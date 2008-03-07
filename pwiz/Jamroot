@@ -69,5 +69,4 @@ lib boost_regex : : <toolset>gcc <variant>debug <name>boost_regex-gcc-d ;
 lib boost_regex : : <toolset>msvc <name>libboost_regex-vc80-mt ;
 lib boost_regex : : <toolset>msvc <variant>debug <name>libboost_regex-vc80-mt-gd ;
 
-lib xerces-c ;
 
