@@ -1,0 +1,213 @@
+//
+// References.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "References.hpp"
+#include <stdexcept>
+
+
+namespace pwiz {
+namespace msdata {
+namespace References {
+
+
+using namespace std;
+using boost::shared_ptr;
+
+
+template <typename object_type>
+struct HasID
+{
+    const string& id_;
+    HasID(const string& id) : id_(id) {}
+
+    bool operator()(const shared_ptr<object_type>& objectPtr)
+    {
+        return objectPtr.get() && objectPtr->id == id_;
+    }
+};
+
+
+template <typename object_type>
+void resolve(shared_ptr<object_type>& reference, 
+             const vector< shared_ptr<object_type> >& referentList)
+{
+    if (!reference.get() || reference->id.empty())
+        return; 
+
+    typename vector< shared_ptr<object_type> >::const_iterator it = 
+        find_if(referentList.begin(), referentList.end(), HasID<object_type>(reference->id));
+
+    if (it == referentList.end())
+    {
+        ostringstream oss;
+        oss << "[References::resolve()] Failed to resolve reference.\n"
+            << "  object type: " << typeid(object_type).name() << endl
+            << "  reference id: " << reference->id << endl
+            << "  referent list: " << referentList.size() << endl;
+        for (typename vector< shared_ptr<object_type> >::const_iterator it=referentList.begin();
+             it!=referentList.end(); ++it)
+            oss << "    " << (*it)->id << endl;
+        throw runtime_error(oss.str().c_str());
+    }
+
+    reference = *it;
+}
+
+
+template <typename object_type>
+void resolve(vector < shared_ptr<object_type> >& references,
+             const vector< shared_ptr<object_type> >& referentList)
+{
+    for (typename vector< shared_ptr<object_type> >::iterator it=references.begin();
+         it!=references.end(); ++it)
+        resolve(*it, referentList);
+}
+
+
+void resolve(ParamContainer& paramContainer, const MSData& msd)
+{
+    resolve(paramContainer.paramGroupPtrs, msd.paramGroupPtrs); 
+}
+
+
+template <typename object_type>
+void resolve(vector<object_type>& objects, const MSData& msd)
+{
+    for (typename vector<object_type>::iterator it=objects.begin(); it!=objects.end(); ++it)
+        resolve(*it, msd);
+}
+
+
+template <typename object_type>
+void resolve(vector< shared_ptr<object_type> >& objectPtrs, const MSData& msd)
+{
+    for (typename vector< shared_ptr<object_type> >::iterator it=objectPtrs.begin(); 
+         it!=objectPtrs.end(); ++it)
+        resolve(**it, msd);
+}
+
+
+void resolve(FileDescription& fileDescription, const MSData& msd)
+{
+    resolve(fileDescription.fileContent, msd);
+    resolve(fileDescription.sourceFilePtrs, msd);
+    resolve(fileDescription.contacts, msd);
+}
+
+
+void resolve(ComponentList& componentList, const MSData& msd)
+{
+    resolve(componentList.source, msd); 
+    resolve(componentList.analyzer, msd); 
+    resolve(componentList.detector, msd); 
+}
+
+
+void resolve(Instrument& instrument, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(instrument), msd);
+    resolve(instrument.componentList, msd);
+    resolve(instrument.softwarePtr, msd.softwarePtrs); 
+}
+
+
+void resolve(DataProcessing& dataProcessing, const MSData& msd)
+{
+    resolve(dataProcessing.softwarePtr, msd.softwarePtrs); 
+    resolve(dataProcessing.processingMethods, msd);
+}
+
+
+void resolve(Acquisition& acquisition, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(acquisition), msd);
+    resolve(acquisition.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
+}
+
+
+void resolve(AcquisitionList& acquisitionList, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(acquisitionList), msd);
+    resolve(acquisitionList.acquisitions, msd);
+}
+
+
+void resolve(Precursor& precursor, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(precursor), msd);
+    resolve(precursor.ionSelection, msd);
+    resolve(precursor.activation, msd);
+}
+
+
+void resolve(Scan& scan, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(scan), msd);
+    resolve(scan.instrumentPtr, msd.instrumentPtrs);
+    resolve(scan.selectionWindows, msd);
+}
+
+
+void resolve(SpectrumDescription& spectrumDescription, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(spectrumDescription), msd);
+    resolve(spectrumDescription.acquisitionList, msd);
+    resolve(spectrumDescription.precursors, msd);
+    resolve(spectrumDescription.scan, msd);
+}
+
+
+void resolve(BinaryDataArray& binaryDataArray, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(binaryDataArray), msd);
+    resolve(binaryDataArray.dataProcessingPtr, msd.dataProcessingPtrs);
+}
+
+
+void resolve(Spectrum& spectrum, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(spectrum), msd);
+    resolve(spectrum.dataProcessingPtr, msd.dataProcessingPtrs);
+    resolve(spectrum.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
+    resolve(spectrum.spectrumDescription, msd);
+    resolve(spectrum.binaryDataArrayPtrs, msd);
+}
+
+
+void resolve(Run& run, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(run), msd);
+    resolve(run.instrumentPtr, msd.instrumentPtrs);
+    resolve(run.samplePtr, msd.samplePtrs);
+    resolve(run.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
+}
+
+
+void resolve(MSData& msd)
+{
+    resolve(msd.paramGroupPtrs, msd);
+    resolve(msd.samplePtrs, msd);
+    resolve(msd.instrumentPtrs, msd);
+    resolve(msd.dataProcessingPtrs, msd);
+    resolve(msd.run, msd);
+
+    // if we're using SpectrumListSimple, resolve the references in each Spectrum
+    SpectrumListSimple* simple = dynamic_cast<SpectrumListSimple*>(msd.run.spectrumListPtr.get());
+    if (simple)
+        resolve(simple->spectra, msd);
+}
+
+
+} // namespace References
+} // namespace msdata
+} // namespace pwiz
+

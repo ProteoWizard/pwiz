@@ -1,0 +1,340 @@
+//
+// Diff.hpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#ifndef _DIFF_HPP_
+#define _DIFF_HPP_
+
+
+#include "MSData.hpp"
+#include "TextWriter.hpp"
+
+
+namespace pwiz {
+namespace msdata {
+
+
+/// configuration struct for diffs
+struct DiffConfig 
+{
+    /// precision with which two doubles are compared
+    double precision;
+
+    /// ignore all file level metadata, and most scan level metadata,
+    /// i.e. verify scan binary data, plus important scan metadata:
+    ///  - msLevel 
+    ///  - scanNumber 
+    ///  - precursor.ionSelection
+    bool ignoreMetadata;
+
+    DiffConfig()
+    :   precision(1e-6), 
+        ignoreMetadata(false)
+    {}
+};
+
+
+//
+// diff implementation declarations
+//
+
+
+namespace diff_impl {
+
+
+void diff(const std::string& a,
+          const std::string& b,
+          std::string& a_b,
+          std::string& b_a,
+          const DiffConfig& config);
+
+void diff(const CV& a,
+          const CV& b,
+          CV& a_b,
+          CV& b_a,
+          const DiffConfig& config);
+
+void diff(const UserParam& a,
+          const UserParam& b,
+          UserParam& a_b,
+          UserParam& b_a,
+          const DiffConfig& config);
+
+void diff(const CVParam& a,
+          const CVParam& b,
+          CVParam& a_b,
+          CVParam& b_a,
+          const DiffConfig& config);
+
+void diff(const ParamContainer& a,
+          const ParamContainer& b,
+          ParamContainer& a_b,
+          ParamContainer& b_a,
+          const DiffConfig& config);
+
+void diff(const ParamGroup& a,
+          const ParamGroup& b,
+          ParamGroup& a_b,
+          ParamGroup& b_a,
+          const DiffConfig& config);
+
+void diff(const SourceFile& a,
+          const SourceFile& b,
+          SourceFile& a_b,
+          SourceFile& b_a,
+          const DiffConfig& config);
+
+void diff(const FileDescription& a,
+          const FileDescription& b,
+          FileDescription& a_b,
+          FileDescription& b_a,
+          const DiffConfig& config);
+
+void diff(const Sample& a,
+          const Sample& b,
+          Sample& a_b,
+          Sample& b_a,
+          const DiffConfig& config);
+
+void diff(const Component& a,
+          const Component& b,
+          Component& a_b,
+          Component& b_a,
+          const DiffConfig& config);
+
+void diff(const Source& a,
+          const Source& b,
+          Source& a_b,
+          Source& b_a,
+          const DiffConfig& config);
+
+void diff(const Analyzer& a,
+          const Analyzer& b,
+          Analyzer& a_b,
+          Analyzer& b_a,
+          const DiffConfig& config);
+
+void diff(const Detector& a,
+          const Detector& b,
+          Detector& a_b,
+          Detector& b_a,
+          const DiffConfig& config);
+
+void diff(const ComponentList& a,
+          const ComponentList& b,
+          ComponentList& a_b,
+          ComponentList& b_a,
+          const DiffConfig& config);
+
+void diff(const Software& a,
+          const Software& b,
+          Software& a_b,
+          Software& b_a,
+          const DiffConfig& config);
+
+void diff(const Instrument& a,
+          const Instrument& b,
+          Instrument& a_b,
+          Instrument& b_a,
+          const DiffConfig& config);
+
+void diff(const ProcessingMethod& a,
+          const ProcessingMethod& b,
+          ProcessingMethod& a_b,
+          ProcessingMethod& b_a,
+          const DiffConfig& config);
+
+void diff(const DataProcessing& a,
+          const DataProcessing& b,
+          DataProcessing& a_b,
+          DataProcessing& b_a,
+          const DiffConfig& config);
+
+void diff(const Acquisition& a,
+          const Acquisition& b,
+          Acquisition& a_b,
+          Acquisition& b_a,
+          const DiffConfig& config);
+
+void diff(const AcquisitionList& a,
+          const AcquisitionList& b,
+          AcquisitionList& a_b,
+          AcquisitionList& b_a,
+          const DiffConfig& config);
+
+void diff(const Precursor& a,
+          const Precursor& b,
+          Precursor& a_b,
+          Precursor& b_a,
+          const DiffConfig& config);
+
+void diff(const Scan& a,
+          const Scan& b,
+          Scan& a_b,
+          Scan& b_a,
+          const DiffConfig& config);
+
+void diff(const SpectrumDescription& a,
+          const SpectrumDescription& b,
+          SpectrumDescription& a_b,
+          SpectrumDescription& b_a,
+          const DiffConfig& config);
+
+void diff(const BinaryDataArray& a,
+          const BinaryDataArray& b,
+          BinaryDataArray& a_b,
+          BinaryDataArray& b_a,
+          const DiffConfig& config);
+
+void diff(const Spectrum& a,
+          const Spectrum& b,
+          Spectrum& a_b,
+          Spectrum& b_a,
+          const DiffConfig& config);
+
+void diff(const SpectrumList& a,
+          const SpectrumList& b,
+          SpectrumListSimple& a_b,
+          SpectrumListSimple& b_a,
+          const DiffConfig& config);
+
+void diff(const Run& a,
+          const Run& b,
+          Run& a_b,
+          Run& b_a,
+          const DiffConfig& config);
+
+void diff(const MSData& a,
+          const MSData& b,
+          MSData& a_b,
+          MSData& b_a,
+          const DiffConfig& config);
+
+} // namespace diff_impl 
+
+
+///     
+/// Calculate diffs of objects in the MSData structure hierarchy.
+///
+/// A diff between two objects a and b calculates the set differences
+/// a\b and b\a.
+///
+/// The Diff struct acts as a functor, but also stores the 
+/// results of the diff calculation.  
+///
+/// The bool conversion operator is provided to indicate whether 
+/// the two objects are different (either a\b or b\a is non-empty).
+///
+/// object_type requirements:
+///   object_type a;
+///   a.empty();
+///   diff(const object_type& a, const object_type& b, object_type& a_b, object_type& b_a);
+///
+template <typename object_type>
+struct Diff
+{
+    Diff(const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {}
+
+    Diff(const object_type& a,
+               const object_type& b,
+               const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+    }
+
+    object_type a_b;
+    object_type b_a;
+
+    /// conversion to bool, with same semantics as *nix diff command:
+    ///  true == different
+    ///  false == not different
+    operator bool() {return !(a_b.empty() && b_a.empty());}
+
+    Diff& operator()(const object_type& a,
+                           const object_type& b)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+        return *this;
+    }
+
+    private:
+    DiffConfig config_;
+};
+
+
+template <>
+struct Diff<SpectrumList>
+{
+    Diff(const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {}
+
+    Diff(const SpectrumList& a,
+               const SpectrumList& b,
+               const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+    }
+
+    SpectrumListSimple a_b;
+    SpectrumListSimple b_a;
+
+    /// conversion to bool, with same semantics as *nix diff command:
+    ///  true == different
+    ///  false == not different
+    operator bool() {return !(a_b.empty() && b_a.empty());}
+
+    Diff& operator()(const SpectrumList& a,
+                           const SpectrumList& b)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+        return *this;
+    }
+
+    private:
+    DiffConfig config_;
+};
+
+
+///
+/// stream insertion of Diff results
+///
+template <typename object_type>
+std::ostream& operator<<(std::ostream& os, const Diff<object_type>& diff)
+{
+    TextWriter write(os, 1);
+
+    if (!diff.a_b.empty())
+    {            
+        os << "+\n";
+        write(diff.a_b);
+    }
+
+    if (!diff.b_a.empty())
+    {            
+        os << "-\n";
+        write(diff.b_a);
+    }
+
+    return os;
+}
+
+
+} // namespace msdata
+} // namespace pwiz
+
+
+#endif // _DIFF_HPP_
+

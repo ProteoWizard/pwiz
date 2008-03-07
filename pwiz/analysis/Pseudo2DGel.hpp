@@ -1,0 +1,95 @@
+//
+// Pseudo2DGel.hpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#ifndef _PSEUDO2DGEL_HPP_
+#define _PSEUDO2DGEL_HPP_
+
+
+#include "MSDataAnalyzer.hpp"
+#include "MSDataCache.hpp"
+#include "RegionAnalyzer.hpp"
+
+
+namespace pwiz {
+namespace analysis {
+
+
+/// creates pseudo-2D-gel images from survey scan data 
+class Pseudo2DGel : public MSDataAnalyzer
+{
+    public:
+
+    struct Config
+    {
+        std::string label;
+        float mzLow;
+        float mzHigh;
+        int binCount;
+        float zRadius;
+        bool bry;
+        bool binSum;
+        bool ms2;
+
+        Config(const std::string& args); 
+    };
+
+    Pseudo2DGel(const MSDataCache& cache, const Config& config);
+
+    /// \name MSDataAnalyzer interface
+    //@{
+    virtual void open(const DataInfo& dataInfo);
+
+    virtual UpdateRequest updateRequested(const DataInfo& dataInfo,
+                                          const SpectrumIdentity& spectrumIdentity) const;
+
+    virtual void update(const DataInfo& dataInfo, 
+                        const Spectrum& spectrum);
+
+    virtual void close(const DataInfo& dataInfo);
+    //@}
+
+    private:
+    class Impl;
+    boost::shared_ptr<Impl> impl_;
+    Pseudo2DGel(Pseudo2DGel&);
+    Pseudo2DGel& operator=(Pseudo2DGel&);
+};
+
+
+template<>
+struct analyzer_strings<Pseudo2DGel>
+{
+    static const char* id() {return "image";}
+    static const char* description() {return "create pseudo-2D-gel image";}
+    static const char* argsFormat() {return "[args]";}
+    static std::vector<std::string> argsUsage()
+    {
+        std::vector<std::string> result;
+        result.push_back("label=xxxx (set filename label to xxxx)");
+        result.push_back("mzLow=N (set low m/z cutoff)");
+        result.push_back("mzHigh=N (set high m/z cutoff)");
+        result.push_back("binCount=N (set histogram bin count)");
+        result.push_back("zRadius=N (set intensity function z-score radius [=2])");
+        result.push_back("bry (use blue-red-yellow gradient)");
+        result.push_back("binSum (sum intensity in bins [default = max intensity])");
+        result.push_back("ms2 (indicate masses selected for ms2)");
+        return result; 
+    }
+};
+
+
+} // namespace analysis 
+} // namespace pwiz
+
+
+#endif // _PSEUDO2DGEL_HPP_
+

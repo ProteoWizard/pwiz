@@ -1,0 +1,33 @@
+#
+# Jamfile (util) 
+#
+#
+# Darren Kessner <Darren.Kessner@cshs.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#   Unauthorized use or reproduction prohibited
+#
+
+
+lib pwiz_util
+    : Base64.cpp 
+      IntegerSet.cpp
+      SHA1Calculator.cpp
+      SHA1.cpp
+      Image.cpp
+      ..//gd
+    : <warnings>all
+    ;
+
+
+unit-test endian_test : endian_test.cpp ;
+unit-test Base64Test : Base64Test.cpp pwiz_util ;
+unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_util ;
+unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_util ; 
+unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_util ; 
+
+exe sha1calc : sha1calc.cpp pwiz_util ;
+install bin : sha1calc : <location>. ;
+explicit bin ;
+

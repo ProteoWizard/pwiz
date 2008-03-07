@@ -1,0 +1,23 @@
+
+# Jamfile (minimxml) 
+#
+#
+# Darren Kessner <Darren.Kessner@cshs.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#   Unauthorized use or reproduction prohibited
+#
+
+
+lib pwiz_minimxml
+    :   XMLWriter.cpp 
+        SAXParser.cpp 
+        ..//boost_regex # built with BOOST_REGEX_MATCH_EXTRA defined in boost/regex/user.hpp
+    : <warnings>all # TODO move to Jamroot
+    ;
+
+unit-test SAXParserTest : SAXParserTest.cpp pwiz_minimxml ;
+unit-test XMLWriterTest : XMLWriterTest.cpp pwiz_minimxml ;
+
+

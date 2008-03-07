@@ -1,0 +1,254 @@
+//
+// BinaryDataEncoder.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Spielberg Family Center for Applied Proteomics
+//   Cedars Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "BinaryDataEncoder.hpp"
+#include "util/Base64.hpp"
+#include "util/endian.hpp"
+#include "boost/static_assert.hpp"
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
+
+
+namespace pwiz {
+namespace msdata {
+
+
+using namespace std;
+using namespace util;
+
+
+//
+// BinaryDataEncoder::Impl
+//
+
+
+class BinaryDataEncoder::Impl
+{
+    public:
+
+    Impl(const Config& config)
+    :   config_(config)
+    {}
+
+    void encode(const vector<double>& data, string& result);
+    void encode(const double* data, size_t dataSize, std::string& result);
+    void decode(const string& encodedData, vector<double>& result);
+
+    private:
+    Config config_;
+};
+
+
+BOOST_STATIC_ASSERT(sizeof(float) == 4);
+BOOST_STATIC_ASSERT(sizeof(double) == 8);
+
+
+struct DoubleToFloat
+{
+    float operator()(double d) {return float(d);}
+};
+
+
+void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result)
+{
+    if (data.empty()) return;
+    encode(&data[0], data.size(), result);
+}
+
+
+void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::string& result)
+{
+    //
+    // We use buffer abstractions, since we may need to change buffers during
+    // downconversion and compression -- these are eventually passed to
+    // the Base64 encoder.  Note that:
+    //  - byteBuffer and byteCount must remain valid at the end of any block
+    //    in this function
+    //  - by default, no processing is done, resulting in no buffer changes
+    //    and fall through to Base64 encoding
+    //
+
+    const void* byteBuffer = reinterpret_cast<const void*>(data); 
+    size_t byteCount = dataSize * sizeof(double);
+
+    // 64-bit -> 32-bit downconversion
+
+    vector<float> data32;
+
+    if (config_.precision == Precision_32)
+    {
+        data32.resize(dataSize);
+        transform(data, data+dataSize, data32.begin(), DoubleToFloat());
+        byteBuffer = reinterpret_cast<void*>(&data32[0]);
+        byteCount = data32.size() * sizeof(float);
+    }
+
+    // byte ordering
+
+    #ifdef PWIZ_LITTLE_ENDIAN
+    bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
+    #elif defined(PWIZ_BIG_ENDIAN)
+    bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
+    #endif
+
+    vector<double> data64endianized;
+
+    if (mustEndianize)
+    {
+        if (config_.precision == Precision_32)
+        {
+            unsigned int* p = reinterpret_cast<unsigned int *>(&data32[0]);
+            transform(p, p+data32.size(), p, endianize32);
+        }
+        else // Precision_64 
+        {
+            data64endianized.resize(dataSize);
+            const unsigned long long* from = reinterpret_cast<const unsigned long long*>(data);
+            unsigned long long* to = reinterpret_cast<unsigned long long*>(&data64endianized[0]);
+            transform(from, from+dataSize, to, endianize64);
+            byteBuffer = reinterpret_cast<void*>(&data64endianized[0]);
+            byteCount = dataSize * sizeof(double);
+        }
+    }
+
+    // compression
+
+    if (config_.compression != Compression_None)
+    {
+        throw runtime_error("[BinaryDataEncoder::encode()] Compression not implemented."); 
+
+        // similar to downconversion and byte order, allocate new array on stack
+        // and set byteBuffer and byteCount
+    }
+
+    // Base64 encoding
+
+    result.resize(Base64::binaryToTextSize(byteCount));    
+    size_t textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
+    result.resize(textSize);
+}
+
+
+template <typename float_type>
+void copyBuffer(const void* byteBuffer, size_t byteCount, vector<double>& result)
+{
+    const float_type* floatBuffer = reinterpret_cast<const float_type*>(byteBuffer);
+
+    if (byteCount % sizeof(float_type) != 0) 
+        throw runtime_error("[BinaryDataEncoder::copyBuffer()] Bad byteCount.");
+
+    size_t floatCount = byteCount / sizeof(float_type);
+
+    result.resize(floatCount);
+
+    copy(floatBuffer, floatBuffer+floatCount, result.begin());
+}
+
+
+void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& result)
+{
+    if (encodedData.empty()) return;
+
+    // Base64 decoding
+
+    vector<unsigned char> binary(Base64::textToBinarySize(encodedData.size()));
+    size_t binarySize = Base64::textToBinary(&encodedData[0], encodedData.size(), &binary[0]);
+    binary.resize(binarySize);
+
+    // buffer abstractions
+
+    void* byteBuffer = &binary[0];
+    size_t byteCount = binarySize;
+
+    // decompression
+
+    if (config_.compression != Compression_None)
+    {
+        throw runtime_error("[BinaryDataEncoder::decode()] Compression not implemented."); 
+    }
+
+    // endianization
+
+    #ifdef PWIZ_LITTLE_ENDIAN
+    bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
+    #elif defined(PWIZ_BIG_ENDIAN)
+    bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
+    #endif
+
+    if (mustEndianize)
+    {
+        if (config_.precision == Precision_32)
+        {
+            unsigned int* p = reinterpret_cast<unsigned int*>(byteBuffer);
+            size_t floatCount = binarySize / sizeof(float);
+            transform(p, p+floatCount, p, endianize32);
+        }
+        else // Precision_64
+        {
+            unsigned long long* p = reinterpret_cast<unsigned long long*>(byteBuffer);
+            size_t doubleCount = binarySize / sizeof(double);
+            transform(p, p+doubleCount, p, endianize64);
+        }
+    }
+
+    // (upconversion and) copy to result buffer
+
+    if (config_.precision == Precision_32)
+        copyBuffer<float>(byteBuffer, byteCount, result);
+    else // Precision_64
+        copyBuffer<double>(byteBuffer, byteCount, result);
+}
+
+
+//
+// BinaryDataEncoder
+//
+
+
+BinaryDataEncoder::BinaryDataEncoder(const Config& config)
+:   impl_(new Impl(config))
+{}
+
+
+void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result) const
+{
+    impl_->encode(data, result);
+}
+
+
+void BinaryDataEncoder::encode(const double* data, size_t dataSize, std::string& result) const
+{
+    impl_->encode(data, dataSize, result);
+}
+
+
+void BinaryDataEncoder::decode(const std::string& encodedData, std::vector<double>& result) const
+{
+    impl_->decode(encodedData, result);
+}
+
+
+ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& config)
+{
+    os << "(" 
+       << (config.precision==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32") << ", "
+       << (config.byteOrder==BinaryDataEncoder::ByteOrder_LittleEndian ? "ByteOrder_LittleEndian" : "ByteOrder_BigEndian") << ", "
+       << (config.compression==BinaryDataEncoder::Compression_None ? "Compression_None" : "Compression_Zlib") 
+       << ")";
+    return os;   
+}
+
+
+} // namespace msdata
+} // namespace pwiz
+

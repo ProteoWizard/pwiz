@@ -1,0 +1,145 @@
+//
+// SHA1Calculator.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Spielberg Family Center for Applied Proteomics 
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "endian.hpp"
+#ifdef PWIZ_BIG_ENDIAN
+#define SHA1_BIG_ENDIAN // for SHA1.h
+#endif // PWIZ_BIG_ENDIAN
+#include "SHA1.h" // TODO: link errors if not first (?)
+
+
+#include "SHA1Calculator.hpp"
+#include <iostream>
+#include <stdexcept>
+
+
+namespace pwiz {
+namespace util {
+
+
+using namespace std;
+
+
+namespace {
+string formatHash(const CSHA1& csha1)
+{
+    char buffer[100];
+    memset(buffer, 0, sizeof(buffer));
+    csha1.ReportHash(buffer);
+
+    string result(40,'\0');
+    const char* p = buffer;
+    for (string::iterator it=result.begin(); it!=result.end();)
+    {
+        *it++ = static_cast<char>(tolower(*p++));
+        *it++ = static_cast<char>(tolower(*p++));
+        ++p;
+    }
+    
+    return result;
+}
+} // namespace
+
+
+class SHA1Calculator::Impl
+{
+    public:
+    CSHA1 csha1;
+    bool closed;
+
+    Impl()
+    :   closed(false)
+    {}
+};
+
+
+SHA1Calculator::SHA1Calculator() : impl_(new Impl) {}
+
+
+void SHA1Calculator::reset()
+{
+    impl_->csha1.Reset();
+    impl_->closed = false;
+}
+
+
+void SHA1Calculator::update(const unsigned char* buffer, size_t bufferSize)
+{
+    if (impl_->closed) 
+        throw runtime_error("[SHA1Calculator::update()] Should not be called after close().");
+
+    impl_->csha1.Update(const_cast<unsigned char*>(buffer), static_cast<UINT_32>(bufferSize));
+}
+    
+
+void SHA1Calculator::update(const string& buffer)
+{
+    if (!buffer.empty())
+        update(reinterpret_cast<const unsigned char*>(&buffer[0]), buffer.size());
+}
+
+
+void SHA1Calculator::close()
+{
+    impl_->csha1.Final();
+    impl_->closed = true;
+}
+
+
+string SHA1Calculator::hash() const
+{
+    return formatHash(impl_->csha1);
+}
+
+
+string SHA1Calculator::hashProjected() const
+{
+    if (impl_->closed) 
+        throw runtime_error("[SHA1Calculator::hashProjected()] Should not be called after close().");
+
+    CSHA1 temp(impl_->csha1);
+    temp.Final();
+    return formatHash(temp);
+}
+
+
+string SHA1Calculator::hash(const string& buffer)
+{
+    return hash((const unsigned char*)buffer.c_str(), buffer.size());
+}
+
+
+string SHA1Calculator::hash(const unsigned char* buffer, size_t bufferSize)
+{
+    CSHA1 sha1;
+    sha1.Update(buffer, static_cast<UINT_32>(bufferSize));
+    sha1.Final();
+    return formatHash(sha1);
+}
+
+
+string SHA1Calculator::hashFile(const string& filename)
+{
+    CSHA1 sha1;
+
+    if (!(sha1.HashFile(filename.c_str())))
+        throw runtime_error(("[SHA1Calculator] Error hashing file " + filename).c_str());
+
+    sha1.Final();
+    return formatHash(sha1);
+}
+
+
+} // namespace util
+} // namespace pwiz
+
+

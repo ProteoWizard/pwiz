@@ -1,0 +1,13 @@
+lib pwiz_math 
+    : Parabola.cpp Random.cpp Stats.cpp erf.cpp mt19937ar.cpp
+    ;
+    
+unit-test LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ;
+unit-test LinearSolverTest : LinearSolverTest.cpp ;
+unit-test MatchedFilterTest : MatchedFilterTest.cpp ;
+unit-test ParabolaTest : Parabola.cpp ParabolaTest.cpp ;
+unit-test StatsTest : Stats.cpp StatsTest.cpp ;
+unit-test erfTest : erf.cpp erfTest.cpp ;
+unit-test qrTest : qrTest.cpp ;
+
+

@@ -1,0 +1,186 @@
+//
+// CVTranslator.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+//
+
+
+#include "CVTranslator.hpp"
+#include "boost/lexical_cast.hpp"
+#include <map>
+#include <iostream>
+#include <sstream>
+#include <iterator>
+#include <stdexcept>
+
+
+namespace pwiz {
+namespace msdata {
+
+
+using namespace std;
+using boost::lexical_cast;
+
+
+//
+// default extra translations
+//
+
+
+namespace {
+
+struct ExtraEntry
+{
+    const char* text;
+    CVID cvid;
+};
+
+ExtraEntry defaultExtraEntries_[] =
+{
+    {"ITMS", MS_ion_trap},
+    {"FTMS", MS_FT_ICR},
+};
+
+size_t defaultExtraEntriesSize_ = sizeof(defaultExtraEntries_)/sizeof(ExtraEntry);
+
+} // namespace
+
+
+//
+// CVTranslator::Impl
+//
+
+
+class CVTranslator::Impl
+{
+    public:
+
+    Impl();
+    void insert(const string& text, CVID cvid);
+    CVID translate(const string& text) const;
+
+    private:
+
+    typedef map<string,CVID> Map;
+    Map map_;
+
+    void insertCVTerms();
+    void insertDefaultExtraEntries();
+};
+
+
+CVTranslator::Impl::Impl()
+{
+    insertCVTerms();
+    insertDefaultExtraEntries();
+}
+
+
+namespace {
+
+
+inline char alnum_lower(char c)
+{
+    // c -> lower-case or whitespace 
+    return isalnum(c) ? static_cast<char>(tolower(c)) : ' ';
+}
+
+
+string preprocess(const string& s)
+{
+    string result = s;
+    transform(result.begin(), result.end(), result.begin(), alnum_lower);
+    return result;
+}
+
+
+string canonicalize(const string& s)
+{
+    // remove non-alnum characters
+    istringstream iss(preprocess(s));
+
+    // remove whitespace around tokens
+    vector<string> tokens;
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+
+    // concatenate with underscores
+    ostringstream oss; 
+    copy(tokens.begin(), tokens.end(), ostream_iterator<string>(oss, "_"));
+
+    return oss.str();
+}
+
+
+} // namespace
+
+
+void CVTranslator::Impl::insert(const string& text, CVID cvid)
+{
+    string key = canonicalize(text);
+
+    if (map_.count(key))
+    {
+        throw runtime_error("[CVTranslator::insert()] Collision: " + 
+                            lexical_cast<string>(map_[key]) + " " +
+                            lexical_cast<string>(cvid));
+    }
+
+    map_[key] = cvid;
+}
+
+
+CVID CVTranslator::Impl::translate(const string& text) const
+{
+    Map::const_iterator it = map_.find(canonicalize(text));
+    if (it != map_.end())
+        return it->second; 
+    return CVID_Unknown;
+}
+
+
+void CVTranslator::Impl::insertCVTerms()
+{
+    for (vector<CVID>::const_iterator cvid=cvids().begin(); cvid!=cvids().end(); ++cvid)
+    {
+        if (cvIsA(*cvid, MS_purgatory)) continue;
+
+        const CVInfo& info = cvinfo(*cvid);
+
+        // insert name
+        insert(info.name, *cvid);
+
+        // insert synonyms
+        for (vector<string>::const_iterator syn=info.exactSynonyms.begin(); 
+             syn!=info.exactSynonyms.end(); ++syn)
+            insert(*syn, *cvid);
+    }
+}
+
+
+void CVTranslator::Impl::insertDefaultExtraEntries()
+{
+    for (const ExtraEntry* it=defaultExtraEntries_; 
+         it!=defaultExtraEntries_+defaultExtraEntriesSize_; ++it)
+        insert(it->text, it->cvid);
+}
+
+
+//
+// CVTranslator
+//
+
+
+CVTranslator::CVTranslator() : impl_(new Impl) {}
+void CVTranslator::insert(const string& text, CVID cvid) {impl_->insert(text, cvid);}
+CVID CVTranslator::translate(const string& text) const {return impl_->translate(text);}
+
+
+} // namespace msdata
+} // namespace pwiz
+

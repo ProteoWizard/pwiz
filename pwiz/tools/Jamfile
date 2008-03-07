@@ -1,0 +1,81 @@
+#
+# Jamfile (tools)
+#
+#
+# Darren Kessner <Darren.Kessner@cshs.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars Sinai Medical Center, Los Angeles, California  90048
+#   Unauthorized use or reproduction prohibited
+#
+
+
+exe hello_msdata
+    : hello_msdata.cpp
+      ../msdata//pwiz_msdata
+    : <include>../..
+    ;
+
+
+exe hello_ramp
+    : hello_ramp.cpp
+      ../msdata//pwiz_msdata
+    : <include>../.. <include>../msdata/ramp
+    ;
+
+
+exe hello_analyzer
+    : hello_analyzer.cpp
+      ../msdata//pwiz_msdata
+      ../analysis//pwiz_analysis
+    : <include>../..
+    ;
+
+
+exe hello_analyzer_2
+    : hello_analyzer_2.cpp
+      ../msdata//pwiz_msdata
+      ../analysis//pwiz_analysis
+    : <include>../..
+    ;
+
+
+exe msdiff 
+    : msdiff.cpp
+      ../msdata//pwiz_msdata
+      ..//boost_program_options
+    : <include>../..
+    ;
+
+
+exe msconvert 
+    : msconvert.cpp
+      ../msdata//pwiz_msdata
+      ..//boost_program_options
+      ..//boost_filesystem
+    : <include>../..
+    ;
+
+
+exe msaccess 
+    : msaccess.cpp
+      ../msdata//pwiz_msdata
+      ../analysis//pwiz_analysis
+    : <include>../..
+    ;
+
+
+# local install for testing
+
+install bin 
+    : hello_msdata 
+      hello_ramp 
+      hello_analyzer 
+      hello_analyzer_2
+      msdiff 
+      msconvert 
+      msaccess
+    : <location>bin ;
+
+explicit bin ;
+

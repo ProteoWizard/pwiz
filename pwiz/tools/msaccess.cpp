@@ -1,0 +1,161 @@
+//
+// msaccess.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "pwiz/analysis/MSDataAnalyzerApplication.hpp"
+#include "pwiz/analysis/MSDataCache.hpp"
+#include "pwiz/analysis/MetadataReporter.hpp"
+#include "pwiz/analysis/SpectrumTable.hpp"
+#include "pwiz/analysis/SpectrumBinaryData.hpp"
+#include "pwiz/analysis/RegionSlice.hpp"
+#include "pwiz/analysis/RegionTIC.hpp"
+#include "pwiz/analysis/RegionSIC.hpp"
+#include "pwiz/analysis/Pseudo2DGel.hpp"
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
+
+
+using namespace pwiz::analysis;
+using boost::shared_ptr;
+using namespace std;
+
+
+template <typename analyzer_type>
+void printCommandUsage(ostream& os)
+{
+    os << "  " << analyzer_strings<analyzer_type>::id()
+       << " " << analyzer_strings<analyzer_type>::argsFormat() << endl
+       << "    (" << analyzer_strings<analyzer_type>::description() << ")\n";
+
+    vector<string> usage = analyzer_strings<analyzer_type>::argsUsage();
+    for (vector<string>::const_iterator it=usage.begin(); it!=usage.end(); ++it)
+        os << "      " << *it << endl;
+
+    os << endl;
+}
+
+
+void initializeAnalyzers(MSDataAnalyzerContainer& analyzers, 
+                         const vector<string>& commands)
+{
+    shared_ptr<MSDataCache> cache(new MSDataCache);
+    analyzers.push_back(cache);
+
+    for (vector<string>::const_iterator it=commands.begin(); it!=commands.end(); ++it)
+    {
+        string name, args;
+        istringstream iss(*it);
+        iss >> name;
+        getline(iss, args);
+
+        if (name == analyzer_strings<MetadataReporter>::id())
+        {
+            MSDataAnalyzerPtr anal(new MetadataReporter);
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<SpectrumTable>::id())
+        {
+            MSDataAnalyzerPtr anal(new SpectrumTable(*cache));
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<SpectrumBinaryData>::id())
+        {
+            MSDataAnalyzerPtr anal(new SpectrumBinaryData(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<RegionSlice>::id())
+        {
+            MSDataAnalyzerPtr anal(new RegionSlice(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<RegionTIC>::id())
+        {
+            MSDataAnalyzerPtr anal(new RegionTIC(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<RegionSIC>::id())
+        {
+            MSDataAnalyzerPtr anal(new RegionSIC(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<Pseudo2DGel>::id())
+        {
+            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else
+        {
+            cerr << "Unknown analyzer: " << name << endl;
+        }
+    }
+}
+
+
+string usage(const MSDataAnalyzerApplication& app)
+{
+    ostringstream oss;
+
+    oss << "Usage: msaccess [options] [filenames]\n"
+        << "MassSpecAccess - command line access to mass spec data files\n"
+        << "\n"
+        << "Options:\n" 
+        << "\n"
+        << app.usageOptions
+        << "\n"
+        << "Commands:\n"
+        << "\n";
+
+    printCommandUsage<MetadataReporter>(oss);
+    printCommandUsage<SpectrumTable>(oss);
+    printCommandUsage<SpectrumBinaryData>(oss);
+    printCommandUsage<RegionSlice>(oss);
+    printCommandUsage<RegionTIC>(oss);
+    printCommandUsage<RegionSIC>(oss);
+    printCommandUsage<Pseudo2DGel>(oss);
+
+    oss << endl
+         << "Spielberg Family Center for Applied Proteomics\n"
+         << "Cedars-Sinai Medical Center, Los Angeles, California\n"
+         << "http://sfcap.cshs.org\n";
+
+    return oss.str();
+}
+
+
+int main(int argc, const char* argv[])
+{
+    try
+    {
+        MSDataAnalyzerApplication app(argc, argv);
+        MSDataAnalyzerContainer analyzers;
+        initializeAnalyzers(analyzers, app.commands);
+
+        if (app.filenames.empty() || app.commands.empty())
+            throw runtime_error(usage(app).c_str());
+
+        app.run(analyzers, &cerr);
+
+        return 0;
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+    
+    return 1;
+}
+
+

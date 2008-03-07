@@ -1,0 +1,485 @@
+//
+// ReferencesTest.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "References.hpp"
+#include "util/unit.hpp"
+#include <iostream>
+
+
+using namespace std;
+using namespace pwiz::util;
+using namespace pwiz::msdata;
+
+
+ostream* os_ = 0;
+
+
+void testParamContainer()
+{
+    if (os_) *os_ << "testParamContainer()\n"; 
+
+    ParamContainer pc;
+    pc.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg1")));
+    pc.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg2")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg2")));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg1")));
+    msd.paramGroupPtrs[0]->cvParams.push_back(MS_reflectron_on);
+    msd.paramGroupPtrs[1]->cvParams.push_back(MS_reflectron_off);
+
+    unit_assert(pc.paramGroupPtrs[0]->cvParams.empty());
+    unit_assert(pc.paramGroupPtrs[1]->cvParams.empty());
+
+    References::resolve(pc, msd);
+
+    unit_assert(pc.paramGroupPtrs[0]->cvParams.size() == 1);
+    unit_assert(pc.paramGroupPtrs[0]->cvParams[0] == MS_reflectron_off);
+    unit_assert(pc.paramGroupPtrs[1]->cvParams.size() == 1);
+    unit_assert(pc.paramGroupPtrs[1]->cvParams[0] == MS_reflectron_on);
+}
+
+
+void testFileDescription()
+{
+    if (os_) *os_ << "testFileDescription()\n"; 
+
+    FileDescription fd;
+    fd.fileContent.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg1")));
+    fd.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile));
+    fd.sourceFilePtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg2")));
+    fd.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile));
+    fd.sourceFilePtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg3")));
+    fd.contacts.push_back(Contact());
+    fd.contacts.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg4")));
+    fd.contacts.push_back(Contact());
+    fd.contacts.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg5")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg5")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user5"));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg4")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user4"));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg3")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user3"));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg2")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user2"));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg1")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user1"));
+
+    References::resolve(fd, msd);
+
+    unit_assert(!fd.fileContent.paramGroupPtrs[0]->userParams.empty() &&
+                fd.fileContent.paramGroupPtrs[0]->userParams[0].name == "user1");
+
+    unit_assert(!fd.sourceFilePtrs[0]->paramGroupPtrs[0]->userParams.empty() &&
+                fd.sourceFilePtrs[0]->paramGroupPtrs[0]->userParams[0].name == "user2");
+
+    unit_assert(!fd.sourceFilePtrs[1]->paramGroupPtrs[0]->userParams.empty() &&
+                fd.sourceFilePtrs[1]->paramGroupPtrs[0]->userParams[0].name == "user3");
+
+    unit_assert(!fd.contacts[0].paramGroupPtrs[0]->userParams.empty() &&
+                fd.contacts[0].paramGroupPtrs[0]->userParams[0].name == "user4");
+
+    unit_assert(!fd.contacts[1].paramGroupPtrs[0]->userParams.empty() &&
+                fd.contacts[1].paramGroupPtrs[0]->userParams[0].name == "user5");
+}
+
+
+void testComponentList()
+{
+    if (os_) *os_ << "testComponentList()\n"; 
+
+    ComponentList componentList;
+    componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    componentList.analyzer.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    componentList.detector.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+ 
+    References::resolve(componentList, msd);
+
+    unit_assert(!componentList.source.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!componentList.analyzer.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!componentList.detector.paramGroupPtrs[0]->userParams.empty());
+}
+
+
+void testInstrument()
+{
+    if (os_) *os_ << "testInstrument()\n"; 
+
+    Instrument instrument;
+    instrument.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    instrument.componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    instrument.softwarePtr = SoftwarePtr(new Software("msdata"));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.softwarePtrs.push_back(SoftwarePtr(new Software("booger")));
+    msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
+    msd.softwarePtrs[1]->softwareParamVersion = "4.20";
+
+    unit_assert(instrument.softwarePtr->softwareParamVersion.empty());
+    unit_assert(instrument.paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(instrument, msd);
+
+    unit_assert(!instrument.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!instrument.componentList.source.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(instrument.softwarePtr->softwareParamVersion == "4.20");
+}
+
+
+void testDataProcessing()
+{
+    if (os_) *os_ << "testDataProcessing()\n"; 
+
+    DataProcessing dataProcessing;
+    dataProcessing.softwarePtr = SoftwarePtr(new Software("msdata"));
+    dataProcessing.processingMethods.push_back(ProcessingMethod());
+    dataProcessing.processingMethods.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.softwarePtrs.push_back(SoftwarePtr(new Software("booger")));
+    msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
+    msd.softwarePtrs[1]->softwareParamVersion = "4.20";
+
+    unit_assert(dataProcessing.softwarePtr->softwareParamVersion.empty());
+    unit_assert(dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(dataProcessing, msd);
+
+    unit_assert(!dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
+    unit_assert(dataProcessing.softwarePtr->softwareParamVersion == "4.20");
+}
+
+
+void testAcquisition()
+{
+    if (os_) *os_ << "testAcquisition()\n"; 
+
+    Acquisition acquisition;
+    acquisition.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    acquisition.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
+    
+    unit_assert(acquisition.sourceFilePtr->name.empty());
+    unit_assert(acquisition.paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(acquisition, msd);
+
+    unit_assert(!acquisition.sourceFilePtr->name.empty());
+    unit_assert(!acquisition.paramGroupPtrs[0]->userParams.empty());
+}
+
+
+void testAcquisitionList()
+{
+    if (os_) *os_ << "testAcquisitionList()\n"; 
+
+    AcquisitionList acquisitionList;
+    acquisitionList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    acquisitionList.acquisitions.push_back(Acquisition());
+    acquisitionList.acquisitions.back().sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
+    acquisitionList.acquisitions.push_back(Acquisition());
+    acquisitionList.acquisitions.back().sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("dummy")));
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
+    
+    unit_assert(acquisitionList.acquisitions[0].sourceFilePtr->name.empty());
+    unit_assert(acquisitionList.acquisitions[1].sourceFilePtr->name.empty());
+    unit_assert(acquisitionList.paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(acquisitionList, msd);
+
+    unit_assert(acquisitionList.acquisitions[0].sourceFilePtr->name == "goo.raw");
+    unit_assert(acquisitionList.acquisitions[1].sourceFilePtr->name == "goo.raw");
+    unit_assert(!acquisitionList.paramGroupPtrs[0]->userParams.empty());
+}
+
+
+void testPrecursor()
+{
+    if (os_) *os_ << "testPrecursor()\n"; 
+
+    Precursor precursor;
+    precursor.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    precursor.ionSelection.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    precursor.activation.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    
+    unit_assert(precursor.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(precursor.ionSelection.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(precursor.activation.paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(precursor, msd);
+
+    unit_assert(!precursor.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!precursor.ionSelection.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!precursor.activation.paramGroupPtrs[0]->userParams.empty());
+}
+
+
+void testScan()
+{
+    if (os_) *os_ << "testScan()\n"; 
+
+    Scan scan;
+    scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    scan.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    scan.selectionWindows.push_back(SelectionWindow());
+    scan.selectionWindows.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
+    msd.instrumentPtrs.back()->userParams.push_back(UserParam("user"));
+    
+    unit_assert(scan.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(scan.instrumentPtr->userParams.empty());
+    unit_assert(scan.selectionWindows.back().paramGroupPtrs.back()->userParams.empty());
+
+    References::resolve(scan, msd);
+
+    unit_assert(!scan.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!scan.instrumentPtr->userParams.empty());
+    unit_assert(!scan.selectionWindows.back().paramGroupPtrs.back()->userParams.empty());
+}
+
+
+void testSpectrumDescription()
+{
+    if (os_) *os_ << "testSpectrumDescription()\n"; 
+
+    SpectrumDescription spectrumDescription;
+    spectrumDescription.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrumDescription.acquisitionList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrumDescription.precursors.push_back(Precursor());
+    spectrumDescription.precursors.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    
+    unit_assert(spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrumDescription.acquisitionList.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrumDescription.precursors.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrumDescription.scan.paramGroupPtrs.back()->userParams.empty());
+
+    References::resolve(spectrumDescription, msd);
+
+    unit_assert(!spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrumDescription.acquisitionList.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrumDescription.precursors.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrumDescription.scan.paramGroupPtrs.back()->userParams.empty());
+}
+
+
+void testBinaryDataArray()
+{
+    if (os_) *os_ << "testBinaryDataArray()\n"; 
+
+    BinaryDataArray binaryDataArray;
+    binaryDataArray.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    binaryDataArray.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("msdata")));
+    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    
+    unit_assert(binaryDataArray.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!binaryDataArray.dataProcessingPtr->softwarePtr.get());
+
+    References::resolve(binaryDataArray, msd);
+
+    unit_assert(!binaryDataArray.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(binaryDataArray.dataProcessingPtr->softwarePtr.get());
+}
+
+
+void testSpectrum()
+{
+    if (os_) *os_ << "testSpectrum()\n"; 
+
+    Spectrum spectrum;
+    spectrum.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrum.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
+    spectrum.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
+    spectrum.spectrumDescription.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrum.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+    spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
+    
+    unit_assert(spectrum.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.dataProcessingPtr->softwarePtr.get());
+    unit_assert(spectrum.sourceFilePtr->name.empty());
+    unit_assert(spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+
+    References::resolve(spectrum, msd);
+
+    unit_assert(!spectrum.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.dataProcessingPtr->softwarePtr.get());
+    unit_assert(spectrum.sourceFilePtr->name == "goo.raw");
+    unit_assert(!spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+}
+
+
+void testRun()
+{
+    if (os_) *os_ << "testRun()\n"; 
+
+    Run run;
+    run.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    run.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    run.samplePtr = SamplePtr(new Sample("sample"));
+    run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+    run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
+    msd.instrumentPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.samplePtrs.push_back(SamplePtr(new Sample("sample")));
+    msd.samplePtrs.back()->name = "sample name";
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo1.raw";
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
+
+    unit_assert(run.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(run.instrumentPtr->userParams.empty());
+    unit_assert(run.samplePtr->name.empty());
+    unit_assert(run.sourceFilePtrs[0]->name.empty());
+    unit_assert(run.sourceFilePtrs[1]->name.empty());
+
+    References::resolve(run, msd);
+
+    unit_assert(!run.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!run.instrumentPtr->userParams.empty());
+    unit_assert(run.samplePtr->name == "sample name");
+    unit_assert(run.sourceFilePtrs[0]->name == "goo2.raw");
+    unit_assert(run.sourceFilePtrs[1]->name == "goo1.raw");
+}
+
+
+void testMSData()
+{
+    if (os_) *os_ << "testMSData()\n"; 
+
+    MSData msd;
+
+    msd.fileDescription.fileContent.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg1")));
+    msd.paramGroupPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg2")));
+    msd.paramGroupPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.samplePtrs.push_back(SamplePtr(new Sample("sample")));
+    msd.samplePtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
+    msd.instrumentPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+    msd.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
+    msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.run.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    unit_assert(msd.paramGroupPtrs[1]->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.paramGroupPtrs[2]->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.samplePtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.instrumentPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.run.paramGroupPtrs.back()->userParams.empty());
+
+    References::resolve(msd);
+
+    unit_assert(!msd.paramGroupPtrs[1]->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.paramGroupPtrs[2]->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.samplePtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.instrumentPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.run.paramGroupPtrs.back()->userParams.empty());
+}
+
+
+void test()
+{
+    testParamContainer();
+    testFileDescription();
+    testComponentList();
+    testInstrument();
+    testDataProcessing();
+    testAcquisition();
+    testAcquisitionList();
+    testPrecursor();
+    testScan();
+    testSpectrumDescription();
+    testBinaryDataArray();
+    testSpectrum();
+    testRun();
+    testMSData();
+}
+
+
+int main(int argc, char* argv[])
+{
+    try
+    {
+        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        test();
+        return 0;
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+    
+    return 1;
+}
+

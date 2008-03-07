@@ -1,0 +1,50 @@
+#
+# Jamfile (analysis) 
+#
+#
+# Darren Kessner <Darren.Kessner@cshs.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#   Unauthorized use or reproduction prohibited
+#
+
+
+project
+    : requirements 
+        <warnings>all
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing # warning: dereferencing type-punned pointer will break strict-aliasing rules
+    ;
+
+
+lib pwiz_analysis
+    :   MSDataAnalyzer.cpp
+        MSDataAnalyzerApplication.cpp
+        SpectrumInfo.cpp
+        MSDataCache.cpp 
+        MetadataReporter.cpp
+        SpectrumTable.cpp
+        SpectrumBinaryData.cpp
+        RegionAnalyzer.cpp
+        RegionSlice.cpp
+        RegionTIC.cpp
+        RegionSIC.cpp
+        Pseudo2DGel.cpp
+        ../math
+        ../msdata//pwiz_msdata
+        ..//boost_program_options
+        ..//boost_filesystem
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+
+unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis ;
+unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis ;
+unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../msdata/examples.cpp pwiz_analysis ;
+unit-test MSDataCacheTest : MSDataCacheTest.cpp ../msdata/examples.cpp pwiz_analysis ;
+unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis ;
+

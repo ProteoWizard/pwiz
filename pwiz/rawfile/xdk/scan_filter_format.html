@@ -1,0 +1,141 @@
+<html>
+<head>
+ <meta name="build tags" content="Xcal_Core">
+ <title>scan filter format</title>
+<link rel="stylesheet" href="../styles.css" type="text/css">
+</head>
+
+<h2>scan filter format</h2>
+<p>(taken from xcalglossary.chm; search for "scan filter format")</p>
+<p class="glossary">Xcalibur creates <a href="scan_filter.htm">scan filters</a>
+  from scan event settings and stores them with each raw file. Users can select
+  scan filters to specify that processing is to be applied to a subset of the
+  scans in a raw file. You should use only fields that apply to your mass spectrometer.
+  You can define additional scan filters, but adhere to the following scan filter
+  format.</p>
+<p class="glossary"><strong>Note</strong>. Not all features are applicable for
+  every mass spectrometer.</p>
+<table class="standard" border="1">
+  <tr>
+    <td class="h1">Feature</td>
+    <td class="h1">Options</td>
+    <td class="h1">Interpretation</td>
+  </tr>
+  <tr>
+    <td>Polarity</td>
+    <td>+, -</td>
+    <td>Positive, Negative</td>
+  </tr>
+  <tr class="shaded">
+    <td>Data&nbsp;type</td>
+    <td>p, c</td>
+    <td>Profile, Centroid</td>
+  </tr>
+  <tr>
+    <td>Dependent&nbsp;scans</td>
+    <td>d, !d</td>
+    <td>Include dependent scans, Exclude dependent scans</td>
+  </tr>
+  <tr class="shaded">
+    <td>TurboScans</td>
+    <td>t, !t</td>
+    <td>Include TurboScan scans, Exclude TurboScan scans</td>
+  </tr>
+  <tr>
+    <td>Source CID</td>
+    <td>sid, !sid</td>
+    <td>Include Source CID scans, Exclude Source CID scans</td>
+  </tr>
+  <tr class="shaded">
+    <td>Scan type</td>
+    <td>full, sim, srm, crm, z</td>
+    <td>Full scan, SIM, SRM, CRM, ZoomScan</td>
+  </tr>
+  <tr>
+    <td>Scan mode</td>
+    <td>ms, ms2, ms3, ... ms10</td>
+    <td>MS<sup>n</sup> for n = 1 to 10<br /><br />
+      Each order can be followed by the appropriate number of parents. The parents
+      can also be omitted.<br />
+      <br />
+      Example: "ms3 345.3 253.2" indicates an MS<sup>3</sup> scan with parents
+      with <i>m/z</i>&nbsp;345.3 and 253.2.</td>
+  </tr>
+  <tr class="shaded">
+    <td>&nbsp;</td>
+    <td>pr</td>
+    <td>Parent (followed by the parent mass)</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>cng</td>
+    <td>Constant Neutral Gain (followed by the mass of the neutral)</td>
+  </tr>
+  <tr class="shaded">
+    <td>&nbsp;</td>
+    <td>cnl</td>
+    <td>Constant Neutral Loss (followed by the mass of the neutral)</td>
+  </tr>
+  <tr>
+    <td>Product masses or mass range of scan</td>
+    <td>[m1a-m1b, m2a-m2b, m3a-m3b, ...]</td>
+    <td>Scans with a specific mass range or mass ranges, such as SIM, SRM, and
+      CRM <br />
+      <br />
+      Example: [50.00-1500.00] for a scan from <em>m/z</em>&nbsp;50.00 to 1500.00<br />
+    <br />
+      <strong>Note</strong>. If a scan is exactly 1&nbsp;u wide, it is displayed
+      as a single value (the center mass). This is typical for SIM, SRM, and CRM.
+      Filters for parents in dependent scans are matched with a tolerance of <em>m/z</em>&nbsp;1.0
+      so that minor differences in parent mass measurements from scan to scan
+      do not give different filters.</td>
+  </tr>
+  <tr class="shaded">
+    <td>Segment/scan event number pairs</td>
+    <td>{segment, scan&nbsp;number}</td>
+    <td>Example: &quot;{3,4} + c ms&quot; indicates segment 3, scan event 4 for
+      a positive centroid MS scan<br />
+      <br />
+      The curly brackets { } are required.</td>
+  </tr>
+  <tr>
+    <td>Ionization mode</td>
+    <td>APCI, ESI, EI, CI, NSI, etc.</td>
+    <td>Example: &quot;+ c ESI ms&quot; indicates a positive centroid electrospray
+      MS scan </td>
+  </tr>
+  <tr class="shaded">
+    <td>Corona on/off</td>
+    <td>corona, <br />&#33;corona</td>
+    <td>Corona on, Corona off<br />
+      <br />
+      Example: &quot;+ APCI !corona ms&quot; indicates a positive centroid APCI
+      scan with the corona off</td>
+  </tr>
+  <tr>
+    <td>Detector value</td>
+    <td>&quot;Det=##.##&quot;</td>
+    <td>Detector value is &quot;##.##&quot; with no spaces<br />
+      <br />
+      Example: &quot;+ ESI det=-800.0&quot; indicates a positive electrospray
+      scan at -800.0 detector units (usually volts) </td>
+  </tr>
+  <tr class="shaded">
+    <td>MS/MS and MS<sup>n</sup> CID energies</td>
+    <td>mass@energy</td>
+    <td>Mass is the parent mass and energy is the CID relative energy (no units)<br />
+      <br />
+      Example: &quot;- c ms2 196.1@25.0&quot; indicates a negative centroid MS/MS
+      scan of <em>m/z</em> 196.1 at 25.0 units of CID energy</td>
+  </tr>
+  <tr>
+    <td>Quadrupole identification</td>
+    <td>Q1MS, Q3MS</td>
+    <td>Example: &quot;+ c ESI Q3MS&quot; indicates a positive centroid electrospray
+      MS scan using quadrupole 3 </td>
+  </tr>
+
+</table>
+<p class="glossary">&nbsp;</p>
+</body>
+</html>

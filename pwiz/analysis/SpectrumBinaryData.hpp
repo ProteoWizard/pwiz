@@ -1,0 +1,79 @@
+//
+// SpectrumBinaryData.hpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#ifndef _SPECTRUMBINARYDATA_HPP_ 
+#define _SPECTRUMBINARYDATA_HPP_ 
+
+
+#include "MSDataAnalyzer.hpp"
+#include "MSDataCache.hpp"
+
+
+namespace pwiz {
+namespace analysis {
+
+
+/// writes table of spectrum metadata to a file
+class SpectrumBinaryData : public MSDataAnalyzer
+{
+    public:
+
+    struct Config
+    {
+        size_t begin;
+        size_t end;
+        bool interpretAsScanNumbers;
+        size_t precision; 
+
+        Config(const std::string& args = "");
+    };
+
+    SpectrumBinaryData(const MSDataCache& cache, const Config& config);
+
+    /// \name MSDataAnalyzer interface
+    //@{
+    virtual UpdateRequest updateRequested(const DataInfo& dataInfo,
+                                          const SpectrumIdentity& spectrumIdentity) const;
+
+    virtual void update(const DataInfo& dataInfo, 
+                        const Spectrum& spectrum);
+    //@}
+
+    private:
+    const MSDataCache& cache_;
+    const Config config_;
+};
+
+
+template<>
+struct analyzer_strings<SpectrumBinaryData>
+{
+    static const char* id() {return "binary";}
+    static const char* description() {return "write binary data for spectra i through j";}
+    static const char* argsFormat() {return "i[-][j] [sn] [precision=d]";}
+
+    static std::vector<std::string> argsUsage() 
+    {
+        std::vector<std::string> result;
+        result.push_back("sn: interpret as scan number, not index");
+        result.push_back("precision=d: write d decimal places");
+        return result;
+    }
+};
+
+
+} // namespace analysis 
+} // namespace pwiz
+
+
+#endif // _SPECTRUMBINARYDATA_HPP_ 
+
