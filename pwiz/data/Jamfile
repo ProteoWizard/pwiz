@@ -1,0 +1,14 @@
+lib pwiz_data 
+    : TransientData.cpp FrequencyData.cpp
+      PeakData.cpp
+      ../util
+      ..//boost_serialization
+      ..//fftw3
+    ;
+
+unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 
+unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data ;
+unit-test PeakDataTest : PeakDataTest.cpp pwiz_data ;
+unit-test SampleDatumTest : SampleDatumTest.cpp ;
+unit-test TransientDataTest : TransientDataTest.cpp pwiz_data ;
+

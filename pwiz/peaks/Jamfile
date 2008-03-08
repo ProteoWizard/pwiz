@@ -1,0 +1,26 @@
+lib pwiz_peaks
+    : FrequencyEstimatorPhysicalModel.cpp
+      FrequencyEstimatorSimple.cpp
+      MagnitudeLorentzian.cpp
+      ParameterEstimator.cpp
+      PeakDetectorMatchedFilter.cpp
+      PeakDetectorNaive.cpp
+      TruncatedLorentzian.cpp
+      TruncatedLorentzianEstimator.cpp
+      TruncatedLorentzianParameters.cpp
+      ../math
+      ../data
+      ../proteome
+      ..//boost_filesystem
+    ;
+
+unit-test FrequencyEstimatorPhysicalModelTest : FrequencyEstimatorPhysicalModelTest.cpp pwiz_peaks ;
+unit-test FrequencyEstimatorSimpleTest : FrequencyEstimatorSimpleTest.cpp pwiz_peaks ;
+unit-test MagnitudeLorentzianTest : MagnitudeLorentzianTest.cpp MagnitudeLorentzianTestData.cpp pwiz_peaks ;
+unit-test ParametrizedFunctionTest : ParametrizedFunctionTest.cpp pwiz_peaks ;
+unit-test PeakDetectorMatchedFilterTest : PeakDetectorMatchedFilterTest.cpp PeakDetectorMatchedFilterTestData.cpp pwiz_peaks ;
+unit-test PeakDetectorNaiveTest : PeakDetectorNaiveTest.cpp pwiz_peaks ;
+unit-test TruncatedLorentzianParametersTest : TruncatedLorentzianParametersTest.cpp pwiz_peaks ;
+unit-test TruncatedLorentzianTest : TruncatedLorentzianTest.cpp pwiz_peaks ;
+
+

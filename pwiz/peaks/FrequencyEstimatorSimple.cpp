@@ -1,0 +1,180 @@
+//
+// FrequencyEstimatorSimple.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2007 Louis Warschaw Prostate Cancer Center
+//   Cedars Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "FrequencyEstimatorSimple.hpp"
+#include "math/Parabola.hpp"
+#include "MagnitudeLorentzian.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <algorithm>
+#include <iterator>
+
+
+#ifdef _MSC_VER // msvc hack
+#define isnan(x) ((x) != (x))
+#endif // _MSC_VER
+
+
+using namespace std;
+using namespace pwiz::math;
+using namespace pwiz::peaks;
+using namespace pwiz::data;
+using namespace pwiz::data::peakdata;
+
+
+namespace pwiz {
+namespace peaks {
+
+
+class FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimple
+{
+    public:
+
+    FrequencyEstimatorSimpleImpl(Type type, unsigned int windowRadius);
+
+    virtual Peak estimate(const FrequencyData& fd, 
+                          const Peak& initialEstimate) const;
+
+    private:
+    Type type_;
+    unsigned int windowRadius_;
+};
+
+
+auto_ptr<FrequencyEstimatorSimple> FrequencyEstimatorSimple::create(Type type,
+                                                                    unsigned int windowRadius)
+{
+    return auto_ptr<FrequencyEstimatorSimple>(
+        new FrequencyEstimatorSimpleImpl(type, windowRadius));
+}
+
+
+FrequencyEstimatorSimpleImpl::FrequencyEstimatorSimpleImpl(Type type, unsigned int windowRadius)
+:   type_(type), 
+    windowRadius_(windowRadius)
+{
+    // TODO: do something with this 
+    // if (type_ == Lorentzian) cout << "[FrequencyEstimatorSimple] Warning: Lorentzian frequency estimator does not work for unnormalized data!\n";
+}
+
+
+namespace {
+pair<double,double> magnitudeSample(const FrequencyDatum& datum)
+{
+    return make_pair(datum.x, abs(datum.y));
+}
+} // namespace 
+
+
+namespace {
+
+bool isLocalMax(FrequencyData::const_iterator it)
+{
+    return norm(it->y) >= norm((it-1)->y) &&
+           norm(it->y) >= norm((it+1)->y);
+}
+
+FrequencyData::const_iterator closestLocalMaximum(const FrequencyData& fd, double frequencyTarget)
+{
+    FrequencyData::const_iterator center = fd.findNearest(frequencyTarget);
+    if (isLocalMax(center))
+        return center;
+
+    const int maxRadius = 10;
+    for (int radius=1; radius<=maxRadius; radius++)
+    {
+        // "good" == valid iterator && local maximum
+        bool leftGood = (fd.data().begin()+radius+1<=center && isLocalMax(center-radius));
+        bool rightGood = (center+radius+1<fd.data().end() && isLocalMax(center+radius));
+
+        if (leftGood)
+        {
+            FrequencyData::const_iterator left = center-radius;
+
+            if (rightGood)
+            {
+                // if both are good, return the one closest to target
+                FrequencyData::const_iterator right = center+radius;
+                double leftDistance = abs(left->x - frequencyTarget);
+                double rightDistance = abs(right->x - frequencyTarget);
+                return (leftDistance < rightDistance) ? left : right;
+            }
+            
+            return left;
+        }
+
+        if (rightGood)
+        {
+            FrequencyData::const_iterator right = center+radius;
+            return right;
+        }
+    }
+
+
+    // this shouldn't happen
+    
+    cerr << "Frequency target: " << frequencyTarget << endl;
+    FrequencyData window(fd, center, 10);
+    copy(window.data().begin(), window.data().end(), ostream_iterator<FrequencyDatum>(cerr, "\n"));
+    cerr << endl;
+    throw runtime_error("FrequencyEstimatorSimple::localMaximum()] Unable to find local maximum.");
+}
+} // namespace
+
+
+Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd, 
+                                            const Peak& initialEstimate) const
+{
+    Peak result;
+    FrequencyData::const_iterator localMax = closestLocalMaximum(fd, initialEstimate.frequency);
+
+    if (type_ == LocalMax)
+    {
+        result.frequency = localMax->x;
+        result.intensity = abs(localMax->y);
+        return result;
+    }
+
+    if (fd.data().begin()+windowRadius_>localMax || localMax+windowRadius_>=fd.data().end())
+    {
+        cerr << endl << "Error processing peak: " << initialEstimate << endl;
+        throw runtime_error("[FrequencyEstimatorSimple::estimatedPeak()] Insufficient window around data.");
+    }
+
+    vector< pair<double,double> > samples;
+    transform(localMax-windowRadius_, localMax+windowRadius_+1,
+              back_inserter(samples), magnitudeSample);
+
+    if (type_ == Parabola)
+    {
+        math::Parabola p(samples);
+        result.frequency = p.center();
+        result.intensity = p(p.center());
+        return result;
+    }
+    else if (type_ == Lorentzian)
+    {
+        MagnitudeLorentzian ml(samples);
+        double intensity = ml(ml.center());
+        if (isnan(intensity)) intensity = 0;
+        result.frequency = ml.center();
+        result.intensity = intensity;
+        return result;
+    }
+
+    throw runtime_error("[FrequencyEstimatorSimple::estimatedPeak()] This isn't happening.");
+}
+
+
+} // namespace peaks
+} // namespace pwiz
+
