@@ -1,0 +1,194 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Building ProteoWizard</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+    <h1>Building ProteoWizard</h1>
+    <hr/>
+
+    <h2>Library Dependencies</h2>
+    <p>
+        The following 3rd party libraries are used by the ProteoWizard projects:
+        <ul>
+            <li><h3>Boost</h3> Several of the Boost C++ libraries 
+                are used, including <code>filesystem</code> for platform-independent filesystem
+                access, <code>program_options</code> for handling command-line parameters,
+                <code>ublas</code> for linear algebra routines, and <code>Boost.Build</code>
+                for platform-independent build files. 
+                <a href="http://boost.org" target="_blank">http://boost.org</a>
+            </li>
+
+            <li><h3>gd</h3> 
+                The <code>gd</code> graphics library is used by <code>mspp</code> for creating
+                images of mass spectra.
+                <a href="http://www.libgd.org" target="_blank">http://www.libgd.org</a>
+            </li>
+
+            <li><h3>fftw</h3>
+                The <code>fftw</code> Fourier Transform library is used for processing
+                FTMS transient data.
+                <a href="http://www.fftw.org" target="_blank">http://www.fftw.org</a>
+            </li>
+
+            <li><h3>XCalibur</h3>
+                Thermo-Fisher's XCalibur software provides the <code>XRawfile2</code> 
+                COM object, which is used by the ProteoWizard <code>rawfile</code> library 
+                for accessing Thermo RAW files.
+        </ul>
+    </p>
+
+    <h2>Build Tools</h2>
+    <p>
+        <code>ProteoWizard</code> uses Boost.Build, a cross-platform build framework.
+        The project builds with <code>gcc</code> on Linux, and
+        with <code>msvc</code> and <code>gcc</code> on Windows/cygwin.
+    </p>
+    <p>
+        Microsoft provides a free Visual C++ compiler and Platform SDK:<br/>
+        <a href="http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk" target="_blank">http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk</a>
+    </p>
+
+    <h2>Build Setup</h2>
+    <p>
+        In order to build ProteoWizard, 3rd party libraries must be installed and the appropriate
+        environment variables set.    
+    </p>
+    <p>
+        If you're on a Unix-like system and you have root access, you can install everything 
+        (including Boost.Build) to standard locations (i.e. /usr/local/*) and everything 
+        should work properly.
+    </p>
+    <p>
+        Otherwise, you must do the following:
+        <ul>
+            <li>Install and configure Boost.Build <br/>
+                (n.b. the space before semicolons):<br/>
+            <ul>
+                <li><code>bjam</code> executable must be in <code>PATH</code></li>
+                <li><code>bjam</code> must be able to find Boost.Build root in one of the 
+                    following ways:
+                    <ul>
+                        <li>default location: /usr/share/boost-build</li>
+                        <li><code>BOOST_BUILD_PATH</code> environment variable</li>
+                        <li>local <code>boost-build.jam</code> file with line:<br/>
+                            &nbsp; boost-build /path/to/boost.build ; </li>
+                    </ul>
+                </li>
+
+                <li><code>user-config.jam</code> must be configured with toolset configuration <br/>
+                    &nbsp; using gcc ; <br/>
+                    &nbsp; using msvc ; <br/>
+                                    </li>
+            </ul>
+            </li>
+            <li>Setup the environment so your compiler(s) can find the appropriate headers
+                and libraries:
+            <ul>
+                <li>gcc: <br/>
+                    &nbsp; export CPLUS_INCLUDE_PATH=~/local/include <br/>
+                    &nbsp; export LIBRARY_PATH=~/local/lib <br/>
+                </li>
+                <li>msvc: <br/>
+                    &nbsp; export INCLUDE='c:/local/include/' <br/>
+                    &nbsp; export LIB='c:/local/lib' <br/>
+                </li>
+            </ul>
+            </li>
+        </ul> 
+    </p>
+
+    <h2>Building</h2>
+    <p>
+        Boost.Build uses portable build files called Jamfiles. <br/>
+    </p>
+    <p>
+        <code>pwiz/src/Jamroot</code> is the root Jamfile that contains
+        general project settings, build location directives, and 3rd party library 
+        declarations. &nbsp; 
+        
+        In particular, it contains compiler-specific settings that are shared
+        across projects, and specifies that executables will be copied to one of the
+        following locations, depending on compiler and build variant:
+        <ul>
+            <li>build/gcc-release</li>
+            <li>build/gcc-debug</li>
+            <li>build/msvc-release</li>
+            <li>build/msvc-debug</li>
+        </ul>
+    </p>
+        Each project has an associated <code>Jamfile</code> that contains directives
+        describing how to build the executable or library, as well as instructions for
+        building and running the unit tests for the project.
+    <p>
+        Example build commands:
+        <ul>
+            <li>Build all projects:<br/>
+            <code> [pwiz/src] $ bjam </code>
+            </li>
+
+            <li>Build a particular project:<br/>
+            <code> 
+                [pwiz/src/project_name] $ bjam <br/>
+                [pwiz/src] $ bjam project_name
+            </code>
+            </li>
+
+            <li>Build a particular target:<br/>
+            <code> 
+                [pwiz/src/project_name] $ bjam target_name<br/>
+                [pwiz/src] $ bjam project_name//target_name
+            </code>
+            </li>
+
+            <li>Clean a project:<br/>
+            <code>$ bjam --clean </code>
+            </li>
+
+            <li>Rebuild all, including dependencies:<br/>
+            <code>$ bjam -a</code>
+            </li>
+
+            <li>Build with a particular compiler:<br/>
+            <code>
+                $ bjam gcc <br/>
+                $ bjam msvc 
+            </code>
+            </li>
+
+            <li>Build a particular variant:<br/>
+            <code>
+                $ bjam release<br/>
+                $ bjam debug 
+            </code>
+            </li>
+
+            <li>Build specifying multiple things:<br/>
+            <code>
+                $ bjam project_path//target_name -a msvc debug
+            </code>
+            </li>
+        </ul>
+    
+        <p>
+        Here is a <a href="Jamfile">simple example Jamfile</a>
+        (<code>pwiz/src/hello/Jamfile</code>).
+
+        <p>
+        Full Boost.Build documentation can be found here:<br/>
+        <a href="http://boost.org/doc/html/bbv2.html" target="_blank">http://boost.org/doc/html/bbv2.html</a>
+        </p>
+
+        <br/>
+    </p>
+
+    <hr/>
+    <a href="index.html">home</a>
+
+ 
+</body>
+</html>
+

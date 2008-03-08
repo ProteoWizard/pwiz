@@ -1,0 +1,119 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Project Overview</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+    <h1>ProteoWizard Project Overview</h1>
+    <hr/>
+
+    <p>
+        <h2>Directory Layout</h2>
+        <ul>
+            <li>pwiz</li>
+            <ul>
+                <li>bin-linux [tested Linux binaries]</li>
+                <li>bin-windows [tested Windows binaries]</li>
+                <li>build [libraries, executables, and packages are built here]</li>
+                <li>doc [documentation]</li>
+                <li>libraries [3rd party library archives]</li>
+                <li>package [scripts for creating distributions]</li>
+                <li>src [source files] </li>
+                <li>test [regression tests] </li>
+            </ul>
+        </ul>
+    </p>
+
+
+    <p>
+        <h2>Projects</h2>
+        Here is an outline of the various ProteoWizard projects, organized by dependency level. &nbsp;
+        There may be dependencies within a given level, but there should never be any 
+        up-level dependencies. &nbsp; Unless otherwise noted, all projects are cross-platform. &nbsp;
+        Each project's source files are contained in the subdirectory of <code>pwiz/src</code>
+        of the same name.
+
+        <ul>
+            <li><h4>level 0 (base):</h4>
+            <ul>                
+                <li><code>util:&nbsp;</code> Utility classes (Base64 encoding, sha1 hashing, 
+                    XML parsing, 2D drawing, unit testing) 
+                </li>
+                <li><code>math:&nbsp;</code> Mathematics classes (linear algebra, statistics,
+                    special mathematical functions)
+                </li>
+            </ul> 
+            </li>
+
+            <li><h4>level 1 (data):</h4> 
+            <ul>
+                <li><code>rawfile:&nbsp;</code> C++ interface to XCalibur COM object XRawfile2
+                    (Windows/MSVC only).
+                </li> 
+                <li><code>msrun:&nbsp;</code> Abstraction interface for accessing data from 
+                    either RAW or mzXML files
+                </li>
+                <li><code>data:&nbsp;</code> Library containing classes for handling FT transient data,
+                    complex frequency data, MS1 peak data.
+                </li>
+                <li><code>proteome:&nbsp;</code> Library containing classes for handling chemical
+                    formulas, peptides, and IPI FASTA database parsing.
+                </li>
+            </ul> 
+            </li>
+
+            <li><h4>level 2 (analysis):</h4>
+            <ul>
+                <li><code>peaks:&nbsp;</code> Library of routines for frequency-domain 
+                    peak detection.
+                </li>
+                <li><code>calibration:&nbsp;</code> Library of routines for scan-level 
+                    database calibration via EM algorithm.
+                </li>
+            </ul>
+            </li>
+
+            <li><h4>level 3 (tools):</h4>
+            <ul>
+                <li><code>raw2xml:&nbsp;</code> Command-line tool to convert RAW files to mzXML</li>
+                <li><code>mspp:&nbsp;</code> Command-line tool for extracting data from
+                    RAW/mzXML files.</li>
+                <li><code>msprefix:&nbsp;</code> Command-line tool for preprocessing of RAW/mzXML
+                    data.</li>
+                <li><code>tools:&nbsp;</code> Command-line tools for processing transient data.</li>
+            </ul>
+            </li>
+        </ul>
+    </p>
+    
+    <p>
+        <h2>Code Conventions</h2>
+
+        A code module consists of an interface (Foo.hpp), implementation (Foo.cpp), and a unit
+        test (FooTest.cpp). &nbsp; The interface should be self-documenting, with optional inclusion
+        of comment markup for automated documentation tools (e.g. Doxygen). &nbsp;
+        
+        The unit test serves two purposes:
+        <ol>
+            <li>To exercise the module's interface and validate its behavior independent 
+                of other modules.
+            </li>
+            <li>To document the intended usage of the code module.
+            </li>
+        </ol>
+        
+        Clients of a code module should never need to look at the implementation for questions
+        about usage.
+
+    </p>
+
+    <hr/>
+    <a href="index.html">home</a>
+
+ 
+</body>
+
+</html>
+

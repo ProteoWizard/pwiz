@@ -1,0 +1,22 @@
+body {
+	color: #000;
+	background-color: #ddd;
+	padding: 40px;
+	line-height: 180%;
+    font-family: sans-serif;
+	font-size: 10pt;
+}
+
+
+hr {
+	border: 0;
+	height: 1px;
+	color: #000;
+	background-color: #000;
+}
+
+
+div.contact {
+    font-style: italic;
+}
+
