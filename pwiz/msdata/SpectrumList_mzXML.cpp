@@ -202,6 +202,9 @@ class HandlerPeaks : public SAXParser::Handler
     virtual Status characters(const string& text,
                               stream_offset position)
     {
+        if (peaksCount == 0)
+            return Status::Ok;
+
         BinaryDataEncoder encoder(config_);
         vector<double> decoded;
         encoder.decode(text, decoded);

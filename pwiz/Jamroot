@@ -30,7 +30,7 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-long-long
 
     : build-dir ../build
-    : default-build release <link>static <runtime-link>static
+    : default-build release <link>static 
     ;
 
 

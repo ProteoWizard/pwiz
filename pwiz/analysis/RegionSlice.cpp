@@ -23,7 +23,6 @@
 
 #include "RegionSlice.hpp"
 #include "msdata/TextWriter.hpp"
-#include "boost/regex.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
@@ -45,19 +44,23 @@ namespace {
 template <typename value_type>
 bool parseRange(const string& text, pair<value_type,value_type>& result)
 {
-    static const boost::regex e("\\[([^,]+),([^,]+)\\]");
+    string::size_type indexComma = text.find(',');
 
-    boost::smatch what; 
-    if (!regex_match(text, what, e))
+    if (text.empty() ||
+        text[0] != '[' || 
+        text[text.size()-1] != ']' ||
+        indexComma == string::npos)
     {
         cerr << "[RegionSlice::parseRange()] Unable to parse range: " << text << endl;
         return false;
     }
-
+    
     try
     {
-        result.first = lexical_cast<value_type>(what[1]);
-        result.second = lexical_cast<value_type>(what[2]);
+        string first = text.substr(1, indexComma-1);
+        string second = text.substr(indexComma+1, text.size()-indexComma-2);
+        result.first = lexical_cast<value_type>(first);
+        result.second = lexical_cast<value_type>(second);
         return true;
     }
     catch (bad_lexical_cast&)
@@ -115,7 +118,6 @@ RegionSlice::Config::Config(const string& args)
     }
 
     suffix << ".txt";
-
     filenameSuffix = suffix.str();
 }
 

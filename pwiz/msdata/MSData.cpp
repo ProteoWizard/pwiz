@@ -498,7 +498,8 @@ void Spectrum::getMZIntensityPairs(vector<MZIntensityPair>& output) const
 {
     output.clear();
     output.resize(defaultArrayLength);
-    getMZIntensityPairs(!output.empty() ? &output[0] : 0, defaultArrayLength);
+    if (!output.empty())
+        getMZIntensityPairs(&output[0], output.size());
 }
 
 
@@ -506,10 +507,10 @@ void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t expectedSize)
 {
     // retrieve and validate m/z and intensity arrays
 
+    if (expectedSize == 0) return;
+
     pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
         getMZIntensityArrays(binaryDataArrayPtrs, expectedSize); 
-
-    if (expectedSize == 0) return;
 
     if (!output)
         throw runtime_error("[MSData::Spectrum::getMZIntensityPairs()] Null output buffer.");

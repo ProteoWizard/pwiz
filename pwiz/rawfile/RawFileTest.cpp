@@ -19,6 +19,7 @@
 
 
 #include "RawFile.h"
+#include <iostream>
 
 
 using namespace std;

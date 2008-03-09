@@ -34,5 +34,7 @@ exe RawFileTest
     : <toolset>gcc:<build>no
     ;
 
+explicit RawFileTest ;
+
 
 
