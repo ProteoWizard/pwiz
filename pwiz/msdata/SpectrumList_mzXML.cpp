@@ -367,6 +367,14 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
         result->spectrumDescription.precursors.front().spectrumID = getPrecursorID(index);
     }
 
+    // we can set instrumentPtr if it wasn't set and there is a single Instrument 
+
+    if (!result->spectrumDescription.scan.instrumentPtr.get() &&
+        msd_.instrumentPtrs.size() == 1)
+    {
+        result->spectrumDescription.scan.instrumentPtr = msd_.instrumentPtrs[0];
+    }
+
     // save to cache if no binary data
 
     if (!getBinaryData && !spectrumCache_[index].get())
