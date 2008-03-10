@@ -157,8 +157,9 @@ class Reader_mzXML : public MSDataFile::Reader
 // static instances of default readers
 Reader_mzML reader_mzML_;
 Reader_mzXML reader_mzXML_;
+#ifndef PWIZ_NO_READER_RAW
 Reader_RAW reader_RAW_;
-
+#endif
 
 vector<const MSDataFile::Reader*> readers_;
 
@@ -171,7 +172,9 @@ void initializeDefaultReaders()
     {
         readers_.push_back(&reader_mzML_);
         readers_.push_back(&reader_mzXML_);
+#ifndef PWIZ_NO_READER_RAW
         readers_.push_back(&reader_RAW_);
+#endif
     }
 }
 
