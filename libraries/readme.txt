@@ -8,5 +8,4 @@ gd graphics library: libgd.org
 fftw library: fftw.org
 
 
-goober
 
