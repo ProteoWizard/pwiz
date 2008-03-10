@@ -243,8 +243,6 @@ int IsotopeTable::Impl::firstNonzeroDimension(const MultiIndex& multiIndex) cons
         if (multiIndex[i]) return i;
 
     throw runtime_error("[IsotopeTable::firstNonzeroDimension()] multiIndex is zero.");
-
-    return -1;
 }
 
 
