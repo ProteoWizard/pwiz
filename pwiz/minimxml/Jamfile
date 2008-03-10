@@ -24,8 +24,7 @@
 lib pwiz_minimxml
     :   XMLWriter.cpp 
         SAXParser.cpp 
-        ..//boost_regex # built with BOOST_REGEX_MATCH_EXTRA defined in boost/regex/user.hpp
-    : <warnings>all # TODO move to Jamroot
+        ..//boost_regex
     ;
 
 unit-test SAXParserTest : SAXParserTest.cpp pwiz_minimxml ;

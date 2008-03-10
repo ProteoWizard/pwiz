@@ -120,15 +120,13 @@ int main(int argc, char* argv[])
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
     catch (...)
     {
         cerr << "Caught unknown exception.\n";
-        return 1;
     }
     
-    return 5;
+    return 1;
 }
 
 

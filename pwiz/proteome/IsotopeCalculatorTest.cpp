@@ -83,7 +83,7 @@ double probability(const vector<double>& p, const vector<int>& i)
         {
             vector<int>::iterator it = find_if(p_count.begin(), p_count.end(), nonzero);
             if (it == p_count.end()) throw runtime_error("blech2");
-            unsigned int index = it - p_count.begin();
+            size_t index = it - p_count.begin();
             //cout << count << ") multiply: " << p[index] << endl;
             result *= p[index];
             (*it)--;

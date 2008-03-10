@@ -66,7 +66,7 @@ void checkTestPair(const TestPair& testPair)
     // convert binary -> text
     vector<char> textBuffer;
     textBuffer.resize(Base64::binaryToTextSize(from.size()) + 1, '\0');
-    int textCount = Base64::binaryToText(from.c_str(), from.size(), &textBuffer[0]);
+    size_t textCount = Base64::binaryToText(from.c_str(), from.size(), &textBuffer[0]);
 
     // verify binary -> text
     string textString = !textBuffer.empty() ? &textBuffer[0] : "";
@@ -76,7 +76,7 @@ void checkTestPair(const TestPair& testPair)
     // convert text -> binary
     vector<char> binaryBuffer;
     binaryBuffer.resize(Base64::textToBinarySize(to.size()) + 1, '\0');
-    int binaryCount = Base64::textToBinary(to.c_str(), to.size(), &binaryBuffer[0]);
+    size_t binaryCount = Base64::textToBinary(to.c_str(), to.size(), &binaryBuffer[0]);
 
     // verify text -> binary
     string binaryString = !binaryBuffer.empty() ? &binaryBuffer[0] : "";
@@ -106,7 +106,7 @@ void test256()
     // convert binary -> text
     vector<char> textBuffer;
     textBuffer.resize(Base64::binaryToTextSize(from.size()) + 1, '\0');
-    int textCount = Base64::binaryToText(&from[0], 256, &textBuffer[0]);
+    size_t textCount = Base64::binaryToText(&from[0], 256, &textBuffer[0]);
     textBuffer[textCount] = '\0';
     unit_assert(textCount == (int)strlen(to));
     unit_assert(!strcmp(to, &textBuffer[0])); 
@@ -114,7 +114,7 @@ void test256()
     // convert text -> binary
     vector<char> binaryBuffer;
     binaryBuffer.resize(300);
-    int binaryCount = Base64::textToBinary(to, strlen(to), &binaryBuffer[0]);
+    size_t binaryCount = Base64::textToBinary(to, strlen(to), &binaryBuffer[0]);
     unit_assert(binaryCount == 256);
     for (int i=0; i<256; i++)
         unit_assert(binaryBuffer[i] == from[i]);

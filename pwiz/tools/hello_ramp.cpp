@@ -43,10 +43,10 @@ void test(const char* filename)
     cout << "analyzer : " << instrument.analyzer << endl;
     cout << "detector: " << instrument.detector << endl;
 
-    unsigned int scanCount = adapter.scanCount();
+    size_t scanCount = adapter.scanCount();
     cout << "scanCount: " << scanCount << "\n\n";
 
-    for (unsigned int i=0; i<scanCount; i++)
+    for (size_t i=0; i<scanCount; i++)
     {
         ScanHeaderStruct header;
         adapter.getScanHeader(i, header);

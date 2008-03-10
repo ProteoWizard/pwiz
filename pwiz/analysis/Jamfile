@@ -23,7 +23,6 @@
 
 project
     : requirements 
-        <warnings>all
         <toolset>gcc:<cxxflags>-fno-strict-aliasing # warning: dereferencing type-punned pointer will break strict-aliasing rules
     ;
 

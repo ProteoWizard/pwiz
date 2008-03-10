@@ -107,7 +107,7 @@ void TransientData::Impl::writeDataBinary(ostream& os)
 {
     vector<float> stage;
     transform(data.begin(), data.end(), back_inserter(stage), toFloat);
-    os.write((const char*)&stage[0], stage.size()*sizeof(float));
+    os.write((const char*)&stage[0], (streamsize)stage.size()*sizeof(float));
 }
 
 
@@ -251,7 +251,7 @@ void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) 
     if (zeroPadding < 1)
         throw runtime_error("[TransientData] zeroPadding must be >= 1.");
 
-    unsigned int sampleCount = impl_->data.size();
+    size_t sampleCount = impl_->data.size();
     if (sampleCount == 0)
         throw runtime_error("[TransientData] No data.");
 
@@ -261,12 +261,12 @@ void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) 
     fill(in.begin()+sampleCount, in.end(), 0);
 
     // allocate output array
-    int frequencyCount = sampleCount*zeroPadding/2;
+    int frequencyCount = (int)sampleCount*zeroPadding/2;
     scoped_array<fftw_complex> out(frequencyCount+1);
 
     // compute the FFT
    
-    fftw_plan plan = fftw_plan_dft_r2c_1d(in.size(), 
+    fftw_plan plan = fftw_plan_dft_r2c_1d((int)in.size(), 
                                           &in[0], 
                                           out.begin(), 
                                           FFTW_ESTIMATE);
@@ -290,12 +290,12 @@ void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) 
 
 void TransientData::add(const Signal& signal)
 {
-    int sampleCount = impl_->data.size();
+    size_t sampleCount = impl_->data.size();
     double t0 = impl_->startTime;
     double T = impl_->observationDuration; 
     vector<double>::iterator it = impl_->data.begin();
 
-    for (int i=0; i<sampleCount; ++i, ++it)
+    for (size_t i=0; i<sampleCount; ++i, ++it)
     {
         double t = t0 + T*i/sampleCount; 
         *it += signal(t);

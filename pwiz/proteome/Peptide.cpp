@@ -67,7 +67,7 @@ void Peptide::Impl::parseSequence()
         formula_ += info[*it].formula;        
 
     // remove a water for each peptide bond
-    int bondCount = !sequence_.empty() ? sequence_.size()-1 : 0;
+    int bondCount = !sequence_.empty() ? (int)sequence_.size()-1 : 0;
     formula_ -= bondCount * Formula("H2O1");
 }
 

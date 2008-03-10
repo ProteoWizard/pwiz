@@ -211,7 +211,7 @@ void FrequencyData::Impl::calculateNoiseFloor()
     std::transform(data_.begin(), data_.end(), back_inserter(squareIntensities), floatNormIntensity);
     sort(squareIntensities.begin(), squareIntensities.end());
     
-    unsigned int indexMidpoint = squareIntensities.size()/2;
+    size_t indexMidpoint = squareIntensities.size()/2;
     float medianNorm = squareIntensities[indexMidpoint];
     noiseFloor_ = sqrt(medianNorm * log(2.)); 
 }
@@ -431,7 +431,7 @@ void FrequencyData::write(std::ostream& os, IOMode mode) const
         header.calibrationB = impl_->calibrationParameters_.B;
         header.observationDuration = impl_->observationDuration_;
         header.noiseFloor = impl_->noiseFloor_;
-        header.recordCount = impl_->data_.size();
+        header.recordCount = (int)impl_->data_.size();
         os.write((const char*)&header, sizeof(header));
         if (!os) throw runtime_error("[Data.cpp::FrequencyData::write()] Error writing header.");
 

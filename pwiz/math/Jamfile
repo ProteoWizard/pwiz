@@ -21,6 +21,18 @@
 #
 
 
+project
+    : requirements 
+        # hacks to allow building with <warnings>all with MSVC and boost::ublas
+        <toolset>msvc:<cxxflags>/wd4267 # warning: conversion from 'size_t' to 'int' 
+                                        # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc:<cxxflags>/wd4244 # warning: conversion from '__w64 int' to 'const int'
+                                        # (boost/numeric/ublas/traits.hpp)
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code
+                                        # (boost/numeric/ublas/banded.hpp)
+    ;
+
+
 lib pwiz_math 
     : Parabola.cpp Random.cpp Stats.cpp erf.cpp mt19937ar.cpp
     ;

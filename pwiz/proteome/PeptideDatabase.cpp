@@ -140,7 +140,7 @@ PeptideDatabaseImpl_Memory::PeptideDatabaseImpl_Memory()
 
 int PeptideDatabaseImpl_Memory::size() const 
 {
-    return records_.size();
+    return (int)records_.size();
 }
 
 
@@ -168,7 +168,7 @@ void PeptideDatabaseImpl_Memory::append(const PeptideDatabaseRecord& record, con
     if (!sequence.empty())
     {
         PeptideDatabaseRecord& r = records_[records_.size()-1];
-        r.sequenceKey = stringTable_.size(); 
+        r.sequenceKey = (int)stringTable_.size(); 
         stringTable_ += sequence + '\0';
     }
 }
@@ -185,13 +185,13 @@ void PeptideDatabaseImpl_Memory::write(const string& filename) const
     
     PDBHeader header;
     header.recordsOffset = sizeof(header);
-    header.recordCount = records_.size();
+    header.recordCount = (int)records_.size();
     header.stringTableOffset = header.recordsOffset + header.recordCount*sizeof(PeptideDatabaseRecord);
-    header.stringTableSize = stringTable_.size();
+    header.stringTableSize = (int)stringTable_.size();
 
     os.write((const char*)&header, sizeof(header));
     os.write((const char*)&records_[0], header.recordCount*sizeof(PeptideDatabaseRecord)); 
-    os.write(stringTable_.c_str(), stringTable_.size());
+    os.write(stringTable_.c_str(), (streamsize)stringTable_.size());
 }
 
 
