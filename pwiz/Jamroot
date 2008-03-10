@@ -30,6 +30,9 @@ project pwiz
         <warnings-as-errors>on
         <warnings>all
 
+        # static runtime linking for gcc
+        <toolset>gcc:<runtime-link>static
+
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
@@ -67,29 +70,37 @@ lib gd : : <toolset>msvc <name>bgd ;
 lib fftw3 ;
 lib fftw3 : : <toolset>msvc <name>libfftw3-3 ;
 
+#
+# Boost libraries notes:
+#
+# For gcc, builds are <runtime-link>static.  To build the boost libraries with static
+# runtime linking, use "bjam stage runtime-link=static" from the root of the Boost 
+# distribution.  This will produce files with filenames like "libboost_filesystem-gcc41-mt-s.a".
+# The declarations below use a shortened name, so you should either rename or use a symbolic
+# link, and put in your library path:
+#   ln -s libboost_filesystem-gcc41-mt-s libboost_filesystem-gcc.a
+#
+# msdata/cvgen requires boost::regex to be built with BOOST_REGEX_MATCH_EXTRA defined in 
+# boost/regex/user.hpp
+#
+
 lib boost_filesystem : : <toolset>gcc <name>boost_filesystem-gcc ;
-lib boost_filesystem : : <toolset>gcc <runtime-link>static <name>boost_filesystem-gcc-mt-s ;
 lib boost_filesystem : : <toolset>msvc <name>libboost_filesystem-vc80-mt ;
 lib boost_filesystem : : <toolset>msvc <variant>debug <name>libboost_filesystem-vc80-mt-gd ;
 
 lib boost_iostreams : : <toolset>gcc <name>boost_iostreams-gcc ;
-lib boost_iostreams : : <toolset>gcc <runtime-link>static <name>boost_iostreams-gcc-mt-s ;
 lib boost_iostreams : : <toolset>msvc <name>libboost_iostreams-vc80-mt ;
 lib boost_iostreams : : <toolset>msvc <variant>debug <name>libboost_iostreams-vc80-mt-gd ;
 
 lib boost_program_options : : <toolset>gcc <name>boost_program_options-gcc ;
-lib boost_program_options : : <toolset>gcc <runtime-link>static <name>boost_program_options-gcc-mt-s ;
 lib boost_program_options : : <toolset>msvc <name>libboost_program_options-vc80-mt ;
 lib boost_program_options : : <toolset>msvc <variant>debug <name>libboost_program_options-vc80-mt-gd ;
 
 lib boost_serialization : : <toolset>gcc <name>boost_serialization-gcc ;
-lib boost_serialization : : <toolset>gcc <runtime-link>static <name>boost_serialization-gcc-mt-s ;
 lib boost_serialization : : <toolset>msvc <name>libboost_serialization-vc80-mt ;
 lib boost_serialization : : <toolset>msvc <variant>debug <name>libboost_serialization-vc80-mt-gd ;
 
 lib boost_regex : pthread : <toolset>gcc <name>boost_regex-gcc ;
-lib boost_regex : pthread : <toolset>gcc <runtime-link>static <name>boost_regex-gcc-mt-s ;
-lib boost_regex : : <toolset>gcc <variant>debug <name>boost_regex-gcc-d ;
 lib boost_regex : : <toolset>msvc <name>libboost_regex-vc80-mt ;
 lib boost_regex : : <toolset>msvc <variant>debug <name>libboost_regex-vc80-mt-gd ;
 

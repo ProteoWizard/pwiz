@@ -70,7 +70,7 @@ void checkTestPair(const TestPair& testPair)
 
     // verify binary -> text
     string textString = !textBuffer.empty() ? &textBuffer[0] : "";
-    unit_assert(textCount == (int)to.size());
+    unit_assert(textCount == (unsigned int)to.size());
     unit_assert(textString == to);
 
     // convert text -> binary
@@ -80,7 +80,7 @@ void checkTestPair(const TestPair& testPair)
 
     // verify text -> binary
     string binaryString = !binaryBuffer.empty() ? &binaryBuffer[0] : "";
-    unit_assert(binaryCount == (int)from.size());
+    unit_assert(binaryCount == (unsigned int)from.size());
     unit_assert(binaryString == from);
 }
 
@@ -108,7 +108,7 @@ void test256()
     textBuffer.resize(Base64::binaryToTextSize(from.size()) + 1, '\0');
     size_t textCount = Base64::binaryToText(&from[0], 256, &textBuffer[0]);
     textBuffer[textCount] = '\0';
-    unit_assert(textCount == (int)strlen(to));
+    unit_assert(textCount == (unsigned int)strlen(to));
     unit_assert(!strcmp(to, &textBuffer[0])); 
 
     // convert text -> binary
