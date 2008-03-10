@@ -44,6 +44,7 @@ namespace util {
 
 #if (defined(PWIZ_GCC) && defined(__BYTE_ORDER) && __BYTE_ORDER==__LITTLE_ENDIAN) || \
     (defined(__MINGW32__)) || \
+    (defined(__i386__)) || \
     (defined(PWIZ_MSVC) && defined(_M_IX86))
 #define PWIZ_LITTLE_ENDIAN
 #endif
