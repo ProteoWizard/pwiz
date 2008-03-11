@@ -122,7 +122,7 @@ const size_t width_massAnalyzerType_ = 9;
 const size_t width_msLevel_ = 8;
 const size_t width_retentionTime_ = 12;
 const size_t width_mz_ = 14;
-const size_t width_intensity_ = 14;
+const size_t width_intensity_ = 17;
 } // namespace
 
 
