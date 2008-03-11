@@ -37,6 +37,7 @@ class Reader_RAW : public MSDataFile::Reader
     public:
     virtual bool accept(const std::string& filename, const std::string& head) const; 
     virtual void read(const std::string& filename, MSData& result) const;
+	static bool hasRAWHeader(const std::string& head); // checks header for "Finnigan" wide char string
 };
 
 

@@ -288,10 +288,7 @@ string SpectrumList_RAW::findPrecursorID(size_t index) const
 //
 
 
-namespace {
-
-
-bool hasRAWHeader(const string& head)
+bool Reader_RAW::hasRAWHeader(const string& head)
 {
     const char rawHeader[] =
     {
@@ -307,6 +304,7 @@ bool hasRAWHeader(const string& head)
     return true;
 }
 
+namespace {
 
 auto_ptr<RawFileLibrary> rawFileLibrary_;
 
