@@ -22,7 +22,11 @@
 
 
 #include "RawFile.h"
+#ifdef NO_EXCALIBUR_SDK
+#include "xdk/XRawFile2.tlh" // use canned header
+#else
 #import "xdk/XRawFile2.dll" rename_namespace("XRawfile")
+#endif
 #include "RawFileValues.h"
 #include "RawFileCOM.h"
 #include <iostream>
