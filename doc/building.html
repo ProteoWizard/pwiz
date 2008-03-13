@@ -1,3 +1,4 @@
+<!--
 <html>
 
 <head>
@@ -6,13 +7,14 @@
 </head>
 
 <body>
+-->
 
     <h1>Building ProteoWizard</h1>
     <hr/>
 
     <h2>Library Dependencies</h2>
     <p>
-        The following 3rd party libraries are used by the ProteoWizard projects:
+        The following libraries are used by the ProteoWizard projects:
         <ul>
             <li><h3>Boost</h3> Several of the Boost C++ libraries 
                 are used, including <code>filesystem</code> for platform-independent filesystem
@@ -44,6 +46,9 @@
     <h2>Build Tools</h2>
     <p>
         <code>ProteoWizard</code> uses Boost.Build, a cross-platform build framework.
+        See <a href="http://boost.org/boost-build2" target="_blank">http://boost.org/boost-build2</a> for Boost.Build documentation.
+    </p>
+    <p>
         The project builds with <code>gcc</code> on Linux, and
         with <code>msvc</code> and <code>gcc</code> on Windows/cygwin.
     </p>
@@ -54,8 +59,9 @@
 
     <h2>Build Setup</h2>
     <p>
-        In order to build ProteoWizard, 3rd party libraries must be installed and the appropriate
-        environment variables set.    
+        In order to build ProteoWizard, the library dependencies must be installed.    
+        It is assumed that your compiler can find headers and libs through
+        your environment.
     </p>
     <p>
         If you're on a Unix-like system and you have root access, you can install everything 
@@ -66,27 +72,35 @@
         Otherwise, you must do the following:
         <ul>
             <li>Install and configure Boost.Build <br/>
-                (n.b. the space before semicolons):<br/>
-            <ul>
+                
+            <ol>
                 <li><code>bjam</code> executable must be in <code>PATH</code></li>
                 <li><code>bjam</code> must be able to find Boost.Build root in one of the 
                     following ways:
                     <ul>
-                        <li>default location: /usr/share/boost-build</li>
+                        <li>default location: <code>/usr/share/boost-build</code></li>
                         <li><code>BOOST_BUILD_PATH</code> environment variable</li>
-                        <li>local <code>boost-build.jam</code> file with line:<br/>
-                            &nbsp; boost-build /path/to/boost.build ; </li>
+                        <li><code>boost-build.jam</code> file in current working directory with line:<br/>
+                            <code>&nbsp; boost-build  /path/to/boost.build  ; &nbsp; # Note the space before semicolons! </code>
+                        </li>
                     </ul>
                 </li>
 
-                <li><code>user-config.jam</code> must be configured with toolset configuration <br/>
+                <li><code>user-config.jam</code> must contain proper toolset configuration
+                <ul>
+                    <li>located in <code>$HOME</code> or <code>$BOOST_BUILD_PATH</code></li>
+                    <li>contains the lines:<br/>
+                    <code>
                     &nbsp; using gcc ; <br/>
                     &nbsp; using msvc ; <br/>
-                                    </li>
-            </ul>
+                    </code>
+                    </li>
+                </ul>
+                </li>
+            </ol>
             </li>
             <li>Setup the environment so your compiler(s) can find the appropriate headers
-                and libraries:
+                and libs for the library dependencies:
             <ul>
                 <li>gcc: <br/>
                     &nbsp; export CPLUS_INCLUDE_PATH=~/local/include <br/>
@@ -101,24 +115,31 @@
         </ul> 
     </p>
 
+    <p>
+    Important note about Boost library builds:  Please see <code>pwiz/Jamroot</code> for details
+    on Boost lib builds and filenames.
+    </p>
+
+    <p>
+    Why is this so complicated, you ask?  We support cross-platform development with
+    native compilers, i.e. the code must build with gcc on Linux and MSVC on Windows.
+    Using a cross-platform build system is much easier to maintain, and less bug-prone,
+    than maintaining platform-specific build files for each project.  Boost.Build also
+    provides a very simple unit testing facility, which allows unit tests to be run
+    as part of the normal build process.
+    </p>
+
+
     <h2>Building</h2>
     <p>
         Boost.Build uses portable build files called Jamfiles. <br/>
     </p>
     <p>
         <code>pwiz/src/Jamroot</code> is the root Jamfile that contains
-        general project settings, build location directives, and 3rd party library 
-        declarations. &nbsp; 
-        
+        general project settings and library dependency declarations.
+        &nbsp; 
         In particular, it contains compiler-specific settings that are shared
-        across projects, and specifies that executables will be copied to one of the
-        following locations, depending on compiler and build variant:
-        <ul>
-            <li>build/gcc-release</li>
-            <li>build/gcc-debug</li>
-            <li>build/msvc-release</li>
-            <li>build/msvc-debug</li>
-        </ul>
+        across projects.
     </p>
         Each project has an associated <code>Jamfile</code> that contains directives
         describing how to build the executable or library, as well as instructions for
@@ -127,20 +148,20 @@
         Example build commands:
         <ul>
             <li>Build all projects:<br/>
-            <code> [pwiz/src] $ bjam </code>
+            <code> [pwiz/pwiz/build] $ bjam </code>
             </li>
 
             <li>Build a particular project:<br/>
             <code> 
-                [pwiz/src/project_name] $ bjam <br/>
-                [pwiz/src] $ bjam project_name
+                [pwiz/pwiz/project_name] $ bjam <br/>
+                [pwiz/pwiz] $ bjam project_name
             </code>
             </li>
 
             <li>Build a particular target:<br/>
             <code> 
-                [pwiz/src/project_name] $ bjam target_name<br/>
-                [pwiz/src] $ bjam project_name//target_name
+                [pwiz/pwiz/project_name] $ bjam target_name<br/>
+                [pwiz/pwiz] $ bjam project_name//target_name
             </code>
             </li>
 
@@ -173,22 +194,14 @@
             </li>
         </ul>
     
-        <p>
-        Here is a <a href="Jamfile">simple example Jamfile</a>
-        (<code>pwiz/src/hello/Jamfile</code>).
-
-        <p>
-        Full Boost.Build documentation can be found here:<br/>
-        <a href="http://boost.org/doc/html/bbv2.html" target="_blank">http://boost.org/doc/html/bbv2.html</a>
-        </p>
-
         <br/>
     </p>
 
     <hr/>
     <a href="index.html">home</a>
 
- 
+<!-- 
 </body>
 </html>
+-->
 
