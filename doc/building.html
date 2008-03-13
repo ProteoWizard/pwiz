@@ -135,7 +135,7 @@
         Boost.Build uses portable build files called Jamfiles. <br/>
     </p>
     <p>
-        <code>pwiz/src/Jamroot</code> is the root Jamfile that contains
+        <code>pwiz/Jamroot</code> is the root Jamfile that contains
         general project settings and library dependency declarations.
         &nbsp; 
         In particular, it contains compiler-specific settings that are shared
@@ -148,20 +148,20 @@
         Example build commands:
         <ul>
             <li>Build all projects:<br/>
-            <code> [pwiz/pwiz/build] $ bjam </code>
+            <code> [pwiz/build] $ bjam </code>
             </li>
 
             <li>Build a particular project:<br/>
             <code> 
-                [pwiz/pwiz/project_name] $ bjam <br/>
-                [pwiz/pwiz] $ bjam project_name
+                [pwiz/project_name] $ bjam <br/>
+                [pwiz] $ bjam project_name
             </code>
             </li>
 
             <li>Build a particular target:<br/>
             <code> 
-                [pwiz/pwiz/project_name] $ bjam target_name<br/>
-                [pwiz/pwiz] $ bjam project_name//target_name
+                [pwiz/project_name] $ bjam target_name<br/>
+                [pwiz] $ bjam project_name//target_name
             </code>
             </li>
 
@@ -198,7 +198,7 @@
     </p>
 
     <hr/>
-    <a href="index.html">home</a>
+    <a href="technical.html">Technical documentation home</a>
 
 <!-- 
 </body>
