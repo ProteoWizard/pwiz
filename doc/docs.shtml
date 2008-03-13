@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>ProteoWizard: Building</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+<script src="basics.js"></script>
+
+<link href="css/structure.css" rel="stylesheet" type="text/css">
+<link href="css/styles.css" rel="stylesheet" type="text/css">
+
+<style type="text/css">
+<!--
+-->
+</style></head>
+<body onLoad="preloadImages();" style="background-color:#000000; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px;">
+<!-- ImageReady Slices (BaseTemplate.psd) -->
+
+
+<!--#include virtual="content/head.html" -->
+
+<iframe src="content/technical.html" width="100%" height="100%" align="left"></iframe>
+
+
+<!--#include virtual="content/tail.html" -->
+
