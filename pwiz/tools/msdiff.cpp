@@ -105,9 +105,8 @@ Config parseCommandLine(int argc, const char* argv[])
     // check stuff
 
     usage << endl
-          << "Spielberg Family Center for Applied Proteomics\n"
-          << "Cedars-Sinai Medical Center, Los Angeles, California\n"
-          << "http://sfcap.cshs.org\n";
+          << "Questions, comments, and bug reports:\n"
+          << "http://proteowizard.sourceforge.net\n";
 
     if (config.filenames.size() != 2)
         throw runtime_error(usage.str());

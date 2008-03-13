@@ -68,8 +68,9 @@ int main(int argc, const char* argv[])
 
         if (app.filenames.empty())
         {
-            cout << "Usage: hello_analyzer [options] [filenames]\n";
-            cout << "Options:\n" << app.usageOptions << endl;
+            cout << "Usage: hello_analyzer [options] [filenames]\n"
+                 << "Options:\n" << app.usageOptions << endl
+                 << "http://proteowizard.sourceforge.net\n";
             return 1;
         }
 

@@ -134,9 +134,8 @@ string usage(const MSDataAnalyzerApplication& app)
     printCommandUsage<Pseudo2DGel>(oss);
 
     oss << endl
-         << "Spielberg Family Center for Applied Proteomics\n"
-         << "Cedars-Sinai Medical Center, Los Angeles, California\n"
-         << "http://sfcap.cshs.org\n";
+        << "Questions, comments, and bug reports:\n"
+        << "http://proteowizard.sourceforge.net\n";
 
     return oss.str();
 }

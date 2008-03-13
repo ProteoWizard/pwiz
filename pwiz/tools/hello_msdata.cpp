@@ -297,6 +297,8 @@ void test()
     filename = "tiny.msdata.mzXML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
+
+    cout << "\nhttp://proteowizard.sourceforge.net\n";
 }
 
 
