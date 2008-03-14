@@ -28,6 +28,10 @@
 #include "MSData.hpp"
 #include "BinaryDataEncoder.hpp"
 
+#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_RAW))
+// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
+#define PWIZ_NO_READER_RAW
+#endif
 
 namespace pwiz {
 namespace msdata {

@@ -21,10 +21,27 @@
 //
 
 
-#ifdef _MSC_VER
-
-
 #include "Reader_RAW.hpp"
+
+namespace {
+// helper function used by both forms (real and stubbed) of ReadRAW
+bool _hasRAWHeader(const std::string& head)
+{
+    const char rawHeader[] =
+    {
+        '\x01', '\xA1', 
+        'F', '\0', 'i', '\0', 'n', '\0', 'n', '\0', 
+        'i', '\0', 'g', '\0', 'a', '\0', 'n', '\0'
+    };
+
+    for (size_t i=0; i<sizeof(rawHeader); i++)
+        if (head[i] != rawHeader[i]) 
+            return false;
+
+    return true;
+}
+} // namespace
+#ifndef PWIZ_NO_READER_RAW
 #include "CVTranslator.hpp"
 #include "rawfile/RawFile.h"
 #include "util/SHA1Calculator.hpp"
@@ -290,18 +307,7 @@ string SpectrumList_RAW::findPrecursorID(size_t index) const
 
 bool Reader_RAW::hasRAWHeader(const string& head)
 {
-    const char rawHeader[] =
-    {
-        '\x01', '\xA1', 
-        'F', '\0', 'i', '\0', 'n', '\0', 'n', '\0', 
-        'i', '\0', 'g', '\0', 'a', '\0', 'n', '\0'
-    };
-
-    for (size_t i=0; i<sizeof(rawHeader); i++)
-        if (head[i] != rawHeader[i]) 
-            return false;
-
-    return true;
+    return _hasRAWHeader(head);
 }
 
 namespace {
@@ -374,7 +380,9 @@ void Reader_RAW::read(const string& filename, MSData& result) const
 {
     // initialize RawFileLibrary
 
-    if (!rawFileLibrary_.get()) rawFileLibrary_ = new RawFileLibrary();
+	if (!rawFileLibrary_.get()) {
+		rawFileLibrary_.reset(new RawFileLibrary());
+	}
 
     // instantiate RawFile, share ownership with SpectrumList_RAW
 
@@ -390,7 +398,7 @@ void Reader_RAW::read(const string& filename, MSData& result) const
 } // namespace pwiz
 
 
-#else // _MSC_VER /////////////////////////////////////////////////////////////////////////////
+#else // PWIZ_NO_READER_RAW /////////////////////////////////////////////////////////////////////////////
 
 //
 // non-MSVC implementation
@@ -414,8 +422,13 @@ void Reader_RAW::read(const string& filename, MSData& result) const
     throw runtime_error("[Reader_RAW::read()] Not implemented."); 
 }
 
+bool Reader_RAW::hasRAWHeader(const string& head)
+{   
+    return _hasRAWHeader(head);
+}
+
 } // namespace msdata
 } // namespace pwiz
 
-#endif // _MSC_VER /////////////////////////////////////////////////////////////////////////////
+#endif // PWIZ_NO_READER_RAW /////////////////////////////////////////////////////////////////////////////
 
