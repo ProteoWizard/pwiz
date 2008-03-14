@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo Not ready
+exit 0
+
+cd ../../build/msvc-release
+mkdir lib
+cp *.lib lib
+zip -r lib.zip lib 
+rm -rf lib
+
+cd ../..
+zip -r build/msvc-release/lib.zip pwiz -i '*.hpp' -i '*.h'
+

@@ -42,18 +42,22 @@ build-project ../tools ;
 
 install exe
     : ../tools
-    : <toolset>gcc
-      <install-type>EXE
-      <variant>release:<location>../../build/gcc-release
-      <variant>debug:<location>../../build/gcc-debug
+    : <install-type>EXE
+      <toolset>gcc,<variant>release:<location>../../build/gcc-release
+      <toolset>gcc,<variant>debug:<location>../../build/gcc-debug
+      <toolset>msvc,<variant>release:<location>../../build/msvc-release
+      <toolset>msvc,<variant>debug:<location>../../build/msvc-debug
     ;
 
 
-install exe
+install lib 
     : ../tools
-    : <toolset>msvc 
-      <install-type>EXE
-      <variant>release:<location>../../build/msvc-release
-      <variant>debug:<location>../../build/msvc-debug
+    : <install-type>LIB
+      <install-dependencies>on
+      <toolset>gcc,<variant>release:<location>../../build/gcc-release
+      <toolset>gcc,<variant>debug:<location>../../build/gcc-debug
+      <toolset>msvc,<variant>release:<location>../../build/msvc-release
+      <toolset>msvc,<variant>debug:<location>../../build/msvc-debug
     ;
+
 

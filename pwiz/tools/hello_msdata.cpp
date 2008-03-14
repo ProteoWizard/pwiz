@@ -298,7 +298,8 @@ void test()
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
 
-    cout << "\nhttp://proteowizard.sourceforge.net\n";
+    cout << "\nhttp://proteowizard.sourceforge.net\n"
+         << "support@proteowizard.org\n";
 }
 
 

@@ -106,7 +106,8 @@ Config parseCommandLine(int argc, const char* argv[])
 
     usage << endl
           << "Questions, comments, and bug reports:\n"
-          << "http://proteowizard.sourceforge.net\n";
+          << "http://proteowizard.sourceforge.net\n"
+          << "support@proteowizard.org\n";
 
     if (config.filenames.size() != 2)
         throw runtime_error(usage.str());

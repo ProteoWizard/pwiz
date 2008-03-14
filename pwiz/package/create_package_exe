@@ -1,0 +1,26 @@
+#!/bin/bash
+
+os=$(get_os)
+
+if [ $os = "linux" ]
+then
+    exe_path="../../build/gcc-release"
+fi
+
+if [ $os = "windows" ]
+then
+    exe_path="../../build/msvc-release"
+fi
+
+if [ $os = "unknown" ]
+then
+    echo "Unknown OS"
+    exit 1
+fi
+
+cd $exe_path
+zipfilename=tools-${os}.zip
+echo "Creating $exe_path/$zipfilename"
+zip $zipfilename *.exe
+
+
