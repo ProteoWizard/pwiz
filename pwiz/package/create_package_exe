@@ -21,6 +21,18 @@ fi
 cd $exe_path
 zipfilename=tools-${os}.zip
 echo "Creating $exe_path/$zipfilename"
-zip $zipfilename *.exe
+
+
+if [ $os = "linux" ]
+then
+    zip $zipfilename *
+fi
+
+if [ $os = "windows" ]
+then
+    zip $zipfilename *.exe
+fi
+
+
 
 
