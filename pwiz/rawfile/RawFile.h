@@ -64,7 +64,7 @@ class RAWFILE_API RawEgg : public std::runtime_error // Eggception class
     {}
 
     virtual const std::string& error() const {return error_;}
-    virtual ~RawEgg(){}
+    virtual ~RawEgg() throw() {}
 
     private:
     std::string error_;
@@ -465,7 +465,7 @@ class auto_handle
     public:
 
     template <typename Parameter>
-    auto_handle(typename Parameter parameter)
+    auto_handle(Parameter parameter)
     :   t_(T::create(parameter).release())
     {}
 
