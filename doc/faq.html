@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>ProteoWizard: Home</title>
+<title>ProteoWizard: FAQ</title>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
 <script src="basics.js"></script>
@@ -92,42 +92,36 @@
 
 <!-- BEGIN CONTENT GOES HERE -->
 
-    <h1>ProteoWizard</h1>
+    <h1>FAQ</h1>
+
+    <h2>What is the current status of ProteoWizard?</h2>
+
     <p>
-        ProteoWizard is a modular and extensible set of open-source, cross-platform tools 
-        and software libraries for proteomics data analysis.  
-    </p>
-    <p>
-        The libraries enable rapid tool creation by providing a robust,
-        pluggable development framework that simplifies and unifies data file access,
-        and performs standard chemistry and LCMS dataset computations.  
-    </p>
-    <p>
-        The software is available for download now, under the Apache open source license.
+        We have released version 1.0 of the library, together with the first set of 
+        command line tools.  Source and binary packages are available for download
+        from our SourceForge project page:<br/><br/>
+        &nbsp; <a href="http://sourceforge.net/projects/proteowizard" target="_blank">http://sourceforge.net/projects/proteowizard</a>
     </p>
 
-    <h1>Features</h1>
-    <ul>
-        <li> native support for the new HUPO-PSI mzML standard mass spectrometry data format </li>
-        <li> modern C++ techniques and design principles </li>
-        <li> cross-platform with native compilers (gcc, MSVC) </li>
-        <li> modular design, for testability and extensibility </li>
-        <li> framework for rapid development of data analysis tools </li>
-        <li> open source license suitable for both academic and commercial projects (Apache v2) </li>
-    </ul>
+    <h2>Who is using ProteoWizard?</h2>
+    <p>
+        
+        Researchers at the Spielberg Family Center for Applied Proteomics (SFCAP) use 
+        the ProteoWizard tools extensively in daily data analysis.
+    </p>
+    <p>
+        The ProteoWizard libraries are being used by the Trans-Proteomic Pipeline (TPP)
+        tools for mzML support, which will be available in the next major release.
+    </p>
 
-    <h1>Tools</h1>
+    <h2>What's next on the development roadmap?</h2>
     <p>
-        <em>msconvert</em>: general data format conversion tool.  Writes mzML or mzXML.  Currently
-           reads mzML, mzXML, Thermo RAW (Windows), with more vendor formats in the near future.
-    </p>
-    <p>
-        <em>msdiff</em>: comparison of two data files, for validation of conversion and 
-        preprocessing
-    </p>
-    <p>
-        <em>msaccess</em>: command line access to mass spec data files, including spectrum
-        binary data and metadata, selected ion chromatograms, and pseudo-2D gel image creation. 
+        We (SFCAP) are mapping out collaboration with other proteomics software groups, including
+        the Seattle Proteome Center at the Institute for Systems Biology (ISB/SPC) and 
+        the Vanderbilt University Mass Spectrometry Research Center, with the goal of 
+        providing a single standard software library for proteomic data analysis.  The first 
+        immediate goal will be to combine efforts to add support for all vendor-specific proprietary
+        data formats.
     </p>
 
 <!-- END CONTENT GOES HERE -->
