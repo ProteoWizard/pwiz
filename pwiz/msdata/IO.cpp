@@ -1809,7 +1809,8 @@ void write(minimxml::XMLWriter& writer, const Run& run,
         attributes.push_back(make_pair("instrumentRef", run.instrumentPtr->id));
     if (run.samplePtr.get())
         attributes.push_back(make_pair("sampleRef", run.samplePtr->id));
-    attributes.push_back(make_pair("startTimeStamp", run.startTimeStamp));
+    if (!run.startTimeStamp.empty())
+        attributes.push_back(make_pair("startTimeStamp", run.startTimeStamp));
 
     writer.startElement("run", attributes);
 

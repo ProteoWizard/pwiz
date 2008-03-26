@@ -41,7 +41,7 @@ using boost::shared_ptr;
 void initializeTestData(MSData& msd)
 {
     msd.accession = "test accession";
-    msd.id = "test id";
+    msd.id = "test_id";
     msd.version = "test version";
 
     // cvList

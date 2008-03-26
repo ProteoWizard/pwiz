@@ -66,8 +66,9 @@ void writeIndex(XMLWriter& xmlWriter,
                 const SpectrumListPtr& spectrumListPtr,
                 const vector<stream_offset>& positions)
 {
-
-    xmlWriter.startElement("index");
+    XMLWriter::Attributes indexAttributes;
+    indexAttributes.push_back(make_pair("name", "spectrum"));        
+    xmlWriter.startElement("index", indexAttributes);
 
     if (spectrumListPtr.get())
     {

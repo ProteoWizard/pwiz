@@ -211,6 +211,11 @@ SpectrumPtr SpectrumList_RAW::spectrum(size_t index, bool getBinaryData) const
 
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;
+
+    if (msd_.instrumentPtrs.empty())
+        throw runtime_error("[SpectrumList_RAW::spectrum()] No instruments defined.");
+    scan.instrumentPtr = msd_.instrumentPtrs[0];
+
     string filterString = scanInfo->filter();
 
     scan.cvParams.push_back(CVParam(MS_filter_string, filterString));
@@ -317,6 +322,13 @@ auto_ptr<RawFileLibrary> rawFileLibrary_;
 
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
+    msd.cvs.resize(1);
+    CV& cv = msd.cvs.front();
+    cv.URI = "psi-ms.obo"; 
+    cv.cvLabel = "MS";
+    cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
+    cv.version = "1.0";
+
     msd.fileDescription.fileContent.cvParams.push_back(MS_MSn_spectrum);
 
     SourceFilePtr sourceFile(new SourceFile);
@@ -354,16 +366,26 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     string model = rawfile.value(InstModel);
     CVID cvidModel = cvTranslator.translate(model);
     if (cvidModel != CVID_Unknown) 
+    {
         instrument->cvParams.push_back(cvidModel);
+        instrument->id = cvinfo(cvidModel).name;
+    }
     else
+    {
         instrument->userParams.push_back(UserParam("instrument model", model));
+        instrument->id = model;
+    }
     instrument->cvParams.push_back(CVParam(MS_instrument_serial_number, 
                                            rawfile.value(InstSerialNumber)));
     instrument->softwarePtr = softwareXcalibur;
+    instrument->componentList.source.order = 1;
+    instrument->componentList.analyzer.order = 2;
+    instrument->componentList.detector.order = 3;
     msd.instrumentPtrs.push_back(instrument);
 
     msd.run.id = filename;
-    msd.run.startTimeStamp = rawfile.getCreationDate();
+    //msd.run.startTimeStamp = rawfile.getCreationDate(); // TODO format: 2007-06-27T15:23:45.00035
+    msd.run.instrumentPtr = instrument;
 }
 
 
