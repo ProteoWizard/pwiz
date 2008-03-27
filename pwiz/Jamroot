@@ -65,7 +65,7 @@ project pwiz
 # external library declarations
 
 lib jpeg png z pthread ;
-lib gd : jpeg png z : <name>gd ; # <toolset>gcc <name>gd ; # remove if works on Linux
+lib gd : jpeg png z : <name>gd ;
 lib gd : : <toolset>msvc <name>bgd ;
 
 lib fftw3 ;
