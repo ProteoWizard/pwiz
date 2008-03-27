@@ -32,6 +32,7 @@ exe hello_ramp
     : hello_ramp.cpp
       ../msdata//pwiz_msdata
     : <include>../.. <include>../msdata/ramp
+      <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
     ;
 
 
