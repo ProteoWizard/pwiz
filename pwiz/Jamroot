@@ -55,6 +55,7 @@ project pwiz
 
         # allow "long long" even with -pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wno-long-long
 
     : build-dir ../build
     : default-build release <link>static 
@@ -64,7 +65,7 @@ project pwiz
 # external library declarations
 
 lib jpeg png z pthread ;
-lib gd : jpeg png z : <toolset>gcc <name>gd ;
+lib gd : jpeg png z : <name>gd ; # <toolset>gcc <name>gd ; # remove if works on Linux
 lib gd : : <toolset>msvc <name>bgd ;
 
 lib fftw3 ;
@@ -87,21 +88,25 @@ lib fftw3 : : <toolset>msvc <name>libfftw3-3 ;
 lib boost_filesystem : : <toolset>gcc <name>boost_filesystem-gcc ;
 lib boost_filesystem : : <toolset>msvc <name>libboost_filesystem-vc80-mt ;
 lib boost_filesystem : : <toolset>msvc <variant>debug <name>libboost_filesystem-vc80-mt-gd ;
+lib boost_filesystem ;
 
 lib boost_iostreams : : <toolset>gcc <name>boost_iostreams-gcc ;
 lib boost_iostreams : : <toolset>msvc <name>libboost_iostreams-vc80-mt ;
 lib boost_iostreams : : <toolset>msvc <variant>debug <name>libboost_iostreams-vc80-mt-gd ;
+lib boost_iostreams ;
 
 lib boost_program_options : : <toolset>gcc <name>boost_program_options-gcc ;
 lib boost_program_options : : <toolset>msvc <name>libboost_program_options-vc80-mt ;
 lib boost_program_options : : <toolset>msvc <variant>debug <name>libboost_program_options-vc80-mt-gd ;
+lib boost_program_options ;
 
 lib boost_serialization : : <toolset>gcc <name>boost_serialization-gcc ;
 lib boost_serialization : : <toolset>msvc <name>libboost_serialization-vc80-mt ;
 lib boost_serialization : : <toolset>msvc <variant>debug <name>libboost_serialization-vc80-mt-gd ;
+lib boost_serialization ;
 
 lib boost_regex : pthread : <toolset>gcc <name>boost_regex-gcc ;
 lib boost_regex : : <toolset>msvc <name>libboost_regex-vc80-mt ;
 lib boost_regex : : <toolset>msvc <variant>debug <name>libboost_regex-vc80-mt-gd ;
-
+lib boost_regex ;
 

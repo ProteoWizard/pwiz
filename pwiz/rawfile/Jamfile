@@ -25,6 +25,7 @@ lib pwiz_rawfile
     : RawFile.cpp 
       RawFileValues.cpp
     : <toolset>gcc:<build>no
+      <toolset>darwin:<build>no
     ;
 
 
@@ -32,6 +33,7 @@ exe RawFileTest
     : RawFileTest.cpp
       pwiz_rawfile
     : <toolset>gcc:<build>no
+      <toolset>darwin:<build>no
     ;
 
 explicit RawFileTest ;

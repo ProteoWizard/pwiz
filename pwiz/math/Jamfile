@@ -30,6 +30,7 @@ project
                                         # (boost/numeric/ublas/traits.hpp)
         <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code
                                         # (boost/numeric/ublas/banded.hpp)
+        <toolset>darwin:<variant>debug  # ublas lu_factorize() causes bus error in release (inlining?)
     ;
 
 
