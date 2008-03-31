@@ -35,6 +35,7 @@ lib pwiz_msdata
         BinaryDataEncoder.cpp
         CVParam.cpp 
         CVTranslator.cpp
+        DefaultReaderList.cpp
         Diff.cpp
         IO.cpp
         LegacyAdapter.cpp
@@ -46,6 +47,7 @@ lib pwiz_msdata
         SpectrumList_mzML.cpp
         SpectrumList_mzXML.cpp
         RAMPAdapter.cpp
+        Reader.cpp
         Reader_RAW.cpp
         References.cpp
         ../util
@@ -107,6 +109,7 @@ unit-test SpectrumList_mzXML_Test : SpectrumList_mzXML_Test.cpp examples.cpp pwi
 unit-test Serializer_mzXML_Test : Serializer_mzXML_Test.cpp examples.cpp pwiz_msdata ; # Serializer_mzXML.cpp examples.cpp SpectrumList_mzXML.cpp Serializer_mzML.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test MSDataFileTest : MSDataFileTest.cpp examples.cpp pwiz_msdata ;
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp examples.cpp pwiz_msdata ;
+unit-test ReaderTest : ReaderTest.cpp pwiz_msdata ;
 
 
 # special run target for Reader_RAW_Test, which needs external data 

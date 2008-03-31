@@ -1,5 +1,5 @@
 //
-// Reader_RAW.hpp
+// DefaultReaderList.hpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,36 +21,22 @@
 //
 
 
-#ifndef _READER_RAW_HPP_ 
-#define _READER_RAW_HPP_ 
+#ifndef _DEFAULTREADERLIST_HPP_
+#define _DEFAULTREADERLIST_HPP_
 
 
 #include "Reader.hpp"
-
-
-// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_RAW))
-#define PWIZ_NO_READER_RAW
-#endif
 
 
 namespace pwiz {
 namespace msdata {
 
 
-class Reader_RAW : public Reader
+/// default Reader list
+class DefaultReaderList : public ReaderList
 {
     public:
-
-    virtual bool accept(const std::string& filename, 
-                        const std::string& head) const; 
-
-    virtual void read(const std::string& filename, 
-                      const std::string& head, 
-                      MSData& result) const;
-
-    /// checks header for "Finnigan" wide char string
-	static bool hasRAWHeader(const std::string& head); 
+    DefaultReaderList();
 };
 
 
@@ -58,5 +44,5 @@ class Reader_RAW : public Reader
 } // namespace pwiz
 
 
-#endif // _READER_RAW_HPP_ 
+#endif// _DEFAULTREADERLIST_HPP_
 

@@ -1,5 +1,5 @@
 //
-// Reader_RAW.hpp
+// Reader.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,42 +21,39 @@
 //
 
 
-#ifndef _READER_RAW_HPP_ 
-#define _READER_RAW_HPP_ 
-
-
 #include "Reader.hpp"
-
-
-// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_RAW))
-#define PWIZ_NO_READER_RAW
-#endif
 
 
 namespace pwiz {
 namespace msdata {
 
 
-class Reader_RAW : public Reader
+using namespace std;
+
+
+bool ReaderList::accept(const string& filename, const string& head) const
 {
-    public:
+    for (const_iterator it=begin(); it!=end(); ++it)
+        if ((*it)->accept(filename, head)) return true;
 
-    virtual bool accept(const std::string& filename, 
-                        const std::string& head) const; 
+    return false;
+}
 
-    virtual void read(const std::string& filename, 
-                      const std::string& head, 
-                      MSData& result) const;
 
-    /// checks header for "Finnigan" wide char string
-	static bool hasRAWHeader(const std::string& head); 
-};
+void ReaderList::read(const string& filename, const string& head, MSData& result) const
+{
+    for (const_iterator it=begin(); it!=end(); ++it)
+    if ((*it)->accept(filename, head))
+    {
+        (*it)->read(filename, head, result);
+        return;
+    }
+
+    throw runtime_error(("[ReaderList::read()] No child accepted file " +
+                        filename).c_str());
+}
 
 
 } // namespace msdata
 } // namespace pwiz
-
-
-#endif // _READER_RAW_HPP_ 
 

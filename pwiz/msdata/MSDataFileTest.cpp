@@ -144,7 +144,7 @@ const char rawHeader_[] = {'\x01', '\xA1',
     'i', '\0', 'g', '\0', 'a', '\0', 'n', '\0'};
 
 
-class TestReader : public MSDataFile::Reader
+class TestReader : public Reader
 {
     public:
 
@@ -163,7 +163,7 @@ class TestReader : public MSDataFile::Reader
         return true;
     }
 
-    virtual void read(const std::string& filename, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result) const
     {
         count++;
     }
@@ -180,12 +180,9 @@ void testReader()
     os.write(rawHeader_, 18);
     os.close();
 
-    // register our reader
+    // open the file with our Reader
     TestReader reader;
-    MSDataFile::registerReader(reader);
-
-    // open the file
-    MSDataFile msd(filename);
+    MSDataFile msd(filename, &reader);
 
     // verify that our reader got called properly
     unit_assert(reader.count == 2);

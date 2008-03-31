@@ -26,12 +26,9 @@
 
 
 #include "MSData.hpp"
+#include "Reader.hpp"
 #include "BinaryDataEncoder.hpp"
 
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_RAW))
-// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#define PWIZ_NO_READER_RAW
-#endif
 
 namespace pwiz {
 namespace msdata {
@@ -40,31 +37,10 @@ namespace msdata {
 /// MSData object plus file I/O
 struct MSDataFile : public MSData
 {
-    /// interface for file readers
-    class Reader
-    {
-        public:
-
-        /// return true iff Reader can handle the file; Reader may filter based on
-        /// filename or on the buffer holding the head of the file
-        virtual bool accept(const std::string& filename, const std::string& head) const = 0;
-
-        /// fill in the MSData structure -- generally this will amount to: 
-        /// 1) fill in the file-level metadata
-        /// 2) instantiate a SpectrumList (held by MSData::run.spectrumListPtr)
-        virtual void read(const std::string& filename, MSData& result) const = 0;
-
-        virtual ~Reader(){}
-    };
-
-    /// runtime Reader registration (replaces default Readers)
-    static void registerReader(const Reader& reader);
-
-    /// clear registered Reader (use default Readers)
-    static void clearReader();
-
-    /// constructs MSData object backed by file
-    MSDataFile(const std::string& filename);
+    /// constructs MSData object backed by file;
+    /// reader==0 -> use DefaultReaderList 
+    MSDataFile(const std::string& filename, 
+               const Reader* reader = 0);
 
     /// data format for write()
     enum Format {Format_Text, Format_mzML, Format_mzXML};

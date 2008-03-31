@@ -25,10 +25,8 @@
 #include "TextWriter.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
-#include "SpectrumList_mzXML.hpp"
-#include "Reader_RAW.hpp"
-#include <iostream> 
-#include <fstream> 
+#include "DefaultReaderList.hpp"
+#include <fstream>
 #include <stdexcept>
 
 
@@ -43,162 +41,7 @@ using boost::shared_ptr;
 namespace {
 
 
-class Reader_mzML : public MSDataFile::Reader
-{
-    public:
-
-    virtual bool accept(const std::string& filename, const std::string& head) const
-    {
-         istringstream iss(head); 
-         return type(iss) != Type_Unknown; 
-    }
-
-    virtual void read(const std::string& filename, MSData& result) const
-    {
-        shared_ptr<istream> is(new ifstream(filename.c_str(), ios::binary));
-        if (!is.get() || !*is)
-            throw runtime_error(("[MSDataFile::Reader_mzML] Unable to open file " + filename).c_str());
-
-        switch (type(*is))
-        {
-            case Type_mzML:
-            {
-                Serializer_mzML::Config config;
-                config.indexed = false;
-                Serializer_mzML serializer(config);
-                serializer.read(is, result);
-                break;
-            }
-            case Type_mzML_Indexed:
-            {
-                Serializer_mzML serializer;
-                serializer.read(is, result);
-                break;
-            }
-            case Type_Unknown:
-            default:
-            {
-                throw runtime_error("[MSDataFile::Reader_mzML] This isn't happening."); 
-            }
-        }
-    }
-
-    private:
-
-    enum Type { Type_mzML, Type_mzML_Indexed, Type_Unknown }; 
-
-    Type type(istream& is) const
-    {
-        is.seekg(0);
-
-        string buffer;
-        is >> buffer;
-
-        if (buffer != "<?xml")
-            return Type_Unknown;
-            
-        getline(is, buffer);
-        is >> buffer; 
-
-        if (buffer == "<indexedmzML")
-            return Type_mzML_Indexed;
-        else if (buffer == "<mzML")
-            return Type_mzML;
-        else
-            return Type_Unknown;
-    }
-};
-
-
-class Reader_mzXML : public MSDataFile::Reader
-{
-    virtual bool accept(const std::string& filename, const std::string& head) const
-    {
-        istringstream iss(head); 
-
-        string buffer;
-        iss >> buffer;
-
-        if (buffer != "<?xml") return false;
-
-        getline(iss, buffer);
-        iss >> buffer; 
-
-        return (buffer=="<mzXML" || buffer=="<msRun");
-    }
-
-    virtual void read(const std::string& filename, MSData& result) const
-    {
-        shared_ptr<istream> is(new ifstream(filename.c_str(), ios::binary));
-        if (!is.get() || !*is)
-            throw runtime_error(("[MSDataFile::Reader_mzXML] Unable to open file " + filename).c_str());
-
-        try
-        {
-            // assume there is a scan index
-            Serializer_mzXML serializer;
-            serializer.read(is, result);
-            return;
-        }
-        catch (SpectrumList_mzXML::index_not_found&)
-        {}
-
-        // error looking for index -- try again, but generate index 
-        is->seekg(0);
-        Serializer_mzXML::Config config;
-        config.indexed = false;
-        Serializer_mzXML serializer(config);
-        serializer.read(is, result);
-        return;
-    }
-};
-
-
-// static instances of default readers
-Reader_mzML reader_mzML_;
-Reader_mzXML reader_mzXML_;
-#ifndef PWIZ_NO_READER_RAW
-Reader_RAW reader_RAW_;
-#endif
-
-vector<const MSDataFile::Reader*> readers_;
-
-
-void initializeDefaultReaders()
-{
-    // initialize default Readers if we don't have anything registered 
-
-    if (readers_.empty())
-    {
-        readers_.push_back(&reader_mzML_);
-        readers_.push_back(&reader_mzXML_);
-#ifndef PWIZ_NO_READER_RAW
-        readers_.push_back(&reader_RAW_);
-#endif
-    }
-}
-
-
-} // namespace
-
-
-void MSDataFile::registerReader(const Reader& reader)
-{
-    readers_.clear();
-    readers_.push_back(&reader);
-}
-
-
-void MSDataFile::clearReader()
-{
-    readers_.clear();
-}
-
-
-namespace {
-
-
-void readFile(const string& filename, MSData& msd)
+void readFile(const string& filename, MSData& msd, const Reader& reader)
 {
     // peek at head of file 
 
@@ -210,30 +53,31 @@ void readFile(const string& filename, MSData& msd)
     is.read(&head[0], (std::streamsize)head.size());
     is.close();
 
-    // delegate to Readers
+    if (!reader.accept(filename, head))
+        throw runtime_error("[MSDataFile::readFile()] Unsupported file format.");
 
-    initializeDefaultReaders();
-
-    for (vector<const MSDataFile::Reader*>::const_iterator it=readers_.begin();
-         it!=readers_.end(); ++it)
-    {
-        if ((*it)->accept(filename, head))
-        {
-            (*it)->read(filename, msd);
-            return;
-        }
-    }
-
-    throw runtime_error("Unsupported file format.");
+    reader.read(filename, head, msd);
 }
+
+
+shared_ptr<DefaultReaderList> defaultReaderList_;
 
 
 } // namespace
 
 
-MSDataFile::MSDataFile(const string& filename)
+MSDataFile::MSDataFile(const string& filename, const Reader* reader)
 {
-    readFile(filename, *this); 
+    if (reader)
+    {
+        readFile(filename, *this, *reader); 
+    }
+    else
+    {
+        if (!defaultReaderList_.get())
+            defaultReaderList_ = shared_ptr<DefaultReaderList>(new DefaultReaderList);
+        readFile(filename, *this, *defaultReaderList_);
+    }
 }
 
 

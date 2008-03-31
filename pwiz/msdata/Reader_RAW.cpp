@@ -23,6 +23,7 @@
 
 #include "Reader_RAW.hpp"
 
+
 namespace {
 // helper function used by both forms (real and stubbed) of ReadRAW
 bool _hasRAWHeader(const std::string& head)
@@ -41,6 +42,8 @@ bool _hasRAWHeader(const std::string& head)
     return true;
 }
 } // namespace
+
+
 #ifndef PWIZ_NO_READER_RAW
 #include "CVTranslator.hpp"
 #include "rawfile/RawFile.h"
@@ -398,7 +401,9 @@ bool Reader_RAW::accept(const string& filename, const string& head) const
 }
 
 
-void Reader_RAW::read(const string& filename, MSData& result) const
+void Reader_RAW::read(const string& filename, 
+                      const string& head,
+                      MSData& result) const
 {
     // initialize RawFileLibrary
 

@@ -68,7 +68,7 @@ void testRead(const string& filename)
 
     Reader_RAW reader;
     MSData msd;
-    reader.read(filename, msd);
+    reader.read(filename, "dummy", msd);
 
     // make assertions about msd
 
