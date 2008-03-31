@@ -164,7 +164,7 @@ DefaultReaderList::DefaultReaderList()
     #ifndef PWIZ_NO_READER_RAW
     push_back(ReaderPtr(new Reader_RAW));
     #endif
-};
+}
 
 
 } // namespace msdata

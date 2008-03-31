@@ -22,6 +22,7 @@
 
 
 #include "Reader.hpp"
+#include <stdexcept>
 
 
 namespace pwiz {

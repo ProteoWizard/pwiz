@@ -444,7 +444,7 @@ bool Reader_RAW::accept(const string& filename, const string& head) const
     return false;
 }
 
-void Reader_RAW::read(const string& filename, MSData& result) const
+void Reader_RAW::read(const string& filename, const string& head, MSData& result) const
 {
     throw runtime_error("[Reader_RAW::read()] Not implemented."); 
 }
