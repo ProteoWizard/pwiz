@@ -50,6 +50,8 @@ struct MSDataCache::Impl
 
     typedef list<SpectrumInfo*> MRU; // most recently used
     MRU mru;
+
+    SpectrumListPtr spectrumListPtr;
 };
 
 
@@ -67,8 +69,13 @@ void MSDataCache::open(const DataInfo& dataInfo)
 {
     clear();
 
+    impl_->mru.clear();
+
     if (dataInfo.msd.run.spectrumListPtr.get())
+    {
         resize(dataInfo.msd.run.spectrumListPtr->size());
+        impl_->spectrumListPtr = dataInfo.msd.run.spectrumListPtr;
+    }
 }
 
 
@@ -97,10 +104,29 @@ void MSDataCache::update(const DataInfo& dataInfo,
         if (impl_->mru.size() > impl_->config.binaryDataCacheSize)
         {
             SpectrumInfo* lru = impl_->mru.back();
-            lru->data.clear();
+            lru->clearBinaryData();
             impl_->mru.pop_back();
         }
     }
+}
+
+
+const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
+{
+    if (!impl_->spectrumListPtr.get() ||
+        size()!=impl_->spectrumListPtr->size())
+        throw runtime_error("[MSDataCache::spectrumInfo()] Usage error."); 
+
+    SpectrumInfo& info = at(index);
+
+    // update cache if necessary 
+    if (info.index == -1)
+    {
+        SpectrumPtr spectrum = impl_->spectrumListPtr->spectrum(index); 
+        info.update(*spectrum);
+    }
+
+    return info;
 }
 
 

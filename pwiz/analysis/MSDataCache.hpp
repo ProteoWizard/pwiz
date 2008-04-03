@@ -46,23 +46,29 @@ using namespace msdata;
 /// - lexical casting
 ///
 /// MSDataCache is a vector of SpectrumInfo objects, but also implements the
-/// MSDataAnalyzer interface.  It is *not* a lazy evaluator; it must be updated 
-/// from the outside.
+/// MSDataAnalyzer interface.  It can be used in two ways:
+/// 1) Updated from the outside via MSDataAnalyzer interface
+/// 2) Automatic updating via spectrumInfo() access method
 ///
-/// On update(), Spectrum binary data (SpectrumInfo::data) is
+/// Spectrum binary data (SpectrumInfo::data) is
 /// freed from the cache using a LRU (least recently used) algorithm.
 /// Binary data will be freed only to make room for a new update.  The
 /// default cache size is 1, i.e. only the most recently updated binary 
 /// data array is stored.  Note that modifying the SpectrumInfo objects
 /// directly through the vector interface circumvents the LRU mechanism. 
 ///
-/// Intended usage:  MSDataCache should be placed first in an 
+/// Usage #1:  MSDataCache should be placed first in an 
 /// MSDataAnalyzerContainer, so that it receives update() first.  Other 
 /// analyzers may then use it (preferably as const MSDataCache&) to access 
 /// spectrum data when they receive update().  On updateRequested(),
 /// MSDataCache returns UpdateRequest_Ok to indicate that it should
 /// receive any updates that are requested by other analyzers.  If no 
 /// other analyzer requests an update, the cache will not be updated.
+///
+/// Usage #2:  Instantiate independently and call open() to set reference to an
+/// MSData object.  Calls to spectrumInfo() will return the requested SpectrumInfo,
+/// automatically updating the cache via call to SpectrumList::spectrum() if
+/// necessary.
 ///
 class MSDataCache : public std::vector<SpectrumInfo>,
                     public MSDataAnalyzer
@@ -93,6 +99,9 @@ class MSDataCache : public std::vector<SpectrumInfo>,
     virtual void update(const DataInfo& dataInfo, 
                         const Spectrum& spectrum);
     //@}
+
+    /// access to SpectrumInfo with automatic update (open() must be called first)
+    const SpectrumInfo& spectrumInfo(size_t index);
 
     private:
     struct Impl;

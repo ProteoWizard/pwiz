@@ -88,6 +88,13 @@ void SpectrumInfo::update(const Spectrum& spectrum)
 }
 
 
+void SpectrumInfo::clearBinaryData()
+{
+    vector<MZIntensityPair> nothing;
+    data.swap(nothing);
+}
+
+
 } // namespace analysis 
 } // namespace pwiz
 

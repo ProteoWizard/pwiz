@@ -46,7 +46,7 @@ struct SpectrumInfo
         double intensity;
         double charge;
 
-        PrecursorInfo() : index(0), mz(0), intensity(0), charge(0) {}
+        PrecursorInfo() : index(-1), mz(0), intensity(0), charge(0) {}
     };
 
     size_t index;
@@ -67,12 +67,13 @@ struct SpectrumInfo
     std::vector<MZIntensityPair> data;
 
     SpectrumInfo()
-    :   index(0), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
+    :   index(-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
         msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
         basePeakIntensity(0), totalIonCurrent(0)
     {}
 
     void update(const Spectrum& spectrum);
+    void clearBinaryData();
 };
 
 

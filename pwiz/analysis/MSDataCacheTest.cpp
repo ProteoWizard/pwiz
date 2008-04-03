@@ -96,10 +96,13 @@ void testDefault()
 
 void printCache(ostream& os, const MSDataCache& cache)
 {
-    os << "cached binary data: ";
+    os << "cached binary data:\n";
     for (vector<SpectrumInfo>::const_iterator it=cache.begin(); it!=cache.end(); ++it) 
-        if (!it->data.empty())
-            os << it->index << " ";
+    {
+        os << it->index << " " 
+           << it->data.size() << "/"
+           << it->data.capacity() << endl;
+    }
     os << endl;
 }
 
@@ -143,7 +146,7 @@ void testMRU()
     cache.update(msd, *sl->spectrum(3, true));
     if (os_) printCache(*os_, cache); // mru: 3 2 1
 
-    unit_assert(cache[0].data.size() == 0);
+    unit_assert(cache[0].data.capacity() == 0);
     unit_assert(cache[1].data.size() == 100);
     unit_assert(cache[2].data.size() == 100);
     unit_assert(cache[3].data.size() == 100);
@@ -152,7 +155,7 @@ void testMRU()
     cache.update(msd, *sl->spectrum(1, true));
     if (os_) printCache(*os_, cache); // mru: 1 3 2
 
-    unit_assert(cache[0].data.size() == 0);
+    unit_assert(cache[0].data.capacity() == 0);
     unit_assert(cache[1].data.size() == 100);
     unit_assert(cache[2].data.size() == 100);
     unit_assert(cache[3].data.size() == 100);
@@ -161,9 +164,9 @@ void testMRU()
     cache.update(msd, *sl->spectrum(4, true));
     if (os_) printCache(*os_, cache); // mru: 4 1 3
 
-    unit_assert(cache[0].data.size() == 0);
+    unit_assert(cache[0].data.capacity() == 0);
     unit_assert(cache[1].data.size() == 100);
-    unit_assert(cache[2].data.size() == 0);
+    unit_assert(cache[2].data.capacity() == 0);
     unit_assert(cache[3].data.size() == 100);
     unit_assert(cache[3].data.size() == 100);
 
@@ -216,10 +219,56 @@ void testUpdateRequest()
         // cache has only been updated with the spectra requested by EvenRequester
 
         unit_assert(i%2==0 && info.index==i && info.id=="something" ||
-                    i%2==1 && info.index==0 && info.id.empty());
+                    i%2==1 && info.index==-1 && info.id.empty());
     }
 
     if (os_) *os_ << endl;
+}
+
+
+void testAutomaticUpdate()
+{
+    if (os_) *os_ << "testAutomaticUpdate()\n";
+
+    vector<MZIntensityPair> pairs(100);
+
+    SpectrumListSimplePtr sl(new SpectrumListSimple);
+    for (size_t i=0; i<10; i++)
+    {
+        SpectrumPtr spectrum(new Spectrum);
+        spectrum->setMZIntensityPairs(pairs);        
+        spectrum->index = i;
+        spectrum->id = "something";
+        sl->spectra.push_back(spectrum);
+    }
+
+    MSData msd;
+    msd.run.spectrumListPtr = sl;
+
+    MSDataCache cache;
+    cache.open(msd);
+
+    unit_assert(cache.size() == sl->size());
+    for (size_t i=0; i<cache.size(); i++)
+        unit_assert(cache[i].index == -1);
+
+    const SpectrumInfo& info5= cache.spectrumInfo(5);
+    const SpectrumInfo& info7 = cache.spectrumInfo(7);
+
+    if (os_)
+    {
+        for (size_t i=0; i<cache.size(); i++)
+            *os_ << i << " " << cache[i].index << " " << cache[i].id << endl;
+    }     
+
+    unit_assert(info5.index==5 && info5.id=="something");
+    unit_assert(cache[5].index==5 && cache[5].id=="something");
+    unit_assert(info7.index==7 && info7.id=="something");
+    unit_assert(cache[7].index==7 && cache[7].id=="something");
+
+    for (size_t i=0; i<cache.size(); i++)
+        if (i!=5 && i!=7)
+            unit_assert(cache[i].index == -1);
 }
 
 
@@ -231,6 +280,7 @@ int main(int argc, char* argv[])
         testDefault();
         testMRU();
         testUpdateRequest();
+        testAutomaticUpdate();
         return 0;
     }
     catch (exception& e)

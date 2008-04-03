@@ -75,6 +75,10 @@ void test()
     unit_assert(info.precursors[0].charge == 2);
     unit_assert(info.data.size() == 10);
 
+    info.clearBinaryData();
+    unit_assert(info.data.size() == 0);
+    unit_assert(info.data.capacity() == 0);
+
     if (os_) *os_ << "ok\n";
 }
 
