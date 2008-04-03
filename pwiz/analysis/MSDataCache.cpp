@@ -120,7 +120,7 @@ const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
     SpectrumInfo& info = at(index);
 
     // update cache if necessary 
-    if (info.index == -1)
+    if (info.index == -1ul)
     {
         SpectrumPtr spectrum = impl_->spectrumListPtr->spectrum(index); 
         info.update(*spectrum);
