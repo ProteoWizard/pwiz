@@ -219,7 +219,7 @@ void testUpdateRequest()
         // cache has only been updated with the spectra requested by EvenRequester
 
         unit_assert(i%2==0 && info.index==i && info.id=="something" ||
-                    i%2==1 && info.index==-1ul && info.id.empty());
+                    i%2==1 && info.index==(size_t)-1&& info.id.empty());
     }
 
     if (os_) *os_ << endl;
@@ -250,7 +250,7 @@ void testAutomaticUpdate()
 
     unit_assert(cache.size() == sl->size());
     for (size_t i=0; i<cache.size(); i++)
-        unit_assert(cache[i].index == -1ul);
+        unit_assert(cache[i].index == (size_t)-1);
 
     const SpectrumInfo& info5= cache.spectrumInfo(5);
     const SpectrumInfo& info7 = cache.spectrumInfo(7);
@@ -268,7 +268,7 @@ void testAutomaticUpdate()
 
     for (size_t i=0; i<cache.size(); i++)
         if (i!=5 && i!=7)
-            unit_assert(cache[i].index == -1ul);
+            unit_assert(cache[i].index == (size_t)-1);
 }
 
 
