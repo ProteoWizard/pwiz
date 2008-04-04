@@ -1,5 +1,5 @@
 #
-# Jamfile (data)
+# Jamfile (data/misc)
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -29,7 +29,7 @@ project
 ;
 
 
-lib pwiz_data 
+lib pwiz_data_misc 
     : TransientData.cpp FrequencyData.cpp
       PeakData.cpp
       ../util
@@ -38,8 +38,8 @@ lib pwiz_data
     ;
 
 unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 
-unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data ;
-unit-test PeakDataTest : PeakDataTest.cpp pwiz_data ;
+unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc ;
+unit-test PeakDataTest : PeakDataTest.cpp pwiz_data_misc ;
 unit-test SampleDatumTest : SampleDatumTest.cpp ;
-unit-test TransientDataTest : TransientDataTest.cpp pwiz_data ;
+unit-test TransientDataTest : TransientDataTest.cpp pwiz_data_misc ;
 

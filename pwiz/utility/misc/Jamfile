@@ -1,5 +1,5 @@
 #
-# Jamfile (util) 
+# Jamfile (utility/misc) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -28,24 +28,24 @@ project
 ;
 
 
-lib pwiz_util
+lib pwiz_utility_misc
     : Base64.cpp 
       IntegerSet.cpp
       SHA1Calculator.cpp
       SHA1.cpp
       Image.cpp
-      ..//gd
+      ../..//gd
     : <warnings>all
     ;
 
 
 unit-test endian_test : endian_test.cpp ;
-unit-test Base64Test : Base64Test.cpp pwiz_util ;
-unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_util ;
-unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_util ; 
-unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_util ; 
+unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;
+unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
+unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ; 
+unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ; 
 
-exe sha1calc : sha1calc.cpp pwiz_util ;
+exe sha1calc : sha1calc.cpp pwiz_utility_misc ;
 install bin : sha1calc : <location>. ;
 explicit bin ;
 
