@@ -1,5 +1,5 @@
 #
-# Jamfile (minimxml) 
+# Jamfile (utility/minimxml) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,13 +21,13 @@
 # 
 
 
-lib pwiz_minimxml
+lib pwiz_utility_minimxml
     :   XMLWriter.cpp 
         SAXParser.cpp 
-        ..//boost_regex
+        ../..//boost_regex
     ;
 
-unit-test SAXParserTest : SAXParserTest.cpp pwiz_minimxml ;
-unit-test XMLWriterTest : XMLWriterTest.cpp pwiz_minimxml ;
+unit-test SAXParserTest : SAXParserTest.cpp pwiz_utility_minimxml ;
+unit-test XMLWriterTest : XMLWriterTest.cpp pwiz_utility_minimxml ;
 
 

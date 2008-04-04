@@ -23,7 +23,7 @@
 
 #include "XMLWriter.hpp"
 #include "boost/lexical_cast.hpp"
-#include "util/unit.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 
 

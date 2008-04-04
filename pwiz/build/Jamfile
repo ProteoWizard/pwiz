@@ -22,22 +22,24 @@
 
 
 # level 0 libraries
-build-project ../util ;
-build-project ../math ;
-build-project ../minimxml ;
+#build-project ../util ;
+#build-project ../math ;
+#build-project ../minimxml ;
+
+build-project ../utility ;
 
 # level 1 libraries
-build-project ../rawfile ;
-build-project ../data ;
-build-project ../msdata ;
+#build-project ../rawfile ;
+#build-project ../data ;
+#build-project ../msdata ;
 
 # level 2 libraries
-build-project ../analysis ;
-build-project ../peaks ;
-build-project ../proteome ;
+#build-project ../analysis ;
+#build-project ../peaks ;
+#build-project ../proteome ;
 
 # tools
-build-project ../tools ;
+#build-project ../tools ;
 
 
 install exe

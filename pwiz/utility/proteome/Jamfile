@@ -21,7 +21,7 @@
 #
 
 
-lib pwiz_proteome
+lib pwiz_utility_proteome
     : AminoAcid.cpp 
       Chemistry.cpp 
       ChemistryData.cpp 
@@ -31,21 +31,21 @@ lib pwiz_proteome
       IsotopeTable.cpp 
       Peptide.cpp 
       PeptideDatabase.cpp 
-      ..//boost_iostreams
+      ../..//boost_iostreams
     ;
 
 
-exe pepdb : pepdb.cpp pwiz_proteome ../peptideSieve/digest.cpp ../peptideSieve ;
+exe pepdb : pepdb.cpp pwiz_utility_proteome ../peptideSieve/digest.cpp ../peptideSieve ;
 explicit pepdb ;
 
 
-unit-test AminoAcidTest : AminoAcidTest.cpp pwiz_proteome ;
-unit-test ChemistryTest : ChemistryTest.cpp pwiz_proteome ; 
-unit-test IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_proteome ; 
-unit-test IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_proteome ;
-unit-test IsotopeTableTest : IsotopeTableTest.cpp pwiz_proteome ;
-unit-test IPIFASTADatabaseTest : IPIFASTADatabaseTest.cpp pwiz_proteome ;
-unit-test PeptideTest : PeptideTest.cpp pwiz_proteome ;
-unit-test PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_proteome ;
+unit-test AminoAcidTest : AminoAcidTest.cpp pwiz_utility_proteome ;
+unit-test ChemistryTest : ChemistryTest.cpp pwiz_utility_proteome ; 
+unit-test IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_utility_proteome ; 
+unit-test IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_utility_proteome ;
+unit-test IsotopeTableTest : IsotopeTableTest.cpp pwiz_utility_proteome ;
+unit-test IPIFASTADatabaseTest : IPIFASTADatabaseTest.cpp pwiz_utility_proteome ;
+unit-test PeptideTest : PeptideTest.cpp pwiz_utility_proteome ;
+unit-test PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_utility_proteome ;
  
 

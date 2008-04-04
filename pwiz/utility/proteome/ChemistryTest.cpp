@@ -23,8 +23,8 @@
 
 #include "Chemistry.hpp"
 #include "Ion.hpp"
-#include "util/unit.hpp"
-#include "math/round.hpp"
+#include "utility/misc/unit.hpp"
+#include "utility/math/round.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>

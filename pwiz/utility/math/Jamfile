@@ -1,5 +1,5 @@
 #
-# Jamfile (math)
+# Jamfile (utility/math)
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -34,7 +34,7 @@ project
     ;
 
 
-lib pwiz_math 
+lib pwiz_utility_math 
     : Parabola.cpp Random.cpp Stats.cpp erf.cpp mt19937ar.cpp
     ;
     
