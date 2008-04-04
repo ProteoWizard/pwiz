@@ -25,7 +25,7 @@
 #define _READER_RAW_HPP_ 
 
 
-#include "Reader.hpp"
+#include "data/msdata/Reader.hpp"
 
 
 // Xcalibur DLL usage is msvc only - mingw doesn't provide com support

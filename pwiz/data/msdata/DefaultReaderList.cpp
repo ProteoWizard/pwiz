@@ -25,7 +25,7 @@
 #include "SpectrumList_mzXML.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
-#include "Reader_RAW.hpp"
+#include "data/vendor_readers/Reader_RAW.hpp"
 #include <iostream>
 #include <fstream>
 
