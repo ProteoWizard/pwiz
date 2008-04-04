@@ -23,7 +23,7 @@
 
 #include "SpectrumIterator.hpp"
 #include "MSData.hpp"
-#include "util/IntegerSet.hpp"
+#include "utility/misc/IntegerSet.hpp"
 #include <iostream>
 #include <stdexcept>
 

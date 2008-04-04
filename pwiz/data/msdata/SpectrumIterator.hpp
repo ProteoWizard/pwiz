@@ -26,7 +26,7 @@
 
 
 #include "MSData.hpp"
-#include "util/IntegerSet.hpp"
+#include "utility/misc/IntegerSet.hpp"
 
 
 namespace pwiz {

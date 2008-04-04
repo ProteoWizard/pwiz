@@ -25,8 +25,8 @@
 #define _SHA1OUTPUTOBSERVER_HPP_
 
 
-#include "minimxml/XMLWriter.hpp"
-#include "util/SHA1Calculator.hpp"
+#include "utility/minimxml/XMLWriter.hpp"
+#include "utility/misc/SHA1Calculator.hpp"
 
 
 namespace pwiz {

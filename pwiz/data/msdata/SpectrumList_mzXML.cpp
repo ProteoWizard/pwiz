@@ -24,7 +24,7 @@
 #include "SpectrumList_mzXML.hpp"
 #include "IO.hpp"
 #include "References.hpp"
-#include "minimxml/SAXParser.hpp"
+#include "utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iostream>

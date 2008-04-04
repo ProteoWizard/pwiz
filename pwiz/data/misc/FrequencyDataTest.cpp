@@ -23,8 +23,8 @@
 
 #include "FrequencyData.hpp"
 #include "FrequencyDataTestData.hpp"
-#include "data/CalibrationParameters.hpp"
-#include "util/unit.hpp"
+#include "data/misc/CalibrationParameters.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>

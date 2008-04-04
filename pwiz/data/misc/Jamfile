@@ -32,9 +32,9 @@ project
 lib pwiz_data_misc 
     : TransientData.cpp FrequencyData.cpp
       PeakData.cpp
-      ../util
-      ..//boost_serialization
-      ..//fftw3
+      ../../utility/misc
+      ../..//boost_serialization
+      ../..//fftw3
     ;
 
 unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 

@@ -27,8 +27,8 @@
 #include "SHA1OutputObserver.hpp"
 #include "LegacyAdapter.hpp"
 #include "CVTranslator.hpp"
-#include "minimxml/XMLWriter.hpp"
-#include "minimxml/SAXParser.hpp"
+#include "utility/minimxml/XMLWriter.hpp"
+#include "utility/minimxml/SAXParser.hpp"
 #include <stdexcept>
 
 

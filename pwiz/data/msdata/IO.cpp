@@ -23,7 +23,7 @@
 
 #include "IO.hpp"
 #include "References.hpp"
-#include "minimxml/SAXParser.hpp"
+#include "utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
 #include <stdexcept>
 #include <functional>

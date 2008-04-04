@@ -27,7 +27,7 @@
 
 #include "MSData.hpp"
 #include "BinaryDataEncoder.hpp"
-#include "minimxml/XMLWriter.hpp"
+#include "utility/minimxml/XMLWriter.hpp"
 #include "boost/iostreams/positioning.hpp"
 
 

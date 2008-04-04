@@ -22,8 +22,8 @@
 
 
 #include "BinaryDataEncoder.hpp"
-#include "util/Base64.hpp"
-#include "util/endian.hpp"
+#include "utility/misc/Base64.hpp"
+#include "utility/misc/endian.hpp"
 #include "boost/static_assert.hpp"
 #include <iostream>
 #include <iterator>
