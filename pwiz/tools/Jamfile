@@ -23,14 +23,14 @@
 
 exe hello_msdata
     : hello_msdata.cpp
-      ../msdata//pwiz_msdata
+      ../data/msdata//pwiz_data_msdata
     : <include>../..
     ;
 
 
 exe hello_ramp
     : hello_ramp.cpp
-      ../msdata//pwiz_msdata
+      ../data/msdata//pwiz_data_msdata
     : <include>../.. <include>../msdata/ramp
       <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
     ;
@@ -38,23 +38,23 @@ exe hello_ramp
 
 exe hello_analyzer
     : hello_analyzer.cpp
-      ../msdata//pwiz_msdata
-      ../analysis//pwiz_analysis
+      ../data/msdata//pwiz_data_msdata
+      ../analysis/passive//pwiz_analysis_passive
     : <include>../..
     ;
 
 
 exe hello_analyzer_2
     : hello_analyzer_2.cpp
-      ../msdata//pwiz_msdata
-      ../analysis//pwiz_analysis
+      ../data/msdata//pwiz_data_msdata
+      ../analysis/passive//pwiz_analysis_passive
     : <include>../..
     ;
 
 
 exe msdiff 
     : msdiff.cpp
-      ../msdata//pwiz_msdata
+      ../data/msdata//pwiz_data_msdata
       ..//boost_program_options
     : <include>../..
     ;
@@ -62,7 +62,7 @@ exe msdiff
 
 exe msconvert 
     : msconvert.cpp
-      ../msdata//pwiz_msdata
+      ../data/msdata//pwiz_data_msdata
       ..//boost_program_options
       ..//boost_filesystem
     : <include>../..
@@ -71,8 +71,8 @@ exe msconvert
 
 exe msaccess 
     : msaccess.cpp
-      ../msdata//pwiz_msdata
-      ../analysis//pwiz_analysis
+      ../data/msdata//pwiz_data_msdata
+      ../analysis/passive//pwiz_analysis_passive
     : <include>../..
     ;
 
