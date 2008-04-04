@@ -22,7 +22,7 @@
 
 
 lib pwiz_peptideid
-    :   PeptideIDMap.cpp
+    :   PeptideIDMap.cpp PeptideID_pepXML.cpp
     ;
 
 
@@ -32,4 +32,6 @@ lib pwiz_peptideid
 
 
 unit-test PeptideIDMapTest : PeptideIDMapTest.cpp pwiz_peptideid ;
+
+unit-test PeptideID_pepXMLTest : PeptideID_pepXMLTest.cpp pwiz_peptideid ../minimxml ;
 
