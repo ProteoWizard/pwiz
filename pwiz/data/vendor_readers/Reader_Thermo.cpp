@@ -45,7 +45,7 @@ bool _hasRAWHeader(const std::string& head)
 
 
 #ifndef PWIZ_NO_READER_RAW
-#include "CVTranslator.hpp"
+#include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"

@@ -21,6 +21,16 @@
 # 
 
 
+project
+    : requirements 
+        <include>ramp # look in local ramp directory for ramp.h
+        <toolset>gcc:<define>_LARGEFILE_SOURCE # ramp.h wants this
+        <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+    ;
+
+
+
 lib pwiz_data_vendor_readers
     :   Reader_Thermo.cpp
         ../../utility/vendor_api/thermo
