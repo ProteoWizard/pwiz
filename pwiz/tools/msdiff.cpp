@@ -21,8 +21,8 @@
 //
 
 
-#include "pwiz/msdata/MSDataFile.hpp"
-#include "pwiz/msdata/Diff.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Diff.hpp"
 #include "boost/program_options.hpp"
 #include <iostream>
 #include <iterator>

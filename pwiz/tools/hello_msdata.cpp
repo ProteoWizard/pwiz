@@ -21,10 +21,10 @@
 //
 
 
-#include "pwiz/msdata/MSDataFile.hpp"
-#include "pwiz/msdata/Serializer_mzML.hpp"
-#include "pwiz/msdata/Diff.hpp"
-#include "pwiz/util/unit.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Serializer_mzML.hpp"
+#include "pwiz/data/msdata/Diff.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
 #include <fstream>

@@ -21,7 +21,7 @@
 //
 
 
-#include "pwiz/msdata/RAMPAdapter.hpp"
+#include "pwiz/data/msdata/RAMPAdapter.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>

@@ -21,8 +21,8 @@
 //
 
 
-#include "pwiz/analysis/MSDataAnalyzerApplication.hpp"
-#include "pwiz/analysis/MSDataCache.hpp"
+#include "pwiz/analysis/passive/MSDataAnalyzerApplication.hpp"
+#include "pwiz/analysis/passive/MSDataCache.hpp"
 #include <iostream>
 
 

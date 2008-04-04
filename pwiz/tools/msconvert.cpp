@@ -21,7 +21,7 @@
 //
 
 
-#include "pwiz/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"

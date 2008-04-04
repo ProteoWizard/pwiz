@@ -21,15 +21,15 @@
 //
 
 
-#include "pwiz/analysis/MSDataAnalyzerApplication.hpp"
-#include "pwiz/analysis/MSDataCache.hpp"
-#include "pwiz/analysis/MetadataReporter.hpp"
-#include "pwiz/analysis/SpectrumTable.hpp"
-#include "pwiz/analysis/SpectrumBinaryData.hpp"
-#include "pwiz/analysis/RegionSlice.hpp"
-#include "pwiz/analysis/RegionTIC.hpp"
-#include "pwiz/analysis/RegionSIC.hpp"
-#include "pwiz/analysis/Pseudo2DGel.hpp"
+#include "pwiz/analysis/passive/MSDataAnalyzerApplication.hpp"
+#include "pwiz/analysis/passive/MSDataCache.hpp"
+#include "pwiz/analysis/passive/MetadataReporter.hpp"
+#include "pwiz/analysis/passive/SpectrumTable.hpp"
+#include "pwiz/analysis/passive/SpectrumBinaryData.hpp"
+#include "pwiz/analysis/passive/RegionSlice.hpp"
+#include "pwiz/analysis/passive/RegionTIC.hpp"
+#include "pwiz/analysis/passive/RegionSIC.hpp"
+#include "pwiz/analysis/passive/Pseudo2DGel.hpp"
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
