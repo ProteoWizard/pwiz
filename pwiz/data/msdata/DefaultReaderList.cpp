@@ -25,7 +25,7 @@
 #include "SpectrumList_mzXML.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
-#include "data/vendor_readers/Reader_RAW.hpp"
+#include "data/vendor_readers/Reader_Thermo.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -162,7 +162,7 @@ DefaultReaderList::DefaultReaderList()
     push_back(ReaderPtr(new Reader_mzXML));
 
     #ifndef PWIZ_NO_READER_RAW
-    push_back(ReaderPtr(new Reader_RAW));
+    push_back(ReaderPtr(new Reader_Thermo));
     #endif
 }
 

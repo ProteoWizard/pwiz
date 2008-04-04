@@ -1,5 +1,5 @@
 //
-// Reader_RAW_Test.cpp
+// Reader_Thermo_Test.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,7 +21,7 @@
 //
 
 
-#include "Reader_RAW.hpp"
+#include "Reader_Thermo.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "utility/misc/unit.hpp"
 #include <iostream>
@@ -48,7 +48,7 @@ void testAccept(const string& filename)
     is.read(&head[0], (std::streamsize)head.size());
     is.close();
 
-    Reader_RAW reader;
+    Reader_Thermo reader;
     bool accepted = reader.accept(filename, head);
     if (os_) *os_ << "accepted: " << boolalpha << accepted << endl;
 
@@ -66,7 +66,7 @@ void testRead(const string& filename)
 
     // read RAW file into MSData object
 
-    Reader_RAW reader;
+    Reader_Thermo reader;
     MSData msd;
     reader.read(filename, "dummy", msd);
 
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
         }
 
         if (filenames.size()!=1)
-            throw runtime_error("Usage: Reader_RAW_Test [-v] filename"); 
+            throw runtime_error("Usage: Reader_Thermo_Test [-v] filename"); 
             
         test(filenames[0]);
         return 0;

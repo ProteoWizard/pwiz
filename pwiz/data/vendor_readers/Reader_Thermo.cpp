@@ -1,5 +1,5 @@
 //
-// Reader_RAW.cpp
+// Reader_Thermo.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,11 +21,11 @@
 //
 
 
-#include "Reader_RAW.hpp"
+#include "Reader_Thermo.hpp"
 
 
 namespace {
-// helper function used by both forms (real and stubbed) of ReadRAW
+// helper function used by both forms (real and stubbed) of Reader_Thermo
 bool _hasRAWHeader(const std::string& head)
 {
     const char rawHeader[] =
@@ -69,18 +69,18 @@ namespace bfs = boost::filesystem;
 
 
 //
-// SpectrumList_RAW
+// SpectrumList_Thermo
 //
 
 
 namespace {
 
 
-class SpectrumList_RAW : public SpectrumList
+class SpectrumList_Thermo : public SpectrumList
 {
     public:
 
-    SpectrumList_RAW(const MSData& msd, shared_ptr<RawFile> rawfile);
+    SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
@@ -100,7 +100,7 @@ class SpectrumList_RAW : public SpectrumList
 };
 
 
-SpectrumList_RAW::SpectrumList_RAW(const MSData& msd, shared_ptr<RawFile> rawfile)
+SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(rawfile->value(NumSpectra)),
     spectrumCache_(size_), index_(size_)
@@ -109,22 +109,22 @@ SpectrumList_RAW::SpectrumList_RAW(const MSData& msd, shared_ptr<RawFile> rawfil
 }
 
 
-size_t SpectrumList_RAW::size() const
+size_t SpectrumList_Thermo::size() const
 {
     return size_;
 }
 
 
-const SpectrumIdentity& SpectrumList_RAW::spectrumIdentity(size_t index) const
+const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
     if (index>size_)
-        throw runtime_error(("[SpectrumList_RAW::spectrumIdentity()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
 }
 
 
-size_t SpectrumList_RAW::find(const string& id) const
+size_t SpectrumList_Thermo::find(const string& id) const
 {
     try
     {
@@ -138,7 +138,7 @@ size_t SpectrumList_RAW::find(const string& id) const
 }
 
 
-size_t SpectrumList_RAW::findNative(const string& nativeID) const
+size_t SpectrumList_Thermo::findNative(const string& nativeID) const
 {
     return find(nativeID);
 }
@@ -185,10 +185,10 @@ CVParam translate(PolarityType scanType)
 }
 
 
-SpectrumPtr SpectrumList_RAW::spectrum(size_t index, bool getBinaryData) const 
+SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const 
 { 
     if (index>size_)
-        throw runtime_error(("[SpectrumList_RAW::spectrum()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
     // returned cached Spectrum if possible
@@ -200,14 +200,14 @@ SpectrumPtr SpectrumList_RAW::spectrum(size_t index, bool getBinaryData) const
 
     SpectrumPtr result(new Spectrum);
     if (!result.get())
-        throw runtime_error("[SpectrumList_RAW::spectrum()] Allocation error.");
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
 
     // get rawfile::ScanInfo and translate
 
     long scanNumber = static_cast<int>(index) + 1;
     auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(scanNumber);
     if (!scanInfo.get())
-        throw runtime_error("[SpectrumList_RAW::spectrum()] Error retrieving ScanInfo.");
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
 
     result->index = index;
     result->id = result->nativeID = lexical_cast<string>(scanNumber);
@@ -216,7 +216,7 @@ SpectrumPtr SpectrumList_RAW::spectrum(size_t index, bool getBinaryData) const
     Scan& scan = sd.scan;
 
     if (msd_.instrumentPtrs.empty())
-        throw runtime_error("[SpectrumList_RAW::spectrum()] No instruments defined.");
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] No instruments defined.");
     scan.instrumentPtr = msd_.instrumentPtrs[0];
 
     string filterString = scanInfo->filter();
@@ -279,7 +279,7 @@ SpectrumPtr SpectrumList_RAW::spectrum(size_t index, bool getBinaryData) const
 }
 
 
-void SpectrumList_RAW::createIndex()
+void SpectrumList_Thermo::createIndex()
 {
     for (size_t i=0; i<size_; i++)
     {
@@ -290,7 +290,7 @@ void SpectrumList_RAW::createIndex()
 }
 
 
-string SpectrumList_RAW::findPrecursorID(size_t index) const
+string SpectrumList_Thermo::findPrecursorID(size_t index) const
 {
     // return most recent survey scan
 
@@ -309,11 +309,11 @@ string SpectrumList_RAW::findPrecursorID(size_t index) const
 
 
 //
-// Reader_RAW
+// Reader_Thermo
 //
 
 
-bool Reader_RAW::hasRAWHeader(const string& head)
+bool Reader_Thermo::hasRAWHeader(const string& head)
 {
     return _hasRAWHeader(head);
 }
@@ -351,13 +351,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     SoftwarePtr softwarePwiz(new Software);
-    softwarePwiz->id = "pwiz::msdata::Reader_RAW";
+    softwarePwiz->id = "pwiz::msdata::Reader_Thermo";
     softwarePwiz->softwareParam = MS_pwiz;
     softwarePwiz->softwareParamVersion = "1.0"; 
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);
-    dpPwiz->id = "pwiz::msdata::Reader_RAW conversion";
+    dpPwiz->id = "pwiz::msdata::Reader_Thermo conversion";
     dpPwiz->softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
@@ -395,13 +395,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 } // namespace
 
 
-bool Reader_RAW::accept(const string& filename, const string& head) const
+bool Reader_Thermo::accept(const string& filename, const string& head) const
 {
     return hasRAWHeader(head);
 }
 
 
-void Reader_RAW::read(const string& filename, 
+void Reader_Thermo::read(const string& filename, 
                       const string& head,
                       MSData& result) const
 {
@@ -411,11 +411,11 @@ void Reader_RAW::read(const string& filename,
 		rawFileLibrary_.reset(new RawFileLibrary());
 	}
 
-    // instantiate RawFile, share ownership with SpectrumList_RAW
+    // instantiate RawFile, share ownership with SpectrumList_Thermo
 
     shared_ptr<RawFile> rawfile(RawFile::create(filename).release());
     rawfile->setCurrentController(Controller_MS, 1);
-    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_RAW(result, rawfile));
+    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Thermo(result, rawfile));
 
     fillInMetadata(filename, *rawfile, result);
 }
@@ -431,7 +431,7 @@ void Reader_RAW::read(const string& filename,
 // non-MSVC implementation
 //
 
-#include "Reader_RAW.hpp"
+#include "Reader_Thermo.hpp"
 #include <stdexcept>
 
 namespace pwiz {
@@ -439,17 +439,17 @@ namespace msdata {
 
 using namespace std;
 
-bool Reader_RAW::accept(const string& filename, const string& head) const
+bool Reader_Thermo::accept(const string& filename, const string& head) const
 {
     return false;
 }
 
-void Reader_RAW::read(const string& filename, const string& head, MSData& result) const
+void Reader_Thermo::read(const string& filename, const string& head, MSData& result) const
 {
-    throw runtime_error("[Reader_RAW::read()] Not implemented."); 
+    throw runtime_error("[Reader_Thermo::read()] Not implemented."); 
 }
 
-bool Reader_RAW::hasRAWHeader(const string& head)
+bool Reader_Thermo::hasRAWHeader(const string& head)
 {   
     return _hasRAWHeader(head);
 }

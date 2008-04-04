@@ -1,5 +1,5 @@
 //
-// Reader_RAW.hpp
+// Reader_Thermo.hpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,8 +21,8 @@
 //
 
 
-#ifndef _READER_RAW_HPP_ 
-#define _READER_RAW_HPP_ 
+#ifndef _READER_THERMO_HPP_ 
+#define _READER_THERMO_HPP_ 
 
 
 #include "data/msdata/Reader.hpp"
@@ -38,7 +38,7 @@ namespace pwiz {
 namespace msdata {
 
 
-class Reader_RAW : public Reader
+class Reader_Thermo : public Reader
 {
     public:
 
@@ -58,5 +58,5 @@ class Reader_RAW : public Reader
 } // namespace pwiz
 
 
-#endif // _READER_RAW_HPP_ 
+#endif // _READER_THERMO_HPP_ 
 
