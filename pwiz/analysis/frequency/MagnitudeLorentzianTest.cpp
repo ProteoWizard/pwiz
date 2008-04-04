@@ -23,8 +23,8 @@
 
 #include "MagnitudeLorentzian.hpp"
 #include "MagnitudeLorentzianTestData.hpp"
-#include "data/FrequencyData.hpp"
-#include "util/unit.hpp"
+#include "data/misc/FrequencyData.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 #include <fstream>
 #include <iterator>

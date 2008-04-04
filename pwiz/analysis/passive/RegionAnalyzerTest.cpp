@@ -22,8 +22,8 @@
 
 
 #include "RegionAnalyzer.hpp"
-#include "msdata/TextWriter.hpp"
-#include "util/unit.hpp"
+#include "data/msdata/TextWriter.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 
 

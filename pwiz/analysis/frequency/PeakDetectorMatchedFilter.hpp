@@ -26,7 +26,7 @@
 
 
 #include "PeakDetector.hpp"
-#include "proteome/IsotopeEnvelopeEstimator.hpp"
+#include "utility/proteome/IsotopeEnvelopeEstimator.hpp"
 #include <memory>
 #include <complex>
 

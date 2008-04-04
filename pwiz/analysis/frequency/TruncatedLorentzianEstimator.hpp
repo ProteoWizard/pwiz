@@ -26,7 +26,7 @@
 
 
 #include "TruncatedLorentzianParameters.hpp"
-#include "data/FrequencyData.hpp"
+#include "data/misc/FrequencyData.hpp"
 #include <memory>
 #include <iosfwd>
 

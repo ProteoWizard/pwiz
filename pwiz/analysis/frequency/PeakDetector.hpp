@@ -25,8 +25,8 @@
 #define _PEAKDETECTOR_HPP_
 
 
-#include "data/FrequencyData.hpp"
-#include "data/PeakData.hpp"
+#include "data/misc//FrequencyData.hpp"
+#include "data/misc/PeakData.hpp"
 
 
 namespace pwiz {

@@ -25,7 +25,7 @@
 #define _MSDATAANALYZER_HPP_
 
 
-#include "msdata/MSData.hpp"
+#include "data/msdata/MSData.hpp"
 #include <iosfwd>
 
 

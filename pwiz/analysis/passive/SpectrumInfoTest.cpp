@@ -22,8 +22,8 @@
 
 
 #include "SpectrumInfo.hpp"
-#include "msdata/examples.hpp"
-#include "util/unit.hpp"
+#include "data/msdata/examples.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 
 

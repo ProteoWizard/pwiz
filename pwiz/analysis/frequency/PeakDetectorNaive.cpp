@@ -22,8 +22,8 @@
 
 
 #include "PeakDetectorNaive.hpp"
-#include "data/FrequencyData.hpp"
-#include "data/PeakData.hpp"
+#include "data/misc/FrequencyData.hpp"
+#include "data/misc/PeakData.hpp"
 #include <iostream>
 
 

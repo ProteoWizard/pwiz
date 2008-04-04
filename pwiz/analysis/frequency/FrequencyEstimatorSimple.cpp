@@ -22,7 +22,7 @@
 
 
 #include "FrequencyEstimatorSimple.hpp"
-#include "math/Parabola.hpp"
+#include "utility/math/Parabola.hpp"
 #include "MagnitudeLorentzian.hpp"
 #include <iostream>
 #include <stdexcept>

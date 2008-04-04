@@ -23,8 +23,8 @@
 #ifndef _PEPTIDEID_PEPXML_HPP_
 #define _PEPTIDEID_PEPXML_HPP_
 
-#include <proteome/auto_vector.h>
-#include "minimxml/SAXParser.hpp"
+#include <utility/proteome/auto_vector.h>
+#include "utility/minimxml/SAXParser.hpp"
 
 namespace pwiz {
 namespace peptideid {

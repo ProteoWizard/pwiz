@@ -1,5 +1,5 @@
 #
-# Jamfile (analysis/peptideid) 
+# Jamfile (utility) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -18,22 +18,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 # See the License for the specific language governing permissions and 
 # limitations under the License.
-# 
-
-
-lib pwiz_analysis_peptideid
-    :   PeptideIDMap.cpp 
-        PeptideID_pepXML.cpp
-        ../../utility/minimxml
-    ;
-
-
-#
-# unit tests
 #
 
 
-unit-test PeptideIDMapTest : PeptideIDMapTest.cpp pwiz_analysis_peptideid ;
-
-unit-test PeptideID_pepXMLTest : PeptideID_pepXMLTest.cpp pwiz_analysis_peptideid ;
+build-project misc ;
+build-project math ;
+build-project minimxml ;
+build-project proteome ;
+build-project vendor_api ;
 

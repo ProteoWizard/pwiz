@@ -23,7 +23,7 @@
 
 #include "PeakDetectorMatchedFilter.hpp"
 #include "PeakDetectorMatchedFilterTestData.hpp"
-#include "util/unit.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>

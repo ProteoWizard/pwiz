@@ -1,5 +1,5 @@
 #
-# Jamfile (analysis) 
+# Jamfile (analysis/passive) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -27,7 +27,7 @@ project
     ;
 
 
-lib pwiz_analysis
+lib pwiz_analysis_passive
     :   MSDataAnalyzer.cpp
         MSDataAnalyzerApplication.cpp
         SpectrumInfo.cpp
@@ -40,10 +40,10 @@ lib pwiz_analysis
         RegionTIC.cpp
         RegionSIC.cpp
         Pseudo2DGel.cpp
-        ../math
-        ../msdata//pwiz_msdata
-        ..//boost_program_options
-        ..//boost_filesystem
+        ../../utility/math
+        ../../data/msdata//pwiz_data_msdata
+        ../..//boost_program_options
+        ../..//boost_filesystem
     ;
 
 
@@ -52,9 +52,9 @@ lib pwiz_analysis
 #
 
 
-unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis ;
-unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis ;
-unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../msdata/examples.cpp pwiz_analysis ;
-unit-test MSDataCacheTest : MSDataCacheTest.cpp ../msdata/examples.cpp pwiz_analysis ;
-unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis ;
+unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
+unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ;
+unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
+unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
+unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
 

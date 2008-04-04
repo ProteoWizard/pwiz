@@ -22,7 +22,7 @@
 
 
 #include "MSDataAnalyzerApplication.hpp"
-#include "msdata/MSDataFile.hpp"
+#include "data/msdata/MSDataFile.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"

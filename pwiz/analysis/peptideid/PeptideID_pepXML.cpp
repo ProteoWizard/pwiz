@@ -21,7 +21,7 @@
 //
 
 #include "PeptideID_pepXML.hpp"
-#include "minimxml/SAXParser.hpp"
+#include "utility/minimxml/SAXParser.hpp"
 
 namespace pwiz {
 namespace peptideid {

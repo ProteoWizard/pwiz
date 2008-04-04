@@ -22,7 +22,7 @@
 
 
 #include "RegionAnalyzer.hpp"
-#include "math/Parabola.hpp"
+#include "utility/math/Parabola.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

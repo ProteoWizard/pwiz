@@ -25,7 +25,7 @@
 #define _PARAMETRIZEDFUNCTION_HPP_
 
 
-#include "data/SampleDatum.hpp"
+#include "data/misc/SampleDatum.hpp"
 
 
 #include "boost/numeric/ublas/vector.hpp"

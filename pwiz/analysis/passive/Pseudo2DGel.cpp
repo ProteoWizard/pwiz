@@ -22,7 +22,7 @@
 
 
 #include "Pseudo2DGel.hpp"
-#include "util/Image.hpp"
+#include "utility/misc/Image.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

@@ -22,7 +22,7 @@
 
 
 #include "MagnitudeLorentzian.hpp"
-#include "math/Parabola.hpp"
+#include "utility/math/Parabola.hpp"
 #include <cmath>
 #include <algorithm>
 #include <iostream>

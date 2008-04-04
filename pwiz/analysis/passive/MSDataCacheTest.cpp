@@ -22,9 +22,9 @@
 
 
 #include "MSDataCache.hpp"
-#include "msdata/MSDataFile.hpp"
-#include "msdata/examples.hpp"
-#include "util/unit.hpp"
+#include "data/msdata/MSDataFile.hpp"
+#include "data/msdata/examples.hpp"
+#include "utility/misc/unit.hpp"
 #include <iostream>
 
 

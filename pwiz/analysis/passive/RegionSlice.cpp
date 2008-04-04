@@ -22,7 +22,7 @@
 
 
 #include "RegionSlice.hpp"
-#include "msdata/TextWriter.hpp"
+#include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
