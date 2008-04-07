@@ -1,0 +1,316 @@
+//
+// PeakFamilyDetectorFT.cpp
+//
+//
+// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
+#include "PeakFamilyDetectorFT.hpp"
+#include "analysis/frequency/PeakDetectorMatchedFilter.hpp"
+#include "data/misc/FrequencyData.hpp"
+#include "utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include <fstream>
+
+
+namespace pwiz {
+namespace analysis {
+
+
+using namespace std;
+using namespace pwiz::proteome;
+using namespace pwiz::data;
+using namespace pwiz::peaks; // TODO: rename -> frequency
+
+
+//
+// PeakFamilyDetectorFT::Impl
+//
+
+
+class PeakFamilyDetectorFT::Impl
+{
+    public:
+
+    Impl(const Config& config);
+
+    void detect(const MZIntensityPair* begin,
+                const MZIntensityPair* end,
+                vector<PeakFamily>& result);
+
+    private:
+
+    Config config_;
+
+    auto_ptr<IsotopeEnvelopeEstimator> isotopeEnvelopeEstimator_;
+    auto_ptr<PeakDetectorMatchedFilter> pdmf_;
+
+    auto_ptr<FrequencyData> createFrequencyData(const MZIntensityPair* begin,
+                                                const MZIntensityPair* end) const;
+};
+
+
+namespace {
+
+void readSecretConfigFile(PeakDetectorMatchedFilter::Config& config)
+{
+    using namespace std;
+
+    ifstream is("secret_config.txt");
+    if (!is) return;
+
+    cout << "Reading secret_config.txt...";
+
+    map<string,string> attributes;
+    
+    while (is)
+    {
+        string name, value;
+        is >> name >> value;
+        if (!is) break;
+        attributes[name] = value;
+    }
+
+    if (attributes.count("filterMatchRate"))
+        config.filterMatchRate = atoi(attributes["filterMatchRate"].c_str());
+    if (attributes.count("filterSampleRadius"))
+        config.filterSampleRadius = atoi(attributes["filterSampleRadius"].c_str());
+    if (attributes.count("peakThresholdFactor"))
+        config.peakThresholdFactor = atof(attributes["peakThresholdFactor"].c_str());
+    if (attributes.count("peakMaxCorrelationAngle"))
+        config.peakMaxCorrelationAngle = atof(attributes["peakMaxCorrelationAngle"].c_str());
+    if (attributes.count("isotopeThresholdFactor"))
+        config.isotopeThresholdFactor = atof(attributes["isotopeThresholdFactor"].c_str());
+    if (attributes.count("monoisotopicPeakThresholdFactor"))
+        config.monoisotopicPeakThresholdFactor = atof(attributes["monoisotopicPeakThresholdFactor"].c_str());
+    if (attributes.count("isotopeMaxChargeState"))
+        config.isotopeMaxChargeState = atoi(attributes["isotopeMaxChargeState"].c_str());
+    if (attributes.count("isotopeMaxNeutronCount"))
+        config.isotopeMaxNeutronCount = atoi(attributes["isotopeMaxNeutronCount"].c_str());
+    if (attributes.count("collapseRadius"))
+        config.collapseRadius = atof(attributes["collapseRadius"].c_str());
+
+    cout << "done.\n" << flush;
+}
+
+PeakDetectorMatchedFilter::Config getPeakDetectorConfiguration()
+{
+    PeakDetectorMatchedFilter::Config config;
+    config.filterMatchRate = 4;
+    config.filterSampleRadius = 2;
+    config.peakThresholdFactor = 4;
+    config.peakMaxCorrelationAngle = 30;
+    config.isotopeThresholdFactor = 4;
+    config.monoisotopicPeakThresholdFactor = 1.5;
+    config.isotopeMaxChargeState = 6;
+    config.isotopeMaxNeutronCount = 5;
+    config.collapseRadius = 15;
+    config.useMagnitudeFilter = true;
+    config.logDetailLevel = 1;
+
+    readSecretConfigFile(config);
+
+    return config;
+}
+
+auto_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
+{
+    const double abundanceCutoff = .01;
+    const double massPrecision = .1; 
+    IsotopeCalculator isotopeCalculator(abundanceCutoff, massPrecision);
+
+    IsotopeEnvelopeEstimator::Config config;
+    config.isotopeCalculator = &isotopeCalculator;
+
+    return auto_ptr<IsotopeEnvelopeEstimator>(new IsotopeEnvelopeEstimator(config));
+}
+
+} // namespace
+
+
+PeakFamilyDetectorFT::Impl::Impl(const Config& config)
+:   config_(config)
+{
+    // instantiate IsotopeEnvelopeEstimator
+    isotopeEnvelopeEstimator_ = createIsotopeEnvelopeEstimator();    
+
+    // fill in PeakDetectorMatchedFilter::Config structure
+    PeakDetectorMatchedFilter::Config pdmfConfig = getPeakDetectorConfiguration();
+    pdmfConfig.isotopeEnvelopeEstimator = isotopeEnvelopeEstimator_.get();
+    pdmfConfig.log = config.log;
+
+    // instantiate PeakDetector
+    pdmf_ = PeakDetectorMatchedFilter::create(pdmfConfig);
+}
+
+
+void PeakFamilyDetectorFT::Impl::detect(const MZIntensityPair* begin,
+                                        const MZIntensityPair* end,
+                                        vector<PeakFamily>& result)
+{
+    if (!begin || !end || begin==end) return; 
+
+    // convert mass data to frequency data
+
+    auto_ptr<FrequencyData> fd = createFrequencyData(begin, end);
+    if (!fd.get() || fd->data().empty())
+        throw NoDataException(); 
+
+    //fd->scanNumber(msrunScan.scanNumber());
+    //fd->retentionTime(msrunScan.retentionTime());
+
+    // find peaks in the frequency data
+
+    peakdata::Scan scan; // TODO: hack
+
+    vector<PeakDetectorMatchedFilter::Score> scores; // TODO: remove
+    pdmf_->findPeaks(*fd, scan, scores);
+
+    result = scan.peakFamilies; 
+}
+
+
+auto_ptr<FrequencyData> 
+PeakFamilyDetectorFT::Impl::createFrequencyData(const MZIntensityPair* begin,
+                                                const MZIntensityPair* end) const
+{
+    auto_ptr<FrequencyData> fd(new FrequencyData);
+
+    // convert mass/intensity pairs to frequency/intensity pairs
+    
+    for (const MZIntensityPair* it=end-1; it>=begin; --it)
+        fd->data().push_back(FrequencyDatum(config_.cp.frequency(it->mz), it->intensity));
+
+    // fill in metadata
+
+    fd->observationDuration(fd->observationDurationEstimatedFromData());
+    fd->calibrationParameters(config_.cp);
+    fd->analyze();
+
+    // noise floor calculation must account for fact that there may be holes in mass data!
+
+    fd->noiseFloor(fd->cutoffNoiseFloor());
+
+    // log if requested
+   
+    if (config_.log)
+    {
+        *config_.log << setprecision(6) << fixed
+                     << "[MassPeakDetector::createFrequencyData()]\n"
+                     << "mzLow: " << begin->mz << endl 
+                     << "mzHigh: " << (end-1)->mz << endl 
+                     << "A: " << config_.cp.A << endl 
+                     << "B: " << config_.cp.B << endl 
+                     << "observationDuration: " << fd->observationDuration() << endl 
+                     << "noiseFloor: " << fd->noiseFloor() << endl
+                     << "<data>" << endl
+                     << "#       m/z           freq          intensity\n";
+
+        for (const MZIntensityPair* it=end-1; it>=begin; --it)
+            *config_.log << setw(15) << it->mz
+                         << setw(15) << config_.cp.frequency(it->mz)
+                         << setw(15) << it->intensity
+                         << endl;
+        
+        *config_.log << "</data>" << endl << endl;
+    } 
+
+    return fd;
+}
+
+/*
+namespace {
+class ScoreToMassPeak 
+{
+    public:
+
+    ScoreToMassPeak(const CalibrationParameters& cp, double noiseFloor)
+    :   cp_(cp), noiseFloor_(noiseFloor)
+    {}
+
+    MassPeakDetector::MassPeak operator()(const PeakDetectorMatchedFilter::Score& score)
+    {
+        MassPeakDetector::MassPeak result;
+        result.mzMonoisotopic = cp_.mz(score.monoisotopicFrequency);
+        result.intensity = abs(score.monoisotopicIntensity);
+        result.charge = score.charge;
+        result.score = score.value / noiseFloor_;
+        return result;
+    }
+
+    private:
+
+    const CalibrationParameters& cp_;
+    double noiseFloor_;
+};
+} // namespace
+
+
+vector<MassPeakDetector::MassPeak> MassPeakDetectorFTImpl::findPeaks(const msrun::Scan& msrunScan,
+                                                                     double mzLow, double mzHigh,
+                                                                     data::peakdata::Scan& result)
+                                                                     const
+{
+    // convert mass data to frequency data
+    auto_ptr<FrequencyData> fd = createFrequencyData(msrunScan.peaks(), mzLow, mzHigh);
+    if (!fd.get() || fd->data().empty())
+        throw NoDataException(); 
+
+    fd->scanNumber(msrunScan.scanNumber());
+    fd->retentionTime(msrunScan.retentionTime());
+
+    // find peaks in the frequency data
+    vector<PeakDetectorMatchedFilter::Score> scores;
+    pd_->findPeaks(*fd, result, scores);
+
+    // TODO: remove below
+
+    // convert frequency peak scores to mass peak info
+    vector<MassPeak> massPeaks;
+
+    transform(scores.begin(), scores.end(), back_inserter(massPeaks), 
+              ScoreToMassPeak(config_.cp, fd->noiseFloor()));
+
+    return massPeaks;
+}
+
+
+*/
+
+
+//
+// PeakFamilyDetectorFT
+//
+
+
+PeakFamilyDetectorFT::PeakFamilyDetectorFT(const Config& config)
+:   impl_(new Impl(config))
+{}
+
+
+void PeakFamilyDetectorFT::detect(const MZIntensityPair* begin,
+                                  const MZIntensityPair* end,
+                                  vector<PeakFamily>& result)
+{
+    impl_->detect(begin, end, result);
+}
+
+
+} // namespace analysis 
+} // namespace pwiz
+
