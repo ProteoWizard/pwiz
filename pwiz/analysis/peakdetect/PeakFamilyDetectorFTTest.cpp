@@ -64,7 +64,7 @@ void test()
     if (os_)
     {
         *os_ << setprecision(10) << "result: " << result.size() << endl;
-        //copy(result.begin(), result.end(), ostream_iterator<PeakFamily>(*os_, "\n"));
+        copy(result.begin(), result.end(), ostream_iterator<PeakFamily>(*os_, "\n"));
     }
 
     unit_assert(result.size() == 1);

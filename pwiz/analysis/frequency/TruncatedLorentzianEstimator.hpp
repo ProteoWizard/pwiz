@@ -32,7 +32,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class TruncatedLorentzianEstimator
@@ -58,7 +58,7 @@ class TruncatedLorentzianEstimator
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

@@ -31,7 +31,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -142,6 +142,6 @@ double MagnitudeLorentzian::alpha() const
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

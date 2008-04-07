@@ -32,7 +32,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// MatchedFilter implementation of the PeakDetector interface. 
@@ -157,7 +157,7 @@ class PeakDetectorMatchedFilter : public PeakDetector
 std::ostream& operator<<(std::ostream& os, const PeakDetectorMatchedFilter::Score& a);
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

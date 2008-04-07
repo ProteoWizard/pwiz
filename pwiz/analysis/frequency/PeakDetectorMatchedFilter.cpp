@@ -38,7 +38,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -285,6 +285,7 @@ peakdata::PeakFamily score2peakFamily(const PeakDetectorMatchedFilter::Score& sc
     peakFamily.charge = score.charge;
     peakFamily.peaks = score.peaks; // TODO: avoid this copy of vector
     peakFamily.mzMonoisotopic = !peakFamily.peaks.empty() ? peakFamily.peaks[0].mz : 0;
+    peakFamily.score = score.value;
 
     return peakFamily;
 }
@@ -382,8 +383,13 @@ void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd,
     }
 
     // remove any redundancies and fill in scores
+
     scores.clear();
     collapseScores(goodScores, scores);
+
+    // normalize scores to noise floor
+    for (vector<Score>::iterator it=scores.begin(); it!=scores.end(); ++it)
+        it->value /= fd.noiseFloor();
 
     if (log_)
     {
@@ -616,6 +622,6 @@ ostream& operator<<(ostream& os, const PeakDetectorMatchedFilter::Score& a)
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

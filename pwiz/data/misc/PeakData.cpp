@@ -284,6 +284,7 @@ std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
     os << "peakFamily ("
        << "mzMonoisotopic:" << peakFamily.mzMonoisotopic << " "
        << "charge:" << peakFamily.charge << " "
+       << "score:" << peakFamily.score << " "
        << "peaks:" << peakFamily.peaks.size() << ")\n"; 
 
     copy(peakFamily.peaks.begin(), peakFamily.peaks.end(), ostream_iterator<Peak>(os, "\n")); 

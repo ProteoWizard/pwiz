@@ -30,7 +30,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// Interface for frequency estimator modules. 
@@ -48,7 +48,7 @@ class FrequencyEstimator
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

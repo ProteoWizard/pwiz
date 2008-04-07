@@ -39,7 +39,7 @@ namespace ublas = boost::numeric::ublas;
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 template<typename value_type>
@@ -110,7 +110,7 @@ class ParametrizedFunction<value_type>::ErrorFunction
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

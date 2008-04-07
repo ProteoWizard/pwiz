@@ -30,7 +30,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// Simple implementation of the FrequencyEstimator interface. 
@@ -53,7 +53,7 @@ class FrequencyEstimatorSimple : public FrequencyEstimator
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

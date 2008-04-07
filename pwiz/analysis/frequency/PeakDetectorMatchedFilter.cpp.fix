@@ -36,7 +36,7 @@ inline double round(double d) {return floor(d + 0.5);}
 
 
 namespace mstools {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -695,6 +695,6 @@ ostream& operator<<(ostream& os, const PeakDetectorMatchedFilter::Score& a)
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace mstools
 

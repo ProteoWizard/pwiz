@@ -35,7 +35,7 @@ namespace ublas = boost::numeric::ublas;
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -169,6 +169,6 @@ ParameterEstimatorImpl::Parameters ParameterEstimatorImpl::solve(const ublas::ma
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

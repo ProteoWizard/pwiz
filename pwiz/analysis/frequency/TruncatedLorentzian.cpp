@@ -30,7 +30,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -243,6 +243,6 @@ void TruncatedLorentzian::outputSamples(const string& filename, const ublas::vec
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

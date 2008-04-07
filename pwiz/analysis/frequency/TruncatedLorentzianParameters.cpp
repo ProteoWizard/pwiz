@@ -28,7 +28,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -198,6 +198,6 @@ bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzia
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

@@ -32,7 +32,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class ParameterEstimator
@@ -63,7 +63,7 @@ class ParameterEstimator
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

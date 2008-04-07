@@ -28,7 +28,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 using namespace std;
@@ -233,6 +233,6 @@ double TruncatedLorentzianEstimatorImpl::sumSquaresModel(const FrequencyData& fd
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

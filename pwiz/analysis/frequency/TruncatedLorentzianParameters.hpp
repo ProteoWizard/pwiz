@@ -29,7 +29,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// struct for holding parameters for a Truncated Lorentzian function
@@ -69,7 +69,7 @@ bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzia
 bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u);
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

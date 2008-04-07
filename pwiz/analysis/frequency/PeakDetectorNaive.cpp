@@ -33,7 +33,7 @@ using namespace pwiz::data::peakdata;
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class PeakDetectorNaiveImpl : public PeakDetectorNaive
@@ -122,6 +122,6 @@ void PeakDetectorNaiveImpl::findPeaks(const FrequencyData& fd, peakdata::Scan& r
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

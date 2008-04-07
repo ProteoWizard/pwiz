@@ -37,13 +37,13 @@
 
 using namespace std;
 using namespace pwiz::math;
-using namespace pwiz::peaks;
+using namespace pwiz::frequency;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimple
@@ -186,6 +186,6 @@ Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd,
 }
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 

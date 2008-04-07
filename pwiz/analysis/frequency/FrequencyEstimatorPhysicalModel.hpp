@@ -31,7 +31,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// Physical model implementation of the FrequencyEstimator interface. 
@@ -61,7 +61,7 @@ class FrequencyEstimatorPhysicalModel : public FrequencyEstimator
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

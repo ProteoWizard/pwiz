@@ -30,7 +30,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::peaks;
+using namespace pwiz::frequency;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 

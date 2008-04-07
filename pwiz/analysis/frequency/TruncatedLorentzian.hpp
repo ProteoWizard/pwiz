@@ -31,7 +31,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class TruncatedLorentzian : public ParametrizedFunction< std::complex<double> >
@@ -57,7 +57,7 @@ class TruncatedLorentzian : public ParametrizedFunction< std::complex<double> >
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

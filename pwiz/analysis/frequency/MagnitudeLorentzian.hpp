@@ -29,7 +29,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 class MagnitudeLorentzian
@@ -59,7 +59,7 @@ class MagnitudeLorentzian
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

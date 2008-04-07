@@ -33,7 +33,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 namespace DerivativeTest {
 
 
@@ -249,7 +249,7 @@ void testDerivatives(const typename ParametrizedFunction<value_type>::ErrorFunct
 
 
 } // namespace DerivativeTest
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

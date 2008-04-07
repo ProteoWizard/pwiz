@@ -30,7 +30,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// Interface for finding peaks in frequency data.
@@ -45,7 +45,7 @@ class PeakDetector
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 

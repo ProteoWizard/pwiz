@@ -35,7 +35,7 @@ namespace analysis {
 using namespace std;
 using namespace pwiz::proteome;
 using namespace pwiz::data;
-using namespace pwiz::peaks; // TODO: rename -> frequency
+using namespace pwiz::frequency;
 
 
 //
@@ -171,16 +171,10 @@ void PeakFamilyDetectorFT::Impl::detect(const MZIntensityPair* begin,
     if (!fd.get() || fd->data().empty())
         throw NoDataException(); 
 
-    //fd->scanNumber(msrunScan.scanNumber());
-    //fd->retentionTime(msrunScan.retentionTime());
-
     // find peaks in the frequency data
 
-    peakdata::Scan scan; // TODO: hack
-
-    vector<PeakDetectorMatchedFilter::Score> scores; // TODO: remove
-    pdmf_->findPeaks(*fd, scan, scores);
-
+    peakdata::Scan scan;
+    pdmf_->findPeaks(*fd, scan);
     result = scan.peakFamilies; 
 }
 
@@ -232,65 +226,6 @@ PeakFamilyDetectorFT::Impl::createFrequencyData(const MZIntensityPair* begin,
 
     return fd;
 }
-
-/*
-namespace {
-class ScoreToMassPeak 
-{
-    public:
-
-    ScoreToMassPeak(const CalibrationParameters& cp, double noiseFloor)
-    :   cp_(cp), noiseFloor_(noiseFloor)
-    {}
-
-    MassPeakDetector::MassPeak operator()(const PeakDetectorMatchedFilter::Score& score)
-    {
-        MassPeakDetector::MassPeak result;
-        result.mzMonoisotopic = cp_.mz(score.monoisotopicFrequency);
-        result.intensity = abs(score.monoisotopicIntensity);
-        result.charge = score.charge;
-        result.score = score.value / noiseFloor_;
-        return result;
-    }
-
-    private:
-
-    const CalibrationParameters& cp_;
-    double noiseFloor_;
-};
-} // namespace
-
-
-vector<MassPeakDetector::MassPeak> MassPeakDetectorFTImpl::findPeaks(const msrun::Scan& msrunScan,
-                                                                     double mzLow, double mzHigh,
-                                                                     data::peakdata::Scan& result)
-                                                                     const
-{
-    // convert mass data to frequency data
-    auto_ptr<FrequencyData> fd = createFrequencyData(msrunScan.peaks(), mzLow, mzHigh);
-    if (!fd.get() || fd->data().empty())
-        throw NoDataException(); 
-
-    fd->scanNumber(msrunScan.scanNumber());
-    fd->retentionTime(msrunScan.retentionTime());
-
-    // find peaks in the frequency data
-    vector<PeakDetectorMatchedFilter::Score> scores;
-    pd_->findPeaks(*fd, result, scores);
-
-    // TODO: remove below
-
-    // convert frequency peak scores to mass peak info
-    vector<MassPeak> massPeaks;
-
-    transform(scores.begin(), scores.end(), back_inserter(massPeaks), 
-              ScoreToMassPeak(config_.cp, fd->noiseFloor()));
-
-    return massPeaks;
-}
-
-
-*/
 
 
 //

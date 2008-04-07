@@ -29,7 +29,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::peaks;
+using namespace pwiz::frequency;
 
 
 ostream* os_ = 0;

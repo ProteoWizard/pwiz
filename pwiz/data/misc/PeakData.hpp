@@ -53,7 +53,7 @@ struct Peak
     double phase;
     double decay;
 
-    Peak() : mz(0), intensity(0), area(0), error(0), 
+    Peak() : mz(0), intensity(0), area(0), error(0),
              frequency(0), phase(0), decay(0) 
     {}
 };
@@ -66,9 +66,10 @@ struct PeakFamily
 {
     double mzMonoisotopic;
     int charge;
+    double score;
     std::vector<Peak> peaks;
 
-    PeakFamily() : mzMonoisotopic(0), charge(0) {}
+    PeakFamily() : mzMonoisotopic(0), charge(0), score(0) {}
     double sumAmplitude() const {return 0;}
     double sumArea() const {return 0;}
 

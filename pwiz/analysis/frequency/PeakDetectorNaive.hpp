@@ -30,7 +30,7 @@
 
 
 namespace pwiz {
-namespace peaks {
+namespace frequency {
 
 
 /// Naive implementation of the PeakDetector interface. 
@@ -61,7 +61,7 @@ class PeakDetectorNaive : public PeakDetector
 };
 
 
-} // namespace peaks
+} // namespace frequency
 } // namespace pwiz
 
 
