@@ -42,6 +42,7 @@ lib pwiz_analysis_passive
         Pseudo2DGel.cpp
         ../../utility/math
         ../../data/msdata//pwiz_data_msdata
+        ../../data/vendor_readers
         ../..//boost_program_options
         ../..//boost_filesystem
     ;
@@ -53,7 +54,7 @@ lib pwiz_analysis_passive
 
 
 unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
-unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ../../data/vendor_readers ; # TODO: remove vendor_readers dependency
+unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ;
 unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
 unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
 unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;

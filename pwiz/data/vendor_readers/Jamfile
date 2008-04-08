@@ -32,7 +32,8 @@ project
 
 
 lib pwiz_data_vendor_readers
-    :   Reader_Thermo.cpp
+    :   ExtendedReaderList.cpp 
+        Reader_Thermo.cpp
         ../../utility/vendor_api/thermo
         ../msdata//pwiz_data_msdata
     ;

@@ -22,6 +22,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -209,10 +210,10 @@ Config parseCommandLine(int argc, const char* argv[])
 }
 
 
-void processFile(const string& filename, const Config& config)
+void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     cout << "processing file: " << filename << endl;
-    MSDataFile msd(filename);
+    MSDataFile msd(filename, &readers);
 
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;
@@ -228,12 +229,14 @@ void go(const Config& config)
 
     boost::filesystem::create_directories(config.outputPath);
 
+    ExtendedReaderList readers;
+
     for (vector<string>::const_iterator it=config.filenames.begin(); 
          it!=config.filenames.end(); ++it)
     {
         try
         {
-            processFile(*it, config);
+            processFile(*it, config, readers);
         }
         catch (exception& e)
         {

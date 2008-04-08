@@ -23,6 +23,7 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/Diff.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "boost/program_options.hpp"
 #include <iostream>
 #include <iterator>
@@ -118,8 +119,10 @@ Config parseCommandLine(int argc, const char* argv[])
 
 int do_diff(const Config& config)
 {
-    MSDataFile msd1(config.filenames[0]); 
-    MSDataFile msd2(config.filenames[1]);
+    ExtendedReaderList readers;
+
+    MSDataFile msd1(config.filenames[0], &readers);
+    MSDataFile msd2(config.filenames[1], &readers);
 
     Diff<MSData> diff(msd1, msd2, config.diffConfig);
     if (diff) cout << diff; 
