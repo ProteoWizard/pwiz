@@ -46,6 +46,7 @@ lib pwiz_data_msdata
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp
         SpectrumList_mzXML.cpp
+        SpectrumListFilter.cpp
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
@@ -95,6 +96,7 @@ unit-test cvtest : cvtest.cpp pwiz_data_msdata ; # cv.cpp ;
 unit-test CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_msdata ; # CVTranslator.cpp cv.cpp ;
 unit-test CVParamTest : CVParamTest.cpp pwiz_data_msdata ; # CVParam.cpp cv.cpp ;
 unit-test MSDataTest : MSDataTest.cpp pwiz_data_msdata ; # MSData.cpp cv.cpp ;
+unit-test SpectrumListFilterTest : SpectrumListFilterTest.cpp pwiz_data_msdata ;
 unit-test LegacyAdapterTest : LegacyAdapterTest.cpp pwiz_data_msdata ; # LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ;
 unit-test SpectrumIteratorTest : SpectrumIteratorTest.cpp pwiz_data_msdata ; # SpectrumIterator.cpp MSData.cpp cv.cpp ../util ;
 unit-test BinaryDataEncoderTest : BinaryDataEncoderTest.cpp pwiz_data_msdata ; # BinaryDataEncoder.cpp ../util ;
