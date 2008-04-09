@@ -104,6 +104,38 @@ void testInstantiation()
 }
 
 
+void testContains()
+{
+    IntegerSet a(3,5);
+    a.insert(11);
+    a.insert(13,17);
+
+    for (int i=0; i<3; i++)
+        unit_assert(!a.contains(i));
+    for (int i=3; i<6; i++)
+        unit_assert(a.contains(i));
+    for (int i=6; i<11; i++)
+        unit_assert(!a.contains(i));
+    unit_assert(a.contains(11));
+    unit_assert(!a.contains(12));
+    for (int i=13; i<18; i++)
+        unit_assert(a.contains(i));
+    for (int i=18; i<100; i++)
+        unit_assert(!a.contains(i));
+}
+
+
+void testUpperBound()
+{
+    IntegerSet a(3,5);
+
+    for (int i=0; i<5; i++)
+        unit_assert(!a.hasUpperBound(i));
+    for (int i=5; i<10; i++)
+        unit_assert(a.hasUpperBound(i));
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -111,6 +143,8 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         test();
         testInstantiation();
+        testContains();
+        testUpperBound();
         return 0;
     }
     catch (exception& e)

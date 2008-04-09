@@ -47,6 +47,8 @@ class IntegerSet
         Interval(int a = 0); // allow int conversion
         Interval(int a, int b);
 
+        bool contains(int n) const {return n>=begin && n<=end;}
+
         friend std::ostream& operator<<(std::ostream& os, const Interval& interval);
     };
 
@@ -119,6 +121,12 @@ class IntegerSet
 
     /// true iff IntegerSet is empty
     bool empty() const {return intervals_.empty();}
+
+    /// true iff n is in the IntegerSet
+    bool contains(int n) const;
+
+    /// true iff n is an upper bound for the IntegerSet 
+    bool hasUpperBound(int n) const; 
 
     private:
     Intervals intervals_; 

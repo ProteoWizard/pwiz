@@ -151,6 +151,22 @@ IntegerSet::const_iterator IntegerSet::end() const
 }
 
 
+bool IntegerSet::contains(int n) const
+{
+    for (Intervals::const_iterator it=intervals_.begin(); it!=intervals_.end(); ++it)
+        if (it->contains(n)) return true;
+    return false;
+}
+
+
+bool IntegerSet::hasUpperBound(int n) const
+{
+    if (empty()) return true;
+    int highest = intervals_.back().end;
+    return highest <= n;
+}
+
+
 ostream& operator<<(ostream& os, const IntegerSet& integerSet)
 {
     copy(integerSet.intervals_.begin(), integerSet.intervals_.end(), 

@@ -23,6 +23,7 @@
 
 #include "SpectrumListFilter.hpp"
 #include "utility/misc/unit.hpp"
+#include "utility/misc/IntegerSet.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
 
@@ -194,12 +195,78 @@ void testSelectedIndices(SpectrumListPtr sl)
 }
 
 
+void testIndexSet(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testIndexSet:\n";
+
+    IntegerSet indexSet;
+    indexSet.insert(3,5);
+    indexSet.insert(7);
+    indexSet.insert(9);
+
+    SpectrumListFilter filter(sl, SpectrumListFilterPredicate_IndexSet(indexSet));
+    
+    if (os_)
+    {
+        *os_ << "size: " << filter.size() << endl;
+
+        for (size_t i=0, end=filter.size(); i<end; i++)
+        {
+            SpectrumPtr spectrum = filter.spectrum(i);
+            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+        }
+
+        *os_ << endl;
+    }
+
+    unit_assert(filter.size() == 5);
+    unit_assert(filter.spectrumIdentity(0).nativeID == "103");
+    unit_assert(filter.spectrumIdentity(1).nativeID == "104");
+    unit_assert(filter.spectrumIdentity(2).nativeID == "105");
+    unit_assert(filter.spectrumIdentity(3).nativeID == "107");
+    unit_assert(filter.spectrumIdentity(4).nativeID == "109");
+}
+
+
+void testScanNumberSet(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testScanNumberSet:\n";
+
+    IntegerSet scanNumberSet;
+    scanNumberSet.insert(102,104);
+    scanNumberSet.insert(107);
+
+    SpectrumListFilter filter(sl, SpectrumListFilterPredicate_ScanNumberSet(scanNumberSet));
+    
+    if (os_)
+    {
+        *os_ << "size: " << filter.size() << endl;
+
+        for (size_t i=0, end=filter.size(); i<end; i++)
+        {
+            SpectrumPtr spectrum = filter.spectrum(i);
+            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+        }
+
+        *os_ << endl;
+    }
+
+    unit_assert(filter.size() == 4);
+    unit_assert(filter.spectrumIdentity(0).nativeID == "102");
+    unit_assert(filter.spectrumIdentity(1).nativeID == "103");
+    unit_assert(filter.spectrumIdentity(2).nativeID == "104");
+    unit_assert(filter.spectrumIdentity(3).nativeID == "107");
+}
+
+
 void test()
 {
     SpectrumListPtr sl = createSpectrumList();
     testEven(sl);
     testEvenMS2(sl);
     testSelectedIndices(sl);
+    testIndexSet(sl);
+    testScanNumberSet(sl);
 }
 
 

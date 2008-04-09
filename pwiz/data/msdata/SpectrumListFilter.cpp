@@ -30,8 +30,10 @@ namespace pwiz {
 namespace msdata {
 
 
+using namespace pwiz::util;
 using namespace std;
 using boost::logic::tribool;
+using boost::lexical_cast;
 
 
 //
@@ -122,6 +124,55 @@ SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBinaryData) const
     newSpectrum->index = index;
 
     return newSpectrum;
+}
+
+
+//
+// SpectrumListFilterPredicate_IndexSet 
+//
+
+
+SpectrumListFilterPredicate_IndexSet::SpectrumListFilterPredicate_IndexSet(const IntegerSet& indexSet)
+:   indexSet_(indexSet), eos_(false)
+{}
+
+
+tribool SpectrumListFilterPredicate_IndexSet::accept(const SpectrumIdentity& spectrumIdentity) const
+{
+    if (indexSet_.hasUpperBound((int)spectrumIdentity.index)) eos_ = true;
+    bool result = indexSet_.contains((int)spectrumIdentity.index);
+    return result;
+}
+
+
+bool SpectrumListFilterPredicate_IndexSet::done() const
+{
+    return eos_; // end of set
+}
+
+
+//
+// SpectrumListFilterPredicate_ScanNumberSet 
+//
+
+
+SpectrumListFilterPredicate_ScanNumberSet::SpectrumListFilterPredicate_ScanNumberSet(const IntegerSet& scanNumberSet)
+:   scanNumberSet_(scanNumberSet), eos_(false)
+{}
+
+
+tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
+{
+    int scanNumber = lexical_cast<int>(spectrumIdentity.nativeID);
+    if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
+    bool result = scanNumberSet_.contains(scanNumber);
+    return result;
+}
+
+
+bool SpectrumListFilterPredicate_ScanNumberSet::done() const
+{
+    return eos_; // end of set
 }
 
 

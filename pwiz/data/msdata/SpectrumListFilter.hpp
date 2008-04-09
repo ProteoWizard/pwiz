@@ -26,6 +26,7 @@
 
 
 #include "MSData.hpp"
+#include "utility/misc/IntegerSet.hpp"
 #include "boost/logic/tribool.hpp"
 
 
@@ -76,6 +77,32 @@ class SpectrumListFilter : public SpectrumList
     boost::shared_ptr<Impl> impl_;
     SpectrumListFilter(SpectrumListFilter&);
     SpectrumListFilter& operator=(SpectrumListFilter&);
+};
+
+
+class SpectrumListFilterPredicate_IndexSet : public SpectrumListFilter::Predicate
+{
+    public:
+    SpectrumListFilterPredicate_IndexSet(const pwiz::util::IntegerSet& indexSet);
+    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const;
+    virtual bool done() const;
+
+    private:
+    pwiz::util::IntegerSet indexSet_;
+    mutable bool eos_;
+};
+
+
+class SpectrumListFilterPredicate_ScanNumberSet : public SpectrumListFilter::Predicate
+{
+    public:
+    SpectrumListFilterPredicate_ScanNumberSet(const pwiz::util::IntegerSet& scanNumberSet);
+    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const;
+    virtual bool done() const;
+
+    private:
+    pwiz::util::IntegerSet scanNumberSet_;
+    mutable bool eos_;
 };
 
 
