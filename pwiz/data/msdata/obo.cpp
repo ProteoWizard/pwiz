@@ -23,7 +23,6 @@
 
 #include "obo.hpp"
 #include "boost/lexical_cast.hpp"
-#define BOOST_REGEX_MATCH_EXTRA
 #include "boost/regex.hpp"
 #include <iostream>
 #include <fstream>
