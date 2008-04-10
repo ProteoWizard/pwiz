@@ -289,12 +289,12 @@ void test()
     unit_assert(!diff);
 
     // write out mzML 
-    string filename = "tiny.msdata.mzML";
+    string filename = "tiny.pwiz.mzML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename);
 
     // write out mzXML
-    filename = "tiny.msdata.mzXML";
+    filename = "tiny.pwiz.mzXML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
 

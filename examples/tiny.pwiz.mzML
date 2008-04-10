@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.1 mzML0.99.1_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.1 mzML0.99.1.xsd" accession="test accession" id="test_id" version="test version">
+    <cvList count="1">
+      <cv cvLabel="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
+    </cvList>
+    <fileDescription>
+      <fileContent>
+        <cvParam cvLabel="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+        <userParam name="number of cats" value="4" type=""/>
+      </fileContent>
+      <sourceFileList count="1">
+        <sourceFile id="1" name="tiny1.RAW" location="file://F:/data/Exp01">
+          <cvParam cvLabel="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
+          <cvParam cvLabel="MS" accession="MS:1000569" name="SHA-1" value="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
+        </sourceFile>
+      </sourceFileList>
+      <contact>
+        <cvParam cvLabel="MS" accession="MS:1000586" name="contact name" value="William Pennington"/>
+        <cvParam cvLabel="MS" accession="MS:1000587" name="contact address" value="Higglesworth University, 12 Higglesworth Avenue, 12045, HI, USA"/>
+        <cvParam cvLabel="MS" accession="MS:1000588" name="contact URL" value="http://www.higglesworth.edu/"/>
+        <cvParam cvLabel="MS" accession="MS:1000589" name="contact email" value="wpennington@higglesworth.edu"/>
+      </contact>
+    </fileDescription>
+    <referenceableParamGroupList count="2">
+      <referenceableParamGroup id="CommonMS1SpectrumParams">
+        <cvParam cvLabel="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvLabel="MS" accession="MS:1000498" name="full scan" value=""/>
+      </referenceableParamGroup>
+      <referenceableParamGroup id="CommonMS2SpectrumParams">
+        <cvParam cvLabel="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvLabel="MS" accession="MS:1000498" name="full scan" value=""/>
+      </referenceableParamGroup>
+    </referenceableParamGroupList>
+    <sampleList count="1">
+      <sample id="1" name="Sample1">
+      </sample>
+    </sampleList>
+    <instrumentList count="1">
+      <instrument id="LCQ Deca">
+        <cvParam cvLabel="MS" accession="MS:1000554" name="LCQ Deca" value=""/>
+        <cvParam cvLabel="MS" accession="MS:1000529" name="instrument serial number" value="23433"/>
+        <componentList count="3">
+          <source order="1">
+            <cvParam cvLabel="MS" accession="MS:1000398" name="nanoelectrospray" value=""/>
+          </source>
+          <analyzer order="2">
+            <cvParam cvLabel="MS" accession="MS:1000082" name="quadrupole ion trap" value=""/>
+          </analyzer>
+          <detector order="3">
+            <cvParam cvLabel="MS" accession="MS:1000253" name="electron multiplier" value=""/>
+          </detector>
+        </componentList>
+        <instrumentSoftwareRef ref="Xcalibur"/>
+      </instrument>
+    </instrumentList>
+    <softwareList count="3">
+      <software id="Bioworks">
+        <softwareParam cvLabel="MS" accession="MS:1000533" name="Bioworks" version="3.3.1 sp1"/>
+      </software>
+      <software id="ReAdW">
+        <softwareParam cvLabel="MS" accession="MS:1000541" name="ReAdW" version="1.0"/>
+      </software>
+      <software id="Xcalibur">
+        <softwareParam cvLabel="MS" accession="MS:1000532" name="Xcalibur" version="2.0.5"/>
+      </software>
+    </softwareList>
+    <dataProcessingList count="2">
+      <dataProcessing id="Xcalibur Processing" softwareRef="Xcalibur">
+        <processingMethod order="1">
+          <cvParam cvLabel="MS" accession="MS:1000033" name="deisotoping" value="false"/>
+          <cvParam cvLabel="MS" accession="MS:1000034" name="charge deconvolution" value="false"/>
+          <cvParam cvLabel="MS" accession="MS:1000035" name="peak picking" value="true"/>
+        </processingMethod>
+      </dataProcessing>
+      <dataProcessing id="ReAdW Conversion" softwareRef="ReAdW">
+        <processingMethod order="2">
+          <cvParam cvLabel="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+        </processingMethod>
+      </dataProcessing>
+    </dataProcessingList>
+    <run id="Exp01" instrumentRef="LCQ Deca" sampleRef="1" startTimeStamp="2007-06-27T15:23:45.00035">
+      <sourceFileRefList count="1">
+        <sourceFileRef ref="1"/>
+      </sourceFileRefList>
+      <spectrumList count="2">
+        <spectrum index="0" id="S19" nativeID="19" defaultArrayLength="10">
+          <cvParam cvLabel="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+          <cvParam cvLabel="MS" accession="MS:1000511" name="ms level" value="1"/>
+          <spectrumDescription>
+            <cvParam cvLabel="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000528" name="lowest m/z value" value="400.39"/>
+            <cvParam cvLabel="MS" accession="MS:1000527" name="highest m/z value" value="1795.56"/>
+            <cvParam cvLabel="MS" accession="MS:1000504" name="base peak m/z" value="445.347"/>
+            <cvParam cvLabel="MS" accession="MS:1000505" name="base peak intensity" value="120053"/>
+            <cvParam cvLabel="MS" accession="MS:1000285" name="total ion current" value="16675500"/>
+            <scan instrumentRef="LCQ Deca">
+              <paramGroupRef ref="CommonMS1SpectrumParams"/>
+              <cvParam cvLabel="MS" accession="MS:1000016" name="scan time" value="5.8905" unitAccession="MS:1000038" unitName="minute"/>
+              <cvParam cvLabel="MS" accession="MS:1000512" name="filter string" value="+ c NSI Full ms [ 400.00-1800.00]"/>
+              <selectionWindowList count="1">
+                <selectionWindow>
+                  <cvParam cvLabel="MS" accession="MS:1000501" name="scan m/z lower limit" value="400"/>
+                  <cvParam cvLabel="MS" accession="MS:1000500" name="scan m/z upper limit" value="1800"/>
+                </selectionWindow>
+              </selectionWindowList>
+            </scan>
+          </spectrumDescription>
+          <binaryDataArray arrayLength="10" encodedLength="108" dataProcessingRef="Xcalibur Processing">
+            <cvParam cvLabel="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000576" name="no compression" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000514" name="m/z array" value=""/>
+            <binary>AAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAGEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIkA=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="10" encodedLength="108" dataProcessingRef="Xcalibur Processing">
+            <cvParam cvLabel="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000576" name="no compression" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000515" name="intensity array" value=""/>
+            <binary>AAAAAAAAJEAAAAAAAAAiQAAAAAAAACBAAAAAAAAAHEAAAAAAAAAYQAAAAAAAABRAAAAAAAAAEEAAAAAAAAAIQAAAAAAAAABAAAAAAAAA8D8=</binary>
+          </binaryDataArray>
+        </spectrum>
+        <spectrum index="1" id="S20" nativeID="20" defaultArrayLength="20">
+          <cvParam cvLabel="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+          <cvParam cvLabel="MS" accession="MS:1000511" name="ms level" value="2"/>
+          <spectrumDescription>
+            <cvParam cvLabel="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000528" name="lowest m/z value" value="320.39"/>
+            <cvParam cvLabel="MS" accession="MS:1000527" name="highest m/z value" value="1003.56"/>
+            <cvParam cvLabel="MS" accession="MS:1000504" name="base peak m/z" value="456.347"/>
+            <cvParam cvLabel="MS" accession="MS:1000505" name="base peak intensity" value="23433"/>
+            <cvParam cvLabel="MS" accession="MS:1000285" name="total ion current" value="16675500"/>
+            <precursorList count="1">
+              <precursor spectrumRef="S19">
+                <ionSelection>
+                  <cvParam cvLabel="MS" accession="MS:1000040" name="m/z" value="445.34"/>
+                  <cvParam cvLabel="MS" accession="MS:1000041" name="charge state" value="2"/>
+                </ionSelection>
+                <activation>
+                  <cvParam cvLabel="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+                  <cvParam cvLabel="MS" accession="MS:1000045" name="collision energy" value="35" unitAccession="MS:1000137" unitName="electron volt"/>
+                </activation>
+              </precursor>
+            </precursorList>
+            <scan instrumentRef="LCQ Deca">
+              <paramGroupRef ref="CommonMS2SpectrumParams"/>
+              <cvParam cvLabel="MS" accession="MS:1000016" name="scan time" value="5.9905" unitAccession="MS:1000038" unitName="minute"/>
+              <cvParam cvLabel="MS" accession="MS:1000512" name="filter string" value="+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"/>
+              <selectionWindowList count="1">
+                <selectionWindow>
+                  <cvParam cvLabel="MS" accession="MS:1000501" name="scan m/z lower limit" value="110"/>
+                  <cvParam cvLabel="MS" accession="MS:1000500" name="scan m/z upper limit" value="905"/>
+                </selectionWindow>
+              </selectionWindowList>
+            </scan>
+          </spectrumDescription>
+          <binaryDataArray arrayLength="20" encodedLength="216" dataProcessingRef="Xcalibur Processing">
+            <cvParam cvLabel="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000576" name="no compression" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000514" name="m/z array" value=""/>
+            <binary>AAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAGEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIkAAAAAAAAAkQAAAAAAAACZAAAAAAAAAKEAAAAAAAAAqQAAAAAAAACxAAAAAAAAALkAAAAAAAAAwQAAAAAAAADFAAAAAAAAAMkAAAAAAAAAzQA==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="20" encodedLength="216" dataProcessingRef="Xcalibur Processing">
+            <cvParam cvLabel="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000576" name="no compression" value=""/>
+            <cvParam cvLabel="MS" accession="MS:1000515" name="intensity array" value=""/>
+            <binary>AAAAAAAANEAAAAAAAAAzQAAAAAAAADJAAAAAAAAAMUAAAAAAAAAwQAAAAAAAAC5AAAAAAAAALEAAAAAAAAAqQAAAAAAAAChAAAAAAAAAJkAAAAAAAAAkQAAAAAAAACJAAAAAAAAAIEAAAAAAAAAcQAAAAAAAABhAAAAAAAAAFEAAAAAAAAAQQAAAAAAAAAhAAAAAAAAAAEAAAAAAAADwPw==</binary>
+          </binaryDataArray>
+        </spectrum>
+      </spectrumList>
+    </run>
+  </mzML>
+  <index name="spectrum">
+    <offset id="S19" nativeID="19">4826</offset>
+    <offset id="S20" nativeID="20">7576</offset>
+  </index>
+  <indexOffset>11300</indexOffset>
+  <fileContentType>MSn spectrum</fileContentType>
+  <fileChecksum>39112d76329487bf095cff1fec09ad871d8fedfb</fileChecksum>
+</indexedmzML>

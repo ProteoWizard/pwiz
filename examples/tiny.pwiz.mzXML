@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mzXML xmlns="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd">
+  <msRun scanCount="2" startTime="PT353.43S" endTime="PT359.43S">
+    <parentFile fileName="file://F:/data/Exp01/tiny1.RAW"
+                fileType="RAWData"
+                fileSha1="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
+    <msInstrument id="LCQ Deca">
+      <msManufacturer category="msManufacturer" value="Thermo Finnigan"/>
+      <msModel category="msModel" value="LCQ Deca"/>
+      <msIonisation category="msIonisation" value="nanoelectrospray"/>
+      <msMassAnalyzer category="msMassAnalyzer" value="quadrupole ion trap"/>
+      <msDetector category="msDetector" value="electron multiplier"/>
+      <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
+    </msInstrument>
+    <dataProcessing>
+      <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
+      <software type="unknown software type" name="ReAdW" version="1.0"/>
+    </dataProcessing>
+    <scan num="19"
+          msLevel="1"
+          peaksCount="10"
+          polarity="+"
+          retentionTime="PT353.43S"
+          lowMz="400.39"
+          highMz="1795.56"
+          basePeakMz="445.347"
+          basePeakIntensity="120053"
+          totIonCurrent="16675500"
+          msInstrumentID="LCQ Deca">
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int">AAAAAAAAAABAJAAAAAAAAD/wAAAAAAAAQCIAAAAAAABAAAAAAAAAAEAgAAAAAAAAQAgAAAAAAABAHAAAAAAAAEAQAAAAAAAAQBgAAAAAAABAFAAAAAAAAEAUAAAAAAAAQBgAAAAAAABAEAAAAAAAAEAcAAAAAAAAQAgAAAAAAABAIAAAAAAAAEAAAAAAAAAAQCIAAAAAAAA/8AAAAAAAAA==</peaks>
+    </scan>
+    <scan num="20"
+          msLevel="2"
+          peaksCount="20"
+          polarity="+"
+          retentionTime="PT359.43S"
+          collisionEnergy="35"
+          lowMz="320.39"
+          highMz="1003.56"
+          basePeakMz="456.347"
+          basePeakIntensity="23433"
+          totIonCurrent="16675500"
+          msInstrumentID="LCQ Deca">
+      <precursorMz precursorScanNum="19" precursorIntensity="" precursorCharge="2">445.34</precursorMz>
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAD/wAAAAAAAAQDMAAAAAAABAAAAAAAAAAEAyAAAAAAAAQAgAAAAAAABAMQAAAAAAAEAQAAAAAAAAQDAAAAAAAABAFAAAAAAAAEAuAAAAAAAAQBgAAAAAAABALAAAAAAAAEAcAAAAAAAAQCoAAAAAAABAIAAAAAAAAEAoAAAAAAAAQCIAAAAAAABAJgAAAAAAAEAkAAAAAAAAQCQAAAAAAABAJgAAAAAAAEAiAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAqAAAAAAAAQBwAAAAAAABALAAAAAAAAEAYAAAAAAAAQC4AAAAAAABAFAAAAAAAAEAwAAAAAAAAQBAAAAAAAABAMQAAAAAAAEAIAAAAAAAAQDIAAAAAAABAAAAAAAAAAEAzAAAAAAAAP/AAAAAAAAA=</peaks>
+    </scan>
+  </msRun>
+  <index name="scan">
+    <offset id="19">1245</offset>
+    <offset id="20">1894</offset>
+  </index>
+  <indexOffset>2898</indexOffset>
+  <sha1>b0f38fb5655369af214e4b5ab731c0f7d00def14</sha1>
+</mzXML>
