@@ -642,8 +642,6 @@ public:
     {
             red = 1 - intensity;
             green = intensity;
-
-            cout << intensity << ", red: "<< red << ", green: "<<green<<"\n";
     }
 };
 } // namespace
@@ -654,9 +652,9 @@ class ColorMapGrey : public ColorMap
 public:
     virtual void operator()(float intensity, float& red, float& green, float& blue) const
     {
-        red = .5 + intensity / 2;
-        green = .5 + intensity / 2;
-        blue = .5 + intensity / 2;
+        red = .5f + intensity / 2;
+        green = .5f + intensity / 2;
+        blue = .5f + intensity / 2;
     }
 };
 } // namespace
