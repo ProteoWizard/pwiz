@@ -36,7 +36,7 @@
 
 #define RAWFILE_API
 
-
+#include "ScanFilter.h"
 #include <string>
 #include <memory>
 #include <stdexcept>
@@ -244,65 +244,6 @@ class MassList
 
     virtual ~MassList(){}
 };
-
-
-enum MassAnalyzerType
-{
-    MassAnalyzerType_Unknown = -1,
-    MassAnalyzerType_ITMS = 0,
-    MassAnalyzerType_FTMS,
-    MassAnalyzerType_Count
-};
-
-
-inline std::string toString(MassAnalyzerType type)
-{
-    switch (type)
-    {
-        case MassAnalyzerType_ITMS: return "ITMS";
-        case MassAnalyzerType_FTMS: return "FTMS";
-        case MassAnalyzerType_Unknown: default: return "Unknown";
-    }
-}
-
-
-enum ScanType
-{
-    ScanType_Unknown = -1,
-    ScanType_Full = 0,
-    ScanType_Zoom
-};
-
-
-inline std::string toString(ScanType type)
-{
-    switch (type)
-    {
-        case ScanType_Full: return "Full";
-        case ScanType_Zoom: return "Zoom";
-        case ScanType_Unknown: default: return "Unknown";
-    }
-}
-
-
-enum PolarityType
-{
-    PolarityType_Unknown = -1,
-    PolarityType_Positive = 0,
-    PolarityType_Negative
-};
-
-
-inline std::string toString(PolarityType type)
-{
-    switch (type)
-    {
-        case PolarityType_Positive: return "+";
-        case PolarityType_Negative: return "-";
-        case PolarityType_Unknown: default: return "Unknown";
-    }
-}
-
 
 class ScanInfo
 {

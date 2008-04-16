@@ -263,7 +263,8 @@ vector<PrecursorInfo> getPrecursorInfo(const SpectrumDescription& sd,
          it!=sd.precursors.end(); ++it)
     {
         PrecursorInfo info;
-        info.scanNum = lexical_cast<string>(idToScanNumber(it->spectrumID, spectrumListPtr));
+        if (!it->spectrumID.empty())
+            info.scanNum = lexical_cast<string>(idToScanNumber(it->spectrumID, spectrumListPtr));
         info.mz = it->ionSelection.cvParam(MS_m_z).value;
         info.intensity = it->ionSelection.cvParam(MS_intensity).value;
         info.charge = it->ionSelection.cvParam(MS_charge_state).value;
@@ -283,8 +284,12 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
          it!=precursorInfo.end(); ++it)
     {    
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("precursorScanNum", it->scanNum));
-        attributes.push_back(make_pair("precursorIntensity", it->intensity));
+        if (!it->scanNum.empty())
+            attributes.push_back(make_pair("precursorScanNum", it->scanNum));
+        if (it->intensity.empty())
+            attributes.push_back(make_pair("precursorIntensity", "0")); // required attribute
+        else
+            attributes.push_back(make_pair("precursorIntensity", it->intensity));
         if (!it->charge.empty())
             attributes.push_back(make_pair("precursorCharge", it->charge));
         xmlWriter.startElement("precursorMz", attributes);
@@ -337,6 +342,23 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     const SpectrumDescription description = spectrum.spectrumDescription;
     const Scan& scan = description.scan;
 
+    CVParam scanTypeParam = spectrum.cvParamChild(MS_spectrum_type);
+    string scanType;
+    switch( scanTypeParam.cvid )
+    {
+        case MS_full_scan:
+        case MS_MSn_spectrum:
+        case MS_MS1_spectrum:
+            scanType = "FULL";
+            break;
+
+        case MS_zoom_scan: scanType = "ZOOM"; break;
+        case MS_CRM_spectrum: scanType = "CRM"; break;
+        case MS_SIM_spectrum: scanType = "SIM"; break;
+        case MS_SRM_spectrum: scanType = "SRM"; break;
+        default: break;
+    }
+
     string scanEvent = scan.cvParam(MS_preset_scan_configuration).value;
     string msLevel = spectrum.cvParam(MS_ms_level).value;
     string polarity = getPolarity(scan);
@@ -358,6 +380,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     attributes.push_back(make_pair("num", spectrum.nativeID));
     if (!scanEvent.empty())
         attributes.push_back(make_pair("scanEvent", scanEvent));
+    if (!scanType.empty())
+        attributes.push_back(make_pair("scanType", scanType));
     attributes.push_back(make_pair("msLevel", msLevel));
     attributes.push_back(make_pair("peaksCount", lexical_cast<string>(mzIntensityPairs.size())));
     attributes.push_back(make_pair("polarity", polarity));

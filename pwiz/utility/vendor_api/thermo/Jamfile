@@ -22,7 +22,8 @@
 
 
 lib pwiz_rawfile
-    : RawFile.cpp 
+    : ScanFilter.cpp
+      RawFile.cpp
       RawFileValues.cpp
     : <toolset>gcc:<build>no
       <toolset>darwin:<build>no

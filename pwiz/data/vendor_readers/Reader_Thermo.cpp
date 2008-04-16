@@ -96,7 +96,7 @@ class SpectrumList_Thermo : public SpectrumList
     vector<SpectrumIdentity> index_;
 
     void createIndex();
-    string findPrecursorID(size_t index) const;
+    string findPrecursorID(int precursorMsLevel, size_t index) const;
 };
 
 
@@ -160,9 +160,15 @@ CVParam translate(ScanType scanType)
     switch (scanType)
     {
         case ScanType_Full:
-            return MS_full_scan;
+            return MS_MSn_spectrum;
         case ScanType_Zoom:
             return MS_zoom_scan;
+        case ScanType_SIM:
+            return MS_SIM_spectrum;
+        case ScanType_SRM:
+            return MS_SRM_spectrum;
+        case ScanType_CRM:
+            return MS_CRM_spectrum;
         case ScanType_Unknown:
         default:
             return CVParam();
@@ -233,7 +239,7 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     result->set(MS_ms_level, scanInfo->msLevel());
 
     ScanType scanType = scanInfo->scanType();
-    if (scanType!=ScanType_Unknown) scan.cvParams.push_back(translate(scanType));
+    if (scanType!=ScanType_Unknown) result->cvParams.push_back(translate(scanType));
 
     PolarityType polarityType = scanInfo->polarityType();
     if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
@@ -255,9 +261,14 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
         // info.  Precursor recalculation should be done outside the Reader.
 
         Precursor precursor;
-        precursor.spectrumID = findPrecursorID(index);
+
+        // TODO: better test here for data dependent modes
+        if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
+            precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
+
         precursor.ionSelection.cvParams.push_back(CVParam(MS_m_z, scanInfo->parentMass(i)));
-        precursor.ionSelection.cvParams.push_back(CVParam(MS_intensity, scanInfo->parentEnergy(i)));
+        // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
+        precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->parentEnergy(i)));
         sd.precursors.push_back(precursor); 
     }
 
@@ -290,15 +301,16 @@ void SpectrumList_Thermo::createIndex()
 }
 
 
-string SpectrumList_Thermo::findPrecursorID(size_t index) const
+string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, size_t index) const
 {
-    // return most recent survey scan
+    // for MSn spectra (n > 1): return first scan with MSn-1
 
     while (index>0)
     {
-        index--;
-        SpectrumPtr candidate = spectrum(index, false);
-        if (candidate->cvParam(MS_ms_level).valueAs<int>() == 1) return candidate->id;
+	    --index;
+	    SpectrumPtr candidate = spectrum(index, false);
+	    if (candidate->cvParam(MS_ms_level).valueAs<int>() == precursorMsLevel)
+		    return candidate->id;
     }
 
     return "";

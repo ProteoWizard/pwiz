@@ -491,6 +491,8 @@ class ScanInfoImpl : public ScanInfo
 
     virtual std::string filter() const {return filter_;}
     virtual MassAnalyzerType massAnalyzerType() const {return massAnalyzerType_;}
+    virtual IonizationType ionizationType() const {return ionizationType_;}
+    virtual ActivationType activationType() const {return activationType_;}
     virtual long msLevel() const {return msLevel_;}
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
@@ -529,6 +531,8 @@ class ScanInfoImpl : public ScanInfo
     IXRawfilePtr& raw_;
     string filter_;
     MassAnalyzerType massAnalyzerType_;
+    IonizationType ionizationType_;
+    ActivationType activationType_;
     long msLevel_;
     ScanType scanType_;
     PolarityType polarityType_;
@@ -565,6 +569,8 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, IXRawfilePtr& raw)
 :   scanNumber_(scanNumber),
     raw_(raw),
     massAnalyzerType_(MassAnalyzerType_Unknown),
+    ionizationType_(IonizationType_Unknown),
+    activationType_(ActivationType_Unknown),
     msLevel_(1),
     scanType_(ScanType_Unknown),
     polarityType_(PolarityType_Unknown),
@@ -658,36 +664,17 @@ void ScanInfoImpl::initialize()
 
 void ScanInfoImpl::parseFilterString()
 {
-    vector<string> tokens;
-    istringstream iss(filter_);
-    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+    ScanFilter filterParser;
+    filterParser.parse(filter_);
 
-    for (vector<string>::iterator it=tokens.begin(); it!=tokens.end(); ++it)
-    {
-        string token = *it;
-        transform(token.begin(), token.end(), token.begin(), tolower);
-
-        if (token == "itms")
-            massAnalyzerType_ = MassAnalyzerType_ITMS;
-        else if (token == "ftms")
-            massAnalyzerType_ = MassAnalyzerType_FTMS;
-        else if (!token.compare(0, 2, "ms") && token.size()>2)
-            msLevel_ = atol(it->c_str()+2);
-        else if (token == "+")
-            polarityType_ = PolarityType_Positive;
-        else if (token == "-")
-            polarityType_ = PolarityType_Negative;
-        else if (token == "full")
-            scanType_ = ScanType_Full;
-        else if (token == "z")
-            scanType_ = ScanType_Zoom;
-        else if (token.find('@') != string::npos)
-        {
-            size_t pos = token.find('@');
-            parentMasses_.push_back(atof(token.substr(0, pos).c_str()));
-            parentEnergies_.push_back(atof(token.substr(pos+1).c_str()));
-        }
-    }
+    msLevel_ = filterParser.msLevel_;
+    massAnalyzerType_ = filterParser.massAnalyzerType_;
+    ionizationType_ = filterParser.ionizationType_;
+    polarityType_ = filterParser.polarityType_;
+    scanType_ = filterParser.scanType_;
+    activationType_ = filterParser.activationType_;
+    parentMasses_.insert(parentMasses_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
+    parentEnergies_.insert(parentEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
 }
 
 
