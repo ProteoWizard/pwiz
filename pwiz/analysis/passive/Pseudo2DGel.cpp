@@ -23,9 +23,11 @@
 
 #include "Pseudo2DGel.hpp"
 #include "utility/misc/Image.hpp"
+#include "analysis/peptideid/PeptideID_pepXML.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
+#include <stdexcept>
 #include <iomanip>
 #include <fstream>
 #include <cmath>
@@ -40,7 +42,7 @@ using boost::shared_ptr;
 using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 using namespace pwiz::util;
-
+using namespace pwiz::peptideid;
 
 //
 // Pseudo2DGel::Config
@@ -76,11 +78,12 @@ Pseudo2DGel::Config::Config(const string& args)
             binSum = true; 
         else if (*it == "ms2")
             ms2 = true;
+        else if (it->find("pepxml=") == 0)
+            peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
         else 
             cout << "[Pseudo2DGel::Config] Ignoring argument: " << *it << endl;
     }
 }
-
 
 //
 // Pseudo2DGel::Impl
@@ -133,8 +136,17 @@ class Pseudo2DGel::Impl
     // main buffer for holding intensity data in bins
     vector< vector<float> > scanBuffer_;
 
+    struct Child
+    {
+        size_t bin;
+        std::string nativeID;
+
+        Child(size_t bin, const string& nativeID)
+            : bin(bin), nativeID(nativeID) {}
+    };
+    
     // map index -> vector of children (as list of bins)
-    map<size_t, vector<size_t> > children_;  
+    map<size_t, vector<shared_ptr<Child> > > children_;  
 
     typedef vector<size_t> ScanList; // by index
     ScanList itScans_;
@@ -146,7 +158,9 @@ class Pseudo2DGel::Impl
     // color map
     void instantiateColorMap();
     auto_ptr<ColorMap> colorMap_;
+    shared_ptr<ColorMap> circleColorMap_;
     Image::Color color(float intensity) const;
+    Image::Color circleColor(float intensity) const;
 
     // data processing and image creation
     void writeImages(const DataInfo& dataInfo);
@@ -218,8 +232,9 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     {
         lastParent = info.index; // remember this scan in case there are children
 
-        if (info.massAnalyzerType == MS_ion_trap)
+        if (info.massAnalyzerType == MS_ion_trap){
             itScans_.push_back(info.index);
+        }
         else if (info.massAnalyzerType == MS_FT_ICR)
             ftScans_.push_back(info.index);
     }
@@ -227,7 +242,11 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     {
         // save precursorMz: translate to x value and
         // push onto vector associated with the parent scan
-        children_[lastParent].push_back(bin(info.precursors[0].mz));
+        children_[lastParent].push_back(
+            shared_ptr<Child>(
+                new Child(bin(info.precursors[0].mz), spectrum.nativeID)
+                )
+            );
     }
 }
 
@@ -258,7 +277,6 @@ void Pseudo2DGel::Impl::clear()
     itScans_.clear();
     ftScans_.clear();
 }
-
 
 namespace {
 template <typename T>
@@ -616,6 +634,32 @@ class ColorMapTouchTable : public ColorMap
 };
 } // namespace
 
+namespace {
+class ColorMapRG : public ColorMap
+{
+public:
+    virtual void operator()(float intensity, float& red, float& green, float& blue) const
+    {
+            red = 1 - intensity;
+            green = intensity;
+
+            cout << intensity << ", red: "<< red << ", green: "<<green<<"\n";
+    }
+};
+} // namespace
+
+namespace {
+class ColorMapGrey : public ColorMap
+{
+public:
+    virtual void operator()(float intensity, float& red, float& green, float& blue) const
+    {
+        red = .5 + intensity / 2;
+        green = .5 + intensity / 2;
+        blue = .5 + intensity / 2;
+    }
+};
+} // namespace
 
 void Pseudo2DGel::Impl::instantiateColorMap()
 {
@@ -623,6 +667,9 @@ void Pseudo2DGel::Impl::instantiateColorMap()
         colorMap_ = auto_ptr<ColorMap>(new ColorMapBRY);
     else
         colorMap_ = auto_ptr<ColorMap>(new ColorMapTouchTable);
+
+    //circleColorMap_ = shared_ptr<ColorMap>(new ColorMapGrey);
+    circleColorMap_ = shared_ptr<ColorMap>(new ColorMapRG);
 }
 
 
@@ -633,6 +680,16 @@ Image::Color Pseudo2DGel::Impl::color(float intensity) const
 
     float r=0, g=0, b=0;
     (*colorMap_)(intensity, r, g, b);
+    return Image::Color(int(r*255), int(g*255), int(b*255));
+}
+
+Image::Color Pseudo2DGel::Impl::circleColor(float intensity) const
+{
+    if (!circleColorMap_.get())
+        throw runtime_error("[Pseudo2DGel::Impl::color()] Circle Color map not instantiated.");
+
+    float r=0, g=0, b=0;
+    (*circleColorMap_)(intensity, r, g, b);
     return Image::Color(int(r*255), int(g*255), int(b*255));
 }
 
@@ -821,17 +878,63 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
             {
                 Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
                 size_t itIndex = itScans_[j];
-                const vector<size_t>& children = children_[itIndex];
-                for (vector<size_t>::const_iterator it=children.begin(); it!=children.end(); ++it)
+                const vector<shared_ptr<Child> >& children = children_[itIndex];
+                for (vector<shared_ptr<Child> >::const_iterator it=children.begin(); it!=children.end(); ++it)
                 {
-                    Image::Point center = lineBegin + Image::Point((int)*it,0);
-                    image.circle(center, 3, Image::white(), false);
+                    Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
+
+                    Image::Color color;
+
+                    if (config_.peptide_id != NULL)
+                    {
+                        color = Image::white();
+                        try
+                        {
+                            float score = (float)config_.peptide_id->record((*it)->nativeID).normalizedScore;
+                            color = circleColor(score);
+                        }
+                        catch(...) {}
+                    }
+                    else
+                        color = Image::white();
+                    
+                    image.circle(center, 3, color, false);
                 }
             }
-        } 
+        }
+        else if (scans.size() == ftScans_.size())
+        {
+            for (size_t j=0; j<scans.size(); j++)
+            {
+                Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
+                size_t itIndex = ftScans_[j];
+                const vector<shared_ptr<Child> >& children = children_[itIndex];
+                for (vector<shared_ptr<Child> >::const_iterator it=children.begin(); it!=children.end(); ++it)
+                {
+                    Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
+
+                    Image::Color color;
+
+                    if (config_.peptide_id != NULL)
+                    {
+                        color = Image::white();
+                        try
+                        {
+                            float score = (float)config_.peptide_id->record((*it)->nativeID).normalizedScore;
+                            color = circleColor(score);
+                        }
+                        catch(...) {}
+                    }
+                    else
+                        color = Image::white();
+                    
+                    image.circle(center, 3, color, false);
+                }
+            }
+        }
         else
         {            
-            cout << "[DumpsterImage] Warning: Scan counts differ.\n";
+            cout << "[DumpsterImage] Warning: Scan counts differ:" <<scans.size()<< " "<< itScans_.size()<<std::endl;
         }
     }
 
@@ -1164,7 +1267,6 @@ void Pseudo2DGel::Impl::drawTMZ(Image& image, const ScanList& scans,
 Pseudo2DGel::Pseudo2DGel(const MSDataCache& cache, const Config& config)
 :   impl_(new Impl(cache, config))
 {}
-
 
 void Pseudo2DGel::open(const DataInfo& dataInfo)
 {

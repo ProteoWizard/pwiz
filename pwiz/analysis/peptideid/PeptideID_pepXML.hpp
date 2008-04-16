@@ -23,46 +23,28 @@
 #ifndef _PEPTIDEID_PEPXML_HPP_
 #define _PEPTIDEID_PEPXML_HPP_
 
-#include <utility/proteome/auto_vector.h>
-#include "utility/minimxml/SAXParser.hpp"
+#include <boost/shared_ptr.hpp>
+
+#include "PeptideID.hpp"
 
 namespace pwiz {
 namespace peptideid {
 
-struct BriefFeature
-{
-    int start_scan;
-    int end_scan;
-    double probability;
-};
-
-class PepXMLHandler : public pwiz::minimxml::SAXParser::Handler
+class PeptideID_pepXml : public PeptideID
 {
 public:
-    static const char* spectrum_query_tag;
-    static const char* start_scan_attr;
-    static const char* end_scan_attr;
-    static const char* peptideprophet_result_tag;
-    static const char* probability_attr;
-
-    virtual pwiz::minimxml::SAXParser::Handler::Status
-        startElement(const std::string& name,
-                     const Attributes& attributes,
-                     stream_offset position);
-
-    virtual pwiz::minimxml::SAXParser::Handler::Status
-        endElement(const std::string& name,
-                   stream_offset position);
-
-
-    auto_vector<BriefFeature>& getFeatures()
-    {
-        return features;
-    }
+    
+    PeptideID_pepXml(const std::string& filename);
+    PeptideID_pepXml(const char* filename);
+    PeptideID_pepXml(std::istream* in);
+    
+    virtual ~PeptideID_pepXml() {}
+    
+    virtual Record record(const std::string& nativeID) const;
     
 private:
-    std::auto_ptr<BriefFeature> current;
-    auto_vector<BriefFeature> features;
+    class Impl;
+    boost::shared_ptr<Impl> pimpl;
 
 };
 

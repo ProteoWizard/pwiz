@@ -26,6 +26,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
+#include <stdexcept>
 #include <fstream>
 
 

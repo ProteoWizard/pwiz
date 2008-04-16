@@ -21,6 +21,7 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include "PeptideID_pepXML.hpp"
@@ -38,26 +39,12 @@ const char* samplePepXML =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<msms_pipeline_analysis>\n"
     "<msms_run_summary>\n"
-    "<spectrum_query start_scan=\"1\" end_scan=\"2\" retention_time_sec=\"1.0\">\n"
+    "<spectrum_query start_scan=\"1\" end_scan=\"1\" retention_time_sec=\"1.0\">\n"
     "<search_result>\n"
-    "<search_hit>\n"
-    "<modification_info modified_peptide=\"ABC\">\n"
-    "<mod_aminoacid_mass position=\"1\" mass=\"111.0320\"/>\n"
-    "<mod_aminoacid_mass position=\"15\" mass=\"160.0307\"/>\n"
-    "<mod_aminoacid_mass position=\"20\" mass=\"160.0307\"/>\n"
-    "</modification_info>\n"
-    "<search_score name=\"dotproduct\" value=\"319\"/>\n"
-    "<search_score name=\"delta\" value=\"0.091\"/>\n"
-    "<search_score name=\"deltastar\" value=\"0\"/>\n"
-    "<search_score name=\"zscore\" value=\"0\"/>\n"
-    "<search_score name=\"expect\" value=\"5.5\"/>\n"
+    "<search_hit peptide=\"ABC\">\n"
     "<analysis_result analysis=\"peptideprophet\">\n"
     "<peptideprophet_result probability=\"0.900\">\n"
     "<search_score_summary>\n"
-    "<parameter name=\"fval\" value=\"-0.7088\"/>\n"
-    "<parameter name=\"ntt\" value=\"2\"/>\n"
-    "<parameter name=\"nmc\" value=\"1\"/>\n"
-    "<parameter name=\"massd\" value=\"-0.601\"/>\n"
     "</search_score_summary>\n"
     "</peptideprophet_result>\n"
     "</analysis_result>\n"
@@ -67,19 +54,34 @@ const char* samplePepXML =
     "</msms_run_summary>\n"
     "</msms_pipeline_analysis>\n";
 
-void test()
+void testIStream()
 {
     istringstream xml (samplePepXML);
-    PepXMLHandler handler;
-    parse(xml, handler);
+
+    PeptideID_pepXml ppXml(&xml);
 
 
-    auto_vector<BriefFeature>::iterator i;
-    BriefFeature* bf = *(handler.getFeatures().begin());
+    std::string id("1");
+    PeptideID::Record bf = ppXml.record(id);
 
-    unit_assert(bf->start_scan == 1);
-    unit_assert(bf->end_scan == 2);
-    unit_assert_equal(bf->probability, 0.9, 1e-15);
+    unit_assert(bf.nativeID == "1");
+    unit_assert(bf.sequence == "ABC");
+    unit_assert_equal(bf.normalizedScore, 0.9, 1e-15);
+}
+
+void testFilename()
+{
+    ifstream xml ("test.pep.xml");
+
+    PeptideID_pepXml ppXml(&xml);
+
+
+    std::string id("1");
+    PeptideID::Record bf = ppXml.record(id);
+
+    unit_assert(bf.nativeID == "1");
+    unit_assert(bf.sequence == "ABC");
+    unit_assert_equal(bf.normalizedScore, 0.9, 1e-15);
 }
 
 int main(int argc, char* argv[])
@@ -87,7 +89,8 @@ int main(int argc, char* argv[])
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        test();
+        //testIStream();
+        //testFilename();
         //testDone();
         //testBadXML();
         //testNested();

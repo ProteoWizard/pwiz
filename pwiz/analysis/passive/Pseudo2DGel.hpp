@@ -24,10 +24,12 @@
 #ifndef _PSEUDO2DGEL_HPP_
 #define _PSEUDO2DGEL_HPP_
 
+#include <boost/shared_ptr.hpp>
 
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
+#include "analysis/peptideid/PeptideID.hpp"
 
 
 namespace pwiz {
@@ -49,8 +51,11 @@ class Pseudo2DGel : public MSDataAnalyzer
         bool bry;
         bool binSum;
         bool ms2;
+        boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
-        Config(const std::string& args); 
+        Config(const std::string& args);
+        Config(const std::string& args,
+               boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id);
     };
 
     Pseudo2DGel(const MSDataCache& cache, const Config& config);
