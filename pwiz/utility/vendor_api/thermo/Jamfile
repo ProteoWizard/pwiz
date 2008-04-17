@@ -29,7 +29,14 @@ lib pwiz_rawfile
       <toolset>darwin:<build>no
     ;
 
+unit-test ScanFilterTest
+    : ScanFilterTest.cpp
+      pwiz_rawfile
+    : <toolset>gcc:<build>no
+      <toolset>drawin:<build>no
+    ;
 
+# a test utility, not a unit test
 exe RawFileTest
     : RawFileTest.cpp
       pwiz_rawfile
@@ -38,6 +45,3 @@ exe RawFileTest
     ;
 
 explicit RawFileTest ;
-
-
-

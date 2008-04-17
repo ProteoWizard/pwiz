@@ -227,23 +227,23 @@ ScanFilter::parseIonizationType(const string & word)
 		return IonizationType_Unknown;
 }
 
-ScanFilter::AccurateMassType 
+AccurateMassType 
 ScanFilter::parseAccurateMassType(const string& word)
 {
 	if (word == "!AM") {
-		return NO_AM;
+		return AccurateMass_NotActive;
 	}
 	else if (word == "AM") {
-		return AM;
+		return AccurateMass_Active;
 	}
 	else if (word == "AMI") {
-		return AMI;
+		return AccurateMass_ActiveWithInternalCalibration;
 	}
 	else if (word == "AME") {
-		return AME;
+		return AccurateMass_ActiveWithExternalCalibration;
 	}
 	else {
-		return ACCURATEMASS_UNDEF;
+		return AccurateMass_Unknown;
 	}
 }
 
@@ -292,27 +292,9 @@ ScanFilter::parseActivationType(const string& word)
 }
 
 
-ScanFilter::ScanFilter() : 
-    massAnalyzerType_(MassAnalyzerType_Unknown),
-    polarityType_(PolarityType_Unknown),
-    dataPointType_(DataPointType_Unknown),
-    ionizationType_(IonizationType_Unknown),
-    coronaOn_(BOOL_UNDEF),
-    photoIonizationOn_(BOOL_UNDEF),
-    sourceCIDOn_(BOOL_UNDEF),
-    detectorSet_(BOOL_UNDEF),
-    turboScanOn_(BOOL_UNDEF),
-    dependentActive_(BOOL_UNDEF),
-    widebandOn_(BOOL_UNDEF),
-    accurateMassType_(ACCURATEMASS_UNDEF),
-    scanType_(ScanType_Unknown),
-    msLevel_(0),
-    activationType_(ActivationType_Unknown)
+ScanFilter::ScanFilter()
 {
-	cidParentMass_.clear();
-	cidEnergy_.clear();
-	scanRangeMin_.clear();
-	scanRangeMax_.clear();
+    initialize();
 };
 
 
@@ -340,35 +322,35 @@ ScanFilter::print()
         cout << "ionization type: " << ionizationType_ << endl;
 	}
 
-	if (coronaOn_ != BOOL_UNDEF) {
+	if (coronaOn_ != TriBool_Unknown) {
 		cout << "corona: " << coronaOn_ << endl;
 	}
 
-	if (photoIonizationOn_ != BOOL_UNDEF) {
+	if (photoIonizationOn_ != TriBool_Unknown) {
 		cout << "photoionization: " << photoIonizationOn_ << endl;
 	}
 
-	if (sourceCIDOn_ != BOOL_UNDEF) {
+	if (sourceCIDOn_ != TriBool_Unknown) {
 		cout << "source CID: " << sourceCIDOn_ << endl;
 	}
 
-	if (detectorSet_ != BOOL_UNDEF) {
+	if (detectorSet_ != TriBool_Unknown) {
 		cout << "detector set: " << detectorSet_ << endl;
 	}
 
-	if (turboScanOn_ != BOOL_UNDEF) {
+	if (turboScanOn_ != TriBool_Unknown) {
 		cout << "turboscan: " << turboScanOn_ << endl;
 	}
 
-	if (dependentActive_ != BOOL_UNDEF) {
+	if (dependentActive_ != TriBool_Unknown) {
 		cout << "data dependent: " << dependentActive_ << endl;
 	}
 
-	if (widebandOn_ != BOOL_UNDEF) {
+	if (widebandOn_ != TriBool_Unknown) {
 		cout << "wideband: " << widebandOn_ << endl;
 	}
 
-	if (accurateMassType_) {
+	if (accurateMassType_ > AccurateMass_Unknown) {
 		cout << "accurate mass: " << accurateMassType_ << endl;
 	}
 
@@ -385,6 +367,33 @@ ScanFilter::print()
 	}
 
 	cout << endl << endl << endl;
+}
+
+
+void
+ScanFilter::initialize()
+{
+    massAnalyzerType_ = MassAnalyzerType_Unknown;
+    polarityType_ = PolarityType_Unknown;
+    dataPointType_ = DataPointType_Unknown;
+    ionizationType_ = IonizationType_Unknown;
+    scanType_ = ScanType_Unknown;
+    accurateMassType_ = AccurateMass_Unknown;
+    activationType_ = ActivationType_Unknown;
+
+    coronaOn_ = TriBool_Unknown;
+    photoIonizationOn_ = TriBool_Unknown;
+    sourceCIDOn_ = TriBool_Unknown;
+    detectorSet_ = TriBool_Unknown;
+    turboScanOn_ = TriBool_Unknown;
+    dependentActive_ = TriBool_Unknown;
+    widebandOn_ = TriBool_Unknown;
+
+    msLevel_ = 0;
+    cidParentMass_.clear();
+	cidEnergy_.clear();
+	scanRangeMin_.clear();
+	scanRangeMax_.clear();
 }
 
 
@@ -443,11 +452,11 @@ ScanFilter::parse(string filterLine)
 
 	// corona
 	if (w == "!CORONA") {
-		coronaOn_ = BOOL_FALSE;
+		coronaOn_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "CORONA") {
-		coronaOn_ = BOOL_TRUE;
+		coronaOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -460,11 +469,11 @@ ScanFilter::parse(string filterLine)
 
 	// photoIonization
 	if (w == "!PI") {
-		photoIonizationOn_ = BOOL_FALSE;
+		photoIonizationOn_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "PI") {
-		photoIonizationOn_ = BOOL_TRUE;
+		photoIonizationOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -477,11 +486,11 @@ ScanFilter::parse(string filterLine)
 
 	// source CID
 	if (w == "!SID") {
-		sourceCIDOn_ = BOOL_FALSE;
+		sourceCIDOn_ = TriBool_False;
 		advance = true;
 	}
 	else if (w.find("SID") == 0) { // handle cases where SID energy is explicit
-		sourceCIDOn_ = BOOL_TRUE;
+		sourceCIDOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -495,11 +504,11 @@ ScanFilter::parse(string filterLine)
 
 	// detector
 	if (w == "!DET") {
-		detectorSet_ = BOOL_FALSE;
+		detectorSet_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "DET") {
-		detectorSet_ = BOOL_TRUE;
+		detectorSet_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -513,11 +522,11 @@ ScanFilter::parse(string filterLine)
 
 	// turboscan
 	if (w == "!T") {
-		turboScanOn_ = BOOL_FALSE;
+		turboScanOn_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "T") {
-		turboScanOn_ = BOOL_TRUE;
+		turboScanOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -531,11 +540,11 @@ ScanFilter::parse(string filterLine)
 
 	// dependent type
 	if (w == "!D") {
-		dependentActive_ = BOOL_FALSE;
+		dependentActive_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "D") {
-		dependentActive_ = BOOL_TRUE;
+		dependentActive_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -549,11 +558,11 @@ ScanFilter::parse(string filterLine)
 
 	// wideband
 	if (w == "!W") {
-		widebandOn_ = BOOL_FALSE;
+		widebandOn_ = TriBool_False;
 		advance = true;
 	}
 	else if (w == "W") {
-		widebandOn_ = BOOL_TRUE;
+		widebandOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
@@ -566,7 +575,7 @@ ScanFilter::parse(string filterLine)
 
 
 	accurateMassType_ = parseAccurateMassType(w);
-	if (accurateMassType_ > ACCURATEMASS_UNDEF) {
+	if (accurateMassType_ > AccurateMass_Unknown) {
 		// "accurate mass" field present
 		if (s.eof()) {
 			return 1;

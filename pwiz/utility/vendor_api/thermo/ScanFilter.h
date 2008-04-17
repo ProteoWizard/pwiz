@@ -169,30 +169,36 @@ inline std::string toString(PolarityType type)
     }
 }
 
-enum DataPointType {
+enum DataPointType
+{
 	DataPointType_Unknown = -1,
 	DataPointType_Centroid = 0,
 	DataPointType_Profile,
     DataPointType_Count
 };
 
-class ScanFilter {
+enum AccurateMassType
+{
+	AccurateMass_Unknown = -1,
+	AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
+	AccurateMass_Active,                        // accurate mass active 
+	AccurateMass_ActiveWithInternalCalibration, // accurate mass with internal calibration
+	AccurateMass_ActiveWithExternalCalibration, // accurate mass with external calibration
+};
+
+enum TriBool
+{
+	TriBool_Unknown = -1,
+	TriBool_False = 0,
+	TriBool_True = 1,
+};
+
+class ScanFilter
+{
     public:
 
-	enum TriBool {
-		BOOL_UNDEF = -1,
-		BOOL_FALSE = 0,
-		BOOL_TRUE = 1,
-	};
+	
 
-	enum AccurateMassType
-    {
-		ACCURATEMASS_UNDEF = 0,
-		NO_AM,		// NOTE: in filter as "!AM": accurate mass not active
-		AM,			// accurate mass active 
-		AMI,		// accurate mass with internal calibration
-		AME,		// accurate mass with external calibration
-	};
 
 	MassAnalyzerType parseMassAnalyzerType(const std::string& word);
 	PolarityType parsePolarityType(const std::string& word);
@@ -230,6 +236,7 @@ class ScanFilter {
 
 	void print();
 
+    void initialize();
 	bool parse(std::string filterLine);
 
 };
