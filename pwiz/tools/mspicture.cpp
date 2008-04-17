@@ -46,11 +46,12 @@ using namespace boost::filesystem;
 struct Config
 {
     vector<string> filenames;
+    string configFilename;
     string outputDirectory;
     string usageOptions;
     vector<string> commands;
 
-    Config() {}
+    Config() : outputDirectory(".") {}
 };
 
 template <typename analyzer_type>
@@ -105,6 +106,9 @@ Config parseCommandArgs(int argc, const char* argv[])
             po::value<string>(&config.outputDirectory)->default_value(
                 config.outputDirectory),
             ": output directory")
+        ("config,c", 
+            po::value<string>(&config.configFilename),
+            ": configuration file (optionName=value) (ignored)")
         ("exec,x", 
             po::value< vector<string> >(&config.commands)->composing(),
             ": execute command")
@@ -178,6 +182,7 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
 
 int main(int argc, const char* argv[])
 {
+    namespace bfs = boost::filesystem;
     try
     {
         Config config = parseCommandArgs(argc, argv);
@@ -185,6 +190,9 @@ int main(int argc, const char* argv[])
         if (config.filenames.empty())
             throw runtime_error(usage(config).c_str());
 
+        if (!config.filenames.empty())
+            bfs::create_directories(config.outputDirectory);
+        
         // Construct the Pseudo2DGel object with an MSDataCache object
         shared_ptr<Pseudo2DGel> analyzer;
         
