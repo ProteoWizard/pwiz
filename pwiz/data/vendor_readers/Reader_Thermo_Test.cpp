@@ -90,8 +90,8 @@ void testRead(const string& filename)
     int scanEvent = spectrum->spectrumDescription.scan.cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 1);
     unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-    CVParam massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    unit_assert(massAnalyzer.cvid == MS_FT_ICR);
+    //CVParam massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
+    //unit_assert(massAnalyzer.cvid == MS_FT_ICR);
     vector<MZIntensityPair> data;
     spectrum->getMZIntensityPairs(data);
     unit_assert(data.size() == 19914);
@@ -107,8 +107,8 @@ void testRead(const string& filename)
     scanEvent = spectrum->spectrumDescription.scan.cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 2);
     unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-    massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    unit_assert(massAnalyzer.cvid == MS_ion_trap);
+    //massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
+    //unit_assert(massAnalyzer.cvid == MS_ion_trap);
     spectrum->getMZIntensityPairs(data);
     unit_assert(data.size() == 19800);
 
@@ -122,8 +122,8 @@ void testRead(const string& filename)
     scanEvent = spectrum->spectrumDescription.scan.cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 3);
     unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 2); 
-    massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    unit_assert(massAnalyzer.cvid == MS_ion_trap);
+    //massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
+    //unit_assert(massAnalyzer.cvid == MS_ion_trap);
     spectrum->getMZIntensityPairs(data);
     unit_assert(data.size() == 485);
     unit_assert(spectrum->spectrumDescription.precursors.size() == 1);

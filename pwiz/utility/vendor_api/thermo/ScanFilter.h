@@ -62,7 +62,7 @@ inline std::string toString(MassAnalyzerType type)
 enum IonizationType
 {
     IonizationType_Unknown = -1,
-    IonizationType_EI = 0,       // Electron Impact
+    IonizationType_EI = 0,       // Electron Ionization
     IonizationType_CI,           // Chemical Ionization
     IonizationType_FAB,          // Fast Atom Bombardment
     IonizationType_ESI,          // Electrospray Ionization

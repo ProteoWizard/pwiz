@@ -254,6 +254,8 @@ class ScanInfo
     // info contained in filter string
     virtual std::string filter() const = 0;
     virtual MassAnalyzerType massAnalyzerType() const = 0;
+    virtual IonizationType ionizationType() const = 0;
+    virtual ActivationType activationType() const = 0;
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;

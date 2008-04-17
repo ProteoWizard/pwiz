@@ -50,6 +50,7 @@ bool _hasRAWHeader(const std::string& head)
 #include "utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string.hpp"
 #include "boost/filesystem/path.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -144,17 +145,6 @@ size_t SpectrumList_Thermo::findNative(const string& nativeID) const
 }
 
 
-CVID filterStringToMassAnalyzer(const string& filterString)
-{
-    if (filterString.find("ITMS") != string::npos)
-        return MS_ion_trap;
-    else if (filterString.find("FTMS") != string::npos)
-        return MS_FT_ICR;
-    else
-        return CVID_Unknown;
-}
-
-
 CVParam translateAsScanningMethod(ScanType scanType)
 {
     switch (scanType)
@@ -196,9 +186,68 @@ CVParam translateAsSpectrumType(ScanType scanType)
 }
 
 
-CVParam translate(PolarityType scanType)
+CVParam translate(MassAnalyzerType type)
 {
-    switch (scanType)
+    switch (type)
+    {
+        case MassAnalyzerType_ITMS: return MS_ion_trap;
+        case MassAnalyzerType_FTMS: return MS_FT_ICR;
+        case MassAnalyzerType_TOFMS: return MS_time_of_flight;
+        case MassAnalyzerType_TQMS: return MS_quadrupole;
+        case MassAnalyzerType_SQMS: return MS_quadrupole;
+        case MassAnalyzerType_Sector: return MS_magnetic_sector;
+        case MassAnalyzerType_Unknown:
+        default:
+            return CVParam();
+    }
+}
+
+
+CVParam translateAsIonizationType(IonizationType ionizationType)
+{
+    switch (ionizationType)
+    {
+        case IonizationType_EI: return MS_electron_ionization;
+        case IonizationType_CI: return MS_chemical_ionization;
+        case IonizationType_FAB: return MS_fast_atom_bombardment_ionization;
+        case IonizationType_ESI: return MS_electrospray_ionization;
+        case IonizationType_NSI: return MS_nanoelectrospray;
+        case IonizationType_APCI: return MS_atmospheric_pressure_chemical_ionization;
+        //case IonizationType_TSP: return MS_thermospray_ionization;
+        case IonizationType_FD: return MS_field_desorption;
+        case IonizationType_MALDI: return MS_matrix_assisted_laser_desorption_ionization;
+        case IonizationType_GD: return MS_glow_discharge_ionization;
+        case IonizationType_Unknown:
+        default:
+            return CVParam();
+    }
+}
+
+    
+CVParam translateAsInletType(IonizationType ionizationType)
+{
+    switch (ionizationType)
+    {
+        //case IonizationType_EI: return MS_electron_ionization;
+        //case IonizationType_CI: return MS_chemical_ionization;
+        case IonizationType_FAB: return MS_continuous_flow_fast_atom_bombardment;
+        case IonizationType_ESI: return MS_electrospray_inlet;
+        case IonizationType_NSI: return MS_nanospray_inlet;
+        //case IonizationType_APCI: return MS_atmospheric_pressure_chemical_ionization;
+        case IonizationType_TSP: return MS_thermospray_inlet;
+        //case IonizationType_FD: return MS_field_desorption;
+        //case IonizationType_MALDI: return MS_matrix_assisted_laser_desorption_ionization;
+        //case IonizationType_GD: return MS_glow_discharge_ionization;
+        case IonizationType_Unknown:
+        default:
+            return CVParam();
+    }
+}
+
+
+CVParam translate(PolarityType polarityType)
+{
+    switch (polarityType)
     {
         case PolarityType_Positive:
             return MS_positive_scan;
@@ -252,9 +301,9 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     string scanEvent = scanInfo->trailerExtraValue("Scan Event:");
     scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, scanEvent));
 
-    CVID massAnalyzer = filterStringToMassAnalyzer(filterString);
-    if (massAnalyzer != CVID_Unknown)
-        scan.cvParams.push_back(massAnalyzer);
+    /* currently non-standard for mzML
+    if (scanInfo->massAnalyzerType_ > MassAnalyzerType_Unknown)
+        scan.cvParams.push_back(translate(scanInfo->massAnalyzerType_));*/
      
     result->set(MS_ms_level, scanInfo->msLevel());
 
@@ -358,6 +407,35 @@ namespace {
 
 auto_ptr<RawFileLibrary> rawFileLibrary_;
 
+void fillInstrumentComponentMetadata(RawFile& rawfile, MSData& msd, InstrumentPtr& instrument)
+{
+    auto_ptr<ScanInfo> firstScanInfo = rawfile.getScanInfo(1);
+
+    instrument->componentList.source.order = 1;
+    instrument->componentList.source.cvParams.push_back(translateAsIonizationType(firstScanInfo->ionizationType()));
+    if (translateAsInletType(firstScanInfo->ionizationType()).cvid != CVID_Unknown)
+        instrument->componentList.source.cvParams.push_back(translateAsInletType(firstScanInfo->ionizationType()));
+
+    // due diligence to determine the mass analyzer(s) (TODO: also try to get a quantative resolution estimate)
+    instrument->componentList.analyzer.order = 2;
+    string model = boost::to_lower_copy( rawfile.value(InstName) + rawfile.value(InstModel) );
+    if (model.find("ltq") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_ion_trap));
+    if (model.find("ft") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_FT_ICR));
+    if (model.find("orbitrap") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_orbitrap));
+    if (model.find("tsq") != string::npos || model.find("quantum") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_quadrupole));
+    if (model.find("tof") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_time_of_flight));
+    if (model.find("sector") != string::npos)
+        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_magnetic_sector));
+
+    instrument->componentList.detector.order = 3;
+    // TODO: verify that all Thermo instruments use EM
+    instrument->componentList.detector.cvParams.push_back(CVParam(MS_electron_multiplier));
+}
 
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
@@ -417,16 +495,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     instrument->cvParams.push_back(CVParam(MS_instrument_serial_number, 
                                            rawfile.value(InstSerialNumber)));
     instrument->softwarePtr = softwareXcalibur;
-    instrument->componentList.source.order = 1;
-    instrument->componentList.analyzer.order = 2;
-    instrument->componentList.detector.order = 3;
+    fillInstrumentComponentMetadata(rawfile, msd, instrument);
     msd.instrumentPtrs.push_back(instrument);
 
     msd.run.id = filename;
     //msd.run.startTimeStamp = rawfile.getCreationDate(); // TODO format: 2007-06-27T15:23:45.00035
     msd.run.instrumentPtr = instrument;
 }
-
 
 } // namespace
 
