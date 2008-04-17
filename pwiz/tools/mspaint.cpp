@@ -1,5 +1,5 @@
 //
-// mspaint.cpp
+// mspicture.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -45,10 +45,10 @@ using namespace boost::filesystem;
 
 struct Config
 {
-    string filename;
+    vector<string> filenames;
     string outputDirectory;
     string usageOptions;
-    string command;
+    vector<string> commands;
 
     Config() {}
 };
@@ -106,7 +106,7 @@ Config parseCommandArgs(int argc, const char* argv[])
                 config.outputDirectory),
             ": output directory")
         ("exec,x", 
-            po::value<string>(&config.command)->composing(),
+            po::value< vector<string> >(&config.commands)->composing(),
             ": execute command")
         ;
 
@@ -122,7 +122,7 @@ Config parseCommandArgs(int argc, const char* argv[])
     const char* label_args = "args";
 
     po::options_description od_args;
-    od_args.add_options()(label_args, po::value< string >(), "");
+    od_args.add_options()(label_args, po::value< vector<string> >(), "");
 
     po::positional_options_description pod_args;
     pod_args.add(label_args, -1);
@@ -141,7 +141,7 @@ Config parseCommandArgs(int argc, const char* argv[])
     // remember filenames from command line
 
     if (vm.count(label_args))
-        config.filename = vm[label_args].as<string>();
+        config.filenames = vm[label_args].as< vector<string> >();
 
     config.usageOptions = usageOptions;
 
@@ -149,13 +149,31 @@ Config parseCommandArgs(int argc, const char* argv[])
 }
 
 void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
-                         const string& command)
+                         const vector<string>& commands)
 {
     shared_ptr<MSDataCache> cache(new MSDataCache);
     analyzers.push_back(cache);
     
-    MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, command));
-    analyzers.push_back(anal);
+    for (vector<string>::const_iterator it=commands.begin(); it!=commands.end(); ++it)
+    {
+        string name, args;
+        istringstream iss(*it);
+        iss >> name;
+        getline(iss, args);
+
+        if (name == analyzer_strings<Pseudo2DGel>::id())
+        {
+            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, args));
+            analyzers.push_back(anal);
+        }
+        else
+        {
+            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, *it));
+            analyzers.push_back(anal);
+        }
+
+        break;
+    }
 }
 
 int main(int argc, const char* argv[])
@@ -164,19 +182,20 @@ int main(int argc, const char* argv[])
     {
         Config config = parseCommandArgs(argc, argv);
 
-        if (config.filename.empty())
+        if (config.filenames.empty())
             throw runtime_error(usage(config).c_str());
 
         // Construct the Pseudo2DGel object with an MSDataCache object
         shared_ptr<Pseudo2DGel> analyzer;
         
         MSDataAnalyzerContainer analyzers;
-        initializeAnalyzers(analyzers, config.command);
-            
-        MSDataFile msd(config.filename);
+        initializeAnalyzers(analyzers, config.commands);
+        
+        // Only take the first file for now.
+        MSDataFile msd(config.filenames[0]);
         MSDataAnalyzer::DataInfo dataInfo(msd);
         
-        dataInfo.sourceFilename = path(config.filename).leaf();
+        dataInfo.sourceFilename = path(config.filenames[0]).leaf();
         dataInfo.outputDirectory = config.outputDirectory;
         dataInfo.log = NULL;
 
