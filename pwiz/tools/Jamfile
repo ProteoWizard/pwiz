@@ -71,8 +71,8 @@ exe msconvert
     ;
 
 
-exe mspaint 
-    : mspaint.cpp
+exe mspicture 
+    : mspicture.cpp
       ../analysis/passive//pwiz_analysis_passive
       ../analysis/peptideid//pwiz_analysis_peptideid
     : <include>../..

@@ -635,13 +635,14 @@ class ColorMapTouchTable : public ColorMap
 } // namespace
 
 namespace {
-class ColorMapRG : public ColorMap
+class ColorMapRB : public ColorMap
 {
 public:
     virtual void operator()(float intensity, float& red, float& green, float& blue) const
     {
-            red = 1 - intensity;
-            green = intensity;
+        red = .801f * (1 - intensity) + .199f;
+            green = .199f + .801f * intensity;
+            blue = .6f * intensity;
     }
 };
 } // namespace
@@ -667,7 +668,7 @@ void Pseudo2DGel::Impl::instantiateColorMap()
         colorMap_ = auto_ptr<ColorMap>(new ColorMapTouchTable);
 
     //circleColorMap_ = shared_ptr<ColorMap>(new ColorMapGrey);
-    circleColorMap_ = shared_ptr<ColorMap>(new ColorMapRG);
+    circleColorMap_ = shared_ptr<ColorMap>(new ColorMapRB);
 }
 
 
@@ -840,7 +841,6 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     if (dataInfo.log) *dataInfo.log << "[Pseudo2DGel] Writing file " << filename << endl;
     image->writePng(filename.string().c_str());
 }
-
 
 void Pseudo2DGel::Impl::drawScans(Image& image, 
                               const ScanList& scans, 
