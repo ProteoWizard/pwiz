@@ -71,6 +71,14 @@ exe msconvert
     ;
 
 
+exe msaccess
+    : msaccess.cpp
+      ../analysis/passive//pwiz_analysis_passive
+      ../analysis/peptideid//pwiz_analysis_peptideid
+    : <include>../..
+    ;
+
+
 exe mspicture 
     : mspicture.cpp
       ../analysis/passive//pwiz_analysis_passive
