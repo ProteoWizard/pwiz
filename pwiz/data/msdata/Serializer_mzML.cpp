@@ -149,7 +149,11 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd) const
         xmlWriter.endElement(); 
         
         xmlWriter.startElement("fileContentType");
-        xmlWriter.characters(msd.run.spectrumListPtr->spectrum(1, false)->cvParamChild(MS_spectrum_type).name());        
+        string fileContentType = "Unknown";
+        if (msd.run.spectrumListPtr.get() && !msd.run.spectrumListPtr->empty()) 
+            fileContentType = msd.run.spectrumListPtr->spectrum(0, false)->
+                cvParamChild(MS_spectrum_type).name();
+        xmlWriter.characters(fileContentType);
         xmlWriter.endElement(); 
 
         xmlWriter.startElement("fileChecksum");
