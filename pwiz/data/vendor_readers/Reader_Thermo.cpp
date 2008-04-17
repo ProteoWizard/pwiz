@@ -155,14 +155,34 @@ CVID filterStringToMassAnalyzer(const string& filterString)
 }
 
 
-CVParam translate(ScanType scanType)
+CVParam translateAsScanningMethod(ScanType scanType)
 {
     switch (scanType)
     {
         case ScanType_Full:
-            return MS_MSn_spectrum;
+            return MS_full_scan;
         case ScanType_Zoom:
             return MS_zoom_scan;
+        case ScanType_SIM:
+            return MS_SIM;
+        case ScanType_SRM:
+            return MS_SRM;
+        case ScanType_CRM:
+            return MS_CRM;
+        case ScanType_Unknown:
+        default:
+            return CVParam();
+    }
+}
+
+
+CVParam translateAsSpectrumType(ScanType scanType)
+{
+    switch (scanType)
+    {
+        case ScanType_Full:
+        case ScanType_Zoom:
+            return MS_MSn_spectrum;
         case ScanType_SIM:
             return MS_SIM_spectrum;
         case ScanType_SRM:
@@ -239,13 +259,17 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     result->set(MS_ms_level, scanInfo->msLevel());
 
     ScanType scanType = scanInfo->scanType();
-    if (scanType!=ScanType_Unknown) result->cvParams.push_back(translate(scanType));
+    if (scanType!=ScanType_Unknown)
+    {
+        result->cvParams.push_back(translateAsSpectrumType(scanType));
+        scan.cvParams.push_back(translateAsScanningMethod(scanType));
+    }
 
     PolarityType polarityType = scanInfo->polarityType();
     if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
 
     if (scanInfo->isProfileScan()) sd.cvParams.push_back(MS_profile_mass_spectrum); 
-    if (scanInfo->isCentroidScan()) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
+    else if (scanInfo->isCentroidScan()) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
 
     scan.cvParams.push_back(CVParam(MS_scan_time, scanInfo->startTime(), MS_minute));
     sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, scanInfo->lowMass()));
@@ -344,7 +368,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
     cv.version = "1.0";
 
-    msd.fileDescription.fileContent.cvParams.push_back(MS_MSn_spectrum);
+    msd.fileDescription.fileContent.cvParams.push_back(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
 
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
