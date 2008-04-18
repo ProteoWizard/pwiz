@@ -26,6 +26,7 @@
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/analysis/passive/MetadataReporter.hpp"
 #include "data/msdata/MSDataFile.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/passive/Pseudo2DGel.hpp"
 #include "pwiz/analysis/peptideid/PeptideID_pepXML.hpp"
 
@@ -200,7 +201,9 @@ int main(int argc, const char* argv[])
         initializeAnalyzers(analyzers, config.commands);
         
         // Only take the first file for now.
-        MSDataFile msd(config.filenames[0]);
+	ExtendedReaderList readers;
+
+        MSDataFile msd(config.filenames[0], &readers);
         MSDataAnalyzer::DataInfo dataInfo(msd);
         
         dataInfo.sourceFilename = path(config.filenames[0]).leaf();

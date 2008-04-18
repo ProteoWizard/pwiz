@@ -97,6 +97,7 @@ install bin
       msdiff 
       msconvert 
       msaccess
+      mspicture
     : <location>bin ;
 
 explicit bin ;
