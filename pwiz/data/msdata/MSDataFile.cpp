@@ -171,7 +171,7 @@ ostream& operator<<(ostream& os, MSDataFile::Format format)
 
 ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& config)
 {
-    os << config.format << " " << config.binaryDataEncoderConfig 
+    os << config.format << " " << config.binaryDataEncoderConfig
        << " indexed=\"" << boolalpha << config.indexed << "\"";
     return os;
 }

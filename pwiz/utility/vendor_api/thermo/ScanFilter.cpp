@@ -400,6 +400,8 @@ ScanFilter::initialize()
 bool 
 ScanFilter::parse(string filterLine)
 {
+    initialize();
+
 	/**
 	almost all of the fields are optional
 	*/
@@ -652,7 +654,7 @@ ScanFilter::parse(string filterLine)
 	// try to get activation type if not already set
 	if (activationType_ == ActivationType_Unknown) {
 		activationType_ = parseActivationType(w);
-		if (activationType_) {
+		if (activationType_ > ActivationType_Unknown) {
 			// "activation type" field present
 			if (s.eof()) {
 				return 1;

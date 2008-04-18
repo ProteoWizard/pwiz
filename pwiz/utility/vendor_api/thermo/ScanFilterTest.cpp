@@ -90,8 +90,8 @@ void testFilter(const ScanFilter& scanFilter,
 const char* scanFilterStrings[] =
 {
     "ITMS + c NSI Full ms [400.00-2000.00]",
-    "ITMS + c NSI d Full ms2 400.30@cid30.00 [100.00-1615.00]",
-    "ITMS + c NSI d Full ms3 400.30@cid30.00 329.73@cid30.00 [80.00-1330.00]",
+    "ITMS + c NSI d Full ms2 400.30@cid30.00 [80.00-1330.00]",
+    "ITMS + c NSI d Full ms3 400.30@cid30.00 329.73@cid30.00 [100.00-1615.00]",
     "FTMS + p NSI Full ms [400.00-1800.00]",
     "+ c ESI Full ms [400.00-1600.00]",
     "+ c d Full ms2 400.29@cid35.00 [100.00-1215.00]",
@@ -268,10 +268,11 @@ int main(int argc, char* argv[])
                         MassAnalyzerType_Unknown,
                         PolarityType_Positive,
                         DataPointType_Centroid,
-                        IonizationType_Unknown,
+                        IonizationType_NSI,
                         ScanType_SRM,
                         2, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
         }
+        return 0;
     }
     catch (exception& e)
     {

@@ -40,6 +40,7 @@ struct Config
     vector<string> filenames;
     string outputPath;
     string extension;
+    bool verbose;
     MSDataFile::WriteConfig writeConfig;
 
     Config()
@@ -85,8 +86,10 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_text = false;
     bool format_mzML = false;
     bool format_mzXML = false;
-    bool precision_32 = false;
-    bool precision_64 = false;
+    bool mz_precision_32 = false;
+    bool mz_precision_64 = false;
+    bool intensity_precision_32 = false;
+    bool intensity_precision_64 = false;
     bool noindex = false;
 
     po::options_description od_config("Options");
@@ -96,25 +99,34 @@ Config parseCommandLine(int argc, const char* argv[])
             ": specify text file containing filenames")
         ("outdir,o",
             po::value<string>(&config.outputPath)->default_value(config.outputPath),
-            ": set output directory")
+            ": set output directory [.]")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
-			": set extension for output files")
+			": set extension for output files [mzML|mzXML|txt]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
-			": write mzML format (default)")
+			": write mzML format [default]")
         ("mzXML",
             po::value<bool>(&format_mzXML)->zero_tokens(),
 			": write mzXML format")
         ("text",
             po::value<bool>(&format_text)->zero_tokens(),
 			": write MSData text format")
-        ("64",
-            po::value<bool>(&precision_64)->zero_tokens(),
-			": write binary data with 64-bit precision (default)")
-        ("32",
-            po::value<bool>(&precision_32)->zero_tokens(),
-			": write binary data with 32-bit precision")
+        ("verbose,v",
+            po::value<bool>(&config.verbose)->zero_tokens(),
+            ": display detailed progress information")
+        ("mz64",
+            po::value<bool>(&mz_precision_64)->zero_tokens(),
+			": encode m/z values in 64-bit precision [default]")
+        ("mz32",
+            po::value<bool>(&mz_precision_32)->zero_tokens(),
+			": encode m/z values in 32-bit precision")
+        ("inten64",
+            po::value<bool>(&intensity_precision_64)->zero_tokens(),
+			": encode m/z values in 64-bit precision [default]")
+        ("inten32",
+            po::value<bool>(&intensity_precision_32)->zero_tokens(),
+			": encode m/z values in 32-bit precision")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
 			": do not write index")
@@ -196,12 +208,17 @@ Config parseCommandLine(int argc, const char* argv[])
         }
     }
 
-    count = precision_32 + precision_64;
-    if (count > 1) throw runtime_error(usage.str());
-    if (precision_32)
-        config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
-    if (precision_64)
-        config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
+    count = mz_precision_32 + mz_precision_64 + intensity_precision_32 + intensity_precision_64;
+    if (count > 2) throw runtime_error(usage.str());
+    config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
+    if (mz_precision_32)
+        config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_32;
+    if (mz_precision_64)
+        config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_64;
+    if (intensity_precision_32)
+        config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+    if (intensity_precision_64)
+        config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_64;
 
     if (noindex)
         config.writeConfig.indexed = false;

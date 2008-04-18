@@ -731,6 +731,7 @@ void initializeTestData(MSData& msd)
     s19.id = "S19";
     s19.index = 0;
     s19.nativeID = "19";
+    s19.defaultArrayLength = 10;
     s19.cvParams.push_back(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
     s19.spectrumDescription.cvParams.push_back(MS_centroid_mass_spectrum);
@@ -769,6 +770,7 @@ void initializeTestData(MSData& msd)
     s20.id = "S20";
     s20.index = 1;
     s20.nativeID = "20";
+    s20.defaultArrayLength = 10;
 
     s20.cvParams.push_back(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);

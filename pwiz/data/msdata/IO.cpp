@@ -1436,41 +1436,49 @@ void read(std::istream& is, SpectrumDescription& spectrumDescription)
 // BinaryData
 //
 
-
-void writeConfig(minimxml::XMLWriter& writer, const BinaryDataEncoder::Config& config)
-{
-    if (config.precision == BinaryDataEncoder::Precision_32)
-        write(writer, MS_32_bit_float);
-    else
-        write(writer, MS_64_bit_float);
-
-    if (config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
-        throw runtime_error("[IO::writeConfig()] mzML: must use little endian encoding.");
-
-    if (config.compression == BinaryDataEncoder::Compression_None)
-        write(writer, MS_no_compression);
-    else if (config.compression == BinaryDataEncoder::Compression_Zlib)
-        write(writer, MS_zlib_compression);
-    else
-        throw runtime_error("[IO::writeConfig()] Unsupported compression method.");
-}
-
-
 void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config)
 {
-    BinaryDataEncoder encoder(config);
+    BinaryDataEncoder::Config usedConfig = config;
+    map<CVID, BinaryDataEncoder::Precision>::const_iterator overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_type).cvid);
+    if (overrideItr != config.precisionOverrides.end())
+        usedConfig.precision = overrideItr->second;
+
+    BinaryDataEncoder encoder(usedConfig);
     string encoded;
     encoder.encode(binaryDataArray.data, encoded);
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("arrayLength", lexical_cast<string>(binaryDataArray.data.size())));
+
+    // primary array types can never override the default array length
+    if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
+        !binaryDataArray.hasCVParam(MS_time_array) &&
+        !binaryDataArray.hasCVParam(MS_intensity_array))
+    {
+        attributes.push_back(make_pair("arrayLength", lexical_cast<string>(binaryDataArray.data.size())));
+    }
+
     attributes.push_back(make_pair("encodedLength", lexical_cast<string>(encoded.size())));
     if (binaryDataArray.dataProcessingPtr.get())
         attributes.push_back(make_pair("dataProcessingRef", binaryDataArray.dataProcessingPtr->id));
 
     writer.startElement("binaryDataArray", attributes);
-    writeConfig(writer, config);
+
+    if (usedConfig.precision == BinaryDataEncoder::Precision_32)
+        write(writer, MS_32_bit_float);
+    else
+        write(writer, MS_64_bit_float);
+
+    if (usedConfig.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
+        throw runtime_error("[IO::writeConfig()] mzML: must use little endian encoding.");
+
+    if (usedConfig.compression == BinaryDataEncoder::Compression_None)
+        write(writer, MS_no_compression);
+    else if (config.compression == BinaryDataEncoder::Compression_Zlib)
+        write(writer, MS_zlib_compression);
+    else
+        throw runtime_error("[IO::writeConfig()] Unsupported compression method.");
+
     writeParamContainer(writer, binaryDataArray);
 
     writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
@@ -1486,9 +1494,11 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
 struct HandlerBinaryDataArray : public HandlerParamContainer
 {
     BinaryDataArray* binaryDataArray;
+    size_t defaultArrayLength;
 
     HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0)
     :   binaryDataArray(_binaryDataArray),
+        defaultArrayLength(0),
         arrayLength_(0),
         encodedLength_(0)
     {}
@@ -1508,7 +1518,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             if (!dataProcessingRef.empty())
                 binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
-            arrayLength_ = encodedLength_ = 0;
+            arrayLength_ = defaultArrayLength;
+            encodedLength_ = 0;
             getAttribute(attributes, "arrayLength", arrayLength_);
             getAttribute(attributes, "encodedLength", encodedLength_);
 
@@ -1545,8 +1556,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 
     private:
 
-    unsigned int arrayLength_;
-    unsigned int encodedLength_;
+    size_t arrayLength_;
+    size_t encodedLength_;
 
     CVID extractCVParam(CVID cvid)
     {
@@ -1697,6 +1708,7 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             spectrum->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
             handlerBinaryDataArray_.binaryDataArray = spectrum->binaryDataArrayPtrs.back().get();
+            handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
         }
 

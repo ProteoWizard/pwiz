@@ -28,6 +28,8 @@
 #include "boost/shared_ptr.hpp"
 #include <string>
 #include <vector>
+#include <map>
+#include "cv.hpp"
 
 
 namespace pwiz {
@@ -49,6 +51,8 @@ class BinaryDataEncoder
         Precision precision;
         ByteOrder byteOrder;
         Compression compression;
+
+        std::map<CVID, Precision> precisionOverrides;
 
         Config()
         :   precision(Precision_64),
