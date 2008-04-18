@@ -33,7 +33,7 @@ unit-test ScanFilterTest
     : ScanFilterTest.cpp
       pwiz_rawfile
     : <toolset>gcc:<build>no
-      <toolset>drawin:<build>no
+      <toolset>darwin:<build>no
     ;
 
 # a test utility, not a unit test
