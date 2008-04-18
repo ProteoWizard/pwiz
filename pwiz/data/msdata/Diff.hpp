@@ -211,10 +211,22 @@ void diff(const Spectrum& a,
           Spectrum& b_a,
           const DiffConfig& config);
 
+void diff(const Chromatogram& a,
+          const Chromatogram& b,
+          Chromatogram& a_b,
+          Chromatogram& b_a,
+          const DiffConfig& config);
+
 void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
+          const DiffConfig& config);
+
+void diff(const ChromatogramList& a,
+          const ChromatogramList& b,
+          ChromatogramListSimple& a_b,
+          ChromatogramListSimple& b_a,
           const DiffConfig& config);
 
 void diff(const Run& a,
@@ -309,6 +321,41 @@ struct Diff<SpectrumList>
 
     Diff& operator()(const SpectrumList& a,
                            const SpectrumList& b)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+        return *this;
+    }
+
+    private:
+    DiffConfig config_;
+};
+
+
+template <>
+struct Diff<ChromatogramList>
+{
+    Diff(const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {}
+
+    Diff(const ChromatogramList& a,
+               const ChromatogramList& b,
+               const DiffConfig& config = DiffConfig())
+    :   config_(config)
+    {
+        diff_impl::diff(a, b, a_b, b_a, config_);
+    }
+
+    ChromatogramListSimple a_b;
+    ChromatogramListSimple b_a;
+
+    /// conversion to bool, with same semantics as *nix diff command:
+    ///  true == different
+    ///  false == not different
+    operator bool() {return !(a_b.empty() && b_a.empty());}
+
+    Diff& operator()(const ChromatogramList& a,
+                     const ChromatogramList& b)
     {
         diff_impl::diff(a, b, a_b, b_a, config_);
         return *this;

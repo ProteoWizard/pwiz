@@ -444,6 +444,18 @@ ostream& operator<<(ostream& os, const MZIntensityPair& mzi)
 
 
 //
+// TimeIntensityPair 
+//
+
+
+ostream& operator<<(ostream& os, const TimeIntensityPair& ti)
+{
+    os << "(" << ti.time << "," << ti.intensity << ")";
+    return os;
+}
+
+
+//
 // Spectrum 
 //
 
@@ -563,6 +575,123 @@ void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size)
 
 
 //
+// Chromatogram 
+//
+
+
+bool Chromatogram::empty() const
+{
+    return index==0 &&
+           id.empty() &&
+           nativeID.empty() &&
+           defaultArrayLength==0 &&
+           (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
+           binaryDataArrayPtrs.empty() &&
+           ParamContainer::empty();
+}
+
+
+namespace {
+
+pair<BinaryDataArrayPtr,BinaryDataArrayPtr> 
+getTimeIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize)
+{
+    BinaryDataArrayPtr timeArray;
+    BinaryDataArrayPtr intensityArray;
+
+    for (vector<BinaryDataArrayPtr>::const_iterator it=ptrs.begin(); it!=ptrs.end(); ++it)
+    {
+        if ((*it)->hasCVParam(MS_time_array) && !timeArray.get()) timeArray = *it;
+        if ((*it)->hasCVParam(MS_intensity_array) && !intensityArray.get()) intensityArray = *it;
+    }
+
+    if (!timeArray.get()) 
+        throw runtime_error("[MSData::getTimeIntensityArrays()] Time array not found.");
+
+    if (!intensityArray.get()) 
+        throw runtime_error("[MSData::getTimeIntensityArrays()] Intensity array not found.");
+
+    if (timeArray->data.size() != expectedSize)
+        throw runtime_error("[MSData::getTimeIntensityArrays()] Time array invalid size.");
+         
+    if (intensityArray->data.size() != expectedSize)
+        throw runtime_error("[MSData::getTimeIntensityArrays()] Intensity array invalid size.");
+         
+    return make_pair(timeArray, intensityArray);
+}
+
+} // namespace
+
+
+void Chromatogram::getTimeIntensityPairs(vector<TimeIntensityPair>& output) const 
+{
+    output.clear();
+    output.resize(defaultArrayLength);
+    if (!output.empty())
+        getTimeIntensityPairs(&output[0], output.size());
+}
+
+
+void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output, size_t expectedSize) const
+{
+    // retrieve and validate time and intensity arrays
+
+    if (expectedSize == 0) return;
+
+    pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
+        getTimeIntensityArrays(binaryDataArrayPtrs, expectedSize); 
+
+    if (!output)
+        throw runtime_error("[MSData::Chromatogram::getTimeIntensityPairs()] Null output buffer.");
+
+    // copy data into return buffer
+
+    double* time = &arrays.first->data[0];
+    double* intensity = &arrays.second->data[0];
+    for (TimeIntensityPair* p=output; p!=output+expectedSize; ++p) 
+    {
+        p->time = *time++;
+        p->intensity = *intensity++;
+    }
+}
+
+
+void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input)
+{
+    if (!input.empty())    
+        setTimeIntensityPairs(&input[0], input.size());
+}
+
+
+void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t size)
+{
+    BinaryDataArrayPtr bd_time(new BinaryDataArray);
+    BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
+
+    binaryDataArrayPtrs.clear();
+    binaryDataArrayPtrs.push_back(bd_time);
+    binaryDataArrayPtrs.push_back(bd_intensity);
+
+    bd_time->cvParams.push_back(MS_time_array);
+    bd_intensity->cvParams.push_back(MS_intensity_array);
+
+    bd_time->data.resize(size);
+    bd_intensity->data.resize(size);
+    defaultArrayLength = size;
+
+    if (size == 0) return;
+
+    double* time = &bd_time->data[0];
+    double* intensity = &bd_intensity->data[0];
+    for (const TimeIntensityPair* p=input; p!=input+size; ++p)
+    {
+        *time++ = p->time;
+        *intensity++ = p->intensity;
+    }
+}
+
+
+//
 // SpectrumList (default implementations)
 //
 
@@ -614,6 +743,57 @@ SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBinaryData) const
 
 
 //
+// ChromatogramList (default implementations)
+//
+
+
+bool ChromatogramList::empty() const {return size()==0;}
+
+
+size_t ChromatogramList::find(const string& id) const
+{
+    for (size_t index=0; index<size(); ++index)
+        if (chromatogramIdentity(index).id == id) 
+            return index;
+    return size();
+}
+
+
+size_t ChromatogramList::findNative(const string& nativeID) const
+{
+    for (size_t index=0; index<size(); ++index)
+        if (chromatogramIdentity(index).nativeID == nativeID) 
+            return index;
+    return size();
+}
+
+
+//
+// ChromatogramListSimple
+//
+
+
+const ChromatogramIdentity& ChromatogramListSimple::chromatogramIdentity(size_t index) const
+{
+    return *chromatogram(index, false);
+}
+
+
+ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinaryData) const
+{
+    // validate index
+    if (index > size())
+        throw runtime_error("[MSData::ChromatogramListSimple::chromatogram()] Invalid index.");
+
+    // validate Chromatogram* 
+    if (!chromatograms[index].get())
+        throw runtime_error("[MSData::ChromatogramListSimple::chromatogram()] Null ChromatogramPtr.");
+
+    return chromatograms[index];
+} 
+
+
+//
 // Run
 //
 
@@ -626,6 +806,7 @@ bool Run::empty() const
            startTimeStamp.empty() &&
            sourceFilePtrs.empty() &&
            (!spectrumListPtr.get() || spectrumListPtr->empty()) &&
+           (!chromatogramListPtr.get() || chromatogramListPtr->empty()) &&
            ParamContainer::empty();
 }
 

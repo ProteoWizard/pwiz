@@ -705,6 +705,53 @@ void diff(const Spectrum& a,
 }
 
 
+void diff(const Chromatogram& a,
+          const Chromatogram& b,
+          Chromatogram& a_b,
+          Chromatogram& b_a,
+          const DiffConfig& config)
+{
+    a_b = Chromatogram();
+    b_a = Chromatogram();
+
+    // important scan metadata
+    diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
+    diff(a.nativeID, b.nativeID, a_b.nativeID, b_a.nativeID, config);
+    diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
+
+    if (!config.ignoreMetadata)
+    {
+        diff(a.id, b.id, a_b.id, b_a.id, config);
+        ptr_diff(a.dataProcessingPtr, b.dataProcessingPtr, a_b.dataProcessingPtr, b_a.dataProcessingPtr, config);
+        diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+    }
+
+    // special handling for binary data arrays
+
+    if (a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size())
+    {
+        a_b.userParams.push_back(UserParam("Binary data array count: " + 
+                                 lexical_cast<string>(a.binaryDataArrayPtrs.size())));
+        b_a.userParams.push_back(UserParam("Binary data array count: " + 
+                                 lexical_cast<string>(b.binaryDataArrayPtrs.size())));
+    }
+    else
+    {
+        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config);
+    }
+
+    // provide context
+    if (!a_b.empty() || !b_a.empty()) 
+    {
+        a_b.id = a.id; 
+        a_b.nativeID = a.nativeID; 
+        b_a.id = b.id; 
+        b_a.nativeID = b.nativeID; 
+    }
+}
+
+
 void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
@@ -736,6 +783,37 @@ void diff(const SpectrumList& a,
 }
 
 
+void diff(const ChromatogramList& a,
+          const ChromatogramList& b,
+          ChromatogramListSimple& a_b,
+          ChromatogramListSimple& b_a,
+          const DiffConfig& config)
+{
+    a_b.chromatograms.clear();
+    b_a.chromatograms.clear();
+    
+    if (a.size() != b.size())
+    {
+        ChromatogramPtr dummy(new Chromatogram);
+        dummy->userParams.push_back(UserParam("ChromatogramList sizes differ"));
+        a_b.chromatograms.push_back(dummy);
+        return;
+    }
+
+    for (unsigned int i=0; i<a.size(); i++)
+    { 
+        ChromatogramPtr temp_a_b(new Chromatogram);        
+        ChromatogramPtr temp_b_a(new Chromatogram);        
+        diff(*a.chromatogram(i, true), *b.chromatogram(i, true), *temp_a_b, *temp_b_a, config);
+        if (!temp_a_b->empty() || !temp_b_a->empty())
+        {
+            a_b.chromatograms.push_back(temp_a_b);
+            b_a.chromatograms.push_back(temp_b_a);
+        }
+    }
+}
+
+
 void diff(const Run& a,
           const Run& b,
           Run& a_b,
@@ -760,6 +838,15 @@ void diff(const Run& a,
     SpectrumListPtr temp_a = a.spectrumListPtr.get() ? a.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
     SpectrumListPtr temp_b = b.spectrumListPtr.get() ? b.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
     diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config);
+
+    // special handling for ChromatogramList diff
+    shared_ptr<ChromatogramListSimple> cl_temp_a_b(new ChromatogramListSimple); 
+    shared_ptr<ChromatogramListSimple> cl_temp_b_a(new ChromatogramListSimple);
+    a_b.chromatogramListPtr = cl_temp_a_b;
+    b_a.chromatogramListPtr = cl_temp_b_a; 
+    ChromatogramListPtr cl_temp_a = a.chromatogramListPtr.get() ? a.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
+    ChromatogramListPtr cl_temp_b = b.chromatogramListPtr.get() ? b.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
+    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config);
 
     // provide context
     if (!a_b.empty() || !b_a.empty()) 

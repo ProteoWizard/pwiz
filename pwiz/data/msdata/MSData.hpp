@@ -368,6 +368,22 @@ struct MZIntensityPair
 std::ostream& operator<<(std::ostream& os, const MZIntensityPair& mzi);
 
 
+#pragma pack(1)
+struct TimeIntensityPair
+{
+    double time;
+    double intensity;
+
+    TimeIntensityPair(double _time = 0, double _intensity = 0)
+    :   time(_time), intensity(_intensity)
+    {}
+};
+#pragma pack()
+
+
+std::ostream& operator<<(std::ostream& os, const TimeIntensityPair& ti);
+
+
 struct SpectrumIdentity
 {
     size_t index;
@@ -377,6 +393,10 @@ struct SpectrumIdentity
 
     SpectrumIdentity() : index(0), sourceFilePosition(-1) {}
 };
+
+
+struct ChromatogramIdentity : public SpectrumIdentity
+{};
 
 
 struct Spectrum : public SpectrumIdentity, public ParamContainer
@@ -408,6 +428,35 @@ struct Spectrum : public SpectrumIdentity, public ParamContainer
 
 
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
+
+
+struct Chromatogram : public ChromatogramIdentity, public ParamContainer
+{
+    size_t defaultArrayLength; 
+    DataProcessingPtr dataProcessingPtr;
+    std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
+
+    Chromatogram() : defaultArrayLength(0) {}
+
+    bool empty() const;
+
+    /// copy binary data arrays into time-intensity pair array
+    void getTimeIntensityPairs(std::vector<TimeIntensityPair>& output) const;
+
+    /// copy binary data arrays into time-intensity pair array
+    /// note: this overload is to allow client to allocate own buffer; the client
+    /// must determine the correct size beforehand, or an exception will be thrown
+    void getTimeIntensityPairs(TimeIntensityPair* output, size_t expectedSize) const;
+
+    /// set binary data arrays 
+    void setTimeIntensityPairs(const std::vector<TimeIntensityPair>& input);
+
+    /// set binary data arrays 
+    void setTimeIntensityPairs(const TimeIntensityPair* input, size_t size);
+};
+
+
+typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
 
 /// 
@@ -481,6 +530,55 @@ struct SpectrumListSimple : public SpectrumList
 typedef boost::shared_ptr<SpectrumListSimple> SpectrumListSimplePtr;
 
 
+class ChromatogramList
+{
+    public:
+    
+    /// returns the number of chromatograms 
+    virtual size_t size() const = 0;
+
+    /// returns true iff (size() == 0)
+    bool empty() const;
+
+    /// access to a chromatogram index
+    virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const = 0;
+
+    /// find id in the chromatogram index (returns size() on failure)
+    virtual size_t find(const std::string& id) const;
+
+    /// find nativeID in the chromatogram index (returns size() on failure)
+    virtual size_t findNative(const std::string& nativeID) const;
+
+    /// retrieve a chromatogram by index
+    /// - binary data arrays will be provided if (getBinaryData == true);
+    /// - client may assume the underlying Chromatogram* is valid 
+    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const = 0;
+
+    virtual ~ChromatogramList(){} 
+};
+
+
+typedef boost::shared_ptr<ChromatogramList> ChromatogramListPtr;
+
+
+/// Simple writeable in-memory implementation of ChromatogramList.
+/// Note:  This chromatogram() implementation returns internal ChromatogramPtrs.
+struct ChromatogramListSimple : public ChromatogramList
+{
+    std::vector<ChromatogramPtr> chromatograms;
+
+    // ChromatogramList implementation
+
+    virtual size_t size() const {return chromatograms.size();}
+    virtual bool empty() const {return chromatograms.empty();}
+    virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
+    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+};
+
+
+typedef boost::shared_ptr<ChromatogramListSimple> ChromatogramListSimplePtr;
+
+
 struct Run : public ParamContainer
 {
     std::string id;
@@ -489,6 +587,7 @@ struct Run : public ParamContainer
     std::string startTimeStamp;
     std::vector<SourceFilePtr> sourceFilePtrs;
     SpectrumListPtr spectrumListPtr;
+    ChromatogramListPtr chromatogramListPtr;
 
     Run(){}
     bool empty() const;

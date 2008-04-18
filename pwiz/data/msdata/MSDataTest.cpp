@@ -218,12 +218,40 @@ void testSpectrumListSimple()
 }
 
 
+void testChromatograms()
+{
+    ChromatogramListSimple cls;
+
+    for (int i=0; i<3; i++)
+    {
+        vector<TimeIntensityPair> pairs;
+        for (int j=0; j<10; j++) pairs.push_back(TimeIntensityPair(j, 10*i+j));
+        cls.chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+        cls.chromatograms.back()->setTimeIntensityPairs(pairs);
+    }
+
+    ChromatogramList& cl = cls;
+
+    unit_assert(cl.size() == 3);
+
+    for (size_t i=0; i<3; i++)
+    {
+        vector<TimeIntensityPair> result; 
+        cl.chromatogram(i)->getTimeIntensityPairs(result);
+        unit_assert(result.size() == 10);
+        for (size_t j=0; j<10; j++) 
+            unit_assert(result[j].time==j  && result[j].intensity==10*i+j);
+    }
+}
+
+
 int main()
 {
     try
     {
         testParamContainer();
         testSpectrumListSimple();
+        testChromatograms();
         return 0;
     }
     catch (exception& e)

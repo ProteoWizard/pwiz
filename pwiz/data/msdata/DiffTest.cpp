@@ -745,6 +745,43 @@ void testSpectrum()
 }
 
 
+void testChromatogram()
+{
+    if (os_) *os_ << "testChromatogram()\n";
+
+    Chromatogram a, b;
+
+    a.id = "goober";
+    a.index = 1;
+    a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
+    a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+    a.binaryDataArrayPtrs.back()->data.resize(6);
+
+    b = a; 
+
+    DiffConfig config;
+    config.precision = 1e-6;
+    Diff<Chromatogram> diff(a, b, config);
+    if (diff) cout << diff;
+    unit_assert(!diff);
+
+    b.binaryDataArrayPtrs[0] = BinaryDataArrayPtr(new BinaryDataArray);
+    b.binaryDataArrayPtrs[0]->data.resize(6);
+
+    a.binaryDataArrayPtrs[0]->data[0] = 420;
+    b.binaryDataArrayPtrs[0]->data[0] = 420 + 1e-12;
+
+    diff(a,b);
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.binaryDataArrayPtrs[0]->data[0] += 1e-3;
+    diff(a,b);
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(diff);
+}
+
+
 void testSpectrumList()
 {
     SpectrumListSimple aSimple, bSimple;
@@ -816,6 +853,77 @@ void testSpectrumList()
 }
 
 
+void testChromatogramList()
+{
+    ChromatogramListSimple aSimple, bSimple;
+
+    ChromatogramPtr chromatogram1a = ChromatogramPtr(new Chromatogram);
+    chromatogram1a->nativeID = "420";
+
+    ChromatogramPtr chromatogram1b = ChromatogramPtr(new Chromatogram);
+    chromatogram1b->nativeID = "420";
+   
+    aSimple.chromatograms.push_back(chromatogram1a); 
+    bSimple.chromatograms.push_back(chromatogram1b); 
+    
+    ChromatogramList& a = aSimple;
+    ChromatogramList& b = bSimple;
+
+    Diff<ChromatogramList> diff(a, b);
+    unit_assert(!diff);
+
+    // check: different ChromatogramList::size()
+    
+    ChromatogramPtr chromatogram2 = ChromatogramPtr(new Chromatogram);
+    chromatogram2->nativeID = "421";
+    aSimple.chromatograms.push_back(chromatogram2);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+    unit_assert(diff.a_b.chromatograms.size() == 1);
+    unit_assert(diff.a_b.chromatograms[0]->userParams.size() == 1);
+
+    // check: same ChromatogramList::size(), different last scan number 
+
+    ChromatogramPtr chromatogram3 = ChromatogramPtr(new Chromatogram);
+    chromatogram3->nativeID = "422";
+    bSimple.chromatograms.push_back(chromatogram3);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+    unit_assert(diff.a_b.chromatograms.size() == 1);
+    unit_assert(diff.a_b.chromatograms[0]->nativeID == "421");
+    unit_assert(diff.b_a.chromatograms.size() == 1);
+    unit_assert(diff.b_a.chromatograms[0]->nativeID == "422");
+
+    // check: scan numbers match, binary data slightly different
+   
+    chromatogram3->nativeID = "421";
+    BinaryDataArrayPtr b1(new BinaryDataArray);
+    BinaryDataArrayPtr b2(new BinaryDataArray);
+    b1->data.resize(10);
+    b2->data.resize(10);
+    for (int i=0; i<10; i++)
+        b1->data[i] = b2->data[i] = i;
+    b2->data[2] += 1e-7;
+    chromatogram2->binaryDataArrayPtrs.push_back(b1);
+    chromatogram3->binaryDataArrayPtrs.push_back(b2);
+
+    DiffConfig config;
+    config.precision = 1e-6;
+
+    Diff<ChromatogramList> diffWide(a, b, config);
+    unit_assert(!diffWide);
+
+    config.precision = 1e-12;
+    Diff<ChromatogramList> diffNarrow(a, b, config);
+    if (os_) *os_ << diffNarrow << endl;
+    unit_assert(diffNarrow);
+}
+
+
 void testRun()
 {
     Run a, b;
@@ -835,6 +943,11 @@ void testRun()
     spectrumList1->spectra.back()->id = "spectrum1";
     a.spectrumListPtr = spectrumList1;
 
+    shared_ptr<ChromatogramListSimple> chromatogramList1(new ChromatogramListSimple);
+    chromatogramList1->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+    chromatogramList1->chromatograms.back()->id = "chromatogram1";
+    b.chromatogramListPtr = chromatogramList1;
+
     // same ref id
     a.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
     b.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
@@ -845,8 +958,13 @@ void testRun()
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
+
     unit_assert(diff.a_b.spectrumListPtr->size() == 1);
     unit_assert(diff.a_b.spectrumListPtr->spectrum(0)->userParams.size() == 1);
+
+    unit_assert(diff.a_b.chromatogramListPtr.get());
+    unit_assert(diff.a_b.chromatogramListPtr->size() == 1);
+    unit_assert(diff.a_b.chromatogramListPtr->chromatogram(0)->userParams.size() == 1);
 
     unit_assert(!diff.a_b.instrumentPtr.get());
     unit_assert(!diff.b_a.instrumentPtr.get());
@@ -1001,7 +1119,9 @@ void test()
     testSpectrumDescription();
     testBinaryDataArray();
     testSpectrum();
+    testChromatogram();
     testSpectrumList();
+    testChromatogramList();
     testRun();
     testMSData();
     testBinaryDataOnly();

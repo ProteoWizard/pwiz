@@ -308,6 +308,8 @@ class TextWriter
         }
         if (run.spectrumListPtr.get())
             child()(run.spectrumListPtr);
+        if (run.chromatogramListPtr.get())
+            child()(run.chromatogramListPtr);
         return *this;
     }
 
@@ -325,6 +327,20 @@ class TextWriter
         return p.get() ? (*this)(*p) : *this;
     }
 
+    TextWriter& operator()(const ChromatogramList& chromatogramList)
+    {
+        (*this)("chromatogramList:");
+        for (size_t index=0; index<chromatogramList.size(); ++index)
+            child()
+                (*chromatogramList.chromatogram(index, true)); 
+        return *this;
+    }
+
+    TextWriter& operator()(const ChromatogramListPtr& p)
+    {
+        return p.get() ? (*this)(*p) : *this;
+    }
+
     TextWriter& operator()(const Spectrum& spectrum)
     {
         (*this)("spectrum:");
@@ -338,6 +354,20 @@ class TextWriter
         if (!spectrum.spectrumDescription.empty())
             child()(spectrum.spectrumDescription);
         for_each(spectrum.binaryDataArrayPtrs.begin(), spectrum.binaryDataArrayPtrs.end(), child()); 
+        return *this;
+    }
+
+    TextWriter& operator()(const Chromatogram& chromatogram)
+    {
+        (*this)("chromatogram:");
+        child()
+            ("index: " + boost::lexical_cast<std::string>(chromatogram.index))
+            ("id: " + chromatogram.id)
+            ("nativeID: " + boost::lexical_cast<std::string>(chromatogram.nativeID))
+            ("defaultArrayLength: " + boost::lexical_cast<std::string>(chromatogram.defaultArrayLength))
+            (chromatogram.dataProcessingPtr)
+            (static_cast<const ParamContainer&>(chromatogram));
+        for_each(chromatogram.binaryDataArrayPtrs.begin(), chromatogram.binaryDataArrayPtrs.end(), child()); 
         return *this;
     }
 
