@@ -42,6 +42,7 @@ lib pwiz_analysis_passive
         Pseudo2DGel.cpp
         ../../utility/math
         ../../data/msdata//pwiz_data_msdata
+        ../../data/vendor_readers
         ../..//boost_program_options
         ../..//boost_filesystem
     ;

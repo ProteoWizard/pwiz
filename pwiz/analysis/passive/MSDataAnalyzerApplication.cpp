@@ -22,6 +22,7 @@
 
 
 #include "MSDataAnalyzerApplication.hpp"
+#include "data/vendor_readers/ExtendedReaderList.hpp"
 #include "data/msdata/MSDataFile.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -128,13 +129,15 @@ void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostream* log) cons
     if (!filenames.empty())
         bfs::create_directories(outputDirectory);
 
+    ExtendedReaderList readers;
+
     for (vector<string>::const_iterator it=filenames.begin(); it!=filenames.end(); ++it)
     {
         try
         {
             if (log) *log << "[MSDataAnalyzerApplication] Analyzing file: " << *it << endl;
 
-            MSDataFile msd(*it);
+            MSDataFile msd(*it, &readers);
             MSDataAnalyzer::DataInfo dataInfo(msd);
             dataInfo.sourceFilename = bfs::path(*it).leaf();
             dataInfo.outputDirectory = outputDirectory;
