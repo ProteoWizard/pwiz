@@ -16,11 +16,13 @@
     </msInstrument>
     <dataProcessing>
       <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
-      <software type="unknown software type" name="ReAdW" version="1.0"/>
+      <software type="unknown software type" name="ProteoWizard" version="1.0"/>
     </dataProcessing>
     <scan num="19"
+          scanEvent="3"
+          scanType="FULL"
           msLevel="1"
-          peaksCount="10"
+          peaksCount="15"
           polarity="+"
           retentionTime="PT353.43S"
           lowMz="400.39"
@@ -31,11 +33,13 @@
           msInstrumentID="LCQ Deca">
       <peaks precision="64"
              byteOrder="network"
-             pairOrder="m/z-int">AAAAAAAAAABAJAAAAAAAAD/wAAAAAAAAQCIAAAAAAABAAAAAAAAAAEAgAAAAAAAAQAgAAAAAAABAHAAAAAAAAEAQAAAAAAAAQBgAAAAAAABAFAAAAAAAAEAUAAAAAAAAQBgAAAAAAABAEAAAAAAAAEAcAAAAAAAAQAgAAAAAAABAIAAAAAAAAEAAAAAAAAAAQCIAAAAAAAA/8AAAAAAAAA==</peaks>
+             pairOrder="m/z-int">AAAAAAAAAABALgAAAAAAAD/wAAAAAAAAQCwAAAAAAABAAAAAAAAAAEAqAAAAAAAAQAgAAAAAAABAKAAAAAAAAEAQAAAAAAAAQCYAAAAAAABAFAAAAAAAAEAkAAAAAAAAQBgAAAAAAABAIgAAAAAAAEAcAAAAAAAAQCAAAAAAAABAIAAAAAAAAEAcAAAAAAAAQCIAAAAAAABAGAAAAAAAAEAkAAAAAAAAQBQAAAAAAABAJgAAAAAAAEAQAAAAAAAAQCgAAAAAAABACAAAAAAAAEAqAAAAAAAAQAAAAAAAAABALAAAAAAAAD/wAAAAAAAA</peaks>
     </scan>
     <scan num="20"
+          scanEvent="4"
+          scanType="FULL"
           msLevel="2"
-          peaksCount="20"
+          peaksCount="10"
           polarity="+"
           retentionTime="PT359.43S"
           collisionEnergy="35"
@@ -45,16 +49,16 @@
           basePeakIntensity="23433"
           totIonCurrent="16675500"
           msInstrumentID="LCQ Deca">
-      <precursorMz precursorScanNum="19" precursorIntensity="" precursorCharge="2">445.34</precursorMz>
+      <precursorMz precursorScanNum="19" precursorIntensity="120053" precursorCharge="2">445.34</precursorMz>
       <peaks precision="64"
              byteOrder="network"
-             pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAD/wAAAAAAAAQDMAAAAAAABAAAAAAAAAAEAyAAAAAAAAQAgAAAAAAABAMQAAAAAAAEAQAAAAAAAAQDAAAAAAAABAFAAAAAAAAEAuAAAAAAAAQBgAAAAAAABALAAAAAAAAEAcAAAAAAAAQCoAAAAAAABAIAAAAAAAAEAoAAAAAAAAQCIAAAAAAABAJgAAAAAAAEAkAAAAAAAAQCQAAAAAAABAJgAAAAAAAEAiAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAqAAAAAAAAQBwAAAAAAABALAAAAAAAAEAYAAAAAAAAQC4AAAAAAABAFAAAAAAAAEAwAAAAAAAAQBAAAAAAAABAMQAAAAAAAEAIAAAAAAAAQDIAAAAAAABAAAAAAAAAAEAzAAAAAAAAP/AAAAAAAAA=</peaks>
+             pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAEAAAAAAAAAAQDIAAAAAAABAEAAAAAAAAEAwAAAAAAAAQBgAAAAAAABALAAAAAAAAEAgAAAAAAAAQCgAAAAAAABAJAAAAAAAAEAkAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAsAAAAAAAAQBgAAAAAAABAMAAAAAAAAEAQAAAAAAAAQDIAAAAAAABAAAAAAAAAAA==</peaks>
     </scan>
   </msRun>
   <index name="scan">
-    <offset id="19">1245</offset>
-    <offset id="20">1894</offset>
+    <offset id="19">1252</offset>
+    <offset id="20">2055</offset>
   </index>
-  <indexOffset>2898</indexOffset>
-  <sha1>b0f38fb5655369af214e4b5ab731c0f7d00def14</sha1>
+  <indexOffset>2903</indexOffset>
+  <sha1>327dbd41aac221774ea34bbf2262e716efce3cd7</sha1>
 </mzXML>

@@ -376,6 +376,34 @@ void testSpectrum()
 }
 
 
+void testChromatogram()
+{
+    if (os_) *os_ << "testChromatogram()\n"; 
+
+    Chromatogram chromatogram;
+    chromatogram.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    chromatogram.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
+    chromatogram.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+    chromatogram.binaryDataArrayPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    
+    unit_assert(chromatogram.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!chromatogram.dataProcessingPtr->softwarePtr.get());
+    unit_assert(chromatogram.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+
+    References::resolve(chromatogram, msd);
+
+    unit_assert(!chromatogram.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(chromatogram.dataProcessingPtr->softwarePtr.get());
+    unit_assert(!chromatogram.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+}
+
+
 void testRun()
 {
     if (os_) *os_ << "testRun()\n"; 
@@ -469,6 +497,7 @@ void test()
     testSpectrumDescription();
     testBinaryDataArray();
     testSpectrum();
+    testChromatogram();
     testRun();
     testMSData();
 }

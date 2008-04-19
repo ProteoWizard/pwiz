@@ -123,13 +123,13 @@ void initializeTiny(MSData& msd)
     softwareBioworks->softwareParam = MS_Bioworks;
     softwareBioworks->softwareParamVersion = "3.3.1 sp1";
      
-    SoftwarePtr softwareReAdW(new Software);
-    softwareReAdW->id = "ReAdW";
-    softwareReAdW->softwareParam = MS_ReAdW;
-    softwareReAdW->softwareParamVersion = "1.0";
+    SoftwarePtr softwarepwiz(new Software);
+    softwarepwiz->id = "pwiz";
+    softwarepwiz->softwareParam = MS_pwiz;
+    softwarepwiz->softwareParamVersion = "1.0";
 
     msd.softwarePtrs.push_back(softwareBioworks);
-    msd.softwarePtrs.push_back(softwareReAdW);
+    msd.softwarePtrs.push_back(softwarepwiz);
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     // dataProcessingList
@@ -146,18 +146,18 @@ void initializeTiny(MSData& msd)
 
     dpXcalibur->processingMethods.push_back(procXcal);
 
-    DataProcessingPtr dpReAdW(new DataProcessing);
-    dpReAdW->id = "ReAdW Conversion";
-    dpReAdW->softwarePtr = softwareReAdW;
+    DataProcessingPtr dppwiz(new DataProcessing);
+    dppwiz->id = "pwiz conversion";
+    dppwiz->softwarePtr = softwarepwiz;
 
-    ProcessingMethod procReAdW;
-    procReAdW.order = 2;
-    procReAdW.cvParams.push_back(MS_Conversion_to_mzML);
+    ProcessingMethod procpwiz;
+    procpwiz.order = 2;
+    procpwiz.cvParams.push_back(MS_Conversion_to_mzML);
 
-    dpReAdW->processingMethods.push_back(procReAdW);
+    dppwiz->processingMethods.push_back(procpwiz);
  
     msd.dataProcessingPtrs.push_back(dpXcalibur);
-    msd.dataProcessingPtrs.push_back(dpReAdW);
+    msd.dataProcessingPtrs.push_back(dppwiz);
 
     // run
 
@@ -266,6 +266,64 @@ void initializeTiny(MSData& msd)
     s20.binaryDataArrayPtrs.push_back(s20_mz);
     s20.binaryDataArrayPtrs.push_back(s20_intensity);
     s20.defaultArrayLength = s20_mz->data.size();
+
+    // chromatograms
+
+    shared_ptr<ChromatogramListSimple> chromatogramList(new ChromatogramListSimple);
+    msd.run.chromatogramListPtr = chromatogramList;
+
+    chromatogramList->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+    chromatogramList->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+
+    Chromatogram& tic = *chromatogramList->chromatograms[0];
+    tic.id = "tic";
+    tic.index = 0;
+    tic.nativeID = "tic native";
+    tic.defaultArrayLength = 15;
+    tic.dataProcessingPtr = dpXcalibur;
+    tic.cvParams.push_back(MS_total_ion_chromatogram__);
+
+    BinaryDataArrayPtr tic_time(new BinaryDataArray);
+    tic_time->dataProcessingPtr = dppwiz;
+    tic_time->cvParams.push_back(MS_time_array);
+    tic_time->data.resize(15);
+    for (int i=0; i<15; i++)
+        tic_time->data[i] = i;
+
+    BinaryDataArrayPtr tic_intensity(new BinaryDataArray);
+    tic_intensity->dataProcessingPtr = dppwiz;
+    tic_intensity->cvParams.push_back(MS_intensity_array);
+    tic_intensity->data.resize(15);
+    for (int i=0; i<15; i++)
+        tic_intensity->data[i] = 15-i;
+
+    tic.binaryDataArrayPtrs.push_back(tic_time);
+    tic.binaryDataArrayPtrs.push_back(tic_intensity);
+
+    Chromatogram& sic = *chromatogramList->chromatograms[1];
+    sic.id = "sic";
+    sic.index = 1;
+    sic.nativeID = "sic native";
+    sic.defaultArrayLength = 10;
+    sic.dataProcessingPtr = dppwiz;
+    sic.cvParams.push_back(MS_total_ion_chromatogram__);
+
+    BinaryDataArrayPtr sic_time(new BinaryDataArray);
+    sic_time->dataProcessingPtr = dppwiz;
+    sic_time->cvParams.push_back(MS_time_array);
+    sic_time->data.resize(10);
+    for (int i=0; i<10; i++)
+        sic_time->data[i] = i;
+
+    BinaryDataArrayPtr sic_intensity(new BinaryDataArray);
+    sic_intensity->dataProcessingPtr = dppwiz;
+    sic_intensity->cvParams.push_back(MS_intensity_array);
+    sic_intensity->data.resize(10);
+    for (int i=0; i<10; i++)
+        sic_intensity->data[i] = 10-i;
+
+    sic.binaryDataArrayPtrs.push_back(sic_time);
+    sic.binaryDataArrayPtrs.push_back(sic_intensity);
 }
 
 

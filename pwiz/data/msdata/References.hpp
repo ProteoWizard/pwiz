@@ -48,6 +48,7 @@ void resolve(Scan& scan, const MSData& msd);
 void resolve(SpectrumDescription& spectrumDescription, const MSData& msd);
 void resolve(BinaryDataArray& binaryDataArray, const MSData& msd);
 void resolve(Spectrum& spectrum, const MSData& msd);
+void resolve(Chromatogram& chromatogram, const MSData& msd);
 void resolve(Run& run, const MSData& msd);
 
 

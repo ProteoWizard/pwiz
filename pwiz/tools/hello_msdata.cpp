@@ -24,6 +24,7 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "pwiz/data/msdata/Diff.hpp"
+#include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
@@ -272,7 +273,8 @@ void test()
 
     // create the MSData object in memory
     MSData msd;
-    initializeTestData(msd);
+    //initializeTestData(msd);
+    examples::initializeTiny(msd); 
 
     // write MSData object to a stream
     ostringstream oss;

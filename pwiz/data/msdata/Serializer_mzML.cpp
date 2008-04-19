@@ -24,6 +24,7 @@
 #include "Serializer_mzML.hpp"
 #include "IO.hpp"
 #include "SpectrumList_mzML.hpp"
+#include "ChromatogramList_mzML.hpp"
 #include "SHA1OutputObserver.hpp"
 #include "utility/minimxml/XMLWriter.hpp"
 #include "utility/minimxml/SAXParser.hpp"
@@ -62,7 +63,7 @@ class Serializer_mzML::Impl
 
 namespace {
 
-void writeIndex(XMLWriter& xmlWriter, 
+void writeSpectrumIndex(XMLWriter& xmlWriter, 
                 const SpectrumListPtr& spectrumListPtr,
                 const vector<stream_offset>& positions)
 {
@@ -73,14 +74,14 @@ void writeIndex(XMLWriter& xmlWriter,
     if (spectrumListPtr.get())
     {
         if (spectrumListPtr->size() != positions.size())
-            throw runtime_error("[Serializer_mzML::writeIndex()] Sizes differ.");
+            throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Sizes differ.");
 
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         for (unsigned int i=0; i<positions.size(); ++i)
         {
             SpectrumPtr spectrum = spectrumListPtr->spectrum(i, false);
             if (!spectrum.get())
-                throw runtime_error("[Serializer_mzML::writeIndex()] Error retrieving spectrum index " 
+                throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Error retrieving spectrum index " 
                                     + lexical_cast<string>(i));
 
             XMLWriter::Attributes attributes;
@@ -88,6 +89,41 @@ void writeIndex(XMLWriter& xmlWriter,
             attributes.push_back(make_pair("nativeID", spectrum->nativeID));        
 
             xmlWriter.startElement("offset", attributes);
+            xmlWriter.characters(lexical_cast<string>(positions[i]));
+            xmlWriter.endElement();
+        }
+        xmlWriter.popStyle();
+    }
+
+    xmlWriter.endElement(); 
+}
+
+void writeChromatogramIndex(XMLWriter& xmlWriter, 
+                const ChromatogramListPtr& chromatogramListPtr,
+                const vector<stream_offset>& positions)
+{
+    XMLWriter::Attributes indexAttributes;
+    indexAttributes.push_back(make_pair("name", "chromatogram"));        
+    xmlWriter.startElement("index", indexAttributes);
+
+    if (chromatogramListPtr.get())
+    {
+        if (chromatogramListPtr->size() != positions.size())
+            throw runtime_error("[serializer_mzml::writechromatogramindex()] sizes differ.");
+
+        xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
+        for (unsigned int i=0; i<positions.size(); ++i)
+        {
+            ChromatogramPtr chromatogram = chromatogramListPtr->chromatogram(i, false);
+            if (!chromatogram.get())
+                throw runtime_error("[Serializer_mzML::writeChromatogramIndex()] Error retrieving chromatogram index " 
+                                    + lexical_cast<string>(i));
+
+            XMLWriter::Attributes Attributes;
+            Attributes.push_back(make_pair("id", chromatogram->id));        
+            Attributes.push_back(make_pair("nativeID", chromatogram->nativeID));        
+
+            xmlWriter.startElement("offset", Attributes);
             xmlWriter.characters(lexical_cast<string>(positions[i]));
             xmlWriter.endElement();
         }
@@ -130,17 +166,19 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd) const
 
     // <mzML>
 
-    vector<stream_offset> positions;
+    vector<stream_offset> spectrumPositions;
+    vector<stream_offset> chromatogramPositions;
     BinaryDataEncoder::Config bdeConfig = config_.binaryDataEncoderConfig;
     bdeConfig.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian; // mzML always little endian
-    IO::write(xmlWriter, msd, bdeConfig, &positions);
+    IO::write(xmlWriter, msd, bdeConfig, &spectrumPositions, &chromatogramPositions);
 
     // <indexedmzML> end
 
     if (config_.indexed)
     {
-        stream_offset indexOffset = xmlWriter.position();
-        writeIndex(xmlWriter, msd.run.spectrumListPtr, positions);
+        stream_offset indexOffset = xmlWriter.positionNext();
+        writeSpectrumIndex(xmlWriter, msd.run.spectrumListPtr, spectrumPositions);
+        writeChromatogramIndex(xmlWriter, msd.run.chromatogramListPtr, chromatogramPositions);
 
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
 
@@ -196,6 +234,7 @@ void Serializer_mzML::Impl::read(shared_ptr<istream> is, MSData& msd) const
 
     IO::read(*is, msd, IO::IgnoreSpectrumList);
     msd.run.spectrumListPtr = SpectrumList_mzML::create(is, msd, config_.indexed);
+    msd.run.chromatogramListPtr = ChromatogramList_mzML::create(is, msd, config_.indexed);
 }
 
 

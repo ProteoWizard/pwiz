@@ -404,11 +404,13 @@ void testSpectrum()
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
     a.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
     a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
-    for (int i=0; i<100; i++)
+    for (size_t i=0; i<a.defaultArrayLength; i++)
         a.binaryDataArrayPtrs.back()->data.push_back(i);
+    a.binaryDataArrayPtrs.back()->set(MS_m_z_array);
     a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
-    for (int i=0; i<100; i++)
+    for (size_t i=0; i<a.defaultArrayLength; i++)
         a.binaryDataArrayPtrs.back()->data.push_back(i*2);
+    a.binaryDataArrayPtrs.back()->set(MS_intensity_array);
     a.spectrumDescription.cvParams.push_back(MS_reflectron_on);
     a.cvParams.push_back(MS_MSn_spectrum);
 
@@ -435,6 +437,61 @@ void testSpectrum()
     // test IgnoreBinaryData
 
     Spectrum c;
+    iss.seekg(0);
+    IO::read(iss, c); // default = IgnoreBinaryData
+    unit_assert(c.binaryDataArrayPtrs.empty());
+    unit_assert(c.sourceFilePosition == 0); // not -1
+
+    a.binaryDataArrayPtrs.clear();
+    diff(a, c);
+    unit_assert(!diff);
+}
+
+
+void testChromatogram()
+{
+    if (os_) *os_ << "testChromatogram():\n";
+
+    Chromatogram a;
+    
+    a.index = 123;
+    a.id = "goo";
+    a.nativeID = "420";
+    a.defaultArrayLength = 666;
+    a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
+    a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+    for (size_t i=0; i<a.defaultArrayLength; i++)
+        a.binaryDataArrayPtrs.back()->data.push_back(i);
+    a.binaryDataArrayPtrs.back()->set(MS_time_array);
+    a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+    for (size_t i=0; i<a.defaultArrayLength; i++)
+        a.binaryDataArrayPtrs.back()->data.push_back(i*2);
+    a.binaryDataArrayPtrs.back()->set(MS_intensity_array);
+    a.cvParams.push_back(MS_total_ion_chromatogram__); // TODO: fix when CV has appropriate terms
+
+    // write 'a' out to a stream
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+    IO::write(writer, a);
+    if (os_) *os_ << oss.str() << endl;
+
+    // read 'b' in from stream
+
+    Chromatogram b; 
+    istringstream iss(oss.str());
+    IO::read(iss, b, IO::ReadBinaryData);
+    unit_assert(b.sourceFilePosition == 0); // not -1
+
+    // compare 'a' and 'b'
+
+    Diff<Chromatogram> diff(a,b);
+    if (diff && os_) *os_ << "diff:\n" << diff << endl;
+    unit_assert(!diff);
+
+    // test IgnoreBinaryData
+
+    Chromatogram c;
     iss.seekg(0);
     IO::read(iss, c); // default = IgnoreBinaryData
     unit_assert(c.binaryDataArrayPtrs.empty());
@@ -512,6 +569,68 @@ void testSpectrumListWithPositions()
 }
 
 
+void testChromatogramList()
+{
+    ChromatogramListSimple a;
+
+    ChromatogramPtr chromatogram1(new Chromatogram);
+    chromatogram1->id = "goober";
+    chromatogram1->index = 0;
+    chromatogram1->nativeID = "420";
+    chromatogram1->defaultArrayLength = 666;
+
+    ChromatogramPtr chromatogram2(new Chromatogram);
+    chromatogram2->id = "raisinet";
+    chromatogram2->index = 1;
+    chromatogram2->nativeID = "421";
+    chromatogram2->defaultArrayLength = 667;
+    
+    a.chromatograms.push_back(chromatogram1);
+    a.chromatograms.push_back(chromatogram2);
+
+    testObject(a);
+}
+
+
+void testChromatogramListWithPositions()
+{
+    if (os_) *os_ << "testChromatogramListWithPositions()\n  ";
+
+    ChromatogramListSimple a;
+
+    ChromatogramPtr chromatogram1(new Chromatogram);
+    chromatogram1->id = "goober";
+    chromatogram1->index = 0;
+    chromatogram1->nativeID = "420";
+    chromatogram1->defaultArrayLength = 666;
+
+    ChromatogramPtr chromatogram2(new Chromatogram);
+    chromatogram2->id = "raisinet";
+    chromatogram2->index = 1;
+    chromatogram2->nativeID = "421";
+    chromatogram2->defaultArrayLength = 667;
+    
+    a.chromatograms.push_back(chromatogram1);
+    a.chromatograms.push_back(chromatogram2);
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+    vector<stream_offset> positions;
+    IO::write(writer, a, BinaryDataEncoder::Config(), &positions);
+
+    if (os_)
+    {
+        copy(positions.begin(), positions.end(), ostream_iterator<stream_offset>(*os_, " "));
+        *os_ << endl << oss.str() << endl;
+        *os_ << "\n\n";
+    }
+
+    unit_assert(positions.size() == 2);
+    unit_assert(positions[0] == 31);
+    unit_assert(positions[1] == 128);
+}
+
+
 void testRun()
 {
     if (os_) *os_ << "testRun():\n";
@@ -524,6 +643,8 @@ void testRun()
     a.startTimeStamp = "20 April 2004 4:20pm";  
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+
+    // spectrumList
 
     shared_ptr<SpectrumListSimple> spectrumListSimple(new SpectrumListSimple);
 
@@ -545,6 +666,27 @@ void testRun()
     spectrumListSimple->spectra.push_back(spectrum2);
 
     a.spectrumListPtr = spectrumListSimple;
+
+    // chromatogramList
+
+    shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
+
+    ChromatogramPtr chromatogram1(new Chromatogram);
+    chromatogram1->id = "goober";
+    chromatogram1->index = 0;
+    chromatogram1->nativeID = "420";
+    chromatogram1->defaultArrayLength = 666;
+
+    ChromatogramPtr chromatogram2(new Chromatogram);
+    chromatogram2->id = "raisinet";
+    chromatogram2->index = 1;
+    chromatogram2->nativeID = "421";
+    chromatogram2->defaultArrayLength = 667;
+    
+    chromatogramListSimple->chromatograms.push_back(chromatogram1);
+    chromatogramListSimple->chromatograms.push_back(chromatogram2);
+
+    a.chromatogramListPtr = chromatogramListSimple;
 
     // write 'a' out to a stream
 
@@ -580,9 +722,10 @@ void testRun()
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
-    // remove SpectrumList from a, and compare to b 
+    // remove SpectrumList and ChromatogramList from a, and compare to b 
 
     a.spectrumListPtr.reset();
+    a.chromatogramListPtr.reset();
     diff(a, b);
     unit_assert(!diff);
 }
@@ -677,13 +820,13 @@ void initializeTestData(MSData& msd)
     softwareBioworks->softwareParam = MS_Bioworks;
     softwareBioworks->softwareParamVersion = "3.3.1 sp1";
      
-    SoftwarePtr softwareReAdW(new Software);
-    softwareReAdW->id = "ReAdW";
-    softwareReAdW->softwareParam = MS_ReAdW;
-    softwareReAdW->softwareParamVersion = "1.0";
+    SoftwarePtr software_pwiz(new Software);
+    software_pwiz->id = "pwiz";
+    software_pwiz->softwareParam = MS_pwiz;
+    software_pwiz->softwareParamVersion = "1.0";
 
     msd.softwarePtrs.push_back(softwareBioworks);
-    msd.softwarePtrs.push_back(softwareReAdW);
+    msd.softwarePtrs.push_back(software_pwiz);
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     // dataProcessingList
@@ -700,18 +843,18 @@ void initializeTestData(MSData& msd)
 
     dpXcalibur->processingMethods.push_back(procXcal);
 
-    DataProcessingPtr dpReAdW(new DataProcessing);
-    dpReAdW->id = "ReAdW Conversion";
-    dpReAdW->softwarePtr = softwareReAdW;
+    DataProcessingPtr dp_msconvert(new DataProcessing);
+    dp_msconvert->id = "pwiz conversion";
+    dp_msconvert->softwarePtr = software_pwiz;
 
-    ProcessingMethod procReAdW;
-    procReAdW.order = 2;
-    procReAdW.cvParams.push_back(MS_Conversion_to_mzML);
+    ProcessingMethod proc_msconvert;
+    proc_msconvert.order = 2;
+    proc_msconvert.cvParams.push_back(MS_Conversion_to_mzML);
 
-    dpReAdW->processingMethods.push_back(procReAdW);
+    dp_msconvert->processingMethods.push_back(proc_msconvert);
  
     msd.dataProcessingPtrs.push_back(dpXcalibur);
-    msd.dataProcessingPtrs.push_back(dpReAdW);
+    msd.dataProcessingPtrs.push_back(dp_msconvert);
 
     // run
 
@@ -815,6 +958,37 @@ void initializeTestData(MSData& msd)
 
     s20.binaryDataArrayPtrs.push_back(s20_mz);
     s20.binaryDataArrayPtrs.push_back(s20_intensity);
+
+    // chromatograms
+
+    shared_ptr<ChromatogramListSimple> chromatogramList(new ChromatogramListSimple);
+    msd.run.chromatogramListPtr = chromatogramList;
+
+    chromatogramList->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+
+    Chromatogram& tic = *chromatogramList->chromatograms[0];
+    tic.id = "tic";
+    tic.index = 0;
+    tic.nativeID = "tic";
+    tic.defaultArrayLength = 10;
+    tic.cvParams.push_back(MS_total_ion_chromatogram__);
+
+    BinaryDataArrayPtr tic_time(new BinaryDataArray);
+    tic_time->dataProcessingPtr = dp_msconvert;
+    tic_time->cvParams.push_back(MS_time_array);
+    tic_time->data.resize(10);
+    for (int i=0; i<10; i++)
+        tic_time->data[i] = i;
+
+    BinaryDataArrayPtr tic_intensity(new BinaryDataArray);
+    tic_intensity->dataProcessingPtr = dp_msconvert;
+    tic_intensity->cvParams.push_back(MS_intensity_array);
+    tic_intensity->data.resize(10);
+    for (int i=0; i<10; i++)
+        tic_intensity->data[i] = 10-i;
+
+    tic.binaryDataArrayPtrs.push_back(tic_time);
+    tic.binaryDataArrayPtrs.push_back(tic_intensity);
 }
 
 
@@ -859,9 +1033,10 @@ void testMSData()
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
-    // remove SpectrumList from a, and compare to b 
+    // remove SpectrumList and ChromatogramList from a, and compare to b 
 
     a.run.spectrumListPtr.reset();
+    a.run.chromatogramListPtr.reset();
     diff(a, b);
     unit_assert(!diff);
 }
@@ -894,8 +1069,11 @@ void test()
     testSpectrumDescription();
     testBinaryDataArray();
     testSpectrum();
+    testChromatogram();
     testSpectrumList();
     testSpectrumListWithPositions();
+    testChromatogramList();
+    testChromatogramListWithPositions();
     testRun();
     testMSData();
 }

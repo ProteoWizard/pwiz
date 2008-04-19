@@ -870,7 +870,11 @@ void testChromatogramList()
     ChromatogramList& b = bSimple;
 
     Diff<ChromatogramList> diff(a, b);
+    DiffConfig config_ignore;
+    config_ignore.ignoreChromatograms = true;
+    Diff<ChromatogramList> diffIgnore(a, b, config_ignore);
     unit_assert(!diff);
+    unit_assert(!diffIgnore);
 
     // check: different ChromatogramList::size()
     
@@ -883,6 +887,10 @@ void testChromatogramList()
     unit_assert(diff);
     unit_assert(diff.a_b.chromatograms.size() == 1);
     unit_assert(diff.a_b.chromatograms[0]->userParams.size() == 1);
+
+    diffIgnore(a,b);
+    if (os_) *os_ << diffIgnore << endl;
+    unit_assert(!diffIgnore);
 
     // check: same ChromatogramList::size(), different last scan number 
 
@@ -897,6 +905,9 @@ void testChromatogramList()
     unit_assert(diff.a_b.chromatograms[0]->nativeID == "421");
     unit_assert(diff.b_a.chromatograms.size() == 1);
     unit_assert(diff.b_a.chromatograms[0]->nativeID == "422");
+
+    diffIgnore(a,b);
+    unit_assert(!diffIgnore);
 
     // check: scan numbers match, binary data slightly different
    
@@ -921,6 +932,9 @@ void testChromatogramList()
     Diff<ChromatogramList> diffNarrow(a, b, config);
     if (os_) *os_ << diffNarrow << endl;
     unit_assert(diffNarrow);
+
+    diffIgnore(a,b);
+    unit_assert(!diffIgnore);
 }
 
 
@@ -1044,7 +1058,9 @@ void testBinaryDataOnly()
 
     MSData tinier;
     SpectrumListSimplePtr sl(new SpectrumListSimple);
+    ChromatogramListSimplePtr cl(new ChromatogramListSimple);
     tinier.run.spectrumListPtr = sl; 
+    tinier.run.chromatogramListPtr = cl; 
 
     for (unsigned int i=0; i<tiny.run.spectrumListPtr->size(); i++)
     {
@@ -1073,6 +1089,27 @@ void testBinaryDataOnly()
             Precursor& precursorFrom = from->spectrumDescription.precursors[precursorIndex];
             precursorTo.ionSelection = precursorFrom.ionSelection;
         }
+    }
+
+    for (unsigned int i=0; i<tiny.run.chromatogramListPtr->size(); i++)
+    {
+        ChromatogramPtr from = tiny.run.chromatogramListPtr->chromatogram(i, true);
+        cl->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+        ChromatogramPtr& to = cl->chromatograms.back();   
+
+        for (vector<BinaryDataArrayPtr>::const_iterator it=from->binaryDataArrayPtrs.begin();
+             it!=from->binaryDataArrayPtrs.end(); ++it)
+        {
+            // copy BinaryDataArray::data from tiny to tinier
+            to->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
+            to->binaryDataArrayPtrs.back()->data = (*it)->data;
+        }
+
+        // copy "important" scan metadata
+
+        to->index = from->index;
+        to->nativeID = from->nativeID;
+        to->defaultArrayLength = from->defaultArrayLength;
     }
 
     if (os_)

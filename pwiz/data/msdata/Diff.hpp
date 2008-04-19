@@ -46,9 +46,12 @@ struct DiffConfig
     ///  - precursor.ionSelection
     bool ignoreMetadata;
 
+    bool ignoreChromatograms;
+
     DiffConfig()
     :   precision(1e-6), 
-        ignoreMetadata(false)
+        ignoreMetadata(false),
+        ignoreChromatograms(false)
     {}
 };
 

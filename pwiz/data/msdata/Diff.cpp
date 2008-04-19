@@ -791,6 +791,8 @@ void diff(const ChromatogramList& a,
 {
     a_b.chromatograms.clear();
     b_a.chromatograms.clear();
+
+    if (config.ignoreChromatograms) return;
     
     if (a.size() != b.size())
     {

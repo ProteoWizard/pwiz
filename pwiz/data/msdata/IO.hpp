@@ -152,10 +152,22 @@ void read(std::istream& is, Spectrum& spectrum,
           BinaryDataFlag binaryDataFlag = IgnoreBinaryData);
 
 
+void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
+           const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
+void read(std::istream& is, Chromatogram& chromatogram, 
+          BinaryDataFlag binaryDataFlag = IgnoreBinaryData);
+
+
 void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0);
 void read(std::istream& is, SpectrumListSimple& spectrumListSimple);
+
+
+void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList, 
+           const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
+           std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0);
+void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple);
 
 
 enum SpectrumListFlag {IgnoreSpectrumList, ReadSpectrumList};
@@ -163,14 +175,16 @@ enum SpectrumListFlag {IgnoreSpectrumList, ReadSpectrumList};
 
 void write(minimxml::XMLWriter& writer, const Run& run,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
-           std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0);
+           std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
+           std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0);
 void read(std::istream& is, Run& run,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);
 
 
 void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
-           std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0);
+           std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
+           std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0);
 void read(std::istream& is, MSData& msd,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);
 

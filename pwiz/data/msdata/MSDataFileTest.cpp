@@ -102,12 +102,13 @@ void test()
     writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
     validateWriteRead(writeConfig, diffConfig);
 
-    // mzXML 32-bit, diff ignoring metadata
+    // mzXML 32-bit, diff ignoring metadata and chromatograms
     writeConfig.format = MSDataFile::Format_mzXML;
     diffConfig.ignoreMetadata = true;
+    diffConfig.ignoreChromatograms = true;
     validateWriteRead(writeConfig, diffConfig);
 
-    // mzXML 64-bit, diff ignoring metadata 
+    // mzXML 64-bit, diff ignoring metadata and chromatograms
     writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
     validateWriteRead(writeConfig, diffConfig);
 

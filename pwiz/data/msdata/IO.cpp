@@ -1731,6 +1731,97 @@ void read(std::istream& is, Spectrum& spectrum,
 
 
 //
+// Chromatogram
+//
+
+
+void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram, 
+           const BinaryDataEncoder::Config& config)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("index", lexical_cast<string>(chromatogram.index)));
+    attributes.push_back(make_pair("id", chromatogram.id));
+    attributes.push_back(make_pair("nativeID", chromatogram.nativeID));
+    attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(chromatogram.defaultArrayLength)));
+    if (chromatogram.dataProcessingPtr.get())
+        attributes.push_back(make_pair("dataProcessingRef", chromatogram.dataProcessingPtr->id));
+
+    writer.startElement("chromatogram", attributes);
+
+    writeParamContainer(writer, chromatogram);
+    
+    for (vector<BinaryDataArrayPtr>::const_iterator it=chromatogram.binaryDataArrayPtrs.begin(); 
+         it!=chromatogram.binaryDataArrayPtrs.end(); ++it)
+         write(writer, **it, config);
+
+    writer.endElement();
+}
+
+
+struct HandlerChromatogram : public HandlerParamContainer
+{
+    BinaryDataFlag binaryDataFlag;
+    Chromatogram* chromatogram;
+
+    HandlerChromatogram(BinaryDataFlag _binaryDataFlag,
+                        Chromatogram* _chromatogram = 0)
+    :   binaryDataFlag(_binaryDataFlag),
+        chromatogram(_chromatogram)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!chromatogram)
+            throw runtime_error("[IO::HandlerChromatogram] Null chromatogram.");
+
+        if (name == "chromatogram")
+        {
+            chromatogram->sourceFilePosition = position;
+
+            getAttribute(attributes, "id", chromatogram->id);
+            getAttribute(attributes, "index", chromatogram->index);
+            getAttribute(attributes, "nativeID", chromatogram->nativeID);
+            getAttribute(attributes, "defaultArrayLength", chromatogram->defaultArrayLength);
+
+            // note: placeholder
+            string dataProcessingRef;
+            getAttribute(attributes, "dataProcessingRef", dataProcessingRef);
+            if (!dataProcessingRef.empty())
+                chromatogram->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
+
+            return Status::Ok;
+        }
+        else if (name == "binaryDataArray")
+        {
+            if (binaryDataFlag == IgnoreBinaryData)
+                return Status::Done;
+
+            chromatogram->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
+            handlerBinaryDataArray_.binaryDataArray = chromatogram->binaryDataArrayPtrs.back().get();
+            handlerBinaryDataArray_.defaultArrayLength = chromatogram->defaultArrayLength;
+            return Status(Status::Delegate, &handlerBinaryDataArray_);
+        }
+
+        HandlerParamContainer::paramContainer = chromatogram;
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+
+    private:
+    HandlerBinaryDataArray handlerBinaryDataArray_;
+};
+
+
+void read(std::istream& is, Chromatogram& chromatogram,
+          BinaryDataFlag binaryDataFlag)
+{
+    HandlerChromatogram handler(binaryDataFlag, &chromatogram);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // SpectrumList
 //
 
@@ -1799,6 +1890,74 @@ void read(std::istream& is, SpectrumListSimple& spectrumListSimple)
 
 
 //
+// ChromatogramList
+//
+
+
+void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList,
+           const BinaryDataEncoder::Config& config,
+           vector<boost::iostreams::stream_offset>* chromatogramPositions)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("count", lexical_cast<string>(chromatogramList.size())));
+    writer.startElement("chromatogramList", attributes);
+
+    for (size_t i=0; i<chromatogramList.size(); i++)
+    {
+        if (chromatogramPositions)
+            chromatogramPositions->push_back(writer.positionNext());
+        ChromatogramPtr chromatogram = chromatogramList.chromatogram(i, true);
+        if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
+        write(writer, *chromatogram, config);
+    }
+
+    writer.endElement();
+}
+
+    
+struct HandlerChromatogramListSimple : public HandlerParamContainer
+{
+    ChromatogramListSimple* chromatogramListSimple;
+
+    HandlerChromatogramListSimple(ChromatogramListSimple* _chromatogramListSimple = 0)
+    :   chromatogramListSimple(_chromatogramListSimple),
+        handlerChromatogram_(ReadBinaryData)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!chromatogramListSimple)
+            throw runtime_error("[IO::HandlerChromatogramListSimple] Null chromatogramListSimple.");
+
+        if (name == "chromatogramList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "chromatogram")
+        {
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            handlerChromatogram_.chromatogram = chromatogramListSimple->chromatograms.back().get();
+            return Status(Status::Delegate, &handlerChromatogram_);
+        }
+
+        throw runtime_error(("[IO::HandlerChromatogramListSimple] Unexpected element name: " + name).c_str());
+    }
+
+    private:
+    HandlerChromatogram handlerChromatogram_;
+};
+
+
+void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple)
+{
+    HandlerChromatogramListSimple handler(&chromatogramListSimple);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // Run
 //
 
@@ -1813,7 +1972,8 @@ void writeSourceFileRef(minimxml::XMLWriter& writer, const SourceFile& sourceFil
 
 void write(minimxml::XMLWriter& writer, const Run& run,
            const BinaryDataEncoder::Config& config,
-           vector<boost::iostreams::stream_offset>* spectrumPositions)
+           vector<boost::iostreams::stream_offset>* spectrumPositions,
+           vector<boost::iostreams::stream_offset>* chromatogramPositions)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", run.id));
@@ -1841,6 +2001,9 @@ void write(minimxml::XMLWriter& writer, const Run& run,
 
     if (run.spectrumListPtr.get())
         write(writer, *run.spectrumListPtr, config, spectrumPositions);
+
+    if (run.chromatogramListPtr.get())
+        write(writer, *run.chromatogramListPtr, config, chromatogramPositions);
 
     writer.endElement();
 }
@@ -1904,6 +2067,13 @@ struct HandlerRun : public HandlerParamContainer
             run->spectrumListPtr = temp;
             return Status(Status::Delegate, &handlerSpectrumListSimple_);
         }
+        else if (name == "chromatogramList")
+        {
+            shared_ptr<ChromatogramListSimple> temp(new ChromatogramListSimple);
+            handlerChromatogramListSimple_.chromatogramListSimple = temp.get();
+            run->chromatogramListPtr = temp;
+            return Status(Status::Delegate, &handlerChromatogramListSimple_);
+        }
 
         HandlerParamContainer::paramContainer = run;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -1911,6 +2081,7 @@ struct HandlerRun : public HandlerParamContainer
 
     private:
     HandlerSpectrumListSimple handlerSpectrumListSimple_;
+    HandlerChromatogramListSimple handlerChromatogramListSimple_;
 };
 
 
@@ -1945,7 +2116,8 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtr
 
 void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config,
-           vector<boost::iostreams::stream_offset>* spectrumPositions)
+           vector<boost::iostreams::stream_offset>* spectrumPositions,
+           vector<boost::iostreams::stream_offset>* chromatogramPositions)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.1"));
@@ -1975,7 +2147,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
 
-    write(writer, msd.run, config, spectrumPositions);
+    write(writer, msd.run, config, spectrumPositions, chromatogramPositions);
 
     writer.endElement();
 }

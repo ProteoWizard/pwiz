@@ -57,6 +57,7 @@ void testWriteRead(const MSData& msd, const Serializer_mzXML::Config& config)
 
     DiffConfig diffConfig;
     diffConfig.ignoreMetadata = true;
+    diffConfig.ignoreChromatograms = true;
 
     Diff<MSData> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 

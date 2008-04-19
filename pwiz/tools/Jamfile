@@ -23,6 +23,7 @@
 
 exe hello_msdata
     : hello_msdata.cpp
+      ../data/msdata/examples.cpp
       ../data/msdata//pwiz_data_msdata
     : <include>../..
     ;

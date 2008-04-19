@@ -194,6 +194,14 @@ void resolve(Spectrum& spectrum, const MSData& msd)
 }
 
 
+void resolve(Chromatogram& chromatogram, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(chromatogram), msd);
+    resolve(chromatogram.dataProcessingPtr, msd.dataProcessingPtrs);
+    resolve(chromatogram.binaryDataArrayPtrs, msd);
+}
+
+
 void resolve(Run& run, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(run), msd);
@@ -215,6 +223,11 @@ void resolve(MSData& msd)
     SpectrumListSimple* simple = dynamic_cast<SpectrumListSimple*>(msd.run.spectrumListPtr.get());
     if (simple)
         resolve(simple->spectra, msd);
+
+    // if we're using ChromatogramListSimple, resolve the references in each Chromatogram
+    ChromatogramListSimple* chromatogramListSimple = dynamic_cast<ChromatogramListSimple*>(msd.run.chromatogramListPtr.get());
+    if (chromatogramListSimple)
+        resolve(chromatogramListSimple->chromatograms, msd);
 }
 
 
