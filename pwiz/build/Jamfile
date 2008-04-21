@@ -31,6 +31,8 @@ install exe
       <toolset>gcc,<variant>debug:<location>../../build/gcc-debug
       <toolset>msvc,<variant>release:<location>../../build/msvc-release
       <toolset>msvc,<variant>debug:<location>../../build/msvc-debug
+      <toolset>darwin,<variant>release:<location>../../build/darwin-release
+      <toolset>darwin,<variant>debug:<location>../../build/darwin-debug
     ;
 
 
@@ -42,6 +44,8 @@ install lib
       <toolset>gcc,<variant>debug:<location>../../build/gcc-debug
       <toolset>msvc,<variant>release:<location>../../build/msvc-release
       <toolset>msvc,<variant>debug:<location>../../build/msvc-debug
+      <toolset>darwin,<variant>release:<location>../../build/darwin-release
+      <toolset>darwin,<variant>debug:<location>../../build/darwin-debug
     ;
 
 
