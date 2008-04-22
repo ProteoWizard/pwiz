@@ -211,6 +211,9 @@ Config parseCommandLine(int argc, const char* argv[])
     count = mz_precision_32 + mz_precision_64 + intensity_precision_32 + intensity_precision_64;
     if (count > 2) throw runtime_error(usage.str());
     config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
+    config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_64;
+    config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+
     if (mz_precision_32)
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_32;
     if (mz_precision_64)
@@ -231,7 +234,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 {
     cout << "processing file: " << filename << endl;
     MSDataFile msd(filename, &readers);
-
+ 
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;
     msd.write(outputFilename, config.writeConfig);

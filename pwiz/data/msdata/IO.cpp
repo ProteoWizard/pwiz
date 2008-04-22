@@ -1440,7 +1440,7 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config)
 {
     BinaryDataEncoder::Config usedConfig = config;
-    map<CVID, BinaryDataEncoder::Precision>::const_iterator overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_type).cvid);
+    map<CVID, BinaryDataEncoder::Precision>::const_iterator overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
     if (overrideItr != config.precisionOverrides.end())
         usedConfig.precision = overrideItr->second;
 

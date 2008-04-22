@@ -252,7 +252,13 @@ void BinaryDataEncoder::decode(const std::string& encodedData, std::vector<doubl
 ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& config)
 {
     os << "(" 
-       << (config.precision==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32") << ", "
+       << (config.precision==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32");
+    os << " [";
+    for( map<CVID, BinaryDataEncoder::Precision>::const_iterator itr = config.precisionOverrides.begin();
+        itr != config.precisionOverrides.end();
+        ++itr )
+        os << " " << itr->first << ":" << (itr->second==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32");
+    os << " ], "
        << (config.byteOrder==BinaryDataEncoder::ByteOrder_LittleEndian ? "ByteOrder_LittleEndian" : "ByteOrder_BigEndian") << ", "
        << (config.compression==BinaryDataEncoder::Compression_None ? "Compression_None" : "Compression_Zlib") 
        << ")";
