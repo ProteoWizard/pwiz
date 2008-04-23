@@ -1,10 +1,10 @@
 //
-// hello_msdata.cpp 
+// write_examples.cpp 
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
 //
-// Copyright 2007 Spielberg Family Center for Applied Proteomics
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
@@ -22,11 +22,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "pwiz/data/msdata/Serializer_mzML.hpp"
-#include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/msdata/examples.hpp"
-#include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -34,43 +30,28 @@
 using namespace std;
 using namespace pwiz;
 using namespace pwiz::msdata;
-using namespace pwiz::util;
-using boost::lexical_cast;
 using boost::shared_ptr;
 
 
-void test()
+
+void write_examples()
 {
-    cout << "Hello, MSData!\n";
+    cout << "write_examples\n";
 
     // create the MSData object in memory
     MSData msd;
     examples::initializeTiny(msd); 
 
-    // write MSData object to a stream
-    ostringstream oss;
-    Serializer_mzML serializer;
-    serializer.write(oss, msd);
-
-    // read back into another object
-    MSData msd2;
-    shared_ptr<istream> iss(new istringstream(oss.str()));
-    serializer.read(iss, msd2);
-
-    // do a diff on the two objects
-    Diff<MSData> diff(msd, msd2); 
-    unit_assert(!diff);
-
     // write out mzML 
     string filename = "tiny.pwiz.mzML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename);
-
+/*
     // write out mzXML
     filename = "tiny.pwiz.mzXML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
-
+*/
     cout << "\nhttp://proteowizard.sourceforge.net\n"
          << "support@proteowizard.org\n";
 }
@@ -80,7 +61,7 @@ int main()
 {
     try
     {
-        test();
+        write_examples();
         return 0;
     }
     catch (exception& e)

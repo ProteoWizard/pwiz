@@ -52,37 +52,37 @@ void initializeTiny(MSData& msd)
     // fileDescription
 
     FileContent& fc = msd.fileDescription.fileContent;
-    fc.cvParams.push_back(MS_MSn_spectrum);
+    fc.set(MS_MSn_spectrum);
     fc.userParams.push_back(UserParam("number of cats", "4"));
 
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "1";
     sfp->name = "tiny1.RAW";
     sfp->location = "file://F:/data/Exp01";
-    sfp->cvParams.push_back(MS_Xcalibur_RAW_file);
-    sfp->cvParams.push_back(CVParam(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1"));
+    sfp->set(MS_Xcalibur_RAW_file);
+    sfp->set(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1");
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
     msd.fileDescription.contacts.resize(1);
     Contact& contact = msd.fileDescription.contacts.front();
-    contact.cvParams.push_back(CVParam(MS_contact_name, "William Pennington"));
-    contact.cvParams.push_back(CVParam(MS_contact_address, 
-                               "Higglesworth University, 12 Higglesworth Avenue, 12045, HI, USA"));
-	contact.cvParams.push_back(CVParam(MS_contact_URL, "http://www.higglesworth.edu/"));
-	contact.cvParams.push_back(CVParam(MS_contact_email, "wpennington@higglesworth.edu"));
+    contact.set(MS_contact_name, "William Pennington");
+    contact.set(MS_contact_address, 
+                               "Higglesworth University, 12 Higglesworth Avenue, 12045, HI, USA");
+	contact.set(MS_contact_URL, "http://www.higglesworth.edu/");
+	contact.set(MS_contact_email, "wpennington@higglesworth.edu");
 
     // paramGroupList
 
     ParamGroupPtr pg1(new ParamGroup);
     pg1->id = "CommonMS1SpectrumParams";
-    pg1->cvParams.push_back(MS_positive_scan);
-    pg1->cvParams.push_back(MS_full_scan);
+    pg1->set(MS_positive_scan);
+    pg1->set(MS_full_scan);
     msd.paramGroupPtrs.push_back(pg1);
 
     ParamGroupPtr pg2(new ParamGroup);
     pg2->id = "CommonMS2SpectrumParams";
-    pg2->cvParams.push_back(MS_positive_scan);
-    pg2->cvParams.push_back(MS_full_scan);
+    pg2->set(MS_positive_scan);
+    pg2->set(MS_full_scan);
     msd.paramGroupPtrs.push_back(pg2);
 
     // sampleList
@@ -96,17 +96,17 @@ void initializeTiny(MSData& msd)
 
     InstrumentPtr instrumentPtr(new Instrument);
     instrumentPtr->id = "LCQ Deca";
-    instrumentPtr->cvParams.push_back(MS_LCQ_Deca);
-    instrumentPtr->cvParams.push_back(CVParam(MS_instrument_serial_number,"23433"));
+    instrumentPtr->set(MS_LCQ_Deca);
+    instrumentPtr->set(MS_instrument_serial_number,"23433");
     Source& source = instrumentPtr->componentList.source;
     source.order = 1;
-    source.cvParams.push_back(MS_nanoelectrospray);
+    source.set(MS_nanoelectrospray);
     Analyzer& analyzer = instrumentPtr->componentList.analyzer;
     analyzer.order = 2;
-    analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
+    analyzer.set(MS_quadrupole_ion_trap);
     Detector& detector = instrumentPtr->componentList.detector;
     detector.order = 3;
-    detector.cvParams.push_back(MS_electron_multiplier);
+    detector.set(MS_electron_multiplier);
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
@@ -140,9 +140,9 @@ void initializeTiny(MSData& msd)
     
     ProcessingMethod procXcal;
     procXcal.order = 1;
-    procXcal.cvParams.push_back(CVParam(MS_deisotoping, false));
-    procXcal.cvParams.push_back(CVParam(MS_charge_deconvolution, false));
-    procXcal.cvParams.push_back(CVParam(MS_peak_picking, true));
+    procXcal.set(MS_deisotoping, false);
+    procXcal.set(MS_charge_deconvolution, false);
+    procXcal.set(MS_peak_picking, true);
 
     dpXcalibur->processingMethods.push_back(procXcal);
 
@@ -152,7 +152,7 @@ void initializeTiny(MSData& msd)
 
     ProcessingMethod procpwiz;
     procpwiz.order = 2;
-    procpwiz.cvParams.push_back(MS_Conversion_to_mzML);
+    procpwiz.set(MS_Conversion_to_mzML);
 
     dppwiz->processingMethods.push_back(procpwiz);
  
@@ -181,32 +181,32 @@ void initializeTiny(MSData& msd)
     s19.set(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
 
-    s19.spectrumDescription.cvParams.push_back(MS_centroid_mass_spectrum);
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_lowest_m_z_value, 400.39));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_highest_m_z_value, 1795.56));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, 445.347));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, 120053));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
+    s19.spectrumDescription.set(MS_centroid_mass_spectrum);
+    s19.spectrumDescription.set(MS_lowest_m_z_value, 400.39);
+    s19.spectrumDescription.set(MS_highest_m_z_value, 1795.56);
+    s19.spectrumDescription.set(MS_base_peak_m_z, 445.347);
+    s19.spectrumDescription.set(MS_base_peak_intensity, 120053);
+    s19.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
     s19.spectrumDescription.scan.instrumentPtr = instrumentPtr;
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, 3));
+    s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, MS_minute);
+    s19.spectrumDescription.scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
+    s19.spectrumDescription.scan.set(MS_preset_scan_configuration, 3);
     s19.spectrumDescription.scan.selectionWindows.resize(1);
     SelectionWindow& window = s19.spectrumDescription.scan.selectionWindows.front();
-    window.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 400.000000));
-    window.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 1800.000000));
+    window.set(MS_scan_m_z_lower_limit, 400.000000);
+    window.set(MS_scan_m_z_upper_limit, 1800.000000);
 
     BinaryDataArrayPtr s19_mz(new BinaryDataArray);
     s19_mz->dataProcessingPtr = dpXcalibur;
-    s19_mz->cvParams.push_back(MS_m_z_array);
+    s19_mz->set(MS_m_z_array);
     s19_mz->data.resize(15);
     for (int i=0; i<15; i++)
         s19_mz->data[i] = i;
 
     BinaryDataArrayPtr s19_intensity(new BinaryDataArray);
     s19_intensity->dataProcessingPtr = dpXcalibur;
-    s19_intensity->cvParams.push_back(MS_intensity_array);
+    s19_intensity->set(MS_intensity_array);
     s19_intensity->data.resize(15);
     for (int i=0; i<15; i++)
         s19_intensity->data[i] = 15-i;
@@ -223,42 +223,42 @@ void initializeTiny(MSData& msd)
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.spectrumDescription.cvParams.push_back(MS_centroid_mass_spectrum);
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_lowest_m_z_value, 320.39));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_highest_m_z_value, 1003.56));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, 456.347));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, 23433));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
+    s20.spectrumDescription.set(MS_centroid_mass_spectrum);
+    s20.spectrumDescription.set(MS_lowest_m_z_value, 320.39);
+    s20.spectrumDescription.set(MS_highest_m_z_value, 1003.56);
+    s20.spectrumDescription.set(MS_base_peak_m_z, 456.347);
+    s20.spectrumDescription.set(MS_base_peak_intensity, 23433);
+    s20.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
 
     s20.spectrumDescription.precursors.resize(1);
     Precursor& precursor = s20.spectrumDescription.precursors.front();
     precursor.spectrumID= s19.id;
-    precursor.ionSelection.cvParams.push_back(CVParam(MS_m_z, 445.34));
-    precursor.ionSelection.cvParams.push_back(CVParam(MS_intensity, 120053));
-    precursor.ionSelection.cvParams.push_back(CVParam(MS_charge_state, 2));
-    precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
-    precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt));
+    precursor.ionSelection.set(MS_m_z, 445.34);
+    precursor.ionSelection.set(MS_intensity, 120053);
+    precursor.ionSelection.set(MS_charge_state, 2);
+    precursor.activation.set(MS_collision_induced_dissociation);
+    precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
 
     s20.spectrumDescription.scan.instrumentPtr = instrumentPtr;
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, 4));
+    s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, MS_minute);
+    s20.spectrumDescription.scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
+    s20.spectrumDescription.scan.set(MS_preset_scan_configuration, 4);
     s20.spectrumDescription.scan.selectionWindows.resize(1);
     SelectionWindow& window2 = s20.spectrumDescription.scan.selectionWindows.front();
-    window2.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 110.000000));
-    window2.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 905.000000));
+    window2.set(MS_scan_m_z_lower_limit, 110.000000);
+    window2.set(MS_scan_m_z_upper_limit, 905.000000);
 
     BinaryDataArrayPtr s20_mz(new BinaryDataArray);
     s20_mz->dataProcessingPtr = dpXcalibur;
-    s20_mz->cvParams.push_back(MS_m_z_array);
+    s20_mz->set(MS_m_z_array);
     s20_mz->data.resize(10);
     for (int i=0; i<10; i++)
         s20_mz->data[i] = i*2;
 
     BinaryDataArrayPtr s20_intensity(new BinaryDataArray);
     s20_intensity->dataProcessingPtr = dpXcalibur;
-    s20_intensity->cvParams.push_back(MS_intensity_array);
+    s20_intensity->set(MS_intensity_array);
     s20_intensity->data.resize(10);
     for (int i=0; i<10; i++)
         s20_intensity->data[i] = (10-i)*2;
@@ -281,18 +281,18 @@ void initializeTiny(MSData& msd)
     tic.nativeID = "tic native";
     tic.defaultArrayLength = 15;
     tic.dataProcessingPtr = dpXcalibur;
-    tic.cvParams.push_back(MS_total_ion_chromatogram__);
+    tic.set(MS_total_ion_chromatogram__);
 
     BinaryDataArrayPtr tic_time(new BinaryDataArray);
     tic_time->dataProcessingPtr = dppwiz;
-    tic_time->cvParams.push_back(MS_time_array);
+    tic_time->set(MS_time_array);
     tic_time->data.resize(15);
     for (int i=0; i<15; i++)
         tic_time->data[i] = i;
 
     BinaryDataArrayPtr tic_intensity(new BinaryDataArray);
     tic_intensity->dataProcessingPtr = dppwiz;
-    tic_intensity->cvParams.push_back(MS_intensity_array);
+    tic_intensity->set(MS_intensity_array);
     tic_intensity->data.resize(15);
     for (int i=0; i<15; i++)
         tic_intensity->data[i] = 15-i;
@@ -306,18 +306,18 @@ void initializeTiny(MSData& msd)
     sic.nativeID = "sic native";
     sic.defaultArrayLength = 10;
     sic.dataProcessingPtr = dppwiz;
-    sic.cvParams.push_back(MS_total_ion_chromatogram__);
+    sic.set(MS_total_ion_chromatogram__);
 
     BinaryDataArrayPtr sic_time(new BinaryDataArray);
     sic_time->dataProcessingPtr = dppwiz;
-    sic_time->cvParams.push_back(MS_time_array);
+    sic_time->set(MS_time_array);
     sic_time->data.resize(10);
     for (int i=0; i<10; i++)
         sic_time->data[i] = i;
 
     BinaryDataArrayPtr sic_intensity(new BinaryDataArray);
     sic_intensity->dataProcessingPtr = dppwiz;
-    sic_intensity->cvParams.push_back(MS_intensity_array);
+    sic_intensity->set(MS_intensity_array);
     sic_intensity->data.resize(10);
     for (int i=0; i<10; i++)
         sic_intensity->data[i] = 10-i;
