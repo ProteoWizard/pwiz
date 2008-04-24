@@ -212,7 +212,7 @@ void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGroup& paramGrou
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("ref", paramGroup.id));
-    writer.startElement("paramGroupRef", attributes, XMLWriter::EmptyElement);
+    writer.startElement("referenceableParamGroupRef", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -259,7 +259,7 @@ struct HandlerParamContainer : public SAXParser::Handler
             handlerUserParam_.userParam = &paramContainer->userParams.back();
             return Status(Status::Delegate, &handlerUserParam_);
         }
-        else if (name == "paramGroupRef")
+        else if (name == "referenceableParamGroupRef")
         {
             // note: placeholder
             string id;
@@ -1241,21 +1241,21 @@ void read(std::istream& is, Precursor& precursor)
 
 
 //
-// SelectionWindow
+// ScanWindow
 //
 
 
-void write(minimxml::XMLWriter& writer, const SelectionWindow& selectionWindow)
+void write(minimxml::XMLWriter& writer, const ScanWindow& scanWindow)
 {
-    writer.startElement("selectionWindow");
-    writeParamContainer(writer, selectionWindow);
+    writer.startElement("scanWindow");
+    writeParamContainer(writer, scanWindow);
     writer.endElement();
 }
 
 
-void read(std::istream& is, SelectionWindow& selectionWindow)
+void read(std::istream& is, ScanWindow& scanWindow)
 {
-    HandlerNamedParamContainer handler("selectionWindow", &selectionWindow);
+    HandlerNamedParamContainer handler("scanWindow", &scanWindow);
     SAXParser::parse(is, handler);
 }
     
@@ -1273,14 +1273,14 @@ void write(minimxml::XMLWriter& writer, const Scan& scan)
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
     
-    if (!scan.selectionWindows.empty())
+    if (!scan.scanWindows.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(scan.selectionWindows.size())));
-        writer.startElement("selectionWindowList", attributes);
+        attributes.push_back(make_pair("count", lexical_cast<string>(scan.scanWindows.size())));
+        writer.startElement("scanWindowList", attributes);
         
-        for (vector<SelectionWindow>::const_iterator it=scan.selectionWindows.begin(); 
-             it!=scan.selectionWindows.end(); ++it)
+        for (vector<ScanWindow>::const_iterator it=scan.scanWindows.begin(); 
+             it!=scan.scanWindows.end(); ++it)
              write(writer, *it);
      
         writer.endElement();
@@ -1295,7 +1295,7 @@ struct HandlerScan : public HandlerParamContainer
     Scan* scan;
 
     HandlerScan(Scan* _scan = 0)
-    :   scan(_scan), handlerSelectionWindow_("selectionWindow")
+    :   scan(_scan), handlerScanWindow_("scanWindow")
     {}
 
     virtual Status startElement(const string& name, 
@@ -1314,15 +1314,15 @@ struct HandlerScan : public HandlerParamContainer
                 scan->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
             return Status::Ok;
         }
-        else if (name == "selectionWindowList")
+        else if (name == "scanWindowList")
         {
             return Status::Ok;
         }
-        else if (name == "selectionWindow")
+        else if (name == "scanWindow")
         {
-            scan->selectionWindows.push_back(SelectionWindow());
-            handlerSelectionWindow_.paramContainer = &scan->selectionWindows.back();
-            return Status(Status::Delegate, &handlerSelectionWindow_);
+            scan->scanWindows.push_back(ScanWindow());
+            handlerScanWindow_.paramContainer = &scan->scanWindows.back();
+            return Status(Status::Delegate, &handlerScanWindow_);
         }
 
         HandlerParamContainer::paramContainer = scan;
@@ -1330,7 +1330,7 @@ struct HandlerScan : public HandlerParamContainer
     }
 
     private:
-    HandlerNamedParamContainer handlerSelectionWindow_;
+    HandlerNamedParamContainer handlerScanWindow_;
 };
 
 

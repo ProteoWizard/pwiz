@@ -380,11 +380,11 @@ bool Precursor::empty() const
 
 
 //
-// SelectionWindow
+// ScanWindow
 //
 
 
-SelectionWindow::SelectionWindow(double mzLow, double mzHigh)
+ScanWindow::ScanWindow(double mzLow, double mzHigh)
 {
     cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, mzLow));
     cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, mzHigh));
@@ -399,7 +399,7 @@ SelectionWindow::SelectionWindow(double mzLow, double mzHigh)
 bool Scan::empty() const
 {
     return (!instrumentPtr.get() || instrumentPtr->empty()) &&
-           selectionWindows.empty() && 
+           scanWindows.empty() && 
            ParamContainer::empty();
 }
 

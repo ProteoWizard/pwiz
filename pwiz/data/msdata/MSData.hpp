@@ -314,17 +314,17 @@ struct Precursor : public ParamContainer
 };
 
 
-struct SelectionWindow : public ParamContainer
+struct ScanWindow : public ParamContainer
 {
-    SelectionWindow(){}
-    SelectionWindow(double mzLow, double mzHigh);
+    ScanWindow(){}
+    ScanWindow(double mzLow, double mzHigh);
 };
 
 
 struct Scan : public ParamContainer
 {
     InstrumentPtr instrumentPtr;
-    std::vector<SelectionWindow> selectionWindows;
+    std::vector<ScanWindow> scanWindows;
 
     bool empty() const;
 };

@@ -164,7 +164,7 @@ void resolve(Scan& scan, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(scan), msd);
     resolve(scan.instrumentPtr, msd.instrumentPtrs);
-    resolve(scan.selectionWindows, msd);
+    resolve(scan.scanWindows, msd);
 }
 
 

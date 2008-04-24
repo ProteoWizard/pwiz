@@ -266,8 +266,8 @@ void testScan()
     Scan scan;
     scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     scan.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
-    scan.selectionWindows.push_back(SelectionWindow());
-    scan.selectionWindows.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    scan.scanWindows.push_back(ScanWindow());
+    scan.scanWindows.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -277,13 +277,13 @@ void testScan()
     
     unit_assert(scan.paramGroupPtrs[0]->userParams.empty());
     unit_assert(scan.instrumentPtr->userParams.empty());
-    unit_assert(scan.selectionWindows.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(scan.scanWindows.back().paramGroupPtrs.back()->userParams.empty());
 
     References::resolve(scan, msd);
 
     unit_assert(!scan.paramGroupPtrs[0]->userParams.empty());
     unit_assert(!scan.instrumentPtr->userParams.empty());
-    unit_assert(!scan.selectionWindows.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!scan.scanWindows.back().paramGroupPtrs.back()->userParams.empty());
 }
 
 

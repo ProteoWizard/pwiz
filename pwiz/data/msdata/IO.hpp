@@ -126,8 +126,8 @@ void write(minimxml::XMLWriter& writer, const Precursor& precursor);
 void read(std::istream& is, Precursor& precursor);
     
 
-void write(minimxml::XMLWriter& writer, const SelectionWindow& selectionWindow);
-void read(std::istream& is, SelectionWindow& selectionWindow);
+void write(minimxml::XMLWriter& writer, const ScanWindow& selectionWindow);
+void read(std::istream& is, ScanWindow& selectionWindow);
     
 
 void write(minimxml::XMLWriter& writer, const Scan& scan);

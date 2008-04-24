@@ -131,7 +131,7 @@ class TextWriter
     {
         for (std::vector<ParamGroupPtr>::const_iterator it=paramContainer.paramGroupPtrs.begin();
              it!=paramContainer.paramGroupPtrs.end(); ++it)
-             (*this)("paramGroupRef: " + (*it)->id);
+             (*this)("referenceableParamGroupRef: " + (*it)->id);
         for_each(paramContainer.cvParams.begin(), paramContainer.cvParams.end(), *this);
         for_each(paramContainer.userParams.begin(), paramContainer.userParams.end(), *this);
         return *this;
@@ -393,14 +393,14 @@ class TextWriter
         (*this)("scan:");
         if (scan.instrumentPtr.get()) child()(*scan.instrumentPtr);
         child()(static_cast<const ParamContainer&>(scan));
-        if (!scan.selectionWindows.empty())
-            child()("selectionWindowList: ", scan.selectionWindows);
+        if (!scan.scanWindows.empty())
+            child()("scanWindowList: ", scan.scanWindows);
         return *this;
     }
 
-    TextWriter& operator()(const SelectionWindow& window)
+    TextWriter& operator()(const ScanWindow& window)
     {
-        (*this)("selectionWindow:");
+        (*this)("scanWindow:");
         for_each(window.cvParams.begin(), window.cvParams.end(), child());
         return *this;
     }

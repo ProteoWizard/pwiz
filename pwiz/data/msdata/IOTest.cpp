@@ -307,7 +307,7 @@ void testScan()
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.selectionWindows.push_back(SelectionWindow(400.0, 1800.0));
+    a.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 
     testObject(a);
 }
@@ -335,7 +335,7 @@ void testSpectrumDescription()
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS2SpectrumParams")));
     a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
-    a.scan.selectionWindows.push_back(SelectionWindow(110.0, 905.0));
+    a.scan.scanWindows.push_back(ScanWindow(110.0, 905.0));
 
     a.acquisitionList.acquisitions.push_back(Acquisition());
     a.acquisitionList.acquisitions.back().number = 420;
@@ -887,8 +887,8 @@ void initializeTestData(MSData& msd)
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
     s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    s19.spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window = s19.spectrumDescription.scan.selectionWindows.front();
+    s19.spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window = s19.spectrumDescription.scan.scanWindows.front();
     window.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 400.000000));
     window.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 1800.000000));
 
@@ -937,8 +937,8 @@ void initializeTestData(MSData& msd)
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
     s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
     s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
-    s20.spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window2 = s20.spectrumDescription.scan.selectionWindows.front();
+    s20.spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window2 = s20.spectrumDescription.scan.scanWindows.front();
     window2.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 110.000000));
     window2.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 905.000000));
 
@@ -1064,7 +1064,7 @@ void test()
     testNamedParamContainer<IonSelection>();
     testNamedParamContainer<Activation>();
     testPrecursor();
-    testNamedParamContainer<SelectionWindow>();
+    testNamedParamContainer<ScanWindow>();
     testScan();
     testSpectrumDescription();
     testBinaryDataArray();

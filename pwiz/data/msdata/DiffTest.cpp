@@ -590,18 +590,18 @@ void testScan()
 
     a.cvParams.push_back(CVParam(MS_ionization_type, 420));
     a.instrumentPtr = ip;
-    a.selectionWindows.push_back(SelectionWindow());
+    a.scanWindows.push_back(ScanWindow());
     b = a; 
 
     Diff<Scan> diff(a, b);
     unit_assert(!diff);
 
-    b.selectionWindows.push_back(SelectionWindow(250.0, 2000.0));
+    b.scanWindows.push_back(ScanWindow(250.0, 2000.0));
     diff(a, b);
         
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-    unit_assert(diff.b_a.selectionWindows.size() == 1);
+    unit_assert(diff.b_a.scanWindows.size() == 1);
 }
 
 
@@ -615,7 +615,7 @@ void testSpectrumDescription()
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.scan.selectionWindows.push_back(SelectionWindow(400.0, 1800.0));
+    a.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 
     b = a; 
 
@@ -681,7 +681,7 @@ void testSpectrum()
     a.spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.spectrumDescription.scan.selectionWindows.push_back(SelectionWindow(400.0, 1800.0));
+    a.spectrumDescription.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 
     b = a; 
 

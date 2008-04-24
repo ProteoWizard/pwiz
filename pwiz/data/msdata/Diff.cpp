@@ -539,7 +539,7 @@ void diff(const Scan& a,
           const DiffConfig& config)
 {
     ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
-    vector_diff_diff(a.selectionWindows, b.selectionWindows, a_b.selectionWindows, b_a.selectionWindows, config);
+    vector_diff_diff(a.scanWindows, b.scanWindows, a_b.scanWindows, b_a.scanWindows, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 
     // provide instrumentPtr for context

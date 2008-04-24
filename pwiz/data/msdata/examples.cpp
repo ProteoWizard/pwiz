@@ -192,8 +192,8 @@ void initializeTiny(MSData& msd)
     s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, MS_minute);
     s19.spectrumDescription.scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
     s19.spectrumDescription.scan.set(MS_preset_scan_configuration, 3);
-    s19.spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window = s19.spectrumDescription.scan.selectionWindows.front();
+    s19.spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window = s19.spectrumDescription.scan.scanWindows.front();
     window.set(MS_scan_m_z_lower_limit, 400.000000);
     window.set(MS_scan_m_z_upper_limit, 1800.000000);
 
@@ -244,8 +244,8 @@ void initializeTiny(MSData& msd)
     s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, MS_minute);
     s20.spectrumDescription.scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
     s20.spectrumDescription.scan.set(MS_preset_scan_configuration, 4);
-    s20.spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window2 = s20.spectrumDescription.scan.selectionWindows.front();
+    s20.spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window2 = s20.spectrumDescription.scan.scanWindows.front();
     window2.set(MS_scan_m_z_lower_limit, 110.000000);
     window2.set(MS_scan_m_z_upper_limit, 905.000000);
 
@@ -407,8 +407,8 @@ SpectrumPtr createSpectrum_5pep_FT()
     spectrum->spectrumDescription.scan.set(MS_scan_time, 0.2961, MS_minute);
     spectrum->spectrumDescription.scan.set(MS_filter_string, "FTMS + p ESI Full ms [200.00-2000.00]");
     spectrum->spectrumDescription.scan.set(MS_preset_scan_configuration, 1);
-    spectrum->spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window = spectrum->spectrumDescription.scan.selectionWindows.front();
+    spectrum->spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window = spectrum->spectrumDescription.scan.scanWindows.front();
     window.set(MS_scan_m_z_lower_limit, 200.000000);
     window.set(MS_scan_m_z_upper_limit, 2000.000000);
 
@@ -433,8 +433,8 @@ SpectrumPtr createSpectrum_5pep_IT()
     spectrum->spectrumDescription.scan.set(MS_scan_time, 0.4738, MS_minute);
     spectrum->spectrumDescription.scan.set(MS_filter_string, "ITMS + p ESI Full ms [200.00-2000.00]");
     spectrum->spectrumDescription.scan.set(MS_preset_scan_configuration, 2);
-    spectrum->spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window = spectrum->spectrumDescription.scan.selectionWindows.front();
+    spectrum->spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window = spectrum->spectrumDescription.scan.scanWindows.front();
     window.set(MS_scan_m_z_lower_limit, 200.000000);
     window.set(MS_scan_m_z_upper_limit, 2000.000000);
 
@@ -459,8 +459,8 @@ SpectrumPtr createSpectrum_5pep_ms2()
     spectrum->spectrumDescription.scan.set(MS_scan_time, 0.6731, MS_minute);
     spectrum->spectrumDescription.scan.set(MS_filter_string, "ITMS + c ESI d Full ms2 810.79@cid35.00 [210.00-1635.00]");
     spectrum->spectrumDescription.scan.set(MS_preset_scan_configuration, 3);
-    spectrum->spectrumDescription.scan.selectionWindows.resize(1);
-    SelectionWindow& window = spectrum->spectrumDescription.scan.selectionWindows.front();
+    spectrum->spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window = spectrum->spectrumDescription.scan.scanWindows.front();
     window.set(MS_scan_m_z_lower_limit, 210);
     window.set(MS_scan_m_z_upper_limit, 1635);
 
