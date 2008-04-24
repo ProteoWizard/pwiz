@@ -183,14 +183,14 @@ enum AccurateMassType
 	AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
 	AccurateMass_Active,                        // accurate mass active 
 	AccurateMass_ActiveWithInternalCalibration, // accurate mass with internal calibration
-	AccurateMass_ActiveWithExternalCalibration, // accurate mass with external calibration
+	AccurateMass_ActiveWithExternalCalibration // accurate mass with external calibration
 };
 
 enum TriBool
 {
 	TriBool_Unknown = -1,
 	TriBool_False = 0,
-	TriBool_True = 1,
+	TriBool_True = 1
 };
 
 class ScanFilter

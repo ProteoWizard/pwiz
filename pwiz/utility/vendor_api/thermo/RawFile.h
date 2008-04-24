@@ -59,8 +59,8 @@ class RAWFILE_API RawEgg : public std::runtime_error // Eggception class
     public:
 
     RawEgg(const std::string& error)
-    :   error_(error),
-        std::runtime_error(("[RawEgg] " + error).c_str())
+    :   std::runtime_error(("[RawEgg] " + error).c_str()),
+		error_(error)        
     {}
 
     virtual const std::string& error() const {return error_;}
