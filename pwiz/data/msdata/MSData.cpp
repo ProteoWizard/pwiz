@@ -374,7 +374,7 @@ bool AcquisitionList::empty() const
 
 bool Precursor::empty() const
 {
-    return spectrumID.empty() && ionSelection.empty() &&
+    return spectrumID.empty() && isolationWindow.empty() && selectedIons.empty() &&
            activation.empty() && ParamContainer::empty();
 }
 

@@ -155,7 +155,8 @@ void resolve(AcquisitionList& acquisitionList, const MSData& msd)
 void resolve(Precursor& precursor, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(precursor), msd);
-    resolve(precursor.ionSelection, msd);
+    resolve(precursor.isolationWindow, msd);
+    resolve(precursor.selectedIons, msd);
     resolve(precursor.activation, msd);
 }
 

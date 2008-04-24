@@ -300,14 +300,16 @@ struct AcquisitionList : public ParamContainer
 };
 
 
-struct IonSelection : public ParamContainer {};
+struct IsolationWindow : public ParamContainer {};
+struct SelectedIon : public ParamContainer {};
 struct Activation : public ParamContainer {};
 
 
 struct Precursor : public ParamContainer
 {
     std::string spectrumID;
-    IonSelection ionSelection;
+    IsolationWindow isolationWindow;
+    std::vector<SelectedIon> selectedIons;
     Activation activation;
 
     bool empty() const;

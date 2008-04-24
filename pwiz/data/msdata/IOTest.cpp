@@ -290,8 +290,10 @@ void testPrecursor()
     Precursor a;
     
     a.spectrumID = "19";
-    a.ionSelection.cvParams.push_back(CVParam(MS_m_z, 445.34));
-    a.ionSelection.cvParams.push_back(CVParam(MS_charge_state, 2));
+    a.isolationWindow.cvParams.push_back(CVParam(MS_m_z, 123450));
+    a.selectedIons.resize(2);
+    a.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
+    a.selectedIons[1].cvParams.push_back(CVParam(MS_charge_state, 2));
     a.activation.cvParams.push_back(MS_collision_induced_dissociation);
     a.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00));
   
@@ -326,8 +328,9 @@ void testSpectrumDescription()
 
     a.precursors.push_back(Precursor());
     a.precursors.back().spectrumID = "19";
-    a.precursors.back().ionSelection.cvParams.push_back(CVParam(MS_m_z, 445.34));
-    a.precursors.back().ionSelection.cvParams.push_back(CVParam(MS_charge_state, 2));
+    a.precursors.back().selectedIons.resize(1);
+    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
+    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
     a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt)); 
     
@@ -928,8 +931,9 @@ void initializeTestData(MSData& msd)
     s20.spectrumDescription.precursors.resize(1);
     Precursor& precursor = s20.spectrumDescription.precursors.front();
     precursor.spectrumID= s19.id;
-    precursor.ionSelection.cvParams.push_back(CVParam(MS_m_z, 445.34));
-    precursor.ionSelection.cvParams.push_back(CVParam(MS_charge_state, 2));
+    precursor.selectedIons.resize(1);
+    precursor.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
+    precursor.selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
     precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt));
 
@@ -1061,7 +1065,8 @@ void test()
     testDataProcessing();
     testAcquisition();
     testAcquisitionList();
-    testNamedParamContainer<IonSelection>();
+    testNamedParamContainer<IsolationWindow>();
+    testNamedParamContainer<SelectedIon>();
     testNamedParamContainer<Activation>();
     testPrecursor();
     testNamedParamContainer<ScanWindow>();

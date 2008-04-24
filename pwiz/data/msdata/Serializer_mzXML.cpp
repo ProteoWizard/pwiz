@@ -265,9 +265,12 @@ vector<PrecursorInfo> getPrecursorInfo(const SpectrumDescription& sd,
         PrecursorInfo info;
         if (!it->spectrumID.empty())
             info.scanNum = lexical_cast<string>(idToScanNumber(it->spectrumID, spectrumListPtr));
-        info.mz = it->ionSelection.cvParam(MS_m_z).value;
-        info.intensity = it->ionSelection.cvParam(MS_intensity).value;
-        info.charge = it->ionSelection.cvParam(MS_charge_state).value;
+        if (!it->selectedIons.empty())
+        { 
+            info.mz = it->selectedIons[0].cvParam(MS_m_z).value;
+            info.intensity = it->selectedIons[0].cvParam(MS_intensity).value;
+            info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
+        }
         info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         if (!info.empty()) result.push_back(info);
     }

@@ -162,9 +162,10 @@ void test(bool indexed)
 
     unit_assert(s->spectrumDescription.precursors.size() == 1);
     Precursor& precursor = s->spectrumDescription.precursors[0];
-    unit_assert(precursor.ionSelection.hasCVParam(MS_m_z));
-    unit_assert(precursor.ionSelection.hasCVParam(MS_intensity));
-    unit_assert(precursor.ionSelection.hasCVParam(MS_charge_state));
+    unit_assert(precursor.selectedIons.size() == 1);
+    unit_assert(precursor.selectedIons[0].hasCVParam(MS_m_z));
+    unit_assert(precursor.selectedIons[0].hasCVParam(MS_intensity));
+    unit_assert(precursor.selectedIons[0].hasCVParam(MS_charge_state));
     unit_assert(precursor.activation.hasCVParam(MS_collision_energy));
     unit_assert(precursor.spectrumID == "19"); // Serializer_mzXML::read() sets id="19", not "S19"
 

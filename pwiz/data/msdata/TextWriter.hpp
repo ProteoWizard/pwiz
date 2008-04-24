@@ -425,6 +425,13 @@ class TextWriter
         return *this;
     }
 
+    TextWriter& operator()(const SelectedIon& selectedIon)
+    {
+        (*this)("selectedIon:");
+        child()(static_cast<const ParamContainer&>(selectedIon));
+        return *this;
+    }
+
     TextWriter& operator()(const Precursor& precursor)
     {
         (*this)("precursor:");
@@ -432,10 +439,15 @@ class TextWriter
             ("spectrumRef: " + precursor.spectrumID)
             (static_cast<const ParamContainer&>(precursor));
 
-        if (!precursor.ionSelection.empty())
+        if (!precursor.isolationWindow.empty())
+        {
+            child()("isolationWindow:");
+            child().child()(precursor.isolationWindow);
+        }
+
+        if (!precursor.selectedIons.empty())
         { 
-            child()("ionSelection:");
-            child().child()(precursor.ionSelection);
+            child()("selectedIons:", precursor.selectedIons);
         }
 
         if (!precursor.activation.empty())

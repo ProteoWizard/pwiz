@@ -114,8 +114,12 @@ void write(minimxml::XMLWriter& writer, const AcquisitionList& acquisitionList);
 void read(std::istream& is, AcquisitionList& acquisitionList);
     
 
-void write(minimxml::XMLWriter& writer, const IonSelection& ionSelection);
-void read(std::istream& is, IonSelection& ionSelection);
+void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow);
+void read(std::istream& is, IsolationWindow& isolationWindow);
+    
+
+void write(minimxml::XMLWriter& writer, const SelectedIon& selectedIon);
+void read(std::istream& is, SelectedIon& selectedIon);
     
 
 void write(minimxml::XMLWriter& writer, const Activation& activation);

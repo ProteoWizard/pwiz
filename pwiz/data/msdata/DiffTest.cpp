@@ -561,7 +561,8 @@ void testPrecursor()
 
     a.spectrumID = "1234"; 
     a.activation.cvParams.push_back(CVParam(MS_ionization_type, 420));
-    a.ionSelection.cvParams.push_back(MS_reflectron_on);
+    a.selectedIons.resize(1);
+    a.selectedIons[0].cvParams.push_back(MS_reflectron_on);
     a.cvParams.push_back(MS_reflectron_off);
     b = a; 
 
@@ -569,13 +570,18 @@ void testPrecursor()
     unit_assert(!diff);
 
     a.cvParams.push_back(MS_reflectron_on); 
-    a.ionSelection.userParams.push_back(UserParam("aaaa"));
+    a.selectedIons[0].userParams.push_back(UserParam("aaaa"));
     b.activation.userParams.push_back(UserParam("bbbb"));
+    b.isolationWindow.set(MS_m_z, 200);
     
     diff(a, b);
         
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
+    unit_assert(!diff.a_b.selectedIons.empty());
+    unit_assert(!diff.a_b.selectedIons[0].userParams.empty());
+    unit_assert(!diff.b_a.selectedIons.empty());
+    unit_assert(diff.b_a.isolationWindow.cvParam(MS_m_z).valueAs<int>() == 200);
 }
 
 
@@ -1087,7 +1093,7 @@ void testBinaryDataOnly()
         {
             Precursor& precursorTo = to->spectrumDescription.precursors[precursorIndex];
             Precursor& precursorFrom = from->spectrumDescription.precursors[precursorIndex];
-            precursorTo.ionSelection = precursorFrom.ionSelection;
+            precursorTo.selectedIons = precursorFrom.selectedIons;
         }
     }
 

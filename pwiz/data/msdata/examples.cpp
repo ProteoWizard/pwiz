@@ -233,9 +233,10 @@ void initializeTiny(MSData& msd)
     s20.spectrumDescription.precursors.resize(1);
     Precursor& precursor = s20.spectrumDescription.precursors.front();
     precursor.spectrumID= s19.id;
-    precursor.ionSelection.set(MS_m_z, 445.34);
-    precursor.ionSelection.set(MS_intensity, 120053);
-    precursor.ionSelection.set(MS_charge_state, 2);
+    precursor.selectedIons.resize(1);
+    precursor.selectedIons[0].set(MS_m_z, 445.34);
+    precursor.selectedIons[0].set(MS_intensity, 120053);
+    precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
 
@@ -467,11 +468,13 @@ SpectrumPtr createSpectrum_5pep_ms2()
     spectrum->spectrumDescription.precursors.resize(1);
     Precursor& precursor = spectrum->spectrumDescription.precursors.front();
     precursor.spectrumID = "change_me";
-    precursor.ionSelection.set(MS_m_z, 810.79);
-    precursor.ionSelection.set(MS_intensity, 120053);
-    precursor.ionSelection.set(MS_charge_state, 2);
+    precursor.selectedIons.resize(1);
+    precursor.selectedIons[0].set(MS_m_z, 810.79);
+    precursor.selectedIons[0].set(MS_intensity, 120053);
+    precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
+    precursor.isolationWindow.set(MS_m_z, 810.80);
 
     return spectrum;
 }

@@ -132,11 +132,13 @@ struct HandlerPrecursor : public SAXParser::Handler
             
             precursor->spectrumID = precursorScanNum;
 
+            precursor->selectedIons.push_back(SelectedIon());
+
             if (!precursorIntensity.empty())
-                precursor->ionSelection.cvParams.push_back(CVParam(MS_intensity, precursorIntensity));
+                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_intensity, precursorIntensity));
 
             if (!precursorCharge.empty())
-                precursor->ionSelection.cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
+                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
 
             return Status::Ok;
         }
@@ -150,7 +152,7 @@ struct HandlerPrecursor : public SAXParser::Handler
         if (!precursor)
             throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor."); 
 
-        precursor->ionSelection.cvParams.push_back(CVParam(MS_m_z, text));
+        precursor->selectedIons.back().cvParams.push_back(CVParam(MS_m_z, text));
 
         return Status::Ok;
     }

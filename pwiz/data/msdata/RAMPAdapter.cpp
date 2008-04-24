@@ -132,9 +132,12 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
         if (precursorIndex < spectrumList.size())
             result.precursorScanNum = scanNumber(spectrumList.spectrum(precursorIndex)->nativeID);
 
-        result.precursorMZ = precursor.ionSelection.cvParam(MS_m_z).valueAs<double>();
-        result.precursorCharge = precursor.ionSelection.cvParam(MS_charge_state).valueAs<int>();
-        result.precursorIntensity = precursor.ionSelection.cvParam(MS_intensity).valueAs<double>();
+        if (!precursor.selectedIons.empty())
+        {
+            result.precursorMZ = precursor.selectedIons[0].cvParam(MS_m_z).valueAs<double>();
+            result.precursorCharge = precursor.selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
+            result.precursorIntensity = precursor.selectedIons[0].cvParam(MS_intensity).valueAs<double>();
+        }
     }
 
     BOOST_STATIC_ASSERT(SCANTYPE_LENGTH > 4);

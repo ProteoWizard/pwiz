@@ -240,22 +240,26 @@ void testPrecursor()
 
     Precursor precursor;
     precursor.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    precursor.ionSelection.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    precursor.selectedIons.resize(1);
+    precursor.selectedIons[0].paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     precursor.activation.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    precursor.isolationWindow.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     
     unit_assert(precursor.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(precursor.ionSelection.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(precursor.selectedIons[0].paramGroupPtrs[0]->userParams.empty());
     unit_assert(precursor.activation.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(precursor.isolationWindow.paramGroupPtrs[0]->userParams.empty());
 
     References::resolve(precursor, msd);
 
     unit_assert(!precursor.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!precursor.ionSelection.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!precursor.selectedIons[0].paramGroupPtrs[0]->userParams.empty());
     unit_assert(!precursor.activation.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!precursor.isolationWindow.paramGroupPtrs[0]->userParams.empty());
 }
 
 

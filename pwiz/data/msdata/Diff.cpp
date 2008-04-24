@@ -514,11 +514,12 @@ void diff(const Precursor& a,
     b_a = Precursor();
 
     // important scan metadata
-    diff(static_cast<const ParamContainer&>(a.ionSelection), b.ionSelection, a_b.ionSelection, b_a.ionSelection, config);
+    vector_diff_diff<SelectedIon>(a.selectedIons, b.selectedIons, a_b.selectedIons, b_a.selectedIons, config);
 
     if (!config.ignoreMetadata)
     {
         diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
+        diff(static_cast<const ParamContainer&>(a.isolationWindow), b.isolationWindow, a_b.isolationWindow, b_a.isolationWindow, config);
         diff(static_cast<const ParamContainer&>(a.activation), b.activation, a_b.activation, b_a.activation, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     }

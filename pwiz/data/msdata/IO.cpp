@@ -1127,21 +1127,41 @@ void read(std::istream& is, AcquisitionList& acquisitionList)
 
 
 //
-// IonSelection
+// IsolationWindow
 //
 
 
-void write(minimxml::XMLWriter& writer, const IonSelection& ionSelection)
+void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow)
 {
-    writer.startElement("ionSelection");
-    writeParamContainer(writer, ionSelection);
+    writer.startElement("isolationWindow");
+    writeParamContainer(writer, isolationWindow);
     writer.endElement();
 }
 
 
-void read(std::istream& is, IonSelection& ionSelection)
+void read(std::istream& is, IsolationWindow& isolationWindow)
 {
-    HandlerNamedParamContainer handler("ionSelection", &ionSelection);
+    HandlerNamedParamContainer handler("isolationWindow", &isolationWindow);
+    SAXParser::parse(is, handler);
+}
+    
+
+//
+// SelectedIon
+//
+
+
+void write(minimxml::XMLWriter& writer, const SelectedIon& selectedIon)
+{
+    writer.startElement("selectedIon");
+    writeParamContainer(writer, selectedIon);
+    writer.endElement();
+}
+
+
+void read(std::istream& is, SelectedIon& selectedIon)
+{
+    HandlerNamedParamContainer handler("selectedIon", &selectedIon);
     SAXParser::parse(is, handler);
 }
     
@@ -1177,14 +1197,34 @@ void write(minimxml::XMLWriter& writer, const Precursor& precursor)
     attributes.push_back(make_pair("spectrumRef", lexical_cast<string>(precursor.spectrumID)));
     writer.startElement("precursor", attributes);
     writeParamContainer(writer, precursor);
-    
-    writer.startElement("ionSelection");
-    writeParamContainer(writer, precursor.ionSelection);
-    writer.endElement();
-    
+
+    if (!precursor.isolationWindow.empty())
+    {
+        writer.startElement("isolationWindow");
+        writeParamContainer(writer, precursor.isolationWindow);
+        writer.endElement(); // isolationWindow
+    }
+
+    if (!precursor.selectedIons.empty())
+    {
+        attributes.clear();
+        attributes.push_back(make_pair("count", lexical_cast<string>(precursor.selectedIons.size())));
+        writer.startElement("selectedIonList", attributes);
+
+        for (vector<SelectedIon>::const_iterator it=precursor.selectedIons.begin(); 
+             it!=precursor.selectedIons.end(); ++it)
+        {
+            writer.startElement("selectedIon");
+            writeParamContainer(writer, *it);
+            writer.endElement(); // selectedIon
+        }
+
+        writer.endElement(); // selectedIonList
+    }
+
     writer.startElement("activation");
     writeParamContainer(writer, precursor.activation);
-    writer.endElement();
+    writer.endElement(); // activation
     
     writer.endElement();
 }
@@ -1196,7 +1236,8 @@ struct HandlerPrecursor : public HandlerParamContainer
 
     HandlerPrecursor(Precursor* _precursor = 0)
     :   precursor(_precursor), 
-        handlerIonSelection_("ionSelection"), 
+        handlerIsolationWindow_("isolationWindow"), 
+        handlerSelectedIon_("selectedIon"), 
         handlerActivation_("activation")
     {}
 
@@ -1212,15 +1253,25 @@ struct HandlerPrecursor : public HandlerParamContainer
             getAttribute(attributes, "spectrumRef", precursor->spectrumID);
             return Status::Ok;
         }
-        else if (name == "ionSelection")
+        else if (name == "isolationWindow")
         {
-            handlerIonSelection_.paramContainer = &precursor->ionSelection;
-            return Status(Status::Delegate, &handlerIonSelection_);
+            handlerIsolationWindow_.paramContainer = &precursor->isolationWindow;
+            return Status(Status::Delegate, &handlerIsolationWindow_);
+        }
+        else if (name == "selectedIon")
+        {
+            precursor->selectedIons.push_back(SelectedIon());
+            handlerSelectedIon_.paramContainer = &precursor->selectedIons.back();
+            return Status(Status::Delegate, &handlerSelectedIon_);
         }
         else if (name == "activation")
         {
             handlerActivation_.paramContainer = &precursor->activation;
             return Status(Status::Delegate, &handlerActivation_);
+        }
+        else if (name == "selectedIonList")
+        {
+            return Status::Ok;
         }
 
         HandlerParamContainer::paramContainer = precursor;
@@ -1228,7 +1279,8 @@ struct HandlerPrecursor : public HandlerParamContainer
     }
 
     private:
-    HandlerNamedParamContainer handlerIonSelection_;
+    HandlerNamedParamContainer handlerIsolationWindow_;
+    HandlerNamedParamContainer handlerSelectedIon_;
     HandlerNamedParamContainer handlerActivation_;
 };
 
