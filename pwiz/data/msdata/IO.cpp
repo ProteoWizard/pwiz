@@ -1647,11 +1647,20 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
     writeParamContainer(writer, spectrum);
     write(writer, spectrum.spectrumDescription);
     
-    for (vector<BinaryDataArrayPtr>::const_iterator it=spectrum.binaryDataArrayPtrs.begin(); 
-         it!=spectrum.binaryDataArrayPtrs.end(); ++it)
-         write(writer, **it, config);
+    if (!spectrum.binaryDataArrayPtrs.empty())
+    {
+        attributes.clear();
+        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.binaryDataArrayPtrs.size())));
+        writer.startElement("binaryDataArrayList", attributes);
 
-    writer.endElement();
+        for (vector<BinaryDataArrayPtr>::const_iterator it=spectrum.binaryDataArrayPtrs.begin(); 
+             it!=spectrum.binaryDataArrayPtrs.end(); ++it)
+             write(writer, **it, config);
+
+        writer.endElement(); // binaryDataArrayList
+    }
+
+    writer.endElement(); // spectrum
 }
 
     
@@ -1711,6 +1720,10 @@ struct HandlerSpectrum : public HandlerParamContainer
             handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
         }
+        else if (name == "binaryDataArrayList")
+        {
+            return Status::Ok;
+        }
 
         HandlerParamContainer::paramContainer = spectrum;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -1750,11 +1763,20 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 
     writeParamContainer(writer, chromatogram);
     
-    for (vector<BinaryDataArrayPtr>::const_iterator it=chromatogram.binaryDataArrayPtrs.begin(); 
-         it!=chromatogram.binaryDataArrayPtrs.end(); ++it)
-         write(writer, **it, config);
+    if (!chromatogram.binaryDataArrayPtrs.empty())
+    {
+        attributes.clear();
+        attributes.push_back(make_pair("count", lexical_cast<string>(chromatogram.binaryDataArrayPtrs.size())));
+        writer.startElement("binaryDataArrayList", attributes);
 
-    writer.endElement();
+        for (vector<BinaryDataArrayPtr>::const_iterator it=chromatogram.binaryDataArrayPtrs.begin(); 
+             it!=chromatogram.binaryDataArrayPtrs.end(); ++it)
+             write(writer, **it, config);
+
+        writer.endElement(); // binaryDataArrayList
+    }
+
+    writer.endElement(); // spectrum
 }
 
 
@@ -1802,6 +1824,10 @@ struct HandlerChromatogram : public HandlerParamContainer
             handlerBinaryDataArray_.binaryDataArray = chromatogram->binaryDataArrayPtrs.back().get();
             handlerBinaryDataArray_.defaultArrayLength = chromatogram->defaultArrayLength;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
+        }
+        else if (name == "binaryDataArrayList")
+        {
+            return Status::Ok;
         }
 
         HandlerParamContainer::paramContainer = chromatogram;
