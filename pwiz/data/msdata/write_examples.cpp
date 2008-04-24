@@ -52,6 +52,16 @@ void write_examples()
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
 */
+
+    // create the MSData object in memory
+    MSData msd2;
+    examples::initializeTiny2(msd2); 
+
+    // write out mzML 
+    filename = "tiny2.pwiz.mzML";
+    cout << "Writing file " << filename << endl;
+    MSDataFile::write(msd2, filename);
+
     cout << "\nhttp://proteowizard.sourceforge.net\n"
          << "support@proteowizard.org\n";
 }

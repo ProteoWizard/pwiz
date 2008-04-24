@@ -34,6 +34,7 @@ namespace examples {
 
 
 void initializeTiny(MSData& msd);
+void initializeTiny2(MSData& msd);
 
 
 } // namespace examples
