@@ -237,8 +237,15 @@ class HandlerIndex : public SAXParser::Handler
             handlerOffset_.chromatogramIdentity = &index_.back();
             return Status(Status::Delegate, &handlerOffset_);
         }
+        else if (name == "indexOffset")
+        {
+            // hack: abort if we've reached <indexOffset> (i.e. no chromatogram index encoded) 
+            return Status::Done; 
+        }
         else
+        {
             throw runtime_error(("[ChromatogramList_mzML::HandlerIndex] Unexpected element name: " + name).c_str());
+        }
     }
 
     private:
