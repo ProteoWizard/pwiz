@@ -646,6 +646,10 @@ const TermInfo termInfos_[] =
     {MS_ProteinLynx_Global_Server_mass_spectrum_XML_file, "MS:1000614", "ProteinLynx Global Server mass spectrum XML file", "Peak list file format used by ProteinLynx Global Server."},
     {MS_ProteoWizard, "MS:1000615", "ProteoWizard", "ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab SFCAP at Cedars-Sinai."},
     {MS_preset_scan_configuration, "MS:1000616", "preset scan configuration", "A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time."},
+    {MS_selected_ion_chromatogram, "MS:1000999", "selected ion chromatogram", "blah"},
+    {MS_precursor_m_z, "MS:1000998", "precursor m/z", "blah"},
+    {MS_product_m_z, "MS:1000997", "product m/z", "blah"},
+    {MS_total_ion_chromatogram, "MS:1000996", "total ion chromatogram", "blah"}
 }; // termInfos_
 
 

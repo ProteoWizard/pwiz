@@ -140,8 +140,15 @@ void testRead(const string& filename)
     const Precursor& precursor2 = spectrum->spectrumDescription.precursors[0];
     unit_assert(precursor2.spectrumID == "2"); // previous ms1 scan
 
-    // test file-level metadata 
+    // test chromatogram list
+    unit_assert(msd.run.chromatogramListPtr.get());
+    ChromatogramList& cl = *msd.run.chromatogramListPtr;
+    if (os_) *os_ << "chromatogram list size: " << cl.size() << endl;
+    unit_assert(cl.size() == 1);
+    ChromatogramPtr chromatogram = cl.chromatogram(0, true);
+    unit_assert(chromatogram->id == "TIC");
 
+    // test file-level metadata 
     unit_assert(msd.fileDescription.fileContent.hasCVParam(MS_MSn_spectrum));
 }
 

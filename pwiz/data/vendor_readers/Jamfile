@@ -33,7 +33,7 @@ project
 
 lib pwiz_data_vendor_readers
     :   ExtendedReaderList.cpp 
-        Reader_Thermo.cpp
+        [ glob *_Thermo*.cpp ]
         ../../utility/vendor_api/thermo
         ../msdata//pwiz_data_msdata
     ;

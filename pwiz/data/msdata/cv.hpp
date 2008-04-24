@@ -747,7 +747,11 @@ enum CVID
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
     MS_ProteoWizard = 1000615,
     MS_pwiz = MS_ProteoWizard,
-    MS_preset_scan_configuration = 1000616
+    MS_preset_scan_configuration = 1000616,
+    MS_selected_ion_chromatogram = 1000999,
+    MS_precursor_m_z = 1000998,
+    MS_product_m_z = 1000997,
+    MS_total_ion_chromatogram = 1000996
 }; // enum CVID
 
 
