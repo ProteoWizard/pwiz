@@ -474,6 +474,26 @@ void diff(const DataProcessing& a,
 }
 
 
+void diff(const AcquisitionSettings& a,
+          const AcquisitionSettings& b,
+          AcquisitionSettings& a_b,
+          AcquisitionSettings& b_a,
+          const DiffConfig& config)
+{
+    diff(a.id, b.id, a_b.id, b_a.id, config);
+    ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
+    vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
+    vector_diff_diff(a.targets, b.targets, a_b.targets, b_a.targets, config);
+
+    // provide id for context
+    if (!a_b.empty() || !b_a.empty()) 
+    {
+        a_b.id = a.id; 
+        b_a.id = b.id; 
+    }
+}
+
+
 void diff(const Acquisition& a,
           const Acquisition& b,
           Acquisition& a_b,
@@ -878,6 +898,7 @@ void diff(const MSData& a,
         vector_diff_deep(a.instrumentPtrs, b.instrumentPtrs, a_b.instrumentPtrs, b_a.instrumentPtrs, config);
         vector_diff_deep(a.softwarePtrs, b.softwarePtrs, a_b.softwarePtrs, b_a.softwarePtrs, config);
         vector_diff_deep(a.dataProcessingPtrs, b.dataProcessingPtrs, a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
+        vector_diff_deep(a.acquisitionSettingsPtrs, b.acquisitionSettingsPtrs, a_b.acquisitionSettingsPtrs, b_a.acquisitionSettingsPtrs, config);
     }
 
     diff(a.run, b.run, a_b.run, b_a.run, config);

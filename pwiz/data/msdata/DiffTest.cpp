@@ -498,6 +498,35 @@ void testDataProcessing()
 }
 
 
+void testAcquisitionSettings()
+{
+    if (os_) *os_ << "testAcquisitionSettings()\n";
+
+    AcquisitionSettings a, b;
+    a.id = "as1";
+
+    b = a;
+
+    Diff<AcquisitionSettings> diff(a, b);
+    unit_assert(!diff);
+
+    a.instrumentPtr = InstrumentPtr(new Instrument("instrument")); 
+    b.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
+    a.targets.resize(2);
+   
+    diff(a, b);
+        
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+    unit_assert(diff.a_b.instrumentPtr.get());
+    unit_assert(!diff.b_a.instrumentPtr.get());
+    unit_assert(diff.a_b.sourceFilePtrs.empty());
+    unit_assert(diff.b_a.sourceFilePtrs.size() == 1);
+    unit_assert(diff.a_b.targets.size() == 2);
+    unit_assert(diff.b_a.targets.empty());
+}
+
+
 void testAcquisition()
 {
     if (os_) *os_ << "testAcquisition()\n";
@@ -1020,6 +1049,7 @@ void testMSData()
     b.softwarePtrs.push_back(SoftwarePtr(new Software("software")));
     a.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dataProcessing")));
     b.run.id = "run";
+    b.acquisitionSettingsPtrs.push_back(AcquisitionSettingsPtr(new AcquisitionSettings("acquisitionSettings")));
    
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -1054,6 +1084,9 @@ void testMSData()
 
     unit_assert(diff.a_b.run.empty());
     unit_assert(!diff.b_a.run.empty());
+
+    unit_assert(diff.a_b.acquisitionSettingsPtrs.empty());
+    unit_assert(!diff.b_a.acquisitionSettingsPtrs.empty());
 }
 
 
@@ -1155,6 +1188,7 @@ void test()
     testInstrument();
     testProcessingMethod();
     testDataProcessing();
+    testAcquisitionSettings();
     testAcquisition();
     testAcquisitionList();
     testPrecursor();

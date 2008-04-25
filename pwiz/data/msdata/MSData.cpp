@@ -343,6 +343,26 @@ bool DataProcessing::empty() const
 
 
 //
+// AcquisitionSettings 
+//
+
+
+AcquisitionSettings::AcquisitionSettings(const string& _id)
+:   id(_id)
+{}
+
+
+bool AcquisitionSettings::empty() const
+{
+    return id.empty() && 
+           (!instrumentPtr.get() || instrumentPtr->empty()) && 
+           sourceFilePtrs.empty() &&
+           targets.empty();
+}
+
+
+
+//
 // Acquisition
 //
 

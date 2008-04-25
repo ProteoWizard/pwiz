@@ -106,6 +106,14 @@ void write(minimxml::XMLWriter& writer, const DataProcessing& dataProcessing);
 void read(std::istream& is, DataProcessing& dataProcessing);
     
 
+void write(minimxml::XMLWriter& writer, const Target& t);
+void read(std::istream& is, Target& t);
+    
+
+void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings);
+void read(std::istream& is, AcquisitionSettings& acquisitionSettings);
+
+
 void write(minimxml::XMLWriter& writer, const Acquisition& acquisition);
 void read(std::istream& is, Acquisition& acquisition);
     

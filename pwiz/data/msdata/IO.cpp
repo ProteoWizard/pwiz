@@ -995,6 +995,132 @@ void read(std::istream& is, DataProcessing& dataProcessing)
     SAXParser::parse(is, handler);
 }
 
+
+//
+// Target
+//
+
+
+void write(minimxml::XMLWriter& writer, const Target& t)
+{
+    writer.startElement("target");
+    writeParamContainer(writer, t);
+    writer.endElement();
+}
+
+
+void read(std::istream& is, Target& t)
+{
+    HandlerNamedParamContainer handler("target", &t);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// AcquisitionSettings
+//
+
+
+void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("id", lexical_cast<string>(acquisitionSettings.id)));
+    if (acquisitionSettings.instrumentPtr.get())
+        attributes.push_back(make_pair("instrumentRef", acquisitionSettings.instrumentPtr->id)); 
+
+    writer.startElement("acquisitionSettings", attributes);
+
+    if (!acquisitionSettings.sourceFilePtrs.empty())
+    {
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionSettings.sourceFilePtrs.size())));
+        writer.startElement("sourceFileList", attributes);
+
+        for (vector<SourceFilePtr>::const_iterator it=acquisitionSettings.sourceFilePtrs.begin(); 
+             it!=acquisitionSettings.sourceFilePtrs.end(); ++it)
+             write(writer, **it);
+
+        writer.endElement(); // sourceFileList
+    }
+
+    if (!acquisitionSettings.targets.empty())
+    {
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionSettings.targets.size())));
+        writer.startElement("targetList", attributes);
+
+        for (vector<Target>::const_iterator it=acquisitionSettings.targets.begin(); 
+             it!=acquisitionSettings.targets.end(); ++it)
+             write(writer, *it);
+
+        writer.endElement(); // targetList
+    }
+
+    writer.endElement();
+}
+
+    
+struct HandlerAcquisitionSettings : public HandlerParamContainer
+{
+    AcquisitionSettings* acquisitionSettings;
+
+    HandlerAcquisitionSettings(AcquisitionSettings* _acquisitionSettings = 0)
+    :   acquisitionSettings(_acquisitionSettings), 
+        handlerTarget_("target")
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!acquisitionSettings)
+            throw runtime_error("[IO::HandlerAcquisitionSettings] Null acquisitionSettings.");
+
+        if (name == "acquisitionSettings")
+        {
+            getAttribute(attributes, "id", acquisitionSettings->id);
+
+            // note: placeholder
+            string instrumentRef;
+            getAttribute(attributes, "instrumentRef", instrumentRef);
+            if (!instrumentRef.empty())
+                acquisitionSettings->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
+
+            return Status::Ok;
+        }
+        else if (name=="sourceFileList" || name=="targetList")
+        {
+            return Status::Ok;
+        }
+        else if (name=="sourceFile")
+        {
+            acquisitionSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile));
+            handlerSourceFile_.sourceFile = acquisitionSettings->sourceFilePtrs.back().get();
+            return Status(Status::Delegate, &handlerSourceFile_);
+        }
+        else if (name=="target")
+        {
+            acquisitionSettings->targets.push_back(Target());
+            handlerTarget_.paramContainer = &acquisitionSettings->targets.back();
+            return Status(Status::Delegate, &handlerTarget_);
+        }
+
+        throw runtime_error(("[IO::HandlerAcquisitionSettings] Unexpected element name: " + name).c_str());
+    }
+
+    private:
+    HandlerSourceFile handlerSourceFile_;
+    HandlerNamedParamContainer handlerTarget_;
+};
+
+
+void read(std::istream& is, AcquisitionSettings& acquisitionSettings)
+{
+    HandlerAcquisitionSettings handler(&acquisitionSettings);
+    SAXParser::parse(is, handler);
+}
+
+
 //
 // Acquisition
 //
@@ -2224,6 +2350,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.instrumentPtrs, "instrumentList");
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
+    writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettings");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions);
 
@@ -2258,7 +2385,8 @@ struct HandlerMSData : public SAXParser::Handler
                  name == "sampleList" || 
                  name == "instrumentList" || 
                  name == "softwareList" ||
-                 name == "dataProcessingList")
+                 name == "dataProcessingList" ||
+                 name == "acquisitionSettingsList")
         {
             // ignore these, unless we want to validate the count attribute
             return Status::Ok;
@@ -2304,6 +2432,12 @@ struct HandlerMSData : public SAXParser::Handler
             handlerDataProcessing_.dataProcessing = msd->dataProcessingPtrs.back().get();
             return Status(Status::Delegate, &handlerDataProcessing_);
         }
+        else if (name == "acquisitionSettings")
+        {
+            msd->acquisitionSettingsPtrs.push_back(AcquisitionSettingsPtr(new AcquisitionSettings));            
+            handlerAcquisitionSettings_.acquisitionSettings = msd->acquisitionSettingsPtrs.back().get();
+            return Status(Status::Delegate, &handlerAcquisitionSettings_);
+        }
         else if (name == "run")
         {
             handlerRun_.run = &msd->run;
@@ -2321,6 +2455,7 @@ struct HandlerMSData : public SAXParser::Handler
     HandlerInstrument handlerInstrument_;
     HandlerSoftware handlerSoftware_;
     HandlerDataProcessing handlerDataProcessing_;
+    HandlerAcquisitionSettings handlerAcquisitionSettings_;
     HandlerRun handlerRun_;
 };
 

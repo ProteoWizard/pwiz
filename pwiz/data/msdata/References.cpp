@@ -138,6 +138,13 @@ void resolve(DataProcessing& dataProcessing, const MSData& msd)
 }
 
 
+void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
+{
+    resolve(acquisitionSettings.instrumentPtr, msd.instrumentPtrs); 
+    resolve(acquisitionSettings.targets, msd);
+}
+
+
 void resolve(Acquisition& acquisition, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(acquisition), msd);
@@ -218,6 +225,7 @@ void resolve(MSData& msd)
     resolve(msd.samplePtrs, msd);
     resolve(msd.instrumentPtrs, msd);
     resolve(msd.dataProcessingPtrs, msd);
+    resolve(msd.acquisitionSettingsPtrs, msd);
     resolve(msd.run, msd);
 
     // if we're using SpectrumListSimple, resolve the references in each Spectrum

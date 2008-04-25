@@ -180,6 +180,33 @@ void testDataProcessing()
 }
 
 
+void testAcquisitionSettings()
+{
+    if (os_) *os_ << "testAcquisitionSettings()\n"; 
+
+    AcquisitionSettings acquisitionSettings;
+    acquisitionSettings.instrumentPtr = InstrumentPtr(new Instrument("msdata"));
+    acquisitionSettings.targets.push_back(Target());
+    acquisitionSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("booger")));
+    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("msdata")));
+    msd.instrumentPtrs[1]->set(MS_m_z, 200);
+
+    unit_assert(acquisitionSettings.instrumentPtr->paramGroupPtrs.empty());
+    unit_assert(acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(acquisitionSettings, msd);
+
+    unit_assert(acquisitionSettings.instrumentPtr->cvParam(MS_m_z).valueAs<int>() == 200);
+    unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs.empty());
+    unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+}
+
+
 void testAcquisition()
 {
     if (os_) *os_ << "testAcquisition()\n"; 
@@ -494,6 +521,7 @@ void test()
     testComponentList();
     testInstrument();
     testDataProcessing();
+    testAcquisitionSettings();
     testAcquisition();
     testAcquisitionList();
     testPrecursor();

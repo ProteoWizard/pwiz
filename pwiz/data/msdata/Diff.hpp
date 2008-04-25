@@ -172,6 +172,12 @@ void diff(const DataProcessing& a,
           DataProcessing& b_a,
           const DiffConfig& config);
 
+void diff(const AcquisitionSettings& a,
+          const AcquisitionSettings& b,
+          AcquisitionSettings& a_b,
+          AcquisitionSettings& b_a,
+          const DiffConfig& config);
+
 void diff(const Acquisition& a,
           const Acquisition& b,
           Acquisition& a_b,

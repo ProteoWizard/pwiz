@@ -248,6 +248,28 @@ void testDataProcessing()
 }
 
 
+void testAcquisitionSettings()
+{
+    AcquisitionSettings a;
+
+    a.id = "as1";
+    a.instrumentPtr = InstrumentPtr(new Instrument("msdata"));
+
+    Target t1, t2;
+
+    t1.set(MS_m_z, 200); 
+    t2.userParams.push_back(UserParam("testing"));
+
+    a.targets.push_back(t1);
+    a.targets.push_back(t2);
+
+    a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
+    a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+    
+    testObject(a);
+}
+
+
 void testAcquisition()
 {
     Acquisition a;
@@ -859,6 +881,17 @@ void initializeTestData(MSData& msd)
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dp_msconvert);
 
+    AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
+    as1->instrumentPtr = instrumentPtr;
+    as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
+    Target t1;
+    t1.set(MS_m_z, 1000);
+    Target t2;
+    t2.set(MS_m_z, 1200);
+    as1->targets.push_back(t1);
+    as1->targets.push_back(t2);
+    msd.acquisitionSettingsPtrs.push_back(as1);
+
     // run
 
     msd.run.id = "Exp01";
@@ -1063,6 +1096,8 @@ void test()
     testInstrument();
     testProcessingMethod();
     testDataProcessing();
+    testNamedParamContainer<Target>();
+    testAcquisitionSettings();
     testAcquisition();
     testAcquisitionList();
     testNamedParamContainer<IsolationWindow>();

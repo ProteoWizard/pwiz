@@ -263,6 +263,15 @@ class TextWriter
         return p.get() ? (*this)(*p) : *this;
     }
 
+    TextWriter& operator()(const ProcessingMethod& processingMethod)
+    {
+        (*this)("processingMethod:");
+        child()
+            ("order: " + boost::lexical_cast<std::string>(processingMethod.order))
+            (static_cast<const ParamContainer&>(processingMethod));
+        return *this;
+    }
+
     TextWriter& operator()(const DataProcessing& dp)
     {
         (*this)("dataProcessing:");
@@ -278,16 +287,31 @@ class TextWriter
     {
         return p.get() ? (*this)(*p) : *this;
     }
-
-    TextWriter& operator()(const ProcessingMethod& processingMethod)
+    
+    TextWriter& operator()(const Target& target)
     {
-        (*this)("processingMethod:");
+        (*this)("target:");
+        child()(static_cast<const ParamContainer&>(target));
+        return *this;
+    }
+    
+    TextWriter& operator()(const AcquisitionSettings& as)
+    {
+        (*this)("acquisitionSettings:");
         child()
-            ("order: " + boost::lexical_cast<std::string>(processingMethod.order))
-            (static_cast<const ParamContainer&>(processingMethod));
+            ("id: " + as.id);
+        if (as.instrumentPtr.get() && !as.instrumentPtr->empty())
+            child()("instrumentRef: " + as.instrumentPtr->id);
+        for_each(as.targets.begin(), as.targets.end(), child());
+        child()("sourceFileList: ", as.sourceFilePtrs);
         return *this;
     }
 
+    TextWriter& operator()(const AcquisitionSettingsPtr& p)
+    {
+        return p.get() ? (*this)(*p) : *this;
+    }
+ 
     TextWriter& operator()(const Run& run)
     {
         (*this)("run:");

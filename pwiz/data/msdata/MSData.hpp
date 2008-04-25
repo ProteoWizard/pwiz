@@ -280,6 +280,25 @@ struct DataProcessing
 typedef boost::shared_ptr<DataProcessing> DataProcessingPtr; 
 
 
+struct Target : public ParamContainer {};
+
+
+struct AcquisitionSettings
+{
+    std::string id;
+    InstrumentPtr instrumentPtr;
+    std::vector<SourceFilePtr> sourceFilePtrs;
+    std::vector<Target> targets;
+
+    AcquisitionSettings(const std::string& _id = "");
+
+    bool empty() const;
+};
+
+
+typedef boost::shared_ptr<AcquisitionSettings> AcquisitionSettingsPtr; 
+
+
 struct Acquisition : public ParamContainer
 {
     int number;
@@ -615,6 +634,7 @@ struct MSData
     std::vector<InstrumentPtr> instrumentPtrs;
     std::vector<SoftwarePtr> softwarePtrs;
     std::vector<DataProcessingPtr> dataProcessingPtrs;
+    std::vector<AcquisitionSettingsPtr> acquisitionSettingsPtrs;
     Run run;
 
     MSData(){}
