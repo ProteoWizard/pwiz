@@ -195,14 +195,14 @@ inline void copyInstrumentString(char* to, const string& from)
 
 void RAMPAdapter::Impl::getInstrument(InstrumentStruct& result) const
 {
-    const Instrument& instrument = 
-        (!msd_.instrumentPtrs.empty() && msd_.instrumentPtrs[0].get()) ?
-        *msd_.instrumentPtrs[0] :
-        Instrument(); // temporary bound to const reference 
+    const InstrumentConfiguration& instrumentConfiguration = 
+        (!msd_.instrumentConfigurationPtrs.empty() && msd_.instrumentConfigurationPtrs[0].get()) ?
+        *msd_.instrumentConfigurationPtrs[0] :
+        InstrumentConfiguration(); // temporary bound to const reference 
 
     // this const_cast is ok since we're only calling const functions,
     // but we wish C++ had "const constructors"
-    const LegacyAdapter_Instrument adapter(const_cast<Instrument&>(instrument), cvTranslator_); 
+    const LegacyAdapter_Instrument adapter(const_cast<InstrumentConfiguration&>(instrumentConfiguration), cvTranslator_); 
 
     copyInstrumentString(result.manufacturer, adapter.manufacturer());
     copyInstrumentString(result.model, adapter.model());

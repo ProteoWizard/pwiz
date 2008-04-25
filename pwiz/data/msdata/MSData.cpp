@@ -296,16 +296,16 @@ Software::Software(const string& _id,
 
 
 //
-// Instrument
+// InstrumentConfiguration
 //
 
 
-Instrument::Instrument(const string& _id)
+InstrumentConfiguration::InstrumentConfiguration(const string& _id)
 :   id(_id)
 {}
 
 
-bool Instrument::empty() const
+bool InstrumentConfiguration::empty() const
 {
     return id.empty() && componentList.empty() && 
            (!softwarePtr.get() || softwarePtr->empty()) && 
@@ -355,7 +355,7 @@ AcquisitionSettings::AcquisitionSettings(const string& _id)
 bool AcquisitionSettings::empty() const
 {
     return id.empty() && 
-           (!instrumentPtr.get() || instrumentPtr->empty()) && 
+           (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) && 
            sourceFilePtrs.empty() &&
            targets.empty();
 }
@@ -418,7 +418,7 @@ ScanWindow::ScanWindow(double mzLow, double mzHigh)
 
 bool Scan::empty() const
 {
-    return (!instrumentPtr.get() || instrumentPtr->empty()) &&
+    return (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) &&
            scanWindows.empty() && 
            ParamContainer::empty();
 }
@@ -821,7 +821,7 @@ ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinar
 bool Run::empty() const
 {
     return id.empty() &&
-           (!instrumentPtr.get() || instrumentPtr->empty()) &&
+           (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) &&
            (!samplePtr.get() || samplePtr->empty()) &&
            startTimeStamp.empty() &&
            sourceFilePtrs.empty() &&
@@ -845,7 +845,7 @@ bool MSData::empty() const
            fileDescription.empty() &&
            paramGroupPtrs.empty() &&
            samplePtrs.empty() &&
-           instrumentPtrs.empty() && 
+           instrumentConfigurationPtrs.empty() && 
            softwarePtrs.empty() &&
            dataProcessingPtrs.empty() &&
            run.empty();

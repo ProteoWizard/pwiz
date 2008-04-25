@@ -45,11 +45,11 @@ using namespace boost::lambda;
 
 struct LegacyAdapter_Instrument::Impl
 {
-    Impl(Instrument& _instrument, const CVTranslator& _cvTranslator) 
-    :   instrument(_instrument), cvTranslator(_cvTranslator)
+    Impl(InstrumentConfiguration& _instrumentConfiguration, const CVTranslator& _cvTranslator) 
+    :   instrumentConfiguration(_instrumentConfiguration), cvTranslator(_cvTranslator)
     {}
 
-    Instrument& instrument;
+    InstrumentConfiguration& instrumentConfiguration;
     const CVTranslator& cvTranslator;
 
     string get(const ParamContainer& paramContainer, 
@@ -127,8 +127,9 @@ void LegacyAdapter_Instrument::Impl::set(ParamContainer& paramContainer, CVID cv
 //
 
 
-LegacyAdapter_Instrument::LegacyAdapter_Instrument(Instrument& instrument, const CVTranslator& cvTranslator)
-:   impl_(new Impl(instrument, cvTranslator)) 
+LegacyAdapter_Instrument::LegacyAdapter_Instrument(InstrumentConfiguration& instrumentConfiguration,
+                                                   const CVTranslator& cvTranslator)
+:   impl_(new Impl(instrumentConfiguration, cvTranslator)) 
 {}
 
 
@@ -136,7 +137,7 @@ string LegacyAdapter_Instrument::manufacturer() const
 {
     // look first for cvParam
 
-    CVParam model = impl_->instrument.cvParamChild(MS_instrument_model);
+    CVParam model = impl_->instrumentConfiguration.cvParamChild(MS_instrument_model);
     if (model.cvid != CVID_Unknown)
     {
         // get the parent term
@@ -153,7 +154,7 @@ string LegacyAdapter_Instrument::manufacturer() const
 
     // then try userParam
 
-    string result = impl_->instrument.userParam("msManufacturer").value;
+    string result = impl_->instrumentConfiguration.userParam("msManufacturer").value;
     if (result.empty()) result = "Unknown";
     return result;
 }
@@ -161,7 +162,7 @@ string LegacyAdapter_Instrument::manufacturer() const
 
 string LegacyAdapter_Instrument::model() const
 {
-    return impl_->get(impl_->instrument, 
+    return impl_->get(impl_->instrumentConfiguration,
                       MS_instrument_model, 
                       "msModel");
 }
@@ -171,27 +172,27 @@ void LegacyAdapter_Instrument::manufacturerAndModel(const string& valueManufactu
                                              const string& valueModel)
 {
     // remove existing params
-    removeCVParams(impl_->instrument.cvParams, MS_instrument_model);
-    removeUserParams(impl_->instrument.userParams, "msManufacturer");
-    removeUserParams(impl_->instrument.userParams, "msModel");
+    removeCVParams(impl_->instrumentConfiguration.cvParams, MS_instrument_model);
+    removeUserParams(impl_->instrumentConfiguration.userParams, "msManufacturer");
+    removeUserParams(impl_->instrumentConfiguration.userParams, "msModel");
 
     // try to translate to cvParam
     CVID cvid = impl_->cvTranslator.translate(valueModel);
     if (cvIsA(cvid, MS_instrument_model))
     {
-        impl_->instrument.cvParams.push_back(cvid);
+        impl_->instrumentConfiguration.cvParams.push_back(cvid);
         return;
     }
 
     // otherwise encode as userParam
-    impl_->instrument.userParams.push_back(UserParam("msManufacturer", valueManufacturer));
-    impl_->instrument.userParams.push_back(UserParam("msModel", valueModel));
+    impl_->instrumentConfiguration.userParams.push_back(UserParam("msManufacturer", valueManufacturer));
+    impl_->instrumentConfiguration.userParams.push_back(UserParam("msModel", valueModel));
 }
 
 
 string LegacyAdapter_Instrument::ionisation() const
 {
-    return impl_->get(impl_->instrument.componentList.source, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.source, 
                       MS_ionization_type, 
                       "msIonisation");
 }
@@ -199,7 +200,7 @@ string LegacyAdapter_Instrument::ionisation() const
 
 void LegacyAdapter_Instrument::ionisation(const string& value)
 {
-    impl_->set(impl_->instrument.componentList.source, 
+    impl_->set(impl_->instrumentConfiguration.componentList.source, 
                MS_ionization_type, 
                "msIonisation", 
                value);
@@ -208,7 +209,7 @@ void LegacyAdapter_Instrument::ionisation(const string& value)
 
 string LegacyAdapter_Instrument::analyzer() const
 {
-    return impl_->get(impl_->instrument.componentList.analyzer, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.analyzer, 
                       MS_mass_analyzer_type, 
                       "msMassAnalyzer");
 }
@@ -216,7 +217,7 @@ string LegacyAdapter_Instrument::analyzer() const
 
 void LegacyAdapter_Instrument::analyzer(const string& value)
 {
-    impl_->set(impl_->instrument.componentList.analyzer, 
+    impl_->set(impl_->instrumentConfiguration.componentList.analyzer, 
                MS_mass_analyzer_type, 
                "msMassAnalyzer", 
                value);
@@ -225,7 +226,7 @@ void LegacyAdapter_Instrument::analyzer(const string& value)
 
 string LegacyAdapter_Instrument::detector() const
 {
-    return impl_->get(impl_->instrument.componentList.detector, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.detector, 
                       MS_detector_type, 
                       "msDetector");
 }
@@ -233,7 +234,7 @@ string LegacyAdapter_Instrument::detector() const
 
 void LegacyAdapter_Instrument::detector(const string& value)
 {
-    impl_->set(impl_->instrument.componentList.detector, 
+    impl_->set(impl_->instrumentConfiguration.componentList.detector, 
                MS_detector_type, 
                "msDetector", 
                value);

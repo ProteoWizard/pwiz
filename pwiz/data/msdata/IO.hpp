@@ -94,8 +94,8 @@ void write(minimxml::XMLWriter& writer, const Software& software);
 void read(std::istream& is, Software& software);
     
 
-void write(minimxml::XMLWriter& writer, const Instrument& instrument);
-void read(std::istream& is, Instrument& instrument);
+void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration);
+void read(std::istream& is, InstrumentConfiguration& instrumentConfiguration);
     
 
 void write(minimxml::XMLWriter& writer, const ProcessingMethod& processingMethod);

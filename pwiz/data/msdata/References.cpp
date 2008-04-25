@@ -123,11 +123,11 @@ void resolve(ComponentList& componentList, const MSData& msd)
 }
 
 
-void resolve(Instrument& instrument, const MSData& msd)
+void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd)
 {
-    resolve(static_cast<ParamContainer&>(instrument), msd);
-    resolve(instrument.componentList, msd);
-    resolve(instrument.softwarePtr, msd.softwarePtrs); 
+    resolve(static_cast<ParamContainer&>(instrumentConfiguration), msd);
+    resolve(instrumentConfiguration.componentList, msd);
+    resolve(instrumentConfiguration.softwarePtr, msd.softwarePtrs); 
 }
 
 
@@ -140,7 +140,7 @@ void resolve(DataProcessing& dataProcessing, const MSData& msd)
 
 void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
 {
-    resolve(acquisitionSettings.instrumentPtr, msd.instrumentPtrs); 
+    resolve(acquisitionSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
     resolve(acquisitionSettings.targets, msd);
 }
 
@@ -171,7 +171,7 @@ void resolve(Precursor& precursor, const MSData& msd)
 void resolve(Scan& scan, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(scan), msd);
-    resolve(scan.instrumentPtr, msd.instrumentPtrs);
+    resolve(scan.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
     resolve(scan.scanWindows, msd);
 }
 
@@ -213,7 +213,7 @@ void resolve(Chromatogram& chromatogram, const MSData& msd)
 void resolve(Run& run, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(run), msd);
-    resolve(run.instrumentPtr, msd.instrumentPtrs);
+    resolve(run.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
     resolve(run.samplePtr, msd.samplePtrs);
     resolve(run.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
 }
@@ -223,7 +223,7 @@ void resolve(MSData& msd)
 {
     resolve(msd.paramGroupPtrs, msd);
     resolve(msd.samplePtrs, msd);
-    resolve(msd.instrumentPtrs, msd);
+    resolve(msd.instrumentConfigurationPtrs, msd);
     resolve(msd.dataProcessingPtrs, msd);
     resolve(msd.acquisitionSettingsPtrs, msd);
     resolve(msd.run, msd);

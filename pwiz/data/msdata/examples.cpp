@@ -92,19 +92,19 @@ void initializeTiny(MSData& msd)
     samplePtr->name = "Sample1";
     msd.samplePtrs.push_back(samplePtr);
 
-    // instrumentList
+    // instrumentConfigurationList
 
-    InstrumentPtr instrumentPtr(new Instrument);
-    instrumentPtr->id = "LCQ Deca";
-    instrumentPtr->set(MS_LCQ_Deca);
-    instrumentPtr->set(MS_instrument_serial_number,"23433");
-    Source& source = instrumentPtr->componentList.source;
+    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
+    instrumentConfigurationPtr->id = "LCQ Deca";
+    instrumentConfigurationPtr->set(MS_LCQ_Deca);
+    instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
+    Source& source = instrumentConfigurationPtr->componentList.source;
     source.order = 1;
     source.set(MS_nanoelectrospray);
-    Analyzer& analyzer = instrumentPtr->componentList.analyzer;
+    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
     analyzer.order = 2;
     analyzer.set(MS_quadrupole_ion_trap);
-    Detector& detector = instrumentPtr->componentList.detector;
+    Detector& detector = instrumentConfigurationPtr->componentList.detector;
     detector.order = 3;
     detector.set(MS_electron_multiplier);
 
@@ -112,9 +112,9 @@ void initializeTiny(MSData& msd)
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->softwareParam = MS_Xcalibur;
     softwareXcalibur->softwareParamVersion = "2.0.5";
-    instrumentPtr->softwarePtr = softwareXcalibur;
+    instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
 
-    msd.instrumentPtrs.push_back(instrumentPtr);
+    msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
 
     // softwareList
 
@@ -162,7 +162,7 @@ void initializeTiny(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentPtr = instrumentPtr;
+    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);
@@ -187,7 +187,7 @@ void initializeTiny(MSData& msd)
     s19.spectrumDescription.set(MS_base_peak_m_z, 445.347);
     s19.spectrumDescription.set(MS_base_peak_intensity, 120053);
     s19.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
-    s19.spectrumDescription.scan.instrumentPtr = instrumentPtr;
+    s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
     s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, MS_minute);
     s19.spectrumDescription.scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
@@ -240,7 +240,7 @@ void initializeTiny(MSData& msd)
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
 
-    s20.spectrumDescription.scan.instrumentPtr = instrumentPtr;
+    s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
     s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, MS_minute);
     s20.spectrumDescription.scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
@@ -538,19 +538,19 @@ void initializeTiny2(MSData& msd)
     samplePtr->name = "Sample1";
     msd.samplePtrs.push_back(samplePtr);
 
-    // instrumentList
+    // instrumentConfigurationList
 
-    InstrumentPtr instrumentPtr(new Instrument);
-    instrumentPtr->id = "LTQ-FT";
-    instrumentPtr->set(MS_LTQ_FT);
-    instrumentPtr->set(MS_instrument_serial_number,"23433");
-    Source& source = instrumentPtr->componentList.source;
+    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
+    instrumentConfigurationPtr->id = "LTQ-FT";
+    instrumentConfigurationPtr->set(MS_LTQ_FT);
+    instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
+    Source& source = instrumentConfigurationPtr->componentList.source;
     source.order = 1;
     source.set(MS_ESI);
-    Analyzer& analyzer = instrumentPtr->componentList.analyzer;
+    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
     analyzer.order = 2;
     analyzer.set(MS_FT_ICR);
-    Detector& detector = instrumentPtr->componentList.detector;
+    Detector& detector = instrumentConfigurationPtr->componentList.detector;
     detector.order = 3;
     detector.set(MS_electron_multiplier);
 
@@ -558,9 +558,9 @@ void initializeTiny2(MSData& msd)
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->softwareParam = MS_Xcalibur;
     softwareXcalibur->softwareParamVersion = "2.0.5";
-    instrumentPtr->softwarePtr = softwareXcalibur;
+    instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
 
-    msd.instrumentPtrs.push_back(instrumentPtr);
+    msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
 
     // softwareList
 
@@ -602,7 +602,7 @@ void initializeTiny2(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentPtr = instrumentPtr;
+    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);

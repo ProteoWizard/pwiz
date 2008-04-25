@@ -58,7 +58,8 @@ class LegacyAdapter_Instrument
 {
     public:
 
-    LegacyAdapter_Instrument(Instrument& instrument, const CVTranslator& cvTranslator);
+    LegacyAdapter_Instrument(InstrumentConfiguration& instrumentConfiguration, 
+                             const CVTranslator& cvTranslator);
 
     std::string manufacturer() const;
     std::string model() const;

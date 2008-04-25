@@ -53,7 +53,7 @@ void MetadataReporter::open(const DataInfo& dataInfo)
     TextWriter write(os, 0);
     write(dataInfo.msd.fileDescription);
     write("sampleList:", dataInfo.msd.samplePtrs);
-    write("instrumentList:", dataInfo.msd.instrumentPtrs);
+    write("instrumentConfigurationList:", dataInfo.msd.instrumentConfigurationPtrs);
     write("softwareList:", dataInfo.msd.softwarePtrs);
     write("dataProcessingList", dataInfo.msd.dataProcessingPtrs);
 }

@@ -288,7 +288,8 @@ class HandlerScan : public SAXParser::Handler
             collisionEnergy_ = collisionEnergy;
 
             if (!msInstrumentID.empty())
-                scan.instrumentPtr = InstrumentPtr(new Instrument(msInstrumentID)); // placeholder 
+                scan.instrumentConfigurationPtr = 
+                    InstrumentConfigurationPtr(new InstrumentConfiguration(msInstrumentID)); // placeholder 
 
             if (retentionTime.size()>3 && 
                 retentionTime.substr(0,2)=="PT" &&
@@ -371,10 +372,10 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
 
     // we can set instrumentPtr if it wasn't set and there is a single Instrument 
 
-    if (!result->spectrumDescription.scan.instrumentPtr.get() &&
-        msd_.instrumentPtrs.size() == 1)
+    if (!result->spectrumDescription.scan.instrumentConfigurationPtr.get() &&
+        msd_.instrumentConfigurationPtrs.size() == 1)
     {
-        result->spectrumDescription.scan.instrumentPtr = msd_.instrumentPtrs[0];
+        result->spectrumDescription.scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs[0];
     }
 
     // save to cache if no binary data

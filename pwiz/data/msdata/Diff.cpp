@@ -424,10 +424,10 @@ void ptr_diff(const shared_ptr<object_type>& a,
 }
 
 
-void diff(const Instrument& a,
-          const Instrument& b,
-          Instrument& a_b,
-          Instrument& b_a,
+void diff(const InstrumentConfiguration& a,
+          const InstrumentConfiguration& b,
+          InstrumentConfiguration& a_b,
+          InstrumentConfiguration& b_a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
@@ -481,7 +481,7 @@ void diff(const AcquisitionSettings& a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
+    ptr_diff(a.instrumentConfigurationPtr, b.instrumentConfigurationPtr, a_b.instrumentConfigurationPtr, b_a.instrumentConfigurationPtr, config);
     vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
     vector_diff_diff(a.targets, b.targets, a_b.targets, b_a.targets, config);
 
@@ -559,15 +559,15 @@ void diff(const Scan& a,
           Scan& b_a,
           const DiffConfig& config)
 {
-    ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
+    ptr_diff(a.instrumentConfigurationPtr, b.instrumentConfigurationPtr, a_b.instrumentConfigurationPtr, b_a.instrumentConfigurationPtr, config);
     vector_diff_diff(a.scanWindows, b.scanWindows, a_b.scanWindows, b_a.scanWindows, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 
-    // provide instrumentPtr for context
+    // provide instrumentConfigurationPtr for context
     if (!a_b.empty() || !b_a.empty()) 
     {
-        a_b.instrumentPtr = a.instrumentPtr; 
-        b_a.instrumentPtr = b.instrumentPtr; 
+        a_b.instrumentConfigurationPtr = a.instrumentConfigurationPtr; 
+        b_a.instrumentConfigurationPtr = b.instrumentConfigurationPtr; 
     }
 }
 
@@ -846,7 +846,7 @@ void diff(const Run& a,
     if (!config.ignoreMetadata)
     {
         diff(a.id, b.id, a_b.id, b_a.id, config);
-        ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
+        ptr_diff(a.instrumentConfigurationPtr, b.instrumentConfigurationPtr, a_b.instrumentConfigurationPtr, b_a.instrumentConfigurationPtr, config);
         ptr_diff(a.samplePtr, b.samplePtr, a_b.samplePtr, b_a.samplePtr, config);
         diff(a.startTimeStamp, b.startTimeStamp, a_b.startTimeStamp, b_a.startTimeStamp, config);
         vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
@@ -895,7 +895,7 @@ void diff(const MSData& a,
         diff(a.fileDescription, b.fileDescription, a_b.fileDescription, b_a.fileDescription, config);
         vector_diff_deep(a.paramGroupPtrs, b.paramGroupPtrs, a_b.paramGroupPtrs, b_a.paramGroupPtrs, config);
         vector_diff_deep(a.samplePtrs, b.samplePtrs, a_b.samplePtrs, b_a.samplePtrs, config);
-        vector_diff_deep(a.instrumentPtrs, b.instrumentPtrs, a_b.instrumentPtrs, b_a.instrumentPtrs, config);
+        vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
         vector_diff_deep(a.softwarePtrs, b.softwarePtrs, a_b.softwarePtrs, b_a.softwarePtrs, config);
         vector_diff_deep(a.dataProcessingPtrs, b.dataProcessingPtrs, a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
         vector_diff_deep(a.acquisitionSettingsPtrs, b.acquisitionSettingsPtrs, a_b.acquisitionSettingsPtrs, b_a.acquisitionSettingsPtrs, config);

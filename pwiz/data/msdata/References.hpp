@@ -39,7 +39,7 @@ namespace References {
 void resolve(ParamContainer& paramContainer, const MSData& msd);
 void resolve(FileDescription& fileDescription, const MSData& msd);
 void resolve(ComponentList& componentList, const MSData& msd);
-void resolve(Instrument& instrument, const MSData& msd);
+void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd);
 void resolve(DataProcessing& dataProcesssing, const MSData& msd);
 void resolve(AcquisitionSettings& dataProcesssing, const MSData& msd);
 void resolve(Acquisition& acquisition, const MSData& msd);

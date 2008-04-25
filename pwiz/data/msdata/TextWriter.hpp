@@ -95,8 +95,8 @@ class TextWriter
             child()("paramGroupList: ", msd.paramGroupPtrs);
         if (!msd.samplePtrs.empty())
             child()("sampleList: " , msd.samplePtrs);
-        if (!msd.instrumentPtrs.empty())
-            child()("instrumentList: ", msd.instrumentPtrs);
+        if (!msd.instrumentConfigurationPtrs.empty())
+            child()("instrumentConfigurationList: ", msd.instrumentConfigurationPtrs);
         if (!msd.softwarePtrs.empty())
             child()("softwareList: ", msd.softwarePtrs);
         if (!msd.dataProcessingPtrs.empty())
@@ -194,20 +194,20 @@ class TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const Instrument& instrument)
+    TextWriter& operator()(const InstrumentConfiguration& instrumentConfiguration)
     {
-        (*this)("instrument:");
+        (*this)("instrumentConfiguration:");
         child()
-            ("id: " + instrument.id)
-            (static_cast<const ParamContainer&>(instrument));
-        if (!instrument.componentList.empty())
-            child()(instrument.componentList);
-        if (instrument.softwarePtr.get() && !instrument.softwarePtr->empty())
-            child()("instrumentSoftwareRef: " + instrument.softwarePtr->id);
+            ("id: " + instrumentConfiguration.id)
+            (static_cast<const ParamContainer&>(instrumentConfiguration));
+        if (!instrumentConfiguration.componentList.empty())
+            child()(instrumentConfiguration.componentList);
+        if (instrumentConfiguration.softwarePtr.get() && !instrumentConfiguration.softwarePtr->empty())
+            child()("instrumentConfigurationSoftwareRef: " + instrumentConfiguration.softwarePtr->id);
         return *this;    
     }
 
-    TextWriter& operator()(const InstrumentPtr& p)
+    TextWriter& operator()(const InstrumentConfigurationPtr& p)
     {
         return p.get() ? (*this)(*p) : *this;
     }
@@ -300,8 +300,8 @@ class TextWriter
         (*this)("acquisitionSettings:");
         child()
             ("id: " + as.id);
-        if (as.instrumentPtr.get() && !as.instrumentPtr->empty())
-            child()("instrumentRef: " + as.instrumentPtr->id);
+        if (as.instrumentConfigurationPtr.get() && !as.instrumentConfigurationPtr->empty())
+            child()("instrumentConfigurationRef: " + as.instrumentConfigurationPtr->id);
         for_each(as.targets.begin(), as.targets.end(), child());
         child()("sourceFileList: ", as.sourceFilePtrs);
         return *this;
@@ -316,8 +316,8 @@ class TextWriter
     {
         (*this)("run:");
         child()("id: " + run.id);
-        if (run.instrumentPtr.get())
-            child()("instrumentRef: " + run.instrumentPtr->id);
+        if (run.instrumentConfigurationPtr.get())
+            child()("instrumentConfigurationRef: " + run.instrumentConfigurationPtr->id);
         if (run.samplePtr.get())
             child()("sampleRef: " + run.samplePtr->id);
         if (!run.startTimeStamp.empty())
@@ -415,7 +415,7 @@ class TextWriter
     TextWriter& operator()(const Scan& scan)
     {
         (*this)("scan:");
-        if (scan.instrumentPtr.get()) child()(*scan.instrumentPtr);
+        if (scan.instrumentConfigurationPtr.get()) child()(*scan.instrumentConfigurationPtr);
         child()(static_cast<const ParamContainer&>(scan));
         if (!scan.scanWindows.empty())
             child()("scanWindowList: ", scan.scanWindows);

@@ -802,65 +802,65 @@ void read(std::istream& is, Software& software)
 
 
 //
-// Instrument
+// InstrumentConfiguration
 //
 
 
-void write(minimxml::XMLWriter& writer, const Instrument& instrument)
+void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", instrument.id));
-    writer.startElement("instrument", attributes);
+    attributes.push_back(make_pair("id", instrumentConfiguration.id));
+    writer.startElement("instrumentConfiguration", attributes);
 
-    writeParamContainer(writer, instrument);
-    write(writer, instrument.componentList);
+    writeParamContainer(writer, instrumentConfiguration);
+    write(writer, instrumentConfiguration.componentList);
 
-    if (instrument.softwarePtr.get())
+    if (instrumentConfiguration.softwarePtr.get())
     {
         attributes.clear();
-        attributes.push_back(make_pair("ref", instrument.softwarePtr->id));
-        writer.startElement("instrumentSoftwareRef", attributes, XMLWriter::EmptyElement);
+        attributes.push_back(make_pair("ref", instrumentConfiguration.softwarePtr->id));
+        writer.startElement("instrumentConfigurationSoftwareRef", attributes, XMLWriter::EmptyElement);
     }
 
     writer.endElement();
 }
 
 
-struct HandlerInstrument : public HandlerParamContainer
+struct HandlerInstrumentConfiguration : public HandlerParamContainer
 {
-    Instrument* instrument;
-    HandlerInstrument(Instrument* _instrument = 0) 
-    :   instrument(_instrument)
+    InstrumentConfiguration* instrumentConfiguration;
+    HandlerInstrumentConfiguration(InstrumentConfiguration* _instrumentConfiguration = 0) 
+    :   instrumentConfiguration(_instrumentConfiguration)
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!instrument)
-            throw runtime_error("[IO::HandlerInstrument] Null instrument.");
+        if (!instrumentConfiguration)
+            throw runtime_error("[IO::HandlerInstrumentConfiguration] Null instrumentConfiguration.");
 
-        if (name == "instrument")
+        if (name == "instrumentConfiguration")
         {
-            getAttribute(attributes, "id", instrument->id);
+            getAttribute(attributes, "id", instrumentConfiguration->id);
             return Status::Ok;
         }
         else if (name == "componentList")
         {
-            handlerComponentList_.componentList = &instrument->componentList;
+            handlerComponentList_.componentList = &instrumentConfiguration->componentList;
             return Status(Status::Delegate, &handlerComponentList_);
         }
-        else if (name == "instrumentSoftwareRef")
+        else if (name == "instrumentConfigurationSoftwareRef")
         {
             // note: placeholder
             string ref;
             getAttribute(attributes, "ref", ref);
             if (!ref.empty())
-                instrument->softwarePtr = SoftwarePtr(new Software(ref));
+                instrumentConfiguration->softwarePtr = SoftwarePtr(new Software(ref));
             return Status::Ok;
         }
 
-        HandlerParamContainer::paramContainer = instrument;
+        HandlerParamContainer::paramContainer = instrumentConfiguration;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
@@ -869,9 +869,9 @@ struct HandlerInstrument : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Instrument& instrument)
+void read(std::istream& is, InstrumentConfiguration& instrumentConfiguration)
 {
-    HandlerInstrument handler(&instrument);
+    HandlerInstrumentConfiguration handler(&instrumentConfiguration);
     SAXParser::parse(is, handler);
 }
 
@@ -1025,8 +1025,8 @@ void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSe
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", lexical_cast<string>(acquisitionSettings.id)));
-    if (acquisitionSettings.instrumentPtr.get())
-        attributes.push_back(make_pair("instrumentRef", acquisitionSettings.instrumentPtr->id)); 
+    if (acquisitionSettings.instrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("instrumentConfigurationRef", acquisitionSettings.instrumentConfigurationPtr->id)); 
 
     writer.startElement("acquisitionSettings", attributes);
 
@@ -1081,10 +1081,10 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
             getAttribute(attributes, "id", acquisitionSettings->id);
 
             // note: placeholder
-            string instrumentRef;
-            getAttribute(attributes, "instrumentRef", instrumentRef);
-            if (!instrumentRef.empty())
-                acquisitionSettings->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
+            string instrumentConfigurationRef;
+            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
+            if (!instrumentConfigurationRef.empty())
+                acquisitionSettings->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
 
             return Status::Ok;
         }
@@ -1446,8 +1446,8 @@ void read(std::istream& is, ScanWindow& scanWindow)
 void write(minimxml::XMLWriter& writer, const Scan& scan)
 {
     XMLWriter::Attributes attributes;
-    if (scan.instrumentPtr.get())
-        attributes.push_back(make_pair("instrumentRef", lexical_cast<string>(scan.instrumentPtr->id)));
+    if (scan.instrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("instrumentConfigurationRef", lexical_cast<string>(scan.instrumentConfigurationPtr->id)));
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
     
@@ -1486,10 +1486,10 @@ struct HandlerScan : public HandlerParamContainer
         if (name == "scan")
         {
             // note: placeholder
-            string instrumentRef;
-            getAttribute(attributes, "instrumentRef", instrumentRef);
-            if (!instrumentRef.empty())
-                scan->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
+            string instrumentConfigurationRef;
+            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
+            if (!instrumentConfigurationRef.empty())
+                scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
             return Status::Ok;
         }
         else if (name == "scanWindowList")
@@ -2181,8 +2181,8 @@ void write(minimxml::XMLWriter& writer, const Run& run,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", run.id));
-    if (run.instrumentPtr.get())
-        attributes.push_back(make_pair("instrumentRef", run.instrumentPtr->id));
+    if (run.instrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("instrumentConfigurationRef", run.instrumentConfigurationPtr->id));
     if (run.samplePtr.get())
         attributes.push_back(make_pair("sampleRef", run.samplePtr->id));
     if (!run.startTimeStamp.empty())
@@ -2235,10 +2235,10 @@ struct HandlerRun : public HandlerParamContainer
             getAttribute(attributes, "startTimeStamp", run->startTimeStamp);
 
             // note: placeholder
-            string instrumentRef;
-            getAttribute(attributes, "instrumentRef", instrumentRef);
-            if (!instrumentRef.empty())
-                run->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
+            string instrumentConfigurationRef;
+            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
+            if (!instrumentConfigurationRef.empty())
+                run->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
 
             // note: placeholder
             string sampleRef;
@@ -2347,7 +2347,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     writeList(writer, msd.paramGroupPtrs, "referenceableParamGroupList");
     writeList(writer, msd.samplePtrs, "sampleList");
-    writeList(writer, msd.instrumentPtrs, "instrumentList");
+    writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
     writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettings");
@@ -2383,7 +2383,7 @@ struct HandlerMSData : public SAXParser::Handler
         else if (name == "cvList" || 
                  name == "referenceableParamGroupList" ||
                  name == "sampleList" || 
-                 name == "instrumentList" || 
+                 name == "instrumentConfigurationList" || 
                  name == "softwareList" ||
                  name == "dataProcessingList" ||
                  name == "acquisitionSettingsList")
@@ -2414,11 +2414,11 @@ struct HandlerMSData : public SAXParser::Handler
             handlerSample_.sample = msd->samplePtrs.back().get();
             return Status(Status::Delegate, &handlerSample_);
         }
-        else if (name == "instrument")
+        else if (name == "instrumentConfiguration")
         {
-            msd->instrumentPtrs.push_back(InstrumentPtr(new Instrument));            
-            handlerInstrument_.instrument = msd->instrumentPtrs.back().get();
-            return Status(Status::Delegate, &handlerInstrument_);
+            msd->instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration));            
+            handlerInstrumentConfiguration_.instrumentConfiguration = msd->instrumentConfigurationPtrs.back().get();
+            return Status(Status::Delegate, &handlerInstrumentConfiguration_);
         }        
         else if (name == "software")
         {
@@ -2452,7 +2452,7 @@ struct HandlerMSData : public SAXParser::Handler
     HandlerFileDescription handlerFileDescription_;
     HandlerParamGroup handlerParamGroup_;
     HandlerSample handlerSample_;
-    HandlerInstrument handlerInstrument_;
+    HandlerInstrumentConfiguration handlerInstrumentConfiguration_;
     HandlerSoftware handlerSoftware_;
     HandlerDataProcessing handlerDataProcessing_;
     HandlerAcquisitionSettings handlerAcquisitionSettings_;

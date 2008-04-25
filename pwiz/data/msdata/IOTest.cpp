@@ -196,9 +196,9 @@ void testSoftware()
 }
 
 
-void testInstrument()
+void testInstrumentConfiguration()
 {
-    Instrument a;
+    InstrumentConfiguration a;
     a.id = "LCQ Deca";
     a.cvParams.push_back(MS_LCQ_Deca);
     a.cvParams.push_back(CVParam(MS_instrument_serial_number, 23433));
@@ -253,7 +253,7 @@ void testAcquisitionSettings()
     AcquisitionSettings a;
 
     a.id = "as1";
-    a.instrumentPtr = InstrumentPtr(new Instrument("msdata"));
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
 
     Target t1, t2;
 
@@ -327,7 +327,7 @@ void testScan()
 {
     Scan a;
 
-    a.instrumentPtr = InstrumentPtr(new Instrument("LTQ FT"));    
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
@@ -356,7 +356,7 @@ void testSpectrumDescription()
     a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
     a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt)); 
     
-    a.scan.instrumentPtr = InstrumentPtr(new Instrument("LTQ FT"));    
+    a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS2SpectrumParams")));
     a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
@@ -663,7 +663,7 @@ void testRun()
     Run a;
     
     a.id = "goober";
-    a.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     a.samplePtr = SamplePtr(new Sample("sample"));
     a.startTimeStamp = "20 April 2004 4:20pm";  
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
@@ -814,19 +814,19 @@ void initializeTestData(MSData& msd)
     samplePtr->name = "Sample1";
     msd.samplePtrs.push_back(samplePtr);
 
-    // instrumentList
+    // instrumentConfigurationList
 
-    InstrumentPtr instrumentPtr(new Instrument);
-    instrumentPtr->id = "LCQ Deca";
-    instrumentPtr->cvParams.push_back(MS_LCQ_Deca);
-    instrumentPtr->cvParams.push_back(CVParam(MS_instrument_serial_number,"23433"));
-    Source& source = instrumentPtr->componentList.source;
+    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
+    instrumentConfigurationPtr->id = "LCQ Deca";
+    instrumentConfigurationPtr->cvParams.push_back(MS_LCQ_Deca);
+    instrumentConfigurationPtr->cvParams.push_back(CVParam(MS_instrument_serial_number,"23433"));
+    Source& source = instrumentConfigurationPtr->componentList.source;
     source.order = 1;
     source.cvParams.push_back(MS_nanoelectrospray);
-    Analyzer& analyzer = instrumentPtr->componentList.analyzer;
+    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
     analyzer.order = 2;
     analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
-    Detector& detector = instrumentPtr->componentList.detector;
+    Detector& detector = instrumentConfigurationPtr->componentList.detector;
     detector.order = 3;
     detector.cvParams.push_back(MS_electron_multiplier);
 
@@ -834,9 +834,9 @@ void initializeTestData(MSData& msd)
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->softwareParam = MS_Xcalibur;
     softwareXcalibur->softwareParamVersion = "2.0.5";
-    instrumentPtr->softwarePtr = softwareXcalibur;
+    instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
 
-    msd.instrumentPtrs.push_back(instrumentPtr);
+    msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
 
     // softwareList
 
@@ -882,7 +882,7 @@ void initializeTestData(MSData& msd)
     msd.dataProcessingPtrs.push_back(dp_msconvert);
 
     AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
-    as1->instrumentPtr = instrumentPtr;
+    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
     as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
     Target t1;
     t1.set(MS_m_z, 1000);
@@ -895,7 +895,7 @@ void initializeTestData(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentPtr = instrumentPtr;
+    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);
@@ -919,7 +919,7 @@ void initializeTestData(MSData& msd)
     s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, 445.347));
     s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, 120053));
     s19.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
-    s19.spectrumDescription.scan.instrumentPtr = instrumentPtr;
+    s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
     s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
@@ -970,7 +970,7 @@ void initializeTestData(MSData& msd)
     precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
     precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt));
 
-    s20.spectrumDescription.scan.instrumentPtr = instrumentPtr;
+    s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
     s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
     s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
@@ -1093,7 +1093,7 @@ void test()
     testSource();
     testComponentList(); 
     testSoftware();
-    testInstrument();
+    testInstrumentConfiguration();
     testProcessingMethod();
     testDataProcessing();
     testNamedParamContainer<Target>();

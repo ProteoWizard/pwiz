@@ -238,18 +238,18 @@ struct Software
 typedef boost::shared_ptr<Software> SoftwarePtr;
 
 
-struct Instrument : public ParamContainer
+struct InstrumentConfiguration : public ParamContainer
 {
     std::string id;
     ComponentList componentList;
     SoftwarePtr softwarePtr;
 
-    Instrument(const std::string& _id = "");
+    InstrumentConfiguration(const std::string& _id = "");
     bool empty() const;
 };
 
 
-typedef boost::shared_ptr<Instrument> InstrumentPtr;
+typedef boost::shared_ptr<InstrumentConfiguration> InstrumentConfigurationPtr;
 
 
 struct ProcessingMethod : public ParamContainer
@@ -286,7 +286,7 @@ struct Target : public ParamContainer {};
 struct AcquisitionSettings
 {
     std::string id;
-    InstrumentPtr instrumentPtr;
+    InstrumentConfigurationPtr instrumentConfigurationPtr;
     std::vector<SourceFilePtr> sourceFilePtrs;
     std::vector<Target> targets;
 
@@ -344,7 +344,7 @@ struct ScanWindow : public ParamContainer
 
 struct Scan : public ParamContainer
 {
-    InstrumentPtr instrumentPtr;
+    InstrumentConfigurationPtr instrumentConfigurationPtr;
     std::vector<ScanWindow> scanWindows;
 
     bool empty() const;
@@ -603,7 +603,7 @@ typedef boost::shared_ptr<ChromatogramListSimple> ChromatogramListSimplePtr;
 struct Run : public ParamContainer
 {
     std::string id;
-    InstrumentPtr instrumentPtr;
+    InstrumentConfigurationPtr instrumentConfigurationPtr;
     SamplePtr samplePtr;
     std::string startTimeStamp;
     std::vector<SourceFilePtr> sourceFilePtrs;
@@ -631,7 +631,7 @@ struct MSData
     FileDescription fileDescription;
     std::vector<ParamGroupPtr> paramGroupPtrs;
     std::vector<SamplePtr> samplePtrs;
-    std::vector<InstrumentPtr> instrumentPtrs;
+    std::vector<InstrumentConfigurationPtr> instrumentConfigurationPtrs;
     std::vector<SoftwarePtr> softwarePtrs;
     std::vector<DataProcessingPtr> dataProcessingPtrs;
     std::vector<AcquisitionSettingsPtr> acquisitionSettingsPtrs;

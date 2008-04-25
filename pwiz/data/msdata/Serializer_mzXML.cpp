@@ -166,20 +166,22 @@ void writeSoftware(XMLWriter& xmlWriter, SoftwarePtr software,
 }
 
 
-void write_msInstrument(XMLWriter& xmlWriter, const Instrument& instrument, 
+void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& instrumentConfiguration, 
                         const MSData& msd, const CVTranslator& cvTranslator)
 {
-    const LegacyAdapter_Instrument adapter(const_cast<Instrument&>(instrument), cvTranslator);
+    const LegacyAdapter_Instrument adapter(
+        const_cast<InstrumentConfiguration&>(instrumentConfiguration), cvTranslator);
     
     XMLWriter::Attributes attributes; 
-    attributes.push_back(make_pair("id", instrument.id));
+    attributes.push_back(make_pair("id", instrumentConfiguration.id));
     xmlWriter.startElement("msInstrument", attributes);
         writeCategoryValue(xmlWriter, "msManufacturer", adapter.manufacturer());
         writeCategoryValue(xmlWriter, "msModel", adapter.model());
         writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation());
         writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer());
         writeCategoryValue(xmlWriter, "msDetector", adapter.detector());
-    if (instrument.softwarePtr.get()) writeSoftware(xmlWriter, instrument.softwarePtr,
+    if (instrumentConfiguration.softwarePtr.get()) writeSoftware(xmlWriter, 
+                                                    instrumentConfiguration.softwarePtr,
                                                     msd, cvTranslator);
     xmlWriter.endElement(); // msInstrument
 }
@@ -188,8 +190,8 @@ void write_msInstrument(XMLWriter& xmlWriter, const Instrument& instrument,
 void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
                         const CVTranslator& cvTranslator)
 {
-    for (vector<InstrumentPtr>::const_iterator it=msd.instrumentPtrs.begin();
-         it!=msd.instrumentPtrs.end(); ++it)
+    for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin();
+         it!=msd.instrumentConfigurationPtrs.end(); ++it)
         if (it->get()) write_msInstrument(xmlWriter, **it, msd, cvTranslator);
 }
 
@@ -397,8 +399,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     attributes.push_back(make_pair("basePeakIntensity", basePeakIntensity));
     attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
 
-    if (scan.instrumentPtr.get())
-        attributes.push_back(make_pair("msInstrumentID", scan.instrumentPtr->id));
+    if (scan.instrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("msInstrumentID", scan.instrumentConfigurationPtr->id));
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("scan", attributes);
@@ -569,18 +571,18 @@ SoftwarePtr registerSoftware(MSData& msd,
 
 struct Handler_msInstrument : public SAXParser::Handler
 {
-    Instrument* instrument;
+    InstrumentConfiguration* instrumentConfiguration;
 
     Handler_msInstrument(MSData& msd, const CVTranslator& cvTranslator)
-    :   instrument(0), msd_(msd), cvTranslator_(cvTranslator)
+    :   instrumentConfiguration(0), msd_(msd), cvTranslator_(cvTranslator)
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!instrument)
-            throw runtime_error("[Serializer_mzXML::Handler_msInstrument] Null instrument.");
+        if (!instrumentConfiguration)
+            throw runtime_error("[Serializer_mzXML::Handler_msInstrument] Null instrumentConfiguration.");
 
         string value;
         getAttribute(attributes, "value", value);
@@ -630,7 +632,7 @@ struct Handler_msInstrument : public SAXParser::Handler
             getAttribute(attributes, "type", type);
             getAttribute(attributes, "name", name);
             getAttribute(attributes, "version", version);
-            instrument->softwarePtr = registerSoftware(msd_, type, name, version, cvTranslator_);
+            instrumentConfiguration->softwarePtr = registerSoftware(msd_, type, name, version, cvTranslator_);
             return Status::Ok;
         }
 
@@ -642,14 +644,14 @@ struct Handler_msInstrument : public SAXParser::Handler
     {
         if (name=="msInstrument" || name=="instrument")
         {
-            if (!instrument)
-                throw runtime_error("[Serializer_mzXML::Handler_msInstrument] Null instrument.");
+            if (!instrumentConfiguration)
+                throw runtime_error("[Serializer_mzXML::Handler_msInstrument] Null instrumentConfiguration.");
 
-            instrument->componentList.source.order = 1;
-            instrument->componentList.analyzer.order = 2;
-            instrument->componentList.detector.order = 3;
+            instrumentConfiguration->componentList.source.order = 1;
+            instrumentConfiguration->componentList.analyzer.order = 2;
+            instrumentConfiguration->componentList.detector.order = 3;
 
-            LegacyAdapter_Instrument adapter(*instrument, cvTranslator_);
+            LegacyAdapter_Instrument adapter(*instrumentConfiguration, cvTranslator_);
             adapter.manufacturerAndModel(manufacturer_, model_);
             adapter.ionisation(ionisation_);
             adapter.analyzer(analyzer_);
@@ -737,8 +739,8 @@ class Handler_mzXML : public SAXParser::Handler
             string id;
             getAttribute(attributes, "id", id);
             if (id.empty()) getAttribute(attributes, "ID", id); // hack: id or ID
-            msd_.instrumentPtrs.push_back(InstrumentPtr(new Instrument(id)));
-            handler_msInstrument_.instrument = msd_.instrumentPtrs.back().get();
+            msd_.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration(id)));
+            handler_msInstrument_.instrumentConfiguration = msd_.instrumentConfigurationPtrs.back().get();
             return Status(Status::Delegate, &handler_msInstrument_);
         }
         else if (name == "dataProcessing")

@@ -62,9 +62,9 @@ void test(bool indexed)
     // dummy would normally be read in from file
   
     MSData dummy;
-    dummy.instrumentPtrs.push_back(InstrumentPtr(new Instrument("LCQ Deca")));
-    dummy.instrumentPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
-    dummy.instrumentPtrs.back()->userParams.push_back(UserParam("doobie", "420"));
+    dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
+    dummy.instrumentConfigurationPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
+    dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));
 
     if (!indexed)
     {
@@ -139,11 +139,11 @@ void test(bool indexed)
     for (int i=0; i<15; i++)
         unit_assert(pairs[i].mz==i && pairs[i].intensity==15-i);
 
-    unit_assert(s->spectrumDescription.scan.instrumentPtr.get());
-    Instrument& instrument = *s->spectrumDescription.scan.instrumentPtr;
-    unit_assert(!instrument.cvParams.empty()); // references resolved
-    unit_assert(instrument.userParams.size() == 1 &&
-                instrument.userParams[0].name == "doobie");
+    unit_assert(s->spectrumDescription.scan.instrumentConfigurationPtr.get());
+    InstrumentConfiguration& instrumentConfiguration = *s->spectrumDescription.scan.instrumentConfigurationPtr;
+    unit_assert(!instrumentConfiguration.cvParams.empty()); // references resolved
+    unit_assert(instrumentConfiguration.userParams.size() == 1 &&
+                instrumentConfiguration.userParams[0].name == "doobie");
 
     // check scan 20
 

@@ -127,14 +127,14 @@ void testComponentList()
 }
 
 
-void testInstrument()
+void testInstrumentConfiguration()
 {
-    if (os_) *os_ << "testInstrument()\n"; 
+    if (os_) *os_ << "testInstrumentConfiguration()\n"; 
 
-    Instrument instrument;
-    instrument.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    instrument.componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    instrument.softwarePtr = SoftwarePtr(new Software("msdata"));
+    InstrumentConfiguration instrumentConfiguration;
+    instrumentConfiguration.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    instrumentConfiguration.componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    instrumentConfiguration.softwarePtr = SoftwarePtr(new Software("msdata"));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -143,14 +143,14 @@ void testInstrument()
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
     msd.softwarePtrs[1]->softwareParamVersion = "4.20";
 
-    unit_assert(instrument.softwarePtr->softwareParamVersion.empty());
-    unit_assert(instrument.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(instrumentConfiguration.softwarePtr->softwareParamVersion.empty());
+    unit_assert(instrumentConfiguration.paramGroupPtrs[0]->userParams.empty());
 
-    References::resolve(instrument, msd);
+    References::resolve(instrumentConfiguration, msd);
 
-    unit_assert(!instrument.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!instrument.componentList.source.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(instrument.softwarePtr->softwareParamVersion == "4.20");
+    unit_assert(!instrumentConfiguration.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!instrumentConfiguration.componentList.source.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(instrumentConfiguration.softwarePtr->softwareParamVersion == "4.20");
 }
 
 
@@ -185,23 +185,23 @@ void testAcquisitionSettings()
     if (os_) *os_ << "testAcquisitionSettings()\n"; 
 
     AcquisitionSettings acquisitionSettings;
-    acquisitionSettings.instrumentPtr = InstrumentPtr(new Instrument("msdata"));
+    acquisitionSettings.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
     acquisitionSettings.targets.push_back(Target());
     acquisitionSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("booger")));
-    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("msdata")));
-    msd.instrumentPtrs[1]->set(MS_m_z, 200);
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("booger")));
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("msdata")));
+    msd.instrumentConfigurationPtrs[1]->set(MS_m_z, 200);
 
-    unit_assert(acquisitionSettings.instrumentPtr->paramGroupPtrs.empty());
+    unit_assert(acquisitionSettings.instrumentConfigurationPtr->paramGroupPtrs.empty());
     unit_assert(acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
 
     References::resolve(acquisitionSettings, msd);
 
-    unit_assert(acquisitionSettings.instrumentPtr->cvParam(MS_m_z).valueAs<int>() == 200);
+    unit_assert(acquisitionSettings.instrumentConfigurationPtr->cvParam(MS_m_z).valueAs<int>() == 200);
     unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs.empty());
     unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
 }
@@ -296,24 +296,24 @@ void testScan()
 
     Scan scan;
     scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    scan.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     scan.scanWindows.push_back(ScanWindow());
     scan.scanWindows.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
-    msd.instrumentPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")));
+    msd.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("user"));
     
     unit_assert(scan.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(scan.instrumentPtr->userParams.empty());
+    unit_assert(scan.instrumentConfigurationPtr->userParams.empty());
     unit_assert(scan.scanWindows.back().paramGroupPtrs.back()->userParams.empty());
 
     References::resolve(scan, msd);
 
     unit_assert(!scan.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!scan.instrumentPtr->userParams.empty());
+    unit_assert(!scan.instrumentConfigurationPtr->userParams.empty());
     unit_assert(!scan.scanWindows.back().paramGroupPtrs.back()->userParams.empty());
 }
 
@@ -441,7 +441,7 @@ void testRun()
 
     Run run;
     run.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    run.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    run.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     run.samplePtr = SamplePtr(new Sample("sample"));
     run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
     run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
@@ -449,8 +449,8 @@ void testRun()
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
-    msd.instrumentPtrs.back()->userParams.push_back(UserParam("user"));
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")));
+    msd.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("user"));
     msd.samplePtrs.push_back(SamplePtr(new Sample("sample")));
     msd.samplePtrs.back()->name = "sample name";
     msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1"))); 
@@ -459,7 +459,7 @@ void testRun()
     msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
 
     unit_assert(run.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(run.instrumentPtr->userParams.empty());
+    unit_assert(run.instrumentConfigurationPtr->userParams.empty());
     unit_assert(run.samplePtr->name.empty());
     unit_assert(run.sourceFilePtrs[0]->name.empty());
     unit_assert(run.sourceFilePtrs[1]->name.empty());
@@ -467,7 +467,7 @@ void testRun()
     References::resolve(run, msd);
 
     unit_assert(!run.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!run.instrumentPtr->userParams.empty());
+    unit_assert(!run.instrumentConfigurationPtr->userParams.empty());
     unit_assert(run.samplePtr->name == "sample name");
     unit_assert(run.sourceFilePtrs[0]->name == "goo2.raw");
     unit_assert(run.sourceFilePtrs[1]->name == "goo1.raw");
@@ -489,8 +489,8 @@ void testMSData()
     msd.paramGroupPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.samplePtrs.push_back(SamplePtr(new Sample("sample")));
     msd.samplePtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    msd.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
-    msd.instrumentPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")));
+    msd.instrumentConfigurationPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
     msd.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
     msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -499,7 +499,7 @@ void testMSData()
     unit_assert(msd.paramGroupPtrs[1]->paramGroupPtrs.back()->userParams.empty());
     unit_assert(msd.paramGroupPtrs[2]->paramGroupPtrs.back()->userParams.empty());
     unit_assert(msd.samplePtrs.back()->paramGroupPtrs.back()->userParams.empty());
-    unit_assert(msd.instrumentPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(msd.instrumentConfigurationPtrs.back()->paramGroupPtrs.back()->userParams.empty());
     unit_assert(msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.back()->userParams.empty());
     unit_assert(msd.run.paramGroupPtrs.back()->userParams.empty());
 
@@ -508,7 +508,7 @@ void testMSData()
     unit_assert(!msd.paramGroupPtrs[1]->paramGroupPtrs.back()->userParams.empty());
     unit_assert(!msd.paramGroupPtrs[2]->paramGroupPtrs.back()->userParams.empty());
     unit_assert(!msd.samplePtrs.back()->paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!msd.instrumentPtrs.back()->paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!msd.instrumentConfigurationPtrs.back()->paramGroupPtrs.back()->userParams.empty());
     unit_assert(!msd.dataProcessingPtrs.back()->processingMethods.back().paramGroupPtrs.back()->userParams.empty());
     unit_assert(!msd.run.paramGroupPtrs.back()->userParams.empty());
 }
@@ -519,7 +519,7 @@ void test()
     testParamContainer();
     testFileDescription();
     testComponentList();
-    testInstrument();
+    testInstrumentConfiguration();
     testDataProcessing();
     testAcquisitionSettings();
     testAcquisition();

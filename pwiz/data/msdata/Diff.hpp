@@ -154,10 +154,10 @@ void diff(const Software& a,
           Software& b_a,
           const DiffConfig& config);
 
-void diff(const Instrument& a,
-          const Instrument& b,
-          Instrument& a_b,
-          Instrument& b_a,
+void diff(const InstrumentConfiguration& a,
+          const InstrumentConfiguration& b,
+          InstrumentConfiguration& a_b,
+          InstrumentConfiguration& b_a,
           const DiffConfig& config);
 
 void diff(const ProcessingMethod& a,

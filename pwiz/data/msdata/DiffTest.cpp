@@ -405,9 +405,9 @@ void testSoftware()
 }
 
 
-void testInstrument()
+void testInstrumentConfiguration()
 {
-    Instrument a, b;
+    InstrumentConfiguration a, b;
 
     a.id = "LCQ Deca";
     a.cvParams.push_back(MS_LCQ_Deca);
@@ -427,7 +427,7 @@ void testInstrument()
     b.softwarePtr = SoftwarePtr(new Software("XCalibur"));
     b.softwarePtr->softwareParamVersion = "4.20";
 
-    Diff<Instrument> diff(a, b);
+    Diff<InstrumentConfiguration> diff(a, b);
     unit_assert(!diff);
 
     b.cvParams.push_back(MS_reflectron_off);
@@ -510,7 +510,7 @@ void testAcquisitionSettings()
     Diff<AcquisitionSettings> diff(a, b);
     unit_assert(!diff);
 
-    a.instrumentPtr = InstrumentPtr(new Instrument("instrument")); 
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")); 
     b.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
     a.targets.resize(2);
    
@@ -518,8 +518,8 @@ void testAcquisitionSettings()
         
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-    unit_assert(diff.a_b.instrumentPtr.get());
-    unit_assert(!diff.b_a.instrumentPtr.get());
+    unit_assert(diff.a_b.instrumentConfigurationPtr.get());
+    unit_assert(!diff.b_a.instrumentConfigurationPtr.get());
     unit_assert(diff.a_b.sourceFilePtrs.empty());
     unit_assert(diff.b_a.sourceFilePtrs.size() == 1);
     unit_assert(diff.a_b.targets.size() == 2);
@@ -620,11 +620,11 @@ void testScan()
 
     Scan a, b;
 
-    InstrumentPtr ip = InstrumentPtr(new Instrument);
+    InstrumentConfigurationPtr ip = InstrumentConfigurationPtr(new InstrumentConfiguration);
     ip->id = "LTQ FT";
 
     a.cvParams.push_back(CVParam(MS_ionization_type, 420));
-    a.instrumentPtr = ip;
+    a.instrumentConfigurationPtr = ip;
     a.scanWindows.push_back(ScanWindow());
     b = a; 
 
@@ -646,7 +646,7 @@ void testSpectrumDescription()
 
     SpectrumDescription a, b;
 
-    a.scan.instrumentPtr = InstrumentPtr(new Instrument("LTQ FT"));    
+    a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
@@ -712,7 +712,7 @@ void testSpectrum()
     a.id = "goober";
     a.index = 1;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
-    a.spectrumDescription.scan.instrumentPtr = InstrumentPtr(new Instrument("LTQ FT"));    
+    a.spectrumDescription.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
     a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
@@ -998,8 +998,8 @@ void testRun()
     b.chromatogramListPtr = chromatogramList1;
 
     // same ref id
-    a.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
-    b.instrumentPtr = InstrumentPtr(new Instrument("instrument"));
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
+    b.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
 
     b.samplePtr = SamplePtr(new Sample("sample"));
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
@@ -1015,8 +1015,8 @@ void testRun()
     unit_assert(diff.a_b.chromatogramListPtr->size() == 1);
     unit_assert(diff.a_b.chromatogramListPtr->chromatogram(0)->userParams.size() == 1);
 
-    unit_assert(!diff.a_b.instrumentPtr.get());
-    unit_assert(!diff.b_a.instrumentPtr.get());
+    unit_assert(!diff.a_b.instrumentConfigurationPtr.get());
+    unit_assert(!diff.b_a.instrumentConfigurationPtr.get());
 
     unit_assert(!diff.a_b.samplePtr.get());
     unit_assert(!diff.b_a.samplePtr->empty());
@@ -1045,7 +1045,7 @@ void testMSData()
     b.fileDescription.fileContent.cvParams.push_back(MS_reflectron_on);
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     b.samplePtrs.push_back(SamplePtr(new Sample("sample"))); 
-    a.instrumentPtrs.push_back(InstrumentPtr(new Instrument("instrument")));
+    a.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")));
     b.softwarePtrs.push_back(SoftwarePtr(new Software("software")));
     a.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dataProcessing")));
     b.run.id = "run";
@@ -1073,8 +1073,8 @@ void testMSData()
     unit_assert(diff.a_b.samplePtrs.empty());
     unit_assert(!diff.b_a.samplePtrs.empty());
 
-    unit_assert(!diff.a_b.instrumentPtrs.empty());
-    unit_assert(diff.b_a.instrumentPtrs.empty());
+    unit_assert(!diff.a_b.instrumentConfigurationPtrs.empty());
+    unit_assert(diff.b_a.instrumentConfigurationPtrs.empty());
 
     unit_assert(diff.a_b.softwarePtrs.empty());
     unit_assert(!diff.b_a.softwarePtrs.empty());
@@ -1185,7 +1185,7 @@ void test()
     testSource();
     testComponentList();
     testSoftware();
-    testInstrument();
+    testInstrumentConfiguration();
     testProcessingMethod();
     testDataProcessing();
     testAcquisitionSettings();
