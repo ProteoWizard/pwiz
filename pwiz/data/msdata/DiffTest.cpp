@@ -56,7 +56,7 @@ void testCV()
 
     CV a, b;
     a.URI = "uri";
-    a.cvLabel = "cvLabel";
+    a.id = "cvLabel";
     a.fullName = "fullName";
     a.version = "version";
     b = a;
@@ -74,7 +74,7 @@ void testCV()
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
     unit_assert(diff.a_b.URI.empty() && diff.b_a.URI.empty());
-    unit_assert(diff.a_b.cvLabel.empty() && diff.b_a.cvLabel.empty());
+    unit_assert(diff.a_b.id.empty() && diff.b_a.id.empty());
     unit_assert(diff.a_b.fullName.empty() && diff.b_a.fullName.empty());
     unit_assert(diff.a_b.version == "version_changed");
     unit_assert(diff.b_a.version == "version");

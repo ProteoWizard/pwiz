@@ -110,7 +110,7 @@ class TextWriter
     {
         (*this)("cv:");
         child()
-            ("cvLabel: " + cv.cvLabel)
+            ("id: " + cv.id)
             ("fullName: " + cv.fullName)
             ("version: " + cv.version)
             ("URI: " + cv.URI);

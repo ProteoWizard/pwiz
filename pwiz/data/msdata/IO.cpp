@@ -49,7 +49,7 @@ using boost::shared_ptr;
 void write(minimxml::XMLWriter& writer, const CV& cv)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvLabel", cv.cvLabel));
+    attributes.push_back(make_pair("id", cv.id));
     attributes.push_back(make_pair("fullName", cv.fullName));
     attributes.push_back(make_pair("version", cv.version));
     attributes.push_back(make_pair("URI", cv.URI));
@@ -68,7 +68,7 @@ struct HandlerCV : public SAXParser::Handler
     {
         if (name != "cv")
             throw runtime_error(("[IO::HandlerCV] Unexpected element name: " + name).c_str());
-        getAttribute(attributes, "cvLabel", cv->cvLabel);
+        getAttribute(attributes, "id", cv->id);
         getAttribute(attributes, "fullName", cv->fullName);
         getAttribute(attributes, "version", cv->version);
         getAttribute(attributes, "URI", cv->URI);
@@ -137,7 +137,7 @@ void read(std::istream& is, UserParam& userParam)
 void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvLabel", "MS"));
+    attributes.push_back(make_pair("cvRef", "MS"));
     attributes.push_back(make_pair("accession", "MS:" + lexical_cast<string>(cvParam.cvid)));
     attributes.push_back(make_pair("name", cvinfo(cvParam.cvid).name));
     attributes.push_back(make_pair("value", cvParam.value));
@@ -166,10 +166,10 @@ struct HandlerCVParam : public SAXParser::Handler
         if (!cvParam)
             throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
 
-        string cvLabel;
-        getAttribute(attributes, "cvLabel", cvLabel);
-        if (cvLabel != "MS")
-            throw runtime_error(("[IO::HandlerCVParam] Unknown cvLabel: " + cvLabel).c_str());
+        string cvRef;
+        getAttribute(attributes, "cvRef", cvRef);
+        if (cvRef != "MS")
+            throw runtime_error(("[IO::HandlerCVParam] Unknown cvRef: " + cvRef).c_str());
             
         string accession;
         getAttribute(attributes, "accession", accession);
@@ -745,7 +745,7 @@ void write(minimxml::XMLWriter& writer, const Software& software)
     writer.startElement("software", attributes);
 
     attributes.clear();
-    attributes.push_back(make_pair("cvLabel", "MS"));
+    attributes.push_back(make_pair("cvRef", "MS"));
     attributes.push_back(make_pair("accession", "MS:" + lexical_cast<string>(software.softwareParam.cvid)));
     attributes.push_back(make_pair("name", cvinfo(software.softwareParam.cvid).name));
     attributes.push_back(make_pair("version", software.softwareParamVersion));
@@ -774,10 +774,10 @@ struct HandlerSoftware : public SAXParser::Handler
         }
         else if (name == "softwareParam")
         {
-            string cvLabel;
-            getAttribute(attributes, "cvLabel", cvLabel);
-            if (cvLabel != "MS")
-                throw runtime_error(("[IO::HandlerSoftware] Unknown cvLabel: " + cvLabel).c_str());
+            string cvRef;
+            getAttribute(attributes, "cvRef", cvRef);
+            if (cvRef != "MS")
+                throw runtime_error(("[IO::HandlerSoftware] Unknown cvRef: " + cvRef).c_str());
                 
             string accession;
             getAttribute(attributes, "accession", accession);

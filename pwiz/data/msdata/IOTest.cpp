@@ -69,7 +69,7 @@ void testCV()
 {
     CV a;
     a.URI = "abcd";
-    a.cvLabel = "efgh";
+    a.id = "efgh";
     a.fullName = "ijkl";
     a.version = "mnop";
 
@@ -767,7 +767,7 @@ void initializeTestData(MSData& msd)
     msd.cvs.resize(1);
     CV& cv = msd.cvs.front();
     cv.URI = "http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"; 
-    cv.cvLabel = "MS";
+    cv.id = "MS";
     cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
     cv.version = "2.0.2";
 

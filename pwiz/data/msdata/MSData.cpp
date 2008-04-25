@@ -44,7 +44,7 @@ using boost::lexical_cast;
 
 bool CV::empty() const 
 {
-    return URI.empty() && cvLabel.empty() && fullName.empty() && version.empty();
+    return id.empty() && URI.empty() && fullName.empty() && version.empty();
 }
 
 

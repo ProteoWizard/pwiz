@@ -176,24 +176,23 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd) const
 
     if (config_.indexed)
     {
-        stream_offset indexOffset = xmlWriter.positionNext();
+        stream_offset indexListOffset = xmlWriter.positionNext();
+
+        XMLWriter::Attributes attributes; 
+        attributes.push_back(make_pair("count", "2"));
+        xmlWriter.startElement("indexList", attributes);
+         
         writeSpectrumIndex(xmlWriter, msd.run.spectrumListPtr, spectrumPositions);
         writeChromatogramIndex(xmlWriter, msd.run.chromatogramListPtr, chromatogramPositions);
 
+        xmlWriter.endElement(); // indexList
+
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
 
-        xmlWriter.startElement("indexOffset");
-        xmlWriter.characters(lexical_cast<string>(indexOffset));
+        xmlWriter.startElement("indexListOffset");
+        xmlWriter.characters(lexical_cast<string>(indexListOffset));
         xmlWriter.endElement(); 
         
-        xmlWriter.startElement("fileContentType");
-        string fileContentType = "Unknown";
-        if (msd.run.spectrumListPtr.get() && !msd.run.spectrumListPtr->empty()) 
-            fileContentType = msd.run.spectrumListPtr->spectrum(0, false)->
-                cvParamChild(MS_spectrum_type).name();
-        xmlWriter.characters(fileContentType);
-        xmlWriter.endElement(); 
-
         xmlWriter.startElement("fileChecksum");
         xmlWriter.characters(sha1OutputObserver.hash());
         xmlWriter.endElement(); 

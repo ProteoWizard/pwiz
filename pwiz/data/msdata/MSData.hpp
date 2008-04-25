@@ -39,8 +39,8 @@ namespace msdata {
 
 struct CV
 {
+    std::string id;
     std::string URI;
-    std::string cvLabel;
     std::string fullName;
     std::string version;
 

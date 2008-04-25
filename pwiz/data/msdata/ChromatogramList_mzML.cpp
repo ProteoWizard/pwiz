@@ -147,32 +147,32 @@ ChromatogramPtr ChromatogramList_mzMLImpl::chromatogram(size_t index, bool getBi
 }
 
 
-class HandlerIndexOffset : public SAXParser::Handler
+class HandlerIndexListOffset : public SAXParser::Handler
 {
     public:
 
-    HandlerIndexOffset(stream_offset& indexOffset)
-    :   indexOffset_(indexOffset)
+    HandlerIndexListOffset(stream_offset& indexListOffset)
+    :   indexListOffset_(indexListOffset)
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "indexOffset")
-            throw runtime_error(("[ChromatogramList_mzML::HandlerIndexOffset] Unexpected element name: " + name).c_str());
+        if (name != "indexListOffset")
+            throw runtime_error(("[ChromatogramList_mzML::HandlerIndexListOffset] Unexpected element name: " + name).c_str());
         return Status::Ok;
     }
 
     virtual Status characters(const string& text,
                               stream_offset position)
     {
-        indexOffset_ = lexical_cast<stream_offset>(text);
+        indexListOffset_ = lexical_cast<stream_offset>(text);
         return Status::Ok;
     }
  
     private:
-    stream_offset& indexOffset_;
+    stream_offset& indexListOffset_;
 };
 
 
@@ -255,6 +255,45 @@ class HandlerIndex : public SAXParser::Handler
 };
 
 
+class HandlerIndexList : public SAXParser::Handler
+{
+    public:
+
+    HandlerIndexList(vector<ChromatogramIdentity>& index)
+    :   handlerIndex_(index)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "indexList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "index")
+        {
+            string indexName;
+            getAttribute(attributes, "name", indexName);
+            if (indexName == "chromatogram")
+            {    
+                return Status(Status::Delegate, &handlerIndex_);
+            }
+            else
+            {
+                return Status(Status::Delegate, &dummy_);
+            }
+        }
+        else
+            throw runtime_error(("[ChromatogramList_mzML::HandlerIndex] Unexpected element name: " + name).c_str());
+    }
+
+    private:
+    HandlerIndex handlerIndex_;
+    SAXParser::Handler dummy_;
+};
+
+
 void ChromatogramList_mzMLImpl::readIndex()
 {
     // find <indexOffset>
@@ -265,33 +304,30 @@ void ChromatogramList_mzMLImpl::readIndex()
     is_->seekg(-bufferSize, ios::end);
     is_->read(&buffer[0], bufferSize);
 
-    string::size_type indexIndexOffset = buffer.find("<indexOffset>");
-    if (indexIndexOffset == string::npos)
-        throw runtime_error("ChromatogramList_mzML::readIndex()] <indexOffset> not found."); 
+    string::size_type indexIndexListOffset = buffer.find("<indexListOffset>");
+    if (indexIndexListOffset == string::npos)
+        throw runtime_error("ChromatogramList_mzML::readIndex()] <indexListOffset> not found."); 
 
-    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), ios::end);
+    is_->seekg(-bufferSize + static_cast<int>(indexIndexListOffset), ios::end);
     if (!*is_)
-        throw runtime_error("ChromatogramList_mzML::readIndex()] Error seeking to <indexOffset>."); 
+        throw runtime_error("ChromatogramList_mzML::readIndex()] Error seeking to <indexListOffset>."); 
     
-    // read <indexOffset>
+    // read <indexListOffset>
 
-    boost::iostreams::stream_offset indexOffset = 0;
-    HandlerIndexOffset handlerIndexOffset(indexOffset);
-    SAXParser::parse(*is_, handlerIndexOffset);
-    if (indexOffset == 0)
-        throw runtime_error("ChromatogramList_mzML::readIndex()] Error parsing <indexOffset>."); 
+    boost::iostreams::stream_offset indexListOffset = 0;
+    HandlerIndexListOffset handlerIndexListOffset(indexListOffset);
+    SAXParser::parse(*is_, handlerIndexListOffset);
+    if (indexListOffset == 0)
+        throw runtime_error("ChromatogramList_mzML::readIndex()] Error parsing <indexListOffset>."); 
 
     // read <index>
 
-    is_->seekg(offset_to_position(indexOffset));
+    is_->seekg(offset_to_position(indexListOffset));
     if (!*is_) 
         throw runtime_error("[ChromatogramList_mzML::readIndex()] Error seeking to <index>.");
 
-    HandlerIndex handlerIndex(index_);
-    SAXParser::parse(*is_, handlerIndex);
-
-    if (index_.empty())
-        SAXParser::parse(*is_, handlerIndex); // second try to get chromatogram index
+    HandlerIndexList handlerIndexList(index_);
+    SAXParser::parse(*is_, handlerIndexList);
 }
 
 

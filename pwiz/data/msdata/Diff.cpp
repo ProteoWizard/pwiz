@@ -79,7 +79,7 @@ void diff(const CV& a,
           const DiffConfig& config)
 {
     diff(a.URI, b.URI, a_b.URI, b_a.URI, config);
-    diff(a.cvLabel, b.cvLabel, a_b.cvLabel, b_a.cvLabel, config);
+    diff(a.id, b.id, a_b.id, b_a.id, config);
     diff(a.fullName, b.fullName, a_b.fullName, b_a.fullName, config);
     diff(a.version, b.version, a_b.version, b_a.version, config);
 }
