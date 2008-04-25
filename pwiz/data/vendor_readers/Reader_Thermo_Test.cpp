@@ -128,9 +128,10 @@ void testRead(const string& filename)
     unit_assert(data.size() == 485);
     unit_assert(spectrum->spectrumDescription.precursors.size() == 1);
     const Precursor& precursor = spectrum->spectrumDescription.precursors[0];
+    const SelectedIon& selectedIon = precursor.selectedIons[0];
     unit_assert(precursor.spectrumID == "2"); // previous ms1 scan
-    unit_assert_equal(precursor.ionSelection.cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-15);
-    unit_assert_equal(precursor.ionSelection.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
+    unit_assert_equal(selectedIon.cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-15);
+    unit_assert_equal(selectedIon.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
 
     spectrum = sl.spectrum(5, true);
     unit_assert(sl.spectrumIdentity(5).index == 5);

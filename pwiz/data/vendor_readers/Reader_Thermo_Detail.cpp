@@ -118,6 +118,30 @@ CVParam translate(PolarityType polarityType)
     }
 }
 
+
+CVParam translate(ActivationType activationType)
+{
+    switch (activationType)
+    {
+        case ActivationType_CID:
+        case ActivationType_SA: // should supplemental CID map to CID?
+            return MS_collision_induced_dissociation;
+        case ActivationType_ETD:
+            return MS_electron_transfer_dissociation;
+        case ActivationType_ECD:
+            return MS_electron_capture_dissociation;
+        case ActivationType_PQD:
+            return MS_pulsed_q_dissociation;
+        case ActivationType_HCD:
+            return MS_high_energy_collision_induced_dissociation;
+        default:
+        case ActivationType_PTR: // what does this map to?
+        case ActivationType_MPD: // what does this map to?
+        case ActivationType_Unknown:
+            return CVParam();
+    }
+}
+
 } // detail
 } // msdata
 } // pwiz

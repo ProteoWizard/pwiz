@@ -183,9 +183,9 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;
 
-    if (msd_.instrumentPtrs.empty())
+    if (msd_.instrumentConfigurationPtrs.empty())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] No instruments defined.");
-    scan.instrumentPtr = msd_.instrumentPtrs[0];
+    scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs[0];
 
     string filterString = scanInfo->filter();
 
@@ -227,15 +227,24 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
         // info.  Precursor recalculation should be done outside the Reader.
 
         Precursor precursor;
+        SelectedIon selectedIon;
 
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
             precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
 
-        precursor.ionSelection.cvParams.push_back(CVParam(MS_m_z, scanInfo->parentMass(i)));
+        selectedIon.cvParams.push_back(CVParam(MS_m_z, scanInfo->parentMass(i)));
         // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
-        precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->parentEnergy(i)));
-        sd.precursors.push_back(precursor); 
+
+        ActivationType activationType = scanInfo->activationType();
+        if (activationType == ActivationType_Unknown)
+            activationType = ActivationType_CID; // assume CID
+        precursor.activation.cvParams.push_back(CVParam(translate(activationType)));
+        if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
+            precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->parentEnergy(i)));
+
+        precursor.selectedIons.push_back(selectedIon);
+        sd.precursors.push_back(precursor);
     }
 
     if (getBinaryData)

@@ -86,34 +86,34 @@ namespace {
 
 auto_ptr<RawFileLibrary> rawFileLibrary_;
 
-void fillInstrumentComponentMetadata(RawFile& rawfile, MSData& msd, InstrumentPtr& instrument)
+void fillInstrumentComponentMetadata(RawFile& rawfile, MSData& msd, InstrumentConfigurationPtr& instrumentConfiguration)
 {
     auto_ptr<ScanInfo> firstScanInfo = rawfile.getScanInfo(1);
 
-    instrument->componentList.source.order = 1;
-    instrument->componentList.source.cvParams.push_back(translateAsIonizationType(firstScanInfo->ionizationType()));
+    instrumentConfiguration->componentList.source.order = 1;
+    instrumentConfiguration->componentList.source.cvParams.push_back(translateAsIonizationType(firstScanInfo->ionizationType()));
     if (translateAsInletType(firstScanInfo->ionizationType()).cvid != CVID_Unknown)
-        instrument->componentList.source.cvParams.push_back(translateAsInletType(firstScanInfo->ionizationType()));
+        instrumentConfiguration->componentList.source.cvParams.push_back(translateAsInletType(firstScanInfo->ionizationType()));
 
     // due diligence to determine the mass analyzer(s) (TODO: also try to get a quantative resolution estimate)
-    instrument->componentList.analyzer.order = 2;
+    instrumentConfiguration->componentList.analyzer.order = 2;
     string model = boost::to_lower_copy( rawfile.value(InstName) + rawfile.value(InstModel) );
     if (model.find("ltq") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_ion_trap));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_ion_trap));
     if (model.find("ft") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_FT_ICR));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_FT_ICR));
     if (model.find("orbitrap") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_orbitrap));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_orbitrap));
     if (model.find("tsq") != string::npos || model.find("quantum") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_quadrupole));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_quadrupole));
     if (model.find("tof") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_time_of_flight));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_time_of_flight));
     if (model.find("sector") != string::npos)
-        instrument->componentList.analyzer.cvParams.push_back(CVParam(MS_magnetic_sector));
+        instrumentConfiguration->componentList.analyzer.cvParams.push_back(CVParam(MS_magnetic_sector));
 
-    instrument->componentList.detector.order = 3;
+    instrumentConfiguration->componentList.detector.order = 3;
     // TODO: verify that all Thermo instruments use EM
-    instrument->componentList.detector.cvParams.push_back(CVParam(MS_electron_multiplier));
+    instrumentConfiguration->componentList.detector.cvParams.push_back(CVParam(MS_electron_multiplier));
 }
 
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
@@ -121,7 +121,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.cvs.resize(1);
     CV& cv = msd.cvs.front();
     cv.URI = "psi-ms.obo"; 
-    cv.cvLabel = "MS";
+    cv.id = "MS";
     cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
     cv.version = "1.0";
 
@@ -158,28 +158,28 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     CVTranslator cvTranslator;
 
-    InstrumentPtr instrument(new Instrument);
+    InstrumentConfigurationPtr instrumentConfiguration(new InstrumentConfiguration);
     string model = rawfile.value(InstModel);
     CVID cvidModel = cvTranslator.translate(model);
     if (cvidModel != CVID_Unknown) 
     {
-        instrument->cvParams.push_back(cvidModel);
-        instrument->id = cvinfo(cvidModel).name;
+        instrumentConfiguration->cvParams.push_back(cvidModel);
+        instrumentConfiguration->id = cvinfo(cvidModel).name;
     }
     else
     {
-        instrument->userParams.push_back(UserParam("instrument model", model));
-        instrument->id = model;
+        instrumentConfiguration->userParams.push_back(UserParam("instrument model", model));
+        instrumentConfiguration->id = model;
     }
-    instrument->cvParams.push_back(CVParam(MS_instrument_serial_number, 
+    instrumentConfiguration->cvParams.push_back(CVParam(MS_instrument_serial_number, 
                                            rawfile.value(InstSerialNumber)));
-    instrument->softwarePtr = softwareXcalibur;
-    fillInstrumentComponentMetadata(rawfile, msd, instrument);
-    msd.instrumentPtrs.push_back(instrument);
+    instrumentConfiguration->softwarePtr = softwareXcalibur;
+    fillInstrumentComponentMetadata(rawfile, msd, instrumentConfiguration);
+    msd.instrumentConfigurationPtrs.push_back(instrumentConfiguration);
 
     msd.run.id = filename;
     //msd.run.startTimeStamp = rawfile.getCreationDate(); // TODO format: 2007-06-27T15:23:45.00035
-    msd.run.instrumentPtr = instrument;
+    msd.run.instrumentConfigurationPtr = instrumentConfiguration;
 }
 
 } // namespace

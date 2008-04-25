@@ -16,6 +16,7 @@ CVParam translate(MassAnalyzerType type);
 CVParam translateAsIonizationType(IonizationType ionizationType);
 CVParam translateAsInletType(IonizationType ionizationType);
 CVParam translate(PolarityType polarityType);
+CVParam translate(ActivationType activationType);
 
 } // detail
 } // msdata
