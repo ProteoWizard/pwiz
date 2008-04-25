@@ -1744,7 +1744,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 
         vector<CVParam>& params = binaryDataArray->cvParams;
         vector<CVParam>::iterator it = find_if(params.begin(), params.end(), 
-                                               CVParam::IsChildOf(cvid));
+                                               CVParamIsChildOf(cvid));
         if (it == params.end())
             throw runtime_error("[IO::HandlerBinaryDataArray] Missing " + cvinfo(cvid).name);
         

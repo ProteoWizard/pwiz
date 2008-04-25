@@ -79,30 +79,6 @@ struct CVParam
     /// convenience function to return time in seconds (throws if units not a time unit)
     double timeInSeconds() const;
 
-    /// functor for finding CVParam with specified exact CVID in a collection of CVParams:
-    ///
-    /// vector<CVParam>::const_iterator it =
-    ///     find_if(params.begin(), params.end(), CVParam::Is(MS_software));
-    ///
-    struct Is 
-    {
-        Is(CVID cvid) : cvid_(cvid) {}
-        bool operator()(const CVParam& param) const {return param.cvid == cvid_;}
-        CVID cvid_;
-    };
-
-    /// functor for finding children of a specified CVID in a collection of CVParams:
-    ///
-    /// vector<CVParam>::const_iterator it =
-    ///     find_if(params.begin(), params.end(), CVParam::IsChildOf(MS_software));
-    ///
-    struct IsChildOf
-    {
-        IsChildOf(CVID cvid) : cvid_(cvid) {}
-        bool operator()(const CVParam& param) const {return cvIsA(param.cvid, cvid_);}
-        CVID cvid_;
-    };
-
     /// equality operator
     bool operator==(const CVParam& that) const
     {
@@ -116,6 +92,32 @@ struct CVParam
     }
 
     bool empty() const {return cvid==CVID_Unknown && value.empty() && units==CVID_Unknown;}
+};
+
+
+/// functor for finding CVParam with specified exact CVID in a collection of CVParams:
+///
+/// vector<CVParam>::const_iterator it =
+///     find_if(params.begin(), params.end(), CVParamIs(MS_software));
+///
+struct CVParamIs 
+{
+    CVParamIs(CVID cvid) : cvid_(cvid) {}
+    bool operator()(const CVParam& param) const {return param.cvid == cvid_;}
+    CVID cvid_;
+};
+
+
+/// functor for finding children of a specified CVID in a collection of CVParams:
+///
+/// vector<CVParam>::const_iterator it =
+///     find_if(params.begin(), params.end(), CVParamIsChildOf(MS_software));
+///
+struct CVParamIsChildOf
+{
+    CVParamIsChildOf(CVID cvid) : cvid_(cvid) {}
+    bool operator()(const CVParam& param) const {return cvIsA(param.cvid, cvid_);}
+    CVID cvid_;
 };
 
 

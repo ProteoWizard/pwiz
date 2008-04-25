@@ -140,7 +140,7 @@ void testIs()
     params.push_back(CVParam(MS_collision_induced_dissociation));
 
     vector<CVParam>::const_iterator it = 
-        find_if(params.begin(), params.end(), CVParam::Is(MS_lowest_m_z_value));
+        find_if(params.begin(), params.end(), CVParamIs(MS_lowest_m_z_value));
 
     unit_assert(it->value == "420");
 }
@@ -159,10 +159,10 @@ void testIsChildOf()
     params.push_back(CVParam(MS_highest_m_z_value, 2400.0));
 
     vector<CVParam>::const_iterator itDiss = 
-        find_if(params.begin(), params.end(), CVParam::IsChildOf(MS_dissociation_method));
+        find_if(params.begin(), params.end(), CVParamIsChildOf(MS_dissociation_method));
 
     vector<CVParam>::const_iterator itUnit = 
-        find_if(params.begin(), params.end(), CVParam::IsChildOf(MS_unit));
+        find_if(params.begin(), params.end(), CVParamIsChildOf(MS_unit));
 
     if (os_)
     {

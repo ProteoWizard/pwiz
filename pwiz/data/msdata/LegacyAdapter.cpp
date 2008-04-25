@@ -71,7 +71,7 @@ void removeCVParams(vector<CVParam>& cvParams, CVID cvid)
     cvParams.erase(
     remove_if(cvParams.begin(), 
               cvParams.end(), 
-              CVParam::IsChildOf(cvid)),
+              CVParamIsChildOf(cvid)),
               cvParams.end());
 }
 

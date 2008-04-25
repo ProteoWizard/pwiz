@@ -88,7 +88,7 @@ CVParam ParamContainer::cvParam(CVID cvid) const
     // first look in our own cvParams
 
     vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParam::Is(cvid));
+        find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
    
     if (it!=cvParams.end()) return *it;
 
@@ -111,7 +111,7 @@ CVParam ParamContainer::cvParamChild(CVID cvid) const
     // first look in our own cvParams
 
     vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParam::IsChildOf(cvid));
+        find_if(cvParams.begin(), cvParams.end(), CVParamIsChildOf(cvid));
    
     if (it!=cvParams.end()) return *it;
 
@@ -163,7 +163,7 @@ UserParam ParamContainer::userParam(const string& name) const
 
 void ParamContainer::set(CVID cvid, const string& value, CVID units)
 {
-    vector<CVParam>::iterator it = find_if(cvParams.begin(), cvParams.end(), CVParam::Is(cvid));
+    vector<CVParam>::iterator it = find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
    
     if (it!=cvParams.end())
     {
