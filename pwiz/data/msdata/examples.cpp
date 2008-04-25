@@ -37,7 +37,7 @@ using namespace std;
 void initializeTiny(MSData& msd)
 {
     msd.accession = "test accession";
-    msd.id = "test id";
+    msd.id = "test_id";
     msd.version = "test version";
 
     // cvList
@@ -56,7 +56,7 @@ void initializeTiny(MSData& msd)
     fc.userParams.push_back(UserParam("number of cats", "4"));
 
     SourceFilePtr sfp(new SourceFile);
-    sfp->id = "1";
+    sfp->id = "sf1";
     sfp->name = "tiny1.RAW";
     sfp->location = "file:///F:/data/Exp01";
     sfp->set(MS_Xcalibur_RAW_file);
@@ -88,14 +88,14 @@ void initializeTiny(MSData& msd)
     // sampleList
 
     SamplePtr samplePtr(new Sample);
-    samplePtr->id = "1";
+    samplePtr->id = "sample1";
     samplePtr->name = "Sample1";
     msd.samplePtrs.push_back(samplePtr);
 
     // instrumentConfigurationList
 
     InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
-    instrumentConfigurationPtr->id = "LCQ Deca";
+    instrumentConfigurationPtr->id = "LCQ_Deca";
     instrumentConfigurationPtr->set(MS_LCQ_Deca);
     instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
     Source& source = instrumentConfigurationPtr->componentList.source;
@@ -135,7 +135,7 @@ void initializeTiny(MSData& msd)
     // dataProcessingList
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "Xcalibur Processing";
+    dpXcalibur->id = "Xcalibur_Processing";
     dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
@@ -147,7 +147,7 @@ void initializeTiny(MSData& msd)
     dpXcalibur->processingMethods.push_back(procXcal);
 
     DataProcessingPtr dppwiz(new DataProcessing);
-    dppwiz->id = "pwiz conversion";
+    dppwiz->id = "pwiz_conversion";
     dppwiz->softwarePtr = softwarepwiz;
 
     ProcessingMethod procpwiz;

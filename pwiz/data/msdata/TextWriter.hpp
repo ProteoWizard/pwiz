@@ -203,7 +203,7 @@ class TextWriter
         if (!instrumentConfiguration.componentList.empty())
             child()(instrumentConfiguration.componentList);
         if (instrumentConfiguration.softwarePtr.get() && !instrumentConfiguration.softwarePtr->empty())
-            child()("instrumentConfigurationSoftwareRef: " + instrumentConfiguration.softwarePtr->id);
+            child()("softwareRef: " + instrumentConfiguration.softwarePtr->id);
         return *this;    
     }
 

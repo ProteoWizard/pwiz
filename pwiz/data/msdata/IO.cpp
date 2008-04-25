@@ -819,7 +819,7 @@ void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumen
     {
         attributes.clear();
         attributes.push_back(make_pair("ref", instrumentConfiguration.softwarePtr->id));
-        writer.startElement("instrumentConfigurationSoftwareRef", attributes, XMLWriter::EmptyElement);
+        writer.startElement("softwareRef", attributes, XMLWriter::EmptyElement);
     }
 
     writer.endElement();
@@ -850,7 +850,7 @@ struct HandlerInstrumentConfiguration : public HandlerParamContainer
             handlerComponentList_.componentList = &instrumentConfiguration->componentList;
             return Status(Status::Delegate, &handlerComponentList_);
         }
-        else if (name == "instrumentConfigurationSoftwareRef")
+        else if (name == "softwareRef")
         {
             // note: placeholder
             string ref;
@@ -2324,9 +2324,9 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            vector<boost::iostreams::stream_offset>* chromatogramPositions)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.1"));
+    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.9"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.1 mzML0.99.1.xsd"));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9.xsd"));
     attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id));
     attributes.push_back(make_pair("version", msd.version));
