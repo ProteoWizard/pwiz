@@ -2350,7 +2350,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
-    writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettings");
+    writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettingsList");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions);
 

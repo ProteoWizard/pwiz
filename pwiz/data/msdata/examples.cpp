@@ -159,6 +159,18 @@ void initializeTiny(MSData& msd)
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dppwiz);
 
+    AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
+    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
+    as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
+    Target t1;
+    t1.set(MS_m_z, 1000);
+    Target t2;
+    t2.set(MS_m_z, 1200);
+    as1->targets.push_back(t1);
+    as1->targets.push_back(t2);
+    msd.acquisitionSettingsPtrs.push_back(as1);
+
+
     // run
 
     msd.run.id = "Exp01";
@@ -483,7 +495,7 @@ SpectrumPtr createSpectrum_5pep_ms2()
 void initializeTiny2(MSData& msd)
 {
     msd.accession = "test accession";
-    msd.id = "test id";
+    msd.id = "test_id";
     msd.version = "test version";
 
     // cvList
@@ -502,7 +514,7 @@ void initializeTiny2(MSData& msd)
     fc.userParams.push_back(UserParam("number of cats", "4"));
 
     SourceFilePtr sfp(new SourceFile);
-    sfp->id = "1";
+    sfp->id = "sf1";
     sfp->name = "tiny1.RAW";
     sfp->location = "file:///F:/data/Exp01";
     sfp->set(MS_Xcalibur_RAW_file);
@@ -534,7 +546,7 @@ void initializeTiny2(MSData& msd)
     // sampleList
 
     SamplePtr samplePtr(new Sample);
-    samplePtr->id = "1";
+    samplePtr->id = "sample1";
     samplePtr->name = "Sample1";
     msd.samplePtrs.push_back(samplePtr);
 
@@ -575,7 +587,7 @@ void initializeTiny2(MSData& msd)
     // dataProcessingList
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "Xcalibur Processing";
+    dpXcalibur->id = "Xcalibur_Processing";
     dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
@@ -587,7 +599,7 @@ void initializeTiny2(MSData& msd)
     dpXcalibur->processingMethods.push_back(procXcal);
 
     DataProcessingPtr dppwiz(new DataProcessing);
-    dppwiz->id = "pwiz conversion";
+    dppwiz->id = "pwiz_conversion";
     dppwiz->softwarePtr = softwarepwiz;
 
     ProcessingMethod procpwiz;
@@ -598,6 +610,18 @@ void initializeTiny2(MSData& msd)
  
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dppwiz);
+    
+    AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
+    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
+    as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
+    Target t1;
+    t1.set(MS_m_z, 1000);
+    Target t2;
+    t2.set(MS_m_z, 1200);
+    as1->targets.push_back(t1);
+    as1->targets.push_back(t2);
+    msd.acquisitionSettingsPtrs.push_back(as1);
+
 
     // run
 
@@ -615,7 +639,10 @@ void initializeTiny2(MSData& msd)
     spectrumList->spectra.push_back(createSpectrum_5pep_ms2());
 
     for (size_t i=0; i<spectrumList->size(); i++)
+    {
         spectrumList->spectra[i]->index = i;
+        spectrumList->spectra[i]->id = "S" + lexical_cast<string>(i);
+    }
 
     // chromatograms
 
