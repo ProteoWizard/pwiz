@@ -37,7 +37,7 @@ using namespace std;
 void initializeTiny(MSData& msd)
 {
     msd.accession = "test accession";
-    msd.id = "test_id";
+    msd.id = "testid";
     msd.version = "test version";
 
     // cvList
@@ -95,7 +95,7 @@ void initializeTiny(MSData& msd)
     // instrumentConfigurationList
 
     InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
-    instrumentConfigurationPtr->id = "LCQ_Deca";
+    instrumentConfigurationPtr->id = "LCQDeca";
     instrumentConfigurationPtr->set(MS_LCQ_Deca);
     instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
     Source& source = instrumentConfigurationPtr->componentList.source;
@@ -135,7 +135,7 @@ void initializeTiny(MSData& msd)
     // dataProcessingList
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "Xcalibur_Processing";
+    dpXcalibur->id = "XcaliburProcessing";
     dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
@@ -147,7 +147,7 @@ void initializeTiny(MSData& msd)
     dpXcalibur->processingMethods.push_back(procXcal);
 
     DataProcessingPtr dppwiz(new DataProcessing);
-    dppwiz->id = "pwiz_conversion";
+    dppwiz->id = "pwizconversion";
     dppwiz->softwarePtr = softwarepwiz;
 
     ProcessingMethod procpwiz;
@@ -403,7 +403,7 @@ void setSpectrumData(Spectrum& spectrum, Datum* data, size_t size)
 } // namespace
 
 
-SpectrumPtr createSpectrum_5pep_FT()
+SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_FT_, data_5pep_FT_size_);
@@ -425,11 +425,13 @@ SpectrumPtr createSpectrum_5pep_FT()
     window.set(MS_scan_m_z_lower_limit, 200.000000);
     window.set(MS_scan_m_z_upper_limit, 2000.000000);
 
+    spectrum->spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+
     return spectrum;
 }
 
 
-SpectrumPtr createSpectrum_5pep_IT()
+SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_IT_, data_5pep_IT_size_);
@@ -451,11 +453,13 @@ SpectrumPtr createSpectrum_5pep_IT()
     window.set(MS_scan_m_z_lower_limit, 200.000000);
     window.set(MS_scan_m_z_upper_limit, 2000.000000);
 
+    spectrum->spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+
     return spectrum;
 }
 
 
-SpectrumPtr createSpectrum_5pep_ms2()
+SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_ms2_, data_5pep_ms2_size_);
@@ -486,7 +490,11 @@ SpectrumPtr createSpectrum_5pep_ms2()
     precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
-    precursor.isolationWindow.set(MS_m_z, 810.80);
+    //precursor.isolationWindow.set(MS_m_z, 810.80);
+    precursor.isolationWindow.userParams.push_back(UserParam("isolation center m/z", "810.8"));
+    precursor.isolationWindow.userParams.push_back(UserParam("isolation half width", "2.0"));
+
+    spectrum->spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
 
     return spectrum;
 }
@@ -495,7 +503,7 @@ SpectrumPtr createSpectrum_5pep_ms2()
 void initializeTiny2(MSData& msd)
 {
     msd.accession = "test accession";
-    msd.id = "test_id";
+    msd.id = "testid";
     msd.version = "test version";
 
     // cvList
@@ -543,6 +551,12 @@ void initializeTiny2(MSData& msd)
     pg2->set(MS_full_scan);
     msd.paramGroupPtrs.push_back(pg2);
 
+    ParamGroupPtr pgInstrument(new ParamGroup);
+    pgInstrument->id = "CommonInstrumentParams";
+    pgInstrument->set(MS_LTQ_FT);
+    pgInstrument->set(MS_instrument_serial_number,"23433");
+    msd.paramGroupPtrs.push_back(pgInstrument);
+
     // sampleList
 
     SamplePtr samplePtr(new Sample);
@@ -552,27 +566,41 @@ void initializeTiny2(MSData& msd)
 
     // instrumentConfigurationList
 
-    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
-    instrumentConfigurationPtr->id = "LTQ-FT";
-    instrumentConfigurationPtr->set(MS_LTQ_FT);
-    instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
-    Source& source = instrumentConfigurationPtr->componentList.source;
+    InstrumentConfigurationPtr icFT(new InstrumentConfiguration);
+    icFT->paramGroupPtrs.push_back(pgInstrument);
+    icFT->id = "LTQFT";
+    Source& source = icFT->componentList.source;
     source.order = 1;
     source.set(MS_ESI);
-    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
+    Analyzer& analyzer = icFT->componentList.analyzer;
     analyzer.order = 2;
     analyzer.set(MS_FT_ICR);
-    Detector& detector = instrumentConfigurationPtr->componentList.detector;
+    Detector& detector = icFT->componentList.detector;
     detector.order = 3;
-    detector.set(MS_electron_multiplier);
+    detector.set(MS_electron_multiplier); // TODO: what should this be?
+    
+    InstrumentConfigurationPtr icIT(new InstrumentConfiguration);
+    icIT->id = "LTQIonTrap";
+    icIT->paramGroupPtrs.push_back(pgInstrument);
+    Source& sourceIT = icIT->componentList.source;
+    sourceIT.order = 1;
+    sourceIT.set(MS_ESI);
+    Analyzer& analyzerIT = icIT->componentList.analyzer;
+    analyzerIT.order = 2;
+    analyzerIT.set(MS_ion_trap);
+    Detector& detectorIT = icIT->componentList.detector;
+    detectorIT.order = 3;
+    detectorIT.set(MS_electron_multiplier);
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->softwareParam = MS_Xcalibur;
     softwareXcalibur->softwareParamVersion = "2.0.5";
-    instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
+    icFT->softwarePtr = softwareXcalibur;
+    icIT->softwarePtr = softwareXcalibur;
 
-    msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
+    msd.instrumentConfigurationPtrs.push_back(icFT);
+    msd.instrumentConfigurationPtrs.push_back(icIT);
 
     // softwareList
 
@@ -587,7 +615,7 @@ void initializeTiny2(MSData& msd)
     // dataProcessingList
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "Xcalibur_Processing";
+    dpXcalibur->id = "XcaliburProcessing";
     dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
@@ -599,7 +627,7 @@ void initializeTiny2(MSData& msd)
     dpXcalibur->processingMethods.push_back(procXcal);
 
     DataProcessingPtr dppwiz(new DataProcessing);
-    dppwiz->id = "pwiz_conversion";
+    dppwiz->id = "pwizconversion";
     dppwiz->softwarePtr = softwarepwiz;
 
     ProcessingMethod procpwiz;
@@ -610,14 +638,27 @@ void initializeTiny2(MSData& msd)
  
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dppwiz);
+
+    // acquisition settings
     
     AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
-    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
+    as1->instrumentConfigurationPtr = icFT;
     as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
+
     Target t1;
-    t1.set(MS_m_z, 1000);
+    //t1.set(MS_m_z, 1000);
+    t1.userParams.push_back(UserParam("precursorMz", "123.456")); 
+    t1.userParams.push_back(UserParam("fragmentMz", "456.789")); 
+    t1.userParams.push_back(UserParam("dwell time", "1", "seconds")); 
+    t1.userParams.push_back(UserParam("active time", "0.5", "seconds")); 
+    
     Target t2;
-    t2.set(MS_m_z, 1200);
+    //t2.set(MS_m_z, 1200);
+    t2.userParams.push_back(UserParam("precursorMz", "231.673")); 
+    t2.userParams.push_back(UserParam("fragmentMz", "566.328")); 
+    t2.userParams.push_back(UserParam("dwell time", "1", "seconds")); 
+    t2.userParams.push_back(UserParam("active time", "0.5", "seconds")); 
+
     as1->targets.push_back(t1);
     as1->targets.push_back(t2);
     msd.acquisitionSettingsPtrs.push_back(as1);
@@ -626,7 +667,7 @@ void initializeTiny2(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    msd.run.instrumentConfigurationPtr = icFT; // TODO: global ref?
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);
@@ -634,9 +675,9 @@ void initializeTiny2(MSData& msd)
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
     msd.run.spectrumListPtr = spectrumList;
 
-    spectrumList->spectra.push_back(createSpectrum_5pep_FT());
-    spectrumList->spectra.push_back(createSpectrum_5pep_IT());
-    spectrumList->spectra.push_back(createSpectrum_5pep_ms2());
+    spectrumList->spectra.push_back(createSpectrum_5pep_FT(icFT));
+    spectrumList->spectra.push_back(createSpectrum_5pep_IT(icIT));
+    spectrumList->spectra.push_back(createSpectrum_5pep_ms2(icIT));
 
     for (size_t i=0; i<spectrumList->size(); i++)
     {

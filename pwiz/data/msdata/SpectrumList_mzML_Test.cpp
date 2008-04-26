@@ -74,8 +74,8 @@ void test(bool indexed)
     dummy.paramGroupPtrs.push_back(pg2);
 
     // so we don't have any dangling references
-    dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ_Deca")));
-    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("Xcalibur_Processing")));
+    dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQDeca")));
+    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("XcaliburProcessing")));
 
     SpectrumListPtr sl = SpectrumList_mzML::create(is, dummy, indexed);
 

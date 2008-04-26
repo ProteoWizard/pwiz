@@ -85,7 +85,7 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
                                     + lexical_cast<string>(i));
 
             XMLWriter::Attributes attributes;
-            attributes.push_back(make_pair("id", spectrum->id));        
+            attributes.push_back(make_pair("idRef", spectrum->id));        
             attributes.push_back(make_pair("nativeID", spectrum->nativeID));        
 
             xmlWriter.startElement("offset", attributes);
@@ -120,7 +120,7 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
                                     + lexical_cast<string>(i));
 
             XMLWriter::Attributes Attributes;
-            Attributes.push_back(make_pair("id", chromatogram->id));        
+            Attributes.push_back(make_pair("idRef", chromatogram->id));        
             Attributes.push_back(make_pair("nativeID", chromatogram->nativeID));        
 
             xmlWriter.startElement("offset", Attributes);

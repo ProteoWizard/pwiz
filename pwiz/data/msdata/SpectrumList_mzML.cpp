@@ -192,7 +192,7 @@ struct HandlerOffset : public SAXParser::Handler
         if (name != "offset")
             throw runtime_error(("[SpectrumList_mzML::HandlerOffset] Unexpected element name: " + name).c_str());
 
-        getAttribute(attributes, "id", spectrumIdentity->id);
+        getAttribute(attributes, "idRef", spectrumIdentity->id);
         getAttribute(attributes, "nativeID", spectrumIdentity->nativeID);
 
         return Status::Ok;

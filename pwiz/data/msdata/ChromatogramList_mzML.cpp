@@ -192,7 +192,7 @@ struct HandlerOffset : public SAXParser::Handler
         if (name != "offset")
             throw runtime_error(("[ChromatogramList_mzML::HandlerOffset] Unexpected element name: " + name).c_str());
 
-        getAttribute(attributes, "id", chromatogramIdentity->id);
+        getAttribute(attributes, "idRef", chromatogramIdentity->id);
         getAttribute(attributes, "nativeID", chromatogramIdentity->nativeID);
 
         return Status::Ok;

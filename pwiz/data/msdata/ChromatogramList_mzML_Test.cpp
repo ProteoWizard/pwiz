@@ -63,8 +63,8 @@ void test(bool indexed)
 
     // so we don't have any dangling references
     //dummy.instrumentPtrs.push_back(InstrumentPtr(new Instrument("LCQ_Deca")));
-    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("pwiz_conversion")));
-    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("Xcalibur_Processing")));
+    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("pwizconversion")));
+    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("XcaliburProcessing")));
 
     ChromatogramListPtr sl = ChromatogramList_mzML::create(is, dummy, indexed);
 
