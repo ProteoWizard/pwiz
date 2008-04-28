@@ -163,6 +163,7 @@ class Pseudo2DGel::Impl
     Image::Color circleColor(float intensity) const;
 
     // data processing and image creation
+    Image::Color chooseCircleColor(shared_ptr<Child> circle);
     void writeImages(const DataInfo& dataInfo);
     auto_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
     void writeImage(const DataInfo& dataInfo, const string& label, ScanList& scans);
@@ -692,6 +693,26 @@ Image::Color Pseudo2DGel::Impl::circleColor(float intensity) const
     return Image::Color(int(r*255), int(g*255), int(b*255));
 }
 
+Image::Color Pseudo2DGel::Impl::chooseCircleColor(shared_ptr<Child> circle)
+{
+    Image::Color color;
+    
+    if (config_.peptide_id != NULL)
+    {
+        color = Image::Color(0x64, 0x95, 0xED);
+        color = Image::white();
+        try
+        {
+            float score = (float)config_.peptide_id->record(circle->nativeID).normalizedScore;
+            color = circleColor(score);
+        }
+        catch(...) {}
+    }
+    else
+        color = Image::white();
+
+    return color;
+}
 
 void Pseudo2DGel::Impl::writeImages(const DataInfo& dataInfo)
 {
@@ -881,20 +902,7 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
                 {
                     Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
 
-                    Image::Color color;
-
-                    if (config_.peptide_id != NULL)
-                    {
-                        color = Image::white();
-                        try
-                        {
-                            float score = (float)config_.peptide_id->record((*it)->nativeID).normalizedScore;
-                            color = circleColor(score);
-                        }
-                        catch(...) {}
-                    }
-                    else
-                        color = Image::white();
+                    Image::Color color = chooseCircleColor(*it);
                     
                     image.circle(center, 3, color, false);
                 }
@@ -911,21 +919,8 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
                 {
                     Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
 
-                    Image::Color color;
+                    Image::Color color = chooseCircleColor(*it);
 
-                    if (config_.peptide_id != NULL)
-                    {
-                        color = Image::white();
-                        try
-                        {
-                            float score = (float)config_.peptide_id->record((*it)->nativeID).normalizedScore;
-                            color = circleColor(score);
-                        }
-                        catch(...) {}
-                    }
-                    else
-                        color = Image::white();
-                    
                     image.circle(center, 3, color, false);
                 }
             }

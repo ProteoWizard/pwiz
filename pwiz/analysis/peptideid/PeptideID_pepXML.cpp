@@ -24,7 +24,7 @@
 #include <fstream>
 #include <vector>
 #include <stdexcept>
-#include <boost/weak_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "PeptideID_pepXML.hpp"
 #include "utility/minimxml/SAXParser.hpp"
@@ -36,8 +36,12 @@ using namespace std;
 using namespace boost;
 using namespace pwiz::minimxml::SAXParser;
 
+typedef map<std::string, PeptideID::Record> record_map;
+typedef multimap<double, shared_ptr<PeptideID::Record>, less<double> > rt_multimap;
+
+
 ////////////////////////////////////////////////////////////////////////////
-// class PeptideID_pepXml::Impl
+// PeptideID_pepXml::Impl 
 
 class PeptideID_pepXml::Impl
 {
@@ -47,8 +51,9 @@ public:
     enum Source {Source_file, Source_stream};
     Source source;
     
-    std::map<std::string, PeptideID::Record> recordMap;
-
+    record_map recordMap;
+    rt_multimap rtMap;
+    
     Impl(const string& filename)
     {
         source = Source_file;
@@ -72,12 +77,26 @@ public:
     
     PeptideID::Record record(const string& nativeID)
     {
-        std::map<std::string, PeptideID::Record>::iterator rec = recordMap.find(nativeID);
+        record_map::iterator rec = recordMap.find(nativeID);
 
         if (rec == recordMap.end())
-            throw new runtime_error(nativeID.c_str());
+            throw new range_error(nativeID.c_str());
 
         return (*rec).second;
+    }
+
+    rt_multimap::const_iterator record(double retention_time_sec) 
+    {
+        rt_multimap::const_iterator recs = rtMap.find(retention_time_sec);
+
+        if (recs == rtMap.end())
+        {
+            ostringstream error;
+            error << "No records found for " << retention_time_sec;
+            throw new range_error(error.str());
+        }
+
+        return recs;
     }
 };
 
@@ -92,15 +111,21 @@ public:
     static const char* peptide_attr;
     static const char* peptideprophet_result_tag;
     static const char* start_scan_attr;
+    static const char* retention_time_sec_attr;
     static const char* end_scan_attr;
     static const char* probability_attr;
 
-    PepXMLHandler(std::map<std::string, PeptideID::Record>* recordMap)
+    PepXMLHandler(record_map* recordMap,
+                  rt_multimap* rtMap)
     {
         if (recordMap == NULL)
             throw new exception();
         
+        if (rtMap == NULL)
+            throw new exception();
+        
         this->recordMap = recordMap;
+        this->rtMap = rtMap;
     }
 
     virtual Handler::Status
@@ -113,15 +138,18 @@ public:
                stream_offset position);
 
 private:
-    std::map<std::string, PeptideID::Record>* recordMap;
+    record_map* recordMap;
+    rt_multimap* rtMap;
     string current;
 };
 
+// Tags and attributes we look for
 const char* PepXMLHandler::spectrum_query_tag = "spectrum_query";
 const char* PepXMLHandler::search_hit_tag = "search_hit";
 const char* PepXMLHandler::peptide_attr = "peptide";
 const char* PepXMLHandler::peptideprophet_result_tag = "peptideprophet_result";
 const char* PepXMLHandler::start_scan_attr = "start_scan";
+const char* PepXMLHandler::retention_time_sec_attr = "retention_time_sec";
 const char* PepXMLHandler::end_scan_attr = "end_scan";
 const char* PepXMLHandler::probability_attr = "probability";
 
@@ -136,6 +164,7 @@ Handler::Status PepXMLHandler::startElement(const std::string& name,
         (*recordMap)[current].nativeID = current;
         (*recordMap)[current].sequence = "";
         (*recordMap)[current].normalizedScore = 0.;
+        getAttribute(attributes, retention_time_sec_attr, (*recordMap)[current].retentionTimeSec);
     }
     else if (name == search_hit_tag)
     {
@@ -165,7 +194,7 @@ PeptideID_pepXml::PeptideID_pepXml(const char* filename)
 {
     ifstream in(filename);
 
-    PepXMLHandler pxh(&(pimpl->recordMap));
+    PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
 
     parse(in, pxh);
 }
@@ -175,7 +204,7 @@ PeptideID_pepXml::PeptideID_pepXml(const string& filename)
 {
     ifstream in(filename.c_str());
 
-    PepXMLHandler pxh(&(pimpl->recordMap));
+    PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
     parse(in, pxh);
 }
 
@@ -185,7 +214,7 @@ PeptideID_pepXml::PeptideID_pepXml(istream* in)
     if (in == NULL)
         throw new exception();
 
-    PepXMLHandler pxh(&(pimpl->recordMap));
+    PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
 
     parse(*in, pxh);
 }
@@ -193,6 +222,11 @@ PeptideID_pepXml::PeptideID_pepXml(istream* in)
 PeptideID::Record PeptideID_pepXml::record(const std::string& nativeID) const
 {
     return pimpl->record(nativeID);
+}
+
+rt_multimap::const_iterator PeptideID_pepXml::record(double retention_time_sec) const
+{
+    return pimpl->record(retention_time_sec);
 }
 
 } // namespace peptideid

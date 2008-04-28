@@ -1,5 +1,5 @@
 //
-// PeptideId_pepXML.hpp
+// PeptideID_pepXML.hpp
 //
 //
 // Original author: Robert Burke <robert.burke@cshs.org>
@@ -23,6 +23,7 @@
 #ifndef _PEPTIDEID_PEPXML_HPP_
 #define _PEPTIDEID_PEPXML_HPP_
 
+#include <map>
 #include <boost/shared_ptr.hpp>
 
 #include "PeptideID.hpp"
@@ -30,17 +31,35 @@
 namespace pwiz {
 namespace peptideid {
 
+/// This class allows access to identified proteins in PeptideProphet files.
+
+/// A PeptideID_pepXML object is contructed with either the path to a
+/// PeptideProphet format file (*.pep.xml), or an std::istream open to
+/// the beginning of a pep.xml file.
+
 class PeptideID_pepXml : public PeptideID
 {
 public:
-    
+    /// Constructor taking path to input file in std::string.
     PeptideID_pepXml(const std::string& filename);
+
+    /// Constructor taking path to input file from const char*.
     PeptideID_pepXml(const char* filename);
+
+    /// Constructor taking std::istream as input.
     PeptideID_pepXml(std::istream* in);
-    
+
+    /// Destructor.
     virtual ~PeptideID_pepXml() {}
-    
+
+    /// Returns the Record object associated with the given nativeID.
+
+    /// A range_error is thrown if the nativeID isn't associated with
+    /// a Record.
     virtual Record record(const std::string& nativeID) const;
+
+    virtual std::multimap<double, boost::shared_ptr<PeptideID::Record> >::const_iterator
+        record(double retention_time_sec) const;
     
 private:
     class Impl;

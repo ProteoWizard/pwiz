@@ -31,6 +31,8 @@
 namespace pwiz {
 namespace peptideid {
 
+/// This is an interface for classes that allow access to data sources
+/// of identified peptides.
 
 class PeptideID
 {
@@ -40,6 +42,7 @@ class PeptideID
     {
         std::string nativeID;
         std::string sequence;
+        double retentionTimeSec;
         double normalizedScore; // in [0,1] 
 
         Record() : normalizedScore(0) {}
