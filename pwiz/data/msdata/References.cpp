@@ -141,6 +141,7 @@ void resolve(DataProcessing& dataProcessing, const MSData& msd)
 void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
 {
     resolve(acquisitionSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
+    resolve(acquisitionSettings.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
     resolve(acquisitionSettings.targets, msd);
 }
 

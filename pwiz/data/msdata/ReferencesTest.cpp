@@ -188,6 +188,8 @@ void testAcquisitionSettings()
     acquisitionSettings.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
     acquisitionSettings.targets.push_back(Target());
     acquisitionSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    acquisitionSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+    acquisitionSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -195,15 +197,23 @@ void testAcquisitionSettings()
     msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("booger")));
     msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("msdata")));
     msd.instrumentConfigurationPtrs[1]->set(MS_m_z, 200);
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo1.raw";
+    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2"))); 
+    msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
 
     unit_assert(acquisitionSettings.instrumentConfigurationPtr->paramGroupPtrs.empty());
     unit_assert(acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+    unit_assert(acquisitionSettings.sourceFilePtrs[0]->name.empty());
+    unit_assert(acquisitionSettings.sourceFilePtrs[1]->name.empty());
 
     References::resolve(acquisitionSettings, msd);
 
     unit_assert(acquisitionSettings.instrumentConfigurationPtr->cvParam(MS_m_z).valueAs<int>() == 200);
     unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs.empty());
     unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+    unit_assert(acquisitionSettings.sourceFilePtrs[0]->name == "goo2.raw");
+    unit_assert(acquisitionSettings.sourceFilePtrs[1]->name == "goo1.raw");
 }
 
 

@@ -385,6 +385,14 @@ void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 }
 
 
+void writeSourceFileRef(minimxml::XMLWriter& writer, const SourceFile& sourceFile)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("ref", sourceFile.id));
+    writer.startElement("sourceFileRef", attributes, XMLWriter::EmptyElement);
+}
+
+
 struct HandlerSourceFile : public HandlerParamContainer
 {
     SourceFile* sourceFile;
@@ -1030,17 +1038,15 @@ void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSe
 
     writer.startElement("acquisitionSettings", attributes);
 
-    if (!acquisitionSettings.sourceFilePtrs.empty())
+    if (!acquisitionSettings.sourceFilePtrs.empty()) 
     {
-        XMLWriter::Attributes attributes;
+        attributes.clear();
         attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionSettings.sourceFilePtrs.size())));
-        writer.startElement("sourceFileList", attributes);
-
+        writer.startElement("sourceFileRefList", attributes);
         for (vector<SourceFilePtr>::const_iterator it=acquisitionSettings.sourceFilePtrs.begin(); 
              it!=acquisitionSettings.sourceFilePtrs.end(); ++it)
-             write(writer, **it);
-
-        writer.endElement(); // sourceFileList
+             writeSourceFileRef(writer, **it);
+        writer.endElement(); // sourceFileRefList
     }
 
     if (!acquisitionSettings.targets.empty())
@@ -1088,16 +1094,19 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
 
             return Status::Ok;
         }
-        else if (name=="sourceFileList" || name=="targetList")
+        else if (name=="sourceFileRefList" || name=="targetList")
         {
             return Status::Ok;
         }
-        else if (name=="sourceFile")
+        else if (name=="sourceFileRef")
         {
-            acquisitionSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile));
-            handlerSourceFile_.sourceFile = acquisitionSettings->sourceFilePtrs.back().get();
-            return Status(Status::Delegate, &handlerSourceFile_);
-        }
+            // note: placeholder
+            string sourceFileRef;
+            getAttribute(attributes, "ref", sourceFileRef);
+            if (!sourceFileRef.empty())
+                acquisitionSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
+            return Status::Ok;
+     }
         else if (name=="target")
         {
             acquisitionSettings->targets.push_back(Target());
@@ -1109,7 +1118,6 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
     }
 
     private:
-    HandlerSourceFile handlerSourceFile_;
     HandlerNamedParamContainer handlerTarget_;
 };
 
@@ -2164,14 +2172,6 @@ void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple)
 //
 // Run
 //
-
-
-void writeSourceFileRef(minimxml::XMLWriter& writer, const SourceFile& sourceFile)
-{
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("ref", sourceFile.id));
-    writer.startElement("sourceFileRef", attributes, XMLWriter::EmptyElement);
-}
 
 
 void write(minimxml::XMLWriter& writer, const Run& run,

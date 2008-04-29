@@ -785,6 +785,9 @@ void initializeTestData(MSData& msd)
     sfp->cvParams.push_back(CVParam(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1"));
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
+    SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/settings/"));
+    msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
+
     msd.fileDescription.contacts.resize(1);
     Contact& contact = msd.fileDescription.contacts.front();
     contact.cvParams.push_back(CVParam(MS_contact_name, "William Pennington"));
@@ -883,7 +886,7 @@ void initializeTestData(MSData& msd)
 
     AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
     as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
-    as1->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("SF2", "parameters.par", "file:///C:/settings/")));
+    as1->sourceFilePtrs.push_back(sfp_parameters);
     Target t1;
     t1.set(MS_m_z, 1000);
     Target t2;
