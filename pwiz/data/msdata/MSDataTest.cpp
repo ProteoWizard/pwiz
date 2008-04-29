@@ -42,8 +42,8 @@ void testParamContainer()
     pc.cvParams.push_back(MS_MSn_spectrum);
     pc.cvParams.push_back(MS_reflectron_off);
     pc.cvParams.push_back(CVParam(MS_ionization_type, 420));
-    pc.userParams.push_back(UserParam("name1", "1", "type1"));
-    pc.userParams.push_back(UserParam("name2", "2", "type2"));
+    pc.userParams.push_back(UserParam("name1", "1", "type1", MS_second));
+    pc.userParams.push_back(UserParam("name2", "2", "type2", MS_minute));
 
     ParamGroupPtr pg(new ParamGroup);
     pg->cvParams.push_back(CVParam(MS_dalton, 666));
@@ -79,10 +79,12 @@ void testParamContainer()
     unit_assert(userParam.name == "name1");
     unit_assert(userParam.valueAs<int>() == 1);
     unit_assert(userParam.type == "type1");
+    unit_assert(userParam.units == MS_second);
     userParam = pc.userParam("name2");
     unit_assert(userParam.name == "name2");
     unit_assert(userParam.valueAs<double>() == 2);
     unit_assert(userParam.type == "type2");
+    unit_assert(userParam.units == MS_minute);
     unit_assert(pc.userParam("goober").valueAs<int>() == 0);
 
     pc.set(MS_ms_level, 2);

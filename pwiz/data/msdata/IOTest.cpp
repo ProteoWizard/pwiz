@@ -83,6 +83,7 @@ void testUserParam()
     a.name = "abcd";
     a.value = "efgh";
     a.type = "ijkl";
+    a.units = MS_minute;
 
     testObject(a);
 }
@@ -590,7 +591,7 @@ void testSpectrumListWithPositions()
 
     unit_assert(positions.size() == 2);
     unit_assert(positions[0] == 27);
-    unit_assert(positions[1] == 225);
+    unit_assert(positions[1] == 208);
 }
 
 

@@ -93,8 +93,16 @@ void write(minimxml::XMLWriter& writer, const UserParam& userParam)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("name", userParam.name));
-    attributes.push_back(make_pair("value", userParam.value));
-    attributes.push_back(make_pair("type", userParam.type));
+    if (!userParam.value.empty())
+        attributes.push_back(make_pair("value", userParam.value));
+    if (!userParam.type.empty())
+        attributes.push_back(make_pair("type", userParam.type));
+    if (userParam.units != CVID_Unknown)
+    {
+        attributes.push_back(make_pair("unitAccession", "MS:" + lexical_cast<string>(userParam.units)));
+        attributes.push_back(make_pair("unitName", cvinfo(userParam.units).name));
+    }
+
     writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
 }
 
@@ -117,6 +125,17 @@ struct HandlerUserParam : public SAXParser::Handler
         getAttribute(attributes, "name", userParam->name);
         getAttribute(attributes, "value", userParam->value);
         getAttribute(attributes, "type", userParam->type);
+
+        string unitAccession;
+        getAttribute(attributes, "unitAccession", unitAccession);
+        if (!unitAccession.empty())
+        {
+            // TODO: fix for multiple CVs
+            if (unitAccession.substr(0,3) != "MS:")
+                throw runtime_error(("[IO::HandlerCVParam] Unknown unitAccession: " + unitAccession).c_str());
+            userParam->units = (CVID)lexical_cast<int>(unitAccession.substr(3));
+        }
+
         return Status::Ok;
     }
 };
@@ -183,6 +202,7 @@ struct HandlerCVParam : public SAXParser::Handler
         getAttribute(attributes, "unitAccession", unitAccession);
         if (!unitAccession.empty())
         {
+            // TODO: fix for multiple CVs
             if (unitAccession.substr(0,3) != "MS:")
                 throw runtime_error(("[IO::HandlerCVParam] Unknown unitAccession: " + unitAccession).c_str());
             cvParam->units = (CVID)lexical_cast<int>(unitAccession.substr(3));

@@ -89,6 +89,7 @@ void testUserParam()
     a.name = "name";
     a.value = "value";
     a.type = "type";
+    a.units = MS_minute;
     b = a;
 
     Diff<UserParam> diff(a, b);
@@ -97,6 +98,7 @@ void testUserParam()
     unit_assert(diff.b_a.empty());
 
     b.value = "value_changed";
+    a.units = MS_second;
     unit_assert(diff(a,b));
     if (os_) *os_ << diff << endl;
     unit_assert(diff.a_b.name == "name");
@@ -104,6 +106,8 @@ void testUserParam()
     unit_assert(diff.a_b.value == "value");
     unit_assert(diff.b_a.value == "value_changed");
     unit_assert(diff.a_b.type.empty() && diff.b_a.type.empty());
+    unit_assert(diff.a_b.units == MS_second);
+    unit_assert(diff.b_a.units == MS_minute);
 }
 
 

@@ -55,20 +55,21 @@ bool CV::empty() const
 
 UserParam::UserParam(const string& _name, 
                      const string& _value, 
-                     const string& _type)
-:   name(_name), value(_value), type(_type)
+                     const string& _type,
+                     CVID _units)
+:   name(_name), value(_value), type(_type), units(_units)
 {}
 
 
 bool UserParam::empty() const 
 {
-    return name.empty() && value.empty() && type.empty();
+    return name.empty() && value.empty() && type.empty() && units==CVID_Unknown;
 }
 
 
 bool UserParam::operator==(const UserParam& that) const
 {
-    return (name==that.name && value==that.value && type==that.type);
+    return (name==that.name && value==that.value && type==that.type && units==that.units);
 }
 
 

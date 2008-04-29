@@ -85,22 +85,6 @@ void diff(const CV& a,
 }
 
 
-void diff(const UserParam& a, 
-          const UserParam& b, 
-          UserParam& a_b, 
-          UserParam& b_a,
-          const DiffConfig& config)
-{
-    diff(a.name, b.name, a_b.name, b_a.name, config);
-    diff(a.value, b.value, a_b.value, b_a.value, config);
-    diff(a.type, b.type, a_b.type, b_a.type, config);
-
-    // provide names for context
-    if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
-    if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
-}
-
-
 void diff(CVID a,
           CVID b,
           CVID& a_b,
@@ -129,6 +113,23 @@ void diff(const CVParam& a,
     // provide names for context
     if (!a_b.empty() && a_b.cvid==CVID_Unknown) a_b.cvid = a.cvid; 
     if (!b_a.empty() && b_a.cvid==CVID_Unknown) b_a.cvid = b.cvid; 
+}
+
+
+void diff(const UserParam& a, 
+          const UserParam& b, 
+          UserParam& a_b, 
+          UserParam& b_a,
+          const DiffConfig& config)
+{
+    diff(a.name, b.name, a_b.name, b_a.name, config);
+    diff(a.value, b.value, a_b.value, b_a.value, config);
+    diff(a.type, b.type, a_b.type, b_a.type, config);
+    diff(a.units, b.units, a_b.units, b_a.units, config);
+
+    // provide names for context
+    if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
+    if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
 }
 
 

@@ -53,10 +53,12 @@ struct UserParam
     std::string name;
     std::string value;
     std::string type;
+    CVID units;
 
     UserParam(const std::string& _name = "", 
               const std::string& _value = "", 
-              const std::string& _type = "");
+              const std::string& _type = "",
+              CVID _units = CVID_Unknown);
 
     /// templated value access with type conversion
     template<typename value_type>
