@@ -131,15 +131,40 @@ string canonicalize(const string& s)
 } // namespace
 
 
+bool shouldIgnore(const string& key, CVID value, CVID cvid)
+{
+    return (key=="unit_" && value==MS_unit && cvid==UO_unit ||
+            key=="mass_unit_" && value==MS_mass_unit && cvid==UO_mass_unit ||
+            key=="time_unit_" && value==MS_time_unit && cvid==UO_time_unit ||
+            key=="energy_unit_" && value==MS_energy_unit && cvid==UO_energy_unit ||
+            key=="pi_" && value==MS_PI && cvid==UO_pi); // MS_PI==photoionization, UO_pi==3.14
+
+}
+
+
+bool shouldReplace(const string& key, CVID value, CVID cvid)
+{
+    return (key=="second_" && value==MS_second && cvid==UO_second ||
+            key=="minute_" && value==MS_minute && cvid==UO_minute ||
+            key=="dalton_" && value==MS_dalton && cvid==UO_dalton);
+}
+
+
 void CVTranslator::Impl::insert(const string& text, CVID cvid)
 {
     string key = canonicalize(text);
 
     if (map_.count(key))
     {
-        throw runtime_error("[CVTranslator::insert()] Collision: " + 
-                            lexical_cast<string>(map_[key]) + " " +
-                            lexical_cast<string>(cvid));
+        if (shouldIgnore(key, map_[key], cvid))
+            return;
+
+        if (!shouldReplace(key, map_[key], cvid))
+        {
+            throw runtime_error("[CVTranslator::insert()] Collision: " + 
+                                lexical_cast<string>(map_[key]) + " " +
+                                lexical_cast<string>(cvid));
+        }
     }
 
     map_[key] = cvid;
@@ -167,9 +192,12 @@ void CVTranslator::Impl::insertCVTerms()
         insert(info.name, *cvid);
 
         // insert synonyms
-        for (vector<string>::const_iterator syn=info.exactSynonyms.begin(); 
-             syn!=info.exactSynonyms.end(); ++syn)
-            insert(*syn, *cvid);
+        if (*cvid < 100000000) // prefix == "MS"
+        {
+            for (vector<string>::const_iterator syn=info.exactSynonyms.begin(); 
+                 syn!=info.exactSynonyms.end(); ++syn)
+                insert(*syn, *cvid);
+        }
     }
 }
 

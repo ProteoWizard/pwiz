@@ -157,12 +157,14 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         os << ",\n";
         os << "    " << enumName(*it) << " = " << enumValue(*it, obo-obos.begin());
         
-        for (vector<string>::const_iterator syn=it->exactSynonyms.begin(); 
-             syn!=it->exactSynonyms.end(); ++syn)
+        if (obo->prefix == "MS") // add synonyms for PSI-MS only
         {
-            if (*syn == "peak processing") continue; // TODO remove when psi-ms.obo fixed
-            os << ",\n";
-            os << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
+            for (vector<string>::const_iterator syn=it->exactSynonyms.begin(); 
+                 syn!=it->exactSynonyms.end(); ++syn)
+            {
+                os << ",\n";
+                os << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
+            }
         }
     }
     os << "\n}; // enum CVID\n\n\n"; 

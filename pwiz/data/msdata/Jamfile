@@ -83,8 +83,8 @@ actions do_cvgen
 }
 
 # we currently call cvgen twice
-make cv.cpp : cvgen psi-ms.obo : do_cvgen ;
-make cv.hpp : cvgen psi-ms.obo : do_cvgen ;
+make cv.cpp : cvgen psi-ms.obo unit.obo : do_cvgen ;
+make cv.hpp : cvgen psi-ms.obo unit.obo : do_cvgen ;
 
 
 
