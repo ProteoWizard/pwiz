@@ -32,12 +32,12 @@
 
 
 // [psi-ms.obo]
-//   format-version: 1.0
-//   date: 21:02:2008 10:40
-//   saved-by: edeutsch
+//   format-version: 1.2
+//   date: 25:04:2008 15:16
+//   saved-by: martlenn
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: PSI-MS
-//   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
+//   remark: version: x.y.z
 //
 
 
@@ -45,11 +45,11 @@ namespace pwiz {
 namespace msdata {
 
 
-/// enumeration of controlled vocabulary (CV) terms, generated from an OBO file
+/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)
 enum CVID
 {
     CVID_Unknown = -1,
-    MS_Mass_Spectrometry_Controlled_Vocabulary = 0,
+    MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Ontology = 0,
     MS_sample_number = 1000001,
     MS_sample_name = 1000002,
     MS_sample_state = 1000003,
@@ -747,11 +747,7 @@ enum CVID
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
     MS_ProteoWizard = 1000615,
     MS_pwiz = MS_ProteoWizard,
-    MS_preset_scan_configuration = 1000616,
-    MS_selected_ion_chromatogram = 1000999,
-    MS_precursor_m_z = 1000998,
-    MS_product_m_z = 1000997,
-    MS_total_ion_chromatogram = 1000996
+    MS_preset_scan_configuration = 1000616
 }; // enum CVID
 
 

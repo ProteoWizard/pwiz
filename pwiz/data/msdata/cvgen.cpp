@@ -148,7 +148,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     namespaceBegin(os, basename);
 
-    os << "/// enumeration of controlled vocabulary (CV) terms, generated from an OBO file\n" 
+    os << "/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)\n" 
           "enum CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)

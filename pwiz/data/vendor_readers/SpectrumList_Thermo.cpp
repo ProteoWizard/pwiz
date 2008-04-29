@@ -114,7 +114,7 @@ void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) cons
         string("TIC"), scanInfo.startTime(), scanInfo.totalIonCurrent());
     if (result.second)
     {
-        result.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram));
+        result.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram__));
     }
 
     if (scanInfo.scanType() == ScanType_SRM)
@@ -124,8 +124,14 @@ void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) cons
             scanInfo.startTime(), scanInfo.totalIonCurrent());
         if (result2.second)
         {
-            result2.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram));
-            result2.first->cvParams.push_back(CVParam(MS_precursor_m_z, scanInfo.parentMass(0)));
+            result2.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram__));
+
+            // TODO: change to CVParam when CV is updated
+
+            result2.first->userParams.push_back(UserParam("MS_precursor_m_z", 
+                                                lexical_cast<string>(scanInfo.parentMass(0))));
+
+            //result2.first->cvParams.push_back(CVParam(MS_precursor_m_z, scanInfo.parentMass(0)));
         }
 
         auto_ptr<raw::MassList> massList = 
@@ -138,9 +144,21 @@ void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) cons
                 scanInfo.startTime(), productMz);
             if (result3.second)
             {
+                // TODO: change to CVParam when CV is updated
+
+                result3.first->userParams.push_back(UserParam("MS_selected_ion_chromatogram"));
+
+                result3.first->userParams.push_back(UserParam("MS_precursor_m_z", 
+                                                    lexical_cast<string>(scanInfo.parentMass(0))));
+
+                result3.first->userParams.push_back(UserParam("MS_product_m_z", 
+                                                    lexical_cast<string>(productMz)));
+
+                /*
                 result3.first->cvParams.push_back(CVParam(MS_selected_ion_chromatogram));
                 result3.first->cvParams.push_back(CVParam(MS_precursor_m_z, scanInfo.parentMass(0)));
                 result3.first->cvParams.push_back(CVParam(MS_product_m_z, productMz));
+                */
             }
         }
     }

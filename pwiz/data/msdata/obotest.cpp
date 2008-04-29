@@ -73,6 +73,22 @@ const char* oboText_ =
     "name: vendor\n"
     "def: \"Name of instrument vendor, replaced by MS:1000031 Model From Vendor.\" [PSI:MS]\n"
     "is_obsolete: true\n"
+    "\n"
+    // OBO format 1.2
+    "[Term]\n"
+    "id: MS:2000025\n"
+    "name: magnetic field strength\n"
+    "def: \"A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.\" [PSI:MS]\n"
+    "synonym: \"B\" EXACT []\n"
+    "synonym: \"Magnetic Field\" RELATED []\n"
+    "is_a: MS:1000480 ! mass analyzer attribute\n"
+    "\n"
+    "[Term]\n"
+    "id: MS:0000000\n"
+    "name: unit\n"
+    "namespace: unit.ontology\n"
+    "def: \"description\" [ignore this Wikipedia:Wikipedia \"http://www.wikipedia.org/\"]\n"
+    "\n"
 ;
 
 
@@ -89,7 +105,8 @@ void test()
    
     unit_assert(obo.filename == filename);    
     unit_assert(obo.header.size() == 5); 
-    unit_assert(obo.terms.size() == 4); // no obsolete terms
+    unit_assert(obo.prefix == "MS");
+    unit_assert(obo.terms.size() == 6); // no obsolete terms
 
     const Term* term = &obo.terms[0];
     unit_assert(term->prefix == "MS");
@@ -116,6 +133,17 @@ void test()
     unit_assert(term->exactSynonyms.size() == 1);
     unit_assert(term->exactSynonyms[0] == "B");
 
+    // test term with OBO 1.2 synonym format
+    term = &obo.terms[4];
+    unit_assert(term->id == 2000025);
+    unit_assert(term->exactSynonyms.size() == 1);
+    unit_assert(term->exactSynonyms[0] == "B");
+
+    // test term with [stuff to ignore]
+    term = &obo.terms[5];
+    unit_assert(term->id == 0);
+    unit_assert(term->def == "description");
+ 
     system(("rm " + filename).c_str()); 
 }
 

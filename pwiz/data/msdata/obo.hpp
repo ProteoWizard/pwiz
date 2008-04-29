@@ -69,6 +69,7 @@ struct OBO
 {
     std::string filename;
     std::vector<std::string> header;
+    std::string prefix; // e.g. "MS", "UO"
     std::vector<Term> terms;
 
     OBO(){}

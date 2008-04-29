@@ -53,6 +53,7 @@ namespace {
 // boost::regex notes:
 //  parentheses are used for submatch captures
 //  \\d matches digit
+//  \\s matches whitespace 
 //  \\w matches [a-zA-Z_]
 
 
@@ -83,7 +84,7 @@ void parse_name(const string& line, Term& term)
 
 void parse_def(const string& line, Term& term)
 {
-    static const boost::regex e("def: \"(.*)\".*");
+    static const boost::regex e("def: \"(.*)\"\\s*\\[.*\\].*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
@@ -103,7 +104,7 @@ void parse_relationship(const string& line, Term& term)
 
     if (what[2] != term.prefix)
     {
-        cerr << "[obo] Ignoring relationship with different prefix:\n  " << line << endl;
+        //cerr << "[obo] Ignoring relationship with different prefix:\n  " << line << endl;
         return;
     }
 
@@ -159,6 +160,19 @@ void parse_exact_synonym(const string& line, Term& term)
 }
 
 
+void parse_synonym(const string& line, Term& term)
+{
+    static const boost::regex e("synonym: \"(.*)\"\\s*(\\w+).*");
+
+    boost::smatch what; 
+    if (!regex_match(line, what, e))
+        throw runtime_error("Error matching term synonym.");    
+
+    if (what[2] == "EXACT")
+        term.exactSynonyms.push_back(what[1]);
+}
+
+
 void parseTagValuePair(const string& line, Term& term)
 {
     string::size_type tagSize = line.find(':'); 
@@ -181,10 +195,13 @@ void parseTagValuePair(const string& line, Term& term)
         parse_is_a(line, term);
     else if (tag == "exact_synonym")
         parse_exact_synonym(line, term);
+    else if (tag == "synonym")
+        parse_synonym(line, term);
     else if (tag == "related_synonym" ||
              tag == "narrow_synonym" ||
              tag == "comment" ||
-             tag == "alt_id")
+             tag == "alt_id" ||
+             tag == "namespace")
         ; // ignore these tags
     else
         cerr << "[obo] Unknown tag \"" << tag << "\":\n  " << line << endl;
@@ -211,6 +228,20 @@ void parseStanza(istream& is, OBO& obo)
     if (stanzaType == "[Term]")
     {
         Term term = parseTerm(is);
+
+        // validate prefix
+        if (obo.prefix.empty())
+        {
+            obo.prefix = term.prefix;
+        }
+        else
+        {
+            if (term.prefix != obo.prefix)
+                throw runtime_error("[obo] Prefix mismatch: " +
+                                    obo.prefix + ", " + 
+                                    term.prefix + ":" + lexical_cast<string>(term.id));
+        }
+
         if (!term.isObsolete)
             obo.terms.push_back(term);
     }
@@ -226,7 +257,7 @@ void parse(const string& filename, OBO& obo)
 {
     ifstream is(filename.c_str());
     if (!is)
-        throw runtime_error(("[OBO] Unable to open file " + filename).c_str());
+        throw runtime_error(("[obo] Unable to open file " + filename).c_str());
 
     // read header lines until blank line
     for (string buffer; getline(is,buffer) && !buffer.empty();)
