@@ -24,6 +24,8 @@
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing # warning: dereferencing type-punned pointer will break strict-aliasing rules
+	: usage-requirements
+	    <library>../peptideid//pwiz_analysis_peptideid
     ;
 
 
@@ -40,6 +42,7 @@ lib pwiz_analysis_passive
         RegionTIC.cpp
         RegionSIC.cpp
         Pseudo2DGel.cpp
+	    ../peptideid//pwiz_analysis_peptideid
         ../../utility/math
         ../../data/msdata//pwiz_data_msdata
         ../../data/vendor_readers
