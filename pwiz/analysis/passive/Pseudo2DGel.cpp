@@ -149,8 +149,27 @@ class Pseudo2DGel::Impl
     map<size_t, vector<shared_ptr<Child> > > children_;  
 
     typedef vector<size_t> ScanList; // by index
-    ScanList itScans_;
-    ScanList ftScans_;
+    struct ScanInfo {
+        ScanList scans;
+        vector<double> rts;
+
+        vector<int> bin; // optional
+        
+        void clear(){
+            scans.clear();
+            rts.clear();
+            bin.clear();
+        }
+
+        bool empty(){
+            return scans.empty();
+        }
+    };
+
+    ScanInfo itScans_;
+    ScanInfo ftScans_;
+
+    ScanInfo ms2Scans_;
 
     int bin(double mz); // converts mz -> bin index
     void clear();
@@ -163,12 +182,16 @@ class Pseudo2DGel::Impl
     Image::Color circleColor(float intensity) const;
 
     // data processing and image creation
-    Image::Color chooseCircleColor(shared_ptr<Child> circle);
+    Image::Color chooseCircleColor(size_t ms2Index);
     void writeImages(const DataInfo& dataInfo);
     auto_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
-    void writeImage(const DataInfo& dataInfo, const string& label, ScanList& scans);
+    void writeImage(const DataInfo& dataInfo, const string& label, ScanInfo& scans);
 
-    void drawScans(Image& image, const ScanList& scans, 
+    void drawScans(Image& image, const ScanInfo& scansInfo,
+                   const IntensityFunction& intensityFunction,
+                   const Image::Point& begin, const Image::Point& end); 
+
+    void drawMS2(Image& image, const ScanInfo& scans, 
                    const IntensityFunction& intensityFunction,
                    const Image::Point& begin, const Image::Point& end); 
 
@@ -227,27 +250,30 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     }
 
     // special handling based on msLevel and instrument type
-
+    
     static size_t lastParent = 0;
     if (info.msLevel == 1)
     {
         lastParent = info.index; // remember this scan in case there are children
 
         if (info.massAnalyzerType == MS_ion_trap){
-            itScans_.push_back(info.index);
+            itScans_.scans.push_back(info.index);
+            itScans_.rts.push_back(info.retentionTime);
+            itScans_.bin.push_back(bin(info.basePeakMZ));
         }
-        else if (info.massAnalyzerType == MS_FT_ICR)
-            ftScans_.push_back(info.index);
+        else if (info.massAnalyzerType == MS_FT_ICR){
+            ftScans_.scans.push_back(info.index);
+            ftScans_.rts.push_back(info.retentionTime);
+            ftScans_.bin.push_back(bin(info.basePeakMZ));
+        }
     }
     else if (info.msLevel == 2 && info.precursors.size() == 1)
     {
-        // save precursorMz: translate to x value and
-        // push onto vector associated with the parent scan
-        children_[lastParent].push_back(
-            shared_ptr<Child>(
-                new Child(bin(info.precursors[0].mz), spectrum.nativeID)
-                )
-            );
+        // Save the ms2 scan index and retention times for possible
+        // ms2 display.
+        ms2Scans_.scans.push_back(info.index);
+        ms2Scans_.rts.push_back(info.retentionTime);
+        ms2Scans_.bin.push_back(bin(info.precursors[0].mz));
     }
 }
 
@@ -693,8 +719,9 @@ Image::Color Pseudo2DGel::Impl::circleColor(float intensity) const
     return Image::Color(int(r*255), int(g*255), int(b*255));
 }
 
-Image::Color Pseudo2DGel::Impl::chooseCircleColor(shared_ptr<Child> circle)
+Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t ms2Index)
 {
+    string nativeID = cache_[ms2Index].nativeID;
     Image::Color color;
     
     if (config_.peptide_id != NULL)
@@ -703,7 +730,7 @@ Image::Color Pseudo2DGel::Impl::chooseCircleColor(shared_ptr<Child> circle)
         color = Image::white();
         try
         {
-            float score = (float)config_.peptide_id->record(circle->nativeID).normalizedScore;
+            float score = (float)config_.peptide_id->record(nativeID).normalizedScore;
             color = circleColor(score);
         }
         catch(...) {}
@@ -717,6 +744,7 @@ Image::Color Pseudo2DGel::Impl::chooseCircleColor(shared_ptr<Child> circle)
 void Pseudo2DGel::Impl::writeImages(const DataInfo& dataInfo)
 {
     string label = ".image." + config_.label;
+    
     writeImage(dataInfo, label + ".itms", itScans_);
     writeImage(dataInfo, label + ".ftms", ftScans_);
 }
@@ -825,8 +853,10 @@ void drawVerticalSeparator(Image& image, int x, int y1, int y2)
 } // namespace
 
 
-void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label, ScanList& scans)
+void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label, ScanInfo& scanInfo)
 {
+    ScanList& scans = scanInfo.scans;
+
     if (scans.empty()) return;
 
     auto_ptr<IntensityFunction> intensityFunction = createIntensityFunction(scans);
@@ -840,7 +870,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     auto_ptr<Image> image = Image::create(x2, y2);
 
     drawLegend(*image, *intensityFunction, Image::Point(0, titleBarHeight), Image::Point(x1, y1));
-    drawScans(*image, scans, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
+    drawScans(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
     drawTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
     drawTMZ(*image, scans, Image::Point(x1, titleBarHeight+150), Image::Point(x2, y1));
 
@@ -864,10 +894,12 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
 }
 
 void Pseudo2DGel::Impl::drawScans(Image& image, 
-                              const ScanList& scans, 
+                              const ScanInfo& scansInfo, 
                               const IntensityFunction& intensityFunction, 
                               const Image::Point& begin, const Image::Point& end) 
 {
+    const ScanList& scans = scansInfo.scans;
+    
     image.clip(begin, end - Image::Point(1,1));
 
     Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
@@ -891,44 +923,7 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
     // draw ms2 indicators if desired
     if (config_.ms2)
     {
-        if (scans.size() == itScans_.size())
-        {
-            for (size_t j=0; j<scans.size(); j++)
-            {
-                Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
-                size_t itIndex = itScans_[j];
-                const vector<shared_ptr<Child> >& children = children_[itIndex];
-                for (vector<shared_ptr<Child> >::const_iterator it=children.begin(); it!=children.end(); ++it)
-                {
-                    Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
-
-                    Image::Color color = chooseCircleColor(*it);
-                    
-                    image.circle(center, 3, color, false);
-                }
-            }
-        }
-        else if (scans.size() == ftScans_.size())
-        {
-            for (size_t j=0; j<scans.size(); j++)
-            {
-                Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
-                size_t itIndex = ftScans_[j];
-                const vector<shared_ptr<Child> >& children = children_[itIndex];
-                for (vector<shared_ptr<Child> >::const_iterator it=children.begin(); it!=children.end(); ++it)
-                {
-                    Image::Point center = lineBegin + Image::Point((int)(*it)->bin,0);
-
-                    Image::Color color = chooseCircleColor(*it);
-
-                    image.circle(center, 3, color, false);
-                }
-            }
-        }
-        else
-        {            
-            cout << "[DumpsterImage] Warning: Scan counts differ:" <<scans.size()<< " "<< itScans_.size()<<std::endl;
-        }
+        drawMS2(image, scansInfo, intensityFunction, begin, end);
     }
 
     // box
@@ -980,6 +975,27 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
                  Image::white(), Image::Large, Image::Right | Image::CenterY);
 }
 
+
+void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo, 
+             const IntensityFunction& intensityFunction,
+             const Image::Point& begin, const Image::Point& end)
+{
+    Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
+
+    for (size_t j=0; j<ms2Scans_.scans.size(); j++)
+    {
+        size_t yPixel = lower_bound(scansInfo.rts.begin(), scansInfo.rts.end(), ms2Scans_.rts[j]) -
+            scansInfo.rts.begin() - 1;
+
+        Image::Point lineBegin = graphBegin + Image::Point(0, (int)yPixel);
+
+        Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
+            
+        Image::Color color = chooseCircleColor(ms2Scans_.scans[j]);
+        
+        image.circle(center, 3, color, false);
+    }
+}
 
 void Pseudo2DGel::Impl::drawLegend(Image& image, 
                                const IntensityFunction& intensityFunction,
