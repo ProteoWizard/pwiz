@@ -92,8 +92,10 @@ void testUserParam()
 void testCVParam()
 {
     CVParam a(MS_m_z, "810.48", MS_mass_unit);
-
     testObject(a);
+
+    CVParam b(UO_second, "123.45");
+    testObject(b);
 }
 
 
@@ -330,7 +332,7 @@ void testScan()
 
     a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute)); // TODO: add cvidToAccession() and accessionToCVID()
+    a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 

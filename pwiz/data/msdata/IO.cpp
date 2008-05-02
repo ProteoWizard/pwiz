@@ -99,7 +99,7 @@ void write(minimxml::XMLWriter& writer, const UserParam& userParam)
         attributes.push_back(make_pair("type", userParam.type));
     if (userParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitAccession", "MS:" + lexical_cast<string>(userParam.units)));
+        attributes.push_back(make_pair("unitAccession", cvinfo(userParam.units).id));
         attributes.push_back(make_pair("unitName", cvinfo(userParam.units).name));
     }
 
@@ -129,12 +129,7 @@ struct HandlerUserParam : public SAXParser::Handler
         string unitAccession;
         getAttribute(attributes, "unitAccession", unitAccession);
         if (!unitAccession.empty())
-        {
-            // TODO: fix for multiple CVs
-            if (unitAccession.substr(0,3) != "MS:")
-                throw runtime_error(("[IO::HandlerCVParam] Unknown unitAccession: " + unitAccession).c_str());
-            userParam->units = (CVID)lexical_cast<int>(unitAccession.substr(3));
-        }
+            userParam->units = cvinfo(unitAccession).cvid;
 
         return Status::Ok;
     }
@@ -156,13 +151,13 @@ void read(std::istream& is, UserParam& userParam)
 void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvRef", "MS"));
-    attributes.push_back(make_pair("accession", "MS:" + lexical_cast<string>(cvParam.cvid)));
+    attributes.push_back(make_pair("cvRef", cvinfo(cvParam.cvid).id.substr(0,2)));
+    attributes.push_back(make_pair("accession", cvinfo(cvParam.cvid).id));
     attributes.push_back(make_pair("name", cvinfo(cvParam.cvid).name));
     attributes.push_back(make_pair("value", cvParam.value));
     if (cvParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitAccession", "MS:" + lexical_cast<string>(cvParam.units)));
+        attributes.push_back(make_pair("unitAccession", cvinfo(cvParam.units).id));
         attributes.push_back(make_pair("unitName", cvinfo(cvParam.units).name));
     }
     writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
@@ -185,28 +180,17 @@ struct HandlerCVParam : public SAXParser::Handler
         if (!cvParam)
             throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
 
-        string cvRef;
-        getAttribute(attributes, "cvRef", cvRef);
-        if (cvRef != "MS")
-            throw runtime_error(("[IO::HandlerCVParam] Unknown cvRef: " + cvRef).c_str());
-            
         string accession;
         getAttribute(attributes, "accession", accession);
-        if (accession.substr(0,3) != "MS:")
-            throw runtime_error(("[IO::HandlerCVParam] Unknown accession: " + accession).c_str());
-        cvParam->cvid = (CVID)lexical_cast<int>(accession.substr(3));
+        if (!accession.empty())
+            cvParam->cvid = cvinfo(accession).cvid;
 
         getAttribute(attributes, "value", cvParam->value);
 
         string unitAccession;
         getAttribute(attributes, "unitAccession", unitAccession);
         if (!unitAccession.empty())
-        {
-            // TODO: fix for multiple CVs
-            if (unitAccession.substr(0,3) != "MS:")
-                throw runtime_error(("[IO::HandlerCVParam] Unknown unitAccession: " + unitAccession).c_str());
-            cvParam->units = (CVID)lexical_cast<int>(unitAccession.substr(3));
-        }
+            cvParam->units = cvinfo(unitAccession).cvid;
 
         return Status::Ok;
     }
@@ -773,9 +757,10 @@ void write(minimxml::XMLWriter& writer, const Software& software)
     writer.startElement("software", attributes);
 
     attributes.clear();
-    attributes.push_back(make_pair("cvRef", "MS"));
-    attributes.push_back(make_pair("accession", "MS:" + lexical_cast<string>(software.softwareParam.cvid)));
-    attributes.push_back(make_pair("name", cvinfo(software.softwareParam.cvid).name));
+    const CVInfo& info = cvinfo(software.softwareParam.cvid);
+    attributes.push_back(make_pair("cvRef", info.id.substr(0,2)));
+    attributes.push_back(make_pair("accession", info.id));
+    attributes.push_back(make_pair("name", info.name));
     attributes.push_back(make_pair("version", software.softwareParamVersion));
     writer.startElement("softwareParam", attributes, XMLWriter::EmptyElement);
 
@@ -802,16 +787,10 @@ struct HandlerSoftware : public SAXParser::Handler
         }
         else if (name == "softwareParam")
         {
-            string cvRef;
-            getAttribute(attributes, "cvRef", cvRef);
-            if (cvRef != "MS")
-                throw runtime_error(("[IO::HandlerSoftware] Unknown cvRef: " + cvRef).c_str());
-                
             string accession;
             getAttribute(attributes, "accession", accession);
-            if (accession.substr(0,3) != "MS:")
-                throw runtime_error(("[IO::HandlerSoftware] Unknown accession: " + accession).c_str());
-            software->softwareParam.cvid = (CVID)lexical_cast<int>(accession.substr(3));
+            if (!accession.empty())
+                software->softwareParam.cvid = cvinfo(accession).cvid;
 
             getAttribute(attributes, "version", software->softwareParamVersion);
             return Status::Ok;

@@ -114,9 +114,12 @@ string enumName(const Term& term)
 }
 
 
+const size_t enumBlockSize_ = 100000000;
+
+
 size_t enumValue(const Term& term, size_t index)
 {
-    return term.id + (100000000 * index);
+    return term.id + (enumBlockSize_ * index);
 }
 
 
@@ -187,7 +190,10 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
     os << "/// returns CV term info for the specified CVID\n" 
-          "const CVInfo& cvinfo(CVID id);\n\n\n";
+          "const CVInfo& cvinfo(CVID cvid);\n\n\n";
+
+    os << "/// returns CV term info for the specified id (accession number)\n" 
+          "const CVInfo& cvinfo(const std::string& id);\n\n\n";
 
     os << "/// returns true iff child IsA parent in the CV\n" 
           "bool cvIsA(CVID child, CVID parent);\n\n\n";
@@ -210,12 +216,14 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     writeCopyright(os, filename);
 
     os << "#include \"" << basename << ".hpp\"\n"
+       << "#include \"boost/lexical_cast.hpp\"\n"
        << "#include <map>\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
 
-    os << "using namespace std;\n\n\n";
+    os << "using namespace std;\n"
+          "using boost::lexical_cast;\n\n\n";
 
     os << "namespace {\n\n\n";
 
@@ -238,7 +246,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
            << "},\n";
     os << "}; // termInfos_\n\n\n";
 
-    os << "const unsigned int termInfosSize_ = sizeof(termInfos_)/sizeof(TermInfo);\n\n\n";
+    os << "const size_t termInfosSize_ = sizeof(termInfos_)/sizeof(TermInfo);\n\n\n";
 
     os << "struct CVIDPair\n"
           "{\n"
@@ -261,7 +269,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
     os << "}; // relationsIsA_\n\n\n";
 
-    os << "const unsigned int relationsIsASize_ = sizeof(relationsIsA_)/sizeof(CVIDPair);\n\n\n";
+    os << "const size_t relationsIsASize_ = sizeof(relationsIsA_)/sizeof(CVIDPair);\n\n\n";
 
     os << "CVIDPair relationsPartOf_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
@@ -271,7 +279,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
     os << "}; // relationsPartOf_\n\n\n";
 
-    os << "const unsigned int relationsPartOfSize_ = sizeof(relationsPartOf_)/sizeof(CVIDPair);\n\n\n";
+    os << "const size_t relationsPartOfSize_ = sizeof(relationsPartOf_)/sizeof(CVIDPair);\n\n\n";
 
     os << "struct CVIDStringPair\n"
           "{\n"
@@ -289,7 +297,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
            << "\"" << *jt << "\"" << "},\n";
     os << "}; // relationsExactSynonym_\n\n\n";
 
-    os << "const unsigned int relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
+    os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
     os << "bool initialized_ = false;\n"
           "map<CVID,CVInfo> infoMap_;\n"
@@ -307,7 +315,6 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "        temp.def = it->def;\n"
           "        infoMap_[temp.cvid] = temp;\n"
           "        cvids_.push_back(it->cvid);\n"
-          "\n"
           "    }\n"
           "\n"
           "    for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)\n"
@@ -322,6 +329,23 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    initialized_ = true;\n"
           "}\n\n\n";
 
+    os << "const char* oboPrefixes_[] =\n"
+          "{\n";
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+        os << "    \"" << obo->prefix << "\",\n";
+    os << "};\n\n\n";
+
+    os << "const size_t oboPrefixesSize_ = sizeof(oboPrefixes_)/sizeof(const char*);\n\n\n"
+
+          "const size_t enumBlockSize_ = " << enumBlockSize_ << ";\n\n\n"
+
+          "struct StringEquals\n"
+          "{\n"
+          "    bool operator()(const string& yours) {return mine==yours;}\n"
+          "    string mine;\n"
+          "    StringEquals(const string& _mine) : mine(_mine) {}\n"
+          "};\n\n\n";
+
     os << "} // namespace\n\n\n";
 
     os << "const string& CVInfo::shortName() const\n"
@@ -333,10 +357,26 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return *result;\n"
           "}\n\n\n";
 
-    os << "const CVInfo& cvinfo(CVID id)\n"
+    os << "const CVInfo& cvinfo(CVID cvid)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
-          "   return infoMap_[id];\n"
+          "   return infoMap_[cvid];\n"
+          "}\n\n\n";
+
+    os << "const CVInfo& cvinfo(const string& id)\n"
+          "{\n"
+          "   if (!initialized_) initialize();\n"
+          "   CVID cvid = CVID_Unknown;\n"
+          "\n"
+          "   const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,\n"
+          "                             StringEquals(id.substr(0,2).c_str()));\n"
+          "\n"
+          "   if (it != oboPrefixes_+oboPrefixesSize_ &&\n" 
+          "       id.size() > 3 &&\n"
+          "       id[2] == ':')\n"
+          "       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + lexical_cast<size_t>(id.substr(3)));\n"
+          "\n"
+          "   return infoMap_[cvid];\n"
           "}\n\n\n";
 
     os << "bool cvIsA(CVID child, CVID parent)\n"

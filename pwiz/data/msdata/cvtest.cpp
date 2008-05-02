@@ -84,6 +84,17 @@ void testSynonyms()
 }
 
 
+void testIDTranslation()
+{
+    unit_assert(cvinfo("MS:1000025").cvid == MS_B);
+    unit_assert(cvinfo("MS:1000042").cvid == MS_intensity);
+    unit_assert(cvinfo("UO:0000231").cvid == UO_information_unit);
+    unit_assert(cvinfo("XX:0000231").cvid == CVID_Unknown);
+    unit_assert(cvinfo("a").cvid == CVID_Unknown);
+    unit_assert(cvinfo("").cvid == CVID_Unknown);
+}
+
+
 int main(int argc, char* argv[])
 {
     if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout; 
@@ -93,6 +104,7 @@ int main(int argc, char* argv[])
         test();
         testIsA();
         testSynonyms();
+        testIDTranslation();
         return 0;
     }
     catch (exception& e)

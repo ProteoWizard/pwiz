@@ -1046,7 +1046,11 @@ struct CVInfo
 
 
 /// returns CV term info for the specified CVID
-const CVInfo& cvinfo(CVID id);
+const CVInfo& cvinfo(CVID cvid);
+
+
+/// returns CV term info for the specified id (accession number)
+const CVInfo& cvinfo(const std::string& id);
 
 
 /// returns true iff child IsA parent in the CV

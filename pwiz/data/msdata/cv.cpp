@@ -24,6 +24,7 @@
 
 
 #include "cv.hpp"
+#include "boost/lexical_cast.hpp"
 #include <map>
 
 
@@ -32,6 +33,7 @@ namespace msdata {
 
 
 using namespace std;
+using boost::lexical_cast;
 
 
 namespace {
@@ -916,7 +918,7 @@ const TermInfo termInfos_[] =
 }; // termInfos_
 
 
-const unsigned int termInfosSize_ = sizeof(termInfos_)/sizeof(TermInfo);
+const size_t termInfosSize_ = sizeof(termInfos_)/sizeof(TermInfo);
 
 
 struct CVIDPair
@@ -1748,7 +1750,7 @@ CVIDPair relationsIsA_[] =
 }; // relationsIsA_
 
 
-const unsigned int relationsIsASize_ = sizeof(relationsIsA_)/sizeof(CVIDPair);
+const size_t relationsIsASize_ = sizeof(relationsIsA_)/sizeof(CVIDPair);
 
 
 CVIDPair relationsPartOf_[] =
@@ -1826,7 +1828,7 @@ CVIDPair relationsPartOf_[] =
 }; // relationsPartOf_
 
 
-const unsigned int relationsPartOfSize_ = sizeof(relationsPartOf_)/sizeof(CVIDPair);
+const size_t relationsPartOfSize_ = sizeof(relationsPartOf_)/sizeof(CVIDPair);
 
 
 struct CVIDStringPair
@@ -2142,7 +2144,7 @@ CVIDStringPair relationsExactSynonym_[] =
 }; // relationsExactSynonym_
 
 
-const unsigned int relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);
+const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);
 
 
 bool initialized_ = false;
@@ -2161,7 +2163,6 @@ void initialize()
         temp.def = it->def;
         infoMap_[temp.cvid] = temp;
         cvids_.push_back(it->cvid);
-
     }
 
     for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)
@@ -2177,6 +2178,27 @@ void initialize()
 }
 
 
+const char* oboPrefixes_[] =
+{
+    "MS",
+    "UO",
+};
+
+
+const size_t oboPrefixesSize_ = sizeof(oboPrefixes_)/sizeof(const char*);
+
+
+const size_t enumBlockSize_ = 100000000;
+
+
+struct StringEquals
+{
+    bool operator()(const string& yours) {return mine==yours;}
+    string mine;
+    StringEquals(const string& _mine) : mine(_mine) {}
+};
+
+
 } // namespace
 
 
@@ -2190,10 +2212,27 @@ const string& CVInfo::shortName() const
 }
 
 
-const CVInfo& cvinfo(CVID id)
+const CVInfo& cvinfo(CVID cvid)
 {
    if (!initialized_) initialize();
-   return infoMap_[id];
+   return infoMap_[cvid];
+}
+
+
+const CVInfo& cvinfo(const string& id)
+{
+   if (!initialized_) initialize();
+   CVID cvid = CVID_Unknown;
+
+   const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,
+                             StringEquals(id.substr(0,2).c_str()));
+
+   if (it != oboPrefixes_+oboPrefixesSize_ &&
+       id.size() > 3 &&
+       id[2] == ':')
+       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + lexical_cast<size_t>(id.substr(3)));
+
+   return infoMap_[cvid];
 }
 
 
