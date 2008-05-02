@@ -889,7 +889,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     bfs::path filename = dataInfo.outputDirectory;
     filename /= dataInfo.sourceFilename + label + ".png";
 
-    if (dataInfo.log) *dataInfo.log << "[Pseudo2DGel] Writing file " << filename << endl;
+    if (dataInfo.log) *dataInfo.log << "[Pseudo2DGel] Writing file " << filename.string() << endl;
     image->writePng(filename.string().c_str());
 }
 

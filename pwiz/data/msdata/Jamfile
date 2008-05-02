@@ -79,7 +79,7 @@ exe cvgen : obo.cpp cvgen.cpp ../..//boost_regex ../..//boost_filesystem
 
 actions do_cvgen
 {
-    $(>)
+   $(2)
 }
 
 # we currently call cvgen twice

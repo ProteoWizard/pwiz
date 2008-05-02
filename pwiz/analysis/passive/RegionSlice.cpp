@@ -28,6 +28,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <stdexcept>
 
 
 namespace pwiz {

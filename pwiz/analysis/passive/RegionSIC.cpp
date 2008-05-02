@@ -28,6 +28,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -109,7 +110,7 @@ void RegionSIC::close(const DataInfo& dataInfo)
     // write peaks info
 
     bfs::path outputPeaks = (bfs::path)dataInfo.outputDirectory / (base.str() + ".peaks.txt");
-    if (dataInfo.log) *dataInfo.log << "[RegionSIC] Writing file " << outputPeaks << endl;
+    if (dataInfo.log) *dataInfo.log << "[RegionSIC] Writing file " << outputPeaks.string() << endl;
     bfs::ofstream osPeaks(outputPeaks);
 
     const size_t width_index = 7;
@@ -161,7 +162,7 @@ void RegionSIC::close(const DataInfo& dataInfo)
     // write summary
 
     bfs::path outputSummary = (bfs::path)dataInfo.outputDirectory / (base.str() + ".summary.txt");
-    if (dataInfo.log) *dataInfo.log << "[RegionSIC] Writing file " << outputSummary << endl;
+    if (dataInfo.log) *dataInfo.log << "[RegionSIC] Writing file " << outputSummary.string() << endl;
     bfs::ofstream osSummary(outputSummary);
 
     const RegionAnalyzer::Stats& stats = regionAnalyzer_->stats();

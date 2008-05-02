@@ -23,11 +23,12 @@
 
 #include "RegionAnalyzer.hpp"
 #include "utility/math/Parabola.hpp"
-#include "boost/filesystem.hpp"
+#include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -141,7 +142,7 @@ void RegionAnalyzer::open(const DataInfo& dataInfo)
         outputFilename /= (dataInfo.sourceFilename + impl_->config.filenameSuffix);
 
         if (dataInfo.log) 
-            *dataInfo.log << "[RegionAnalyzer] Writing file " << outputFilename << endl;
+            *dataInfo.log << "[RegionAnalyzer] Writing file " << outputFilename.string() << endl;
 
         impl_->osDump.open(outputFilename);
         

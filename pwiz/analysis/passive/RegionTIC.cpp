@@ -28,6 +28,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -98,7 +99,7 @@ void RegionTIC::close(const DataInfo& dataInfo)
     outputFilename /= oss.str();
 
     if (dataInfo.log) 
-        *dataInfo.log << "[RegionTIC] Writing file " << outputFilename << endl;
+        *dataInfo.log << "[RegionTIC] Writing file " << outputFilename.string() << endl;
 
     bfs::ofstream os(outputFilename);
 
