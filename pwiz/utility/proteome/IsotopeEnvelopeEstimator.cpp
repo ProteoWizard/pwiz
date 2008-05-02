@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IsotopeEnvelopeEstimator.hpp"
 #include "IsotopeCalculator.hpp"
 #include "utility/math/round.hpp"
@@ -145,15 +147,15 @@ Chemistry::MassDistribution IsotopeEnvelopeEstimator::Impl::isotopeEnvelope(doub
 // forwarding to impl
 //
 
-IsotopeEnvelopeEstimator::IsotopeEnvelopeEstimator(const Config& config)
+PWIZ_API_DECL IsotopeEnvelopeEstimator::IsotopeEnvelopeEstimator(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
-IsotopeEnvelopeEstimator::~IsotopeEnvelopeEstimator() {} // auto destruction of impl_
+PWIZ_API_DECL IsotopeEnvelopeEstimator::~IsotopeEnvelopeEstimator() {} // auto destruction of impl_
 
 
-Chemistry::MassDistribution IsotopeEnvelopeEstimator::isotopeEnvelope(double mass) const
+PWIZ_API_DECL Chemistry::MassDistribution IsotopeEnvelopeEstimator::isotopeEnvelope(double mass) const
 {
     return impl_->isotopeEnvelope(mass);
 }

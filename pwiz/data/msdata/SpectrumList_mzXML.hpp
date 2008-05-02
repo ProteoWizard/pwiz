@@ -24,7 +24,7 @@
 #ifndef _SPECTRUMLIST_MZXML_HPP_
 #define _SPECTRUMLIST_MZXML_HPP_
 
-
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include <iosfwd>
 #include <stdexcept>
@@ -35,7 +35,7 @@ namespace msdata {
 
 
 /// implementation of SpectrumList, backed by an mzXML file
-class SpectrumList_mzXML : public SpectrumList
+class PWIZ_API_DECL SpectrumList_mzXML : public SpectrumList
 {
     public:
 

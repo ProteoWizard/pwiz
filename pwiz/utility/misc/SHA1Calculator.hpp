@@ -24,7 +24,7 @@
 #ifndef _SHA1CALCULATOR_HPP_
 #define _SHA1CALCULATOR_HPP_ 
 
-
+#include "utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include <string>
 
@@ -33,7 +33,7 @@ namespace pwiz {
 namespace util {
 
 
-class SHA1Calculator
+class PWIZ_API_DECL SHA1Calculator
 {
     public:
 

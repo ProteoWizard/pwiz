@@ -25,7 +25,8 @@
 #define _PEAKDETECTOR_HPP_
 
 
-#include "data/misc//FrequencyData.hpp"
+#include "utility/misc/Export.hpp"
+#include "data/misc/FrequencyData.hpp"
 #include "data/misc/PeakData.hpp"
 
 
@@ -34,7 +35,7 @@ namespace frequency {
 
 
 /// Interface for finding peaks in frequency data.
-class PeakDetector
+class PWIZ_API_DECL PeakDetector
 {
     public:
 

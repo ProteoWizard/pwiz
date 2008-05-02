@@ -25,6 +25,7 @@
 #define _ERF_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <complex>
 
 
@@ -55,7 +56,7 @@ namespace math {
 	 */
 
 
-std::complex<double> erf(const std::complex<double>& z);
+PWIZ_API_DECL std::complex<double> erf(const std::complex<double>& z);
 
 // Darren's testing
 std::complex<double> erf_series2(const std::complex<double>& z);

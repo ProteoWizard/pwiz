@@ -24,6 +24,7 @@
 #ifndef _CVPARAM_HPP_
 #define _CVPARAM_HPP_
 
+#include "utility/misc/Export.hpp"
 
 #include "cv.hpp"
 #include "boost/lexical_cast.hpp"
@@ -37,18 +38,57 @@ namespace msdata {
 
 
 /// represents a tag-value pair, where the tag comes from the controlled vocabulary
-struct CVParam
+struct PWIZ_API_DECL CVParam
 {
     CVID cvid;
     std::string value;
     CVID units;
 
-    /// template constructor performs automatic conversion from value types
-    /// that can be lexical_casted to a string
-    template <typename value_type>
-    CVParam(CVID _cvid, const value_type& _value, CVID _units = CVID_Unknown)
+    CVParam(CVID _cvid, float _value, CVID _units = CVID_Unknown)
     :   cvid(_cvid), 
         value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, double _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, int _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, long _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, unsigned int _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, unsigned long _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(boost::lexical_cast<std::string>(_value)),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, std::string _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(_value),
+        units(_units)
+    {}
+
+    CVParam(CVID _cvid, const char* _value, CVID _units = CVID_Unknown)
+    :   cvid(_cvid), 
+        value(_value),
         units(_units)
     {}
 
@@ -61,6 +101,8 @@ struct CVParam
     CVParam(CVID _cvid = CVID_Unknown)
     :   cvid(_cvid), units(CVID_Unknown)
     {}
+
+    ~CVParam();
 
     /// templated value access with type conversion
     template<typename value_type>
@@ -100,7 +142,7 @@ struct CVParam
 /// vector<CVParam>::const_iterator it =
 ///     find_if(params.begin(), params.end(), CVParamIs(MS_software));
 ///
-struct CVParamIs 
+struct PWIZ_API_DECL CVParamIs 
 {
     CVParamIs(CVID cvid) : cvid_(cvid) {}
     bool operator()(const CVParam& param) const {return param.cvid == cvid_;}
@@ -113,7 +155,7 @@ struct CVParamIs
 /// vector<CVParam>::const_iterator it =
 ///     find_if(params.begin(), params.end(), CVParamIsChildOf(MS_software));
 ///
-struct CVParamIsChildOf
+struct PWIZ_API_DECL CVParamIsChildOf
 {
     CVParamIsChildOf(CVID cvid) : cvid_(cvid) {}
     bool operator()(const CVParam& param) const {return cvIsA(param.cvid, cvid_);}
@@ -130,7 +172,7 @@ inline bool CVParam::valueAs<bool>() const
 }
 
 
-std::ostream& operator<<(std::ostream& os, const CVParam& param);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const CVParam& param);
 
 
 } // namespace msdata

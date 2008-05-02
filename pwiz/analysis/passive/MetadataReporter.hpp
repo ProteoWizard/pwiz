@@ -25,6 +25,7 @@
 #define _METADATAREPORTER_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 
 
@@ -33,7 +34,7 @@ namespace analysis {
 
 
 /// writes file-level metadata to a file
-class MetadataReporter : public MSDataAnalyzer
+class PWIZ_API_DECL MetadataReporter : public MSDataAnalyzer
 {
     public:
 

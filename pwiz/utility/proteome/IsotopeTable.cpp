@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IsotopeTable.hpp"
 #include <iostream>
 #include <iterator>
@@ -406,21 +408,21 @@ void IsotopeTable::Impl::printRecord(int recordIndex) const
 // IsotopeTable implementation
 
 
-IsotopeTable::IsotopeTable(const Chemistry::MassDistribution& md, int maxAtomCount, double cutoff)
+PWIZ_API_DECL IsotopeTable::IsotopeTable(const Chemistry::MassDistribution& md, int maxAtomCount, double cutoff)
 :   impl_(new Impl(md, maxAtomCount, cutoff))
 {}
 
 
-IsotopeTable::~IsotopeTable() {} // auto destruction of impl_
+PWIZ_API_DECL IsotopeTable::~IsotopeTable() {} // auto destruction of impl_
 
 
-MassDistribution IsotopeTable::distribution(int atomCount) const 
+PWIZ_API_DECL MassDistribution IsotopeTable::distribution(int atomCount) const 
 {
     return impl_->distribution(atomCount);
 }
 
 
-ostream& operator<<(ostream& os, const IsotopeTable& isotopeTable)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const IsotopeTable& isotopeTable)
 {
     isotopeTable.impl_->printInfo(os);
     return os;

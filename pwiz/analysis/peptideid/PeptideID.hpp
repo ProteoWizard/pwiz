@@ -25,6 +25,7 @@
 #define _PEPTIDEID_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <string>
 
 
@@ -34,11 +35,11 @@ namespace peptideid {
 /// This is an interface for classes that allow access to data sources
 /// of identified peptides.
 
-class PeptideID
+class PWIZ_API_DECL PeptideID
 {
     public:
 
-    struct Record
+    struct PWIZ_API_DECL Record
     {
         std::string nativeID;
         std::string sequence;

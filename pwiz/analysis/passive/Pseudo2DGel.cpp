@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Pseudo2DGel.hpp"
 #include "utility/misc/Image.hpp"
 #include "analysis/peptideid/PeptideID_pepXML.hpp"
@@ -49,7 +51,7 @@ using namespace pwiz::peptideid;
 //
 
 
-Pseudo2DGel::Config::Config(const string& args)
+PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 :   mzLow(200), mzHigh(2000), binCount(640),
     zRadius(2), bry(false), binSum(false), ms2(false)
 {
@@ -1273,16 +1275,17 @@ void Pseudo2DGel::Impl::drawTMZ(Image& image, const ScanList& scans,
 //
 
 
-Pseudo2DGel::Pseudo2DGel(const MSDataCache& cache, const Config& config)
+PWIZ_API_DECL Pseudo2DGel::Pseudo2DGel(const MSDataCache& cache, const Config& config)
 :   impl_(new Impl(cache, config))
 {}
 
-void Pseudo2DGel::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void Pseudo2DGel::open(const DataInfo& dataInfo)
 {
     impl_->open(dataInfo);
 }
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 Pseudo2DGel::updateRequested(const DataInfo& dataInfo, 
                              const SpectrumIdentity& spectrumIdentity) const 
@@ -1291,6 +1294,7 @@ Pseudo2DGel::updateRequested(const DataInfo& dataInfo,
 }
 
 
+PWIZ_API_DECL
 void Pseudo2DGel::update(const DataInfo& dataInfo, 
                          const Spectrum& spectrum)
 {
@@ -1298,7 +1302,7 @@ void Pseudo2DGel::update(const DataInfo& dataInfo,
 }
 
 
-void Pseudo2DGel::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void Pseudo2DGel::close(const DataInfo& dataInfo)
 {
     impl_->close(dataInfo);
 }

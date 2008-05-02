@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MetadataReporter.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
@@ -38,7 +40,7 @@ using namespace std;
 namespace bfs = boost::filesystem;
 
 
-void MetadataReporter::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void MetadataReporter::open(const DataInfo& dataInfo)
 {
     bfs::path outputFile = dataInfo.outputDirectory;
     outputFile /= dataInfo.sourceFilename + ".metadata.txt";

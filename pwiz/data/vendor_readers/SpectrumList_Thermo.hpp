@@ -1,3 +1,4 @@
+#include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "ChromatogramList_Thermo.hpp"
@@ -15,7 +16,7 @@ namespace detail {
 //
 // SpectrumList_Thermo
 //
-class SpectrumList_Thermo : public SpectrumList
+class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
 {
     public:
 

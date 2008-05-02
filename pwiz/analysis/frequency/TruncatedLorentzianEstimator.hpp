@@ -25,6 +25,7 @@
 #define _TRUNCATEDLORENTZIANESTIMATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "TruncatedLorentzianParameters.hpp"
 #include "data/misc/FrequencyData.hpp"
 #include <memory>
@@ -35,7 +36,7 @@ namespace pwiz {
 namespace frequency {
 
 
-class TruncatedLorentzianEstimator
+class PWIZ_API_DECL TruncatedLorentzianEstimator
 {
     public:
 

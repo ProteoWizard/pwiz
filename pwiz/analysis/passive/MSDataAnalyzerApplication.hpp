@@ -25,6 +25,7 @@
 #define _MSDATAANALYZERAPPLICATION_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 
 
@@ -36,7 +37,7 @@ namespace analysis {
 /// Utility class for handling command line parsing, filename wrangling, and
 /// MSDataAnalyzer driving.
 ///
-struct MSDataAnalyzerApplication
+struct PWIZ_API_DECL MSDataAnalyzerApplication
 {
     std::string usageOptions;
     std::string outputDirectory;

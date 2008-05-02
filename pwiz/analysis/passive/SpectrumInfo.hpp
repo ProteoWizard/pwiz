@@ -25,6 +25,7 @@
 #define _SPECTRUMINFO_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 
 
@@ -36,10 +37,10 @@ using namespace msdata;
 
 
 /// simple structure for holding Spectrum info 
-struct SpectrumInfo
+struct PWIZ_API_DECL SpectrumInfo
 {
     /// structure for Precursor info 
-    struct PrecursorInfo
+    struct PWIZ_API_DECL PrecursorInfo
     {
         size_t index;
         double mz;

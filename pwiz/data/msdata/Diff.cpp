@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Diff.hpp"
 #include <string>
 #include <cmath>
@@ -37,6 +39,7 @@ using boost::shared_ptr;
 using boost::lexical_cast;
 
 
+PWIZ_API_DECL
 void diff(const string& a, 
           const string& b, 
           string& a_b, 
@@ -72,6 +75,7 @@ void diff_numeric(const T& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const CV& a, 
           const CV& b, 
           CV& a_b, 
@@ -85,6 +89,7 @@ void diff(const CV& a,
 }
 
 
+PWIZ_API_DECL
 void diff(CVID a,
           CVID b,
           CVID& a_b,
@@ -100,6 +105,7 @@ void diff(CVID a,
 }
 
 
+PWIZ_API_DECL
 void diff(const CVParam& a, 
           const CVParam& b, 
           CVParam& a_b, 
@@ -116,6 +122,7 @@ void diff(const CVParam& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const UserParam& a, 
           const UserParam& b, 
           UserParam& a_b, 
@@ -251,6 +258,7 @@ void vector_diff_deep(const vector< shared_ptr<object_type> >& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const ParamContainer& a, 
           const ParamContainer& b, 
           ParamContainer& a_b, 
@@ -263,6 +271,7 @@ void diff(const ParamContainer& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const ParamGroup& a, 
           const ParamGroup& b, 
           ParamGroup& a_b, 
@@ -281,6 +290,7 @@ void diff(const ParamGroup& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const SourceFile& a, 
           const SourceFile& b, 
           SourceFile& a_b, 
@@ -301,6 +311,7 @@ void diff(const SourceFile& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const FileDescription& a, 
           const FileDescription& b, 
           FileDescription& a_b, 
@@ -313,6 +324,7 @@ void diff(const FileDescription& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Sample& a, 
           const Sample& b, 
           Sample& a_b, 
@@ -332,6 +344,7 @@ void diff(const Sample& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Component& a, 
           const Component& b, 
           Component& a_b, 
@@ -343,6 +356,7 @@ void diff(const Component& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Source& a, 
           const Source& b, 
           Source& a_b, 
@@ -353,6 +367,7 @@ void diff(const Source& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Analyzer& a, 
           const Analyzer& b, 
           Analyzer& a_b, 
@@ -363,6 +378,7 @@ void diff(const Analyzer& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Detector& a, 
           const Detector& b, 
           Detector& a_b, 
@@ -373,6 +389,7 @@ void diff(const Detector& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const ComponentList& a, 
           const ComponentList& b, 
           ComponentList& a_b, 
@@ -385,6 +402,7 @@ void diff(const ComponentList& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Software& a, 
           const Software& b, 
           Software& a_b, 
@@ -425,6 +443,7 @@ void ptr_diff(const shared_ptr<object_type>& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const InstrumentConfiguration& a,
           const InstrumentConfiguration& b,
           InstrumentConfiguration& a_b,
@@ -445,6 +464,7 @@ void diff(const InstrumentConfiguration& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const ProcessingMethod& a,
           const ProcessingMethod& b,
           ProcessingMethod& a_b,
@@ -456,6 +476,7 @@ void diff(const ProcessingMethod& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const DataProcessing& a,
           const DataProcessing& b,
           DataProcessing& a_b,
@@ -475,6 +496,7 @@ void diff(const DataProcessing& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const AcquisitionSettings& a,
           const AcquisitionSettings& b,
           AcquisitionSettings& a_b,
@@ -495,6 +517,7 @@ void diff(const AcquisitionSettings& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Acquisition& a,
           const Acquisition& b,
           Acquisition& a_b,
@@ -514,6 +537,7 @@ void diff(const Acquisition& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const AcquisitionList& a,
           const AcquisitionList& b,
           AcquisitionList& a_b,
@@ -525,6 +549,7 @@ void diff(const AcquisitionList& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Precursor& a,
           const Precursor& b,
           Precursor& a_b,
@@ -554,6 +579,7 @@ void diff(const Precursor& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Scan& a,
           const Scan& b,
           Scan& a_b,
@@ -573,6 +599,7 @@ void diff(const Scan& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const SpectrumDescription& a,
           const SpectrumDescription& b,
           SpectrumDescription& a_b,
@@ -611,6 +638,7 @@ double maxdiff(const vector<double>& a, const vector<double>& b)
 }
 
 
+PWIZ_API_DECL
 void diff(const BinaryDataArray& a,
           const BinaryDataArray& b,
           BinaryDataArray& a_b,
@@ -651,6 +679,7 @@ void diff(const BinaryDataArray& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const vector<BinaryDataArrayPtr>& a,
           const vector<BinaryDataArrayPtr>& b,
           vector<BinaryDataArrayPtr>& a_b,
@@ -678,6 +707,7 @@ void diff(const vector<BinaryDataArrayPtr>& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Spectrum& a,
           const Spectrum& b,
           Spectrum& a_b,
@@ -727,6 +757,7 @@ void diff(const Spectrum& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Chromatogram& a,
           const Chromatogram& b,
           Chromatogram& a_b,
@@ -774,6 +805,7 @@ void diff(const Chromatogram& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
@@ -805,6 +837,7 @@ void diff(const SpectrumList& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
@@ -838,6 +871,7 @@ void diff(const ChromatogramList& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const Run& a,
           const Run& b,
           Run& a_b,
@@ -881,6 +915,7 @@ void diff(const Run& a,
 }
 
 
+PWIZ_API_DECL
 void diff(const MSData& a,
           const MSData& b,
           MSData& a_b,

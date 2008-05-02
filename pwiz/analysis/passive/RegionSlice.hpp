@@ -25,6 +25,7 @@
 #define _REGIONSLICE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
@@ -35,11 +36,11 @@ namespace analysis {
 
 
 /// writes data samples from a single rectangular region 
-class RegionSlice : public MSDataAnalyzer
+class PWIZ_API_DECL RegionSlice : public MSDataAnalyzer
 {
     public:
 
-    struct Config : public RegionAnalyzer::Config
+    struct PWIZ_API_DECL Config : public RegionAnalyzer::Config
     {
         Config(const std::string& args); 
     };

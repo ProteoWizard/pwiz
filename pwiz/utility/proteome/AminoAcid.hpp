@@ -25,6 +25,7 @@
 #define _AMINOACID_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include <string>
 #include <memory>
@@ -39,7 +40,7 @@ namespace AminoAcid {
 
 
 /// enumeration of the amino acids 
-enum Type 
+enum PWIZ_API_DECL Type 
 {
     Alanine,
     Cysteine,
@@ -68,7 +69,7 @@ enum Type
 
 
 /// class for accessing information about the amino acids
-class Info 
+class PWIZ_API_DECL Info 
 {
     public:
 

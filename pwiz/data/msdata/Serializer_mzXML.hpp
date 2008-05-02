@@ -24,6 +24,7 @@
 #ifndef _SERIALIZER_MZXML_HPP_
 #define _SERIALIZER_MZXML_HPP_
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "BinaryDataEncoder.hpp"
 
@@ -33,12 +34,12 @@ namespace msdata {
 
 
 /// MSData <-> mzXML stream serialization
-class Serializer_mzXML
+class PWIZ_API_DECL Serializer_mzXML
 {
     public:
 
     /// Serializer_mzXML configuration
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         /// configuration for binary data encoding in write()
         /// note: byteOrder is ignored (mzXML always big endian) 
@@ -69,7 +70,7 @@ class Serializer_mzXML
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Serializer_mzXML::Config& config);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Serializer_mzXML::Config& config);
 
 
 } // namespace msdata

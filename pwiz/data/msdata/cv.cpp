@@ -23,9 +23,11 @@
 //
 
 
+#define PWIZ_SOURCE
 #include "cv.hpp"
 #include "boost/lexical_cast.hpp"
 #include <map>
+#include <algorithm>
 
 
 namespace pwiz {
@@ -2202,7 +2204,7 @@ struct StringEquals
 } // namespace
 
 
-const string& CVInfo::shortName() const
+PWIZ_API_DECL const string& CVInfo::shortName() const
 {
     const string* result = &name;
     for (vector<string>::const_iterator it=exactSynonyms.begin(); it!=exactSynonyms.end(); ++it)
@@ -2212,14 +2214,14 @@ const string& CVInfo::shortName() const
 }
 
 
-const CVInfo& cvinfo(CVID cvid)
+PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)
 {
    if (!initialized_) initialize();
    return infoMap_[cvid];
 }
 
 
-const CVInfo& cvinfo(const string& id)
+PWIZ_API_DECL const CVInfo& cvinfo(const string& id)
 {
    if (!initialized_) initialize();
    CVID cvid = CVID_Unknown;
@@ -2236,7 +2238,7 @@ const CVInfo& cvinfo(const string& id)
 }
 
 
-bool cvIsA(CVID child, CVID parent)
+PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)
 {
     if (child == parent) return true;
     const CVInfo& info = cvinfo(child);
@@ -2246,7 +2248,7 @@ bool cvIsA(CVID child, CVID parent)
 }
 
 
-const vector<CVID>& cvids()
+PWIZ_API_DECL const vector<CVID>& cvids()
 {
    if (!initialized_) initialize();
    return cvids_;

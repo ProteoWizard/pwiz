@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "XMLWriter.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -190,33 +191,33 @@ stream_offset XMLWriter::Impl::positionNext() const
 //
 
 
-XMLWriter::XMLWriter(ostream& os, const Config& config)
+PWIZ_API_DECL XMLWriter::XMLWriter(ostream& os, const Config& config)
 :   impl_(new Impl(os, config))
 {}
 
-void XMLWriter::pushStyle(unsigned int flags) {impl_->pushStyle(flags);}
+PWIZ_API_DECL void XMLWriter::pushStyle(unsigned int flags) {impl_->pushStyle(flags);}
 
-void XMLWriter::popStyle() {impl_->popStyle();}
+PWIZ_API_DECL void XMLWriter::popStyle() {impl_->popStyle();}
 
-void XMLWriter::processingInstruction(const string& name, const string& data) 
+PWIZ_API_DECL void XMLWriter::processingInstruction(const string& name, const string& data) 
 {
     impl_->processingInstruction(name, data);
 }
 
-void XMLWriter::startElement(const string& name, 
+PWIZ_API_DECL void XMLWriter::startElement(const string& name, 
                              const Attributes& attributes,
                              EmptyElementTag emptyElementTag)
 {
     impl_->startElement(name, attributes, emptyElementTag);
 }
 
-void XMLWriter::endElement() {impl_->endElement();}
+PWIZ_API_DECL void XMLWriter::endElement() {impl_->endElement();}
 
-void XMLWriter::characters(const string& text) {impl_->characters(text);}
+PWIZ_API_DECL void XMLWriter::characters(const string& text) {impl_->characters(text);}
 
-stream_offset XMLWriter::position() const {return impl_->position();}
+PWIZ_API_DECL stream_offset XMLWriter::position() const {return impl_->position();}
 
-stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
+PWIZ_API_DECL stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
 
 
 } // namespace minimxml

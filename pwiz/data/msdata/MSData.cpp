@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "MSData.hpp"
 #include <iostream>
@@ -42,7 +43,7 @@ using boost::lexical_cast;
 //
 
 
-bool CV::empty() const 
+PWIZ_API_DECL bool CV::empty() const 
 {
     return id.empty() && URI.empty() && fullName.empty() && version.empty();
 }
@@ -53,6 +54,7 @@ bool CV::empty() const
 //
 
 
+PWIZ_API_DECL
 UserParam::UserParam(const string& _name, 
                      const string& _value, 
                      const string& _type,
@@ -61,19 +63,19 @@ UserParam::UserParam(const string& _name,
 {}
 
 
-bool UserParam::empty() const 
+PWIZ_API_DECL bool UserParam::empty() const 
 {
     return name.empty() && value.empty() && type.empty() && units==CVID_Unknown;
 }
 
 
-bool UserParam::operator==(const UserParam& that) const
+PWIZ_API_DECL bool UserParam::operator==(const UserParam& that) const
 {
     return (name==that.name && value==that.value && type==that.type && units==that.units);
 }
 
 
-bool UserParam::operator!=(const UserParam& that) const
+PWIZ_API_DECL bool UserParam::operator!=(const UserParam& that) const
 {
     return !operator==(that); 
 }
@@ -84,7 +86,7 @@ bool UserParam::operator!=(const UserParam& that) const
 //
 
 
-CVParam ParamContainer::cvParam(CVID cvid) const
+PWIZ_API_DECL CVParam ParamContainer::cvParam(CVID cvid) const
 {
     // first look in our own cvParams
 
@@ -107,7 +109,7 @@ CVParam ParamContainer::cvParam(CVID cvid) const
 }
 
 
-CVParam ParamContainer::cvParamChild(CVID cvid) const
+PWIZ_API_DECL CVParam ParamContainer::cvParamChild(CVID cvid) const
 {
     // first look in our own cvParams
 
@@ -130,14 +132,14 @@ CVParam ParamContainer::cvParamChild(CVID cvid) const
 }
 
 
-bool ParamContainer::hasCVParam(CVID cvid) const
+PWIZ_API_DECL bool ParamContainer::hasCVParam(CVID cvid) const
 {
     CVParam param = cvParam(cvid);
     return (param.cvid != CVID_Unknown);
 }
 
 
-bool ParamContainer::hasCVParamChild(CVID cvid) const
+PWIZ_API_DECL bool ParamContainer::hasCVParamChild(CVID cvid) const
 {
     CVParam param = cvParamChild(cvid);
     return (param.cvid != CVID_Unknown);
@@ -154,7 +156,7 @@ struct HasName
 } // namespace
 
 
-UserParam ParamContainer::userParam(const string& name) const
+PWIZ_API_DECL UserParam ParamContainer::userParam(const string& name) const
 {
     vector<UserParam>::const_iterator it = 
         find_if(userParams.begin(), userParams.end(), HasName(name));
@@ -162,7 +164,7 @@ UserParam ParamContainer::userParam(const string& name) const
 }
 
 
-void ParamContainer::set(CVID cvid, const string& value, CVID units)
+PWIZ_API_DECL void ParamContainer::set(CVID cvid, const string& value, CVID units)
 {
     vector<CVParam>::iterator it = find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
    
@@ -177,7 +179,7 @@ void ParamContainer::set(CVID cvid, const string& value, CVID units)
 }
 
 
-bool ParamContainer::empty() const
+PWIZ_API_DECL bool ParamContainer::empty() const
 {
     return paramGroupPtrs.empty() && cvParams.empty() && userParams.empty();
 }
@@ -188,12 +190,12 @@ bool ParamContainer::empty() const
 //
 
 
-ParamGroup::ParamGroup(const string& _id)
+PWIZ_API_DECL ParamGroup::ParamGroup(const string& _id)
 : id(_id) 
 {}
 
 
-bool ParamGroup::empty() const 
+PWIZ_API_DECL bool ParamGroup::empty() const 
 {
     return id.empty() && ParamContainer::empty();
 }
@@ -204,6 +206,7 @@ bool ParamGroup::empty() const
 //
 
 
+PWIZ_API_DECL
 SourceFile::SourceFile(const string _id,
                        const string _name,
                        const string _location)
@@ -211,7 +214,7 @@ SourceFile::SourceFile(const string _id,
 {}
 
 
-bool SourceFile::empty() const
+PWIZ_API_DECL bool SourceFile::empty() const
 {
     return id.empty() && name.empty() && location.empty() && ParamContainer::empty();
 }
@@ -222,7 +225,7 @@ bool SourceFile::empty() const
 //
 
 
-bool FileDescription::empty() const
+PWIZ_API_DECL bool FileDescription::empty() const
 {
     return fileContent.empty() && sourceFilePtrs.empty() && contacts.empty();
 }
@@ -233,13 +236,14 @@ bool FileDescription::empty() const
 //
 
 
+PWIZ_API_DECL
 Sample::Sample(const string _id,
                const string _name)
 :   id(_id), name(_name)
 {}
 
 
-bool Sample::empty() const
+PWIZ_API_DECL bool Sample::empty() const
 {
     return id.empty() && name.empty() && ParamContainer::empty();
 }
@@ -250,7 +254,7 @@ bool Sample::empty() const
 //
 
 
-bool Component::empty() const
+PWIZ_API_DECL bool Component::empty() const
 {
     return order==0 && ParamContainer::empty();
 }
@@ -261,7 +265,7 @@ bool Component::empty() const
 //
 
 
-bool ComponentList::empty() const
+PWIZ_API_DECL bool ComponentList::empty() const
 {
     return source.empty() && analyzer.empty() && detector.empty();
 }
@@ -272,7 +276,7 @@ bool ComponentList::empty() const
 //
 
 
-bool Software::empty() const
+PWIZ_API_DECL bool Software::empty() const
 {
     return id.empty() && softwareParam.cvid==CVID_Unknown && 
            softwareParamVersion.empty();
@@ -284,11 +288,12 @@ bool Software::empty() const
 // For some reason MSVC doesn't like this default argument, but won't say why:
 //   const CVParam& _cvParam = CVParam(),
 //
-Software::Software(const string& _id)
+PWIZ_API_DECL Software::Software(const string& _id)
 :   id(_id)
 {}
 
 
+PWIZ_API_DECL
 Software::Software(const string& _id,
                    const CVParam& _softwareParam,
                    const string& _softwareParamVersion)
@@ -301,12 +306,12 @@ Software::Software(const string& _id,
 //
 
 
-InstrumentConfiguration::InstrumentConfiguration(const string& _id)
+PWIZ_API_DECL InstrumentConfiguration::InstrumentConfiguration(const string& _id)
 :   id(_id)
 {}
 
 
-bool InstrumentConfiguration::empty() const
+PWIZ_API_DECL bool InstrumentConfiguration::empty() const
 {
     return id.empty() && componentList.empty() && 
            (!softwarePtr.get() || softwarePtr->empty()) && 
@@ -319,7 +324,7 @@ bool InstrumentConfiguration::empty() const
 //
 
 
-bool ProcessingMethod::empty() const
+PWIZ_API_DECL bool ProcessingMethod::empty() const
 {
     return order==0 && ParamContainer::empty();
 }
@@ -330,12 +335,12 @@ bool ProcessingMethod::empty() const
 //
 
 
-DataProcessing::DataProcessing(const string& _id)
+PWIZ_API_DECL DataProcessing::DataProcessing(const string& _id)
 :   id(_id)
 {}
 
 
-bool DataProcessing::empty() const
+PWIZ_API_DECL bool DataProcessing::empty() const
 {
     return id.empty() && 
            (!softwarePtr.get() || softwarePtr->empty()) && 
@@ -348,12 +353,12 @@ bool DataProcessing::empty() const
 //
 
 
-AcquisitionSettings::AcquisitionSettings(const string& _id)
+PWIZ_API_DECL AcquisitionSettings::AcquisitionSettings(const string& _id)
 :   id(_id)
 {}
 
 
-bool AcquisitionSettings::empty() const
+PWIZ_API_DECL bool AcquisitionSettings::empty() const
 {
     return id.empty() && 
            (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) && 
@@ -368,7 +373,7 @@ bool AcquisitionSettings::empty() const
 //
 
 
-bool Acquisition::empty() const
+PWIZ_API_DECL bool Acquisition::empty() const
 {
     return number==0 && 
            (!sourceFilePtr.get() || sourceFilePtr->empty()) && 
@@ -382,7 +387,7 @@ bool Acquisition::empty() const
 //
 
 
-bool AcquisitionList::empty() const
+PWIZ_API_DECL bool AcquisitionList::empty() const
 {
     return acquisitions.empty() && ParamContainer::empty();
 }
@@ -393,7 +398,7 @@ bool AcquisitionList::empty() const
 //
 
 
-bool Precursor::empty() const
+PWIZ_API_DECL bool Precursor::empty() const
 {
     return spectrumID.empty() && isolationWindow.empty() && selectedIons.empty() &&
            activation.empty() && ParamContainer::empty();
@@ -405,7 +410,7 @@ bool Precursor::empty() const
 //
 
 
-ScanWindow::ScanWindow(double mzLow, double mzHigh)
+PWIZ_API_DECL ScanWindow::ScanWindow(double mzLow, double mzHigh)
 {
     cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, mzLow));
     cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, mzHigh));
@@ -417,7 +422,7 @@ ScanWindow::ScanWindow(double mzLow, double mzHigh)
 //
 
 
-bool Scan::empty() const
+PWIZ_API_DECL bool Scan::empty() const
 {
     return (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) &&
            scanWindows.empty() && 
@@ -430,7 +435,7 @@ bool Scan::empty() const
 //
 
 
-bool SpectrumDescription::empty() const
+PWIZ_API_DECL bool SpectrumDescription::empty() const
 {
     return acquisitionList.empty() &&
            precursors.empty() && 
@@ -444,7 +449,7 @@ bool SpectrumDescription::empty() const
 //
 
 
-bool BinaryDataArray::empty() const
+PWIZ_API_DECL bool BinaryDataArray::empty() const
 {
     return (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
            data.empty() && 
@@ -457,7 +462,7 @@ bool BinaryDataArray::empty() const
 //
 
 
-ostream& operator<<(ostream& os, const MZIntensityPair& mzi)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const MZIntensityPair& mzi)
 {
     os << "(" << mzi.mz << "," << mzi.intensity << ")";
     return os;
@@ -469,7 +474,7 @@ ostream& operator<<(ostream& os, const MZIntensityPair& mzi)
 //
 
 
-ostream& operator<<(ostream& os, const TimeIntensityPair& ti)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const TimeIntensityPair& ti)
 {
     os << "(" << ti.time << "," << ti.intensity << ")";
     return os;
@@ -481,7 +486,7 @@ ostream& operator<<(ostream& os, const TimeIntensityPair& ti)
 //
 
 
-bool Spectrum::empty() const
+PWIZ_API_DECL bool Spectrum::empty() const
 {
     return index==0 &&
            id.empty() &&
@@ -527,7 +532,7 @@ getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize
 } // namespace
 
 
-void Spectrum::getMZIntensityPairs(vector<MZIntensityPair>& output) const 
+PWIZ_API_DECL void Spectrum::getMZIntensityPairs(vector<MZIntensityPair>& output) const 
 {
     output.clear();
     output.resize(defaultArrayLength);
@@ -536,7 +541,7 @@ void Spectrum::getMZIntensityPairs(vector<MZIntensityPair>& output) const
 }
 
 
-void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t expectedSize) const
+PWIZ_API_DECL void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t expectedSize) const
 {
     // retrieve and validate m/z and intensity arrays
 
@@ -560,14 +565,14 @@ void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t expectedSize)
 }
 
 
-void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input)
+PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input)
 {
     if (!input.empty())    
         setMZIntensityPairs(&input[0], input.size());
 }
 
 
-void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size)
+PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size)
 {
     BinaryDataArrayPtr bd_mz(new BinaryDataArray);
     BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
@@ -600,7 +605,7 @@ void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size)
 //
 
 
-bool Chromatogram::empty() const
+PWIZ_API_DECL bool Chromatogram::empty() const
 {
     return index==0 &&
            id.empty() &&
@@ -644,7 +649,7 @@ getTimeIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSi
 } // namespace
 
 
-void Chromatogram::getTimeIntensityPairs(vector<TimeIntensityPair>& output) const 
+PWIZ_API_DECL void Chromatogram::getTimeIntensityPairs(vector<TimeIntensityPair>& output) const 
 {
     output.clear();
     output.resize(defaultArrayLength);
@@ -653,7 +658,7 @@ void Chromatogram::getTimeIntensityPairs(vector<TimeIntensityPair>& output) cons
 }
 
 
-void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output, size_t expectedSize) const
+PWIZ_API_DECL void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output, size_t expectedSize) const
 {
     // retrieve and validate time and intensity arrays
 
@@ -677,14 +682,14 @@ void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output, size_t expec
 }
 
 
-void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input)
+PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input)
 {
     if (!input.empty())    
         setTimeIntensityPairs(&input[0], input.size());
 }
 
 
-void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t size)
+PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t size)
 {
     BinaryDataArrayPtr bd_time(new BinaryDataArray);
     BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
@@ -717,10 +722,10 @@ void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t 
 //
 
 
-bool SpectrumList::empty() const {return size()==0;}
+PWIZ_API_DECL bool SpectrumList::empty() const {return size()==0;}
 
 
-size_t SpectrumList::find(const string& id) const
+PWIZ_API_DECL size_t SpectrumList::find(const string& id) const
 {
     for (size_t index=0; index<size(); ++index)
         if (spectrumIdentity(index).id == id) 
@@ -729,7 +734,7 @@ size_t SpectrumList::find(const string& id) const
 }
 
 
-size_t SpectrumList::findNative(const string& nativeID) const
+PWIZ_API_DECL size_t SpectrumList::findNative(const string& nativeID) const
 {
     for (size_t index=0; index<size(); ++index)
         if (spectrumIdentity(index).nativeID == nativeID) 
@@ -743,13 +748,13 @@ size_t SpectrumList::findNative(const string& nativeID) const
 //
 
 
-const SpectrumIdentity& SpectrumListSimple::spectrumIdentity(size_t index) const
+PWIZ_API_DECL const SpectrumIdentity& SpectrumListSimple::spectrumIdentity(size_t index) const
 {
     return *spectrum(index, false);
 }
 
 
-SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBinaryData) const
+PWIZ_API_DECL SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBinaryData) const
 {
     // validate index
     if (index > size())
@@ -768,10 +773,10 @@ SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBinaryData) const
 //
 
 
-bool ChromatogramList::empty() const {return size()==0;}
+PWIZ_API_DECL bool ChromatogramList::empty() const {return size()==0;}
 
 
-size_t ChromatogramList::find(const string& id) const
+PWIZ_API_DECL size_t ChromatogramList::find(const string& id) const
 {
     for (size_t index=0; index<size(); ++index)
         if (chromatogramIdentity(index).id == id) 
@@ -780,7 +785,7 @@ size_t ChromatogramList::find(const string& id) const
 }
 
 
-size_t ChromatogramList::findNative(const string& nativeID) const
+PWIZ_API_DECL size_t ChromatogramList::findNative(const string& nativeID) const
 {
     for (size_t index=0; index<size(); ++index)
         if (chromatogramIdentity(index).nativeID == nativeID) 
@@ -794,13 +799,13 @@ size_t ChromatogramList::findNative(const string& nativeID) const
 //
 
 
-const ChromatogramIdentity& ChromatogramListSimple::chromatogramIdentity(size_t index) const
+PWIZ_API_DECL const ChromatogramIdentity& ChromatogramListSimple::chromatogramIdentity(size_t index) const
 {
     return *chromatogram(index, false);
 }
 
 
-ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinaryData) const
+PWIZ_API_DECL ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinaryData) const
 {
     // validate index
     if (index > size())
@@ -819,7 +824,7 @@ ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinar
 //
 
 
-bool Run::empty() const
+PWIZ_API_DECL bool Run::empty() const
 {
     return id.empty() &&
            (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) &&
@@ -836,8 +841,10 @@ bool Run::empty() const
 // MSData
 //
 
+PWIZ_API_DECL MSData::MSData() {}
+PWIZ_API_DECL MSData::~MSData() {}
 
-bool MSData::empty() const
+PWIZ_API_DECL bool MSData::empty() const
 {
     return accession.empty() &&
            id.empty() &&

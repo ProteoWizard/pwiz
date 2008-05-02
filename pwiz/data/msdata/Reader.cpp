@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Reader.hpp"
 #include <stdexcept>
 
@@ -32,7 +34,7 @@ namespace msdata {
 using namespace std;
 
 
-bool ReaderList::accept(const string& filename, const string& head) const
+PWIZ_API_DECL bool ReaderList::accept(const string& filename, const string& head) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head)) return true;
@@ -41,7 +43,7 @@ bool ReaderList::accept(const string& filename, const string& head) const
 }
 
 
-void ReaderList::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
     if ((*it)->accept(filename, head))

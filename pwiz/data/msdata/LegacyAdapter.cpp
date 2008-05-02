@@ -22,6 +22,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "LegacyAdapter.hpp"
 #include "CVTranslator.hpp"
 #include "boost/lambda/lambda.hpp"
@@ -127,13 +129,14 @@ void LegacyAdapter_Instrument::Impl::set(ParamContainer& paramContainer, CVID cv
 //
 
 
+PWIZ_API_DECL
 LegacyAdapter_Instrument::LegacyAdapter_Instrument(InstrumentConfiguration& instrumentConfiguration,
                                                    const CVTranslator& cvTranslator)
 :   impl_(new Impl(instrumentConfiguration, cvTranslator)) 
 {}
 
 
-string LegacyAdapter_Instrument::manufacturer() const
+PWIZ_API_DECL string LegacyAdapter_Instrument::manufacturer() const
 {
     // look first for cvParam
 
@@ -160,7 +163,7 @@ string LegacyAdapter_Instrument::manufacturer() const
 }
 
 
-string LegacyAdapter_Instrument::model() const
+PWIZ_API_DECL string LegacyAdapter_Instrument::model() const
 {
     return impl_->get(impl_->instrumentConfiguration,
                       MS_instrument_model, 
@@ -168,8 +171,9 @@ string LegacyAdapter_Instrument::model() const
 }
 
 
+PWIZ_API_DECL
 void LegacyAdapter_Instrument::manufacturerAndModel(const string& valueManufacturer,
-                                             const string& valueModel)
+                                                    const string& valueModel)
 {
     // remove existing params
     removeCVParams(impl_->instrumentConfiguration.cvParams, MS_instrument_model);
@@ -190,7 +194,7 @@ void LegacyAdapter_Instrument::manufacturerAndModel(const string& valueManufactu
 }
 
 
-string LegacyAdapter_Instrument::ionisation() const
+PWIZ_API_DECL string LegacyAdapter_Instrument::ionisation() const
 {
     return impl_->get(impl_->instrumentConfiguration.componentList.source, 
                       MS_ionization_type, 
@@ -198,7 +202,7 @@ string LegacyAdapter_Instrument::ionisation() const
 }
 
 
-void LegacyAdapter_Instrument::ionisation(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Instrument::ionisation(const string& value)
 {
     impl_->set(impl_->instrumentConfiguration.componentList.source, 
                MS_ionization_type, 
@@ -207,7 +211,7 @@ void LegacyAdapter_Instrument::ionisation(const string& value)
 }
 
 
-string LegacyAdapter_Instrument::analyzer() const
+PWIZ_API_DECL string LegacyAdapter_Instrument::analyzer() const
 {
     return impl_->get(impl_->instrumentConfiguration.componentList.analyzer, 
                       MS_mass_analyzer_type, 
@@ -215,7 +219,7 @@ string LegacyAdapter_Instrument::analyzer() const
 }
 
 
-void LegacyAdapter_Instrument::analyzer(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Instrument::analyzer(const string& value)
 {
     impl_->set(impl_->instrumentConfiguration.componentList.analyzer, 
                MS_mass_analyzer_type, 
@@ -224,7 +228,7 @@ void LegacyAdapter_Instrument::analyzer(const string& value)
 }
 
 
-string LegacyAdapter_Instrument::detector() const
+PWIZ_API_DECL string LegacyAdapter_Instrument::detector() const
 {
     return impl_->get(impl_->instrumentConfiguration.componentList.detector, 
                       MS_detector_type, 
@@ -232,7 +236,7 @@ string LegacyAdapter_Instrument::detector() const
 }
 
 
-void LegacyAdapter_Instrument::detector(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Instrument::detector(const string& value)
 {
     impl_->set(impl_->instrumentConfiguration.componentList.detector, 
                MS_detector_type, 
@@ -330,7 +334,7 @@ LegacyAdapter_Software::LegacyAdapter_Software(SoftwarePtr software,
 {}
 
 
-string LegacyAdapter_Software::name() const
+PWIZ_API_DECL string LegacyAdapter_Software::name() const
 {
     if (impl_->software->softwareParam.cvid != CVID_Unknown)
         return impl_->software->softwareParam.name();
@@ -340,7 +344,7 @@ string LegacyAdapter_Software::name() const
 }
 
 
-void LegacyAdapter_Software::name(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Software::name(const string& value)
 {
     impl_->software->softwareParam = impl_->cvTranslator.translate(value);
 
@@ -353,26 +357,26 @@ void LegacyAdapter_Software::name(const string& value)
 }
 
 
-string LegacyAdapter_Software::version() const
+PWIZ_API_DECL string LegacyAdapter_Software::version() const
 {
     return impl_->software->softwareParamVersion;
 }
 
 
-void LegacyAdapter_Software::version(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Software::version(const string& value)
 {
     impl_->software->softwareParamVersion = value;
 }
 
 
-string LegacyAdapter_Software::type() const
+PWIZ_API_DECL string LegacyAdapter_Software::type() const
 {
     string result = getProcessingMethodUserParamValue("type", impl_->software, impl_->msd);
     return !result.empty() ? result : "unknown software type";
 }
 
 
-void LegacyAdapter_Software::type(const string& value)
+PWIZ_API_DECL void LegacyAdapter_Software::type(const string& value)
 {
     ProcessingMethod& pm = getProcessingMethod(impl_->software, impl_->msd);
     removeUserParams(pm.userParams, "type");

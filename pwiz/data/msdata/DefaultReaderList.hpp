@@ -25,6 +25,7 @@
 #define _DEFAULTREADERLIST_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Reader.hpp"
 
 
@@ -33,7 +34,7 @@ namespace msdata {
 
 
 /// default Reader list
-class DefaultReaderList : public ReaderList
+class PWIZ_API_DECL DefaultReaderList : public ReaderList
 {
     public:
     DefaultReaderList();

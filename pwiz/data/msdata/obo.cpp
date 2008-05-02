@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "obo.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
@@ -272,14 +274,14 @@ void parse(const string& filename, OBO& obo)
 } // namespace
 
 
-OBO::OBO(const string& _filename)
+PWIZ_API_DECL OBO::OBO(const string& _filename)
 :   filename(_filename) 
 {
     parse(filename, *this);
 }
 
 
-ostream& operator<<(ostream& os, const Term& term)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Term& term)
 {
     os << "[Term]\n"
        << "id: " << term.prefix << ":" << term.id << endl
@@ -298,7 +300,7 @@ ostream& operator<<(ostream& os, const Term& term)
 }
 
 
-std::ostream& operator<<(std::ostream& os, const OBO& obo)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OBO& obo)
 {
     copy(obo.header.begin(), obo.header.end(), ostream_iterator<string>(os,"\n"));
     os << endl;

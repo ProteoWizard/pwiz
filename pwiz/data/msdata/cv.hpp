@@ -29,9 +29,10 @@
 
 #include <string>
 #include <vector>
+#include "utility/misc/Export.hpp"
 
 
-// [psi-ms.obo]
+// [..\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 25:04:2008 15:16
 //   saved-by: martlenn
@@ -39,7 +40,7 @@
 //   default-namespace: PSI-MS
 //   remark: version: x.y.z
 //
-// [unit.obo]
+// [..\data\msdata\unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -55,7 +56,7 @@ namespace msdata {
 
 
 /// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)
-enum CVID
+enum PWIZ_API_DECL CVID
 {
     CVID_Unknown = -1,
     MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Ontology = 0,
@@ -1028,7 +1029,7 @@ enum CVID
 
 
 /// structure for holding CV term info
-struct CVInfo
+struct PWIZ_API_DECL CVInfo
 {
     CVID cvid;
     std::string id;
@@ -1046,19 +1047,19 @@ struct CVInfo
 
 
 /// returns CV term info for the specified CVID
-const CVInfo& cvinfo(CVID cvid);
+PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid);
 
 
 /// returns CV term info for the specified id (accession number)
-const CVInfo& cvinfo(const std::string& id);
+PWIZ_API_DECL const CVInfo& cvinfo(const std::string& id);
 
 
 /// returns true iff child IsA parent in the CV
-bool cvIsA(CVID child, CVID parent);
+PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);
 
 
 /// returns vector of all valid CVIDs
-const std::vector<CVID>& cvids();
+PWIZ_API_DECL const std::vector<CVID>& cvids();
 
 
 } // namespace msdata

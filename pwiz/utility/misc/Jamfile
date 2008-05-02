@@ -24,7 +24,10 @@
 project 
     : requirements 
         # hacks to allow building with <warnings>all with MSVC and boost
-        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code                                        # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : usage-requirements
+        <library>../..//gd
 ;
 
 
@@ -34,8 +37,8 @@ lib pwiz_utility_misc
       SHA1Calculator.cpp
       SHA1.cpp
       Image.cpp
-      ../..//gd
     : <warnings>all
+      <library>../..//gd
     ;
 
 

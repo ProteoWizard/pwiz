@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "BinaryDataEncoder.hpp"
 #include "utility/misc/Base64.hpp"
 #include "utility/misc/endian.hpp"
@@ -226,30 +228,30 @@ void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& 
 //
 
 
-BinaryDataEncoder::BinaryDataEncoder(const Config& config)
+PWIZ_API_DECL BinaryDataEncoder::BinaryDataEncoder(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
-void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result) const
+PWIZ_API_DECL void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result) const
 {
     impl_->encode(data, result);
 }
 
 
-void BinaryDataEncoder::encode(const double* data, size_t dataSize, std::string& result) const
+PWIZ_API_DECL void BinaryDataEncoder::encode(const double* data, size_t dataSize, std::string& result) const
 {
     impl_->encode(data, dataSize, result);
 }
 
 
-void BinaryDataEncoder::decode(const std::string& encodedData, std::vector<double>& result) const
+PWIZ_API_DECL void BinaryDataEncoder::decode(const std::string& encodedData, std::vector<double>& result) const
 {
     impl_->decode(encodedData, result);
 }
 
 
-ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& config)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& config)
 {
     os << "(" 
        << (config.precision==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32");

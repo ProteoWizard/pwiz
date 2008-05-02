@@ -26,6 +26,7 @@
 #define _CVTRANSLATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "cv.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -35,7 +36,7 @@ namespace msdata {
 
 
 /// translates text to CV terms
-class CVTranslator
+class PWIZ_API_DECL CVTranslator
 {
     public:
 

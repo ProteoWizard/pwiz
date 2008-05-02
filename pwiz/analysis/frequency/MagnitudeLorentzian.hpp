@@ -25,6 +25,7 @@
 #define _MAGNITUDELORENTZIAN_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <vector>
 
 
@@ -32,7 +33,7 @@ namespace pwiz {
 namespace frequency {
 
 
-class MagnitudeLorentzian
+class PWIZ_API_DECL MagnitudeLorentzian
 {
     public:
 

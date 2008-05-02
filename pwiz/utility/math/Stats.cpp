@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Stats.hpp"
 #include <iostream>
 
@@ -104,11 +106,11 @@ void Stats::Impl::computeSums(const Stats::data_type& data)
 }
 
 
-Stats::Stats(const Stats::data_type& data) : impl_(new Stats::Impl(data)) {}
-Stats::~Stats() {} // auto destruction of impl_
-Stats::vector_type Stats::mean() const {return impl_->mean();}
-Stats::matrix_type Stats::meanOuterProduct() const {return impl_->meanOuterProduct();}
-Stats::matrix_type Stats::covariance() const {return impl_->covariance();}
+PWIZ_API_DECL Stats::Stats(const Stats::data_type& data) : impl_(new Stats::Impl(data)) {}
+PWIZ_API_DECL Stats::~Stats() {} // auto destruction of impl_
+PWIZ_API_DECL Stats::vector_type Stats::mean() const {return impl_->mean();}
+PWIZ_API_DECL Stats::matrix_type Stats::meanOuterProduct() const {return impl_->meanOuterProduct();}
+PWIZ_API_DECL Stats::matrix_type Stats::covariance() const {return impl_->covariance();}
 
 
 } // namespace math

@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "SpectrumList_mzXML.hpp"
 #include "IO.hpp"
@@ -606,7 +607,7 @@ string SpectrumList_mzXMLImpl::getPrecursorID(size_t index) const
 } // namespace
 
 
-SpectrumListPtr SpectrumList_mzXML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
+PWIZ_API_DECL SpectrumListPtr SpectrumList_mzXML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
 {
     if (!is.get() || !*is)
         throw runtime_error("[SpectrumList_mzXML::create()] Bad istream.");

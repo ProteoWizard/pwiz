@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "IntegerSet.hpp"
 #include <iostream>
@@ -38,19 +39,19 @@ using namespace std;
 // IntegerSet::Interval implementation
 
 
-IntegerSet::Interval::Interval(int a)
+PWIZ_API_DECL IntegerSet::Interval::Interval(int a)
 :   begin(a), end(a) 
 {}
 
 
-IntegerSet::Interval::Interval(int a, int b)
+PWIZ_API_DECL IntegerSet::Interval::Interval(int a, int b)
 :   begin(a), end(b)
 {
     if (a>b) throw runtime_error("[IntegerSet::Interval] Instantiation with a>b");
 }
 
 
-ostream& operator<<(ostream& os, const IntegerSet::Interval& interval)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet::Interval& interval)
 {
     os << "[" << interval.begin << "," << interval.end << "]";
     return os;
@@ -60,9 +61,9 @@ ostream& operator<<(ostream& os, const IntegerSet::Interval& interval)
 // IntegerSet implementation
 
 
-IntegerSet::IntegerSet() {}
-IntegerSet::IntegerSet(int a) {insert(a);}
-IntegerSet::IntegerSet(int a, int b) {insert(a,b);}
+PWIZ_API_DECL IntegerSet::IntegerSet() {}
+PWIZ_API_DECL IntegerSet::IntegerSet(int a) {insert(a);}
+PWIZ_API_DECL IntegerSet::IntegerSet(int a, int b) {insert(a,b);}
 
 
 namespace {
@@ -80,7 +81,7 @@ inline bool endBefore(const IntegerSet::Interval& i, const IntegerSet::Interval&
 } // namespace
 
 
-void IntegerSet::insert(Interval interval) 
+PWIZ_API_DECL void IntegerSet::insert(Interval interval) 
 {
     // eat any subintervals 
 
@@ -127,31 +128,31 @@ void IntegerSet::insert(Interval interval)
 }
 
 
-void IntegerSet::insert(int a) 
+PWIZ_API_DECL void IntegerSet::insert(int a) 
 {
     insert(Interval(a));
 }
 
 
-void IntegerSet::insert(int a, int b) 
+PWIZ_API_DECL void IntegerSet::insert(int a, int b) 
 {
     insert(Interval(a,b));
 }
 
 
-IntegerSet::const_iterator IntegerSet::begin() const 
+PWIZ_API_DECL IntegerSet::const_iterator IntegerSet::begin() const 
 {
     return IntegerSet::Iterator(*this);
 }
 
 
-IntegerSet::const_iterator IntegerSet::end() const
+PWIZ_API_DECL IntegerSet::const_iterator IntegerSet::end() const
 {
     return IntegerSet::Iterator();
 }
 
 
-bool IntegerSet::contains(int n) const
+PWIZ_API_DECL bool IntegerSet::contains(int n) const
 {
     for (Intervals::const_iterator it=intervals_.begin(); it!=intervals_.end(); ++it)
         if (it->contains(n)) return true;
@@ -159,7 +160,7 @@ bool IntegerSet::contains(int n) const
 }
 
 
-bool IntegerSet::hasUpperBound(int n) const
+PWIZ_API_DECL bool IntegerSet::hasUpperBound(int n) const
 {
     if (empty()) return true;
     int highest = intervals_.back().end;
@@ -167,7 +168,7 @@ bool IntegerSet::hasUpperBound(int n) const
 }
 
 
-ostream& operator<<(ostream& os, const IntegerSet& integerSet)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet& integerSet)
 {
     copy(integerSet.intervals_.begin(), integerSet.intervals_.end(), 
          ostream_iterator<IntegerSet::Interval>(os," "));
@@ -185,21 +186,21 @@ IntegerSet::Intervals nothing_;
 } // namespace
 
 
-IntegerSet::Iterator::Iterator() 
+PWIZ_API_DECL IntegerSet::Iterator::Iterator() 
 :   it_(nothing_.end()),
     end_(nothing_.end()),
     value_(0)
 {}
 
 
-IntegerSet::Iterator::Iterator(const IntegerSet& integerSet)
+PWIZ_API_DECL IntegerSet::Iterator::Iterator(const IntegerSet& integerSet)
 :   it_(integerSet.intervals_.begin()),
     end_(integerSet.intervals_.end()),
     value_(it_!=end_ ? it_->begin : 0) 
 {}
 
 
-IntegerSet::Iterator& IntegerSet::Iterator::operator++()
+PWIZ_API_DECL IntegerSet::Iterator& IntegerSet::Iterator::operator++()
 {
     value_++;
 
@@ -214,7 +215,7 @@ IntegerSet::Iterator& IntegerSet::Iterator::operator++()
 }
 
 
-const IntegerSet::Iterator IntegerSet::Iterator::operator++(int)
+PWIZ_API_DECL const IntegerSet::Iterator IntegerSet::Iterator::operator++(int)
 {
     Iterator temp(*this);
     this->operator++();
@@ -222,7 +223,7 @@ const IntegerSet::Iterator IntegerSet::Iterator::operator++(int)
 }
 
 
-int IntegerSet::Iterator::operator*() const
+PWIZ_API_DECL int IntegerSet::Iterator::operator*() const
 {
     if (it_ == end_)
         throw runtime_error("[IntegerSet::Iterator::operator*()] Invalid dereference.");
@@ -231,13 +232,13 @@ int IntegerSet::Iterator::operator*() const
 }
 
 
-bool IntegerSet::Iterator::operator!=(const Iterator& that) const
+PWIZ_API_DECL bool IntegerSet::Iterator::operator!=(const Iterator& that) const
 {
     return !this->operator==(that);
 }
 
 
-bool IntegerSet::Iterator::operator==(const Iterator& that) const
+PWIZ_API_DECL bool IntegerSet::Iterator::operator==(const Iterator& that) const
 {
     // true in two cases:
     // 1) "this" and "that" are both valid and equal

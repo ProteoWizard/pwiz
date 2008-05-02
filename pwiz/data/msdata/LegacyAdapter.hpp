@@ -26,6 +26,7 @@
 #define _LEGACYADAPTER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -54,7 +55,7 @@ class CVTranslator;
 /// 
 /// The "get" methods look for the cvParam first, then the userParam.
 ///
-class LegacyAdapter_Instrument
+class PWIZ_API_DECL LegacyAdapter_Instrument
 {
     public:
 
@@ -98,7 +99,7 @@ class LegacyAdapter_Instrument
 /// Since the id is generated from 'name', it is an error to set 'type' before
 /// setting 'name'.
 ///
-class LegacyAdapter_Software
+class PWIZ_API_DECL LegacyAdapter_Software
 {
     public:
 

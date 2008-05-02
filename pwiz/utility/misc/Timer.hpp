@@ -25,6 +25,7 @@
 #define _TIMER_H_
 
 
+#include "utility/misc/Export.hpp"
 #include <ctime>
 #include <iostream>
 
@@ -33,7 +34,7 @@ namespace pwiz {
 namespace util {
 
 
-class Timer
+class PWIZ_API_DECL Timer
 {
     public:
     Timer() {time(&start_);}

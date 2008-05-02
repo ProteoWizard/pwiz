@@ -1,5 +1,8 @@
 #ifndef _CHROMATOGRAMLIST_THERMO_
 #define _CHROMATOGRAMLIST_THERMO_
+
+
+#include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include <map>
@@ -15,7 +18,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-class ChromatogramList_Thermo : public ChromatogramList
+class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramList
 {
 public:
 

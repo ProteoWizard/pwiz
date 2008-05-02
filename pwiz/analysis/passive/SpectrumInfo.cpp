@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumInfo.hpp"
 
 
@@ -48,7 +50,7 @@ int nativeIDToScanNumber(const string& nativeID)
 } // namespace
 
 
-void SpectrumInfo::update(const Spectrum& spectrum)
+PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
 {
     const SpectrumDescription& sd = spectrum.spectrumDescription;
 
@@ -91,7 +93,7 @@ void SpectrumInfo::update(const Spectrum& spectrum)
 }
 
 
-void SpectrumInfo::clearBinaryData()
+PWIZ_API_DECL void SpectrumInfo::clearBinaryData()
 {
     vector<MZIntensityPair> nothing;
     data.swap(nothing);

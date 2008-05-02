@@ -25,6 +25,7 @@
 #define _PEAKFAMILYDETECTORFT_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "PeakFamilyDetector.hpp"
 #include "data/misc/PeakData.hpp"
 
@@ -36,11 +37,11 @@ namespace analysis {
 ///
 /// FT-specific implementation of PeakFamilyDetector 
 /// 
-class PeakFamilyDetectorFT : public PeakFamilyDetector
+class PWIZ_API_DECL PeakFamilyDetectorFT : public PeakFamilyDetector
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         std::ostream* log;
         data::CalibrationParameters cp;

@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumTable.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
@@ -40,11 +42,12 @@ using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 
 
-SpectrumTable::SpectrumTable(const MSDataCache& cache)
+PWIZ_API_DECL SpectrumTable::SpectrumTable(const MSDataCache& cache)
 :   cache_(cache)
 {}
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 SpectrumTable::updateRequested(const DataInfo& dataInfo, 
                                const SpectrumIdentity& spectrumIdentity) const 
@@ -56,7 +59,7 @@ SpectrumTable::updateRequested(const DataInfo& dataInfo,
 }
 
 
-void SpectrumTable::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
 {
     bfs::path filename = dataInfo.outputDirectory;
     filename /= dataInfo.sourceFilename + ".spectrum_table.txt";

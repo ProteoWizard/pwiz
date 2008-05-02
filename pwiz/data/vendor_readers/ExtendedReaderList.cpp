@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "ExtendedReaderList.hpp"
 #include "data/vendor_readers/Reader_Thermo.hpp"
 #include <iostream>
@@ -35,7 +37,7 @@ using namespace std;
 using boost::shared_ptr;
 
 
-ExtendedReaderList::ExtendedReaderList()
+PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
     #ifndef PWIZ_NO_READER_RAW
     push_back(ReaderPtr(new Reader_Thermo));

@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IPIFASTADatabase.hpp"
 #include <iostream>
 #include <iomanip>
@@ -80,12 +82,12 @@ void IPIFASTADatabase::Impl::readRecords(istream& is)
 }
 
 
-IPIFASTADatabase::IPIFASTADatabase(const string& filename) : impl_(new Impl(filename)) {}
-IPIFASTADatabase::~IPIFASTADatabase(){} // auto-destruction of impl_
-const vector<IPIFASTADatabase::Record>& IPIFASTADatabase::records() const {return impl_->records();} 
+PWIZ_API_DECL IPIFASTADatabase::IPIFASTADatabase(const string& filename) : impl_(new Impl(filename)) {}
+PWIZ_API_DECL IPIFASTADatabase::~IPIFASTADatabase(){} // auto-destruction of impl_
+PWIZ_API_DECL const vector<IPIFASTADatabase::Record>& IPIFASTADatabase::records() const {return impl_->records();} 
 
 
-ostream& operator<<(ostream& os, const IPIFASTADatabase::Record& record)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const IPIFASTADatabase::Record& record)
 {
     os << ">IPI:IPI" << setfill('0') << setw(8) << record.id << endl;
     for (unsigned int i=0; i<record.sequence.size(); i++)

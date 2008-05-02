@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumList_mzML.hpp"
 #include "IO.hpp"
 #include "References.hpp"
@@ -382,7 +384,7 @@ void SpectrumList_mzMLImpl::createMaps()
 } // namespace
 
 
-SpectrumListPtr SpectrumList_mzML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
+PWIZ_API_DECL SpectrumListPtr SpectrumList_mzML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
 {
     if (!is.get() || !*is)
         throw runtime_error("[SpectrumList_mzML::create()] Bad istream.");

@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeakDetector.hpp"
 
 
@@ -31,6 +33,7 @@ namespace analysis {
 using namespace std;
 
 
+PWIZ_API_DECL
 void PeakDetector::detect(const vector<MZIntensityPair>& data,
                           vector<Peak>& result)
 {

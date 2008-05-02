@@ -25,6 +25,7 @@
 #define _EXAMPLES_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 
 
@@ -33,10 +34,11 @@ namespace msdata {
 namespace examples {
 
 
-void initializeTiny(MSData& msd);
-void initializeTiny2(MSData& msd);
-
-
+PWIZ_API_DECL void initializeTiny(MSData& msd);
+PWIZ_API_DECL void initializeTiny2(MSData& msd);
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
 } // namespace examples
 } // namespace msdata
 } // namespace pwiz

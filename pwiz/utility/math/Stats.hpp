@@ -25,6 +25,7 @@
 #define _STATS_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -36,7 +37,7 @@ namespace pwiz {
 namespace math {
 
 
-class Stats
+class PWIZ_API_DECL Stats
 {
     public:
 

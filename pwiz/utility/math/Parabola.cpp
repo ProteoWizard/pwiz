@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Parabola.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -51,7 +53,7 @@ namespace math {
 using namespace std;
 
 
-Parabola::Parabola(double a, double b, double c)
+PWIZ_API_DECL Parabola::Parabola(double a, double b, double c)
 :   a_(3)
 {
     a_[0] = a;
@@ -60,7 +62,7 @@ Parabola::Parabola(double a, double b, double c)
 }
 
 
-Parabola::Parabola(vector<double> a)
+PWIZ_API_DECL Parabola::Parabola(vector<double> a)
 :   a_(a)
 {
     if (a_.size() != 3)
@@ -176,7 +178,7 @@ void fitWeightedLeastSquares(const vector< pair<double,double> >& samples,
 } // namespace
 
 
-Parabola::Parabola(const vector< pair<double,double> >& samples)
+PWIZ_API_DECL Parabola::Parabola(const vector< pair<double,double> >& samples)
 :   a_(3)
 {
     if (samples.size() < 3)
@@ -190,6 +192,7 @@ Parabola::Parabola(const vector< pair<double,double> >& samples)
 
 
 // construct by weighted least squares
+PWIZ_API_DECL
 Parabola::Parabola(const std::vector< std::pair<double,double> >& samples,
                    const std::vector<double>& weights)
 :   a_(3)
@@ -198,7 +201,7 @@ Parabola::Parabola(const std::vector< std::pair<double,double> >& samples,
 }
 
 
-ostream& operator<<(ostream& os, const Parabola& p)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Parabola& p)
 {
     vector<double> a = p.coefficients();
     os << "[Parabola (" << a[0] << ", " << a[1] << ", " << a[2] << ")]";

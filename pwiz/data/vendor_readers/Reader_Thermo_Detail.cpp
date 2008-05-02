@@ -1,10 +1,12 @@
+#define PWIZ_SOURCE
+
 #include "Reader_Thermo_Detail.hpp"
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
-CVParam translateAsScanningMethod(ScanType scanType)
+PWIZ_API_DECL CVParam translateAsScanningMethod(ScanType scanType)
 {
     switch (scanType)
     {
@@ -25,7 +27,7 @@ CVParam translateAsScanningMethod(ScanType scanType)
 }
 
 
-CVParam translateAsSpectrumType(ScanType scanType)
+PWIZ_API_DECL CVParam translateAsSpectrumType(ScanType scanType)
 {
     switch (scanType)
     {
@@ -45,7 +47,7 @@ CVParam translateAsSpectrumType(ScanType scanType)
 }
 
 
-CVParam translate(MassAnalyzerType type)
+PWIZ_API_DECL CVParam translate(MassAnalyzerType type)
 {
     switch (type)
     {
@@ -62,7 +64,7 @@ CVParam translate(MassAnalyzerType type)
 }
 
 
-CVParam translateAsIonizationType(IonizationType ionizationType)
+PWIZ_API_DECL CVParam translateAsIonizationType(IonizationType ionizationType)
 {
     switch (ionizationType)
     {
@@ -83,7 +85,7 @@ CVParam translateAsIonizationType(IonizationType ionizationType)
 }
 
     
-CVParam translateAsInletType(IonizationType ionizationType)
+PWIZ_API_DECL CVParam translateAsInletType(IonizationType ionizationType)
 {
     switch (ionizationType)
     {
@@ -104,7 +106,7 @@ CVParam translateAsInletType(IonizationType ionizationType)
 }
 
 
-CVParam translate(PolarityType polarityType)
+PWIZ_API_DECL CVParam translate(PolarityType polarityType)
 {
     switch (polarityType)
     {
@@ -119,7 +121,7 @@ CVParam translate(PolarityType polarityType)
 }
 
 
-CVParam translate(ActivationType activationType)
+PWIZ_API_DECL CVParam translate(ActivationType activationType)
 {
     switch (activationType)
     {

@@ -27,6 +27,7 @@ lib pwiz_rawfile
       RawFileValues.cpp
     : <toolset>gcc:<build>no
       <toolset>darwin:<build>no
+      <toolset>msvc,<link>shared:<define>RAWFILE_DYN_LINK
     ;
 
 unit-test ScanFilterTest
@@ -34,6 +35,7 @@ unit-test ScanFilterTest
       pwiz_rawfile
     : <toolset>gcc:<build>no
       <toolset>darwin:<build>no
+      #<testing.launcher>"\"%VS80COMNTOOLS%../ide/devenv\" /debugexe" # a convenient way to launch MSVC to run and debug a unit-test
     ;
 
 # a test utility, not a unit test

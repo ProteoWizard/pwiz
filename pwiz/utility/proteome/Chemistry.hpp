@@ -25,6 +25,7 @@
 #define _CHEMISTRY_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <iosfwd>
 #include <string>
 #include <memory>
@@ -38,7 +39,7 @@ namespace Chemistry {
 
 
 /// struct for holding isotope information
-struct MassAbundance
+struct PWIZ_API_DECL MassAbundance
 {
     double mass;
     double abundance;
@@ -56,8 +57,8 @@ struct MassAbundance
 typedef std::vector<MassAbundance> MassDistribution;
 
 
-std::ostream& operator<<(std::ostream& os, const MassAbundance& ma);
-std::ostream& operator<<(std::ostream& os, const MassDistribution& md);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MassAbundance& ma);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MassDistribution& md);
 
  
 /// scope for declarations related to elements
@@ -65,7 +66,7 @@ namespace Element {
 
 
 /// enumeration of the elements
-enum Type
+enum PWIZ_API_DECL Type
 {
     H, He, Li, Be, B, C, N, O, F, Ne, 
     Na, Mg, Al, Si, P, S, Cl, Ar, K, Ca, 
@@ -82,11 +83,11 @@ enum Type
 };
 
 
-std::ostream& operator<<(std::ostream& os, Type type);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, Type type);
 
 
 /// class for obtaining information about elements
-class Info
+class PWIZ_API_DECL Info
 {
     public:
 
@@ -118,14 +119,14 @@ class Info
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Info::Record& record);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Info::Record& record);
 
 
 } // namespace Element
 
 
 /// class to represent a chemical formula
-class Formula
+class PWIZ_API_DECL Formula
 {
     public:
 
@@ -158,14 +159,14 @@ class Formula
 };
 
 
-Formula operator+(const Formula& a, const Formula& b);
-Formula operator-(const Formula& a, const Formula& b);
-Formula operator*(const Formula& a, int scalar);
-Formula operator*(int scalar, const Formula& a);
+PWIZ_API_DECL Formula operator+(const Formula& a, const Formula& b);
+PWIZ_API_DECL Formula operator-(const Formula& a, const Formula& b);
+PWIZ_API_DECL Formula operator*(const Formula& a, int scalar);
+PWIZ_API_DECL Formula operator*(int scalar, const Formula& a);
 
 
 /// output a Formula
-std::ostream& operator<<(std::ostream& os, const Formula& formula);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Formula& formula);
 
 
 } // namespace Chemistry 

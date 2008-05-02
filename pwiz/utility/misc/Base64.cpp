@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "Base64.hpp"
 #include <iostream>
@@ -67,13 +68,13 @@ void initializeByteTable()
 } // namespace
 
 
-size_t Base64::binaryToTextSize(size_t byteCount)
+PWIZ_API_DECL size_t Base64::binaryToTextSize(size_t byteCount)
 {
     return (size_t)ceil(byteCount/3.) * 4;
 }
 
 
-size_t Base64::binaryToText(const void* from, size_t byteCount, char* to)
+PWIZ_API_DECL size_t Base64::binaryToText(const void* from, size_t byteCount, char* to)
 {
     byte* it = (byte*)from;
     byte* end = it + byteCount;
@@ -114,13 +115,13 @@ size_t Base64::binaryToText(const void* from, size_t byteCount, char* to)
 }
 
 
-size_t Base64::textToBinarySize(size_t charCount)
+PWIZ_API_DECL size_t Base64::textToBinarySize(size_t charCount)
 {
     return (size_t)ceil(charCount/4.) * 3;
 }
 
 
-size_t Base64::textToBinary(const char* from, size_t charCount, void* to)
+PWIZ_API_DECL size_t Base64::textToBinary(const char* from, size_t charCount, void* to)
 {
     if (!byteTableInitialized)
         initializeByteTable();

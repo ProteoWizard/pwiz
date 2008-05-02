@@ -25,6 +25,7 @@
 #define _PEAKDETECTOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include "data/misc/PeakData.hpp"
 
@@ -36,7 +37,7 @@ namespace analysis {
 ///
 /// interface for peak detection
 /// 
-class PeakDetector
+class PWIZ_API_DECL PeakDetector
 {
     public:
 

@@ -25,6 +25,7 @@
 #define _PEPTIDEDATABASE_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include <string>
 #include <memory>
 
@@ -34,7 +35,7 @@ namespace proteome {
 
 
 #pragma pack(1)
-struct PeptideDatabaseFormula
+struct PWIZ_API_DECL PeptideDatabaseFormula
 {
     int C;
     int H;
@@ -49,11 +50,11 @@ struct PeptideDatabaseFormula
 #pragma pack()
 
 
-std::ostream& operator<<(std::ostream& os, const PeptideDatabaseFormula& formula);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeptideDatabaseFormula& formula);
 
 
 #pragma pack(1)
-struct PeptideDatabaseRecord
+struct PWIZ_API_DECL PeptideDatabaseRecord
 {
     int id_ipi;
     double abundance;
@@ -68,11 +69,11 @@ struct PeptideDatabaseRecord
 #pragma pack()
 
 
-std::ostream& operator<<(std::ostream& os, const PeptideDatabaseRecord& record);
-bool operator==(const PeptideDatabaseFormula& r, const PeptideDatabaseFormula& s); 
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeptideDatabaseRecord& record);
+PWIZ_API_DECL bool operator==(const PeptideDatabaseFormula& r, const PeptideDatabaseFormula& s); 
 
 
-class PeptideDatabase
+class PWIZ_API_DECL PeptideDatabase
 {
     public:
 

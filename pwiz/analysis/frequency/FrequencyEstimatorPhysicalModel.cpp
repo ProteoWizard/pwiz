@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "FrequencyEstimatorPhysicalModel.hpp"
 #include "TruncatedLorentzianEstimator.hpp"
 #include "data/misc/PeakData.hpp"
@@ -60,6 +62,7 @@ class FrequencyEstimatorPhysicalModelImpl : public FrequencyEstimatorPhysicalMod
 };
 
 
+PWIZ_API_DECL
 auto_ptr<FrequencyEstimatorPhysicalModel> 
 FrequencyEstimatorPhysicalModel::create(const Config& config)
 {

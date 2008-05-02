@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "DefaultReaderList.hpp"
 #include "SpectrumList_mzXML.hpp"
 #include "Serializer_mzML.hpp"
@@ -155,7 +157,7 @@ class Reader_mzXML : public Reader
 
 
 /// default Reader list
-DefaultReaderList::DefaultReaderList()
+PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
 {
     push_back(ReaderPtr(new Reader_mzML));
     push_back(ReaderPtr(new Reader_mzXML));

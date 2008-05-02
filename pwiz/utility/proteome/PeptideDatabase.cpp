@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeptideDatabase.hpp"
 #include "boost/iostreams/device/mapped_file.hpp"
 #include <iostream>
@@ -62,7 +64,7 @@ using namespace std;
 //
 
 
-ostream& operator<<(ostream& os, const PeptideDatabaseFormula& formula)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const PeptideDatabaseFormula& formula)
 {
     os << "C" << formula.C 
         << " H" << formula.H
@@ -74,7 +76,7 @@ ostream& operator<<(ostream& os, const PeptideDatabaseFormula& formula)
 }
 
 
-bool operator==(const PeptideDatabaseFormula& r, const PeptideDatabaseFormula& s) 
+PWIZ_API_DECL bool operator==(const PeptideDatabaseFormula& r, const PeptideDatabaseFormula& s) 
 {
     return (r.C == s.C &&
             r.H == s.H &&
@@ -84,7 +86,7 @@ bool operator==(const PeptideDatabaseFormula& r, const PeptideDatabaseFormula& s
 }
 
 
-ostream& operator<<(ostream& os, const PeptideDatabaseRecord& record)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const PeptideDatabaseRecord& record)
 {
     os << record.abundance << " " << record.mass << " " << record.formula; 
 	return os;
@@ -268,13 +270,13 @@ void PeptideDatabaseImpl_File::write(const string& filename) const
 }
 
 
-auto_ptr<PeptideDatabase> PeptideDatabase::create()
+PWIZ_API_DECL auto_ptr<PeptideDatabase> PeptideDatabase::create()
 {
     return auto_ptr<PeptideDatabase>(new PeptideDatabaseImpl_Memory);
 }
 
 
-auto_ptr<const PeptideDatabase> PeptideDatabase::create(const string& filename)
+PWIZ_API_DECL auto_ptr<const PeptideDatabase> PeptideDatabase::create(const string& filename)
 {
     try 
     {
@@ -295,7 +297,7 @@ bool hasSmallerMass(const PeptideDatabaseRecord& a, const PeptideDatabaseRecord&
 } // namespace
 
 
-PeptideDatabase::iterator PeptideDatabase::mass_lower_bound(double mass) const
+PWIZ_API_DECL PeptideDatabase::iterator PeptideDatabase::mass_lower_bound(double mass) const
 {
     PeptideDatabaseRecord record;
     record.mass = mass;
@@ -303,7 +305,7 @@ PeptideDatabase::iterator PeptideDatabase::mass_lower_bound(double mass) const
 }
 
 
-PeptideDatabase::iterator PeptideDatabase::mass_upper_bound(double mass) const
+PWIZ_API_DECL PeptideDatabase::iterator PeptideDatabase::mass_upper_bound(double mass) const
 {
     PeptideDatabaseRecord record;
     record.mass = mass;

@@ -22,7 +22,7 @@
 
 
 #include "Diff.hpp"
-#include "examples.cpp"
+#include "examples.hpp"
 #include "utility/misc/unit.hpp"
 #include <iostream>
 

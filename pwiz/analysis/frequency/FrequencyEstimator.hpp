@@ -25,6 +25,7 @@
 #define _FREQUENCYESTIMATOR_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "data/misc/FrequencyData.hpp"
 #include "data/misc/PeakData.hpp"
 
@@ -34,7 +35,7 @@ namespace frequency {
 
 
 /// Interface for frequency estimator modules. 
-class FrequencyEstimator
+class PWIZ_API_DECL FrequencyEstimator
 {
     public:
 

@@ -25,20 +25,22 @@
 #define _TRUNCATEDLORENTZIAN_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "ParametrizedFunction.hpp"
 #include <complex>
 #include <memory>
+#include "boost/shared_ptr.hpp"
 
 
 namespace pwiz {
 namespace frequency {
 
 
-class TruncatedLorentzian : public ParametrizedFunction< std::complex<double> >
+class PWIZ_API_DECL TruncatedLorentzian : public ParametrizedFunction< std::complex<double> >
 {
     public:
 
-    enum ParameterIndex {AlphaR, AlphaI, Tau, F0};
+    enum PWIZ_API_DECL ParameterIndex {AlphaR, AlphaI, Tau, F0};
 
     TruncatedLorentzian(double T); // cutoff value T
     ~TruncatedLorentzian();
@@ -52,8 +54,8 @@ class TruncatedLorentzian : public ParametrizedFunction< std::complex<double> >
                        double shift = 0, double scale = 1) const;
 
     private:
-    class Impl;
-    std::auto_ptr<Impl> impl_;
+    struct Impl;
+    boost::shared_ptr<Impl> impl_;
 };
 
 

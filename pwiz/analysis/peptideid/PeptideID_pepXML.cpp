@@ -20,6 +20,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -189,7 +191,7 @@ Handler::Status PepXMLHandler::endElement(const std::string& name,
 ////////////////////////////////////////////////////////////////////////////
 // class PeptideID_pepXML
 
-PeptideID_pepXml::PeptideID_pepXml(const char* filename)
+PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(const char* filename)
     : pimpl(new Impl(filename))
 {
     ifstream in(filename);
@@ -199,7 +201,7 @@ PeptideID_pepXml::PeptideID_pepXml(const char* filename)
     parse(in, pxh);
 }
 
-PeptideID_pepXml::PeptideID_pepXml(const string& filename)
+PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(const string& filename)
     : pimpl(new Impl(filename))
 {
     ifstream in(filename.c_str());
@@ -208,7 +210,7 @@ PeptideID_pepXml::PeptideID_pepXml(const string& filename)
     parse(in, pxh);
 }
 
-PeptideID_pepXml::PeptideID_pepXml(istream* in)
+PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(istream* in)
     : pimpl(new Impl(in))
 {
     if (in == NULL)
@@ -219,7 +221,7 @@ PeptideID_pepXml::PeptideID_pepXml(istream* in)
     parse(*in, pxh);
 }
 
-PeptideID::Record PeptideID_pepXml::record(const std::string& nativeID) const
+PWIZ_API_DECL PeptideID::Record PeptideID_pepXml::record(const std::string& nativeID) const
 {
     return pimpl->record(nativeID);
 }

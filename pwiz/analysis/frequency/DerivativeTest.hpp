@@ -25,6 +25,7 @@
 #define _DERIVATIVETEST_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "ParametrizedFunction.hpp"
 #include "utility/misc/unit.hpp"
 #include <iomanip>

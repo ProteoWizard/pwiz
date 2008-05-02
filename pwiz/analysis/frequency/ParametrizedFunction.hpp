@@ -25,6 +25,7 @@
 #define _PARAMETRIZEDFUNCTION_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "data/misc/SampleDatum.hpp"
 
 

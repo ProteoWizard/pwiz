@@ -1,3 +1,5 @@
+#define PWIZ_SOURCE
+
 #include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
@@ -15,18 +17,18 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_Thermo::ChromatogramList_Thermo()
+PWIZ_API_DECL ChromatogramList_Thermo::ChromatogramList_Thermo()
 {
 }
 
 
-size_t ChromatogramList_Thermo::size() const
+PWIZ_API_DECL size_t ChromatogramList_Thermo::size() const
 {
     return index_.size();
 }
 
 
-const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const
+PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const
 {
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogramIdentity()] Bad index: " 
@@ -35,7 +37,7 @@ const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t
 }
 
 
-size_t ChromatogramList_Thermo::find(const string& id) const
+PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 {
     map<string, size_t>::const_iterator itr = idMap_.find(id);
     if (itr != idMap_.end())
@@ -45,13 +47,13 @@ size_t ChromatogramList_Thermo::find(const string& id) const
 }
 
 
-size_t ChromatogramList_Thermo::findNative(const string& nativeID) const
+PWIZ_API_DECL size_t ChromatogramList_Thermo::findNative(const string& nativeID) const
 {
     return find(nativeID);
 }
 
 
-ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
 { 
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogram()] Bad index: " 

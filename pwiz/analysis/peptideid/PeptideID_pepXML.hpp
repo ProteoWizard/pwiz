@@ -23,6 +23,7 @@
 #ifndef _PEPTIDEID_PEPXML_HPP_
 #define _PEPTIDEID_PEPXML_HPP_
 
+#include "utility/misc/Export.hpp"
 #include <map>
 #include <boost/shared_ptr.hpp>
 
@@ -37,7 +38,7 @@ namespace peptideid {
 /// PeptideProphet format file (*.pep.xml), or an std::istream open to
 /// the beginning of a pep.xml file.
 
-class PeptideID_pepXml : public PeptideID
+class PWIZ_API_DECL PeptideID_pepXml : public PeptideID
 {
 public:
     /// Constructor taking path to input file in std::string.

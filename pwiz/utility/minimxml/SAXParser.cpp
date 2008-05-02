@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
@@ -314,7 +315,7 @@ class HandlerWrangler : public SAXParser::Handler
 //   - HandlerWrangler handles any XML/Handler validation
 // - return on Handler::Status::Done
 //
-void parse(istream& is, Handler& handler)
+PWIZ_API_DECL void parse(istream& is, Handler& handler)
 {
     using boost::iostreams::offset_to_position;
 

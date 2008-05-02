@@ -25,6 +25,7 @@
 #define _PEPTIDE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include <string>
 #include <memory>
@@ -35,7 +36,7 @@ namespace proteome {
 
 
 /// class representing a peptide
-class Peptide
+class PWIZ_API_DECL Peptide
 {
     public:
 

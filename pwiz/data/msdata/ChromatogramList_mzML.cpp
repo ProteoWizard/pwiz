@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "ChromatogramList_mzML.hpp"
 #include "IO.hpp"
 #include "References.hpp"
@@ -398,7 +400,7 @@ void ChromatogramList_mzMLImpl::createMaps()
 } // namespace
 
 
-ChromatogramListPtr ChromatogramList_mzML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
+PWIZ_API_DECL ChromatogramListPtr ChromatogramList_mzML::create(shared_ptr<istream> is, const MSData& msd, bool indexed)
 {
     if (!is.get() || !*is)
         throw runtime_error("[ChromatogramList_mzML::create()] Bad istream.");

@@ -25,6 +25,7 @@
 #define _MSDATAFILE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "Reader.hpp"
 #include "BinaryDataEncoder.hpp"
@@ -35,7 +36,7 @@ namespace msdata {
 
 
 /// MSData object plus file I/O
-struct MSDataFile : public MSData
+struct PWIZ_API_DECL MSDataFile : public MSData
 {
     /// constructs MSData object backed by file;
     /// reader==0 -> use DefaultReaderList 
@@ -43,10 +44,10 @@ struct MSDataFile : public MSData
                const Reader* reader = 0);
 
     /// data format for write()
-    enum Format {Format_Text, Format_mzML, Format_mzXML};
+    enum PWIZ_API_DECL Format {Format_Text, Format_mzML, Format_mzXML};
 
     /// configuration for write()
-    struct WriteConfig
+    struct PWIZ_API_DECL WriteConfig
     {
         Format format;
         BinaryDataEncoder::Config binaryDataEncoderConfig;
@@ -68,8 +69,8 @@ struct MSDataFile : public MSData
 };
 
 
-std::ostream& operator<<(std::ostream& os, MSDataFile::Format format);
-std::ostream& operator<<(std::ostream& os, const MSDataFile::WriteConfig& config);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, MSDataFile::Format format);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MSDataFile::WriteConfig& config);
 
 
 } // namespace msdata

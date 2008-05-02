@@ -1,3 +1,5 @@
+#define PWIZ_SOURCE
+
 #include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
@@ -36,13 +38,13 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
 }
 
 
-size_t SpectrumList_Thermo::size() const
+PWIZ_API_DECL size_t SpectrumList_Thermo::size() const
 {
     return size_;
 }
 
 
-const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
+PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
@@ -51,7 +53,7 @@ const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) cons
 }
 
 
-size_t SpectrumList_Thermo::find(const string& id) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 {
     try
     {
@@ -65,7 +67,7 @@ size_t SpectrumList_Thermo::find(const string& id) const
 }
 
 
-size_t SpectrumList_Thermo::findNative(const string& nativeID) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::findNative(const string& nativeID) const
 {
     return find(nativeID);
 }
@@ -73,6 +75,7 @@ size_t SpectrumList_Thermo::findNative(const string& nativeID) const
 
 // first: the pointer to the new or existing chromatogram
 // second: true if the chromatogram is newly inserted
+PWIZ_API_DECL
 pair<ChromatogramPtr, bool> addPointToNewOrExistingChromatogram(ChromatogramList_Thermo& cl,
                                                                 ScanInfo& scanInfo,
                                                                 const string& id,
@@ -111,7 +114,7 @@ pair<ChromatogramPtr, bool> addPointToNewOrExistingChromatogram(ChromatogramList
     }
 }
 
-void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) const
+PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) const
 {
     //if (!msd.run.chromatogramListPtr.get())
     //    return;
@@ -171,12 +174,12 @@ void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) cons
     }
 }
 
-ChromatogramListPtr SpectrumList_Thermo::Chromatograms() const
+PWIZ_API_DECL ChromatogramListPtr SpectrumList_Thermo::Chromatograms() const
 {
     return chromatograms_;
 }
 
-SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const 
 { 
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
@@ -293,7 +296,7 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
 }
 
 
-void SpectrumList_Thermo::createIndex()
+PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 {
     for (size_t i=0; i<size_; i++)
     {
@@ -306,7 +309,7 @@ void SpectrumList_Thermo::createIndex()
 }
 
 
-string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, size_t index) const
+PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, size_t index) const
 {
     // for MSn spectra (n > 1): return first scan with MSn-1
 

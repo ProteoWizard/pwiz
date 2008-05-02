@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "AminoAcid.hpp"
 #include <iostream>
 #include <map>
@@ -113,12 +115,12 @@ void Info::Impl::initializeRecords()
 }
 
 
-Info::Info() : impl_(new Impl) {}
-Info::~Info() {} // automatic destruction of impl_
-const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
+PWIZ_API_DECL Info::Info() : impl_(new Impl) {}
+PWIZ_API_DECL Info::~Info() {} // automatic destruction of impl_
+PWIZ_API_DECL const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
 
 
-const Info::Record& Info::operator[](char symbol) const 
+PWIZ_API_DECL const Info::Record& Info::operator[](char symbol) const 
 {
     const Info::Record* record = impl_->record(symbol);
     if (!record)

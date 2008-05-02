@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IsotopeCalculator.hpp"
 #include "IsotopeTable.hpp"
 #include "Ion.hpp"
@@ -296,14 +298,15 @@ MassDistribution IsotopeCalculator::Impl::distributionManually(Element::Type e,
 }
 
 
-IsotopeCalculator::IsotopeCalculator(double abundanceCutoff, double massPrecision)
+PWIZ_API_DECL IsotopeCalculator::IsotopeCalculator(double abundanceCutoff, double massPrecision)
 :   impl_(new Impl(abundanceCutoff, massPrecision))
 {}
 
 
-IsotopeCalculator::~IsotopeCalculator(){} // auto destruction of impl_
+PWIZ_API_DECL IsotopeCalculator::~IsotopeCalculator(){} // auto destruction of impl_
 
 
+PWIZ_API_DECL
 MassDistribution IsotopeCalculator::distribution(const Formula& formula,
                                                  int chargeState,
                                                  int normalization) const

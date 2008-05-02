@@ -24,7 +24,7 @@
 #ifndef _INTEGERSET_HPP_
 #define _INTEGERSET_HPP_
 
-
+#include "utility/misc/Export.hpp"
 #include <list>
 
 
@@ -34,12 +34,12 @@ namespace util {
 
 /// a virtual container of integers, accessible via an iterator interface,
 /// stored as union of intervals
-class IntegerSet
+class PWIZ_API_DECL IntegerSet
 {
     public:
 
     /// a single closed interval of integers 
-    struct Interval
+    struct PWIZ_API_DECL Interval
     {
         int begin;
         int end;
@@ -49,14 +49,14 @@ class IntegerSet
 
         bool contains(int n) const {return n>=begin && n<=end;}
 
-        friend std::ostream& operator<<(std::ostream& os, const Interval& interval);
+        friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Interval& interval);
     };
 
     /// collection of Interval objects
     typedef std::list<Interval> Intervals;
 
     /// forward iterator providing readonly access to the virtual container 
-    class Iterator
+    class PWIZ_API_DECL Iterator
     {
         public:
 
@@ -131,7 +131,7 @@ class IntegerSet
     private:
     Intervals intervals_; 
 
-    friend std::ostream& operator<<(std::ostream& os, const IntegerSet& integerSet);
+    friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IntegerSet& integerSet);
 };
 
 

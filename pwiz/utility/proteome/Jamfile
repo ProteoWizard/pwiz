@@ -32,6 +32,8 @@ lib pwiz_utility_proteome
       Peptide.cpp 
       PeptideDatabase.cpp 
       ../..//boost_iostreams
+    : <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : <library>../..//boost_iostreams
     ;
 
 

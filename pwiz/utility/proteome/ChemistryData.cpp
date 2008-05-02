@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "ChemistryData.hpp"
 
 
@@ -375,7 +377,7 @@ Isotope isotopes_Uuh[] = { {0, 0}, };
 const int isotopes_Uuh_size = sizeof(isotopes_Uuh)/sizeof(Isotope);
 
 
-Element elements_[] =
+PWIZ_API_DECL Element elements_[] =
 {
     { H, "H", 1, 1.00794, isotopes_H, isotopes_H_size },
     { He, "He", 2, 4.002602, isotopes_He, isotopes_He_size },
@@ -494,16 +496,16 @@ Element elements_[] =
 };
 
 
-const int elementsSize_ = sizeof(elements_)/sizeof(Element);
+PWIZ_API_DECL const int elementsSize_ = sizeof(elements_)/sizeof(Element);
 
 
-Element* elements()
+PWIZ_API_DECL Element* elements()
 {
     return elements_;
 }
 
 
-int elementsSize()
+PWIZ_API_DECL int elementsSize()
 {
     return elementsSize_;
 }

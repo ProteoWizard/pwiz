@@ -25,6 +25,7 @@
 #define _MSDATACACHE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "SpectrumInfo.hpp"
 
@@ -70,14 +71,14 @@ using namespace msdata;
 /// automatically updating the cache via call to SpectrumList::spectrum() if
 /// necessary.
 ///
-class MSDataCache : public std::vector<SpectrumInfo>,
-                    public MSDataAnalyzer
+class PWIZ_API_DECL MSDataCache : public std::vector<SpectrumInfo>,
+                                  public MSDataAnalyzer
                     
 {
     public:
 
     /// MSDataCache configuration
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         size_t binaryDataCacheSize;
         Config() : binaryDataCacheSize(1) {}

@@ -25,6 +25,7 @@
 #define _DIFF_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "TextWriter.hpp"
 
@@ -34,7 +35,7 @@ namespace msdata {
 
 
 /// configuration struct for diffs
-struct DiffConfig 
+struct PWIZ_API_DECL DiffConfig 
 {
     /// precision with which two doubles are compared
     double precision;
@@ -64,186 +65,217 @@ struct DiffConfig
 namespace diff_impl {
 
 
+PWIZ_API_DECL
 void diff(const std::string& a,
           const std::string& b,
           std::string& a_b,
           std::string& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const CV& a,
           const CV& b,
           CV& a_b,
           CV& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const UserParam& a,
           const UserParam& b,
           UserParam& a_b,
           UserParam& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const CVParam& a,
           const CVParam& b,
           CVParam& a_b,
           CVParam& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const ParamContainer& a,
           const ParamContainer& b,
           ParamContainer& a_b,
           ParamContainer& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const ParamGroup& a,
           const ParamGroup& b,
           ParamGroup& a_b,
           ParamGroup& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const SourceFile& a,
           const SourceFile& b,
           SourceFile& a_b,
           SourceFile& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const FileDescription& a,
           const FileDescription& b,
           FileDescription& a_b,
           FileDescription& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Sample& a,
           const Sample& b,
           Sample& a_b,
           Sample& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Component& a,
           const Component& b,
           Component& a_b,
           Component& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Source& a,
           const Source& b,
           Source& a_b,
           Source& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Analyzer& a,
           const Analyzer& b,
           Analyzer& a_b,
           Analyzer& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Detector& a,
           const Detector& b,
           Detector& a_b,
           Detector& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const ComponentList& a,
           const ComponentList& b,
           ComponentList& a_b,
           ComponentList& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Software& a,
           const Software& b,
           Software& a_b,
           Software& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const InstrumentConfiguration& a,
           const InstrumentConfiguration& b,
           InstrumentConfiguration& a_b,
           InstrumentConfiguration& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const ProcessingMethod& a,
           const ProcessingMethod& b,
           ProcessingMethod& a_b,
           ProcessingMethod& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const DataProcessing& a,
           const DataProcessing& b,
           DataProcessing& a_b,
           DataProcessing& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const AcquisitionSettings& a,
           const AcquisitionSettings& b,
           AcquisitionSettings& a_b,
           AcquisitionSettings& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Acquisition& a,
           const Acquisition& b,
           Acquisition& a_b,
           Acquisition& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const AcquisitionList& a,
           const AcquisitionList& b,
           AcquisitionList& a_b,
           AcquisitionList& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Precursor& a,
           const Precursor& b,
           Precursor& a_b,
           Precursor& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Scan& a,
           const Scan& b,
           Scan& a_b,
           Scan& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const SpectrumDescription& a,
           const SpectrumDescription& b,
           SpectrumDescription& a_b,
           SpectrumDescription& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const BinaryDataArray& a,
           const BinaryDataArray& b,
           BinaryDataArray& a_b,
           BinaryDataArray& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Spectrum& a,
           const Spectrum& b,
           Spectrum& a_b,
           Spectrum& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Chromatogram& a,
           const Chromatogram& b,
           Chromatogram& a_b,
           Chromatogram& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
           ChromatogramListSimple& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const Run& a,
           const Run& b,
           Run& a_b,
           Run& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
 void diff(const MSData& a,
           const MSData& b,
           MSData& a_b,

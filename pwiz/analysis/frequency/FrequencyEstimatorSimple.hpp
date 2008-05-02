@@ -25,6 +25,7 @@
 #define _FREQUENCYESTIMATORSIMPLE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "FrequencyEstimator.hpp" 
 #include <memory>
 
@@ -34,11 +35,11 @@ namespace frequency {
 
 
 /// Simple implementation of the FrequencyEstimator interface. 
-class FrequencyEstimatorSimple : public FrequencyEstimator
+class PWIZ_API_DECL FrequencyEstimatorSimple : public FrequencyEstimator
 {
     public:
 
-    enum Type {LocalMax, Parabola, Lorentzian};
+    enum PWIZ_API_DECL Type {LocalMax, Parabola, Lorentzian};
 
     /// create an instance
     static std::auto_ptr<FrequencyEstimatorSimple> create(Type type = Parabola,

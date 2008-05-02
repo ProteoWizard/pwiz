@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "examples.hpp"
 
@@ -34,7 +35,7 @@ using boost::lexical_cast;
 using namespace std;
 
 
-void initializeTiny(MSData& msd)
+PWIZ_API_DECL void initializeTiny(MSData& msd)
 {
     msd.accession = "test accession";
     msd.id = "testid";
@@ -407,7 +408,7 @@ void setSpectrumData(Spectrum& spectrum, Datum* data, size_t size)
 } // namespace
 
 
-SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_FT_, data_5pep_FT_size_);
@@ -435,7 +436,7 @@ SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentC
 }
 
 
-SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_IT_, data_5pep_IT_size_);
@@ -463,7 +464,7 @@ SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentC
 }
 
 
-SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_ms2_, data_5pep_ms2_size_);
@@ -504,7 +505,7 @@ SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrument
 }
 
 
-void initializeTiny2(MSData& msd)
+PWIZ_API_DECL void initializeTiny2(MSData& msd)
 {
     msd.accession = "test accession";
     msd.id = "testid";

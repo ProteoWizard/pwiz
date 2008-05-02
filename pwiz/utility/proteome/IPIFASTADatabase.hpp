@@ -25,6 +25,7 @@
 #define _IPIFASTADATABASE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,7 +37,7 @@ namespace proteome {
 
 
 /// class for accessing data in ipi.*.fasta files
-class IPIFASTADatabase
+class PWIZ_API_DECL IPIFASTADatabase
 {
     public:
 
@@ -45,7 +46,7 @@ class IPIFASTADatabase
     ~IPIFASTADatabase();
 
     /// structure for holding peptide info
-    struct Record
+    struct PWIZ_API_DECL Record
     {
         int id;
         std::string sequence;
@@ -64,7 +65,7 @@ class IPIFASTADatabase
 };
 
 
-std::ostream& operator<<(std::ostream& os, const IPIFASTADatabase::Record& record);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IPIFASTADatabase::Record& record);
 
 
 } // namespace proteome

@@ -22,16 +22,16 @@
 #ifndef _LINEARLEASTSQUARES_HPP_
 #define _LINEARLEASTSQUARES_HPP_
 
+
+#include "utility/misc/Export.hpp"
 #include <iostream>
-
 #include "LinearSolver.hpp"
-
 #include "Types.hpp"
 
 namespace pwiz {
 namespace math {
 
-enum LinearLeastSquaresType {LinearLeastSquaresType_LU, LinearLeastSquaresType_QR};
+enum PWIZ_API_DECL LinearLeastSquaresType {LinearLeastSquaresType_LU, LinearLeastSquaresType_QR};
 
 template <LinearLeastSquaresType lls_type = LinearLeastSquaresType_LU>
 class LinearLeastSquares;

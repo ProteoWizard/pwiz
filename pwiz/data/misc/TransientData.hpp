@@ -25,6 +25,7 @@
 #define _TRANSIENTDATA_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -38,7 +39,7 @@ class FrequencyData;
 
 
 /// class for accessing/creating MIDAS format FT transient data
-class TransientData
+class PWIZ_API_DECL TransientData
 {
     public:
 
@@ -84,7 +85,7 @@ class TransientData
     void computeFFT(unsigned int zeroPadding, FrequencyData& result) const;
 
     /// interface for a signal function
-    class Signal
+    class PWIZ_API_DECL Signal
     {
         public:
         virtual double operator()(double t) const = 0;
@@ -98,7 +99,7 @@ class TransientData
 
     /// \name Output functions 
     //@{
-    enum Format {Text, Binary};
+    enum PWIZ_API_DECL Format {Text, Binary};
     void write(std::ostream& os, Format format = Binary);
     void write(const std::string& filename, Format format = Binary);
     //@}

@@ -25,6 +25,7 @@
 #define _READER_THERMO_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "data/msdata/Reader.hpp"
 
 
@@ -38,7 +39,7 @@ namespace pwiz {
 namespace msdata {
 
 
-class Reader_Thermo : public Reader
+class PWIZ_API_DECL Reader_Thermo : public Reader
 {
     public:
 

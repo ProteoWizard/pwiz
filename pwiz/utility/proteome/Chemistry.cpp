@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Chemistry.hpp"
 #include "ChemistryData.hpp"
 #include <iostream>
@@ -40,26 +42,26 @@ namespace proteome {
 namespace Chemistry { 
 
 
-bool MassAbundance::operator==(const MassAbundance& that) const
+PWIZ_API_DECL bool MassAbundance::operator==(const MassAbundance& that) const
 {
     return this->mass==that.mass && this->abundance==that.abundance;
 }
 
 
-bool MassAbundance::operator!=(const MassAbundance& that) const
+PWIZ_API_DECL bool MassAbundance::operator!=(const MassAbundance& that) const
 {
     return !operator==(that); 
 }
 
 
-ostream& operator<<(ostream& os, const MassAbundance& ma)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const MassAbundance& ma)
 {
     os << "<" << ma.mass << ", " << ma.abundance << ">";
     return os;
 }
 
 
-ostream& operator<<(ostream& os, const MassDistribution& md)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const MassDistribution& md)
 {
     copy(md.begin(), md.end(), ostream_iterator<MassAbundance>(os, "\n"));
     return os;
@@ -69,7 +71,7 @@ ostream& operator<<(ostream& os, const MassDistribution& md)
 namespace Element {
 
 
-std::ostream& operator<<(std::ostream& os, Type type)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, Type type)
 {
     Info info;
     os << info[type].symbol;
@@ -138,12 +140,12 @@ void Info::Impl::initializeData()
 
 // Info implementation
 
-Info::Info() : impl_(new Impl) {}
-Info::~Info() {} // auto destruction of impl_
-const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
+PWIZ_API_DECL Info::Info() : impl_(new Impl) {}
+PWIZ_API_DECL Info::~Info() {} // auto destruction of impl_
+PWIZ_API_DECL const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
 
 
-ostream& operator<<(ostream& os, const Info::Record& r)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Info::Record& r)
 {
     cout << r.symbol << " " << r.atomicNumber << " " << r.atomicWeight << " ";
     copy(r.isotopes.begin(), r.isotopes.end(), ostream_iterator<MassAbundance>(cout, " "));
@@ -226,28 +228,28 @@ Formula::Impl::Impl(const string& formula)
 }
 
 
-Formula::Formula(const string& formula)
+PWIZ_API_DECL Formula::Formula(const string& formula)
 :   impl_(new Impl(formula))
 {}
 
 
-Formula::Formula(const Formula& formula)
+PWIZ_API_DECL Formula::Formula(const Formula& formula)
 :   impl_(new Impl(*formula.impl_))
 {}
 
 
-const Formula& Formula::operator=(const Formula& formula)
+PWIZ_API_DECL const Formula& Formula::operator=(const Formula& formula)
 {
     *impl_ = *formula.impl_;
     return *this;
 }
 
 
-Formula::~Formula()
+PWIZ_API_DECL Formula::~Formula()
 {} // auto destruction of impl_
 
 
-double Formula::monoisotopicMass() const
+PWIZ_API_DECL double Formula::monoisotopicMass() const
 {
     Element::Info info;
     double result = 0;
@@ -263,7 +265,7 @@ double Formula::monoisotopicMass() const
 }
 
 
-double Formula::molecularWeight() const
+PWIZ_API_DECL double Formula::molecularWeight() const
 {
     Element::Info info;
     double result = 0;
@@ -275,7 +277,7 @@ double Formula::molecularWeight() const
 }
 
 
-string Formula::formula() const
+PWIZ_API_DECL string Formula::formula() const
 {
     // collect a term for each element
     vector<string> terms;
@@ -293,25 +295,25 @@ string Formula::formula() const
 }
 
 
-int Formula::operator[](Element::Type e) const
+PWIZ_API_DECL int Formula::operator[](Element::Type e) const
 {
     return impl_->data[e];
 }
 
 
-int& Formula::operator[](Element::Type e)
+PWIZ_API_DECL int& Formula::operator[](Element::Type e)
 {
     return impl_->data[e];
 }
 
 
-const map<Element::Type, int>& Formula::data() const
+PWIZ_API_DECL const map<Element::Type, int>& Formula::data() const
 {
     return impl_->data;
 }
 
 
-Formula& Formula::operator+=(const Formula& that)
+PWIZ_API_DECL Formula& Formula::operator+=(const Formula& that)
 {
     for (Map::const_iterator it=that.data().begin(); it!=that.data().end(); ++it)
         impl_->data[it->first] += it->second;
@@ -319,7 +321,7 @@ Formula& Formula::operator+=(const Formula& that)
 }
 
 
-Formula& Formula::operator-=(const Formula& that)
+PWIZ_API_DECL Formula& Formula::operator-=(const Formula& that)
 {
     for (Map::const_iterator it=that.data().begin(); it!=that.data().end(); ++it)
         impl_->data[it->first] -= it->second;
@@ -327,7 +329,7 @@ Formula& Formula::operator-=(const Formula& that)
 }
 
 
-Formula& Formula::operator*=(int scalar)
+PWIZ_API_DECL Formula& Formula::operator*=(int scalar)
 {
     for (Map::iterator it=impl_->data.begin(); it!=impl_->data.end(); ++it)
         it->second *= scalar;
@@ -335,7 +337,7 @@ Formula& Formula::operator*=(int scalar)
 }
 
 
-Formula operator+(const Formula& a, const Formula& b)
+PWIZ_API_DECL Formula operator+(const Formula& a, const Formula& b)
 {
     Formula result(a);
     result += b;
@@ -343,7 +345,7 @@ Formula operator+(const Formula& a, const Formula& b)
 }
 
 
-Formula operator-(const Formula& a, const Formula& b)
+PWIZ_API_DECL Formula operator-(const Formula& a, const Formula& b)
 {
     Formula result(a);
     result -= b;
@@ -351,7 +353,7 @@ Formula operator-(const Formula& a, const Formula& b)
 }
 
 
-Formula operator*(const Formula& a, int scalar)
+PWIZ_API_DECL Formula operator*(const Formula& a, int scalar)
 {
     Formula result(a);
     result *= scalar;
@@ -359,7 +361,7 @@ Formula operator*(const Formula& a, int scalar)
 }
 
 
-Formula operator*(int scalar, const Formula& a)
+PWIZ_API_DECL Formula operator*(int scalar, const Formula& a)
 {
     Formula result(a);
     result *= scalar;
@@ -367,7 +369,7 @@ Formula operator*(int scalar, const Formula& a)
 }
 
 
-ostream& operator<<(ostream& os, const Formula& formula)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Formula& formula)
 {
     os << formula.formula();
     return os;

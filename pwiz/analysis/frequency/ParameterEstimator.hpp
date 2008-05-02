@@ -25,6 +25,7 @@
 #define _PARAMETERESTIMATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "ParametrizedFunction.hpp"
 #include <memory>
 #include <vector>

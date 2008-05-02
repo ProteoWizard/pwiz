@@ -24,6 +24,7 @@
 #include "References.hpp"
 #include "utility/misc/unit.hpp"
 #include <iostream>
+#include "utility/minimxml/XMLWriter.hpp"
 
 
 using namespace std;

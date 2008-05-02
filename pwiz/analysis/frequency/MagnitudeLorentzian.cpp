@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MagnitudeLorentzian.hpp"
 #include "utility/math/Parabola.hpp"
 #include <cmath>
@@ -38,7 +40,7 @@ using namespace std;
 using namespace math;
 
 
-MagnitudeLorentzian::MagnitudeLorentzian(double a, double b, double c)
+PWIZ_API_DECL MagnitudeLorentzian::MagnitudeLorentzian(double a, double b, double c)
 :   a_(3), leastSquaresError_(0)
 {
     a_[0] = a;
@@ -47,7 +49,7 @@ MagnitudeLorentzian::MagnitudeLorentzian(double a, double b, double c)
 }
 
 
-MagnitudeLorentzian::MagnitudeLorentzian(vector<double> a)
+PWIZ_API_DECL MagnitudeLorentzian::MagnitudeLorentzian(vector<double> a)
 :   a_(a), leastSquaresError_(0)
 {
     if (a_.size() != 3)
@@ -84,7 +86,7 @@ double calculateLeastSquaresError(const MagnitudeLorentzian& ml,
 } // namespace
 
 
-MagnitudeLorentzian::MagnitudeLorentzian(const vector< pair<double,double> >& samples)
+PWIZ_API_DECL MagnitudeLorentzian::MagnitudeLorentzian(const vector< pair<double,double> >& samples)
 :   leastSquaresError_(0)
 {
     vector< pair<double,double> > transformedSamples;
@@ -100,43 +102,43 @@ MagnitudeLorentzian::MagnitudeLorentzian(const vector< pair<double,double> >& sa
 }
 
 
-double MagnitudeLorentzian::leastSquaresError() const 
+PWIZ_API_DECL double MagnitudeLorentzian::leastSquaresError() const 
 {
     return leastSquaresError_;
 }
 
 
-vector<double>& MagnitudeLorentzian::coefficients()
+PWIZ_API_DECL vector<double>& MagnitudeLorentzian::coefficients()
 {
     return a_;
 }
 
 
-const vector<double>& MagnitudeLorentzian::coefficients() const
+PWIZ_API_DECL const vector<double>& MagnitudeLorentzian::coefficients() const
 {
     return a_;
 }
 
 
-double MagnitudeLorentzian::operator()(double x) const
+PWIZ_API_DECL double MagnitudeLorentzian::operator()(double x) const
 {
     return 1/sqrt(a_[0]*x*x + a_[1]*x + a_[2]);
 }
 
 
-double MagnitudeLorentzian::center() const
+PWIZ_API_DECL double MagnitudeLorentzian::center() const
 {
     return -a_[1]/(2*a_[0]);
 }
 
 
-double MagnitudeLorentzian::tau() const
+PWIZ_API_DECL double MagnitudeLorentzian::tau() const
 {
     return operator()(center())/alpha();
 }
 
 
-double MagnitudeLorentzian::alpha() const
+PWIZ_API_DECL double MagnitudeLorentzian::alpha() const
 {
     return 2*M_PI/sqrt(a_[0]);
 }

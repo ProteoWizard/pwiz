@@ -25,6 +25,7 @@
 #define _CHEMISTRYDATA_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 
 
@@ -36,14 +37,14 @@ namespace ChemistryData {
 typedef pwiz::proteome::Chemistry::Element::Type Type;
 
 
-struct Isotope 
+struct PWIZ_API_DECL Isotope 
 {
     double mass; 
     double abundance;
 };
 
 
-struct Element 
+struct PWIZ_API_DECL Element 
 {
     Type type;
     const char* symbol;
@@ -54,8 +55,8 @@ struct Element
 };
 
 
-Element* elements();
-int elementsSize();
+PWIZ_API_DECL Element* elements();
+PWIZ_API_DECL int elementsSize();
 
 
 } // namespace ChemistryData

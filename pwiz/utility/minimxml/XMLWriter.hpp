@@ -24,7 +24,7 @@
 #ifndef _XMLWRITER_HPP_
 #define _XMLWRITER_HPP_
 
-
+#include "utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iosfwd>
@@ -41,12 +41,12 @@ namespace minimxml {
 /// Internally, XMLWriter keeps a style stack (for client customization
 /// of the XML style) and an element stack (for element nesting/indentation). 
 ///
-class XMLWriter
+class PWIZ_API_DECL XMLWriter
 {
     public:
 
     /// flags to control the XML writing style
-    enum StyleFlag
+    enum PWIZ_API_DECL StyleFlag
     {
         StyleFlag_InlineInner = 0x01, // no whitespace within an element 
         StyleFlag_InlineOuter = 0x02, // no whitespace around an element
@@ -55,7 +55,7 @@ class XMLWriter
     };
 
     /// interface to allow outside observation of data sent to output stream 
-    class OutputObserver
+    class PWIZ_API_DECL OutputObserver
     {
         public:
         virtual void update(const std::string& output) = 0;
@@ -63,7 +63,7 @@ class XMLWriter
     };
 
     /// initial configuration of the XMLWriter
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         unsigned int initialStyle;
         unsigned int indentationStep;
@@ -76,6 +76,7 @@ class XMLWriter
 
     /// constructor
     XMLWriter(std::ostream& os, const Config& config = Config());
+    virtual ~XMLWriter() {}
 
     /// pushes style flags onto the internal style stack
     void pushStyle(unsigned int flags);

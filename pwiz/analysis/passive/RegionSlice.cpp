@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "RegionSlice.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
@@ -73,7 +75,7 @@ bool parseRange(const string& text, pair<value_type,value_type>& result)
 } // namespace
 
 
-RegionSlice::Config::Config(const string& args)
+PWIZ_API_DECL RegionSlice::Config::Config(const string& args)
 {
     mzRange = make_pair(0, numeric_limits<double>::max());
     rtRange = make_pair(0, numeric_limits<double>::max());
@@ -123,18 +125,19 @@ RegionSlice::Config::Config(const string& args)
 }
 
 
-RegionSlice::RegionSlice(const MSDataCache& cache, const Config& config)
+PWIZ_API_DECL RegionSlice::RegionSlice(const MSDataCache& cache, const Config& config)
 :   cache_(cache),
     regionAnalyzer_(new RegionAnalyzer(config, cache_))
 {}
 
 
-void RegionSlice::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionSlice::open(const DataInfo& dataInfo)
 {
     regionAnalyzer_->open(dataInfo);
 }
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 RegionSlice::updateRequested(const DataInfo& dataInfo, 
                              const SpectrumIdentity& spectrumIdentity) const 
@@ -143,6 +146,7 @@ RegionSlice::updateRequested(const DataInfo& dataInfo,
 }
 
 
+PWIZ_API_DECL
 void RegionSlice::update(const DataInfo& dataInfo, 
                          const Spectrum& spectrum)
 {
@@ -150,7 +154,7 @@ void RegionSlice::update(const DataInfo& dataInfo,
 }
 
 
-void RegionSlice::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionSlice::close(const DataInfo& dataInfo)
 {
     regionAnalyzer_->close(dataInfo);
 }

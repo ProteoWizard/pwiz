@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MSDataAnalyzerApplication.hpp"
 #include "data/vendor_readers/ExtendedReaderList.hpp"
 #include "data/msdata/MSDataFile.hpp"
@@ -42,7 +44,7 @@ using namespace std;
 //
 
 
-MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, const char* argv[])
+PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, const char* argv[])
 :   outputDirectory(".")
 {
     namespace po = boost::program_options;
@@ -122,7 +124,7 @@ MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, const char* argv[
 }
 
 
-void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostream* log) const
+PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostream* log) const
 {
     namespace bfs = boost::filesystem;
 

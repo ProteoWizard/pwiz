@@ -25,6 +25,7 @@
 #define _SHA1OUTPUTOBSERVER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "utility/minimxml/XMLWriter.hpp"
 #include "utility/misc/SHA1Calculator.hpp"
 
@@ -33,7 +34,7 @@ namespace pwiz {
 namespace msdata {
 
 
-class SHA1OutputObserver : public minimxml::XMLWriter::OutputObserver
+class PWIZ_API_DECL SHA1OutputObserver : public minimxml::XMLWriter::OutputObserver
 {
     public:
     virtual void update(const std::string& output) {sha1Calculator_.update(output);}

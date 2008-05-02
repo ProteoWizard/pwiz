@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MSDataFile.hpp"
 #include "TextWriter.hpp"
 #include "Serializer_mzML.hpp"
@@ -66,7 +68,7 @@ shared_ptr<DefaultReaderList> defaultReaderList_;
 } // namespace
 
 
-MSDataFile::MSDataFile(const string& filename, const Reader* reader)
+PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reader)
 {
     if (reader)
     {
@@ -81,6 +83,7 @@ MSDataFile::MSDataFile(const string& filename, const Reader* reader)
 }
 
 
+PWIZ_API_DECL
 void MSDataFile::write(const string& filename,
                        const WriteConfig& config)
 {
@@ -140,6 +143,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
 } // namespace
 
 
+PWIZ_API_DECL
 void MSDataFile::write(const MSData& msd,
                        const string& filename,
                        const WriteConfig& config)
@@ -149,7 +153,7 @@ void MSDataFile::write(const MSData& msd,
 }
 
 
-ostream& operator<<(ostream& os, MSDataFile::Format format)
+PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
 {
     switch (format)
     {
@@ -169,7 +173,7 @@ ostream& operator<<(ostream& os, MSDataFile::Format format)
 }
 
 
-ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& config)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& config)
 {
     os << config.format << " " << config.binaryDataEncoderConfig
        << " indexed=\"" << boolalpha << config.indexed << "\"";

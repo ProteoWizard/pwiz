@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "endian.hpp"
 #ifdef PWIZ_BIG_ENDIAN
@@ -73,17 +74,17 @@ class SHA1Calculator::Impl
 };
 
 
-SHA1Calculator::SHA1Calculator() : impl_(new Impl) {}
+PWIZ_API_DECL SHA1Calculator::SHA1Calculator() : impl_(new Impl) {}
 
 
-void SHA1Calculator::reset()
+PWIZ_API_DECL void SHA1Calculator::reset()
 {
     impl_->csha1.Reset();
     impl_->closed = false;
 }
 
 
-void SHA1Calculator::update(const unsigned char* buffer, size_t bufferSize)
+PWIZ_API_DECL void SHA1Calculator::update(const unsigned char* buffer, size_t bufferSize)
 {
     if (impl_->closed) 
         throw runtime_error("[SHA1Calculator::update()] Should not be called after close().");
@@ -92,27 +93,27 @@ void SHA1Calculator::update(const unsigned char* buffer, size_t bufferSize)
 }
     
 
-void SHA1Calculator::update(const string& buffer)
+PWIZ_API_DECL void SHA1Calculator::update(const string& buffer)
 {
     if (!buffer.empty())
         update(reinterpret_cast<const unsigned char*>(&buffer[0]), buffer.size());
 }
 
 
-void SHA1Calculator::close()
+PWIZ_API_DECL void SHA1Calculator::close()
 {
     impl_->csha1.Final();
     impl_->closed = true;
 }
 
 
-string SHA1Calculator::hash() const
+PWIZ_API_DECL string SHA1Calculator::hash() const
 {
     return formatHash(impl_->csha1);
 }
 
 
-string SHA1Calculator::hashProjected() const
+PWIZ_API_DECL string SHA1Calculator::hashProjected() const
 {
     if (impl_->closed) 
         throw runtime_error("[SHA1Calculator::hashProjected()] Should not be called after close().");
@@ -123,13 +124,13 @@ string SHA1Calculator::hashProjected() const
 }
 
 
-string SHA1Calculator::hash(const string& buffer)
+PWIZ_API_DECL string SHA1Calculator::hash(const string& buffer)
 {
     return hash((const unsigned char*)buffer.c_str(), buffer.size());
 }
 
 
-string SHA1Calculator::hash(const unsigned char* buffer, size_t bufferSize)
+PWIZ_API_DECL string SHA1Calculator::hash(const unsigned char* buffer, size_t bufferSize)
 {
     CSHA1 sha1;
     sha1.Update(buffer, static_cast<UINT_32>(bufferSize));
@@ -138,7 +139,7 @@ string SHA1Calculator::hash(const unsigned char* buffer, size_t bufferSize)
 }
 
 
-string SHA1Calculator::hashFile(const string& filename)
+PWIZ_API_DECL string SHA1Calculator::hashFile(const string& filename)
 {
     CSHA1 sha1;
 

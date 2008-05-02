@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "Serializer_mzXML.hpp"
 #include "SpectrumList_mzXML.hpp"
@@ -780,24 +781,24 @@ void Serializer_mzXML::Impl::read(shared_ptr<istream> is, MSData& msd) const
 //
 
 
-Serializer_mzXML::Serializer_mzXML(const Config& config)
+PWIZ_API_DECL Serializer_mzXML::Serializer_mzXML(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
-void Serializer_mzXML::write(ostream& os, const MSData& msd) const
+PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd) const
 {
     return impl_->write(os, msd);
 }
 
 
-void Serializer_mzXML::read(shared_ptr<istream> is, MSData& msd) const
+PWIZ_API_DECL void Serializer_mzXML::read(shared_ptr<istream> is, MSData& msd) const
 {
     return impl_->read(is, msd);
 }
 
 
-ostream& operator<<(ostream& os, const Serializer_mzXML::Config& config)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Serializer_mzXML::Config& config)
 {
     os << config.binaryDataEncoderConfig 
        << " indexed=\"" << boolalpha << config.indexed << "\"";

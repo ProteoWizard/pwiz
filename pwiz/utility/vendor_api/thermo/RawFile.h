@@ -24,17 +24,18 @@
 #ifndef _RAWFILE_H_
 #define _RAWFILE_H_
 
-
-/*
-#ifdef RAWFILE_EXPORTS
+#ifdef RAWFILE_DYN_LINK
+#ifdef RAWFILE_SOURCE
 #define RAWFILE_API __declspec(dllexport)
 #else
 #define RAWFILE_API __declspec(dllimport)
-#endif
-*/
+#endif  // RAWFILE_SOURCE
+#endif  // RAWFILE_DYN_LINK
 
-
+// if RAWFILE_API isn't defined yet define it now:
+#ifndef RAWFILE_API
 #define RAWFILE_API
+#endif
 
 #include "ScanFilter.h"
 #include <string>
@@ -54,7 +55,7 @@ class RAWFILE_API RawFileLibrary
 };
 
 
-class RAWFILE_API RawEgg : public std::runtime_error // Eggception class
+class RawEgg : public std::runtime_error // Eggception class
 {
     public:
 
@@ -71,7 +72,7 @@ class RAWFILE_API RawEgg : public std::runtime_error // Eggception class
 };
 
 
-enum ControllerType
+enum RAWFILE_API ControllerType
 {
     Controller_None = -1,
     Controller_MS = 0,
@@ -82,14 +83,14 @@ enum ControllerType
 };
 
 
-struct ControllerInfo
+struct RAWFILE_API ControllerInfo
 {
     ControllerType type;
     long controllerNumber;
 };
 
 
-enum ValueID_String
+enum RAWFILE_API ValueID_String
 {
     FileName,
     CreatorID,
@@ -125,7 +126,7 @@ enum ValueID_String
 };
 
 
-enum ValueID_Long
+enum RAWFILE_API ValueID_Long
 {
     VersionNumber,
     IsError,
@@ -156,7 +157,7 @@ enum ValueID_Long
 };
 
 
-enum ValueID_Double
+enum RAWFILE_API ValueID_Double
 {
     SeqRowInjectionVolume,
     SeqRowSampleWeight,
@@ -177,7 +178,7 @@ enum ValueID_Double
 };
 
 
-class StringArray
+class RAWFILE_API StringArray
 {
     public:
     virtual int size() const = 0;
@@ -186,7 +187,7 @@ class StringArray
 };
 
 
-class LabelValueArray
+class RAWFILE_API LabelValueArray
 {
     public:
     virtual int size() const = 0;
@@ -204,7 +205,7 @@ class LabelValueArray
 // or define a Type enum.
 
 
-enum CutoffType
+enum RAWFILE_API CutoffType
 {
     Cutoff_None = 0,
     Cutoff_Absolute,
@@ -212,7 +213,7 @@ enum CutoffType
 };
 
 
-enum WhichMassList
+enum RAWFILE_API WhichMassList
 {
     MassList_Current,
     MassList_Previous,
@@ -220,14 +221,14 @@ enum WhichMassList
 };
 
 
-struct MassIntensityPair
+struct RAWFILE_API MassIntensityPair
 {
     double mass;
     double intensity;
 };
 
 
-class MassList
+class RAWFILE_API MassList
 {
     public:
     virtual long scanNumber() const = 0;
@@ -245,7 +246,7 @@ class MassList
     virtual ~MassList(){}
 };
 
-class ScanInfo
+class RAWFILE_API ScanInfo
 {
     public:
 
@@ -293,14 +294,14 @@ class ScanInfo
 };
 
 
-struct ErrorLogItem
+struct RAWFILE_API ErrorLogItem
 {
     double rt;
     std::string errorMessage;
 };
 
 
-enum ChromatogramOperatorType
+enum RAWFILE_API ChromatogramOperatorType
 {
     Operator_None,
     Operator_Minus,
@@ -308,7 +309,7 @@ enum ChromatogramOperatorType
 };
 
 
-enum ChromatogramSmoothingType
+enum RAWFILE_API ChromatogramSmoothingType
 {
     Smoothing_None,
     Smoothing_Boxcar,
@@ -316,14 +317,14 @@ enum ChromatogramSmoothingType
 };
 
 
-struct TimeIntensityPair
+struct RAWFILE_API TimeIntensityPair
 {
     double time;
     double intensity;
 };
 
 
-class ChromatogramData
+class RAWFILE_API ChromatogramData
 {
     public:
     virtual double startTime() const = 0;

@@ -25,9 +25,13 @@ lib pwiz_analysis_peakdetect
     :   PeakDetector.cpp
         PeakFamilyDetector.cpp
         PeakFamilyDetectorFT.cpp
-        ../../utility/proteome
-        ../../data/msdata
-        ../../analysis/frequency
+        ../../utility/proteome//pwiz_utility_proteome
+        ../../data/msdata//pwiz_data_msdata
+        ../../analysis/frequency//pwiz_analysis_frequency
+    :	<toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    :   <library>../../utility/proteome//pwiz_utility_proteome
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../../analysis/frequency//pwiz_analysis_frequency
     ;
 
 

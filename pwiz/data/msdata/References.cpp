@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
 #include "References.hpp"
 #include <stdexcept>
@@ -84,7 +85,7 @@ void resolve(vector < shared_ptr<object_type> >& references,
 }
 
 
-void resolve(ParamContainer& paramContainer, const MSData& msd)
+PWIZ_API_DECL void resolve(ParamContainer& paramContainer, const MSData& msd)
 {
     resolve(paramContainer.paramGroupPtrs, msd.paramGroupPtrs); 
 }
@@ -107,7 +108,7 @@ void resolve(vector< shared_ptr<object_type> >& objectPtrs, const MSData& msd)
 }
 
 
-void resolve(FileDescription& fileDescription, const MSData& msd)
+PWIZ_API_DECL void resolve(FileDescription& fileDescription, const MSData& msd)
 {
     resolve(fileDescription.fileContent, msd);
     resolve(fileDescription.sourceFilePtrs, msd);
@@ -115,7 +116,7 @@ void resolve(FileDescription& fileDescription, const MSData& msd)
 }
 
 
-void resolve(ComponentList& componentList, const MSData& msd)
+PWIZ_API_DECL void resolve(ComponentList& componentList, const MSData& msd)
 {
     resolve(componentList.source, msd); 
     resolve(componentList.analyzer, msd); 
@@ -123,7 +124,7 @@ void resolve(ComponentList& componentList, const MSData& msd)
 }
 
 
-void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd)
+PWIZ_API_DECL void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(instrumentConfiguration), msd);
     resolve(instrumentConfiguration.componentList, msd);
@@ -131,14 +132,14 @@ void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd
 }
 
 
-void resolve(DataProcessing& dataProcessing, const MSData& msd)
+PWIZ_API_DECL void resolve(DataProcessing& dataProcessing, const MSData& msd)
 {
     resolve(dataProcessing.softwarePtr, msd.softwarePtrs); 
     resolve(dataProcessing.processingMethods, msd);
 }
 
 
-void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
+PWIZ_API_DECL void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
 {
     resolve(acquisitionSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
     resolve(acquisitionSettings.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
@@ -146,21 +147,21 @@ void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
 }
 
 
-void resolve(Acquisition& acquisition, const MSData& msd)
+PWIZ_API_DECL void resolve(Acquisition& acquisition, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(acquisition), msd);
     resolve(acquisition.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
 }
 
 
-void resolve(AcquisitionList& acquisitionList, const MSData& msd)
+PWIZ_API_DECL void resolve(AcquisitionList& acquisitionList, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(acquisitionList), msd);
     resolve(acquisitionList.acquisitions, msd);
 }
 
 
-void resolve(Precursor& precursor, const MSData& msd)
+PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(precursor), msd);
     resolve(precursor.isolationWindow, msd);
@@ -169,7 +170,7 @@ void resolve(Precursor& precursor, const MSData& msd)
 }
 
 
-void resolve(Scan& scan, const MSData& msd)
+PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(scan), msd);
     resolve(scan.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
@@ -177,7 +178,7 @@ void resolve(Scan& scan, const MSData& msd)
 }
 
 
-void resolve(SpectrumDescription& spectrumDescription, const MSData& msd)
+PWIZ_API_DECL void resolve(SpectrumDescription& spectrumDescription, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(spectrumDescription), msd);
     resolve(spectrumDescription.acquisitionList, msd);
@@ -186,14 +187,14 @@ void resolve(SpectrumDescription& spectrumDescription, const MSData& msd)
 }
 
 
-void resolve(BinaryDataArray& binaryDataArray, const MSData& msd)
+PWIZ_API_DECL void resolve(BinaryDataArray& binaryDataArray, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(binaryDataArray), msd);
     resolve(binaryDataArray.dataProcessingPtr, msd.dataProcessingPtrs);
 }
 
 
-void resolve(Spectrum& spectrum, const MSData& msd)
+PWIZ_API_DECL void resolve(Spectrum& spectrum, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(spectrum), msd);
     resolve(spectrum.dataProcessingPtr, msd.dataProcessingPtrs);
@@ -203,7 +204,7 @@ void resolve(Spectrum& spectrum, const MSData& msd)
 }
 
 
-void resolve(Chromatogram& chromatogram, const MSData& msd)
+PWIZ_API_DECL void resolve(Chromatogram& chromatogram, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(chromatogram), msd);
     resolve(chromatogram.dataProcessingPtr, msd.dataProcessingPtrs);
@@ -211,7 +212,7 @@ void resolve(Chromatogram& chromatogram, const MSData& msd)
 }
 
 
-void resolve(Run& run, const MSData& msd)
+PWIZ_API_DECL void resolve(Run& run, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(run), msd);
     resolve(run.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
@@ -220,7 +221,7 @@ void resolve(Run& run, const MSData& msd)
 }
 
 
-void resolve(MSData& msd)
+PWIZ_API_DECL void resolve(MSData& msd)
 {
     resolve(msd.paramGroupPtrs, msd);
     resolve(msd.samplePtrs, msd);

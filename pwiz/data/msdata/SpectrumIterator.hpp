@@ -25,6 +25,7 @@
 #define _SPECTRUMITERATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "utility/misc/IntegerSet.hpp"
 
@@ -53,12 +54,12 @@ using pwiz::util::IntegerSet;
 ///
 /// For usage examples, see SpectrumIteratorTest.cpp
 ///
-class SpectrumIterator
+class PWIZ_API_DECL SpectrumIterator
 {
     public:
 
     /// interface for filtering based on ScanInfo
-    class Sieve
+    class PWIZ_API_DECL Sieve
     {
         public:
         virtual bool accept(const Spectrum& spectrum) const {return true;}
@@ -67,7 +68,7 @@ class SpectrumIterator
 
     /// SpectrumIterator configuration -- note that constructors allow automatic 
     /// conversion from IntegerSet or Sieve to Config
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         const IntegerSet* scanNumbers;
         const Sieve* sieve;

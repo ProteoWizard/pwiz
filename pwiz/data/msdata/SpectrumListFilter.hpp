@@ -25,6 +25,7 @@
 #define _SPECTRUMLISTFILTER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "utility/misc/IntegerSet.hpp"
 #include "boost/logic/tribool.hpp"
@@ -35,13 +36,13 @@ namespace msdata {
 
 
 /// SpectrumList filter, for creating Spectrum sub-lists
-class SpectrumListFilter : public SpectrumList
+class PWIZ_API_DECL SpectrumListFilter : public SpectrumList
 {
     public:
 
     /// client-implemented filter predicate -- called during construction of
     /// SpectrumListFilter to create the filtered list of spectra
-    struct Predicate
+    struct PWIZ_API_DECL Predicate
     {
         /// return values:
         ///  true: accept the Spectrum
@@ -80,7 +81,7 @@ class SpectrumListFilter : public SpectrumList
 };
 
 
-class SpectrumListFilterPredicate_IndexSet : public SpectrumListFilter::Predicate
+class PWIZ_API_DECL SpectrumListFilterPredicate_IndexSet : public SpectrumListFilter::Predicate
 {
     public:
     SpectrumListFilterPredicate_IndexSet(const pwiz::util::IntegerSet& indexSet);
@@ -93,7 +94,7 @@ class SpectrumListFilterPredicate_IndexSet : public SpectrumListFilter::Predicat
 };
 
 
-class SpectrumListFilterPredicate_ScanNumberSet : public SpectrumListFilter::Predicate
+class PWIZ_API_DECL SpectrumListFilterPredicate_ScanNumberSet : public SpectrumListFilter::Predicate
 {
     public:
     SpectrumListFilterPredicate_ScanNumberSet(const pwiz::util::IntegerSet& scanNumberSet);

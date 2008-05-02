@@ -25,6 +25,7 @@
 #define _PARABOLA_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <vector>
 #include <iosfwd>
 
@@ -33,7 +34,7 @@ namespace pwiz {
 namespace math {
 
 
-class Parabola
+class PWIZ_API_DECL Parabola
 {
     public:
 
@@ -59,7 +60,7 @@ class Parabola
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Parabola& p);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Parabola& p);
 
 
 } // namespace math 

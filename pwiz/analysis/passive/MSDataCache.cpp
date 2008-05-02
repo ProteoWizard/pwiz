@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MSDataCache.hpp"
 #include "data/msdata/MSDataFile.hpp"
 #include <stdexcept>
@@ -60,12 +62,12 @@ struct MSDataCache::Impl
 //
 
 
-MSDataCache::MSDataCache(const MSDataCache::Config& config)
+PWIZ_API_DECL MSDataCache::MSDataCache(const MSDataCache::Config& config)
 :   impl_(new Impl(config)) 
 {}
 
 
-void MSDataCache::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void MSDataCache::open(const DataInfo& dataInfo)
 {
     clear();
 
@@ -79,6 +81,7 @@ void MSDataCache::open(const DataInfo& dataInfo)
 }
 
 
+PWIZ_API_DECL
 void MSDataCache::update(const DataInfo& dataInfo,
                          const Spectrum& spectrum)
 {
@@ -111,7 +114,7 @@ void MSDataCache::update(const DataInfo& dataInfo,
 }
 
 
-const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
+PWIZ_API_DECL const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
 {
     if (!impl_->spectrumListPtr.get() ||
         size()!=impl_->spectrumListPtr->size())

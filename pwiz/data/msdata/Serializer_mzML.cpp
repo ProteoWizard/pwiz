@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Serializer_mzML.hpp"
 #include "IO.hpp"
 #include "SpectrumList_mzML.hpp"
@@ -242,24 +244,24 @@ void Serializer_mzML::Impl::read(shared_ptr<istream> is, MSData& msd) const
 //
 
 
-Serializer_mzML::Serializer_mzML(const Config& config)
+PWIZ_API_DECL Serializer_mzML::Serializer_mzML(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
-void Serializer_mzML::write(ostream& os, const MSData& msd) const
+PWIZ_API_DECL void Serializer_mzML::write(ostream& os, const MSData& msd) const
 {
     return impl_->write(os, msd);
 }
 
 
-void Serializer_mzML::read(shared_ptr<istream> is, MSData& msd) const
+PWIZ_API_DECL void Serializer_mzML::read(shared_ptr<istream> is, MSData& msd) const
 {
     return impl_->read(is, msd);
 }
 
 
-ostream& operator<<(ostream& os, const Serializer_mzML::Config& config)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Serializer_mzML::Config& config)
 {
     os << config.binaryDataEncoderConfig 
        << " indexed=\"" << boolalpha << config.indexed << "\"";

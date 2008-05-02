@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "TransientData.hpp"
 #include "FrequencyData.hpp"
 #include "scoped_array.hpp"
@@ -192,12 +194,12 @@ void readData(const string& filename, unsigned int offset, unsigned int count, v
 }//namespace
 
 
-TransientData::TransientData()
+PWIZ_API_DECL TransientData::TransientData()
 :   impl_(new Impl)
 {}
 
 
-TransientData::TransientData(const string& filename)
+PWIZ_API_DECL TransientData::TransientData(const string& filename)
 :   impl_(new Impl)
 {
     map<string,string> parameters;
@@ -221,24 +223,24 @@ TransientData::TransientData(const string& filename)
 }
 
 
-TransientData::~TransientData()
+PWIZ_API_DECL TransientData::~TransientData()
 {} // automatic destruction of impl_
 
 
-double TransientData::startTime() const {return impl_->startTime;}
-void TransientData::startTime(double value) {impl_->startTime = value;}
-double TransientData::observationDuration() const {return impl_->observationDuration;}
-void TransientData::observationDuration(double value) {impl_->observationDuration = value;}
-double TransientData::A() const {return impl_->A;}
-void TransientData::A(double value) {impl_->A = value;}
-double TransientData::B() const {return impl_->B;}
-void TransientData::B(double value) {impl_->B = value;}
-const vector<double>& TransientData::data() const {return impl_->data;}
-vector<double>& TransientData::data() {return impl_->data;}
-double TransientData::bandwidth() const {return impl_->bandwidth();}
+PWIZ_API_DECL double TransientData::startTime() const {return impl_->startTime;}
+PWIZ_API_DECL void TransientData::startTime(double value) {impl_->startTime = value;}
+PWIZ_API_DECL double TransientData::observationDuration() const {return impl_->observationDuration;}
+PWIZ_API_DECL void TransientData::observationDuration(double value) {impl_->observationDuration = value;}
+PWIZ_API_DECL double TransientData::A() const {return impl_->A;}
+PWIZ_API_DECL void TransientData::A(double value) {impl_->A = value;}
+PWIZ_API_DECL double TransientData::B() const {return impl_->B;}
+PWIZ_API_DECL void TransientData::B(double value) {impl_->B = value;}
+PWIZ_API_DECL const vector<double>& TransientData::data() const {return impl_->data;}
+PWIZ_API_DECL vector<double>& TransientData::data() {return impl_->data;}
+PWIZ_API_DECL double TransientData::bandwidth() const {return impl_->bandwidth();}
 
 
-double TransientData::magneticField() const 
+PWIZ_API_DECL double TransientData::magneticField() const 
 {
     const double e = 1.60217733e-19;
     const double mu = 1.6605402e-27;
@@ -246,7 +248,7 @@ double TransientData::magneticField() const
 }
 
 
-void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) const
+PWIZ_API_DECL void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) const
 {
     if (zeroPadding < 1)
         throw runtime_error("[TransientData] zeroPadding must be >= 1.");
@@ -288,7 +290,7 @@ void TransientData::computeFFT(unsigned int zeroPadding, FrequencyData& result) 
 }
 
 
-void TransientData::add(const Signal& signal)
+PWIZ_API_DECL void TransientData::add(const Signal& signal)
 {
     size_t sampleCount = impl_->data.size();
     double t0 = impl_->startTime;
@@ -303,7 +305,7 @@ void TransientData::add(const Signal& signal)
 }
 
 
-void TransientData::write(std::ostream& os, Format format)
+PWIZ_API_DECL void TransientData::write(std::ostream& os, Format format)
 {
     impl_->writeHeader(os);
 
@@ -321,7 +323,7 @@ void TransientData::write(std::ostream& os, Format format)
 }
 
 
-void TransientData::write(const std::string& filename, Format format)
+PWIZ_API_DECL void TransientData::write(const std::string& filename, Format format)
 {
     ofstream os(filename.c_str());
     if (!os) throw runtime_error("Error creating file " + filename);

@@ -24,6 +24,8 @@
 
 // TODO: resolve licensing conflict between LGPL and Apache
 
+#define RAWFILE_SOURCE
+
 #include "ScanFilter.h"
 
 #include <sstream>

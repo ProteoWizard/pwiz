@@ -25,6 +25,7 @@
 #define _TRUNCATEDLORENTZIANPARAMETERS_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "TruncatedLorentzian.hpp"
 
 
@@ -33,7 +34,7 @@ namespace frequency {
 
 
 /// struct for holding parameters for a Truncated Lorentzian function
-struct TruncatedLorentzianParameters
+struct PWIZ_API_DECL TruncatedLorentzianParameters
 {
     double T;
     double tau;
@@ -64,9 +65,9 @@ struct TruncatedLorentzianParameters
 };
 
 
-std::ostream& operator<<(std::ostream& os, const TruncatedLorentzianParameters& tlp);
-bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u);
-bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const TruncatedLorentzianParameters& tlp);
+PWIZ_API_DECL bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u);
+PWIZ_API_DECL bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u);
 
 
 } // namespace frequency

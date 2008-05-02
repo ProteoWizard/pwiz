@@ -30,6 +30,9 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
 
+        # is there any platform where static runtime linkage does not necessiate static object linkage?
+        <runtime-link>static:<link>static
+
         # static runtime linking for gcc
         #<toolset>gcc:<runtime-link>static
 
@@ -44,6 +47,8 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
         <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+        <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+        <toolset>msvc:<cxxflags>/wd4267					# warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 
@@ -87,27 +92,47 @@ lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>../libraries : : <include>.
 #
 
 lib boost_filesystem : : <toolset>gcc <name>boost_filesystem ;
-lib boost_filesystem : : <toolset>msvc <name>libboost_filesystem-vc80-mt ;
-lib boost_filesystem : : <toolset>msvc <variant>debug <name>libboost_filesystem-vc80-mt-gd ;
+#lib boost_filesystem : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_filesystem-vc80-mt ;
+lib boost_filesystem : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_filesystem-vc80-mt ;
+lib boost_filesystem : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_filesystem-vc80-mt-s ;
+#lib boost_filesystem : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_filesystem-vc80-mt-gd ;
+lib boost_filesystem : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_filesystem-vc80-mt-gd ;
+lib boost_filesystem : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_filesystem-vc80-mt-sgd ;
 lib boost_filesystem ;
 
 lib boost_iostreams : : <toolset>gcc <name>boost_iostreams ;
-lib boost_iostreams : : <toolset>msvc <name>libboost_iostreams-vc80-mt ;
-lib boost_iostreams : : <toolset>msvc <variant>debug <name>libboost_iostreams-vc80-mt-gd ;
+#lib boost_iostreams : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_iostreams-vc80-mt ;
+lib boost_iostreams : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_iostreams-vc80-mt ;
+lib boost_iostreams : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_iostreams-vc80-mt-s ;
+#lib boost_iostreams : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_iostreams-vc80-mt-gd ;
+lib boost_iostreams : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_iostreams-vc80-mt-gd ;
+lib boost_iostreams : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_iostreams-vc80-mt-sgd ;
 lib boost_iostreams ;
 
 lib boost_program_options : : <toolset>gcc <name>boost_program_options ;
-lib boost_program_options : : <toolset>msvc <name>libboost_program_options-vc80-mt ;
-lib boost_program_options : : <toolset>msvc <variant>debug <name>libboost_program_options-vc80-mt-gd ;
+#lib boost_program_options : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_program_options-vc80-mt ;
+lib boost_program_options : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_program_options-vc80-mt ;
+lib boost_program_options : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_program_options-vc80-mt-s ;
+#lib boost_program_options : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_program_options-vc80-mt-gd ;
+lib boost_program_options : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_program_options-vc80-mt-gd ;
+lib boost_program_options : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_program_options-vc80-mt-sgd ;
 lib boost_program_options ;
 
 lib boost_serialization : : <toolset>gcc <name>boost_serialization ;
-lib boost_serialization : : <toolset>msvc <name>libboost_serialization-vc80-mt ;
-lib boost_serialization : : <toolset>msvc <variant>debug <name>libboost_serialization-vc80-mt-gd ;
+#lib boost_serialization : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_serialization-vc80-mt ;
+lib boost_serialization : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_serialization-vc80-mt ;
+lib boost_serialization : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_serialization-vc80-mt-s ;
+#lib boost_serialization : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_serialization-vc80-mt-gd ;
+lib boost_serialization : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_serialization-vc80-mt-gd ;
+lib boost_serialization : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_serialization-vc80-mt-sgd ;
 lib boost_serialization ;
 
 lib boost_regex : pthread : <toolset>gcc <name>boost_regex ;
-lib boost_regex : : <toolset>msvc <name>libboost_regex-vc80-mt ;
-lib boost_regex : : <toolset>msvc <variant>debug <name>libboost_regex-vc80-mt-gd ;
+#lib boost_regex : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_regex-vc80-mt ;
+lib boost_regex : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_regex-vc80-mt ;
+lib boost_regex : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_regex-vc80-mt-s ;
+#lib boost_regex : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_regex-vc80-mt-gd ;
+lib boost_regex : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_regex-vc80-mt-gd ;
+lib boost_regex : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_regex-vc80-mt-sgd ;
 lib boost_regex ;
 

@@ -24,7 +24,8 @@
 lib pwiz_analysis_peptideid
     :   PeptideIDMap.cpp 
         PeptideID_pepXML.cpp
-        ../../utility/minimxml
+        ../../utility/minimxml//pwiz_utility_minimxml
+    :	<toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
 

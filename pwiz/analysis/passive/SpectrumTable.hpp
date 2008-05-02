@@ -25,6 +25,7 @@
 #define _SPECTRUMTABLE_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 
@@ -34,7 +35,7 @@ namespace analysis {
 
 
 /// writes table of spectrum metadata to a file
-class SpectrumTable : public MSDataAnalyzer
+class PWIZ_API_DECL SpectrumTable : public MSDataAnalyzer
 {
     public:
 

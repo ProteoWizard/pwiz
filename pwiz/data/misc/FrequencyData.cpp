@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "FrequencyData.hpp"
 #include <iostream>
 #include <iterator>
@@ -285,19 +287,19 @@ double FrequencyData::Impl::observationDurationEstimatedFromData()
 }
 
 
-FrequencyData::FrequencyData()
+PWIZ_API_DECL FrequencyData::FrequencyData()
 :   impl_(new Impl)
 {}
 
 
-FrequencyData::FrequencyData(const std::string& filename, IOMode mode)
+PWIZ_API_DECL FrequencyData::FrequencyData(const std::string& filename, IOMode mode)
 :   impl_(new Impl)
 {
     read(filename, mode);
 }
 
 
-FrequencyData::FrequencyData(const FrequencyData& that, const_iterator begin, const_iterator end)
+PWIZ_API_DECL FrequencyData::FrequencyData(const FrequencyData& that, const_iterator begin, const_iterator end)
 :   impl_(new Impl)
 {
     copy(begin, end, back_inserter(impl_->data_));
@@ -310,7 +312,7 @@ FrequencyData::FrequencyData(const FrequencyData& that, const_iterator begin, co
 }
 
 
-FrequencyData::FrequencyData(const FrequencyData& that, const_iterator center, int radius)
+PWIZ_API_DECL FrequencyData::FrequencyData(const FrequencyData& that, const_iterator center, int radius)
 :   impl_(new Impl)
 {
     const_iterator begin = center<that.data().begin()+radius ? that.data().begin() : center-radius;
@@ -325,11 +327,11 @@ FrequencyData::FrequencyData(const FrequencyData& that, const_iterator center, i
 }
 
 
-FrequencyData::~FrequencyData()
+PWIZ_API_DECL FrequencyData::~FrequencyData()
 {} // automatic cleanup of impl_
 
 
-void FrequencyData::read(const string& filename, IOMode mode)
+PWIZ_API_DECL void FrequencyData::read(const string& filename, IOMode mode)
 {
     ifstream is(filename.c_str(), ios::binary);
     if (!is)
@@ -357,7 +359,7 @@ void FrequencyData::read(const string& filename, IOMode mode)
 }
 
 
-void FrequencyData::read(std::istream& is, IOMode mode)
+PWIZ_API_DECL void FrequencyData::read(std::istream& is, IOMode mode)
 {
     if (mode == Text)
     {
@@ -401,7 +403,7 @@ void FrequencyData::read(std::istream& is, IOMode mode)
 }
 
 
-void FrequencyData::write(const std::string& filename, IOMode mode) const
+PWIZ_API_DECL void FrequencyData::write(const std::string& filename, IOMode mode) const
 {
     ios::openmode flags = ios::out;
     if (mode == Binary)
@@ -415,7 +417,7 @@ void FrequencyData::write(const std::string& filename, IOMode mode) const
 }
 
 
-void FrequencyData::write(std::ostream& os, IOMode mode) const
+PWIZ_API_DECL void FrequencyData::write(std::ostream& os, IOMode mode) const
 {
     if (mode == Text)
     {
@@ -443,38 +445,38 @@ void FrequencyData::write(std::ostream& os, IOMode mode) const
 }
 
 
-FrequencyData::container& FrequencyData::data() {return impl_->data_;}
-const FrequencyData::container& FrequencyData::data() const {return impl_->data_;}
+PWIZ_API_DECL FrequencyData::container& FrequencyData::data() {return impl_->data_;}
+PWIZ_API_DECL const FrequencyData::container& FrequencyData::data() const {return impl_->data_;}
 
-int FrequencyData::scanNumber() const {return impl_->scanNumber_;}
-void FrequencyData::scanNumber(int value) {impl_->scanNumber_ = value;}
+PWIZ_API_DECL int FrequencyData::scanNumber() const {return impl_->scanNumber_;}
+PWIZ_API_DECL void FrequencyData::scanNumber(int value) {impl_->scanNumber_ = value;}
 
-double FrequencyData::retentionTime() const {return impl_->retentionTime_;}
-void FrequencyData::retentionTime(double value) {impl_->retentionTime_ = value;}
+PWIZ_API_DECL double FrequencyData::retentionTime() const {return impl_->retentionTime_;}
+PWIZ_API_DECL void FrequencyData::retentionTime(double value) {impl_->retentionTime_ = value;}
 
-const CalibrationParameters& FrequencyData::calibrationParameters() const {return impl_->calibrationParameters_;}
-void FrequencyData::calibrationParameters(const CalibrationParameters& c) {impl_->calibrationParameters_ = c;}
+PWIZ_API_DECL const CalibrationParameters& FrequencyData::calibrationParameters() const {return impl_->calibrationParameters_;}
+PWIZ_API_DECL void FrequencyData::calibrationParameters(const CalibrationParameters& c) {impl_->calibrationParameters_ = c;}
 
-double FrequencyData::observationDuration() const {return impl_->observationDuration_;}
-void FrequencyData::observationDuration(double value) {impl_->observationDuration_ = value;}
+PWIZ_API_DECL double FrequencyData::observationDuration() const {return impl_->observationDuration_;}
+PWIZ_API_DECL void FrequencyData::observationDuration(double value) {impl_->observationDuration_ = value;}
 
 
-double FrequencyData::noiseFloor() const {return impl_->noiseFloor_;}
-void FrequencyData::noiseFloor(double value) {impl_->noiseFloor_ = value;}
+PWIZ_API_DECL double FrequencyData::noiseFloor() const {return impl_->noiseFloor_;}
+PWIZ_API_DECL void FrequencyData::noiseFloor(double value) {impl_->noiseFloor_ = value;}
 
-void FrequencyData::transform(double shift, complex<double> scale) {impl_->transform(shift, scale);}
-double FrequencyData::shift() const {return impl_->shift_;}
-complex<double> FrequencyData::scale() const {return impl_->scale_;}
-void FrequencyData::normalize() {impl_->transform(-impl_->max_->x, 1/abs(impl_->max_->y));}
-void FrequencyData::operator+=(const FrequencyData& that) {*impl_+=*that.impl_;}
-void FrequencyData::analyze() {impl_->analyze();}
-FrequencyData::const_iterator FrequencyData::max() const {return impl_->max_;}
-double FrequencyData::mean() const {return impl_->mean_;}
-double FrequencyData::meanSquare() const {return impl_->meanSquare_;}
-double FrequencyData::sumSquares() const {return impl_->sumSquares_;}
-double FrequencyData::variance() const {return impl_->variance_;}
-double FrequencyData::cutoffNoiseFloor() const {return impl_->cutoffNoiseFloor();}
-double FrequencyData::observationDurationEstimatedFromData() const {return impl_->observationDurationEstimatedFromData();}
+PWIZ_API_DECL void FrequencyData::transform(double shift, complex<double> scale) {impl_->transform(shift, scale);}
+PWIZ_API_DECL double FrequencyData::shift() const {return impl_->shift_;}
+PWIZ_API_DECL complex<double> FrequencyData::scale() const {return impl_->scale_;}
+PWIZ_API_DECL void FrequencyData::normalize() {impl_->transform(-impl_->max_->x, 1/abs(impl_->max_->y));}
+PWIZ_API_DECL void FrequencyData::operator+=(const FrequencyData& that) {*impl_+=*that.impl_;}
+PWIZ_API_DECL void FrequencyData::analyze() {impl_->analyze();}
+PWIZ_API_DECL FrequencyData::const_iterator FrequencyData::max() const {return impl_->max_;}
+PWIZ_API_DECL double FrequencyData::mean() const {return impl_->mean_;}
+PWIZ_API_DECL double FrequencyData::meanSquare() const {return impl_->meanSquare_;}
+PWIZ_API_DECL double FrequencyData::sumSquares() const {return impl_->sumSquares_;}
+PWIZ_API_DECL double FrequencyData::variance() const {return impl_->variance_;}
+PWIZ_API_DECL double FrequencyData::cutoffNoiseFloor() const {return impl_->cutoffNoiseFloor();}
+PWIZ_API_DECL double FrequencyData::observationDurationEstimatedFromData() const {return impl_->observationDurationEstimatedFromData();}
 
 
 namespace {
@@ -485,7 +487,7 @@ bool hasFrequencyLessThan(const FrequencyDatum& a, const FrequencyDatum& b)
 } // namespace
 
 
-FrequencyData::const_iterator FrequencyData::findNearest(double frequency) const 
+PWIZ_API_DECL FrequencyData::const_iterator FrequencyData::findNearest(double frequency) const 
 {
     FrequencyDatum dummy(frequency, 0);
     const_iterator above = lower_bound(impl_->data_.begin(), impl_->data_.end(), dummy, hasFrequencyLessThan);
@@ -497,7 +499,7 @@ FrequencyData::const_iterator FrequencyData::findNearest(double frequency) const
 }
 
 
-pair<double,double> FrequencyData::magnitudeSample(const FrequencyDatum& datum)
+PWIZ_API_DECL pair<double,double> FrequencyData::magnitudeSample(const FrequencyDatum& datum)
 {
     return make_pair(datum.x, abs(datum.y));
 }

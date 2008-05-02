@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "RAMPAdapter.hpp"
 #include "MSDataFile.hpp"
 #include "LegacyAdapter.hpp"
@@ -217,13 +219,13 @@ void RAMPAdapter::Impl::getInstrument(InstrumentStruct& result) const
 //
 
 
-RAMPAdapter::RAMPAdapter(const std::string& filename) : impl_(new Impl(filename)) {}
-size_t RAMPAdapter::scanCount() const {return impl_->scanCount();}
-size_t RAMPAdapter::index(int scanNumber) const {return impl_->index(scanNumber);}
-void RAMPAdapter::getScanHeader(size_t index, ScanHeaderStruct& result) const {impl_->getScanHeader(index, result);}
-void RAMPAdapter::getScanPeaks(size_t index, std::vector<double>& result) const {impl_->getScanPeaks(index, result);}
-void RAMPAdapter::getRunHeader(RunHeaderStruct& result) const {impl_->getRunHeader(result);}
-void RAMPAdapter::getInstrument(InstrumentStruct& result) const {impl_->getInstrument(result);}
+PWIZ_API_DECL RAMPAdapter::RAMPAdapter(const std::string& filename) : impl_(new Impl(filename)) {}
+PWIZ_API_DECL size_t RAMPAdapter::scanCount() const {return impl_->scanCount();}
+PWIZ_API_DECL size_t RAMPAdapter::index(int scanNumber) const {return impl_->index(scanNumber);}
+PWIZ_API_DECL void RAMPAdapter::getScanHeader(size_t index, ScanHeaderStruct& result) const {impl_->getScanHeader(index, result);}
+PWIZ_API_DECL void RAMPAdapter::getScanPeaks(size_t index, std::vector<double>& result) const {impl_->getScanPeaks(index, result);}
+PWIZ_API_DECL void RAMPAdapter::getRunHeader(RunHeaderStruct& result) const {impl_->getRunHeader(result);}
+PWIZ_API_DECL void RAMPAdapter::getInstrument(InstrumentStruct& result) const {impl_->getInstrument(result);}
 
 
 } // namespace msdata

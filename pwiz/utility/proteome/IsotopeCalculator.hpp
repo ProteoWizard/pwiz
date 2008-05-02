@@ -25,6 +25,7 @@
 #define _ISOTOPECALCULATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include <memory>
 
@@ -33,14 +34,14 @@ namespace pwiz {
 namespace proteome {
 
 
-class IsotopeCalculator
+class PWIZ_API_DECL IsotopeCalculator
 {
     public:
     
     IsotopeCalculator(double abundanceCutoff, double massPrecision);
     ~IsotopeCalculator();
 
-    enum NormalizationFlags
+    enum PWIZ_API_DECL NormalizationFlags
     {
         NormalizeMass = 0x01,       // shift masses -> monoisotopic_mass == 0
         NormalizeAbundance = 0x02   // scale abundances -> sum(abundance[i]^2) == 1 

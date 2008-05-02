@@ -24,6 +24,8 @@
 #ifndef _PSEUDO2DGEL_HPP_
 #define _PSEUDO2DGEL_HPP_
 
+
+#include "utility/misc/Export.hpp"
 #include <boost/shared_ptr.hpp>
 
 #include "MSDataAnalyzer.hpp"
@@ -37,11 +39,11 @@ namespace analysis {
 
 
 /// creates pseudo-2D-gel images from survey scan data 
-class Pseudo2DGel : public MSDataAnalyzer
+class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         std::string label;
         float mzLow;

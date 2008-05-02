@@ -25,6 +25,8 @@ lib pwiz_utility_minimxml
     :   XMLWriter.cpp 
         SAXParser.cpp 
         ../..//boost_regex
+    :   <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    :   <library>../..//boost_regex
     ;
 
 unit-test SAXParserTest : SAXParserTest.cpp pwiz_utility_minimxml ;

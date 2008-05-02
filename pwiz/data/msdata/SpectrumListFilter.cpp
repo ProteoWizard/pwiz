@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumListFilter.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -98,24 +100,24 @@ void SpectrumListFilter::Impl::pushSpectrum(const SpectrumIdentity& spectrumIden
 //
 
 
-SpectrumListFilter::SpectrumListFilter(const SpectrumListPtr original, const Predicate& predicate)
+PWIZ_API_DECL SpectrumListFilter::SpectrumListFilter(const SpectrumListPtr original, const Predicate& predicate)
 :   impl_(new Impl(original, predicate))
 {}
 
 
-size_t SpectrumListFilter::size() const
+PWIZ_API_DECL size_t SpectrumListFilter::size() const
 {
     return impl_->indexMap.size();
 }
 
 
-const SpectrumIdentity& SpectrumListFilter::spectrumIdentity(size_t index) const
+PWIZ_API_DECL const SpectrumIdentity& SpectrumListFilter::spectrumIdentity(size_t index) const
 {
     return impl_->spectrumIdentities.at(index);
 }
 
 
-SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBinaryData) const
+PWIZ_API_DECL SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBinaryData) const
 {
     size_t originalIndex = impl_->indexMap.at(index);
     SpectrumPtr originalSpectrum = impl_->original->spectrum(originalIndex, getBinaryData);  
@@ -132,12 +134,12 @@ SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBinaryData) const
 //
 
 
-SpectrumListFilterPredicate_IndexSet::SpectrumListFilterPredicate_IndexSet(const IntegerSet& indexSet)
+PWIZ_API_DECL SpectrumListFilterPredicate_IndexSet::SpectrumListFilterPredicate_IndexSet(const IntegerSet& indexSet)
 :   indexSet_(indexSet), eos_(false)
 {}
 
 
-tribool SpectrumListFilterPredicate_IndexSet::accept(const SpectrumIdentity& spectrumIdentity) const
+PWIZ_API_DECL tribool SpectrumListFilterPredicate_IndexSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
     if (indexSet_.hasUpperBound((int)spectrumIdentity.index)) eos_ = true;
     bool result = indexSet_.contains((int)spectrumIdentity.index);
@@ -145,7 +147,7 @@ tribool SpectrumListFilterPredicate_IndexSet::accept(const SpectrumIdentity& spe
 }
 
 
-bool SpectrumListFilterPredicate_IndexSet::done() const
+PWIZ_API_DECL bool SpectrumListFilterPredicate_IndexSet::done() const
 {
     return eos_; // end of set
 }
@@ -156,12 +158,12 @@ bool SpectrumListFilterPredicate_IndexSet::done() const
 //
 
 
-SpectrumListFilterPredicate_ScanNumberSet::SpectrumListFilterPredicate_ScanNumberSet(const IntegerSet& scanNumberSet)
+PWIZ_API_DECL SpectrumListFilterPredicate_ScanNumberSet::SpectrumListFilterPredicate_ScanNumberSet(const IntegerSet& scanNumberSet)
 :   scanNumberSet_(scanNumberSet), eos_(false)
 {}
 
 
-tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
+PWIZ_API_DECL tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
     int scanNumber = lexical_cast<int>(spectrumIdentity.nativeID);
     if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
@@ -170,7 +172,7 @@ tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const SpectrumIdentity
 }
 
 
-bool SpectrumListFilterPredicate_ScanNumberSet::done() const
+PWIZ_API_DECL bool SpectrumListFilterPredicate_ScanNumberSet::done() const
 {
     return eos_; // end of set
 }

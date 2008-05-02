@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IO.hpp"
 #include "References.hpp"
 #include "utility/minimxml/SAXParser.hpp"
@@ -46,7 +48,7 @@ using boost::shared_ptr;
 //
 
 
-void write(minimxml::XMLWriter& writer, const CV& cv)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", cv.id));
@@ -77,7 +79,7 @@ struct HandlerCV : public SAXParser::Handler
 };
 
 
-void read(std::istream& is, CV& cv)
+PWIZ_API_DECL void read(std::istream& is, CV& cv)
 {
     HandlerCV handler(&cv);
     SAXParser::parse(is, handler);
@@ -89,7 +91,7 @@ void read(std::istream& is, CV& cv)
 //
 
 
-void write(minimxml::XMLWriter& writer, const UserParam& userParam)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("name", userParam.name));
@@ -136,7 +138,7 @@ struct HandlerUserParam : public SAXParser::Handler
 };
 
 
-void read(std::istream& is, UserParam& userParam)
+PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
 {
     HandlerUserParam handler(&userParam);
     SAXParser::parse(is, handler);
@@ -148,7 +150,7 @@ void read(std::istream& is, UserParam& userParam)
 //
 
 
-void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("cvRef", cvinfo(cvParam.cvid).id.substr(0,2)));
@@ -197,7 +199,7 @@ struct HandlerCVParam : public SAXParser::Handler
 };
 
 
-void read(std::istream& is, CVParam& cvParam)
+PWIZ_API_DECL void read(std::istream& is, CVParam& cvParam)
 {
     HandlerCVParam handler(&cvParam);
     SAXParser::parse(is, handler);
@@ -212,7 +214,7 @@ void read(std::istream& is, CVParam& cvParam)
 //
 
 
-void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
+PWIZ_API_DECL void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("ref", paramGroup.id));
@@ -220,7 +222,7 @@ void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGroup& paramGrou
 }
 
 
-void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc)
+PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc)
 {
     for (vector<ParamGroupPtr>::const_iterator it=pc.paramGroupPtrs.begin(); 
          it!=pc.paramGroupPtrs.end(); ++it)
@@ -308,7 +310,7 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
 //
 
 
-void write(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", paramGroup.id));
@@ -345,7 +347,7 @@ struct HandlerParamGroup : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, ParamGroup& paramGroup)
+PWIZ_API_DECL void read(std::istream& is, ParamGroup& paramGroup)
 {
     HandlerParamGroup handler(&paramGroup);
     SAXParser::parse(is, handler);
@@ -357,7 +359,7 @@ void read(std::istream& is, ParamGroup& paramGroup)
 //
 
 
-void write(minimxml::XMLWriter& writer, const FileContent& fc)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FileContent& fc)
 {
     writer.startElement("fileContent");
     writeParamContainer(writer, fc);
@@ -365,7 +367,7 @@ void write(minimxml::XMLWriter& writer, const FileContent& fc)
 }
 
 
-void read(std::istream& is, FileContent& fc)
+PWIZ_API_DECL void read(std::istream& is, FileContent& fc)
 {
     HandlerNamedParamContainer handler("fileContent", &fc);
     SAXParser::parse(is, handler);
@@ -377,7 +379,7 @@ void read(std::istream& is, FileContent& fc)
 //
 
 
-void write(minimxml::XMLWriter& writer, const SourceFile& sf)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", sf.id));
@@ -426,7 +428,7 @@ struct HandlerSourceFile : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, SourceFile& sf)
+PWIZ_API_DECL void read(std::istream& is, SourceFile& sf)
 {
     HandlerSourceFile handler(&sf);
     SAXParser::parse(is, handler);
@@ -438,7 +440,7 @@ void read(std::istream& is, SourceFile& sf)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Contact& c)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Contact& c)
 {
     writer.startElement("contact");
     writeParamContainer(writer, c);
@@ -446,7 +448,7 @@ void write(minimxml::XMLWriter& writer, const Contact& c)
 }
 
 
-void read(std::istream& is, Contact& c)
+PWIZ_API_DECL void read(std::istream& is, Contact& c)
 {
     HandlerNamedParamContainer handler("contact", &c);
     SAXParser::parse(is, handler);
@@ -458,7 +460,7 @@ void read(std::istream& is, Contact& c)
 //
 
 
-void write(minimxml::XMLWriter& writer, const FileDescription& fd)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FileDescription& fd)
 {
     writer.startElement("fileDescription");
     write(writer, fd.fileContent);
@@ -534,7 +536,7 @@ struct HandlerFileDescription : public SAXParser::Handler
 };
 
  
-void read(std::istream& is, FileDescription& fd)
+PWIZ_API_DECL void read(std::istream& is, FileDescription& fd)
 {
     HandlerFileDescription handler(&fd);
     SAXParser::parse(is, handler);
@@ -546,7 +548,7 @@ void read(std::istream& is, FileDescription& fd)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Sample& sample)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", sample.id));
@@ -585,7 +587,7 @@ struct HandlerSample : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Sample& sample)
+PWIZ_API_DECL void read(std::istream& is, Sample& sample)
 {
     HandlerSample handler(&sample);
     SAXParser::parse(is, handler);
@@ -597,7 +599,7 @@ void read(std::istream& is, Sample& sample)
 //
 
 
-void writeComponent(minimxml::XMLWriter& writer, const Component& component, const string& label)
+PWIZ_API_DECL void writeComponent(minimxml::XMLWriter& writer, const Component& component, const string& label)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("order", lexical_cast<string>(component.order)));
@@ -636,39 +638,39 @@ struct HandlerComponent : public HandlerParamContainer
 };
 
 
-void write(minimxml::XMLWriter& writer, const Source& source)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Source& source)
 {
     writeComponent(writer, source, "source");
 }
 
 
-void read(std::istream& is, Source& source)
+PWIZ_API_DECL void read(std::istream& is, Source& source)
 {
     HandlerComponent handler(&source);
     SAXParser::parse(is, handler);
 }
 
 
-void write(minimxml::XMLWriter& writer, const Analyzer& analyzer)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Analyzer& analyzer)
 {
     writeComponent(writer, analyzer, "analyzer");
 }
 
 
-void read(std::istream& is, Analyzer& analyzer)
+PWIZ_API_DECL void read(std::istream& is, Analyzer& analyzer)
 {
     HandlerComponent handler(&analyzer);
     SAXParser::parse(is, handler);
 }
 
 
-void write(minimxml::XMLWriter& writer, const Detector& detector)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Detector& detector)
 {
     writeComponent(writer, detector, "detector");
 }
 
 
-void read(std::istream& is, Detector& detector)
+PWIZ_API_DECL void read(std::istream& is, Detector& detector)
 {
     HandlerComponent handler(&detector);
     SAXParser::parse(is, handler);
@@ -680,7 +682,7 @@ void read(std::istream& is, Detector& detector)
 //
 
 
-void write(minimxml::XMLWriter& writer, const ComponentList& componentList)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ComponentList& componentList)
 {
     int count = 0;
     if (componentList.source.order) count++;
@@ -738,7 +740,7 @@ struct HandlerComponentList : public SAXParser::Handler
 };
 
 
-void read(std::istream& is, ComponentList& componentList)
+PWIZ_API_DECL void read(std::istream& is, ComponentList& componentList)
 {
     HandlerComponentList handler(&componentList);
     SAXParser::parse(is, handler);
@@ -750,7 +752,7 @@ void read(std::istream& is, ComponentList& componentList)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Software& software)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", software.id));
@@ -801,7 +803,7 @@ struct HandlerSoftware : public SAXParser::Handler
 };
 
 
-void read(std::istream& is, Software& software)
+PWIZ_API_DECL void read(std::istream& is, Software& software)
 {
     HandlerSoftware handler(&software);
     SAXParser::parse(is, handler);
@@ -813,7 +815,7 @@ void read(std::istream& is, Software& software)
 //
 
 
-void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", instrumentConfiguration.id));
@@ -876,7 +878,7 @@ struct HandlerInstrumentConfiguration : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, InstrumentConfiguration& instrumentConfiguration)
+PWIZ_API_DECL void read(std::istream& is, InstrumentConfiguration& instrumentConfiguration)
 {
     HandlerInstrumentConfiguration handler(&instrumentConfiguration);
     SAXParser::parse(is, handler);
@@ -888,7 +890,7 @@ void read(std::istream& is, InstrumentConfiguration& instrumentConfiguration)
 //
 
 
-void write(minimxml::XMLWriter& writer, const ProcessingMethod& processingMethod)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& processingMethod)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("order", lexical_cast<string>(processingMethod.order)));
@@ -925,7 +927,7 @@ struct HandlerProcessingMethod : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, ProcessingMethod& processingMethod)
+PWIZ_API_DECL void read(std::istream& is, ProcessingMethod& processingMethod)
 {
     HandlerProcessingMethod handler(&processingMethod);
     SAXParser::parse(is, handler);
@@ -937,7 +939,7 @@ void read(std::istream& is, ProcessingMethod& processingMethod)
 //
 
 
-void write(minimxml::XMLWriter& writer, const DataProcessing& dataProcessing)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataProcessing& dataProcessing)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", lexical_cast<string>(dataProcessing.id)));
@@ -996,7 +998,7 @@ struct HandlerDataProcessing : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, DataProcessing& dataProcessing)
+PWIZ_API_DECL void read(std::istream& is, DataProcessing& dataProcessing)
 {
     HandlerDataProcessing handler(&dataProcessing);
     SAXParser::parse(is, handler);
@@ -1008,7 +1010,7 @@ void read(std::istream& is, DataProcessing& dataProcessing)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Target& t)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Target& t)
 {
     writer.startElement("target");
     writeParamContainer(writer, t);
@@ -1016,7 +1018,7 @@ void write(minimxml::XMLWriter& writer, const Target& t)
 }
 
 
-void read(std::istream& is, Target& t)
+PWIZ_API_DECL void read(std::istream& is, Target& t)
 {
     HandlerNamedParamContainer handler("target", &t);
     SAXParser::parse(is, handler);
@@ -1028,7 +1030,7 @@ void read(std::istream& is, Target& t)
 //
 
 
-void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", lexical_cast<string>(acquisitionSettings.id)));
@@ -1121,7 +1123,7 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, AcquisitionSettings& acquisitionSettings)
+PWIZ_API_DECL void read(std::istream& is, AcquisitionSettings& acquisitionSettings)
 {
     HandlerAcquisitionSettings handler(&acquisitionSettings);
     SAXParser::parse(is, handler);
@@ -1133,7 +1135,7 @@ void read(std::istream& is, AcquisitionSettings& acquisitionSettings)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Acquisition& acquisition)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Acquisition& acquisition)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("number", lexical_cast<string>(acquisition.number)));
@@ -1190,7 +1192,7 @@ struct HandlerAcquisition : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Acquisition& acquisition)
+PWIZ_API_DECL void read(std::istream& is, Acquisition& acquisition)
 {
     HandlerAcquisition handler(&acquisition);
     SAXParser::parse(is, handler);
@@ -1202,7 +1204,7 @@ void read(std::istream& is, Acquisition& acquisition)
 //
 
 
-void write(minimxml::XMLWriter& writer, const AcquisitionList& acquisitionList)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionList& acquisitionList)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionList.acquisitions.size())));
@@ -1252,7 +1254,7 @@ struct HandlerAcquisitionList : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, AcquisitionList& acquisitionList)
+PWIZ_API_DECL void read(std::istream& is, AcquisitionList& acquisitionList)
 {
     HandlerAcquisitionList handler(&acquisitionList);
     SAXParser::parse(is, handler);
@@ -1264,7 +1266,7 @@ void read(std::istream& is, AcquisitionList& acquisitionList)
 //
 
 
-void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow)
 {
     writer.startElement("isolationWindow");
     writeParamContainer(writer, isolationWindow);
@@ -1272,7 +1274,7 @@ void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow)
 }
 
 
-void read(std::istream& is, IsolationWindow& isolationWindow)
+PWIZ_API_DECL void read(std::istream& is, IsolationWindow& isolationWindow)
 {
     HandlerNamedParamContainer handler("isolationWindow", &isolationWindow);
     SAXParser::parse(is, handler);
@@ -1284,7 +1286,7 @@ void read(std::istream& is, IsolationWindow& isolationWindow)
 //
 
 
-void write(minimxml::XMLWriter& writer, const SelectedIon& selectedIon)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SelectedIon& selectedIon)
 {
     writer.startElement("selectedIon");
     writeParamContainer(writer, selectedIon);
@@ -1292,7 +1294,7 @@ void write(minimxml::XMLWriter& writer, const SelectedIon& selectedIon)
 }
 
 
-void read(std::istream& is, SelectedIon& selectedIon)
+PWIZ_API_DECL void read(std::istream& is, SelectedIon& selectedIon)
 {
     HandlerNamedParamContainer handler("selectedIon", &selectedIon);
     SAXParser::parse(is, handler);
@@ -1304,7 +1306,7 @@ void read(std::istream& is, SelectedIon& selectedIon)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Activation& activation)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Activation& activation)
 {
     writer.startElement("activation");
     writeParamContainer(writer, activation);
@@ -1312,7 +1314,7 @@ void write(minimxml::XMLWriter& writer, const Activation& activation)
 }
 
 
-void read(std::istream& is, Activation& activation)
+PWIZ_API_DECL void read(std::istream& is, Activation& activation)
 {
     HandlerNamedParamContainer handler("activation", &activation);
     SAXParser::parse(is, handler);
@@ -1324,7 +1326,7 @@ void read(std::istream& is, Activation& activation)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Precursor& precursor)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("spectrumRef", lexical_cast<string>(precursor.spectrumID)));
@@ -1418,7 +1420,7 @@ struct HandlerPrecursor : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Precursor& precursor)
+PWIZ_API_DECL void read(std::istream& is, Precursor& precursor)
 {
     HandlerPrecursor handler(&precursor);
     SAXParser::parse(is, handler);
@@ -1430,7 +1432,7 @@ void read(std::istream& is, Precursor& precursor)
 //
 
 
-void write(minimxml::XMLWriter& writer, const ScanWindow& scanWindow)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanWindow& scanWindow)
 {
     writer.startElement("scanWindow");
     writeParamContainer(writer, scanWindow);
@@ -1438,7 +1440,7 @@ void write(minimxml::XMLWriter& writer, const ScanWindow& scanWindow)
 }
 
 
-void read(std::istream& is, ScanWindow& scanWindow)
+PWIZ_API_DECL void read(std::istream& is, ScanWindow& scanWindow)
 {
     HandlerNamedParamContainer handler("scanWindow", &scanWindow);
     SAXParser::parse(is, handler);
@@ -1450,7 +1452,7 @@ void read(std::istream& is, ScanWindow& scanWindow)
 //
 
 
-void write(minimxml::XMLWriter& writer, const Scan& scan)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan)
 {
     XMLWriter::Attributes attributes;
     if (scan.instrumentConfigurationPtr.get())
@@ -1519,7 +1521,7 @@ struct HandlerScan : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Scan& scan)
+PWIZ_API_DECL void read(std::istream& is, Scan& scan)
 {
     HandlerScan handler(&scan);
     SAXParser::parse(is, handler);
@@ -1531,7 +1533,7 @@ void read(std::istream& is, Scan& scan)
 //
 
 
-void write(minimxml::XMLWriter& writer, const SpectrumDescription& spectrumDescription)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumDescription& spectrumDescription)
 {
     writer.startElement("spectrumDescription");
     writeParamContainer(writer, spectrumDescription);
@@ -1610,7 +1612,7 @@ struct HandlerSpectrumDescription : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, SpectrumDescription& spectrumDescription)
+PWIZ_API_DECL void read(std::istream& is, SpectrumDescription& spectrumDescription)
 {
     HandlerSpectrumDescription handler(&spectrumDescription);
     SAXParser::parse(is, handler);
@@ -1621,6 +1623,7 @@ void read(std::istream& is, SpectrumDescription& spectrumDescription)
 // BinaryData
 //
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config)
 {
@@ -1802,7 +1805,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, BinaryDataArray& binaryDataArray)
+PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray)
 {
     HandlerBinaryDataArray handler(&binaryDataArray);
     SAXParser::parse(is, handler);
@@ -1814,6 +1817,7 @@ void read(std::istream& is, BinaryDataArray& binaryDataArray)
 //
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, 
            const BinaryDataEncoder::Config& config)
 {
@@ -1920,7 +1924,7 @@ struct HandlerSpectrum : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Spectrum& spectrum,
+PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
           BinaryDataFlag binaryDataFlag)
 {
     HandlerSpectrum handler(binaryDataFlag, &spectrum);
@@ -1933,6 +1937,7 @@ void read(std::istream& is, Spectrum& spectrum,
 //
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram, 
            const BinaryDataEncoder::Config& config)
 {
@@ -2024,7 +2029,7 @@ struct HandlerChromatogram : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, Chromatogram& chromatogram,
+PWIZ_API_DECL void read(std::istream& is, Chromatogram& chromatogram,
           BinaryDataFlag binaryDataFlag)
 {
     HandlerChromatogram handler(binaryDataFlag, &chromatogram);
@@ -2037,6 +2042,7 @@ void read(std::istream& is, Chromatogram& chromatogram,
 //
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions)
@@ -2093,7 +2099,7 @@ struct HandlerSpectrumListSimple : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, SpectrumListSimple& spectrumListSimple)
+PWIZ_API_DECL void read(std::istream& is, SpectrumListSimple& spectrumListSimple)
 {
     HandlerSpectrumListSimple handler(&spectrumListSimple);
     SAXParser::parse(is, handler);
@@ -2105,6 +2111,7 @@ void read(std::istream& is, SpectrumListSimple& spectrumListSimple)
 //
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* chromatogramPositions)
@@ -2161,7 +2168,7 @@ struct HandlerChromatogramListSimple : public HandlerParamContainer
 };
 
 
-void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple)
+PWIZ_API_DECL void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple)
 {
     HandlerChromatogramListSimple handler(&chromatogramListSimple);
     SAXParser::parse(is, handler);
@@ -2173,6 +2180,7 @@ void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple)
 //
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const Run& run,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
@@ -2288,6 +2296,7 @@ struct HandlerRun : public HandlerParamContainer
 };
 
 
+PWIZ_API_DECL
 void read(std::istream& is, Run& run,
           SpectrumListFlag spectrumListFlag)
 {
@@ -2317,6 +2326,7 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtr
 }
 
 
+PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
@@ -2459,6 +2469,7 @@ struct HandlerMSData : public SAXParser::Handler
 };
 
 
+PWIZ_API_DECL
 void read(std::istream& is, MSData& msd,
           SpectrumListFlag spectrumListFlag)
 {

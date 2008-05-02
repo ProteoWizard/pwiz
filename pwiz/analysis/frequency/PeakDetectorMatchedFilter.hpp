@@ -25,6 +25,7 @@
 #define _PEAKDETECTORMATCHEDFILTER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "PeakDetector.hpp"
 #include "utility/proteome/IsotopeEnvelopeEstimator.hpp"
 #include <memory>
@@ -37,12 +38,12 @@ namespace frequency {
 
 /// MatchedFilter implementation of the PeakDetector interface. 
 
-class PeakDetectorMatchedFilter : public PeakDetector
+class PWIZ_API_DECL PeakDetectorMatchedFilter : public PeakDetector
 {
     public:
 
     /// structure for holding configuration
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         /// IsotopeEnvelopeEstimator pointer, must be valid for PeakDetector lifetime 
         const proteome::IsotopeEnvelopeEstimator* isotopeEnvelopeEstimator;
@@ -125,7 +126,7 @@ class PeakDetectorMatchedFilter : public PeakDetector
     virtual const Config& config() const = 0;
 
     /// structure for holding the matched filter calculation results
-    struct Score
+    struct PWIZ_API_DECL Score
     {
         double frequency;
         int charge;
@@ -154,7 +155,7 @@ class PeakDetectorMatchedFilter : public PeakDetector
 };
 
 
-std::ostream& operator<<(std::ostream& os, const PeakDetectorMatchedFilter::Score& a);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakDetectorMatchedFilter::Score& a);
 
 
 } // namespace frequency

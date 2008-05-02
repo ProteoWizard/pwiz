@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "TruncatedLorentzian.hpp"
 #include <fstream>
 
@@ -36,7 +38,7 @@ namespace frequency {
 using namespace std;
 
 
-class TruncatedLorentzian::Impl
+struct TruncatedLorentzian::Impl
 {
     public:
 
@@ -190,22 +192,22 @@ void TruncatedLorentzian::Impl::calculate(double f, const ublas::vector<double>&
 }
 
 
-TruncatedLorentzian::TruncatedLorentzian(double T)
+PWIZ_API_DECL TruncatedLorentzian::TruncatedLorentzian(double T)
 :   impl_(new Impl(T))
 {}
 
 
-TruncatedLorentzian::~TruncatedLorentzian()
+PWIZ_API_DECL TruncatedLorentzian::~TruncatedLorentzian()
 {} // this must be here to delete Impl properly
 
 
-complex<double> TruncatedLorentzian::operator()(double f, const ublas::vector<double>& p) const
+PWIZ_API_DECL complex<double> TruncatedLorentzian::operator()(double f, const ublas::vector<double>& p) const
 {
     return impl_->value(f, p);
 }
 
 
-ublas::vector< complex<double> > TruncatedLorentzian::dp(double f, const ublas::vector<double>& p) const
+PWIZ_API_DECL ublas::vector< complex<double> > TruncatedLorentzian::dp(double f, const ublas::vector<double>& p) const
 {
     ublas::vector< complex<double> > result;
     impl_->d1(f, p, result);
@@ -213,7 +215,7 @@ ublas::vector< complex<double> > TruncatedLorentzian::dp(double f, const ublas::
 }
 
 
-ublas::matrix< complex<double> > TruncatedLorentzian::dp2(double f, const ublas::vector<double>& p) const
+PWIZ_API_DECL ublas::matrix< complex<double> > TruncatedLorentzian::dp2(double f, const ublas::vector<double>& p) const
 {
     ublas::matrix< complex<double> > result;
     impl_->d2(f, p, result);
@@ -221,7 +223,7 @@ ublas::matrix< complex<double> > TruncatedLorentzian::dp2(double f, const ublas:
 }
 
 
-void TruncatedLorentzian::outputSamples(const string& filename, const ublas::vector<double>& p, double shift, double scale) const
+PWIZ_API_DECL void TruncatedLorentzian::outputSamples(const string& filename, const ublas::vector<double>& p, double shift, double scale) const
 {
     cout << "[TruncatedLorentzian] Writing file " << filename << endl;
     ofstream os(filename.c_str());

@@ -24,7 +24,7 @@
 #ifndef _READER_HPP_ 
 #define _READER_HPP_ 
 
-
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include <string>
 
@@ -34,7 +34,7 @@ namespace msdata {
 
 
 /// interface for file readers
-class Reader
+class PWIZ_API_DECL Reader
 {
     public:
 
@@ -61,8 +61,8 @@ typedef boost::shared_ptr<Reader> ReaderPtr;
 /// The template get<reader_type>() gives access to child Readers by type, to facilitate 
 /// Reader-specific configuration at runtime. 
 ///
-class ReaderList : public Reader,
-                   public std::vector<ReaderPtr>
+class PWIZ_API_DECL ReaderList : public Reader,
+                                 public std::vector<ReaderPtr>
 {
     public:
 

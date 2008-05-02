@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "FrequencyEstimatorSimple.hpp"
 #include "utility/math/Parabola.hpp"
 #include "MagnitudeLorentzian.hpp"
@@ -46,7 +48,7 @@ namespace pwiz {
 namespace frequency {
 
 
-class FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimple
+class PWIZ_API_DECL FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimple
 {
     public:
 
@@ -61,7 +63,7 @@ class FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimple
 };
 
 
-auto_ptr<FrequencyEstimatorSimple> FrequencyEstimatorSimple::create(Type type,
+PWIZ_API_DECL auto_ptr<FrequencyEstimatorSimple> FrequencyEstimatorSimple::create(Type type,
                                                                     unsigned int windowRadius)
 {
     return auto_ptr<FrequencyEstimatorSimple>(
@@ -142,6 +144,7 @@ FrequencyData::const_iterator closestLocalMaximum(const FrequencyData& fd, doubl
 } // namespace
 
 
+PWIZ_API_DECL
 Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd, 
                                             const Peak& initialEstimate) const
 {

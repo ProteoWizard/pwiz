@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "CVParam.hpp"
 #include <iostream>
 
@@ -37,19 +39,21 @@ using namespace std;
 //
 
 
-string CVParam::name() const
+PWIZ_API_DECL CVParam::~CVParam() {}
+
+PWIZ_API_DECL string CVParam::name() const
 {
     return cvinfo(cvid).name;
 }
 
 
-string CVParam::unitsName() const
+PWIZ_API_DECL string CVParam::unitsName() const
 {
     return cvinfo(units).name;
 }
 
 
-double CVParam::timeInSeconds() const
+PWIZ_API_DECL double CVParam::timeInSeconds() const
 {
     if (units == MS_second) 
         return valueAs<double>();
@@ -59,7 +63,7 @@ double CVParam::timeInSeconds() const
 }
 
 
-ostream& operator<<(ostream& os, const CVParam& param)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const CVParam& param)
 {
     os << cvinfo(param.cvid).name << ": " << param.value;
 

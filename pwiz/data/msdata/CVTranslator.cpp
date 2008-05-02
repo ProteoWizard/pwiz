@@ -22,6 +22,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "CVTranslator.hpp"
 #include "boost/lexical_cast.hpp"
 #include <map>
@@ -215,9 +217,9 @@ void CVTranslator::Impl::insertDefaultExtraEntries()
 //
 
 
-CVTranslator::CVTranslator() : impl_(new Impl) {}
-void CVTranslator::insert(const string& text, CVID cvid) {impl_->insert(text, cvid);}
-CVID CVTranslator::translate(const string& text) const {return impl_->translate(text);}
+PWIZ_API_DECL CVTranslator::CVTranslator() : impl_(new Impl) {}
+PWIZ_API_DECL void CVTranslator::insert(const string& text, CVID cvid) {impl_->insert(text, cvid);}
+PWIZ_API_DECL CVID CVTranslator::translate(const string& text) const {return impl_->translate(text);}
 
 
 } // namespace msdata

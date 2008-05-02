@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeptideIDMap.hpp"
 
 
@@ -31,7 +33,7 @@ namespace peptideid {
 using namespace std;
 
 
-PeptideID::Record PeptideIDMap::record(const string& nativeID) const
+PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const string& nativeID) const
 {
     map<string,PeptideID::Record>::const_iterator it = this->find(nativeID);
     if (it != this->end()) return it->second;

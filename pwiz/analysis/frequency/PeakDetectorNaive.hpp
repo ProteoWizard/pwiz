@@ -25,6 +25,7 @@
 #define _PEAKDETECTORNAIVE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "PeakDetector.hpp"
 #include <memory>
 
@@ -42,7 +43,7 @@ namespace frequency {
 ///
 /// All peaks are reported as charge==1
 
-class PeakDetectorNaive : public PeakDetector
+class PWIZ_API_DECL PeakDetectorNaive : public PeakDetector
 {
     public:
     /// create an instance.

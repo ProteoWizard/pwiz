@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "TruncatedLorentzianEstimator.hpp"
 #include "ParameterEstimator.hpp"
 #include "utility/math/Parabola.hpp"
@@ -58,7 +60,7 @@ class TruncatedLorentzianEstimatorImpl : public TruncatedLorentzianEstimator
 };
 
 
-auto_ptr<TruncatedLorentzianEstimator> TruncatedLorentzianEstimator::create()
+PWIZ_API_DECL auto_ptr<TruncatedLorentzianEstimator> TruncatedLorentzianEstimator::create()
 {
     return auto_ptr<TruncatedLorentzianEstimator>(new TruncatedLorentzianEstimatorImpl); 
 }

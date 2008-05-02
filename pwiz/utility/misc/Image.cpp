@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Image.hpp"
 #include "gd.h"
 #include "gdfontt.h"
@@ -206,7 +208,7 @@ class ImageImpl : public Image
 };
 
 
-auto_ptr<Image> Image::create(int width, int height)
+PWIZ_API_DECL auto_ptr<Image> Image::create(int width, int height)
 {
     return auto_ptr<Image>(new ImageImpl(width, height));
 }

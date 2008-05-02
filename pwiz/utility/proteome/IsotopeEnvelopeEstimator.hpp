@@ -25,6 +25,7 @@
 #define _ISOTOPEENVELOPEESTIMATOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include "IsotopeCalculator.hpp"
  
@@ -38,11 +39,11 @@ namespace proteome {
 /// the elemental composition estimate is based on the average elemental composition
 /// of amino acid residues.  Mass distributions are calculated on construction of the 
 /// object and cached for quick access.
-class IsotopeEnvelopeEstimator
+class PWIZ_API_DECL IsotopeEnvelopeEstimator
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         enum Type {Peptide}; 
 

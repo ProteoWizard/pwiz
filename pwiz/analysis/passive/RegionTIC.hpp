@@ -25,6 +25,7 @@
 #define _REGIONTIC_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
@@ -35,11 +36,11 @@ namespace analysis {
 
 
 /// writes data samples from a single rectangular region 
-class RegionTIC : public MSDataAnalyzer
+class PWIZ_API_DECL RegionTIC : public MSDataAnalyzer
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         std::pair<double,double> mzRange;
         Config(const std::string& args); 

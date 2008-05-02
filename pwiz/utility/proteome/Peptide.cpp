@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Peptide.hpp"
 #include "AminoAcid.hpp"
 #include <iostream>
@@ -72,10 +74,10 @@ void Peptide::Impl::parseSequence()
 }
 
 
-Peptide::Peptide(const string& sequence) : impl_(new Impl(sequence)) {}
-Peptide::~Peptide() {} // auto-destruction of impl_
-string Peptide::sequence() const {return impl_->sequence();}
-Formula Peptide::formula() const {return impl_->formula();}
+PWIZ_API_DECL Peptide::Peptide(const string& sequence) : impl_(new Impl(sequence)) {}
+PWIZ_API_DECL Peptide::~Peptide() {} // auto-destruction of impl_
+PWIZ_API_DECL string Peptide::sequence() const {return impl_->sequence();}
+PWIZ_API_DECL Formula Peptide::formula() const {return impl_->formula();}
 
 
 } // namespace pwiz

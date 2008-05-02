@@ -24,7 +24,7 @@
 #ifndef _SAXPARSER_HPP_
 #define _SAXPARSER_HPP_
 
-
+#include "utility/misc/Export.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iosfwd>
@@ -123,7 +123,7 @@ class Handler
 /// - Start tags with end marker '/' generate two events, e.g. <br/> will generate events
 ///   startElement("br", ...) and endElement("br").
 ///
-void parse(std::istream& is, Handler& handler);
+PWIZ_API_DECL void parse(std::istream& is, Handler& handler);
 
 
 } // namespace SAXParser 

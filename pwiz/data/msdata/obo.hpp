@@ -25,6 +25,7 @@
 #define _OBO_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <vector>
 #include <string>
 #include <limits>
@@ -35,7 +36,7 @@ namespace msdata {
 
 
 /// a single controlled vocabulary term
-struct Term
+struct PWIZ_API_DECL Term
 {
     typedef unsigned int id_type;
     typedef std::vector<id_type> id_list; 
@@ -65,7 +66,7 @@ struct Term
 /// - non-Term stanzas
 /// - obsolete Terms
 ///
-struct OBO
+struct PWIZ_API_DECL OBO
 {
     std::string filename;
     std::vector<std::string> header;
@@ -77,8 +78,8 @@ struct OBO
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Term& term);
-std::ostream& operator<<(std::ostream& os, const OBO& obo);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Term& term);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OBO& obo);
 
 
 } // namespace msdata

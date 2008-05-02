@@ -25,6 +25,7 @@
 #define _MSDATAANALYZER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include <iosfwd>
 
@@ -55,12 +56,12 @@ using namespace msdata;
 /// only those spectra that are requested by other MSDataAnalyzers; it won't request 
 /// any updates, but it needs to see any update requested by someone else.
 ///
-class MSDataAnalyzer
+class PWIZ_API_DECL MSDataAnalyzer
 {
     public:
 
     /// information about the data to be analyzed
-    struct DataInfo
+    struct PWIZ_API_DECL DataInfo
     {
         const MSData& msd;
         std::string sourceFilename;
@@ -70,7 +71,7 @@ class MSDataAnalyzer
         DataInfo(const MSData& _msd) : msd(_msd), log(0) {}
     };
 
-    enum UpdateRequest
+    enum PWIZ_API_DECL UpdateRequest
     {
         UpdateRequest_None,      // do not update
         UpdateRequest_Ok,        // will accept an update
@@ -129,8 +130,8 @@ struct analyzer_strings
 /// 
 /// container of MSDataAnalyzer (composite pattern)
 ///
-class MSDataAnalyzerContainer : public MSDataAnalyzer,
-                                public std::vector<MSDataAnalyzerPtr>
+class PWIZ_API_DECL MSDataAnalyzerContainer : public MSDataAnalyzer,
+                                              public std::vector<MSDataAnalyzerPtr>
 {
     public:
 
@@ -152,17 +153,17 @@ class MSDataAnalyzerContainer : public MSDataAnalyzer,
 ///
 /// event generator for MSDataAnalyzer
 ///
-class MSDataAnalyzerDriver
+class PWIZ_API_DECL MSDataAnalyzerDriver
 {
     public:
 
     /// instantiate with an MSDataAnalyzer
     MSDataAnalyzerDriver(MSDataAnalyzer& analyzer);
 
-    enum Status {Status_Ok, Status_Cancel};
+    enum PWIZ_API_DECL Status {Status_Ok, Status_Cancel};
 
     /// progress callback interface
-    class ProgressCallback
+    class PWIZ_API_DECL ProgressCallback
     {
         public:
         virtual size_t iterationsPerCallback() const {return 100;}

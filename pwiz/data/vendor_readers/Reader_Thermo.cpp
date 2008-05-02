@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "Reader_Thermo.hpp"
 
 
@@ -79,7 +81,7 @@ using namespace pwiz::msdata::detail;
 //
 
 
-bool Reader_Thermo::hasRAWHeader(const string& head)
+PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 {
     return _hasRAWHeader(head);
 }
@@ -235,15 +237,16 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 } // namespace
 
 
-bool Reader_Thermo::accept(const string& filename, const string& head) const
+PWIZ_API_DECL bool Reader_Thermo::accept(const string& filename, const string& head) const
 {
     return hasRAWHeader(head);
 }
 
 
+PWIZ_API_DECL
 void Reader_Thermo::read(const string& filename, 
-                      const string& head,
-                      MSData& result) const
+                         const string& head,
+                         MSData& result) const
 {
     // initialize RawFileLibrary
 
@@ -282,17 +285,17 @@ namespace msdata {
 
 using namespace std;
 
-bool Reader_Thermo::accept(const string& filename, const string& head) const
+PWIZ_API_DECL bool Reader_Thermo::accept(const string& filename, const string& head) const
 {
     return false;
 }
 
-void Reader_Thermo::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result) const
 {
     throw runtime_error("[Reader_Thermo::read()] Not implemented."); 
 }
 
-bool Reader_Thermo::hasRAWHeader(const string& head)
+PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 {   
     return _hasRAWHeader(head);
 }

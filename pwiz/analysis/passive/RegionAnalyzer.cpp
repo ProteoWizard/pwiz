@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "RegionAnalyzer.hpp"
 #include "utility/math/Parabola.hpp"
 #include "boost/filesystem/path.hpp"
@@ -46,7 +48,7 @@ namespace bfs = boost::filesystem;
 //
 
 
-RegionAnalyzer::Config::Config()
+PWIZ_API_DECL RegionAnalyzer::Config::Config()
 :   mzRange(make_pair(0, numeric_limits<double>::max())),
     indexRange(make_pair(0, numeric_limits<size_t>::max())),
     scanNumberRange(make_pair(0, numeric_limits<int>::max())),
@@ -55,12 +57,12 @@ RegionAnalyzer::Config::Config()
 {}
 
 
-RegionAnalyzer::SpectrumStats::SpectrumStats()
+PWIZ_API_DECL RegionAnalyzer::SpectrumStats::SpectrumStats()
 :   sumIntensity(0)
 {}
 
 
-RegionAnalyzer::Stats::Stats()
+PWIZ_API_DECL RegionAnalyzer::Stats::Stats()
 :
     nonzeroCount(0),
     sum_sumIntensity(0),
@@ -97,18 +99,18 @@ struct RegionAnalyzer::Impl
 //
 
 
-RegionAnalyzer::RegionAnalyzer(const Config& config, const MSDataCache& cache)
+PWIZ_API_DECL RegionAnalyzer::RegionAnalyzer(const Config& config, const MSDataCache& cache)
 :   impl_(new Impl(config, cache))
 {}
 
 
-const vector<RegionAnalyzer::SpectrumStats>& RegionAnalyzer::spectrumStats() const 
+PWIZ_API_DECL const vector<RegionAnalyzer::SpectrumStats>& RegionAnalyzer::spectrumStats() const 
 {
     return impl_->spectrumStats;
 }
 
 
-const RegionAnalyzer::Stats& RegionAnalyzer::stats() const
+PWIZ_API_DECL const RegionAnalyzer::Stats& RegionAnalyzer::stats() const
 {
     return impl_->stats;
 }
@@ -127,7 +129,7 @@ const size_t width_intensity_ = 17;
 } // namespace
 
 
-void RegionAnalyzer::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionAnalyzer::open(const DataInfo& dataInfo)
 {
     impl_->spectrumStats.clear();
     impl_->stats = Stats();
@@ -161,6 +163,7 @@ void RegionAnalyzer::open(const DataInfo& dataInfo)
 }
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 RegionAnalyzer::updateRequested(const DataInfo& dataInfo,
                                 const SpectrumIdentity& spectrumIdentity) const
@@ -193,6 +196,7 @@ MZIntensityPair interpolatedPeak(vector<MZIntensityPair>::const_iterator begin,
 }
 
 
+PWIZ_API_DECL
 void RegionAnalyzer::update(const DataInfo& dataInfo, 
                             const Spectrum& spectrum)
 {
@@ -255,7 +259,7 @@ void RegionAnalyzer::update(const DataInfo& dataInfo,
 }
 
 
-void RegionAnalyzer::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionAnalyzer::close(const DataInfo& dataInfo)
 {
     int count = 0;
     double sum_peak_mz = 0;

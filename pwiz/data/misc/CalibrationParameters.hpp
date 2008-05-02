@@ -25,6 +25,7 @@
 #define _CALIBRATIONPARAMETERS_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <cmath>
 #include <stdexcept>
 #include <iostream>

@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeakFamilyDetectorFT.hpp"
 #include "analysis/frequency/PeakDetectorMatchedFilter.hpp"
 #include "data/misc/FrequencyData.hpp"
@@ -233,11 +235,12 @@ PeakFamilyDetectorFT::Impl::createFrequencyData(const MZIntensityPair* begin,
 //
 
 
-PeakFamilyDetectorFT::PeakFamilyDetectorFT(const Config& config)
+PWIZ_API_DECL PeakFamilyDetectorFT::PeakFamilyDetectorFT(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
+PWIZ_API_DECL
 void PeakFamilyDetectorFT::detect(const MZIntensityPair* begin,
                                   const MZIntensityPair* end,
                                   vector<PeakFamily>& result)

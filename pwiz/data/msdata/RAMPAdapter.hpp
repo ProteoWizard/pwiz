@@ -25,6 +25,7 @@
 #define _RAMPADAPTER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "ramp.h"
 #include "boost/shared_ptr.hpp"
 #include <string>
@@ -36,7 +37,7 @@ namespace msdata {
 
 
 /// adapter to provide RAMP-friendly access to MSData library 
-class RAMPAdapter 
+class PWIZ_API_DECL RAMPAdapter 
 {
     public:
 

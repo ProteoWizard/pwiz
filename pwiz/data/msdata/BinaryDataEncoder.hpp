@@ -25,6 +25,7 @@
 #define _BINARYDATAENCODER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include <string>
 #include <vector>
@@ -37,7 +38,7 @@ namespace msdata {
 
 
 /// binary-to-text encoding
-class BinaryDataEncoder
+class PWIZ_API_DECL BinaryDataEncoder
 {
     public:
 
@@ -46,7 +47,7 @@ class BinaryDataEncoder
     enum Compression {Compression_None, Compression_Zlib};
 
     /// encoding/decoding configuration 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         Precision precision;
         ByteOrder byteOrder;
@@ -80,7 +81,7 @@ class BinaryDataEncoder
 };
 
 
-std::ostream& operator<<(std::ostream& os, const BinaryDataEncoder::Config& config);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const BinaryDataEncoder::Config& config);
 
 
 } // namespace msdata

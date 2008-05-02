@@ -25,6 +25,7 @@
 #define _PEAKFAMILYDETECTOR_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include "data/misc/PeakData.hpp"
 
@@ -36,7 +37,7 @@ namespace analysis {
 ///
 /// interface for peak family (isotope envelope) detection
 /// 
-class PeakFamilyDetector
+class PWIZ_API_DECL PeakFamilyDetector
 {
     public:
 

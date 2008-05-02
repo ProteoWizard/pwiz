@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumIterator.hpp"
 #include "MSData.hpp"
 #include "utility/misc/IntegerSet.hpp"
@@ -225,17 +227,17 @@ void SpectrumIterator::Impl::updateSpectrum() const
 //
 
 
-SpectrumIterator::SpectrumIterator() 
+PWIZ_API_DECL SpectrumIterator::SpectrumIterator() 
 :   impl_(new Impl) 
 {}
 
 
-SpectrumIterator::SpectrumIterator(const SpectrumList& spectrumList, const Config& config)
+PWIZ_API_DECL SpectrumIterator::SpectrumIterator(const SpectrumList& spectrumList, const Config& config)
 :   impl_(new Impl(spectrumList, config)) 
 {}
 
 
-SpectrumIterator::SpectrumIterator(const MSData& msd, const Config& config)
+PWIZ_API_DECL SpectrumIterator::SpectrumIterator(const MSData& msd, const Config& config)
 {
     if (!msd.run.spectrumListPtr.get())
         throw runtime_error("[SpectrumIterator::SpectrumIterator(MSData&)] Null spectrumListPtr.");
@@ -244,16 +246,16 @@ SpectrumIterator::SpectrumIterator(const MSData& msd, const Config& config)
 }
 
 
-SpectrumIterator::SpectrumIterator(const SpectrumIterator& that) 
+PWIZ_API_DECL SpectrumIterator::SpectrumIterator(const SpectrumIterator& that) 
 :   impl_(new Impl(*that.impl_)) // uses compiler-generated Impl(Impl&)
 {}
 
 
-SpectrumIterator& SpectrumIterator::operator++() {impl_->preincrement(); return *this;}
-const Spectrum& SpectrumIterator::operator*() const {return impl_->dereference();}
-const Spectrum* SpectrumIterator::operator->() const {return impl_->dereferencePointer();}
-bool SpectrumIterator::operator==(const SpectrumIterator& that) const {return impl_->equal(*that.impl_);}
-bool SpectrumIterator::operator!=(const SpectrumIterator& that) const {return impl_->notEqual(*that.impl_);}
+PWIZ_API_DECL SpectrumIterator& SpectrumIterator::operator++() {impl_->preincrement(); return *this;}
+PWIZ_API_DECL const Spectrum& SpectrumIterator::operator*() const {return impl_->dereference();}
+PWIZ_API_DECL const Spectrum* SpectrumIterator::operator->() const {return impl_->dereferencePointer();}
+PWIZ_API_DECL bool SpectrumIterator::operator==(const SpectrumIterator& that) const {return impl_->equal(*that.impl_);}
+PWIZ_API_DECL bool SpectrumIterator::operator!=(const SpectrumIterator& that) const {return impl_->notEqual(*that.impl_);}
 
 
 } // namespace msdata

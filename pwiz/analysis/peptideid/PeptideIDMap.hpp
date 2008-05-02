@@ -25,6 +25,7 @@
 #define _PEPTIDEIDMAP_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "PeptideID.hpp"
 #include <map>
 
@@ -33,8 +34,8 @@ namespace pwiz {
 namespace peptideid {
 
 
-class PeptideIDMap : public PeptideID, 
-                     public std::map<std::string, PeptideID::Record>
+class PWIZ_API_DECL PeptideIDMap : public PeptideID, 
+                                   public std::map<std::string, PeptideID::Record>
 {
     public:
     virtual Record record(const std::string& nativeID) const;

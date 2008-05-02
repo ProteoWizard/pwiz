@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeakData.hpp"
 //#include "util_old/MinimXML.hpp"
 #include <complex>
@@ -111,7 +113,7 @@ using namespace std;
 //using namespace pwiz::util;
 
 
-void PeakFamily::printSimple(std::ostream& os) const
+PWIZ_API_DECL void PeakFamily::printSimple(std::ostream& os) const
 {
     if (peaks.empty())
         os << 0 << " " << complex<double>(0.) << " " << 0 << endl;
@@ -122,7 +124,7 @@ void PeakFamily::printSimple(std::ostream& os) const
 }
 
 
-void Scan::printSimple(std::ostream& os) const
+PWIZ_API_DECL void Scan::printSimple(std::ostream& os) const
 {
     for (vector<PeakFamily>::const_iterator it=peakFamilies.begin(); it!=peakFamilies.end(); ++it)
         it->printSimple(os);
@@ -264,7 +266,7 @@ using boost::archive::xml_iarchive;
 using boost::archive::xml_oarchive;
 
 
-std::ostream& operator<<(std::ostream& os, const Peak& peak)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peak& peak)
 {
     os << "<"
        << peak.mz << ","
@@ -279,7 +281,7 @@ std::ostream& operator<<(std::ostream& os, const Peak& peak)
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
 {
     os << "peakFamily ("
        << "mzMonoisotopic:" << peakFamily.mzMonoisotopic << " "
@@ -292,7 +294,7 @@ std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
 }
 
 
-std::ostream& operator<<(std::ostream& os, const Scan& scan)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
 {
     os << "scan (#" << scan.scanNumber 
        << " rt:" << scan.retentionTime
@@ -304,7 +306,7 @@ std::ostream& operator<<(std::ostream& os, const Scan& scan)
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PeakData& pd)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd)
 {
     xml_oarchive oa(os);
     oa << make_nvp("peakdata", pd);
@@ -312,7 +314,7 @@ std::ostream& operator<<(std::ostream& os, const PeakData& pd)
 }
 
 
-std::istream& operator>>(std::istream& is, PeakData& pd)
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 {
     xml_iarchive ia(is);
     ia >> make_nvp("peakdata", pd);

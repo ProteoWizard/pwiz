@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "erf.hpp"
 #include <iostream>
 #include <limits>
@@ -37,8 +39,8 @@ using namespace std;
 // pulled from IT++ Library - dk
 
 
-const double pi = 3.14159265358979323846;
-const double eps = std::numeric_limits<double>::epsilon();
+PWIZ_API_DECL const double pi = 3.14159265358979323846;
+PWIZ_API_DECL const double eps = std::numeric_limits<double>::epsilon();
 
 
   /*
@@ -156,7 +158,7 @@ const double eps = std::numeric_limits<double>::epsilon();
    * complex z. Three methods are implemented. Which one is used
    * depends on z. 
 	 */
-  std::complex<double> erf(const std::complex<double>& z)
+  PWIZ_API_DECL std::complex<double> erf(const std::complex<double>& z)
   {
     // Use the method appropriate to size of z - 
     // there probably ought to be an extra option for NaN z, or infinite z

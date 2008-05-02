@@ -25,6 +25,7 @@
 #define _FREQUENCYESTIMATORPHYSICALMODEL_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "FrequencyEstimator.hpp" 
 #include <string>
 #include <memory>
@@ -35,11 +36,11 @@ namespace frequency {
 
 
 /// Physical model implementation of the FrequencyEstimator interface. 
-class FrequencyEstimatorPhysicalModel : public FrequencyEstimator
+class PWIZ_API_DECL FrequencyEstimatorPhysicalModel : public FrequencyEstimator
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         unsigned int windowRadius;
         unsigned int iterationCount;

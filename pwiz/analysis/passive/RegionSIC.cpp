@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "RegionSIC.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
@@ -41,7 +43,7 @@ using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 
 
-RegionSIC::Config::Config(const string& args)
+PWIZ_API_DECL RegionSIC::Config::Config(const string& args)
 :   mzCenter(0), radius(0), radiusUnits(RadiusUnits_Unknown)
 {
     vector<string> tokens;
@@ -60,7 +62,7 @@ RegionSIC::Config::Config(const string& args)
 }
 
 
-RegionSIC::RegionSIC(const MSDataCache& cache, const Config& config)
+PWIZ_API_DECL RegionSIC::RegionSIC(const MSDataCache& cache, const Config& config)
 :   cache_(cache), config_(config)
 {
     RegionAnalyzer::Config regionAnalyzerConfig;
@@ -79,12 +81,13 @@ RegionSIC::RegionSIC(const MSDataCache& cache, const Config& config)
 }
 
 
-void RegionSIC::open(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionSIC::open(const DataInfo& dataInfo)
 {
     regionAnalyzer_->open(dataInfo);
 }
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 RegionSIC::updateRequested(const DataInfo& dataInfo, 
                              const SpectrumIdentity& spectrumIdentity) const 
@@ -93,14 +96,15 @@ RegionSIC::updateRequested(const DataInfo& dataInfo,
 }
 
 
+PWIZ_API_DECL
 void RegionSIC::update(const DataInfo& dataInfo, 
-                         const Spectrum& spectrum)
+                       const Spectrum& spectrum)
 {
     return regionAnalyzer_->update(dataInfo, spectrum); 
 }
 
 
-void RegionSIC::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
 {
     regionAnalyzer_->close(dataInfo);
 

@@ -25,6 +25,7 @@
 #define _ISOTOPETABLE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 
 
@@ -35,7 +36,7 @@ namespace proteome {
 /// Class representing a table of isotope distributions for collections of multiple
 /// atoms of a single element; the table is computed on instantiation, based on the 
 /// element's mass distribution, a maximum atom count, and abundance cutoff value.
-class IsotopeTable
+class PWIZ_API_DECL IsotopeTable
 {
     public:
 
@@ -53,7 +54,7 @@ class IsotopeTable
     IsotopeTable& operator=(const IsotopeTable&);
 
     /// debugging
-    friend std::ostream& operator<<(std::ostream& os, const IsotopeTable& isotopeTable);
+    friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IsotopeTable& isotopeTable);
 };
 
 

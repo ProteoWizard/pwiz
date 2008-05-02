@@ -136,6 +136,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "#define " << includeGuard << "\n\n\n"
        << "#include <string>\n"
        << "#include <vector>\n"
+       << "#include \"utility/misc/Export.hpp\"\n"
        << "\n\n";
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
@@ -152,7 +153,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     namespaceBegin(os, basename);
 
     os << "/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)\n" 
-          "enum CVID\n{\n"
+          "enum PWIZ_API_DECL CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
@@ -173,7 +174,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "\n}; // enum CVID\n\n\n"; 
 
     os << "/// structure for holding CV term info\n" 
-          "struct CVInfo\n"
+          "struct PWIZ_API_DECL CVInfo\n"
           "{\n"
           "    CVID cvid;\n"
           "    std::string id;\n"      
@@ -190,16 +191,16 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
     os << "/// returns CV term info for the specified CVID\n" 
-          "const CVInfo& cvinfo(CVID cvid);\n\n\n";
+          "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid);\n\n\n";
 
     os << "/// returns CV term info for the specified id (accession number)\n" 
-          "const CVInfo& cvinfo(const std::string& id);\n\n\n";
+          "PWIZ_API_DECL const CVInfo& cvinfo(const std::string& id);\n\n\n";
 
     os << "/// returns true iff child IsA parent in the CV\n" 
-          "bool cvIsA(CVID child, CVID parent);\n\n\n";
+          "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);\n\n\n";
 
     os << "/// returns vector of all valid CVIDs\n" 
-          "const std::vector<CVID>& cvids();\n\n\n";
+          "PWIZ_API_DECL const std::vector<CVID>& cvids();\n\n\n";
 
     namespaceEnd(os, basename);
 
@@ -215,7 +216,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     writeCopyright(os, filename);
 
-    os << "#include \"" << basename << ".hpp\"\n"
+    os << "#define PWIZ_SOURCE\n"
+       << "#include \"" << basename << ".hpp\"\n"
        << "#include \"boost/lexical_cast.hpp\"\n"
        << "#include <map>\n"
        << "#include <algorithm>\n"
@@ -349,7 +351,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "} // namespace\n\n\n";
 
-    os << "const string& CVInfo::shortName() const\n"
+    os << "PWIZ_API_DECL const string& CVInfo::shortName() const\n"
           "{\n"
           "    const string* result = &name;\n"
           "    for (vector<string>::const_iterator it=exactSynonyms.begin(); it!=exactSynonyms.end(); ++it)\n"
@@ -358,13 +360,13 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return *result;\n"
           "}\n\n\n";
 
-    os << "const CVInfo& cvinfo(CVID cvid)\n"
+    os << "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   return infoMap_[cvid];\n"
           "}\n\n\n";
 
-    os << "const CVInfo& cvinfo(const string& id)\n"
+    os << "PWIZ_API_DECL const CVInfo& cvinfo(const string& id)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   CVID cvid = CVID_Unknown;\n"
@@ -380,7 +382,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "   return infoMap_[cvid];\n"
           "}\n\n\n";
 
-    os << "bool cvIsA(CVID child, CVID parent)\n"
+    os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"
           "{\n"
           "    if (child == parent) return true;\n"
           "    const CVInfo& info = cvinfo(child);\n"
@@ -389,7 +391,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return false;\n"
           "}\n\n\n";
 
-    os << "const vector<CVID>& cvids()\n"
+    os << "PWIZ_API_DECL const vector<CVID>& cvids()\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   return cvids_;\n"

@@ -25,6 +25,7 @@
 #define _FREQUENCYDATA_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "SampleDatum.hpp"
 #include "CalibrationParameters.hpp"
 #include <vector>
@@ -43,13 +44,13 @@ typedef SampleDatum< double, std::complex<double> > FrequencyDatum;
 /// Stores raw frequency-domain data, as well as meta-data.  Also includes
 /// basic access and analysis functions.
 
-class FrequencyData
+class PWIZ_API_DECL FrequencyData
 {
     public:
 
     /// \name types
     //@{
-        enum IOMode {Binary, Text, Automatic};
+        enum PWIZ_API_DECL IOMode {Binary, Text, Automatic};
         typedef std::vector<FrequencyDatum> container;
         typedef container::iterator iterator;
         typedef container::const_iterator const_iterator;

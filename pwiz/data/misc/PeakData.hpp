@@ -25,6 +25,7 @@
 #define _PEAKDATA_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <string>
@@ -40,7 +41,7 @@ const int PeakDataFormatVersion_Major = 1;
 const int PeakDataFormatVersion_Minor = 0;
 
 
-struct Peak
+struct PWIZ_API_DECL Peak
 {
     // general peak info
     double mz;
@@ -59,10 +60,10 @@ struct Peak
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Peak& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peak& pd);
 
 
-struct PeakFamily 
+struct PWIZ_API_DECL PeakFamily 
 {
     double mzMonoisotopic;
     int charge;
@@ -77,10 +78,10 @@ struct PeakFamily
 };
 
 
-std::ostream& operator<<(std::ostream& os, const PeakFamily& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& pd);
 
 
-struct Scan
+struct PWIZ_API_DECL Scan
 {
     int scanNumber;
     double retentionTime;
@@ -94,10 +95,10 @@ struct Scan
 };
 
 
-std::ostream& operator<<(std::ostream& os, const Scan& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& pd);
 
 
-struct Software
+struct PWIZ_API_DECL Software
 {
     std::string name;
     std::string version;
@@ -108,7 +109,7 @@ struct Software
 };
 
 
-struct PeakData
+struct PWIZ_API_DECL PeakData
 {
     std::string sourceFilename;
     Software software; 
@@ -120,8 +121,8 @@ struct PeakData
 
 
 // xml serialization
-std::istream& operator>>(std::istream& is, PeakData& pd);
-std::ostream& operator<<(std::ostream& os, const PeakData& pd);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd);
 
 
 } // namespace peakdata 

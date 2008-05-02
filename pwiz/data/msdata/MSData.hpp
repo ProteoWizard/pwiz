@@ -24,6 +24,7 @@
 #ifndef _MSDATA_HPP_
 #define _MSDATA_HPP_
 
+#include "utility/misc/Export.hpp"
 
 #include "CVParam.hpp"
 #include "boost/shared_ptr.hpp"
@@ -37,7 +38,7 @@ namespace pwiz {
 namespace msdata {
 
 
-struct CV
+struct PWIZ_API_DECL CV
 {
     std::string id;
     std::string URI;
@@ -48,7 +49,7 @@ struct CV
 };
 
 
-struct UserParam
+struct PWIZ_API_DECL UserParam
 {
     std::string name;
     std::string value;
@@ -86,7 +87,7 @@ struct ParamGroup;
 typedef boost::shared_ptr<ParamGroup> ParamGroupPtr;
 
 
-struct ParamContainer
+struct PWIZ_API_DECL ParamContainer
 {
     std::vector<ParamGroupPtr> paramGroupPtrs;
     std::vector<CVParam> cvParams;
@@ -137,7 +138,7 @@ inline void ParamContainer::set<bool>(CVID cvid, bool value, CVID units)
 }
 
 
-struct ParamGroup : public ParamContainer
+struct PWIZ_API_DECL ParamGroup : public ParamContainer
 {
     std::string id;
 
@@ -146,10 +147,10 @@ struct ParamGroup : public ParamContainer
 };
 
 
-struct FileContent : public ParamContainer {};
+struct PWIZ_API_DECL FileContent : public ParamContainer {};
 
 
-struct SourceFile : public ParamContainer
+struct PWIZ_API_DECL SourceFile : public ParamContainer
 {
     std::string id;
     std::string name;
@@ -166,10 +167,10 @@ struct SourceFile : public ParamContainer
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;
 
 
-struct Contact : public ParamContainer {};
+struct PWIZ_API_DECL Contact : public ParamContainer {};
 
 
-struct FileDescription
+struct PWIZ_API_DECL FileDescription
 {
     FileContent fileContent;
     std::vector<SourceFilePtr> sourceFilePtrs;
@@ -179,7 +180,7 @@ struct FileDescription
 };
 
 
-struct Sample : public ParamContainer
+struct PWIZ_API_DECL Sample : public ParamContainer
 {
     std::string id;
     std::string name;
@@ -194,7 +195,7 @@ struct Sample : public ParamContainer
 typedef boost::shared_ptr<Sample> SamplePtr;
 
 
-struct Component : public ParamContainer
+struct PWIZ_API_DECL Component : public ParamContainer
 {
     int order;
 
@@ -205,12 +206,12 @@ struct Component : public ParamContainer
 };
 
 
-struct Source : public Component {};
-struct Analyzer : public Component {};
-struct Detector : public Component {};
+struct PWIZ_API_DECL Source : public Component {};
+struct PWIZ_API_DECL Analyzer : public Component {};
+struct PWIZ_API_DECL Detector : public Component {};
 
 
-struct ComponentList
+struct PWIZ_API_DECL ComponentList
 {
     Source source;
     Analyzer analyzer;
@@ -220,7 +221,7 @@ struct ComponentList
 };
 
 
-struct Software
+struct PWIZ_API_DECL Software
 {
     std::string id;
 
@@ -240,7 +241,7 @@ struct Software
 typedef boost::shared_ptr<Software> SoftwarePtr;
 
 
-struct InstrumentConfiguration : public ParamContainer
+struct PWIZ_API_DECL InstrumentConfiguration : public ParamContainer
 {
     std::string id;
     ComponentList componentList;
@@ -254,7 +255,7 @@ struct InstrumentConfiguration : public ParamContainer
 typedef boost::shared_ptr<InstrumentConfiguration> InstrumentConfigurationPtr;
 
 
-struct ProcessingMethod : public ParamContainer
+struct PWIZ_API_DECL ProcessingMethod : public ParamContainer
 {
     int order;
 
@@ -267,7 +268,7 @@ struct ProcessingMethod : public ParamContainer
 typedef boost::shared_ptr<ProcessingMethod> ProcessingMethodPtr;
 
 
-struct DataProcessing
+struct PWIZ_API_DECL DataProcessing
 {
     std::string id;
     SoftwarePtr softwarePtr;
@@ -282,10 +283,10 @@ struct DataProcessing
 typedef boost::shared_ptr<DataProcessing> DataProcessingPtr; 
 
 
-struct Target : public ParamContainer {};
+struct PWIZ_API_DECL Target : public ParamContainer {};
 
 
-struct AcquisitionSettings
+struct PWIZ_API_DECL AcquisitionSettings
 {
     std::string id;
     InstrumentConfigurationPtr instrumentConfigurationPtr;
@@ -301,7 +302,7 @@ struct AcquisitionSettings
 typedef boost::shared_ptr<AcquisitionSettings> AcquisitionSettingsPtr; 
 
 
-struct Acquisition : public ParamContainer
+struct PWIZ_API_DECL Acquisition : public ParamContainer
 {
     int number;
     SourceFilePtr sourceFilePtr;
@@ -313,7 +314,7 @@ struct Acquisition : public ParamContainer
 };
 
 
-struct AcquisitionList : public ParamContainer
+struct PWIZ_API_DECL AcquisitionList : public ParamContainer
 {
     std::vector<Acquisition> acquisitions;
 
@@ -321,12 +322,12 @@ struct AcquisitionList : public ParamContainer
 };
 
 
-struct IsolationWindow : public ParamContainer {};
-struct SelectedIon : public ParamContainer {};
-struct Activation : public ParamContainer {};
+struct PWIZ_API_DECL IsolationWindow : public ParamContainer {};
+struct PWIZ_API_DECL SelectedIon : public ParamContainer {};
+struct PWIZ_API_DECL Activation : public ParamContainer {};
 
 
-struct Precursor : public ParamContainer
+struct PWIZ_API_DECL Precursor : public ParamContainer
 {
     std::string spectrumID;
     IsolationWindow isolationWindow;
@@ -337,14 +338,14 @@ struct Precursor : public ParamContainer
 };
 
 
-struct ScanWindow : public ParamContainer
+struct PWIZ_API_DECL ScanWindow : public ParamContainer
 {
     ScanWindow(){}
     ScanWindow(double mzLow, double mzHigh);
 };
 
 
-struct Scan : public ParamContainer
+struct PWIZ_API_DECL Scan : public ParamContainer
 {
     InstrumentConfigurationPtr instrumentConfigurationPtr;
     std::vector<ScanWindow> scanWindows;
@@ -353,7 +354,7 @@ struct Scan : public ParamContainer
 };
 
 
-struct SpectrumDescription : public ParamContainer
+struct PWIZ_API_DECL SpectrumDescription : public ParamContainer
 {
     AcquisitionList acquisitionList;
     std::vector<Precursor> precursors;
@@ -363,7 +364,7 @@ struct SpectrumDescription : public ParamContainer
 };
 
 
-struct BinaryDataArray : public ParamContainer
+struct PWIZ_API_DECL BinaryDataArray : public ParamContainer
 {
     DataProcessingPtr dataProcessingPtr;
     std::vector<double> data;
@@ -376,7 +377,7 @@ typedef boost::shared_ptr<BinaryDataArray> BinaryDataArrayPtr;
 
 
 #pragma pack(1)
-struct MZIntensityPair
+struct PWIZ_API_DECL MZIntensityPair
 {
     double mz;
     double intensity;
@@ -388,11 +389,11 @@ struct MZIntensityPair
 #pragma pack()
 
 
-std::ostream& operator<<(std::ostream& os, const MZIntensityPair& mzi);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MZIntensityPair& mzi);
 
 
 #pragma pack(1)
-struct TimeIntensityPair
+struct PWIZ_API_DECL TimeIntensityPair
 {
     double time;
     double intensity;
@@ -404,10 +405,10 @@ struct TimeIntensityPair
 #pragma pack()
 
 
-std::ostream& operator<<(std::ostream& os, const TimeIntensityPair& ti);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const TimeIntensityPair& ti);
 
 
-struct SpectrumIdentity
+struct PWIZ_API_DECL SpectrumIdentity
 {
     size_t index;
     std::string id;
@@ -418,11 +419,11 @@ struct SpectrumIdentity
 };
 
 
-struct ChromatogramIdentity : public SpectrumIdentity
+struct PWIZ_API_DECL ChromatogramIdentity : public SpectrumIdentity
 {};
 
 
-struct Spectrum : public SpectrumIdentity, public ParamContainer
+struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 {
     size_t defaultArrayLength; 
     DataProcessingPtr dataProcessingPtr;
@@ -453,7 +454,7 @@ struct Spectrum : public SpectrumIdentity, public ParamContainer
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
 
 
-struct Chromatogram : public ChromatogramIdentity, public ParamContainer
+struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamContainer
 {
     size_t defaultArrayLength; 
     DataProcessingPtr dataProcessingPtr;
@@ -504,7 +505,7 @@ typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 ///   BinaryDataArrayPtrs on spectrum(index, false);  implementations *must* provide 
 ///   valid BinaryDataArrayPtrs on spectrum(index, true).
 ///
-class SpectrumList
+class PWIZ_API_DECL SpectrumList
 {
     public:
     
@@ -537,7 +538,7 @@ typedef boost::shared_ptr<SpectrumList> SpectrumListPtr;
 
 /// Simple writeable in-memory implementation of SpectrumList.
 /// Note:  This spectrum() implementation returns internal SpectrumPtrs.
-struct SpectrumListSimple : public SpectrumList
+struct PWIZ_API_DECL SpectrumListSimple : public SpectrumList
 {
     std::vector<SpectrumPtr> spectra;
 
@@ -553,7 +554,7 @@ struct SpectrumListSimple : public SpectrumList
 typedef boost::shared_ptr<SpectrumListSimple> SpectrumListSimplePtr;
 
 
-class ChromatogramList
+class PWIZ_API_DECL ChromatogramList
 {
     public:
     
@@ -586,7 +587,7 @@ typedef boost::shared_ptr<ChromatogramList> ChromatogramListPtr;
 
 /// Simple writeable in-memory implementation of ChromatogramList.
 /// Note:  This chromatogram() implementation returns internal ChromatogramPtrs.
-struct ChromatogramListSimple : public ChromatogramList
+struct PWIZ_API_DECL ChromatogramListSimple : public ChromatogramList
 {
     std::vector<ChromatogramPtr> chromatograms;
 
@@ -602,7 +603,7 @@ struct ChromatogramListSimple : public ChromatogramList
 typedef boost::shared_ptr<ChromatogramListSimple> ChromatogramListSimplePtr;
 
 
-struct Run : public ParamContainer
+struct PWIZ_API_DECL Run : public ParamContainer
 {
     std::string id;
     InstrumentConfigurationPtr instrumentConfigurationPtr;
@@ -624,7 +625,7 @@ struct Run : public ParamContainer
 };
 
 
-struct MSData
+struct PWIZ_API_DECL MSData
 {
     std::string accession;
     std::string id;
@@ -639,7 +640,8 @@ struct MSData
     std::vector<AcquisitionSettingsPtr> acquisitionSettingsPtrs;
     Run run;
 
-    MSData(){}
+    MSData();
+    ~MSData();
     bool empty() const;
 
     private:

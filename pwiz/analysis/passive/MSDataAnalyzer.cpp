@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "MSDataAnalyzer.hpp"
 
 
@@ -36,7 +38,7 @@ using namespace std;
 //
 
 
-void MSDataAnalyzerContainer::open(const DataInfo& dataInfo) 
+PWIZ_API_DECL void MSDataAnalyzerContainer::open(const DataInfo& dataInfo) 
 {
     for (const_iterator it=begin(); it!=end(); ++it)
     if (it->get())
@@ -44,6 +46,7 @@ void MSDataAnalyzerContainer::open(const DataInfo& dataInfo)
 }
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 MSDataAnalyzerContainer::updateRequested(const DataInfo& dataInfo, 
                                          const SpectrumIdentity& spectrumIdentity) const 
@@ -64,6 +67,7 @@ MSDataAnalyzerContainer::updateRequested(const DataInfo& dataInfo,
 }
 
 
+PWIZ_API_DECL
 void MSDataAnalyzerContainer::update(const DataInfo& dataInfo, 
                                      const Spectrum& spectrum)
 {
@@ -76,7 +80,7 @@ void MSDataAnalyzerContainer::update(const DataInfo& dataInfo,
 }
 
 
-void MSDataAnalyzerContainer::close(const DataInfo& dataInfo)
+PWIZ_API_DECL void MSDataAnalyzerContainer::close(const DataInfo& dataInfo)
 {
     for (const_iterator it=begin(); it!=end(); ++it)
     if (it->get())
@@ -89,11 +93,12 @@ void MSDataAnalyzerContainer::close(const DataInfo& dataInfo)
 //
 
 
-MSDataAnalyzerDriver::MSDataAnalyzerDriver(MSDataAnalyzer& analyzer)
+PWIZ_API_DECL MSDataAnalyzerDriver::MSDataAnalyzerDriver(MSDataAnalyzer& analyzer)
 :   analyzer_(analyzer)
 {}
 
 
+PWIZ_API_DECL
 MSDataAnalyzerDriver::Status 
 MSDataAnalyzerDriver::analyze(const MSDataAnalyzer::DataInfo& dataInfo,
                               ProgressCallback* progressCallback) const

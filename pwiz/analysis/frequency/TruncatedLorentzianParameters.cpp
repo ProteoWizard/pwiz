@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "TruncatedLorentzianParameters.hpp"
 #include <iostream>
 #include <fstream>
@@ -34,12 +36,12 @@ namespace frequency {
 using namespace std;
 
 
-TruncatedLorentzianParameters::TruncatedLorentzianParameters()
+PWIZ_API_DECL TruncatedLorentzianParameters::TruncatedLorentzianParameters()
 :   T(1), tau(1), alpha(1), f0(0)
 {}
 
 
-TruncatedLorentzianParameters::TruncatedLorentzianParameters(const TruncatedLorentzianParameters& that)
+PWIZ_API_DECL TruncatedLorentzianParameters::TruncatedLorentzianParameters(const TruncatedLorentzianParameters& that)
 :   T(that.T), tau(that.tau), alpha(that.alpha), f0(that.f0)
 {}
 
@@ -78,7 +80,7 @@ struct BinaryFormat
 } // namespace
 
 
-TruncatedLorentzianParameters::TruncatedLorentzianParameters(const string& filename)
+PWIZ_API_DECL TruncatedLorentzianParameters::TruncatedLorentzianParameters(const string& filename)
 {
     BinaryFormat good;
     BinaryFormat bf;
@@ -100,7 +102,7 @@ TruncatedLorentzianParameters::TruncatedLorentzianParameters(const string& filen
 }
 
 
-void TruncatedLorentzianParameters::write(const string& filename) const
+PWIZ_API_DECL void TruncatedLorentzianParameters::write(const string& filename) const
 {
     ofstream os(filename.c_str(), ios::binary);
     if (!os)
@@ -117,7 +119,7 @@ void TruncatedLorentzianParameters::write(const string& filename) const
 }
 
 
-void TruncatedLorentzianParameters::writeSamples(std::ostream& os) const
+PWIZ_API_DECL void TruncatedLorentzianParameters::writeSamples(std::ostream& os) const
 {
     os.precision(10);
     double fwhm = sqrt(T*T+tau*tau)/(T*tau);
@@ -131,6 +133,7 @@ void TruncatedLorentzianParameters::writeSamples(std::ostream& os) const
 }
 
 
+PWIZ_API_DECL
 void TruncatedLorentzianParameters::writeSamples(std::ostream& os, 
                                                  double frequencyStart, 
                                                  double frequencyStep, 
@@ -159,6 +162,7 @@ ublas::vector<double> TruncatedLorentzianParameters::parameters(double shift, co
 }
 
 
+PWIZ_API_DECL
 void TruncatedLorentzianParameters::parameters(const ublas::vector<double>& value, 
                                                double shift, 
                                                complex<double> scale) 
@@ -169,7 +173,7 @@ void TruncatedLorentzianParameters::parameters(const ublas::vector<double>& valu
 }
 
 
-std::ostream& operator<<(std::ostream& os, const TruncatedLorentzianParameters& tlp)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const TruncatedLorentzianParameters& tlp)
 {
     os << setprecision(12) 
         << "T=" << tlp.T 
@@ -183,7 +187,7 @@ std::ostream& operator<<(std::ostream& os, const TruncatedLorentzianParameters& 
 }
 
 
-bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u)
+PWIZ_API_DECL bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u)
 {
     return (t.T == u.T &&
             t.tau == u.tau &&
@@ -192,7 +196,7 @@ bool operator==(const TruncatedLorentzianParameters& t, const TruncatedLorentzia
 }
 
 
-bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u)
+PWIZ_API_DECL bool operator!=(const TruncatedLorentzianParameters& t, const TruncatedLorentzianParameters& u)
 {
     return !(t==u);
 }

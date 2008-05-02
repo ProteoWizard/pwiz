@@ -25,6 +25,7 @@
 #define _REGIONANANALYZER_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 
@@ -34,11 +35,11 @@ namespace analysis {
 
 
 /// analyzes a rectangular region of m/z-time space 
-class RegionAnalyzer : public MSDataAnalyzer
+class PWIZ_API_DECL RegionAnalyzer : public MSDataAnalyzer
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         std::pair<double,double> mzRange;
         std::pair<size_t,size_t> indexRange;
@@ -52,7 +53,7 @@ class RegionAnalyzer : public MSDataAnalyzer
 
     RegionAnalyzer(const Config& config, const MSDataCache& cache);
 
-    struct SpectrumStats
+    struct PWIZ_API_DECL SpectrumStats
     {
         double sumIntensity;
         MZIntensityPair max;  // sample point with highest intensity
@@ -63,7 +64,7 @@ class RegionAnalyzer : public MSDataAnalyzer
 
     const std::vector<SpectrumStats>& spectrumStats() const;
 
-    struct Stats
+    struct PWIZ_API_DECL Stats
     {
         size_t nonzeroCount; // # spectra with sumIntensity > 0
         double sum_sumIntensity;

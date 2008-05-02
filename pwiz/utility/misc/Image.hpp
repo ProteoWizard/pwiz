@@ -25,6 +25,7 @@
 #define _IMAGE_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <memory>
 #include <string>
 
@@ -34,12 +35,12 @@ namespace util {
 
 
 /// wrapper class for using 'gd' graphics library
-class Image
+class PWIZ_API_DECL Image
 {
     public:
 
     /// struct for holding rgb values (in [0,255])
-    struct Color
+    struct PWIZ_API_DECL Color
     {
         int red;
         int green;
@@ -52,7 +53,7 @@ class Image
     static Color black() {return Color(0, 0, 0);}
 
     /// struct for holding pixel coordinates
-    struct Point
+    struct PWIZ_API_DECL Point
     {
         int x;
         int y;
@@ -60,8 +61,8 @@ class Image
         Point(int _x=0, int _y=0) :  x(_x), y(_y) {}
     };
 
-    enum Align {Left=0x01, CenterX=0x02, Right=0x04, Top=0x08, CenterY=0x10, Bottom=0x20};
-    enum Size {Tiny, Small, MediumBold, Large, Giant};
+    enum PWIZ_API_DECL Align {Left=0x01, CenterX=0x02, Right=0x04, Top=0x08, CenterY=0x10, Bottom=0x20};
+    enum PWIZ_API_DECL Size {Tiny, Small, MediumBold, Large, Giant};
 
     /// create an instance
     static std::auto_ptr<Image> create(int width, int height);

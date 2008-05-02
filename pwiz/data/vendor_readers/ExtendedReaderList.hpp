@@ -25,6 +25,7 @@
 #define _EXTENDEDREADERLIST_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "data/msdata/DefaultReaderList.hpp"
 
 
@@ -33,7 +34,7 @@ namespace msdata {
 
 
 /// default ReaderList, extended to include vendor readers
-class ExtendedReaderList : public DefaultReaderList
+class PWIZ_API_DECL ExtendedReaderList : public DefaultReaderList
 {
     public:
     ExtendedReaderList();

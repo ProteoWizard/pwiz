@@ -25,6 +25,7 @@
 #define _SPECTRUMBINARYDATA_HPP_ 
 
 
+#include "utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 
@@ -34,11 +35,11 @@ namespace analysis {
 
 
 /// writes table of spectrum metadata to a file
-class SpectrumBinaryData : public MSDataAnalyzer
+class PWIZ_API_DECL SpectrumBinaryData : public MSDataAnalyzer
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         size_t begin;
         size_t end;

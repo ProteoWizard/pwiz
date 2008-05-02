@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define RAWFILE_SOURCE
 
 #include "RawFile.h"
 #ifdef PWIZ_NO_EXCALIBUR_SDK
@@ -34,7 +35,6 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-
 
 using namespace pwiz::raw;
 using namespace XRawfile;

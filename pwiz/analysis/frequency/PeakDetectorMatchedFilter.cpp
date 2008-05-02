@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PeakDetectorMatchedFilter.hpp"
 #include "TruncatedLorentzian.hpp"
 #include "TruncatedLorentzianParameters.hpp"
@@ -49,7 +51,7 @@ using namespace data;
 using namespace data::peakdata;
 
 
-namespace {
+namespace detail {
 
 class TruncatedLorentzianKernel
 {
@@ -80,7 +82,7 @@ class TruncatedLorentzianKernel
 typedef MatchedFilter::KernelTraits<TruncatedLorentzianKernel>::correlation_data_type 
     CorrelationData;
 
-} // namespace
+} // detail
 
 
 class PeakDetectorMatchedFilterImpl : public PeakDetectorMatchedFilter
@@ -102,19 +104,19 @@ class PeakDetectorMatchedFilterImpl : public PeakDetectorMatchedFilter
 
     void analyzePeak(double frequency, 
                      const FrequencyData& fd,
-                     const CorrelationData& correlationData,
+                     const detail::CorrelationData& correlationData,
                      vector<Score>& goodScores) const;
 
     void calculateScore(Score& score,
                         const FrequencyData& fd,
-                        const CorrelationData& correlationData) const;
+                        const detail::CorrelationData& correlationData) const;
 
     void collapseScores(const vector<Score>& scores, vector<Score>& result) const;
 };
 
 
 auto_ptr<PeakDetectorMatchedFilter> 
-PeakDetectorMatchedFilter::create(const Config& config)
+PWIZ_API_DECL PeakDetectorMatchedFilter::create(const Config& config)
 {
     return auto_ptr<PeakDetectorMatchedFilter>(new PeakDetectorMatchedFilterImpl(config));
 }
@@ -235,7 +237,7 @@ MatchedFilter::SampledData<MatchedFilter::DxCD> createSampledData(const Frequenc
 }
 
 
-void findPeaksAux(const CorrelationData& correlationData, 
+void findPeaksAux(const detail::CorrelationData& correlationData, 
                   double minMagnitude, double maxAngle,
                   vector<double>& result)
 {
@@ -247,7 +249,7 @@ void findPeaksAux(const CorrelationData& correlationData,
 
     int index = 1;
 
-    for (CorrelationData::samples_type::const_iterator it=correlationData.samples.begin()+1; 
+    for (detail::CorrelationData::samples_type::const_iterator it=correlationData.samples.begin()+1; 
         it+1!=correlationData.samples.end(); ++it, ++index)
     if (norm(it->dot) >= minNorm &&             // magnitude >= minMagnitude
         it->tan2angle <= maxTan2Angle &&        // angle <= maxAngle,
@@ -304,12 +306,13 @@ void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd,
 
     SampledData<DxCD> sampledData = createSampledData(fd);
 
-    TruncatedLorentzianKernel kernel(fd.observationDuration(), config_.useMagnitudeFilter); 
+    detail::TruncatedLorentzianKernel kernel(fd.observationDuration(), config_.useMagnitudeFilter); 
 
-    CorrelationData correlationData = computeCorrelationData(sampledData,
-                                                             kernel,
-                                                             config_.filterSampleRadius,
-                                                             config_.filterMatchRate);
+    detail::CorrelationData correlationData =
+        computeCorrelationData(sampledData,
+                               kernel,
+                               config_.filterSampleRadius,
+                               config_.filterMatchRate);
 
     // get initial list of peaks 
 
@@ -413,7 +416,7 @@ void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd,
 
 void PeakDetectorMatchedFilterImpl::analyzePeak(double frequency, 
                                                 const FrequencyData& fd,
-                                                const CorrelationData& correlationData,
+                                                const detail::CorrelationData& correlationData,
                                                 vector<Score>& goodScores) const
 {
     const data::CalibrationParameters& cp = fd.calibrationParameters();
@@ -479,7 +482,7 @@ const double neutronMass_ = 1.008665;
 
 void PeakDetectorMatchedFilterImpl::calculateScore(Score& score,
                                                    const FrequencyData& fd,
-                                                   const CorrelationData& correlationData
+                                                   const detail::CorrelationData& correlationData
                                                    ) const 
 {
     // assume: frequency, charge, neutronCount have been set
@@ -614,7 +617,7 @@ void PeakDetectorMatchedFilterImpl::collapseScores(const vector<Score>& scores, 
 }
 
 
-ostream& operator<<(ostream& os, const PeakDetectorMatchedFilter::Score& a)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const PeakDetectorMatchedFilter::Score& a)
 {
     os << a.frequency << " (" << a.charge << ", " << a.neutronCount << ") "
         << a.value << " " << a.monoisotopicFrequency << " " << a.monoisotopicIntensity;

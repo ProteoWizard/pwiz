@@ -20,9 +20,9 @@
 // limitations under the License.
 //
 
+#define RAWFILE_SOURCE
 
 #include "RawFileValues.h"
-
 
 using namespace XRawfile;
 using namespace std;

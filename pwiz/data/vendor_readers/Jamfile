@@ -27,6 +27,10 @@ project
         <toolset>gcc:<define>_LARGEFILE_SOURCE # ramp.h wants this
         <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : usage-requirements
+		<library>../msdata//pwiz_data_msdata
+		<library>../../utility/vendor_api/thermo//pwiz_rawfile
     ;
 
 
@@ -34,7 +38,7 @@ project
 lib pwiz_data_vendor_readers
     :   ExtendedReaderList.cpp 
         [ glob *_Thermo*.cpp ]
-        ../../utility/vendor_api/thermo
+        ../../utility/vendor_api/thermo//pwiz_rawfile
         ../msdata//pwiz_data_msdata
     ;
 

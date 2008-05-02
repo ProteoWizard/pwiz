@@ -25,6 +25,7 @@
 #define _SAMPLEDATUM_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <iostream>
 #include <iomanip>
 #include <sstream>

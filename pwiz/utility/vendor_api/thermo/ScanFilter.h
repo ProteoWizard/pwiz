@@ -26,13 +26,32 @@
 #ifndef _SCANFILTER_H_
 #define _SCANFILTER_H_
 
+#ifdef RAWFILE_DYN_LINK
+#ifdef RAWFILE_SOURCE
+#define RAWFILE_API __declspec(dllexport)
+#else
+#define RAWFILE_API __declspec(dllimport)
+#endif  // RAWFILE_SOURCE
+#endif  // RAWFILE_DYN_LINK
+
+// if RAWFILE_API isn't defined yet define it now:
+#ifndef RAWFILE_API
+#define RAWFILE_API
+#endif
+
+// disable warning "class needs to have dll-interface to be used by clients of class"
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4251)
+#endif
+
 #include <string>
 #include <vector>
 
 namespace pwiz {
 namespace raw {
 
-enum MassAnalyzerType
+enum RAWFILE_API MassAnalyzerType
 {
     MassAnalyzerType_Unknown = -1,
     MassAnalyzerType_ITMS = 0,      // Ion Trap
@@ -59,7 +78,7 @@ inline std::string toString(MassAnalyzerType type)
     }
 }
 
-enum IonizationType
+enum RAWFILE_API IonizationType
 {
     IonizationType_Unknown = -1,
     IonizationType_EI = 0,       // Electron Ionization
@@ -93,7 +112,7 @@ inline std::string toString(IonizationType type)
     }
 }
 
-enum ActivationType
+enum RAWFILE_API ActivationType
 {
     ActivationType_Unknown = -1,
     ActivationType_CID = 0,     // Collision Induced Dissociation
@@ -123,7 +142,7 @@ inline std::string toString(ActivationType type)
     }
 }
 
-enum ScanType
+enum RAWFILE_API ScanType
 {
     ScanType_Unknown = -1,
     ScanType_Full = 0,
@@ -151,7 +170,7 @@ inline std::string toString(ScanType type)
     }
 }
 
-enum PolarityType
+enum RAWFILE_API PolarityType
 {
     PolarityType_Unknown = -1,
     PolarityType_Positive = 0,
@@ -169,7 +188,7 @@ inline std::string toString(PolarityType type)
     }
 }
 
-enum DataPointType
+enum RAWFILE_API DataPointType
 {
 	DataPointType_Unknown = -1,
 	DataPointType_Centroid = 0,
@@ -177,7 +196,7 @@ enum DataPointType
     DataPointType_Count
 };
 
-enum AccurateMassType
+enum RAWFILE_API AccurateMassType
 {
 	AccurateMass_Unknown = -1,
 	AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
@@ -186,14 +205,14 @@ enum AccurateMassType
 	AccurateMass_ActiveWithExternalCalibration // accurate mass with external calibration
 };
 
-enum TriBool
+enum RAWFILE_API TriBool
 {
 	TriBool_Unknown = -1,
 	TriBool_False = 0,
 	TriBool_True = 1
 };
 
-class ScanFilter
+class RAWFILE_API ScanFilter
 {
     public:
 
@@ -243,5 +262,9 @@ class ScanFilter
 
 } // namespace raw
 } // namespace pwiz
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif // _SCANFILTER_H_

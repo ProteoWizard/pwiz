@@ -24,8 +24,15 @@
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing # warning: dereferencing type-punned pointer will break strict-aliasing rules
-	: usage-requirements
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : usage-requirements
 	    <library>../peptideid//pwiz_analysis_peptideid
+	    <library>../../utility/misc//pwiz_utility_misc
+	    <library>../../utility/math//pwiz_utility_math
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../../data/vendor_readers//pwiz_data_vendor_readers
+        <library>../..//boost_program_options
+        <library>../..//boost_filesystem
     ;
 
 
@@ -42,10 +49,11 @@ lib pwiz_analysis_passive
         RegionTIC.cpp
         RegionSIC.cpp
         Pseudo2DGel.cpp
-	    ../peptideid//pwiz_analysis_peptideid
-        ../../utility/math
+        ../peptideid//pwiz_analysis_peptideid
+        ../../utility/misc//pwiz_utility_misc
+        ../../utility/math//pwiz_utility_math
         ../../data/msdata//pwiz_data_msdata
-        ../../data/vendor_readers
+        ../../data/vendor_readers//pwiz_data_vendor_readers
         ../..//boost_program_options
         ../..//boost_filesystem
     ;
@@ -59,6 +67,6 @@ lib pwiz_analysis_passive
 unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
 unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ;
 unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
-unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
+unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_passive ;
 unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
 

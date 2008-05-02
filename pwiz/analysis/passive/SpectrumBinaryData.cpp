@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "SpectrumBinaryData.hpp"
 #include "data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
@@ -41,7 +43,7 @@ using boost::bad_lexical_cast;
 namespace bfs = boost::filesystem;
 
 
-SpectrumBinaryData::Config::Config(const std::string& args)
+PWIZ_API_DECL SpectrumBinaryData::Config::Config(const std::string& args)
 :   begin(0), end(0), 
     interpretAsScanNumbers(false), 
     precision(4)
@@ -78,11 +80,12 @@ SpectrumBinaryData::Config::Config(const std::string& args)
 }
 
 
-SpectrumBinaryData::SpectrumBinaryData(const MSDataCache& cache, const Config& config)
+PWIZ_API_DECL SpectrumBinaryData::SpectrumBinaryData(const MSDataCache& cache, const Config& config)
 :   cache_(cache), config_(config)
 {}
 
 
+PWIZ_API_DECL
 MSDataAnalyzer::UpdateRequest 
 SpectrumBinaryData::updateRequested(const DataInfo& dataInfo, 
                                     const SpectrumIdentity& spectrumIdentity) const 
@@ -110,6 +113,7 @@ SpectrumBinaryData::updateRequested(const DataInfo& dataInfo,
 }
 
 
+PWIZ_API_DECL
 void SpectrumBinaryData::update(const DataInfo& dataInfo, 
                                 const Spectrum& spectrum)
 {

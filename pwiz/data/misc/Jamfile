@@ -26,15 +26,23 @@ project
         # hacks to allow building with <warnings>all with MSVC and boost
         <toolset>msvc:<cxxflags>/wd4267 # warning: conversion from 'size_t' to 'int' 
                                         # (boost/serialization/collections_save_imp.hpp)
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : usage-requirements
+		<library>../../utility/misc//pwiz_utility_misc
+		<library>../..//boost_serialization
+		<library>../..//fftw3
 ;
 
 
 lib pwiz_data_misc 
     : TransientData.cpp FrequencyData.cpp
       PeakData.cpp
-      ../../utility/misc
+      ../../utility/misc//pwiz_utility_misc
       ../..//boost_serialization
       ../..//fftw3
+    :   <library>../../utility/misc//pwiz_utility_misc
+		<library>../..//boost_serialization
+		<library>../..//fftw3
     ;
 
 unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 

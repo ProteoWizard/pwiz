@@ -24,7 +24,7 @@
 #ifndef _REFERENCES_HPP_
 #define _REFERENCES_HPP_
 
-
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 
 
@@ -36,21 +36,21 @@ namespace msdata {
 namespace References {
 
 
-void resolve(ParamContainer& paramContainer, const MSData& msd);
-void resolve(FileDescription& fileDescription, const MSData& msd);
-void resolve(ComponentList& componentList, const MSData& msd);
-void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd);
-void resolve(DataProcessing& dataProcesssing, const MSData& msd);
-void resolve(AcquisitionSettings& dataProcesssing, const MSData& msd);
-void resolve(Acquisition& acquisition, const MSData& msd);
-void resolve(AcquisitionList& acquisitionList, const MSData& msd);
-void resolve(Precursor& precursor, const MSData& msd);
-void resolve(Scan& scan, const MSData& msd);
-void resolve(SpectrumDescription& spectrumDescription, const MSData& msd);
-void resolve(BinaryDataArray& binaryDataArray, const MSData& msd);
-void resolve(Spectrum& spectrum, const MSData& msd);
-void resolve(Chromatogram& chromatogram, const MSData& msd);
-void resolve(Run& run, const MSData& msd);
+PWIZ_API_DECL void resolve(ParamContainer& paramContainer, const MSData& msd);
+PWIZ_API_DECL void resolve(FileDescription& fileDescription, const MSData& msd);
+PWIZ_API_DECL void resolve(ComponentList& componentList, const MSData& msd);
+PWIZ_API_DECL void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd);
+PWIZ_API_DECL void resolve(DataProcessing& dataProcesssing, const MSData& msd);
+PWIZ_API_DECL void resolve(AcquisitionSettings& dataProcesssing, const MSData& msd);
+PWIZ_API_DECL void resolve(Acquisition& acquisition, const MSData& msd);
+PWIZ_API_DECL void resolve(AcquisitionList& acquisitionList, const MSData& msd);
+PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd);
+PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd);
+PWIZ_API_DECL void resolve(SpectrumDescription& spectrumDescription, const MSData& msd);
+PWIZ_API_DECL void resolve(BinaryDataArray& binaryDataArray, const MSData& msd);
+PWIZ_API_DECL void resolve(Spectrum& spectrum, const MSData& msd);
+PWIZ_API_DECL void resolve(Chromatogram& chromatogram, const MSData& msd);
+PWIZ_API_DECL void resolve(Run& run, const MSData& msd);
 
 
 ///
@@ -62,7 +62,7 @@ void resolve(Run& run, const MSData& msd);
 /// File-backed SpectrumList implementations using lazy evaluation of a Spectrum need 
 /// to call resolve(spectrum, msd) before returning it to the client.
 ///
-void resolve(MSData& msd);
+PWIZ_API_DECL void resolve(MSData& msd);
 
 
 } // namespace References

@@ -25,6 +25,7 @@
 #define _TEXTWRITER_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
@@ -36,7 +37,7 @@ namespace pwiz {
 namespace msdata {
 
 
-class TextWriter
+class PWIZ_API_DECL TextWriter
 {
     public:
 
