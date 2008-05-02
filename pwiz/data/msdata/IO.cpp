@@ -2323,9 +2323,9 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            vector<boost::iostreams::stream_offset>* chromatogramPositions)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.9"));
+    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.10"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9.xsd"));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd"));
     attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id));
     attributes.push_back(make_pair("version", msd.version));

@@ -18,6 +18,13 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+
+string scanNumberToSpectrumID(long scanNumber)
+{
+    return "S" + lexical_cast<string>(scanNumber); 
+}
+
+
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(rawfile->value(NumSpectra)),
@@ -196,7 +203,8 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     addSpectrumToChromatogramList(*scanInfo);
 
     result->index = index;
-    result->id = result->nativeID = lexical_cast<string>(scanNumber);
+    result->id = scanNumberToSpectrumID(scanNumber);
+    result->nativeID = lexical_cast<string>(scanNumber);
 
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;
@@ -289,7 +297,9 @@ void SpectrumList_Thermo::createIndex()
     {
         SpectrumIdentity& si = index_[i];
         si.index = i;
-        si.id = si.nativeID = lexical_cast<string>(i+1);
+        long scanNumber = (long)i+1;
+        si.id = scanNumberToSpectrumID(scanNumber); 
+        si.nativeID = lexical_cast<string>(scanNumber);
     }
 }
 

@@ -23,6 +23,7 @@
 
 #include "Reader_Thermo.hpp"
 
+
 namespace {
 // helper function used by both forms (real and stubbed) of Reader_Thermo
 bool _hasRAWHeader(const std::string& head)
@@ -55,6 +56,7 @@ bool _hasRAWHeader(const std::string& head)
 #include "SpectrumList_Thermo.hpp"
 #include "ChromatogramList_Thermo.hpp"
 #include <iostream>
+#include <iomanip>
 #include <stdexcept>
 
 
@@ -115,6 +117,36 @@ void fillInstrumentComponentMetadata(RawFile& rawfile, MSData& msd, InstrumentCo
     // TODO: verify that all Thermo instruments use EM
     instrumentConfiguration->componentList.detector.cvParams.push_back(CVParam(MS_electron_multiplier));
 }
+
+
+string creationDateToStartTimeStamp(string creationDate)
+{
+	// input format: "6/27/2007 15:23:45"
+	// output format: "2007-06-27T15:23:45.00035"
+
+	int month, day, year, hour, minute, second;
+	char separator;
+
+	istringstream iss(creationDate);
+	iss >> month >> separator
+	    >> day >> separator
+		>> year
+		>> hour >> separator
+		>> minute >> separator
+		>> second;
+
+	ostringstream result;
+	result << year << "-"
+           << setfill('0')
+	       << setw(2) << month << "-"
+	       << setw(2) << day << "T"
+	       << setw(2) << hour << ":"
+	       << setw(2) << minute << ":"
+	       << setw(2) << second;
+
+	return result.str();
+}
+
 
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
@@ -178,7 +210,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.instrumentConfigurationPtrs.push_back(instrumentConfiguration);
 
     msd.run.id = filename;
-    //msd.run.startTimeStamp = rawfile.getCreationDate(); // TODO format: 2007-06-27T15:23:45.00035
+    msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
     msd.run.instrumentConfigurationPtr = instrumentConfiguration;
 }
 
