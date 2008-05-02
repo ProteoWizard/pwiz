@@ -218,6 +218,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "#include \"" << basename << ".hpp\"\n"
        << "#include \"boost/lexical_cast.hpp\"\n"
        << "#include <map>\n"
+       << "#include <algorithm>\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
