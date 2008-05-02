@@ -148,6 +148,22 @@ string creationDateToStartTimeStamp(string creationDate)
 }
 
 
+
+
+inline char idref_allowed(char c)
+{
+    return isalnum(c) ? c : '_';
+}
+
+
+string stringToIDREF(const string& s)
+{
+    string result = s;
+    transform(result.begin(), result.end(), result.begin(), idref_allowed);
+    return result;
+}
+
+
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
     msd.cvs.resize(1);
@@ -169,6 +185,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     sourceFile->cvParams.push_back(CVParam(MS_SHA_1, sha1));
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
+    msd.id = stringToIDREF(p.leaf());
+
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->softwareParam = MS_Xcalibur;
@@ -176,13 +194,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     SoftwarePtr softwarePwiz(new Software);
-    softwarePwiz->id = "pwiz::msdata::Reader_Thermo";
+    softwarePwiz->id = "pwiz_Reader_Thermo";
     softwarePwiz->softwareParam = MS_pwiz;
     softwarePwiz->softwareParamVersion = "1.0"; 
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);
-    dpPwiz->id = "pwiz::msdata::Reader_Thermo conversion";
+    dpPwiz->id = "pwiz_Reader_Thermo_conversion";
     dpPwiz->softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
@@ -196,7 +214,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     if (cvidModel != CVID_Unknown) 
     {
         instrumentConfiguration->cvParams.push_back(cvidModel);
-        instrumentConfiguration->id = cvinfo(cvidModel).name;
+        instrumentConfiguration->id = stringToIDREF(cvinfo(cvidModel).name);
     }
     else
     {
@@ -209,7 +227,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     fillInstrumentComponentMetadata(rawfile, msd, instrumentConfiguration);
     msd.instrumentConfigurationPtrs.push_back(instrumentConfiguration);
 
-    msd.run.id = filename;
+    msd.run.id = stringToIDREF(filename);
     msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
     msd.run.instrumentConfigurationPtr = instrumentConfiguration;
 }

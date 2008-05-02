@@ -246,6 +246,8 @@ SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) cons
     sd.cvParams.push_back(CVParam(MS_base_peak_intensity, scanInfo->basePeakIntensity()));
     sd.cvParams.push_back(CVParam(MS_total_ion_current, scanInfo->totalIonCurrent()));
 
+    scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass())); // TODO: check that these values are the ones we want
+
     for (long i=0, precursorCount=scanInfo->parentCount(); i<precursorCount; i++)
     {
         // Note: we report what RawFile gives us, which comes from the filter string;
