@@ -22,6 +22,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
@@ -42,6 +43,7 @@ struct Config
     string extension;
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
+    string contactFilename;
 
     Config()
     :   outputPath(".")
@@ -65,6 +67,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "format: " << config.writeConfig << endl;
     os << "outputPath: " << config.outputPath << endl;
     os << "extension: " << config.extension << endl; 
+    os << "contactFilename: " << config.contactFilename << endl;
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
@@ -130,6 +133,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
 			": do not write index")
+        ("contact,c",
+            po::value<string>(&config.contactFilename),
+			": filename for contact info")
         ;
 
     // append options description to usage string
@@ -230,10 +236,28 @@ Config parseCommandLine(int argc, const char* argv[])
 }
 
 
+void addContactInfo(MSData& msd, const string& contactFilename)
+{
+    ifstream is(contactFilename.c_str());
+    if (!is)
+    {
+        cerr << "unable to read contact info: " << contactFilename << endl; 
+        return;
+    }
+
+    Contact contact;
+    IO::read(is, contact);
+    msd.fileDescription.contacts.push_back(contact);
+}
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     cout << "processing file: " << filename << endl;
     MSDataFile msd(filename, &readers);
+
+    if (!config.contactFilename.empty())
+        addContactInfo(msd, config.contactFilename);
  
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;
