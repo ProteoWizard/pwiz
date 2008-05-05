@@ -23,6 +23,7 @@
 
 #include "IPIFASTADatabase.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -78,7 +79,7 @@ void test()
     unit_assert(it->sequence.find("PTRTVD") == 120);
     if (os_) *os_ << *it << endl;
 
-    system(("rm " + filename).c_str());
+    boost::filesystem::remove(filename);
 }
 
 

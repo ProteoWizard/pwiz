@@ -24,6 +24,7 @@
 #include "SHA1_ostream.hpp"
 #include "unit.hpp"
 #include "boost/iostreams/flush.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -85,7 +86,8 @@ void testFile()
 
     unit_assert(hashStream == hashFile);
     unit_assert(hashStream == "a159e6cde4e50e51713700d1fe4d0ce553eace87");
-    system(("rm " + filename).c_str());
+    ofs.close();
+    boost::filesystem::remove(filename);
 }
 
 

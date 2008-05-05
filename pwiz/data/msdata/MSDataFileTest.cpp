@@ -25,6 +25,7 @@
 #include "Diff.hpp"
 #include "examples.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -45,46 +46,41 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
 {
     if (os_) *os_ << "validateWriteRead()\n  " << writeConfig << endl; 
 
-    // create MSData object in memory
-
-    MSData tiny;
-    examples::initializeTiny(tiny);
-
-    // write to file #1 (static)
-
     string filename1 = filenameBase_ + ".1";
-    MSDataFile::write(tiny, filename1, writeConfig);
-
-    // read back into an MSDataFile object
-
-    MSDataFile msd1(filename1);
-
-    // compare
-
-    Diff<MSData> diff(tiny, msd1, diffConfig);
-    if (diff && os_) *os_ << diff << endl;
-    unit_assert(!diff);
-
-    // write to file #2 (member)
-
     string filename2 = filenameBase_ + ".2";
-    msd1.write(filename2, writeConfig);
 
-    // read back into another MSDataFile object
+    {
+        // create MSData object in memory
+        MSData tiny;
+        examples::initializeTiny(tiny);
 
-    MSDataFile msd2(filename2);
+        // write to file #1 (static)
+        MSDataFile::write(tiny, filename1, writeConfig);
 
-    // compare
+        // read back into an MSDataFile object
+        MSDataFile msd1(filename1);
 
-    diff(tiny, msd2);
-    if (diff && os_) *os_ << diff << endl;
-    unit_assert(!diff);
+        // compare
+        Diff<MSData> diff(tiny, msd1, diffConfig);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+
+        // write to file #2 (member)
+        msd1.write(filename2, writeConfig);
+
+        // read back into another MSDataFile object
+        MSDataFile msd2(filename2);
+
+        // compare
+        diff(tiny, msd2);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+    }
 
     // remove temp files
-
-    system(("rm " + filename1 + " " + filename2).c_str());
+    boost::filesystem::remove(filename1);
+    boost::filesystem::remove(filename2);
 }
-
 
 void test()
 {
@@ -189,7 +185,7 @@ void testReader()
     unit_assert(reader.count == 2);
 
     // remove temp file
-    system(("rm " + filename).c_str());
+    boost::filesystem::remove(filename);
 }
 
 
@@ -202,6 +198,12 @@ int main(int argc, char* argv[])
         //demo();
         testReader();
         return 0;
+    }
+    catch (boost::filesystem::filesystem_path_error& e)
+    {
+        string target = e.what();
+        boost::filesystem::system_message(e.system_error(), target);
+        cerr << target << endl;
     }
     catch (exception& e)
     {

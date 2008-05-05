@@ -25,6 +25,7 @@
 #include "FrequencyDataTestData.hpp"
 #include "data/misc/CalibrationParameters.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iomanip>
 #include <iterator>
@@ -204,9 +205,8 @@ void testNoiseFloor()
 
 void cleanTests()
 {
-    if (os_) *os_ << "Deleting FrequencyDataTest.output*.txt\n"; 
-    string command = "rm FrequencyDataTest.output*.txt FrequencyDataTest.output*.cfd";
-    system(command.c_str());
+    if (os_) *os_ << "Deleting FrequencyDataTest.output*.txt\n";
+    boost::filesystem::remove("FrequencyDataTest.output*.*");
 }
 
 
@@ -223,7 +223,7 @@ void testNoiseFloorVarianceCalculation()
     temp.close();
 
     FrequencyData fd(filename);
-    system(("rm " + filename).c_str()); 
+    boost::filesystem::remove(filename);
 
     double result = fd.cutoffNoiseFloor();
     if (os_) *os_ << "result: " << result << endl;

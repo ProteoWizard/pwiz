@@ -23,6 +23,7 @@
 
 #include "SHA1Calculator.hpp"
 #include "unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -80,7 +81,7 @@ void testFile()
     if (os_) *os_ << "hash file: " << hash << endl;
     unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
 
-    system(("rm " + string(filename)).c_str());
+    boost::filesystem::remove(filename);
 }
 
 

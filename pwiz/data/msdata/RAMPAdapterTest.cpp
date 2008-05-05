@@ -25,6 +25,7 @@
 #include "MSDataFile.hpp"
 #include "examples.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iterator>
 
@@ -234,7 +235,7 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         string filename = writeTempFile();
         test(filename);
-        system(("rm " + filename).c_str());
+       boost::filesystem::remove(filename);
         return 0;
     }
     catch (exception& e)

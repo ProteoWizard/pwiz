@@ -23,6 +23,7 @@
 
 #include "PeptideDatabase.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 
 
@@ -83,18 +84,20 @@ void test_basic()
 
     // test i/o
     string filename = "PeptideDatabaseTest.output.pdb";
-    pdb->write(filename);
-    auto_ptr<const PeptideDatabase> pdb2 = PeptideDatabase::create(filename);
-    unit_assert(pdb2->size() == pdb->size());
-  
-    for (int i=0; i<pdb->size(); ++i)
     {
-        const PeptideDatabaseRecord* record1 = pdb->records()+i;
-        const PeptideDatabaseRecord* record2 = pdb2->records()+i;
-        compareRecords(pdb.get(), record1, pdb2.get(), record2);
+        pdb->write(filename);
+        auto_ptr<const PeptideDatabase> pdb2 = PeptideDatabase::create(filename);
+        unit_assert(pdb2->size() == pdb->size());
+      
+        for (int i=0; i<pdb->size(); ++i)
+        {
+            const PeptideDatabaseRecord* record1 = pdb->records()+i;
+            const PeptideDatabaseRecord* record2 = pdb2->records()+i;
+            compareRecords(pdb.get(), record1, pdb2.get(), record2);
+        }
     }
-    
-    system(("rm " + filename).c_str());
+
+    boost::filesystem::remove(filename);
 }
         
         

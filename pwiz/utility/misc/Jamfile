@@ -45,8 +45,8 @@ lib pwiz_utility_misc
 unit-test endian_test : endian_test.cpp ;
 unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;
 unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
-unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ; 
-unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ; 
+unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ../..//boost_filesystem ; 
+unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ../..//boost_filesystem ; 
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;
 install bin : sha1calc : <location>. ;

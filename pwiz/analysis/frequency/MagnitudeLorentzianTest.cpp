@@ -25,6 +25,7 @@
 #include "MagnitudeLorentzianTestData.hpp"
 #include "data/misc/FrequencyData.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -104,7 +105,7 @@ void testData()
     temp.close();
 
     FrequencyData fd(filename);
-    system(("rm " + filename).c_str()); 
+    boost::filesystem::remove(filename); 
 
     FrequencyData::const_iterator max = fd.max();
     if (os_) *os_ << "max: (" << max->x << ", " << abs(max->y) << ")\n";

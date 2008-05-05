@@ -46,8 +46,8 @@ lib pwiz_data_misc
     ;
 
 unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 
-unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc ;
-unit-test PeakDataTest : PeakDataTest.cpp pwiz_data_misc ;
+unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc ../..//boost_filesystem ;
+unit-test PeakDataTest : PeakDataTest.cpp pwiz_data_misc ../..//boost_filesystem ;
 unit-test SampleDatumTest : SampleDatumTest.cpp ;
-unit-test TransientDataTest : TransientDataTest.cpp pwiz_data_misc ;
+unit-test TransientDataTest : TransientDataTest.cpp pwiz_data_misc ../..//boost_filesystem ;
 

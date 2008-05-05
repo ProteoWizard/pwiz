@@ -24,6 +24,7 @@
 #include "TransientData.hpp"
 #include "FrequencyData.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -100,8 +101,8 @@ void test()
     TransientData tdText(filenameText_);
     testBasic(tdText);
 
-    system(("rm " + filename_).c_str());
-    system(("rm " + filenameText_).c_str());
+    boost::filesystem::remove(filename_);
+    boost::filesystem::remove(filenameText_);
 }
 
 

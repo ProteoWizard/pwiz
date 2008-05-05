@@ -23,6 +23,7 @@
 
 #include "TruncatedLorentzianParameters.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 
 
@@ -78,9 +79,7 @@ void testIO()
     unit_assert(tlp2.f0 == tlp.f0);
     unit_assert(tlp2.alpha == tlp.alpha);
 
-    ostringstream command;
-    command << "rm " << filename;
-    system(command.str().c_str());
+    boost::filesystem::remove(filename);
 }
 
 

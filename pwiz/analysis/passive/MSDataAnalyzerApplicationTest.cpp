@@ -24,6 +24,7 @@
 #include "MSDataAnalyzerApplication.hpp"
 #include "data/msdata/MSDataFile.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iterator>
 
@@ -107,7 +108,7 @@ void test()
 
     unit_assert(dummy.filenames.size() == 1);
 
-    system(("rm " + string(tempFilename_)).c_str());
+    boost::filesystem::remove(tempFilename_);
 }
 
 

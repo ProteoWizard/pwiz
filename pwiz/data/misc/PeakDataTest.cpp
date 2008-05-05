@@ -23,6 +23,7 @@
 
 #include "PeakData.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -81,8 +82,9 @@ void test()
     peakdata::PeakData pd2;
     is >> pd2;
     if (os_) *os_ << "pd2:\n" << pd2 << endl; 
+    is.close();
 
-    system((string("rm ") + filename).c_str());
+    boost::filesystem::remove(filename);
 
     // verify xml is the same before and after io
 

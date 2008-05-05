@@ -23,6 +23,7 @@
 
 #include "obo.hpp"
 #include "utility/misc/unit.hpp"
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -144,7 +145,7 @@ void test()
     unit_assert(term->id == 0);
     unit_assert(term->def == "description");
  
-    system(("rm " + filename).c_str()); 
+    boost::filesystem::remove(filename); 
 }
 
 
