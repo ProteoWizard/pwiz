@@ -464,7 +464,9 @@ PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPt
 }
 
 
-PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr)
+PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(
+    const InstrumentConfigurationPtr& instrumentConfigurationPtr,
+    const ParamGroupPtr& pgActivation)
 {
     SpectrumPtr spectrum(new Spectrum);
     setSpectrumData(*spectrum, data_5pep_ms2_, data_5pep_ms2_size_);
@@ -493,8 +495,7 @@ PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationP
     precursor.selectedIons[0].set(MS_m_z, 810.79);
     precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
-    precursor.activation.set(MS_collision_induced_dissociation);
-    precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
+    precursor.activation.paramGroupPtrs.push_back(pgActivation);
     //precursor.isolationWindow.set(MS_m_z, 810.80);
     precursor.isolationWindow.userParams.push_back(UserParam("isolation center m/z", "810.8"));
     precursor.isolationWindow.userParams.push_back(UserParam("isolation half width", "2.0"));
@@ -563,7 +564,15 @@ PWIZ_API_DECL void initializeTiny2(MSData& msd)
     pgInstrument->id = "CommonInstrumentParams";
     pgInstrument->set(MS_LTQ_FT);
     pgInstrument->set(MS_instrument_serial_number,"23433");
+    pgInstrument->set(MS_customization ,"none");
     msd.paramGroupPtrs.push_back(pgInstrument);
+
+    ParamGroupPtr pgActivation(new ParamGroup);
+    pgActivation->id = "CommonActivationParams";
+    pgActivation->set(MS_collision_induced_dissociation);
+    pgActivation->set(MS_collision_energy, 35.00, MS_electron_volt);
+    pgActivation->set(MS_collision_gas, "nitrogen"); 
+    msd.paramGroupPtrs.push_back(pgActivation);
 
     // sampleList
 
@@ -578,8 +587,10 @@ PWIZ_API_DECL void initializeTiny2(MSData& msd)
     icFT->paramGroupPtrs.push_back(pgInstrument);
     icFT->id = "LTQFT";
     Source& source = icFT->componentList.source;
+
     source.order = 1;
     source.set(MS_ESI);
+    source.set(MS_source_potential, "3.86", UO_kilovolt); 
     Analyzer& analyzer = icFT->componentList.analyzer;
     analyzer.order = 2;
     analyzer.set(MS_FT_ICR);
@@ -685,7 +696,7 @@ PWIZ_API_DECL void initializeTiny2(MSData& msd)
 
     spectrumList->spectra.push_back(createSpectrum_5pep_FT(icFT));
     spectrumList->spectra.push_back(createSpectrum_5pep_IT(icIT));
-    spectrumList->spectra.push_back(createSpectrum_5pep_ms2(icIT));
+    spectrumList->spectra.push_back(createSpectrum_5pep_ms2(icIT, pgActivation));
 
     for (size_t i=0; i<spectrumList->size(); i++)
     {

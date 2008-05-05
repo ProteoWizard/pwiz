@@ -179,6 +179,23 @@ PWIZ_API_DECL ChromatogramListPtr SpectrumList_Thermo::Chromatograms() const
     return chromatograms_;
 }
 
+
+InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType)
+{
+    if (msd.instrumentConfigurationPtrs.empty())
+        throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()] No instruments defined.");
+
+    for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
+         end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
+        if ((*it)->componentList.analyzer.hasCVParam(massAnalyzerType))
+            return *it;
+
+    throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()]"\
+                        "Instrument configuration not found for mass analyzer type: " +
+                        cvinfo(massAnalyzerType).name);
+}
+
+
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const 
 { 
     if (index>size_)
@@ -212,9 +229,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;
 
-    if (msd_.instrumentConfigurationPtrs.empty())
-        throw runtime_error("[SpectrumList_Thermo::spectrum()] No instruments defined.");
-    scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs[0];
+    scan.instrumentConfigurationPtr = 
+        findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()).cvid);
 
     string filterString = scanInfo->filter();
 
@@ -223,10 +239,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     string scanEvent = scanInfo->trailerExtraValue("Scan Event:");
     scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, scanEvent));
 
-    /* currently non-standard for mzML
-    if (scanInfo->massAnalyzerType_ > MassAnalyzerType_Unknown)
-        scan.cvParams.push_back(translate(scanInfo->massAnalyzerType_));*/
-     
     result->set(MS_ms_level, scanInfo->msLevel());
 
     ScanType scanType = scanInfo->scanType();
