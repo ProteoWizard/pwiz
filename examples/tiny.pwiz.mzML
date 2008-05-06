@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9.xsd" accession="test accession" id="testid" version="test version">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd" accession="test accession" id="testid" version="test version">
     <cvList count="1">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
     </cvList>
     <fileDescription>
       <fileContent>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <userParam name="number of cats" value="4" type=""/>
       </fileContent>
-      <sourceFileList count="1">
+      <sourceFileList count="2">
         <sourceFile id="sf1" name="tiny1.RAW" location="file:///F:/data/Exp01">
           <cvParam cvRef="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
           <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
+        </sourceFile>
+        <sourceFile id="sf_parameters" name="parameters.par" location="file:///C:/settings/">
         </sourceFile>
       </sourceFileList>
       <contact>
@@ -81,10 +82,9 @@
     </dataProcessingList>
     <acquisitionSettingsList count="1">
       <acquisitionSettings id="as1" instrumentConfigurationRef="LCQDeca">
-        <sourceFileList count="1">
-          <sourceFile id="SF2" name="parameters.par" location="file:///C:/settings/">
-          </sourceFile>
-        </sourceFileList>
+        <sourceFileRefList count="1">
+          <sourceFileRef ref="sf_parameters"/>
+        </sourceFileRefList>
         <targetList count="2">
           <target>
             <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="1000"/>
@@ -232,14 +232,14 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="S19" nativeID="19">5484</offset>
-      <offset idRef="S20" nativeID="20">8472</offset>
+      <offset idRef="S19" nativeID="19">5488</offset>
+      <offset idRef="S20" nativeID="20">8476</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic" nativeID="tic native">12310</offset>
-      <offset idRef="sic" nativeID="sic native">13781</offset>
+      <offset idRef="tic" nativeID="tic native">12314</offset>
+      <offset idRef="sic" nativeID="sic native">13785</offset>
     </index>
   </indexList>
-  <indexListOffset>15185</indexListOffset>
-  <fileChecksum>734b96b1f5d99501a8cc101839e4c01a66c5cbe2</fileChecksum>
+  <indexListOffset>15189</indexListOffset>
+  <fileChecksum>2eee55bac5c4bc979d6df914cac12b812d420f5d</fileChecksum>
 </indexedmzML>

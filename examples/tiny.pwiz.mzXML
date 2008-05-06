@@ -3,10 +3,10 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd">
   <msRun scanCount="2" startTime="PT353.43S" endTime="PT359.43S">
-    <parentFile fileName="file://F:/data/Exp01/tiny1.RAW"
+    <parentFile fileName="file:///F:/data/Exp01/tiny1.RAW"
                 fileType="RAWData"
                 fileSha1="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
-    <msInstrument id="LCQ Deca">
+    <msInstrument id="LCQDeca">
       <msManufacturer category="msManufacturer" value="Thermo Finnigan"/>
       <msModel category="msModel" value="LCQ Deca"/>
       <msIonisation category="msIonisation" value="nanoelectrospray"/>
@@ -30,7 +30,7 @@
           basePeakMz="445.347"
           basePeakIntensity="120053"
           totIonCurrent="16675500"
-          msInstrumentID="LCQ Deca">
+          msInstrumentID="LCQDeca">
       <peaks precision="64"
              byteOrder="network"
              pairOrder="m/z-int">AAAAAAAAAABALgAAAAAAAD/wAAAAAAAAQCwAAAAAAABAAAAAAAAAAEAqAAAAAAAAQAgAAAAAAABAKAAAAAAAAEAQAAAAAAAAQCYAAAAAAABAFAAAAAAAAEAkAAAAAAAAQBgAAAAAAABAIgAAAAAAAEAcAAAAAAAAQCAAAAAAAABAIAAAAAAAAEAcAAAAAAAAQCIAAAAAAABAGAAAAAAAAEAkAAAAAAAAQBQAAAAAAABAJgAAAAAAAEAQAAAAAAAAQCgAAAAAAABACAAAAAAAAEAqAAAAAAAAQAAAAAAAAABALAAAAAAAAD/wAAAAAAAA</peaks>
@@ -48,7 +48,7 @@
           basePeakMz="456.347"
           basePeakIntensity="23433"
           totIonCurrent="16675500"
-          msInstrumentID="LCQ Deca">
+          msInstrumentID="LCQDeca">
       <precursorMz precursorScanNum="19" precursorIntensity="120053" precursorCharge="2">445.34</precursorMz>
       <peaks precision="64"
              byteOrder="network"
@@ -57,8 +57,8 @@
   </msRun>
   <index name="scan">
     <offset id="19">1252</offset>
-    <offset id="20">2055</offset>
+    <offset id="20">2054</offset>
   </index>
-  <indexOffset>2903</indexOffset>
-  <sha1>327dbd41aac221774ea34bbf2262e716efce3cd7</sha1>
+  <indexOffset>2901</indexOffset>
+  <sha1>daad2aaae24b3fd4991b6aeb9406005d6080aca4</sha1>
 </mzXML>

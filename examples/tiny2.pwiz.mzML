@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.9 mzML0.99.9.xsd" accession="test accession" id="testid" version="test version">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd" accession="test accession" id="testid" version="test version">
     <cvList count="1">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
     </cvList>
     <fileDescription>
       <fileContent>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <userParam name="number of cats" value="4" type=""/>
       </fileContent>
-      <sourceFileList count="1">
+      <sourceFileList count="2">
         <sourceFile id="sf1" name="tiny1.RAW" location="file:///F:/data/Exp01">
           <cvParam cvRef="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
           <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
+        </sourceFile>
+        <sourceFile id="sf_parameters" name="parameters.par" location="file:///C:/settings/">
         </sourceFile>
       </sourceFileList>
       <contact>
@@ -22,7 +23,7 @@
         <cvParam cvRef="MS" accession="MS:1000589" name="contact email" value="wpennington@higglesworth.edu"/>
       </contact>
     </fileDescription>
-    <referenceableParamGroupList count="3">
+    <referenceableParamGroupList count="4">
       <referenceableParamGroup id="CommonMS1SpectrumParams">
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000498" name="full scan" value=""/>
@@ -34,6 +35,12 @@
       <referenceableParamGroup id="CommonInstrumentParams">
         <cvParam cvRef="MS" accession="MS:1000448" name="LTQ FT" value=""/>
         <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="23433"/>
+        <cvParam cvRef="MS" accession="MS:1000032" name="customization" value="none"/>
+      </referenceableParamGroup>
+      <referenceableParamGroup id="CommonActivationParams">
+        <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="35" unitAccession="MS:1000137" unitName="electron volt"/>
+        <cvParam cvRef="MS" accession="MS:1000419" name="collision gas" value="nitrogen"/>
       </referenceableParamGroup>
     </referenceableParamGroupList>
     <sampleList count="1">
@@ -46,6 +53,7 @@
         <componentList count="3">
           <source order="1">
             <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000486" name="source potential" value="3.86" unitAccession="UO:0000248" unitName="kilovolt"/>
           </source>
           <analyzer order="2">
             <cvParam cvRef="MS" accession="MS:1000079" name="fourier transform ion cyclotron resonance mass spectrometer" value=""/>
@@ -86,6 +94,11 @@
           <cvParam cvRef="MS" accession="MS:1000033" name="deisotoping" value="false"/>
           <cvParam cvRef="MS" accession="MS:1000034" name="charge deconvolution" value="false"/>
           <cvParam cvRef="MS" accession="MS:1000035" name="peak picking" value="true"/>
+          <cvParam cvRef="MS" accession="MS:1000592" name="smoothing" value="false"/>
+          <cvParam cvRef="MS" accession="MS:1000593" name="baseline reduction" value="false"/>
+          <userParam name="signal-to-noise estimation" value="none"/>
+          <userParam name="centroiding algorithm" value="none"/>
+          <userParam name="charge states calculated" value="none"/>
         </processingMethod>
       </dataProcessing>
       <dataProcessing id="pwizconversion" softwareRef="pwiz">
@@ -96,20 +109,19 @@
     </dataProcessingList>
     <acquisitionSettingsList count="1">
       <acquisitionSettings id="as1" instrumentConfigurationRef="LTQFT">
-        <sourceFileList count="1">
-          <sourceFile id="SF2" name="parameters.par" location="file:///C:/settings/">
-          </sourceFile>
-        </sourceFileList>
+        <sourceFileRefList count="1">
+          <sourceFileRef ref="sf_parameters"/>
+        </sourceFileRefList>
         <targetList count="2">
           <target>
-            <userParam name="precursorMz" value="123.456" type=""/>
-            <userParam name="fragmentMz" value="456.789" type=""/>
+            <userParam name="precursorMz" value="123.456"/>
+            <userParam name="fragmentMz" value="456.789"/>
             <userParam name="dwell time" value="1" type="seconds"/>
             <userParam name="active time" value="0.5" type="seconds"/>
           </target>
           <target>
-            <userParam name="precursorMz" value="231.673" type=""/>
-            <userParam name="fragmentMz" value="566.328" type=""/>
+            <userParam name="precursorMz" value="231.673"/>
+            <userParam name="fragmentMz" value="566.328"/>
             <userParam name="dwell time" value="1" type="seconds"/>
             <userParam name="active time" value="0.5" type="seconds"/>
           </target>
@@ -208,8 +220,8 @@
             <precursorList count="1">
               <precursor spectrumRef="change_me">
                 <isolationWindow>
-                  <userParam name="isolation center m/z" value="810.8" type=""/>
-                  <userParam name="isolation half width" value="2.0" type=""/>
+                  <userParam name="isolation center m/z" value="810.8"/>
+                  <userParam name="isolation half width" value="2.0"/>
                 </isolationWindow>
                 <selectedIonList count="1">
                   <selectedIon>
@@ -219,8 +231,7 @@
                   </selectedIon>
                 </selectedIonList>
                 <activation>
-                  <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-                  <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="35" unitAccession="MS:1000137" unitName="electron volt"/>
+                  <referenceableParamGroupRef ref="CommonActivationParams"/>
                 </activation>
               </precursor>
             </precursorList>
@@ -292,15 +303,15 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="S0" nativeID="">6597</offset>
-      <offset idRef="S1" nativeID="">9167</offset>
-      <offset idRef="S2" nativeID="">11741</offset>
+      <offset idRef="S0" nativeID="">7605</offset>
+      <offset idRef="S1" nativeID="">10175</offset>
+      <offset idRef="S2" nativeID="">12749</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic" nativeID="tic native">15519</offset>
-      <offset idRef="sic" nativeID="sic native">16990</offset>
+      <offset idRef="tic" nativeID="tic native">16328</offset>
+      <offset idRef="sic" nativeID="sic native">17799</offset>
     </index>
   </indexList>
-  <indexListOffset>18394</indexListOffset>
-  <fileChecksum>792bb4dbab5ae1af56476b5a86b5ada9f7a00281</fileChecksum>
+  <indexListOffset>19203</indexListOffset>
+  <fileChecksum>4d0947eb2c6531f8202b3a9d5063b425fafa2d13</fileChecksum>
 </indexedmzML>

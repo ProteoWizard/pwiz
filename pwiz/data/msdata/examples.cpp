@@ -54,7 +54,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
-    fc.userParams.push_back(UserParam("number of cats", "4"));
 
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "sf1";
@@ -525,7 +524,6 @@ PWIZ_API_DECL void initializeTiny2(MSData& msd)
 
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
-    fc.userParams.push_back(UserParam("number of cats", "4"));
 
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "sf1";
@@ -642,6 +640,11 @@ PWIZ_API_DECL void initializeTiny2(MSData& msd)
     procXcal.set(MS_deisotoping, false);
     procXcal.set(MS_charge_deconvolution, false);
     procXcal.set(MS_peak_picking, true);
+    procXcal.set(MS_smoothing, false);
+    procXcal.set(MS_baseline_reduction, false);
+    procXcal.userParams.push_back(UserParam("signal-to-noise estimation", "none"));
+    procXcal.userParams.push_back(UserParam("centroiding algorithm", "none"));
+    procXcal.userParams.push_back(UserParam("charge states calculated", "none"));
 
     dpXcalibur->processingMethods.push_back(procXcal);
 
