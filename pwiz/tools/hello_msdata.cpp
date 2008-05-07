@@ -73,25 +73,11 @@ void test()
 }
 
 
-void test2()
-{
-    // create the MSData object in memory
-    MSData msd2;
-    examples::initializeTiny2(msd2); 
-
-    // write out mzML 
-    string filename = "tiny2.pwiz.mzML";
-    cout << "Writing file " << filename << endl;
-    MSDataFile::write(msd2, filename);
-}
-
-
 int main()
 {
     try
     {
         test();
-        test2();
 
         cout << "\nhttp://proteowizard.sourceforge.net\n"
              << "support@proteowizard.org\n";

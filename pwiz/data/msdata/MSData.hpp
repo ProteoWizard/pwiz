@@ -49,6 +49,9 @@ struct PWIZ_API_DECL CV
 };
 
 
+PWIZ_API_DECL std::vector<CV> defaultCVList();
+
+
 struct PWIZ_API_DECL UserParam
 {
     std::string name;

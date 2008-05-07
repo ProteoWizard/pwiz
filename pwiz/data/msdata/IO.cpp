@@ -2336,7 +2336,8 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.10"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
     attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd"));
-    attributes.push_back(make_pair("accession", msd.accession));
+    if (!msd.accession.empty())
+        attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id));
     attributes.push_back(make_pair("version", msd.version));
 

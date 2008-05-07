@@ -34,10 +34,8 @@ using boost::shared_ptr;
 
 
 
-void write_examples()
+void writeTiny()
 {
-    cout << "write_examples\n";
-
     // create the MSData object in memory
     MSData msd;
     examples::initializeTiny(msd); 
@@ -46,24 +44,30 @@ void write_examples()
     string filename = "tiny.pwiz.mzML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename);
-/*
+
     // write out mzXML
     filename = "tiny.pwiz.mzXML";
     cout << "Writing file " << filename << endl;
     MSDataFile::write(msd, filename, MSDataFile::Format_mzXML);
-*/
+}
 
-    // create the MSData object in memory
-    MSData msd2;
-    examples::initializeTiny2(msd2); 
 
-    // write out mzML 
-    filename = "tiny2.pwiz.mzML";
-    cout << "Writing file " << filename << endl;
-    MSDataFile::write(msd2, filename);
+void writeMIAPE()
+{
+    const string& inputFile = "small.pwiz.mzML";
+    const string& outputFile = "small_miape.pwiz.mzML";
 
-    cout << "\nhttp://proteowizard.sourceforge.net\n"
-         << "support@proteowizard.org\n";
+    try
+    {
+        MSDataFile msd(inputFile);
+        examples::addMIAPEExampleMetadata(msd);
+        cout << "Writing file " << outputFile << endl;
+        msd.write(outputFile);
+    }
+    catch (exception& e)
+    {
+        cerr << "Error opening file " << inputFile << endl;
+    }
 }
 
 
@@ -71,7 +75,12 @@ int main()
 {
     try
     {
-        write_examples();
+        writeTiny();
+        writeMIAPE();
+
+        cout << "\nhttp://proteowizard.sourceforge.net\n"
+             << "support@proteowizard.org\n";
+
         return 0;
     }
     catch (exception& e)

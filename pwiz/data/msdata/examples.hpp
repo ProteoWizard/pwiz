@@ -35,10 +35,9 @@ namespace examples {
 
 
 PWIZ_API_DECL void initializeTiny(MSData& msd);
-PWIZ_API_DECL void initializeTiny2(MSData& msd);
-PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_FT(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
-PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_IT(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
-PWIZ_API_DECL SpectrumPtr createSpectrum_5pep_ms2(const InstrumentConfigurationPtr& instrumentConfigurationPtr);
+PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd);
+
+
 } // namespace examples
 } // namespace msdata
 } // namespace pwiz
