@@ -2,7 +2,7 @@
 <mzXML xmlns="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd">
-  <msRun scanCount="2" startTime="PT353.43S" endTime="PT359.43S">
+  <msRun scanCount="3" startTime="PT353.43S" endTime="PT0S">
     <parentFile fileName="file:///F:/data/Exp01/tiny1.RAW"
                 fileType="RAWData"
                 fileSha1="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
@@ -54,11 +54,27 @@
              byteOrder="network"
              pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAEAAAAAAAAAAQDIAAAAAAABAEAAAAAAAAEAwAAAAAAAAQBgAAAAAAABALAAAAAAAAEAgAAAAAAAAQCgAAAAAAABAJAAAAAAAAEAkAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAsAAAAAAAAQBgAAAAAAABAMAAAAAAAAEAQAAAAAAAAQDIAAAAAAABAAAAAAAAAAA==</peaks>
     </scan>
+    <scan num="21"
+          scanType="FULL"
+          msLevel="1"
+          peaksCount="0"
+          polarity="Unknown"
+          retentionTime="PT0S"
+          lowMz=""
+          highMz=""
+          basePeakMz=""
+          basePeakIntensity=""
+          totIonCurrent="">
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int"></peaks>
+    </scan>
   </msRun>
   <index name="scan">
-    <offset id="19">1252</offset>
-    <offset id="20">2054</offset>
+    <offset id="19">1247</offset>
+    <offset id="20">2049</offset>
+    <offset id="21">2887</offset>
   </index>
-  <indexOffset>2901</indexOffset>
-  <sha1>daad2aaae24b3fd4991b6aeb9406005d6080aca4</sha1>
+  <indexOffset>3285</indexOffset>
+  <sha1>1c88bb5cbd6b98cc24a0c275bda00b7477be3940</sha1>
 </mzXML>

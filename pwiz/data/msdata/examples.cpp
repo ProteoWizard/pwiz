@@ -182,6 +182,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
+    spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
 
     Spectrum& s19 = *spectrumList->spectra[0];
     s19.id = "S19";
@@ -277,6 +278,18 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.binaryDataArrayPtrs.push_back(s20_mz);
     s20.binaryDataArrayPtrs.push_back(s20_intensity);
     s20.defaultArrayLength = s20_mz->data.size();
+
+    // spectrum with no data
+
+    Spectrum& s21 = *spectrumList->spectra[2]; 
+    s21.id = "S21";
+    s21.index = 2;
+    s21.nativeID = "21";
+
+    s21.set(MS_MSn_spectrum);
+    s21.set(MS_ms_level, 1);
+
+    s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data (no BinaryDataArrayList)"));
 
     // chromatograms
 

@@ -133,10 +133,11 @@ void test(const string& filename)
 
     size_t scanCount = adapter.scanCount();
     if (os_) *os_ << "scanCount: " << scanCount << "\n\n";
-    unit_assert(scanCount == 2);
+    unit_assert(scanCount == 3);
 
     unit_assert(adapter.index(19) == 0);
     unit_assert(adapter.index(20) == 1);
+    unit_assert(adapter.index(21) == 2);
 
     // first scan (scan number == 19)
 
@@ -203,7 +204,7 @@ void test(const string& filename)
 
     RunHeaderStruct runHeader;
     adapter.getRunHeader(runHeader);
-    unit_assert(runHeader.scanCount == 2);
+    unit_assert(runHeader.scanCount == 3);
     unit_assert(runHeader.lowMZ == 0);
     unit_assert(runHeader.highMZ == 0);
     unit_assert(runHeader.startMZ == 0);

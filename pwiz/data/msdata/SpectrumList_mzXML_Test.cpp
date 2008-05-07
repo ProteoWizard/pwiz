@@ -95,11 +95,13 @@ void test(bool indexed)
     // check easy functions
 
     unit_assert(sl.get());
-    unit_assert(sl->size() == 2);
+    unit_assert(sl->size() == 3);
     unit_assert(sl->find("19") == 0);
     unit_assert(sl->findNative("19") == 0);
     unit_assert(sl->find("20") == 1);
     unit_assert(sl->findNative("20") == 1);
+    unit_assert(sl->find("21") == 2);
+    unit_assert(sl->findNative("21") == 2);
 
     // check scan 19
 
