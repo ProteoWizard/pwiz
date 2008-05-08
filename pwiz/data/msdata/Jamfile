@@ -85,8 +85,7 @@ exe cvgen
          cvgen.cpp
          ../..//boost_regex
          ../..//boost_filesystem 
-    :    <toolset>darwin:<variant>debug
-         <library>../..//boost_regex
+    :    <library>../..//boost_regex
          <library>../..//boost_filesystem
     ;
 

@@ -62,6 +62,10 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-long-long
         <toolset>darwin:<cxxflags>-Wno-long-long
 
+        # don't call 'strip' -- causes 'Bus error' in some cases
+        #  e.g. find_if with inline predicate
+        <toolset>darwin:<debug-symbols>on
+
     : build-dir ../build
     : default-build release <link>static 
     ;

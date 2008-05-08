@@ -32,7 +32,7 @@
 #include "utility/misc/Export.hpp"
 
 
-// [..\data\msdata\psi-ms.obo]
+// [psi-ms.obo]
 //   format-version: 1.2
 //   date: 25:04:2008 15:16
 //   saved-by: martlenn
@@ -40,7 +40,7 @@
 //   default-namespace: PSI-MS
 //   remark: version: x.y.z
 //
-// [..\data\msdata\unit.obo]
+// [unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos

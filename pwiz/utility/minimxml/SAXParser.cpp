@@ -158,7 +158,7 @@ void parseAttribute(const string& tag, string::size_type& index, Handler::Attrib
         indexQuoteOpen == string::npos ||
         indexQuoteClose == string::npos)
         throw runtime_error("[SAXParser::parseAttribute()] Error at index " 
-                            + lexical_cast<string>(index));
+                            + lexical_cast<string>(index) + ":\n" + tag);
 
     string name = tag.substr(indexNameBegin, indexNameEnd-indexNameBegin);
     string value = tag.substr(indexQuoteOpen+1, indexQuoteClose-indexQuoteOpen-1);

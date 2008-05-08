@@ -361,7 +361,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     msd.cvs = defaultCVList(); // TODO: move this to Reader_Thermo
 
     FileContent& fc = msd.fileDescription.fileContent;
-    fc.userParams.push_back(UserParam("ProteoWizard", "RAW->mzML converted data, with additional MIAPE parameters added for illustration"));
+    fc.userParams.push_back(UserParam("ProteoWizard", "Thermo RAW data converted to mzML, with additional MIAPE parameters added for illustration"));
 
     // fileDescription
 
