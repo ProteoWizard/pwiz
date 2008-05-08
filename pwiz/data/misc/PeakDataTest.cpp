@@ -30,12 +30,14 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::data;
+using namespace pwiz::minimxml;
+using namespace pwiz::data::peakdata;
 
 
 ostream* os_ = 0;
 
 
+/*
 void test()
 {
     // create a PeakData object
@@ -108,6 +110,38 @@ void test()
         pd.writeXML(*os_);
     }
 }
+*/
+
+
+void testPeak()
+{
+    Peak peak;
+
+    peak.mz = 1;
+    peak.intensity = 2;
+    peak.area = 3;
+    peak.error = 4;
+    peak.frequency = 5;
+    peak.phase = 6;
+    peak.decay = 7;
+
+    if (os_) *os_ << peak;
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+
+    peak.write(writer);
+    if (os_) *os_ << oss.str() << endl;
+    
+
+ 
+}
+
+
+void test()
+{
+    testPeak();
+}
 
 
 int main(int argc, char* argv[])
@@ -116,7 +150,7 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "PeakDataTest\n";
-        test();
+        test(); 
         return 0;
     }
     catch (exception& e)

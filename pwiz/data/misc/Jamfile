@@ -27,21 +27,24 @@ project
         <toolset>msvc:<cxxflags>/wd4267 # warning: conversion from 'size_t' to 'int' 
                                         # (boost/serialization/collections_save_imp.hpp)
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-    : usage-requirements
-		<library>../../utility/misc//pwiz_utility_misc
-		<library>../..//boost_serialization
-		<library>../..//fftw3
 ;
 
 
 lib pwiz_data_misc 
-    : TransientData.cpp FrequencyData.cpp
-      PeakData.cpp
-      ../../utility/misc//pwiz_utility_misc
-      ../..//boost_serialization
-      ../..//fftw3
-    :   <library>../../utility/misc//pwiz_utility_misc
-		<library>../..//boost_serialization
+    :   # sources
+        TransientData.cpp 
+        FrequencyData.cpp
+        PeakData.cpp
+    :   # requirements
+        <library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../..//boost_serialization
+		<library>../..//fftw3
+    :   # default-build
+    :   # usage-requirements
+        <library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../..//boost_serialization
 		<library>../..//fftw3
     ;
 

@@ -26,6 +26,7 @@
 
 
 #include "utility/misc/Export.hpp"
+#include "utility/minimxml/XMLWriter.hpp"
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <string>
@@ -54,9 +55,10 @@ struct PWIZ_API_DECL Peak
     double phase;
     double decay;
 
-    Peak() : mz(0), intensity(0), area(0), error(0),
-             frequency(0), phase(0), decay(0) 
-    {}
+    Peak();
+
+    void write(minimxml::XMLWriter& writer) const;
+    void read(std::istream& is);
 };
 
 

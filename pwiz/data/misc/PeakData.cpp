@@ -23,10 +23,79 @@
 
 #define PWIZ_SOURCE
 
+
 #include "PeakData.hpp"
-//#include "util_old/MinimXML.hpp"
+#include "boost/lexical_cast.hpp"
 #include <complex>
 
+
+namespace pwiz {
+namespace data {
+namespace peakdata {
+
+
+using namespace std;
+using namespace pwiz::minimxml;
+using boost::lexical_cast;
+
+
+//
+// Peak
+//
+
+
+Peak::Peak()
+:   mz(0), intensity(0), area(0), error(0),
+    frequency(0), phase(0), decay(0) 
+{}
+
+
+void Peak::write(minimxml::XMLWriter& writer) const
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
+    attributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
+    attributes.push_back(make_pair("area", lexical_cast<string>(area)));
+    attributes.push_back(make_pair("error", lexical_cast<string>(error)));
+    attributes.push_back(make_pair("frequency", lexical_cast<string>(frequency)));
+    attributes.push_back(make_pair("phase", lexical_cast<string>(phase)));
+    attributes.push_back(make_pair("decay", lexical_cast<string>(decay)));
+    writer.startElement("peak", attributes, XMLWriter::EmptyElement);
+}
+
+
+void Peak::read(istream& is)
+{
+
+}
+
+
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Peak& peak)
+{
+    os << "<"
+       << peak.mz << ","
+       << peak.intensity << ","
+       << peak.area << ","
+       << peak.error << ","
+       << peak.frequency << ","
+       << peak.phase << ","
+       << peak.decay << ">";
+
+    return os;
+}
+
+
+
+} // namespace pwiz
+} // namespace data
+} // namespace peakdata
+
+
+
+
+
+
+//#include "util_old/MinimXML.hpp"
 
 // note: boost/archive headers must precede boost/serialization headers
 // (as of Boost v1.33.1)
@@ -266,21 +335,6 @@ using boost::archive::xml_iarchive;
 using boost::archive::xml_oarchive;
 
 
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peak& peak)
-{
-    os << "<"
-       << peak.mz << ","
-       << peak.intensity << ","
-       << peak.area << ","
-       << peak.error << ","
-       << peak.frequency << ","
-       << peak.phase << ","
-       << peak.decay << ">";
-
-    return os;
-}
-
-
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
 {
     os << "peakFamily ("
@@ -325,5 +379,6 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 } // namespace peakdata 
 } // namespace data 
 } // namespace pwiz
+
 
 
