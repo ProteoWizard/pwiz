@@ -99,7 +99,7 @@ struct analyzer_strings<Pseudo2DGel>
         result.push_back("zRadius=N (set intensity function z-score radius [=2])");
         result.push_back("bry (use blue-red-yellow gradient)");
         result.push_back("binSum (sum intensity in bins [default = max intensity])");
-        result.push_back("ms2 (indicate masses selected for ms2)");
+        result.push_back("ms2locs (indicate masses selected for ms2)");
         return result; 
     }
 };

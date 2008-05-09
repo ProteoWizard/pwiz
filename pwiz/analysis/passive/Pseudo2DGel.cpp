@@ -78,7 +78,7 @@ PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
             bry = true; 
         else if (*it == "binSum")
             binSum = true; 
-        else if (*it == "ms2")
+        else if (*it == "ms2locs")
             ms2 = true;
         else if (it->find("pepxml=") == 0)
             peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
