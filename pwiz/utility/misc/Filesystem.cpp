@@ -33,6 +33,8 @@ using std::runtime_error;
     #include <windows.h>
     #include <direct.h>
 #else
+    #include <sys/types.h>
+    #include <sys/stat.h>
     #include <glob.h>
     #include <dirent.h>
     #include <unistd.h>
