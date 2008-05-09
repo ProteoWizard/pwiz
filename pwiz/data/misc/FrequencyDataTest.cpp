@@ -25,6 +25,7 @@
 #include "FrequencyDataTestData.hpp"
 #include "data/misc/CalibrationParameters.hpp"
 #include "utility/misc/unit.hpp"
+#include "utility/misc/Filesystem.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iomanip>
@@ -206,7 +207,9 @@ void testNoiseFloor()
 void cleanTests()
 {
     if (os_) *os_ << "Deleting FrequencyDataTest.output*.txt\n";
-    boost::filesystem::remove("FrequencyDataTest.output*.*");
+    vector<string> filepaths = FindFilesByMask("FrequencyDataTest.output*.*");
+    for (size_t i=0; i < filepaths.size(); ++i)
+        boost::filesystem::remove(filepaths[i]);
 }
 
 
