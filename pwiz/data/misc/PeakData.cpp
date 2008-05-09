@@ -25,8 +25,10 @@
 
 
 #include "PeakData.hpp"
+#include "utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
 #include <complex>
+#include <iterator>
 
 
 namespace pwiz {
@@ -36,6 +38,7 @@ namespace peakdata {
 
 using namespace std;
 using namespace pwiz::minimxml;
+using namespace minimxml::SAXParser;
 using boost::lexical_cast;
 
 
@@ -48,6 +51,24 @@ Peak::Peak()
 :   mz(0), intensity(0), area(0), error(0),
     frequency(0), phase(0), decay(0) 
 {}
+
+
+bool Peak::operator==(const Peak& that) const
+{
+    return mz == that.mz &&
+           intensity == that.intensity &&
+           area == that.area &&
+           error == that.error &&
+           frequency == that.frequency &&
+           phase == that.phase &&
+           decay == that.decay;
+}
+
+
+bool Peak::operator!=(const Peak& that) const
+{
+    return !(*this==that);
+}
 
 
 void Peak::write(minimxml::XMLWriter& writer) const
@@ -64,9 +85,35 @@ void Peak::write(minimxml::XMLWriter& writer) const
 }
 
 
+struct HandlerPeak : public SAXParser::Handler
+{
+    Peak* peak;
+    HandlerPeak(Peak* _peak = 0) : peak(_peak) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "peak")
+            throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
+
+        getAttribute(attributes, "mz", peak->mz);
+        getAttribute(attributes, "intensity", peak->intensity);
+        getAttribute(attributes, "area", peak->area);
+        getAttribute(attributes, "error", peak->error);
+        getAttribute(attributes, "frequency", peak->frequency);
+        getAttribute(attributes, "phase", peak->phase);
+        getAttribute(attributes, "decay", peak->decay);
+
+        return Status::Ok;
+    }
+};
+
+
 void Peak::read(istream& is)
 {
-
+    HandlerPeak handler(this);
+    SAXParser::parse(is, handler);
 }
 
 
@@ -86,13 +133,55 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const Peak& peak)
 
 
 
+//
+// PeakFamily
+//
+
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
+{
+    os << "peakFamily ("
+       << "mzMonoisotopic:" << peakFamily.mzMonoisotopic << " "
+       << "charge:" << peakFamily.charge << " "
+       << "score:" << peakFamily.score << " "
+       << "peaks:" << peakFamily.peaks.size() << ")\n"; 
+
+    copy(peakFamily.peaks.begin(), peakFamily.peaks.end(), ostream_iterator<Peak>(os, "\n")); 
+    return os;
+}
+
+
+//
+// Scan 
+//
+
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
+{
+    os << "scan (#" << scan.scanNumber 
+       << " rt:" << scan.retentionTime
+       << " T:" << scan.observationDuration
+       << " A:" << scan.calibrationParameters.A
+       << " B:" << scan.calibrationParameters.B << ")\n";
+    copy(scan.peakFamilies.begin(), scan.peakFamilies.end(), ostream_iterator<PeakFamily>(os, "")); 
+    return os;
+}
+
+
+//
+// PeakData 
+//
+
+
+
 } // namespace pwiz
 } // namespace data
 } // namespace peakdata
 
 
-
-
+////////////////////
+/////  below here is old stuff
+////////////////////
 
 
 //#include "util_old/MinimXML.hpp"
@@ -333,31 +422,6 @@ void PeakData::writeXML(std::ostream& os) const
 using boost::serialization::make_nvp;
 using boost::archive::xml_iarchive;
 using boost::archive::xml_oarchive;
-
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
-{
-    os << "peakFamily ("
-       << "mzMonoisotopic:" << peakFamily.mzMonoisotopic << " "
-       << "charge:" << peakFamily.charge << " "
-       << "score:" << peakFamily.score << " "
-       << "peaks:" << peakFamily.peaks.size() << ")\n"; 
-
-    copy(peakFamily.peaks.begin(), peakFamily.peaks.end(), ostream_iterator<Peak>(os, "\n")); 
-    return os;
-}
-
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
-{
-    os << "scan (#" << scan.scanNumber 
-       << " rt:" << scan.retentionTime
-       << " T:" << scan.observationDuration
-       << " A:" << scan.calibrationParameters.A
-       << " B:" << scan.calibrationParameters.B << ")\n";
-    copy(scan.peakFamilies.begin(), scan.peakFamilies.end(), ostream_iterator<PeakFamily>(os, "")); 
-    return os;
-}
 
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd)

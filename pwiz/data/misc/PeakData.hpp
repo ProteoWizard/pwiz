@@ -57,6 +57,9 @@ struct PWIZ_API_DECL Peak
 
     Peak();
 
+    bool operator==(const Peak& that) const;
+    bool operator!=(const Peak& that) const;
+
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
 };

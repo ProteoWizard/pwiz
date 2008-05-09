@@ -115,6 +115,8 @@ void test()
 
 void testPeak()
 {
+    // instantiate a Peak
+
     Peak peak;
 
     peak.mz = 1;
@@ -125,7 +127,9 @@ void testPeak()
     peak.phase = 6;
     peak.decay = 7;
 
-    if (os_) *os_ << peak;
+    if (os_) *os_ << peak << endl;
+
+    // write out XML to a stream
 
     ostringstream oss;
     XMLWriter writer(oss);
@@ -133,8 +137,28 @@ void testPeak()
     peak.write(writer);
     if (os_) *os_ << oss.str() << endl;
     
+    // allocate a new Peak
 
- 
+    Peak peakIn;
+
+    if (os_) *os_ << peakIn << endl; 
+    unit_assert(peak != peakIn);
+
+    // read from stream into new Peak
+
+    istringstream iss(oss.str());
+    peakIn.read(iss);
+
+    // verify that new Peak is the same as old Peak
+
+    if (os_) 
+    {
+        *os_ << peakIn << endl; 
+        XMLWriter osWriter(*os_);
+        peakIn.write(osWriter);
+    }
+
+    unit_assert(peak == peakIn);
 }
 
 
