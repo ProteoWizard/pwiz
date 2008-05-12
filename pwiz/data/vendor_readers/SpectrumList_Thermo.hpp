@@ -28,6 +28,9 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual ChromatogramListPtr Chromatograms() const;
 
+    void centroidSpectra(bool value) {centroidSpectra_ = value;}
+    bool centroidSpectra() const {return centroidSpectra_;}
+
     private:
 
     const MSData& msd_;
@@ -36,6 +39,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     mutable vector<SpectrumPtr> spectrumCache_;
     mutable ChromatogramListPtr chromatograms_;
     vector<SpectrumIdentity> index_;
+    bool centroidSpectra_;
 
     void createIndex();
     string findPrecursorID(int precursorMsLevel, size_t index) const;

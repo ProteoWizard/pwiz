@@ -516,7 +516,7 @@ class PWIZ_API_DECL SpectrumList
     virtual size_t size() const = 0;
 
     /// returns true iff (size() == 0)
-    bool empty() const;
+    virtual bool empty() const;
 
     /// access to a spectrum index
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const = 0;

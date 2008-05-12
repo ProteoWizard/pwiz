@@ -32,7 +32,8 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
     size_(rawfile->value(NumSpectra)),
     spectrumCache_(size_),
     chromatograms_(new ChromatogramList_Thermo()),
-    index_(size_)
+    index_(size_),
+    centroidSpectra_(false)
 {
     createIndex();
 }
@@ -293,7 +294,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     if (getBinaryData)
     {
         auto_ptr<raw::MassList> massList = 
-            rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, false);
+            rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, centroidSpectra_);
 
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
                                     massList->size());
