@@ -25,4 +25,5 @@ build-project frequency ;
 build-project passive ;
 build-project peakdetect ;
 build-project peptideid ;
+build-project spectrum_processing ;
 

@@ -66,6 +66,7 @@ exe msconvert
     : msconvert.cpp
       ../data/msdata//pwiz_data_msdata
       ../data/vendor_readers
+      ../analysis/spectrum_processing//pwiz_analysis_spectrum_processing
       ..//boost_program_options
       ..//boost_filesystem
     : <include>../..

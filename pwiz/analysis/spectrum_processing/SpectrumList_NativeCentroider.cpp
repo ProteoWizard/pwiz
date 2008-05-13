@@ -42,11 +42,10 @@ PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(const
     if (thermo)
     {
         thermo->centroidSpectra(true);
+        return;
     }
-    else
-    {
-        throw runtime_error("[SpectrumList_NativeCentroider] Unknown inner SpectrumList type.");
-    }
+
+    throw runtime_error("[SpectrumList_NativeCentroider] No native centroiding available.");
 }
 
 

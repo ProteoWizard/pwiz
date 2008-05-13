@@ -24,6 +24,7 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -34,6 +35,8 @@
 
 using namespace std;
 using namespace pwiz::msdata;
+using namespace pwiz::analysis;
+using boost::shared_ptr;
 
 
 struct Config
@@ -44,9 +47,10 @@ struct Config
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
+    bool centroidSpectra;
 
     Config()
-    :   outputPath(".")
+    :   outputPath("."), verbose(false), centroidSpectra(false)
     {}
 
     string outputFilename(const string& inputFilename) const;
@@ -68,6 +72,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "outputPath: " << config.outputPath << endl;
     os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
+    os << "centroidSpectra: " << boolalpha << config.centroidSpectra << endl;
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
@@ -133,9 +138,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
 			": do not write index")
-        ("contact,c",
+        ("contactInfo,i",
             po::value<string>(&config.contactFilename),
 			": filename for contact info")
+        ("centroid,c",
+            po::value<bool>(&config.centroidSpectra)->zero_tokens()->default_value(config.centroidSpectra),
+			": retrieve centroided spectrum data")
         ;
 
     // append options description to usage string
@@ -258,6 +266,13 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     if (!config.contactFilename.empty())
         addContactInfo(msd, config.contactFilename);
+
+    if (config.centroidSpectra)
+    {
+        shared_ptr<SpectrumList_NativeCentroider> 
+            nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr));
+        msd.run.spectrumListPtr = nativeCentroider;
+    }
  
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;

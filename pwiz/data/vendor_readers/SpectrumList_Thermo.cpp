@@ -252,8 +252,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     PolarityType polarityType = scanInfo->polarityType();
     if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
 
-    if (scanInfo->isProfileScan()) sd.cvParams.push_back(MS_profile_mass_spectrum); 
-    else if (scanInfo->isCentroidScan()) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
+    if (scanInfo->isProfileScan() && !centroidSpectra_) sd.cvParams.push_back(MS_profile_mass_spectrum); 
+    else if (scanInfo->isCentroidScan() || centroidSpectra_) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
 
     scan.cvParams.push_back(CVParam(MS_scan_time, scanInfo->startTime(), MS_minute));
     sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, scanInfo->lowMass()));
