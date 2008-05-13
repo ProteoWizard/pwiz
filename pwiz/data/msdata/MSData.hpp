@@ -609,7 +609,7 @@ typedef boost::shared_ptr<ChromatogramListSimple> ChromatogramListSimplePtr;
 struct PWIZ_API_DECL Run : public ParamContainer
 {
     std::string id;
-    InstrumentConfigurationPtr instrumentConfigurationPtr;
+    InstrumentConfigurationPtr defaultInstrumentConfigurationPtr;
     SamplePtr samplePtr;
     std::string startTimeStamp;
     std::vector<SourceFilePtr> sourceFilePtrs;

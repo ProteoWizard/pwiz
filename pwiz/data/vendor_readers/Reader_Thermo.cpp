@@ -262,11 +262,11 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.dataProcessingPtrs.push_back(dpPwiz);
 
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
+    if (!msd.instrumentConfigurationPtrs.empty())
+        msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = boost::to_lower_copy(stringToIDREF(filename));
     msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
-
-    //msd.run.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("TODO_fix_this"));
 }
 
 } // namespace

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.11 mzML0.99.11_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.11 mzML0.99.11.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
     <cvList count="2">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
       <cv id="UO" fullName="Unit Ontology" version="unknown" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
@@ -96,7 +96,7 @@
         </targetList>
       </acquisitionSettings>
     </acquisitionSettingsList>
-    <run id="Exp01" instrumentConfigurationRef="LCQDeca" sampleRef="sample1" startTimeStamp="2007-06-27T15:23:45.00035">
+    <run id="Exp01" defaultInstrumentConfigurationRef="LCQDeca" sampleRef="sample1" startTimeStamp="2007-06-27T15:23:45.00035">
       <sourceFileRefList count="1">
         <sourceFileRef ref="sf1"/>
       </sourceFileRefList>
@@ -240,15 +240,15 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="S19" nativeID="19">5635</offset>
-      <offset idRef="S20" nativeID="20">8623</offset>
-      <offset idRef="S21" nativeID="21">12404</offset>
+      <offset idRef="S19" nativeID="19">5642</offset>
+      <offset idRef="S20" nativeID="20">8630</offset>
+      <offset idRef="S21" nativeID="21">12411</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic" nativeID="tic native">12881</offset>
-      <offset idRef="sic" nativeID="sic native">14352</offset>
+      <offset idRef="tic" nativeID="tic native">12888</offset>
+      <offset idRef="sic" nativeID="sic native">14359</offset>
     </index>
   </indexList>
-  <indexListOffset>15756</indexListOffset>
-  <fileChecksum>edfbb7167fc20ff70cc179030e48bc275d3928fe</fileChecksum>
+  <indexListOffset>15763</indexListOffset>
+  <fileChecksum>018022e55a5afab46bc1f40a550e1597a8d3ef55</fileChecksum>
 </indexedmzML>

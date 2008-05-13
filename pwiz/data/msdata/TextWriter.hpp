@@ -317,8 +317,8 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("run:");
         child()("id: " + run.id);
-        if (run.instrumentConfigurationPtr.get())
-            child()("instrumentConfigurationRef: " + run.instrumentConfigurationPtr->id);
+        if (run.defaultInstrumentConfigurationPtr.get())
+            child()("defaultInstrumentConfigurationRef: " + run.defaultInstrumentConfigurationPtr->id);
         if (run.samplePtr.get())
             child()("sampleRef: " + run.samplePtr->id);
         if (!run.startTimeStamp.empty())

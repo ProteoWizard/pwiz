@@ -666,7 +666,7 @@ void testRun()
     Run a;
     
     a.id = "goober";
-    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
+    a.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     a.samplePtr = SamplePtr(new Sample("sample"));
     a.startTimeStamp = "20 April 2004 4:20pm";  
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
@@ -901,7 +901,7 @@ void initializeTestData(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    msd.run.defaultInstrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);

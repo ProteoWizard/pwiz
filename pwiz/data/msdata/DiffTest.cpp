@@ -1002,8 +1002,8 @@ void testRun()
     b.chromatogramListPtr = chromatogramList1;
 
     // same ref id
-    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
-    b.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
+    a.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
+    b.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
 
     b.samplePtr = SamplePtr(new Sample("sample"));
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
@@ -1019,8 +1019,8 @@ void testRun()
     unit_assert(diff.a_b.chromatogramListPtr->size() == 1);
     unit_assert(diff.a_b.chromatogramListPtr->chromatogram(0)->userParams.size() == 1);
 
-    unit_assert(!diff.a_b.instrumentConfigurationPtr.get());
-    unit_assert(!diff.b_a.instrumentConfigurationPtr.get());
+    unit_assert(!diff.a_b.defaultInstrumentConfigurationPtr.get());
+    unit_assert(!diff.b_a.defaultInstrumentConfigurationPtr.get());
 
     unit_assert(!diff.a_b.samplePtr.get());
     unit_assert(!diff.b_a.samplePtr->empty());

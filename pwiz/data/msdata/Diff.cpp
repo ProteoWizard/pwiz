@@ -881,7 +881,7 @@ void diff(const Run& a,
     if (!config.ignoreMetadata)
     {
         diff(a.id, b.id, a_b.id, b_a.id, config);
-        ptr_diff(a.instrumentConfigurationPtr, b.instrumentConfigurationPtr, a_b.instrumentConfigurationPtr, b_a.instrumentConfigurationPtr, config);
+        ptr_diff(a.defaultInstrumentConfigurationPtr, b.defaultInstrumentConfigurationPtr, a_b.defaultInstrumentConfigurationPtr, b_a.defaultInstrumentConfigurationPtr, config);
         ptr_diff(a.samplePtr, b.samplePtr, a_b.samplePtr, b_a.samplePtr, config);
         diff(a.startTimeStamp, b.startTimeStamp, a_b.startTimeStamp, b_a.startTimeStamp, config);
         vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);

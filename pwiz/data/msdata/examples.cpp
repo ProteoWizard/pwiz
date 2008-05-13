@@ -172,7 +172,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     // run
 
     msd.run.id = "Exp01";
-    msd.run.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    msd.run.defaultInstrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
     msd.run.sourceFilePtrs.push_back(sfp);

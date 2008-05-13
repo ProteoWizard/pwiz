@@ -848,7 +848,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index,
 PWIZ_API_DECL bool Run::empty() const
 {
     return id.empty() &&
-           (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) &&
+           (!defaultInstrumentConfigurationPtr.get() || defaultInstrumentConfigurationPtr->empty()) &&
            (!samplePtr.get() || samplePtr->empty()) &&
            startTimeStamp.empty() &&
            sourceFilePtrs.empty() &&

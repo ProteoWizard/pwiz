@@ -2188,8 +2188,8 @@ void write(minimxml::XMLWriter& writer, const Run& run,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", run.id));
-    if (run.instrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("instrumentConfigurationRef", run.instrumentConfigurationPtr->id));
+    if (run.defaultInstrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", run.defaultInstrumentConfigurationPtr->id));
     if (run.samplePtr.get())
         attributes.push_back(make_pair("sampleRef", run.samplePtr->id));
     if (!run.startTimeStamp.empty())
@@ -2242,10 +2242,10 @@ struct HandlerRun : public HandlerParamContainer
             getAttribute(attributes, "startTimeStamp", run->startTimeStamp);
 
             // note: placeholder
-            string instrumentConfigurationRef;
-            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
-            if (!instrumentConfigurationRef.empty())
-                run->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
+            string defaultInstrumentConfigurationRef;
+            getAttribute(attributes, "defaultInstrumentConfigurationRef", defaultInstrumentConfigurationRef);
+            if (!defaultInstrumentConfigurationRef.empty())
+                run->defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(defaultInstrumentConfigurationRef));
 
             // note: placeholder
             string sampleRef;
@@ -2333,9 +2333,9 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            vector<boost::iostreams::stream_offset>* chromatogramPositions)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.10"));
+    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_0.99.11"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.10 mzML0.99.10.xsd"));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_0.99.11 mzML0.99.11.xsd"));
     if (!msd.accession.empty())
         attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id));

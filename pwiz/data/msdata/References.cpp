@@ -215,7 +215,7 @@ PWIZ_API_DECL void resolve(Chromatogram& chromatogram, const MSData& msd)
 PWIZ_API_DECL void resolve(Run& run, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(run), msd);
-    resolve(run.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
+    resolve(run.defaultInstrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
     resolve(run.samplePtr, msd.samplePtrs);
     resolve(run.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
 }

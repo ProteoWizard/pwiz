@@ -452,7 +452,7 @@ void testRun()
 
     Run run;
     run.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    run.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
+    run.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     run.samplePtr = SamplePtr(new Sample("sample"));
     run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
     run.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
@@ -470,7 +470,7 @@ void testRun()
     msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
 
     unit_assert(run.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(run.instrumentConfigurationPtr->userParams.empty());
+    unit_assert(run.defaultInstrumentConfigurationPtr->userParams.empty());
     unit_assert(run.samplePtr->name.empty());
     unit_assert(run.sourceFilePtrs[0]->name.empty());
     unit_assert(run.sourceFilePtrs[1]->name.empty());
@@ -478,7 +478,7 @@ void testRun()
     References::resolve(run, msd);
 
     unit_assert(!run.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!run.instrumentConfigurationPtr->userParams.empty());
+    unit_assert(!run.defaultInstrumentConfigurationPtr->userParams.empty());
     unit_assert(run.samplePtr->name == "sample name");
     unit_assert(run.sourceFilePtrs[0]->name == "goo2.raw");
     unit_assert(run.sourceFilePtrs[1]->name == "goo1.raw");
