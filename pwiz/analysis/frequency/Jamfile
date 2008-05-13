@@ -35,11 +35,9 @@ project
         <toolset>msvc:<cxxflags>/wd4510 # warning: default constructor could not be generated
         <toolset>msvc:<cxxflags>/wd4610 # warning: can never be instantiated - user defined constructor required
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-    : usage-requirements
-	    <library>../../utility/math//pwiz_utility_math
-        <library>../../data/misc//pwiz_data_misc
-        <library>../../utility/proteome//pwiz_utility_proteome
-        <library>../..//boost_filesystem
+
+        # hack for ublas internal check
+        <define>NDEBUG 
 ;
 
 
@@ -53,11 +51,19 @@ lib pwiz_analysis_frequency
       TruncatedLorentzian.cpp
       TruncatedLorentzianEstimator.cpp
       TruncatedLorentzianParameters.cpp
-      ../../utility/math//pwiz_utility_math
-      ../../data/misc//pwiz_data_misc
-      ../../utility/proteome//pwiz_utility_proteome
-      ../..//boost_filesystem
+    : # requirements
+	    <library>../../utility/math//pwiz_utility_math
+        <library>../../data/misc//pwiz_data_misc
+        <library>../../utility/proteome//pwiz_utility_proteome
+        <library>../..//boost_filesystem
+    : # default-build
+    : # usage-requirements
+	    <library>../../utility/math//pwiz_utility_math
+        <library>../../data/misc//pwiz_data_misc
+        <library>../../utility/proteome//pwiz_utility_proteome
+        <library>../..//boost_filesystem
     ;
+
 
 unit-test FrequencyEstimatorPhysicalModelTest : FrequencyEstimatorPhysicalModelTest.cpp pwiz_analysis_frequency ;
 unit-test FrequencyEstimatorSimpleTest : FrequencyEstimatorSimpleTest.cpp pwiz_analysis_frequency ;
