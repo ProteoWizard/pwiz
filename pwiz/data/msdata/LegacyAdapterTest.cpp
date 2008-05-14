@@ -79,25 +79,26 @@ void testModelAndManufacturer()
 void testIonisation()
 {
     InstrumentConfiguration instrumentConfiguration;
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Source, 2));
     CVTranslator cvTranslator;
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
 
     adapter.ionisation(" esi\t");
     if (os_) *os_ << "ionisation: " << adapter.ionisation() << endl;
-    unit_assert(instrumentConfiguration.componentList.source.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.source.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.source(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.source(0).userParams.empty());
     unit_assert(adapter.ionisation() == "electrospray ionization");
 
     adapter.ionisation("goober");
     if (os_) *os_ << "ionisation: " << adapter.ionisation() << endl;
-    unit_assert(instrumentConfiguration.componentList.source.cvParams.empty());
-    unit_assert(instrumentConfiguration.componentList.source.userParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.source(0).cvParams.empty());
+    unit_assert(instrumentConfiguration.componentList.source(0).userParams.size() == 1);
     unit_assert(adapter.ionisation() == "goober");
 
     adapter.ionisation(" Electrospray-Ionization");
     if (os_) *os_ << "ionisation: " << adapter.ionisation() << endl;
-    unit_assert(instrumentConfiguration.componentList.source.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.source.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.source(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.source(0).userParams.empty());
     unit_assert(adapter.ionisation() == "electrospray ionization");
 }
 
@@ -105,25 +106,26 @@ void testIonisation()
 void testAnalyzer()
 {
     InstrumentConfiguration instrumentConfiguration;
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Analyzer, 2));
     CVTranslator cvTranslator;
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
 
     adapter.analyzer("IT");
     if (os_) *os_ << "analyzer: " << adapter.analyzer() << endl;
-    unit_assert(instrumentConfiguration.componentList.analyzer.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.analyzer.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).userParams.empty());
     unit_assert(adapter.analyzer() == "ion trap");
 
     adapter.analyzer("goober");
     if (os_) *os_ << "analyzer: " << adapter.analyzer() << endl;
-    unit_assert(instrumentConfiguration.componentList.analyzer.cvParams.empty());
-    unit_assert(instrumentConfiguration.componentList.analyzer.userParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).cvParams.empty());
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).userParams.size() == 1);
     unit_assert(adapter.analyzer() == "goober");
 
     adapter.analyzer(" qit");
     if (os_) *os_ << "analyzer: " << adapter.analyzer() << endl;
-    unit_assert(instrumentConfiguration.componentList.analyzer.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.analyzer.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.analyzer(0).userParams.empty());
     unit_assert(adapter.analyzer() == "quadrupole ion trap");
 }
 
@@ -131,25 +133,26 @@ void testAnalyzer()
 void testDetector()
 {
     InstrumentConfiguration instrumentConfiguration;
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Detector, 3));
     CVTranslator cvTranslator;
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
 
     adapter.detector("emt");
     if (os_) *os_ << "detector: " << adapter.detector() << endl;
-    unit_assert(instrumentConfiguration.componentList.detector.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.detector.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.detector(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.detector(0).userParams.empty());
     unit_assert(adapter.detector() == "electron multiplier tube");
 
     adapter.detector("goober");
     if (os_) *os_ << "detector: " << adapter.detector() << endl;
-    unit_assert(instrumentConfiguration.componentList.detector.cvParams.empty());
-    unit_assert(instrumentConfiguration.componentList.detector.userParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.detector(0).cvParams.empty());
+    unit_assert(instrumentConfiguration.componentList.detector(0).userParams.size() == 1);
     unit_assert(adapter.detector() == "goober");
 
     adapter.detector(" Electron   Multiplier ");
     if (os_) *os_ << "detector: " << adapter.detector() << endl;
-    unit_assert(instrumentConfiguration.componentList.detector.cvParams.size() == 1);
-    unit_assert(instrumentConfiguration.componentList.detector.userParams.empty());
+    unit_assert(instrumentConfiguration.componentList.detector(0).cvParams.size() == 1);
+    unit_assert(instrumentConfiguration.componentList.detector(0).userParams.empty());
     unit_assert(adapter.detector() == "electron multiplier");
 }
 

@@ -24,7 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo.hpp"
-
+#include "utility/misc/Filesystem.hpp"
+#include "utility/misc/String.hpp"
 
 namespace {
 // helper function used by both forms (real and stubbed) of Reader_Thermo
@@ -135,43 +136,17 @@ string stringToIDREF(const string& s)
 }
 
 
-InstrumentConfigurationPtr createInstrumentConfiguration(CVID massAnalyzerType, 
-                                                         RawFile& rawfile)
-{
-    InstrumentConfigurationPtr result(new InstrumentConfiguration);
-
-    auto_ptr<ScanInfo> firstScanInfo = rawfile.getScanInfo(1);
-
-    // source
-    result->componentList.source.order = 1;
-    result->componentList.source.cvParams.push_back(translateAsIonizationType(firstScanInfo->ionizationType()));
-    if (translateAsInletType(firstScanInfo->ionizationType()).cvid != CVID_Unknown)
-        result->componentList.source.cvParams.push_back(translateAsInletType(firstScanInfo->ionizationType()));
-
-    // analyzer
-    result->componentList.analyzer.order = 2;
-    result->componentList.analyzer.set(massAnalyzerType);
-
-    // detector
-    result->componentList.detector.order = 3;
-    result->componentList.detector.set(MS_electron_multiplier); // TODO: verify that all Thermo instruments use EM
-
-    return result;
-}
-
-
 void initializeInstrumentConfigurationPtrs(MSData& msd, 
                                            RawFile& rawfile, 
                                            const SoftwarePtr& instrumentSoftware)
 {
     // get the instrument model
+    string modelString = rawfile.value(InstModel);
+    InstrumentModelType modelType = parseInstrumentModelType(modelString);
+    CVID cvidModel = translateAsInstrumentModel(modelType);
 
-    string model = rawfile.value(InstModel);
-    CVTranslator cvTranslator;
-    CVID cvidModel = cvTranslator.translate(model);
 
     // set common instrument parameters
-
     ParamGroupPtr commonInstrumentParams(new ParamGroup);
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
@@ -179,38 +154,25 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     if (cvidModel != CVID_Unknown) 
         commonInstrumentParams->set(cvidModel);
     else
-        commonInstrumentParams->userParams.push_back(UserParam("instrument model", model));
+    {
+        // TODO: add cvParam for "instrument unknown"
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", modelString));
+    }
 
     commonInstrumentParams->set(MS_instrument_serial_number, rawfile.value(InstSerialNumber));
 
-    // create instrument configurations based on mass analyzer types
+    // create instrument configuration templates based on the instrument model
+    vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
 
-    vector<CVID> massAnalyzerTypes;
-
-    string nameAndModel = boost::to_lower_copy( rawfile.value(InstName) + rawfile.value(InstModel) );
-    if (nameAndModel.find("ltq") != string::npos)
-        massAnalyzerTypes.push_back(MS_ion_trap);
-    if (nameAndModel.find("ft") != string::npos)
-        massAnalyzerTypes.push_back(MS_FT_ICR);
-    if (nameAndModel.find("orbitrap") != string::npos)
-        massAnalyzerTypes.push_back(MS_orbitrap);
-    if (nameAndModel.find("tsq") != string::npos || model.find("quantum") != string::npos)
-        massAnalyzerTypes.push_back(MS_quadrupole);
-    if (nameAndModel.find("tof") != string::npos)
-        massAnalyzerTypes.push_back(MS_time_of_flight);
-    if (nameAndModel.find("sector") != string::npos)
-        massAnalyzerTypes.push_back(MS_magnetic_sector);
-
-    for (vector<CVID>::const_iterator it=massAnalyzerTypes.begin(), end=massAnalyzerTypes.end();
-         it!=end; ++it)
+    for (size_t i=0; i < configurations.size(); ++i)
     {
-        InstrumentConfigurationPtr ic = createInstrumentConfiguration(*it, rawfile);
+        InstrumentConfigurationPtr ic = InstrumentConfigurationPtr(new InstrumentConfiguration(configurations[i]));
 
         string modelName = cvidModel == CVID_Unknown ?
-                           model :
+                           modelString :
                            cvinfo(cvidModel).shortName();
 
-        ic->id = stringToIDREF(modelName + '-' + cvinfo(*it).shortName());
+        ic->id = (format("IC%d") % (i+1)).str();
         ic->paramGroupPtrs.push_back(commonInstrumentParams);
         ic->softwarePtr = instrumentSoftware;
 
@@ -232,9 +194,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
-    sourceFile->id = "rawfile";
+    sourceFile->id = "RAW1";
     sourceFile->name = p.leaf();
-    sourceFile->location = p.branch_path().string();
+    sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
     sourceFile->cvParams.push_back(MS_Xcalibur_RAW_file);
     string sha1 = SHA1Calculator::hashFile(filename);
     sourceFile->cvParams.push_back(CVParam(MS_SHA_1, sha1));

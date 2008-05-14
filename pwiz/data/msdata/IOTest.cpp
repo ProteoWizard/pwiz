@@ -162,12 +162,9 @@ void testSample()
 }
 
 
-void testSource()
+void testComponent()
 {
-    Source a;
-    //Analyzer a;
-    //Detector a;
-    a.order = 1;
+    Component a(ComponentType_Source, 1);
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
     a.cvParams.push_back(CVParam(MS_m_z, "666"));
@@ -179,12 +176,9 @@ void testSource()
 void testComponentList()
 {
     ComponentList a;
-    a.source.order = 1;
-    a.analyzer.order = 2;
-    a.detector.order = 3;
-    a.source.cvParams.push_back(MS_nanoelectrospray);
-    a.analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
-    a.detector.cvParams.push_back(MS_electron_multiplier);
+    a.push_back(Component(MS_nanoelectrospray, 1));
+    a.push_back(Component(MS_quadrupole_ion_trap, 2));
+    a.push_back(Component(MS_electron_multiplier, 3));
     testObject(a);
 }
 
@@ -205,12 +199,9 @@ void testInstrumentConfiguration()
     a.id = "LCQ Deca";
     a.cvParams.push_back(MS_LCQ_Deca);
     a.cvParams.push_back(CVParam(MS_instrument_serial_number, 23433));
-    a.componentList.source.order = 1;
-    a.componentList.source.cvParams.push_back(MS_nanoelectrospray);
-    a.componentList.analyzer.order = 2;
-    a.componentList.analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
-    a.componentList.detector.order = 3;
-    a.componentList.detector.cvParams.push_back(MS_electron_multiplier);
+    a.componentList.push_back(Component(MS_nanoelectrospray, 1));
+    a.componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
+    a.componentList.push_back(Component(MS_electron_multiplier, 3));
     a.softwarePtr = SoftwarePtr(new Software("XCalibur"));
     testObject(a);
 }
@@ -495,7 +486,7 @@ void testChromatogram()
     for (size_t i=0; i<a.defaultArrayLength; i++)
         a.binaryDataArrayPtrs.back()->data.push_back(i*2);
     a.binaryDataArrayPtrs.back()->set(MS_intensity_array);
-    a.cvParams.push_back(MS_total_ion_chromatogram__); // TODO: fix when CV has appropriate terms
+    a.cvParams.push_back(MS_total_ion_current_chromatogram); // TODO: fix when CV has appropriate terms
 
     // write 'a' out to a stream
 
@@ -826,15 +817,9 @@ void initializeTestData(MSData& msd)
     instrumentConfigurationPtr->id = "LCQ Deca";
     instrumentConfigurationPtr->cvParams.push_back(MS_LCQ_Deca);
     instrumentConfigurationPtr->cvParams.push_back(CVParam(MS_instrument_serial_number,"23433"));
-    Source& source = instrumentConfigurationPtr->componentList.source;
-    source.order = 1;
-    source.cvParams.push_back(MS_nanoelectrospray);
-    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
-    analyzer.order = 2;
-    analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
-    Detector& detector = instrumentConfigurationPtr->componentList.detector;
-    detector.order = 3;
-    detector.cvParams.push_back(MS_electron_multiplier);
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_nanoelectrospray, 1));
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_electron_multiplier, 3));
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
@@ -1014,7 +999,7 @@ void initializeTestData(MSData& msd)
     tic.index = 0;
     tic.nativeID = "tic";
     tic.defaultArrayLength = 10;
-    tic.cvParams.push_back(MS_total_ion_chromatogram__);
+    tic.cvParams.push_back(MS_total_ion_current_chromatogram);
 
     BinaryDataArrayPtr tic_time(new BinaryDataArray);
     tic_time->dataProcessingPtr = dp_msconvert;
@@ -1096,7 +1081,7 @@ void test()
     testNamedParamContainer<Contact>();
     testFileDescription();
     testSample();
-    testSource();
+    testComponent();
     testComponentList(); 
     testSoftware();
     testInstrumentConfiguration();

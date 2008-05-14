@@ -46,12 +46,12 @@ void testParamContainer()
     pc.userParams.push_back(UserParam("name2", "2", "type2", MS_minute));
 
     ParamGroupPtr pg(new ParamGroup);
-    pg->cvParams.push_back(CVParam(MS_dalton, 666));
+    pg->cvParams.push_back(CVParam(MS_Dalton, 666));
     pc.paramGroupPtrs.push_back(pg);
    
     unit_assert(pc.hasCVParam(MS_reflectron_off));
     unit_assert(!pc.hasCVParam(MS_spectrum_type));
-    unit_assert(pc.hasCVParam(MS_dalton));
+    unit_assert(pc.hasCVParam(MS_Dalton));
     unit_assert(!pc.hasCVParam(MS_mass_unit));
       
     unit_assert(pc.hasCVParamChild(MS_spectrum_type));
@@ -60,17 +60,17 @@ void testParamContainer()
     unit_assert(pc.cvParam(MS_m_z) == CVID_Unknown);
     unit_assert(pc.cvParam(MS_reflectron_off) == MS_reflectron_off);
     unit_assert(pc.cvParam(MS_mass_unit) == CVID_Unknown);
-    unit_assert(pc.cvParam(MS_dalton).cvid == MS_dalton);
+    unit_assert(pc.cvParam(MS_Dalton).cvid == MS_Dalton);
 
     unit_assert(pc.cvParamChild(MS_spectrum_type) == MS_MSn_spectrum);
-    unit_assert(pc.cvParamChild(MS_mass_unit).cvid == MS_dalton);
+    unit_assert(pc.cvParamChild(MS_mass_unit).cvid == MS_Dalton);
 
     string result = "goober";
     result = pc.cvParam(MS_m_z).value;
     unit_assert(result == "");
     result = pc.cvParam(MS_ionization_type).value;
     unit_assert(result == "420");
-    result = pc.cvParam(MS_dalton).value;
+    result = pc.cvParam(MS_Dalton).value;
     unit_assert(result == "666");
 
     UserParam userParam = pc.userParam("name");

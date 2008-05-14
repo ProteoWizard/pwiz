@@ -599,11 +599,24 @@ PWIZ_API_DECL void read(std::istream& is, Sample& sample)
 //
 
 
-PWIZ_API_DECL void writeComponent(minimxml::XMLWriter& writer, const Component& component, const string& label)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Component& component)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("order", lexical_cast<string>(component.order)));
-    writer.startElement(label, attributes);
+    switch (component.type)
+    {
+        case ComponentType_Source:
+            writer.startElement("source", attributes);
+            break;
+        case ComponentType_Analyzer:
+            writer.startElement("analyzer", attributes);
+            break;
+        case ComponentType_Detector:
+            writer.startElement("detector", attributes);
+            break;
+        case ComponentType_Unknown:
+            throw runtime_error("[IO::write] Unknown component type.");
+    }
     writeParamContainer(writer, component);
     writer.endElement();
 }
@@ -624,9 +637,9 @@ struct HandlerComponent : public HandlerParamContainer
         if (!component)
             throw runtime_error("[IO::HandlerComponent] Null component.");
 
-        if (name=="source" && dynamic_cast<Source*>(component) ||
-            name=="analyzer" && dynamic_cast<Analyzer*>(component) ||
-            name=="detector" && dynamic_cast<Detector*>(component))
+        if (name=="source" ||
+            name=="analyzer" ||
+            name=="detector")
         {
             getAttribute(attributes, "order", component->order);
             return Status::Ok;
@@ -638,41 +651,9 @@ struct HandlerComponent : public HandlerParamContainer
 };
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Source& source)
+PWIZ_API_DECL void read(std::istream& is, Component& component)
 {
-    writeComponent(writer, source, "source");
-}
-
-
-PWIZ_API_DECL void read(std::istream& is, Source& source)
-{
-    HandlerComponent handler(&source);
-    SAXParser::parse(is, handler);
-}
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Analyzer& analyzer)
-{
-    writeComponent(writer, analyzer, "analyzer");
-}
-
-
-PWIZ_API_DECL void read(std::istream& is, Analyzer& analyzer)
-{
-    HandlerComponent handler(&analyzer);
-    SAXParser::parse(is, handler);
-}
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Detector& detector)
-{
-    writeComponent(writer, detector, "detector");
-}
-
-
-PWIZ_API_DECL void read(std::istream& is, Detector& detector)
-{
-    HandlerComponent handler(&detector);
+    HandlerComponent handler(&component);
     SAXParser::parse(is, handler);
 }
 
@@ -684,18 +665,14 @@ PWIZ_API_DECL void read(std::istream& is, Detector& detector)
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ComponentList& componentList)
 {
-    int count = 0;
-    if (componentList.source.order) count++;
-    if (componentList.analyzer.order) count++;
-    if (componentList.detector.order) count++;
+    int count = (int) componentList.size();
 
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(count)));
 
     writer.startElement("componentList", attributes);
-    if (componentList.source.order) write(writer, componentList.source); 
-    if (componentList.analyzer.order) write(writer, componentList.analyzer); 
-    if (componentList.detector.order) write(writer, componentList.detector); 
+    for (size_t i=0; i < componentList.size(); ++i)
+        write(writer, componentList[i]);
     writer.endElement();
 }
 
@@ -718,17 +695,20 @@ struct HandlerComponentList : public SAXParser::Handler
         }
         else if (name == "source")
         {
-            handlerComponent_.component = &componentList->source;
+            componentList->push_back(Component(ComponentType_Source, 1));
+            handlerComponent_.component = &componentList->back();
             return Status(Status::Delegate, &handlerComponent_);
         }
         else if (name == "analyzer")
         {
-            handlerComponent_.component = &componentList->analyzer;
+            componentList->push_back(Component(ComponentType_Analyzer, 1));
+            handlerComponent_.component = &componentList->back();
             return Status(Status::Delegate, &handlerComponent_);
         }
         else if (name == "detector")
         {
-            handlerComponent_.component = &componentList->detector;
+            componentList->push_back(Component(ComponentType_Detector, 1));
+            handlerComponent_.component = &componentList->back();
             return Status(Status::Delegate, &handlerComponent_);
         }
 
@@ -1329,7 +1309,8 @@ PWIZ_API_DECL void read(std::istream& is, Activation& activation)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("spectrumRef", lexical_cast<string>(precursor.spectrumID)));
+    if (!precursor.spectrumID.empty())
+        attributes.push_back(make_pair("spectrumRef", lexical_cast<string>(precursor.spectrumID)));
     writer.startElement("precursor", attributes);
     writeParamContainer(writer, precursor);
 

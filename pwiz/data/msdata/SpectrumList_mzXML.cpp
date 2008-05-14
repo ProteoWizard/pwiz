@@ -238,8 +238,9 @@ class HandlerScan : public SAXParser::Handler
 {
     public:
 
-    HandlerScan(Spectrum& spectrum, bool getBinaryData)
-    :   spectrum_(spectrum), 
+    HandlerScan(const MSData& msd, Spectrum& spectrum, bool getBinaryData)
+    :   msd_(msd),
+        spectrum_(spectrum), 
         getBinaryData_(getBinaryData), 
         peaksCount_(0),
         handlerPeaks_(spectrum)
@@ -253,7 +254,7 @@ class HandlerScan : public SAXParser::Handler
         {
             string num, scanEvent, msLevel, peaksCount, polarity, collisionEnergy, 
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
-                msInstrumentID;
+                msInstrumentID, centroided, deisotoped;
 
             getAttribute(attributes, "num", num);
             getAttribute(attributes, "scanEvent", scanEvent);
@@ -268,6 +269,8 @@ class HandlerScan : public SAXParser::Handler
             getAttribute(attributes, "basePeakIntensity", basePeakIntensity);
             getAttribute(attributes, "totIonCurrent", totIonCurrent);
             getAttribute(attributes, "msInstrumentID", msInstrumentID);
+            getAttribute(attributes, "centroided", centroided);
+            getAttribute(attributes, "deisotoped", deisotoped);
 
             spectrum_.id = num;
             spectrum_.nativeID = num;
@@ -279,12 +282,18 @@ class HandlerScan : public SAXParser::Handler
 
             Scan& scan = spectrum_.spectrumDescription.scan;
 
-            scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, scanEvent));
+            scan.set(MS_preset_scan_configuration, scanEvent);
 
             if (polarity == "+")
-                scan.cvParams.push_back(MS_positive_scan);
+                scan.set(MS_positive_scan);
             else if (polarity == "-")
-                scan.cvParams.push_back(MS_negative_scan);
+                scan.set(MS_negative_scan);
+
+            // assume centroid if not specified (TODO: factor in dataProcessing information)
+            if (centroided == "0")
+                spectrum_.spectrumDescription.set(MS_profile_mass_spectrum);
+            else
+                spectrum_.spectrumDescription.set(MS_centroid_mass_spectrum);
 
             collisionEnergy_ = collisionEnergy;
 
@@ -299,13 +308,13 @@ class HandlerScan : public SAXParser::Handler
             else
                 throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
 
-            scan.cvParams.push_back(CVParam(MS_scan_time, retentionTime, MS_second));
+            scan.set(MS_scan_time, retentionTime, MS_second);
             
-            spectrum_.spectrumDescription.cvParams.push_back(CVParam(MS_lowest_m_z_value, lowMz));
-            spectrum_.spectrumDescription.cvParams.push_back(CVParam(MS_highest_m_z_value, highMz));
-            spectrum_.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, basePeakMz));
-            spectrum_.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, basePeakIntensity));
-            spectrum_.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, totIonCurrent));
+            spectrum_.spectrumDescription.set(MS_lowest_m_z_value, lowMz);
+            spectrum_.spectrumDescription.set(MS_highest_m_z_value, highMz);
+            spectrum_.spectrumDescription.set(MS_base_peak_m_z, basePeakMz);
+            spectrum_.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity);
+            spectrum_.spectrumDescription.set(MS_total_ion_current, totIonCurrent);
 
             return Status::Ok;
         }
@@ -313,7 +322,7 @@ class HandlerScan : public SAXParser::Handler
         {
             spectrum_.spectrumDescription.precursors.push_back(Precursor());
             Precursor& precursor = spectrum_.spectrumDescription.precursors.back();
-            precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, collisionEnergy_));
+            precursor.activation.set(MS_collision_energy, collisionEnergy_);
             handlerPrecursor_.precursor = &precursor; 
             return Status(Status::Delegate, &handlerPrecursor_);
         }
@@ -328,6 +337,7 @@ class HandlerScan : public SAXParser::Handler
     }
 
     private:
+    const MSData& msd_;
     Spectrum& spectrum_;
     bool getBinaryData_;
     string collisionEnergy_;
@@ -359,7 +369,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
 
-    HandlerScan handler(*result, getBinaryData);
+    HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);
 
     // hack to get parent scanNumber if precursorScanNum wasn't set

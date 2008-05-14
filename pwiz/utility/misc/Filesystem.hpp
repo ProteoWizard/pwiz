@@ -22,25 +22,18 @@
 //
 
 #include "Export.hpp"
-#include <string>
-#include <vector>
+#include "String.hpp"
+#include "Container.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 
-using boost::filesystem::path;
-using boost::filesystem::file_size;
-using boost::filesystem::last_write_time;
-using boost::filesystem::exists;
-using boost::filesystem::current_path;
-using boost::filesystem::change_extension;
-using boost::filesystem::basename;
-using boost::filesystem::extension;
+namespace bfs = boost::filesystem;
 
 
 namespace pwiz {
 namespace util {
-PWIZ_API_DECL void FindFilesByMask(const std::string& mask,
-                                   std::vector<std::string>& matchingFilepaths);
-PWIZ_API_DECL std::vector<std::string> FindFilesByMask(const std::string& mask);
+PWIZ_API_DECL void FindFilesByMask(const string& mask,
+                                   vector<string>& matchingFilepaths);
+PWIZ_API_DECL vector<string> FindFilesByMask(const string& mask);
 } // util
 } // pwiz

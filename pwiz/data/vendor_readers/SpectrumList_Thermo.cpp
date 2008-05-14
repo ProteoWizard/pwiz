@@ -125,7 +125,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& 
         string("TIC"), scanInfo.startTime(), scanInfo.totalIonCurrent());
     if (result.second)
     {
-        result.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram__));
+        result.first->cvParams.push_back(CVParam(MS_total_ion_current_chromatogram));
     }
 
     if (scanInfo.scanType() == ScanType_SRM)
@@ -135,7 +135,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& 
             scanInfo.startTime(), scanInfo.totalIonCurrent());
         if (result2.second)
         {
-            result2.first->cvParams.push_back(CVParam(MS_total_ion_chromatogram__));
+            result2.first->cvParams.push_back(CVParam(MS_total_ion_current_chromatogram));
 
             // TODO: change to CVParam when CV is updated
 
@@ -188,10 +188,10 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
 
     for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
          end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
-        if ((*it)->componentList.analyzer.hasCVParam(massAnalyzerType))
+        if ((*it)->componentList.analyzer(0).hasCVParam(massAnalyzerType))
             return *it;
 
-    throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()]"\
+    throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()] "\
                         "Instrument configuration not found for mass analyzer type: " +
                         cvinfo(massAnalyzerType).name);
 }
@@ -231,7 +231,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     Scan& scan = sd.scan;
 
     scan.instrumentConfigurationPtr = 
-        findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()).cvid);
+        findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
     string filterString = scanInfo->filter();
 

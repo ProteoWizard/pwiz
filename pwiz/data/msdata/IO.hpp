@@ -75,17 +75,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sf);
 PWIZ_API_DECL void read(std::istream& is, Sample& sf);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Source& source);
-PWIZ_API_DECL void read(std::istream& is, Source& source);
-    
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Component& component);
+PWIZ_API_DECL void read(std::istream& is, Component& component);
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Analyzer& analyzer);
-PWIZ_API_DECL void read(std::istream& is, Analyzer& analyzer);
-    
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Detector& detector);
-PWIZ_API_DECL void read(std::istream& is, Detector& detector);
-    
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ComponentList& componentList);
 PWIZ_API_DECL void read(std::istream& is, ComponentList& componentList);

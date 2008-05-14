@@ -51,7 +51,7 @@ namespace util {
 void FindFilesByMask(const string& mask, vector<string>& matchingFilepaths)
 {
 #ifdef WIN32
-	string maskPathname = path(mask).branch_path().string();
+    string maskPathname = bfs::path(mask).branch_path().string();
 	WIN32_FIND_DATA fdata;
 	HANDLE srcFile = FindFirstFileEx(mask.c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
 	if (srcFile == INVALID_HANDLE_VALUE)

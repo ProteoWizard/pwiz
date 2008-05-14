@@ -118,9 +118,8 @@ PWIZ_API_DECL void resolve(FileDescription& fileDescription, const MSData& msd)
 
 PWIZ_API_DECL void resolve(ComponentList& componentList, const MSData& msd)
 {
-    resolve(componentList.source, msd); 
-    resolve(componentList.analyzer, msd); 
-    resolve(componentList.detector, msd); 
+    for (size_t i=0; i < componentList.size(); ++i)
+        resolve(componentList[i], msd); 
 }
 
 

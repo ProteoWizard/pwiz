@@ -648,9 +648,9 @@ struct Handler_msInstrument : public SAXParser::Handler
             if (!instrumentConfiguration)
                 throw runtime_error("[Serializer_mzXML::Handler_msInstrument] Null instrumentConfiguration.");
 
-            instrumentConfiguration->componentList.source.order = 1;
-            instrumentConfiguration->componentList.analyzer.order = 2;
-            instrumentConfiguration->componentList.detector.order = 3;
+            instrumentConfiguration->componentList.push_back(Component(ComponentType_Source, 1));
+            instrumentConfiguration->componentList.push_back(Component(ComponentType_Analyzer, 1));
+            instrumentConfiguration->componentList.push_back(Component(ComponentType_Detector, 1));
 
             LegacyAdapter_Instrument adapter(*instrumentConfiguration, cvTranslator_);
             adapter.manufacturerAndModel(manufacturer_, model_);
@@ -687,6 +687,14 @@ struct Handler_dataProcessing : public SAXParser::Handler
     {
         if (name == "dataProcessing")
         {
+            string centroided, deisotoped;
+            getAttribute(attributes, "centroided", centroided);
+            getAttribute(attributes, "deisotoped", deisotoped);
+            if (centroided == "1")
+                msd_.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
+            else
+                msd_.fileDescription.fileContent.set(MS_profile_mass_spectrum);
+            // TODO: terms for deisotoped spectra?
             return Status::Ok;
         }
         else if (name == "software")

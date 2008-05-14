@@ -351,41 +351,10 @@ void diff(const Component& a,
           Component& b_a,
           const DiffConfig& config)
 {
+    int a_bType, b_aType; // TODO: how to take the difference of enum types?
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff_numeric(a.order, b.order, a_b.order, b_a.order, config);
-}
-
-
-PWIZ_API_DECL
-void diff(const Source& a, 
-          const Source& b, 
-          Source& a_b, 
-          Source& b_a,
-          const DiffConfig& config)
-{
-    diff(static_cast<const Component&>(a), b, a_b, b_a, config);
-}
-
-
-PWIZ_API_DECL
-void diff(const Analyzer& a, 
-          const Analyzer& b, 
-          Analyzer& a_b, 
-          Analyzer& b_a,
-          const DiffConfig& config)
-{
-    diff(static_cast<const Component&>(a), b, a_b, b_a, config);
-}
-
-
-PWIZ_API_DECL
-void diff(const Detector& a, 
-          const Detector& b, 
-          Detector& a_b, 
-          Detector& b_a,
-          const DiffConfig& config)
-{
-    diff(static_cast<const Component&>(a), b, a_b, b_a, config);
+    diff_numeric((int)a.type, (int)b.type, a_bType, b_aType, config);
 }
 
 
@@ -396,9 +365,15 @@ void diff(const ComponentList& a,
           ComponentList& b_a,
           const DiffConfig& config)
 {
-    diff(a.source, b.source, a_b.source, b_a.source, config);
-    diff(a.analyzer, b.analyzer, a_b.analyzer, b_a.analyzer, config);
-    diff(a.detector, b.detector, a_b.detector, b_a.detector, config);
+    //size_t a_bSize, b_aSize; // TODO: what to do with this?
+    //diff_numeric(a.size(), b.size(), a_bSize, b_aSize, config);
+    //for (size_t i=0; i < a.size(); ++i)
+    //    diff(a[i], b[i], a_b[i], b_a[i], config);
+    vector_diff_diff(static_cast<const vector<Component>&>(a),
+                     static_cast<const vector<Component>&>(b),
+                     static_cast<vector<Component>&>(a_b),
+                     static_cast<vector<Component>&>(b_a),
+                     config);
 }
 
 

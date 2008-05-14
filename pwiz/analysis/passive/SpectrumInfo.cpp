@@ -62,7 +62,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
     massAnalyzerType = sd.scan.cvParamChild(MS_mass_analyzer_type).cvid; // TODO: wait on spec
     if (massAnalyzerType == CVID_Unknown)
         massAnalyzerType = sd.scan.instrumentConfigurationPtr.get() ? 
-                                sd.scan.instrumentConfigurationPtr->componentList.analyzer.cvParamChild(MS_mass_analyzer_type).cvid :
+                                sd.scan.instrumentConfigurationPtr->componentList.analyzer(0).cvParamChild(MS_mass_analyzer_type).cvid :
                                 CVID_Unknown;
 
     scanEvent = sd.scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 

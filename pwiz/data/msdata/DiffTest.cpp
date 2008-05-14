@@ -346,11 +346,11 @@ void testSource()
 {
     if (os_) *os_ << "testSource()\n";
 
-    Source a, b;
+    Component a, b;
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<Source> diff(a, b);
+    Diff<Component> diff(a, b);
     unit_assert(!diff);
 
     a.order = 420;
@@ -367,19 +367,26 @@ void testComponentList()
 
     ComponentList a, b;
 
-    a.source.userParams.push_back(UserParam("common"));
-    b.source.userParams.push_back(UserParam("common"));
+    a.push_back(Component(ComponentType_Source, 1));
+    b.push_back(Component(ComponentType_Source, 1));
+    a.push_back(Component(ComponentType_Analyzer, 2));
+    b.push_back(Component(ComponentType_Analyzer, 2));
+    a.push_back(Component(ComponentType_Detector, 3));
+    b.push_back(Component(ComponentType_Detector, 3));
+
+    a[0].userParams.push_back(UserParam("common"));
+    b[0].userParams.push_back(UserParam("common"));
 
     Diff<ComponentList> diff(a, b);
     unit_assert(!diff);
 
-    a.analyzer.userParams.push_back(UserParam("common"));
-    b.analyzer.userParams.push_back(UserParam("common"));
-    a.analyzer.userParams.push_back(UserParam("a only"));
-    b.analyzer.userParams.push_back(UserParam("b only"));
+    a[1].userParams.push_back(UserParam("common"));
+    b[1].userParams.push_back(UserParam("common"));
+    a[1].userParams.push_back(UserParam("a only"));
+    b[1].userParams.push_back(UserParam("b only"));
 
-    a.detector.userParams.push_back(UserParam("a only"));
-    b.detector.userParams.push_back(UserParam("b only"));
+    a[2].userParams.push_back(UserParam("a only"));
+    b[2].userParams.push_back(UserParam("b only"));
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -416,12 +423,9 @@ void testInstrumentConfiguration()
     a.id = "LCQ Deca";
     a.cvParams.push_back(MS_LCQ_Deca);
     a.cvParams.push_back(CVParam(MS_instrument_serial_number, 23433));
-    a.componentList.source.order = 1;
-    a.componentList.source.cvParams.push_back(MS_nanoelectrospray);
-    a.componentList.analyzer.order = 2;
-    a.componentList.analyzer.cvParams.push_back(MS_quadrupole_ion_trap);
-    a.componentList.detector.order = 3;
-    a.componentList.detector.cvParams.push_back(MS_electron_multiplier);
+    a.componentList.push_back(Component(MS_nanoelectrospray, 1));
+    a.componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
+    a.componentList.push_back(Component(MS_electron_multiplier, 3));
 
     b = a;
 
@@ -434,9 +438,9 @@ void testInstrumentConfiguration()
     Diff<InstrumentConfiguration> diff(a, b);
     unit_assert(!diff);
 
-    b.cvParams.push_back(MS_reflectron_off);
-    b.componentList.source.order = 2; 
-    b.componentList.detector.order = 1; 
+    b.set(MS_reflectron_off);
+    b.componentList.source(0).order = 2; 
+    b.componentList.detector(0).order = 1; 
 
     diff(a, b);
     if (os_) *os_ << diff << endl;

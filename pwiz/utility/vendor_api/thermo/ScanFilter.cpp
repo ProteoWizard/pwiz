@@ -22,7 +22,6 @@
 
 */
 
-// TODO: resolve licensing conflict between LGPL and Apache
 
 #define RAWFILE_SOURCE
 
@@ -33,6 +32,7 @@
 #include <iostream>
 #include <cctype> // for toupper
 #include <algorithm>
+#include <vector>
 #include "boost/algorithm/string.hpp"
 #include "boost/lexical_cast.hpp"
 

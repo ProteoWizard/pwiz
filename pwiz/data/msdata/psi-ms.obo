@@ -1,6 +1,6 @@
 format-version: 1.2
-date: 25:04:2008 15:16
-saved-by: martlenn
+date: 12:05:2008 09:58
+saved-by: edeutsch
 auto-generated-by: OBO-Edit 1.101
 default-namespace: PSI-MS
 remark: version: x.y.z
@@ -251,10 +251,12 @@ is_a: MS:1000550 ! time unit
 [Term]
 id: MS:1000040
 name: m/z
-def: "Three-character symbol m/z is used to denote the dimensionless quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge-ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the dimensionless quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated." [PSI:MS]
-synonym: "Mass To Charge Ratio" EXACT []
-synonym: "thomson" RELATED []
+def: "Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit Thomson (Th) is deprecated." [PSI:MS]
+synonym: "Mass-to-charge ratio" EXACT []
+synonym: "Th" EXACT []
+synonym: "Thomson" EXACT []
 is_a: MS:1000455 ! ion selection attribute
+is_a: MS:1000460 ! unit
 
 [Term]
 id: MS:1000041
@@ -1173,13 +1175,13 @@ is_a: MS:1000121 ! ABI / SCIEX instrument model
 
 [Term]
 id: MS:1000188
-name: q-tof micro
+name: Q-Tof micro
 def: "Waters Q-Tof micro MS." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
 id: MS:1000189
-name: q-tof ultima
+name: Q-Tof ultima
 def: "Waters Q-Tof Ultima MS." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
@@ -1326,7 +1328,7 @@ is_a: MS:1000507 ! ion attribute
 
 [Term]
 id: MS:1000212
-name: dalton
+name: Dalton
 def: "A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg." [PSI:MS]
 synonym: "Da" EXACT []
 is_a: MS:1000464 ! mass unit
@@ -1472,9 +1474,11 @@ is_a: MS:1000444 ! m/z Separation Method
 
 [Term]
 id: MS:1000235
-name: total ion chromatogram ?
+name: total ion current chromatogram
 def: "Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time." [PSI:MS]
-relationship: part_of MS:1000461 ! additional description
+synonym: "TIC chromatogram" EXACT []
+is_a: MS:1000524 ! data file content
+is_a: MS:1000626 ! chromatogram type
 
 [Term]
 id: MS:1000236
@@ -3220,31 +3224,32 @@ is_a: MS:1000503 ! scan attribute
 [Term]
 id: MS:1000513
 name: binary data array
-def: "Binary Data Type." [PSI:MS]
+def: "A data array of values." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
+relationship: part_of MS:1000625 ! chromatogram
 
 [Term]
 id: MS:1000514
 name: m/z array
-def: "M/Z Array." [PSI:MS]
+def: "A data array of mass divided by charge values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
 
 [Term]
 id: MS:1000515
 name: intensity array
-def: "Intensity Array." [PSI:MS]
+def: "A data array of intensity values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
 
 [Term]
 id: MS:1000516
 name: charge array
-def: "Charge Array." [PSI:MS]
+def: "A data array of charge values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
 
 [Term]
 id: MS:1000517
 name: signal to noise array
-def: "Singal to Noise Array." [PSI:MS]
+def: "A data array of signal-to-noise values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
 
 [Term]
@@ -3252,6 +3257,7 @@ id: MS:1000518
 name: binary data type
 def: "Binary Data type. 16-bit integer, 32-bit integer, 32-bit float\n64-bit integer 64-bit float." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
+relationship: part_of MS:1000625 ! chromatogram
 
 [Term]
 id: MS:1000519
@@ -3401,7 +3407,7 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000543
 name: data processing action
-def: "Data processing attribute used to describe the type of data processing performed on the data file." [PSI:MS]
+def: "Type of data processing performed on the data file." [PSI:MS]
 is_a: MS:1000452 ! data transformation
 
 [Term]
@@ -3579,6 +3585,7 @@ id: MS:1000572
 name: binary data compression type
 def: "Compression Type." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
+relationship: part_of MS:1000625 ! chromatogram
 
 [Term]
 id: MS:1000573
@@ -3718,12 +3725,13 @@ is_a: MS:1000543 ! data processing action
 id: MS:1000594
 name: low intensity data point removal
 def: "The removal of very low intensity data points that are likely to be spurious noise rather than real signal." [PSI:MS]
+synonym: "thresholding" EXACT []
 is_a: MS:1000543 ! data processing action
 
 [Term]
 id: MS:1000595
 name: time array
-def: "Array of increasing time points." [PSI:MS]
+def: "A data array of relative time offset values from a reference time." [PSI:MS]
 is_a: MS:1000513 ! binary data array
 
 [Term]
@@ -3857,6 +3865,217 @@ name: preset scan configuration
 def: "A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time." [PSI:MS]
 comment: The attribute 'ms level' should be encoded in the homonymous XML attribute of the element 'dx:Spectrum', and not using the CvParam element.
 is_a: MS:1000503 ! scan attribute
+
+[Term]
+id: MS:1000617
+name: wavelength array
+def: "A data array of electromagnetic radiation wavelength values." [PSI:MS]
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1000618
+name: highest wavelength value
+def: "Highest wavelength value observed in the uv/vis spectum." [PSI:MS]
+is_a: MS:1000499 ! spectrum attribute
+
+[Term]
+id: MS:1000619
+name: lowest wavelength value
+def: "Lowest wavelength value observed in the uv/vis spectrum." [PSI:MS]
+is_a: MS:1000499 ! spectrum attribute
+
+[Term]
+id: MS:1000620
+name: PDA spectrum
+def: "Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum)." [PSI:MS]
+is_a: MS:1000524 ! data file content
+is_a: MS:1000559 ! spectrum type
+
+[Term]
+id: MS:1000621
+name: photodiode array detector
+def: "An array detector used to record spectra in the ultraviolet and visable region of light." [PSI:MS]
+synonym: "PDA" EXACT []
+is_a: MS:1000026 ! detector type
+
+[Term]
+id: MS:1000622
+name: Surveyor PDA
+def: "Surveyor PDA." [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1000623
+name: Accela PDA
+def: "Accela PDA." [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1000624
+name: inductive detector
+def: "Inductive detector." [PSI:MS]
+synonym: "image current detector" EXACT []
+is_a: MS:1000026 ! detector type
+
+[Term]
+id: MS:1000625
+name: chromatogram
+def: "The representation of detector response versus time." [PSI:MS]
+relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+
+[Term]
+id: MS:1000626
+name: chromatogram type
+def: "Broad category or type of a chromatogram." [PSI:MS]
+relationship: part_of MS:1000625 ! chromatogram
+
+[Term]
+id: MS:1000627
+name: selected ion current chromatogram
+def: "Chromatogram created by creating an array of the measurements of a specific single ion current at each time point." [PSI:MS]
+synonym: "SIC chromatogram" EXACT []
+is_a: MS:1000524 ! data file content
+is_a: MS:1000559 ! spectrum type
+is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1000628
+name: basepeak chromatogram
+def: "Chromatogram created by creating an array of the most intense peaks at each time point." [PSI:MS]
+is_a: MS:1000524 ! data file content
+is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1000629
+name: low intensity threshold
+def: "Threshold below which some action is taken." [PSI:MS]
+is_a: MS:1000630 ! data processing parameter
+
+[Term]
+id: MS:1000630
+name: data processing parameter
+def: "Data processing parameter used in the data processing performed on the data file." [PSI:MS]
+is_a: MS:1000452 ! data transformation
+
+[Term]
+id: MS:1000631
+name: high intensity threshold
+def: "Threshold above which some action is taken." [PSI:MS]
+is_a: MS:1000630 ! data processing parameter
+
+[Term]
+id: MS:1000632
+name: Q-Tof Premier
+def: "Waters Q-Tof Premier MS." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1000633
+name: possible charge state
+def: "A possible charge state of the ion in a situation where the charge of an ion is known to be one of several possible values rather than a completely unknown value or determined to be a specific charge with reasonable certainty." [PSI:MS]
+is_a: MS:1000455 ! ion selection attribute
+
+[Term]
+id: MS:10634
+name: DSQ
+def: "ThermoFinnigan DSQ GC-MS"  [PSI:MS]
+is_a: MS:1000125 ! Thermo Finnigan instrument model
+
+[Term]
+id: MS:10635
+name: ITQ 700
+def: "Thermo Scientific ITQ 700 GC-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10636
+name: ITQ 900
+def: "Thermo Scientific ITQ 900 GC-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10637
+name: ITQ 1100
+def: "Thermo Scientific ITQ 1100 GC-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10638
+name: LTQ XL ETD
+def: "Thermo Scientific LTQ XL MS with ETD"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10639
+name: LTQ Orbitrap XL ETD
+def: "Thermo Scientific LTQ Orbitrap XL MS with ETD"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10640
+name: DFS
+def: "Thermo Scientific DFS HR GC-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10641
+name: DSQ II
+def: "Thermo Scientific DSQ II GC-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10642
+name: MALDI LTQ XL
+def: "Thermo Scientific MALDI LTQ XL MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10643
+name: MALDI LTQ Orbitrap
+def: "Thermo Scientific MALDI LTQ Orbitrap MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10644
+name: TSQ Quantum Access
+def: "Thermo Scientific TSQ Quantum Access MS."  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10645
+name: Element XR
+def: "Thermo Scientific Element XR HR-ICP-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10646
+name: Element 2
+def: "Thermo Scientific Element 2 HR-ICP-MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10647
+name: Element GD
+def: "Thermo Scientific Element GD Glow Discharge MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10648
+name: GC IsoLink
+def: "Thermo Scientific GC IsoLink Isotope Ratio MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10649
+name: Exactive
+def: "Thermo Scientific Exactive MS"  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:10650
+name: Proteomics Discoverer
+def: "Thermo Scientific software for data analysis of peptides and proteins."  [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Typedef]
 id: part_of

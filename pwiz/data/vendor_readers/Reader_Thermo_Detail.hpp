@@ -3,7 +3,8 @@
 
 #include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
-#include "utility/vendor_api/thermo/ScanFilter.h"
+#include "utility/vendor_api/thermo/RawFile.h"
+#include <vector>
 
 using namespace pwiz::raw;
 
@@ -11,13 +12,17 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-PWIZ_API_DECL CVParam translateAsScanningMethod(ScanType scanType);
-PWIZ_API_DECL CVParam translateAsSpectrumType(ScanType scanType);
-PWIZ_API_DECL CVParam translate(MassAnalyzerType type);
-PWIZ_API_DECL CVParam translateAsIonizationType(IonizationType ionizationType);
-PWIZ_API_DECL CVParam translateAsInletType(IonizationType ionizationType);
-PWIZ_API_DECL CVParam translate(PolarityType polarityType);
-PWIZ_API_DECL CVParam translate(ActivationType activationType);
+PWIZ_API_DECL
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile);
+
+PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentModelType);
+PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType);
+PWIZ_API_DECL CVID translateAsSpectrumType(ScanType scanType);
+PWIZ_API_DECL CVID translate(MassAnalyzerType type);
+PWIZ_API_DECL CVID translateAsIonizationType(IonizationType ionizationType);
+PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
+PWIZ_API_DECL CVID translate(PolarityType polarityType);
+PWIZ_API_DECL CVID translate(ActivationType activationType);
 
 } // detail
 } // msdata

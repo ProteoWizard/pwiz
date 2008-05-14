@@ -216,37 +216,31 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const ComponentList& componentList)
     {
         (*this)("componentList:");
-        if (!componentList.source.empty())
-            child()(componentList.source);
-        if (!componentList.analyzer.empty())
-            child()(componentList.analyzer);
-        if (!componentList.detector.empty())
-            child()(componentList.detector);
+        for (size_t i=0; i < componentList.size(); ++i)
+            child()(componentList[i]);
         return *this;
     }
 
-    TextWriter& operator()(const Component& component, const std::string& label = "component: ")
+    TextWriter& operator()(const Component& component)
     {
-        (*this)(label);
+        switch(component.type)
+        {
+            case ComponentType_Source:
+                (*this)("source: ");
+                break;
+            case ComponentType_Analyzer:
+                (*this)("analyzer: ");
+                break;
+            case ComponentType_Detector:
+                (*this)("detector: ");
+                break;
+            default:
+                break;
+        }
         child()
             ("order: " + boost::lexical_cast<std::string>(component.order))
             (static_cast<const ParamContainer&>(component));
         return *this;
-    }
-
-    TextWriter& operator()(const Source& source)
-    {
-        return (*this)(static_cast<const Component&>(source), "source: ");
-    }
-
-    TextWriter& operator()(const Analyzer& analyzer) 
-    {
-        return (*this)(static_cast<const Component&>(analyzer), "analyzer: ");
-    }
-
-    TextWriter& operator()(const Detector& detector)
-    {
-        return (*this)(static_cast<const Component&>(detector), "detector: ");
     }
 
     TextWriter& operator()(const Software& software)

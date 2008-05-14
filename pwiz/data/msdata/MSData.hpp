@@ -198,29 +198,40 @@ struct PWIZ_API_DECL Sample : public ParamContainer
 typedef boost::shared_ptr<Sample> SamplePtr;
 
 
+enum ComponentType
+{
+    ComponentType_Unknown = -1,
+    ComponentType_Source = 0,
+    ComponentType_Analyzer,
+    ComponentType_Detector
+};
+
+
 struct PWIZ_API_DECL Component : public ParamContainer
 {
+    ComponentType type;
     int order;
 
-    Component() : order(0) {}
+    Component() : type(ComponentType_Unknown), order(0) {}
+    Component(ComponentType type, int order) : type(type), order(order) {}
+    Component(CVID cvid, int order) { define(cvid, order); }
     virtual ~Component(){}
 
+    void define(CVID cvid, int order);
     bool empty() const;
 };
 
 
-struct PWIZ_API_DECL Source : public Component {};
-struct PWIZ_API_DECL Analyzer : public Component {};
-struct PWIZ_API_DECL Detector : public Component {};
+//struct PWIZ_API_DECL Source : public Component {};
+//struct PWIZ_API_DECL Analyzer : public Component {};
+//struct PWIZ_API_DECL Detector : public Component {};
 
 
-struct PWIZ_API_DECL ComponentList
+struct PWIZ_API_DECL ComponentList : public std::vector<Component>
 {
-    Source source;
-    Analyzer analyzer;
-    Detector detector;
-
-    bool empty() const;
+    Component& source(size_t index);
+    Component& analyzer(size_t index);
+    Component& detector(size_t index);
 };
 
 

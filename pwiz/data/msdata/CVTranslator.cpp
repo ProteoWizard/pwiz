@@ -148,7 +148,7 @@ bool shouldReplace(const string& key, CVID value, CVID cvid)
 {
     return (key=="second_" && value==MS_second && cvid==UO_second ||
             key=="minute_" && value==MS_minute && cvid==UO_minute ||
-            key=="dalton_" && value==MS_dalton && cvid==UO_dalton);
+            key=="dalton_" && value==MS_Dalton && cvid==UO_dalton);
 }
 
 

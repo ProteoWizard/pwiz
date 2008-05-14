@@ -112,9 +112,12 @@ void testComponentList()
     if (os_) *os_ << "testComponentList()\n"; 
 
     ComponentList componentList;
-    componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    componentList.analyzer.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    componentList.detector.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    componentList.push_back(Component(ComponentType_Source, 1));
+    componentList.push_back(Component(ComponentType_Analyzer, 2));
+    componentList.push_back(Component(ComponentType_Detector, 3));
+    componentList.source(0).paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    componentList.analyzer(0).paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    componentList.detector(0).paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -122,9 +125,9 @@ void testComponentList()
  
     References::resolve(componentList, msd);
 
-    unit_assert(!componentList.source.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!componentList.analyzer.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!componentList.detector.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!componentList.source(0).paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!componentList.analyzer(0).paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!componentList.detector(0).paramGroupPtrs[0]->userParams.empty());
 }
 
 
@@ -134,7 +137,8 @@ void testInstrumentConfiguration()
 
     InstrumentConfiguration instrumentConfiguration;
     instrumentConfiguration.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    instrumentConfiguration.componentList.source.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Source, 1));
+    instrumentConfiguration.componentList.source(0).paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     instrumentConfiguration.softwarePtr = SoftwarePtr(new Software("msdata"));
 
     MSData msd;
@@ -150,7 +154,7 @@ void testInstrumentConfiguration()
     References::resolve(instrumentConfiguration, msd);
 
     unit_assert(!instrumentConfiguration.paramGroupPtrs[0]->userParams.empty());
-    unit_assert(!instrumentConfiguration.componentList.source.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!instrumentConfiguration.componentList.source(0).paramGroupPtrs[0]->userParams.empty());
     unit_assert(instrumentConfiguration.softwarePtr->softwareParamVersion == "4.20");
 }
 

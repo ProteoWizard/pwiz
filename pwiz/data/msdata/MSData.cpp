@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <iterator>
 #include "boost/lexical_cast.hpp"
-
+#include "boost/format.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -275,6 +275,23 @@ PWIZ_API_DECL bool Sample::empty() const
 //
 
 
+PWIZ_API_DECL void Component::define(CVID cvid, int order)
+{
+    cvParams.clear();
+    cvParams.push_back(cvid);
+    this->order = order;
+
+    if (cvIsA(cvid, MS_ionization_type))
+        type = ComponentType_Source;
+    else if (cvIsA(cvid, MS_mass_analyzer_type))
+        type = ComponentType_Analyzer;
+    else if (cvIsA(cvid, MS_detector_type))
+        type = ComponentType_Detector;
+    else
+        throw runtime_error(("[Component::define] Error determining component type for term \"" + cvinfo(cvid).name + "\""));
+}
+
+
 PWIZ_API_DECL bool Component::empty() const
 {
     return order==0 && ParamContainer::empty();
@@ -286,10 +303,59 @@ PWIZ_API_DECL bool Component::empty() const
 //
 
 
-PWIZ_API_DECL bool ComponentList::empty() const
+PWIZ_API_DECL Component& ComponentList::source(size_t index)
 {
-    return source.empty() && analyzer.empty() && detector.empty();
+    size_t count = 0;
+    for (size_t i=0; i < size(); ++i)
+    {
+        Component& c = at(i);
+        if (c.type == ComponentType_Source)
+        {
+            if (count == index)
+                return c;
+            ++count;
+        }
+    }
+    throw out_of_range((boost::format("[ComponentList::source] Source %d is out of range; only found %d sources") % index % count).str());
 }
+
+
+PWIZ_API_DECL Component& ComponentList::analyzer(size_t index)
+{
+    size_t count = 0;
+    for (size_t i=0; i < size(); ++i)
+    {
+        Component& c = at(i);
+        if (c.type == ComponentType_Analyzer)
+        {
+            if (count == index)
+                return c;
+            ++count;
+        }
+    }
+    throw out_of_range((boost::format("[ComponentList::analyzer] Analyzer %d is out of range; only found %d analyzers") % index % count).str());
+}
+
+
+PWIZ_API_DECL Component& ComponentList::detector(size_t index)
+{
+    size_t count = 0;
+    for (size_t i=0; i < size(); ++i)
+    {
+        Component& c = at(i);
+        if (c.type == ComponentType_Detector)
+        {
+            if (count == index)
+                return c;
+            ++count;
+        }
+    }
+    throw out_of_range((boost::format("[ComponentList::detector] Detector %d is out of range; only found %d detectors") % index % count).str());
+}
+//PWIZ_API_DECL bool ComponentList::empty() const
+//{
+//    return source.empty() && analyzer.empty() && detector.empty();
+//}
 
 
 //

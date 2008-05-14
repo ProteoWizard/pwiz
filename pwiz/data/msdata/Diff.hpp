@@ -136,27 +136,6 @@ void diff(const Component& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Source& a,
-          const Source& b,
-          Source& a_b,
-          Source& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const Analyzer& a,
-          const Analyzer& b,
-          Analyzer& a_b,
-          Analyzer& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const Detector& a,
-          const Detector& b,
-          Detector& a_b,
-          Detector& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const ComponentList& a,
           const ComponentList& b,
           ComponentList& a_b,

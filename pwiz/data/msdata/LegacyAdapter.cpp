@@ -196,7 +196,7 @@ void LegacyAdapter_Instrument::manufacturerAndModel(const string& valueManufactu
 
 PWIZ_API_DECL string LegacyAdapter_Instrument::ionisation() const
 {
-    return impl_->get(impl_->instrumentConfiguration.componentList.source, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.source(0), 
                       MS_ionization_type, 
                       "msIonisation");
 }
@@ -204,7 +204,7 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::ionisation() const
 
 PWIZ_API_DECL void LegacyAdapter_Instrument::ionisation(const string& value)
 {
-    impl_->set(impl_->instrumentConfiguration.componentList.source, 
+    impl_->set(impl_->instrumentConfiguration.componentList.source(0), 
                MS_ionization_type, 
                "msIonisation", 
                value);
@@ -213,7 +213,7 @@ PWIZ_API_DECL void LegacyAdapter_Instrument::ionisation(const string& value)
 
 PWIZ_API_DECL string LegacyAdapter_Instrument::analyzer() const
 {
-    return impl_->get(impl_->instrumentConfiguration.componentList.analyzer, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.analyzer(0), 
                       MS_mass_analyzer_type, 
                       "msMassAnalyzer");
 }
@@ -221,7 +221,7 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::analyzer() const
 
 PWIZ_API_DECL void LegacyAdapter_Instrument::analyzer(const string& value)
 {
-    impl_->set(impl_->instrumentConfiguration.componentList.analyzer, 
+    impl_->set(impl_->instrumentConfiguration.componentList.analyzer(0), 
                MS_mass_analyzer_type, 
                "msMassAnalyzer", 
                value);
@@ -230,7 +230,7 @@ PWIZ_API_DECL void LegacyAdapter_Instrument::analyzer(const string& value)
 
 PWIZ_API_DECL string LegacyAdapter_Instrument::detector() const
 {
-    return impl_->get(impl_->instrumentConfiguration.componentList.detector, 
+    return impl_->get(impl_->instrumentConfiguration.componentList.detector(0), 
                       MS_detector_type, 
                       "msDetector");
 }
@@ -238,7 +238,7 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::detector() const
 
 PWIZ_API_DECL void LegacyAdapter_Instrument::detector(const string& value)
 {
-    impl_->set(impl_->instrumentConfiguration.componentList.detector, 
+    impl_->set(impl_->instrumentConfiguration.componentList.detector(0), 
                MS_detector_type, 
                "msDetector", 
                value);

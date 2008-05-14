@@ -95,15 +95,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     instrumentConfigurationPtr->id = "LCQDeca";
     instrumentConfigurationPtr->set(MS_LCQ_Deca);
     instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
-    Source& source = instrumentConfigurationPtr->componentList.source;
-    source.order = 1;
-    source.set(MS_nanoelectrospray);
-    Analyzer& analyzer = instrumentConfigurationPtr->componentList.analyzer;
-    analyzer.order = 2;
-    analyzer.set(MS_quadrupole_ion_trap);
-    Detector& detector = instrumentConfigurationPtr->componentList.detector;
-    detector.order = 3;
-    detector.set(MS_electron_multiplier);
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_nanoelectrospray, 1));
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
+    instrumentConfigurationPtr->componentList.push_back(Component(MS_electron_multiplier, 3));
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
@@ -305,7 +299,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     tic.nativeID = "tic native";
     tic.defaultArrayLength = 15;
     tic.dataProcessingPtr = dpXcalibur;
-    tic.set(MS_total_ion_chromatogram__);
+    tic.set(MS_total_ion_current_chromatogram);
 
     BinaryDataArrayPtr tic_time(new BinaryDataArray);
     tic_time->dataProcessingPtr = dppwiz;
@@ -330,7 +324,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sic.nativeID = "sic native";
     sic.defaultArrayLength = 10;
     sic.dataProcessingPtr = dppwiz;
-    sic.set(MS_total_ion_chromatogram__);
+    sic.set(MS_total_ion_current_chromatogram);
 
     BinaryDataArrayPtr sic_time(new BinaryDataArray);
     sic_time->dataProcessingPtr = dppwiz;
@@ -406,8 +400,12 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
          end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
     {
-        Source& source = (*it)->componentList.source;
-        source.set(MS_source_potential, "4.20", UO_kilovolt); 
+        for (size_t i=0; i < (*it)->componentList.size(); ++i)
+        {
+            Component& c = (*it)->componentList[i];
+            if (c.type == ComponentType_Source)
+                c.set(MS_source_potential, "4.20", UO_kilovolt);
+        }
     }
  
     // dataProcesingList

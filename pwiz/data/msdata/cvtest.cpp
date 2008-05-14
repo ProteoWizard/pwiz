@@ -60,10 +60,10 @@ void test()
 
 void testIsA()
 {
-    unit_assert(cvIsA(MS_dalton, MS_mass_unit));
+    unit_assert(cvIsA(MS_Dalton, MS_mass_unit));
     unit_assert(cvIsA(MS_mass_unit, MS_unit));
-    unit_assert(cvIsA(MS_dalton, MS_unit));
-    unit_assert(!cvIsA(MS_dalton, MS_energy_unit));
+    unit_assert(cvIsA(MS_Dalton, MS_unit));
+    unit_assert(!cvIsA(MS_Dalton, MS_energy_unit));
     unit_assert(cvIsA(MS_m_z, MS_m_z));
     unit_assert(cvIsA(MS_FT_ICR, MS_mass_analyzer_type));
 }
