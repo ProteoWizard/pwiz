@@ -33,9 +33,6 @@ project pwiz
         # is there any platform where static runtime linkage does not necessiate static object linkage?
         <runtime-link>static:<link>static
 
-        # static runtime linking for gcc
-        #<toolset>gcc:<runtime-link>static
-
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
@@ -67,7 +64,12 @@ project pwiz
         <toolset>darwin:<debug-symbols>on
 
     : build-dir ../build
-    : default-build release <link>static 
+    : usage-requirements
+        <include>.
+    : default-build
+        release
+        <link>static
+        <runtime-link>static
     ;
 
 
@@ -80,20 +82,6 @@ lib gd : : <toolset>msvc <name>bgd <search>../libraries : : <include>../librarie
 
 lib fftw3 ;
 lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>../libraries : : <include>../libraries/fftw-3.1.2/api ;
-
-#
-# Boost libraries notes:
-#
-# For gcc, builds are <runtime-link>static.  To build the boost libraries with static
-# runtime linking, use "bjam stage runtime-link=static" from the root of the Boost 
-# distribution.  This will produce files with filenames like "libboost_filesystem-gcc41-mt-s.a".
-# The declarations below use a shortened name, so you should either rename or use a symbolic
-# link, and put in your library path:
-#   ln -s libboost_filesystem-gcc41-mt-s libboost_filesystem-gcc.a
-#
-# msdata/cvgen requires boost::regex to be built with BOOST_REGEX_MATCH_EXTRA defined in 
-# boost/regex/user.hpp
-#
 
 lib boost_filesystem : : <toolset>gcc <name>boost_filesystem ;
 #lib boost_filesystem : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_filesystem-vc80-mt ;
@@ -139,4 +127,3 @@ lib boost_regex : : <toolset>msvc <variant>release <link>static <runtime-link>st
 lib boost_regex : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_regex-vc80-mt-gd ;
 lib boost_regex : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_regex-vc80-mt-sgd ;
 lib boost_regex ;
-
