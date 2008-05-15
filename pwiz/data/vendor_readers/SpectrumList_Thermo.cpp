@@ -256,13 +256,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     else if (scanInfo->isCentroidScan() || centroidSpectra_) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
 
     scan.cvParams.push_back(CVParam(MS_scan_time, scanInfo->startTime(), MS_minute));
-    sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, scanInfo->lowMass()));
-    sd.cvParams.push_back(CVParam(MS_highest_m_z_value, scanInfo->highMass()));
     sd.cvParams.push_back(CVParam(MS_base_peak_m_z, scanInfo->basePeakMass()));
     sd.cvParams.push_back(CVParam(MS_base_peak_intensity, scanInfo->basePeakIntensity()));
     sd.cvParams.push_back(CVParam(MS_total_ion_current, scanInfo->totalIonCurrent()));
 
-    scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass())); // TODO: check that these values are the ones we want
+    scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
 
     for (long i=0, precursorCount=scanInfo->parentCount(); i<precursorCount; i++)
     {
@@ -295,6 +293,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     {
         auto_ptr<raw::MassList> massList = 
             rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, centroidSpectra_);
+
+        sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, massList->data()[0].mass));
+        sd.cvParams.push_back(CVParam(MS_highest_m_z_value, massList->data()[massList->size()-1].mass));
 
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
                                     massList->size());
