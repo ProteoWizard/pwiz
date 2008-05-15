@@ -69,27 +69,56 @@ const char* sampleEncoded32Big_ = "Q0gADAAAAABDSAAcAAAAAENIACwAAAAAQ0gAPAAAAABDS
 const char* sampleEncoded32Little_ = "DABIQwAAAAAcAEhDAAAAACwASEMAAAAAPABIQwAAAABCG0lDAAAAAFIbSUMAAAAAYhtJQwAAAAByG0lDAAAAAIIbSUPTK2NEkhtJQ55InkSiG0lDqkOdRLIbSUPHMlREwhtJQwAAAADSG0lDAAAAAOIbSUMAAAAAAABIQwAAAAAAAJZDAACAPwAAyEMAACBBAAD6QwAAyEIAABZEAAB6RA==";
 const char* sampleEncoded64Little_ = "/xedigEAaUAAAAAAAAAAAIV5fYYDAGlAAAAAAAAAAACkK16CBQBpQAAAAAAAAAAAXy4/fgcAaUAAAAAAAAAAAK4HNjVoI2lAAAAAAAAAAACrvLg2aiNpQAAAAAAAAAAAnMM7OGwjaUAAAAAAAAAAAIIcvzluI2lAAAAAAAAAAABax0I7cCNpQAAAAGB6ZYxAJcTGPHIjaUAAAADAE8mTQOUSSz50I2lAAAAAQHWok0CYs88/diNpQAAAAOBYhopAP6ZUQXgjaUAAAAAAAAAAANvq2UJ6I2lAAAAAAAAAAABpgV9EfCNpQAAAAAAAAAAAAAAAAAAAaUAAAAAAAAAAAAAAAAAAwHJAAAAAAAAA8D8AAAAAAAB5QAAAAAAAACRAAAAAAABAf0AAAAAAAABZQAAAAAAAwIJAAAAAAABAj0A=";
 const char* sampleEncoded64Big_ = "QGkAAYqdF/8AAAAAAAAAAEBpAAOGfXmFAAAAAAAAAABAaQAFgl4rpAAAAAAAAAAAQGkAB34/Ll8AAAAAAAAAAEBpI2g1NgeuAAAAAAAAAABAaSNqNri8qwAAAAAAAAAAQGkjbDg7w5wAAAAAAAAAAEBpI245vxyCAAAAAAAAAABAaSNwO0LHWkCMZXpgAAAAQGkjcjzGxCVAk8kTwAAAAEBpI3Q+SxLlQJOodUAAAABAaSN2P8+zmECKhljgAAAAQGkjeEFUpj8AAAAAAAAAAEBpI3pC2erbAAAAAAAAAABAaSN8RF+BaQAAAAAAAAAAQGkAAAAAAAAAAAAAAAAAAEBywAAAAAAAP/AAAAAAAABAeQAAAAAAAEAkAAAAAAAAQH9AAAAAAABAWQAAAAAAAECCwAAAAAAAQI9AAAAAAAA=";
+const char* sampleEncoded32LittleZlib_ = "eJzjYfBwZgACGSitA6VtoLSTtCeYDoLSSVC6CEo3AenL2skuk4D0PI95LouA9CrnuS6bgPRxoxCXQ1B1l6D0IyjNADWfgWEakG6wZ2A4AaQVHBkYfgHpE04MDGIuDAxVLgB7LB3q";
+const char* sampleEncoded32BigZlib_ = "eJxz9mDgYQACZw8GGSitA6VtwLSntBOUDoLSSVC6CEo3uSRrXwbSk1zmecwD0otc5jqvAtKbXEKMjgPpQ1B1l6D0I6j5YOA8jYHBvgFIn2BgcFQA0r8YGJyAbBcxIK5iYAAAfLkd6g==";
+const char* sampleEncoded64LittleZlib_ = "eJz7Lz63i5Eh04EBClora9uYkfhLtOOaWJH48Xr2dexI/HXsZqYZygj+6j07zLKQ+HMOW1vkIPGbZPZb5iHxo447WRdA+AlVqT0OqkeO2RRB+AeET052eCrkbVcC4TuUrpjsMGPzefsyCP9BRFuXg/2yEMcKJPNuv7rpVIXEz2yMd6lB4kNFUfkHiqD8D/YQuhLKV4HQDvVQfiSEPtAEFe93AACmsz1+";
+const char* sampleEncoded64BigZlib_ = "eJxzyGRg7Jor/p8BChwyGZjbaitbkfisTXHaS5D47HX2evEIvnKGqRn7OiR+ltmOPauR+DkW1ofnIPHzLPfLNCHxC6ydjkc59KRWJUD4RTbHjqg6TD4pfADCL7HzFnrqMHlFqQOEX2Z/fvMMh662iAcQfoVjyDJ7JPOqnG6+uo3Er3GJb8xEcj8KcCg6AKbtP0D5lVBaBUrXO0DoSCi/CaLeoR8iDgC0Qj1+";
+
 
 
 const char* regressionTest(const BinaryDataEncoder::Config& config)
 {
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian)
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
+        config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded32Little_;
 
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
+        config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded32Big_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian)
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
+        config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Little_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
+        config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Big_;
+
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
+        config.compression == BinaryDataEncoder::Compression_Zlib)
+        return sampleEncoded32LittleZlib_;
      
-    throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
+        config.compression == BinaryDataEncoder::Compression_Zlib)
+        return sampleEncoded32BigZlib_;
+
+    if (config.precision == BinaryDataEncoder::Precision_64 &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
+        config.compression == BinaryDataEncoder::Compression_Zlib)
+        return sampleEncoded64LittleZlib_;
+     
+    if (config.precision == BinaryDataEncoder::Precision_64 &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
+        config.compression == BinaryDataEncoder::Compression_Zlib)
+        return sampleEncoded64BigZlib_;
+
+     throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
 }
 
  
@@ -140,14 +169,16 @@ void testConfiguration(const BinaryDataEncoder::Config& config)
     // validate by comparing scan data before/after encode/decode
 
     unit_assert(binary.size() == decoded.size());
-    const double epsilon = 1e-5; 
+
+    const double epsilon = config.precision == BinaryDataEncoder::Precision_64 ? 1e-14 : 1e-5 ;
+
     for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
          it!=binary.end(); ++it, ++jt)
     {
         unit_assert_equal(*it, *jt, epsilon);
     }
 
-    if (os_) *os_ << "validated with epsilon: " << epsilon << "\n\n";
+    if (os_) *os_ << "validated with epsilon: " << fixed << setprecision(1) << scientific << epsilon << "\n\n";
 }
 
 
@@ -170,6 +201,29 @@ void test()
     config.precision = BinaryDataEncoder::Precision_64;
     config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     testConfiguration(config);
+
+/*
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+  
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+*/
+
 }
 
 

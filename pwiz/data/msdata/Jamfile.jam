@@ -68,10 +68,12 @@ lib pwiz_data_msdata
     : # requirements
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../..//boost_iostreams
     : # default-build
     : # usage-requirements
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../..//boost_iostreams
     ;
 
 

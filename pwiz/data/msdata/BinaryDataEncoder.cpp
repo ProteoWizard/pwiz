@@ -27,7 +27,12 @@
 #include "utility/misc/Base64.hpp"
 #include "utility/misc/endian.hpp"
 #include "boost/static_assert.hpp"
+#include "boost/iostreams/filtering_streambuf.hpp"
+#include "boost/iostreams/copy.hpp"
+#include "boost/iostreams/filter/zlib.hpp"
+#include "boost/iostreams/device/array.hpp"
 #include <iostream>
+#include <sstream>
 #include <iterator>
 #include <stdexcept>
 
@@ -38,6 +43,7 @@ namespace msdata {
 
 using namespace std;
 using namespace util;
+using namespace boost::iostreams;
 
 
 //
@@ -76,6 +82,23 @@ void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result)
 {
     if (data.empty()) return;
     encode(&data[0], data.size(), result);
+}
+
+
+template <typename filter_type>
+void filterArray(const void* byteBuffer, size_t byteCount, ostringstream& result)
+{
+    array_source source(reinterpret_cast<const char*>(byteBuffer), byteCount);
+    filtering_streambuf<input> in;
+    in.push(filter_type());
+    in.push(source);
+    boost::iostreams::copy(in, result);
+
+
+    // hacks?
+    in.pop();
+    in.pop();
+
 }
 
 
@@ -136,12 +159,21 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
 
     // compression
 
-    if (config_.compression != Compression_None)
+    ostringstream compressed;
+    if (config_.compression == Compression_Zlib)
     {
-        throw runtime_error("[BinaryDataEncoder::encode()] Compression not implemented."); 
+        throw runtime_error("[BinaryDataEncoder::encode()] Compression not implemented");
 
-        // similar to downconversion and byte order, allocate new array on stack
-        // and set byteBuffer and byteCount
+        filterArray<zlib_compressor>(byteBuffer, byteCount, compressed);
+        if (!compressed.str().empty())
+        {
+            byteBuffer = reinterpret_cast<void*>(&compressed.str()[0]);
+            byteCount = compressed.str().size();
+        }
+        else
+        {
+            throw runtime_error("[BinaryDataEncoder::encode()] Compression error?");
+        }
     }
 
     // Base64 encoding
@@ -185,9 +217,21 @@ void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& 
 
     // decompression
 
-    if (config_.compression != Compression_None)
+    ostringstream decompressed;
+    if (config_.compression == Compression_Zlib)
     {
-        throw runtime_error("[BinaryDataEncoder::decode()] Compression not implemented."); 
+        throw runtime_error("[BinaryDataEncoder::decode()] Compression not implemented");
+
+        filterArray<zlib_decompressor>(byteBuffer, byteCount, decompressed);
+        if (!decompressed.str().empty())
+        {
+            byteBuffer = reinterpret_cast<void*>(&decompressed.str()[0]);
+            byteCount = decompressed.str().size();
+        }
+        else
+        {
+            throw runtime_error("[BinaryDataEncoder::decode()] Compression error?");
+        }
     }
 
     // endianization
