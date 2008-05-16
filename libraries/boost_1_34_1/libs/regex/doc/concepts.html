@@ -1,0 +1,453 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Index</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Concepts</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <H3><A name="charT"></A>charT requirements</H3>
+      <P>Type charT used a template argument to <A href="basic_regex.html">class template 
+            basic_regex</A>, must have a trivial default constructor, copy constructor, 
+         assignment operator, and destructor.&nbsp; In addition the following 
+         requirements must be met for objects; c of type charT, c1 and c2 of type charT 
+         const, and i of type int:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="100%" border="1">
+            <TR>
+               <TD><STRONG>Expression</STRONG></TD>
+               <TD><STRONG>Return type</STRONG></TD>
+               <TD><STRONG>Assertion / Note / Pre- / Post-condition</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>charT c</TD>
+               <TD>charT</TD>
+               <TD>Default constructor (must be trivial).</TD>
+            </TR>
+            <TR>
+               <TD>charT c(c1)</TD>
+               <TD>charT</TD>
+               <TD>Copy constructor (must be trivial).</TD>
+            </TR>
+            <TR>
+               <TD>c1 = c2</TD>
+               <TD>charT</TD>
+               <TD>Assignment operator (must be trivial).</TD>
+            </TR>
+            <TR>
+               <TD>c1 == c2</TD>
+               <TD>bool</TD>
+               <TD>true if&nbsp;c1 has the same value&nbsp;as c2.</TD>
+            </TR>
+            <TR>
+               <TD>c1 != c2</TD>
+               <TD>bool</TD>
+               <TD>true if c1 and c2 are not equal.</TD>
+            </TR>
+            <TR>
+               <TD>c1 &lt; c2</TD>
+               <TD>bool</TD>
+               <TD>true if the value of c1 is less than c2.</TD>
+            </TR>
+            <TR>
+               <TD>c1 &gt; c2</TD>
+               <TD>bool</TD>
+               <TD>true if the value of c1 is greater than c2.</TD>
+            </TR>
+            <TR>
+               <TD>c1 &lt;= c2</TD>
+               <TD>bool</TD>
+               <TD>true if c1 is less than or equal to c2.</TD>
+            </TR>
+            <TR>
+               <TD>c1 &gt;= c2</TD>
+               <TD>bool</TD>
+               <TD>true if c1 is greater than or equal to c2.</TD>
+            </TR>
+            <TR>
+               <TD>intmax_t i = c1</TD>
+               <TD>int</TD>
+               <TD>
+                  <P>charT must be convertible to an integral type.</P>
+                  <P>Note: type charT is not required to support this operation, if the traits class 
+                     used supports the full Boost-specific interface, rather than&nbsp;the minimal 
+                     standardised-interface (see traits class requirements below).</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>charT c(i);</TD>
+               <TD>charT</TD>
+               <TD>charT must be constructable from an integral type.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <H3><A name="traits"></A>traits requirements</H3>
+      <P>There are two sets of requirements for the traits template argument to 
+         basic_regex: a mininal interface (which is part of the regex standardization 
+         proposal), and an optional Boost-specific enhanced interface.</P>
+      <H4>Minimal requirements.</H4>
+      <P>In the following table X denotes a traits class defining types and functions 
+         for the character container type charT; u is an object of type X; v is an 
+         object of type const X; p is a value of type const charT*; I1 and I2 are Input 
+         Iterators; c is a value of type const charT; s is an object of type 
+         X::string_type; cs is an object of type const X::string_type; b is a value of 
+         type bool; I is a value of type int; F1 and F2 are values of type const charT*; 
+         and loc is an object of type X::locale_type.</P>
+      <P>
+         <TABLE id="Table3" cellSpacing="1" cellPadding="7" width="100%" border="1">
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P><STRONG>Expression</STRONG></P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P><STRONG>Return type</STRONG></P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P><STRONG>Assertion / Note
+                        <BR>
+                        Pre / Post condition</STRONG></P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::char_type</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>charT</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>The character container type used in the implementation of class template <CODE>basic_regex</CODE>.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::size_type</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>&nbsp;</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>An unsigned integer type, capable of holding the length of a null-terminated 
+                     string of charT's.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::string_type</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>std::basic_string&lt;charT&gt; or std::vector&lt;charT&gt;</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>&nbsp;</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::locale_type</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>Implementation defined</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>A copy constructible type that represents the locale used by the traits class.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::char_class_type</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>Implementation defined</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>A bitmask type representing a particular character classification. Multiple 
+                     values of this type can be bitwise-or'ed together to obtain a new valid value.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>X::length(p)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::size_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Yields the smallest <CODE>i</CODE> such that <CODE>p[i] == 0</CODE>. Complexity 
+                     is linear in <CODE>i</CODE>.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.translate(c)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::char_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns a character such that for any character d that is to be considered 
+                     equivalent to c then v.translate(c) == v.translate(d).</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.translate_nocase(c)</P>
+               </TD>
+               <TD vAlign="top" width="28%">X::char_type</TD>
+               <TD vAlign="top" width="45%">For all characters C that are to be considered 
+                  equivalent to c when comparisons are to be performed without regard to case, 
+                  then v.translate_- nocase(c) == v.translate_- nocase(C).</TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.transform(F1, F2)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::string_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns a sort key for the character sequence designated by the iterator range 
+                     [F1, F2) such that if the character sequence [G1, G2) sorts before the 
+                     character sequence [H1, H2) then v.transform(G1, G2) &lt; v.transform(H1, 
+                     H2).&nbsp;</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.transform_primary(F1, F2)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::string_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns a sort key for the character sequence designated by the iterator range 
+                     [F1, F2) such that if the character sequence [G1, G2) sorts before the 
+                     character sequence [H1, H2) when character case is not considered then 
+                     v.transform_primary(G1, G2) &lt; v.transform_- primary(H1, H2).</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.lookup_classname(F1, F2)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::char_class_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Converts the character sequence designated by the iterator range [F1,F2) into a 
+                     bitmask type that can subsequently be passed to isctype. Values returned from 
+                     lookup_classname can be safely bitwise or'ed together. Returns 0 if the 
+                     character sequence is not the name of a character class recognized by X. The 
+                     value returned shall be independent of the case of the characters in the 
+                     sequence.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.lookup_collatename(F1, F2)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::string_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns a sequence of characters that represents the collating element 
+                     consisting of the character sequence designated by the iterator range [F1, F2). 
+                     Returns an empty string if the character sequence is not a valid collating 
+                     element.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.isctype(c, v.lookup_classname (F1, F2))</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>bool</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns true if character c is a member of the character class designated by 
+                     the iterator range [F1, F2), false otherwise.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.value(c, i)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>int</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns the value represented by the digit c in base I if the character c is a 
+                     valid digit in base I; otherwise returns -1. [Note: the value of I will only be 
+                     8, 10, or 16. -end note]</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>u.imbue(loc)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::locale_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Imbues <CODE>u</CODE> with the locale <CODE>loc</CODE>, returns the previous 
+                     locale used by u if any.&nbsp;</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.getloc()</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>X::locale_type</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns the current locale used by <CODE>v</CODE> if any.&nbsp;</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD vAlign="top" width="28%">
+                  <P>v.error_string(i)</P>
+               </TD>
+               <TD vAlign="top" width="28%">
+                  <P>std::string</P>
+               </TD>
+               <TD vAlign="top" width="45%">
+                  <P>Returns a human readable error string for the error condition <CODE>i</CODE>, 
+                     where <CODE>i</CODE> is one of the values enumerated by type <CODE>regex_constants::error_type</CODE>.&nbsp; 
+                     If the value <CODE>i</CODE> is not recognized then returns the string "Unknown 
+                     error" or a localized equivalent.</P>
+               </TD>
+            </TR>
+         </TABLE>
+      </P>
+      <H4>Additional Optional Requirements</H4>
+      <P>The following additional requirements are strictly optional, however in order 
+         for basic_regex to take advantage of these additional interfaces, all of the 
+         following requirements must be met; basic_regex will detect the presence or 
+         absense of member <EM>boost_extensions_tag </EM>and configure itself 
+         appropriately.</P>
+      <P>
+         <TABLE id="Table4" cellSpacing="1" cellPadding="1" width="100%" border="1">
+            <TR>
+               <TD><STRONG>Expression</STRONG></TD>
+               <TD width="231"><STRONG>Result</STRONG></TD>
+               <TD>
+                  <P><STRONG>Assertion / Note
+                        <BR>
+                        Pre / Post condition</STRONG></P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>X::boost_extensions_tag</TD>
+               <TD width="231">An unspecified type.</TD>
+               <TD>When present, all of the extensions listed in this table must be present.</TD>
+            </TR>
+            <TR>
+               <TD>
+                  <P>v.syntax_type(c)</P>
+               </TD>
+               <TD width="231"><A href="../../../boost/regex/v4/syntax_type.hpp">regex_constants::syntax_type</A></TD>
+               <TD>
+                  <P>Returns a symbolic value of type <CODE>regex_constants::syntax_type </CODE>that 
+                     signifies the meaning of character <CODE>c</CODE> within the regular expression 
+                     grammar.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>v.escape_syntax_type(c)</TD>
+               <TD width="231"><A href="../../../boost/regex/v4/syntax_type.hpp">regex_constants::escape_syntax_type</A></TD>
+               <TD>
+                  <P>Returns a symbolic value of type <CODE>regex_constants::escape_syntax_type</CODE>, 
+                     that signifies the meaning of character <CODE>c</CODE>&nbsp;within the regular 
+                     expression grammar, when <CODE>c</CODE> has been preceded by an escape 
+                     character. Precondition: if <CODE>b</CODE> is the character preceding <CODE>c</CODE>
+                     in the expression being parsed then: <CODE>v.syntax_type(b) == syntax_escape</CODE></P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>
+                  <P>v.translate(c, b)</P>
+               </TD>
+               <TD width="231">X::char_type</TD>
+               <TD>
+                  <P>Returns a character <CODE>d</CODE> such that: for any character <CODE>d</CODE> that 
+                     is to be considered equivalent to <CODE>c</CODE>&nbsp;then <CODE>v.translate(c,false)==v.translate(d,false)</CODE>. 
+                     Likewise for all characters <CODE>C</CODE> that are to be considered equivalent 
+                     to <CODE>c</CODE> when comparisons are to be performed without regard to case, 
+                     then <CODE>v.translate(c,true)==v.translate(C,true)</CODE>.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>
+                  <P>v.toi(I1, I2, i)</P>
+               </TD>
+               <TD width="231">An integer type capable of holding either a charT or an int.</TD>
+               <TD>
+                  <P>Behaves as follows: if <CODE>p==q</CODE> or if <CODE>*p </CODE>is not a digit 
+                     character then returns -1. Otherwise performs formatted numeric input on the 
+                     sequence [p,q) and returns the result as an int. Postcondition: either <CODE>p == 
+                        q</CODE> or <CODE>*p</CODE> is a non-digit character.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>
+                  <P>v.error_string(i)</P>
+               </TD>
+               <TD width="231">std::string</TD>
+               <TD>
+                  <P>Returns a human readable error string for the error condition <CODE>i</CODE>, 
+                     where <CODE>i</CODE> is one of the values enumerated by type <CODE><A href="error_type.html">
+                           regex_constants::error_type</A></CODE>.&nbsp; If the value <CODE>i</CODE> 
+                     is not recognized then returns the string "Unknown error" or a localized 
+                     equivalent.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>v.tolower(c)</TD>
+               <TD width="231">X::char_type</TD>
+               <TD>Converts c to lower case, used for Perl-style \l and \L formating operations.</TD>
+            </TR>
+            <TR>
+               <TD>v.toupper(c)</TD>
+               <TD width="231">X::char_type</TD>
+               <TD>Converts c to upper case, used for Perl-style \u and \U formating operations.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <H3><A name="iterator"></A>Iterator Rrequirements</H3>
+      <P>
+      <P>The regular expression algorithms (and iterators) take all require a 
+         Bidirectional-Iterator.</P>
+      <P>
+         <HR>
+      </P>
+      <P></P>
+      <p>Revised 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         24&nbsp;June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

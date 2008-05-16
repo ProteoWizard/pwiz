@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: class regex_traits</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">class regex_traits</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#synopsis">Synopsis</A> <dt><a href="#description">Description</a></dt>
+      </dl>
+      <H3><A name="synopsis"></A>Synopsis</H3>
+      <pre>
+namespace boost{
+
+template &lt;class charT, class implementationT = sensible_default_choice&gt;
+struct regex_traits : public implementationT
+{
+   regex_traits() : implementationT() {}
+};
+
+template &lt;class charT&gt;
+struct c_regex_traits;
+
+template &lt;class charT&gt;
+struct cpp_regex_traits;
+
+template &lt;class charT&gt;
+struct w32_regex_traits;
+
+} // namespace boost
+</pre>
+      <H3><A name="description"></A>Description</H3>
+      <P>The class regex_traits is just a thin wrapper around an actual implemention 
+         class, which may be one of:</P>
+      <UL>
+         <LI>
+            c_regex_traits: this class is deprecated, it wraps the C locale, and is used as 
+            the default implementation when the platform is not Win32, and the C++ locale 
+            is not available.</LI>
+         <LI>
+            cpp_regex_traits: the default traits class for non-Win32 platforms, allows the 
+            regex class to be imbued with a std::locale instance.</LI>
+         <LI>
+            w32_regex_traits: the default traits class implementation on Win32 platforms, 
+            allows the regex class to be imbued with an LCID.</LI></UL>
+      <P>The default behavior can be altered by defining one of the following 
+         configuration macros in <A href="../../../boost/regex/user.hpp">boost/regex/user.hpp</A>:</P>
+      <UL>
+         <LI>
+            BOOST_REGEX_USE_C_LOCALE: makes c_regex_traits the default.</LI>
+         <LI>
+            BOOST_REGEX_USE_CPP_LOCALE: makes cpp_regex_traits the default.</LI></UL>
+      <P>All these traits classes fulfil the <A href="concepts.html#traits">traits class 
+            requirements</A>.</P>
+      <HR>
+      <P></P>
+      <p>Revised 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         24&nbsp;June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->
+            2004</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

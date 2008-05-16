@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: regex_error</title>
+      <meta name="generator" content="HTML Tidy, see www.w3.org">
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <p></p>
+      <table id="Table1" cellspacing="1" cellpadding="1" width="100%" border="0">
+         <tr>
+            <td valign="top" width="300">
+               <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+            </td>
+            <td width="353">
+               <h1 align="center">Boost.Regex</h1>
+               <h2 align="center">class regex_error</h2>
+            </td>
+            <td width="50">
+               <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+            </td>
+         </tr>
+      </table>
+      <br>
+      <br>
+      <hr>
+      <h3>Synopsis</h3>
+      <p>#include &lt;<a href="../../../boost/regex/pattern_except.hpp">boost/pattern_except.hpp</a>&gt;</p>
+      <p>The class <code>regex_error</code> defines the type of objects thrown as 
+         exceptions to report errors during the conversion from a string representing a 
+         regular expression to a finite state machine.&nbsp;&nbsp;</p>
+      <pre>
+<b>namespace</b> boost{
+
+<b>class</b> regex_error : <b>public</b> std::runtime_error
+{
+<b>public</b>:
+   <b>explicit</b> regex_error(<b>const</b> std::string& s, <a href="error_type.html">regex_constants::error_type err</a>, std::ptrdiff_t pos);
+   <b>explicit</b> regex_error(<a href="error_type.html">boost::regex_constants::error_type err</a>);
+   <a href="error_type.html">boost::regex_constants::error_type</a> code()<b>const</b>;
+   std::ptrdiff_t position()<b>const</b>;
+};
+
+typedef regex_error bad_pattern; // for backwards compatibility
+typedef regex_error bad_expression; // for backwards compatibility
+
+} // namespace boost
+</pre>
+      <h3>Description</h3>
+      <pre>
+regex_error(<b>const</b> std::string& s, <a href="error_type.html">regex_constants::error_type</a> err, std::ptrdiff_t pos);
+regex_error(<a href="error_type.html">boost::regex_constants::error_type err</a>);</pre>
+      <p><b>Effects:</b> Constructs an object of class <code>regex_error</code>.</p>
+      <pre>
+<a href="error_type.html">boost::regex_constants::error_type</a> code()<b>const</b>;</pre>
+      <p><b>Effects:</b> returns the error code that represents parsing error that occurred.</p>
+      <pre>
+std::ptrdiff_t position()<b>const</b>; </pre>
+      <p><b>Effects:</b> returns the location in the expression where parsing stopped.</p>
+      <P>Footnotes: the choice of <code>std::runtime_error</code> as the base class for <code>
+            regex_error</code> is moot; depending upon how the library is used 
+         exceptions may be either logic errors (programmer supplied expressions) or run 
+         time errors (user supplied expressions).&nbsp; The library previously used <code>bad_pattern</code>
+         and <code>bad_expression</code> for errors, these have been replaced by the 
+         single class <code>regex_error</code> to keep the library in synchronization 
+         with the standardization proposal.</P>
+      <p></p>
+      <hr>
+      <p>Revised 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         24&nbsp;June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+

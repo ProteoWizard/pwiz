@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Redistributables and Library Names</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Redistributables and Library Names</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <P>If you are using Microsoft or Borland C++ and link to a dll version of the run 
+         time library, then you can choose to also link to a dll version of boost.regex 
+         by defining the symbol BOOST_REGEX_DYN_LINK when you compile your code. While 
+         these dll's are redistributable, there are no "standard" versions, so when 
+         installing on the users PC, you should place these in a directory private to 
+         your application, and not in the PC's directory path. Note that if you link to 
+         a static version of your run time library, then you will also link to a static 
+         version of boost.regex and no dll's will need to be distributed. The possible 
+         boost.regex dll and library names are computed according to the <A href="../../../more/getting_started.html#step5">
+            formula given in the getting started guide</A>.
+      </P>
+      <P>Note: you can disable automatic library selection by defining the symbol 
+         BOOST_REGEX_NO_LIB when compiling, this is useful if you want to build 
+         Boost.Regex yourself in your IDE, or if you need to debug boost.regex.
+      </P>
+      <P>
+         <HR>
+      <P></P>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         28 June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

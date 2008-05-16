@@ -1,0 +1,19 @@
+lib z
+:   $(location)/adler32.c
+    $(location)/compress.c
+    $(location)/crc32.c
+    $(location)/deflate.c
+    $(location)/gzio.c
+    $(location)/inffast.c
+    $(location)/inflate.c
+    $(location)/inftrees.c
+    $(location)/trees.c
+    $(location)/uncompr.c
+    $(location)/zutil.c
+:   <include>.
+    <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+    <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+    <link>shared:<define>ZLIB_DLL
+:
+:   <include>.
+;

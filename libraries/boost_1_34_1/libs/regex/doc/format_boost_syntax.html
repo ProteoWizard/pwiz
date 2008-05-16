@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Boost-Extended Format String Syntax</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Boost-Extended Format String Syntax</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <P>Boost-Extended&nbsp;format strings treat all characters as literals except for 
+         '$', '\', '(', ')', '?', ':' and '\'.</P>
+      <H4>Grouping</H4>
+      <P>The characters '(' and ')' perform lexical grouping, use \( and \) if you want 
+         a to output literal parenthesis.</P>
+      <H4>Conditionals</H4>
+      <P>The character '?' begins a conditional expression, the general form is:</P>
+      <PRE>?Ntrue-expression:false-expression</PRE>
+      <P>where N is decimal digit.</P>
+      <P>If sub-expression <EM>N</EM> was matched, then true-expression is evaluated and 
+         sent to output, otherwise false-expression is evaluated and sent to output.</P>
+      <P>You will normally need to surround a conditional-expression with parenthesis in 
+         order to prevent ambiguities.</P>
+      <H4>Placeholder Sequences</H4>
+      <P>Placeholder sequences specify that some part of what matched the regular 
+         expression should be sent to output as follows:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="4" cellPadding="1" width="100%" border="0">
+            <TR>
+               <TD><STRONG>Placeholder</STRONG></TD>
+               <TD><STRONG>Meaning</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>$&amp;</TD>
+               <TD>Outputs what matched the whole expression.</TD>
+            </TR>
+            <TR>
+               <TD>$`</TD>
+               <TD>Outputs the text between the end of the last match found (or the start of the 
+                  text if no previous match was found), and the start of the current match.</TD>
+            </TR>
+            <TR>
+               <TD>$'</TD>
+               <TD>Outputs all the text following the end of the current match.</TD>
+            </TR>
+            <TR>
+               <TD>$$</TD>
+               <TD>Outputs a literal '$'</TD>
+            </TR>
+            <TR>
+               <TD>$n</TD>
+               <TD>Outputs what matched the n'th sub-expression.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <P>Any $-placeholder sequence not listed above, results in '$' being treated as a 
+         literal.</P>
+      <H4>Escape Sequences</H4>
+      <P>An escape character followed by any character <EM>x</EM>, outputs that 
+         character unless <EM>x</EM> is one of the escape sequences shown below.</P>
+      <P>
+         <TABLE id="Table3" cellSpacing="4" cellPadding="1" width="100%" border="0">
+            <TR>
+               <TD><STRONG>Escape</STRONG></TD>
+               <TD><STRONG>Meaning</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>\a</TD>
+               <TD>Outputs the bell character: '\a'.</TD>
+            </TR>
+            <TR>
+               <TD>\e</TD>
+               <TD>Outputs the ANSI escape character (code point 27).</TD>
+            </TR>
+            <TR>
+               <TD>\f</TD>
+               <TD>Outputs a form feed character: '\f'</TD>
+            </TR>
+            <TR>
+               <TD>\n</TD>
+               <TD>Outputs a newline character: '\n'.</TD>
+            </TR>
+            <TR>
+               <TD>\r</TD>
+               <TD>Outputs a carriage return character: '\r'.</TD>
+            </TR>
+            <TR>
+               <TD>\t</TD>
+               <TD>Outputs a tab character: '\t'.</TD>
+            </TR>
+            <TR>
+               <TD>\v</TD>
+               <TD>Outputs a vertical tab character: '\v'.</TD>
+            </TR>
+            <TR>
+               <TD>\xDD</TD>
+               <TD>Outputs the character whose hexadecimal code point is 0xDD</TD>
+            </TR>
+            <TR>
+               <TD>\x{DDDD}</TD>
+               <TD>Outputs the character whose hexadecimal code point is 0xDDDDD</TD>
+            </TR>
+            <TR>
+               <TD>\cX</TD>
+               <TD>Outputs the ANSI escape sequence "escape-X".</TD>
+            </TR>
+            <TR>
+               <TD>\D</TD>
+               <TD>If <EM>D</EM> is a decimal digit in the range 1-9, then outputs the text that 
+                  matched sub-expression <EM>D</EM>.</TD>
+            </TR>
+            <TR>
+               <TD>\l</TD>
+               <TD>Causes the next character to be outputted, to be output in lower case.</TD>
+            </TR>
+            <TR>
+               <TD>\u</TD>
+               <TD>Causes the next character to be outputted, to be output in upper case.</TD>
+            </TR>
+            <TR>
+               <TD>\L</TD>
+               <TD>Causes all subsequent characters to be output in lower case, until a \E is 
+                  found.</TD>
+            </TR>
+            <TR>
+               <TD>\U</TD>
+               <TD>Causes all subsequent characters to be output in upper case, until a \E is 
+                  found.</TD>
+            </TR>
+            <TR>
+               <TD>\E</TD>
+               <TD>Terminates a \L or \U sequence.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <P>
+         <HR>
+      <P></P>
+      <P></P>
+      <p>Revised 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         24 Nov 2004 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;2004</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

@@ -1,0 +1,276 @@
+#~ Copyright Redshift Software, Inc. 2007.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+import feature ;
+import property ;
+import project ;
+import path ;
+import modules ;
+
+feature.feature extension : : optional implicit ;
+
+# Defines a Boost.Build extension project. Such extensions usually
+# contain library targets and features that can be used by many people.
+# Even though extensions are really projects, they can be initialize as
+# a module would be with the "using" (project.project-rules.using)
+# mechanism.
+rule declare ( extension + : options * : * )
+{
+    # The caller is a standalone module for the extension.
+    local mod = [ CALLER_MODULE ] ;
+
+#~ ECHO + *$(mod)* ;
+
+    modules.poke $(mod) : __extension__ : $(extension[1]) ;
+    
+    # We need to do the rest within the extension module.
+    module $(mod)
+    {
+        import path ;
+        import project ;
+        import feature ;
+        import common ;
+        
+        local ext = $(1[1]) ;
+        local ext-options = $(1[2-]) ;
+        
+        # Find the root project.
+        local root-project = [ project.current ] ;
+        root-project = [ $(root-project).project-module ] ;
+        while
+            [ project.attribute $(root-project) parent-module ] &&
+            [ project.attribute $(root-project) parent-module ] != user-config
+        {
+            root-project = [ project.attribute $(root-project) parent-module ] ;
+        }
+        
+        # Add the extension to the know list.
+        feature.extend extension : $(ext) ;
+        
+        # Create the project data, and bring in the project rules
+        # into the module.
+        project.initialize $(__name__) :
+            [ path.join [ project.attribute $(root-project) location ] ext $(ext:L) ] ;
+        
+        # Create the project itself, i.e. the attributes.
+        # All extensions are created in the "/ext" project space.
+        project /ext/$(ext) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        local attributes = [ project.attributes $(__name__) ] ;
+        
+        # Inherit from the root project of whomever is defining us.
+        project.inherit-attributes $(__name__) : $(root-project) ;
+        $(attributes).set parent-module : $(root-project) : exact ;
+        
+        # Set the extension value in the requirements.
+        local requirements = [ $(attributes).get requirements ] ;
+        $(attributes).set requirements :
+            [ $(requirements).add-raw <extension>$(ext) ] : exact ;
+
+        # All exntensions get version and location features. The version
+        # feature is composed to include the options for each extension
+        # version.
+        #~ feature.feature $(ext) : : optional ;
+        feature.feature $(ext)-version : : optional implicit composite ;
+        feature.feature $(ext)-location : : free ;
+
+        rule default-tag ( name : type ? : property-set )
+        {
+            return [ common.format-name
+                <base> <toolset> <threading> <runtime> <version:$(__extension__)-version>
+                : $(name) : $(type) : $(property-set) ] ;
+        }
+
+
+        rule when-file ( file : yes * : no * )
+        {
+            if [ path.exists [ path.make $(file) ] ]
+            {
+                return $(yes) ;
+            }
+            else
+            {
+                return $(no) ;
+            }
+        }
+    }
+}
+
+rule option ( extension name : values * )
+{
+    values ?= disable enable ;
+    feature.feature $(extension)-$(name) : $(values) : propagated incidental optional ;
+    .options.$(extension) += $(extension)-$(name) ;
+}
+
+rule all-options ( extension )
+{
+    return $(.options.$(extension)) ;
+}
+
+rule define ( extension version ? : location : options * )
+{
+    version ?= default ;
+    location = [ path.make $(location) ] ;
+    #~ if ! [ feature.is-subvalue $(extension) : : version : $(version) ]
+    #~ {
+        feature.extend $(extension)-version : $(version) ;
+    #~ }
+    local requirements ;
+    for local opt in [ all-options $(extension) ]
+    {
+        local opt-default = [ feature.defaults <$(opt)> ] [ feature.values <$(opt)> ] ;
+        opt-default = $(opt-default[1]) ;
+        requirements += <$(opt)>$(opt-default) ;
+    }
+    local requirements =
+        [ option-requirements $(extension) : $(requirements) : $(options) ]
+        <$(extension)-location>$(location)
+        ;
+    feature.compose <$(extension)-version>$(version) : $(requirements) ;
+    
+    local user-mod = [ CALLER_MODULE 2 ] ;
+    modules.poke $(user-mod) : LOCATION($(extension)-$(version)) : $(location) ;
+    
+    return
+        $(requirements)
+        <tag>@default-tag
+        ;
+}
+
+rule refine ( extension version : refinements * )
+{
+    local requirements
+        = [ modules.peek feature : <$(extension)-version>$(version).components ] ;
+    local extra ;
+    if $(refinements)
+    {
+        for local r in $(refinements)
+        {
+            if $(r:G) in <use>
+            {
+                requirements += $(r) ;
+            }
+            else if $(r:G) in <tag>
+            {
+                extra += $(r) ;
+                requirements = [ property.change $(requirements) : $(r:G) ] ;
+            }
+            else
+            {
+                requirements = [ property.change $(requirements) : $(r:G) $(r:G=) ] ;
+            }
+        }
+        modules.poke feature
+            : <$(extension)-version>$(version).components
+            : $(requirements) ;
+    }
+    return $(requirements) $(extra) ;
+}
+
+#######################################################################
+
+local rule enable-prop ( extension : opt )
+{
+    local vals = [ MATCH "--([^-]+)-(.*)" : $(opt) ] ;
+    return <$(extension)-$(vals[2])>$(vals[1]) ;
+}
+#~ local rule enable-prop ( option )
+#~ {
+    #~ local vals = [ MATCH "--([^-]+)-([^=]+)[=]?(.*)" : $(option) ] ;
+    #~ if $(vals[2])
+    #~ {
+        #~ return <$(extension)-$(vals[1])>$(vals[2]) ;
+    #~ }
+    #~ else
+    #~ {
+        #~ return <$(extension)-$(vals[1])>enable ;
+    #~ }
+#~ }
+
+local rule with-prop ( extension : opt )
+{
+    local vals = [ MATCH "--with-([^=]+)[=]?(.*)" : $(opt) ] ;
+    if $(vals[2])
+    {
+        return <$(extension)-$(vals[1])>$(vals[2]) ;
+    }
+    else
+    {
+        return <$(extension)-$(vals[1])>enable ;
+    }
+}
+
+local rule option-requirements ( extension : requirements * : options * )
+{
+    for local opt in $(options)
+    {
+        switch $(opt)
+        {
+            case --enable-* :
+            requirements = [ property.refine $(requirements)
+                : [ enable-prop $(extension) : $(opt) ] ] ;
+            
+            case --disable-* :
+            requirements = [ property.refine $(requirements)
+                : [ enable-prop $(extension) : $(opt) ] ] ;
+            
+            case --with-* :
+            requirements = [ property.refine $(requirements)
+                : [ with-prop $(extension) : $(opt) ] ] ;
+        }
+    }
+    return $(requirements) ;
+}
+
+#######################################################################
+
+rule text ( extension version ?
+    : name
+    : format *
+    : requirements * : usage-requirements * )
+{
+    local mod = [ CALLER_MODULE ] ;
+    .format,$(extension),$(version),$(name) = $(format) ;
+    module $(mod)
+    {
+        local extension = $(1[1]) ;
+        local version = $(1[2]) ;
+        make $(2) : : @extension.make-text
+            :   <$(extension)-version>$(version)
+                <location-prefix>src
+                $(4)
+            :   $(5)
+            ;
+            explicit $(2) ;
+    }
+}
+
+rule make-text ( targets * : sources * : properties * )
+{
+    local ext = [ property.select <extension> : $(properties) ] ;
+    local version = [ property.select <$(ext:G=)-version> : $(properties) ] ;
+    local NL = "
+" ;
+    local text = ;
+    local format = $(.format,$(ext:G=),$(version:G=),$(targets[1]:G=)) ;
+    for local f in $(format)
+    {
+        if $(f:G)
+        {
+            local t = [ property.evaluate-conditionals-in-context $(f) : $(properties) ] ;
+            text += $(t:G=) ;
+        }
+        else
+        {
+            text += $(f) ;
+        }
+    }
+    TEXT on $(targets) = $(text:J=$(NL)) ;
+}
+
+actions make-text
+{
+    @($(STDOUT):E=$(TEXT)) > "$(<)"
+}

@@ -1,0 +1,16 @@
+# Boost System Library Build Jamfile
+
+# (C) Copyright Beman Dawes 2002, 2006
+
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or www.boost.org/LICENSE_1_0.txt)
+
+# See library home page at http://www.boost.org/libs/filesystem
+
+project
+    : requirements <library>../build//boost_filesystem
+      <hardcode-dll-paths>true
+    ;
+    
+exe file_size : file_size.cpp ;
+exe simple_ls : simple_ls.cpp ;    

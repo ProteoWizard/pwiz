@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: error_type</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <LINK href="../../../boost.css" type="text/css" rel="stylesheet"></head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td vAlign="top" width="300">
+                  <h3><A href="../../../index.htm"><IMG height="86" alt="C++ Boost" src="../../../boost.png" width="277" border="0"></A></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">error_type</H2>
+               </TD>
+               <td width="50">
+                  <h3><A href="index.html"><IMG height="45" alt="Boost.Regex Index" src="uarrow.gif" width="43" border="0"></A></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#synopsis">Synopsis</A> <dt><a href="#description">Description</a></dt></dl>
+      <H3><A name="synopsis"></A>Synopsis</H3>
+      <P>Type error type represents the different types of errors that can be raised by 
+         the library when parsing a regular expression.</P>
+      <pre>
+namespace boost{ namespace regex_constants{
+
+typedef implementation-specific-type error_type;
+
+static const error_type error_collate;
+static const error_type error_ctype;
+static const error_type error_escape;
+static const error_type error_backref;
+static const error_type error_brack;
+static const error_type error_paren;
+static const error_type error_brace;
+static const error_type error_badbrace;
+static const error_type error_range;
+static const error_type error_space;
+static const error_type error_badrepeat;
+static const error_type error_complexity;
+static const error_type error_stack;
+static const error_type error_bad_pattern;
+
+} // namespace regex_constants
+} // namespace boost
+</pre>
+      <P>&nbsp;</P>
+      <H3><A name="description"></A>Description</H3>
+      <P>The type error_type is an implementation-specific enumeration type that may 
+         take one of the following values:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="100%" border="1">
+            <TR>
+               <TD><STRONG>Constant</STRONG></TD>
+               <TD><STRONG>Meaning</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>error_collate</TD>
+               <TD>An invalid collating element was specified in a [[.name.]] block.</TD>
+            </TR>
+            <TR>
+               <TD>error_ctype</TD>
+               <TD>An invalid character class name was specified in a [[:name:]] block.</TD>
+            </TR>
+            <TR>
+               <TD>error_escape</TD>
+               <TD>An invalid or trailing escape was encountered.</TD>
+            </TR>
+            <TR>
+               <TD>error_backref</TD>
+               <TD>A back-reference to a non-existant marked sub-expression was encountered.</TD>
+            </TR>
+            <TR>
+               <TD>error_brack</TD>
+               <TD>An invalid character set [...] was encountered.</TD>
+            </TR>
+            <TR>
+               <TD>error_paren</TD>
+               <TD>
+                  <P>Mismatched '(' and ')'.</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>error_brace</TD>
+               <TD>Mismatched '{' and '}'.</TD>
+            </TR>
+            <TR>
+               <TD>error_badbrace</TD>
+               <TD>Invalid contents of a {...} block.</TD>
+            </TR>
+            <TR>
+               <TD>error_range</TD>
+               <TD>A character range was invalid, for example [d-a].</TD>
+            </TR>
+            <TR>
+               <TD>error_space</TD>
+               <TD>Out of memory.</TD>
+            </TR>
+            <TR>
+               <TD>error_badrepeat</TD>
+               <TD>An attempt to repeat something that can not be repeated - for example a*+</TD>
+            </TR>
+            <TR>
+               <TD>error_complexity</TD>
+               <TD>The expression became too complex to handle.</TD>
+            </TR>
+            <TR>
+               <TD>error_stack</TD>
+               <TD>Out of program stack space.</TD>
+            </TR>
+            <TR>
+               <TD>error_bad_pattern</TD>
+               <TD>Other unspecified errors.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <H3><A name="examples"></A>
+         <HR>
+      </H3>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         24 June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+      </p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+

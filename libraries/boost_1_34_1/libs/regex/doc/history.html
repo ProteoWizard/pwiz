@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: History</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">History</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <P>Boost 1.34</P>
+      <UL>
+         <LI>
+         Fix for non-greedy repeats and partial matches not working correctly in some 
+         cases.
+         <LI>
+         Fix for non-greedy repeats on VC++ not working in some cases (bug report 
+         1515830).
+         <LI>
+            Changed match_results::position() to return a valid result when *this 
+            represents a partial match.</LI>
+      </UL>
+      <P>Boost 1.33.1</P>
+      <UL>
+         <LI>
+         Fixed broken makefiles.
+         <LI>
+         Fixed configuration setup to allow building with VC7.1 - STLport-4.6.2 when 
+         using /Zc:wchar_t.
+         <LI>
+         Moved declarations class-inline in static_mutex.hpp so that SGI Irix compiler 
+         can cope.
+         <LI>
+         Added needed standard library #includes to fileiter.hpp, regex_workaround.hpp 
+         and cpp_regex_traits.hpp.
+         <LI>
+         Fixed a bug where non-greedy repeats could in certain strange curcumstances 
+         repeat more times than their maximum value.
+         <LI>
+         Fixed the value returned by basic_regex&lt;&gt;::empty() from a default 
+         constructed object.
+         <LI>
+         Changed the deffinition of regex_error to make it backwards compatible with 
+         Boost-1.32.0.
+         <LI>
+         Disabled external templates for Intel C++ 8.0 and earlier - otherwise 
+         unresolved references can occur.
+         <LI>
+         Rewritten extern template code for gcc so that only specific member functions 
+         are exported: otherwise strange unresolved references can occur when linking 
+         and mixing debug and non-debug code.
+         <LI>
+         Initialise all the data members of the unicode_iterators: this keeps gcc from 
+         issuing needless warnings.
+         <LI>
+         Ported the ICU integration code to VC6 and VC7.
+         <LI>
+         Ensured code is STLport debug mode clean.
+         <LI>
+         Fixed lookbehind assertions so that fixed length repeats are permitted, and so 
+         that regex iteration allows lookbehind to look back before the current search 
+         range (into the last match).
+         <LI>
+         Fixed strange bug with non-greedy repeats inside forward lookahead assertions.
+         <LI>
+         Enabled negated character classes inside character sets.
+         <LI>
+         Fixed regression so that [a-z-] is a valid expression again.
+         <LI>
+            Fixed bug that allowed some invalid expressions to be accepted.</LI></UL>
+      <P>Boost 1.33.0.</P>
+      <UL>
+         <LI>
+         Completely rewritten expression parsing code, and traits class support; now 
+         conforms to the standardization proposal.
+         <LI>
+            <STRONG>Breaking Change:</STRONG> The <A href="syntax_option_type.html">syntax 
+               options</A> that can be passed to <A href="basic_regex.html">basic_regex 
+               constructors</A> have been rationalized.&nbsp; The default option (perl) now 
+            has a value of zero, and it is now clearly documented which options apply to 
+            which <A href="syntax.html">regular expression syntax styles (perl, 
+               POSIX-extended, POSIX-basic etc)</A>.&nbsp; Some of the more esoteric 
+         options have now been removed, so there is the possibility that existing code 
+         may fail to compile: however equivalent functionality should still be 
+         available.
+         <LI>
+            <STRONG>Breaking Change: </STRONG>
+         POSIX-extended and POSIX-basic regular expressions now enforce the letter of 
+         the POSIX standard much more closely than before.
+         <LI>
+            Added <A href="syntax_perl.html#Perl">support for (?imsx-imsx) constructs</A>.
+         <LI>
+            Added <A href="syntax_perl.html#Perl">support for lookbehind expressions 
+               (?&lt;=positive-lookbehind) and (?&lt;!negative-lookbehind)</A>.
+         <LI>
+            Added <A href="syntax_perl.html#Perl">support for conditional expressions 
+               (?(assertion)true-expresion|false-expression)</A>.
+         <LI>
+            Added <A href="mfc_strings.html">MFC/ATL string wrappers</A>.
+         <LI>
+            Added <A href="unicode.html">Unicode support; based on ICU</A>.
+         <LI>
+         Changed newline support to recognise \f as a line separator (all character 
+         types), and \x85 as a line separator for wide characters / Unicode only.
+         <LI>
+            Added a new format flag <A href="match_flag_type.html"><code>format_literal</code></A>
+            that treats the replace string as a literal, rather than a Perl or Sed style <A href="format_syntax.html">
+               format string</A>.
+         <LI>
+            Errors are now reported by throwing exceptions of type <A href="bad_expression.html">
+               <code>regex_error</code></A>. The types used previously - <code>bad_expression</code>
+            and <code>bad_pattern</code> - are now just typedefs for <code>regex_error</code>. 
+            Type <code>regex_error</code> has a couple of new members: <code>code()</code> to 
+            report an error code rather than a string, and <code>position()</code> to 
+            report where in the expression the error occured.</LI></UL>
+      <P>Boost 1.32.1.</P>
+      <UL>
+         <LI>
+            Fixed bug in partial matches of bounded repeats of '.'.</LI></UL>
+      <P>Boost 1.31.0.</P>
+      <UL>
+         <LI>
+         Completely rewritten pattern matching code - it is now up to 10 times faster 
+         than before.
+         <LI>
+         Reorganized documentation.
+         <LI>
+            Deprecated all interfaces that are not part of the <A href="http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/papers/2003/n1429.htm">
+               regular expression standardization proposal</A>.
+         <LI>
+            Added <A href="regex_iterator.html">regex_iterator</A> and <A href="regex_token_iterator.html">
+               regex_token_iterator</A>
+         .
+         <LI>
+         Added support for Perl style independent sub-expressions.
+         <LI>
+            Added non-member operators to the<A href="sub_match.html"> sub_match class</A>, 
+         so that you can compare sub_match's with strings, or add them to a string to 
+         produce a new string.
+         <LI>
+            Added experimental support for <A href="captures.html">extended capture 
+               information</A>.
+         <LI>
+            Changed the match flags so that they are a distinct type (not an integer), if 
+            you try to pass the match flags as an integer rather than<A href="match_flag_type.html">
+               match_flag_type</A> to the regex algorithms then you will now get a compiler 
+            error.</LI></UL>
+      <P>
+         <HR>
+      <P></P>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         28 June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

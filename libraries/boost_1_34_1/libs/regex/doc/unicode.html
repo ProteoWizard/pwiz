@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Index</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Unicode Regular Expressions.</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <P>There are two ways to use Boost.Regex with Unicode strings:</P>
+      <H3>Rely on wchar_t</H3>
+      <P>If your platform's wchar_t type can hold Unicode strings, <EM>and</EM> your 
+         platform's C/C++ runtime correctly handles wide character constants (when 
+         passed to std::iswspace std::iswlower etc), then you can use boost::wregex to 
+         process Unicode.&nbsp; However, there are several disadvantages to this 
+         approach:</P>
+      <UL>
+         <LI>
+            It's not portable: there's no guarantee on the width of wchar_t, or even 
+            whether the runtime treats wide characters as Unicode at all, most Windows 
+            compilers do so, but many Unix systems do not.</LI>
+         <LI>
+            There's no support for Unicode-specific character classes: [[:Nd:]], [[:Po:]] 
+            etc.</LI>
+         <LI>
+            You can only search strings that are encoded as sequences of wide characters, 
+            it is not possible to search UTF-8, or even UTF-16 on many platforms.</LI></UL>
+      <H3>Use a Unicode Aware Regular Expression Type.</H3>
+      <P>If you have the <A href="http://www.ibm.com/software/globalization/icu/">ICU 
+            library</A>, then Boost.Regex can be <A href="install.html#unicode">configured 
+            to make use of it</A>, and provide a distinct regular expression type 
+         (boost::u32regex), that supports both Unicode specific character properties, 
+         and the searching of text that is encoded in either UTF-8, UTF-16, or 
+         UTF-32.&nbsp; See: <A href="icu_strings.html">ICU string class support</A>.</P>
+      <P>
+         <HR>
+      </P>
+      <P></P>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         04 Jan 2005&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;2005</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+

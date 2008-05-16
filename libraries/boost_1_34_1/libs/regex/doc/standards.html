@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Standards Conformance</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Standards Conformance</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>C++</H3>
+      <P>Boost.regex is intended to conform to the <A href="http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/papers/2003/n1429.htm">
+            regular expression standardization proposal</A>, which will appear in a 
+         future C++ standard technical report (and hopefully in a future version of the 
+         standard).&nbsp;</P>
+      <H3>ECMAScript / JavaScript</H3>
+      <P>All of the ECMAScript regular expression syntax features are supported, except 
+         that:</P>
+      <P>Negated class escapes (\S, \D and \W) are not permitted inside character class 
+         definitions ( [...] ).</P>
+      <P>The escape sequence \u matches any upper case character (the same as 
+         [[:upper:]])&nbsp;rather than a Unicode escape sequence; use \x{DDDD} for 
+         Unicode escape sequences.</P>
+      <H3>Perl</H3>
+      <P>Almost all Perl features are supported, except for:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <TD>(?{code})</TD>
+               <TD>Not implementable in a compiled strongly typed language.</TD>
+            </TR>
+            <TR>
+               <TD>(??{code})</TD>
+               <TD>Not implementable in a compiled strongly typed language.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <H3>POSIX</H3>
+      <P>All the POSIX basic and extended regular expression features are supported, 
+         except that:</P>
+      <P>No character collating names are recognized except those specified in the POSIX 
+         standard for the C locale, unless they are explicitly registered with the 
+         traits class.</P>
+      <P>Character equivalence classes ( [[=a=]] etc) are probably buggy except on 
+         Win32.&nbsp; Implementing this feature requires knowledge of the format of the 
+         string sort keys produced by the system; if you need this, and the default 
+         implementation doesn't work on your platform, then you will need to supply a 
+         custom traits class.</P>
+      <H3>Unicode</H3>
+      <P>The following comments refer to&nbsp;<A href="http://www.unicode.org/reports/tr18/">Unicode 
+            Technical
+            <SPAN>Standard 
+</SPAN>#18: Unicode Regular Expressions</A>&nbsp;version 9.</P>
+      <P>
+         <TABLE id="Table3" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <TD>#</TD>
+               <TD>Feature</TD>
+               <TD>Support</TD>
+            </TR>
+            <TR>
+               <TD>1.1</TD>
+               <TD>Hex Notation</TD>
+               <TD>Yes: use \x{DDDD} to refer to code point UDDDD.</TD>
+            </TR>
+            <TR>
+               <TD>1.2</TD>
+               <TD>Character Properties</TD>
+               <TD>All the names listed under the&nbsp;<A href="http://www.unicode.org/reports/tr18/#Categories">General 
+                     Category Property</A> are supported.&nbsp; Script names and Other Names are 
+                  not currently supported.</TD>
+            </TR>
+            <TR>
+               <TD>1.3</TD>
+               <TD><A name="Subtraction_and_Intersection">Subtraction</A> and Intersection</TD>
+               <TD>
+                  <P>Indirectly support by forward-lookahead:
+                  </P>
+                  <P>(?=[[:X:]])[[:Y:]]</P>
+                  <P>Gives the intersection of character properties X and Y.</P>
+                  <P>(?![[:X:]])[[:Y:]]</P>
+                  <P>Gives everything in Y that is not in X (subtraction).</P>
+               </TD>
+            </TR>
+            <TR>
+               <TD>1.4</TD>
+               <TD><A name="Simple_Word_Boundaries">Simple Word Boundaries</A></TD>
+               <TD>Conforming: non-spacing marks are included in the set of word characters.</TD>
+            </TR>
+            <TR>
+               <TD>1.5</TD>
+               <TD>Caseless Matching</TD>
+               <TD>Supported, note that at this level, case transformations are 1:1, many to many 
+                  case folding operations are not supported (for example&nbsp;"ß" to "SS").</TD>
+            </TR>
+            <TR>
+               <TD>1.6</TD>
+               <TD>Line Boundaries</TD>
+               <TD>Supported, except that "." matches only one character of "\r\n". Other than 
+                  that word boundaries match correctly; including not matching in the middle of a 
+                  "\r\n" sequence.</TD>
+            </TR>
+            <TR>
+               <TD>1.7</TD>
+               <TD>Code Points</TD>
+               <TD>Supported: provided you use the <A href="icu_strings.html">u32* algorithms</A>, 
+                  then UTF-8, UTF-16 and UTF-32 are all treated as sequences of 32-bit code 
+                  points.</TD>
+            </TR>
+            <TR>
+               <TD>2.1</TD>
+               <TD>Canonical Equivalence</TD>
+               <TD>Not supported: it is up to the user of the library to convert all text into 
+                  the same canonical form as the regular expression.</TD>
+            </TR>
+            <TR>
+               <TD>2.2</TD>
+               <TD>Default Grapheme Clusters</TD>
+               <TD>Not supported.</TD>
+            </TR>
+            <TR>
+               <TD>2.3</TD>
+               <TD><!--StartFragment -->
+                  <P><A name="Default_Word_Boundaries">Default Word Boundaries</A></P>
+               </TD>
+               <TD>Not supported.</TD>
+            </TR>
+            <TR>
+               <TD>2.4</TD>
+               <TD><!--StartFragment -->
+                  <P><A name="Default_Loose_Matches">Default Loose Matches</A></P>
+               </TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>2.5</TD>
+               <TD>Name Properties</TD>
+               <TD>Supported: the expression "[[:name:]]" or \N{name} matches the named character 
+                  "name".</TD>
+            </TR>
+            <TR>
+               <TD>2.6</TD>
+               <TD>Wildcard properties</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.1</TD>
+               <TD>Tailored Punctuation.</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.2</TD>
+               <TD>Tailored Grapheme Clusters</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.3</TD>
+               <TD>Tailored Word Boundaries.</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.4</TD>
+               <TD>Tailored Loose Matches</TD>
+               <TD>Partial support: [[=c=]] matches characters with the same primary equivalence 
+                  class as "c".</TD>
+            </TR>
+            <TR>
+               <TD>3.5</TD>
+               <TD>Tailored Ranges</TD>
+               <TD>Supported: [a-b] matches any character that collates in the range a to b, when 
+                  the expression is constructed with the <A href="syntax_option_type.html">collate</A>
+                  flag set.</TD>
+            </TR>
+            <TR>
+               <TD>3.6</TD>
+               <TD>Context Matches</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.7</TD>
+               <TD>Incremental Matches</TD>
+               <TD>Supported: pass the flag <A href="match_flag_type.html">match_partial</A> to 
+                  the regex algorithms.</TD>
+            </TR>
+            <TR>
+               <TD>3.8</TD>
+               <TD>Unicode Set Sharing</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+            <TR>
+               <TD>3.9</TD>
+               <TD>Possible Match Sets</TD>
+               <TD>Not supported, however this information is used internally to optimise the 
+                  matching of regular expressions, and return quickly if no match is possible.</TD>
+            </TR>
+            <TR>
+               <TD>3.10</TD>
+               <TD>Folded Matching</TD>
+               <TD>Partial Support:&nbsp; It is possible to achieve a similar effect by using a 
+                  custom regular expression traits class.</TD>
+            </TR>
+            <TR>
+               <TD>3.11</TD>
+               <TD>Custom&nbsp;Submatch Evaluation</TD>
+               <TD>Not Supported.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         28 June 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2004<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+
+

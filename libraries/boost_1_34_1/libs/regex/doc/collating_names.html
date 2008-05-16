@@ -1,0 +1,368 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Collating Element Names</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Collating Element Names</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#digraphs">Digraphs</A></dt>
+         <dt><A href="#posix">POSIX Symbolic Names</A></dt>
+         <dt><A href="#unicode">Unicode Symbolic Names</A></dt>
+      </dl>
+      <H3><A name="digraphs"></A>Digraphs</H3>
+      <P>The following are treated as valid digraphs when used as a collating name:</P>
+      <P>"ae", "Ae", "AE", "ch", "Ch", "CH", "ll", "Ll", "LL", "ss", "Ss", "SS", "nj", 
+         "Nj", "NJ", "dz", "Dz", "DZ", "lj", "Lj", "LJ".</P>
+      <H3><A name="posix"></A>POSIX Symbolic Names</H3>
+      <P>The following symbolic names are recognised as valid collating element names, 
+         in addition to any single character:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="50%" border="1">
+            <TR>
+               <TD><STRONG>Name</STRONG></TD>
+               <TD><STRONG>Character</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>NUL</TD>
+               <TD>\x00</TD>
+            </TR>
+            <TR>
+               <TD>SOH</TD>
+               <TD>\x01</TD>
+            </TR>
+            <TR>
+               <TD>STX</TD>
+               <TD>\x02</TD>
+            </TR>
+            <TR>
+               <TD>ETX</TD>
+               <TD>\x03</TD>
+            </TR>
+            <TR>
+               <TD>EOT</TD>
+               <TD>\x04</TD>
+            </TR>
+            <TR>
+               <TD>ENQ</TD>
+               <TD>\x05</TD>
+            </TR>
+            <TR>
+               <TD>ACK</TD>
+               <TD>\x06</TD>
+            </TR>
+            <TR>
+               <TD>alert</TD>
+               <TD>\x07</TD>
+            </TR>
+            <TR>
+               <TD>backspace</TD>
+               <TD>\x08</TD>
+            </TR>
+            <TR>
+               <TD>tab</TD>
+               <TD>\t</TD>
+            </TR>
+            <TR>
+               <TD>newline</TD>
+               <TD>\n</TD>
+            </TR>
+            <TR>
+               <TD>vertical-tab</TD>
+               <TD>\v</TD>
+            </TR>
+            <TR>
+               <TD>form-feed</TD>
+               <TD>\f</TD>
+            </TR>
+            <TR>
+               <TD>carriage-return</TD>
+               <TD>\r</TD>
+            </TR>
+            <TR>
+               <TD>SO</TD>
+               <TD>\xE</TD>
+            </TR>
+            <TR>
+               <TD>SI</TD>
+               <TD>\xF</TD>
+            </TR>
+            <TR>
+               <TD>DLE</TD>
+               <TD>\x10</TD>
+            </TR>
+            <TR>
+               <TD>DC1</TD>
+               <TD>\x11</TD>
+            </TR>
+            <TR>
+               <TD>DC2</TD>
+               <TD>\x12</TD>
+            </TR>
+            <TR>
+               <TD>DC3</TD>
+               <TD>\x13</TD>
+            </TR>
+            <TR>
+               <TD>DC4</TD>
+               <TD>\x14</TD>
+            </TR>
+            <TR>
+               <TD>NAK</TD>
+               <TD>\x15</TD>
+            </TR>
+            <TR>
+               <TD>SYN</TD>
+               <TD>\x16</TD>
+            </TR>
+            <TR>
+               <TD>ETB</TD>
+               <TD>\x17</TD>
+            </TR>
+            <TR>
+               <TD>CAN</TD>
+               <TD>\x18</TD>
+            </TR>
+            <TR>
+               <TD>EM</TD>
+               <TD>\x19</TD>
+            </TR>
+            <TR>
+               <TD>SUB</TD>
+               <TD>\x1A</TD>
+            </TR>
+            <TR>
+               <TD>ESC</TD>
+               <TD>\x1B</TD>
+            </TR>
+            <TR>
+               <TD>IS4</TD>
+               <TD>\x1C</TD>
+            </TR>
+            <TR>
+               <TD>IS3</TD>
+               <TD>\x1D</TD>
+            </TR>
+            <TR>
+               <TD>IS2</TD>
+               <TD>\x1E</TD>
+            </TR>
+            <TR>
+               <TD>IS1</TD>
+               <TD>\x1F</TD>
+            </TR>
+            <TR>
+               <TD>space</TD>
+               <TD>\x20</TD>
+            </TR>
+            <TR>
+               <TD>exclamation-mark</TD>
+               <TD>!</TD>
+            </TR>
+            <TR>
+               <TD>quotation-mark</TD>
+               <TD>"</TD>
+            </TR>
+            <TR>
+               <TD>number-sign</TD>
+               <TD>#</TD>
+            </TR>
+            <TR>
+               <TD>dollar-sign</TD>
+               <TD>$</TD>
+            </TR>
+            <TR>
+               <TD>percent-sign</TD>
+               <TD>%</TD>
+            </TR>
+            <TR>
+               <TD>ampersand</TD>
+               <TD>&amp;</TD>
+            </TR>
+            <TR>
+               <TD>apostrophe</TD>
+               <TD>'</TD>
+            </TR>
+            <TR>
+               <TD>left-parenthesis</TD>
+               <TD>(</TD>
+            </TR>
+            <TR>
+               <TD>right-parenthesis</TD>
+               <TD>)</TD>
+            </TR>
+            <TR>
+               <TD>asterisk</TD>
+               <TD>*</TD>
+            </TR>
+            <TR>
+               <TD>plus-sign</TD>
+               <TD>+</TD>
+            </TR>
+            <TR>
+               <TD>comma</TD>
+               <TD>,</TD>
+            </TR>
+            <TR>
+               <TD>hyphen</TD>
+               <TD>-</TD>
+            </TR>
+            <TR>
+               <TD>period</TD>
+               <TD>.</TD>
+            </TR>
+            <TR>
+               <TD>slash</TD>
+               <TD>/</TD>
+            </TR>
+            <TR>
+               <TD>zero</TD>
+               <TD>0</TD>
+            </TR>
+            <TR>
+               <TD>one</TD>
+               <TD>1</TD>
+            </TR>
+            <TR>
+               <TD>two</TD>
+               <TD>2</TD>
+            </TR>
+            <TR>
+               <TD>three</TD>
+               <TD>3</TD>
+            </TR>
+            <TR>
+               <TD>four</TD>
+               <TD>4</TD>
+            </TR>
+            <TR>
+               <TD>five</TD>
+               <TD>5</TD>
+            </TR>
+            <TR>
+               <TD>six</TD>
+               <TD>6</TD>
+            </TR>
+            <TR>
+               <TD>seven</TD>
+               <TD>7</TD>
+            </TR>
+            <TR>
+               <TD>eight</TD>
+               <TD>8</TD>
+            </TR>
+            <TR>
+               <TD>nine</TD>
+               <TD>9</TD>
+            </TR>
+            <TR>
+               <TD>colon</TD>
+               <TD>:</TD>
+            </TR>
+            <TR>
+               <TD>semicolon</TD>
+               <TD>;</TD>
+            </TR>
+            <TR>
+               <TD>less-than-sign</TD>
+               <TD>&lt;</TD>
+            </TR>
+            <TR>
+               <TD>equals-sign</TD>
+               <TD>=</TD>
+            </TR>
+            <TR>
+               <TD>greater-than-sign</TD>
+               <TD>&gt;</TD>
+            </TR>
+            <TR>
+               <TD>question-mark</TD>
+               <TD>?</TD>
+            </TR>
+            <TR>
+               <TD>commercial-at</TD>
+               <TD>@</TD>
+            </TR>
+            <TR>
+               <TD>left-square-bracket</TD>
+               <TD>[</TD>
+            </TR>
+            <TR>
+               <TD>backslash</TD>
+               <TD>\</TD>
+            </TR>
+            <TR>
+               <TD>right-square-bracket</TD>
+               <TD>]</TD>
+            </TR>
+            <TR>
+               <TD>circumflex</TD>
+               <TD>~</TD>
+            </TR>
+            <TR>
+               <TD>underscore</TD>
+               <TD>_</TD>
+            </TR>
+            <TR>
+               <TD>grave-accent</TD>
+               <TD>`</TD>
+            </TR>
+            <TR>
+               <TD>left-curly-bracket</TD>
+               <TD>{</TD>
+            </TR>
+            <TR>
+               <TD>vertical-line</TD>
+               <TD>|</TD>
+            </TR>
+            <TR>
+               <TD>right-curly-bracket</TD>
+               <TD>}</TD>
+            </TR>
+            <TR>
+               <TD>tilde</TD>
+               <TD>~</TD>
+            </TR>
+            <TR>
+               <TD>DEL</TD>
+               <TD>\x7F</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <P>
+         <H3><A name="unicode"></A>Named Unicode Characters</H3>
+      <P>When using <A href="icu_strings.html">Unicode aware regular expressions</A> (with 
+         the <EM>u32regex </EM>type), all the normal symbolic names for Unicode 
+         characters (those given in Unidata.txt) are recognised.</P>
+      <P>
+         <HR>
+      </P>
+      <P></P>
+      <p>Revised 12 Jan 2005 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --></p>
+      <p><i>© Copyright John Maddock&nbsp;2004-2005</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

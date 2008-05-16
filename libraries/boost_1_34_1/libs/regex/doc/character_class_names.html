@@ -1,0 +1,326 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Character Class Names</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Character Class Names.</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><a href="#always">Character Classes that are Always Supported</a> <dt><a href="#unicode">
+                  Character classes that are supported by Unicode Regular Expressions</a></dt>
+      </dl>
+      <H3><A name="always"></A>Character Classes that are Always Supported</H3>
+      <P>The following character class names are always supported by Boost.Regex:</P>
+      <P>
+         <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="100%" border="1">
+            <TR>
+               <TD><STRONG>Name</STRONG></TD>
+               <TD><STRONG>POSIX-standard name</STRONG></TD>
+               <TD><STRONG>Description</STRONG></TD>
+            </TR>
+            <TR>
+               <TD>alnum</TD>
+               <TD>Yes</TD>
+               <TD>Any alpha-numeric character.</TD>
+            </TR>
+            <TR>
+               <TD>alpha</TD>
+               <TD>Yes</TD>
+               <TD>Any alphabetic character.</TD>
+            </TR>
+            <TR>
+               <TD>blank</TD>
+               <TD>Yes</TD>
+               <TD>Any whitespace character that is not a line separator.</TD>
+            </TR>
+            <TR>
+               <TD>cntrl</TD>
+               <TD>Yes</TD>
+               <TD>Any control character.</TD>
+            </TR>
+            <TR>
+               <TD>d</TD>
+               <TD>No</TD>
+               <TD>Any decimal digit</TD>
+            </TR>
+            <TR>
+               <TD>digit</TD>
+               <TD>Yes</TD>
+               <TD>Any decimal digit.</TD>
+            </TR>
+            <TR>
+               <TD>graph</TD>
+               <TD>Yes</TD>
+               <TD>Any graphical character.</TD>
+            </TR>
+            <TR>
+               <TD>l</TD>
+               <TD>No</TD>
+               <TD>Any lower case character.</TD>
+            </TR>
+            <TR>
+               <TD>lower</TD>
+               <TD>Yes</TD>
+               <TD>Any lower case character.</TD>
+            </TR>
+            <TR>
+               <TD>print</TD>
+               <TD>Yes</TD>
+               <TD>Any printable character.</TD>
+            </TR>
+            <TR>
+               <TD>punct</TD>
+               <TD>Yes</TD>
+               <TD>Any punctuation character.</TD>
+            </TR>
+            <TR>
+               <TD>s</TD>
+               <TD>No</TD>
+               <TD>Any whitespace character.</TD>
+            </TR>
+            <TR>
+               <TD>space</TD>
+               <TD>Yes</TD>
+               <TD>Any whitespace character.</TD>
+            </TR>
+            <TR>
+               <TD>unicode</TD>
+               <TD>No</TD>
+               <TD>Any extended character whose code point is above 255 in value.</TD>
+            </TR>
+            <TR>
+               <TD>u</TD>
+               <TD>No</TD>
+               <TD>Any upper case character.</TD>
+            </TR>
+            <TR>
+               <TD>upper</TD>
+               <TD>Yes</TD>
+               <TD>Any upper case character.</TD>
+            </TR>
+            <TR>
+               <TD>w</TD>
+               <TD>No</TD>
+               <TD>Any word character (alphanumeric characters plus the underscore).</TD>
+            </TR>
+            <TR>
+               <TD>word</TD>
+               <TD>No</TD>
+               <TD>Any word character (alphanumeric characters plus the underscore).</TD>
+            </TR>
+            <TR>
+               <TD>xdigit</TD>
+               <TD>Yes</TD>
+               <TD>Any hexadecimal digit character.</TD>
+            </TR>
+         </TABLE>
+      </P>
+      <P>
+         <H3><A name="unicode"></A>Character classes that are supported by Unicode Regular 
+            Expressions</H3>
+      <P>The following character classes are only supported by <A href="icu_strings.html">Unicode 
+            Regular Expressions</A>: that is those that use the u32regex type.&nbsp; The 
+         names used are the same as those from <A href="http://www.unicode.org/versions/Unicode4.0.0/ch04.pdf#G124142">
+            Chapter 4 of the Unicode standard</A>.</P>
+      <table width="100%" ID="Table3">
+         <tr>
+            <td><b>Short Name</b></td>
+            <td><b>Long Name</b></td>
+         </tr>
+         <tr>
+            <td>
+            </td>
+            <td>ASCII</td>
+         </tr>
+         <tr>
+            <td>
+            </td>
+            <td>Any</td>
+         </tr>
+         <tr>
+            <td>
+            </td>
+            <td>Assigned</td>
+         </tr>
+         <tr>
+            <td>C*</td>
+            <td>Other</td>
+         </tr>
+         <tr>
+            <td>Cc</td>
+            <td>Control</td>
+         </tr>
+         <tr>
+            <td>Cf</td>
+            <td>Format</td>
+         </tr>
+         <tr>
+            <td>Cn</td>
+            <td>Not Assigned</td>
+         </tr>
+         <tr>
+            <td>Co</td>
+            <td>Private Use</td>
+         </tr>
+         <tr>
+            <td>Cs</td>
+            <td>Surrogate</td>
+         </tr>
+         <tr>
+            <td>L*</td>
+            <td>Letter</td>
+         </tr>
+         <tr>
+            <td>Ll</td>
+            <td>Lowercase Letter</td>
+         </tr>
+         <tr>
+            <td>Lm</td>
+            <td>Modifier Letter</td>
+         </tr>
+         <tr>
+            <td>Lo</td>
+            <td>Other Letter</td>
+         </tr>
+         <tr>
+            <td>Lt</td>
+            <td>Titlecase</td>
+         </tr>
+         <tr>
+            <td>Lu</td>
+            <td>Uppercase Letter</td>
+         </tr>
+         <tr>
+            <td>M*</td>
+            <td>Mark</td>
+         </tr>
+         <tr>
+            <td>Mc</td>
+            <td>Spacing Combining Mark</td>
+         </tr>
+         <tr>
+            <td>Me</td>
+            <td>Enclosing Mark</td>
+         </tr>
+         <tr>
+            <td>Mn</td>
+            <td>Non-Spacing Mark</td>
+         </tr>
+         <tr>
+            <td>N*</td>
+            <td>Number</td>
+         </tr>
+         <tr>
+            <td>Nd</td>
+            <td>Decimal Digit Number</td>
+         </tr>
+         <tr>
+            <td>Nl</td>
+            <td>Letter Number</td>
+         </tr>
+         <tr>
+            <td>No</td>
+            <td>Other Number</td>
+         </tr>
+         <tr>
+            <td>P*</td>
+            <td>Punctuation</td>
+         </tr>
+         <tr>
+            <td>Pc</td>
+            <td>Connector Punctuation</td>
+         </tr>
+         <tr>
+            <td>Pd</td>
+            <td>Dash Punctuation</td>
+         </tr>
+         <tr>
+            <td>Pe</td>
+            <td>Close Punctuation</td>
+         </tr>
+         <tr>
+            <td>Pf</td>
+            <td>Final Punctuation</td>
+         </tr>
+         <tr>
+            <td>Pi</td>
+            <td>Initial Punctuation</td>
+         </tr>
+         <tr>
+            <td>Po</td>
+            <td>Other Punctuation</td>
+         </tr>
+         <tr>
+            <td>Ps</td>
+            <td>Open Punctuation</td>
+         </tr>
+         <tr>
+            <td>S*</td>
+            <td>Symbol</td>
+         </tr>
+         <tr>
+            <td>Sc</td>
+            <td>Currency Symbol</td>
+         </tr>
+         <tr>
+            <td>Sk</td>
+            <td>Modifier Symbol</td>
+         </tr>
+         <tr>
+            <td>Sm</td>
+            <td>Math Symbol</td>
+         </tr>
+         <tr>
+            <td>So</td>
+            <td>Other Symbol</td>
+         </tr>
+         <tr>
+            <td>Z*</td>
+            <td>Separator</td>
+         </tr>
+         <tr>
+            <td>Zl</td>
+            <td>Line Separator</td>
+         </tr>
+         <tr>
+            <td>Zp</td>
+            <td>Paragraph Separator</td>
+         </tr>
+         <tr>
+            <td>Zs</td>
+            <td>Space Separator</td>
+         </tr>
+      </table>
+      <HR>
+      <P></P>
+      <P></P>
+      <p>Revised&nbsp;&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         10&nbsp;Jan 2005&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;2004-5</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

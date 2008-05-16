@@ -1,0 +1,52 @@
+# Boost Filesystem Library test Jamfile
+
+# (C) Copyright Beman Dawes 2002, 2006
+
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or www.boost.org/LICENSE_1_0.txt)
+
+# See library home page at http://www.boost.org/libs/filesystem
+
+project 
+    : requirements <library>/boost/filesystem//boost_filesystem
+      <define>BOOST_ALL_NO_LIB
+    ;
+
+   test-suite "filesystem" :
+       [ run path_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK 
+                 <runtime-link>static <link>static
+       ]                  
+       [ run path_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_DYN_LINK 
+               : path_test_dll
+       ]
+       [ run operations_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK 
+                  <runtime-link>static <link>static
+       ]
+       [ run operations_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_DYN_LINK
+         : operations_test_dll
+       ]
+       [ run fstream_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK 
+                  <runtime-link>static <link>static
+       ]
+       [ run convenience_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK
+                  <runtime-link>static <link>static                   
+       ]
+       [ run large_file_support_test.cpp
+         :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK
+                  <runtime-link>static <link>static
+       ]
+       [ run wide_test.cpp
+          :  :  : <define>BOOST_FILESYSTEM_STATIC_LINK
+                  <runtime-link>static <link>static
+       ]
+
+       [ compile ../example/mbcopy.cpp ]
+       [ compile ../example/mbpath.cpp ]
+       [ compile ../example/simple_ls.cpp ]
+       ;

@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+    <TITLE>Portability</TITLE>
+    <LINK REL="stylesheet" HREF="../../../boost.css">
+    <LINK REL="stylesheet" HREF="theme/iostreams.css">
+</HEAD>
+<BODY>
+
+<!-- Begin Banner -->
+
+    <H1 CLASS="title">Portability</H1>
+    <HR CLASS="banner">
+
+<!-- End Banner -->
+
+<P>
+    The Iostreams library has been tested with a wide variety of platforms. With a few exceptions, noted in the rightmost column below, the library is fully supported on the following platforms:
+</P>
+
+<TABLE STYLE="margin-bottom:1em" BORDER="1" CELLPADDING="6" CELLSPACING="1">
+<TR>
+    <TH>Compiler</TH><TH>Standard Library</TH><TH>Operating System</TH><TH>Limitations</TH>
+</TR>
+<TR>
+    <TD ROWSPAN='3'>GCC 3.2 - 4.0</TD>
+    <TD ROWSPAN='4'>libstdc++</TD>
+    <TD>Linux and Most UNIX</TD>
+    <TD><I>none</I></TD>
+</TR>
+<TR>
+    <TD>Windows (MinGW and Cygwin)</TD>
+    <TD ROWSPAN='2'><A CLASS='footnote_ref' NAME='note_1_ref' HREF="#note_1">[1]</TD>
+</TR>
+<TR>
+    <TD>OSF1 V5</TD>
+</TR>
+<TR>
+    <TD ROWSPAN='2'>GCC 2.9.3</TD>
+    <TD ROWSPAN='2'>Linux</TD>
+    <TD>
+        <A CLASS='footnote_ref' NAME='note_1_ref' HREF="#note_1">[1]</A>,
+        <A CLASS='footnote_ref' NAME='note_2_ref' HREF="#note_2">[2]</A>,
+        <A CLASS="footnote_ref" NAME="note_2_ref" HREF="#note_3">[3]</A>
+    </TD>
+</TR>
+<TR>
+    <TD>STLPort</TD>
+    <TD>
+        <A CLASS='footnote_ref' NAME='note_2_ref' HREF="#note_2">[2]</A>,
+        <A CLASS='footnote_ref' NAME='note_4_ref' HREF="#note_4">[4]</A>
+    </TD>
+</TR>
+<TR>
+    <TD>Visual C++ 7.1, 8.0 (beta 2)</TD>
+    <TD ROWSPAN='2'>Dinkumware</TD>
+    <TD ROWSPAN='2'>Windows</TD>
+    <TD><I>none</I></TD>
+</TR>
+<TR>
+    <TD>Visual C++ 6.0 - 7.0</TD>
+    <TD>
+        <A CLASS='footnote_ref' NAME='note_2_ref' HREF="#note_2">[2]</A>,
+        <A CLASS='footnote_ref' NAME='note_5_ref' HREF="#note_5">[5]</A>
+    </TD>
+</TR>
+<TR>
+    <TD ROWSPAN='2'>CodeWarrior 8.3 - 9.5</TD>
+    <TD ROWSPAN='2'>MSL</TD>
+    <TD>Windows, Max OS X</TD>
+    <TD ROWSPAN='2'><I>none</I></TD>
+</TR>
+<TR>
+    <TD>Max OS X</TD>
+</TR>
+<TR>
+    <TD>Borland 5.6.4</TD>
+    <TD>STLPort 4.5.3</TD>
+    <TD>Windows</TD>
+    <TD>
+        <A CLASS='footnote_ref' NAME='note_2_ref' HREF="#note_2">[2]</A>,
+        <A CLASS='footnote_ref' NAME='note_4_ref' HREF="#note_4">[4]</A>
+    </TD>
+</TR>
+<!-- 
+    <TR>
+        <TD>RogueWave</TD>
+        <TD>
+            <A CLASS='footnote_ref' NAME='note_2_ref' HREF="#note_2">[2]</A>
+        </TD> 
+    </TR>
+-->
+<TR>
+    <TD>Comeau C/C++ 4.3.3</TD>
+    <TD>libcomo 31</TD>
+    <TD>Windows</TD>
+    <TD>
+        <A CLASS='footnote_ref' NAME='note_3_ref' HREF="#note_3">[3]</A>,
+        <A CLASS='footnote_ref' NAME='note_4_ref' HREF="#note_4">[4]</A>
+        <A CLASS='footnote_ref' NAME='note_6_ref' HREF="#note_6">[6]</A>
+    </TD>
+</TR>
+<TR>
+    <TD ROWSPAN='2'>Intel 7.0 - 8.0</TD>
+    <TD>libstdc++</TD>
+    <TD>Linux</TD>
+    <TD ROWSPAN='2'><I>none</I></TD>
+</TR>
+<TR>
+    <TD>Dinkumware</TD>
+    <TD>Windows</TD>
+</TR>
+<TR>
+    <TD>Intel 9.0</TD>
+    <TD>Dinkumware</TD>
+    <TD>Windows</TD>
+    <TD><A CLASS='footnote_ref' NAME='note_7_ref' HREF="#note_7">[7]</A></TD>
+</TR>
+<TR>
+    <TD>Compaq C++ 6.5-042</TD>
+    <TD>RogueWave</TD>
+    <TD>Tru64 UNIX</TD>
+    <TD><I>none</I></TD>
+</TR>
+</TABLE>
+
+<!-- Begin Footnotes -->
+
+<H4>Notes</H4>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_1" HREF="#note_1_ref"><SUP>[1]</SUP></A>Wide streams are not supported.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_2" HREF="#note_2_ref"><SUP>[2]</SUP></A>Fails <A HREF="../test/finite_state_filter_test.cpp"><CODE>finite_state_filter_test.cpp</CODE></A>. Note that <A HREF="tutorial/finite_state_filters.html"><CODE>finite_state_filter</CODE></A> is part of the library examples and not the core library.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_3" HREF="#note_3_ref"><SUP>[3]</SUP></A>Exhibits several unexplained runtime failures. See the <A HREF="http://www.boost.org/status/compiler_status.html" TARGET="_top">Compiler Status Tables</A> for details.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_4" HREF="#note_4_ref"><SUP>[4]</SUP></A>Fails <A HREF="../test/seekable_file_test.cpp"><CODE>seekable_file_test.cpp</CODE></A>.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_5" HREF="#note_5_ref"><SUP>[5]</SUP></A>Exhibits several unexplained runtime failures when global optimization (<CODE>/Og</CODE>) is enabled.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_6" HREF="#note_6_ref"><SUP>[6]</SUP></A>When run in strict mode, fails to compile those tests which depend on the header <CODE>&lt;windows.h&gt;</CODE>, namely <A HREF="../test/bzip2_test.cpp"><CODE>bzip2_test.cpp</CODE></A>, <A HREF="../test/file_descriptor_test.cpp"><CODE>file_descriptor_test.cpp</CODE></A> and <A HREF="../test/mapped_file_test.cpp"><CODE>mapped_file_test.cpp</CODE></A>.
+</P>
+
+<P>
+    <A CLASS="footnote_ref" NAME="note_7" HREF="#note_7_ref"><SUP>[7]</SUP></A>Intermittently fails the <A HREF="../test/mapped_file_test.cpp"><CODE>mapped_file_test</CODE></A> test cases in which a <A HREF="classes/mapped_file.html"><CODE>mapped_file</CODE></A> is used to create a new file.</A>.
+</P>
+
+<!-- End Footnotes -->
+
+<!-- Begin Footer -->
+
+<HR>
+<P CLASS="copyright">Revised
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
+20 May, 2004
+<!--webbot bot="Timestamp" endspan i-checksum="38504" -->
+</P>
+
+<P CLASS="copyright">&copy; Copyright <A HREF="http://www.kangaroologic.com" TARGET="_top">Jonathan Turkanis</A>, 2004</P>
+<P CLASS="copyright"> 
+    Distributed under the Boost Software License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at <A HREF="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)
+</P>
+
+<!-- End Footer -->
+
+</BODY>

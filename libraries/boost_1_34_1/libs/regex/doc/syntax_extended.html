@@ -1,0 +1,520 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: POSIX-Extended Regular Expression Syntax</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <LINK href="../../../boost.css" type="text/css" rel="stylesheet"></head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td vAlign="top" width="300">
+                  <h3><A href="../../../index.htm"><IMG height="86" alt="C++ Boost" src="../../../boost.png" width="277" border="0"></A></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">POSIX-Extended Regular Expression Syntax</H2>
+               </TD>
+               <td width="50">
+                  <h3><A href="index.html"><IMG height="45" alt="Boost.Regex Index" src="uarrow.gif" width="43" border="0"></A></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#synopsis">Synopsis</A> <dt><A href="#extended">POSIX&nbsp;Extended Syntax</A>
+               <dt><A href="#variations">Variations</A>
+                  <dd>
+                     <dl>
+                        <dt><A href="#egrep">egrep</A> <dt><A href="#awk">awk</A>&nbsp;</dt>
+                     </dl>
+                     <dt><A href="#options">Options</A> <dt><A href="#refs">References</A></dt>
+      </dl>
+      <H3><A name="synopsis"></A>Synopsis</H3>
+      <P>The POSIX-Extended regular expression syntax is supported by the POSIX C 
+         regular expression API's, and variations are used by the utilities <EM>egrep</EM>
+         and <EM>awk</EM>. You can construct POSIX extended regular expressions in 
+         Boost.Regex by passing the flag <EM>extended</EM> to the regex constructor, for 
+         example:</P>
+      <PRE>// e1 is a case sensitive POSIX-Extended expression:
+boost::regex e1(my_expression, boost::regex::extended);
+// e2 a case insensitive POSIX-Extended expression:
+boost::regex e2(my_expression, boost::regex::extended|boost::regex::icase);</PRE>
+      <H3>POSIX Extended Syntax<A name="extended"></A></H3>
+      <P>In POSIX-Extended regular expressions, all characters match themselves except 
+         for the following special characters:</P>
+      <PRE>.[{()\*+?|^$</PRE>
+      <H4>Wildcard:</H4>
+      <P>The single character '.' when used outside of a character set will match any 
+         single character except:</P>
+      <P>The NULL character when the flag <EM>match_no_dot_null</EM> is passed to the 
+         matching algorithms.</P>
+      <P>The newline character when the flag <EM>match_not_dot_newline</EM> is passed to 
+         the matching algorithms.</P>
+      <H4>Anchors:</H4>
+      <P>A '^' character shall match the start of a line when used as the first 
+         character of an expression, or the first character of a sub-expression.</P>
+      <P>A '$' character shall match the end of a line when used as the last character 
+         of an expression, or the last character of a sub-expression.</P>
+      <H4>Marked sub-expressions:</H4>
+      <P>A section beginning ( and ending ) acts as a marked sub-expression.&nbsp; 
+         Whatever matched the sub-expression is split out in a separate field by the 
+         matching algorithms.&nbsp; Marked sub-expressions can also repeated, or 
+         referred to by a back-reference.</P>
+      <H4>Repeats:</H4>
+      <P>Any atom (a single character, a marked sub-expression, or a character class) 
+         can be repeated with the *, +, ?, and {}&nbsp;operators.</P>
+      <P>The * operator will match the preceding atom zero or more times, for example 
+         the expression a*b will match any of the following:</P>
+      <PRE>b
+ab
+aaaaaaaab</PRE>
+      <P>The + operator will match the preceding atom one or more times, for example the 
+         expression a+b will match any of the following:</P>
+      <PRE>ab
+aaaaaaaab</PRE>
+      <P>But will not match:</P>
+      <PRE>b</PRE>
+      <P>The ? operator will match the preceding atom zero or&nbsp;one times, for 
+         example the expression ca?b will match any of the following:</P>
+      <PRE>cb
+cab</PRE>
+      <P>But will not match:</P>
+      <PRE>caab</PRE>
+      <P>An atom can also be repeated with a bounded repeat:</P>
+      <P>a{n}&nbsp; Matches 'a' repeated exactly <EM>n</EM> times.</P>
+      <P>a{n,}&nbsp; Matches 'a' repeated <EM>n</EM> or more times.</P>
+      <P>a{n, m}&nbsp; Matches 'a' repeated between <EM>n</EM> and <EM>m</EM> times 
+         inclusive.</P>
+      <P>For example:</P>
+      <PRE>^a{2,3}$</PRE>
+      <P>Will match either of:</P>
+      <PRE>aa
+aaa</PRE>
+      <P>But neither of:</P>
+      <PRE>a
+aaaa</PRE>
+      <P>It is an error to use a repeat operator, if the preceding construct can not be 
+         repeated, for example:</P>
+      <PRE>a(*)</PRE>
+      <P>Will raise an error, as there is nothing for the * operator to be applied to.</P>
+      <H4>Back references:</H4>
+      <P>An escape character followed by a digit <EM>n</EM>, where <EM>n </EM>is in the 
+         range 1-9, matches the same string that was matched by sub-expression <EM>n</EM>.&nbsp; 
+         For example the expression:</P>
+      <PRE>^(a*).*\1$</PRE>
+      <P>Will match the string:</P>
+      <PRE>aaabbaaa</PRE>
+      <P>But not the string:</P>
+      <PRE>aaabba</PRE>
+      <P><EM><STRONG>Caution</STRONG>: the POSIX standard does not support back-references 
+            for "extended" regular expressions, this is a compatible extension to that 
+            standard.</EM></P>
+      <H4>Alternation</H4>
+      <P>The | operator will match either of its arguments, so for example: abc|def will 
+         match either "abc" or "def".&nbsp;
+      </P>
+      <P>Parenthesis can be used to group alternations, for example: ab(d|ef) will match 
+         either of "abd" or "abef".</P>
+      <H4>Character sets:</H4>
+      <P>A character set is a bracket-expression starting with [ and ending with ], it 
+         defines a set of characters, and matches any single character that is a member 
+         of that set.</P>
+      <P>A bracket expression may contain any combination of the following:</P>
+      <BLOCKQUOTE dir="ltr" style="MARGIN-RIGHT: 0px">
+         <H5>Single characters:</H5>
+         <P>For example [abc], will match any of the characters 'a', 'b', or 'c'.</P>
+         <H5>Character ranges:</H5>
+         <P>For example [a-c] will match any single character in the range 'a' to 
+            'c'.&nbsp; By default, for POSIX-Extended regular expressions, a character <EM>x</EM>
+            is within the range <EM>y</EM> to <EM>z</EM>, if it collates within that 
+            range;&nbsp;<EM><STRONG>this results in locale specific behavior</STRONG></EM> .&nbsp; 
+            This behavior can be turned off by unsetting the <EM><A href="syntax_option_type.html#extended">
+                  collate</A></EM> option flag - in which case whether a character appears 
+            within a range is determined by comparing the code points of the characters 
+            only.</P>
+         <H5>Negation:</H5>
+         <P>If the bracket-expression begins with the ^ character, then it matches the 
+            complement of the characters it contains, for example [^a-c] matches any 
+            character that is not in the range a-c.</P>
+         <H5>Character classes:</H5>
+         <P>An expression of the form [[:name:]] matches the named character class "name", 
+            for example [[:lower:]] matches any lower case character.&nbsp; See <A href="character_class_names.html">
+               character class names</A>.</P>
+         <H5>Collating Elements:</H5>
+         <P>An expression of the form [[.col.] matches the collating element <EM>col</EM>.&nbsp; 
+            A collating element is any single character, or any sequence of characters that 
+            collates as a single unit.&nbsp; Collating elements may also be used as the end 
+            point of a range, for example: [[.ae.]-c] matches the character sequence "ae", 
+            plus any single character in the range "ae"-c, assuming that "ae" is treated as 
+            a single collating element in the current locale.</P>
+         <P>Collating elements may be used in place of escapes (which are not normally 
+            allowed inside character sets), for example [[.^.]abc] would match either one 
+            of the characters 'abc^'.</P>
+         <P>As an extension, a collating element may also be specified via its <A href="collating_names.html">
+               symbolic name</A>, for example:</P>
+         <P>[[.NUL.]]</P>
+         <P>matches a NUL character.</P>
+         <H5>Equivalence classes:</H5>
+         <P>
+            An expression oftheform[[=col=]], matches any character or collating element 
+            whose primary sort key is the same as that for collating element <EM>col</EM>, 
+            as with colating elements the name <EM>col</EM> may be a <A href="collating_names.html">
+               symbolic name</A>.&nbsp; A primary sort key is one that ignores case, 
+            accentation, or locale-specific tailorings; so for example [[=a=]] matches any 
+            of the characters: a, à, á, â, ã, ä, å, A, À, Á, Â, Ã, Ä and Å.&nbsp; 
+            Unfortunately implementation of this is reliant on the platform's collation and 
+            localisation support; this feature can not be relied upon to work portably 
+            across all platforms, or even all locales on one platform.</P>
+      </BLOCKQUOTE>
+      <H5>Combinations:</H5>
+      <P>All of the above can be combined in one character set declaration, for example: 
+         [[:digit:]a-c[.NUL.]].</P>
+      <H4>Escapes</H4>
+      <P>The POSIX standard defines no escape sequences for POSIX-Extended regular 
+         expressions, except that:</P>
+      <UL>
+         <LI>
+         Any special character preceded by an escape shall match itself.
+         <LI>
+         The effect of any ordinary character being preceded by an escape is undefined.
+         <LI>
+            An escape inside a character class declaration shall match itself: in other 
+            words the escape character is not "special" inside a character class 
+            declaration; so [\^] will match either a literal '\' or a '^'.</LI></UL>
+      <P>However, that's rather restrictive, so the following standard-compatible 
+         extensions are also supported by Boost.Regex:</P>
+      <BLOCKQUOTE dir="ltr" style="MARGIN-RIGHT: 0px">
+         <H5>Escapes matching a specific character</H5>
+         <P>The following escape sequences are all synonyms for single characters:</P>
+         <P>
+            <TABLE id="Table7" cellSpacing="1" cellPadding="1" width="100%" border="1">
+               <TR>
+                  <TD><STRONG>Escape</STRONG></TD>
+                  <TD><STRONG>Character</STRONG></TD>
+               </TR>
+               <TR>
+                  <TD>\a</TD>
+                  <TD>'\a'</TD>
+               </TR>
+               <TR>
+                  <TD>\e</TD>
+                  <TD>0x1B</TD>
+               </TR>
+               <TR>
+                  <TD>\f</TD>
+                  <TD>\f</TD>
+               </TR>
+               <TR>
+                  <TD>\n</TD>
+                  <TD>\n</TD>
+               </TR>
+               <TR>
+                  <TD>\r</TD>
+                  <TD>\r</TD>
+               </TR>
+               <TR>
+                  <TD>\t</TD>
+                  <TD>\t</TD>
+               </TR>
+               <TR>
+                  <TD>\v</TD>
+                  <TD>\v</TD>
+               </TR>
+               <TR>
+                  <TD>\b</TD>
+                  <TD>\b (but only inside a character class declaration).</TD>
+               </TR>
+               <TR>
+                  <TD>\cX</TD>
+                  <TD>An ASCII escape sequence - the character whose code point is X % 32</TD>
+               </TR>
+               <TR>
+                  <TD>\xdd</TD>
+                  <TD>A hexadecimal escape sequence - matches the single character whose code point 
+                     is 0xdd.</TD>
+               </TR>
+               <TR>
+                  <TD>\x{dddd}</TD>
+                  <TD>A hexadecimal escape sequence - matches the single character whose code point 
+                     is 0xdddd.</TD>
+               </TR>
+               <TR>
+                  <TD>\0ddd</TD>
+                  <TD>An octal escape sequence - matches the single character whose code point is 
+                     0ddd.</TD>
+               </TR>
+               <TR>
+                  <TD>\N{Name}</TD>
+                  <TD>Matches the single character which has the <A href="collating_names.html">symbolic 
+                        name</A> <EM>name.&nbsp; </EM>For example \N{newline} matches the single 
+                     character \n.</TD>
+               </TR>
+            </TABLE>
+         </P>
+         <H5>"Single character" character&nbsp;classes:</H5>
+         <P>Any escaped character <EM>x</EM>, if <EM>x</EM> is the name of a character 
+            class shall match any character that is a member of that class, and any escaped 
+            character <EM>X</EM>, if <EM>x</EM> is the name of a character class, shall 
+            match any character not in that class.</P>
+         <P>The following are supported by default:</P>
+         <P>
+            <TABLE id="Table3" cellSpacing="1" cellPadding="1" width="300" border="1">
+               <TR>
+                  <TD><STRONG>Escape sequence</STRONG></TD>
+                  <TD><STRONG>Equivalent to</STRONG></TD>
+               </TR>
+               <TR>
+                  <TD>\d</TD>
+                  <TD>[[:digit:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\l</TD>
+                  <TD>[[:lower:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\s</TD>
+                  <TD>[[:space:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\u</TD>
+                  <TD>[[:upper:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\w</TD>
+                  <TD>[[:word:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\D</TD>
+                  <TD>[^[:digit:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\L</TD>
+                  <TD>[^[:lower:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\S</TD>
+                  <TD>[^[:space:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\U</TD>
+                  <TD>[^[:upper:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\W</TD>
+                  <TD>[^[:word:]]</TD>
+               </TR>
+            </TABLE>
+         </P>
+         <H5>
+            <H5>Character Properties</H5>
+         </H5>
+         <P dir="ltr">The character property names in the following table are all 
+            equivalent to the <A href="character_class_names.html">names used in character 
+               classes</A>.</P>
+         <H5>
+            <TABLE id="Table9" cellSpacing="1" cellPadding="1" width="100%" border="0">
+               <TR>
+                  <TD><STRONG>Form</STRONG></TD>
+                  <TD><STRONG>Description</STRONG></TD>
+                  <TD><STRONG>Equivalent character set form</STRONG></TD>
+               </TR>
+               <TR>
+                  <TD>\pX</TD>
+                  <TD>Matches any character that has the property X.</TD>
+                  <TD>[[:X:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\p{Name}</TD>
+                  <TD>Matches any character that has the property <EM>Name</EM>.</TD>
+                  <TD>[[:Name:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\PX</TD>
+                  <TD>Matches any character that does not have the property X.</TD>
+                  <TD>[^[:X:]]</TD>
+               </TR>
+               <TR>
+                  <TD>\P{Name}</TD>
+                  <TD>Matches any character that does not have the property <EM>Name</EM>.</TD>
+                  <TD>[^[:Name:]]</TD>
+               </TR>
+            </TABLE>
+         </H5>
+         <H5>Word Boundaries</H5>
+         <P>The following escape sequences match the boundaries of words:</P>
+         <P>
+            <TABLE id="Table4" cellSpacing="1" cellPadding="1" width="100%" border="1">
+               <TR>
+                  <TD>\&lt;</TD>
+                  <TD>Matches the start of a word.</TD>
+               </TR>
+               <TR>
+                  <TD>\&gt;</TD>
+                  <TD>Matches the end of a word.</TD>
+               </TR>
+               <TR>
+                  <TD>\b</TD>
+                  <TD>Matches a word boundary (the start or end of a word).</TD>
+               </TR>
+               <TR>
+                  <TD>\B</TD>
+                  <TD>Matches only when not at a word boundary.</TD>
+               </TR>
+            </TABLE>
+         </P>
+         <H5>Buffer boundaries</H5>
+         <P>The following match only at buffer boundaries: a "buffer" in this context is 
+            the whole of the input text&nbsp;that is being matched against (note that ^ and 
+            $ may match embedded newlines within the text).</P>
+         <P>
+            <TABLE id="Table5" cellSpacing="1" cellPadding="1" width="100%" border="1">
+               <TR>
+                  <TD>\`</TD>
+                  <TD>Matches at the start of a buffer only.</TD>
+               </TR>
+               <TR>
+                  <TD>\'</TD>
+                  <TD>Matches at the end of a buffer only.</TD>
+               </TR>
+               <TR>
+                  <TD>\A</TD>
+                  <TD>Matches at the start of a buffer only (the same as \`).</TD>
+               </TR>
+               <TR>
+                  <TD>\z</TD>
+                  <TD>Matches at the end of a buffer only (the same as \').</TD>
+               </TR>
+               <TR>
+                  <TD>\Z</TD>
+                  <TD>Matches an optional sequence of newlines at the end of a buffer: equivalent to 
+                     the regular expression \n*\z</TD>
+               </TR>
+            </TABLE>
+         </P>
+         <H5>Continuation Escape</H5>
+         <P>The sequence \G matches only at the end of the last match found, or at the 
+            start of the text being matched if no previous match was found.&nbsp; This 
+            escape useful if you're iterating over the matches contained within a text, and 
+            you want each subsequence match to start where the last one ended.</P>
+         <H5>Quoting escape</H5>
+         <P>The escape sequence \Q begins a "quoted sequence": all the subsequent 
+            characters are treated as literals, until either the end of the regular 
+            expression or \E is found.&nbsp; For example the expression: \Q\*+\Ea+ would 
+            match either of:</P>
+         <PRE>\*+a<BR>\*+aaa</PRE>
+         <H5>Unicode escapes</H5>
+         <P>
+            <TABLE id="Table6" cellSpacing="1" cellPadding="1" width="100%" border="1">
+               <TR>
+                  <TD>\C</TD>
+                  <TD>Matches a single code point: in Boost regex this has exactly the same effect 
+                     as a "." operator.</TD>
+               </TR>
+               <TR>
+                  <TD>\X</TD>
+                  <TD>Matches a combining character sequence: that is any non-combining character 
+                     followed by a sequence of zero or more combining characters.</TD>
+               </TR>
+            </TABLE>
+         </P>
+         <H5>Any other escape</H5>
+         <P>Any other escape sequence matches the character that is escaped, for example \@ 
+            matches a literal <A href="mailto:'@'">'@'</A>.</P>
+      </BLOCKQUOTE><A name="variations">
+         <H4>Operator precedence</H4>
+         <P>&nbsp;The order of precedence for of operators is as shown in the following 
+            table:</P>
+         <P>
+            <TABLE id="Table2" cellSpacing="1" cellPadding="1" width="100%" border="1">
+               <TR>
+                  <TD>Collation-related bracket symbols</TD>
+                  <TD>[==] [::] [..]</TD>
+               </TR>
+               <TR>
+                  <TD>Escaped characters
+                  </TD>
+                  <TD>\</TD>
+               </TR>
+               <TR>
+                  <TD>Character set&nbsp;(bracket expression)
+                  </TD>
+                  <TD>[]</TD>
+               </TR>
+               <TR>
+                  <TD>Grouping</TD>
+                  <TD>()</TD>
+               </TR>
+               <TR>
+                  <TD>Single-character-ERE duplication
+                  </TD>
+                  <TD>* + ? {m,n}</TD>
+               </TR>
+               <TR>
+                  <TD>Concatenation</TD>
+                  <TD></TD>
+               </TR>
+               <TR>
+                  <TD>Anchoring</TD>
+                  <TD>^$</TD>
+               </TR>
+               <TR>
+                  <TD>Alternation</TD>
+                  <TD>|</TD>
+               </TR>
+            </TABLE>
+         </P>
+      </A>
+      <H4>What Gets Matched</H4>
+      <P>When there is more that one way to match a regular expression, the "best" 
+         possible match is obtained using the <A href="syntax_leftmost_longest.html">leftmost-longest 
+            rule</A>.</P>
+      <H3>Variations</H3>
+      <H4>Egrep<A name="egrep"></H4>
+      <P>When an expression is compiled with the flag <EM>egrep</EM> set, then the 
+         expression is treated as a newline separated list of POSIX-Extended 
+         expressions, a match is found if any of the expressions in the list match, for 
+         example:</P>
+      <PRE>boost::regex e("abc\ndef", boost::regex::egrep);</PRE>
+      <P>will match either of the POSIX-Basic expressions "abc" or "def".</P>
+      <P>As its name suggests, this behavior is consistent with the Unix utility <EM>egrep</EM>, 
+         and with <EM>grep</EM> when used with the -E option.</P>
+      <H4>awk<A name="awk"></A></H4>
+      <P>In addition to the <A href="#extended">POSIX-Extended features</A>&nbsp;the 
+         escape character is special inside a character class declaration.&nbsp;</P>
+      <P>In addition, some escape sequences that are not defined as part of 
+         POSIX-Extended specification are required to be supported - however Boost.Regex 
+         supports these by default anyway.</P>
+      <H3><A name="options"></A>Options</H3>
+      <P>There are a <A href="syntax_option_type.html#extended">variety of flags</A> that 
+         may be combined with the <EM>extended</EM> and <EM>egrep</EM> options when 
+         constructing the regular expression, in particular note that the <A href="syntax_option_type.html#extended">
+            newline_alt</A> option alters the syntax, while the <A href="syntax_option_type.html#extended">
+            collate, nosubs&nbsp;and icase</A> options modify how the case and locale 
+         sensitivity are to be applied.</P>
+      <H3><A name="refs">References</H3>
+      <P><A href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap09.html"> IEEE 
+            Std 1003.1-2001, Portable Operating System Interface (POSIX ), Base Definitions 
+            and Headers, Section 9, Regular Expressions.</A></P>
+      <P><A href="http://www.opengroup.org/onlinepubs/000095399/utilities/grep.html"> IEEE 
+            Std 1003.1-2001, Portable Operating System Interface (POSIX ), Shells and 
+            Utilities, Section 4, Utilities, egrep.</A></P>
+      <P><A href="http://www.opengroup.org/onlinepubs/000095399/utilities/awk.html">IEEE 
+            Std 1003.1-2001, Portable Operating System Interface (POSIX ), Shells and 
+            Utilities, Section 4, Utilities, awk.</A></P>
+      <HR>
+      <P></P>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         21 Aug 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <P><I>© Copyright <a href="mailto:jm@regex.fsnet.co.uk">John Maddock</a>&nbsp;2004</I></P>
+      <I>
+         <P><I>Use, modification and distribution are subject to the Boost Software License, 
+               Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+               or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>).</I></P>
+      </I>
+   </body>
+</html>

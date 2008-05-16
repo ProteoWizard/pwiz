@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Index</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <link rel="stylesheet" type="text/css" href="../../../boost.css">
+   </head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td valign="top" width="300">
+                  <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">The "Leftmost Longest" Rule</H2>
+               </TD>
+               <td width="50">
+                  <h3><a href="index.html"><img height="45" width="43" alt="Boost.Regex Index" src="uarrow.gif" border="0"></a></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <P>Often there is more than one way of matching a regular expression at a 
+         particular location, for POSIX basic and extended regular expressions, the 
+         "best" match is determined as follows:</P>
+      <OL>
+         <LI>
+            Find the leftmost match, if there is only one match possible at this location 
+            then return it.</LI>
+         <LI>
+            Find the longest of the possible matches, along with any ties.&nbsp; If there 
+            is only one such possible match then return it.</LI>
+         <LI>
+            If there are no marked sub-expressions, then all the remaining alternatives are 
+            indistinguishable; return the first of these found.</LI>
+         <LI>
+            Find the match which has matched the first sub-expression in the leftmost 
+            position, along with any ties.&nbsp; If there is only on such match possible 
+            then return it.</LI>
+         <LI>
+            Find the match which has the longest match for the first sub-expression, along 
+            with any ties.&nbsp; If there is only one such match then return it.</LI>
+         <LI>
+            Repeat steps 3 and 4 for each additional marked sub-expression.</LI>
+         <LI>
+            If there is still more than one possible match remaining, then they are 
+            indistinguishable; return the first one found.</LI></OL>
+      <P>
+         <HR>
+      <P></P>
+      <p>Revised 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         16 Dec 2004</p>
+      <p><i>© Copyright John Maddock&nbsp;1998- 
+            <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y" startspan -->  2003<!--webbot bot="Timestamp" endspan i-checksum="39359" --></i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+

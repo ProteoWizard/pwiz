@@ -1,0 +1,294 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Working With MFC/ATL String Types</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <LINK href="../../../boost.css" type="text/css" rel="stylesheet"></head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td vAlign="top" width="300">
+                  <h3><A href="../../../index.htm"><IMG height="86" alt="C++ Boost" src="../../../boost.png" width="277" border="0"></A></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Working With MFC/ATL String Types.</H2>
+               </TD>
+               <td width="50">
+                  <h3><A href="index.html"><IMG height="45" alt="Boost.Regex Index" src="uarrow.gif" width="43" border="0"></A></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#intro">Introduction</A> <dt><A href="#types">Types</A> <dt><A href="#create">Regular 
+                     Expression Creation</A> <dt><A href="#algo">Overloaded Algorithms</A>
+                     <dd>
+                        <dl>
+                           <dt><A href="#regex_match">regex_match</A> <dt><A href="#regex_search">regex_search</A>
+                                 <dt><A href="#regex_replace">regex_replace</A> </dt>
+                        </dl>
+                        <dt><A href="#iterators">Iterators</A>
+                           <dd>
+                              <dl>
+                                 <dt><A href="#regex_iterator">regex_iterator creation helper</A> <dt><A href="#regex_token_iterator">
+                                          regex_token_iterator creation helpers</A></dt>
+                              </dl>
+                           </dd>
+      </dl>
+      <H3><a name="intro"></a>Introduction</H3>
+      <P>The header &lt;boost/regex/mfc.hpp&gt; provides Boost.Regex support for MFC 
+         string types: note that this support requires Visual Studio .NET (Visual C++ 7) 
+         or later, where all of the MFC and ATL string types are based around 
+         the&nbsp;CSimpleStringT class template.&nbsp;</P>
+      <P>In the following documentation, whenever you see CSimpleStringT&lt;charT&gt;, 
+         then you can substitute any of the following MFC/ATL types (all of which 
+         inherit from&nbsp;CSimpleStringT):</P>
+      <P>CString<BR>
+         CStringA<BR>
+         CStringW<BR>
+         CAtlString<BR>
+         CAtlStringA<BR>
+         CAtlStringW<BR>
+         CStringT&lt;charT,traits&gt;<BR>
+         CFixedStringT&lt;charT,N&gt;<BR>
+         CSimpleStringT&lt;charT&gt;</B></P>
+      <H3><A name="types"></A>Types</H3>
+      <P>The following typedefs are provided for the convenience of those working with 
+         TCHAR's:</P>
+      <PRE>typedef <A href="basic_regex.html" >basic_regex</A>&lt;TCHAR&gt; tregex; 
+typedef <A href="match_results.html" >match_results</A>&lt;TCHAR const*&gt; tmatch; 
+typedef <A href="regex_iterator.html" >regex_iterator</A>&lt;TCHAR const*&gt; tregex_iterator; 
+typedef <A href="regex_token_iterator.html" >regex_token_iterator</A>&lt;TCHAR const*&gt; tregex_token_iterator; 
+</PRE>
+      <P>If you are working with explicitly narrow or wide characters rather than TCHAR, 
+         then use the regular Boost.Regex types instead.</P>
+      <H3><A name="create"></A>Regular Expression Creation</H3>
+      <P>The following helper function is available to assist in the creation of a 
+         regular expression from an MFC/ATL string type:</P>
+      <pre>template &lt;class charT&gt;
+basic_regex&lt;charT&gt; 
+   make_regex(const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+              ::boost::regex_constants::syntax_option_type f = boost::regex_constants::normal);</pre>
+      <P><STRONG>Effects</STRONG>: returns basic_regex&lt;charT&gt;(s.GetString(), 
+         s.GetString() + s.GetLength(), f);</P>
+      <H3><A name="algo"></A>Overloaded Algorithms</H3>
+      <P>For each regular expression algorithm that's overloaded for a std::basic_string 
+         argument, there is also one overloaded for the MFC/ATL string types.&nbsp; 
+         These algorithm signatures&nbsp;all look a lot more complex than they actually 
+         are, but for completeness here they are anyway:</P>
+      <H4><A name="regex_match"></A>regex_match</H4>
+      <P>There are two overloads, the first reports what matched in a match_results 
+         structure, the second does not.&nbsp;
+      </P>
+      <P>All the usual caveats for <A href="regex_match.html">regex_match</A> apply, in 
+         particular the algorithm will only report a successful match if <STRONG>all of the 
+            input text matches the expression</STRONG>, if this isn't what you want then 
+         use <A href="regex_search.html">regex_search</A> instead.</P>
+      <PRE>template &lt;class charT, class T, class A&gt;
+bool regex_match(
+   const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+   match_results&lt;const B*, A&gt;&amp; what, 
+   const basic_regex&lt;charT, T&gt;&amp; e, 
+   boost::regex_constants::match_flag_type f = boost::regex_constants::match_default); </PRE>
+      <P>
+      <P><STRONG>Effects</STRONG>: returns ::boost::<A href="regex_match.html">regex_match</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), what, e, f);</P>
+      <p><strong>Example:</strong></p>
+      <pre>//
+// Extract filename part of a path from a CString and return the result
+// as another CString:
+//
+CString get_filename(const CString&amp; path)
+{
+   boost::tregex r(__T("(?:\\A|.*\\\\)([^\\\\]+)"));
+   boost::tmatch what;
+   if(boost::regex_match(path, what, r))
+   {
+      // extract $1 as a CString:
+      return CString(what[1].first, what.length(1));
+   }
+   else
+   {
+      throw std::runtime_error("Invalid pathname");
+   }
+}
+      </pre>
+      <hr>
+      <PRE>template &lt;class charT, class T&gt;
+bool regex_match(
+   const ATL::CSimpleStringT&lt;charT&gt;&amp; s,
+   const basic_regex&lt;B, T&gt;&amp; e,
+   boost::regex_constants::match_flag_type f = boost::regex_constants::match_default)</PRE>
+      <P>
+      <P><STRONG>Effects</STRONG>: returns ::boost::<A href="regex_match.html">regex_match</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, f);</P>
+      <p><strong>Example:</strong></p>
+      <pre>//
+// Find out if *password* meets our password requirements,
+// as defined by the regular expression *requirements*.
+//
+bool is_valid_password(const CString&amp; password, const CString&amp; requirements)
+{
+   return boost::regex_match(password, boost::make_regex(requirements));
+}      </pre>
+      <hr>
+      <H4><A name="regex_search"></A>regex_search</H4>
+      <P>There are two additional overloads for <A href="regex_search.html">regex_search</A>, 
+         the first reports what matched the second does not:</P>
+      <PRE>template &lt;class charT, class A, class T&gt;
+bool regex_search(const ATL::CSimpleStringT&lt;charT&gt;&amp; s,
+                  match_results&lt;const charT*, A&gt;&amp; what,
+                  const basic_regex&lt;charT, T&gt;&amp; e,
+                  boost::regex_constants::match_flag_type f = boost::regex_constants::match_default)</PRE>
+      <P><STRONG>Effects</STRONG>: returns ::boost::<A href="regex_search.html">regex_search</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), what, e, f);</P>
+      <P><STRONG>Example:</STRONG>: Postcode extraction from an address string.</P>
+      <pre>CString extract_postcode(const CString&amp; address)
+{
+   // searches throw address for a UK postcode and returns the result,
+   // the expression used is by Phil A. on www.regxlib.com:
+   boost::tregex r(__T("^(([A-Z]{1,2}[0-9]{1,2})|([A-Z]{1,2}[0-9][A-Z]))\\s?([0-9][A-Z]{2})$"));
+   boost::tmatch what;
+   if(boost::regex_search(address, what, r))
+   {
+      // extract $0 as a CString:
+      return CString(what[0].first, what.length());
+   }
+   else
+   {
+      throw std::runtime_error("No postcode found");
+   }
+}      </pre>
+      <hr>
+      <pre>template &lt;class charT, class T&gt;
+inline bool regex_search(const ATL::CSimpleStringT&lt;charT&gt;&amp; s,
+                 const basic_regex&lt;charT, T&gt;&amp; e,
+                 boost::regex_constants::match_flag_type f = boost::regex_constants::match_default)
+</pre>
+      <P><STRONG>Effects</STRONG>: returns ::boost::<A href="regex_search.html">regex_search</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, f);</P>
+      <hr>
+      <H4><A name="regex_replace"></A>regex_replace</H4>
+      <P>There are two additional overloads for <A href="regex_replace.html">regex_replace</A>, 
+         the first sends output to an output iterator, while the second creates a new 
+         string</P>
+      <PRE>template &lt;class OutputIterator, class BidirectionalIterator, class traits, class
+          charT&gt;
+OutputIterator regex_replace(OutputIterator out,
+                           BidirectionalIterator first,
+                           BidirectionalIterator last,
+                           const basic_regex&lt;charT, traits&gt;&amp; e,
+                           const ATL::CSimpleStringT&lt;charT&gt;&amp; fmt,
+                           match_flag_type flags = match_default)
+</PRE>
+      <P><STRONG>Effects</STRONG>: returns ::boost::<A href="regex_replace.html">regex_replace</A>(out, 
+         first, last, e, fmt.GetString(), flags);</P>
+      <pre>template &lt;class traits, charT&gt;
+ATL::CSimpleStringT&lt;charT&gt; regex_replace(const ATL::CSimpleStringT&lt;charT&gt;&amp; s,
+                            const basic_regex&lt;charT, traits&gt;&amp; e,
+                            const ATL::CSimpleStringT&lt;charT&gt;&amp; fmt,
+                            match_flag_type flags = match_default)</pre>
+      <P><STRONG>Effects</STRONG>: returns a new string created using <A href="regex_replace.html">
+            regex_replace</A>, and the same memory manager as string <EM>s</EM>.</P>
+      <P><STRONG>Example:</STRONG></P>
+      <PRE>//
+// Take a credit card number as a string of digits, 
+// and reformat it as a human readable string with "-"
+// separating each group of four digits:
+//
+const boost::tregex e(__T("\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z"));
+const CString human_format = __T("$1-$2-$3-$4");
+
+CString human_readable_card_number(const CString&amp; s)
+{
+   return boost::regex_replace(s, e, human_format);
+}
+      </PRE>
+      <H3><a name="iterators"></a>Iterators</H3>
+      <P>The following helper functions are provided to ease the conversion from an 
+         MFC/ATL string to a <A href="regex_iterator.html">regex_iterator</A> or <A href="regex_token_iterator.html">
+            regex_token_iterator</A>:</P>
+      <H4><A name="regex_iterator"></A>regex_iterator creation helper</H4>
+      <PRE>template &lt;class charT&gt;
+regex_iterator&lt;charT const*&gt; 
+   make_regex_iterator(
+      const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+      const basic_regex&lt;charT&gt;&amp; e, 
+      ::boost::regex_constants::match_flag_type f = boost::regex_constants::match_default);
+</PRE>
+      <p><STRONG>Effects:</STRONG>returns <A href="regex_iterator.html">regex_iterator</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, f);</p>
+      <p><strong>Example:</strong></p>
+      <pre>void enumerate_links(const CString&amp; html)
+{
+   // enumerate and print all the <a> links in some HTML text,
+   // the expression used is by Andew Lee on <a href="http://www.regxlib.com">www.regxlib.com</a>:
+   boost::tregex r(__T("href=[\"\']((http:\\/\\/|\\.\\/|\\/)?\\w+(\\.\\w+)*(\\/\\w+(\\.\\w+)?)*(\\/|\\?\\w*=\\w*(&amp;\\w*=\\w*)*)?)[\"\']"));
+   boost::tregex_iterator i(boost::make_regex_iterator(html, r)), j;
+   while(i != j)
+   {
+      std::cout &lt;&lt; (*i)[1] &lt;&lt; std::endl;
+      ++i;
+   }
+}
+      </pre>
+      <hr>
+      <H4><A name="regex_token_iterator"></A>regex_token_iterator creation helpers</H4>
+      <PRE>template &lt;class charT&gt; 
+regex_token_iterator&lt;charT const*&gt; 
+   make_regex_token_iterator(
+      const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+      const basic_regex&lt;charT&gt;&amp; e, 
+      int sub = 0, 
+      ::boost::regex_constants::match_flag_type f = boost::regex_constants::match_default);
+</PRE>
+      <p><STRONG>Effects:</STRONG>returns <A href="regex_token_iterator.html">regex_token_iterator</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, sub, f);</p>
+      <pre>template &lt;class charT&gt; 
+regex_token_iterator&lt;charT const*&gt; 
+   make_regex_token_iterator(
+      const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+      const basic_regex&lt;charT&gt;&amp; e, 
+      const std::vector&lt;int&gt;&amp; subs, 
+      ::boost::regex_constants::match_flag_type f = boost::regex_constants::match_default);
+</pre>
+      <p><STRONG>Effects:</STRONG>returns <A href="regex_token_iterator.html">regex_token_iterator</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, subs, f);</p>
+      <pre>template &lt;class charT, std::size_t N&gt; 
+regex_token_iterator&lt;charT const*&gt; 
+   make_regex_token_iterator(
+      const ATL::CSimpleStringT&lt;charT&gt;&amp; s, 
+      const basic_regex&lt;charT&gt;&amp; e, 
+      const int (&amp; subs)[N], 
+      ::boost::regex_constants::match_flag_type f = boost::regex_constants::match_default);
+</pre>
+      <p><STRONG>Effects: </STRONG>returns <A href="regex_token_iterator.html">regex_token_iterator</A>(s.GetString(), 
+         s.GetString() + s.GetLength(), e, subs, f);</p>
+      <P><STRONG>Example:</STRONG></P>
+      <PRE>void enumerate_links2(const CString&amp; html)
+{
+   // enumerate and print all the <a> links in some HTML text,
+   // the expression used is by Andew Lee on <a href="http://www.regxlib.com">www.regxlib.com</a>:
+   boost::tregex r(__T("href=[\"\']((http:\\/\\/|\\.\\/|\\/)?\\w+(\\.\\w+)*(\\/\\w+(\\.\\w+)?)*(\\/|\\?\\w*=\\w*(&amp;\\w*=\\w*)*)?)[\"\']"));
+   boost::tregex_token_iterator i(boost::make_regex_token_iterator(html, r, 1)), j;
+   while(i != j)
+   {
+      std::cout &lt;&lt; *i &lt;&lt; std::endl;
+      ++i;
+   }
+}      </PRE>
+      <HR>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         21&nbsp;Dec 2004 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;2004</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>

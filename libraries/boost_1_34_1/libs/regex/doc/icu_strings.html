@@ -1,0 +1,468 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: Working With Unicode and ICU String Types</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <LINK href="../../../boost.css" type="text/css" rel="stylesheet"></head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td vAlign="top" width="300">
+                  <h3><A href="../../../index.htm"><IMG height="86" alt="C++ Boost" src="../../../boost.png" width="277" border="0"></A></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">Working With Unicode and ICU String Types.</H2>
+               </TD>
+               <td width="50">
+                  <h3><A href="index.html"><IMG height="45" alt="Boost.Regex Index" src="uarrow.gif" width="43" border="0"></A></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <p></p>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><a href="#introduction">Introduction</a></dt> 
+         <dt><a href="#types">Unicode regular expression types</a></dt> 
+         <dt><a href="#algo">Regular Expression Algorithms</a>
+            <dd>
+               <dl class="index">
+                  <dt><a href="#u32regex_match">u32regex_match</a></dt> 
+                  <dt><a href="#u32regex_search">u32regex_search</a></dt> 
+                  <dt><a href="#u32regex_replace">u32regex_replace</a></dt> 
+               </dl>
+            </dd>
+         </dt>
+         <dt><a href="#iterators">Iterators</a>
+            <dd>
+               <dl class="index">
+                  <dt><a href="#u32regex_iterator">u32regex_iterator</a></dt> 
+                  <dt><a href="#u32regex_token_iterator">u32regex_token_iterator</a></dt> 
+               </dl>
+            </dd>
+         </dt>
+      </dl>
+      <H3><A name="introduction"></A>Introduction</H3>
+      <P>The header:</P>
+      <PRE>&lt;boost/regex/icu.hpp&gt;</PRE>
+      <P>contains the data types and algorithms necessary for working with regular 
+         expressions in a Unicode aware environment.&nbsp;
+      </P>
+      <P>In order to use this header you will need <A href="http://www.ibm.com/software/globalization/icu/">
+            the ICU library</A>, and you will need to have built the Boost.Regex library 
+         with <A href="install.html#unicode">ICU support enabled</A>.</P>
+      <P>The header will enable you to:</P>
+      <UL>
+         <LI>
+         Create regular expressions that treat Unicode strings as sequences of UTF-32 
+         code points.
+         <LI>
+         Create regular expressions that support various Unicode data properties, 
+         including character classification.
+         <LI>
+            Transparently search Unicode strings that are encoded as either UTF-8, UTF-16 
+            or UTF-32.</LI></UL>
+      <H3><A name="types"></A>Unicode regular expression types</H3>
+      <P>Header &lt;boost/regex/icu.hpp&gt; provides a regular expression&nbsp;traits 
+         class that handles UTF-32 characters:</P>
+      <PRE>class icu_regex_traits;</PRE>
+      <P>and a regular expression type based upon that:</P>
+      <PRE>typedef basic_regex&lt;UChar32,icu_regex_traits&gt; u32regex;</PRE>
+      <P>The type <EM>u32regex</EM> is regular expression type to use for all Unicode 
+         regular expressions; internally it uses UTF-32 code points, but can be created 
+         from, and used to search, either UTF-8, or UTF-16 encoded strings as well as 
+         UTF-32 ones.</P>
+      <P>The <A href="basic_regex.html#c2">constructors</A>, and <A href="basic_regex.html#a1">
+            assign</A> member functions of u32regex, require UTF-32 encoded strings, but 
+         there are a series of overloaded algorithms called make_u32regex which allow 
+         regular expressions to be created from UTF-8, UTF-16, or UTF-32 encoded 
+         strings:</P>
+      <PRE>template &lt;class InputIterator&gt; 
+u32regex make_u32regex(InputIterator i, InputIterator j, boost::regex_constants::syntax_option_type opt);
+</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the iterator 
+         sequence [i,j). The character encoding of the sequence is determined based upon <code>
+            sizeof(*i)</code>: 1 implies UTF-8, 2 implies UTF-16, and 4 implies UTF-32.</P>
+      <PRE>u32regex make_u32regex(const char* p, boost::regex_constants::syntax_option_type opt = boost::regex_constants::perl);
+</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the 
+         Null-terminated UTF-8 characater sequence <EM>p</EM>.</P>
+      <PRE>u32regex make_u32regex(const unsigned char* p, boost::regex_constants::syntax_option_type opt = boost::regex_constants::perl);</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the 
+         Null-terminated UTF-8 characater sequence <EM>p</EM>.u32regex 
+         make_u32regex(const wchar_t* p, boost::regex_constants::syntax_option_type opt 
+         = boost::regex_constants::perl);</P>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the 
+         Null-terminated characater sequence <EM>p</EM>.&nbsp; The character encoding of 
+         the sequence is determined based upon <CODE>sizeof(wchar_t)</CODE>: 1 implies 
+         UTF-8, 2 implies UTF-16, and 4 implies UTF-32.</P>
+      <PRE>u32regex make_u32regex(const UChar* p, boost::regex_constants::syntax_option_type opt = boost::regex_constants::perl);</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the 
+         Null-terminated UTF-16 characater sequence <EM>p</EM>.</P>
+      <PRE>template&lt;class C, class T, class A&gt;
+u32regex make_u32regex(const std::basic_string&lt;C, T, A&gt;&amp; s, boost::regex_constants::syntax_option_type opt = boost::regex_constants::perl);</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the string <EM>s</EM>.&nbsp; 
+         The character encoding of the string is determined based upon <CODE>sizeof(C)</CODE>: 
+         1 implies UTF-8, 2 implies UTF-16, and 4 implies UTF-32.</P>
+      <PRE>u32regex make_u32regex(const UnicodeString&amp; s, boost::regex_constants::syntax_option_type opt = boost::regex_constants::perl);</PRE>
+      <P><STRONG>Effects:</STRONG> Creates a regular expression object from the UTF-16 
+         encoding string <EM>s</EM>.</P>
+      <H3><A name="algo"></A>Regular Expression Algorithms</H3>
+      <P>The regular expression algorithms <A href="regex_match.html">regex_match</A>, <A href="regex_search.html">
+            regex_search</A> and <A href="regex_replace.html">regex_replace</A> all 
+         expect that the character sequence upon which they operate, is encoded in the 
+         same character encoding as the regular expression object with which they are 
+         used.&nbsp; For Unicode regular expressions that behavior is undesirable: while 
+         we may want to process the data in UTF-32 "chunks", the actual data is much 
+         more likely to encoded as either UTF-8 or UTF-16.&nbsp; Therefore the header 
+         &lt;boost/regex/icu.hpp&gt; provides a series of thin wrappers around these 
+         algorithms, called u32regex_match, u32regex_search, and u32regex_replace.&nbsp; 
+         These wrappers use iterator-adapters internally to make external UTF-8 or 
+         UTF-16 data look as though it's really a UTF-32 sequence, that can then be 
+         passed on to the "real" algorithm.</P>
+      <H4><A name="u32regex_match"></A>u32regex_match</H4>
+      <P>For each <A href="regex_match.html">regex_match</A> algorithm defined by 
+         &lt;boost/regex.hpp&gt;, then &lt;boost/regex/icu.hpp&gt; defines an overloaded 
+         algorithm that takes the same arguments, but which is called <EM>u32regex_match</EM>, 
+         and which will accept UTF-8, UTF-16 or UTF-32 encoded data, as well as an 
+         ICU&nbsp;UnicodeString as input.</P>
+      <P><STRONG>Example: </STRONG>match a password, encoded in a UTF-16 UnicodeString:</P>
+      <PRE>//
+// Find out if *password* meets our password requirements,
+// as defined by the regular expression *requirements*.
+//
+bool is_valid_password(const UnicodeString&amp; password, const UnicodeString&amp; requirements)
+{
+   return boost::u32regex_match(password, boost::make_u32regex(requirements));
+}
+</PRE>
+      <P>
+      <P><STRONG>Example: </STRONG>match a UTF-8 encoded filename:</P>
+      <PRE>//
+// Extract filename part of a path from a UTF-8 encoded std::string and return the result
+// as another std::string:
+//
+std::string get_filename(const std::string&amp; path)
+{
+   boost::u32regex r = boost::make_u32regex("(?:\\A|.*\\\\)([^\\\\]+)");
+   boost::smatch what;
+   if(boost::u32regex_match(path, what, r))
+   {
+      // extract $1 as a CString:
+      return what.str(1);
+   }
+   else
+   {
+      throw std::runtime_error("Invalid pathname");
+   }
+}
+</PRE>
+      <H4><A name="u32regex_search"></A>u32regex_search</H4>
+      <P>For each <A href="regex_search.html">regex_search</A> algorithm defined by 
+         &lt;boost/regex.hpp&gt;, then &lt;boost/regex/icu.hpp&gt; defines an overloaded 
+         algorithm that takes the same arguments, but which is called <EM>u32regex_search</EM>, 
+         and which will accept UTF-8, UTF-16 or UTF-32 encoded data, as well as an 
+         ICU&nbsp;UnicodeString as input.</P>
+      <P><STRONG>Example: </STRONG>search for a character sequence in a specific 
+         language block:
+      </P>
+      <PRE>UnicodeString extract_greek(const UnicodeString&amp; text)
+{
+   // searches through some UTF-16 encoded text for a block encoded in Greek,
+   // this expression is imperfect, but the best we can do for now - searching
+   // for specific scripts is actually pretty hard to do right.
+   //
+   // Here we search for a character sequence that begins with a Greek letter,
+   // and continues with characters that are either not-letters ( [^[:L*:]] )
+   // or are characters in the Greek character block ( [\\x{370}-\\x{3FF}] ).
+   //
+   boost::u32regex r = boost::make_u32regex(L"[\\x{370}-\\x{3FF}](?:[^[:L*:]]|[\\x{370}-\\x{3FF}])*");
+   boost::u16match what;
+   if(boost::u32regex_search(text, what, r))
+   {
+      // extract $0 as a CString:
+      return UnicodeString(what[0].first, what.length(0));
+   }
+   else
+   {
+      throw std::runtime_error("No Greek found!");
+   }
+}</PRE>
+      <H4><A name="u32regex_replace"></A>u32regex_replace</H4>
+      <P>For each <A href="regex_replace.html">regex_replace</A> algorithm defined by 
+         &lt;boost/regex.hpp&gt;, then &lt;boost/regex/icu.hpp&gt; defines an overloaded 
+         algorithm that takes the same arguments, but which is called <EM>u32regex_replace</EM>, 
+         and which will accept UTF-8, UTF-16 or UTF-32 encoded data, as well as an 
+         ICU&nbsp;UnicodeString as input.&nbsp; The input sequence and the format string 
+         specifier passed to the algorithm, can be encoded independently (for example 
+         one can be UTF-8, the other in UTF-16), but the result string / output iterator 
+         argument must use the same character encoding as the text being searched.</P>
+      <P><STRONG>Example: </STRONG>Credit card number reformatting:</P>
+      <PRE>//
+// Take a credit card number as a string of digits, 
+// and reformat it as a human readable string with "-"
+// separating each group of four digit;, 
+// note that we're mixing a UTF-32 regex, with a UTF-16
+// string and a UTF-8 format specifier, and it still all 
+// just works:
+//
+const boost::u32regex e = boost::make_u32regex("\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z");
+const char* human_format = "$1-$2-$3-$4";
+
+UnicodeString human_readable_card_number(const UnicodeString&amp; s)
+{
+   return boost::u32regex_replace(s, e, human_format);
+}</PRE>
+      <P>
+         <H2><A name="iterators"></A>Iterators</H2>
+         <H3><A name="u32regex_iterator"></A>u32regex_iterator</H3>
+      <P>Type u32regex_iterator is in all respects the same as <A href="regex_iterator.html">
+            regex_iterator</A> except that since the regular expression type is always 
+         u32regex it only takes one template parameter (the iterator type). It also 
+         calls u32regex_search internally, allowing it to interface correctly with 
+         UTF-8, UTF-16, and UTF-32 data:</P>
+      <PRE>
+template &lt;class BidirectionalIterator&gt;
+class u32regex_iterator
+{
+   // for members see <A href="regex_iterator.html">regex_iterator</A>
+};
+
+typedef u32regex_iterator&lt;const char*&gt;     utf8regex_iterator;
+typedef u32regex_iterator&lt;const UChar*&gt;    utf16regex_iterator;
+typedef u32regex_iterator&lt;const UChar32*&gt;  utf32regex_iterator;
+</PRE>
+      <P>In order to simplify the construction of a u32regex_iterator from a string, 
+         there are a series of non-member helper functions called 
+         make_u32regex_iterator:</P>
+      <PRE>
+u32regex_iterator&lt;const char*&gt; 
+   make_u32regex_iterator(const char* s, 
+                          const u32regex&amp; e, 
+                          regex_constants::match_flag_type m = regex_constants::match_default);
+                          
+u32regex_iterator&lt;const wchar_t*&gt; 
+   make_u32regex_iterator(const wchar_t* s, 
+                          const u32regex&amp; e, 
+                          regex_constants::match_flag_type m = regex_constants::match_default);
+                          
+u32regex_iterator&lt;const UChar*&gt; 
+   make_u32regex_iterator(const UChar* s, 
+                          const u32regex&amp; e, 
+                          regex_constants::match_flag_type m = regex_constants::match_default);
+                          
+template &lt;class charT, class Traits, class Alloc&gt;
+u32regex_iterator&lt;typename std::basic_string&lt;charT, Traits, Alloc&gt;::const_iterator&gt; 
+   make_u32regex_iterator(const std::basic_string&lt;charT, Traits, Alloc&gt;&amp; s, 
+                          const u32regex&amp; e, 
+                          regex_constants::match_flag_type m = regex_constants::match_default);
+                          
+u32regex_iterator&lt;const UChar*&gt; 
+   make_u32regex_iterator(const UnicodeString&amp; s, 
+                          const u32regex&amp; e, 
+                          regex_constants::match_flag_type m = regex_constants::match_default);</PRE>
+      <P>
+      <P>Each of these overloads returns an iterator that enumerates all occurrences of 
+         expression <EM>e</EM>, in text <EM>s</EM>, using match_flags <EM>m.</EM></P>
+      <P><STRONG>Example</STRONG>: search for international currency symbols, along with 
+         their associated numeric value:</P>
+      <PRE>
+void enumerate_currencies(const std::string&amp; text)
+{
+   // enumerate and print all the currency symbols, along
+   // with any associated numeric values:
+   const char* re = 
+      "([[:Sc:]][[:Cf:][:Cc:][:Z*:]]*)?"
+      "([[:Nd:]]+(?:[[:Po:]][[:Nd:]]+)?)?"
+      "(?(1)"
+         "|(?(2)"
+            "[[:Cf:][:Cc:][:Z*:]]*"
+         ")"
+         "[[:Sc:]]"
+      ")";
+   boost::u32regex r = boost::make_u32regex(re);
+   boost::u32regex_iterator&lt;std::string::const_iterator&gt; i(boost::make_u32regex_iterator(text, r)), j;
+   while(i != j)
+   {
+      std::cout &lt;&lt; (*i)[0] &lt;&lt; std::endl;
+      ++i;
+   }
+}</PRE>
+      <P>
+      <P>Calling
+      </P>
+      <PRE>enumerate_currencies(" $100.23 or £198.12 ");</PRE>
+      <P>Yields the output:</P>
+      <PRE>$100.23<BR>£198.12</PRE>
+      <P>Provided of course that the input is encoded as UTF-8.</P>
+      <H3><A name="u32regex_token_iterator"></A>u32regex_token_iterator</H3>
+      <P>Type u32regex_token_iterator is in all respects the same as <A href="regex_token_iterator.html">
+            regex_token_iterator</A> except that since the regular expression type is 
+         always u32regex it only takes one template parameter (the iterator type).&nbsp; 
+         It also calls u32regex_search internally, allowing it to interface correctly 
+         with UTF-8, UTF-16, and UTF-32 data:</P>
+      <PRE>template &lt;class BidirectionalIterator&gt;
+class u32regex_token_iterator
+{
+   // for members see <A href="regex_token_iterator.html">regex_token_iterator</A>
+};
+
+typedef u32regex_token_iterator&lt;const char*&gt;     utf8regex_token_iterator;
+typedef u32regex_token_iterator&lt;const UChar*&gt;    utf16regex_token_iterator;
+typedef u32regex_token_iterator&lt;const UChar32*&gt;  utf32regex_token_iterator;
+</PRE>
+      <P>In order to simplify the construction of a u32regex_token_iterator from a 
+         string, there are a series of non-member helper functions called 
+         make_u32regex_token_iterator:</P>
+      <PRE>
+u32regex_token_iterator&lt;const char*&gt; 
+   make_u32regex_token_iterator(const char* s, 
+                                const u32regex&amp; e, 
+                                int sub, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                               
+u32regex_token_iterator&lt;const wchar_t*&gt; 
+   make_u32regex_token_iterator(const wchar_t* s, 
+                                const u32regex&amp; e, 
+                                int sub, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UChar* s, 
+                                const u32regex&amp; e, 
+                                int sub, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;class charT, class Traits, class Alloc&gt;
+u32regex_token_iterator&lt;typename std::basic_string&lt;charT, Traits, Alloc&gt;::const_iterator&gt; 
+   make_u32regex_token_iterator(const std::basic_string&lt;charT, Traits, Alloc&gt;&amp; s, 
+                                const u32regex&amp; e, 
+                                int sub, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UnicodeString&amp; s, 
+                                const u32regex&amp; e, 
+                                int sub, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);</PRE>
+      <P>
+      <P>Each of these overloads returns an iterator that enumerates all occurrences of 
+         marked sub-expression <EM>sub</EM> in regular expression&nbsp;<EM>e</EM>, found 
+         in text <EM>s</EM>, using match_flags <EM>m.</EM></P>
+      <PRE>
+template &lt;std::size_t N&gt;
+u32regex_token_iterator&lt;const char*&gt; 
+   make_u32regex_token_iterator(const char* p, 
+                                const u32regex&amp; e, 
+                                const int (&amp;submatch)[N], 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;std::size_t N&gt;
+u32regex_token_iterator&lt;const wchar_t*&gt; 
+   make_u32regex_token_iterator(const wchar_t* p, 
+                                const u32regex&amp; e, 
+                                const int (&amp;submatch)[N], 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;std::size_t N&gt;
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UChar* p, 
+                                const u32regex&amp; e, 
+                                const int (&amp;submatch)[N], 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;class charT, class Traits, class Alloc, std::size_t N&gt;
+u32regex_token_iterator&lt;typename std::basic_string&lt;charT, Traits, Alloc&gt;::const_iterator&gt; 
+   make_u32regex_token_iterator(const std::basic_string&lt;charT, Traits, Alloc&gt;&amp; p, 
+                                const u32regex&amp; e, 
+                                const int (&amp;submatch)[N], 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;std::size_t N&gt;
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UnicodeString&amp; s, 
+                                const u32regex&amp; e, 
+                                const int (&amp;submatch)[N], 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+</PRE>
+      <P>Each of these overloads returns an iterator that enumerates one sub-expression 
+         for each&nbsp;<EM>submatch</EM> in regular expression&nbsp;<EM>e</EM>, found in 
+         text <EM>s</EM>, using match_flags <EM>m.</EM></P>
+      <PRE>
+u32regex_token_iterator&lt;const char*&gt; 
+   make_u32regex_token_iterator(const char* p, 
+                                const u32regex&amp; e, 
+                                const std::vector&lt;int&gt;&amp; submatch, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+u32regex_token_iterator&lt;const wchar_t*&gt; 
+   make_u32regex_token_iterator(const wchar_t* p, 
+                                const u32regex&amp; e, 
+                                const std::vector&lt;int&gt;&amp; submatch, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UChar* p, 
+                                const u32regex&amp; e, 
+                                const std::vector&lt;int&gt;&amp; submatch, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+template &lt;class charT, class Traits, class Alloc&gt;
+u32regex_token_iterator&lt;typename std::basic_string&lt;charT, Traits, Alloc&gt;::const_iterator&gt; 
+   make_u32regex_token_iterator(const std::basic_string&lt;charT, Traits, Alloc&gt;&amp; p, 
+                                const u32regex&amp; e, 
+                                const std::vector&lt;int&gt;&amp; submatch, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+                                
+u32regex_token_iterator&lt;const UChar*&gt; 
+   make_u32regex_token_iterator(const UnicodeString&amp; s, 
+                                const u32regex&amp; e, 
+                                const std::vector&lt;int&gt;&amp; submatch, 
+                                regex_constants::match_flag_type m = regex_constants::match_default);
+</PRE>
+      <P>Each of these overloads returns an iterator that enumerates one sub-expression 
+         for each&nbsp;<EM>submatch</EM> in regular expression&nbsp;<EM>e</EM>, found in 
+         text <EM>s</EM>, using match_flags <EM>m.</EM></P>
+      <P><STRONG>Example</STRONG>: search for international currency symbols, along with 
+         their associated numeric value:</P>
+      <PRE>
+void enumerate_currencies2(const std::string&amp; text)
+{
+   // enumerate and print all the currency symbols, along
+   // with any associated numeric values:
+   const char* re = 
+      "([[:Sc:]][[:Cf:][:Cc:][:Z*:]]*)?"
+      "([[:Nd:]]+(?:[[:Po:]][[:Nd:]]+)?)?"
+      "(?(1)"
+         "|(?(2)"
+            "[[:Cf:][:Cc:][:Z*:]]*"
+         ")"
+         "[[:Sc:]]"
+      ")";
+   boost::u32regex r = boost::make_u32regex(re);
+   boost::u32regex_token_iterator&lt;std::string::const_iterator&gt; 
+      i(boost::make_u32regex_token_iterator(text, r, 1)), j;
+   while(i != j)
+   {
+      std::cout &lt;&lt; *i &lt;&lt; std::endl;
+      ++i;
+   }
+}
+</PRE>
+      <P>
+         <HR>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
+         05 Jan 2005&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <p><i>© Copyright John Maddock&nbsp;2005</i></p>
+      <P><I>Use, modification and distribution are subject to the Boost Software License, 
+            Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+            or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+   </body>
+</html>
+
+

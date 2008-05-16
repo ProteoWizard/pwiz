@@ -1,0 +1,289 @@
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building Boost <http://www.boost.org/> externally.
+### Targets:
+###     /ext/boost//boost
+###     /ext/boost//thread
+###     /ext/boost//regex
+###     /ext/boost//interprocess
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import set ;
+import stage ;
+import common ;
+import path ;
+
+extension.declare boost ;
+
+# On Windows, iostreams does not by default support zlib and bzip2 compression
+if [ modules.peek : NT ]
+{
+   feature.feature boost-iostreams-zlib : off on : composite link-incompatible propagated ;
+   feature.compose <boost-iostreams-zlib>off : <define>NO_ZLIB=1 ;
+   feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
+   feature.compose <boost-iostreams-bzip2>off : <define>NO_BZIP2=1 ;
+}
+else if [ modules.peek : UNIX ]
+{
+   feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
+   feature.compose <boost-iostreams-zlib>off : <define>NO_ZLIB=1 ;
+   feature.feature boost-iostreams-bzip2 : on off : composite link-incompatible propagated ;
+   feature.compose <boost-iostreams-bzip2>off : <define>NO_BZIP2=1 ;
+}
+
+feature.feature boost-interprocess : : free ;
+feature.feature boost-asio : : free ;
+
+rule boost-tag ( name : type ? : property-set )
+{
+    return [ common.format-name
+        boost_ <base> <toolset> <threading> <runtime> <version:boost-version>
+        : $(name) : $(type) : $(property-set) ] ;
+}
+
+rule init ( version ? : location : options * )
+{
+    version ?= default ;
+    local requirements =
+        [ extension.define boost $(version) : $(location) : $(options) ] ;
+        requirements =
+        [ extension.refine boost $(version) : <tag>@boost-tag ]
+        <boost-version>$(version)
+        <boost-location>$(location)
+        <toolset>msvc:<define>WIN32
+        <toolset>msvc:<define>BOOST_WINDOWS_API
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+        #~ <warnings>off
+        ;
+    requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
+    local common-requirements =
+        <include>$(location)
+        ;
+    alias boost
+        :
+        :   $(common-requirements)
+            $(requirements)
+        :
+        :   $(common-requirements)
+        ;
+
+     lib filesystem
+        :   [ glob $(location)/libs/filesystem/src/*.cpp ]
+        :   $(requirements)
+            <location-prefix>filesystem
+            <use>boost
+            <threading>multi
+            <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
+            <define>BOOST_FILESYSTEM_NO_LIB=1
+        :
+        :   <define>BOOST_FILESYSTEM_NO_LIB=1
+        ;
+
+    lib iostreams
+        :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
+        :   $(requirements)
+            <location-prefix>iostreams
+            <use>boost
+            <threading>multi
+            <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
+            <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/zlib.cpp
+            <boost-iostreams-bzip2>on:<source>$(location)/libs/iostreams/src/bzip2.cpp
+            <define>BOOST_IOSTREAMS_NO_LIB=1
+        :
+        :   <define>BOOST_IOSTREAMS_NO_LIB=1
+        ;
+
+    local tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+    tmp += $(location)/libs/serialization/build ;
+    modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+    local serialization_sources =
+        basic_archive
+        basic_archive_impl
+        basic_iarchive
+        basic_oarchive
+        basic_iserializer
+        basic_oserializer
+        basic_pointer_iserializer
+        basic_pointer_oserializer
+        basic_serializer_map
+        basic_text_iprimitive
+        basic_text_oprimitive
+        basic_xml_archive
+        binary_iarchive
+        binary_oarchive
+        extended_type_info
+        extended_type_info_no_rtti
+        extended_type_info_typeid
+        polymorphic_iarchive
+        polymorphic_oarchive
+        stl_port
+        text_iarchive
+        text_oarchive
+        void_cast
+        xml_grammar
+        xml_iarchive
+        xml_oarchive
+    ;
+
+   local wserialization_sources = 
+        codecvt_null
+        utf8_codecvt_facet
+        basic_text_wiprimitive
+        basic_text_woprimitive
+        binary_wiarchive
+        binary_woarchive
+        text_wiarchive
+        text_woarchive
+        xml_wgrammar
+        xml_wiarchive
+        xml_woarchive
+    ;
+
+    lib serialization
+        :   $(location)/libs/serialization/src/$(serialization_sources).cpp
+        :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
+            <location-prefix>serialization
+            <use>boost
+            #<threading>multi
+            <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
+            <define>BOOST_SERIALIZATION_NO_LIB=1
+        :
+        :   <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
+            <define>BOOST_SERIALIZATION_NO_LIB=1
+        ;
+
+    lib wserialization
+        :   $(location)/libs/serialization/src/$(wserialization_sources).cpp serialization
+        :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
+            <location-prefix>wserialization
+            <use>boost
+            #<threading>multi
+            <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
+            <define>BOOST_SERIALIZATION_NO_LIB=1
+        :
+        :   <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
+            <define>BOOST_SERIALIZATION_NO_LIB=1
+        ;
+
+    lib thread
+        :   [ set.difference
+                [ glob $(location)/libs/thread/src/*.cpp ]
+                :
+                [ glob $(location)/libs/thread/src/tss_null.cpp ]
+                ]
+        :   $(requirements)
+            <location-prefix>thread
+            <use>boost
+            <threading>multi
+            <define>BOOST_THREAD_BUILD_DLL=1
+            <define>BOOST_THREAD_NO_LIB=1
+            <toolset>msvc:<cxxflags>/wd4275
+            <toolset>msvc:<cxxflags>/wd4251
+        :
+        :   <threading>multi
+            <define>BOOST_THREAD_USE_DLL=1
+            <define>BOOST_THREAD_NO_LIB=1
+        ;
+    
+    lib regex
+        :   [ glob $(location)/libs/regex/src/*.cpp ]
+        :   $(requirements)
+            <location-prefix>regex
+            <use>boost
+            <link>shared:<define>BOOST_REGEX_DYN_LINK=1
+            <define>BOOST_REGEX_NO_LIB=1
+            <toolset>msvc:<cxxflags>/wd4309
+            <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+        :
+        :   <define>BOOST_REGEX_NO_LIB=1
+        ;
+    
+    if <boost-interprocess> in $(requirements:G)
+    {
+        local i = [ property.select <boost-interprocess> : $(requirements) ] ;
+        if ! ( $(i:G=) in enable disable )
+        {
+            local i-location = [ path.make $(i:G=) ] ;
+            local i-files = [ path.glob-tree $(i-location)/boost/interprocess : *.hpp ] ;
+            local custom-files ;
+            for local i-file in $(i-files)
+            {
+                local custom-file = [ path.relative $(i-file) $(i-location) ] ;
+                make $(custom-file) : $(i-file) : common.copy
+                    :   $(requirements)
+                        <location-prefix>interprocess
+                    ;
+                custom-files += $(custom-file) ;
+            }
+            alias interprocess
+                :
+                :   $(requirements)
+                    <use>boost
+                    <dependency>$(custom-files)
+                :
+                :   $(common-requirements)
+                    <dependency>$(custom-files)
+                    <implicit-dependency>$(custom-files)
+                ;
+        }
+        else if $(i:G=) = enable
+        {
+            alias interprocess
+                :
+                :   $(requirements)
+                    <use>boost
+                :
+                :
+                ;
+        }
+    }
+    
+    if <boost-asio> in $(requirements:G)
+    {
+        local i = [ property.select <boost-asio> : $(requirements) ] ;
+        if ! ( $(i:G=) in enable disable )
+        {
+            local i-location = [ path.make $(i:G=) ] ;
+            local i-files = [ path.glob-tree $(i-location)/boost/asio : *.hpp ] ;
+            local custom-files ;
+            for local i-file in $(i-files)
+            {
+                local custom-file = [ path.relative $(i-file) $(i-location) ] ;
+                make $(custom-file) : $(i-file) : common.copy
+                    :   $(requirements)
+                        <location-prefix>asio
+                    ;
+                custom-files += $(custom-file) ;
+            }
+            alias asio
+                :
+                :   $(requirements)
+                    <use>boost
+                    <dependency>$(custom-files)
+                :
+                :   $(common-requirements)
+                    <dependency>$(custom-files)
+                    <implicit-dependency>$(custom-files)
+                ;
+        }
+        else if $(i:G=) = enable
+        {
+            alias asio
+                :
+                :   $(requirements)
+                    <use>boost
+                :
+                :
+                ;
+        }
+    }
+}

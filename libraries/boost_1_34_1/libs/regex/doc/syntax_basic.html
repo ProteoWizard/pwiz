@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <title>Boost.Regex: POSIX-Basic Regular Expression Syntax</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <LINK href="../../../boost.css" type="text/css" rel="stylesheet"></head>
+   <body>
+      <P>
+         <TABLE id="Table1" cellSpacing="1" cellPadding="1" width="100%" border="0">
+            <TR>
+               <td vAlign="top" width="300">
+                  <h3><A href="../../../index.htm"><IMG height="86" alt="C++ Boost" src="../../../boost.png" width="277" border="0"></A></h3>
+               </td>
+               <TD width="353">
+                  <H1 align="center">Boost.Regex</H1>
+                  <H2 align="center">POSIX Basic Regular Expression Syntax</H2>
+               </TD>
+               <td width="50">
+                  <h3><A href="index.html"><IMG height="45" alt="Boost.Regex Index" src="uarrow.gif" width="43" border="0"></A></h3>
+               </td>
+            </TR>
+         </TABLE>
+      </P>
+      <HR>
+      <H3>Contents</H3>
+      <dl class="index">
+         <dt><A href="#synopsis">Synopsis</A> <dt><A href="#Basic">POSIX Basic Syntax</A> <dt><A href="#variations">
+                     Variations</A>
+                  <dd>
+                     <dl>
+                        <dt><A href="#grep">Grep</A> <dt><A href="#emacs">Emacs</A></dt>
+                     </dl>
+                     <dt><A href="#options">Options</A> <dt><A href="#refs">References</A></dt>
+      </dl>
+      <H3><A name="synopsis"></A>Synopsis</H3>
+      <P>The POSIX-Basic regular expression syntax is used by the Unix utility <EM>sed</EM>, 
+         and variations are used by <EM>grep</EM> and <EM>emacs</EM>.&nbsp; You can 
+         construct POSIX basic regular expressions in Boost.Regex by passing the flag <EM>basic</EM>
+         to the regex constructor, for example:</P>
+      <PRE>// e1 is a case sensitive POSIX-Basic expression:
+boost::regex e1(my_expression, boost::regex::basic);
+// e2 a case insensitive POSIX-Basic expression:
+boost::regex e2(my_expression, boost::regex::basic|boost::regex::icase);</PRE>
+      <H3>POSIX Basic Syntax<A name="Basic"></A></H3>
+      <P>In POSIX-Basic regular expressions, all characters are match themselves except 
+         for the following special characters:</P>
+      <PRE>.[\*^$</PRE>
+      <H4>Wildcard:</H4>
+      <P>The single character '.' when used outside of a character set will match any 
+         single character except:</P>
+      <P>The NULL character when the flag <EM>match_no_dot_null</EM> is passed to the 
+         matching algorithms.</P>
+      <P>The newline character when the flag <EM>match_not_dot_newline</EM> is passed to 
+         the matching algorithms.</P>
+      <H4>Anchors:</H4>
+      <P>A '^' character shall match the start of a line when used as the first 
+         character of an expression, or the first character of a sub-expression.</P>
+      <P>A '$' character shall match the end of a line when used as the last character 
+         of an expression, or the last character of a sub-expression.</P>
+      <H4>Marked sub-expressions:</H4>
+      <P>A section beginning \( and ending \) acts as a marked sub-expression.&nbsp; 
+         Whatever matched the sub-expression is split out in a separate field by the 
+         matching algorithms.&nbsp; Marked sub-expressions can also repeated, or 
+         referred-to by a back-reference.</P>
+      <H4>Repeats:</H4>
+      <P>Any atom (a single character, a marked sub-expression, or a character class) 
+         can be repeated with the * operator.</P>
+      <P>For example a* will match any number of letter a's repeated zero or more times 
+         (an atom repeated zero times matches an empty string), so the expression a*b 
+         will match any of the following:</P>
+      <PRE>b
+ab
+aaaaaaaab</PRE>
+      <P>An atom can also be repeated with a bounded repeat:</P>
+      <P>a\{n\}&nbsp; Matches 'a' repeated exactly <EM>n</EM> times.</P>
+      <P>a\{n,\}&nbsp; Matches 'a' repeated <EM>n</EM> or more times.</P>
+      <P>a\{n, m\}&nbsp; Matches 'a' repeated between <EM>n</EM> and <EM>m</EM> times 
+         inclusive.</P>
+      <P>For example:</P>
+      <PRE>^a\{2,3\}$</PRE>
+      <P>Will match either of:</P>
+      <PRE>aa
+aaa</PRE>
+      <P>But neither of:</P>
+      <PRE>a
+aaaa</PRE>
+      <P>It is an error to use a repeat operator, if the preceding construct can not be 
+         repeated, for example:</P>
+      <PRE>a\(*\)</PRE>
+      <P>Will raise an error, as there is nothing for the * operator to be applied to.</P>
+      <H4>Back references:</H4>
+      <P>An escape character followed by a digit <EM>n</EM>, where <EM>n </EM>is in the 
+         range 1-9, matches the same string that was matched by sub-expression <EM>n</EM>.&nbsp; 
+         For example the expression:</P>
+      <PRE>^\(a*\).*\1$</PRE>
+      <P>Will match the string:</P>
+      <PRE>aaabbaaa</PRE>
+      <P>But not the string:</P>
+      <PRE>aaabba</PRE>
+      <H4>Character sets:</H4>
+      <P>A character set is a bracket-expression starting with [ and ending with ], it 
+         defines a set of characters, and matches any single character that is a member 
+         of that set.</P>
+      <P>A bracket expression may contain any combination of the following:</P>
+      <BLOCKQUOTE dir="ltr" style="MARGIN-RIGHT: 0px">
+         <H5>Single characters:</H5>
+         <P>For example [abc], will match any of the characters 'a', 'b', or 'c'.</P>
+         <H5>Character ranges:</H5>
+         <P>For example [a-c] will match any single character in the range 'a' to 
+            'c'.&nbsp; By default, for POSIX-Basic regular expressions, a character <EM>x</EM>
+            is within the range <EM>y</EM> to <EM>z</EM>, if it collates within that 
+            range;&nbsp;this results in locale specific behavior.&nbsp; This behavior can 
+            be turned off by unsetting the <EM><A href="syntax_option_type.html#basic">collate</A></EM>
+            option flag - in which case whether a character appears within a range is 
+            determined by comparing the code points of the characters only</P>
+         <H5>Negation:</H5>
+         <P>If the bracket-expression begins with the ^ character, then it matches the 
+            complement of the characters it contains, for example [^a-c] matches any 
+            character that is not in the range a-c.</P>
+         <H5>Character classes:</H5>
+         <P>An expression of the form [[:name:]] matches the named character class "name", 
+            for example [[:lower:]] matches any lower case character.&nbsp; See <A href="character_class_names.html">
+               character class names</A>.</P>
+         <H5>Collating Elements:</H5>
+         <P>An expression of the form [[.col.] matches the collating element <EM>col</EM>.&nbsp; 
+            A collating element is any single character, or any sequence of characters that 
+            collates as a single unit.&nbsp; Collating elements may also be used as the end 
+            point of a range, for example: [[.ae.]-c] matches the character sequence "ae", 
+            plus any single character in the rangle "ae"-c, assuming that "ae" is treated 
+            as a single collating element in the current locale.</P>
+         <P>Collating elements may be used in place of escapes (which are not normally 
+            allowed inside character sets), for example [[.^.]abc] would match either one 
+            of the characters 'abc^'.</P>
+         <P>As an extension, a collating element may also be specified via its <A href="collating_names.html">
+               symbolic name</A>, for example:</P>
+         <P>[[.NUL.]]</P>
+         <P>matches a NUL character.</P>
+         <H5>Equivalence classes:</H5>
+         <P>
+            An expression of theform[[=col=]], matches any character or collating element 
+            whose primary sort key is the same as that for collating element <EM>col</EM>, 
+            as with collating elements the name <EM>col</EM> may be a <A href="collating_names.html">
+               symbolic name</A>.&nbsp; A primary sort key is one that ignores case, 
+            accentation, or locale-specific tailorings; so for example [[=a=]] matches any 
+            of the characters: a, à, á, â, ã, ä, å, A, À, Á, Â, Ã, Ä and Å.&nbsp; 
+            Unfortunately implementation of this is reliant on the platform's collation and 
+            localisation support; this feature can not be relied upon to work portably 
+            across all platforms, or even all locales on one platform.</P>
+      </BLOCKQUOTE>
+      <H5>Combinations:</H5>
+      <P>All of the above can be combined in one character set declaration, for example: 
+         [[:digit:]a-c[.NUL.]].</P>
+      <H4>Escapes</H4>
+      <P>With the exception of the escape sequences \{, \}, \(, and \), which are 
+         documented above, an escape followed by any character matches that 
+         character.&nbsp; This can be used to make the special characters .[\*^$, 
+         "ordinary".&nbsp; Note that the escape character loses its special meaning 
+         inside a character set, so [\^] will match either a literal '\' or a '^'.</P>
+      <H4>What Gets Matched</H4>
+      <P>When there is more that one way to match a regular expression, the "best" 
+         possible match is obtained using the <A href="syntax_leftmost_longest.html">leftmost-longest 
+            rule</A>.</P>
+      <H3><A name="variations"></A>Variations</H3>
+      <H4><A name="grep"></A>Grep</H4>
+      <P>When an expression is compiled with the flag <EM>grep</EM> set, then the 
+         expression is treated as a newline separated list of <A href="#Basic">POSIX-Basic</A>
+         expressions, a match is found if any of the expressions in the list match, for 
+         example:</P>
+      <PRE>boost::regex e("abc\ndef", boost::regex::grep);</PRE>
+      <P>will match either of the POSIX-Basic expressions "abc" or "def".</P>
+      <P>As its name suggests, this behavior is consistent with the Unix utility <EM>grep</EM>.</P>
+      <H4><A name="emacs"></A>emacs</H4>
+      <P>In addition to the <A href="#Basic">POSIX-Basic features</A> the following 
+         characters are also special:</P>
+      <BLOCKQUOTE dir="ltr" style="MARGIN-RIGHT: 0px">
+         <P>+ repeats the preceding atom one or more times.</P>
+         <P>? repeats the preceding atom zero or one times.</P>
+         <P>*? A non-greedy version of *.</P>
+         <P>+? A non-greedy version of +.</P>
+         <P>?? A non-greedy version of ?.</P>
+      </BLOCKQUOTE>
+      <P>And the following escape sequences are also recognised:</P>
+      <BLOCKQUOTE dir="ltr" style="MARGIN-RIGHT: 0px">
+         <P>\| specifies an alternative.</P>
+         <P>\(?:&nbsp; ...&nbsp; \) is a non-marking grouping construct - allows you to 
+            lexically group something without spitting out an extra sub-expression.</P>
+         <P>\w&nbsp; matches any word character.</P>
+         <P>\W matches any non-word character.</P>
+         <P>\sx matches any character in the syntax group <EM>x</EM>, the following emacs 
+            groupings are supported: 's', ' ', '_', 'w', '.', ')', '(', '"', '\'', '&gt;' 
+            and '&lt;'.&nbsp; Refer to the emacs docs for details.</P>
+         <P>\Sx matches any character not in the syntax grouping <EM>x</EM>.</P>
+         <P>\c and \C are not supported.</P>
+         <P>\` matches zero characters only at the start of a buffer (or string being 
+            matched).</P>
+         <P>\' matches zero characters only at the end of a buffer (or string being 
+            matched).</P>
+         <P>\b matches zero characters at a word boundary.</P>
+         <P>\B matches zero characters, not at a word boundary.</P>
+         <P>\&lt; matches zero characters only at the start of a word.</P>
+         <P>\&gt; matches zero characters only at the end of a word.</P>
+      </BLOCKQUOTE>
+      <P dir="ltr">Finally, you should note that emacs style regular expressions are 
+         matched according to the <A href="syntax_perl.html#what">Perl "depth first search" 
+            rules</A>.&nbsp; Emacs expressions are matched this way because they contain 
+         Perl-like extensions, that do not interact well with the <A href="syntax_leftmost_longest.html">
+            POSIX-style leftmost-longest rule</A>.</P>
+      <H3><A name="options"></A>Options</H3>
+      <P>There are a <A href="syntax_option_type.html#basic">variety of flags</A> that 
+         may be combined with the <EM>basic</EM> and <EM>grep</EM> options when 
+         constructing the regular expression, in particular note that the <A href="syntax_option_type.html#basic">
+            newline_alt, no_char_classes, no-intervals, bk_plus_qm and bk_plus_vbar</A> options 
+         all alter the syntax, while the <A href="syntax_option_type.html#basic">collate 
+            and icase</A> options modify how the case and locale sensitivity are to be 
+         applied.</P>
+      <H3><A name="refs"></A>References</H3>
+      <P><A href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap09.html">IEEE 
+            Std 1003.1-2001, Portable Operating System Interface (POSIX ), Base Definitions 
+            and Headers, Section 9, Regular Expressions (FWD.1).</A></P>
+      <P><A href="http://www.opengroup.org/onlinepubs/000095399/utilities/grep.html">IEEE 
+            Std 1003.1-2001, Portable Operating System Interface (POSIX ), Shells and 
+            Utilities, Section 4, Utilities, grep (FWD.1).</A></P>
+      <P><A href="http://www.gnu.org/software/emacs/">Emacs Version 21.3</A>.</P>
+      <P>
+         <HR>
+      <P></P>
+      <p>Revised&nbsp; 
+         <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+         21 Aug 2004&nbsp; 
+         <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+      <P><I>© Copyright <a href="mailto:jm@regex.fsnet.co.uk">John Maddock</a>&nbsp;2004</I></P>
+      <I>
+         <P><I>Use, modification and distribution are subject to the Boost Software License, 
+               Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+               or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>).</I></P>
+      </I>
+   </body>
+</html>
