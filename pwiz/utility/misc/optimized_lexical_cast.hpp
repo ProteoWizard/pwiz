@@ -25,6 +25,7 @@
 #define _OPTIMIZED_LEXICAL_CAST_HPP_
 
 #include <cstdlib>
+#include <cerrno>
 #include <boost/lexical_cast.hpp>
 
 // optimized string->numeric conversions
