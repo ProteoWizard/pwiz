@@ -86,19 +86,15 @@ void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result)
 
 
 template <typename filter_type>
-void filterArray(const void* byteBuffer, size_t byteCount, ostringstream& result)
+string filterArray(const void* byteBuffer, size_t byteCount)
 {
+    ostringstream result;
     array_source source(reinterpret_cast<const char*>(byteBuffer), byteCount);
     filtering_streambuf<input> in;
     in.push(filter_type());
     in.push(source);
     boost::iostreams::copy(in, result);
-
-
-    // hacks?
-    in.pop();
-    in.pop();
-
+    return result.str();
 }
 
 
@@ -159,16 +155,14 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
 
     // compression
 
-    ostringstream compressed;
+    string compressed;
     if (config_.compression == Compression_Zlib)
     {
-        throw runtime_error("[BinaryDataEncoder::encode()] Compression not implemented");
-
-        filterArray<zlib_compressor>(byteBuffer, byteCount, compressed);
-        if (!compressed.str().empty())
+        compressed = filterArray<zlib_compressor>(byteBuffer, byteCount);
+        if (!compressed.empty())
         {
-            byteBuffer = reinterpret_cast<void*>(&compressed.str()[0]);
-            byteCount = compressed.str().size();
+            byteBuffer = reinterpret_cast<void*>(&compressed[0]);
+            byteCount = compressed.size();
         }
         else
         {
@@ -217,16 +211,14 @@ void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& 
 
     // decompression
 
-    ostringstream decompressed;
+    string decompressed;
     if (config_.compression == Compression_Zlib)
     {
-        throw runtime_error("[BinaryDataEncoder::decode()] Compression not implemented");
-
-        filterArray<zlib_decompressor>(byteBuffer, byteCount, decompressed);
-        if (!decompressed.str().empty())
+        decompressed = filterArray<zlib_decompressor>(byteBuffer, byteCount);
+        if (!decompressed.empty())
         {
-            byteBuffer = reinterpret_cast<void*>(&decompressed.str()[0]);
-            byteCount = decompressed.str().size();
+            byteBuffer = reinterpret_cast<void*>(&decompressed[0]);
+            byteCount = decompressed.size();
         }
         else
         {
@@ -247,13 +239,13 @@ void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& 
         if (config_.precision == Precision_32)
         {
             unsigned int* p = reinterpret_cast<unsigned int*>(byteBuffer);
-            size_t floatCount = binarySize / sizeof(float);
+            size_t floatCount = byteCount / sizeof(float);
             transform(p, p+floatCount, p, endianize32);
         }
         else // Precision_64
         {
             unsigned long long* p = reinterpret_cast<unsigned long long*>(byteBuffer);
-            size_t doubleCount = binarySize / sizeof(double);
+            size_t doubleCount = byteCount / sizeof(double);
             transform(p, p+doubleCount, p, endianize64);
         }
     }

@@ -202,7 +202,6 @@ void test()
     config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     testConfiguration(config);
 
-/*
     config.precision = BinaryDataEncoder::Precision_32;
     config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_Zlib;
@@ -217,13 +216,11 @@ void test()
     config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_Zlib;
     testConfiguration(config);
-  
+
     config.precision = BinaryDataEncoder::Precision_64;
     config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     config.compression = BinaryDataEncoder::Compression_Zlib;
     testConfiguration(config);
-*/
-
 }
 
 
