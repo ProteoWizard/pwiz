@@ -99,6 +99,7 @@ Config parseCommandLine(int argc, const char* argv[])
     bool intensity_precision_32 = false;
     bool intensity_precision_64 = false;
     bool noindex = false;
+    bool zlib = false;
 
     po::options_description od_config("Options");
     od_config.add_options()
@@ -131,10 +132,10 @@ Config parseCommandLine(int argc, const char* argv[])
 			": encode m/z values in 32-bit precision")
         ("inten64",
             po::value<bool>(&intensity_precision_64)->zero_tokens(),
-			": encode m/z values in 64-bit precision [default]")
+			": encode m/z values in 64-bit precision")
         ("inten32",
             po::value<bool>(&intensity_precision_32)->zero_tokens(),
-			": encode m/z values in 32-bit precision")
+			": encode m/z values in 32-bit precision [default]")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
 			": do not write index")
@@ -144,6 +145,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("centroid,c",
             po::value<bool>(&config.centroidSpectra)->zero_tokens()->default_value(config.centroidSpectra),
 			": retrieve centroided spectrum data")
+        ("zlib,z",
+            po::value<bool>(&zlib)->zero_tokens(),
+			": use zlib compression for binary data")
         ;
 
     // append options description to usage string
@@ -239,6 +243,9 @@ Config parseCommandLine(int argc, const char* argv[])
 
     if (noindex)
         config.writeConfig.indexed = false;
+
+    if (zlib)
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
     return config;
 }
