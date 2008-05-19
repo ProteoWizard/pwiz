@@ -34,7 +34,7 @@ project pwiz
         <warnings>all
 
         # is there any platform where static runtime linkage does not necessiate static object linkage?
-        <runtime-link>static:<link>static
+        <link>shared:<runtime-link>shared
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -48,7 +48,7 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
         <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
         <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-        <toolset>msvc:<cxxflags>/wd4267					# warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 

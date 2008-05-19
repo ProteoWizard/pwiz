@@ -31,9 +31,9 @@ lib pwiz_utility_proteome
       IsotopeTable.cpp 
       Peptide.cpp 
       PeptideDatabase.cpp 
-      /ext/boost//iostreams/<boost-iostreams-zlib>on
-      /ext/zlib//z
     : <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+      <library>/ext/zlib//z
     : <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
       <library>/ext/zlib//z
     ;

@@ -39,17 +39,17 @@ lib pwiz_data_misc
         <library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//serialization
-		<library>../..//fftw3
+        <library>../..//fftw3
     :   # default-build
     :   # usage-requirements
         <library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//serialization
-		<library>../..//fftw3
+        <library>../..//fftw3
     ;
 
 unit-test CalibrationParametersTest : CalibrationParametersTest.cpp ; 
-unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc ../..//boost_filesystem ;
+unit-test FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc /ext/boost//filesystem ;
 unit-test PeakDataTest : PeakDataTest.cpp pwiz_data_misc /ext/boost//filesystem ;
 unit-test SampleDatumTest : SampleDatumTest.cpp ;
 unit-test TransientDataTest : TransientDataTest.cpp pwiz_data_misc /ext/boost//filesystem ;
