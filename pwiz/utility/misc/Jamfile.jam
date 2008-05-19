@@ -28,7 +28,7 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     : usage-requirements
         <library>../..//gd
-        <library>../..//boost_filesystem
+        <library>/ext/boost//filesystem
 ;
 
 
@@ -41,7 +41,7 @@ lib pwiz_utility_misc
       Image.cpp
     : <warnings>all
       <library>../..//gd
-      <library>../..//boost_filesystem
+      <library>/ext/boost//filesystem
     ;
 
 

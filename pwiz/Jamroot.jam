@@ -23,10 +23,13 @@
 
 import testing ; # needed to enable unit-test rule
 
+path-constant PWIZ_ROOT_PATH : . ;
 
 project pwiz 
     : requirements 
-        <include>. 
+        <include>.
+        <include>../libraries/zlib-1.2.3
+
         #<warnings-as-errors>on
         <warnings>all
 
@@ -83,23 +86,16 @@ lib gd : : <toolset>msvc <name>bgd <search>../libraries : : <include>../librarie
 lib fftw3 ;
 lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>../libraries : : <include>../libraries/fftw-3.1.2/api ;
 
-lib boost_filesystem : : <toolset>gcc <name>boost_filesystem ;
-#lib boost_filesystem : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_filesystem-vc80-mt ;
-lib boost_filesystem : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_filesystem-vc80-mt ;
-lib boost_filesystem : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_filesystem-vc80-mt-s ;
-#lib boost_filesystem : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_filesystem-vc80-mt-gd ;
-lib boost_filesystem : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_filesystem-vc80-mt-gd ;
-lib boost_filesystem : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_filesystem-vc80-mt-sgd ;
-lib boost_filesystem ;
+local .boost-build-file = [ modules.peek : .boost-build-file ] ;
+tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+tmp += $(PWIZ_ROOT_PATH) $(PWIZ_ROOT_PATH)/../libraries ;
+modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
-lib boost_iostreams : : <toolset>gcc <name>boost_iostreams ;
-#lib boost_iostreams : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_iostreams-vc80-mt ;
-lib boost_iostreams : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_iostreams-vc80-mt ;
-lib boost_iostreams : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_iostreams-vc80-mt-s ;
-#lib boost_iostreams : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_iostreams-vc80-mt-gd ;
-lib boost_iostreams : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_iostreams-vc80-mt-gd ;
-lib boost_iostreams : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_iostreams-vc80-mt-sgd ;
-lib boost_iostreams ;
+path-constant ZLIB_SOURCE : ../libraries/zlib-1.2.3 ;
+path-constant BOOST_SOURCE : ../libraries/boost_1_34_1 ;
+
+using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+using boost : 1.34.1 : $(BOOST_SOURCE) ;
 
 lib boost_program_options : : <toolset>gcc <name>boost_program_options ;
 #lib boost_program_options : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_program_options-vc80-mt ;
@@ -109,21 +105,3 @@ lib boost_program_options : : <toolset>msvc <variant>release <link>static <runti
 lib boost_program_options : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_program_options-vc80-mt-gd ;
 lib boost_program_options : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_program_options-vc80-mt-sgd ;
 lib boost_program_options ;
-
-lib boost_serialization : : <toolset>gcc <name>boost_serialization ;
-#lib boost_serialization : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_serialization-vc80-mt ;
-lib boost_serialization : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_serialization-vc80-mt ;
-lib boost_serialization : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_serialization-vc80-mt-s ;
-#lib boost_serialization : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_serialization-vc80-mt-gd ;
-lib boost_serialization : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_serialization-vc80-mt-gd ;
-lib boost_serialization : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_serialization-vc80-mt-sgd ;
-lib boost_serialization ;
-
-lib boost_regex : pthread : <toolset>gcc <name>boost_regex ;
-#lib boost_regex : : <toolset>msvc <variant>release <link>shared <runtime-link>shared <name>boost_regex-vc80-mt ;
-lib boost_regex : : <toolset>msvc <variant>release  <runtime-link>shared <name>libboost_regex-vc80-mt ;
-lib boost_regex : : <toolset>msvc <variant>release <link>static <runtime-link>static <name>libboost_regex-vc80-mt-s ;
-#lib boost_regex : : <toolset>msvc <variant>debug <link>shared <runtime-link>shared <name>boost_regex-vc80-mt-gd ;
-lib boost_regex : : <toolset>msvc <variant>debug  <runtime-link>shared <name>libboost_regex-vc80-mt-gd ;
-lib boost_regex : : <toolset>msvc <variant>debug <link>static <runtime-link>static <name>libboost_regex-vc80-mt-sgd ;
-lib boost_regex ;

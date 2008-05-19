@@ -35,10 +35,10 @@ lib pwiz_data_msdata_obo
     : # sources
         obo.cpp 
     : # usage
-        <library>../..//boost_regex
+        <library>/ext/boost//regex
     : # default-build
     : # usage-requirements 
-        <library>../..//boost_regex
+        <library>/ext/boost//regex
     ;
 
 
@@ -68,12 +68,14 @@ lib pwiz_data_msdata
     : # requirements
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
-        <library>../..//boost_iostreams
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
-        <library>../..//boost_iostreams
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/zlib//z
     ;
 
 
@@ -99,10 +101,10 @@ lib pwiz_data_msdata_examples
 exe cvgen
     :    pwiz_data_msdata_obo
          cvgen.cpp
-         ../..//boost_regex
-         ../..//boost_filesystem 
-    :    <library>../..//boost_regex
-         <library>../..//boost_filesystem
+         /ext/boost//regex
+         /ext/boost//filesystem 
+    :    <library>/ext/boost//regex
+         <library>/ext/boost//filesystem
     ;
 
 
@@ -148,7 +150,7 @@ explicit pwiz_data_msdata_swig ;
 #
 
 
-unit-test obotest : obotest.cpp pwiz_data_msdata_obo ../..//boost_filesystem ../..//boost_regex ;
+unit-test obotest : obotest.cpp pwiz_data_msdata_obo /ext/boost//filesystem /ext/boost//regex ;
 unit-test cvtest : cvtest.cpp pwiz_data_msdata ; # cv.cpp ;
 unit-test CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_msdata ; # CVTranslator.cpp cv.cpp ;
 unit-test CVParamTest : CVParamTest.cpp pwiz_data_msdata ; # CVParam.cpp cv.cpp ;
@@ -165,8 +167,8 @@ unit-test ChromatogramList_mzML_Test : ChromatogramList_mzML_Test.cpp pwiz_data_
 unit-test Serializer_mzML_Test : Serializer_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzML.cpp examples.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test SpectrumList_mzXML_Test : SpectrumList_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzXML.cpp examples.cpp Serializer_mzXML.cpp References.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test Serializer_mzXML_Test : Serializer_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzXML.cpp examples.cpp SpectrumList_mzXML.cpp Serializer_mzML.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
-unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ../..//boost_filesystem ;
-unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ../..//boost_filesystem ;
+unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;
 
 

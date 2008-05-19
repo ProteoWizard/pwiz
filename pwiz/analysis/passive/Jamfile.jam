@@ -32,7 +32,7 @@ project
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
         <library>../..//boost_program_options
-        <library>../..//boost_filesystem
+        <library>/ext/boost//filesystem
     ;
 
 
@@ -55,7 +55,7 @@ lib pwiz_analysis_passive
         ../../data/msdata//pwiz_data_msdata
         ../../data/vendor_readers//pwiz_data_vendor_readers
         ../..//boost_program_options
-        ../..//boost_filesystem
+        /ext/boost//filesystem
     ;
 
 

@@ -53,6 +53,10 @@ exe hello_analyzer_2
     ;
 
 
+alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
+explicit hello_examples ;
+
+
 exe msdiff 
     : msdiff.cpp
       ../data/msdata//pwiz_data_msdata
@@ -68,7 +72,7 @@ exe msconvert
       ../data/vendor_readers
       ../analysis/spectrum_processing//pwiz_analysis_spectrum_processing
       ..//boost_program_options
-      ..//boost_filesystem
+      /ext/boost//filesystem
     : <include>../..
     ;
 
@@ -89,6 +93,8 @@ exe mspicture
     ;
 
 
+alias mstools : msdiff msconvert msaccess mspicture ;
+
 # local install for testing
 
 install bin 
@@ -104,3 +110,19 @@ install bin
 
 explicit bin ;
 
+
+import package ;
+local install-requirements = <link>static:<install-dependencies>off ;
+if [ modules.peek : NT ] {
+    install-requirements += <install-default-prefix>"C:/Program Files/ProteoWizard/bin" ;
+} else if [ modules.peek : UNIX ] {
+    install-requirements += <install-default-prefix>/usr/local ;
+}
+
+package.install install
+    : $(install-requirements) release
+    : mstools
+    : # no libraries
+    : # no headers
+    ;
+explicit install ;
