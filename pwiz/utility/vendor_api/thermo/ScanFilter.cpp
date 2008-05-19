@@ -161,23 +161,23 @@ Mass range
 
 */
 
-MassAnalyzerType
+ScanFilterMassAnalyzerType
 ScanFilter::parseMassAnalyzerType(const string& word)
 {
 	if (word == "ITMS")
-		return MassAnalyzerType_ITMS;
+		return ScanFilterMassAnalyzerType_ITMS;
 	else if (word == "TQMS")
-		return MassAnalyzerType_TQMS;
+		return ScanFilterMassAnalyzerType_TQMS;
 	else if (word == "SQMS")
-		return MassAnalyzerType_SQMS;
+		return ScanFilterMassAnalyzerType_SQMS;
 	else if (word == "TOFMS")
-		return MassAnalyzerType_TOFMS;
+		return ScanFilterMassAnalyzerType_TOFMS;
 	else if (word == "FTMS")
-		return MassAnalyzerType_FTMS;
+		return ScanFilterMassAnalyzerType_FTMS;
 	else if (word == "SECTOR")
-		return MassAnalyzerType_Sector;
+		return ScanFilterMassAnalyzerType_Sector;
 	else
-		return MassAnalyzerType_Unknown;
+		return ScanFilterMassAnalyzerType_Unknown;
 }
 
 PolarityType 
@@ -375,7 +375,7 @@ ScanFilter::print()
 void
 ScanFilter::initialize()
 {
-    massAnalyzerType_ = MassAnalyzerType_Unknown;
+    massAnalyzerType_ = ScanFilterMassAnalyzerType_Unknown;
     polarityType_ = PolarityType_Unknown;
     dataPointType_ = DataPointType_Unknown;
     ionizationType_ = IonizationType_Unknown;
@@ -417,7 +417,7 @@ ScanFilter::parse(string filterLine)
 	s >> w;
 
 	massAnalyzerType_ = parseMassAnalyzerType(w);
-	if (massAnalyzerType_ > MassAnalyzerType_Unknown) {
+	if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
 		// "analyzer" field was present
 		if (s.eof()) {
 			return 1;

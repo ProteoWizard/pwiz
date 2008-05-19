@@ -386,6 +386,11 @@ class RAWFILE_API RawFile
     virtual std::auto_ptr<LabelValueArray> getInstrumentMethods() = 0;
     virtual std::auto_ptr<StringArray> getInstrumentChannelLabels() = 0;
 
+    virtual InstrumentModelType getInstrumentModel() = 0;
+    virtual const std::vector<IonizationType>& getIonSources() = 0;
+    virtual const std::vector<MassAnalyzerType>& getMassAnalyzers() = 0;
+    virtual const std::vector<DetectorType>& getDetectors() = 0;
+
     virtual std::auto_ptr<ChromatogramData>
     getChromatogramData(long type1,
                         ChromatogramOperatorType op,

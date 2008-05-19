@@ -37,7 +37,7 @@ void testFilter(const ScanFilter& scanFilter,
                 TriBool turboScanOn,
                 TriBool widebandOn,
                 TriBool dependentActive,
-                MassAnalyzerType massAnalyzerType,
+                ScanFilterMassAnalyzerType massAnalyzerType,
                 PolarityType polarityType,
                 DataPointType dataPointType,
                 IonizationType ionizationType,
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_Unknown, // data-dependent?
-                        MassAnalyzerType_ITMS,
+                        ScanFilterMassAnalyzerType_ITMS,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_True, // data-dependent?
-                        MassAnalyzerType_ITMS,
+                        ScanFilterMassAnalyzerType_ITMS,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_True, // data-dependent?
-                        MassAnalyzerType_ITMS,
+                        ScanFilterMassAnalyzerType_ITMS,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_Unknown, // data-dependent?
-                        MassAnalyzerType_FTMS,
+                        ScanFilterMassAnalyzerType_FTMS,
                         PolarityType_Positive,
                         DataPointType_Profile,
                         IonizationType_NSI,
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_Unknown, // data-dependent?
-                        MassAnalyzerType_Unknown,
+                        ScanFilterMassAnalyzerType_Unknown,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_ESI,
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_True, // data-dependent?
-                        MassAnalyzerType_Unknown,
+                        ScanFilterMassAnalyzerType_Unknown,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_Unknown,
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_Unknown, // data-dependent?
-                        MassAnalyzerType_Unknown,
+                        ScanFilterMassAnalyzerType_Unknown,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
                         TriBool_Unknown, // turbo scan?
                         TriBool_Unknown, // wideband?
                         TriBool_Unknown, // data-dependent?
-                        MassAnalyzerType_Unknown,
+                        ScanFilterMassAnalyzerType_Unknown,
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,

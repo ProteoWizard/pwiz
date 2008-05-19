@@ -140,11 +140,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
                                            RawFile& rawfile, 
                                            const SoftwarePtr& instrumentSoftware)
 {
-    // get the instrument model
-    string modelString = rawfile.value(InstModel);
-    InstrumentModelType modelType = parseInstrumentModelType(modelString);
-    CVID cvidModel = translateAsInstrumentModel(modelType);
-
+    CVID cvidModel = translateAsInstrumentModel(rawfile.getInstrumentModel());
 
     // set common instrument parameters
     ParamGroupPtr commonInstrumentParams(new ParamGroup);
@@ -156,7 +152,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     else
     {
         // TODO: add cvParam for "instrument unknown"
-        commonInstrumentParams->userParams.push_back(UserParam("instrument model", modelString));
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile.value(InstModel)));
     }
 
     commonInstrumentParams->set(MS_instrument_serial_number, rawfile.value(InstSerialNumber));
@@ -167,10 +163,6 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     for (size_t i=0; i < configurations.size(); ++i)
     {
         InstrumentConfigurationPtr ic = InstrumentConfigurationPtr(new InstrumentConfiguration(configurations[i]));
-
-        string modelName = cvidModel == CVID_Unknown ?
-                           modelString :
-                           cvinfo(cvidModel).shortName();
 
         ic->id = (format("IC%d") % (i+1)).str();
         ic->paramGroupPtrs.push_back(commonInstrumentParams);

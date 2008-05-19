@@ -12,15 +12,12 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
 {
     switch (instrumentModelType)
     {
-        //case InstrumentModelType_LCQ:                       return MS_LCQ;
         case InstrumentModelType_LCQ_Advantage:             return MS_LCQ_Advantage;
         case InstrumentModelType_LCQ_Classic:               return MS_LCQ_Classic;
         case InstrumentModelType_LCQ_Deca:                  return MS_LCQ_Deca;
-        //case InstrumentModelType_LCQ_Deca_XP:               return MS_LCQ_Deca_XP;
         case InstrumentModelType_LCQ_Deca_XP_Plus:          return MS_LCQ_Deca_XP_Plus;
         case InstrumentModelType_LCQ_Fleet:                 return MS_LCQ_Fleet;
         case InstrumentModelType_LTQ:                       return MS_LTQ;
-        //case InstrumentModelType_LTQ_XL:                    return MS_LTQ_XL;
         case InstrumentModelType_LTQ_FT:                    return MS_LTQ_FT;
         case InstrumentModelType_LTQ_FT_Ultra:              return MS_LTQ_FT_Ultra;
         case InstrumentModelType_LTQ_Orbitrap:              return MS_LTQ_Orbitrap;
@@ -28,24 +25,24 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_TSQ_Quantum:               return MS_TSQ_Quantum;
-        //case InstrumentModelType_TSQ_Quantum_Access:        return MS_TSQ_Quantum_Access;
+        case InstrumentModelType_TSQ_Quantum_Access:        return MS_TSQ_Quantum_Access;
         case InstrumentModelType_GC_Quantum:                return MS_GC_Quantum;
         case InstrumentModelType_Delta_Plus_XP:             return MS_DELTAplusXP;
         case InstrumentModelType_Delta_Plus_Advantage:      return MS_DELTA_plusAdvantage;
-        case InstrumentModelType_ELEMENT2:                  return MS_ELEMENT2;
+        case InstrumentModelType_Element2:                  return MS_ELEMENT2;
         case InstrumentModelType_MAT253:                    return MS_MAT253;
         case InstrumentModelType_MAT900XP:                  return MS_MAT900XP;
         case InstrumentModelType_MAT900XP_Trap:             return MS_MAT900XP_Trap;
         case InstrumentModelType_MAT95XP:                   return MS_MAT95XP;
         case InstrumentModelType_MAT95XP_Trap:              return MS_MAT95XP_Trap;
-        //case InstrumentModelType_Neptune:                   return MS_NEPTUNE;
+        case InstrumentModelType_Neptune:                   return MS_neptune;
         case InstrumentModelType_PolarisQ:                  return MS_PolarisQ;
         case InstrumentModelType_Surveyor_MSQ:              return MS_Surveyor_MSQ;
-        //case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
+        case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
+        case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
         case InstrumentModelType_Tempus_TOF:                return MS_TEMPUS_TOF;
         case InstrumentModelType_Trace_DSQ:                 return MS_TRACE_DSQ;
         case InstrumentModelType_Triton:                    return MS_TRITON;
-        //case InstrumentModelType_Accela_PDA:                return MS_ACCELA_PDA;
         case InstrumentModelType_Unknown:
         default:
             return CVID_Unknown;
@@ -74,39 +71,83 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
 
     switch (model)
     {
-        // hybrid models with both FT/inductive and IT/multiplier
+        case InstrumentModelType_Exactive:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
+            break;
+
         case InstrumentModelType_LTQ_FT:
         case InstrumentModelType_LTQ_FT_Ultra:
-        case InstrumentModelType_LTQ_Orbitrap:
-        case InstrumentModelType_LTQ_Orbitrap_Discovery:
-        case InstrumentModelType_LTQ_Orbitrap_XL:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_FT_ICR, 2));
             configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
 
-            // fall through to add IT/multiplier
-
-
-        //case InstrumentModelType_LCQ:
-        case InstrumentModelType_LCQ_Advantage:
-        case InstrumentModelType_LCQ_Classic:
-        case InstrumentModelType_LCQ_Deca:
-        //case InstrumentModelType_LCQ_Deca_XP:
-        case InstrumentModelType_LCQ_Deca_XP_Plus:
-        case InstrumentModelType_LCQ_Fleet:
-        case InstrumentModelType_LTQ:
-        case InstrumentModelType_LTQ_XL:
-        case InstrumentModelType_LXQ:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
             configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
             break;
 
+        case InstrumentModelType_LTQ_Orbitrap:
+        case InstrumentModelType_LTQ_Orbitrap_Discovery:
+        case InstrumentModelType_LTQ_Orbitrap_XL:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
 
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentModelType_LCQ_Advantage:
+        case InstrumentModelType_LCQ_Classic:
+        case InstrumentModelType_LCQ_Deca:
+        case InstrumentModelType_LCQ_Deca_XP_Plus:
+        case InstrumentModelType_LCQ_Fleet:
+        case InstrumentModelType_PolarisQ:
+        case InstrumentModelType_ITQ_700:
+        case InstrumentModelType_ITQ_900:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentModelType_LTQ:
+        case InstrumentModelType_LXQ:
+        case InstrumentModelType_LTQ_XL_ETD:
+        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
+        case InstrumentModelType_ITQ_1100:
+        case InstrumentModelType_MALDI_LTQ_XL:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentModelType_SSQ_7000:
+        case InstrumentModelType_Surveyor_MSQ:
+        case InstrumentModelType_DSQ:
+        case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_Trace_DSQ:
+        case InstrumentModelType_GC_IsoLink:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentModelType_TSQ_7000:
+        case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
-        //case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_GC_Quantum:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -116,22 +157,36 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
             configurations.back().componentList.push_back(Component(MS_electron_multiplier, 5));
             break;
 
-        case InstrumentModelType_Delta_Plus_XP:
-        case InstrumentModelType_Delta_Plus_Advantage:
-        case InstrumentModelType_ELEMENT2:
+        case InstrumentModelType_DFS:
         case InstrumentModelType_MAT253:
         case InstrumentModelType_MAT900XP:
         case InstrumentModelType_MAT900XP_Trap:
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
-        case InstrumentModelType_Neptune:
-        case InstrumentModelType_PolarisQ:
-        case InstrumentModelType_Surveyor_MSQ:
-        //case InstrumentModelType_Surveyor_PDA:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_magnetic_sector, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
         case InstrumentModelType_Tempus_TOF:
-        case InstrumentModelType_Trace_DSQ:
+        case InstrumentModelType_Element2:
+        case InstrumentModelType_Element_XR:
+        case InstrumentModelType_Element_2:
+        case InstrumentModelType_Element_GD:
+        case InstrumentModelType_Delta_Plus_Advantage:
+        case InstrumentModelType_Delta_Plus_XP:
+        case InstrumentModelType_Neptune:
         case InstrumentModelType_Triton:
-        //case InstrumentModelType_Accela_PDA:
+            // TODO: figure out these configurations
+            break;
+
+        case InstrumentModelType_Surveyor_PDA:
+        case InstrumentModelType_Accela_PDA:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_PDA, 1));
+            break;
+
         case InstrumentModelType_Unknown:
         default:
             break; // unknown configuration
@@ -186,12 +241,14 @@ PWIZ_API_DECL CVID translate(MassAnalyzerType type)
 {
     switch (type)
     {
-        case MassAnalyzerType_ITMS: return MS_radial_ejection_linear_ion_trap;
-        case MassAnalyzerType_FTMS: return MS_FT_ICR;
-        case MassAnalyzerType_TOFMS: return MS_time_of_flight;
-        case MassAnalyzerType_TQMS: return MS_quadrupole;
-        case MassAnalyzerType_SQMS: return MS_quadrupole;
-        case MassAnalyzerType_Sector: return MS_magnetic_sector;
+        case MassAnalyzerType_Linear_Ion_Trap:      return MS_radial_ejection_linear_ion_trap;
+        case MassAnalyzerType_Quadrupole_Ion_Trap:  return MS_quadrupole_ion_trap;
+        case MassAnalyzerType_Orbitrap:             return MS_orbitrap;
+        case MassAnalyzerType_FTICR:                return MS_FT_ICR;
+        case MassAnalyzerType_TOF:                  return MS_time_of_flight;
+        case MassAnalyzerType_Triple_Quadrupole:    return MS_quadrupole;
+        case MassAnalyzerType_Single_Quadrupole:    return MS_quadrupole;
+        case MassAnalyzerType_Magnetic_Sector:      return MS_magnetic_sector;
         case MassAnalyzerType_Unknown:
         default:
             return CVID_Unknown;
@@ -203,16 +260,16 @@ PWIZ_API_DECL CVID translateAsIonizationType(IonizationType ionizationType)
 {
     switch (ionizationType)
     {
-        case IonizationType_EI: return MS_electron_ionization;
-        case IonizationType_CI: return MS_chemical_ionization;
-        case IonizationType_FAB: return MS_fast_atom_bombardment_ionization;
-        case IonizationType_ESI: return MS_electrospray_ionization;
-        case IonizationType_NSI: return MS_nanoelectrospray;
-        case IonizationType_APCI: return MS_atmospheric_pressure_chemical_ionization;
-        //case IonizationType_TSP: return MS_thermospray_ionization;
-        case IonizationType_FD: return MS_field_desorption;
-        case IonizationType_MALDI: return MS_matrix_assisted_laser_desorption_ionization;
-        case IonizationType_GD: return MS_glow_discharge_ionization;
+        case IonizationType_EI:                     return MS_electron_ionization;
+        case IonizationType_CI:                     return MS_chemical_ionization;
+        case IonizationType_FAB:                    return MS_fast_atom_bombardment_ionization;
+        case IonizationType_ESI:                    return MS_electrospray_ionization;
+        case IonizationType_NSI:                    return MS_nanoelectrospray;
+        case IonizationType_APCI:                   return MS_atmospheric_pressure_chemical_ionization;
+        //case IonizationType_TSP:                  return MS_thermospray_ionization;
+        case IonizationType_FD:                     return MS_field_desorption;
+        case IonizationType_MALDI:                  return MS_matrix_assisted_laser_desorption_ionization;
+        case IonizationType_GD:                     return MS_glow_discharge_ionization;
         case IonizationType_Unknown:
         default:
             return CVID_Unknown;
@@ -224,16 +281,16 @@ PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType)
 {
     switch (ionizationType)
     {
-        //case IonizationType_EI: return MS_electron_ionization;
-        //case IonizationType_CI: return MS_chemical_ionization;
-        case IonizationType_FAB: return MS_continuous_flow_fast_atom_bombardment;
-        case IonizationType_ESI: return MS_electrospray_inlet;
-        case IonizationType_NSI: return MS_nanospray_inlet;
-        //case IonizationType_APCI: return MS_atmospheric_pressure_chemical_ionization;
-        case IonizationType_TSP: return MS_thermospray_inlet;
-        //case IonizationType_FD: return MS_field_desorption;
-        //case IonizationType_MALDI: return MS_matrix_assisted_laser_desorption_ionization;
-        //case IonizationType_GD: return MS_glow_discharge_ionization;
+        //case IonizationType_EI:                   return MS_electron_ionization;
+        //case IonizationType_CI:                   return MS_chemical_ionization;
+        case IonizationType_FAB:                    return MS_continuous_flow_fast_atom_bombardment;
+        case IonizationType_ESI:                    return MS_electrospray_inlet;
+        case IonizationType_NSI:                    return MS_nanospray_inlet;
+        //case IonizationType_APCI:                 return MS_atmospheric_pressure_chemical_ionization;
+        case IonizationType_TSP:                    return MS_thermospray_inlet;
+        //case IonizationType_FD:                   return MS_field_desorption;
+        //case IonizationType_MALDI:                return MS_matrix_assisted_laser_desorption_ionization;
+        //case IonizationType_GD:                   return MS_glow_discharge_ionization;
         case IonizationType_Unknown:
         default:
             return CVID_Unknown;

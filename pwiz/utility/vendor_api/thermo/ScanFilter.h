@@ -57,7 +57,7 @@ class RAWFILE_API ScanFilter
 {
     public:
 
-	MassAnalyzerType parseMassAnalyzerType(const std::string& word);
+	ScanFilterMassAnalyzerType parseMassAnalyzerType(const std::string& word);
 	PolarityType parsePolarityType(const std::string& word);
 	DataPointType parseDataPointType(const std::string& word);
 	IonizationType parseIonizationType(const std::string & word);
@@ -65,7 +65,7 @@ class RAWFILE_API ScanFilter
 	ActivationType parseActivationType(const std::string& word);
 	AccurateMassType parseAccurateMassType(const std::string& word);
 
-	MassAnalyzerType massAnalyzerType_;
+	ScanFilterMassAnalyzerType massAnalyzerType_;
 	PolarityType polarityType_;
 	DataPointType dataPointType_;
 	IonizationType ionizationType_;

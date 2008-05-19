@@ -136,6 +136,11 @@ class RawFileImpl : public RawFile
     virtual auto_ptr<LabelValueArray> getInstrumentMethods();
     virtual auto_ptr<StringArray> getInstrumentChannelLabels();
 
+    virtual InstrumentModelType getInstrumentModel();
+    virtual const vector<IonizationType>& getIonSources();
+    virtual const vector<MassAnalyzerType>& getMassAnalyzers();
+    virtual const vector<DetectorType>& getDetectors();
+
     virtual auto_ptr<ChromatogramData>
     getChromatogramData(long type1,
                         ChromatogramOperatorType op,
@@ -150,7 +155,13 @@ class RawFileImpl : public RawFile
                         long smoothingValue);
 
     private:
+    friend class ScanInfoImpl;
     IXRawfilePtr raw_;
+
+    InstrumentModelType instrumentModel_;
+    vector<IonizationType> ionSources_;
+    vector<MassAnalyzerType> massAnalyzers_;
+    vector<DetectorType> detectors_;
 };
 
 
@@ -161,7 +172,8 @@ auto_ptr<RawFile> RawFile::create(const string& filename)
 
 
 RawFileImpl::RawFileImpl(const string& filename)
-:   raw_("XRawfile.XRawfile.1")
+:   raw_("XRawfile.XRawfile.1"),
+    instrumentModel_(InstrumentModelType_Unknown)
 {
     if (raw_->Open(filename.c_str()))
         throw RawEgg("Unable to open file " + filename);
@@ -327,6 +339,41 @@ double RawFileImpl::rt(long scanNumber)
 }
 
 
+InstrumentModelType RawFileImpl::getInstrumentModel()
+{
+    if (instrumentModel_ == InstrumentModelType_Unknown)
+    {
+        string modelString = value(InstModel);
+        instrumentModel_ = parseInstrumentModelType(modelString);
+    }
+    return instrumentModel_;
+}
+
+
+const vector<IonizationType>& RawFileImpl::getIonSources()
+{
+    if (ionSources_.empty())
+        ionSources_ = getIonSourcesForInstrumentModel(getInstrumentModel());
+    return ionSources_;
+}
+
+
+const vector<MassAnalyzerType>& RawFileImpl::getMassAnalyzers()
+{
+    if (massAnalyzers_.empty())
+        massAnalyzers_ = getMassAnalyzersForInstrumentModel(getInstrumentModel());
+    return massAnalyzers_;
+}
+
+
+const vector<DetectorType>& RawFileImpl::getDetectors()
+{
+    if (detectors_.empty())
+        detectors_ = getDetectorsForInstrumentModel(getInstrumentModel());
+    return detectors_;
+}
+
+
 namespace{
 class MassListImpl : public MassList
 {
@@ -481,12 +528,11 @@ auto_ptr<StringArray> RawFileImpl::getFilters()
 }
 
 
-namespace {
 class ScanInfoImpl : public ScanInfo
 {
     public:
 
-    ScanInfoImpl(long scanNumber, IXRawfilePtr& raw);
+    ScanInfoImpl(long scanNumber, RawFileImpl* raw);
     virtual long scanNumber() const {return scanNumber_;}
 
     virtual std::string filter() const {return filter_;}
@@ -528,7 +574,7 @@ class ScanInfoImpl : public ScanInfo
     private:
 
     long scanNumber_;
-    IXRawfilePtr& raw_;
+    RawFileImpl* rawfile_;
     string filter_;
     MassAnalyzerType massAnalyzerType_;
     IonizationType ionizationType_;
@@ -565,9 +611,9 @@ class ScanInfoImpl : public ScanInfo
     void parseFilterString();
 };
 
-ScanInfoImpl::ScanInfoImpl(long scanNumber, IXRawfilePtr& raw)
+ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
 :   scanNumber_(scanNumber),
-    raw_(raw),
+    rawfile_(raw),
     massAnalyzerType_(MassAnalyzerType_Unknown),
     ionizationType_(IonizationType_Unknown),
     activationType_(ActivationType_Unknown),
@@ -600,6 +646,8 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, IXRawfilePtr& raw)
 
 void ScanInfoImpl::initialize()
 {
+    IXRawfilePtr& raw_ = (*rawfile_).raw_;
+
     _bstr_t bstrFilter;
     checkResult(raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()));
     filter_ = (const char*)(bstrFilter);
@@ -668,7 +716,7 @@ void ScanInfoImpl::parseFilterString()
     filterParser.parse(filter_);
 
     msLevel_ = filterParser.msLevel_;
-    massAnalyzerType_ = filterParser.massAnalyzerType_;
+    massAnalyzerType_ = convertScanFilterMassAnalyzer(filterParser.massAnalyzerType_, rawfile_->getInstrumentModel());
     ionizationType_ = filterParser.ionizationType_;
     polarityType_ = filterParser.polarityType_;
     scanType_ = filterParser.scanType_;
@@ -680,6 +728,8 @@ void ScanInfoImpl::parseFilterString()
 
 double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 {
+    IXRawfilePtr& raw_ = rawfile_->raw_;
+
     VARIANT v;
     VariantInit(&v);
 
@@ -695,6 +745,8 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 
 long ScanInfoImpl::trailerExtraValueLong(const string& name) const
 {
+    IXRawfilePtr& raw_ = rawfile_->raw_;
+
     VARIANT v;
     VariantInit(&v);
 
@@ -708,12 +760,10 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
     throw RawEgg("[ScanInfoImpl::trailerExtraValueLong()] Unknown type.");
 }
 
-} // namespace
-
 
 auto_ptr<ScanInfo> RawFileImpl::getScanInfo(long scanNumber)
 {
-    auto_ptr<ScanInfoImpl> scanInfo(new ScanInfoImpl(scanNumber, raw_));
+    auto_ptr<ScanInfo> scanInfo(new ScanInfoImpl(scanNumber, this));
     return scanInfo;
 }
 
