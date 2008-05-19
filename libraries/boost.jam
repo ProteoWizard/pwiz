@@ -34,8 +34,10 @@ else if [ modules.peek : UNIX ]
 {
    feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
    feature.compose <boost-iostreams-zlib>off : <define>NO_ZLIB=1 ;
+   feature.compose <boost-iostreams-zlib>on : <linkflags>-lz ;
    feature.feature boost-iostreams-bzip2 : on off : composite link-incompatible propagated ;
    feature.compose <boost-iostreams-bzip2>off : <define>NO_BZIP2=1 ;
+   feature.compose <boost-iostreams-bzip2>on : <linkflags>-lbz2 ;
 }
 
 feature.feature boost-interprocess : : free ;
@@ -61,6 +63,7 @@ rule init ( version ? : location : options * )
         <toolset>msvc:<define>BOOST_WINDOWS_API
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+        <toolset>gcc:<library>pthread/<link>shared
         #~ <warnings>off
         ;
     requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
@@ -74,6 +77,9 @@ rule init ( version ? : location : options * )
         :
         :   $(common-requirements)
         ;
+
+     lib pthread : : <name>pthread <link>shared ;
+     explicit pthread ;
 
      lib filesystem
         :   [ glob $(location)/libs/filesystem/src/*.cpp ]
@@ -203,6 +209,7 @@ rule init ( version ? : location : options * )
             <define>BOOST_REGEX_NO_LIB=1
             <toolset>msvc:<cxxflags>/wd4309
             <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+            <toolset>gcc:<library>pthread
         :
         :   <define>BOOST_REGEX_NO_LIB=1
         ;
