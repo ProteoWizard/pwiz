@@ -36,6 +36,7 @@
 using namespace std;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
+using namespace pwiz::util;
 using boost::shared_ptr;
 
 
@@ -47,10 +48,10 @@ struct Config
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
-    bool centroidSpectra;
+    string msLevelsToCentroid;
 
     Config()
-    :   outputPath("."), verbose(false), centroidSpectra(false)
+    :   outputPath("."), verbose(false)
     {}
 
     string outputFilename(const string& inputFilename) const;
@@ -72,7 +73,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "outputPath: " << config.outputPath << endl;
     os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
-    os << "centroidSpectra: " << boolalpha << config.centroidSpectra << endl;
+    os << "msLevelsToCentroid: " << config.msLevelsToCentroid << endl;
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
@@ -143,8 +144,8 @@ Config parseCommandLine(int argc, const char* argv[])
             po::value<string>(&config.contactFilename),
 			": filename for contact info")
         ("centroid,c",
-            po::value<bool>(&config.centroidSpectra)->zero_tokens()->default_value(config.centroidSpectra),
-			": retrieve centroided spectrum data")
+            po::value<string>(&config.msLevelsToCentroid)->default_value(config.msLevelsToCentroid),
+			": centroid spectrum data for msLevel ranges (list of closed intervals, e.g. \"[2,3] [5,7]\")")
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
 			": use zlib compression for binary data")
@@ -274,10 +275,14 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     if (!config.contactFilename.empty())
         addContactInfo(msd, config.contactFilename);
 
-    if (config.centroidSpectra)
+    if (!config.msLevelsToCentroid.empty())
     {
+        IntegerSet msLevelsToCentroid;
+        msLevelsToCentroid.parse(config.msLevelsToCentroid);
+
         shared_ptr<SpectrumList_NativeCentroider> 
-            nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr));
+            nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr,
+                                                               msLevelsToCentroid));
         msd.run.spectrumListPtr = nativeCentroider;
     }
  

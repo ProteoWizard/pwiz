@@ -26,6 +26,7 @@
 
 
 #include "utility/misc/Export.hpp"
+#include "utility/misc/IntegerSet.hpp"
 #include "SpectrumListWrapper.hpp"
 
 
@@ -38,7 +39,13 @@ class PWIZ_API_DECL SpectrumList_NativeCentroider : public SpectrumListWrapper
 {
     public:
 
-    SpectrumList_NativeCentroider(const msdata::SpectrumListPtr& inner);
+    SpectrumList_NativeCentroider(const msdata::SpectrumListPtr& inner,
+                                  const util::IntegerSet& msLevelsToCentroid);
+
+    virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+
+    private:
+    const util::IntegerSet msLevelsToCentroid_;
 };
 
 
