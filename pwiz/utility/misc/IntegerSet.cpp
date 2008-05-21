@@ -64,7 +64,14 @@ PWIZ_API_DECL istream& operator>>(istream& is, IntegerSet::Interval& interval)
 {
     char open = 0, comma = 0, close = 0;
     int a = 0, b = 0; 
+
+    // hack for msvc (Dinkumware): by default barfs on comma when reading an int
+    locale old = is.imbue(locale("C")); 
+
     is >> open >> a >> comma >> b >> close;
+
+    // hack for msvc: restore old locale in case someone else depends on it 
+    is.imbue(old);
     
     if (!is || open!='[' || comma!=',' || close!=']')
         return is; 

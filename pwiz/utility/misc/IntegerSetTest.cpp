@@ -148,12 +148,26 @@ void testIntervalExtraction()
 }
 
 
+
+void testIntExtraction()
+{
+    //std::locale::global(std::locale("C"));  // hack for msvc
+
+    istringstream iss("1,100");
+    iss.imbue(locale("C")); // hack for msvc
+
+    int i = 0;
+    iss >> i;
+
+    unit_assert(i == 1); 
+}
+
+
 void testParse()
 {
     IntegerSet a;
 
-    // TODO: msvc requires space before comma ????
-    a.parse(" [-3 ,2] [5 ,5] [ 8 , 9 ] booger ");  // insert(-3,2); insert(5); insert(8,9);
+    a.parse(" [-3, 2] [5 ,5] [ 8 , 9 ] booger ");  // insert(-3,2); insert(5); insert(8,9);
 
     vector<int> b;
     copy(a.begin(), a.end(), back_inserter(b));
@@ -180,6 +194,7 @@ int main(int argc, char* argv[])
         testContains();
         testUpperBound();
         testIntervalExtraction();
+        testIntExtraction();
         testParse();
         return 0;
     }
