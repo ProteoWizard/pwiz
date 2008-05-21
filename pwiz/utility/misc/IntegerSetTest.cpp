@@ -136,6 +136,40 @@ void testUpperBound()
 }
 
 
+void testIntervalExtraction()
+{
+    IntegerSet::Interval i;
+
+    istringstream iss(" \t [-2 , 5] ");
+    iss >> i;
+
+    unit_assert(i.begin == -2);
+    unit_assert(i.end == 5);
+}
+
+
+void testParse()
+{
+    IntegerSet a;
+
+    // TODO: msvc requires space before comma ????
+    a.parse(" [-3 ,2] [5 ,5] [ 8 , 9 ] booger ");  // insert(-3,2); insert(5); insert(8,9);
+
+    vector<int> b;
+    copy(a.begin(), a.end(), back_inserter(b));
+    unit_assert(b.size() == 9);
+    unit_assert(b[0] == -3);
+    unit_assert(b[1] == -2);
+    unit_assert(b[2] == -1);
+    unit_assert(b[3] == 0);
+    unit_assert(b[4] == 1);
+    unit_assert(b[5] == 2);
+    unit_assert(b[6] == 5);
+    unit_assert(b[7] == 8);
+    unit_assert(b[8] == 9);
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -145,6 +179,8 @@ int main(int argc, char* argv[])
         testInstantiation();
         testContains();
         testUpperBound();
+        testIntervalExtraction();
+        testParse();
         return 0;
     }
     catch (exception& e)

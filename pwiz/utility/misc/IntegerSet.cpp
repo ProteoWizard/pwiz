@@ -27,6 +27,8 @@
 #include <iterator>
 #include <stdexcept>
 #include <algorithm>
+#include <sstream>
+#include <vector>
 
 
 namespace pwiz {
@@ -55,6 +57,21 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet::Interval& inter
 {
     os << "[" << interval.begin << "," << interval.end << "]";
     return os;
+}
+
+
+PWIZ_API_DECL istream& operator>>(istream& is, IntegerSet::Interval& interval)
+{
+    char open = 0, comma = 0, close = 0;
+    int a = 0, b = 0; 
+    is >> open >> a >> comma >> b >> close;
+    
+    if (!is || open!='[' || comma!=',' || close!=']')
+        return is; 
+
+    interval.begin = a;
+    interval.end = b;
+    return is;
 }
 
 
@@ -137,6 +154,16 @@ PWIZ_API_DECL void IntegerSet::insert(int a)
 PWIZ_API_DECL void IntegerSet::insert(int a, int b) 
 {
     insert(Interval(a,b));
+}
+
+
+PWIZ_API_DECL void IntegerSet::parse(const std::string& intervalList)
+{
+    istringstream iss(intervalList);
+    vector<Interval> intervals;
+    copy(istream_iterator<Interval>(iss), istream_iterator<Interval>(), back_inserter(intervals));
+    for (vector<Interval>::const_iterator it=intervals.begin(); it!=intervals.end(); ++it)
+        insert(*it);
 }
 
 

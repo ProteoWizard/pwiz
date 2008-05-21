@@ -50,6 +50,7 @@ class PWIZ_API_DECL IntegerSet
         bool contains(int n) const {return n>=begin && n<=end;}
 
         friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Interval& interval);
+        friend PWIZ_API_DECL std::istream& operator>>(std::istream& is, Interval& interval);
     };
 
     /// collection of Interval objects
@@ -104,12 +105,20 @@ class PWIZ_API_DECL IntegerSet
 
     /// \name write access to the virtual container 
     //@{
+
     /// insert an interval of integers into the virtual container
     void insert(Interval interval);
+
     /// insert a single integer into the virtual container
     void insert(int a);
+
     /// insert an interval of integers into the virtual container
     void insert(int a, int b);
+
+    /// insert intervals by parsing a string representing a 
+    /// whitespace-delimited list of closed intervals:
+    ///   parse(" [-3,2]  [5,5] [8,9] ");  // insert(-3,2); insert(5); insert(8,9);
+    void parse(const std::string& intervalList);
     //@}
 
     /// \name const iterator interface to the virtual container 
