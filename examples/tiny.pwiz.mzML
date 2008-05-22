@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.11 mzML0.99.11_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.11 mzML0.99.11.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
     <cvList count="2">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
       <cv id="UO" fullName="Unit Ontology" version="unknown" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
@@ -113,7 +113,7 @@
             <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="16675500"/>
             <scan instrumentConfigurationRef="LCQDeca">
               <referenceableParamGroupRef ref="CommonMS1SpectrumParams"/>
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.8905" unitAccession="MS:1000038" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.8905" unitCvRef="MS" unitAccession="MS:1000038" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="+ c NSI Full ms [ 400.00-1800.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <scanWindowList count="1">
@@ -160,13 +160,13 @@
                 </selectedIonList>
                 <activation>
                   <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-                  <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="35" unitAccession="MS:1000137" unitName="electron volt"/>
+                  <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="35" unitCvRef="MS" unitAccession="MS:1000137" unitName="electron volt"/>
                 </activation>
               </precursor>
             </precursorList>
             <scan instrumentConfigurationRef="LCQDeca">
               <referenceableParamGroupRef ref="CommonMS2SpectrumParams"/>
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.9905" unitAccession="MS:1000038" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.9905" unitCvRef="MS" unitAccession="MS:1000038" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <scanWindowList count="1">
@@ -202,7 +202,7 @@
       </spectrumList>
       <chromatogramList count="2">
         <chromatogram index="0" id="tic" nativeID="tic native" defaultArrayLength="15" dataProcessingRef="XcaliburProcessing">
-          <cvParam cvRef="MS" accession="MS:1000235" name="total ion chromatogram ?" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
           <binaryDataArrayList count="2">
             <binaryDataArray encodedLength="160" dataProcessingRef="pwizconversion">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
@@ -219,7 +219,7 @@
           </binaryDataArrayList>
         </chromatogram>
         <chromatogram index="1" id="sic" nativeID="sic native" defaultArrayLength="10" dataProcessingRef="pwizconversion">
-          <cvParam cvRef="MS" accession="MS:1000235" name="total ion chromatogram ?" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
           <binaryDataArrayList count="2">
             <binaryDataArray encodedLength="108" dataProcessingRef="pwizconversion">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
@@ -241,14 +241,14 @@
   <indexList count="2">
     <index name="spectrum">
       <offset idRef="S19" nativeID="19">5642</offset>
-      <offset idRef="S20" nativeID="20">8630</offset>
-      <offset idRef="S21" nativeID="21">12411</offset>
+      <offset idRef="S20" nativeID="20">8645</offset>
+      <offset idRef="S21" nativeID="21">12456</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic" nativeID="tic native">12888</offset>
-      <offset idRef="sic" nativeID="sic native">14359</offset>
+      <offset idRef="tic" nativeID="tic native">12933</offset>
+      <offset idRef="sic" nativeID="sic native">14410</offset>
     </index>
   </indexList>
-  <indexListOffset>15763</indexListOffset>
-  <fileChecksum>018022e55a5afab46bc1f40a550e1597a8d3ef55</fileChecksum>
+  <indexListOffset>15820</indexListOffset>
+  <fileChecksum>eac254dafb9441f84e90dfc2dadc2fcfab3e496b</fileChecksum>
 </indexedmzML>
