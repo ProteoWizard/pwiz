@@ -102,7 +102,7 @@ exe cvgen
     :    pwiz_data_msdata_obo
          cvgen.cpp
          /ext/boost//regex
-         /ext/boost//filesystem 
+         /ext/boost//filesystem
     :    <library>/ext/boost//regex
          <library>/ext/boost//filesystem
     ;

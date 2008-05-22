@@ -29,6 +29,7 @@
 #include <iterator>
 #include "boost/lexical_cast.hpp"
 #include "boost/format.hpp"
+#include "Diff.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -46,6 +47,12 @@ using boost::lexical_cast;
 PWIZ_API_DECL bool CV::empty() const 
 {
     return id.empty() && URI.empty() && fullName.empty() && version.empty();
+}
+
+
+PWIZ_API_DECL bool CV::operator==(const CV& that) const
+{
+    return id == that.id && fullName == that.fullName && URI == that.URI && version == that.version;
 }
 
 
@@ -203,6 +210,18 @@ PWIZ_API_DECL void ParamContainer::set(CVID cvid, const string& value, CVID unit
 PWIZ_API_DECL bool ParamContainer::empty() const
 {
     return paramGroupPtrs.empty() && cvParams.empty() && userParams.empty();
+}
+
+
+PWIZ_API_DECL bool ParamContainer::operator==(const ParamContainer& that) const
+{
+    return !Diff<ParamContainer>(*this, that);
+}
+
+
+PWIZ_API_DECL bool ParamContainer::operator!=(const ParamContainer& that) const
+{
+    return !(*this == that);
 }
 
 
@@ -487,7 +506,8 @@ PWIZ_API_DECL bool AcquisitionList::empty() const
 
 PWIZ_API_DECL bool Precursor::empty() const
 {
-    return spectrumID.empty() && isolationWindow.empty() && selectedIons.empty() &&
+    return (!sourceFilePtr.get() || sourceFilePtr->empty()) && spectrumID.empty() &&
+           isolationWindow.empty() && selectedIons.empty() &&
            activation.empty() && ParamContainer::empty();
 }
 
@@ -556,6 +576,12 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MZIntensityPair& mzi)
 }
 
 
+PWIZ_API_DECL bool MZIntensityPair::operator==(const MZIntensityPair& that) const
+{
+    return mz == that.mz && intensity == that.intensity;
+}
+
+
 //
 // TimeIntensityPair 
 //
@@ -565,6 +591,12 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const TimeIntensityPair& ti)
 {
     os << "(" << ti.time << "," << ti.intensity << ")";
     return os;
+}
+
+
+PWIZ_API_DECL bool TimeIntensityPair::operator==(const TimeIntensityPair& that) const
+{
+    return time == that.time && intensity == that.intensity;
 }
 
 

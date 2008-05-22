@@ -269,7 +269,7 @@ void testAcquisition()
     Acquisition a;
 
     a.number = 420;
-    a.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
+    //a.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
     a.spectrumID = "1234";
     a.cvParams.push_back(MS_reflectron_on);
    
@@ -283,13 +283,13 @@ void testAcquisitionList()
 
     Acquisition a1;
     a1.number = 420;
-    a1.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
+    //a1.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
     a1.spectrumID = "1234";
     a1.cvParams.push_back(MS_reflectron_on);
 
     Acquisition a2;
     a2.number = 421;
-    a2.sourceFilePtr = SourceFilePtr(new SourceFile("test.mzxml"));
+    //a2.sourceFilePtr = SourceFilePtr(new SourceFile("test.mzxml"));
     a2.spectrumID = "5678";
     a1.cvParams.push_back(MS_reflectron_off);
 
@@ -358,6 +358,7 @@ void testSpectrumDescription()
 
     a.acquisitionList.acquisitions.push_back(Acquisition());
     a.acquisitionList.acquisitions.back().number = 420;
+    a.acquisitionList.acquisitions.back().spectrumID = "1234";
 
     testObject(a);
 }

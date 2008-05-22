@@ -46,6 +46,7 @@ struct PWIZ_API_DECL CV
     std::string version;
 
     bool empty() const;
+    bool operator==(const CV& that) const;
 };
 
 
@@ -130,6 +131,8 @@ struct PWIZ_API_DECL ParamContainer
     }
 
     bool empty() const;
+    bool operator==(const ParamContainer& that) const;
+    bool operator!=(const ParamContainer& that) const;
 };
 
 
@@ -320,6 +323,8 @@ struct PWIZ_API_DECL Acquisition : public ParamContainer
 {
     int number;
     SourceFilePtr sourceFilePtr;
+    std::string externalNativeID;
+    std::string externalSpectrumID;
     std::string spectrumID;
 
     Acquisition() : number(0) {}
@@ -343,6 +348,9 @@ struct PWIZ_API_DECL Activation : public ParamContainer {};
 
 struct PWIZ_API_DECL Precursor : public ParamContainer
 {
+    SourceFilePtr sourceFilePtr;
+    std::string externalNativeID;
+    std::string externalSpectrumID;
     std::string spectrumID;
     IsolationWindow isolationWindow;
     std::vector<SelectedIon> selectedIons;
@@ -399,6 +407,8 @@ struct PWIZ_API_DECL MZIntensityPair
     MZIntensityPair(double _mz = 0, double _intensity = 0)
     :   mz(_mz), intensity(_intensity)
     {}
+
+    bool operator==(const MZIntensityPair& that) const;
 };
 #pragma pack()
 
@@ -415,6 +425,8 @@ struct PWIZ_API_DECL TimeIntensityPair
     TimeIntensityPair(double _time = 0, double _intensity = 0)
     :   time(_time), intensity(_intensity)
     {}
+
+    bool operator==(const TimeIntensityPair& that) const;
 };
 #pragma pack()
 

@@ -32,7 +32,7 @@
 #include "utility/misc/Export.hpp"
 
 
-// [psi-ms.obo]
+// [..\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 12:05:2008 09:58
 //   saved-by: edeutsch
@@ -40,7 +40,7 @@
 //   default-namespace: PSI-MS
 //   remark: version: x.y.z
 //
-// [unit.obo]
+// [..\data\msdata\unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -1084,6 +1084,7 @@ struct PWIZ_API_DECL CVInfo
 
     CVInfo() : cvid((CVID)-1) {}
     const std::string& shortName() const;
+    std::string prefix() const;
 };
 
 

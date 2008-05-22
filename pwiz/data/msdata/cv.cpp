@@ -24,18 +24,15 @@
 
 
 #define PWIZ_SOURCE
+
 #include "cv.hpp"
-#include "boost/lexical_cast.hpp"
-#include <map>
-#include <algorithm>
+#include "utility/misc/String.hpp"
+#include "utility/misc/Container.hpp"
+#include "utility/misc/Exception.hpp"
 
 
 namespace pwiz {
 namespace msdata {
-
-
-using namespace std;
-using boost::lexical_cast;
 
 
 namespace {
@@ -2298,6 +2295,12 @@ PWIZ_API_DECL const string& CVInfo::shortName() const
 }
 
 
+PWIZ_API_DECL string CVInfo::prefix() const
+{
+    return id.substr(0, id.find_first_of(":"));
+}
+
+
 PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)
 {
    if (!initialized_) initialize();
@@ -2305,20 +2308,39 @@ PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)
 }
 
 
+inline unsigned int stringToCVID(const std::string& str)
+{
+    errno = 0;
+    const char* stringToConvert = str.c_str();
+    const char* endOfConversion = stringToConvert;
+    unsigned int value = (unsigned int) strtoul (stringToConvert, const_cast<char**>(&endOfConversion), 10);
+    if (( value == 0u && stringToConvert == endOfConversion) || // error: conversion could not be performed
+        errno != 0 ) // error: overflow or underflow
+        throw bad_lexical_cast();
+    return value;
+}
+
+
 PWIZ_API_DECL const CVInfo& cvinfo(const string& id)
 {
-   if (!initialized_) initialize();
-   CVID cvid = CVID_Unknown;
+    if (!initialized_) initialize();
+    CVID cvid = CVID_Unknown;
 
-   const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,
-                             StringEquals(id.substr(0,2).c_str()));
+    vector<string> tokens;
+    tokens.reserve(2);
+    bal::split(tokens, id, bal::is_any_of(":"));
+    if (tokens.size() != 2)
+        throw runtime_error("[cvinfo] Error splitting id \"" + id + "\" into prefix and numeric components");
+    const string& prefix = tokens[0];
+    const string& cvidStr = tokens[1];
 
-   if (it != oboPrefixes_+oboPrefixesSize_ &&
-       id.size() > 3 &&
-       id[2] == ':')
-       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + lexical_cast<size_t>(id.substr(3)));
+    const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,
+                              StringEquals(prefix.c_str()));
 
-   return infoMap_[cvid];
+    if (it != oboPrefixes_+oboPrefixesSize_)
+       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));
+
+    return infoMap_[cvid];
 }
 
 

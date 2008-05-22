@@ -163,6 +163,7 @@ PWIZ_API_DECL void resolve(AcquisitionList& acquisitionList, const MSData& msd)
 PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(precursor), msd);
+    resolve(precursor.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
     resolve(precursor.isolationWindow, msd);
     resolve(precursor.selectedIons, msd);
     resolve(precursor.activation, msd);

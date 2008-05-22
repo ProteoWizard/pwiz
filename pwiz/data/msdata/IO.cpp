@@ -153,12 +153,13 @@ PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvRef", cvinfo(cvParam.cvid).id.substr(0,2)));
+    attributes.push_back(make_pair("cvRef", cvinfo(cvParam.cvid).prefix()));
     attributes.push_back(make_pair("accession", cvinfo(cvParam.cvid).id));
     attributes.push_back(make_pair("name", cvinfo(cvParam.cvid).name));
     attributes.push_back(make_pair("value", cvParam.value));
     if (cvParam.units != CVID_Unknown)
     {
+        attributes.push_back(make_pair("unitCvRef", cvinfo(cvParam.units).prefix()));
         attributes.push_back(make_pair("unitAccession", cvinfo(cvParam.units).id));
         attributes.push_back(make_pair("unitName", cvinfo(cvParam.units).name));
     }
@@ -1120,10 +1121,20 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Acquisition& acquisi
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("number", lexical_cast<string>(acquisition.number)));
 
-    if (acquisition.sourceFilePtr.get())
-        attributes.push_back(make_pair("sourceFileRef", acquisition.sourceFilePtr->id)); 
+    if (acquisition.spectrumID.empty())
+    {
+        if (acquisition.externalNativeID.empty() && acquisition.externalSpectrumID.empty())
+            throw runtime_error("[IO::write] Acquisition elements must have a spectrum reference");
+        if (!acquisition.sourceFilePtr.get())
+            throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-    if (!acquisition.spectrumID.empty())
+        attributes.push_back(make_pair("sourceFileRef", acquisition.sourceFilePtr->id)); 
+        if (acquisition.externalNativeID.empty())
+            attributes.push_back(make_pair("externalSpectrumID", acquisition.externalSpectrumID)); 
+        else
+            attributes.push_back(make_pair("externalNativeID", acquisition.externalNativeID)); 
+    }
+    else
         attributes.push_back(make_pair("spectrumRef", acquisition.spectrumID));
 
     writer.startElement("acquisition", attributes);
@@ -1153,6 +1164,8 @@ struct HandlerAcquisition : public HandlerParamContainer
         {
             getAttribute(attributes, "number", acquisition->number);
             getAttribute(attributes, "spectrumRef", acquisition->spectrumID);
+            getAttribute(attributes, "externalSpectrumID", acquisition->externalSpectrumID);
+            getAttribute(attributes, "externalNativeID", acquisition->externalNativeID);
 
             // note: placeholder
             string sourceFileRef;
@@ -1309,8 +1322,23 @@ PWIZ_API_DECL void read(std::istream& is, Activation& activation)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor)
 {
     XMLWriter::Attributes attributes;
-    if (!precursor.spectrumID.empty())
-        attributes.push_back(make_pair("spectrumRef", lexical_cast<string>(precursor.spectrumID)));
+
+    if (precursor.spectrumID.empty())
+    {
+        if (precursor.externalNativeID.empty() && precursor.externalSpectrumID.empty())
+            throw runtime_error("[IO::write] Precursor elements must have a spectrum reference");
+        if (!precursor.sourceFilePtr.get())
+            throw runtime_error("[IO::write] External spectrum references must refer to a source file");
+
+        attributes.push_back(make_pair("sourceFileRef", precursor.sourceFilePtr->id)); 
+        if (precursor.externalNativeID.empty())
+            attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
+        else
+            attributes.push_back(make_pair("externalNativeID", precursor.externalNativeID)); 
+    }
+    else
+        attributes.push_back(make_pair("spectrumRef", precursor.spectrumID));
+
     writer.startElement("precursor", attributes);
     writeParamContainer(writer, precursor);
 
@@ -1367,6 +1395,15 @@ struct HandlerPrecursor : public HandlerParamContainer
         if (name == "precursor")
         {
             getAttribute(attributes, "spectrumRef", precursor->spectrumID);
+            getAttribute(attributes, "externalSpectrumID", precursor->externalSpectrumID);
+            getAttribute(attributes, "externalNativeID", precursor->externalNativeID);
+
+            // note: placeholder
+            string sourceFileRef;
+            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            if (!sourceFileRef.empty())
+                precursor->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+
             return Status::Ok;
         }
         else if (name == "isolationWindow")

@@ -55,7 +55,7 @@ inline std::string unit_assert_message(const char* filename, int line, const cha
 
 
 #define unit_assert(x) \
-    (!(x) ? throw runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
+    (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
 
 
 #define unit_assert_equal(x, y, epsilon) \

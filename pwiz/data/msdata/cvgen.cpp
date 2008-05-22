@@ -188,6 +188,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "    CVInfo() : cvid((CVID)-1) {}\n"
           "    const std::string& shortName() const;\n"
+          "    std::string prefix() const;\n"
           "};\n\n\n";
 
     os << "/// returns CV term info for the specified CVID\n" 
@@ -216,17 +217,14 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     writeCopyright(os, filename);
 
-    os << "#define PWIZ_SOURCE\n"
+    os << "#define PWIZ_SOURCE\n\n"
        << "#include \"" << basename << ".hpp\"\n"
-       << "#include \"boost/lexical_cast.hpp\"\n"
-       << "#include <map>\n"
-       << "#include <algorithm>\n"
+       << "#include \"utility/misc/String.hpp\"\n"
+       << "#include \"utility/misc/Container.hpp\"\n"
+       << "#include \"utility/misc/Exception.hpp\"\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
-
-    os << "using namespace std;\n"
-          "using boost::lexical_cast;\n\n\n";
 
     os << "namespace {\n\n\n";
 
@@ -360,26 +358,49 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return *result;\n"
           "}\n\n\n";
 
+    os << "PWIZ_API_DECL string CVInfo::prefix() const\n"
+          "{\n"
+          "    return id.substr(0, id.find_first_of(\":\"));\n"
+          "}\n\n\n";
+
     os << "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   return infoMap_[cvid];\n"
           "}\n\n\n";
 
+    os << "inline unsigned int stringToCVID(const std::string& str)\n"
+          "{\n"
+          "    errno = 0;\n"
+          "    const char* stringToConvert = str.c_str();\n"
+          "    const char* endOfConversion = stringToConvert;\n"
+          "    unsigned int value = (unsigned int) strtoul (stringToConvert, const_cast<char**>(&endOfConversion), 10);\n"
+          "    if (( value == 0u && stringToConvert == endOfConversion) || // error: conversion could not be performed\n"
+          "        errno != 0 ) // error: overflow or underflow\n"
+          "        throw bad_lexical_cast();\n"
+          "    return value;\n"
+          "}\n\n\n";
+
     os << "PWIZ_API_DECL const CVInfo& cvinfo(const string& id)\n"
           "{\n"
-          "   if (!initialized_) initialize();\n"
-          "   CVID cvid = CVID_Unknown;\n"
+          "    if (!initialized_) initialize();\n"
+          "    CVID cvid = CVID_Unknown;\n"
           "\n"
-          "   const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,\n"
-          "                             StringEquals(id.substr(0,2).c_str()));\n"
+          "    vector<string> tokens;\n"
+          "    tokens.reserve(2);\n"
+          "    bal::split(tokens, id, bal::is_any_of(\":\"));\n"
+          "    if (tokens.size() != 2)\n"
+          "        throw runtime_error(\"[cvinfo] Error splitting id \\\"\" + id + \"\\\" into prefix and numeric components\");\n"
+          "    const string& prefix = tokens[0];\n"
+          "    const string& cvidStr = tokens[1];\n"
           "\n"
-          "   if (it != oboPrefixes_+oboPrefixesSize_ &&\n" 
-          "       id.size() > 3 &&\n"
-          "       id[2] == ':')\n"
-          "       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + lexical_cast<size_t>(id.substr(3)));\n"
+          "    const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,\n"
+          "                              StringEquals(prefix.c_str()));\n"
           "\n"
-          "   return infoMap_[cvid];\n"
+          "    if (it != oboPrefixes_+oboPrefixesSize_)\n"
+          "       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));\n"
+          "\n"
+          "    return infoMap_[cvid];\n"
           "}\n\n\n";
 
     os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"

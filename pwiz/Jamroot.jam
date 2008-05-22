@@ -33,9 +33,6 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
 
-        # is there any platform where static runtime linkage does not necessiate static object linkage?
-        <link>shared:<runtime-link>shared
-
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
