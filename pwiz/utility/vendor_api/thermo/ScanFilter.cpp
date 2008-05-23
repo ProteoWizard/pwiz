@@ -308,7 +308,7 @@ ScanFilter::~ScanFilter()
 void 
 ScanFilter::print()
 {
-	if (massAnalyzerType_ > MassAnalyzerType_Unknown) {
+	if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
         cout << "mass analyzer: " << massAnalyzerType_ << endl;
 	}
 
