@@ -32,8 +32,7 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
     size_(rawfile->value(NumSpectra)),
     spectrumCache_(size_),
     chromatograms_(new ChromatogramList_Thermo()),
-    index_(size_),
-    centroidSpectra_(false)
+    index_(size_)
 {
     createIndex();
 }
@@ -157,7 +156,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& 
             {
                 // TODO: change to CVParam when CV is updated
 
-                result3.first->userParams.push_back(UserParam("MS_selected_ion_chromatogram"));
+                result3.first->set(MS_selected_ion_current_chromatogram);
 
                 result3.first->userParams.push_back(UserParam("MS_precursor_m_z", 
                                                     lexical_cast<string>(scanInfo.parentMass(0))));
@@ -197,7 +196,13 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
 }
 
 
-PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const
+{
+    return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
+}
+
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
@@ -252,8 +257,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     PolarityType polarityType = scanInfo->polarityType();
     if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
 
-    if (scanInfo->isProfileScan() && !centroidSpectra_) sd.cvParams.push_back(MS_profile_mass_spectrum); 
-    else if (scanInfo->isCentroidScan() || centroidSpectra_) sd.cvParams.push_back(MS_centroid_mass_spectrum); 
+    bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
+
+    if (scanInfo->isProfileScan() && !doCentroid) sd.cvParams.push_back(MS_profile_mass_spectrum);
+    else sd.cvParams.push_back(MS_centroid_mass_spectrum); 
 
     scan.cvParams.push_back(CVParam(MS_scan_time, scanInfo->startTime(), MS_minute));
     sd.cvParams.push_back(CVParam(MS_base_peak_m_z, scanInfo->basePeakMass()));
@@ -276,6 +283,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
 
         selectedIon.cvParams.push_back(CVParam(MS_m_z, scanInfo->parentMass(i)));
+        long parentCharge = scanInfo->parentCharge();
+        if (parentCharge > 0)
+            selectedIon.cvParams.push_back(CVParam(MS_charge_state, parentCharge));
         // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
 
         ActivationType activationType = scanInfo->activationType();
@@ -292,7 +302,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     if (getBinaryData)
     {
         auto_ptr<raw::MassList> massList = 
-            rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, centroidSpectra_);
+            rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
 
         sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, massList->data()[0].mass));
         sd.cvParams.push_back(CVParam(MS_highest_m_z_value, massList->data()[massList->size()-1].mass));

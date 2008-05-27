@@ -261,6 +261,7 @@ class RAWFILE_API ScanInfo
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
     virtual long parentCount() const = 0;
+    virtual long parentCharge() const = 0;
     virtual double parentMass(long index) const = 0;
     virtual double parentEnergy(long index) const = 0;
 

@@ -36,37 +36,44 @@ namespace analysis {
 using namespace msdata;
 using namespace msdata::detail;
 using namespace pwiz::util;
-using namespace std;
 
 
 PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
     const msdata::SpectrumListPtr& inner,
     const IntegerSet& msLevelsToCentroid)
 :   SpectrumListWrapper(inner),
-    msLevelsToCentroid_(msLevelsToCentroid)
+    msLevelsToCentroid_(msLevelsToCentroid),
+    mode_(0)
 {
     // check to see if we're able to do native centroiding, based on the SpectrumList type
 
     SpectrumList_Thermo* thermo = dynamic_cast<SpectrumList_Thermo*>(&*inner);
     if (thermo)
+    {
+        mode_ = 1;
         return;
+    }
+}
 
-    throw runtime_error("[SpectrumList_NativeCentroider] No native centroiding available.");
+
+PWIZ_API_DECL bool SpectrumList_NativeCentroider::accept(const msdata::SpectrumListPtr& inner)
+{
+    SpectrumList_Thermo* thermo = dynamic_cast<SpectrumList_Thermo*>(&*inner);
+    if (thermo)
+        return true;
+    return false;
 }
 
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_NativeCentroider::spectrum(size_t index, bool getBinaryData) const
 {
-    SpectrumList_Thermo* thermo = dynamic_cast<SpectrumList_Thermo*>(&*inner_);
-    if (thermo)
+    switch (mode_)
     {
-        SpectrumPtr spectrum = inner_->spectrum(index, false);
-        int msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
-        thermo->centroidSpectra(msLevelsToCentroid_.contains(msLevel));
-        return inner_->spectrum(index, getBinaryData);
+        case 1:
+            return dynamic_cast<SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+        default:
+            return inner_->spectrum(index, getBinaryData);
     }
-
-    throw runtime_error("[SpectrumList_NativeCentroider::spectrum()] This isn't happening.");
 }
 
 

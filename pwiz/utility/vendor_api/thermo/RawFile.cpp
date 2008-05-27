@@ -543,6 +543,7 @@ class ScanInfoImpl : public ScanInfo
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
     virtual long parentCount() const {return (long)parentMasses_.size();}
+    virtual long parentCharge() const {return trailerExtraValueLong("Charge State:");}
     virtual double parentMass(long index) const {return parentMasses_[index];}
     virtual double parentEnergy(long index) const {return parentEnergies_[index];}
 
