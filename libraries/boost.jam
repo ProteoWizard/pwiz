@@ -91,6 +91,7 @@ rule init ( version ? : location : options * )
             <define>BOOST_FILESYSTEM_NO_LIB=1
         :
         :   <define>BOOST_FILESYSTEM_NO_LIB=1
+            <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
         ;
 
     lib iostreams
@@ -101,10 +102,13 @@ rule init ( version ? : location : options * )
             <threading>multi
             <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
             <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/zlib.cpp
+            <toolset>msvc,<boost-iostreams-zlib>on:<link>static
             <boost-iostreams-bzip2>on:<source>$(location)/libs/iostreams/src/bzip2.cpp
+            <toolset>msvc,<boost-iostreams-bzip2>on:<link>static
             <define>BOOST_IOSTREAMS_NO_LIB=1
         :
         :   <define>BOOST_IOSTREAMS_NO_LIB=1
+            <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
         ;
 
     local tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
@@ -212,6 +216,7 @@ rule init ( version ? : location : options * )
             <toolset>gcc:<library>pthread
         :
         :   <define>BOOST_REGEX_NO_LIB=1
+            <link>shared:<define>BOOST_REGEX_DYN_LINK=1
         ;
     
     if <boost-interprocess> in $(requirements:G)
