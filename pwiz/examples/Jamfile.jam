@@ -1,5 +1,5 @@
 #
-# Jamfile (tools)
+# Jamfile (examples)
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,92 +21,49 @@
 #
 
 
-exe msdiff 
-    : msdiff.cpp
+exe hello_msdata
+    : hello_msdata.cpp
+      ../data/msdata/examples.cpp
       ../data/msdata//pwiz_data_msdata
-      ../data/vendor_readers
-      ..//boost_program_options
     : <include>../..
     ;
 
 
-exe msconvert 
-    : msconvert.cpp
+exe hello_ramp
+    : hello_ramp.cpp
       ../data/msdata//pwiz_data_msdata
-      ../data/vendor_readers
-      ../analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-      ..//boost_program_options
-      /ext/boost//filesystem
-    : <include>../..
+    : <include>../.. <include>../data/msdata/ramp
+      <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
     ;
 
 
-exe msaccess
-    : msaccess.cpp
+exe hello_analyzer
+    : hello_analyzer.cpp
+      ../data/msdata//pwiz_data_msdata
       ../analysis/passive//pwiz_analysis_passive
-      ../analysis/peptideid//pwiz_analysis_peptideid
     : <include>../..
     ;
 
 
-exe mspicture 
-    : mspicture.cpp
+exe hello_analyzer_2
+    : hello_analyzer_2.cpp
+      ../data/msdata//pwiz_data_msdata
       ../analysis/passive//pwiz_analysis_passive
-      ../analysis/peptideid//pwiz_analysis_peptideid
     : <include>../..
     ;
 
 
-rule SeeMS_build_release_if ( properties * )
-{
-    if <toolset>msvc in $(properties) && <variant>release in $(properties)
-    { }
-    else
-    {
-        return <build>no ;
-    }
-}
-
-rule SeeMS_build_debug_if ( properties * )
-{
-    if <toolset>msvc in $(properties) && <variant>debug in $(properties)
-    { }
-    else
-    {
-        return <build>no ;
-    }
-}
-
-path-constant TOOLS_PATH : . ;
-
-actions do_make_SeeMS_release
-{
-    call "%VS80COMNTOOLS%vsvars32.bat"
-    echo "$(TOOLS_PATH)/SeeMS/seems.sln"
-    devenv.exe "$(TOOLS_PATH)/SeeMS/seems.sln" /build Release
-}
-
-actions do_make_SeeMS_debug
-{
-    call "%VS80COMNTOOLS%vsvars32.bat"
-    devenv.exe "$(TOOLS_PATH)/SeeMS/seems.sln" /build Debug
-}
-
-import notfile ;
-notfile SeeMS_make_release : @do_make_SeeMS_release : : <conditional>@SeeMS_build_release_if ;
-notfile SeeMS_make_debug : @do_make_SeeMS_debug : : <conditional>@SeeMS_build_debug_if ;
-
-
-alias mstools : msdiff msconvert msaccess mspicture ;
+alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
+explicit hello_examples ;
 
 
 # local install for testing
 
 install bin 
-    : msdiff 
-      msconvert 
-      msaccess
-      mspicture
+    : hello_msdata 
+      hello_ramp 
+      hello_analyzer 
+      hello_analyzer_2
     : <location>bin ;
 
 explicit bin ;
