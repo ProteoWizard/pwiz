@@ -374,6 +374,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     string basePeakMz = description.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = description.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = description.cvParam(MS_total_ion_current).value;
+    bool isCentroided = description.hasCVParam(MS_centroid_mass_spectrum);
 
     vector<PrecursorInfo> precursorInfo = getPrecursorInfo(description, spectrumListPtr);
 
@@ -388,6 +389,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
         attributes.push_back(make_pair("scanEvent", scanEvent));
     if (!scanType.empty())
         attributes.push_back(make_pair("scanType", scanType));
+    if (isCentroided)
+        attributes.push_back(make_pair("centroided", "1"));
     attributes.push_back(make_pair("msLevel", msLevel));
     attributes.push_back(make_pair("peaksCount", lexical_cast<string>(mzIntensityPairs.size())));
     attributes.push_back(make_pair("polarity", polarity));
