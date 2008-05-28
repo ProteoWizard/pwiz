@@ -543,7 +543,7 @@ class ScanInfoImpl : public ScanInfo
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
     virtual long parentCount() const {return (long)parentMasses_.size();}
-    virtual long parentCharge() const {return trailerExtraValueLong("Charge State:");}
+    virtual long parentCharge() const;
     virtual double parentMass(long index) const {return parentMasses_[index];}
     virtual double parentEnergy(long index) const {return parentEnergies_[index];}
 
@@ -724,6 +724,20 @@ void ScanInfoImpl::parseFilterString()
     activationType_ = filterParser.activationType_;
     parentMasses_.insert(parentMasses_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
     parentEnergies_.insert(parentEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
+}
+
+
+long ScanInfoImpl::parentCharge() const
+{
+    try
+    {
+        return trailerExtraValueLong("Charge State:");
+    }
+    catch (RawEgg& e)
+    {
+        // almost certainly means that the label was not present
+        return 0;
+    }
 }
 
 
