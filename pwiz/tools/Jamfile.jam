@@ -93,7 +93,48 @@ exe mspicture
     ;
 
 
+rule SeeMS_build_release_if ( properties * )
+{
+    if <toolset>msvc in $(properties) && <variant>release in $(properties)
+    { }
+    else
+    {
+        return <build>no ;
+    }
+}
+
+rule SeeMS_build_debug_if ( properties * )
+{
+    if <toolset>msvc in $(properties) && <variant>debug in $(properties)
+    { }
+    else
+    {
+        return <build>no ;
+    }
+}
+
+path-constant TOOLS_PATH : . ;
+
+actions do_make_SeeMS_release
+{
+    call "%VS80COMNTOOLS%vsvars32.bat"
+    echo "$(TOOLS_PATH)/SeeMS/seems.sln"
+    devenv.exe "$(TOOLS_PATH)/SeeMS/seems.sln" /build Release
+}
+
+actions do_make_SeeMS_debug
+{
+    call "%VS80COMNTOOLS%vsvars32.bat"
+    devenv.exe "$(TOOLS_PATH)/SeeMS/seems.sln" /build Debug
+}
+
+import notfile ;
+notfile SeeMS_make_release : @do_make_SeeMS_release : : <conditional>@SeeMS_build_release_if ;
+notfile SeeMS_make_debug : @do_make_SeeMS_debug : : <conditional>@SeeMS_build_debug_if ;
+
+
 alias mstools : msdiff msconvert msaccess mspicture ;
+
 
 # local install for testing
 

@@ -1,0 +1,33 @@
+project
+    : requirements
+        <toolset>msvc:<build>yes
+        <library>../../../data/msdata//pwiz_data_msdata/<link>static
+        <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static
+        <library>../../../data/vendor_readers//pwiz_data_vendor_readers/<link>static
+        <library>../../../analysis/spectrum_processing//pwiz_analysis_spectrum_processing/<link>static
+        <link>shared
+        <runtime-link>shared
+        <cxxflags>"/EHa /clr"
+        <define>UNICODE
+        <define>_UNICODE
+    : usage-requirements
+        <cxxflags>"/EHa /clr /FU pwiz_bindings_cli.dll"
+        <define>UNICODE
+        <define>_UNICODE
+    : default-build
+        release
+        <build>no
+	;
+
+lib pwiz_bindings_cli
+    : CVParam.cpp
+      MSData.cpp
+      MSDataFile.cpp
+      examples.cpp
+    : <linkflags>"/DLL /MACHINE:X86 /FIXED:No"
+    ;
+
+path-constant CLI_ROOT : . ;
+
+unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>test <cxxflags>"/AI $(CLI_ROOT)/test" ;
+unit-test MSDataFileTest : MSDataFileTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>test <cxxflags>"/AI $(CLI_ROOT)/test" ;
