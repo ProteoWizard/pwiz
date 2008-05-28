@@ -53,6 +53,15 @@ exe hello_analyzer_2
     ;
 
 
+exe mscat
+    : mscat.cpp
+      ../data/msdata//pwiz_data_msdata
+      ../data/vendor_readers
+    : <include>../..
+    ;
+
+
+
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
 
@@ -64,6 +73,7 @@ install bin
       hello_ramp 
       hello_analyzer 
       hello_analyzer_2
+      mscat
     : <location>bin ;
 
 explicit bin ;
