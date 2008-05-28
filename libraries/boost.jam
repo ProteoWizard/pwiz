@@ -94,6 +94,19 @@ rule init ( version ? : location : options * )
             <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
         ;
 
+    lib program_options
+        :   [ glob $(location)/libs/program_options/src/*.cpp ]
+        :   $(requirements)
+            <location-prefix>program_options
+            <use>boost
+            <threading>multi
+            <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
+            <define>BOOST_PROGRAM_OPTIONS_NO_LIB=1
+        :
+        :   <define>BOOST_PROGRAM_OPTIONS_NO_LIB=1
+            <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
+        ;
+
     lib iostreams
         :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
         :   $(requirements)
