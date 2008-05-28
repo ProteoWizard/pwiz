@@ -61,6 +61,14 @@ exe mscat
     ;
 
 
+exe txt2mzml
+    : txt2mzml.cpp
+      ../data/msdata//pwiz_data_msdata
+      ../data/vendor_readers
+    : <include>../..
+    ;
+
+
 
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
@@ -74,6 +82,7 @@ install bin
       hello_analyzer 
       hello_analyzer_2
       mscat
+      txt2mzml
     : <location>bin ;
 
 explicit bin ;
