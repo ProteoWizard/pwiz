@@ -25,7 +25,7 @@ exe msdiff
     : msdiff.cpp
       ../data/msdata//pwiz_data_msdata
       ../data/vendor_readers
-      ..//boost_program_options
+      /ext/boost//program_options
     : <include>../..
     ;
 
@@ -35,7 +35,7 @@ exe msconvert
       ../data/msdata//pwiz_data_msdata
       ../data/vendor_readers
       ../analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-      ..//boost_program_options
+      /ext/boost//program_options
       /ext/boost//filesystem
     : <include>../..
     ;
@@ -45,6 +45,7 @@ exe msaccess
     : msaccess.cpp
       ../analysis/passive//pwiz_analysis_passive
       ../analysis/peptideid//pwiz_analysis_peptideid
+      ../utility/misc//pwiz_utility_image
     : <include>../..
     ;
 
@@ -53,6 +54,7 @@ exe mspicture
     : mspicture.cpp
       ../analysis/passive//pwiz_analysis_passive
       ../analysis/peptideid//pwiz_analysis_peptideid
+      ../utility/misc//pwiz_utility_image
     : <include>../..
     ;
 

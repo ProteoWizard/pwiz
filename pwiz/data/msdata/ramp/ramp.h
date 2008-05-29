@@ -32,7 +32,7 @@ Non sequential parser for mzXML files
 #define RAP_EXTERN_C 
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(_MINGW_)
 #include <winsock2.h>
 #include <sys/types.h>
 #include <fcntl.h>
