@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Tools Tutorial</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+    <h1>ProteoWizard Tools Tutorial</h1>
+    <hr/>
+
+    <p>
+        <h2>Downloading the tools</h2>
+        Zip files containing binary executables for various platforms may be downloaded
+        from the ProteoWizard home page.
+    </p>
+
+    <p>
+        <h2>File format conversion</h2>
+        <i>msconvert</i> is a command line tool for converting between various file formats.
+
+        <p>
+        Currently supported formats: 
+        <ul>
+            <li><b>Read:</b> mzML, mzXML, Thermo RAW, MGF</li>
+            <li><b>Write:</b> mzML, mzXML</li>
+                 
+        </ul>
+        </p>
+
+        <p>
+        Vendor format reading restrictions: 
+        <ul>
+            <li><b>Thermo RAW:</b> Windows with XCalibur XDK installed</li>
+        </ul>
+        </p>
+
+        <p>
+        Examples:
+        <ul>
+            <li><code>msconvert data.RAW</code><br/>
+            (creates data.mzML in current directory)<p/></li>
+
+            <li><code>msconvert data.RAW --mzXML</code><br/>
+            (creates data.mzXML in current directory)<p/></li>
+
+            <li><code>msconvert *.RAW -o my_output_dir</code><br/>
+            (converts all files matching *.RAW to mzML, output files created in <code>my_output_dir</code>)<p/></li>
+
+            <li><code>msconvert data.RAW --zlib --centroid [2,3] </code><br/>
+            (use zlib compression for binary data arrays, and centroid for msLevels in [2,3])<p/></li>
+        </ul>
+        </p>
+    </p>
+
+    <p>
+        <h2>Data extraction</h2>
+        <i>msaccess</i> is a command line tool for extracting data and metadata from data files. 
+
+        <p>
+        Examples:
+        <ul>
+            <li><code>msaccess data.mzML -x spectrum_table</code><br/>
+            (creates data.mzML.spectrum_table.txt with summary information for all spectra)<p/></li>
+
+            <li><code>msaccess data.mzML -x "binary 0-3"</code><br/>
+            (creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)<p/></li>
+
+            <li><code>msaccess data.mzML -x image</code><br/>
+            (creates data.mzML.image* with pseudo-2D-gel image of the data file)<p/></li>
+        </ul>
+        </p>
+    <hr/>
+    <a href="index.html">Technical documentation home</a>
+
+</body>
+
+</html>
+
