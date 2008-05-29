@@ -726,7 +726,8 @@ void ScanInfoImpl::parseFilterString()
     parentEnergies_.insert(parentEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
 }
 
-
+#pragma warning(push)
+#pragma warning(disable:4101) // don't bark about unused RawEgg &e
 long ScanInfoImpl::parentCharge() const
 {
     try
@@ -739,7 +740,7 @@ long ScanInfoImpl::parentCharge() const
         return 0;
     }
 }
-
+#pragma warning(pop)
 
 double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 {
