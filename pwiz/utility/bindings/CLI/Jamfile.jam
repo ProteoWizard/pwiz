@@ -24,10 +24,21 @@ lib pwiz_bindings_cli
       MSData.cpp
       MSDataFile.cpp
       examples.cpp
-    : <linkflags>"/MACHINE:X86 /FIXED:No /MANIFEST:NO /KEYFILE:signature.snk"
+    : <linkflags>"/MACHINE:X86 /FIXED:No /KEYFILE:signature.snk"
     ;
+
+actions do_update_embedded_manifest
+{
+    call "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    REM echo $(>)
+    sn.exe /q /Ra $(>[0]) signature.snk
+}
+
+import notfile ;
+notfile update_embedded_manifest : @do_update_embedded_manifest : pwiz_bindings_cli ;
+#notfile update_embedded_manifest_test : @do_update_embedded_manifest : pwiz_bindings_cli/<location>$(CLI_ROOT)/test : <location>$(CLI_ROOT)/test ;
 
 path-constant CLI_ROOT : . ;
 
-unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>test <cxxflags>"/AI $(CLI_ROOT)/test" ;
-unit-test MSDataFileTest : MSDataFileTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>test <cxxflags>"/AI $(CLI_ROOT)/test" ;
+#unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
+#unit-test MSDataFileTest : MSDataFileTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
