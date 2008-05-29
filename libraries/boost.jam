@@ -26,17 +26,13 @@ extension.declare boost ;
 if [ modules.peek : NT ]
 {
    feature.feature boost-iostreams-zlib : off on : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-zlib>off : <define>NO_ZLIB=1 ;
    feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-bzip2>off : <define>NO_BZIP2=1 ;
 }
 else if [ modules.peek : UNIX ]
 {
    feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-zlib>off : <define>NO_ZLIB=1 ;
    feature.compose <boost-iostreams-zlib>on : <linkflags>-lz ;
    feature.feature boost-iostreams-bzip2 : on off : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-bzip2>off : <define>NO_BZIP2=1 ;
    feature.compose <boost-iostreams-bzip2>on : <linkflags>-lbz2 ;
 }
 
@@ -53,9 +49,8 @@ rule boost-tag ( name : type ? : property-set )
 rule init ( version ? : location : options * )
 {
     version ?= default ;
-    local requirements =
-        [ extension.define boost $(version) : $(location) : $(options) ] ;
-        requirements =
+    local requirements = [ extension.define boost $(version) : $(location) : $(options) ] ;
+    requirements =
         [ extension.refine boost $(version) : <tag>@boost-tag ]
         <boost-version>$(version)
         <boost-location>$(location)
@@ -63,9 +58,17 @@ rule init ( version ? : location : options * )
         <toolset>msvc:<define>BOOST_WINDOWS_API
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-        <toolset>gcc:<library>pthread/<link>shared
         #~ <warnings>off
         ;
+
+    lib pthread : : <name>pthread <link>shared ;
+    explicit pthread ;
+    local regex_pthread_requirement ;
+    if [ modules.peek : UNIX ]
+    {
+        regex_pthread_requirement = <toolset>gcc:<library>pthread/<link>shared ;
+    }
+
     requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
     local common-requirements =
         <include>$(location)
@@ -78,8 +81,6 @@ rule init ( version ? : location : options * )
         :   $(common-requirements)
         ;
 
-     lib pthread : : <name>pthread <link>shared ;
-     explicit pthread ;
 
      lib filesystem
         :   [ glob $(location)/libs/filesystem/src/*.cpp ]
@@ -220,13 +221,13 @@ rule init ( version ? : location : options * )
     lib regex
         :   [ glob $(location)/libs/regex/src/*.cpp ]
         :   $(requirements)
+            $(regex_pthread_requirement)
             <location-prefix>regex
             <use>boost
             <link>shared:<define>BOOST_REGEX_DYN_LINK=1
             <define>BOOST_REGEX_NO_LIB=1
             <toolset>msvc:<cxxflags>/wd4309
             <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
-            <toolset>gcc:<library>pthread
         :
         :   <define>BOOST_REGEX_NO_LIB=1
             <link>shared:<define>BOOST_REGEX_DYN_LINK=1
