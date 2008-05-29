@@ -169,8 +169,8 @@ namespace seems
 						pwiz.CLI.msdata.Chromatogram c = cl.chromatogram( i );
 
 						OnStatusReport( String.Format( "Loading chromatograms from source file ({0} of {1})...",
-										( i + 1 ), sl.size() ) );
-						OnProgressReport( ( i + 1 ) * 100 / sl.size() );
+										( i + 1 ), cl.size() ) );
+						OnProgressReport( ( i + 1 ) * 100 / cl.size() );
 
 						sourceGraphItems.Add( new Chromatogram( this, c ) );
 					}

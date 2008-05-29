@@ -24,7 +24,7 @@ lib pwiz_bindings_cli
       MSData.cpp
       MSDataFile.cpp
       examples.cpp
-    : <linkflags>"/DLL /MACHINE:X86 /FIXED:No"
+    : <linkflags>"/MACHINE:X86 /FIXED:No /MANIFEST:NO /KEYFILE:signature.snk"
     ;
 
 path-constant CLI_ROOT : . ;
