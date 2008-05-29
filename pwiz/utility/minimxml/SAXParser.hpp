@@ -25,7 +25,7 @@
 #define _SAXPARSER_HPP_
 
 #include "utility/misc/Export.hpp"
-#include "boost/lexical_cast.hpp"
+#include "utility/misc/optimized_lexical_cast.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iosfwd>
 #include <string>

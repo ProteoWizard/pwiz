@@ -45,6 +45,9 @@ const char* targetXML =
     "        <quote>I'm not a crook.</quote>\n"
     "        <resigned/>\n"
     "    </record>\n"
+    "    <record name=\"&quot;Penn &amp; Teller&quot;\">\n"
+    "        <quote>'Bull&lt;shit!'</quote>\n"
+    "    </record>\n"
     "    <record name=\"clinton\"\n"
     "            color=\"blue\"\n"
     "            number=\"42\">\n" 
@@ -114,6 +117,16 @@ void test()
         writer.popStyle();
 
         attributes.clear();
+        attributes.push_back(make_pair("name", "\"Penn & Teller\""));
+        writer.startElement("record", attributes);
+            writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+            writer.startElement("quote");
+            writer.characters("'Bull<shit!'");
+            writer.endElement();
+            writer.popStyle();
+        writer.endElement();
+
+        attributes.clear();
         attributes.push_back(make_pair("name", "clinton"));
         attributes.push_back(make_pair("color", "blue"));
         attributes.push_back(make_pair("number", "42"));
@@ -155,7 +168,7 @@ void test()
 
     unit_assert(targetXML == oss.str());
     unit_assert(writer.position() == (int)oss.str().size());
-    unit_assert(writer.position() == 568);
+    unit_assert(writer.position() == 671);
 
     if (os_) *os_ << "outputObserver cache:\n" << outputObserver.cache << endl;
     unit_assert(targetXML == outputObserver.cache);

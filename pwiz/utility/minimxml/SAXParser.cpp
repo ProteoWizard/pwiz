@@ -23,7 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
+#include "utility/misc/String.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <stack>
@@ -141,6 +141,17 @@ struct ProcessingInstruction
 };
 
 
+string& unescapeXML(string& str)
+{
+    bal::replace_all(str, "&amp;", "&");
+    bal::replace_all(str, "&lt;", "<");
+    bal::replace_all(str, "&gt;", ">");
+    bal::replace_all(str, "&quot;", "\"");
+    bal::replace_all(str, "&apos;", "'");
+    return str;
+}
+
+
 const string whitespace_ = " \t\n\r";
 
 
@@ -163,7 +174,7 @@ void parseAttribute(const string& tag, string::size_type& index, Handler::Attrib
     string name = tag.substr(indexNameBegin, indexNameEnd-indexNameBegin);
     string value = tag.substr(indexQuoteOpen+1, indexQuoteClose-indexQuoteOpen-1);
 
-    attributes[name] = value;
+    attributes[name] = unescapeXML(value);
     index = tag.find_first_not_of(whitespace_, indexQuoteClose+1);
 }
 
@@ -336,6 +347,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         if (!buffer.empty())
         {
+            unescapeXML(buffer);
             Handler::Status status = wrangler.characters(buffer, position);
             if (status.flag == Handler::Status::Done) return;
         }

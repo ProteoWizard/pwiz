@@ -41,8 +41,8 @@ ostream* os_;
 const char* sampleXML = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<RootElement param=\"value\">\n"
-    "    <FirstElement>\n"
-    "        Some Text\n"
+    "    <FirstElement escaped_attribute=\"&quot;&lt;&amp;&gt;&quot;\">\n"
+    "        Some Text with Entity References: &lt;&amp;&gt;\n"
     "    </FirstElement>\n"
     "    <SecondElement param2=\"something\" param3=\"something.else 1234-56\">\n"
     "        Pre-Text <Inline>Inlined text</Inline> Post-text. <br/>\n"
@@ -142,6 +142,7 @@ void demo()
 
 struct First
 {
+    string escaped_attribute;
     string text;
 };
 
@@ -186,16 +187,25 @@ class FirstHandler : public Handler
     :   object_(first)
     {}
 
+    virtual Status startElement(const string& name,
+                                const Handler::Attributes& attributes, 
+                                stream_offset position)
+    {
+        if (name == "FirstElement")
+            readAttribute(attributes, "escaped_attribute", object_.escaped_attribute);
+        return Status::Ok;
+    }
+
     virtual Status characters(const string& text, stream_offset position)
     {
-        unit_assert(position == 0x5e);
+        unit_assert(position == 0x8c);
         object_.text = text;          
         return Status::Ok;
     }
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert(position == 0x6c);
+        unit_assert(position == 0xc0);
         return Status::Ok;
     }
 
@@ -298,7 +308,8 @@ void test()
     }
 
     unit_assert(root.param == "value");
-    unit_assert(root.first.text == "Some Text");
+    unit_assert(root.first.escaped_attribute == "\"<&>\"");
+    unit_assert(root.first.text == "Some Text with Entity References: <&>");
     unit_assert(root.second.param2 == "something");
     unit_assert(root.second.param3 == "something.else 1234-56");
     unit_assert(root.second.text.size() == 3);
@@ -318,7 +329,7 @@ class AnotherRootHandler : public Handler
     {
         if (name == "AnotherRoot")
         {
-            unit_assert(position == 0x1a6);
+            unit_assert(position == 0x1fa);
             return Status::Done; 
         }
 

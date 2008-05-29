@@ -23,19 +23,14 @@
 #define PWIZ_SOURCE
 
 #include "XMLWriter.hpp"
-#include "boost/iostreams/positioning.hpp"
-#include <iostream>
+#include "utility/misc/Stream.hpp"
+#include "utility/misc/String.hpp"
+#include "utility/misc/Exception.hpp"
 #include <stack>
-#include <stdexcept>
-#include <sstream>
-
+using std::stack;
 
 namespace pwiz {
 namespace minimxml {
-
-	
-using namespace std;
-using boost::iostreams::stream_offset;
 
 
 class XMLWriter::Impl
@@ -51,8 +46,8 @@ class XMLWriter::Impl
                       EmptyElementTag emptyElementTag);
     void endElement();
     void characters(const string& text);
-    stream_offset position() const;
-    stream_offset positionNext() const;
+    bio::stream_offset position() const;
+    bio::stream_offset positionNext() const;
 
     private:
     ostream& os_;
@@ -61,6 +56,7 @@ class XMLWriter::Impl
     stack<unsigned int> styleStack_;
 
     string indentation() const {return string(elementStack_.size()*config_.indentationStep, ' ');}
+    string indentation(size_t depth) const {return string(depth*config_.indentationStep, ' ');}
     bool style(StyleFlag styleFlag) const {return styleStack_.top() & styleFlag ? true : false;}
 };
 
@@ -88,11 +84,51 @@ void XMLWriter::Impl::popStyle()
 
 void XMLWriter::Impl::processingInstruction(const string& name, const string& data) 
 {
-    ostringstream oss;
-    oss << indentation() << "<?" << name << " " << data << "?>\n"; 
+    ostream* os = &os_;
+    if (config_.outputObserver) os = new ostringstream;
 
-    if (config_.outputObserver) config_.outputObserver->update(oss.str());
-    os_ << oss.str();
+    *os << indentation() << "<?" << name << " " << data << "?>\n"; 
+
+    if (config_.outputObserver)
+    {
+        config_.outputObserver->update(static_cast<ostringstream*>(os)->str());
+        os_ << static_cast<ostringstream*>(os)->str();
+        delete os;
+    }
+}
+
+
+void writeEscapedAttributeXML(ostream& os, const string& str)
+{
+    for (size_t i=0; i < str.size(); ++i)
+    {
+        const char& c = str[i];
+        switch (c)
+        {
+            case '&': os << "&amp;"; break;
+            case '"': os << "&quot;"; break;
+            case '\'': os << "&apos;"; break;
+            case '<': os << "&lt;"; break;
+            case '>': os << "&gt;"; break;
+            default: os << c; break;
+        }
+    }
+}
+
+
+void writeEscapedTextXML(ostream& os, const string& str)
+{
+    for (size_t i=0; i < str.size(); ++i)
+    {
+        const char& c = str[i];
+        switch (c)
+        {
+            case '&': os << "&amp;"; break;
+            case '<': os << "&lt;"; break;
+            case '>': os << "&gt;"; break;
+            default: os << c; break;
+        }
+    }
 }
 
 
@@ -100,86 +136,101 @@ void XMLWriter::Impl::startElement(const string& name,
                   const Attributes& attributes,
                   EmptyElementTag emptyElementTag)
 {
-    ostringstream oss;
+    ostream* os = &os_;
+    if (config_.outputObserver) os = new ostringstream;
 
     if (!style(StyleFlag_InlineOuter))
-        oss << indentation();
+        *os << indentation();
 
-    oss << "<" << name;
+    *os << "<" << name;
 
     string attributeIndentation(name.size()+1, ' ');
 
     for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
     {
-        oss << " " << it->first << "=\"" << it->second << "\"";
+        *os << " " << it->first << "=\"";
+        writeEscapedAttributeXML(*os, it->second);
+        *os << "\"";
         if (style(StyleFlag_AttributesOnMultipleLines) && (it+1)!=attributes.end())
-            oss << endl << indentation() << attributeIndentation;
+            *os << "\n" << indentation() << attributeIndentation;
     }
 
-    oss << (emptyElementTag==EmptyElement ? "/" : "") << ">";
+    *os << (emptyElementTag==EmptyElement ? "/>" : ">");
 
     if (!style(StyleFlag_InlineInner) || 
         !style(StyleFlag_InlineOuter) && emptyElementTag==EmptyElement)
-        oss << endl;
+        *os << "\n";
 
     if (emptyElementTag == NotEmptyElement)
         elementStack_.push(name);
 
-    if (config_.outputObserver) config_.outputObserver->update(oss.str());
-    os_ << oss.str();
+    if (config_.outputObserver)
+    {
+        config_.outputObserver->update(static_cast<ostringstream*>(os)->str());
+        os_ << static_cast<ostringstream*>(os)->str();
+        delete os;
+    }
 }
 
 
 void XMLWriter::Impl::endElement()
 {
-    ostringstream oss;
+    ostream* os = &os_;
+    if (config_.outputObserver) os = new ostringstream;
 
     if (elementStack_.empty())
         throw runtime_error("[XMLWriter] Element stack underflow.");
 
-    string name = elementStack_.top();
+    if (!style(StyleFlag_InlineInner))
+        *os << indentation(elementStack_.size()-1);
+
+    *os << "</" << elementStack_.top() << ">";
     elementStack_.pop();
 
-    if (!style(StyleFlag_InlineInner))
-        oss << indentation();
-
-    oss << "</" << name << ">";
-
     if (!style(StyleFlag_InlineOuter))
-        oss << endl;
+        *os << "\n";
         
-    if (config_.outputObserver) config_.outputObserver->update(oss.str());
-    os_ << oss.str();
+    if (config_.outputObserver)
+    {
+        config_.outputObserver->update(static_cast<ostringstream*>(os)->str());
+        os_ << static_cast<ostringstream*>(os)->str();
+        delete os;
+    }
 }
 
 
 void XMLWriter::Impl::characters(const string& text)
 {
-    ostringstream oss;
+    ostream* os = &os_;
+    if (config_.outputObserver) os = new ostringstream;
 
     if (!style(StyleFlag_InlineInner))
-        oss << indentation();
+        *os << indentation();
 
-    oss << text;
+    writeEscapedTextXML(*os, text);
 
     if (!style(StyleFlag_InlineInner))
-        oss << endl;
+        *os << "\n";
 
-    if (config_.outputObserver) config_.outputObserver->update(oss.str());
-    os_ << oss.str();
+    if (config_.outputObserver)
+    {
+        config_.outputObserver->update(static_cast<ostringstream*>(os)->str());
+        os_ << static_cast<ostringstream*>(os)->str();
+        delete os;
+    }
 }
 
 
-stream_offset XMLWriter::Impl::position() const
+XMLWriter::stream_offset XMLWriter::Impl::position() const
 {
     os_ << flush;
     return boost::iostreams::position_to_offset(os_.tellp()); 
 }
 
 
-stream_offset XMLWriter::Impl::positionNext() const
+XMLWriter::stream_offset XMLWriter::Impl::positionNext() const
 {
-    boost::iostreams::stream_offset offset = position(); 
+    stream_offset offset = position(); 
     if (!style(StyleFlag_InlineOuter))
         offset += indentation().size();
     return offset;
@@ -215,9 +266,9 @@ PWIZ_API_DECL void XMLWriter::endElement() {impl_->endElement();}
 
 PWIZ_API_DECL void XMLWriter::characters(const string& text) {impl_->characters(text);}
 
-PWIZ_API_DECL stream_offset XMLWriter::position() const {return impl_->position();}
+PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::position() const {return impl_->position();}
 
-PWIZ_API_DECL stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
+PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
 
 
 } // namespace minimxml
