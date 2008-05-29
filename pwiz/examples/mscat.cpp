@@ -73,7 +73,8 @@ void cat(const char* filename)
 
     const size_t columnWidth = 14;
 
-    cout << setw(columnWidth) << "# scanNumber"
+    cout << "#"
+         << setw(columnWidth) << "scanNumber"
          << setw(columnWidth) << "msLevel"
          << setw(columnWidth) << "m/z"
          << setw(columnWidth) << "intensity" << endl;
@@ -92,7 +93,8 @@ void cat(const char* filename)
         // iterate through the m/z-intensity pairs
         for (vector<MZIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
         {
-            cout << setw(columnWidth) << spectrum->nativeID
+            cout << " "
+                 << setw(columnWidth) << spectrum->nativeID
                  << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
                  << setw(columnWidth) << fixed << setprecision(4) << it->mz
                  << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;
