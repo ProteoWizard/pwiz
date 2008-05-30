@@ -151,7 +151,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& 
             double productMz = massList->data()[i].mass;
             pair<ChromatogramPtr, bool> result3 = addPointToNewOrExistingChromatogram(cl, scanInfo,
                 (format("SRM SIC %1.4f->%1.4f") % scanInfo.parentMass(0) % productMz).str(),
-                scanInfo.startTime(), productMz);
+                scanInfo.startTime(), massList->data()[i].intensity);
             if (result3.second)
             {
                 // TODO: change to CVParam when CV is updated

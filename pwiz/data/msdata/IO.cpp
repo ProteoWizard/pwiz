@@ -1325,16 +1325,17 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
 
     if (precursor.spectrumID.empty())
     {
-        if (precursor.externalNativeID.empty() && precursor.externalSpectrumID.empty())
-            throw runtime_error("[IO::write] Precursor elements must have a spectrum reference");
-        if (!precursor.sourceFilePtr.get())
-            throw runtime_error("[IO::write] External spectrum references must refer to a source file");
+        if (!precursor.externalNativeID.empty() || !precursor.externalSpectrumID.empty())
+        {
+            if (!precursor.sourceFilePtr.get())
+                throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-        attributes.push_back(make_pair("sourceFileRef", precursor.sourceFilePtr->id)); 
-        if (precursor.externalNativeID.empty())
-            attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
-        else
-            attributes.push_back(make_pair("externalNativeID", precursor.externalNativeID)); 
+            attributes.push_back(make_pair("sourceFileRef", precursor.sourceFilePtr->id)); 
+            if (precursor.externalNativeID.empty())
+                attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
+            else
+                attributes.push_back(make_pair("externalNativeID", precursor.externalNativeID)); 
+        }
     }
     else
         attributes.push_back(make_pair("spectrumRef", precursor.spectrumID));
