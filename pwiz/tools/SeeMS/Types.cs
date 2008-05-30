@@ -215,7 +215,7 @@ namespace seems
 		{
 			get
 			{
-				double time = element.spectrumDescription.cvParam( CVID.MS_scan_time ).timeInSeconds();
+				double time = element.spectrumDescription.scan.cvParam( CVID.MS_scan_time ).timeInSeconds();
 				switch( retentionTimeUnit )
 				{
 					default:

@@ -175,7 +175,7 @@ namespace seems
 
 				// the header does not have the data points
 				pane.YAxis.Title.Text = "Intensity";
-				pane.XAxis.Title.Text = "m/z (in Da/z)";
+				pane.XAxis.Title.Text = "m/z";
 
 				PointList pointList = scan.PointList;
 				if( pointList.FullCount > 0 )
@@ -202,8 +202,6 @@ namespace seems
 				if( pointList.FullCount > 0 )
 				{
 					int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-					foreach( ZedGraph.PointPair point in pointList ) // convert seconds to minutes
-						point.X /= 60.0;
 
 					if( isScaleAuto )
 						pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
