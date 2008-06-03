@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
     <cvList count="2">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.0.2" URI="http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"/>
       <cv id="UO" fullName="Unit Ontology" version="unknown" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
@@ -240,15 +240,15 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="S19" nativeID="19">5642</offset>
-      <offset idRef="S20" nativeID="20">8645</offset>
-      <offset idRef="S21" nativeID="21">12456</offset>
+      <offset idRef="S19" nativeID="19">5630</offset>
+      <offset idRef="S20" nativeID="20">8633</offset>
+      <offset idRef="S21" nativeID="21">12444</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic" nativeID="tic native">12933</offset>
-      <offset idRef="sic" nativeID="sic native">14410</offset>
+      <offset idRef="tic" nativeID="tic native">12921</offset>
+      <offset idRef="sic" nativeID="sic native">14398</offset>
     </index>
   </indexList>
-  <indexListOffset>15820</indexListOffset>
-  <fileChecksum>eac254dafb9441f84e90dfc2dadc2fcfab3e496b</fileChecksum>
+  <indexListOffset>15808</indexListOffset>
+  <fileChecksum>4cacca258c881ef6264adc30d1fc5c4887c20f3e</fileChecksum>
 </indexedmzML>

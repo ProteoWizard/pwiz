@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_0.99.12" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_0.99.12 mzML0.99.12.xsd" id="small_RAW" version="">
+<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0_idx.xsd">
+  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0.xsd" id="small_RAW" version="">
     <cvList count="1">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.0" URI="psi-ms.obo"/>
     </cvList>
@@ -9,7 +9,7 @@
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
       </fileContent>
       <sourceFileList count="1">
-        <sourceFile id="RAW1" name="small.RAW" location="file://z:/darren/pwiz/pwiz/tools/bin/example/..">
+        <sourceFile id="RAW1" name="small.RAW" location="file://z:/darren/pwiz/example_data">
           <cvParam cvRef="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
           <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b43e9286b40e8b5dbc0dfa2e428495769ca96a96"/>
         </sourceFile>
@@ -70,7 +70,7 @@
         </processingMethod>
       </dataProcessing>
     </dataProcessingList>
-    <run id="___small_raw" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2005-07-20T14:44:22">
+    <run id="example_data_small_raw" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2005-07-20T14:44:22">
       <spectrumList count="48">
         <spectrum index="0" id="S1" nativeID="1" defaultArrayLength="19914">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
@@ -2410,59 +2410,59 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="S1" nativeID="1">4047</offset>
-      <offset idRef="S2" nativeID="2">116013</offset>
-      <offset idRef="S3" nativeID="3">244652</offset>
-      <offset idRef="S4" nativeID="4">252841</offset>
-      <offset idRef="S5" nativeID="5">265976</offset>
-      <offset idRef="S6" nativeID="6">277505</offset>
-      <offset idRef="S7" nativeID="7">287277</offset>
-      <offset idRef="S8" nativeID="8">298126</offset>
-      <offset idRef="S9" nativeID="9">381280</offset>
-      <offset idRef="S10" nativeID="10">517637</offset>
-      <offset idRef="S11" nativeID="11">526473</offset>
-      <offset idRef="S12" nativeID="12">538984</offset>
-      <offset idRef="S13" nativeID="13">548624</offset>
-      <offset idRef="S14" nativeID="14">559724</offset>
-      <offset idRef="S15" nativeID="15">569693</offset>
-      <offset idRef="S16" nativeID="16">664129</offset>
-      <offset idRef="S17" nativeID="17">793325</offset>
-      <offset idRef="S18" nativeID="18">802414</offset>
-      <offset idRef="S19" nativeID="19">814694</offset>
-      <offset idRef="S20" nativeID="20">824650</offset>
-      <offset idRef="S21" nativeID="21">834684</offset>
-      <offset idRef="S22" nativeID="22">846742</offset>
-      <offset idRef="S23" nativeID="23">941994</offset>
-      <offset idRef="S24" nativeID="24">1052528</offset>
-      <offset idRef="S25" nativeID="25">1061626</offset>
-      <offset idRef="S26" nativeID="26">1074096</offset>
-      <offset idRef="S27" nativeID="27">1085173</offset>
-      <offset idRef="S28" nativeID="28">1095303</offset>
-      <offset idRef="S29" nativeID="29">1107119</offset>
-      <offset idRef="S30" nativeID="30">1218241</offset>
-      <offset idRef="S31" nativeID="31">1343193</offset>
-      <offset idRef="S32" nativeID="32">1355690</offset>
-      <offset idRef="S33" nativeID="33">1365483</offset>
-      <offset idRef="S34" nativeID="34">1375773</offset>
-      <offset idRef="S35" nativeID="35">1384956</offset>
-      <offset idRef="S36" nativeID="36">1476016</offset>
-      <offset idRef="S37" nativeID="37">1589115</offset>
-      <offset idRef="S38" nativeID="38">1598134</offset>
-      <offset idRef="S39" nativeID="39">1611864</offset>
-      <offset idRef="S40" nativeID="40">1621679</offset>
-      <offset idRef="S41" nativeID="41">1633591</offset>
-      <offset idRef="S42" nativeID="42">1644367</offset>
-      <offset idRef="S43" nativeID="43">1829961</offset>
-      <offset idRef="S44" nativeID="44">1960692</offset>
-      <offset idRef="S45" nativeID="45">1970089</offset>
-      <offset idRef="S46" nativeID="46">1983260</offset>
-      <offset idRef="S47" nativeID="47">1993614</offset>
-      <offset idRef="S48" nativeID="48">2003503</offset>
+      <offset idRef="S1" nativeID="1">4032</offset>
+      <offset idRef="S2" nativeID="2">115998</offset>
+      <offset idRef="S3" nativeID="3">244637</offset>
+      <offset idRef="S4" nativeID="4">252826</offset>
+      <offset idRef="S5" nativeID="5">265961</offset>
+      <offset idRef="S6" nativeID="6">277490</offset>
+      <offset idRef="S7" nativeID="7">287262</offset>
+      <offset idRef="S8" nativeID="8">298111</offset>
+      <offset idRef="S9" nativeID="9">381265</offset>
+      <offset idRef="S10" nativeID="10">517622</offset>
+      <offset idRef="S11" nativeID="11">526458</offset>
+      <offset idRef="S12" nativeID="12">538969</offset>
+      <offset idRef="S13" nativeID="13">548609</offset>
+      <offset idRef="S14" nativeID="14">559709</offset>
+      <offset idRef="S15" nativeID="15">569678</offset>
+      <offset idRef="S16" nativeID="16">664114</offset>
+      <offset idRef="S17" nativeID="17">793310</offset>
+      <offset idRef="S18" nativeID="18">802399</offset>
+      <offset idRef="S19" nativeID="19">814679</offset>
+      <offset idRef="S20" nativeID="20">824635</offset>
+      <offset idRef="S21" nativeID="21">834669</offset>
+      <offset idRef="S22" nativeID="22">846727</offset>
+      <offset idRef="S23" nativeID="23">941979</offset>
+      <offset idRef="S24" nativeID="24">1052513</offset>
+      <offset idRef="S25" nativeID="25">1061611</offset>
+      <offset idRef="S26" nativeID="26">1074081</offset>
+      <offset idRef="S27" nativeID="27">1085158</offset>
+      <offset idRef="S28" nativeID="28">1095288</offset>
+      <offset idRef="S29" nativeID="29">1107104</offset>
+      <offset idRef="S30" nativeID="30">1218226</offset>
+      <offset idRef="S31" nativeID="31">1343178</offset>
+      <offset idRef="S32" nativeID="32">1355675</offset>
+      <offset idRef="S33" nativeID="33">1365468</offset>
+      <offset idRef="S34" nativeID="34">1375758</offset>
+      <offset idRef="S35" nativeID="35">1384941</offset>
+      <offset idRef="S36" nativeID="36">1476001</offset>
+      <offset idRef="S37" nativeID="37">1589100</offset>
+      <offset idRef="S38" nativeID="38">1598119</offset>
+      <offset idRef="S39" nativeID="39">1611849</offset>
+      <offset idRef="S40" nativeID="40">1621664</offset>
+      <offset idRef="S41" nativeID="41">1633576</offset>
+      <offset idRef="S42" nativeID="42">1644352</offset>
+      <offset idRef="S43" nativeID="43">1829946</offset>
+      <offset idRef="S44" nativeID="44">1960677</offset>
+      <offset idRef="S45" nativeID="45">1970074</offset>
+      <offset idRef="S46" nativeID="46">1983245</offset>
+      <offset idRef="S47" nativeID="47">1993599</offset>
+      <offset idRef="S48" nativeID="48">2003488</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="TIC" nativeID="TIC">2013198</offset>
+      <offset idRef="TIC" nativeID="TIC">2013183</offset>
     </index>
   </indexList>
-  <indexListOffset>2015224</indexListOffset>
-  <fileChecksum>9ee98c3394876b01ea8a49161bd0baeaedfc179b</fileChecksum>
+  <indexListOffset>2015209</indexListOffset>
+  <fileChecksum>e26e265dcde682b56c1f0b39f065cd62df8be456</fileChecksum>
 </indexedmzML>

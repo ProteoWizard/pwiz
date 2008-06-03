@@ -21,6 +21,7 @@
     <scan num="19"
           scanEvent="3"
           scanType="FULL"
+          centroided="1"
           msLevel="1"
           peaksCount="15"
           polarity="+"
@@ -38,6 +39,7 @@
     <scan num="20"
           scanEvent="4"
           scanType="FULL"
+          centroided="1"
           msLevel="2"
           peaksCount="10"
           polarity="+"
@@ -72,9 +74,9 @@
   </msRun>
   <index name="scan">
     <offset id="19">1247</offset>
-    <offset id="20">2049</offset>
-    <offset id="21">2887</offset>
+    <offset id="20">2074</offset>
+    <offset id="21">2937</offset>
   </index>
-  <indexOffset>3285</indexOffset>
-  <sha1>1c88bb5cbd6b98cc24a0c275bda00b7477be3940</sha1>
+  <indexOffset>3335</indexOffset>
+  <sha1>cf8ad06f6cc685e8408ac3f0969cb2848ed3dfeb</sha1>
 </mzXML>
