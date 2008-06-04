@@ -84,12 +84,12 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 #define DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
     DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
 
-#define NATIVE_SHARED_PTR_TO_CLI(CLIType, SharedPtr) gcnew CLIType(&SharedPtr)
-#define NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER(CLIType, NativeRef) gcnew CLIType(&NativeRef)
+#define NATIVE_SHARED_PTR_TO_CLI(CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(&(SharedPtr)) : nullptr)
+#define NATIVE_REFERENCE_TO_CLI(CLIType, NativeRef) gcnew CLIType(&(NativeRef))
 #define NATIVE_VALUE_TO_CLI(CLIType, NativeValue) ((CLIType) NativeValue)
 
-#define PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) NativeType(*CLIObject->base_)
-#define PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(*CLIObject->base_)
+#define CLI_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
+#define CLI_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
 #define CLI_VALUE_TO_NATIVE_VALUE(NativeType, CLIObject) ((NativeType) CLIObject)
 
 
@@ -298,9 +298,60 @@ public ref class ParamGroup : public ParamContainer
     bool empty() new {return (*base_)->empty();}
 };
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::msdata::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::msdata::CVParam, CVParam, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserParam, UserParam, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+
+// Preprocessed version for debugging
+/*public ref class ParamGroupList : public System::Collections::Generic::IList<ParamGroup^> \
+{ \
+    internal: ParamGroupList(std::vector<pwiz::msdata::ParamGroupPtr>* base) : base_(base) {} \
+              virtual ~ParamGroupList() {if (base_) delete base_;} \
+              std::vector<pwiz::msdata::ParamGroupPtr>* base_; \
+    \
+    public: ParamGroupList() : base_(new std::vector<pwiz::msdata::ParamGroupPtr>()) {} \
+    \
+    public: \
+    property int Count { virtual int get() {return (int) base_->size();} } \
+    property bool IsReadOnly { virtual bool get() {return false;} } \
+    \
+    property ParamGroup^ Item[int] \
+    { \
+        virtual ParamGroup^ get(int index) {return NATIVE_SHARED_PTR_TO_CLI(ParamGroup, base_->at((size_t) index));} \
+        virtual void set(int index, ParamGroup^ value) {} \
+    } \
+    \
+    virtual void Add(ParamGroup^ item) {base_->push_back(CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item));} \
+    virtual void Clear() {base_->clear();} \
+    virtual bool Contains(ParamGroup^ item) {return std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item)) != base_->end();} \
+    virtual void CopyTo(array<ParamGroup^>^ arrayTarget, int arrayIndex) {} \
+    virtual bool Remove(ParamGroup^ item) {std::vector<pwiz::msdata::ParamGroupPtr>::iterator itr = std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
+    virtual int IndexOf(ParamGroup^ item) {return (int) (std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item))-base_->begin());} \
+    virtual void Insert(int index, ParamGroup^ item) {base_->insert(base_->begin() + index, CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item));} \
+    virtual void RemoveAt(int index) {base_->erase(base_->begin() + index);} \
+    \
+    ref class Enumerator : System::Collections::Generic::IEnumerator<ParamGroup^> \
+    { \
+        public: Enumerator(std::vector<pwiz::msdata::ParamGroupPtr>* base) : base_(base) {} \
+        internal: std::vector<pwiz::msdata::ParamGroupPtr>* base_; \
+        internal: std::vector<pwiz::msdata::ParamGroupPtr>::iterator* itr_; \
+        \
+        public: \
+        property ParamGroup^ Current { virtual ParamGroup^ get() {return NATIVE_SHARED_PTR_TO_CLI(ParamGroup, **itr_);} } \
+        property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NATIVE_SHARED_PTR_TO_CLI(ParamGroup, **itr_);} } \
+        virtual bool MoveNext() \
+        { \
+            if (*itr_ == base_->end()) return false; \
+            else ++*itr_; return true; \
+        } \
+        virtual void Reset() {*itr_ = base_->begin();} \
+        ~Enumerator() {} \
+    }; \
+    virtual System::Collections::Generic::IEnumerator<ParamGroup^>^ GetEnumerator() {return gcnew Enumerator(base_);} \
+    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
+};*/
+
+
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::msdata::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::msdata::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class FileContent : public ParamContainer
@@ -350,8 +401,8 @@ public ref class Contact : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SourceFileList, pwiz::msdata::SourceFilePtr, SourceFile, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact, Contact, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SourceFileList, pwiz::msdata::SourceFilePtr, SourceFile, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact, Contact, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class FileDescription
@@ -444,7 +495,7 @@ public ref class Component : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ComponentBaseList, pwiz::msdata::Component, Component, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ComponentBaseList, pwiz::msdata::Component, Component, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class ComponentList : public ComponentBaseList
@@ -510,7 +561,7 @@ public ref class InstrumentConfiguration : public ParamContainer
 
     property Software^ software
     {
-        Software^ get() {return gcnew Software(&(*base_)->softwarePtr);}
+        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(Software, (*base_)->softwarePtr);}
     }
 
 
@@ -539,7 +590,7 @@ public ref class ProcessingMethod : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProcessingMethodList, pwiz::msdata::ProcessingMethod, ProcessingMethod, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProcessingMethodList, pwiz::msdata::ProcessingMethod, ProcessingMethod, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class DataProcessing
@@ -555,7 +606,7 @@ public ref class DataProcessing
 
     property Software^ software
     {
-        Software^ get() {return gcnew Software(&(*base_)->softwarePtr);}
+        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(Software, (*base_)->softwarePtr);}
     }
 
     property ProcessingMethodList^ processingMethods
@@ -578,7 +629,7 @@ public ref class Target : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class AcquisitionSettings
@@ -594,7 +645,7 @@ public ref class AcquisitionSettings
 
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return gcnew InstrumentConfiguration(&(*base_)->instrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = *value->base_;}
     }
 
@@ -629,7 +680,7 @@ public ref class Acquisition : public ParamContainer
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return gcnew SourceFile(&base_->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, base_->sourceFilePtr);}
         void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
     }
 
@@ -658,7 +709,7 @@ public ref class Acquisition : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Acquisitions, pwiz::msdata::Acquisition, Acquisition, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Acquisitions, pwiz::msdata::Acquisition, Acquisition, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class AcquisitionList : public ParamContainer
@@ -699,7 +750,7 @@ public ref class Activation : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SelectedIonList, pwiz::msdata::SelectedIon, SelectedIon, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SelectedIonList, pwiz::msdata::SelectedIon, SelectedIon, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class Precursor : public ParamContainer
@@ -709,7 +760,7 @@ public ref class Precursor : public ParamContainer
     public:
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return gcnew SourceFile(&base_->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, base_->sourceFilePtr);}
         void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
     }
 
@@ -765,7 +816,7 @@ public ref class ScanWindow : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class Scan : public ParamContainer
@@ -775,7 +826,7 @@ public ref class Scan : public ParamContainer
     public:
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return gcnew InstrumentConfiguration(&base_->instrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, base_->instrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
     }
 
@@ -791,7 +842,7 @@ public ref class Scan : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class SpectrumDescription : public ParamContainer
@@ -832,7 +883,7 @@ public ref class BinaryDataArray : public ParamContainer
     public:
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return gcnew DataProcessing(&(*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
         void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
@@ -918,6 +969,12 @@ public ref class SpectrumIdentity
         void set(System::String^ value) {base_->nativeID = ToStdString(value);}
     }
 
+    property System::String^ spotID
+    {
+        System::String^ get() {return gcnew System::String(base_->spotID.c_str());}
+        void set(System::String^ value) {base_->spotID = ToStdString(value);}
+    }
+
 	property System::UInt64 sourceFilePosition
     {
         System::UInt64 get() {return (System::UInt64) base_->sourceFilePosition;}
@@ -929,16 +986,43 @@ public ref class SpectrumIdentity
 };
 
 
-public ref class ChromatogramIdentity : public SpectrumIdentity
+public ref class ChromatogramIdentity
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(ChromatogramIdentity, SpectrumIdentity);
-    public: ChromatogramIdentity();
+    DEFINE_INTERNAL_BASE_CODE(ChromatogramIdentity);
+
+    public:
+    property int index
+    {
+        int get() {return (int) base_->index;}
+        void set(int value) {base_->index = (size_t) value;}
+    }
+
+    property System::String^ id
+    {
+        System::String^ get() {return gcnew System::String(base_->id.c_str());}
+        void set(System::String^ value) {base_->id = ToStdString(value);}
+    }
+
+    property System::String^ nativeID
+    {
+        System::String^ get() {return gcnew System::String(base_->nativeID.c_str());}
+        void set(System::String^ value) {base_->nativeID = ToStdString(value);}
+    }
+
+	property System::UInt64 sourceFilePosition
+    {
+        System::UInt64 get() {return (System::UInt64) base_->sourceFilePosition;}
+        void set(System::UInt64 value) {base_->sourceFilePosition = (size_t) value;}
+    }
+
+
+    ChromatogramIdentity() : base_(new pwiz::msdata::ChromatogramIdentity()) {}
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(BinaryDataArrayList, pwiz::msdata::BinaryDataArrayPtr, BinaryDataArray, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MZIntensityPairList, pwiz::msdata::MZIntensityPair, MZIntensityPair, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata::TimeIntensityPair, TimeIntensityPair, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(BinaryDataArrayList, pwiz::msdata::BinaryDataArrayPtr, BinaryDataArray, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MZIntensityPairList, pwiz::msdata::MZIntensityPair, MZIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata::TimeIntensityPair, TimeIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class Spectrum : public ParamContainer
@@ -982,13 +1066,13 @@ public ref class Spectrum : public ParamContainer
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return gcnew DataProcessing(&(*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
         void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return gcnew SourceFile(&(*base_)->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, (*base_)->sourceFilePtr);}
         void set(SourceFile^ value) {(*base_)->sourceFilePtr = *value->base_;}
     }
 
@@ -1057,7 +1141,7 @@ public ref class Chromatogram : public ParamContainer
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return gcnew DataProcessing(&(*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
         //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
@@ -1131,7 +1215,7 @@ public ref class SpectrumList
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Spectra, pwiz::msdata::SpectrumPtr, Spectrum, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Spectra, pwiz::msdata::SpectrumPtr, Spectrum, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// Simple writeable in-memory implementation of SpectrumList.
@@ -1189,7 +1273,7 @@ public ref class ChromatogramList
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Chromatograms, pwiz::msdata::ChromatogramPtr, Chromatogram, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Chromatograms, pwiz::msdata::ChromatogramPtr, Chromatogram, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// Simple writeable in-memory implementation of ChromatogramList.
@@ -1231,13 +1315,13 @@ public ref class Run : public ParamContainer
 
     property InstrumentConfiguration^ defaultInstrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return gcnew InstrumentConfiguration(&base_->defaultInstrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {base_->defaultInstrumentConfigurationPtr = *value->base_;}
     }
 
     property Sample^ sample
     {
-        Sample^ get() {return gcnew Sample(&base_->samplePtr);}
+        Sample^ get() {return NATIVE_SHARED_PTR_TO_CLI(Sample, base_->samplePtr);}
         void set(Sample^ value) {base_->samplePtr = *value->base_;}
     }
 
@@ -1255,13 +1339,13 @@ public ref class Run : public ParamContainer
 
     property SpectrumList^ spectrumList
     {
-        SpectrumList^ get() {return gcnew SpectrumList(&base_->spectrumListPtr);}
+        SpectrumList^ get() {return NATIVE_SHARED_PTR_TO_CLI(SpectrumList, base_->spectrumListPtr);}
         void set(SpectrumList^ value) {base_->spectrumListPtr = *value->base_;}
     }
 
     property ChromatogramList^ chromatogramList
     {
-        ChromatogramList^ get() {return gcnew ChromatogramList(&base_->chromatogramListPtr);}
+        ChromatogramList^ get() {return NATIVE_SHARED_PTR_TO_CLI(ChromatogramList, base_->chromatogramListPtr);}
         void set(ChromatogramList^ value) {base_->chromatogramListPtr = *value->base_;}
     }
 
@@ -1278,12 +1362,12 @@ public ref class Run : public ParamContainer
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::msdata::CV, CV, NATIVE_REFERENCE_TO_PWIZ_CLI_WRAPPER, PWIZ_CLI_WRAPPER_TO_NATIVE_REFERENCE);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SampleList, pwiz::msdata::SamplePtr, Sample, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(InstrumentConfigurationList, pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SoftwareList, pwiz::msdata::SoftwarePtr, Software, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataProcessingList, pwiz::msdata::DataProcessingPtr, DataProcessing, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(AcquisitionSettingsList, pwiz::msdata::AcquisitionSettingsPtr, AcquisitionSettings, NATIVE_SHARED_PTR_TO_CLI, PWIZ_CLI_WRAPPER_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::msdata::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SampleList, pwiz::msdata::SamplePtr, Sample, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(InstrumentConfigurationList, pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SoftwareList, pwiz::msdata::SoftwarePtr, Software, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataProcessingList, pwiz::msdata::DataProcessingPtr, DataProcessing, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(AcquisitionSettingsList, pwiz::msdata::AcquisitionSettingsPtr, AcquisitionSettings, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 public ref class MSData

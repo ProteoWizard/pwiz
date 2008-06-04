@@ -93,6 +93,8 @@ pair<ChromatogramPtr, bool> addPointToNewOrExistingChromatogram(ChromatogramList
         vector<TimeIntensityPair> firstPair;
         firstPair.push_back(TimeIntensityPair(time, intensity));
         c->setTimeIntensityPairs(firstPair);
+        c->binaryDataArrayPtrs[0]->set(MS_minute);
+        //c->binaryDataArrayPtrs[1]->set(MS_minute); // TODO: determine intensity unit from detector?
 
         cl.index_.push_back(c);
         cl.idMap_[id] = index;
@@ -231,6 +233,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     result->index = index;
     result->id = scanNumberToSpectrumID(scanNumber);
     result->nativeID = lexical_cast<string>(scanNumber);
+
+    if (scanInfo->ionizationType() == IonizationType_MALDI)
+    {
+        result->spotID += scanInfo->trailerExtraValue("Sample Position:");
+        result->spotID += "," + scanInfo->trailerExtraValue("Fine Position:");
+        result->spotID += "," + scanInfo->trailerExtraValue("Absolute X Position:");
+        result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
+    }
 
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;

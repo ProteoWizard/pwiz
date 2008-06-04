@@ -48,6 +48,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
+    fc.set(MS_centroid_mass_spectrum);
 
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "sf1";
@@ -177,6 +178,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
+    spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
 
     Spectrum& s19 = *spectrumList->spectra[0];
     s19.id = "S19";
@@ -284,6 +286,49 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_ms_level, 1);
 
     s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data (no BinaryDataArrayList)"));
+
+    // spectrum with MALDI spot information
+    Spectrum& s22 = *spectrumList->spectra[3];
+    s22.id = "S22";
+    s22.index = 3;
+    s22.nativeID = "22";
+    s22.spotID = "A1,42x42,4242x4242";
+
+    s22.set(MS_MSn_spectrum);
+    s22.set(MS_ms_level, 1);
+    
+    s22.spectrumDescription.set(MS_centroid_mass_spectrum);
+    s22.spectrumDescription.set(MS_lowest_m_z_value, 142.39);
+    s22.spectrumDescription.set(MS_highest_m_z_value, 942.56);
+    s22.spectrumDescription.set(MS_base_peak_m_z, 422.42);
+    s22.spectrumDescription.set(MS_base_peak_intensity, 42);
+    s22.spectrumDescription.set(MS_total_ion_current, 4200);
+    s22.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s22.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
+    s22.spectrumDescription.scan.set(MS_scan_time, 42.0500, MS_second);
+    s22.spectrumDescription.scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
+    s22.spectrumDescription.scan.scanWindows.resize(1);
+    ScanWindow& window3 = s22.spectrumDescription.scan.scanWindows.front();
+    window3.set(MS_scan_m_z_lower_limit, 100.000000);
+    window3.set(MS_scan_m_z_upper_limit, 1000.000000);
+
+    BinaryDataArrayPtr s22_mz(new BinaryDataArray);
+    s22_mz->dataProcessingPtr = dpXcalibur;
+    s22_mz->set(MS_m_z_array);
+    s22_mz->data.resize(15);
+    for (int i=0; i<15; i++)
+        s22_mz->data[i] = i;
+
+    BinaryDataArrayPtr s22_intensity(new BinaryDataArray);
+    s22_intensity->dataProcessingPtr = dpXcalibur;
+    s22_intensity->set(MS_intensity_array);
+    s22_intensity->data.resize(15);
+    for (int i=0; i<15; i++)
+        s22_intensity->data[i] = 15-i;
+
+    s22.binaryDataArrayPtrs.push_back(s22_mz);
+    s22.binaryDataArrayPtrs.push_back(s22_intensity);
+    s22.defaultArrayLength = s22_mz->data.size();
 
     // chromatograms
 

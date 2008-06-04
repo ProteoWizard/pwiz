@@ -435,6 +435,7 @@ class Reader_MGF : public Reader
         result.fileDescription.sourceFilePtrs.push_back(sourceFile);
         result.run.id = "Run1";
         result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF(is, result));
+        result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
 };

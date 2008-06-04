@@ -47,7 +47,6 @@ using boost::iostreams::offset_to_position;
 
 namespace {
 
-
 class SpectrumList_mzMLImpl : public SpectrumList
 {
     public:
@@ -60,6 +59,7 @@ class SpectrumList_mzMLImpl : public SpectrumList
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual size_t findNative(const std::string& nativeID) const;
+    virtual IndexList findSpotID(const std::string& spotID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
 
 
@@ -69,6 +69,7 @@ class SpectrumList_mzMLImpl : public SpectrumList
     vector<SpectrumIdentity> index_;
     map<string,size_t> idToIndex_;
     map<string,size_t> nativeIDToIndex_;
+    map<string,IndexList> spotIDToIndexList_;
     mutable vector<SpectrumPtr> spectrumCache_;
 
     void readIndex();
@@ -112,6 +113,12 @@ size_t SpectrumList_mzMLImpl::findNative(const string& nativeID) const
     return it!=nativeIDToIndex_.end() ? it->second : size();
 }
 
+
+IndexList SpectrumList_mzMLImpl::findSpotID(const string& spotID) const
+{
+    map<string,IndexList>::const_iterator it=spotIDToIndexList_.find(spotID);
+    return it!=spotIDToIndexList_.end() ? it->second : IndexList();
+}
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
@@ -196,6 +203,7 @@ struct HandlerOffset : public SAXParser::Handler
 
         getAttribute(attributes, "idRef", spectrumIdentity->id);
         getAttribute(attributes, "nativeID", spectrumIdentity->nativeID);
+        getAttribute(attributes, "spotID", spectrumIdentity->spotID);
 
         return Status::Ok;
     }
@@ -331,15 +339,14 @@ class HandlerIndexCreator : public SAXParser::Handler
     {
         if (name == "spectrum")
         {
-            string index, id, nativeID;
-            getAttribute(attributes, "index", index);
-            getAttribute(attributes, "id", id);
-            getAttribute(attributes, "nativeID", nativeID);
-
+            string index;
             SpectrumIdentity si;
-            si.index = lexical_cast<size_t>(index);
-            si.id = id;
-            si.nativeID = nativeID;
+            getAttribute(attributes, "index", index);
+            getAttribute(attributes, "id", si.id);
+            getAttribute(attributes, "nativeID", si.nativeID);
+            getAttribute(attributes, "spotID", si.spotID);
+
+            si.index = lexical_cast<int>(index);
             si.sourceFilePosition = position;
 
             if (si.index != index_.size())
@@ -375,9 +382,14 @@ void SpectrumList_mzMLImpl::createIndex()
 
 void SpectrumList_mzMLImpl::createMaps()
 {
-    vector<SpectrumIdentity>::const_iterator it=index_.begin();
+    vector<SpectrumIdentity>::const_iterator it;
+    it=index_.begin();
     for (size_t i=0; i!=index_.size(); ++i, ++it)
+    {
         idToIndex_[it->id] = nativeIDToIndex_[it->nativeID] = i;
+        if (!it->spotID.empty())
+            spotIDToIndexList_[it->spotID].push_back(i);
+    }   
 }
 
 

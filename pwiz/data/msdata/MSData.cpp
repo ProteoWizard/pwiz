@@ -862,6 +862,16 @@ PWIZ_API_DECL size_t SpectrumList::findNative(const string& nativeID) const
 }
 
 
+PWIZ_API_DECL IndexList SpectrumList::findSpotID(const string& spotID) const
+{
+    IndexList result;
+    for (size_t index=0; index<size(); ++index)
+        if (spectrumIdentity(index).spotID == spotID) 
+            result.push_back(index);
+    return result;
+}
+
+
 //
 // SpectrumListSimple
 //

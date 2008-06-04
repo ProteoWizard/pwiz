@@ -30,6 +30,7 @@ project
 lib pwiz_analysis_spectrum_processing
     : # sources  
         SpectrumList_NativeCentroider.cpp
+        SpectrumList_SavitzkyGolaySmoother.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers

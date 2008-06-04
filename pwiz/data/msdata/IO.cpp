@@ -1844,6 +1844,8 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
     attributes.push_back(make_pair("index", lexical_cast<string>(spectrum.index)));
     attributes.push_back(make_pair("id", spectrum.id));
     attributes.push_back(make_pair("nativeID", spectrum.nativeID));
+    if (!spectrum.spotID.empty())
+        attributes.push_back(make_pair("spotID", spectrum.spotID));
     attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(spectrum.defaultArrayLength)));
     if (spectrum.dataProcessingPtr.get())
         attributes.push_back(make_pair("dataProcessingRef", spectrum.dataProcessingPtr->id));
@@ -1897,6 +1899,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             getAttribute(attributes, "id", spectrum->id);
             getAttribute(attributes, "index", spectrum->index);
             getAttribute(attributes, "nativeID", spectrum->nativeID);
+            getAttribute(attributes, "spotID", spectrum->spotID);
             getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
 
             // note: placeholder

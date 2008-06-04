@@ -126,7 +126,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge;
+            string precursorScanNum("0"), precursorIntensity, precursorCharge;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
@@ -332,6 +332,26 @@ class HandlerScan : public SAXParser::Handler
             handlerPeaks_.peaksCount = peaksCount_;
             return Status(Status::Delegate, &handlerPeaks_);
         }
+        else if (name == "scanOrigin")
+        {
+            AcquisitionList& al = spectrum_.spectrumDescription.acquisitionList;
+            Acquisition a;
+            string num, parentFileID;
+            getAttribute(attributes, "num", num);
+            getAttribute(attributes, "parentFileID", parentFileID);
+            a.number = lexical_cast<int>(num);
+            if (parentFileID.empty()) // local spectrumRef
+            {
+                a.spectrumID = num;
+            }
+            else
+            {
+                a.sourceFilePtr = SourceFilePtr(new SourceFile(parentFileID));
+                a.externalNativeID = num;
+            }
+            al.acquisitions.push_back(a);
+            return Status::Ok;
+        }
 
         throw runtime_error(("[SpectrumList_mzXML::HandlerScan] Unexpected element name: " + name).c_str());
     }
@@ -378,7 +398,13 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
         !result->spectrumDescription.precursors.empty() &&
         result->spectrumDescription.precursors.front().spectrumID.empty())
     {
-        result->spectrumDescription.precursors.front().spectrumID = getPrecursorID(index);
+        // MCC: I see your hack and I raise you a hack!
+        // * precursorScanNum is optional
+        // * the precursor scan is not necessarily in the mzXML
+        if (result->spectrumDescription.precursors.front().spectrumID == "0")
+            result->spectrumDescription.precursors.front().spectrumID.clear();
+        else
+            result->spectrumDescription.precursors.front().spectrumID = getPrecursorID(index);
     }
 
     // we can set instrumentPtr if it wasn't set and there is a single Instrument 

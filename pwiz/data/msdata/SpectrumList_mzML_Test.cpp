@@ -82,13 +82,20 @@ void test(bool indexed)
     // check easy functions
 
     unit_assert(sl.get());
-    unit_assert(sl->size() == 3);
+    unit_assert(sl->size() == 4);
     unit_assert(sl->find ("S19") == 0);
     unit_assert(sl->findNative("19") == 0);
     unit_assert(sl->find("S20") == 1);
     unit_assert(sl->findNative("20") == 1);
     unit_assert(sl->find("S21") == 2);
     unit_assert(sl->findNative("21") == 2);
+    unit_assert(sl->find("S22") == 3);
+    unit_assert(sl->findNative("22") == 3);
+
+    unit_assert(sl->findSpotID("A1").empty());
+    IndexList spotIndexList = sl->findSpotID("A1,42x42,4242x4242");
+    unit_assert(spotIndexList.size() == 1);
+    unit_assert(spotIndexList[0] == 3);
 
 
     // check scan 19
@@ -97,12 +104,14 @@ void test(bool indexed)
     unit_assert(s.get());
     unit_assert(s->id == "S19");
     unit_assert(s->nativeID == "19");
+    unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
     unit_assert(s->binaryDataArrayPtrs.empty());
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
     unit_assert(sl->spectrumIdentity(0).id == "S19");
     unit_assert(sl->spectrumIdentity(0).nativeID == "19");
+    unit_assert(sl->spectrumIdentity(0).spotID.empty());
  
     SpectrumPtr s_cache = sl->spectrum(0); // cache read
     unit_assert(s_cache.get() == s.get());
@@ -126,11 +135,13 @@ void test(bool indexed)
     unit_assert(s.get());
     unit_assert(s->id == "S20");
     unit_assert(s->nativeID == "20");
+    unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
 
     unit_assert(sl->spectrumIdentity(1).index == 1);
     unit_assert(sl->spectrumIdentity(1).id == "S20");
     unit_assert(sl->spectrumIdentity(1).nativeID == "20");
+    unit_assert(sl->spectrumIdentity(1).spotID.empty());
 
     pairs.clear();
     s->getMZIntensityPairs(pairs);
@@ -141,6 +152,19 @@ void test(bool indexed)
     unit_assert(s->spectrumDescription.scan.paramGroupPtrs.size() == 1);
     unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->id == "CommonMS2SpectrumParams");
     unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->cvParams.size() == 2);
+
+    // check scan 22 (MALDI)
+    s = sl->spectrum(3, true);
+    unit_assert(s.get());
+    unit_assert(s->id == "S22");
+    unit_assert(s->nativeID == "22");
+    unit_assert(s->spotID == "A1,42x42,4242x4242");
+    unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
+
+    unit_assert(sl->spectrumIdentity(3).index == 3);
+    unit_assert(sl->spectrumIdentity(3).id == "S22");
+    unit_assert(sl->spectrumIdentity(3).nativeID == "22");
+    unit_assert(sl->spectrumIdentity(3).spotID == "A1,42x42,4242x4242");
 }
 
 

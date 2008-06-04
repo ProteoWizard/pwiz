@@ -249,11 +249,6 @@ BinaryDataArray::BinaryDataArray()
 {base_ = new boost::shared_ptr<b::BinaryDataArray>(static_cast<b::BinaryDataArray*>(ParamContainer::base_));}
 
 
-ChromatogramIdentity::ChromatogramIdentity()
-: SpectrumIdentity(new b::ChromatogramIdentity())
-{base_ = static_cast<b::ChromatogramIdentity*>(SpectrumIdentity::base_);}
-
-
 Spectrum::Spectrum()
 : ParamContainer(new b::Spectrum())
 {base_ = new boost::shared_ptr<b::Spectrum>(static_cast<b::Spectrum*>(ParamContainer::base_));}

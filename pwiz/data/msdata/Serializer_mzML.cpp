@@ -87,8 +87,10 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
                                     + lexical_cast<string>(i));
 
             XMLWriter::Attributes attributes;
-            attributes.push_back(make_pair("idRef", spectrum->id));        
-            attributes.push_back(make_pair("nativeID", spectrum->nativeID));        
+            attributes.push_back(make_pair("idRef", spectrum->id));
+            attributes.push_back(make_pair("nativeID", spectrum->nativeID));
+            if (!spectrum->spotID.empty())
+                attributes.push_back(make_pair("spotID", spectrum->spotID));
 
             xmlWriter.startElement("offset", attributes);
             xmlWriter.characters(lexical_cast<string>(positions[i]));

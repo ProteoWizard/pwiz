@@ -439,14 +439,22 @@ struct PWIZ_API_DECL SpectrumIdentity
     size_t index;
     std::string id;
     std::string nativeID;
+    std::string spotID;
 	boost::iostreams::stream_offset sourceFilePosition;
 
     SpectrumIdentity() : index(0), sourceFilePosition(-1) {}
 };
 
 
-struct PWIZ_API_DECL ChromatogramIdentity : public SpectrumIdentity
-{};
+struct PWIZ_API_DECL ChromatogramIdentity
+{
+    size_t index;
+    std::string id;
+    std::string nativeID;
+	boost::iostreams::stream_offset sourceFilePosition;
+
+    ChromatogramIdentity() : index(0), sourceFilePosition(-1) {}
+};
 
 
 struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
@@ -509,6 +517,10 @@ struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamCon
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
 
+// note: derived container to support dynamic linking on Windows
+class IndexList : public std::vector<size_t> {};
+
+
 /// 
 /// Interface for accessing spectra, which may be stored in memory
 /// or backed by a data file (RAW, mzXML, mzML).  
@@ -549,6 +561,9 @@ class PWIZ_API_DECL SpectrumList
 
     /// find nativeID in the spectrum index (returns size() on failure)
     virtual size_t findNative(const std::string& nativeID) const;
+
+    /// find all spectrum indexes with spotID (returns empty vector on failure)
+    virtual IndexList findSpotID(const std::string& spotID) const;
 
     /// retrieve a spectrum by index
     /// - binary data arrays will be provided if (getBinaryData == true);
