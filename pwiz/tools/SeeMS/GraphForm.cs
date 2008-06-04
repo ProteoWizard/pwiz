@@ -6,10 +6,11 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 
 namespace seems
 {
-	public partial class GraphForm : Form
+	public partial class GraphForm : DockableForm
 	{
 		private bool isLoaded = false;
 
@@ -24,9 +25,6 @@ namespace seems
 
 		private GraphItem currentGraphItem = null;
 		public GraphItem CurrentGraphItem { get { return (GraphItem) currentGraphItem; } }
-
-		private int currentGraphItemIndex = -1;
-		public int CurrentGraphItemIndex { get { return currentGraphItemIndex; } }
 
 		private ChromatogramAnnotationSettings chromatogramAnnotationSettings = new ChromatogramAnnotationSettings();
 		public ChromatogramAnnotationSettings ChromatogramAnnotationSettings { get { return chromatogramAnnotationSettings; } }
@@ -49,7 +47,18 @@ namespace seems
 
 		public ZedGraph.ZedGraphControl ZedGraphControl { get { return zedGraphControl1; } }
 
-		private seems SeemsMdiParent { get { return (seems) MdiParent; } }
+        public List<GraphItem> GraphItems
+        {
+            get
+            {
+                List<GraphItem> items = new List<GraphItem>();
+                if( currentGraphItem != null )
+                    items.Add( currentGraphItem );
+                foreach( RefPair<DataSource, GraphItem> item in currentOverlays )
+                    items.Add( item.second );
+                return items;
+            }
+        }
 
 		public GraphForm()
 		{
@@ -78,18 +87,6 @@ namespace seems
 			zedGraphControl1.EditModifierKeys = Keys.None;
 		}
 
-		public static GraphForm CreateNewWindow( Form mdiParent, bool giveFocus )
-		{
-			// create a new window with this data source
-			GraphForm graphForm = new GraphForm();
-			graphForm.MdiParent = mdiParent;
-			graphForm.Show();
-			if( giveFocus )
-				graphForm.Activate();
-
-			return graphForm;
-		}
-
 		private void GraphForm_Load( object sender, EventArgs e )
 		{
 			this.StartPosition = FormStartPosition.Manual;
@@ -109,9 +106,9 @@ namespace seems
 			if( clearOverlays )
 				currentOverlays.Clear();
 
-			showData( currentGraphItemIndex, false );
+			showData( currentGraphItem, false );
 			DataSource primaryDataSource = currentDataSource;
-			foreach( RefPair<DataSource, int> overlayDataPair in currentOverlays )
+			foreach( RefPair<DataSource, GraphItem> overlayDataPair in currentOverlays )
 			{
 				currentDataSource = overlayDataPair.first;
 				showData( overlayDataPair.second, true );
@@ -119,21 +116,21 @@ namespace seems
 			currentDataSource = primaryDataSource;
 		}
 
-		public void ShowData( DataSource dataSource, int dataIndex )
+		public void ShowData( DataSource dataSource, GraphItem dataItem )
 		{
 			currentOverlays.Clear();
 			currentDataSource = dataSource;
-			currentGraphItemIndex = dataIndex;
-			showData( dataIndex, false );
+			currentGraphItem = dataItem;
+			showData( dataItem, false );
 		}
 
-		List<RefPair<DataSource, int>> currentOverlays = new List<RefPair<DataSource, int>>();
-		public void ShowDataOverlay( DataSource dataSource, int dataIndex )
+		List<RefPair<DataSource, GraphItem>> currentOverlays = new List<RefPair<DataSource, GraphItem>>();
+		public void ShowDataOverlay( DataSource dataSource, GraphItem dataItem )
 		{
-			currentOverlays.Add( new RefPair<DataSource, int>( dataSource, dataIndex ) );
+			currentOverlays.Add( new RefPair<DataSource, GraphItem>( dataSource, dataItem ) );
 			currentDataSource = dataSource;
-			currentGraphItemIndex = dataIndex;
-			showData( dataIndex, true );
+			currentGraphItem = dataItem;
+			showData( dataItem, true );
 		}
 
 		private Color[] overlayColors = new Color[]
@@ -143,9 +140,16 @@ namespace seems
 			Color.DarkRed, Color.DarkBlue, Color.DarkGreen, Color.DeepPink
 		};
 
-		private GraphItem showData( int dataIndex, bool isOverlay )
+		private void showData( GraphItem dataItem, bool isOverlay )
 		{
-			GraphItem newGraphItem = currentDataSource.CurrentGraphItems[dataIndex];
+			if( dataItem.IsChromatogram )
+				showChromatogram( dataItem as Chromatogram, isOverlay );
+			else
+				showSpectrum( dataItem as MassSpectrum, isOverlay );
+		}
+
+		private void showChromatogram( Chromatogram chromatogram, bool isOverlay )
+		{
 			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
 
 			if( isOverlay && pane.CurveList.Count > overlayColors.Length )
@@ -153,14 +157,14 @@ namespace seems
 
 			// set form title
 			if( !isOverlay )
-				Text = String.Format( "{0} - {1}", currentDataSource.Name, newGraphItem.Id );
+				Text = String.Format( "{0} - {1}", currentDataSource.Name, chromatogram.Id );
 			else
-				Text += "," + newGraphItem.Id;
+				Text += "," + chromatogram.Id;
 
 			if( !isOverlay )
 				pane.CurveList.Clear();
 
-			if( currentGraphItem != null && newGraphItem.IsMassSpectrum != currentGraphItem.IsMassSpectrum )
+			if( currentGraphItem != null && !currentGraphItem.IsChromatogram )
 			{
 				zedGraphControl1.RestoreScale( pane );
 				zedGraphControl1.ZoomOutAll( pane );
@@ -169,48 +173,18 @@ namespace seems
 
 			//pane.GraphObjList.Clear();
 
-			if( newGraphItem is MassSpectrum )
+			PointList pointList = chromatogram.PointList;
+			if( pointList.FullCount > 0 )
 			{
-				MassSpectrum scan = (MassSpectrum) newGraphItem;
+				int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
 
-				// the header does not have the data points
-				pane.YAxis.Title.Text = "Intensity";
-				pane.XAxis.Title.Text = "m/z";
-
-				PointList pointList = scan.PointList;
-				if( pointList.FullCount > 0 )
-				{
-					int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-					if( isScaleAuto )
-						pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
-					else
-						pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-
-					if( scan.Source.DoCentroiding )
-					{
-						ZedGraph.StickItem stick = pane.AddStick( scan.Id, pointList, Color.Gray );
-						stick.Symbol.IsVisible = false;
-						stick.Line.Width = 1;
-					} else
-						pane.AddCurve( newGraphItem.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
-				}
-			} else
-			{
-				Chromatogram chromatogram = (Chromatogram) newGraphItem;
-
-				PointList pointList = chromatogram.PointList;
-				if( pointList.FullCount > 0 )
-				{
-					int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-
-					if( isScaleAuto )
-						pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
-					else
-						pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-					pane.YAxis.Title.Text = "Total Intensity";
-					pane.XAxis.Title.Text = "Retention Time (in minutes)";
-					pane.AddCurve( newGraphItem.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
-				}
+				if( isScaleAuto )
+					pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
+				else
+					pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
+				pane.YAxis.Title.Text = "Total Intensity";
+				pane.XAxis.Title.Text = "Retention Time (in minutes)";
+				pane.AddCurve( chromatogram.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
 			}
 			pane.AxisChange();
 
@@ -226,12 +200,78 @@ namespace seems
 			} else
 			{
 				pane.Legend.IsVisible = false;
-				currentGraphItem = newGraphItem;
+				currentGraphItem = chromatogram;
 			}
 
 			SetDataLabelsVisible( true );
 			zedGraphControl1.Refresh();
-			return newGraphItem;
+		}
+
+		private void showSpectrum( MassSpectrum spectrum, bool isOverlay )
+		{
+			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
+
+			if( isOverlay && pane.CurveList.Count > overlayColors.Length )
+				MessageBox.Show( "SeeMS only supports up to " + overlayColors.Length + " simultaneous overlays.", "Too many overlays", MessageBoxButtons.OK, MessageBoxIcon.Stop );
+
+			// set form title
+			if( !isOverlay )
+				Text = String.Format( "{0} - {1}", currentDataSource.Name, spectrum.Id );
+			else
+				Text += "," + spectrum.Id;
+
+			if( !isOverlay )
+				pane.CurveList.Clear();
+
+			if( currentGraphItem != null && !currentGraphItem.IsMassSpectrum )
+			{
+				zedGraphControl1.RestoreScale( pane );
+				zedGraphControl1.ZoomOutAll( pane );
+			}
+			bool isScaleAuto = !pane.IsZoomed;
+
+			//pane.GraphObjList.Clear();
+
+			// the header does not have the data points
+			pane.YAxis.Title.Text = "Intensity";
+			pane.XAxis.Title.Text = "m/z";
+
+			PointList pointList = spectrum.PointList;
+			if( pointList.FullCount > 0 )
+			{
+				int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
+				if( isScaleAuto )
+					pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
+				else
+					pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
+
+				if( spectrum.Element.spectrumDescription.hasCVParam(pwiz.CLI.msdata.CVID.MS_centroid_mass_spectrum) )
+				{
+					ZedGraph.StickItem stick = pane.AddStick( spectrum.Id, pointList, Color.Gray );
+					stick.Symbol.IsVisible = false;
+					stick.Line.Width = 1;
+				} else
+					pane.AddCurve( spectrum.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
+			}
+			pane.AxisChange();
+
+			if( isOverlay )
+			{
+				pane.Legend.IsVisible = true;
+				pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
+				for( int i = 0; i < pane.CurveList.Count; ++i )
+				{
+					pane.CurveList[i].Color = overlayColors[i];
+					( pane.CurveList[i] as ZedGraph.LineItem ).Line.Width = 2;
+				}
+			} else
+			{
+				pane.Legend.IsVisible = false;
+				currentGraphItem = spectrum;
+			}
+
+			SetDataLabelsVisible( true );
+			zedGraphControl1.Refresh();
 		}
 
 		// create a map of point X coordinates to point indexes in descending order by the Y coordinate

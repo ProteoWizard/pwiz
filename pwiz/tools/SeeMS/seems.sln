@@ -2,26 +2,27 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C8DCD898-FBF1-444E-A510-155780292899} = {C8DCD898-FBF1-444E-A510-155780292899}
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeaderComboBox", "HeaderComboBox\HeaderComboBox.csproj", "{C8DCD898-FBF1-444E-A510-155780292899}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|Win32 = Debug|Win32
 		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|Win32.ActiveCfg = Debug|Any CPU
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C8DCD898-FBF1-444E-A510-155780292899}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8DCD898-FBF1-444E-A510-155780292899}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8DCD898-FBF1-444E-A510-155780292899}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8DCD898-FBF1-444E-A510-155780292899}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -25,13 +25,19 @@ public class Pair<T1, T2>
 }
 
 public class RefPair<T1, T2>
-	where T1 : new()
-	where T2 : new()
+	//where T1 : new()
+	//where T2 : new()
 {
-	public RefPair()
+	/*public RefPair()
 	{
 		this.first = new T1();
 		this.second = new T2();
+	}*/
+
+	public RefPair()
+	{
+		this.first = default(T1);
+		this.second = default(T2);
 	}
 
 	public RefPair( T1 first, T2 second )
@@ -99,10 +105,16 @@ namespace seems
 		ResolvingPower
 	}
 
-	public abstract class GraphItem
+	public abstract class GraphItem : IComparable<GraphItem>
 	{
 		protected string id;
 		public string Id { get { return id; } }
+
+        protected int index;
+        public int Index { get { return index; } }
+
+        protected DataSource source;
+        public DataSource Source { get { return source; } }
 
 		protected PointList pointList;
 		public PointList PointList { get { return pointList; } }
@@ -112,6 +124,13 @@ namespace seems
 
 		public bool IsChromatogram { get { return this is Chromatogram; } }
 		public bool IsMassSpectrum { get { return this is MassSpectrum; } }
+
+        public int CompareTo( GraphItem other )
+        {
+            return id.CompareTo( other.id );
+        }
+
+        public object Tag;
 	}
 
 	public class Chromatogram : GraphItem
@@ -121,16 +140,25 @@ namespace seems
 			this.source = source;
 			this.element = chromatogram;
 			id = element.nativeID;
-			this.pointList = new PointList( new ZedGraph.PointPairList() );
-		}
+            index = element.index;
 
-		private DataSource source;
-		public DataSource Source { get { return source; } }
+            if( chromatogram.binaryDataArrays.Count >= 2 )
+            {
+                Map<double, double> sortedFullPointList = new Map<double, double>();
+                IList<double> timeList = chromatogram.binaryDataArrays[0].data;
+                IList<double> intensityList = chromatogram.binaryDataArrays[1].data;
+                for( int i = 0; i < (int) chromatogram.defaultArrayLength; ++i )
+                    sortedFullPointList[timeList[i]] = intensityList[i];
+                pointList = new PointList( new ZedGraph.PointPairList(
+                    new List<double>( sortedFullPointList.Keys ).ToArray(),
+                    new List<double>( sortedFullPointList.Values ).ToArray() ) );
+            }
+		}
 
 		private pwiz.CLI.msdata.Chromatogram element;
 		public pwiz.CLI.msdata.Chromatogram Element { get { return element; } }
 
-		public new PointList PointList
+		/*public new PointList PointList
 		{
 			get
 			{
@@ -150,36 +178,37 @@ namespace seems
 					new List<double>( sortedFullPointList.Values ).ToArray() ) );
 				return pointList;
 			}
-		}
-
-		public string ComboBoxView
-		{
-			get
-			{
-				return String.Format( "{0,-20}{1,-10}", id, totalIntegratedArea );
-			}
-		}
+		}*/
 	}
 
 	public class MassSpectrum : GraphItem
 	{
-		public MassSpectrum( DataSource source, pwiz.CLI.msdata.Spectrum spectrum )
-		{
-			this.source = source;
-			this.element = spectrum;
-			id = element.nativeID;
-			this.pointList = new PointList( new ZedGraph.PointPairList() );
+        public MassSpectrum( DataSource source, pwiz.CLI.msdata.Spectrum spectrum )
+        {
+            this.source = source;
+            this.element = spectrum;
+            id = element.nativeID;
+            index = element.index;
 
-			retentionTimeUnit = RetentionTimeUnits.Minutes;
-		}
+            if( spectrum.binaryDataArrays.Count >= 2 )
+            {
+                Map<double, double> sortedFullPointList = new Map<double, double>();
+                IList<double> mzList = spectrum.binaryDataArrays[0].data;
+                IList<double> intensityList = spectrum.binaryDataArrays[1].data;
+                for( int i = 0; i < (int) spectrum.defaultArrayLength; ++i )
+                    sortedFullPointList[mzList[i]] = intensityList[i];
+                pointList = new PointList( new ZedGraph.PointPairList(
+                    new List<double>( sortedFullPointList.Keys ).ToArray(),
+                    new List<double>( sortedFullPointList.Values ).ToArray() ) );
+            }
 
-		private DataSource source;
-		public DataSource Source { get { return source; } }
+            retentionTimeUnit = RetentionTimeUnits.Minutes;
+        }
 
 		private pwiz.CLI.msdata.Spectrum element;
 		public pwiz.CLI.msdata.Spectrum Element { get { return element; } }
 
-		public new PointList PointList
+		/*public PointList PointList
 		{
 			get
 			{
@@ -202,7 +231,7 @@ namespace seems
 					new List<double>( sortedFullPointList.Values ).ToArray() ) );
 				return pointList;
 			}
-		}
+		}*/
 
 		private RetentionTimeUnits retentionTimeUnit;
 		public RetentionTimeUnits RetentionTimeUnit
@@ -226,22 +255,6 @@ namespace seems
 					case RetentionTimeUnits.Hours:
 						return time / 3600.0;
 				}
-			}
-		}
-
-		public string ComboBoxView
-		{
-			get
-			{
-				string precursorMz = "n/a";
-				PrecursorList precursors = element.spectrumDescription.precursors;
-				if( precursors.Count > 0 && precursors[0].selectedIons.Count > 0 )
-					precursorMz = ( (double) precursors[0].selectedIons[0].cvParam( CVID.MS_m_z ).value ).ToString( "f3" );
-				return String.Format( "{0,-8}{1,-10}{2,-5}{3,-15}{4,-15}",
-					id, RetentionTime.ToString( "f3" ),
-					element.cvParam( CVID.MS_ms_level ).value,
-					( (double) element.spectrumDescription.cvParam( CVID.MS_total_ion_current ).value ).ToString( "e3" ),
-					precursorMz );
 			}
 		}
 	}

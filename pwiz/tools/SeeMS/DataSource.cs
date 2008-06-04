@@ -71,15 +71,46 @@ namespace seems
 	{
 		private MSDataFile msDataFile;
 		private string sourceFilepath;
-		private List<GraphItem> sourceGraphItems = new List<GraphItem>();
-		private bool doCentroiding;
+		private List<Chromatogram> chromatograms = new List<Chromatogram>();
+		private List<MassSpectrum> spectra = new List<MassSpectrum>();
 
 		public string Name { get { return Path.GetFileNameWithoutExtension( sourceFilepath ); } }
 		public MSDataFile MSDataFile { get { return msDataFile; } }
 		public string CurrentFilepath { get { return sourceFilepath; } }
-		//public SeemsScan CurrentChromatogram { get { return sourceChromatogram; } }
-		public List<GraphItem> CurrentGraphItems { get { return sourceGraphItems; } }
-		public bool DoCentroiding { get { return doCentroiding; } set { doCentroiding = value; } }
+
+        public List<Chromatogram> Chromatograms { get { return chromatograms; } }
+		public List<MassSpectrum> Spectra { get { return spectra; } }
+
+        public Chromatogram GetChromatogram( int index )
+        { return GetChromatogram( index, false ); }
+
+        public Chromatogram GetChromatogram( int index, bool getBinaryData )
+        { return new Chromatogram( this, msDataFile.run.chromatogramList.chromatogram( index, getBinaryData ) ); }
+
+        //public Chromatogram GetChromatogram( int index, bool getBinaryData, ChromatogramList chromatogramList );
+
+        public Chromatogram GetChromatogram( Chromatogram metaChromatogram, ChromatogramList chromatogramList )
+        {
+            Chromatogram chromatogram = new Chromatogram( this, chromatogramList.chromatogram( metaChromatogram.Index, true ) );
+            chromatogram.Tag = metaChromatogram.Tag;
+            return chromatogram;
+        }
+
+        public MassSpectrum GetMassSpectrum( int index )
+        { return GetMassSpectrum( index, false ); }
+
+        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData )
+        { return GetMassSpectrum( index, getBinaryData, msDataFile.run.spectrumList ); }
+
+        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData, SpectrumList spectrumList )
+        { return new MassSpectrum( this, spectrumList.spectrum( index, getBinaryData ) ); }
+
+        public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, SpectrumList spectrumList )
+        {
+            MassSpectrum spectrum = new MassSpectrum( this, spectrumList.spectrum( metaSpectrum.Index, true ) );
+            spectrum.Tag = metaSpectrum.Tag;
+            return spectrum;
+        }
 
 		public event ProgressReportEventHandler ProgressReport;
 		public event StatusReportEventHandler StatusReport;
@@ -114,14 +145,13 @@ namespace seems
 		public DataSource( string filepath )
 		{
 			msDataFile = new MSDataFile(filepath);
-
-			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
-			setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
-			Thread setInputFileThread = new Thread( setInputFileDelegate );
-			//setInputFileThread.IsBackground = true;
 			sourceFilepath = filepath;
 
-			setInputFileThread.Start( (object) filepath );
+			/*setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
+			setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
+			Thread setInputFileThread = new Thread( setInputFileDelegate );
+
+			setInputFileThread.Start( (object) filepath );*/
 		}
 
 		private ParameterizedThreadStart setInputFileDelegate;
@@ -149,7 +179,7 @@ namespace seems
 				if( ticIndex < cl.size() )
 				{
 					pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram(ticIndex, true);
-					sourceGraphItems.Add( new Chromatogram( this, tic ) );
+					chromatograms.Add( new Chromatogram( this, tic ) );
 				}
 
 				CVParam spectrumType = tempInterface.fileDescription.fileContent.cvParamChild( CVID.MS_spectrum_type );
@@ -172,7 +202,7 @@ namespace seems
 										( i + 1 ), cl.size() ) );
 						OnProgressReport( ( i + 1 ) * 100 / cl.size() );
 
-						sourceGraphItems.Add( new Chromatogram( this, c ) );
+						chromatograms.Add( new Chromatogram( this, c ) );
 					}
 
 				} else if( spectrumType.cvid == CVID.MS_MS1_spectrum ||
@@ -190,7 +220,7 @@ namespace seems
 							OnProgressReport( ( i + 1 ) * 100 / sl.size() );
 						}
 
-						sourceGraphItems.Add( new MassSpectrum( this, s ) );
+						spectra.Add( new MassSpectrum( this, s ) );
 					}
 				} else
 					throw new Exception( "Error loading metadata: unable to open files with spectrum type \"" + spectrumType.name + "\"" );
@@ -198,53 +228,6 @@ namespace seems
 				OnStatusReport( "Finished loading source metadata." );
 				OnProgressReport( 100 );
 
-				/*if( transitionMap.Count > 0 )
-				{
-					OnStatusReport( "Generating chromatograms for SRM/MRM data..." );
-					OnProgressReport( 0 );
-					Map<double, RefPair<ZedGraph.PointPairList, Map<double, ZedGraph.PointPairList>>> transitionChromatograms = new Map<double, RefPair<ZedGraph.PointPairList, Map<double, ZedGraph.PointPairList>>>();
-					foreach( ParentToFragmentMap.MapPair pfPair in transitionMap )
-					{
-						Map<double, List<double>> parentPeaks = new Map<double, List<double>>();
-						foreach( FragmentToChromatogramMap.MapPair fcPair in pfPair.Value )
-						{
-							ZedGraph.PointPairList fragmentChromatogram = transitionChromatograms[pfPair.Key].second[fcPair.Key] = new ZedGraph.PointPairList();
-							foreach( ChromatogramData.MapPair tiPair in fcPair.Value )
-							{
-								fragmentChromatogram.Add( tiPair.Key, tiPair.Value );
-								parentPeaks[tiPair.Key].Add(tiPair.Value);
-							}
-						}
-
-						ZedGraph.PointPairList parentChromatogram = transitionChromatograms[pfPair.Key].first = new ZedGraph.PointPairList();
-						ZedGraph.PointPairList productChromatogram = transitionChromatograms[pfPair.Key].second[pfPair.Key] = new ZedGraph.PointPairList();
-						foreach( Map<double, List<double>>.MapPair itr in parentPeaks )
-						{
-							double totalIntensity = 0, productIntensity = 1;
-							foreach( double intensity in itr.Value )
-							{
-								totalIntensity += intensity;
-								productIntensity *= intensity;
-							}
-							parentChromatogram.Add( itr.Key, totalIntensity );
-							productChromatogram.Add( itr.Key, productIntensity );
-						}
-
-						OnProgressReport( transitionChromatograms.Count * 100 / transitionMap.Count );
-					}
-
-					foreach( Map<double, RefPair<ZedGraph.PointPairList, Map<double, ZedGraph.PointPairList>>>.MapPair kvp1 in transitionChromatograms )
-					{
-						sourceGraphItems.Add( new Chromatogram( kvp1.Value.first, String.Format( "{0} (Sum)", Math.Round( kvp1.Key, 2 ) ) ) );
-						sourceGraphItems.Add( new Chromatogram( kvp1.Value.second[kvp1.Key], String.Format( "{0} (Product)", Math.Round( kvp1.Key, 2 ) ) ) );
-						foreach( Map<double, ZedGraph.PointPairList>.MapPair kvp2 in kvp1.Value.second )
-							if( kvp1.Key != kvp2.Key )
-								sourceGraphItems.Add( new Chromatogram( kvp2.Value, String.Format( "{0} -> {1}", Math.Round( kvp1.Key, 2 ), Math.Round( kvp2.Key, 2 ) ) ) );
-					}
-
-					OnStatusReport( "Finished loading source metadata." );
-					OnProgressReport( 100 );
-				}*/
 			} catch( Exception ex )
 			{
 				string message = "SeeMS encountered an error reading metadata from \"" + filepath + "\" (" + ex.Message + ")";

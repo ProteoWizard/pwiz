@@ -15,40 +15,29 @@ using pwiz.CLI.msdata;
 using JWC;
 using Microsoft.Win32;
 using Extensions;
+using DigitalRune.Windows.Docking;
 
 namespace seems
 {
-	using DataSourceMap = Map<string, DataSource>;
-
 	public partial class seems : Form
 	{
 		private bool isLoaded = false;
 		private OpenFileDialog browseToFileDialog;
-
-		private HeaderComboBox.HeaderComboBoxControl dataSourceComboBox;
-		private HeaderComboBox.HeaderComboBoxControl scanNumberComboBox;
-		private ToolStripControlHost dataSourceComboBoxToolStripHost;
-		private ToolStripControlHost scanNumberComboBoxToolStripHost;
-		private string scanNumberHeaderString = String.Format( "{0,-8}{1,-10}{2,-5}{3,-15:E}{4,-15}",
-			"Number", "Time (m)", "MSn", "TIC", "Parent M/Z" );
+		private Manager manager;
 
 		private MruStripMenu recentFilesMenu;
 		private string seemsRegistryLocation = "Software\\SeeMS";
 		private RegistryKey seemsRegistryKey;
 
-		private DataSourceMap dataSources;
-		private bool pendingActivation; // a graph form is being activated
-
-		public HeaderComboBox.HeaderComboBoxControl ScanNumberComboBox { get { return scanNumberComboBox; } }
-		public ToolStripControlHost ScanNumberComboBoxHost { get { return scanNumberComboBoxToolStripHost; } }
+		public DockPanel DockPanel { get { return dockPanel; } }
 		public ToolStrip ToolStrip1 { get { return toolStrip1; } }
-		public ToolStripLabel ToolStripScanLabel { get { return toolStripLabel2; } }
 		public StatusStrip StatusStrip1 { get { return statusStrip1; } }
 		public ToolStripStatusLabel StatusLabel { get { return toolStripStatusLabel1; } }
 		public ToolStripProgressBar StatusProgressBar { get { return toolStripProgressBar1; } }
-		public GraphForm CurrentGraphForm { get { return ( (GraphForm) ActiveMdiChild ); } }
+		public GraphForm CurrentGraphForm { get { return ( ActiveMdiChild is GraphForm ? (GraphForm) ActiveMdiChild : null ); } }
 		public ToolStripMenuItem CentroidMenuItem { get { return centroidToolStripMenuItem; } }
 		public ToolStripMenuItem DeisotopeMenuItem { get { return deisotopeToolStripMenuItem; } }
+        public ToolStripMenuItem SmoothMenuItem { get { return smoothToolStripMenuItem; } }
 		public ToolStripMenuItem UseVendorCentroidMenuItem { get { return vendorToolStripMenuItem; } }
 		public ToolStripDropDownButton PeakProcessingButton { get { return peakProcessingToolStripDropDownButton; } }
 		public ToolStripDropDownButton AnnotateButton { get { return annotateToolStripDropDownButton; } }
@@ -67,59 +56,12 @@ namespace seems
 
 			recentFilesMenu = new MruStripMenu( recentFilesFileMenuItem, new MruStripMenu.ClickedHandler( recentFilesFileMenuItem_Click ), seemsRegistryLocation + "\\Recent File List", true );
 
-			dataSources = new Map<string, DataSource>();
-			dataSourceComboBox = new HeaderComboBox.HeaderComboBoxControl();
-			dataSourceComboBox.AccessibleName = "dataSourceComboBox";
-			dataSourceComboBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-			dataSourceComboBox.AutoSize = false;
-			dataSourceComboBox.Enabled = false;
-			dataSourceComboBox.IntegralHeight = true;
-			dataSourceComboBox.ItemHeight = 13;
-			dataSourceComboBox.ListDisplayMember = "CurrentFilepath";
-			dataSourceComboBox.Name = "dataSourceComboBox";
-			dataSourceComboBox.Size = new Size( 150, 22 );
-			dataSourceComboBox.Margin = new Padding( 0, 0, 15, 0 );
-			dataSourceComboBox.TabIndex = 4;
-			dataSourceComboBox.TextDisplayMember = "Name";
-			dataSourceComboBox.SelectedIndexChanged += new EventHandler( dataSourceComboBox_SelectedIndexChanged );
-			dataSourceComboBox.Dock = DockStyle.Fill;
-			dataSourceComboBoxToolStripHost = new ToolStripControlHost( dataSourceComboBox );
-			dataSourceComboBoxToolStripHost.Alignment = ToolStripItemAlignment.Right;
-			dataSourceComboBoxToolStripHost.AutoSize = false;
-
-			toolStrip1.Items.Insert( toolStrip1.Items.IndexOf( toolStripLabel1 ), dataSourceComboBoxToolStripHost );
-
-			scanNumberComboBox = new HeaderComboBox.HeaderComboBoxControl();
-			scanNumberComboBox.AccessibleName = "scanNumberComboBox";
-			scanNumberComboBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-			scanNumberComboBox.AutoSize = false;
-			scanNumberComboBox.Enabled = false;
-			scanNumberComboBox.IntegralHeight = true;
-			scanNumberComboBox.ItemHeight = 13;
-			scanNumberComboBox.ListDisplayMember = "ComboBoxView";
-			scanNumberComboBox.Name = "scanNumberComboBox";
-			scanNumberComboBox.Size = new Size( 72, 22 );
-			scanNumberComboBox.TabIndex = 8;
-			scanNumberComboBox.TextDisplayMember = "Id";
-			scanNumberComboBox.ValueMember = "Id";
-			scanNumberComboBox.SelectedIndexChanged += new EventHandler( scanNumberComboBox_SelectedIndexChanged );
-			scanNumberComboBox.ListBox.FindForm().FormClosed += new FormClosedEventHandler( scanNumberComboBoxListBox_FormClosed );
-			scanNumberComboBox.ListHeaderText = scanNumberHeaderString;
-			scanNumberComboBox.ListBox.ContextMenuStrip = scanNumberComboBoxContextMenuStrip;
-			scanNumberComboBoxContextMenuStrip.Opened += new EventHandler( scanNumberComboBoxContextMenuStrip_Opened );
-			scanNumberComboBox.Dock = DockStyle.Fill;
-			scanNumberComboBoxToolStripHost = new ToolStripControlHost( scanNumberComboBox );
-			scanNumberComboBoxToolStripHost.Alignment = ToolStripItemAlignment.Right;
-			scanNumberComboBoxToolStripHost.AutoSize = false;
-
-			toolStrip1.Items.Insert( toolStrip1.Items.IndexOf( toolStripLabel2 ), scanNumberComboBoxToolStripHost );
-
-			setFileControls( true );
-			setScanControls( false );
+			dockPanel.DocumentStyle = DigitalRune.Windows.Docking.DocumentStyle.DockingMdi;
 
 			browseToFileDialog = new OpenFileDialog();
 			browseToFileDialog.Filter =
-				"Any spectra format (*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep)|*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep|" +
+				"Any spectra format (*.mzML;*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep)|*.mzML;*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep|" +
+				"mzML (*.mzML;*.xml)|*.mzML;*.xml|" +
 				"mzData (*.mzData;*.xml)|*.mzData;*.xml|" +
 				"mzXML (*.mzXML;*.xml)|*.mzXML;*.xml|" +
 				"RAW (*.RAW)|*.raw|" +
@@ -129,6 +71,8 @@ namespace seems
 				"DTA (*.dta)|*.dta";
 			browseToFileDialog.FilterIndex = 0;
 			browseToFileDialog.InitialDirectory = "C:\\";
+
+			manager = new Manager(this);
 
 			if( args.Length > 0 )
 			{
@@ -173,16 +117,6 @@ namespace seems
 			isLoaded = true;
 		}
 
-		private void seems_Resize( object sender, EventArgs e )
-		{
-			if( isLoaded && this.WindowState != FormWindowState.Minimized )
-			{
-				if( this.WindowState == FormWindowState.Normal )
-					Properties.Settings.Default.MainFormSize = this.Size;
-				Properties.Settings.Default.MainFormWindowState = this.WindowState;
-			}
-		}
-
 		private void seems_LocationChanged( object sender, EventArgs e )
 		{
 			if( isLoaded && this.WindowState == FormWindowState.Normal )
@@ -193,89 +127,37 @@ namespace seems
 		{
 			Properties.Settings.Default.Save();
 
-			foreach( Map<string, DataSource>.MapPair sourceItr in dataSources )
-				if( sourceItr.Value != null && sourceItr.Value.MSDataFile != null )
-					sourceItr.Value.MSDataFile.Dispose();
+			/*foreach( DataSourceMap.MapPair sourceItr in dataSources )
+				if( sourceItr.Value != null &&
+					sourceItr.Value.first != null &&
+					sourceItr.Value.first.MSDataFile != null )
+					sourceItr.Value.first.MSDataFile.Dispose();*/
 		}
 
 		public void setFileControls( bool enabled )
 		{
-			openFileToolStripButton.Enabled = enabled;
-			openFileMenuItem.Enabled = enabled;
-			closeAllWindowMenuItem.Enabled = enabled;
+			// this is no longer relevant i think
 		}
 
 		public void setScanControls( bool enabled )
 		{
-			peakProcessingToolStripDropDownButton.Enabled = enabled;
-			integratePeaksToolStripButton.Enabled = enabled;
-			annotateToolStripDropDownButton.Enabled = enabled;
-			dataSourceComboBox.Enabled = enabled;
-			if( CurrentGraphForm != null )
-			{
-				scanNumberComboBox.Enabled = enabled;
-				setPeakIntegrationMode( peakIntegrationMode.Checked ); 
-				if( enabled == true )
-				{
-					GraphItem selectedScan = (GraphItem) scanNumberComboBox.SelectedItem;
-
-					if( selectedScan != null && selectedScan.IsMassSpectrum )
-					{
-						peakProcessingToolStripDropDownButton.Enabled = true;
-						peptideFragmentationToolStripMenuItem.Enabled = true;
-						peptideMassMappingToolStripMenuItem.Enabled = true;
-
-						if( (selectedScan as MassSpectrum).Element.hasCVParam(CVID.MS_centroid_mass_spectrum) )
-						{
-							CentroidMenuItem.Enabled = false;
-							CentroidMenuItem.Checked = true;
-						} else
-							CentroidMenuItem.Enabled = true;
-					} else
-					{
-						peakProcessingToolStripDropDownButton.Enabled = false;
-						peptideFragmentationToolStripMenuItem.Enabled = false;
-						peptideMassMappingToolStripMenuItem.Enabled = false;
-					}
-				}
-			}
+			// if on MS1, enable mass fingerprint
+			// if on MS2+, enable fragmentation
+			// if on MS that is centroided in the file, disable peak processing
+			// if on SRM, disable annotation
 		}
 
 		private void openFile( string filepath )
 		{
-			try
-			{
-				DataSourceMap.InsertResult insertResult = dataSources.Insert( filepath, null );
-				if( insertResult.WasInserted )
-				{
-					// file was not already open; create a new data source
-					insertResult.Element.Value = new DataSource( filepath );
-					insertResult.Element.Value.StatusReport += new StatusReportEventHandler( openFile_StatusReport );
-					insertResult.Element.Value.ProgressReport += new ProgressReportEventHandler( openFile_ProgressReport );
-					insertResult.Element.Value.SetInputFileCompleted += new SetInputFileCompletedEventHandler( openFile_SetInputFileCompleted );
-					dataSourceComboBox.Items.Add( insertResult.Element.Value );
-				} else
-					GraphForm.CreateNewWindow( this, true ).ShowData( insertResult.Element.Value, 0 );
-
-
-				// update recent files list
-				recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
-				recentFilesMenu.SaveToRegistry();
-
-			} catch( Exception ex )
-			{
-				string message = ex.Message;
-				if( ex.InnerException != null )
-					message += "\n\nAdditional information: " + ex.InnerException.Message;
-				MessageBox.Show( message,
-								"Error opening source file",
-								MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-								0, false );
-			}
+			manager.OpenFile(filepath);
+			
+			// update recent files list
+			recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
+			recentFilesMenu.SaveToRegistry();
 		}
 
 		private delegate void SetStatusLabelCallback( string status );
-		private void SetStatusLabel( string status )
+		public void SetStatusLabel( string status )
 		{
 			if( toolStrip1.InvokeRequired )
 			{
@@ -294,7 +176,7 @@ namespace seems
 		}
 
 		private delegate void SetProgressPercentageCallback( int percentage );
-		private void SetProgressPercentage( int percentage )
+		public void SetProgressPercentage( int percentage )
 		{
 			if( toolStrip1.InvokeRequired )
 			{
@@ -321,24 +203,6 @@ namespace seems
 			}
 		}
 
-		public delegate void SetInputFileCompletedCallback( object sender, SetInputFileCompletedEventArgs e );
-		private void openFile_SetInputFileCompleted( object sender, SetInputFileCompletedEventArgs e )
-		{
-			if( InvokeRequired )
-			{
-				SetInputFileCompletedCallback d = new SetInputFileCompletedCallback( openFile_SetInputFileCompleted );
-				Invoke( d, new object[] { sender, e } );
-			} else
-			{
-				pendingActivation = true;
-				GraphForm.CreateNewWindow( this, true ).ShowData( e.DataSource, 0 );
-				dataSourceComboBox.SelectedItem = CurrentGraphForm.DataSource;
-				Application.DoEvents(); // repopulate scanNumberComboBox with the correct items
-				scanNumberComboBox.SelectedIndex = CurrentGraphForm.CurrentGraphItemIndex;
-				setScanControls( true );
-			}
-		}
-
 		private void openFile_StatusReport( object sender, StatusReportEventArgs e )
 		{
 			SetStatusLabel( e.Status );
@@ -357,12 +221,15 @@ namespace seems
 			}
 		}
 
-		private void centroidToolStripMenuItem_CheckedChanged( object sender, EventArgs e )
-		{
-			bool doCentroiding = CentroidMenuItem.Enabled && CentroidMenuItem.Checked;
-			CurrentGraphForm.DataSource.DoCentroiding = doCentroiding;
-			CurrentGraphForm.updateGraph();
-		}
+        private void centroidToolStripMenuItem_CheckedChanged( object sender, EventArgs e )
+        {
+            manager.UpdateGraph( CurrentGraphForm );
+        }
+
+        private void smoothToolStripMenuItem_CheckedChanged( object sender, EventArgs e )
+        {
+            manager.UpdateGraph( CurrentGraphForm );
+        }
 
 		private void peptideFragmentationToolStripMenuItem_Click( object sender, EventArgs e )
 		{
@@ -498,7 +365,7 @@ namespace seems
 		{
 			if( CurrentGraphForm != null )
 			{
-				if( CurrentGraphForm.DataSource != null )
+				/*if( CurrentGraphForm.DataSource != null )
 				{
 					dataSourceComboBox.SelectedItem = CurrentGraphForm.DataSource;
 					dataSourceComboBox.Refresh();
@@ -509,21 +376,20 @@ namespace seems
 					scanNumberComboBox.SelectedIndex = CurrentGraphForm.CurrentGraphItemIndex;
 					scanNumberComboBox.UpdateTextBox();
 					scanNumberComboBox.Refresh();
-				}
+				}*/
 
-				setScanControls( true );
 				if( CurrentGraphForm != currentGraphForm )
 				{
 					currentGraphForm = CurrentGraphForm;
-					CurrentGraphForm.LostFocus += new EventHandler( GraphForm_LostFocus );
+					/*CurrentGraphForm.LostFocus += new EventHandler( GraphForm_LostFocus );
 					CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
 					CurrentGraphForm.FormClosing += new FormClosingEventHandler( GraphForm_FormClosing );
 					CurrentGraphForm.Resize += new EventHandler( GraphForm_Resize );
-					CurrentGraphForm.LocationChanged += new EventHandler( GraphForm_LocationChanged );
-					pendingActivation = false;
+					CurrentGraphForm.LocationChanged += new EventHandler( GraphForm_LocationChanged );*/
+					//pendingActivation = false;
 				}
-			} else
-				setScanControls( false );
+			}// else
+			//	setScanControls( false );
 
 			/*if( ActiveMdiChild == null )
 			{
@@ -531,24 +397,23 @@ namespace seems
 			}*/
 		}
 
-		void GraphForm_GotFocus( object sender, EventArgs e )
+		/*void GraphForm_GotFocus( object sender, EventArgs e )
 		{
 			if( CurrentGraphForm != currentGraphForm )
 			{
 				currentGraphForm = CurrentGraphForm;
 				CurrentGraphForm.GotFocus -= new EventHandler( GraphForm_GotFocus );
 				CurrentGraphForm.LostFocus += new EventHandler( GraphForm_LostFocus );
-				CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
 				CurrentGraphForm.FormClosing += new FormClosingEventHandler( GraphForm_FormClosing );
 				CurrentGraphForm.Resize += new EventHandler( GraphForm_Resize );
 				CurrentGraphForm.LocationChanged += new EventHandler( GraphForm_LocationChanged );
-				pendingActivation = false;
+				//pendingActivation = false;
 			}
 		}
 
 		private void GraphForm_Resize( object sender, EventArgs e )
 		{
-			if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState != FormWindowState.Minimized )
+			/*if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState != FormWindowState.Minimized )
 			{
 				if( CurrentGraphForm.WindowState == FormWindowState.Normal )
 					Properties.Settings.Default.LastGraphFormSize = CurrentGraphForm.Size;
@@ -558,8 +423,8 @@ namespace seems
 
 		private void GraphForm_LocationChanged( object sender, EventArgs e )
 		{
-			if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState == FormWindowState.Normal )
-				Properties.Settings.Default.LastGraphFormLocation = CurrentGraphForm.Location;
+			//if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState == FormWindowState.Normal )
+			//	Properties.Settings.Default.LastGraphFormLocation = CurrentGraphForm.Location;
 		}
 
 		private void GraphForm_FormClosing( object sender, FormClosingEventArgs e )
@@ -573,29 +438,12 @@ namespace seems
 			currentGraphForm = null;
 			CurrentGraphForm.GotFocus += new EventHandler( GraphForm_GotFocus );
 			CurrentGraphForm.LostFocus -= new EventHandler( GraphForm_LostFocus );
-			CurrentGraphForm.ZedGraphControl.PreviewKeyDown -= new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
 			CurrentGraphForm.FormClosing -= new FormClosingEventHandler( GraphForm_FormClosing );
 			CurrentGraphForm.Resize -= new EventHandler( GraphForm_Resize );
 			CurrentGraphForm.LocationChanged -= new EventHandler( GraphForm_LocationChanged );
-		}
+		}*/
 
-		private void GraphForm_PreviewKeyDown( object sender, PreviewKeyDownEventArgs e )
-		{
-			if( CurrentGraphForm.DataSource == null )
-				return;
-
-			int key = (int) e.KeyCode;
-			if( key == (int) Keys.Left && scanNumberComboBox.SelectedIndex > 0 )
-				scanNumberComboBox.SelectedIndex = scanNumberComboBox.SelectedIndex - 1;
-			else if( key == (int) Keys.Right && scanNumberComboBox.SelectedIndex < scanNumberComboBox.Items.Count - 1 )
-				scanNumberComboBox.SelectedIndex = scanNumberComboBox.SelectedIndex + 1;
-			else
-				return;
-
-			//CurrentGraphForm.ZedGraphControl.PreviewKeyDown -= new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
-			//Application.DoEvents();
-			//CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
-		}
+		
 
 		private void cascadeWindowMenuItem_Click( object sender, EventArgs e )
 		{
@@ -651,7 +499,16 @@ namespace seems
 
 		private void toolStripPanel1_Layout( object sender, LayoutEventArgs e )
 		{
-			
+			DockPanel.Location = new Point(0, toolStripPanel1.Height);
+			DockPanel.Height = ClientSize.Height - toolStripPanel2.Height - toolStripPanel1.Height;
+			DockPanel.Width = ClientSize.Width;
+		}
+
+		private void toolStripPanel2_Layout( object sender, LayoutEventArgs e )
+		{
+			DockPanel.Location = new Point( 0, toolStripPanel1.Height );
+			DockPanel.Height = ClientSize.Height - toolStripPanel2.Height - toolStripPanel1.Height;
+			DockPanel.Width = ClientSize.Width;
 		}
 
 		private void seems_ResizeBegin( object sender, EventArgs e )
@@ -663,8 +520,22 @@ namespace seems
 			}
 		}
 
+		private void seems_Resize( object sender, EventArgs e )
+		{
+			DockPanel.Location = new Point( 0, toolStripPanel1.Height );
+			DockPanel.Height = ClientSize.Height - toolStripPanel2.Height - toolStripPanel1.Height;
+			DockPanel.Width = ClientSize.Width;
+		}
+
 		private void seems_ResizeEnd( object sender, EventArgs e )
 		{
+			if( isLoaded && this.WindowState != FormWindowState.Minimized )
+			{
+				if( this.WindowState == FormWindowState.Normal )
+					Properties.Settings.Default.MainFormSize = this.Size;
+				Properties.Settings.Default.MainFormWindowState = this.WindowState;
+			}
+
 			if( CurrentGraphForm != null && CurrentGraphForm.WindowState == FormWindowState.Maximized )
 			{
 				CurrentGraphForm.ResumeLayout();
@@ -673,82 +544,29 @@ namespace seems
 			}
 		}
 
-		private void dataSourceComboBox_SelectedIndexChanged( object sender, EventArgs e )
-		{
-			if( CurrentGraphForm != null && dataSourceComboBox.SelectedItem != null )
-			{
-				scanNumberComboBox.BeginUpdate();
-				scanNumberComboBox.Items.Clear();
-				foreach( GraphItem graphItem in (dataSourceComboBox.SelectedItem as DataSource).CurrentGraphItems )
-					scanNumberComboBox.Items.Add( graphItem );
-				scanNumberComboBox.EndUpdate();
-				scanNumberComboBox.Refresh();
-
-				if( scanNumberComboBox.Items.Count > 0 && scanNumberComboBox.SelectedItem != null )
-					setScanControls( true );
-				else
-					setScanControls( false );
-			}
-		}
-
-		private void scanNumberComboBox_SelectedIndexChanged( object sender, EventArgs e )
-		{
-			if( scanNumberComboBox.SelectedIndex < 0 )
-			{
-				CurrentGraphForm.ZedGraphControl.Visible = false;
-				return;
-			}
-
-			CurrentGraphForm.ZedGraphControl.Visible = true;
-			setScanControls( true );
-
-			bool doCentroid = CentroidMenuItem.Enabled && CentroidMenuItem.Checked;
-			//CurrentGraphForm.DataSource.MSDataFile.setCentroiding( doCentroid, doCentroid, UseVendorCentroidMenuItem.Checked );
-			CurrentGraphForm.ShowData( (DataSource) dataSourceComboBox.SelectedItem, scanNumberComboBox.SelectedIndex );
-			scanNumberComboBox.TextBox.Refresh();
-			CurrentGraphForm.ZedGraphControl.Focus();
-			//Application.DoEvents();
-		}
-
-		void scanNumberComboBoxListBox_FormClosed( object sender, FormClosedEventArgs e )
-		{
-			if( e.CloseReason == CloseReason.FormOwnerClosing &&
-				CurrentGraphForm.DataSource != (DataSource) dataSourceComboBox.SelectedItem )
-			{
-				CurrentGraphForm.ShowData( (DataSource) dataSourceComboBox.SelectedItem, scanNumberComboBox.SelectedIndex );
-				scanNumberComboBox.TextBox.Refresh();
-				CurrentGraphForm.ZedGraphControl.Focus();
-				//Application.DoEvents();
-			}
-		}
-
 		private int overlaySelectedIndex;
 		void scanNumberComboBoxContextMenuStrip_Opened( object sender, EventArgs e )
 		{
-			overlaySelectedIndex = scanNumberComboBox.ListBox.SelectedIndex;
+			//overlaySelectedIndex = scanNumberComboBox.ListBox.SelectedIndex;
 		}
 
 		private void openInActiveWindowToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			scanNumberComboBox.SelectedIndex = scanNumberComboBox.ListBox.SelectedIndex;
-			scanNumberComboBox.Button.PerformClick();
 		}
 
 		private void openInNewWindowToolStripMenuItem_Click( object sender, EventArgs e )
 		{
 			GraphForm oldForm = CurrentGraphForm;
-			int oldSelectedIndex = oldForm.CurrentGraphItemIndex;
-			GraphForm graphForm = GraphForm.CreateNewWindow( this, false );
-			graphForm.ShowData( (DataSource) dataSourceComboBox.SelectedItem, scanNumberComboBox.ListBox.SelectedIndex );
-			scanNumberComboBox.SelectedIndex = oldSelectedIndex;
+			//int oldSelectedIndex = oldForm.CurrentGraphItemIndex;
+			//GraphForm graphForm = CreateNewGraph( false );
+			//graphForm.ShowData( (DataSource) dataSourceComboBox.SelectedItem, scanNumberComboBox.ListBox.SelectedIndex );
+			//scanNumberComboBox.SelectedIndex = oldSelectedIndex;
 			oldForm.Activate();
-			scanNumberComboBox.Button.PerformClick();
 		}
 
 		private void overlayOnActiveWindowToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			CurrentGraphForm.ShowDataOverlay( (DataSource) dataSourceComboBox.SelectedItem, overlaySelectedIndex );
-			scanNumberComboBox.Button.PerformClick();
+			//CurrentGraphForm.ShowDataOverlay( (DataSource) dataSourceComboBox.SelectedItem, overlaySelectedIndex );
 		}
 
 		Point integratePeaksMouseDownLocation;
@@ -1047,10 +865,10 @@ namespace seems
 						//CurrentGraphForm.ZedGraphControl.GraphPane.Title.Text = totalIntegratedArea.ToString("f0") + " " + totalAreaPoints + " " + totalAreaCount;
 						//CurrentGraphForm.ZedGraphControl.GraphPane.Title.IsVisible = true;
 						CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = totalIntegratedArea;
-						int currentIndex = scanNumberComboBox.SelectedIndex;
-						object currentObject = scanNumberComboBox.SelectedItem;
-						scanNumberComboBox.Items.RemoveAt( currentIndex );
-						scanNumberComboBox.Items.Insert( currentIndex, currentObject );
+						//int currentIndex = scanNumberComboBox.SelectedIndex;
+						//object currentObject = scanNumberComboBox.SelectedItem;
+						//scanNumberComboBox.Items.RemoveAt( currentIndex );
+						//scanNumberComboBox.Items.Insert( currentIndex, currentObject );
 					}
 				}
 				CurrentGraphForm.ZedGraphControl.Refresh();
@@ -1146,10 +964,10 @@ namespace seems
 			}
 
 			CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
-			int currentIndex = scanNumberComboBox.SelectedIndex;
+			/*int currentIndex = scanNumberComboBox.SelectedIndex;
 			object currentObject = scanNumberComboBox.SelectedItem;
 			scanNumberComboBox.Items.RemoveAt( currentIndex );
-			scanNumberComboBox.Items.Insert( currentIndex, currentObject );
+			scanNumberComboBox.Items.Insert( currentIndex, currentObject );*/
 		}
 
 		private void clearAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
@@ -1165,7 +983,7 @@ namespace seems
 				CurrentGraphForm.ZedGraphControl.Refresh();
 			}
 
-			scanNumberComboBox.BeginUpdate();
+			/*scanNumberComboBox.BeginUpdate();
 			scanNumberComboBox.Items.Clear();
 			foreach( GraphItem graphItem in ( dataSourceComboBox.SelectedItem as DataSource ).CurrentGraphItems )
 			{
@@ -1173,7 +991,7 @@ namespace seems
 				scanNumberComboBox.Items.Add( graphItem );
 			}
 			scanNumberComboBox.EndUpdate();
-			scanNumberComboBox.Refresh();
+			scanNumberComboBox.Refresh();*/
 		}
 
 		private void exportAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
@@ -1187,8 +1005,8 @@ namespace seems
 			{
 				StreamWriter writer = new StreamWriter( exportDialog.FileName );
 				writer.WriteLine( "Id,Area" );
-				foreach( GraphItem graphItem in ( dataSourceComboBox.SelectedItem as DataSource ).CurrentGraphItems )
-					writer.WriteLine( "{0},{1}", graphItem.Id, graphItem.TotalIntegratedArea );
+				/*foreach( GraphItem graphItem in ( dataSourceComboBox.SelectedItem as DataSource ).CurrentGraphItems )
+					writer.WriteLine( "{0},{1}", graphItem.Id, graphItem.TotalIntegratedArea );*/
 				writer.Close();
 			}
 		}

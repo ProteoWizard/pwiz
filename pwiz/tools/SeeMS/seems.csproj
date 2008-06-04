@@ -72,6 +72,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChromatogramListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChromatogramListForm.Designer.cs">
+      <DependentUpon>ChromatogramListForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataSource.cs" />
     <Compile Include="Dialogs\AnnotationSettingsAddEditDialog.cs">
       <SubType>Form</SubType>
@@ -90,6 +96,13 @@
     </Compile>
     <Compile Include="Dialogs\ChromatogramAnnotationSettingsForm.Designer.cs">
       <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Manager.cs" />
+    <Compile Include="SpectrumListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SpectrumListForm.Designer.cs">
+      <DependentUpon>SpectrumListForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GraphForm.cs">
       <SubType>Form</SubType>
@@ -179,12 +192,10 @@
     <Compile Include="Misc\WebBrowserCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="HeaderComboBox\HeaderComboBox.csproj">
-      <Project>{C8DCD898-FBF1-444E-A510-155780292899}</Project>
-      <Name>HeaderComboBox</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <EmbeddedResource Include="ChromatogramListForm.resx">
+      <DependentUpon>ChromatogramListForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\AnnotationSettingsAddEditDialog.resx">
       <SubType>Designer</SubType>
       <DependentUpon>AnnotationSettingsAddEditDialog.cs</DependentUpon>
@@ -202,6 +213,10 @@
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Misc\SpectrumIcon.ico" />
+    <EmbeddedResource Include="SpectrumListForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SpectrumListForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Misc\PeakIntegralActive.bmp" />

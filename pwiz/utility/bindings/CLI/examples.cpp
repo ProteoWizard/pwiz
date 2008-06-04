@@ -24,6 +24,7 @@
 #include "examples.hpp"
 #include "../../../data/msdata/examples.hpp"
 #include "SpectrumList_NativeCentroider.hpp"
+#include "SpectrumList_SavitzkyGolaySmoother.hpp"
 
 
 namespace pwiz {
