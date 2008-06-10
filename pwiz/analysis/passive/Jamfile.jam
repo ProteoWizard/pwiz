@@ -25,19 +25,12 @@ project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing # warning: dereferencing type-punned pointer will break strict-aliasing rules
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-    : usage-requirements
-	    <library>../peptideid//pwiz_analysis_peptideid
-	    <library>../../utility/misc//pwiz_utility_misc
-	    <library>../../utility/math//pwiz_utility_math
-        <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>/ext/boost//program_options
-        <library>/ext/boost//filesystem
     ;
 
 
 lib pwiz_analysis_passive
-    :   MSDataAnalyzer.cpp
+    : # sources 
+        MSDataAnalyzer.cpp
         MSDataAnalyzerApplication.cpp
         SpectrumInfo.cpp
         MSDataCache.cpp 
@@ -49,13 +42,23 @@ lib pwiz_analysis_passive
         RegionTIC.cpp
         RegionSIC.cpp
         Pseudo2DGel.cpp
-        ../peptideid//pwiz_analysis_peptideid
-        ../../utility/misc//pwiz_utility_misc
-        ../../utility/math//pwiz_utility_math
-        ../../data/msdata//pwiz_data_msdata
-        ../../data/vendor_readers//pwiz_data_vendor_readers
-        /ext/boost//program_options
-        /ext/boost//filesystem
+    : # requirements
+        <library>../peptideid//pwiz_analysis_peptideid
+        <library>../../utility/misc//pwiz_utility_image
+        <library>../../utility/math//pwiz_utility_math
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../../data/vendor_readers//pwiz_data_vendor_readers
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
+    :  # default-build
+    :  # usage-requirements
+        <library>../peptideid//pwiz_analysis_peptideid
+        <library>../../utility/misc//pwiz_utility_image
+        <library>../../utility/math//pwiz_utility_math
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../../data/vendor_readers//pwiz_data_vendor_readers
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
     ;
 
 

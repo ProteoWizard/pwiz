@@ -26,29 +26,36 @@ project
         # hacks to allow building with <warnings>all with MSVC and boost
         <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-    : usage-requirements
-        <library>/ext/boost//filesystem
 ;
 
 
 lib pwiz_utility_misc
-    : Base64.cpp 
-      IntegerSet.cpp
-      Filesystem.cpp
-      SHA1Calculator.cpp
-      SHA1.cpp
-    : <warnings>all
-      <library>/ext/boost//filesystem
+    : # sources
+        Base64.cpp 
+        IntegerSet.cpp
+        Filesystem.cpp
+        SHA1Calculator.cpp
+        SHA1.cpp
+    : # requirements
+        <warnings>all
+        <library>/ext/boost//filesystem
+    : # default-build
+    : # usage-requirements
+        <library>/ext/boost//filesystem
     ;
 
 
 lib pwiz_utility_image
-    : Image.cpp
-    : <warnings>all
-      <library>../..//gd
-      <library>pwiz_utility_misc
-    : <library>../..//gd
-      <library>pwiz_utility_misc
+    : # sources
+        Image.cpp
+    : # requirements
+        <warnings>all
+        <library>../..//gd
+        <library>pwiz_utility_misc
+    : # default-build
+    : # usage-requirements
+        <library>../..//gd
+        <library>pwiz_utility_misc
     ;
 
 
