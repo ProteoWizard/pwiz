@@ -178,11 +178,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\DerivativeTest.hpp"
+				RelativePath=".\pwiz\analysis\frequency\DerivativeTest.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\DerivativeTest.hpp"
+				RelativePath=".\analysis\frequency\DerivativeTest.hpp"
 				>
 			</File>
 			<File
@@ -202,11 +202,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\math\erf.hpp"
+				RelativePath=".\pwiz\utility\math\erf.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\math\erf.hpp"
+				RelativePath=".\utility\math\erf.hpp"
 				>
 			</File>
 			<File
@@ -254,19 +254,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\FrequencyEstimator.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\analysis\frequency\FrequencyEstimator.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\FrequencyEstimatorPhysicalModel.hpp"
+				RelativePath=".\pwiz\analysis\frequency\FrequencyEstimator.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\analysis\frequency\FrequencyEstimatorPhysicalModel.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\frequency\FrequencyEstimatorPhysicalModel.hpp"
 				>
 			</File>
 			<File
@@ -286,11 +286,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\Image.hpp"
+				RelativePath=".\pwiz\utility\misc\Image.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\misc\Image.hpp"
+				RelativePath=".\utility\misc\Image.hpp"
 				>
 			</File>
 			<File
@@ -310,19 +310,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\Ion.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\utility\proteome\Ion.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\IPIFASTADatabase.hpp"
+				RelativePath=".\pwiz\utility\proteome\Ion.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\utility\proteome\IPIFASTADatabase.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\proteome\IPIFASTADatabase.hpp"
 				>
 			</File>
 			<File
@@ -334,11 +334,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\IsotopeEnvelopeEstimator.hpp"
+				RelativePath=".\utility\proteome\IsotopeEnvelopeEstimator.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\IsotopeEnvelopeEstimator.hpp"
+				RelativePath=".\pwiz\utility\proteome\IsotopeEnvelopeEstimator.hpp"
 				>
 			</File>
 			<File
@@ -358,15 +358,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\math\LinearLeastSquares.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\utility\math\LinearLeastSquares.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\math\LinearSolver.hpp"
+				RelativePath=".\pwiz\utility\math\LinearLeastSquares.hpp"
 				>
 			</File>
 			<File
@@ -374,11 +370,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzian.hpp"
+				RelativePath=".\utility\math\LinearSolver.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\frequency\MagnitudeLorentzian.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzian.hpp"
 				>
 			</File>
 			<File
@@ -402,11 +402,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\bindings\CLI\MSData.hpp"
+				RelativePath=".\pwiz\data\msdata\MSData.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\MSData.hpp"
+				RelativePath=".\utility\bindings\CLI\MSData.hpp"
 				>
 			</File>
 			<File
@@ -414,11 +414,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\MSDataAnalyzer.hpp"
+				RelativePath=".\analysis\passive\MSDataAnalyzer.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\MSDataAnalyzer.hpp"
+				RelativePath=".\pwiz\analysis\passive\MSDataAnalyzer.hpp"
 				>
 			</File>
 			<File
@@ -438,15 +438,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\data\msdata\MSDataFile.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utility\bindings\CLI\MSDataFile.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\data\msdata\MSDataFile.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\data\msdata\MSDataFile.hpp"
 				>
 			</File>
 			<File
@@ -474,11 +474,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\ParameterEstimator.hpp"
+				RelativePath=".\pwiz\analysis\frequency\ParameterEstimator.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\ParameterEstimator.hpp"
+				RelativePath=".\analysis\frequency\ParameterEstimator.hpp"
 				>
 			</File>
 			<File
@@ -490,19 +490,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\misc\PeakData.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\data\misc\PeakData.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\PeakDetector.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\pwiz\analysis\peakdetect\PeakDetector.hpp"
+				RelativePath=".\pwiz\data\misc\PeakData.hpp"
 				>
 			</File>
 			<File
@@ -511,6 +503,14 @@
 			</File>
 			<File
 				RelativePath=".\pwiz\analysis\frequency\PeakDetector.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\peakdetect\PeakDetector.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\frequency\PeakDetector.hpp"
 				>
 			</File>
 			<File
@@ -542,15 +542,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\peakdetect\PeakFamilyDetectorFT.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\analysis\peakdetect\PeakFamilyDetectorFT.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\Peptide.hpp"
+				RelativePath=".\pwiz\analysis\peakdetect\PeakFamilyDetectorFT.hpp"
 				>
 			</File>
 			<File
@@ -558,7 +554,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\PeptideDatabase.hpp"
+				RelativePath=".\utility\proteome\Peptide.hpp"
 				>
 			</File>
 			<File
@@ -566,11 +562,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\peptideid\PeptideID.hpp"
+				RelativePath=".\pwiz\utility\proteome\PeptideDatabase.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\peptideid\PeptideID.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\peptideid\PeptideID.hpp"
 				>
 			</File>
 			<File
@@ -590,11 +590,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\Pseudo2DGel.hpp"
+				RelativePath=".\analysis\passive\Pseudo2DGel.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\Pseudo2DGel.hpp"
+				RelativePath=".\pwiz\analysis\passive\Pseudo2DGel.hpp"
 				>
 			</File>
 			<File
@@ -606,11 +606,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\ramp\ramp.h"
+				RelativePath=".\pwiz\data\msdata\ramp\ramp.h"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\ramp\ramp.h"
+				RelativePath=".\data\msdata\ramp\ramp.h"
 				>
 			</File>
 			<File
@@ -626,11 +626,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFile.h"
+				RelativePath=".\utility\vendor_api\thermo\RawFile.h"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\vendor_api\thermo\RawFile.h"
+				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFile.h"
 				>
 			</File>
 			<File
@@ -646,11 +646,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileValues.h"
+				RelativePath=".\utility\vendor_api\thermo\RawFileValues.h"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\vendor_api\thermo\RawFileValues.h"
+				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileValues.h"
 				>
 			</File>
 			<File
@@ -666,11 +666,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\vendor_readers\Reader_Thermo.hpp"
+				RelativePath=".\pwiz\data\vendor_readers\Reader_Thermo.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\vendor_readers\Reader_Thermo.hpp"
+				RelativePath=".\data\vendor_readers\Reader_Thermo.hpp"
 				>
 			</File>
 			<File
@@ -678,19 +678,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\References.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\data\msdata\References.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\RegionAnalyzer.hpp"
+				RelativePath=".\data\msdata\References.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\analysis\passive\RegionAnalyzer.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\passive\RegionAnalyzer.hpp"
 				>
 			</File>
 			<File
@@ -710,11 +710,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\RegionTIC.hpp"
+				RelativePath=".\pwiz\analysis\passive\RegionTIC.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\RegionTIC.hpp"
+				RelativePath=".\analysis\passive\RegionTIC.hpp"
 				>
 			</File>
 			<File
@@ -726,19 +726,23 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\misc\SampleDatum.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\data\misc\SampleDatum.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\minimxml\SAXParser.hpp"
+				RelativePath=".\pwiz\data\misc\SampleDatum.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\spectrum_processing\SavitzkyGolaySmoother.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\utility\minimxml\SAXParser.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\utility\minimxml\SAXParser.hpp"
 				>
 			</File>
 			<File
@@ -750,11 +754,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\misc\scoped_array.hpp"
+				RelativePath=".\pwiz\data\misc\scoped_array.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\misc\scoped_array.hpp"
+				RelativePath=".\data\misc\scoped_array.hpp"
 				>
 			</File>
 			<File
@@ -766,19 +770,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\Serializer_mzXML.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\data\msdata\Serializer_mzXML.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\SHA1.h"
+				RelativePath=".\pwiz\data\msdata\Serializer_mzXML.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\utility\misc\SHA1.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\misc\SHA1.h"
 				>
 			</File>
 			<File
@@ -790,11 +794,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\misc\SHA1Calculator.hpp"
+				RelativePath=".\utility\misc\SHA1Calculator.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\SHA1Calculator.hpp"
+				RelativePath=".\pwiz\utility\misc\SHA1Calculator.hpp"
 				>
 			</File>
 			<File
@@ -806,15 +810,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\SpectrumBinaryData.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\passive\SpectrumBinaryData.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\SpectrumInfo.hpp"
+				RelativePath=".\analysis\passive\SpectrumBinaryData.hpp"
 				>
 			</File>
 			<File
@@ -822,7 +822,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\SpectrumIterator.hpp"
+				RelativePath=".\pwiz\analysis\passive\SpectrumInfo.hpp"
 				>
 			</File>
 			<File
@@ -830,11 +830,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\SpectrumList_mzML.hpp"
+				RelativePath=".\data\msdata\SpectrumIterator.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\data\msdata\SpectrumList_mzML.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\data\msdata\SpectrumList_mzML.hpp"
 				>
 			</File>
 			<File
@@ -854,15 +858,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\analysis\spectrum_processing\SpectrumList_SavitzkyGolaySmoother.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\bindings\CLI\SpectrumList_SavitzkyGolaySmoother.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\data\vendor_readers\SpectrumList_Thermo.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\SpectrumListFilter.hpp"
+				RelativePath=".\pwiz\data\msdata\SpectrumListFilter.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\SpectrumListFilter.hpp"
+				RelativePath=".\data\msdata\SpectrumListFilter.hpp"
 				>
 			</File>
 			<File
@@ -874,15 +886,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\SpectrumTable.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\passive\SpectrumTable.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\math\Stats.hpp"
+				RelativePath=".\analysis\passive\SpectrumTable.hpp"
 				>
 			</File>
 			<File
@@ -890,11 +898,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\String.hpp"
+				RelativePath=".\utility\math\Stats.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\TextWriter.hpp"
+				RelativePath=".\utility\misc\String.hpp"
 				>
 			</File>
 			<File
@@ -902,7 +910,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\misc\Timer.hpp"
+				RelativePath=".\pwiz\data\msdata\TextWriter.hpp"
 				>
 			</File>
 			<File
@@ -910,11 +918,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\misc\TransientData.hpp"
+				RelativePath=".\pwiz\utility\misc\Timer.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\data\misc\TransientData.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\data\misc\TransientData.hpp"
 				>
 			</File>
 			<File
@@ -934,19 +946,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\TruncatedLorentzianParameters.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianParameters.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\math\Types.hpp"
+				RelativePath=".\analysis\frequency\TruncatedLorentzianParameters.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\utility\math\Types.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\utility\math\Types.hpp"
 				>
 			</File>
 			<File
@@ -958,11 +970,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\minimxml\XMLWriter.hpp"
+				RelativePath=".\utility\minimxml\XMLWriter.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\minimxml\XMLWriter.hpp"
+				RelativePath=".\pwiz\utility\minimxml\XMLWriter.hpp"
 				>
 			</File>
 		</Filter>
@@ -1374,11 +1386,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\IsotopeCalculator.cpp"
+				RelativePath=".\utility\proteome\IsotopeCalculator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\IsotopeCalculator.cpp"
+				RelativePath=".\pwiz\utility\proteome\IsotopeCalculator.cpp"
 				>
 			</File>
 			<File
@@ -1390,19 +1402,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\IsotopeEnvelopeEstimator.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\utility\proteome\IsotopeEnvelopeEstimator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\IsotopeEnvelopeEstimatorTest.cpp"
+				RelativePath=".\pwiz\utility\proteome\IsotopeEnvelopeEstimator.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\utility\proteome\IsotopeEnvelopeEstimatorTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\proteome\IsotopeEnvelopeEstimatorTest.cpp"
 				>
 			</File>
 			<File
@@ -1446,15 +1458,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\math\LinearSolverTest.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\utility\math\LinearSolverTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzian.cpp"
+				RelativePath=".\utility\math\LinearSolverTest.cpp"
 				>
 			</File>
 			<File
@@ -1462,11 +1470,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzianTest.cpp"
+				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzian.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\frequency\MagnitudeLorentzianTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\frequency\MagnitudeLorentzianTest.cpp"
 				>
 			</File>
 			<File
@@ -1482,11 +1494,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\MetadataReporter.cpp"
+				RelativePath=".\analysis\passive\MetadataReporter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\MetadataReporter.cpp"
+				RelativePath=".\pwiz\analysis\passive\MetadataReporter.cpp"
 				>
 			</File>
 			<File
@@ -1510,15 +1522,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\data\msdata\MSData.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utility\bindings\CLI\MSData.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\data\msdata\MSData.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\data\msdata\MSData.cpp"
 				>
 			</File>
 			<File
@@ -1530,11 +1542,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\MSDataAnalyzerApplication.cpp"
+				RelativePath=".\analysis\passive\MSDataAnalyzerApplication.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\MSDataAnalyzerApplication.cpp"
+				RelativePath=".\pwiz\analysis\passive\MSDataAnalyzerApplication.cpp"
 				>
 			</File>
 			<File
@@ -1546,15 +1558,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\MSDataAnalyzerTest.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\passive\MSDataAnalyzerTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\MSDataCache.cpp"
+				RelativePath=".\analysis\passive\MSDataAnalyzerTest.cpp"
 				>
 			</File>
 			<File
@@ -1562,7 +1570,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\MSDataCacheTest.cpp"
+				RelativePath=".\pwiz\analysis\passive\MSDataCache.cpp"
 				>
 			</File>
 			<File
@@ -1570,11 +1578,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\MSDataFile.cpp"
+				RelativePath=".\pwiz\analysis\passive\MSDataCacheTest.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\utility\bindings\CLI\MSDataFile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\data\msdata\MSDataFile.cpp"
 				>
 			</File>
 			<File
@@ -1594,7 +1606,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\bindings\CLI\MSDataTest.cpp"
+				RelativePath=".\pwiz\data\msdata\MSDataTest.cpp"
 				>
 			</File>
 			<File
@@ -1602,7 +1614,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\MSDataTest.cpp"
+				RelativePath=".\utility\bindings\CLI\MSDataTest.cpp"
 				>
 			</File>
 			<File
@@ -1630,11 +1642,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\obotest.cpp"
+				RelativePath=".\pwiz\data\msdata\obotest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\obotest.cpp"
+				RelativePath=".\data\msdata\obotest.cpp"
 				>
 			</File>
 			<File
@@ -1662,15 +1674,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\ParametrizedFunctionTest.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\frequency\ParametrizedFunctionTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\parse_isotopes.cpp"
+				RelativePath=".\analysis\frequency\ParametrizedFunctionTest.cpp"
 				>
 			</File>
 			<File
@@ -1678,11 +1686,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\misc\PeakData.cpp"
+				RelativePath=".\pwiz\utility\proteome\parse_isotopes.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\data\misc\PeakData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\data\misc\PeakData.cpp"
 				>
 			</File>
 			<File
@@ -1694,19 +1706,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\peakdetect\PeakDetector.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\peakdetect\PeakDetector.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\PeakDetectorMatchedFilter.cpp"
+				RelativePath=".\analysis\peakdetect\PeakDetector.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\analysis\frequency\PeakDetectorMatchedFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\frequency\PeakDetectorMatchedFilter.cpp"
 				>
 			</File>
 			<File
@@ -1722,19 +1734,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\PeakDetectorNaive.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\analysis\frequency\PeakDetectorNaive.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\PeakDetectorNaiveTest.cpp"
+				RelativePath=".\analysis\frequency\PeakDetectorNaive.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\frequency\PeakDetectorNaiveTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\frequency\PeakDetectorNaiveTest.cpp"
 				>
 			</File>
 			<File
@@ -1766,11 +1778,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\pepdb.cpp"
+				RelativePath=".\pwiz\utility\proteome\pepdb.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\proteome\pepdb.cpp"
+				RelativePath=".\utility\proteome\pepdb.cpp"
 				>
 			</File>
 			<File
@@ -1782,15 +1794,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\PeptideDatabase.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\utility\proteome\PeptideDatabase.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\proteome\PeptideDatabaseTest.cpp"
+				RelativePath=".\utility\proteome\PeptideDatabase.cpp"
 				>
 			</File>
 			<File
@@ -1798,7 +1806,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\peptideid\PeptideID_pepXML.cpp"
+				RelativePath=".\utility\proteome\PeptideDatabaseTest.cpp"
 				>
 			</File>
 			<File
@@ -1806,7 +1814,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\peptideid\PeptideID_pepXMLTest.cpp"
+				RelativePath=".\pwiz\analysis\peptideid\PeptideID_pepXML.cpp"
 				>
 			</File>
 			<File
@@ -1814,11 +1822,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\peptideid\PeptideIDMap.cpp"
+				RelativePath=".\analysis\peptideid\PeptideID_pepXMLTest.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\analysis\peptideid\PeptideIDMap.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\analysis\peptideid\PeptideIDMap.cpp"
 				>
 			</File>
 			<File
@@ -1854,11 +1866,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\RAMPAdapter.cpp"
+				RelativePath=".\pwiz\data\msdata\RAMPAdapter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\RAMPAdapter.cpp"
+				RelativePath=".\data\msdata\RAMPAdapter.cpp"
 				>
 			</File>
 			<File
@@ -1882,15 +1894,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileTest.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\utility\vendor_api\thermo\RawFileTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileValues.cpp"
+				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileTest.cpp"
 				>
 			</File>
 			<File
@@ -1898,7 +1906,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\Reader.cpp"
+				RelativePath=".\pwiz\utility\vendor_api\thermo\RawFileValues.cpp"
 				>
 			</File>
 			<File
@@ -1906,7 +1914,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\vendor_readers\Reader_Thermo.cpp"
+				RelativePath=".\pwiz\data\msdata\Reader.cpp"
 				>
 			</File>
 			<File
@@ -1914,15 +1922,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\data\vendor_readers\Reader_Thermo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\data\vendor_readers\Reader_Thermo_Detail.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\vendor_readers\Reader_Thermo_Test.cpp"
+				RelativePath=".\data\vendor_readers\Reader_Thermo_Test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\data\vendor_readers\Reader_Thermo_Test.cpp"
+				RelativePath=".\pwiz\data\vendor_readers\Reader_Thermo_Test.cpp"
 				>
 			</File>
 			<File
@@ -1934,19 +1946,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\References.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\data\msdata\References.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\ReferencesTest.cpp"
+				RelativePath=".\data\msdata\References.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\data\msdata\ReferencesTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\data\msdata\ReferencesTest.cpp"
 				>
 			</File>
 			<File
@@ -1966,19 +1978,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\RegionSIC.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\analysis\passive\RegionSIC.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\RegionSlice.cpp"
+				RelativePath=".\pwiz\analysis\passive\RegionSIC.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\passive\RegionSlice.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\passive\RegionSlice.cpp"
 				>
 			</File>
 			<File
@@ -1998,6 +2010,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\analysis\spectrum_processing\SavitzkyGolaySmootherTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pwiz\utility\minimxml\SAXParser.cpp"
 				>
 			</File>
@@ -2014,19 +2030,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\vendor_api\thermo\ScanFilter.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\utility\vendor_api\thermo\ScanFilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\utility\vendor_api\thermo\ScanFilterTest.cpp"
+				RelativePath=".\pwiz\utility\vendor_api\thermo\ScanFilter.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\utility\vendor_api\thermo\ScanFilterTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\vendor_api\thermo\ScanFilterTest.cpp"
 				>
 			</File>
 			<File
@@ -2038,11 +2054,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\Serializer_mzML_Test.cpp"
+				RelativePath=".\pwiz\data\msdata\Serializer_mzML_Test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\Serializer_mzML_Test.cpp"
+				RelativePath=".\data\msdata\Serializer_mzML_Test.cpp"
 				>
 			</File>
 			<File
@@ -2054,15 +2070,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\Serializer_mzXML_Test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\data\msdata\Serializer_mzXML_Test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\misc\SHA1.cpp"
+				RelativePath=".\pwiz\data\msdata\Serializer_mzXML_Test.cpp"
 				>
 			</File>
 			<File
@@ -2070,7 +2082,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\utility\misc\SHA1_ostream_test.cpp"
+				RelativePath=".\pwiz\utility\misc\SHA1.cpp"
 				>
 			</File>
 			<File
@@ -2078,7 +2090,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\sha1calc.cpp"
+				RelativePath=".\pwiz\utility\misc\SHA1_ostream_test.cpp"
 				>
 			</File>
 			<File
@@ -2086,11 +2098,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\utility\misc\SHA1Calculator.cpp"
+				RelativePath=".\utility\misc\sha1calc.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pwiz\utility\misc\SHA1Calculator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utility\misc\SHA1Calculator.cpp"
 				>
 			</File>
 			<File
@@ -2102,11 +2118,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\SpectrumBinaryData.cpp"
+				RelativePath=".\pwiz\analysis\passive\SpectrumBinaryData.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\SpectrumBinaryData.cpp"
+				RelativePath=".\analysis\passive\SpectrumBinaryData.cpp"
 				>
 			</File>
 			<File
@@ -2118,11 +2134,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\passive\SpectrumInfoTest.cpp"
+				RelativePath=".\analysis\passive\SpectrumInfoTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\passive\SpectrumInfoTest.cpp"
+				RelativePath=".\pwiz\analysis\passive\SpectrumInfoTest.cpp"
 				>
 			</File>
 			<File
@@ -2150,19 +2166,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\SpectrumList_mzML_Test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pwiz\data\msdata\SpectrumList_mzML_Test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\SpectrumList_mzXML.cpp"
+				RelativePath=".\data\msdata\SpectrumList_mzML_Test.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\data\msdata\SpectrumList_mzXML.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\data\msdata\SpectrumList_mzXML.cpp"
 				>
 			</File>
 			<File
@@ -2178,6 +2194,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\analysis\spectrum_processing\SpectrumList_SavitzkyGolaySmoother.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\data\vendor_readers\SpectrumList_Thermo.cpp"
 				>
 			</File>
@@ -2190,11 +2210,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\msdata\SpectrumListFilterTest.cpp"
+				RelativePath=".\pwiz\data\msdata\SpectrumListFilterTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\data\msdata\SpectrumListFilterTest.cpp"
+				RelativePath=".\data\msdata\SpectrumListFilterTest.cpp"
 				>
 			</File>
 			<File
@@ -2246,15 +2266,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzian.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\analysis\frequency\TruncatedLorentzian.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianEstimator.cpp"
+				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzian.cpp"
 				>
 			</File>
 			<File
@@ -2262,7 +2278,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianParameters.cpp"
+				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianEstimator.cpp"
 				>
 			</File>
 			<File
@@ -2270,7 +2286,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\analysis\frequency\TruncatedLorentzianParametersTest.cpp"
+				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianParameters.cpp"
 				>
 			</File>
 			<File
@@ -2278,11 +2294,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianTest.cpp"
+				RelativePath=".\analysis\frequency\TruncatedLorentzianParametersTest.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\analysis\frequency\TruncatedLorentzianTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pwiz\analysis\frequency\TruncatedLorentzianTest.cpp"
 				>
 			</File>
 			<File
@@ -2314,6 +2334,90 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\utility\bindings\CLI\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\analysis\passive\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\analysis\frequency\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\analysis\peakdetect\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\analysis\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\build\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\data\misc\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\data\msdata\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\data\vendor_readers\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\tools\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\examples\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\data\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\math\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\bindings\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\minimxml\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\vendor_api\thermo\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\vendor_api\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\proteome\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\utility\misc\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\Jamroot.jam"
+			>
+		</File>
 		<File
 			RelativePath=".\pwiz\data\msdata\ref\mzml_notes.html"
 			>

@@ -64,17 +64,39 @@ namespace seems
 			Scan scan = sd.scan;
 			InstrumentConfiguration ic = scan.instrumentConfiguration;
 			DataProcessing dp = s.dataProcessing;
+
+            CVParam param;
+
+            param = s.cvParam( CVID.MS_ms_level );
+            int msLevel = param.cvid != CVID.CVID_Unknown ? Convert.ToInt32( (string) param.value ) : 0;
+
+            param = scan.cvParam( CVID.MS_scan_time );
+            double scanTime = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+
+            param = sd.cvParam( CVID.MS_base_peak_m_z );
+            double bpmz = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+
+            param = sd.cvParam( CVID.MS_base_peak_intensity );
+            double bpi = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+
+            param = sd.cvParam( CVID.MS_total_ion_current );
+            double tic = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+
+            param = scan.cvParamChild( CVID.MS_polarity );
+            string polarity = param.cvid != CVID.CVID_Unknown ? param.name : "unknown";
+
 			int rowIndex = gridView.Rows.Add(
 				s.id, s.nativeID, s.index,
 				s.cvParamChild( CVID.MS_spectrum_type ).name,
-                Convert.ToInt32( (string) s.cvParam( CVID.MS_ms_level ).value ),
-                Convert.ToDouble( (string) scan.cvParam( CVID.MS_scan_time ).value ),
+                msLevel,
+                scanTime,
+                s.defaultArrayLength,
 				( ic != null ? ic.id : "unknown" ),
-                Convert.ToDouble( (string) sd.cvParam( CVID.MS_base_peak_m_z ).value ),
-                Convert.ToDouble( (string) sd.cvParam( CVID.MS_base_peak_intensity ).value ),
-				Convert.ToDouble( (string) sd.cvParam( CVID.MS_total_ion_current ).value ),
-				( dp != null ? dp.id : "n/a" ),
-				scan.cvParamChild( CVID.MS_polarity ).name,
+                bpmz,
+                bpi,
+                tic,
+				( dp != null ? dp.id : "unknown" ),
+                polarity,
 				"",
 				""
 			);
@@ -91,6 +113,23 @@ namespace seems
 		{
 			OnCellDoubleClick( e );
 		}
+
+        private void selectColumnsToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            SelectColumnsDialog dialog = new SelectColumnsDialog( gridView );
+            dialog.ShowDialog();
+        }
+
+        private void gridView_ColumnHeaderMouseClick( object sender, DataGridViewCellMouseEventArgs e )
+        {
+            if( e.Button == MouseButtons.Right )
+            {
+                Rectangle cellRectangle = gridView.GetCellDisplayRectangle( e.ColumnIndex, e.RowIndex, true );
+                Point cellLocation = new Point( cellRectangle.Left, cellRectangle.Top );
+                cellLocation.Offset( e.Location );
+                selectColumnsMenuStrip.Show( gridView, cellLocation );
+            }
+        }
 	}
 
 	public class SpectrumListCellClickEventArgs : MouseEventArgs
@@ -101,7 +140,8 @@ namespace seems
 		internal SpectrumListCellClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
 			: base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
 		{
-			spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+			    spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;
 		}
 	}
 
@@ -113,7 +153,8 @@ namespace seems
 		internal SpectrumListCellDoubleClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
 			: base( e.Button, e.Clicks, e.X, e.Y, e.Delta )
 		{
-			spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+			    spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;
 		}
 	}
 }

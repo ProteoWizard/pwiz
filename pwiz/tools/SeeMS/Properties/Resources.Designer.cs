@@ -60,6 +60,34 @@ namespace seems.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap Centroider {
+            get {
+                object obj = ResourceManager.GetObject("Centroider", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon CentroiderIcon {
+            get {
+                object obj = ResourceManager.GetObject("CentroiderIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap DataProcessing {
+            get {
+                object obj = ResourceManager.GetObject("DataProcessing", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon DataProcessingIcon {
+            get {
+                object obj = ResourceManager.GetObject("DataProcessingIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap PeakIntegral {
             get {
                 object obj = ResourceManager.GetObject("PeakIntegral", resourceCulture);
@@ -71,6 +99,20 @@ namespace seems.Properties {
             get {
                 object obj = ResourceManager.GetObject("PeakIntegralActive", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Smoother {
+            get {
+                object obj = ResourceManager.GetObject("Smoother", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon SmootherIcon {
+            get {
+                object obj = ResourceManager.GetObject("SmootherIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }

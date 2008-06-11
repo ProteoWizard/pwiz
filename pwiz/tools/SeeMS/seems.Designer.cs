@@ -54,10 +54,7 @@ namespace seems
             this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.peakProcessingToolStripDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
-            this.centroidToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.vendorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.deisotopeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.annotateToolStripDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.peptideMassMappingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.annotateMassMapProteinDigestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -67,19 +64,18 @@ namespace seems
             this.manualEditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.integratePeaksToolStripButton = new System.Windows.Forms.ToolStripSplitButton();
+            this.peakIntegrationMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearCurrentIntegration = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataProcessingButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripPanel2 = new System.Windows.Forms.ToolStripPanel();
             this.scanNumberComboBoxContextMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
             this.openInActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openInNewWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.overlayOnActiveWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
-            this.openFileToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.integratePeaksToolStripButton = new System.Windows.Forms.ToolStripSplitButton();
-            this.peakIntegrationMode = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearCurrentIntegration = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.smoothToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.toolStripPanel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -273,9 +269,9 @@ namespace seems
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
             this.openFileToolStripButton,
-            this.peakProcessingToolStripDropDownButton,
             this.annotateToolStripDropDownButton,
-            this.integratePeaksToolStripButton} );
+            this.integratePeaksToolStripButton,
+            this.dataProcessingButton} );
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip1.Location = new System.Drawing.Point( 0, 24 );
             this.toolStrip1.Name = "toolStrip1";
@@ -284,44 +280,19 @@ namespace seems
             this.toolStrip1.Stretch = true;
             this.toolStrip1.TabIndex = 2;
             // 
-            // peakProcessingToolStripDropDownButton
+            // openFileToolStripButton
             // 
-            this.peakProcessingToolStripDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.peakProcessingToolStripDropDownButton.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.centroidToolStripMenuItem,
-            this.deisotopeToolStripMenuItem,
-            this.smoothToolStripMenuItem} );
-            this.peakProcessingToolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.peakProcessingToolStripDropDownButton.Name = "peakProcessingToolStripDropDownButton";
-            this.peakProcessingToolStripDropDownButton.Size = new System.Drawing.Size( 97, 22 );
-            this.peakProcessingToolStripDropDownButton.Text = "Peak Processing";
-            // 
-            // centroidToolStripMenuItem
-            // 
-            this.centroidToolStripMenuItem.CheckOnClick = true;
-            this.centroidToolStripMenuItem.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.vendorToolStripMenuItem} );
-            this.centroidToolStripMenuItem.Name = "centroidToolStripMenuItem";
-            this.centroidToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
-            this.centroidToolStripMenuItem.Text = "Centroid";
-            this.centroidToolStripMenuItem.Click += new System.EventHandler( this.centroidToolStripMenuItem_CheckedChanged );
-            // 
-            // vendorToolStripMenuItem
-            // 
-            this.vendorToolStripMenuItem.Checked = true;
-            this.vendorToolStripMenuItem.CheckOnClick = true;
-            this.vendorToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.vendorToolStripMenuItem.Name = "vendorToolStripMenuItem";
-            this.vendorToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
-            this.vendorToolStripMenuItem.Text = "Vendor";
-            this.vendorToolStripMenuItem.Click += new System.EventHandler( this.centroidToolStripMenuItem_CheckedChanged );
-            // 
-            // deisotopeToolStripMenuItem
-            // 
-            this.deisotopeToolStripMenuItem.Enabled = false;
-            this.deisotopeToolStripMenuItem.Name = "deisotopeToolStripMenuItem";
-            this.deisotopeToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
-            this.deisotopeToolStripMenuItem.Text = "Deisotope";
+            this.openFileToolStripButton.AutoSize = false;
+            this.openFileToolStripButton.BackColor = System.Drawing.SystemColors.Control;
+            this.openFileToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.openFileToolStripButton.Image = ( (System.Drawing.Image) ( resources.GetObject( "openFileToolStripButton.Image" ) ) );
+            this.openFileToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.openFileToolStripButton.Name = "openFileToolStripButton";
+            this.openFileToolStripButton.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            this.openFileToolStripButton.Size = new System.Drawing.Size( 23, 22 );
+            this.openFileToolStripButton.Text = "&Open";
+            this.openFileToolStripButton.ToolTipText = "Open specified source file";
+            this.openFileToolStripButton.Click += new System.EventHandler( this.openFile_Click );
             // 
             // annotateToolStripDropDownButton
             // 
@@ -396,6 +367,63 @@ namespace seems
             this.clearToolStripMenuItem.Text = "Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler( this.clearToolStripMenuItem_Click );
             // 
+            // integratePeaksToolStripButton
+            // 
+            this.integratePeaksToolStripButton.BackColor = System.Drawing.SystemColors.Control;
+            this.integratePeaksToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.integratePeaksToolStripButton.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
+            this.peakIntegrationMode,
+            this.clearCurrentIntegration,
+            this.clearAllIntegrationsToolStripMenuItem,
+            this.exportAllIntegrationsToolStripMenuItem} );
+            this.integratePeaksToolStripButton.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.integratePeaksToolStripButton.Image = global::seems.Properties.Resources.PeakIntegral;
+            this.integratePeaksToolStripButton.ImageTransparentColor = System.Drawing.Color.White;
+            this.integratePeaksToolStripButton.Name = "integratePeaksToolStripButton";
+            this.integratePeaksToolStripButton.Size = new System.Drawing.Size( 32, 22 );
+            this.integratePeaksToolStripButton.Text = "Integrate Peaks";
+            this.integratePeaksToolStripButton.ButtonClick += new System.EventHandler( this.integratePeaksButton_Click );
+            // 
+            // peakIntegrationMode
+            // 
+            this.peakIntegrationMode.CheckOnClick = true;
+            this.peakIntegrationMode.Name = "peakIntegrationMode";
+            this.peakIntegrationMode.Size = new System.Drawing.Size( 162, 22 );
+            this.peakIntegrationMode.Text = "Integrate Peaks";
+            this.peakIntegrationMode.Visible = false;
+            this.peakIntegrationMode.Click += new System.EventHandler( this.integratePeaksButton_Click );
+            // 
+            // clearCurrentIntegration
+            // 
+            this.clearCurrentIntegration.Name = "clearCurrentIntegration";
+            this.clearCurrentIntegration.Size = new System.Drawing.Size( 162, 22 );
+            this.clearCurrentIntegration.Text = "Clear (current)";
+            this.clearCurrentIntegration.Click += new System.EventHandler( this.clearCurrentIntegration_Click );
+            // 
+            // clearAllIntegrationsToolStripMenuItem
+            // 
+            this.clearAllIntegrationsToolStripMenuItem.Name = "clearAllIntegrationsToolStripMenuItem";
+            this.clearAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
+            this.clearAllIntegrationsToolStripMenuItem.Text = "Clear (all)";
+            this.clearAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.clearAllIntegrationsToolStripMenuItem_Click );
+            // 
+            // exportAllIntegrationsToolStripMenuItem
+            // 
+            this.exportAllIntegrationsToolStripMenuItem.Name = "exportAllIntegrationsToolStripMenuItem";
+            this.exportAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
+            this.exportAllIntegrationsToolStripMenuItem.Text = "Export";
+            this.exportAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.exportAllIntegrationsToolStripMenuItem_Click );
+            // 
+            // dataProcessingButton
+            // 
+            this.dataProcessingButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.dataProcessingButton.Image = global::seems.Properties.Resources.DataProcessing;
+            this.dataProcessingButton.ImageTransparentColor = System.Drawing.Color.White;
+            this.dataProcessingButton.Name = "dataProcessingButton";
+            this.dataProcessingButton.Size = new System.Drawing.Size( 23, 22 );
+            this.dataProcessingButton.Text = "Configure Data Processing";
+            this.dataProcessingButton.Click += new System.EventHandler( this.dataProcessingButton_Click );
+            // 
             // toolStripPanel2
             // 
             this.toolStripPanel2.Controls.Add( this.statusStrip1 );
@@ -451,75 +479,6 @@ namespace seems
             this.dockPanel.Size = new System.Drawing.Size( 792, 489 );
             this.dockPanel.TabIndex = 5;
             // 
-            // openFileToolStripButton
-            // 
-            this.openFileToolStripButton.AutoSize = false;
-            this.openFileToolStripButton.BackColor = System.Drawing.SystemColors.Control;
-            this.openFileToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.openFileToolStripButton.Image = ( (System.Drawing.Image) ( resources.GetObject( "openFileToolStripButton.Image" ) ) );
-            this.openFileToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.openFileToolStripButton.Name = "openFileToolStripButton";
-            this.openFileToolStripButton.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.openFileToolStripButton.Size = new System.Drawing.Size( 23, 22 );
-            this.openFileToolStripButton.Text = "&Open";
-            this.openFileToolStripButton.ToolTipText = "Open specified source file";
-            this.openFileToolStripButton.Click += new System.EventHandler( this.openFile_Click );
-            // 
-            // integratePeaksToolStripButton
-            // 
-            this.integratePeaksToolStripButton.BackColor = System.Drawing.SystemColors.Control;
-            this.integratePeaksToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.integratePeaksToolStripButton.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.peakIntegrationMode,
-            this.clearCurrentIntegration,
-            this.clearAllIntegrationsToolStripMenuItem,
-            this.exportAllIntegrationsToolStripMenuItem} );
-            this.integratePeaksToolStripButton.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.integratePeaksToolStripButton.Image = global::seems.Properties.Resources.PeakIntegral;
-            this.integratePeaksToolStripButton.ImageTransparentColor = System.Drawing.Color.White;
-            this.integratePeaksToolStripButton.Name = "integratePeaksToolStripButton";
-            this.integratePeaksToolStripButton.Size = new System.Drawing.Size( 32, 22 );
-            this.integratePeaksToolStripButton.Text = "Integrate Peaks";
-            this.integratePeaksToolStripButton.ButtonClick += new System.EventHandler( this.integratePeaksButton_Click );
-            // 
-            // peakIntegrationMode
-            // 
-            this.peakIntegrationMode.CheckOnClick = true;
-            this.peakIntegrationMode.Name = "peakIntegrationMode";
-            this.peakIntegrationMode.Size = new System.Drawing.Size( 162, 22 );
-            this.peakIntegrationMode.Text = "Integrate Peaks";
-            this.peakIntegrationMode.Visible = false;
-            this.peakIntegrationMode.Click += new System.EventHandler( this.integratePeaksButton_Click );
-            // 
-            // clearCurrentIntegration
-            // 
-            this.clearCurrentIntegration.Name = "clearCurrentIntegration";
-            this.clearCurrentIntegration.Size = new System.Drawing.Size( 162, 22 );
-            this.clearCurrentIntegration.Text = "Clear (current)";
-            this.clearCurrentIntegration.Click += new System.EventHandler( this.clearCurrentIntegration_Click );
-            // 
-            // clearAllIntegrationsToolStripMenuItem
-            // 
-            this.clearAllIntegrationsToolStripMenuItem.Name = "clearAllIntegrationsToolStripMenuItem";
-            this.clearAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
-            this.clearAllIntegrationsToolStripMenuItem.Text = "Clear (all)";
-            this.clearAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.clearAllIntegrationsToolStripMenuItem_Click );
-            // 
-            // exportAllIntegrationsToolStripMenuItem
-            // 
-            this.exportAllIntegrationsToolStripMenuItem.Name = "exportAllIntegrationsToolStripMenuItem";
-            this.exportAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
-            this.exportAllIntegrationsToolStripMenuItem.Text = "Export";
-            this.exportAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.exportAllIntegrationsToolStripMenuItem_Click );
-            // 
-            // smoothToolStripMenuItem
-            // 
-            this.smoothToolStripMenuItem.CheckOnClick = true;
-            this.smoothToolStripMenuItem.Name = "smoothToolStripMenuItem";
-            this.smoothToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
-            this.smoothToolStripMenuItem.Text = "Smooth";
-            this.smoothToolStripMenuItem.CheckedChanged += new System.EventHandler( this.smoothToolStripMenuItem_CheckedChanged );
-            // 
             // seems
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
@@ -563,11 +522,7 @@ namespace seems
 		private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
 		private System.Windows.Forms.ToolStripPanel toolStripPanel1;
 		private System.Windows.Forms.ToolStrip toolStrip1;
-		private System.Windows.Forms.ToolStripButton openFileToolStripButton;
-		private System.Windows.Forms.ToolStripDropDownButton peakProcessingToolStripDropDownButton;
-		private System.Windows.Forms.ToolStripMenuItem centroidToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem vendorToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem deisotopeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton openFileToolStripButton;
 		private System.Windows.Forms.ToolStripDropDownButton annotateToolStripDropDownButton;
 		private System.Windows.Forms.ToolStripMenuItem peptideMassMappingToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem annotateMassMapProteinDigestToolStripMenuItem;
@@ -605,7 +560,7 @@ namespace seems
 		private System.Windows.Forms.ToolStripMenuItem clearCurrentIntegration;
 		private System.Windows.Forms.ToolStripMenuItem clearAllIntegrationsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportAllIntegrationsToolStripMenuItem;
-		private DigitalRune.Windows.Docking.DockPanel dockPanel;
-        private System.Windows.Forms.ToolStripMenuItem smoothToolStripMenuItem;
+        private DigitalRune.Windows.Docking.DockPanel dockPanel;
+        private System.Windows.Forms.ToolStripButton dataProcessingButton;
 	}
 }

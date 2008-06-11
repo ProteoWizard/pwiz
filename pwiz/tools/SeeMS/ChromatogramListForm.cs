@@ -87,7 +87,8 @@ namespace seems
 		internal ChromatogramListCellClickEventArgs( ChromatogramListForm sender, DataGridViewCellMouseEventArgs e )
 			: base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
 		{
-			chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+			    chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;
 		}
 	}
 
@@ -99,7 +100,8 @@ namespace seems
 		internal ChromatogramListCellDoubleClickEventArgs( ChromatogramListForm sender, DataGridViewCellMouseEventArgs e )
 			: base( e.Button, e.Clicks, e.X, e.Y, e.Delta )
 		{
-			chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+			    chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;
 		}
 	}
 }

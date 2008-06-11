@@ -27,6 +27,7 @@ namespace seems
 		{
 			this.source = source;
 			spectrumListForm = new SpectrumListForm();
+            spectrumProcessingForm = new SpectrumProcessingForm();
 			chromatogramListForm = new ChromatogramListForm();
 			graphInfoMap = new GraphInfoMap();
 		}
@@ -37,8 +38,14 @@ namespace seems
 		private SpectrumListForm spectrumListForm;
 		public SpectrumListForm SpectrumListForm { get { return spectrumListForm; } }
 
+        private SpectrumProcessingForm spectrumProcessingForm;
+        public SpectrumProcessingForm SpectrumProcessingForm { get { return spectrumProcessingForm; } }
+
 		private ChromatogramListForm chromatogramListForm;
 		public ChromatogramListForm ChromatogramListForm { get { return chromatogramListForm; } }
+
+        //private ChromatogramProcessingForm spectrumProcessingForm;
+        //public ChromatogramProcessingForm SpectrumProcessingForm { get { return spectrumProcessingForm; } }
 
 		private GraphInfoMap graphInfoMap;
 		public GraphInfoMap GraphInfoMap { get { return graphInfoMap; } }
@@ -138,11 +145,7 @@ namespace seems
                 hostGraph.ShowData( managedDataSource.Source, managedDataSource.Source.GetChromatogram( item as Chromatogram, cl ) );
             } else
             {
-                SpectrumList sl = managedDataSource.Source.MSDataFile.run.spectrumList;
-                if( mainForm.CentroidMenuItem.Enabled && mainForm.CentroidMenuItem.Checked )
-                    sl = new SpectrumList_NativeCentroider(sl, new int [] { (int) (item as MassSpectrum).Element.cvParam(CVID.MS_ms_level).value } );
-                if( mainForm.SmoothMenuItem.Checked )
-                    sl = new SpectrumList_SavitzkyGolaySmoother( sl, new int[] { (int) ( item as MassSpectrum ).Element.cvParam( CVID.MS_ms_level ).value } );
+                SpectrumList sl = managedDataSource.SpectrumProcessingForm.ProcessingListView.ProcessingWrapper(managedDataSource.Source.MSDataFile.run.spectrumList);
                 hostGraph.ShowData( managedDataSource.Source, managedDataSource.Source.GetMassSpectrum( item as MassSpectrum, sl ) );
             }
         }
@@ -159,9 +162,7 @@ namespace seems
                 hostGraph.ShowDataOverlay( managedDataSource.Source, managedDataSource.Source.GetChromatogram( item.Index, true ) );
             } else
             {
-                SpectrumList sl = managedDataSource.Source.MSDataFile.run.spectrumList;
-                if( mainForm.CentroidMenuItem.Enabled && mainForm.CentroidMenuItem.Checked )
-                    sl = new SpectrumList_NativeCentroider( sl, new int[] { (int) ( item as MassSpectrum ).Element.cvParam( CVID.MS_ms_level ).value } );
+                SpectrumList sl = managedDataSource.SpectrumProcessingForm.ProcessingListView.ProcessingWrapper( managedDataSource.Source.MSDataFile.run.spectrumList );
                 hostGraph.ShowDataOverlay( managedDataSource.Source, managedDataSource.Source.GetMassSpectrum( item as MassSpectrum, sl ) );
             }
         }
@@ -311,8 +312,34 @@ namespace seems
 			}
 		}
 
+        public void ShowDataProcessing()
+        {
+            if( mainForm.CurrentGraphForm != null &&
+                mainForm.CurrentGraphForm.CurrentGraphItem != null &&
+                mainForm.CurrentGraphForm.CurrentGraphItem.IsMassSpectrum )
+            {
+                SpectrumProcessingForm dataProcessingForm = dataSourceMap[mainForm.CurrentGraphForm.CurrentGraphItem.Source.CurrentFilepath].SpectrumProcessingForm;
+                dataProcessingForm.ProcessingListView.ItemsChanged += new EventHandler(processingListView_Changed);
+                dataProcessingForm.Show( mainForm.DockPanel, DockState.Floating );
+            }
+        }
+
+        private void processingListView_Changed( object sender, EventArgs e )
+        {
+            if( mainForm.CurrentGraphForm != null &&
+                mainForm.CurrentGraphForm.CurrentGraphItem != null &&
+                mainForm.CurrentGraphForm.CurrentGraphItem.IsMassSpectrum )
+            {
+                UpdateGraph( mainForm.CurrentGraphForm );
+            }
+        }
+
+
         private void chromatogramListForm_CellDoubleClick( object sender, ChromatogramListCellDoubleClickEventArgs e )
         {
+            if( e.Chromatogram == null )
+                return;
+
             GraphForm currentGraphForm = mainForm.CurrentGraphForm;
             if( currentGraphForm == null )
                 currentGraphForm = OpenGraph( true );
@@ -323,6 +350,9 @@ namespace seems
 
         private void spectrumListForm_CellDoubleClick( object sender, SpectrumListCellDoubleClickEventArgs e )
         {
+            if( e.Spectrum == null )
+                return;
+
             GraphForm currentGraphForm = mainForm.CurrentGraphForm;
             if( currentGraphForm == null )
                 currentGraphForm = OpenGraph( true );

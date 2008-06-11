@@ -97,7 +97,13 @@
     <Compile Include="Dialogs\ChromatogramAnnotationSettingsForm.Designer.cs">
       <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\SelectColumnsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Manager.cs" />
+    <Compile Include="ProcessingListView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="SpectrumListForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -187,6 +193,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Misc\Set.cs" />
+    <Compile Include="SpectrumProcessingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SpectrumProcessingForm.Designer.cs">
+      <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Types.cs">
     </Compile>
     <Compile Include="Misc\WebBrowserCache.cs" />
@@ -217,11 +229,21 @@
       <SubType>Designer</SubType>
       <DependentUpon>SpectrumListForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SpectrumProcessingForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Misc\Centroider.ico" />
     <Content Include="Misc\PeakIntegralActive.bmp" />
+    <Content Include="Misc\Smoother.ico" />
     <Content Include="Misc\SpectrumSVG-template.svg">
     </Content>
+    <None Include="Resources\Smoother.bmp" />
+    <None Include="Resources\Centroider.bmp" />
+    <None Include="Resources\DataProcessing.bmp" />
+    <None Include="Resources\DataProcessing.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">

@@ -35,11 +35,6 @@ namespace seems
 		public ToolStripStatusLabel StatusLabel { get { return toolStripStatusLabel1; } }
 		public ToolStripProgressBar StatusProgressBar { get { return toolStripProgressBar1; } }
 		public GraphForm CurrentGraphForm { get { return ( ActiveMdiChild is GraphForm ? (GraphForm) ActiveMdiChild : null ); } }
-		public ToolStripMenuItem CentroidMenuItem { get { return centroidToolStripMenuItem; } }
-		public ToolStripMenuItem DeisotopeMenuItem { get { return deisotopeToolStripMenuItem; } }
-        public ToolStripMenuItem SmoothMenuItem { get { return smoothToolStripMenuItem; } }
-		public ToolStripMenuItem UseVendorCentroidMenuItem { get { return vendorToolStripMenuItem; } }
-		public ToolStripDropDownButton PeakProcessingButton { get { return peakProcessingToolStripDropDownButton; } }
 		public ToolStripDropDownButton AnnotateButton { get { return annotateToolStripDropDownButton; } }
 
 		public seems( string[] args )
@@ -1010,5 +1005,10 @@ namespace seems
 				writer.Close();
 			}
 		}
+
+        private void dataProcessingButton_Click( object sender, EventArgs e )
+        {
+            manager.ShowDataProcessing();
+        }
 	}
 }

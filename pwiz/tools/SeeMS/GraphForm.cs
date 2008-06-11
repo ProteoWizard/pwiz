@@ -321,16 +321,20 @@ namespace seems
 				Graphics g = zedGraphControl1.CreateGraphics();
 				System.Drawing.Bitmap gmap;
 
-				try
-				{
-					//pane.Draw( g );
-					pane.CurveList.Draw( g, pane, 1.0f );
-					gmap = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
-					zedGraphControl1.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
-				} catch
-				{
-					return;
-				}
+                if( pane.Chart.Rect.Width > 0 && pane.Chart.Rect.Height > 0 )
+                {
+                    try
+                    {
+                        //pane.Draw( g );
+                        pane.CurveList.Draw( g, pane, 1.0f );
+                        gmap = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
+                        zedGraphControl1.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
+                    } catch
+                    {
+                        return;
+                    }
+                } else
+                    return;
 
 				Region textBoundsRegion;
 				Region chartRegion = new Region( pane.Chart.Rect );

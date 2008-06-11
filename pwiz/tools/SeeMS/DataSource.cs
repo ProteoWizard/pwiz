@@ -154,7 +154,7 @@ namespace seems
 			setInputFileThread.Start( (object) filepath );*/
 		}
 
-		private ParameterizedThreadStart setInputFileDelegate;
+		//private ParameterizedThreadStart setInputFileDelegate;
 		private void startSetInputFile( object threadArg )
 		{
 			SetInputFile( (string) threadArg );
