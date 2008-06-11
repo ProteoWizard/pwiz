@@ -26,21 +26,18 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "utility/minimxml/SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <iterator>
+#include "utility/misc/Exception.hpp"
+#include "utility/misc/String.hpp"
+#include "utility/misc/Stream.hpp"
+#include "utility/misc/Container.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::minimxml;
 using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::stream_offset;
 using boost::iostreams::offset_to_position;
 
@@ -176,10 +173,12 @@ class HandlerPeaks : public SAXParser::Handler
     {
         if (name == "peaks")
         {
-            string precision, byteOrder, pairOrder;
+            string precision, byteOrder, pairOrder, compressionType, compressedLen;
             getAttribute(attributes, "precision", precision);
             getAttribute(attributes, "byteOrder", byteOrder);
             getAttribute(attributes, "pairOrder", pairOrder);
+            getAttribute(attributes, "compressionType", compressionType);
+            getAttribute(attributes, "compressedLen", compressedLen);
 
             if (precision == "32")
                 config_.precision = BinaryDataEncoder::Precision_32;
@@ -187,6 +186,16 @@ class HandlerPeaks : public SAXParser::Handler
                 config_.precision = BinaryDataEncoder::Precision_64;
             else
                 throw runtime_error("[SpectrumList_mzXML::HandlerPeaks] Invalid precision."); 
+
+            if (!compressionType.empty())
+            {
+                if (compressionType == "zlib")
+                    config_.compression = BinaryDataEncoder::Compression_Zlib;
+                else if (compressionType == "none")
+                    config_.compression = BinaryDataEncoder::Compression_None;
+                else
+                    throw runtime_error("[SpectrumList_mzXML::HandlerPeaks] Invalid compression type.");
+            }
 
             if (byteOrder=="network" || byteOrder.empty()) // may be empty for older mzXML
                 config_.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
@@ -224,6 +233,8 @@ class HandlerPeaks : public SAXParser::Handler
                               stream_offset position)
     {
         // hack: avoid reading nested <scan> elements
+        // TODO: this is a bug: many files will not use precursorScanNum and instead
+        //       use nested scans to indicate precursor relationships
         if (name == "peaks") return Status::Done;
         return Status::Ok;
     }
@@ -290,10 +301,11 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_negative_scan);
 
             // assume centroid if not specified (TODO: factor in dataProcessing information)
-            if (centroided == "0")
-                spectrum_.spectrumDescription.set(MS_profile_mass_spectrum);
-            else
+            if (!spectrum_.spectrumDescription.hasCVParam(MS_centroid_mass_spectrum) &&
+                centroided == "1")
                 spectrum_.spectrumDescription.set(MS_centroid_mass_spectrum);
+            else
+                spectrum_.spectrumDescription.set(MS_profile_mass_spectrum);
 
             collisionEnergy_ = collisionEnergy;
 
@@ -388,6 +400,10 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     is_->seekg(offset_to_position(index_[index].sourceFilePosition));
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
+
+    // if file-level dataProcessing says the file is centroid, ignore the centroided attribute
+    if (msd_.fileDescription.fileContent.hasCVParam(MS_centroid_mass_spectrum))
+        result->spectrumDescription.set(MS_centroid_mass_spectrum);
 
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);
@@ -532,7 +548,7 @@ void SpectrumList_mzXMLImpl::readIndex()
     const int bufferSize = 512;
     string buffer(bufferSize, '\0');
 
-    is_->seekg(-bufferSize, ios::end);
+    is_->seekg(-bufferSize, std::ios::end);
     if (!*is_)
         throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to end.");
 
@@ -544,7 +560,7 @@ void SpectrumList_mzXMLImpl::readIndex()
     if (indexIndexOffset == string::npos)
         throw index_not_found("[SpectrumList_mzXML::readIndex()] <indexOffset> not found."); 
 
-    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), ios::end);
+    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
     if (!*is_)
         throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <indexOffset>."); 
     

@@ -47,4 +47,4 @@ lib pwiz_analysis_spectrum_processing
 
 
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_analysis_spectrum_processing ;
-
+unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_spectrum_processing ;

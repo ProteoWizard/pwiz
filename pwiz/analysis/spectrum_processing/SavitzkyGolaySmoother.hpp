@@ -29,6 +29,10 @@
 #include <vector>
 
 
+namespace pwiz {
+namespace analysis {
+
+
 template <typename T>
 class SavitzkyGolaySmoother
 {
@@ -37,19 +41,23 @@ class SavitzkyGolaySmoother
     {
         if (data.size() < 9)
             return data;
-        typename std::vector<T>::const_iterator start, stop;
-        typename std::vector<T> smoothedData;
-        for (start = data.begin(), stop = data.begin()+9;
-            stop != data.end()-9;
-            ++start, ++stop)
+        typename std::vector<T>::const_iterator start;
+        typename std::vector<T> smoothedData(data.begin(), data.begin()+4);
+        for (start = data.begin();
+            (start+8) != data.end();
+            ++start)
         {
             T sum = 59 * *(start+4) + 54 * (*(start+3) + *(start+5)) +
                     39 * (*(start+2) + *(start+6)) + 14 * (*(start+1) + *(start+7)) -
-                    121 * (*start + *(start+8));
+                    21 * (*start + *(start+8));
             smoothedData.push_back(sum / 231);
         }
+        smoothedData.insert(smoothedData.end(), data.end()-4, data.end());
         return smoothedData;
     }
 };
+
+} // namespace analysis
+} // namespace pwiz
 
 #endif // _SAVITZKYGOLAYSMOOTHER_HPP_

@@ -27,21 +27,17 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "utility/minimxml/SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <iterator>
-
+#include "utility/misc/Exception.hpp"
+#include "utility/misc/String.hpp"
+#include "utility/misc/Stream.hpp"
+#include "utility/misc/Container.hpp"
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::minimxml;
 using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::offset_to_position;
 
 
@@ -295,14 +291,14 @@ void SpectrumList_mzMLImpl::readIndex()
     const int bufferSize = 512;
     string buffer(bufferSize, '\0');
 
-    is_->seekg(-bufferSize, ios::end);
+    is_->seekg(-bufferSize, std::ios::end);
     is_->read(&buffer[0], bufferSize);
 
     string::size_type indexIndexOffset = buffer.find("<indexListOffset>");
     if (indexIndexOffset == string::npos)
         throw runtime_error("SpectrumList_mzML::readIndex()] <indexListOffset> not found."); 
 
-    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), ios::end);
+    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
     if (!*is_)
         throw runtime_error("SpectrumList_mzML::readIndex()] Error seeking to <indexListOffset>."); 
     

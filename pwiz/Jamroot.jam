@@ -79,7 +79,7 @@ project pwiz
 
 # external library declarations
 
-lib pthread : : <link>shared ;
+lib pthread : : <name>pthread <link>shared ;
 lib jpeg png z ;
 lib gd : jpeg png z : <name>gd ;
 lib gd : : <toolset>msvc <name>bgd <search>../libraries : : <include>../libraries/gd-2.0.33 ;

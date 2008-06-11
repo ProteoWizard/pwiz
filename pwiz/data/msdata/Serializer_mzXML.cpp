@@ -536,8 +536,7 @@ void process_parentFile(const string& fileName, const string& fileType,
     sf.name = name;
     sf.location = location;
 
-    if (fileType == "RAWData")
-        sf.cvParams.push_back(MS_Xcalibur_RAW_file);
+    // TODO: make a vendor-independent distinction between RAWFile and processedFile?
 
     sf.cvParams.push_back(CVParam(MS_SHA_1, fileSha1));
 }
@@ -695,9 +694,11 @@ struct Handler_dataProcessing : public SAXParser::Handler
             getAttribute(attributes, "deisotoped", deisotoped);
             if (centroided == "1")
                 msd_.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
-            else
+            else // if 0 or absent, assume profile
                 msd_.fileDescription.fileContent.set(MS_profile_mass_spectrum);
-            // TODO: terms for deisotoped spectra?
+
+            // TODO: terms for deisotoped and charge-deconvoluted spectra?
+
             return Status::Ok;
         }
         else if (name == "software")

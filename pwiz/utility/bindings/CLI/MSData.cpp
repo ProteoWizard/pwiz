@@ -23,6 +23,9 @@
 
 #include "MSData.hpp"
 //#include "../../../data/msdata/MSData.hpp"
+#include "utility/misc/Exception.hpp"
+using System::Exception;
+using System::String;
 
 
 namespace b = pwiz::msdata;
@@ -310,12 +313,13 @@ int SpectrumList::findNative(System::String^ nativeID)
 
 Spectrum^ SpectrumList::spectrum(int index)
 {
-    return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, false)));
+    return spectrum(index, false);
 }
 
 Spectrum^ SpectrumList::spectrum(int index, bool getBinaryData)
 {
-    return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));
+    try { return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData))); }
+    catch (exception& e) { throw gcnew Exception(gcnew String(e.what())); }
 }
 
 

@@ -59,9 +59,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_SavitzkyGolaySmoother::spectrum(size_t in
         return inner_->spectrum(index, false);
 
     SpectrumPtr s = inner_->spectrum(index, true);
-    vector<double> intensities = s->binaryDataArrayPtrs[1]->data;
-    vector<double> smoothedIntensities = SavitzkyGolaySmoother<double>::smooth_copy(intensities);
-    intensities.swap(smoothedIntensities);
+
+    try
+    {
+        vector<double>& intensities = s->binaryDataArrayPtrs[1]->data;
+        vector<double> smoothedIntensities = SavitzkyGolaySmoother<double>::smooth_copy(intensities);
+        intensities.swap(smoothedIntensities);
+    }
+    catch(std::exception& e)
+    {
+        throw std::runtime_error(std::string("[SpectrumList_SavitzskyGolaySmoother] Error smoothing intensity data: ") + e.what());
+    }
     return s;
 }
 
