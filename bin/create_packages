@@ -1,0 +1,7 @@
+#!/bin/bash
+
+tag=1.2.1
+
+zip -j pwiz-$tag-tools-windows-i386.zip windows/i386/*
+zip -j pwiz-$tag-tools-linux-i386.zip linux/i386/*
+zip -j pwiz-$tag-tools-osx-i386.zip osx/i386/*
