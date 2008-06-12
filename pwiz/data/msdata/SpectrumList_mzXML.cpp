@@ -265,7 +265,7 @@ class HandlerScan : public SAXParser::Handler
         {
             string num, scanEvent, msLevel, peaksCount, polarity, collisionEnergy, 
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
-                msInstrumentID, centroided, deisotoped;
+                msInstrumentID, centroided, deisotoped, scanType;
 
             getAttribute(attributes, "num", num);
             getAttribute(attributes, "scanEvent", scanEvent);
@@ -282,6 +282,7 @@ class HandlerScan : public SAXParser::Handler
             getAttribute(attributes, "msInstrumentID", msInstrumentID);
             getAttribute(attributes, "centroided", centroided);
             getAttribute(attributes, "deisotoped", deisotoped);
+            getAttribute(attributes, "scanType", scanType);
 
             spectrum_.id = num;
             spectrum_.nativeID = num;
@@ -299,6 +300,38 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_positive_scan);
             else if (polarity == "-")
                 scan.set(MS_negative_scan);
+
+            // set spectrum and scan type by scanType attribute (assume MSn/Full if absent)
+            boost::to_lower(scanType);
+            if (scanType.empty() || scanType == "full")
+            {
+                spectrum_.set(MS_MSn_spectrum);
+                scan.set(MS_full_scan);
+            } else if (scanType == "zoom")
+            {
+                spectrum_.set(MS_MSn_spectrum);
+                scan.set(MS_zoom_scan);
+            } else if (scanType == "sim")
+            {
+                spectrum_.set(MS_SIM_spectrum);
+                scan.set(MS_SIM);
+            } else if (scanType == "srm")
+            {
+                spectrum_.set(MS_SRM_spectrum);
+                scan.set(MS_SRM);
+            } else if (scanType == "crm")
+            {
+                spectrum_.set(MS_CRM_spectrum);
+                scan.set(MS_CRM);
+            } else if (scanType == "q1")
+            {
+                spectrum_.set(MS_precursor_ion_spectrum);
+                scan.set(MS_precursor_ion_scan);
+            } else if (scanType == "q3")
+            {
+                spectrum_.set(MS_product_ion_spectrum);
+                scan.set(MS_product_ion_scan);
+            }
 
             // assume centroid if not specified (TODO: factor in dataProcessing information)
             if (!spectrum_.spectrumDescription.hasCVParam(MS_centroid_mass_spectrum) &&
