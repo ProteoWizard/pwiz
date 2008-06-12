@@ -26,6 +26,7 @@ alias all : ../utility ../data ../analysis ../tools ;
 
 install exe
     : ../tools
+      ../examples
     : <install-type>EXE
       <toolset>gcc,<variant>release:<location>../../build/gcc-release
       <toolset>gcc,<variant>debug:<location>../../build/gcc-debug
@@ -38,6 +39,7 @@ install exe
 
 install lib 
     : ../tools
+      ../examples
     : <install-type>LIB
       <install-dependencies>on
       <toolset>gcc,<variant>release:<location>../../build/gcc-release
