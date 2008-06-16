@@ -233,8 +233,7 @@ class HandlerPeaks : public SAXParser::Handler
                               stream_offset position)
     {
         // hack: avoid reading nested <scan> elements
-        // TODO: this is a bug: many files will not use precursorScanNum and instead
-        //       use nested scans to indicate precursor relationships
+        // TODO: use nested scans to indicate precursor relationships
         if (name == "peaks") return Status::Done;
         return Status::Ok;
     }
@@ -373,7 +372,21 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "peaks")
         {
-            if (!getBinaryData_) return Status::Done;
+            if (!getBinaryData_)
+            {
+                // insert empty arrays
+                BinaryDataArrayPtr bd_mz(new BinaryDataArray);
+                BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
+
+                spectrum_.binaryDataArrayPtrs.clear();
+                spectrum_.binaryDataArrayPtrs.push_back(bd_mz);
+                spectrum_.binaryDataArrayPtrs.push_back(bd_intensity);
+
+                bd_mz->cvParams.push_back(MS_m_z_array);
+                bd_intensity->cvParams.push_back(MS_intensity_array);
+                return Status::Done;
+            }
+
             handlerPeaks_.peaksCount = peaksCount_;
             return Status(Status::Delegate, &handlerPeaks_);
         }

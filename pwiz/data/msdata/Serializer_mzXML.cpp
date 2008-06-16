@@ -349,7 +349,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     const Scan& scan = description.scan;
 
     CVParam spectrumTypeParam = spectrum.cvParamChild(MS_spectrum_type);
-    CVParam scanTypeParam = spectrum.cvParamChild(MS_scanning_method);
+    CVParam scanTypeParam = scan.cvParamChild(MS_scanning_method);
     string scanType;
     if (scanTypeParam.empty())
     {
