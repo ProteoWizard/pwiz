@@ -28,6 +28,7 @@
 #include "utility/misc/endian.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/iostreams/filtering_streambuf.hpp"
+#include "boost/iostreams/filtering_stream.hpp"
 #include "boost/iostreams/copy.hpp"
 #include "boost/iostreams/filter/zlib.hpp"
 #include "boost/iostreams/device/array.hpp"
@@ -95,6 +96,16 @@ string filterArray(const void* byteBuffer, size_t byteCount)
     in.push(source);
     boost::iostreams::copy(in, result);
     return result.str();
+/*
+    ostringstream result(ios::binary);
+    filtering_ostream fos;
+    fos.push(filter_type());
+    fos.push(result);
+    fos.write((const char*)byteBuffer, byteCount);
+    fos.pop(); 
+    fos.pop();
+    return result.str();
+*/
 }
 
 
