@@ -24,99 +24,9 @@
 #ifndef _MSDATA_HPP_CLI_
 #define _MSDATA_HPP_CLI_
 
-#using <mscorlib.dll>
+
 #include "CVParam.hpp"
 #include "../../../data/msdata/MSData.hpp"
-#include <boost/shared_ptr.hpp>
-
-#define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
-public ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
-{ \
-    internal: WrapperName(std::vector<NativeType>* base) : base_(base) {} \
-              virtual ~WrapperName() {if (base_) delete base_;} \
-              std::vector<NativeType>* base_; \
-    \
-    public: WrapperName() : base_(new std::vector<NativeType>()) {} \
-    \
-    public: \
-    property int Count { virtual int get() {return (int) base_->size();} } \
-    property bool IsReadOnly { virtual bool get() {return false;} } \
-    \
-    property CLIHandle Item[int] \
-    { \
-        virtual CLIHandle get(int index) {return NativeToCLI(CLIType, base_->at((size_t) index));} \
-        virtual void set(int index, CLIHandle value) {} \
-    } \
-    \
-    virtual void Add(CLIHandle item) {base_->push_back(CLIToNative(NativeType, item));} \
-    virtual void Clear() {base_->clear();} \
-    virtual bool Contains(CLIHandle item) {return std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)) != base_->end();} \
-    virtual void CopyTo(array<CLIHandle>^ arrayTarget, int arrayIndex) {} \
-    virtual bool Remove(CLIHandle item) {std::vector<NativeType>::iterator itr = std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
-    virtual int IndexOf(CLIHandle item) {return (int) (std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item))-base_->begin());} \
-    virtual void Insert(int index, CLIHandle item) {base_->insert(base_->begin() + index, CLIToNative(NativeType, item));} \
-    virtual void RemoveAt(int index) {base_->erase(base_->begin() + index);} \
-    \
-    ref class Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
-    { \
-        public: Enumerator(std::vector<NativeType>* base) : base_(base) {} \
-        internal: std::vector<NativeType>* base_; \
-        internal: std::vector<NativeType>::iterator* itr_; \
-        \
-        public: \
-        property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(CLIType, **itr_);} } \
-        property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(CLIType, **itr_);} } \
-        virtual bool MoveNext() \
-        { \
-            if (*itr_ == base_->end()) return false; \
-            else ++*itr_; return true; \
-        } \
-        virtual void Reset() {*itr_ = base_->begin();} \
-        ~Enumerator() {} \
-    }; \
-    virtual System::Collections::Generic::IEnumerator<CLIHandle>^ GetEnumerator() {return gcnew Enumerator(base_);} \
-    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
-};
-
-
-#define DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
-    DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType^, NativeToCLI, CLIToNative)
-#define DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
-    DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
-
-#define NATIVE_SHARED_PTR_TO_CLI(CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(&(SharedPtr)) : nullptr)
-#define NATIVE_REFERENCE_TO_CLI(CLIType, NativeRef) gcnew CLIType(&(NativeRef))
-#define NATIVE_VALUE_TO_CLI(CLIType, NativeValue) ((CLIType) NativeValue)
-
-#define CLI_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
-#define CLI_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
-#define CLI_VALUE_TO_NATIVE_VALUE(NativeType, CLIObject) ((NativeType) CLIObject)
-
-
-#define DEFINE_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base) : base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          pwiz::msdata::ClassType* base_;
-
-#define DEFINE_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base) : BaseClassType(base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          pwiz::msdata::ClassType* base_;
-
-#define DEFINE_SHARED_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
-
-#define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((pwiz::msdata::BaseClassType*) &**base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
-
-#define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((boost::shared_ptr<pwiz::msdata::BaseClassType>*) base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
 
 
 namespace pwiz {
@@ -232,11 +142,27 @@ public ref class ParamContainer
               virtual ~ParamContainer() {if (base_) delete base_;}
               pwiz::msdata::ParamContainer* base_;
 
+    ParamGroupList^ getParamGroups();
+    CVParamList^ getCVParams();
+    UserParamList^ getUserParams();
+
     public:
     ParamContainer() : base_(new pwiz::msdata::ParamContainer()) {}
-    ParamGroupList^ paramGroups();
-    CVParamList^ cvParams();
-    UserParamList^ userParams();
+
+    property ParamGroupList^ paramGroups
+    {
+        ParamGroupList^ get() {return getParamGroups();}
+    }
+
+    property CVParamList^ cvParams
+    {
+        CVParamList^ get() {return getCVParams();}
+    }
+
+    property UserParamList^ userParams
+    {
+        UserParamList^ get() {return getUserParams();}
+    }
 
     
     /// Finds pwiz::msdata::CVID in the container:
@@ -1050,6 +976,12 @@ public ref class Spectrum : public ParamContainer
         void set(System::String^ value) {(*base_)->nativeID = ToStdString(value);}
     }
 
+    property System::String^ spotID
+    {
+        System::String^ get() {return gcnew System::String((*base_)->spotID.c_str());}
+        void set(System::String^ value) {(*base_)->spotID = ToStdString(value);}
+    }
+
 	property System::UInt64 sourceFilePosition
     {
         System::UInt64 get() {return (System::UInt64) (*base_)->sourceFilePosition;}
@@ -1096,8 +1028,26 @@ public ref class Spectrum : public ParamContainer
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(MZIntensityPairList^% output);
 
+    /// get m/z array (may be null)
+    BinaryDataArray^ getMZArray();
+
+    /// get intensity array (may be null)
+    BinaryDataArray^ getIntensityArray();
+
     /// set binary data arrays 
     void setMZIntensityPairs(MZIntensityPairList^ input);
+
+    /// set binary data arrays 
+    void setMZIntensityPairs(MZIntensityPairList^ input, CVID intensityUnits);
+
+    /// set m/z and intensity arrays separately (they must be the same size)
+    void setMZIntensityArrays(System::Collections::Generic::List<double>^ mzArray,
+                              System::Collections::Generic::List<double>^ intensityArray);
+
+    /// set m/z and intensity arrays separately (they must be the same size)
+    void setMZIntensityArrays(System::Collections::Generic::List<double>^ mzArray,
+                              System::Collections::Generic::List<double>^ intensityArray,
+                              CVID intensityUnits);
 };
 
 

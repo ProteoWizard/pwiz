@@ -106,6 +106,19 @@ size_t SpectrumList_mzXMLImpl::findNative(const string& nativeID) const
 }
 
 
+void addEmptyMzIntensityArrays(Spectrum& spectrum)
+{
+    BinaryDataArrayPtr bd_mz(new BinaryDataArray);
+    BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
+
+    spectrum.binaryDataArrayPtrs.push_back(bd_mz);
+    spectrum.binaryDataArrayPtrs.push_back(bd_intensity);
+
+    bd_mz->cvParams.push_back(MS_m_z_array);
+    bd_intensity->cvParams.push_back(MS_intensity_array);
+}
+
+
 struct HandlerPrecursor : public SAXParser::Handler
 {
     Precursor* precursor;
@@ -215,7 +228,10 @@ class HandlerPeaks : public SAXParser::Handler
                               stream_offset position)
     {
         if (peaksCount == 0)
+        {
+            addEmptyMzIntensityArrays(spectrum_);
             return Status::Ok;
+        }
 
         BinaryDataEncoder encoder(config_);
         vector<double> decoded;
@@ -372,18 +388,9 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "peaks")
         {
-            if (!getBinaryData_)
+            if (!getBinaryData_ || peaksCount_ == 0)
             {
-                // insert empty arrays
-                BinaryDataArrayPtr bd_mz(new BinaryDataArray);
-                BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
-
-                spectrum_.binaryDataArrayPtrs.clear();
-                spectrum_.binaryDataArrayPtrs.push_back(bd_mz);
-                spectrum_.binaryDataArrayPtrs.push_back(bd_intensity);
-
-                bd_mz->cvParams.push_back(MS_m_z_array);
-                bd_intensity->cvParams.push_back(MS_intensity_array);
+                addEmptyMzIntensityArrays(spectrum_);
                 return Status::Done;
             }
 

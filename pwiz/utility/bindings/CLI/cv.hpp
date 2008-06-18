@@ -27,6 +27,10 @@
 #define _CV_HPP_CLI_
 
 
+#include "SharedCLI.hpp"
+#include "../../../data/msdata/cv.hpp"
+
+
 // [psi-ms.obo]
 //   format-version: 1.2
 //   date: 12:05:2008 09:58
@@ -1063,6 +1067,42 @@ public enum class CVID
     UO_watt_per_meter_kelvin = 100000265,
     UO_electronvolt = 100000266
 }; // enum CVID
+
+
+DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::msdata::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::String, STD_STRING_TO_CLI_STRING, CLI_STRING_TO_STD_STRING);
+
+
+/// structure for holding CV term info
+public ref class CVInfo
+{
+    DEFINE_INTERNAL_BASE_CODE(CVInfo);
+
+    public:
+    property CVID cvid { CVID get() {return (CVID) base_->cvid;} }
+    property System::String^ id { System::String^ get() {return gcnew System::String(base_->id.c_str());} }
+    property System::String^ name { System::String^ get() {return gcnew System::String(base_->name.c_str());} }
+    property System::String^ def { System::String^ get() {return gcnew System::String(base_->def.c_str());} }
+
+    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA);} }
+    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf);} }
+    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
+
+    CVInfo() : base_(new pwiz::msdata::CVInfo()) {}
+
+    /// returns CV term info for the specified CVID
+    CVInfo(CVID cvid) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo((pwiz::msdata::CVID) cvid))) {}
+
+    /// returns CV term info for the specified id (accession number)
+    CVInfo(System::String^ id) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo(ToStdString(id)))) {}
+
+    System::String^ shortName() {return gcnew System::String(base_->shortName().c_str());}
+    System::String^ prefix() {return gcnew System::String(base_->prefix().c_str());}
+};
+
+
+/// returns true iff child IsA parent in the CV
+//bool cvIsA(CVID child, CVID parent);
 
 
 } // namespace msdata

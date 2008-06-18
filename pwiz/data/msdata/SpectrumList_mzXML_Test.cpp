@@ -124,10 +124,16 @@ void test(bool indexed)
     unit_assert(s->spectrumDescription.scan.hasCVParam(MS_scan_time));
     unit_assert(s->spectrumDescription.scan.cvParam(MS_preset_scan_configuration).valueAs<int>() == 3);
     unit_assert(s->spectrumDescription.cvParam(MS_base_peak_intensity).value == "120053");
-    unit_assert(s->binaryDataArrayPtrs.empty());
+    unit_assert(s->defaultArrayLength == 15);
+    unit_assert(s->binaryDataArrayPtrs.size() == 2);
+    unit_assert(s->binaryDataArrayPtrs[0]->hasCVParam(MS_m_z_array));
+    unit_assert(s->binaryDataArrayPtrs[1]->hasCVParam(MS_intensity_array));
+    unit_assert(s->binaryDataArrayPtrs[0]->data.empty() && s->binaryDataArrayPtrs[1]->data.empty());
 
     s = sl->spectrum(0, true);
+    unit_assert(s->defaultArrayLength == 15);
     unit_assert(s->binaryDataArrayPtrs.size() == 2);
+    unit_assert(!s->binaryDataArrayPtrs[0]->data.empty() && !s->binaryDataArrayPtrs[1]->data.empty());
 
     vector<MZIntensityPair> pairs;
     s->getMZIntensityPairs(pairs);

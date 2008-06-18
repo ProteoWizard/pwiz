@@ -622,7 +622,7 @@ PWIZ_API_DECL bool Spectrum::empty() const
 namespace {
 
 pair<BinaryDataArrayPtr,BinaryDataArrayPtr> 
-getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize)
+getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs)
 {
     BinaryDataArrayPtr mzArray;
     BinaryDataArrayPtr intensityArray;
@@ -633,18 +633,6 @@ getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize
         if ((*it)->hasCVParam(MS_intensity_array) && !intensityArray.get()) intensityArray = *it;
     }
 
-    if (!mzArray.get()) 
-        throw runtime_error("[MSData::getMZIntensityArrays()] m/z array not found.");
-
-    if (!intensityArray.get()) 
-        throw runtime_error("[MSData::getMZIntensityArrays()] Intensity array not found.");
-
-    if (mzArray->data.size() != expectedSize)
-        throw runtime_error("[MSData::getMZIntensityArrays()] m/z array invalid size.");
-         
-    if (intensityArray->data.size() != expectedSize)
-        throw runtime_error("[MSData::getMZIntensityArrays()] Intensity array invalid size.");
-         
     return make_pair(mzArray, intensityArray);
 }
 
@@ -653,10 +641,31 @@ getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize
 
 PWIZ_API_DECL void Spectrum::getMZIntensityPairs(vector<MZIntensityPair>& output) const 
 {
+    // retrieve and validate m/z and intensity arrays
+
+    pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
+        getMZIntensityArrays(binaryDataArrayPtrs);
+
+    if (!arrays.first.get() || !arrays.second.get()) 
+        return;
+
+    if (arrays.first->data.size() != arrays.second->data.size())
+        throw runtime_error("[MSData::Spectrum::getMZIntensityPairs()] Sizes do not match.");
+
     output.clear();
-    output.resize(defaultArrayLength);
+    output.resize(arrays.first->data.size());
+
     if (!output.empty())
-        getMZIntensityPairs(&output[0], output.size());
+    {
+        double* mz = &arrays.first->data[0];
+        double* intensity = &arrays.second->data[0];
+        MZIntensityPair* start = &output[0];
+        for (MZIntensityPair* p = start; p != start + output.size(); ++p) 
+        {
+            p->mz = *mz++;
+            p->intensity = *intensity++;
+        }
+    }
 }
 
 
@@ -664,10 +673,18 @@ PWIZ_API_DECL void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t
 {
     // retrieve and validate m/z and intensity arrays
 
-    if (expectedSize == 0) return;
-
     pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
-        getMZIntensityArrays(binaryDataArrayPtrs, expectedSize); 
+        getMZIntensityArrays(binaryDataArrayPtrs);
+
+    // if either array is absent, do not modify the output
+    if (!arrays.first.get() || !arrays.second.get()) 
+        return;
+
+    if (arrays.first->data.size() != expectedSize)
+        throw runtime_error("[MSData::Spectrum::getMZIntensityPairs()] m/z array invalid size.");
+
+    if (arrays.second->data.size() != expectedSize)
+        throw runtime_error("[MSData::Spectrum::getMZIntensityPairs()] Intensity array invalid size.");
 
     if (!output)
         throw runtime_error("[MSData::Spectrum::getMZIntensityPairs()] Null output buffer.");
@@ -684,24 +701,66 @@ PWIZ_API_DECL void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t
 }
 
 
-PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input)
+PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getMZArray() const
 {
+    for (vector<BinaryDataArrayPtr>::const_iterator it = binaryDataArrayPtrs.begin();
+         it != binaryDataArrayPtrs.end();
+         ++it)
+    {
+        if ((*it)->hasCVParam(MS_m_z_array)) return *it;
+    }
+    return BinaryDataArrayPtr();
+}
+
+
+PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getIntensityArray() const
+{
+    for (vector<BinaryDataArrayPtr>::const_iterator it = binaryDataArrayPtrs.begin();
+         it != binaryDataArrayPtrs.end();
+         ++it)
+    {
+        if ((*it)->hasCVParam(MS_intensity_array)) return *it;
+    }
+    return BinaryDataArrayPtr();
+}
+
+
+PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input, CVID intensityUnit)
+{
+    // TODO: setting the arrays with an empty vector is a valid use case!
     if (!input.empty())    
         setMZIntensityPairs(&input[0], input.size());
 }
 
 
-PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size)
+PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits)
 {
-    BinaryDataArrayPtr bd_mz(new BinaryDataArray);
-    BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
+    pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
+            getMZIntensityArrays(binaryDataArrayPtrs);
 
-    binaryDataArrayPtrs.clear();
-    binaryDataArrayPtrs.push_back(bd_mz);
-    binaryDataArrayPtrs.push_back(bd_intensity);
+    BinaryDataArrayPtr& bd_mz = arrays.first;
+    BinaryDataArrayPtr& bd_intensity = arrays.second;
 
-    bd_mz->cvParams.push_back(MS_m_z_array);
-    bd_intensity->cvParams.push_back(MS_intensity_array);
+    if (!bd_mz.get())
+    {
+        bd_mz = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_m_z_array);
+        arrayType.units = MS_m_z;
+        bd_mz->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_mz);
+    }
+
+    if (!bd_intensity.get())
+    {
+        bd_intensity = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_intensity_array);
+        arrayType.units = intensityUnits;
+        bd_intensity->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_intensity);
+    }
+
+    bd_mz->data.clear();
+    bd_intensity->data.clear();
 
     bd_mz->data.resize(size);
     bd_intensity->data.resize(size);
@@ -716,6 +775,45 @@ PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, s
         *mz++ = p->mz;
         *intensity++ = p->intensity;
     }
+}
+
+
+PWIZ_API_DECL void Spectrum::setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits)
+{
+    if (mzArray.size() != intensityArray.size())
+        throw runtime_error("[MSData::Spectrum::setMZIntensityArrays()] Sizes do not match.");
+
+    pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
+            getMZIntensityArrays(binaryDataArrayPtrs);
+
+    BinaryDataArrayPtr& bd_mz = arrays.first;
+    BinaryDataArrayPtr& bd_intensity = arrays.second;
+
+    if (!bd_mz.get())
+    {
+        bd_mz = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_m_z_array);
+        arrayType.units = MS_m_z;
+        bd_mz->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_mz);
+    }
+
+    if (!bd_intensity.get())
+    {
+        bd_intensity = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_intensity_array);
+        arrayType.units = intensityUnits;
+        bd_intensity->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_intensity);
+    }
+
+    defaultArrayLength = mzArray.size();
+
+    bd_mz->data.clear();
+    bd_intensity->data.clear();
+
+    bd_mz->data.insert(bd_mz->data.end(), mzArray.begin(), mzArray.end());
+    bd_intensity->data.insert(bd_intensity->data.end(), intensityArray.begin(), intensityArray.end());
 }
 
 

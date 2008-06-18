@@ -61,17 +61,17 @@ UserParam::UserParam(System::String^ _name, System::String^ _value, System::Stri
 {value_ = gcnew UserParamValue(base_);}
 
 
-ParamGroupList^ ParamContainer::paramGroups()
+ParamGroupList^ ParamContainer::getParamGroups()
 {
     return gcnew ParamGroupList(&base_->paramGroupPtrs);
 }
 
-CVParamList^ ParamContainer::cvParams()
+CVParamList^ ParamContainer::getCVParams()
 {
     return gcnew CVParamList(&base_->cvParams);
 }
 
-UserParamList^ ParamContainer::userParams()
+UserParamList^ ParamContainer::getUserParams()
 {
     return gcnew UserParamList(&base_->userParams);
 }
@@ -263,9 +263,45 @@ void Spectrum::getMZIntensityPairs(MZIntensityPairList^% output)
     output = gcnew MZIntensityPairList(p);
 }
 
+BinaryDataArray^ Spectrum::getMZArray()
+{
+    return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));
+}
+
+BinaryDataArray^ Spectrum::getIntensityArray()
+{
+    return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));
+}
+
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input)
 {
-    (*base_)->setMZIntensityPairs(*input->base_);
+    (*base_)->setMZIntensityPairs(*input->base_, (b::CVID) CVID::CVID_Unknown);
+}
+
+void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input, CVID intensityUnits)
+{
+    (*base_)->setMZIntensityPairs(*input->base_, (b::CVID) intensityUnits);
+}
+
+void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ mzArray,
+                                    System::Collections::Generic::List<double>^ intensityArray)
+{
+    setMZIntensityArrays(mzArray, intensityArray, CVID::CVID_Unknown);
+}
+
+void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ mzArray,
+                                    System::Collections::Generic::List<double>^ intensityArray,
+                                    CVID intensityUnits)
+{
+    cli::array<double>^ mzArray2 = mzArray->ToArray();
+    pin_ptr<double> mzArrayPinPtr = &mzArray2[0];
+    double* mzArrayBegin = (double*) mzArrayPinPtr;
+    cli::array<double>^ intensityArray2 = intensityArray->ToArray();
+    pin_ptr<double> intensityArrayPinPtr = &intensityArray2[0];
+    double* intensityArrayBegin = (double*) intensityArrayPinPtr;
+    (*base_)->setMZIntensityArrays(std::vector<double>(mzArrayBegin, mzArrayBegin + mzArray2->Length),
+                                   std::vector<double>(intensityArrayBegin, intensityArrayBegin + intensityArray2->Length),
+                                   (b::CVID) intensityUnits);
 }
 
 

@@ -285,7 +285,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_MSn_spectrum);
     s21.set(MS_ms_level, 1);
 
-    s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data (no BinaryDataArrayList)"));
+    s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data"));
+    s21.setMZIntensityArrays(vector<double>(), vector<double>());
 
     // spectrum with MALDI spot information
     Spectrum& s22 = *spectrumList->spectra[3];

@@ -24,33 +24,15 @@
 #ifndef _CVPARAM_HPP_CLI_
 #define _CVPARAM_HPP_CLI_
 
-#include <stdlib.h>
-#include <vcclr.h>
-#include <string>
-
+#include "SharedCLI.hpp"
 #include "cv.hpp"
 #include "../../../data/msdata/CVParam.hpp"
-#include <boost/shared_ptr.hpp>
 
 namespace pwiz {
 namespace CLI {
 namespace msdata {
 
-inline std::string ToStdString( System::String^ source )
-{
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-		throw std::runtime_error("error converting System::String to std::string");
-	return target;
-}
+
 
 public ref class CVParamValue
 {

@@ -477,11 +477,20 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     /// must determine the correct size beforehand, or an exception will be thrown
     void getMZIntensityPairs(MZIntensityPair* output, size_t expectedSize) const;
 
-    /// set binary data arrays 
-    void setMZIntensityPairs(const std::vector<MZIntensityPair>& input);
+    /// get m/z array (may be null)
+    BinaryDataArrayPtr getMZArray() const;
+
+    /// get intensity array (may be null)
+    BinaryDataArrayPtr getIntensityArray() const;
 
     /// set binary data arrays 
-    void setMZIntensityPairs(const MZIntensityPair* input, size_t size);
+    void setMZIntensityPairs(const std::vector<MZIntensityPair>& input, CVID intensityUnits = CVID_Unknown);
+
+    /// set binary data arrays 
+    void setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits = CVID_Unknown);
+
+    /// set m/z and intensity arrays separately (they must be the same size)
+    void setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits = CVID_Unknown);
 };
 
 

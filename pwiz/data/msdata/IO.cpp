@@ -1702,6 +1702,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 {
     BinaryDataArray* binaryDataArray;
     size_t defaultArrayLength;
+    BinaryDataEncoder::Config config;
 
     HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0)
     :   binaryDataArray(_binaryDataArray),
@@ -1734,6 +1735,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
         else if (name == "binary")
         {
+            config = getConfig();
             return Status::Ok;
         }
 
@@ -1748,7 +1750,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         if (!binaryDataArray)
             throw runtime_error("[IO::HandlerBinaryDataArray] Null binaryDataArray."); 
 
-        BinaryDataEncoder::Config config = getConfig();
         BinaryDataEncoder encoder(config);
         encoder.decode(text, binaryDataArray->data); 
 
