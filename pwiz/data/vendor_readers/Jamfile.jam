@@ -37,11 +37,11 @@ lib pwiz_data_vendor_readers
         ChromatogramList_Thermo.cpp
     : # requirements
 		<library>../msdata//pwiz_data_msdata
-		<library>../../utility/vendor_api/thermo//pwiz_rawfile
+		<toolset>msvc:<library>../../utility/vendor_api/thermo//pwiz_rawfile
     : # default-build
     : # usage-requirements
 		<library>../msdata//pwiz_data_msdata
-		<library>../../utility/vendor_api/thermo//pwiz_rawfile
+		<toolset>msvc:<library>../../utility/vendor_api/thermo//pwiz_rawfile
     ;
 
 

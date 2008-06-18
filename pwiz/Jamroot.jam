@@ -31,9 +31,6 @@ project pwiz
         <include>../libraries/boost_1_34_1
         <include>../libraries/zlib-1.2.3
 
-        #<warnings-as-errors>on
-        <warnings>all
-
         <toolset>gcc,<link>shared:<runtime-link>shared
 
         # special msvc hacks
@@ -74,6 +71,8 @@ project pwiz
         release
         <link>static
         <runtime-link>static
+        #<warnings-as-errors>on
+        <warnings>all
     ;
 
 

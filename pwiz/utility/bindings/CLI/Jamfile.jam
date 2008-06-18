@@ -1,3 +1,7 @@
+import modules ;
+
+if [ modules.peek : NT ] {
+
 project
     : requirements
         <toolset>msvc:<build>yes
@@ -46,3 +50,5 @@ notfile update_embedded_manifest : @do_update_embedded_manifest : pwiz_bindings_
 
 #unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
 #unit-test MSDataFileTest : MSDataFileTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
+
+}
