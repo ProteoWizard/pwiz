@@ -314,8 +314,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         auto_ptr<raw::MassList> massList = 
             rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
 
-        sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, massList->data()[0].mass));
-        sd.cvParams.push_back(CVParam(MS_highest_m_z_value, massList->data()[massList->size()-1].mass));
+        double mzLowest = 0;
+        double mzHighest = 0;
+
+        if (massList->size() > 0)
+        {
+            mzLowest = massList->data()[0].mass;
+            mzHighest = massList->data()[massList->size()-1].mass;
+        }
+
+        sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, mzLowest));
+        sd.cvParams.push_back(CVParam(MS_highest_m_z_value, mzHighest));
 
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
                                     massList->size());
