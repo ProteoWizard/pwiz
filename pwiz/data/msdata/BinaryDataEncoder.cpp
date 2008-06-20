@@ -89,21 +89,24 @@ void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result)
 template <typename filter_type>
 string filterArray(const void* byteBuffer, size_t byteCount)
 {
-    ostringstream result;
-    array_source source(reinterpret_cast<const char*>(byteBuffer), byteCount);
-    filtering_streambuf<input> in;
-    in.push(filter_type());
-    in.push(source);
-    boost::iostreams::copy(in, result);
-    return result.str();
-/*
     ostringstream result(ios::binary);
     filtering_ostream fos;
     fos.push(filter_type());
     fos.push(result);
     fos.write((const char*)byteBuffer, byteCount);
     fos.pop(); 
-    fos.pop();
+    fos.pop(); // forces buffer to flush
+    return result.str();
+
+/* 
+    // original implementation, using technique in boost iostreams docs
+    // this doesn't flush properly in all cases -- see unit test
+    ostringstream result;
+    array_source source(reinterpret_cast<const char*>(byteBuffer), byteCount);
+    filtering_streambuf<input> in;
+    in.push(filter_type());
+    in.push(source);
+    boost::iostreams::copy(in, result);
     return result.str();
 */
 }
