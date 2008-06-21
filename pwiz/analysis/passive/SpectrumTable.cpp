@@ -61,19 +61,14 @@ SpectrumTable::updateRequested(const DataInfo& dataInfo,
 
 namespace {
 
-const char* knownAbbreviations_[] = {"FTMS", "ITMS"};
-const size_t knownAbbreviationsSize_ = sizeof(knownAbbreviations_) / sizeof(const char*);
-
 string massAnalyzerTypeAbbreviation(const SpectrumInfo& spectrumInfo)
 {
     string result = "Unknown";
 
-    for (const char** it=knownAbbreviations_; it!=knownAbbreviations_+knownAbbreviationsSize_; ++it)
-    if (spectrumInfo.filterString.find(*it) != string::npos)
-    {
-        result = *it;
-        break;
-    }
+    if (cvIsA(spectrumInfo.massAnalyzerType, MS_ion_trap))
+        result = "ITMS";
+    else if (spectrumInfo.massAnalyzerType == MS_FT_ICR)
+        result = "FTMS";
 
     return result;
 }
