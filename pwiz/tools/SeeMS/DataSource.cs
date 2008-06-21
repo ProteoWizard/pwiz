@@ -147,8 +147,8 @@ namespace seems
 			msDataFile = new MSDataFile(filepath);
 			sourceFilepath = filepath;
 
-			/*setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
-			setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
+			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
+			/*setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
 			Thread setInputFileThread = new Thread( setInputFileDelegate );
 
 			setInputFileThread.Start( (object) filepath );*/

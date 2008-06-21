@@ -193,9 +193,10 @@ namespace seems
             if( spectrum.binaryDataArrays.Count >= 2 )
             {
                 Map<double, double> sortedFullPointList = new Map<double, double>();
-                IList<double> mzList = spectrum.binaryDataArrays[0].data;
-                IList<double> intensityList = spectrum.binaryDataArrays[1].data;
-                for( int i = 0; i < (int) spectrum.defaultArrayLength; ++i )
+                IList<double> mzList = spectrum.getMZArray().data;
+                IList<double> intensityList = spectrum.getIntensityArray().data;
+                int arrayLength = mzList.Count;
+                for( int i = 0; i < arrayLength; ++i )
                     sortedFullPointList[mzList[i]] = intensityList[i];
                 pointList = new PointList( new ZedGraph.PointPairList(
                     new List<double>( sortedFullPointList.Keys ).ToArray(),

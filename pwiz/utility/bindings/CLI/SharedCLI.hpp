@@ -61,20 +61,24 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
     \
     ref class Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
     { \
-        public: Enumerator(std::vector<NativeType>* base) : base_(base) {} \
+        public: Enumerator(std::vector<NativeType>* base) : base_(base), itr_(new std::vector<NativeType>::iterator), isReset_(true) {} \
         internal: std::vector<NativeType>* base_; \
-        internal: std::vector<NativeType>::iterator* itr_; \
+                  std::vector<NativeType>::iterator* itr_; \
+                  bool isReset_; \
         \
         public: \
         property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(CLIType, **itr_);} } \
         property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(CLIType, **itr_);} } \
         virtual bool MoveNext() \
         { \
-            if (*itr_ == base_->end()) return false; \
-            else ++*itr_; return true; \
+            if (base_->empty()) return false; \
+            else if (isReset_) {isReset_ = false; *itr_ = base_->begin();} \
+            else if (*itr_+1 == base_->end()) return false; \
+            else ++*itr_; \
+            return true; \
         } \
-        virtual void Reset() {*itr_ = base_->begin();} \
-        ~Enumerator() {} \
+        virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
+        ~Enumerator() {delete itr_;} \
     }; \
     virtual System::Collections::Generic::IEnumerator<CLIHandle>^ GetEnumerator() {return gcnew Enumerator(base_);} \
     virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \

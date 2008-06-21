@@ -214,7 +214,7 @@ namespace seems
 						firstGraph = OpenGraph( true );
 						showData( firstGraph, managedDataSource, ticChromatogram );
 						firstChromatogramLoaded = true;
-						chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottomAutoHide );
+						chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
 						Application.DoEvents();
 					}
 				}
@@ -249,13 +249,16 @@ namespace seems
 										( i + 1 ), cl.size() ) );
 						mainForm.SetProgressPercentage( ( i + 1 ) * 100 / cl.size() );
 
+                        if( mainForm.IsDisposed )
+                            return;
+
 						Chromatogram chromatogram = new Chromatogram( source, c );
 						chromatogramListForm.Add( chromatogram );
 						source.Chromatograms.Add( chromatogram );
 						if( !firstChromatogramLoaded )
 						{
 							firstChromatogramLoaded = true;
-							chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottomAutoHide );
+							chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
 							firstGraph = OpenGraph( true );
                             showData( firstGraph, managedDataSource, chromatogram );
 						}
@@ -275,13 +278,16 @@ namespace seems
 						mainForm.SetProgressPercentage( ( i + 1 ) * 100 / sl.size() );
 					}
 
+                    if( mainForm.IsDisposed )
+                        return;
+
 					MassSpectrum spectrum = new MassSpectrum( source, s );
 					spectrumListForm.Add( spectrum );
 					source.Spectra.Add( spectrum );
 					if( !firstSpectrumLoaded )
 					{
 						firstSpectrumLoaded = true;
-						spectrumListForm.Show( mainForm.DockPanel, DockState.DockBottomAutoHide );
+						spectrumListForm.Show( mainForm.DockPanel, DockState.DockBottom );
 						if( firstChromatogramLoaded )
 						{
 							GraphForm spectrumGraph = CreateGraph();

@@ -88,6 +88,7 @@ namespace seems
             this.gridView.TabIndex = 10;
             this.gridView.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseClick );
             this.gridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_ColumnHeaderMouseClick );
+            this.gridView.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler( this.gridView_CellMouseEnter );
             this.gridView.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseDoubleClick );
             // 
             // SpectrumId
@@ -95,18 +96,21 @@ namespace seems
             this.SpectrumId.HeaderText = "Id";
             this.SpectrumId.Name = "SpectrumId";
             this.SpectrumId.ReadOnly = true;
+            this.SpectrumId.ToolTipText = "Unique Arbitrary Idenitifer";
             // 
             // NativeID
             // 
             this.NativeID.HeaderText = "Native Id";
             this.NativeID.Name = "NativeID";
             this.NativeID.ReadOnly = true;
+            this.NativeID.ToolTipText = "Unique Vendor/Instrument spectrum Identifier";
             // 
             // Index
             // 
             this.Index.HeaderText = "Index";
             this.Index.Name = "Index";
             this.Index.ReadOnly = true;
+            this.Index.ToolTipText = "Ordinal Index in Data Source";
             // 
             // SpectrumType
             // 
@@ -131,12 +135,14 @@ namespace seems
             this.DataPoints.HeaderText = "Data Points";
             this.DataPoints.Name = "DataPoints";
             this.DataPoints.ReadOnly = true;
+            this.DataPoints.ToolTipText = "Number of M/Z Data Points";
             // 
             // InstrumentConfigurationID
             // 
             this.InstrumentConfigurationID.HeaderText = "IC Id";
             this.InstrumentConfigurationID.Name = "InstrumentConfigurationID";
             this.InstrumentConfigurationID.ReadOnly = true;
+            this.InstrumentConfigurationID.ToolTipText = "Instrument Configuration";
             // 
             // BasePeakMZ
             // 
@@ -158,9 +164,10 @@ namespace seems
             // 
             // DataProcessing
             // 
-            this.DataProcessing.HeaderText = "Data Processing Id";
+            this.DataProcessing.HeaderText = "DP Id";
             this.DataProcessing.Name = "DataProcessing";
             this.DataProcessing.ReadOnly = true;
+            this.DataProcessing.ToolTipText = "Data Processing";
             // 
             // Polarity
             // 
@@ -173,12 +180,14 @@ namespace seems
             this.PrecursorInfo.HeaderText = "Precursor Info";
             this.PrecursorInfo.Name = "PrecursorInfo";
             this.PrecursorInfo.ReadOnly = true;
+            this.PrecursorInfo.ToolTipText = "Information related to the precursor (if applicable)";
             // 
             // ScanInfo
             // 
             this.ScanInfo.HeaderText = "Scan Info";
             this.ScanInfo.Name = "ScanInfo";
             this.ScanInfo.ReadOnly = true;
+            this.ScanInfo.ToolTipText = "Information related to the scan and the acquisitions composing it";
             // 
             // selectColumnsMenuStrip
             // 
@@ -214,6 +223,8 @@ namespace seems
 		#endregion
 
         private System.Windows.Forms.DataGridView gridView;
+        private System.Windows.Forms.ContextMenuStrip selectColumnsMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem selectColumnsToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn SpectrumId;
         private System.Windows.Forms.DataGridViewTextBoxColumn NativeID;
         private System.Windows.Forms.DataGridViewTextBoxColumn Index;
@@ -229,7 +240,5 @@ namespace seems
         private System.Windows.Forms.DataGridViewTextBoxColumn Polarity;
         private System.Windows.Forms.DataGridViewTextBoxColumn PrecursorInfo;
         private System.Windows.Forms.DataGridViewTextBoxColumn ScanInfo;
-        private System.Windows.Forms.ContextMenuStrip selectColumnsMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem selectColumnsToolStripMenuItem;
 	}
 }

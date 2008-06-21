@@ -539,31 +539,6 @@ namespace seems
 			}
 		}
 
-		private int overlaySelectedIndex;
-		void scanNumberComboBoxContextMenuStrip_Opened( object sender, EventArgs e )
-		{
-			//overlaySelectedIndex = scanNumberComboBox.ListBox.SelectedIndex;
-		}
-
-		private void openInActiveWindowToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-		}
-
-		private void openInNewWindowToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			GraphForm oldForm = CurrentGraphForm;
-			//int oldSelectedIndex = oldForm.CurrentGraphItemIndex;
-			//GraphForm graphForm = CreateNewGraph( false );
-			//graphForm.ShowData( (DataSource) dataSourceComboBox.SelectedItem, scanNumberComboBox.ListBox.SelectedIndex );
-			//scanNumberComboBox.SelectedIndex = oldSelectedIndex;
-			oldForm.Activate();
-		}
-
-		private void overlayOnActiveWindowToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			//CurrentGraphForm.ShowDataOverlay( (DataSource) dataSourceComboBox.SelectedItem, overlaySelectedIndex );
-		}
-
 		Point integratePeaksMouseDownLocation;
 		Point integratePeaksMouseUpLocation;
 		ZedGraph.LineItem integratePeaksLine;
