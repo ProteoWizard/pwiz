@@ -1,0 +1,16 @@
+#!/bin/bash
+
+tag=$(cat VERSION)
+packagedir=build/packages/$tag
+
+mkdir -p $packagedir
+
+zip -j $packagedir/pwiz-$tag-tools-windows-i386.zip bin/windows/i386/*
+zip -j $packagedir/pwiz-$tag-tools-linux-i386.zip bin/linux/i386/*
+zip -j $packagedir/pwiz-$tag-tools-osx-i386.zip bin/osx/i386/*
+
+tar czvf $packagedir/pwiz-$tag-src.tgz --exclude=*.svn* --exclude=*/bin* LICENSE NOTICE VERSION pwiz doc 
+
+echo
+echo $packagedir
+ls -lt $packagedir

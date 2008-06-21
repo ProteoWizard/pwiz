@@ -1,0 +1,13 @@
+#!/bin/bash
+
+tag=$(sed 's/\./_/g' VERSION)
+
+from=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/trunk/pwiz
+to=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/tags/pwiz_$tag
+
+echo $from
+echo $to
+
+read -p "Ready to create tag in repository (enter to continue)..."
+
+svn copy $from $to -m "added tag pwiz_$tag"

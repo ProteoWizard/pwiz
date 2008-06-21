@@ -1,0 +1,11 @@
+#!/bin/bash
+
+packagedir=build/packages/$(cat VERSION)
+
+ls -lt $packagedir
+
+echo "Ready to upload to SourceForge"
+read -p "user: " user 
+
+rsync -avP -e ssh $packagedir/* $user@frs.sourceforge.net:uploads/
+
