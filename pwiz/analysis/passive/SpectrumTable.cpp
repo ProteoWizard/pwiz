@@ -59,6 +59,28 @@ SpectrumTable::updateRequested(const DataInfo& dataInfo,
 }
 
 
+namespace {
+
+const char* knownAbbreviations_[] = {"FTMS", "ITMS"};
+const size_t knownAbbreviationsSize_ = sizeof(knownAbbreviations_) / sizeof(const char*);
+
+string massAnalyzerTypeAbbreviation(const SpectrumInfo& spectrumInfo)
+{
+    string result = "Unknown";
+
+    for (const char** it=knownAbbreviations_; it!=knownAbbreviations_+knownAbbreviationsSize_; ++it)
+    if (spectrumInfo.filterString.find(*it) != string::npos)
+    {
+        result = *it;
+        break;
+    }
+
+    return result;
+}
+
+} // namespace
+
+
 PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
 {
     bfs::path filename = dataInfo.outputDirectory;
@@ -108,7 +130,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
            << setw(width_id) << it->id 
            << setw(width_nativeID) << it->nativeID
            << setw(width_scanEvent) << it->scanEvent 
-           << setw(width_massAnalyzerType) << cvinfo(it->massAnalyzerType).shortName()
+           << setw(width_massAnalyzerType) << massAnalyzerTypeAbbreviation(*it)
            << setw(width_msLevel) << "ms" + lexical_cast<string>(it->msLevel)
            << setw(width_retentionTime) << fixed << setprecision(2) << it->retentionTime
            << setw(width_mzLow) << fixed << setprecision(0) << it->mzLow 

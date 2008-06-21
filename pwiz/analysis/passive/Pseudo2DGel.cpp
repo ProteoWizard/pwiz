@@ -258,7 +258,7 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     {
         lastParent = info.index; // remember this scan in case there are children
 
-        if (info.massAnalyzerType == MS_ion_trap){
+        if (cvIsA(info.massAnalyzerType, MS_ion_trap)){
             itScans_.scans.push_back(info.index);
             itScans_.rts.push_back(info.retentionTime);
             itScans_.bin.push_back(bin(info.basePeakMZ));
