@@ -31,6 +31,7 @@ lib pwiz_analysis_spectrum_processing
     : # sources  
         SpectrumList_NativeCentroider.cpp
         SpectrumList_SavitzkyGolaySmoother.cpp
+        PrecursorRecalculatorDefault.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
@@ -48,3 +49,6 @@ lib pwiz_analysis_spectrum_processing
 
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test PrecursorRecalculatorDefaultTest : PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing ;
+
+
