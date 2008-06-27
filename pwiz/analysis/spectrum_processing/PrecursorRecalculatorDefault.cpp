@@ -20,24 +20,125 @@
 // limitations under the License.
 //
 
+
 #include "PrecursorRecalculatorDefault.hpp"
+#include <iostream>
 
 
 namespace pwiz {
 namespace analysis {
 
 
-PrecursorRecalculatorDefault::PrecursorRecalculatorDefault(const Config&)
+using namespace std;
+using namespace pwiz::msdata;
+using namespace pwiz::data::peakdata;
+
+
+//
+// PrecursorRecalculatorDefault::Impl
+//
+
+
+class PrecursorRecalculatorDefault::Impl
+{
+    public:
+
+    Impl(const Config& config)
+    :   config_(config)
+    {}
+
+    void recalculate(const MZIntensityPair* begin,
+                     const MZIntensityPair* end,
+                     const PrecursorInfo& initialEstimate,
+                     vector<PrecursorInfo>& result);
+
+    private:
+    Config config_;
+};
+
+
+namespace {
+
+struct HasLowerMZ
+{
+    bool operator()(const MZIntensityPair& a, const MZIntensityPair& b){return a.mz < b.mz;}
+};
+
+PrecursorRecalculator::PrecursorInfo peakFamilyToPrecursorInfo(const PeakFamily& peakFamily)
+{
+    PrecursorRecalculator::PrecursorInfo result;
+    result.mz = peakFamily.mzMonoisotopic;
+    result.charge = peakFamily.charge;
+    result.score = peakFamily.score;
+    if (!peakFamily.peaks.empty())
+        result.intensity = peakFamily.peaks[0].intensity;
+    return result;
+}
+
+struct IsCloserTo
+{
+    IsCloserTo(double mz) : mz_(mz) {}
+
+    bool operator()(const PrecursorRecalculator::PrecursorInfo& a, 
+                    const PrecursorRecalculator::PrecursorInfo& b)
+    {
+        return fabs(a.mz - mz_) < fabs(b.mz - mz_);
+    }
+
+    private:
+    double mz_;
+};
+
+} // namespace
+
+
+void PrecursorRecalculatorDefault::Impl::recalculate(const MZIntensityPair* begin,
+                                                     const MZIntensityPair* end,
+                                                     const PrecursorInfo& initialEstimate,
+                                                     vector<PrecursorInfo>& result)
+{
+    // use initial estimate to find window
+
+    double mzLow = initialEstimate.mz - config_.mzLeftWidth;
+    double mzHigh = initialEstimate.mz + config_.mzRightWidth;
+
+    const MZIntensityPair* low = lower_bound(begin, end, mzLow, HasLowerMZ());
+    const MZIntensityPair* high = lower_bound(begin, end, mzHigh, HasLowerMZ());
+
+    // peak detection
+
+    vector<PeakFamily> peakFamilies;
+    config_.peakFamilyDetector->detect(low, high, peakFamilies);
+
+    // translate PeakFamily result -> PrecursorInfo result
+
+    transform(peakFamilies.begin(), peakFamilies.end(), back_inserter(result), peakFamilyToPrecursorInfo);
+
+    // sort
+
+    if (config_.sortBy == PrecursorRecalculatorDefault::Config::SortBy_Proximity)
+        sort(result.begin(), result.end(), IsCloserTo(initialEstimate.mz));
+    else
+        throw runtime_error("[PrecursorRecalculatorDefault::recalculate()] sort not implemented");
+}
+
+
+//
+// PrecursorRecalculatorDefault
+//
+
+
+PrecursorRecalculatorDefault::PrecursorRecalculatorDefault(const Config& config)
+:   impl_(new Impl(config))
 {}
-    
 
 
 void PrecursorRecalculatorDefault::recalculate(const MZIntensityPair* begin,
                                                const MZIntensityPair* end,
                                                const PrecursorInfo& initialEstimate,
-                                               std::vector<PrecursorInfo>& result)
+                                               vector<PrecursorInfo>& result)
 {
-
+    impl_->recalculate(begin, end, initialEstimate, result);
 }
 
 

@@ -36,7 +36,7 @@ class PWIZ_API_DECL PrecursorRecalculator
 {
     public:
 
-    struct PrecursorInfo
+    struct PWIZ_API_DECL PrecursorInfo
     {
         double mz;
         double intensity;
@@ -46,8 +46,10 @@ class PWIZ_API_DECL PrecursorRecalculator
         PrecursorInfo() : mz(0), intensity(0), charge(0), score(0) {}
     };
 
-    virtual void recalculate(const pwiz::msdata::MZIntensityPair* begin,
-                             const pwiz::msdata::MZIntensityPair* end,
+    typedef pwiz::msdata::MZIntensityPair MZIntensityPair;
+
+    virtual void recalculate(const MZIntensityPair* begin,
+                             const MZIntensityPair* end,
                              const PrecursorInfo& initialEstimate,
                              std::vector<PrecursorInfo>& result) = 0;
 

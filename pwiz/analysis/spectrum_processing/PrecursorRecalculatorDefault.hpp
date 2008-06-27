@@ -26,35 +26,43 @@
 
 
 #include "PrecursorRecalculator.hpp"
+#include "analysis/peakdetect/PeakFamilyDetector.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-class PrecursorRecalculatorDefault : public PrecursorRecalculator
+class PWIZ_API_DECL PrecursorRecalculatorDefault : public PrecursorRecalculator
 {
     public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
+        boost::shared_ptr<PeakFamilyDetector> peakFamilyDetector;
+        std::ostream* log;
+
         double mzLeftWidth;
         double mzRightWidth;
 
         enum SortBy {SortBy_Proximity, SortBy_Score};
         SortBy sortBy;
         
-        Config() : mzLeftWidth(0), mzRightWidth(0), sortBy(SortBy_Proximity) {}
+        Config() : log(0), mzLeftWidth(0), mzRightWidth(0), sortBy(SortBy_Proximity) {}
     };
 
     PrecursorRecalculatorDefault(const Config&);
 
-    typedef pwiz::msdata::MZIntensityPair MZIntensityPair;
-    
     virtual void recalculate(const MZIntensityPair* begin,
                              const MZIntensityPair* end,
                              const PrecursorInfo& initialEstimate,
                              std::vector<PrecursorInfo>& result);
+
+    private:
+    class Impl;
+    boost::shared_ptr<Impl> impl_;
+    PrecursorRecalculatorDefault(PrecursorRecalculatorDefault&);
+    PrecursorRecalculatorDefault& operator=(PrecursorRecalculatorDefault&);
 };
 
 
