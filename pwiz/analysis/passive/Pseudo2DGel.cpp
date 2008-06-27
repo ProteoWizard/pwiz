@@ -29,6 +29,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
+#include <algorithm>
 #include <stdexcept>
 #include <iomanip>
 #include <fstream>
@@ -94,7 +95,6 @@ PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 
 namespace {
 
-
 class IntensityFunction
 {
     public:
@@ -116,6 +116,51 @@ class ColorMap
 
 } // namespace 
 
+namespace {
+
+struct prob_comp
+{
+    const MSDataCache& cache_;
+    const Pseudo2DGel::Config& config_;
+    
+    prob_comp(const MSDataCache& cache,
+              const Pseudo2DGel::Config& config)
+        : cache_(cache), config_(config)
+    {}
+    
+    // Compares 
+    bool operator()(const size_t& x, const size_t& y) const
+    {
+        bool result = x < y;
+
+        try
+        {
+            string nativeID_x = cache_[x].nativeID;
+            string nativeID_y = cache_[y].nativeID;
+            
+            if (config_.peptide_id != NULL)
+            {
+                PeptideID::Record x_record = config_.peptide_id->
+                    record(nativeID_x);
+                double x_score  = x_record.normalizedScore;
+                double y_score = config_.peptide_id->record(nativeID_x)
+                    .normalizedScore;
+                result = x_score < y_score;
+            }
+        }
+        catch(range_error re)
+        {
+            cerr << "caught range_error: "<<re.what()<<endl;;
+        }
+        catch(...)
+        {
+        }
+        
+        return result;
+    }
+};    
+
+}
 
 class Pseudo2DGel::Impl
 {
@@ -284,7 +329,6 @@ void Pseudo2DGel::Impl::close(const DataInfo& dataInfo)
 {
     writeImages(dataInfo);
 }
-
 
 int Pseudo2DGel::Impl::bin(double mz)
 {
@@ -746,7 +790,7 @@ Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t ms2Index)
 void Pseudo2DGel::Impl::writeImages(const DataInfo& dataInfo)
 {
     string label = ".image." + config_.label;
-    
+
     writeImage(dataInfo, label + ".itms", itScans_);
     writeImage(dataInfo, label + ".ftms", ftScans_);
 }
@@ -905,7 +949,7 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
     image.clip(begin, end - Image::Point(1,1));
 
     Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
-
+    
     // draw the scans
     for (size_t j=0; j<scans.size(); j++)
     {
@@ -983,6 +1027,19 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
              const Image::Point& begin, const Image::Point& end)
 {
     Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
+
+    // If a peptide_id object has been configured, then sort the scans
+    // by probability.
+
+    // TODO copy the ms2's into a new vector
+    ScanList orderedScans(scansInfo.scans.size());
+    copy(scansInfo.scans.begin(), scansInfo.scans.end(), orderedScans.begin());
+
+    if (config_.peptide_id != NULL)
+    {
+        prob_comp comp(cache_, config_);
+        sort(orderedScans.begin(), orderedScans.end(), comp);
+    }
 
     for (size_t j=0; j<ms2Scans_.scans.size(); j++)
     {

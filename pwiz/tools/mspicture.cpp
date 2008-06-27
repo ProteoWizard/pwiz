@@ -201,7 +201,7 @@ int main(int argc, const char* argv[])
         initializeAnalyzers(analyzers, config.commands);
         
         // Only take the first file for now.
-	ExtendedReaderList readers;
+        ExtendedReaderList readers;
 
         MSDataFile msd(config.filenames[0], &readers);
         MSDataAnalyzer::DataInfo dataInfo(msd);
