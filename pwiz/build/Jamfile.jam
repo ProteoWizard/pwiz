@@ -21,11 +21,11 @@
 #
 
 
-alias all : ../utility ../data ../analysis ../tools ;
+alias all : ../utility ../data ../analysis ../../pwiz_tools/commandline ;
 
 
 install exe
-    : ../tools
+    : ../../pwiz_tools/commandline
       ../examples
     : <install-type>EXE
       <toolset>gcc,<variant>release:<location>../../build/gcc-release
@@ -38,7 +38,7 @@ install exe
 
 
 install lib 
-    : ../tools
+    : ../../pwiz_tools/commandline
       ../examples
     : <install-type>LIB
       <install-dependencies>on
