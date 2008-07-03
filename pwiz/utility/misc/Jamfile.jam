@@ -50,11 +50,11 @@ lib pwiz_utility_image
         Image.cpp
     : # requirements
         <warnings>all
-        <library>../..//gd
+        <library>../../..//gd
         <library>pwiz_utility_misc
     : # default-build
     : # usage-requirements
-        <library>../..//gd
+        <library>../../..//gd
         <library>pwiz_utility_misc
     ;
 
