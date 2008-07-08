@@ -74,6 +74,10 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
     basePeakMZ = sd.cvParam(MS_base_peak_m_z).valueAs<double>();    
     basePeakIntensity = sd.cvParam(MS_base_peak_intensity).valueAs<double>();    
     totalIonCurrent = sd.cvParam(MS_total_ion_current).valueAs<double>();
+
+    UserParam userParamMonoisotopicMZ = sd.scan.userParam("[Thermo Trailer Extra]Monoisotopic M/Z:");
+    if (!userParamMonoisotopicMZ.name.empty())
+        thermoMonoisotopicMZ = userParamMonoisotopicMZ.valueAs<double>();        
  
     for (vector<Precursor>::const_iterator it=sd.precursors.begin(); it!=sd.precursors.end(); ++it)
     {

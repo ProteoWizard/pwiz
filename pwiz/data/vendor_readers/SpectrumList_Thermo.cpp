@@ -277,6 +277,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     sd.cvParams.push_back(CVParam(MS_base_peak_intensity, scanInfo->basePeakIntensity()));
     sd.cvParams.push_back(CVParam(MS_total_ion_current, scanInfo->totalIonCurrent()));
 
+    double mzMonoisotopic = scanInfo->trailerExtraValueDouble("Monoisotopic M/Z:");
+    scan.userParams.push_back(UserParam("[Thermo Trailer Extra]Monoisotopic M/Z:", 
+                                        lexical_cast<string>(mzMonoisotopic),
+                                        "xsd:float"));
+
     scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
 
     for (long i=0, precursorCount=scanInfo->parentCount(); i<precursorCount; i++)

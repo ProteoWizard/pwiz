@@ -66,11 +66,29 @@ string massAnalyzerTypeAbbreviation(const SpectrumInfo& spectrumInfo)
     string result = "Unknown";
 
     if (cvIsA(spectrumInfo.massAnalyzerType, MS_ion_trap))
-        result = "ITMS";
+        result = "IonTrap";
     else if (spectrumInfo.massAnalyzerType == MS_FT_ICR)
-        result = "FTMS";
+        result = "FT";
+    else if (spectrumInfo.massAnalyzerType == MS_orbitrap)
+        result = "Orbitrap";
 
     return result;
+}
+
+double mzFromFilterString(const string& filterString)
+{
+    istringstream iss(filterString);
+    vector<string> tokens;
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+    
+    for (vector<string>::const_iterator it=tokens.begin(), end=tokens.end(); it!=end; ++it)
+    {
+        string::size_type at = it->find("@");
+        if (at != string::npos)
+            return lexical_cast<double>(it->substr(0,at));
+    }
+    
+    return 0;
 }
 
 } // namespace
@@ -102,6 +120,8 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
     const size_t width_basePeakIntensity = 14;
     const size_t width_totalIonCurrent = 14;
     const size_t width_precursorMZ = 12;
+    const size_t width_thermoMonoisotopicMZ = 15;
+    const size_t width_filterStringMZ = 15;
 
     os << setfill(' ')
        << setw(width_index) << "# index"
@@ -117,6 +137,8 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
        << setw(width_basePeakIntensity) << "basePeakInt"
        << setw(width_totalIonCurrent) << "TIC"
        << setw(width_precursorMZ) << "precursorMZ"
+       << setw(width_thermoMonoisotopicMZ) << "thermo_monoMZ"
+       << setw(width_filterStringMZ) << "filterStringMZ"
        << endl;
 
     for (vector<SpectrumInfo>::const_iterator it=cache_.begin(); it!=cache_.end(); ++it)
@@ -134,6 +156,8 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
            << setw(width_basePeakIntensity) << fixed << setprecision(2) << it->basePeakIntensity
            << setw(width_totalIonCurrent) << fixed << setprecision(2) << it->totalIonCurrent
            << setw(width_precursorMZ) << fixed << setprecision(4) << (!it->precursors.empty() ? it->precursors[0].mz : 0)
+           << setw(width_thermoMonoisotopicMZ) << fixed << setprecision(4) << it->thermoMonoisotopicMZ
+           << setw(width_filterStringMZ) << fixed << setprecision(4) << mzFromFilterString(it->filterString)
            << endl;
     }
 }
