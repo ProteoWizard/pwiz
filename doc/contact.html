@@ -29,37 +29,35 @@
 			onmouseup="changeImages('home', 'images/home-over.jpg'); return true;">
 			<img name="home" src="images/home.jpg" width="79" height="46" border="0" alt="home"></a>
 	</div>
-	<div id="about">
+	<div id="faq">
 		<a href="faq.html"
-			onmouseover="window.status='About Us'; changeImages('about', 'images/about-over.jpg'); return true;"
-			onmouseout="window.status=''; changeImages('about', 'images/about.jpg'); return true;"
-			onmousedown="changeImages('about', 'images/about-over.jpg'); return true;"
-			onmouseup="changeImages('about', 'images/about-over.jpg'); return true;">
-			<img name="about" src="images/about.jpg" width="89" height="46" border="0" alt="FAQ"></a>
-	</div>
-	<div id="people">
-		<a href="people.html"
-			onmouseover="window.status='people'; changeImages('people', 'images/people-over.jpg'); return true;"
-			onmouseout="window.status=''; changeImages('people', 'images/people.jpg'); return true;"
-			onmousedown="changeImages('people', 'images/people-over.jpg'); return true;"
-			onmouseup="changeImages('people', 'images/people-over.jpg'); return true;">
-			<img name="people" src="images/people.jpg" width="90" height="46" border="0" alt="people"></a>
-	</div>
-	<div id="download">
-		<a href="contact.html"
+			onmouseover="window.status='faq'; changeImages('faq', 'images/faq-over.jpg'); return true;"
+			onmouseout="window.status=''; changeImages('faq', 'images/about.jpg'); return true;"
+			onmousedown="changeImages('faq', 'images/faq-over.jpg'); return true;"
+			onmouseup="changeImages('faq', 'images/faq-over.jpg'); return true;">
+			<img name="about" src="images/faq.jpg" width="89" height="46" border="0" alt="FAQ"></a>	</div>
+<div id="docs">
+		<a href="docs.html"
+			onmouseover="window.status='docs'; changeImages('docs', 'images/docs-over.jpg'); return true;"
+			onmouseout="window.status=''; changeImages('docs', 'images/docs.jpg'); return true;"
+			onmousedown="changeImages('docs', 'images/docs-over.jpg'); return true;"
+			onmouseup="changeImages('docs', 'images/docs-over.jpg'); return true;">
+			<img name="docs" src="images/docs.jpg" width="90" height="46" border="0" alt="docs"></a>	</div>
+<div id="download">
+		<a href="download.html"
 			onmouseover="window.status='download'; changeImages('download', 'images/download-over.jpg'); return true;"
 			onmouseout="window.status=''; changeImages('download', 'images/download.jpg'); return true;"
 			onmousedown="changeImages('download', 'images/download-over.jpg'); return true;"
 			onmouseup="changeImages('download', 'images/download-over.jpg'); return true;">
-			<img name="download" src="images/download.jpg" width="86" height="46" border="0" alt="contact"></a>
+			<img name="download" src="images/download.jpg" width="86" height="46" border="0" alt="download"></a>
 	</div>
 	<div id="contact">
-		<a href="docs.html"
+		<a href="contact.html"
 			onmouseover="window.status='contact'; changeImages('contact', 'images/contact-over.jpg'); return true;"
 			onmouseout="window.status=''; changeImages('contact', 'images/contact.jpg'); return true;"
 			onmousedown="changeImages('contact', 'images/contact-over.jpg'); return true;"
 			onmouseup="changeImages('contact', 'images/contact-over.jpg'); return true;">
-			<img name="contact" src="images/contact.jpg" width="94" height="46" border="0" alt="docs"></a>
+			<img name="contact" src="images/contact.jpg" width="94" height="46" border="0" alt="contact"></a>
 	</div>
 	<div id="m2">
 		<img src="images/m2.jpg" width="71" height="680" alt="">
@@ -80,7 +78,7 @@
 		<img src="images/down.jpg" width="438" height="17" alt="">
 	</div>
 	<div id="BaseTemplate-14">
-	  <div align="right"><a href="index.html">Home</a> | <a href="faq.html">FAQ</a> | <a href="people.html">People</a> | <a href="docs.html">Documentation</a> | <a href="contact.html">Contact Us</a><br>
+	  <div align="right"><a href="index.html">Home</a> | <a href="faq.html">FAQ</a> | <a href="download.html">Download</a> | <a href="docs.html">Documentation</a> | <a href="contact.html">Contact Us</a><br>
       Copyright &copy; Cedars-Sinai Medical Center </div>
 	</div>
 	<div id="LeftSpacer">
@@ -102,7 +100,7 @@
     </p>
 
     <p>
-        For general questions, please email Darren Kessner:<br/>
+        For general questions or to become a code contributor, please email Darren Kessner:<br/>
         &nbsp; <a href="mailto:darren@proteowizard.org">darren@proteowizard.org</a>
     </p>
 
@@ -116,6 +114,53 @@
     <p>
         &nbsp; <a href="http://sourceforge.net/projects/proteowizard" target="_blank">http://sourceforge.net/projects/proteowizard</a>
     </p>
+    
+    <hr>
+    
+        <h1>People Behind ProteoWizard (so far)</h1>
+
+    <h2>Darren Kessner (SFCAP)</h2>
+    <p>
+        Darren is responsible for the design of ProteoWizard, and the initial implementation
+        of the libraries and tools in release 1.0.
+    </p>
+
+    <h2>Matt Chambers (Vanderbilt)</h2>
+    <p>
+        Matt Chambers wrote the SeeMS interactive viewer, and added most of the 
+        vendor-specific reader code.
+    </p>
+
+    <h2>Brian Pratt (Insilicos)</h2>
+    <p>
+        Brian plugged ProteoWizard into the Trans-Proteomic Pipeline.
+    </p>
+
+    <h2>Robert Burke (SFCAP)</h2>
+    <p>
+        Rob has been working on <code>mspicture</code>, the ProteoWizard pseudo-2D gel image creation tool. 
+    </p>
+
+    <h2>Parag Mallick (SFCAP)</h2>
+    <p>
+        Parag is the web designer (and the PI/SFCAP Director of Clinical Proteomics).
+    </p>
+
+
+    <h1>Groups</h1>
+
+    <h2>The Spielberg Family Center for Applied Proteomics (SFCAP)</h2>
+    <a href="http://sfcap.cshs.org" target="_blank">http://sfcap.cshs.org</a>
+
+    <h2>Seattle Proteome Center, Institute for Systems Biology (SPC-ISB)</h2>
+    <a href="http://proteomecenter.org" target="_blank">http://proteomecenter.org</a>
+
+    <h2>Vanderbilt University Mass Spectrometry Research Center</h2>
+    <a href="http://www.mc.vanderbilt.edu/msrc" target="_blank">http://www.mc.vanderbilt.edu/msrc</a>
+
+    <h2>Insilicos</h2>
+    <a href="http://insilicos.com" target="_blank">http://insilicos.com</a>
+
 
 <!-- END CONTENT GOES HERE -->
 

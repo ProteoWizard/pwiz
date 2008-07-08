@@ -12,6 +12,10 @@
 
 <style type="text/css">
 <!--
+.style1 {
+	font-size: 9px;
+	color: #FF9933;
+}
 -->
 </style></head>
 <body onLoad="preloadImages();" style="background-color:#000000; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px;">
@@ -29,37 +33,35 @@
 			onmouseup="changeImages('home', 'images/home-over.jpg'); return true;">
 			<img name="home" src="images/home.jpg" width="79" height="46" border="0" alt="home"></a>
 	</div>
-	<div id="about">
+	<div id="faq">
 		<a href="faq.html"
-			onmouseover="window.status='About Us'; changeImages('about', 'images/about-over.jpg'); return true;"
-			onmouseout="window.status=''; changeImages('about', 'images/about.jpg'); return true;"
-			onmousedown="changeImages('about', 'images/about-over.jpg'); return true;"
-			onmouseup="changeImages('about', 'images/about-over.jpg'); return true;">
-			<img name="about" src="images/about.jpg" width="89" height="46" border="0" alt="FAQ"></a>
-	</div>
-	<div id="people">
-		<a href="people.html"
-			onmouseover="window.status='people'; changeImages('people', 'images/people-over.jpg'); return true;"
-			onmouseout="window.status=''; changeImages('people', 'images/people.jpg'); return true;"
-			onmousedown="changeImages('people', 'images/people-over.jpg'); return true;"
-			onmouseup="changeImages('people', 'images/people-over.jpg'); return true;">
-			<img name="people" src="images/people.jpg" width="90" height="46" border="0" alt="people"></a>
-	</div>
-	<div id="download">
-		<a href="contact.html"
+			onmouseover="window.status='faq'; changeImages('faq', 'images/faq-over.jpg'); return true;"
+			onmouseout="window.status=''; changeImages('faq', 'images/about.jpg'); return true;"
+			onmousedown="changeImages('faq', 'images/faq-over.jpg'); return true;"
+			onmouseup="changeImages('faq', 'images/faq-over.jpg'); return true;">
+			<img name="about" src="images/faq.jpg" width="89" height="46" border="0" alt="FAQ"></a>	</div>
+<div id="docs">
+		<a href="docs.html"
+			onmouseover="window.status='docs'; changeImages('docs', 'images/docs-over.jpg'); return true;"
+			onmouseout="window.status=''; changeImages('docs', 'images/docs.jpg'); return true;"
+			onmousedown="changeImages('docs', 'images/docs-over.jpg'); return true;"
+			onmouseup="changeImages('docs', 'images/docs-over.jpg'); return true;">
+			<img name="docs" src="images/docs.jpg" width="90" height="46" border="0" alt="docs"></a>	</div>
+<div id="download">
+		<a href="download.html"
 			onmouseover="window.status='download'; changeImages('download', 'images/download-over.jpg'); return true;"
 			onmouseout="window.status=''; changeImages('download', 'images/download.jpg'); return true;"
 			onmousedown="changeImages('download', 'images/download-over.jpg'); return true;"
 			onmouseup="changeImages('download', 'images/download-over.jpg'); return true;">
-			<img name="download" src="images/download.jpg" width="86" height="46" border="0" alt="contact"></a>
+			<img name="download" src="images/download.jpg" width="86" height="46" border="0" alt="download"></a>
 	</div>
 	<div id="contact">
-		<a href="docs.html"
+		<a href="contact.html"
 			onmouseover="window.status='contact'; changeImages('contact', 'images/contact-over.jpg'); return true;"
 			onmouseout="window.status=''; changeImages('contact', 'images/contact.jpg'); return true;"
 			onmousedown="changeImages('contact', 'images/contact-over.jpg'); return true;"
 			onmouseup="changeImages('contact', 'images/contact-over.jpg'); return true;">
-			<img name="contact" src="images/contact.jpg" width="94" height="46" border="0" alt="docs"></a>
+			<img name="contact" src="images/contact.jpg" width="94" height="46" border="0" alt="contact"></a>
 	</div>
 	<div id="m2">
 		<img src="images/m2.jpg" width="71" height="680" alt="">
@@ -80,7 +82,7 @@
 		<img src="images/down.jpg" width="438" height="17" alt="">
 	</div>
 	<div id="BaseTemplate-14">
-	  <div align="right"><a href="index.html">Home</a> | <a href="faq.html">FAQ</a> | <a href="people.html">People</a> | <a href="docs.html">Documentation</a> | <a href="contact.html">Contact Us</a><br>
+	  <div align="right"><a href="index.html">Home</a> | <a href="faq.html">FAQ</a> | <a href="download.html">Download</a> | <a href="docs.html">Documentation</a> | <a href="contact.html">Contact Us</a><br>
       Copyright &copy; Cedars-Sinai Medical Center </div>
 	</div>
 	<div id="LeftSpacer">
@@ -113,6 +115,22 @@
         ]
     </p>
     <p>
+        Alternately, go to the <a href="download.html"> download </a> page to download specific parts of the project. 
+
+    <p>
+        If you use or incorporate the ProteoWizard tools or libraries, please cite our Bioinformatics Application Note [<a href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btn323?ijkey=BNjsLHD6Ki2zYgS&keytype=ref">abstract</a>]
+
+		[<a href="http://bioinformatics.oxfordjournals.org/cgi/reprint/btn323?ijkey=BNjsLHD6Ki2zYgS&keytype=ref">pdf</a>]
+:<br/>
+	  <UL class="style1">
+       	  ProteoWizard: Open Source Software for Rapid Proteomics Tools Development <br/>
+		  Darren Kessner; Matt Chambers; Robert Burke; David Agus; Parag Mallick<br/>
+		  Bioinformatics 2008; doi: 10.1093/bioinformatics/btn323<br/>
+		</UL>
+
+    </p>
+
+<p>
         Download our US HUPO 2008 poster:<br/>
         <a href="proteowizard_hupo08_poster.pdf" target="_blank">proteowizard_hupo08_poster.pdf</a>
     </p>
@@ -124,7 +142,8 @@
 
     <h1>Features</h1>
     <ul>
-        <li> native support for the new HUPO-PSI mzML standard mass spectrometry data format </li>
+    	<li> reference implementation of the new HUPO-PSI mzML standard mass spectrometry data format </li>
+      <li> native support for the mzML standard mass spectrometry data format </li>
         <li> modern C++ techniques and design principles </li>
         <li> cross-platform with native compilers (MSVC on Windows, gcc on Linux, XCode on OSX) </li>
         <li> modular design, for testability and extensibility </li>
@@ -132,25 +151,15 @@
         <li> open source license suitable for both academic and commercial projects (Apache v2) </li>
     </ul>
 
-    <h1>Tools</h1>
+
+    <h1>Tools List</h1>
+    For more details on each of our tools, please see the <a href="download.html">download</a> page.  
+
     <p>
-        <em>msconvert</em>: general data format conversion tool.  Writes mzML or mzXML.  Currently
-           reads mzML, mzXML, Thermo RAW (Windows), with more vendor formats in the near future
+      <em>msConvert</em>, <em>msDiff</em>, <em>msAccess</em>,<em>msPicture</em>,<em>SeeMS</em>, <em>msCat</em>, <em>txt2mzML </em>
     </p>
-    <p>
-        <em>msdiff</em>: comparison of two data files, for validation of conversion and 
-        preprocessing
-    </p>
-    <p>
-        <em>msaccess</em>: command line access to mass spec data files, including spectrum
-        binary data and metadata, selected ion chromatograms, and pseudo-2D gel image creation
-    </p>
-    <p>
-        <em>mspicture</em>: command line pseudo-2D gel image creation
-    </p>
-    <p>
-        <em>SeeMS</em>: interactive viewer for mass spec data files (Windows only) 
-    </p>
+
+
 
 
 <!-- END CONTENT GOES HERE -->
