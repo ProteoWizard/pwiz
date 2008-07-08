@@ -28,6 +28,7 @@ project
         <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
     ;
 
 
