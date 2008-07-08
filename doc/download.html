@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>ProteoWizard: FAQ</title>
+<title>ProteoWizard: Downloads</title>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta NAME="DESCRIPTION" CONTENT="Free open source C++ software library for mass spectrometry data formats mzML, mzXML, Thermo RAW, MGF and analysis, from the Parag Mallick Lab, Spielberg Family Center for Applied Proteomics.">
 <meta NAME="KEYWORDS" CONTENT="pwiz,C++,software,data,mzML,mzXML,RAW,HUPO-PSI,proteomics,mass spec,format,boost,reader,writer,conversion,converter,Parag Mallick">
@@ -12,6 +12,10 @@
 
 <style type="text/css">
 <!--
+.style1 {
+	font-size: 9px;
+	color: #FF9933;
+}
 -->
 </style></head>
 <body onLoad="preloadImages();" style="background-color:#000000; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px;">
@@ -94,43 +98,61 @@
 
 <!-- BEGIN CONTENT GOES HERE -->
 
-    <h1>FAQ</h1>
-
-    <h2>What is the current status of ProteoWizard?</h2>
-
+    <h1>ProteoWizard</h1>
     <p>
-        We have released version 1.2 of the library, together with the first set of 
-        command line tools.  Source and binary packages are available for download
-        from our <a href="download.html">download</a> page or from our SourceForge project page:<br/><br/>
-        &nbsp; <a href="http://sourceforge.net/projects/proteowizard" target="_blank">http://sourceforge.net/projects/proteowizard</a>
-    </p>
-
-    <h2>Who is using ProteoWizard?</h2>
-    <p>
-        
-        Researchers at the Spielberg Family Center for Applied Proteomics (SFCAP) use 
-        the ProteoWizard tools extensively in daily data analysis.
+        ProteoWizard is a modular and extensible set of open-source, cross-platform tools 
+        and software libraries for proteomics data analysis.  
     </p>
     <p>
-        The ProteoWizard libraries are being used by the Trans-Proteomic Pipeline (TPP)
-        tools for mzML support, which will be available in the next major release.
+        You can download the entire package [
+        <a href="http://downloads.sourceforge.net/proteowizard/pwiz-1.2.2-src.tgz" target="_blank">src</a> |
+        <a href="http://downloads.sourceforge.net/proteowizard/pwiz-1.2.2-tools-windows-i386.zip" target="_blank">win</a> |
+        <a href="http://downloads.sourceforge.net/proteowizard/pwiz-1.2.2-tools-linux-i386.zip" target="_blank">linux</a> |
+        <a href="http://downloads.sourceforge.net/proteowizard/pwiz-1.2.2-tools-osx-i386.zip" target="_blank">osx-i386</a>
+        ]
     </p>
-    
-        <h2>I want to contribute!</h2>
     <p>
-        
-        Great! Drop Darren an email <a href="mailto:darren@proteowizard.org">darren@proteowizard.org</a> and he'll get you signed up to the subversion repository.
+        or specific parts of the project below. 
+
+    <p>
+        If you use or incorporate the ProteoWizard tools or libraries, please cite our Bioinformatics Application Note [<a href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btn323?ijkey=BNjsLHD6Ki2zYgS&keytype=ref">abstract</a>]
+
+		[<a href="http://bioinformatics.oxfordjournals.org/cgi/reprint/btn323?ijkey=BNjsLHD6Ki2zYgS&keytype=ref">pdf</a>]
+:<br/>
+	  <UL class="style1">
+       	  ProteoWizard: Open Source Software for Rapid Proteomics Tools Development <br/>
+		  Darren Kessner; Matt Chambers; Robert Burke; David Agus; Parag Mallick<br/>
+		  Bioinformatics 2008; doi: 10.1093/bioinformatics/btn323<br/>
+		</UL>
+
     </p>
 
-
-    <h2>What's next on the development roadmap?</h2>
+    <h1>Tools List</h1>
     <p>
-        We (SFCAP) are mapping out collaboration with other proteomics software groups, including
-        the Seattle Proteome Center at the Institute for Systems Biology (ISB/SPC) and 
-        the Vanderbilt University Mass Spectrometry Research Center, with the goal of 
-        providing a single standard software library for proteomic data analysis.  The first 
-        immediate goal will be to combine efforts to add support for all vendor-specific proprietary
-        data formats.
+      <em>msconvert</em>: general data format conversion tool.  Writes mzML or mzXML.  Currently
+           reads mzML, mzXML, Thermo RAW (Windows), with more vendor formats in the near future
+    </p>
+    <p>
+        <em>msdiff</em>: comparison of two data files, for validation of conversion and 
+        preprocessing
+    </p>
+    <p>
+        <em>msaccess</em>: command line access to mass spec data files, including spectrum
+        binary data and metadata, selected ion chromatograms, and pseudo-2D gel image creation
+    </p>
+    <p>
+        <em>mspicture</em>: command line pseudo-2D gel image creation
+    </p>
+    <p>
+        <em>SeeMS</em>: interactive viewer for mass spec data files (Windows only) 
+    </p>
+
+    <p>
+        <em>msCat</em>: exports data from a variety of formats into 4 column text format (Raw supported on Windows only) 
+    </p>
+
+    <p>
+        <em>txt2mzML </em>: converts data from 4 column format to mzML(Raw supported on Windows only) 
     </p>
 
 <!-- END CONTENT GOES HERE -->
