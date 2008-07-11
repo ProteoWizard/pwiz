@@ -28,6 +28,7 @@ path-constant PWIZ_ROOT_PATH : . ;
 project pwiz 
     : requirements 
         <include>$(PWIZ_ROOT_PATH)/pwiz
+        <include>$(PWIZ_ROOT_PATH)/pwiz_aux
         <include>$(PWIZ_ROOT_PATH)/libraries/boost_1_34_1
         <include>$(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3
 
@@ -81,10 +82,10 @@ project pwiz
 lib pthread : : <name>pthread <link>shared ;
 lib jpeg png z ;
 lib gd : jpeg png z : <name>gd ;
-lib gd : : <toolset>msvc <name>bgd <search>../libraries : : <include>../libraries/gd-2.0.33 ;
+lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/gd-2.0.33 ;
 
 lib fftw3 ;
-lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>../libraries : : <include>../libraries/fftw-3.1.2/api ;
+lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/api ;
 
 local .boost-build-file = [ modules.peek : .boost-build-file ] ;
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;

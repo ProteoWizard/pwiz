@@ -366,7 +366,10 @@ class PWIZ_API_DECL TextWriter
         child()
             ("index: " + boost::lexical_cast<std::string>(spectrum.index))
             ("id: " + spectrum.id)
-            ("nativeID: " + boost::lexical_cast<std::string>(spectrum.nativeID))
+            ("nativeID: " + spectrum.nativeID);
+        if (!spectrum.spotID.empty())
+            child()("spotID: " + spectrum.spotID);
+        child()
             ("defaultArrayLength: " + boost::lexical_cast<std::string>(spectrum.defaultArrayLength))
             (spectrum.dataProcessingPtr)
             (static_cast<const ParamContainer&>(spectrum));
@@ -382,7 +385,7 @@ class PWIZ_API_DECL TextWriter
         child()
             ("index: " + boost::lexical_cast<std::string>(chromatogram.index))
             ("id: " + chromatogram.id)
-            ("nativeID: " + boost::lexical_cast<std::string>(chromatogram.nativeID))
+            ("nativeID: " + chromatogram.nativeID)
             ("defaultArrayLength: " + boost::lexical_cast<std::string>(chromatogram.defaultArrayLength))
             (chromatogram.dataProcessingPtr)
             (static_cast<const ParamContainer&>(chromatogram));

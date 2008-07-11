@@ -47,7 +47,7 @@ bool _hasRAWHeader(const std::string& head)
 } // namespace
 
 
-#ifndef PWIZ_NO_READER_RAW
+#ifndef PWIZ_NO_READER_THERMO
 #include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
@@ -260,7 +260,7 @@ void Reader_Thermo::read(const string& filename,
 } // namespace pwiz
 
 
-#else // PWIZ_NO_READER_RAW /////////////////////////////////////////////////////////////////////////////
+#else // PWIZ_NO_READER_THERMO /////////////////////////////////////////////////////////////////////////////
 
 //
 // non-MSVC implementation
@@ -292,5 +292,5 @@ PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 } // namespace msdata
 } // namespace pwiz
 
-#endif // PWIZ_NO_READER_RAW /////////////////////////////////////////////////////////////////////////////
+#endif // PWIZ_NO_READER_THERMO /////////////////////////////////////////////////////////////////////////////
 

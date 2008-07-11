@@ -1,0 +1,40 @@
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+lib pwiz_aux_isb_reader_waters
+    : # sources
+        Reader_Waters.cpp
+        Reader_Waters_Detail.cpp
+        SpectrumList_Waters.cpp
+        #dacserver_4-1.cpp
+    : # requirements
+		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+
+# special run target for Reader_Thermo_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Waters_Test.cpp pwiz_aux_isb_reader_waters 
+    : # args
+    : # input-files
+        #Reader_Waters_Test.RAW
+    : # requirements
+    : # target name
+        Reader_Waters_Test 
+    : # default-build
+    ;
+
+

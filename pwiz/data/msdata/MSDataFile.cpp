@@ -30,6 +30,7 @@
 #include "DefaultReaderList.hpp"
 #include <fstream>
 #include <stdexcept>
+#include "utility/misc/Filesystem.hpp"
 
 
 namespace pwiz {
@@ -43,18 +44,8 @@ using boost::shared_ptr;
 namespace {
 
 
-void readFile(const string& filename, MSData& msd, const Reader& reader)
+void readFile(const string& filename, MSData& msd, const Reader& reader, const string& head)
 {
-    // peek at head of file 
-
-    ifstream is(filename.c_str(), ios::binary);
-    if (!is)
-        throw runtime_error(("[MSDataFile::readFile()] Unable to open file " + filename).c_str());
-
-    string head(512, '\0');
-    is.read(&head[0], (std::streamsize)head.size());
-    is.close();
-
     if (!reader.accept(filename, head))
         throw runtime_error("[MSDataFile::readFile()] Unsupported file format.");
 
@@ -70,15 +61,29 @@ shared_ptr<DefaultReaderList> defaultReaderList_;
 
 PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reader)
 {
+    // peek at head of file 
+
+    string head;
+    if (!bfs::is_directory(filename))
+    {
+        ifstream is(filename.c_str(), ios::binary);
+        if (!is)
+            throw runtime_error(("[MSDataFile::MSDataFile()] Unable to open file " + filename).c_str());
+
+        head.resize(512, '\0');
+        is.read(&head[0], (std::streamsize)head.size());
+        is.close();
+    }
+
     if (reader)
     {
-        readFile(filename, *this, *reader); 
+        readFile(filename, *this, *reader, head); 
     }
     else
     {
         if (!defaultReaderList_.get())
             defaultReaderList_ = shared_ptr<DefaultReaderList>(new DefaultReaderList);
-        readFile(filename, *this, *defaultReaderList_);
+        readFile(filename, *this, *defaultReaderList_, head);
     }
 }
 

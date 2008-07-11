@@ -280,7 +280,8 @@ class HandlerScan : public SAXParser::Handler
         {
             string num, scanEvent, msLevel, peaksCount, polarity, collisionEnergy, 
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
-                msInstrumentID, centroided, deisotoped, scanType;
+                msInstrumentID, centroided, deisotoped, chargeDeconvoluted, scanType,
+                ionisationEnergy, cidGasPressure, startMz, endMz;
 
             getAttribute(attributes, "num", num);
             getAttribute(attributes, "scanEvent", scanEvent);
@@ -297,7 +298,12 @@ class HandlerScan : public SAXParser::Handler
             getAttribute(attributes, "msInstrumentID", msInstrumentID);
             getAttribute(attributes, "centroided", centroided);
             getAttribute(attributes, "deisotoped", deisotoped);
+            //TODO: use this: getAttribute(attributes, "chargeDeconvoluted", chargeDeconvoluted);
             getAttribute(attributes, "scanType", scanType);
+            //TODO: use this: getAttribute(attributes, "ionisationEnergy", ionisationEnergy);
+            //TODO: use this: getAttribute(attributes, "cidGasPressure", cidGasPressure);
+            getAttribute(attributes, "startMz", startMz);
+            getAttribute(attributes, "endMz", endMz);
 
             spectrum_.id = num;
             spectrum_.nativeID = num;
@@ -348,7 +354,7 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_product_ion_scan);
             }
 
-            // assume centroid if not specified (TODO: factor in dataProcessing information)
+            // assume centroid if not specified
             if (!spectrum_.spectrumDescription.hasCVParam(MS_centroid_mass_spectrum) &&
                 centroided == "1")
                 spectrum_.spectrumDescription.set(MS_centroid_mass_spectrum);
@@ -357,6 +363,8 @@ class HandlerScan : public SAXParser::Handler
 
             collisionEnergy_ = collisionEnergy;
 
+            if (msInstrumentID.empty() && !msd_.instrumentConfigurationPtrs.empty())
+                msInstrumentID = msd_.instrumentConfigurationPtrs[0]->id;
             if (!msInstrumentID.empty())
                 scan.instrumentConfigurationPtr = 
                     InstrumentConfigurationPtr(new InstrumentConfiguration(msInstrumentID)); // placeholder 
@@ -369,6 +377,9 @@ class HandlerScan : public SAXParser::Handler
                 throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
 
             scan.set(MS_scan_time, retentionTime, MS_second);
+            if (!startMz.empty() && !endMz.empty())
+                scan.scanWindows.push_back(
+                    ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
             
             spectrum_.spectrumDescription.set(MS_lowest_m_z_value, lowMz);
             spectrum_.spectrumDescription.set(MS_highest_m_z_value, highMz);

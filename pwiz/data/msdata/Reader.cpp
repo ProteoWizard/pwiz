@@ -57,6 +57,45 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
 }
 
 
+PWIZ_API_DECL ReaderList& ReaderList::operator +=(const ReaderList& rhs)
+{
+    insert(end(), rhs.begin(), rhs.end());
+    return *this;
+}
+
+
+PWIZ_API_DECL ReaderList& ReaderList::operator +=(const ReaderPtr& rhs)
+{
+    push_back(rhs);
+    return *this;
+}
+
+
+PWIZ_API_DECL ReaderList ReaderList::operator +(const ReaderList& rhs) const
+{
+    ReaderList readerList(*this);
+    readerList += rhs;
+    return readerList;
+}
+
+
+PWIZ_API_DECL ReaderList ReaderList::operator +(const ReaderPtr& rhs) const
+{
+    ReaderList readerList(*this);
+    readerList += rhs;
+    return readerList;
+}
+
+
+PWIZ_API_DECL ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs)
+{
+    ReaderList readerList;
+    readerList.push_back(lhs);
+    readerList.push_back(rhs);
+    return readerList;
+}
+
+
 } // namespace msdata
 } // namespace pwiz
 

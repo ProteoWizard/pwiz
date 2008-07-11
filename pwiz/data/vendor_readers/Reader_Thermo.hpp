@@ -30,8 +30,8 @@
 
 
 // Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_RAW))
-#define PWIZ_NO_READER_RAW
+#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_THERMO))
+#define PWIZ_NO_READER_THERMO
 #endif
 
 

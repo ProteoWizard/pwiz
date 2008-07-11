@@ -24,13 +24,10 @@
 #include "MSDataFile.hpp"
 #include "utility/misc/Exception.hpp"
 
-#ifdef PWIZ_HAS_VENDOR_READERS
 #include "data/vendor_readers/ExtendedReaderList.hpp"
 #define ReaderListType pwiz::msdata::ExtendedReaderList
-#else
-#include "data/msdata/DefaultReaderList.hpp"
-#define ReaderListType pwiz::msdata::DefaultReaderList
-#endif
+
+#include "isb/readers/waters/Reader_Waters.hpp"
 
 namespace b = pwiz::msdata;
 
@@ -45,10 +42,10 @@ MSDataFile::MSDataFile(System::String^ filename)
 {
     try
     {
-        ReaderListType* readerList = new ReaderListType();
-        base_ = new b::MSDataFile(ToStdString(filename), readerList);
+        ReaderListType readerList;
+        readerList.push_back(b::ReaderPtr(new b::Reader_Waters));
+        base_ = new b::MSDataFile(ToStdString(filename), (b::Reader*) &readerList);
         MSData::base_ = base_;
-        delete readerList;
     }
     catch(exception& e)
     {

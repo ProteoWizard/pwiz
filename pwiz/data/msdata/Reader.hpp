@@ -32,7 +32,6 @@
 namespace pwiz {
 namespace msdata {
 
-
 /// interface for file readers
 class PWIZ_API_DECL Reader
 {
@@ -75,6 +74,18 @@ class PWIZ_API_DECL ReaderList : public Reader,
                       const std::string& head,
                       MSData& result) const;
 
+    /// appends all of the rhs operand's Readers to the list
+    ReaderList& operator +=(const ReaderList& rhs);
+
+    /// appends the rhs Reader to the list
+    ReaderList& operator +=(const ReaderPtr& rhs);
+
+    /// returns a concatenated list of all the Readers from the lhs and rhs operands
+    ReaderList operator +(const ReaderList& rhs) const;
+
+    /// returns a concatenated list of all the Readers from the lhs and rhs operands
+    ReaderList operator +(const ReaderPtr& rhs) const;
+
     /// returns pointer to Reader of the specified type
     template <typename reader_type>
     reader_type* get()
@@ -95,6 +106,10 @@ class PWIZ_API_DECL ReaderList : public Reader,
         return const_cast<ReaderList*>(this)->get<reader_type>();
     }
 };
+
+
+/// returns a list containing the lhs and rhs as readers
+ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs);
 
 
 } // namespace msdata

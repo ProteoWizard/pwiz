@@ -8,7 +8,9 @@ project
         <library>../../../data/msdata//pwiz_data_msdata/<link>static
         <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static
         <library>../../../data/vendor_readers//pwiz_data_vendor_readers/<link>static
+        <library>../../../../pwiz_aux/isb/readers/waters//pwiz_aux_isb_reader_waters/<link>static
         <library>../../../analysis/spectrum_processing//pwiz_analysis_spectrum_processing/<link>static
+        <library>../../../analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing/<link>static
         <link>shared
         <runtime-link>shared
         <cxxflags>"/EHa /clr"
