@@ -125,6 +125,9 @@ namespace seems
                 }
             }
 
+            if( precursorInfo.Length == 0 )
+                precursorInfo.Append( "unknown" );
+
             StringBuilder scanInfo = new StringBuilder();
             if( sd.acquisitionList.acquisitions.Count > 0 )
                 foreach( Acquisition a in sd.acquisitionList.acquisitions )
@@ -144,6 +147,9 @@ namespace seems
                                           (double) sw.cvParam( CVID.MS_scan_m_z_upper_limit ).value );
                 }
             }
+
+            if( scanInfo.Length == 0 )
+                scanInfo.Append( "unknown" );
 
 			int rowIndex = gridView.Rows.Add(
 				s.id, s.nativeID, s.index,
@@ -415,7 +421,7 @@ namespace seems
             }
 
             // set or reset hover timer
-            hoverTimer.Interval = 500;
+            hoverTimer.Interval = 1000;
             hoverTimer.Start();
             hoverCell = gridView[e.ColumnIndex, e.RowIndex];
         }
@@ -427,30 +433,37 @@ namespace seems
             if( hoverCell == null )
                 return;
 
+            Rectangle cellRectangle = gridView.GetCellDisplayRectangle( hoverCell.ColumnIndex, hoverCell.RowIndex, true );
+            //Point cellLocation = new Point( cellRectangle.Left, cellRectangle.Top );
+            //cellLocation.Offset( e.Location );
+            Point mousePt = Form.MousePosition;
+            if( !cellRectangle.Contains( gridView.PointToClient( mousePt ) ) )
+                return;
+
             gridView_ShowCellToolTip( hoverCell );
         }
 	}
 
-	public class SpectrumListCellClickEventArgs : MouseEventArgs
+    public class SpectrumListCellClickEventArgs : DataGridViewCellMouseEventArgs
 	{
 		private MassSpectrum spectrum;
 		public MassSpectrum Spectrum { get { return spectrum; } }
 
 		internal SpectrumListCellClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
-			: base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
+            : base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
 		{
             if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
 			    spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;
 		}
 	}
 
-	public class SpectrumListCellDoubleClickEventArgs : MouseEventArgs
+    public class SpectrumListCellDoubleClickEventArgs : DataGridViewCellMouseEventArgs
 	{
 		private MassSpectrum spectrum;
 		public MassSpectrum Spectrum { get { return spectrum; } }
 
 		internal SpectrumListCellDoubleClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
-			: base( e.Button, e.Clicks, e.X, e.Y, e.Delta )
+            : base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
 		{
             if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
 			    spectrum = sender.GridView.Rows[e.RowIndex].Tag as MassSpectrum;

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
+using System.Drawing;
+using System.IO;
 using Extensions;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.msdata;
@@ -185,11 +187,13 @@ namespace seems
 				chromatogramListForm.TabText = source.Name + " chromatograms";
 				chromatogramListForm.ShowIcon = false;
                 chromatogramListForm.CellDoubleClick += new ChromatogramListCellDoubleClickHandler( chromatogramListForm_CellDoubleClick );
+                chromatogramListForm.CellClick += new ChromatogramListCellClickHandler( chromatogramListForm_CellClick );
 
 				spectrumListForm.Text = source.Name + " spectra";
 				spectrumListForm.TabText = source.Name + " spectra";
 				spectrumListForm.ShowIcon = false;
                 spectrumListForm.CellDoubleClick += new SpectrumListCellDoubleClickHandler( spectrumListForm_CellDoubleClick );
+                spectrumListForm.CellClick += new SpectrumListCellClickHandler(spectrumListForm_CellClick);
 
 				bool firstChromatogramLoaded = false;
 				bool firstSpectrumLoaded = false;
@@ -259,6 +263,7 @@ namespace seems
 						{
 							firstChromatogramLoaded = true;
 							chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
+                            Application.DoEvents();
 							firstGraph = OpenGraph( true );
                             showData( firstGraph, managedDataSource, chromatogram );
 						}
@@ -288,6 +293,7 @@ namespace seems
 					{
 						firstSpectrumLoaded = true;
 						spectrumListForm.Show( mainForm.DockPanel, DockState.DockBottom );
+                        Application.DoEvents();
 						if( firstChromatogramLoaded )
 						{
 							GraphForm spectrumGraph = CreateGraph();
@@ -318,6 +324,141 @@ namespace seems
 			}
 		}
 
+        void chromatogramListForm_CellClick( object sender, ChromatogramListCellClickEventArgs e )
+        {
+            if( e.Chromatogram == null || e.Button != MouseButtons.Right )
+                return;
+
+            ChromatogramListForm chromatogramListForm = sender as ChromatogramListForm;
+
+            List<GraphItem> selectedGraphItems = new List<GraphItem>();
+            Set<int> selectedRows = new Set<int>();
+            foreach( DataGridViewCell cell in chromatogramListForm.GridView.SelectedCells )
+            {
+                if( selectedRows.Insert( cell.RowIndex ).WasInserted )
+                    selectedGraphItems.Add( cell.OwningRow.Tag as GraphItem );
+            }
+
+            if( selectedRows.Count == 0 )
+                chromatogramListForm.GridView[e.ColumnIndex, e.RowIndex].Selected = true;
+
+            ContextMenuStrip menu = new ContextMenuStrip();
+            if( mainForm.CurrentGraphForm != null )
+            {
+                if( selectedRows.Count == 1 )
+                {
+                    menu.Items.Add( "Show as Current Graph", null, new EventHandler( graphListForm_showAsCurrentGraph ) );
+                    menu.Items.Add( "Overlay on Current Graph", null, new EventHandler( graphListForm_overlayOnCurrentGraph ) );
+                } else
+                {
+                    menu.Items.Add( "Overlay All on Current Graph", null, new EventHandler( graphListForm_overlayAllOnCurrentGraph ) );
+                }
+            }
+
+            if( selectedRows.Count == 1 )
+            {
+                menu.Items.Add( "Show as New Graph", null, new EventHandler( graphListForm_showAsNewGraph ) );
+                menu.Items[0].Font = new System.Drawing.Font( menu.Items[0].Font, System.Drawing.FontStyle.Bold );
+                menu.Tag = e.Chromatogram;
+            } else
+            {
+                menu.Items.Add( "Show All as New Graphs", null, new EventHandler( graphListForm_showAllAsNewGraph ) );
+                menu.Tag = selectedGraphItems;
+            }
+
+            menu.Show( Form.MousePosition );
+        }
+
+        void spectrumListForm_CellClick( object sender, SpectrumListCellClickEventArgs e )
+        {
+            if( e.Spectrum == null || e.Button != MouseButtons.Right )
+                return;
+
+            SpectrumListForm spectrumListForm = sender as SpectrumListForm;
+
+            List<GraphItem> selectedGraphItems = new List<GraphItem>();
+            Set<int> selectedRows = new Set<int>();
+            foreach( DataGridViewCell cell in spectrumListForm.GridView.SelectedCells )
+            {
+                if( selectedRows.Insert( cell.RowIndex ).WasInserted )
+                    selectedGraphItems.Add( cell.OwningRow.Tag as GraphItem );
+            }
+
+            if( selectedRows.Count == 0 )
+                spectrumListForm.GridView[e.ColumnIndex, e.RowIndex].Selected = true;
+
+            ContextMenuStrip menu = new ContextMenuStrip();
+            if( mainForm.CurrentGraphForm != null )
+            {
+                if( selectedRows.Count == 1 )
+                {
+                    menu.Items.Add( "Show as Current Graph", null, new EventHandler( graphListForm_showAsCurrentGraph ) );
+                    menu.Items.Add( "Overlay on Current Graph", null, new EventHandler( graphListForm_overlayOnCurrentGraph ) );
+                } else
+                {
+                    menu.Items.Add( "Overlay All on Current Graph", null, new EventHandler( graphListForm_overlayAllOnCurrentGraph ) );
+                }
+            }
+
+            if( selectedRows.Count == 1 )
+            {
+                menu.Items.Add( "Show as New Graph", null, new EventHandler( graphListForm_showAsNewGraph ) );
+                menu.Items[0].Font = new Font( menu.Items[0].Font, FontStyle.Bold );
+                menu.Tag = e.Spectrum;
+            } else
+            {
+                menu.Items.Add( "Show All as New Graphs", null, new EventHandler( graphListForm_showAllAsNewGraph ) );
+                menu.Tag = selectedGraphItems;
+            }
+
+            menu.Show( Form.MousePosition );
+        }
+
+        void graphListForm_showAsCurrentGraph( object sender, EventArgs e )
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+            GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
+            showData( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+        }
+
+        void graphListForm_overlayOnCurrentGraph( object sender, EventArgs e )
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+            GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
+            showDataOverlay( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+        }
+
+        void graphListForm_overlayAllOnCurrentGraph( object sender, EventArgs e )
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+            List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+            foreach( GraphItem g in gList )
+                showDataOverlay( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+        }
+
+        void graphListForm_showAsNewGraph( object sender, EventArgs e )
+        {
+            GraphForm newGraph = OpenGraph( true );
+            GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
+            showData( newGraph, dataSourceMap[g.Source.CurrentFilepath], g );
+        }
+
+        void graphListForm_showAllAsNewGraph( object sender, EventArgs e )
+        {
+            List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+            foreach( GraphItem g in gList )
+            {
+                GraphForm newGraph = OpenGraph( true );
+                showData( newGraph, dataSourceMap[g.Source.CurrentFilepath], g );
+            }
+        }
+
         public void ShowDataProcessing()
         {
             if( mainForm.CurrentGraphForm != null &&
@@ -343,7 +484,7 @@ namespace seems
 
         private void chromatogramListForm_CellDoubleClick( object sender, ChromatogramListCellDoubleClickEventArgs e )
         {
-            if( e.Chromatogram == null )
+            if( e.Chromatogram == null || e.Button != MouseButtons.Left )
                 return;
 
             GraphForm currentGraphForm = mainForm.CurrentGraphForm;
@@ -405,5 +546,25 @@ namespace seems
             //Application.DoEvents();
             //CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
         }
+
+        public void ExportIntegration()
+        {
+			SaveFileDialog exportDialog = new SaveFileDialog();
+			exportDialog.InitialDirectory = Path.GetDirectoryName( mainForm.CurrentGraphForm.CurrentSourceFilepath );
+			exportDialog.OverwritePrompt = true;
+			exportDialog.RestoreDirectory = true;
+            exportDialog.FileName = Path.GetFileNameWithoutExtension( mainForm.CurrentGraphForm.CurrentSourceFilepath ) + "-peaks.csv";
+			if( exportDialog.ShowDialog() == DialogResult.OK )
+			{
+				StreamWriter writer = new StreamWriter( exportDialog.FileName );
+				writer.WriteLine( "Id,Area" );
+                foreach( DataGridViewRow row in dataSourceMap[mainForm.CurrentGraphForm.CurrentSourceFilepath].ChromatogramListForm.GridView.Rows )
+                {
+                    GraphItem g = row.Tag as GraphItem;
+                    writer.WriteLine( "{0},{1}", g.Id, g.TotalIntegratedArea );
+                }
+				writer.Close();
+			}
+		}
 	}
 }

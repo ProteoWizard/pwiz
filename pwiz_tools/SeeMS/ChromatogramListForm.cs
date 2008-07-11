@@ -79,26 +79,26 @@ namespace seems
 		}
 	}
 
-	public class ChromatogramListCellClickEventArgs : MouseEventArgs
+    public class ChromatogramListCellClickEventArgs : DataGridViewCellMouseEventArgs
 	{
 		private Chromatogram chromatogram;
 		public Chromatogram Chromatogram { get { return chromatogram; } }
 
 		internal ChromatogramListCellClickEventArgs( ChromatogramListForm sender, DataGridViewCellMouseEventArgs e )
-			: base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
+            : base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
 		{
             if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
 			    chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;
 		}
 	}
 
-	public class ChromatogramListCellDoubleClickEventArgs : MouseEventArgs
+    public class ChromatogramListCellDoubleClickEventArgs : DataGridViewCellMouseEventArgs
 	{
 		private Chromatogram chromatogram;
 		public Chromatogram Chromatogram { get { return chromatogram; } }
 
 		internal ChromatogramListCellDoubleClickEventArgs( ChromatogramListForm sender, DataGridViewCellMouseEventArgs e )
-			: base( e.Button, e.Clicks, e.X, e.Y, e.Delta )
+			: base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
 		{
             if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
 			    chromatogram = sender.GridView.Rows[e.RowIndex].Tag as Chromatogram;

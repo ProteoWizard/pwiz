@@ -66,6 +66,7 @@ namespace seems
 				"DTA (*.dta)|*.dta";
 			browseToFileDialog.FilterIndex = 0;
 			browseToFileDialog.InitialDirectory = "C:\\";
+            
 
 			manager = new Manager(this);
 
@@ -209,7 +210,7 @@ namespace seems
 		}
 
 		private void openFile_Click( object sender, EventArgs e )
-		{
+        {
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
 				openFile( browseToFileDialog.FileName );
@@ -756,7 +757,7 @@ namespace seems
 									if( areaPoints.Count == 0 )
 										continue;
 
-									ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.Cyan, Color.Cyan );
+                                    ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.FromArgb( 127, Color.Cyan ), Color.FromArgb( 127, Color.Cyan ) );
 									integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
 									//integratePeaksArea.IsClosedFigure = true;
 									areaPoints.Add( areaPoints[0] );
@@ -791,7 +792,7 @@ namespace seems
 								if( areaPoints.Count == 0 )
 									continue;
 
-								ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.Cyan, Color.Cyan );
+                                ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.FromArgb( 127, Color.Cyan ), Color.FromArgb( 127, Color.Cyan ) );
 								integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
 								//integratePeaksArea.IsClosedFigure = true;
 								areaPoints.Add( areaPoints[0] );
@@ -934,10 +935,6 @@ namespace seems
 			}
 
 			CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
-			/*int currentIndex = scanNumberComboBox.SelectedIndex;
-			object currentObject = scanNumberComboBox.SelectedItem;
-			scanNumberComboBox.Items.RemoveAt( currentIndex );
-			scanNumberComboBox.Items.Insert( currentIndex, currentObject );*/
 		}
 
 		private void clearAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
@@ -952,33 +949,11 @@ namespace seems
 				integratePeaksAreas.Clear();
 				CurrentGraphForm.ZedGraphControl.Refresh();
 			}
-
-			/*scanNumberComboBox.BeginUpdate();
-			scanNumberComboBox.Items.Clear();
-			foreach( GraphItem graphItem in ( dataSourceComboBox.SelectedItem as DataSource ).CurrentGraphItems )
-			{
-				graphItem.TotalIntegratedArea = 0.0;
-				scanNumberComboBox.Items.Add( graphItem );
-			}
-			scanNumberComboBox.EndUpdate();
-			scanNumberComboBox.Refresh();*/
 		}
 
 		private void exportAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			SaveFileDialog exportDialog = new SaveFileDialog();
-			exportDialog.InitialDirectory = Path.GetDirectoryName( CurrentGraphForm.CurrentSourceFilepath );
-			exportDialog.OverwritePrompt = true;
-			exportDialog.RestoreDirectory = true;
-			exportDialog.FileName = Path.GetFileNameWithoutExtension( CurrentGraphForm.CurrentSourceFilepath ) + "-peaks.csv";
-			if( exportDialog.ShowDialog() == DialogResult.OK )
-			{
-				StreamWriter writer = new StreamWriter( exportDialog.FileName );
-				writer.WriteLine( "Id,Area" );
-				/*foreach( GraphItem graphItem in ( dataSourceComboBox.SelectedItem as DataSource ).CurrentGraphItems )
-					writer.WriteLine( "{0},{1}", graphItem.Id, graphItem.TotalIntegratedArea );*/
-				writer.Close();
-			}
+            manager.ExportIntegration();
 		}
 
         private void dataProcessingButton_Click( object sender, EventArgs e )
