@@ -328,10 +328,10 @@ class HandlerWrangler : public SAXParser::Handler
 //
 PWIZ_API_DECL void parse(istream& is, Handler& handler)
 {
-    using boost::iostreams::offset_to_position;
+    using boost::iostreams::position_to_offset;
 
     HandlerWrangler wrangler(handler);
-    Handler::stream_offset position = offset_to_position(is.tellg());
+    Handler::stream_offset position = position_to_offset(is.tellg());
 
     while (is)
     {
@@ -354,7 +354,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         // position == beginning of tag
 
-        position = offset_to_position(is.tellg());
+        position = position_to_offset(is.tellg());
         if (position > 0) position--;
 
         // read tag
@@ -405,7 +405,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
         }
 
         // position == after tag end
-        position = offset_to_position(is.tellg());
+        position = position_to_offset(is.tellg());
     }
 }
 
