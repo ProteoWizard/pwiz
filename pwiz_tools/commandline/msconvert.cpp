@@ -23,6 +23,8 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/IO.hpp"
+#include "pwiz/data/msdata/SpectrumListFilter.hpp"
+#include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "boost/program_options.hpp"
@@ -49,9 +51,10 @@ struct Config
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
     string msLevelsToCentroid;
+    bool stripITScans;
 
     Config()
-    :   outputPath("."), verbose(false)
+    :   outputPath("."), verbose(false), stripITScans(false)
     {}
 
     string outputFilename(const string& inputFilename) const;
@@ -74,6 +77,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
     os << "msLevelsToCentroid: " << config.msLevelsToCentroid << endl;
+    os << "stripITScans: " << boolalpha << config.stripITScans << endl;
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
@@ -149,6 +153,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
 			": use zlib compression for binary data")
+        ("stripIT",
+            po::value<bool>(&config.stripITScans)->zero_tokens(),
+			": strip ion trap ms1 scans")
         ;
 
     // append options description to usage string
@@ -267,6 +274,21 @@ void addContactInfo(MSData& msd, const string& contactFilename)
 }
 
 
+struct StripIonTrapSurveyScans : public SpectrumListFilter::Predicate
+{
+    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
+    {
+        return boost::logic::indeterminate; // need full Spectrum
+    }
+
+    virtual bool accept(const Spectrum& spectrum) const
+    {
+        SpectrumInfo info(spectrum);
+        return !(info.msLevel==1 && cvIsA(info.massAnalyzerType, MS_ion_trap));
+    }
+};
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     cout << "processing file: " << filename << endl;
@@ -284,6 +306,14 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr,
                                                                msLevelsToCentroid));
         msd.run.spectrumListPtr = nativeCentroider;
+    }
+
+    if (config.stripITScans)
+    {
+        shared_ptr<SpectrumListFilter> 
+            filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
+                                          StripIonTrapSurveyScans()));
+        msd.run.spectrumListPtr = filter;    
     }
  
     string outputFilename = config.outputFilename(filename);

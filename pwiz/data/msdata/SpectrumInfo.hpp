@@ -26,14 +26,11 @@
 
 
 #include "utility/misc/Export.hpp"
-#include "MSDataAnalyzer.hpp"
+#include "MSData.hpp"
 
 
 namespace pwiz {
-namespace analysis {
-
-
-using namespace msdata;
+namespace msdata {
 
 
 /// simple structure for holding Spectrum info 
@@ -68,18 +65,15 @@ struct PWIZ_API_DECL SpectrumInfo
     std::vector<PrecursorInfo> precursors;
     std::vector<MZIntensityPair> data;
 
-    SpectrumInfo()
-    :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
-        msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
-        basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
-    {}
+    SpectrumInfo();
+    SpectrumInfo(const Spectrum& spectrum);
 
     void update(const Spectrum& spectrum);
     void clearBinaryData();
 };
 
 
-} // namespace analysis 
+} // namespace msdata 
 } // namespace pwiz
 
 

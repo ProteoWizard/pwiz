@@ -60,6 +60,7 @@ lib pwiz_data_msdata
         MSDataFile.cpp 
         Serializer_mzML.cpp
         Serializer_mzXML.cpp
+        SpectrumInfo.cpp
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp
         SpectrumList_mzXML.cpp
@@ -154,6 +155,7 @@ unit-test Serializer_mzXML_Test : Serializer_mzXML_Test.cpp pwiz_data_msdata pwi
 unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;
+unit-test SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
 
 
 # special run target for BinaryDataEncoderTest, which needs external data 

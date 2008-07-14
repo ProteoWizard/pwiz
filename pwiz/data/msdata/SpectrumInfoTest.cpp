@@ -29,7 +29,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::analysis;
+using namespace pwiz::msdata;
 
 
 ostream* os_ = 0;

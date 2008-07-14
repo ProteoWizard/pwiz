@@ -27,12 +27,28 @@
 
 
 namespace pwiz {
-namespace analysis {
+namespace msdata {
 
 
 using namespace std;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
+
+
+PWIZ_API_DECL SpectrumInfo::SpectrumInfo()
+:   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
+    msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
+    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
+{}
+
+
+PWIZ_API_DECL SpectrumInfo::SpectrumInfo(const Spectrum& spectrum)
+:   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
+    msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
+    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
+{
+    update(spectrum);
+}
 
 
 namespace {
@@ -59,11 +75,10 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
     index = spectrum.index;
     scanNumber = nativeIDToScanNumber(spectrum.nativeID);
 
-    massAnalyzerType = sd.scan.cvParamChild(MS_mass_analyzer_type).cvid; // TODO: wait on spec
-    if (massAnalyzerType == CVID_Unknown)
-        massAnalyzerType = sd.scan.instrumentConfigurationPtr.get() ? 
-                                sd.scan.instrumentConfigurationPtr->componentList.analyzer(0).cvParamChild(MS_mass_analyzer_type).cvid :
-                                CVID_Unknown;
+    massAnalyzerType = sd.scan.instrumentConfigurationPtr.get() ? 
+                       sd.scan.instrumentConfigurationPtr->componentList.analyzer(0)
+                           .cvParamChild(MS_mass_analyzer_type).cvid :
+                       CVID_Unknown;
 
     scanEvent = sd.scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
@@ -104,6 +119,6 @@ PWIZ_API_DECL void SpectrumInfo::clearBinaryData()
 }
 
 
-} // namespace analysis 
+} // namespace msdata
 } // namespace pwiz
 

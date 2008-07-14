@@ -32,7 +32,6 @@ lib pwiz_analysis_passive
     : # sources 
         MSDataAnalyzer.cpp
         MSDataAnalyzerApplication.cpp
-        SpectrumInfo.cpp
         MSDataCache.cpp 
         MetadataReporter.cpp
         SpectrumTable.cpp
@@ -69,7 +68,6 @@ lib pwiz_analysis_passive
 
 unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
 unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ;
-unit-test SpectrumInfoTest : SpectrumInfoTest.cpp ../../data/msdata/examples.cpp pwiz_analysis_passive ;
 unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_passive ;
 unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
 

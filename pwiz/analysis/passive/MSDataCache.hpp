@@ -26,8 +26,8 @@
 
 
 #include "utility/misc/Export.hpp"
+#include "data/msdata/SpectrumInfo.hpp"
 #include "MSDataAnalyzer.hpp"
-#include "SpectrumInfo.hpp"
 
 
 namespace pwiz {
