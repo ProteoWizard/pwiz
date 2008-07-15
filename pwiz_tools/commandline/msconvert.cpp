@@ -52,6 +52,8 @@ struct Config
     string contactFilename;
     string msLevelsToCentroid;
     bool stripITScans;
+    string indexSubset;
+    string scanSubset;
 
     Config()
     :   outputPath("."), verbose(false), stripITScans(false)
@@ -78,6 +80,9 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "contactFilename: " << config.contactFilename << endl;
     os << "msLevelsToCentroid: " << config.msLevelsToCentroid << endl;
     os << "stripITScans: " << boolalpha << config.stripITScans << endl;
+    os << "indexSubset: " << config.indexSubset << endl;
+    os << "scanSubset: " << config.scanSubset << endl;
+
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
@@ -156,6 +161,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("stripIT",
             po::value<bool>(&config.stripITScans)->zero_tokens(),
 			": strip ion trap ms1 scans")
+        ("indexSubset",
+            po::value<string>(&config.indexSubset)->default_value(config.indexSubset),
+			": specify subset of spectrum indices (list of closed intervals, e.g. \"[0,3] [5,5] [11,13]\")")
+        ("scanSubset",
+            po::value<string>(&config.scanSubset)->default_value(config.scanSubset),
+			": specify subset of scan numbers (list of closed intervals, e.g. \"[1,4] [6,6] [12,14]\")")
         ;
 
     // append options description to usage string
@@ -274,6 +285,44 @@ void addContactInfo(MSData& msd, const string& contactFilename)
 }
 
 
+void wrapSpectrumList_indexSubset(MSData& msd, const string& indexSubsetString)
+{
+    IntegerSet indexSet;
+    indexSet.parse(indexSubsetString);
+
+    shared_ptr<SpectrumListFilter> 
+        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
+                                      SpectrumListFilterPredicate_IndexSet(indexSet)));
+
+    msd.run.spectrumListPtr = filter;
+}
+
+
+void wrapSpectrumList_scanSubset(MSData& msd, const string& scanSubsetString)
+{
+    IntegerSet scanNumberSet;
+    scanNumberSet.parse(scanSubsetString);
+
+    shared_ptr<SpectrumListFilter> 
+        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
+                                      SpectrumListFilterPredicate_ScanNumberSet(scanNumberSet)));
+
+    msd.run.spectrumListPtr = filter;
+}
+
+
+void wrapSpectrumList_nativeCentroider(MSData& msd, const string& msLevelsToCentroidString)
+{
+    IntegerSet msLevelsToCentroid;
+    msLevelsToCentroid.parse(msLevelsToCentroidString);
+
+    shared_ptr<SpectrumList_NativeCentroider> 
+        nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr,
+                                                           msLevelsToCentroid));
+    msd.run.spectrumListPtr = nativeCentroider;
+}
+
+
 struct StripIonTrapSurveyScans : public SpectrumListFilter::Predicate
 {
     virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
@@ -289,33 +338,41 @@ struct StripIonTrapSurveyScans : public SpectrumListFilter::Predicate
 };
 
 
+void wrapSpectrumList_stripIT(MSData& msd)
+{
+    shared_ptr<SpectrumListFilter> 
+        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
+                                      StripIonTrapSurveyScans()));
+    msd.run.spectrumListPtr = filter;    
+}
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
+    // read in data file
+
     cout << "processing file: " << filename << endl;
     MSDataFile msd(filename, &readers);
+
+    // process the data 
 
     if (!config.contactFilename.empty())
         addContactInfo(msd, config.contactFilename);
 
-    if (!config.msLevelsToCentroid.empty())
-    {
-        IntegerSet msLevelsToCentroid;
-        msLevelsToCentroid.parse(config.msLevelsToCentroid);
+    if (!config.msLevelsToCentroid.empty()) // wrap immediately above native SpectrumList
+        wrapSpectrumList_nativeCentroider(msd, config.msLevelsToCentroid);
 
-        shared_ptr<SpectrumList_NativeCentroider> 
-            nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr,
-                                                               msLevelsToCentroid));
-        msd.run.spectrumListPtr = nativeCentroider;
-    }
+    if (!config.indexSubset.empty())
+        wrapSpectrumList_indexSubset(msd, config.indexSubset); 
+
+    if (!config.scanSubset.empty())
+        wrapSpectrumList_scanSubset(msd, config.scanSubset); 
 
     if (config.stripITScans)
-    {
-        shared_ptr<SpectrumListFilter> 
-            filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
-                                          StripIonTrapSurveyScans()));
-        msd.run.spectrumListPtr = filter;    
-    }
+        wrapSpectrumList_stripIT(msd);
  
+    // write out the new data file
+
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;
     msd.write(outputFilename, config.writeConfig);
