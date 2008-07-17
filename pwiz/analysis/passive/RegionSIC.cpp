@@ -154,7 +154,7 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
             << setw(width_id) << info.id
             << setw(width_nativeID) << info.nativeID
             << setw(width_scanEvent) << info.scanEvent
-            << setw(width_massAnalyzerType) << cvinfo(info.massAnalyzerType).shortName()
+            << setw(width_massAnalyzerType) << info.massAnalyzerTypeAbbreviation()
             << setw(width_msLevel) << "ms" + lexical_cast<string>(info.msLevel)
             << setw(width_retentionTime) << fixed << setprecision(2) << info.retentionTime
             << setw(width_sumIntensity) << fixed << setprecision(4) << spectrumStats.sumIntensity

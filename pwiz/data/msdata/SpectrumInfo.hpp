@@ -70,6 +70,10 @@ struct PWIZ_API_DECL SpectrumInfo
 
     void update(const Spectrum& spectrum);
     void clearBinaryData();
+
+    // some helper functions
+    std::string massAnalyzerTypeAbbreviation() const;
+    double mzFromFilterString() const;
 };
 
 

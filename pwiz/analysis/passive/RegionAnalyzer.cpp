@@ -239,7 +239,7 @@ void RegionAnalyzer::update(const DataInfo& dataInfo,
             << setw(width_id_) << info.id
             << setw(width_nativeID_) << info.nativeID
             << setw(width_scanEvent_) << info.scanEvent
-            << setw(width_massAnalyzerType_) << cvinfo(info.massAnalyzerType).shortName()
+            << setw(width_massAnalyzerType_) << info.massAnalyzerTypeAbbreviation()
             << setw(width_msLevel_) << "ms" + lexical_cast<string>(info.msLevel)
             << setw(width_retentionTime_) << fixed << setprecision(2) << info.retentionTime
             << setw(width_mz_) << fixed << setprecision(4) << it->mz

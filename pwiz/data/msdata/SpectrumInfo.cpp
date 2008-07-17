@@ -23,7 +23,9 @@
 
 #define PWIZ_SOURCE
 
+
 #include "SpectrumInfo.hpp"
+#include <iterator>
 
 
 namespace pwiz {
@@ -116,6 +118,37 @@ PWIZ_API_DECL void SpectrumInfo::clearBinaryData()
 {
     vector<MZIntensityPair> nothing;
     data.swap(nothing);
+}
+
+
+PWIZ_API_DECL string SpectrumInfo::massAnalyzerTypeAbbreviation() const
+{
+    string result = "Unknown";
+
+    if (cvIsA(massAnalyzerType, MS_ion_trap))
+        result = "IonTrap";
+    else if (massAnalyzerType == MS_FT_ICR)
+        result = "FT";
+    else if (massAnalyzerType == MS_orbitrap)
+        result = "Orbitrap";
+
+    return result;
+}
+
+PWIZ_API_DECL double SpectrumInfo::mzFromFilterString() const
+{
+    istringstream iss(filterString);
+    vector<string> tokens;
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+    
+    for (vector<string>::const_iterator it=tokens.begin(), end=tokens.end(); it!=end; ++it)
+    {
+        string::size_type at = it->find("@");
+        if (at != string::npos)
+            return lexical_cast<double>(it->substr(0,at));
+    }
+    
+    return 0;
 }
 
 
