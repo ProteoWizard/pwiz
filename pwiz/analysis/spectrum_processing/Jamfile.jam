@@ -51,6 +51,19 @@ lib pwiz_analysis_spectrum_processing
 
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test PrecursorRecalculatorDefaultTest : PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing ;
+
+
+# special run target for PrecursorRecalculatorDefaultTest, since we have external data files;
+# we pass in single input file, to which bjam prepends the full path from current
+# Jamfile directory.  PrecursorCalculatorTest can then locate its data files.
+
+run PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : PrecursorRecalculatorDefaultTest.data/5peptide.b64 # input-files
+    : # requirements
+    : PrecursorRecalculatorDefaultTest  # target name
+    : # default-build
+    ;
+
 
 
