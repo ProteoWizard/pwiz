@@ -33,6 +33,7 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include "boost/format.hpp"
 #include <vector>
 #include <algorithm>
 
@@ -68,7 +69,7 @@ RawFileLibrary::~RawFileLibrary()
 
 
 namespace {
-void checkResult(HRESULT hr)
+void checkResult(HRESULT hr, const string& msg = "")
 {
     // note:
     // XRawfile seems to return 0 for success, >0 for failure;
@@ -78,7 +79,7 @@ void checkResult(HRESULT hr)
         return;
 
     ostringstream temp;
-    temp << "HRESULT returned from COM object: " << hr;
+    temp << msg << "Failed HRESULT returned from COM object: " << hr;
     throw RawEgg(temp.str().c_str());
 }
 } // namespace
@@ -207,7 +208,9 @@ string RawFileImpl::name(ValueID_String id)
 long RawFileImpl::value(ValueID_Long id)
 {
     long result = 0;
-    checkResult((raw_->*RawFileValues::descriptor(id)->function)(&result));
+    HRESULT hr = (raw_->*RawFileValues::descriptor(id)->function)(&result);
+    if (hr > 0)
+        throw RawEgg((boost::format("[RawFileImpl::value()] Error getting value for \"%s\"") % name(id)).str());
     return result;
 }
 
@@ -215,7 +218,9 @@ long RawFileImpl::value(ValueID_Long id)
 double RawFileImpl::value(ValueID_Double id)
 {
     double result = 0;
-    checkResult((raw_->*RawFileValues::descriptor(id)->function)(&result));
+    HRESULT hr = (raw_->*RawFileValues::descriptor(id)->function)(&result);
+    if (hr > 0)
+        throw RawEgg((boost::format("[RawFileImpl::value()] Error getting value for \"%s\"") % name(id)).str());
     return result;
 }
 
@@ -223,7 +228,9 @@ double RawFileImpl::value(ValueID_Double id)
 string RawFileImpl::value(ValueID_String id)
 {
     _bstr_t bstr;
-    checkResult((raw_->*RawFileValues::descriptor(id)->function)(bstr.GetAddress()));
+    HRESULT hr = (raw_->*RawFileValues::descriptor(id)->function)(bstr.GetAddress());
+    if (hr > 0)
+        throw RawEgg((boost::format("[RawFileImpl::value()] Error getting value for \"%s\"") % name(id)).str());
     return (const char*)(bstr);
 }
 
@@ -231,7 +238,7 @@ string RawFileImpl::value(ValueID_String id)
 string RawFileImpl::getCreationDate()
 {
     DATE date;
-    checkResult(raw_->GetCreationDate(&date));
+    checkResult(raw_->GetCreationDate(&date), "[RawFileImpl::getCreationDate(), GetCreationDate()] ");
 
     UDATE udate;
     HRESULT hr = VarUdateFromDate(date, 0, &udate);
@@ -282,8 +289,8 @@ auto_ptr<LabelValueArray> RawFileImpl::getSequenceRowUserInfo()
     {
         _bstr_t bstrLabel;
         _bstr_t bstrValue;
-        checkResult(raw_->GetSeqRowUserLabel(i, bstrLabel.GetAddress()));
-        checkResult(raw_->GetSeqRowUserText(i, bstrValue.GetAddress()));
+        checkResult(raw_->GetSeqRowUserLabel(i, bstrLabel.GetAddress()), "[RawFileImpl::getSequenceRowUserInfo(), GetSeqRowUserLabel()] ");
+        checkResult(raw_->GetSeqRowUserText(i, bstrValue.GetAddress()), "[RawFileImpl::getSequenceRowUserInfo(), GetSeqRowUserText()] ");
         info->push_back((const char*)(bstrLabel), (const char*)(bstrValue));
     }
 
@@ -295,7 +302,7 @@ ControllerInfo RawFileImpl::getCurrentController()
 {
     ControllerInfo result;
     long type = 0;
-    checkResult(raw_->GetCurrentController(&type, &result.controllerNumber));
+    checkResult(raw_->GetCurrentController(&type, &result.controllerNumber), "[RawFileImpl::getCurrentController()] ");
     result.type = ControllerType(type);
     return result;
 }
@@ -303,14 +310,14 @@ ControllerInfo RawFileImpl::getCurrentController()
 
 void RawFileImpl::setCurrentController(ControllerType type, long controllerNumber)
 {
-    checkResult(raw_->SetCurrentController(type, controllerNumber));
+    checkResult(raw_->SetCurrentController(type, controllerNumber), "[RawFileImpl::setCurrentController()] ");
 }
 
 
 long RawFileImpl::getNumberOfControllersOfType(ControllerType type)
 {
     long result = 0;
-    checkResult(raw_->GetNumberOfControllersOfType(type, &result));
+    checkResult(raw_->GetNumberOfControllersOfType(type, &result), "[RawFileImpl::getNumberOfControllersOfType()] ");
     return result;
 }
 
@@ -318,7 +325,7 @@ long RawFileImpl::getNumberOfControllersOfType(ControllerType type)
 ControllerType RawFileImpl::getControllerType(long index)
 {
     long result = 0;
-    checkResult(raw_->GetControllerType(index, &result));
+    checkResult(raw_->GetControllerType(index, &result), "[RawFileImpl::getControllerType()] ");
     return ControllerType(result);
 }
 
@@ -326,7 +333,7 @@ ControllerType RawFileImpl::getControllerType(long index)
 long RawFileImpl::scanNumber(double rt)
 {
     long result = 0;
-    checkResult(raw_->ScanNumFromRT(rt, &result));
+    checkResult(raw_->ScanNumFromRT(rt, &result), "[RawFileImpl::scanNumber()] ");
     return result;
 }
 
@@ -334,7 +341,7 @@ long RawFileImpl::scanNumber(double rt)
 double RawFileImpl::rt(long scanNumber)
 {
     double result = 0;
-    checkResult(raw_->RTFromScanNum(scanNumber, &result));
+    checkResult(raw_->RTFromScanNum(scanNumber, &result), "[RawFileImpl::rt()] ");
     return result;
 }
 
@@ -521,7 +528,7 @@ auto_ptr<StringArray> RawFileImpl::getFilters()
     VariantInit(&v);
     long size = 0;
 
-    checkResult(raw_->GetFilters(&v, &size));
+    checkResult(raw_->GetFilters(&v, &size), "[RawFileImpl::getFilters()] ");
 
     VariantStringArray* vsa = new VariantStringArray(v, size);
     return auto_ptr<StringArray>(vsa);
@@ -542,10 +549,16 @@ class ScanInfoImpl : public ScanInfo
     virtual long msLevel() const {return msLevel_;}
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
-    virtual long parentCount() const {return (long)parentMasses_.size();}
-    virtual long parentCharge() const;
-    virtual double parentMass(long index) const {return parentMasses_[index];}
-    virtual double parentEnergy(long index) const {return parentEnergies_[index];}
+
+    virtual long precursorCount() const {return precursorMZs_.size();}
+    virtual long precursorCharge() const;
+    virtual double precursorMZ(long index, bool preferMonoisotope) const;
+    virtual double precursorActivationEnergy(long index) const {return precursorActivationEnergies_[index];}
+
+    virtual long parentCount() const {return precursorCount();}
+    virtual long parentCharge() const {return precursorCharge();}
+    virtual double parentMass(long index, bool preferMonoisotope) const {return precursorMZ(index, preferMonoisotope);}
+    virtual double parentEnergy(long index) const {return precursorActivationEnergy(index);}
 
     virtual bool isProfileScan() const {return isProfileScan_;}
     virtual bool isCentroidScan() const {return isCentroidScan_;}
@@ -554,7 +567,8 @@ class ScanInfoImpl : public ScanInfo
     virtual double lowMass() const {return lowMass_;}
     virtual double highMass() const {return highMass_;}
     virtual double totalIonCurrent() const {return totalIonCurrent_;}
-    virtual double basePeakMass() const {return basePeakMass_;}
+    virtual double basePeakMass() const {return basePeakMZ_;}
+    virtual double basePeakMZ() const {return basePeakMZ_;}
     virtual double basePeakIntensity() const {return basePeakIntensity_;}
     virtual long channelCount() const {return channelCount_;}
     virtual bool isUniformTime() const {return isUniformTime_;}
@@ -583,8 +597,8 @@ class ScanInfoImpl : public ScanInfo
     long msLevel_;
     ScanType scanType_;
     PolarityType polarityType_;
-    vector<double> parentMasses_;
-    vector<double> parentEnergies_;
+    vector<double> precursorMZs_;
+    vector<double> precursorActivationEnergies_;
     bool isProfileScan_;
     bool isCentroidScan_;
     long packetCount_;
@@ -592,7 +606,7 @@ class ScanInfoImpl : public ScanInfo
     double lowMass_;
     double highMass_;
     double totalIonCurrent_;
-    double basePeakMass_;
+    double basePeakMZ_;
     double basePeakIntensity_;
     long channelCount_;
     bool isUniformTime_;
@@ -628,7 +642,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     lowMass_(0),
     highMass_(0),
     totalIonCurrent_(0),
-    basePeakMass_(0),
+    basePeakMZ_(0),
     basePeakIntensity_(0),
     channelCount_(0),
     isUniformTime_(false),
@@ -650,15 +664,15 @@ void ScanInfoImpl::initialize()
     IXRawfilePtr& raw_ = (*rawfile_).raw_;
 
     _bstr_t bstrFilter;
-    checkResult(raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()));
+    checkResult(raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()), "[ScanInfoImpl::initialize(), GetFilterForScanNum()] ");
     filter_ = (const char*)(bstrFilter);
 
     long isProfileScan = 0;
-    checkResult(raw_->IsProfileScanForScanNum(scanNumber_, &isProfileScan));
+    checkResult(raw_->IsProfileScanForScanNum(scanNumber_, &isProfileScan), "[ScanInfoImpl::initialize(), IsProfileScanForScanNum()] ");
     isProfileScan_ = (isProfileScan!=0);
 
     long isCentroidScan = 0;
-    checkResult(raw_->IsCentroidScanForScanNum(scanNumber_, &isCentroidScan));
+    checkResult(raw_->IsCentroidScanForScanNum(scanNumber_, &isCentroidScan), "[ScanInfoImpl::initialize(), IsCentroidScanForScanNum()] ");
     isCentroidScan_ = (isCentroidScan!=0);
 
     long isUniformTime = 0;
@@ -668,11 +682,12 @@ void ScanInfoImpl::initialize()
                                                   &lowMass_,
                                                   &highMass_,
                                                   &totalIonCurrent_,
-                                                  &basePeakMass_,
+                                                  &basePeakMZ_,
                                                   &basePeakIntensity_,
                                                   &channelCount_,
                                                   &isUniformTime,
-                                                  &frequency_));
+                                                  &frequency_),
+                                                  "[ScanInfoImpl::initialize(), GetScanHeaderInfoForScanNum()] ");
     isUniformTime_ = (isUniformTime!=0);
 
     VARIANT variantStatusLogLabels;
@@ -685,7 +700,8 @@ void ScanInfoImpl::initialize()
                                              &statusLogRT_,
                                              &variantStatusLogLabels,
                                              &variantStatusLogValues,
-                                             &statusLogSize));
+                                             &statusLogSize),
+                                             "[ScanInfoImpl::initialize(), GetStatusLogForScanNum()] ");
     statusLogSize_ = statusLogSize;
     statusLogLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogLabels, statusLogSize));
     statusLogValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogValues, statusLogSize));
@@ -699,13 +715,14 @@ void ScanInfoImpl::initialize()
     checkResult(raw_->GetTrailerExtraForScanNum(scanNumber_,
                                                 &variantTrailerExtraLabels,
                                                 &variantTrailerExtraValues,
-                                                &trailerExtraSize));
+                                                &trailerExtraSize),
+                                                "[]");
     trailerExtraSize_ = trailerExtraSize;
     trailerExtraLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraLabels, trailerExtraSize));
     trailerExtraValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize));
 
     if (trailerExtraLabels_->size() != trailerExtraValues_->size())
-        throw RawEgg("[RawFile::ScanInfoImpl]  Trailer Extra sizes do not match."); 
+        throw RawEgg("[ScanInfoImpl::initialize()]  Trailer Extra sizes do not match."); 
 
     for (int i=0; i<trailerExtraLabels_->size(); i++)
         trailerExtraMap_[trailerExtraLabels_->item(i)] = trailerExtraValues_->item(i);
@@ -722,13 +739,13 @@ void ScanInfoImpl::parseFilterString()
     polarityType_ = filterParser.polarityType_;
     scanType_ = filterParser.scanType_;
     activationType_ = filterParser.activationType_;
-    parentMasses_.insert(parentMasses_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
-    parentEnergies_.insert(parentEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
+    precursorMZs_.insert(precursorMZs_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
+    precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
 }
 
 #pragma warning(push)
 #pragma warning(disable:4101) // don't bark about unused RawEgg &e
-long ScanInfoImpl::parentCharge() const
+long ScanInfoImpl::precursorCharge() const
 {
     try
     {
@@ -742,6 +759,25 @@ long ScanInfoImpl::parentCharge() const
 }
 #pragma warning(pop)
 
+double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
+{
+    if (preferMonoisotope)
+    {
+        double monoisotopicMZ;
+        try
+        {
+            monoisotopicMZ = trailerExtraValueDouble("Monoisotopic M/Z:");
+        }
+        catch (RawEgg& e)
+        {
+            monoisotopicMZ = 0;
+        }
+        if (monoisotopicMZ > 0)
+            return monoisotopicMZ;
+    }
+    return precursorMZs_[index];
+}
+
 double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 {
     IXRawfilePtr& raw_ = rawfile_->raw_;
@@ -751,7 +787,8 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
                                                      name.c_str(), 
-                                                     &v));
+                                                     &v),
+                                                     "[ScanInfoImpl::trailerExtraValueDouble()] ");
     if (v.vt == VT_R4) return v.fltVal;
 	else if (v.vt == VT_R8) return v.dblVal;
 
@@ -768,7 +805,8 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
                                                      name.c_str(), 
-                                                     &v));
+                                                     &v),
+                                                     "[ScanInfoImpl::trailerExtraValueLong()] ");
     if (v.vt == VT_I4) return v.lVal;
 	else if (v.vt == VT_I2) return v.iVal;
 	else if (v.vt == VT_INT) return v.intVal;

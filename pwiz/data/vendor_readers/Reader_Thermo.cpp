@@ -190,8 +190,6 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     sourceFile->name = p.leaf();
     sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
     sourceFile->cvParams.push_back(MS_Xcalibur_RAW_file);
-    string sha1 = SHA1Calculator::hashFile(filename);
-    sourceFile->cvParams.push_back(CVParam(MS_SHA_1, sha1));
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = stringToIDREF(p.leaf());

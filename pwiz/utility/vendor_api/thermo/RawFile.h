@@ -260,9 +260,16 @@ class RAWFILE_API ScanInfo
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
+
+    virtual long precursorCount() const = 0;
+    virtual long precursorCharge() const = 0;
+    virtual double precursorMZ(long index, bool preferMonoisotope = true) const = 0;
+    virtual double precursorActivationEnergy(long index) const = 0;
+
+    // "parent" synonym is deprecated
     virtual long parentCount() const = 0;
     virtual long parentCharge() const = 0;
-    virtual double parentMass(long index) const = 0;
+    virtual double parentMass(long index, bool preferMonoisotope = true) const = 0;
     virtual double parentEnergy(long index) const = 0;
 
     // other scan info 

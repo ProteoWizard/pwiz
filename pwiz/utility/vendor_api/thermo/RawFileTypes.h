@@ -114,7 +114,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "TRITON")                  return InstrumentModelType_Triton;
     else if (type == "LTQ" || type == "LTQ XL") return InstrumentModelType_LTQ;
     else if (type == "LTQ FT")                  return InstrumentModelType_LTQ_FT;
-    else if (type == "LTQ FT Ultra")            return InstrumentModelType_LTQ_FT_Ultra;
+    else if (type == "LTQ FT ULTRA")            return InstrumentModelType_LTQ_FT_Ultra;
     else if (type == "LTQ ORBITRAP")            return InstrumentModelType_LTQ_Orbitrap;
     else if (type == "LTQ ORBITRAP DISCOVERY")  return InstrumentModelType_LTQ_Orbitrap_Discovery;
     else if (type == "LTQ ORBITRAP XL")         return InstrumentModelType_LTQ_Orbitrap_XL;
@@ -125,11 +125,11 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "ITQ 1100")                return InstrumentModelType_ITQ_1100;
     else if (type == "GC QUANTUM")              return InstrumentModelType_GC_Quantum;
     else if (type == "LTQ XL ETD")              return InstrumentModelType_LTQ_XL_ETD;
-    else if (type == "LTQ Orbitrap XL ETD")     return InstrumentModelType_LTQ_Orbitrap_XL_ETD;
+    else if (type == "LTQ ORBITRAP XL ETD")     return InstrumentModelType_LTQ_Orbitrap_XL_ETD;
     else if (type == "DFS")                     return InstrumentModelType_DFS;
     else if (type == "DSQ II")                  return InstrumentModelType_DSQ_II;
     else if (type == "MALDI LTQ XL")            return InstrumentModelType_MALDI_LTQ_XL;
-    else if (type == "MALDI LTQ Orbitrap")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
+    else if (type == "MALDI LTQ ORBITRAP")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
     else if (type == "TSQ QUANTUM")             return InstrumentModelType_TSQ_Quantum;
     else if (type == "TSQ QUANTUM ACCESS")      return InstrumentModelType_TSQ_Quantum_Access;
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;

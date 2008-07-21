@@ -277,14 +277,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     sd.cvParams.push_back(CVParam(MS_base_peak_intensity, scanInfo->basePeakIntensity()));
     sd.cvParams.push_back(CVParam(MS_total_ion_current, scanInfo->totalIonCurrent()));
 
-    double mzMonoisotopic = scanInfo->trailerExtraValueDouble("Monoisotopic M/Z:");
-    scan.userParams.push_back(UserParam("[Thermo Trailer Extra]Monoisotopic M/Z:", 
-                                        lexical_cast<string>(mzMonoisotopic),
-                                        "xsd:float"));
+    try
+    {
+        double mzMonoisotopic = scanInfo->trailerExtraValueDouble("Monoisotopic M/Z:");
+        scan.userParams.push_back(UserParam("[Thermo Trailer Extra]Monoisotopic M/Z:", 
+                                            lexical_cast<string>(mzMonoisotopic),
+                                            "xsd:float"));
+    }
+    catch (RawEgg&)
+    {
+    }
 
     scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
 
-    for (long i=0, precursorCount=scanInfo->parentCount(); i<precursorCount; i++)
+    for (long i=0, precursorCount=scanInfo->precursorCount(); i<precursorCount; i++)
     {
         // Note: we report what RawFile gives us, which comes from the filter string;
         // we can look in the trailer extra values for better (but still unreliable) 
@@ -297,10 +303,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
             precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
 
-        selectedIon.cvParams.push_back(CVParam(MS_m_z, scanInfo->parentMass(i)));
-        long parentCharge = scanInfo->parentCharge();
-        if (parentCharge > 0)
-            selectedIon.cvParams.push_back(CVParam(MS_charge_state, parentCharge));
+        selectedIon.cvParams.push_back(CVParam(MS_m_z, scanInfo->precursorMZ(i)));
+        long precursorCharge = scanInfo->precursorCharge();
+        if (precursorCharge > 0)
+            selectedIon.cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
         // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
 
         ActivationType activationType = scanInfo->activationType();
@@ -308,7 +314,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             activationType = ActivationType_CID; // assume CID
         precursor.activation.cvParams.push_back(CVParam(translate(activationType)));
         if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
-            precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->parentEnergy(i)));
+            precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->precursorActivationEnergy(i)));
 
         precursor.selectedIons.push_back(selectedIon);
         sd.precursors.push_back(precursor);
