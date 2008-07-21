@@ -104,6 +104,8 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_text = false;
     bool format_mzML = false;
     bool format_mzXML = false;
+    bool precision_32 = false;
+    bool precision_64 = false;
     bool mz_precision_32 = false;
     bool mz_precision_64 = false;
     bool intensity_precision_32 = false;
@@ -130,10 +132,16 @@ Config parseCommandLine(int argc, const char* argv[])
 			": write mzXML format")
         ("text",
             po::value<bool>(&format_text)->zero_tokens(),
-			": write MSData text format")
+			": write ProteoWizard internal text format")
         ("verbose,v",
             po::value<bool>(&config.verbose)->zero_tokens(),
             ": display detailed progress information")
+        ("64",
+            po::value<bool>(&precision_64)->zero_tokens(),
+			": set default binary encoding to 64-bit precision [default]")
+        ("32",
+            po::value<bool>(&precision_32)->zero_tokens(),
+			": set default binary encoding to 32-bit precision")
         ("mz64",
             po::value<bool>(&mz_precision_64)->zero_tokens(),
 			": encode m/z values in 64-bit precision [default]")
@@ -142,10 +150,10 @@ Config parseCommandLine(int argc, const char* argv[])
 			": encode m/z values in 32-bit precision")
         ("inten64",
             po::value<bool>(&intensity_precision_64)->zero_tokens(),
-			": encode m/z values in 64-bit precision")
+			": encode intensity values in 64-bit precision")
         ("inten32",
             po::value<bool>(&intensity_precision_32)->zero_tokens(),
-			": encode m/z values in 32-bit precision [default]")
+			": encode intensity values in 32-bit precision [default]")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
 			": do not write index")
@@ -245,9 +253,19 @@ Config parseCommandLine(int argc, const char* argv[])
         }
     }
 
+    // default BinaryDataEncoder precision
+
+    count = precision_32 + precision_64;
+    if (count > 1) throw runtime_error(usage.str());
+    config.writeConfig.binaryDataEncoderConfig.precision = precision_32 ? 
+                                                           BinaryDataEncoder::Precision_32 :
+                                                           BinaryDataEncoder::Precision_64;
+
+    // precision overrides
+
     count = mz_precision_32 + mz_precision_64 + intensity_precision_32 + intensity_precision_64;
     if (count > 2) throw runtime_error(usage.str());
-    config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
+
     config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_64;
     config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
 
