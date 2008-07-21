@@ -153,6 +153,7 @@ string& unescapeXML(string& str)
 
 
 const string whitespace_ = " \t\n\r";
+const string quote_ = "\"\'";
 
 
 void parseAttribute(const string& tag, string::size_type& index, Handler::Attributes& attributes)
@@ -160,8 +161,9 @@ void parseAttribute(const string& tag, string::size_type& index, Handler::Attrib
     string::size_type indexNameBegin = tag.find_first_not_of(whitespace_, index);
     string::size_type indexNameEnd = tag.find_first_of(whitespace_ + '=', indexNameBegin+1);
     string::size_type indexEquals = tag.find_first_of('=', indexNameEnd);
-    string::size_type indexQuoteOpen = tag.find_first_of('"', indexEquals+1);
-    string::size_type indexQuoteClose = tag.find_first_of('"', indexQuoteOpen+1);
+    string::size_type indexQuoteOpen = tag.find_first_of(quote_, indexEquals+1);
+    char quoteChar = tag[indexQuoteOpen];
+    string::size_type indexQuoteClose = tag.find_first_of(quoteChar, indexQuoteOpen+1);
 
     if (indexNameBegin == string::npos ||
         indexNameEnd == string::npos ||
