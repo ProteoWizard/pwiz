@@ -136,7 +136,7 @@ PrecursorRecalculatorDefault::PrecursorRecalculatorDefault(const Config& config)
 void PrecursorRecalculatorDefault::recalculate(const MZIntensityPair* begin,
                                                const MZIntensityPair* end,
                                                const PrecursorInfo& initialEstimate,
-                                               vector<PrecursorInfo>& result)
+                                               vector<PrecursorInfo>& result) const
 {
     impl_->recalculate(begin, end, initialEstimate, result);
 }

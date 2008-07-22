@@ -51,7 +51,7 @@ class PWIZ_API_DECL PrecursorRecalculator
     virtual void recalculate(const MZIntensityPair* begin,
                              const MZIntensityPair* end,
                              const PrecursorInfo& initialEstimate,
-                             std::vector<PrecursorInfo>& result) = 0;
+                             std::vector<PrecursorInfo>& result) const = 0;
 
     virtual ~PrecursorRecalculator() {}
 }; 
