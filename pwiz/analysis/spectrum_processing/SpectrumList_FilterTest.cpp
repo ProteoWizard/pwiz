@@ -1,5 +1,5 @@
 //
-// SpectrumListFilterTest.cpp
+// SpectrumList_FilterTest.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,7 +21,7 @@
 //
 
 
-#include "SpectrumListFilter.hpp"
+#include "SpectrumList_Filter.hpp"
 #include "utility/misc/unit.hpp"
 #include "utility/misc/IntegerSet.hpp"
 #include "boost/lexical_cast.hpp"
@@ -29,6 +29,7 @@
 
 
 using namespace pwiz::msdata;
+using namespace pwiz::analysis;
 using namespace pwiz::util;
 using namespace std;
 using boost::lexical_cast;
@@ -73,7 +74,7 @@ SpectrumListPtr createSpectrumList()
 }
 
 
-struct EvenPredicate : public SpectrumListFilter::Predicate
+struct EvenPredicate : public SpectrumList_Filter::Predicate
 {
     virtual tribool accept(const SpectrumIdentity& spectrumIdentity) const
     {
@@ -86,7 +87,7 @@ void testEven(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testEven:\n";
 
-    SpectrumListFilter filter(sl, EvenPredicate());
+    SpectrumList_Filter filter(sl, EvenPredicate());
     if (os_) *os_ << "size: " << filter.size() << endl;
     unit_assert(filter.size() == 5);
 
@@ -106,7 +107,7 @@ void testEven(SpectrumListPtr sl)
 }
 
 
-struct EvenMS2Predicate : public SpectrumListFilter::Predicate
+struct EvenMS2Predicate : public SpectrumList_Filter::Predicate
 {
     virtual tribool accept(const SpectrumIdentity& spectrumIdentity) const
     {
@@ -125,7 +126,7 @@ void testEvenMS2(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testEvenMS2:\n";
 
-    SpectrumListFilter filter(sl, EvenMS2Predicate());
+    SpectrumList_Filter filter(sl, EvenMS2Predicate());
     
     if (os_)
     {
@@ -147,7 +148,7 @@ void testEvenMS2(SpectrumListPtr sl)
 }
 
 
-struct SelectedIndexPredicate : public SpectrumListFilter::Predicate
+struct SelectedIndexPredicate : public SpectrumList_Filter::Predicate
 {
     mutable bool pastMaxIndex;
 
@@ -173,7 +174,7 @@ void testSelectedIndices(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testSelectedIndices:\n";
 
-    SpectrumListFilter filter(sl, SelectedIndexPredicate());
+    SpectrumList_Filter filter(sl, SelectedIndexPredicate());
     
     if (os_)
     {
@@ -204,7 +205,7 @@ void testIndexSet(SpectrumListPtr sl)
     indexSet.insert(7);
     indexSet.insert(9);
 
-    SpectrumListFilter filter(sl, SpectrumListFilterPredicate_IndexSet(indexSet));
+    SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_IndexSet(indexSet));
     
     if (os_)
     {
@@ -236,7 +237,7 @@ void testScanNumberSet(SpectrumListPtr sl)
     scanNumberSet.insert(102,104);
     scanNumberSet.insert(107);
 
-    SpectrumListFilter filter(sl, SpectrumListFilterPredicate_ScanNumberSet(scanNumberSet));
+    SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet));
     
     if (os_)
     {

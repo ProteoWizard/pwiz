@@ -23,9 +23,9 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/IO.hpp"
-#include "pwiz/data/msdata/SpectrumListFilter.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
@@ -308,9 +308,9 @@ void wrapSpectrumList_indexSubset(MSData& msd, const string& indexSubsetString)
     IntegerSet indexSet;
     indexSet.parse(indexSubsetString);
 
-    shared_ptr<SpectrumListFilter> 
-        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
-                                      SpectrumListFilterPredicate_IndexSet(indexSet)));
+    shared_ptr<SpectrumList_Filter> 
+        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
+                                       SpectrumList_FilterPredicate_IndexSet(indexSet)));
 
     msd.run.spectrumListPtr = filter;
 }
@@ -321,9 +321,9 @@ void wrapSpectrumList_scanSubset(MSData& msd, const string& scanSubsetString)
     IntegerSet scanNumberSet;
     scanNumberSet.parse(scanSubsetString);
 
-    shared_ptr<SpectrumListFilter> 
-        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
-                                      SpectrumListFilterPredicate_ScanNumberSet(scanNumberSet)));
+    shared_ptr<SpectrumList_Filter> 
+        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
+                                       SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet)));
 
     msd.run.spectrumListPtr = filter;
 }
@@ -341,7 +341,7 @@ void wrapSpectrumList_nativeCentroider(MSData& msd, const string& msLevelsToCent
 }
 
 
-struct StripIonTrapSurveyScans : public SpectrumListFilter::Predicate
+struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
 {
     virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
     {
@@ -358,9 +358,9 @@ struct StripIonTrapSurveyScans : public SpectrumListFilter::Predicate
 
 void wrapSpectrumList_stripIT(MSData& msd)
 {
-    shared_ptr<SpectrumListFilter> 
-        filter(new SpectrumListFilter(msd.run.spectrumListPtr, 
-                                      StripIonTrapSurveyScans()));
+    shared_ptr<SpectrumList_Filter> 
+        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
+                                       StripIonTrapSurveyScans()));
     msd.run.spectrumListPtr = filter;    
 }
 

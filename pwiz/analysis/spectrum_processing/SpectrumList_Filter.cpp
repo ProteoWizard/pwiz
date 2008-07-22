@@ -1,5 +1,5 @@
 //
-// SpectrumListFilter.cpp
+// SpectrumList_Filter.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -23,27 +23,28 @@
 
 #define PWIZ_SOURCE
 
-#include "SpectrumListFilter.hpp"
+#include "SpectrumList_Filter.hpp"
 #include <stdexcept>
 #include <iostream>
 
 
 namespace pwiz {
-namespace msdata {
+namespace analysis {
 
 
 using namespace pwiz::util;
+using namespace pwiz::msdata;
 using namespace std;
 using boost::logic::tribool;
 using boost::lexical_cast;
 
 
 //
-// SpectrumListFilter::Impl
+// SpectrumList_Filter::Impl
 //
 
 
-struct SpectrumListFilter::Impl
+struct SpectrumList_Filter::Impl
 {
     const SpectrumListPtr original;
     std::vector<SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
@@ -54,10 +55,10 @@ struct SpectrumListFilter::Impl
 };
 
 
-SpectrumListFilter::Impl::Impl(SpectrumListPtr _original, const Predicate& predicate)
+SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& predicate)
 :   original(_original)
 {
-    if (!original.get()) throw runtime_error("[SpectrumListFilter] Null pointer");
+    if (!original.get()) throw runtime_error("[SpectrumList_Filter] Null pointer");
 
     // iterate through the spectra, using predicate to build the sub-list
     for (size_t i=0, end=original->size(); i<end; i++)
@@ -87,7 +88,7 @@ SpectrumListFilter::Impl::Impl(SpectrumListPtr _original, const Predicate& predi
 }
 
 
-void SpectrumListFilter::Impl::pushSpectrum(const SpectrumIdentity& spectrumIdentity)
+void SpectrumList_Filter::Impl::pushSpectrum(const SpectrumIdentity& spectrumIdentity)
 {
     indexMap.push_back(spectrumIdentity.index);
     spectrumIdentities.push_back(spectrumIdentity);
@@ -96,28 +97,28 @@ void SpectrumListFilter::Impl::pushSpectrum(const SpectrumIdentity& spectrumIden
 
 
 //
-// SpectrumListFilter
+// SpectrumList_Filter
 //
 
 
-PWIZ_API_DECL SpectrumListFilter::SpectrumListFilter(const SpectrumListPtr original, const Predicate& predicate)
-:   impl_(new Impl(original, predicate))
+PWIZ_API_DECL SpectrumList_Filter::SpectrumList_Filter(const SpectrumListPtr original, const Predicate& predicate)
+:   SpectrumListWrapper(original), impl_(new Impl(original, predicate))
 {}
 
 
-PWIZ_API_DECL size_t SpectrumListFilter::size() const
+PWIZ_API_DECL size_t SpectrumList_Filter::size() const
 {
     return impl_->indexMap.size();
 }
 
 
-PWIZ_API_DECL const SpectrumIdentity& SpectrumListFilter::spectrumIdentity(size_t index) const
+PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Filter::spectrumIdentity(size_t index) const
 {
     return impl_->spectrumIdentities.at(index);
 }
 
 
-PWIZ_API_DECL SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBinaryData) const
+PWIZ_API_DECL SpectrumPtr SpectrumList_Filter::spectrum(size_t index, bool getBinaryData) const
 {
     size_t originalIndex = impl_->indexMap.at(index);
     SpectrumPtr originalSpectrum = impl_->original->spectrum(originalIndex, getBinaryData);  
@@ -130,16 +131,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumListFilter::spectrum(size_t index, bool getBin
 
 
 //
-// SpectrumListFilterPredicate_IndexSet 
+// SpectrumList_FilterPredicate_IndexSet 
 //
 
 
-PWIZ_API_DECL SpectrumListFilterPredicate_IndexSet::SpectrumListFilterPredicate_IndexSet(const IntegerSet& indexSet)
+PWIZ_API_DECL SpectrumList_FilterPredicate_IndexSet::SpectrumList_FilterPredicate_IndexSet(const IntegerSet& indexSet)
 :   indexSet_(indexSet), eos_(false)
 {}
 
 
-PWIZ_API_DECL tribool SpectrumListFilterPredicate_IndexSet::accept(const SpectrumIdentity& spectrumIdentity) const
+PWIZ_API_DECL tribool SpectrumList_FilterPredicate_IndexSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
     if (indexSet_.hasUpperBound((int)spectrumIdentity.index)) eos_ = true;
     bool result = indexSet_.contains((int)spectrumIdentity.index);
@@ -147,23 +148,23 @@ PWIZ_API_DECL tribool SpectrumListFilterPredicate_IndexSet::accept(const Spectru
 }
 
 
-PWIZ_API_DECL bool SpectrumListFilterPredicate_IndexSet::done() const
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_IndexSet::done() const
 {
     return eos_; // end of set
 }
 
 
 //
-// SpectrumListFilterPredicate_ScanNumberSet 
+// SpectrumList_FilterPredicate_ScanNumberSet 
 //
 
 
-PWIZ_API_DECL SpectrumListFilterPredicate_ScanNumberSet::SpectrumListFilterPredicate_ScanNumberSet(const IntegerSet& scanNumberSet)
+PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPredicate_ScanNumberSet(const IntegerSet& scanNumberSet)
 :   scanNumberSet_(scanNumberSet), eos_(false)
 {}
 
 
-PWIZ_API_DECL tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
+PWIZ_API_DECL tribool SpectrumList_FilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
     int scanNumber = lexical_cast<int>(spectrumIdentity.nativeID);
     if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
@@ -172,13 +173,11 @@ PWIZ_API_DECL tribool SpectrumListFilterPredicate_ScanNumberSet::accept(const Sp
 }
 
 
-PWIZ_API_DECL bool SpectrumListFilterPredicate_ScanNumberSet::done() const
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanNumberSet::done() const
 {
     return eos_; // end of set
 }
 
 
-} // namespace msdata
+} // namespace analysis
 } // namespace pwiz
-
-

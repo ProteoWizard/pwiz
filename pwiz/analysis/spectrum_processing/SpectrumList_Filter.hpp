@@ -1,5 +1,5 @@
 //
-// SpectrumListFilter.hpp
+// SpectrumList_Filter.hpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,38 +21,38 @@
 //
 
 
-#ifndef _SPECTRUMLISTFILTER_HPP_
-#define _SPECTRUMLISTFILTER_HPP_
+#ifndef _SPECTRUMLIST_FILTER_HPP_
+#define _SPECTRUMLIST_FILTER_HPP_
 
 
 #include "utility/misc/Export.hpp"
-#include "MSData.hpp"
+#include "SpectrumListWrapper.hpp"
 #include "utility/misc/IntegerSet.hpp"
 #include "boost/logic/tribool.hpp"
 
 
 namespace pwiz {
-namespace msdata {
+namespace analysis {
 
 
 /// SpectrumList filter, for creating Spectrum sub-lists
-class PWIZ_API_DECL SpectrumListFilter : public SpectrumList
+class PWIZ_API_DECL SpectrumList_Filter : public SpectrumListWrapper
 {
     public:
 
     /// client-implemented filter predicate -- called during construction of
-    /// SpectrumListFilter to create the filtered list of spectra
+    /// SpectrumList_Filter to create the filtered list of spectra
     struct PWIZ_API_DECL Predicate
     {
         /// return values:
         ///  true: accept the Spectrum
         ///  false: reject the Spectrum
         ///  indeterminate: need to see the full Spectrum object to decide
-        virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const 
+        virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const 
         {return false;} 
 
         /// return true iff Spectrum is accepted
-        virtual bool accept(const Spectrum& spectrum) const {return false;} 
+        virtual bool accept(const msdata::Spectrum& spectrum) const {return false;} 
 
         /// return true iff done accepting spectra; 
         /// this allows early termination of the iteration through the original
@@ -64,52 +64,52 @@ class PWIZ_API_DECL SpectrumListFilter : public SpectrumList
         virtual ~Predicate() {}
     };
 
-    SpectrumListFilter(const SpectrumListPtr original, const Predicate& predicate);
+    SpectrumList_Filter(const msdata::SpectrumListPtr original, const Predicate& predicate);
 
     /// \name SpectrumList interface
     //@{
     virtual size_t size() const;
-    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
+    virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
+    virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
     //@}
 
     private:
     struct Impl;
     boost::shared_ptr<Impl> impl_;
-    SpectrumListFilter(SpectrumListFilter&);
-    SpectrumListFilter& operator=(SpectrumListFilter&);
+    SpectrumList_Filter(SpectrumList_Filter&);
+    SpectrumList_Filter& operator=(SpectrumList_Filter&);
 };
 
 
-class PWIZ_API_DECL SpectrumListFilterPredicate_IndexSet : public SpectrumListFilter::Predicate
+class PWIZ_API_DECL SpectrumList_FilterPredicate_IndexSet : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumListFilterPredicate_IndexSet(const pwiz::util::IntegerSet& indexSet);
-    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const;
+    SpectrumList_FilterPredicate_IndexSet(const util::IntegerSet& indexSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
     virtual bool done() const;
 
     private:
-    pwiz::util::IntegerSet indexSet_;
+    util::IntegerSet indexSet_;
     mutable bool eos_;
 };
 
 
-class PWIZ_API_DECL SpectrumListFilterPredicate_ScanNumberSet : public SpectrumListFilter::Predicate
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumListFilterPredicate_ScanNumberSet(const pwiz::util::IntegerSet& scanNumberSet);
-    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const;
+    SpectrumList_FilterPredicate_ScanNumberSet(const util::IntegerSet& scanNumberSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
     virtual bool done() const;
 
     private:
-    pwiz::util::IntegerSet scanNumberSet_;
+    util::IntegerSet scanNumberSet_;
     mutable bool eos_;
 };
 
 
-} // namespace msdata
+} // namespace analysis
 } // namespace pwiz
 
 
-#endif // _SPECTRUMLISTFILTER_HPP_
+#endif // _SPECTRUMLIST_FILTER_HPP_
 
