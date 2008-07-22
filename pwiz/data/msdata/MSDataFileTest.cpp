@@ -77,6 +77,18 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         unit_assert(!diff);
     }
 
+	// now give the gzip read a workout
+	std::string cmd("gzip ");
+	cmd += filename1;
+	if (!system(cmd.c_str())) { // don't fret if gzip command isn't present
+		filename1+=".gz";
+		MSDataFile msd1(filename1);
+        // compare
+        Diff<MSData> diff(tiny, msd1, diffConfig);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+	}
+
     // remove temp files
     boost::filesystem::remove(filename1);
     boost::filesystem::remove(filename2);

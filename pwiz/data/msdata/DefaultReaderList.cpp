@@ -34,6 +34,7 @@
 #include "References.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
+#include "utility/misc/random_access_compressed_ifstream.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -73,8 +74,8 @@ string GetXMLRootElement(istream& is)
 
 string GetXMLRootElementFromFile(const string& filepath)
 {
-    ifstream file(filepath.c_str(), ios::binary);
-    if (!file.is_open())
+    pwiz::util::random_access_compressed_ifstream file(filepath.c_str());
+    if (!file)
         throw runtime_error("[GetXMLRootElementFromFile] Error opening file");
     return GetXMLRootElement(file);
 }
@@ -92,7 +93,7 @@ class Reader_mzML : public Reader
 
     virtual void read(const std::string& filename, const std::string& head, MSData& result) const
     {
-        shared_ptr<istream> is(new ifstream(filename.c_str(), ios::binary));
+		shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[MSDataFile::Reader_mzML] Unable to open file " + filename).c_str());
 
@@ -159,7 +160,7 @@ class Reader_mzXML : public Reader
 
     virtual void read(const std::string& filename, const std::string& head, MSData& result) const
     {
-        shared_ptr<istream> is(new ifstream(filename.c_str(), ios::binary));
+        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[MSDataFile::Reader_mzXML] Unable to open file " + filename).c_str());
 
@@ -193,7 +194,7 @@ class Reader_MGF : public Reader
 
     virtual void read(const string& filename, const string& head, MSData& result) const
     {
-        shared_ptr<istream> is(new ifstream(filename.c_str(), ios::binary));
+        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_MGF::read] Unable to open file " + filename));
 

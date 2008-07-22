@@ -31,6 +31,7 @@
 #include <fstream>
 #include <stdexcept>
 #include "utility/misc/Filesystem.hpp"
+#include "utility/misc/random_access_compressed_ifstream.hpp"
 
 
 namespace pwiz {
@@ -66,13 +67,12 @@ PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reade
     string head;
     if (!bfs::is_directory(filename))
     {
-        ifstream is(filename.c_str(), ios::binary);
+        pwiz::util::random_access_compressed_ifstream is(filename.c_str());
         if (!is)
             throw runtime_error(("[MSDataFile::MSDataFile()] Unable to open file " + filename).c_str());
 
         head.resize(512, '\0');
         is.read(&head[0], (std::streamsize)head.size());
-        is.close();
     }
 
     if (reader)

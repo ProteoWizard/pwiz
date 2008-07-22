@@ -237,6 +237,14 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         string filename = writeTempFile();
         test(filename);
+		// now try it with a gzipped file
+		string cmd("gzip ");
+		cmd += filename;
+		if (!system(cmd.c_str()))  // don't bother if no gzip on system
+		{
+			filename += ".gz";
+	        test(filename); // run it again with a gzipped file
+		}
        boost::filesystem::remove(filename);
         return 0;
     }
