@@ -64,6 +64,7 @@ lib pwiz_data_msdata
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp
         SpectrumList_mzXML.cpp
+        SpectrumList_MGF.cpp
         SpectrumListFilter.cpp
         RAMPAdapter.cpp
         Reader.cpp
@@ -72,12 +73,14 @@ lib pwiz_data_msdata
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
         <library>/ext/zlib//z
     ;
 
@@ -152,6 +155,7 @@ unit-test ChromatogramList_mzML_Test : ChromatogramList_mzML_Test.cpp pwiz_data_
 unit-test Serializer_mzML_Test : Serializer_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzML.cpp examples.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test SpectrumList_mzXML_Test : SpectrumList_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzXML.cpp examples.cpp Serializer_mzXML.cpp References.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test Serializer_mzXML_Test : Serializer_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzXML.cpp examples.cpp SpectrumList_mzXML.cpp Serializer_mzML.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
+unit-test SpectrumList_MGF_Test : SpectrumList_MGF_test.cpp pwiz_data_msdata ;
 unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;
