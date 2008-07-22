@@ -768,7 +768,7 @@ double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
         {
             monoisotopicMZ = trailerExtraValueDouble("Monoisotopic M/Z:");
         }
-        catch (RawEgg& e)
+        catch (RawEgg& )
         {
             monoisotopicMZ = 0;
         }
