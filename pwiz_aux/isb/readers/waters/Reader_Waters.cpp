@@ -70,8 +70,6 @@ void fillInMetadata(const string& rawpath, MSData& msd)
         sourceFile->name = sourcePath.leaf();
         sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
         //sourceFile->cvParams.push_back(MS_Waters_RAW_file);
-        //string sha1 = SHA1Calculator::hashFile(sourcePath.string());
-        //sourceFile->cvParams.push_back(CVParam(MS_SHA_1, sha1));
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
     msd.id = stringToIDREF(p.leaf());

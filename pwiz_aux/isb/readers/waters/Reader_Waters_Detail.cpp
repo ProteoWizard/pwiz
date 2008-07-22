@@ -25,8 +25,8 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(const string& rawpath)
 PWIZ_API_DECL
 void translateFunctionType(const string& funcType,
                            int& msLevel,
-                           CVID scanningMethod,
-                           CVID spectrumType)
+                           CVID& scanningMethod,
+                           CVID& spectrumType)
 {
     if (funcType.find("MSMSMS") != string::npos)
     {
