@@ -35,6 +35,7 @@ using std::multimap;
 using std::set;
 using std::multiset;
 using std::deque;
+using std::pair;
 
 using std::find;
 using std::find_end;
