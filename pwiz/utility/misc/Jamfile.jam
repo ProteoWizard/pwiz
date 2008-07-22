@@ -34,6 +34,7 @@ lib pwiz_utility_misc
         Base64.cpp 
         IntegerSet.cpp
         Filesystem.cpp
+        random_access_compressed_ifstream.cpp
         SHA1Calculator.cpp
         SHA1.cpp
     : # requirements

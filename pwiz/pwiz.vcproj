@@ -626,6 +626,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\utility\misc\random_access_compressed_ifstream.hpp"
+				>
+			</File>		
+			<File
 				RelativePath=".\utility\vendor_api\thermo\RawFile.h"
 				>
 			</File>
@@ -1885,6 +1889,10 @@
 				RelativePath=".\pwiz\utility\math\Random.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\utility\misc\random_access_compressed_ifstream.cpp"
+				>
+			</File>			
 			<File
 				RelativePath=".\utility\vendor_api\thermo\RawFile.cpp"
 				>
