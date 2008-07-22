@@ -381,11 +381,16 @@ class HandlerScan : public SAXParser::Handler
                 scan.scanWindows.push_back(
                     ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
             
-            spectrum_.spectrumDescription.set(MS_lowest_m_z_value, lowMz);
-            spectrum_.spectrumDescription.set(MS_highest_m_z_value, highMz);
-            spectrum_.spectrumDescription.set(MS_base_peak_m_z, basePeakMz);
-            spectrum_.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity);
-            spectrum_.spectrumDescription.set(MS_total_ion_current, totIonCurrent);
+            if (!lowMz.empty())
+                spectrum_.spectrumDescription.set(MS_lowest_m_z_value, lowMz);
+            if (!highMz.empty())
+                spectrum_.spectrumDescription.set(MS_highest_m_z_value, highMz);
+            if (!basePeakMz.empty())
+                spectrum_.spectrumDescription.set(MS_base_peak_m_z, basePeakMz);
+            if (!basePeakIntensity.empty())
+                spectrum_.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity);
+            if (!totIonCurrent.empty()) 
+                spectrum_.spectrumDescription.set(MS_total_ion_current, totIonCurrent);
 
             return Status::Ok;
         }
@@ -393,7 +398,8 @@ class HandlerScan : public SAXParser::Handler
         {
             spectrum_.spectrumDescription.precursors.push_back(Precursor());
             Precursor& precursor = spectrum_.spectrumDescription.precursors.back();
-            precursor.activation.set(MS_collision_energy, collisionEnergy_);
+            if (!collisionEnergy_.empty())
+                precursor.activation.set(MS_collision_energy, collisionEnergy_);
             handlerPrecursor_.precursor = &precursor; 
             return Status(Status::Delegate, &handlerPrecursor_);
         }

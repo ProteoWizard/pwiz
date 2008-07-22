@@ -769,7 +769,8 @@ class Handler_mzXML : public SAXParser::Handler
         else if (name=="msInstrument" || name=="instrument")
         {
             string id;
-            getAttribute(attributes, "id", id);
+            getAttribute(attributes, "msInstrumentID", id);
+            if (id.empty()) getAttribute(attributes, "id", id);
             if (id.empty()) getAttribute(attributes, "ID", id); // hack: id or ID
             msd_.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration(id)));
             handler_msInstrument_.instrumentConfiguration = msd_.instrumentConfigurationPtrs.back().get();
