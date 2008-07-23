@@ -68,7 +68,7 @@ struct PWIZ_API_DECL SpectrumInfo
     SpectrumInfo();
     SpectrumInfo(const Spectrum& spectrum);
 
-    void update(const Spectrum& spectrum);
+    void update(const Spectrum& spectrum, bool getBinaryData = false);
     void clearBinaryData();
 
     // some helper functions

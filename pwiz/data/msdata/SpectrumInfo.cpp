@@ -68,8 +68,11 @@ int nativeIDToScanNumber(const string& nativeID)
 } // namespace
 
 
-PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
+PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinaryData)
 {
+    *this = SpectrumInfo();
+    clearBinaryData();
+
     const SpectrumDescription& sd = spectrum.spectrumDescription;
 
     id = spectrum.id;
@@ -109,7 +112,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum)
         precursors.push_back(precursorInfo);
     }
 
-    if (!spectrum.binaryDataArrayPtrs.empty())
+    if (getBinaryData && !spectrum.binaryDataArrayPtrs.empty())
         spectrum.getMZIntensityPairs(data);
 }
 

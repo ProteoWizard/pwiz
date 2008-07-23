@@ -371,10 +371,24 @@ PWIZ_API_DECL Component& ComponentList::detector(size_t index)
     }
     throw out_of_range((boost::format("[ComponentList::detector] Detector %d is out of range; only found %d detectors") % index % count).str());
 }
-//PWIZ_API_DECL bool ComponentList::empty() const
-//{
-//    return source.empty() && analyzer.empty() && detector.empty();
-//}
+
+
+PWIZ_API_DECL const Component& ComponentList::source(size_t index) const
+{
+    return const_cast<ComponentList*>(this)->source(index);
+}
+
+
+PWIZ_API_DECL const Component& ComponentList::analyzer(size_t index) const
+{
+    return const_cast<ComponentList*>(this)->analyzer(index);
+}
+
+
+PWIZ_API_DECL const Component& ComponentList::detector(size_t index) const
+{
+    return const_cast<ComponentList*>(this)->detector(index);
+}
 
 
 //

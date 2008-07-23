@@ -252,14 +252,24 @@ void testAutomaticUpdate()
     for (size_t i=0; i<cache.size(); i++)
         unit_assert(cache[i].index == (size_t)-1);
 
-    const SpectrumInfo& info5= cache.spectrumInfo(5);
-    const SpectrumInfo& info7 = cache.spectrumInfo(7);
+    const SpectrumInfo& info5 = cache.spectrumInfo(5, true);
+    unit_assert(cache[5].data.size() == 100);
+
+    cache.spectrumInfo(7); // getBinaryData==false -> doesn't change cached binary data
+    unit_assert(cache[5].data.size() == 100);
+    unit_assert(cache[7].data.size() == 0);
+
+    const SpectrumInfo& info7 = cache.spectrumInfo(7, true);
 
     if (os_)
     {
         for (size_t i=0; i<cache.size(); i++)
-            *os_ << i << " " << cache[i].index << " " << cache[i].id << endl;
+            *os_ << i << " " << cache[i].index << " " << cache[i].id << " "
+                 << cache[i].data.size() << endl;
     }     
+
+    unit_assert(info7.data.size() == 100);
+    unit_assert(info5.data.size() == 0);
 
     unit_assert(info5.index==5 && info5.id=="something");
     unit_assert(cache[5].index==5 && cache[5].id=="something");

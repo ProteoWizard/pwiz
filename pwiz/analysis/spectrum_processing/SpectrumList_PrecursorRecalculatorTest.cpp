@@ -22,8 +22,6 @@
 
 
 #include "SpectrumList_PrecursorRecalculator.hpp"
-#include "PrecursorRecalculatorDefault.hpp"
-#include "analysis/peakdetect/PeakFamilyDetectorFT.hpp"
 #include "data/msdata/MSDataFile.hpp"
 #include "utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
@@ -31,7 +29,6 @@
 
 
 using namespace pwiz::msdata;
-using namespace pwiz::data;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace std;
@@ -60,25 +57,7 @@ void verifyPrecursorInfo(const Spectrum& spectrum, double precursorMZ, int precu
     unit_assert_equal(selectedIon.cvParam(MS_m_z).valueAs<double>(), precursorMZ, epsilon);
 
     if (precursorCharge != 0)
-        unit_assert(selectedIon.cvParam(MS_m_z).valueAs<int>() == precursorCharge);
-}
-
-
-shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix()
-{
-    // instantiate PeakFamilyDetector
-
-    PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo();
-    shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
-
-    // instantiate PrecursorRecalculatorDefault
-
-    PrecursorRecalculatorDefault::Config config;
-    config.peakFamilyDetector = pfd;
-    config.mzLeftWidth = 3;
-    config.mzRightWidth = 1.6;
-    return shared_ptr<PrecursorRecalculatorDefault>(new PrecursorRecalculatorDefault(config));
+        unit_assert(selectedIon.cvParam(MS_charge_state).valueAs<int>() == precursorCharge);
 }
 
 
@@ -94,18 +73,16 @@ void test5peptideFT(const bfs::path& datadir)
     verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(5), 558.87, 0);
     verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(6), 812.33, 0);
 
-    shared_ptr<PrecursorRecalculatorDefault> prd = createPrecursorRecalculator_msprefix();
-
     shared_ptr<SpectrumList_PrecursorRecalculator> spectrumListRecalculated(
-        new SpectrumList_PrecursorRecalculator(msd.run.spectrumListPtr, prd));
+        new SpectrumList_PrecursorRecalculator(msd));
 
     unit_assert(spectrumListRecalculated->size() == 7); 
     if (os_) *os_ << "recalculated spectra:\n";
-    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(2), 810.79, 0); // TODO: fix
-    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(3), 837.34, 0); // TODO: fix
-    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(4), 725.36, 0); // TODO: fix
-    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(5), 558.87, 0); // TODO: fix
-    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(6), 812.33, 0); // TODO: fix
+    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(2), 810.42, 2);
+    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(3), 836.96, 2);
+    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(4), 724.91, 2);
+    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(5), 558.31, 3);
+    verifyPrecursorInfo(*spectrumListRecalculated->spectrum(6), 810.42, 2);
 }
 
 

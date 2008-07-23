@@ -102,7 +102,7 @@ class PWIZ_API_DECL MSDataCache : public std::vector<SpectrumInfo>,
     //@}
 
     /// access to SpectrumInfo with automatic update (open() must be called first)
-    const SpectrumInfo& spectrumInfo(size_t index);
+    const SpectrumInfo& spectrumInfo(size_t index, bool getBinaryData = false);
 
     private:
     struct Impl;

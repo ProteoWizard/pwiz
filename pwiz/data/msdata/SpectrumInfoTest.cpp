@@ -56,9 +56,15 @@ void test()
     unit_assert_equal(info.mzLow, 400.39, epsilon_);
     unit_assert_equal(info.mzHigh, 1795.56, epsilon_);
     unit_assert(info.precursors.empty());
+
+    info.update(*tiny.run.spectrumListPtr->spectrum(0), true);
     unit_assert(info.data.size() == 15);
 
-    info.update(*tiny.run.spectrumListPtr->spectrum(1));
+    info.update(*tiny.run.spectrumListPtr->spectrum(0), false);
+    unit_assert(info.data.size() == 0);
+    unit_assert(info.data.capacity() == 0);
+
+    info.update(*tiny.run.spectrumListPtr->spectrum(1), true);
     unit_assert(info.index == 1);
     unit_assert(info.id == "S20");
     unit_assert(info.nativeID == "20");

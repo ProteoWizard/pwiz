@@ -53,8 +53,37 @@ struct MSDataCache::Impl
     typedef list<SpectrumInfo*> MRU; // most recently used
     MRU mru;
 
+    void updateMRU(SpectrumInfo* info);
+
     SpectrumListPtr spectrumListPtr;
 };
+
+
+void MSDataCache::Impl::updateMRU(SpectrumInfo* info)
+{
+    if (!info)
+        throw runtime_error("[MSDataCache::updateMRU()] Null pointer.");
+
+    // MRU binary data caching
+    if (config.binaryDataCacheSize>0 && !info->data.empty())
+    {
+        // find and erase if we're already on the list
+        MRU::iterator it = find(mru.begin(), mru.end(), info);
+        if (it!=mru.end()) 
+            mru.erase(it);
+
+        // put us at the front of the list
+        mru.push_front(info);
+
+        // free binary data from the least recently used SpectrumInfo (back of list)
+        if (mru.size() > config.binaryDataCacheSize)
+        {
+            SpectrumInfo* lru = mru.back();
+            lru->clearBinaryData();
+            mru.pop_back();
+        }
+    }
+}
 
 
 //
@@ -90,31 +119,13 @@ void MSDataCache::update(const DataInfo& dataInfo,
         throw runtime_error("[MSDataCache::update()] Usage error."); 
 
     SpectrumInfo& info = at(spectrum.index);
-    info.update(spectrum);
+    info.update(spectrum, true);
+    impl_->updateMRU(&info);
 
-    // MRU binary data caching
-    if (impl_->config.binaryDataCacheSize>0 && !info.data.empty())
-    {
-        // find and erase if we're already on the list
-        Impl::MRU::iterator it = find(impl_->mru.begin(), impl_->mru.end(), &info);
-        if (it!=impl_->mru.end()) 
-            impl_->mru.erase(it);
-
-        // put us at the front of the list
-        impl_->mru.push_front(&info);
-
-        // free binary data from the least recently used SpectrumInfo (back of list)
-        if (impl_->mru.size() > impl_->config.binaryDataCacheSize)
-        {
-            SpectrumInfo* lru = impl_->mru.back();
-            lru->clearBinaryData();
-            impl_->mru.pop_back();
-        }
-    }
 }
 
 
-PWIZ_API_DECL const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
+PWIZ_API_DECL const SpectrumInfo& MSDataCache::spectrumInfo(size_t index, bool getBinaryData)
 {
     if (!impl_->spectrumListPtr.get() ||
         size()!=impl_->spectrumListPtr->size())
@@ -123,10 +134,12 @@ PWIZ_API_DECL const SpectrumInfo& MSDataCache::spectrumInfo(size_t index)
     SpectrumInfo& info = at(index);
 
     // update cache if necessary 
-    if (info.index == (size_t)-1)
+    if (info.index == (size_t)-1 ||
+        getBinaryData==true && info.data.empty())
     {
-        SpectrumPtr spectrum = impl_->spectrumListPtr->spectrum(index); 
-        info.update(*spectrum);
+        SpectrumPtr spectrum = impl_->spectrumListPtr->spectrum(index, getBinaryData);
+        info.update(*spectrum, getBinaryData);
+        impl_->updateMRU(&info);
     }
 
     return info;

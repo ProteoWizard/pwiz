@@ -235,6 +235,10 @@ struct PWIZ_API_DECL ComponentList : public std::vector<Component>
     Component& source(size_t index);
     Component& analyzer(size_t index);
     Component& detector(size_t index);
+
+    const Component& source(size_t index) const;
+    const Component& analyzer(size_t index) const;
+    const Component& detector(size_t index) const;
 };
 
 

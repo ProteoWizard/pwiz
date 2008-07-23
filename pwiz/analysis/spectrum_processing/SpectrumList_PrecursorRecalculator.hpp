@@ -27,7 +27,6 @@
 
 #include "utility/misc/Export.hpp"
 #include "SpectrumListWrapper.hpp"
-#include "PrecursorRecalculator.hpp"
 
 
 namespace pwiz {
@@ -39,8 +38,9 @@ class PWIZ_API_DECL SpectrumList_PrecursorRecalculator : public SpectrumListWrap
 {
     public:
 
-    SpectrumList_PrecursorRecalculator(const msdata::SpectrumListPtr original, 
-                                       boost::shared_ptr<PrecursorRecalculator> precursorRecalculator);
+    /// constructor needs the full MSData object for instrument info;
+    /// SpectrumList_PrecursorRecalculator holds a reference to the original SpectrumListPtr
+    SpectrumList_PrecursorRecalculator(const msdata::MSData& msd);
 
     /// \name SpectrumList interface
     //@{
