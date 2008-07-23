@@ -152,7 +152,7 @@ namespace seems
                 scanInfo.Append( "unknown" );
 
 			int rowIndex = gridView.Rows.Add(
-				s.id, s.nativeID, s.index,
+				s.id, s.nativeID, s.index, s.spotID,
 				s.cvParamChild( CVID.MS_spectrum_type ).name,
                 msLevel,
                 scanTime,
@@ -168,6 +168,9 @@ namespace seems
 			);
 			gridView.Rows[rowIndex].Tag = spectrum;
             spectrum.Tag = gridView.Rows[rowIndex];
+
+            if( s.spotID.Length > 0 )
+                gridView.Columns["SpotId"].Visible = true;
 		}
 
 		private void gridView_CellMouseClick( object sender, DataGridViewCellMouseEventArgs e )
@@ -204,6 +207,9 @@ namespace seems
 
             foreach( CVParam param in pc.cvParams )
             {
+                if( param.empty() )
+                    continue;
+
                 string nodeText;
                 if( param.value.ToString().Length > 0 )
                 {

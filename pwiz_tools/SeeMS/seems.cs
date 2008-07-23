@@ -22,7 +22,7 @@ namespace seems
 	public partial class seems : Form
 	{
 		private bool isLoaded = false;
-		private OpenFileDialog browseToFileDialog;
+		private OpenDataSourceDialog browseToFileDialog;
 		private Manager manager;
 
 		private MruStripMenu recentFilesMenu;
@@ -53,18 +53,7 @@ namespace seems
 
 			dockPanel.DocumentStyle = DigitalRune.Windows.Docking.DocumentStyle.DockingMdi;
 
-			browseToFileDialog = new OpenFileDialog();
-			browseToFileDialog.Filter =
-				"Any spectra format (*.mzML;*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep)|*.mzML;*.mzData;*.mzXML;*.xml;*.raw;*.wiff;*.mgf;*.dta;fid;*.baf;*.yep|" +
-				"mzML (*.mzML;*.xml)|*.mzML;*.xml|" +
-				"mzData (*.mzData;*.xml)|*.mzData;*.xml|" +
-				"mzXML (*.mzXML;*.xml)|*.mzXML;*.xml|" +
-				"RAW (*.RAW)|*.raw|" +
-				"WIFF (*.WIFF)|*.wiff|" +
-				"Bruker (fid;*.baf;*.yep)|fid;*.baf;*.yep|" +
-				"MGF (*.mgf)|*.mgf|" +
-				"DTA (*.dta)|*.dta";
-			browseToFileDialog.FilterIndex = 0;
+            browseToFileDialog = new OpenDataSourceDialog();
 			browseToFileDialog.InitialDirectory = "C:\\";
             
 
@@ -213,7 +202,8 @@ namespace seems
         {
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
-				openFile( browseToFileDialog.FileName );
+                foreach( string dataSource in browseToFileDialog.DataSources )
+                    openFile( dataSource );
 			}
 		}
 
@@ -392,54 +382,6 @@ namespace seems
 				dataSourceComboBox.Enabled = false;
 			}*/
 		}
-
-		/*void GraphForm_GotFocus( object sender, EventArgs e )
-		{
-			if( CurrentGraphForm != currentGraphForm )
-			{
-				currentGraphForm = CurrentGraphForm;
-				CurrentGraphForm.GotFocus -= new EventHandler( GraphForm_GotFocus );
-				CurrentGraphForm.LostFocus += new EventHandler( GraphForm_LostFocus );
-				CurrentGraphForm.FormClosing += new FormClosingEventHandler( GraphForm_FormClosing );
-				CurrentGraphForm.Resize += new EventHandler( GraphForm_Resize );
-				CurrentGraphForm.LocationChanged += new EventHandler( GraphForm_LocationChanged );
-				//pendingActivation = false;
-			}
-		}
-
-		private void GraphForm_Resize( object sender, EventArgs e )
-		{
-			/*if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState != FormWindowState.Minimized )
-			{
-				if( CurrentGraphForm.WindowState == FormWindowState.Normal )
-					Properties.Settings.Default.LastGraphFormSize = CurrentGraphForm.Size;
-				Properties.Settings.Default.LastGraphFormWindowState = CurrentGraphForm.WindowState;
-			}
-		}
-
-		private void GraphForm_LocationChanged( object sender, EventArgs e )
-		{
-			//if( isLoaded && !pendingActivation && CurrentGraphForm.WindowState == FormWindowState.Normal )
-			//	Properties.Settings.Default.LastGraphFormLocation = CurrentGraphForm.Location;
-		}
-
-		private void GraphForm_FormClosing( object sender, FormClosingEventArgs e )
-		{
-			Properties.Settings.Default.Save();
-			setScanControls( false );
-		}
-
-		private void GraphForm_LostFocus( object sender, EventArgs e )
-		{
-			currentGraphForm = null;
-			CurrentGraphForm.GotFocus += new EventHandler( GraphForm_GotFocus );
-			CurrentGraphForm.LostFocus -= new EventHandler( GraphForm_LostFocus );
-			CurrentGraphForm.FormClosing -= new FormClosingEventHandler( GraphForm_FormClosing );
-			CurrentGraphForm.Resize -= new EventHandler( GraphForm_Resize );
-			CurrentGraphForm.LocationChanged -= new EventHandler( GraphForm_LocationChanged );
-		}*/
-
-		
 
 		private void cascadeWindowMenuItem_Click( object sender, EventArgs e )
 		{

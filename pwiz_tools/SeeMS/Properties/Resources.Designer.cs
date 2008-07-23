@@ -60,6 +60,13 @@ namespace seems.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap back {
+            get {
+                object obj = ResourceManager.GetObject("back", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Centroider {
             get {
                 object obj = ResourceManager.GetObject("Centroider", resourceCulture);
@@ -88,6 +95,69 @@ namespace seems.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap Desktop {
+            get {
+                object obj = ResourceManager.GetObject("Desktop", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap file {
+            get {
+                object obj = ResourceManager.GetObject("file", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap folder {
+            get {
+                object obj = ResourceManager.GetObject("folder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap LocalDrive {
+            get {
+                object obj = ResourceManager.GetObject("LocalDrive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap MyComputer {
+            get {
+                object obj = ResourceManager.GetObject("MyComputer", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap MyDocuments {
+            get {
+                object obj = ResourceManager.GetObject("MyDocuments", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap MyNetworkPlaces {
+            get {
+                object obj = ResourceManager.GetObject("MyNetworkPlaces", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap NetworkDrive {
+            get {
+                object obj = ResourceManager.GetObject("NetworkDrive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap OpticalDrive {
+            get {
+                object obj = ResourceManager.GetObject("OpticalDrive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap PeakIntegral {
             get {
                 object obj = ResourceManager.GetObject("PeakIntegral", resourceCulture);
@@ -98,6 +168,13 @@ namespace seems.Properties {
         internal static System.Drawing.Bitmap PeakIntegralActive {
             get {
                 object obj = ResourceManager.GetObject("PeakIntegralActive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap RecentDocuments {
+            get {
+                object obj = ResourceManager.GetObject("RecentDocuments", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,6 +190,20 @@ namespace seems.Properties {
             get {
                 object obj = ResourceManager.GetObject("SmootherIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap up {
+            get {
+                object obj = ResourceManager.GetObject("up", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap views {
+            get {
+                object obj = ResourceManager.GetObject("views", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

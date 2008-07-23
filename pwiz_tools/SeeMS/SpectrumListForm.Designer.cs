@@ -30,9 +30,12 @@ namespace seems
 		{
             this.components = new System.ComponentModel.Container();
             this.gridView = new System.Windows.Forms.DataGridView();
+            this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
+            this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SpectrumId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NativeID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Index = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SpotId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SpectrumType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.msLevel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ScanTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -45,8 +48,6 @@ namespace seems
             this.Polarity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PrecursorInfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ScanInfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
-            this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ( (System.ComponentModel.ISupportInitialize) ( this.gridView ) ).BeginInit();
             this.selectColumnsMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -65,6 +66,7 @@ namespace seems
             this.SpectrumId,
             this.NativeID,
             this.Index,
+            this.SpotId,
             this.SpectrumType,
             this.msLevel,
             this.ScanTime,
@@ -91,6 +93,20 @@ namespace seems
             this.gridView.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler( this.gridView_CellMouseEnter );
             this.gridView.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseDoubleClick );
             // 
+            // selectColumnsMenuStrip
+            // 
+            this.selectColumnsMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
+            this.selectColumnsToolStripMenuItem} );
+            this.selectColumnsMenuStrip.Name = "selectColumnsMenuStrip";
+            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 170, 26 );
+            // 
+            // selectColumnsToolStripMenuItem
+            // 
+            this.selectColumnsToolStripMenuItem.Name = "selectColumnsToolStripMenuItem";
+            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 169, 22 );
+            this.selectColumnsToolStripMenuItem.Text = "Select Columns...";
+            this.selectColumnsToolStripMenuItem.Click += new System.EventHandler( this.selectColumnsToolStripMenuItem_Click );
+            // 
             // SpectrumId
             // 
             this.SpectrumId.HeaderText = "Id";
@@ -111,6 +127,13 @@ namespace seems
             this.Index.Name = "Index";
             this.Index.ReadOnly = true;
             this.Index.ToolTipText = "Ordinal Index in Data Source";
+            // 
+            // SpotId
+            // 
+            this.SpotId.HeaderText = "MALDI Spot Id";
+            this.SpotId.Name = "SpotId";
+            this.SpotId.ReadOnly = true;
+            this.SpotId.Visible = false;
             // 
             // SpectrumType
             // 
@@ -189,20 +212,6 @@ namespace seems
             this.ScanInfo.ReadOnly = true;
             this.ScanInfo.ToolTipText = "Information related to the scan and the acquisitions composing it";
             // 
-            // selectColumnsMenuStrip
-            // 
-            this.selectColumnsMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.selectColumnsToolStripMenuItem} );
-            this.selectColumnsMenuStrip.Name = "selectColumnsMenuStrip";
-            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 170, 26 );
-            // 
-            // selectColumnsToolStripMenuItem
-            // 
-            this.selectColumnsToolStripMenuItem.Name = "selectColumnsToolStripMenuItem";
-            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 169, 22 );
-            this.selectColumnsToolStripMenuItem.Text = "Select Columns...";
-            this.selectColumnsToolStripMenuItem.Click += new System.EventHandler( this.selectColumnsToolStripMenuItem_Click );
-            // 
             // SpectrumListForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
@@ -228,6 +237,7 @@ namespace seems
         private System.Windows.Forms.DataGridViewTextBoxColumn SpectrumId;
         private System.Windows.Forms.DataGridViewTextBoxColumn NativeID;
         private System.Windows.Forms.DataGridViewTextBoxColumn Index;
+        private System.Windows.Forms.DataGridViewTextBoxColumn SpotId;
         private System.Windows.Forms.DataGridViewTextBoxColumn SpectrumType;
         private System.Windows.Forms.DataGridViewTextBoxColumn msLevel;
         private System.Windows.Forms.DataGridViewTextBoxColumn ScanTime;
