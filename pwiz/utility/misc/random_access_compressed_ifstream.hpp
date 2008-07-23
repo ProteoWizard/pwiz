@@ -56,9 +56,16 @@ class random_access_compressed_streambuf; // forward ref
 
 class random_access_compressed_ifstream : public std::istream {
 public:
-	random_access_compressed_ifstream(const char *fname, bool *isCompressed=NULL); // optional arg to learn compression state
+	random_access_compressed_ifstream(const char *fname); // optional arg to learn compression state
 	virtual ~random_access_compressed_ifstream(); // destructor
-
+	bool is_open() const; // for ease of use as ifstream replacement
+	void close(); // for ease of use as ifstream replacement
+	enum eCompressionType {NONE, GZIP}; // maybe add bz2 etc later?
+	eCompressionType getCompressionType() const {
+		return compressionType;
+	}
+private:
+	eCompressionType compressionType;
 };
 
 

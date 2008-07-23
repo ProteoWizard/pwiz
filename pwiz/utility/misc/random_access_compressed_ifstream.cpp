@@ -87,6 +87,8 @@ class random_access_compressed_streambuf : public std::streambuf {
 public:
 	random_access_compressed_streambuf(const char *path, std::ios_base::openmode mode);
 	virtual ~random_access_compressed_streambuf();
+	bool is_open() const;
+	void close();
 protected:
     virtual pos_type seekoff(off_type off,
 		std::ios_base::seekdir way,
@@ -128,7 +130,7 @@ private:
 		setg((char *)outbuf,(char *)outbuf+new_posoffset,(char *)outbuf + new_buflen);
 	}
 	std::streampos get_next_read_pos() {
-		return outbuf_headpos+gptr()-(char *)outbuf;
+		return outbuf_headpos+boost::iostreams::offset_to_position(gptr()-(char *)outbuf);
 	}
 	bool pos_is_in_outbuf(std::streampos pos) {
 		return ((outbuf_headpos <= pos) && 
@@ -140,7 +142,7 @@ private:
 #define gzio_raw_readerror(s) (s->infile->bad())
 
 // constructor
-random_access_compressed_ifstream::random_access_compressed_ifstream(const char *path, bool *isCompressedFlag) :
+random_access_compressed_ifstream::random_access_compressed_ifstream(const char *path) :
 std::istream(new std::filebuf()) 
 {
 	std::filebuf *fb = (std::filebuf *)rdbuf();
@@ -151,14 +153,30 @@ std::istream(new std::filebuf())
 		gzipped = ((fb->sbumpc() == gz_magic[0]) && (fb->sbumpc() == gz_magic[1])); 
 		fb->pubseekpos(0); // rewind
 	}
-	if (isCompressedFlag) {
-		*isCompressedFlag = gzipped;
-	}	
 	if (gzipped) { // replace streambuf with gzip handler
 		fb->close();
 		rdbuf( new random_access_compressed_streambuf(path,std::ios_base::in|std::ios_base::binary));
 		delete fb;
-	} 
+		compressionType = GZIP;
+	} else {
+		compressionType = NONE;
+	}
+}
+
+bool random_access_compressed_ifstream::is_open() const { // for ease of use as ifstream replacement
+	if (NONE == compressionType) {
+		return ((std::filebuf *)rdbuf())->is_open();
+	} else {
+		return ((random_access_compressed_streambuf *)rdbuf())->is_open();
+	}
+}
+
+void random_access_compressed_ifstream::close() {
+	if (NONE == compressionType) {
+		((std::filebuf *)rdbuf())->close();
+	} else {
+		((random_access_compressed_streambuf *)rdbuf())->close();
+	}
 }
 
 random_access_compressed_ifstream::~random_access_compressed_ifstream()
@@ -222,6 +240,15 @@ random_access_compressed_streambuf::random_access_compressed_streambuf(const cha
    this->infile->clear(); // clear eof flag for short files
 	this->start = this->infile->tellg() - (std::streamoff)(this->stream.avail_in);
 	this->update_istream_ptrs(0,0); // we're pointed at head of file, but no read yet
+}
+
+
+bool random_access_compressed_streambuf::is_open() const { // for ifstream-ish-ness
+	return (this->infile && this->infile->is_open());
+}
+
+void random_access_compressed_streambuf::close() { // for ifstream-ish-ness
+	this->destroy();
 }
 
 random_access_compressed_streambuf::~random_access_compressed_streambuf() {
@@ -539,7 +566,7 @@ perform_seek_ret:
 		}
 		this->crc = crc32(this->crc, start, (uInt)(this->stream.next_out - start));
 
-		if (len == this->stream.avail_out &&
+		if (len == (int)this->stream.avail_out &&
 			(this->z_err == Z_DATA_ERROR || this->z_err == Z_ERRNO)) {
 				return traits_type::eof();;
 		}
