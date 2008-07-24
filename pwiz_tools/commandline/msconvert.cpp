@@ -27,6 +27,7 @@
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -54,9 +55,10 @@ struct Config
     bool stripITScans;
     string indexSubset;
     string scanSubset;
+    bool recalculatePrecursors;
 
     Config()
-    :   outputPath("."), verbose(false), stripITScans(false)
+    :   outputPath("."), verbose(false), stripITScans(false), recalculatePrecursors(false)
     {}
 
     string outputFilename(const string& inputFilename) const;
@@ -82,6 +84,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "stripITScans: " << boolalpha << config.stripITScans << endl;
     os << "indexSubset: " << config.indexSubset << endl;
     os << "scanSubset: " << config.scanSubset << endl;
+    os << "recalculatePrecursors: " << boolalpha << config.recalculatePrecursors << endl;
 
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
@@ -175,6 +178,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("scanSubset",
             po::value<string>(&config.scanSubset)->default_value(config.scanSubset),
 			": specify subset of scan numbers (list of closed intervals, e.g. \"[1,4] [6,6] [12,14]\")")
+        ("precursorRecalculation,p",
+            po::value<bool>(&config.recalculatePrecursors)->zero_tokens(),
+			": recalculate precursor info based on ms1 data (msprefix)")
         ;
 
     // append options description to usage string
@@ -365,6 +371,13 @@ void wrapSpectrumList_stripIT(MSData& msd)
 }
 
 
+void wrapSpectrumList_recalculatePrecursors(MSData& msd)
+{
+    shared_ptr<SpectrumList_PrecursorRecalculator> pr(new SpectrumList_PrecursorRecalculator(msd));
+    msd.run.spectrumListPtr = pr;    
+}
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     // read in data file
@@ -388,6 +401,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     if (config.stripITScans)
         wrapSpectrumList_stripIT(msd);
+
+    if (config.recalculatePrecursors)
+        wrapSpectrumList_recalculatePrecursors(msd);
  
     // write out the new data file
 
