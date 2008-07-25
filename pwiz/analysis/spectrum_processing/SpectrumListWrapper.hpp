@@ -44,13 +44,9 @@ class PWIZ_API_DECL SpectrumListWrapper : public msdata::SpectrumList
         if (!inner.get()) throw std::runtime_error("[SpectrumListWrapper] Null SpectrumListPtr.");
     }
 
-    static bool accept(const msdata::SpectrumListPtr& inner) {return true;}
-
     virtual size_t size() const {return inner_->size();}
     virtual bool empty() const {return inner_->empty();}
     virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);} 
-    virtual size_t find(const std::string& id) const {return inner_->find(id);}
-    virtual size_t findNative(const std::string& nativeID) const {return inner_->findNative(nativeID);}
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
 
     protected:

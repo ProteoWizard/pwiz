@@ -52,6 +52,22 @@ class MyWrapper : public SpectrumListWrapper
 };
 
 
+class FilterWrapper : public SpectrumListWrapper
+{
+    // a simple filter that returns only even indices 
+
+    public:
+
+    FilterWrapper(const SpectrumListPtr& inner)
+    :   SpectrumListWrapper(inner)
+    {}
+
+    virtual size_t size() const {return inner_->size()/2;}
+    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index*2);} 
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index*2, getBinaryData);}
+};
+
+
 void test()
 {
     SpectrumListSimplePtr simple(new SpectrumListSimple);
@@ -66,9 +82,9 @@ void test()
         s.nativeID = lexical_cast<string>(i);
     }
 
-    shared_ptr<MyWrapper> wrapper(new MyWrapper(simple)); 
+    // check MyWrapper 
 
-    // make sure we're getting what we expect
+    shared_ptr<MyWrapper> wrapper(new MyWrapper(simple)); 
 
     wrapper->verifySize(10);
     unit_assert(wrapper->size() == 10);
@@ -85,6 +101,29 @@ void test()
         unit_assert(identity.nativeID == nativeID);
 
         SpectrumPtr s = wrapper->spectrum(i);
+        unit_assert(s->id == id);
+        unit_assert(s->nativeID == nativeID);
+    }
+
+    // check FilterWrapper
+
+    shared_ptr<FilterWrapper> filterWrapper(new FilterWrapper(simple)); 
+
+    unit_assert(filterWrapper->size() == 5);
+
+    for (size_t i=0; i<filterWrapper->size(); i++)
+    {
+        string id = "S" + lexical_cast<string>(i*2);
+        string nativeID = lexical_cast<string>(i*2);
+
+        unit_assert(filterWrapper->find(id) == i);
+        unit_assert(filterWrapper->findNative(nativeID) == i);
+
+        const SpectrumIdentity& identity = filterWrapper->spectrumIdentity(i);
+        unit_assert(identity.id == id);
+        unit_assert(identity.nativeID == nativeID);
+
+        SpectrumPtr s = filterWrapper->spectrum(i);
         unit_assert(s->id == id);
         unit_assert(s->nativeID == nativeID);
     }
