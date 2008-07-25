@@ -133,7 +133,8 @@ PrecursorRecalculator::PrecursorInfo getInitialEstimate(const Spectrum& spectrum
 void encodePrecursorInfo(Spectrum& spectrum, 
                          vector<PrecursorRecalculator::PrecursorInfo> precursorInfos)
 {
-    if (spectrum.spectrumDescription.precursors.empty()) return;
+    if (spectrum.spectrumDescription.precursors.empty() ||
+        precursorInfos.empty()) return;
 
     Precursor& precursor = spectrum.spectrumDescription.precursors[0];
     precursor.selectedIons.clear();
