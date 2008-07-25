@@ -539,27 +539,6 @@ perform_seek_ret:
 			}
 			this->z_err = inflate(&(this->stream), Z_NO_FLUSH);
 
-			if (this->z_err == Z_STREAM_END) {
-				/* Check CRC and original size */
-				this->crc = crc32(this->crc, start, (uInt)(this->stream.next_out - start));
-				start = this->stream.next_out;
-
-				if (this->getLong() != this->crc) {
-					// not all gzips write the closing info
-					this->z_err = this->z_eof?Z_OK:Z_DATA_ERROR;
-				} else {
-					this->getLong();
-					/* The uncompressed length returned by above getlong() may be
-					* different from this->out in case of concatenated .gz files.
-					* Check for such files:
-					*/
-					this->check_header();
-					if (this->z_err == Z_OK) {
-						inflateReset(&(this->stream));
-						this->crc = crc32(0L, Z_NULL, 0);
-					}
-				}
-			}
 			if (this->z_err != Z_OK || this->z_eof) {
 				break;
 			}
