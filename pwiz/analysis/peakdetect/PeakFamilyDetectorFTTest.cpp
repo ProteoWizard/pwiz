@@ -49,7 +49,7 @@ void test()
 
     PeakFamilyDetectorFT::Config config;
     config.log = os_;
-    config.cp = CalibrationParameters::thermo();
+    config.cp = CalibrationParameters::thermo_FT();
     PeakFamilyDetectorFT detector(config); 
 
     // detect 

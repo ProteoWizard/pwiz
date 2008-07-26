@@ -397,7 +397,7 @@ void test()
     // instantiate PeakFamilyDetector
 
     PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo();
+    pfdftConfig.cp = CalibrationParameters::thermo_FT();
     shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
 
     // instantiate PrecursorRecalculatorDefault
@@ -429,7 +429,7 @@ void test2()
     // instantiate PeakFamilyDetector
 
     PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo();
+    pfdftConfig.cp = CalibrationParameters::thermo_FT();
     shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
 
     // instantiate PrecursorRecalculatorDefault
@@ -485,7 +485,7 @@ shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix()
     // instantiate PeakFamilyDetector
 
     PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo();
+    pfdftConfig.cp = CalibrationParameters::thermo_FT();
     shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
 
     // instantiate PrecursorRecalculatorDefault

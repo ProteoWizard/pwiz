@@ -63,7 +63,7 @@ shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix()
     // instantiate PeakFamilyDetector
 
     PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo();
+    pfdftConfig.cp = CalibrationParameters::thermo_FT(); // TODO: orbitrap
     shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
 
     // instantiate PrecursorRecalculatorDefault
@@ -187,8 +187,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PrecursorRecalculator::spectrum(size_t in
         return originalSpectrum;
 
     vector<PrecursorRecalculator::PrecursorInfo> result;
-    impl_->precursorRecalculator->recalculate(&parent.data[0], &parent.data[0]+parent.data.size(),
-                                              initialEstimate, result);
+
+    try 
+    {
+        impl_->precursorRecalculator->recalculate(&parent.data[0], 
+                                                  &parent.data[0]+parent.data.size(),
+                                                  initialEstimate, 
+                                                  result);
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl
+             << "[SpectrumList_PrecursorRecalculator] Caught exception.\n";
+        return originalSpectrum;
+    }
 
     // encode result in Spectrum 
 

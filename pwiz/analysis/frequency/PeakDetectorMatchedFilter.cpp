@@ -318,7 +318,7 @@ void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd,
 
     if (fd.noiseFloor() == 0)
     {
-        cerr << "[PeakDetectorMatchedFilterImpl::findPeaks()] Warning: noise floor == 0.\n";
+        cerr << "[PeakDetectorMatchedFilter::findPeaks()] Warning: noise floor == 0.\n";
         return;
     }
 
@@ -457,8 +457,7 @@ void PeakDetectorMatchedFilterImpl::analyzePeak(double frequency,
         {
             best.charge = 0; // we don't actually know the charge state if there's only one peak
 
-            if (best.neutronCount > 0)
-                cout << "[PeakDetectorMatchedFilterImpl::analyzePeak()] Warning: Lonely peak with neutronCount>0.\n";
+            //if (best.neutronCount > 0) cout << "[PeakDetectorMatchedFilterImpl::analyzePeak()] Warning: Lonely peak with neutronCount>0.\n";
         }
 
         goodScores.push_back(best);

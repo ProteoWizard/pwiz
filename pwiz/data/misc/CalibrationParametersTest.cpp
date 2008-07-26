@@ -36,13 +36,22 @@ ostream* os_ = 0;
 
 void test()
 {
-    CalibrationParameters p = CalibrationParameters::thermo();
+    CalibrationParameters p = CalibrationParameters::thermo_FT();
     CalibrationParameters q(0,1);
 
     unit_assert(p!=q);
-    q.A = thermoA_;
-    q.B = thermoB_;
+    q.A = thermoA_FT_;
+    q.B = thermoB_FT_;
     unit_assert(p==q);
+
+    double dummy = 420;
+    double epsilon = 1e-13;
+    unit_assert_equal(dummy, p.mz(p.frequency(dummy)), epsilon);
+    unit_assert_equal(dummy, p.frequency(p.mz(dummy)), epsilon);
+
+    CalibrationParameters p2 = CalibrationParameters::thermo_Orbitrap();
+    unit_assert_equal(dummy, p2.mz(p2.frequency(dummy)), epsilon);
+    unit_assert_equal(dummy, p2.frequency(p2.mz(dummy)), epsilon);
 }
 
 

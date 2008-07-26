@@ -235,7 +235,7 @@ void testNoiseFloorVarianceCalculation()
     // test noise floor calculation on sample mass data 
 
     FrequencyData fdMasses;
-    CalibrationParameters cp = CalibrationParameters::thermo();
+    CalibrationParameters cp = CalibrationParameters::thermo_FT();
 
     for (RawMassDatum* p=sampleMassData_; p!=sampleMassData_+sampleMassDataSize_; ++p)
         fdMasses.data().push_back(FrequencyDatum(cp.frequency(p->mz), p->intensity));
