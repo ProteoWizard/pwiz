@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "TransientData.hpp"
-#include "FrequencyData.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
 #include "scoped_array.hpp"
 #include "utility/misc/endian.hpp"
 #include "fftw3.h"

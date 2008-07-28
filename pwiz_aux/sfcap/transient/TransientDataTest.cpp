@@ -22,7 +22,7 @@
 
 
 #include "TransientData.hpp"
-#include "FrequencyData.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
 #include "utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
