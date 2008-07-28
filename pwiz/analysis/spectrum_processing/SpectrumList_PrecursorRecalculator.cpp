@@ -58,12 +58,19 @@ struct SpectrumList_PrecursorRecalculator::Impl
 
 
 namespace {
-shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix()
+shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix(CVID targetMassAnalyzerType)
 {
     // instantiate PeakFamilyDetector
 
     PeakFamilyDetectorFT::Config pfdftConfig;
-    pfdftConfig.cp = CalibrationParameters::thermo_FT(); // TODO: orbitrap
+
+    if (targetMassAnalyzerType == MS_FT_ICR)
+        pfdftConfig.cp = CalibrationParameters::thermo_FT();
+    else if (targetMassAnalyzerType == MS_orbitrap)
+        pfdftConfig.cp = CalibrationParameters::thermo_Orbitrap();
+    else
+        throw runtime_error("[SpectrumList_PrecursorRecalculator] This isn't happening");
+
     shared_ptr<PeakFamilyDetector> pfd(new PeakFamilyDetectorFT(pfdftConfig));
 
     // instantiate PrecursorRecalculatorDefault
@@ -78,8 +85,7 @@ shared_ptr<PrecursorRecalculatorDefault> createPrecursorRecalculator_msprefix()
 
 
 SpectrumList_PrecursorRecalculator::Impl::Impl(const MSData& msd)
-:   precursorRecalculator(createPrecursorRecalculator_msprefix()),
-    targetMassAnalyzerType(CVID_Unknown)
+:   targetMassAnalyzerType(CVID_Unknown)
 {
     cache.open(msd);
 
@@ -99,6 +105,9 @@ SpectrumList_PrecursorRecalculator::Impl::Impl(const MSData& msd)
     if (targetMassAnalyzerType!=MS_FT_ICR && targetMassAnalyzerType!=MS_orbitrap)
         throw runtime_error(("[SpectrumList_PrecursorRecalculator] Mass analyzer not supported: " +
                             cvinfo(targetMassAnalyzerType).name).c_str());
+
+
+    precursorRecalculator = createPrecursorRecalculator_msprefix(targetMassAnalyzerType);
 }
 
 
@@ -198,7 +207,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PrecursorRecalculator::spectrum(size_t in
     catch (exception& e)
     {
         cerr << e.what() << endl
-             << "[SpectrumList_PrecursorRecalculator] Caught exception.\n";
+             << "[SpectrumList_PrecursorRecalculator] Caught exception in spectrum index "
+             << originalSpectrum->index << " (" << originalSpectrum->id << ","
+             << originalSpectrum->nativeID << ")\n";
         return originalSpectrum;
     }
 
