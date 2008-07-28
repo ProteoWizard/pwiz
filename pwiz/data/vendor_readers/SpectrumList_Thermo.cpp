@@ -4,15 +4,10 @@
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/format.hpp"
+#include "utility/misc/String.hpp"
+#include "utility/misc/Filesystem.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
-#include "ChromatogramList_Thermo.hpp"
-#include <iostream>
-#include <stdexcept>
 
 using boost::format;
 
@@ -31,7 +26,6 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
 :   msd_(msd), rawfile_(rawfile),
     size_(rawfile->value(NumSpectra)),
     spectrumCache_(size_),
-    chromatograms_(new ChromatogramList_Thermo()),
     index_(size_)
 {
     createIndex();
@@ -70,115 +64,6 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 PWIZ_API_DECL size_t SpectrumList_Thermo::findNative(const string& nativeID) const
 {
     return find(nativeID);
-}
-
-
-// first: the pointer to the new or existing chromatogram
-// second: true if the chromatogram is newly inserted
-PWIZ_API_DECL
-pair<ChromatogramPtr, bool> addPointToNewOrExistingChromatogram(ChromatogramList_Thermo& cl,
-                                                                ScanInfo& scanInfo,
-                                                                const string& id,
-                                                                double time,
-                                                                double intensity)
-{
-    size_t index = cl.find(id);
-    ChromatogramPtr c;
-    if (index == cl.size())
-    {
-        c = ChromatogramPtr(new Chromatogram);
-        c->id = c->nativeID = id;
-        c->index = index;
-
-        vector<TimeIntensityPair> firstPair;
-        firstPair.push_back(TimeIntensityPair(time, intensity));
-        c->setTimeIntensityPairs(firstPair);
-        c->binaryDataArrayPtrs[0]->set(MS_minute);
-        //c->binaryDataArrayPtrs[1]->set(MS_minute); // TODO: determine intensity unit from detector?
-
-        cl.index_.push_back(c);
-        cl.idMap_[id] = index;
-        return pair<ChromatogramPtr, bool>(c, true);
-    } else
-    {
-        c = cl.index_[index];
-        // if most recently added time is the same, add to its intensity
-        if (c->binaryDataArrayPtrs[0]->data.back() == time)
-        {
-            c->binaryDataArrayPtrs[1]->data.back() += intensity;
-        } else
-        {
-            ++ c->defaultArrayLength;
-            c->binaryDataArrayPtrs[0]->data.push_back(time);
-            c->binaryDataArrayPtrs[1]->data.push_back(intensity);
-        }
-        return pair<ChromatogramPtr, bool>(c, false);
-    }
-}
-
-PWIZ_API_DECL void SpectrumList_Thermo::addSpectrumToChromatogramList(ScanInfo& scanInfo) const
-{
-    //if (!msd.run.chromatogramListPtr.get())
-    //    return;
-    ChromatogramList_Thermo& cl = reinterpret_cast<ChromatogramList_Thermo&>(*chromatograms_);
-
-    pair<ChromatogramPtr, bool> result = addPointToNewOrExistingChromatogram(cl, scanInfo,
-        string("TIC"), scanInfo.startTime(), scanInfo.totalIonCurrent());
-    if (result.second)
-    {
-        result.first->cvParams.push_back(CVParam(MS_total_ion_current_chromatogram));
-    }
-
-    if (scanInfo.scanType() == ScanType_SRM)
-    {
-        pair<ChromatogramPtr, bool> result2 = addPointToNewOrExistingChromatogram(cl, scanInfo,
-            (format("SRM TIC %1.4f") % scanInfo.parentMass(0)).str(),
-            scanInfo.startTime(), scanInfo.totalIonCurrent());
-        if (result2.second)
-        {
-            result2.first->cvParams.push_back(CVParam(MS_total_ion_current_chromatogram));
-
-            // TODO: change to CVParam when CV is updated
-
-            result2.first->userParams.push_back(UserParam("MS_precursor_m_z", 
-                                                lexical_cast<string>(scanInfo.parentMass(0))));
-
-            //result2.first->cvParams.push_back(CVParam(MS_precursor_m_z, scanInfo.parentMass(0)));
-        }
-
-        auto_ptr<raw::MassList> massList = 
-            rawfile_->getMassList(scanInfo.scanNumber(), "", raw::Cutoff_None, 0, 0, true);
-        for (int i=0; i < massList->size(); ++i)
-        {
-            double productMz = massList->data()[i].mass;
-            pair<ChromatogramPtr, bool> result3 = addPointToNewOrExistingChromatogram(cl, scanInfo,
-                (format("SRM SIC %1.4f->%1.4f") % scanInfo.parentMass(0) % productMz).str(),
-                scanInfo.startTime(), massList->data()[i].intensity);
-            if (result3.second)
-            {
-                // TODO: change to CVParam when CV is updated
-
-                result3.first->set(MS_selected_ion_current_chromatogram);
-
-                result3.first->userParams.push_back(UserParam("MS_precursor_m_z", 
-                                                    lexical_cast<string>(scanInfo.parentMass(0))));
-
-                result3.first->userParams.push_back(UserParam("MS_product_m_z", 
-                                                    lexical_cast<string>(productMz)));
-
-                /*
-                result3.first->cvParams.push_back(CVParam(MS_selected_ion_chromatogram));
-                result3.first->cvParams.push_back(CVParam(MS_precursor_m_z, scanInfo.parentMass(0)));
-                result3.first->cvParams.push_back(CVParam(MS_product_m_z, productMz));
-                */
-            }
-        }
-    }
-}
-
-PWIZ_API_DECL ChromatogramListPtr SpectrumList_Thermo::Chromatograms() const
-{
-    return chromatograms_;
 }
 
 
@@ -227,8 +112,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(scanNumber);
     if (!scanInfo.get())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
-
-    addSpectrumToChromatogramList(*scanInfo);
 
     result->index = index;
     result->id = scanNumberToSpectrumID(scanNumber);

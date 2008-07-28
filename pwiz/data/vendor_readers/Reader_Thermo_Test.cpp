@@ -134,6 +134,7 @@ void testRead(const string& filename)
     unit_assert_equal(selectedIon.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
 
     spectrum = sl.spectrum(5, true);
+    if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(sl.spectrumIdentity(5).index == 5);
     unit_assert(sl.spectrumIdentity(5).id == "S6");
     unit_assert(sl.spectrumIdentity(5).nativeID == "6");
@@ -146,7 +147,9 @@ void testRead(const string& filename)
     ChromatogramList& cl = *msd.run.chromatogramListPtr;
     if (os_) *os_ << "chromatogram list size: " << cl.size() << endl;
     unit_assert(cl.size() == 1);
+
     ChromatogramPtr chromatogram = cl.chromatogram(0, true);
+    if (os_) TextWriter(*os_,0)(*chromatogram); 
     unit_assert(chromatogram->id == "TIC");
 
     // test file-level metadata 

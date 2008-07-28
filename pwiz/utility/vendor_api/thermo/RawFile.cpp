@@ -34,13 +34,14 @@
 #include <map>
 #include <sstream>
 #include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
 #include <vector>
 #include <algorithm>
 
 using namespace pwiz::raw;
 using namespace XRawfile;
 using namespace std;
-
+using boost::shared_ptr;
 
 namespace {
 bool libraryInitialized_ = false;
@@ -99,6 +100,8 @@ class RawFileImpl : public RawFile
     virtual double value(ValueID_Double id);
     virtual string value(ValueID_String id);
 
+    virtual std::string getFilename() {return filename_;}
+
     virtual string getCreationDate();
     virtual auto_ptr<LabelValueArray> getSequenceRowUserInfo();
 
@@ -106,6 +109,8 @@ class RawFileImpl : public RawFile
     virtual void setCurrentController(ControllerType type, long controllerNumber);
     virtual long getNumberOfControllersOfType(ControllerType type);
     virtual ControllerType getControllerType(long index);
+
+    virtual ScanEventPtr getScanEvent(long index);
 
     virtual long scanNumber(double rt);
     virtual double rt(long scanNumber);
@@ -143,9 +148,9 @@ class RawFileImpl : public RawFile
     virtual const vector<DetectorType>& getDetectors();
 
     virtual auto_ptr<ChromatogramData>
-    getChromatogramData(long type1,
+    getChromatogramData(ChromatogramType type1,
                         ChromatogramOperatorType op,
-                        long type2,
+                        ChromatogramType type2,
                         const string& filter,
                         const string& massRanges1,
                         const string& massRanges2,
@@ -158,6 +163,7 @@ class RawFileImpl : public RawFile
     private:
     friend class ScanInfoImpl;
     IXRawfilePtr raw_;
+    string filename_;
 
     InstrumentModelType instrumentModel_;
     vector<IonizationType> ionSources_;
@@ -174,6 +180,7 @@ auto_ptr<RawFile> RawFile::create(const string& filename)
 
 RawFileImpl::RawFileImpl(const string& filename)
 :   raw_("XRawfile.XRawfile.1"),
+    filename_(filename),
     instrumentModel_(InstrumentModelType_Unknown)
 {
     if (raw_->Open(filename.c_str()))
@@ -1042,9 +1049,9 @@ class ChromatogramDataImpl : public ChromatogramData
 
 
 auto_ptr<ChromatogramData>
-RawFileImpl::getChromatogramData(long type1,
+RawFileImpl::getChromatogramData(ChromatogramType type1,
                                  ChromatogramOperatorType op,
-                                 long type2,
+                                 ChromatogramType type2,
                                  const string& filter,
                                  const string& massRanges1,
                                  const string& massRanges2,
@@ -1073,3 +1080,116 @@ RawFileImpl::getChromatogramData(long type1,
         (new ChromatogramDataImpl(variantChromatogramData, size, startTime, endTime));
 }
 
+
+namespace {
+class ScanEventImpl : public ScanEvent
+{
+    public:
+
+    ScanEventImpl(MS_ScanEvent* rawScanEvent);
+
+    //virtual MassAnalyzerType massAnalyzerType() const;
+    virtual IonizationType ionizationType() const;
+    //virtual ActivationType activationType() const;
+    virtual ScanType scanType() const;
+    virtual PolarityType polarityType() const;
+
+    virtual const std::vector<MassRange>& massRanges() const;
+
+    virtual ~ScanEventImpl() {delete rawScanEvent_;}
+
+    private:
+    MS_ScanEvent* rawScanEvent_;
+    mutable std::vector<MassRange> massRanges_;
+};
+
+ScanEventImpl::ScanEventImpl(MS_ScanEvent* rawScanEvent)
+: rawScanEvent_(rawScanEvent)
+{}
+
+IonizationType ScanEventImpl::ionizationType() const
+{
+    switch(rawScanEvent_->eIonizationMode)
+    {
+        case MS_ElectronImpact:                             return IonizationType_EI;
+        case MS_ChemicalIonization:                         return IonizationType_CI;
+        case MS_FastAtomBombardment:                        return IonizationType_FAB;
+        case MS_Electrospray:                               return IonizationType_ESI;
+        case MS_AtmosphericPressureChemicalIonization:      return IonizationType_APCI;
+        case MS_Nanospray:                                  return IonizationType_NSI;
+        case MS_Thermospray:                                return IonizationType_TSP;
+        case MS_FieldDesorption:                            return IonizationType_FD;
+        case MS_MatrixAssistedLaserDesorptionIonization:    return IonizationType_MALDI;
+        case MS_GlowDischarge:                              return IonizationType_GD;
+
+        case MS_AcceptAnyIonizationMode:
+        default:
+            return IonizationType_Unknown;
+    }
+}
+
+ScanType ScanEventImpl::scanType() const
+{
+    switch(rawScanEvent_->eScanType)
+    {
+        case MS_Fullsc:     return ScanType_Full;
+        case MS_Zoomsc:     return ScanType_Zoom;
+        case MS_SIMsc:      return ScanType_SIM;
+        case MS_SRMsc:      return ScanType_SRM;
+        case MS_CRMsc:      return ScanType_CRM;
+        case MS_Q1MSsc:     return ScanType_Q1MS;
+        case MS_Q3MSsc:     return ScanType_Q3MS;
+
+        case MS_AcceptAnyScanType:
+        default:
+            return ScanType_Unknown;
+    }
+}
+
+PolarityType ScanEventImpl::polarityType() const
+{
+    switch (rawScanEvent_->ePolarity)
+    {
+        case MS_Negative:   return PolarityType_Negative;
+        case MS_Positive:   return PolarityType_Positive;
+
+        case MS_AnyPolarity:
+        default:
+            return PolarityType_Unknown;
+    }
+}
+
+const vector<MassRange>& ScanEventImpl::massRanges() const
+{
+    if (massRanges_.empty())
+    {
+        MassRange* massRangeArray = reinterpret_cast<MassRange*>(rawScanEvent_->arrMassRanges);
+        massRanges_.assign(massRangeArray, massRangeArray+rawScanEvent_->nNumMassRanges);
+    }
+    return massRanges_;
+}
+
+} // namespace
+
+ScanEventPtr RawFileImpl::getScanEvent(long index)
+{
+    /*::XRawfile::IXVirMSPtr virms("XRawfile2.XVirMS.1");
+    wchar_t* wfilename = new wchar_t[filename_.length()+1];
+    for(size_t i=0; i < filename_.length(); ++i)
+        wfilename[i] = filename_[i];
+    wfilename[filename_.length()] = 0;
+    checkResult(virms->Create(wfilename), "create XVirMS");
+    checkResult(virms->InitMethodScanEvents(), "init method scan events");
+    MS_ScanEvent* rawScanEvent = new MS_ScanEvent;
+    checkResult(virms->InitializeScanEvent(rawScanEvent), "init scan event");
+    checkResult(virms->SetMethodScanEvent(0, index, rawScanEvent), "set method scan event");
+    checkResult(virms->WriteMethodScanEvents(), "write method scan events");
+    virms->InitializeScanIndex(0, MS_PacketTypes_MS_ANALOG_TYPE);
+    MS_ScanIndex rawScanIndex;
+    virms->WriteScanIndex2(&rawScanIndex);
+    checkResult(virms->Close(), "close XVirMS");*/
+    /*auto_ptr<LabelValueArray> foo = getInstrumentMethods();
+    for(size_t i=0, end=foo->size(); i < end; ++i)
+        cout << foo->label(i) << ": " << foo->value(i) << endl;*/
+    return ScanEventPtr();//new ScanEventImpl(0));
+}

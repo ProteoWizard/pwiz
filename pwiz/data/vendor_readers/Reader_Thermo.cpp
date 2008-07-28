@@ -247,8 +247,9 @@ void Reader_Thermo::read(const string& filename,
     rawfile->setCurrentController(Controller_MS, 1);
 
     SpectrumList_Thermo* sl = new SpectrumList_Thermo(result, rawfile);
+    ChromatogramList_Thermo* cl = new ChromatogramList_Thermo(result, rawfile);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
-    result.run.chromatogramListPtr = sl->Chromatograms();
+    result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
     fillInMetadata(filename, *rawfile, result);
 }

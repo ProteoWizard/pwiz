@@ -48,11 +48,10 @@ class PWIZ_API_DECL SpectrumList_Filter : public SpectrumListWrapper
         ///  true: accept the Spectrum
         ///  false: reject the Spectrum
         ///  indeterminate: need to see the full Spectrum object to decide
-        virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const 
-        {return false;} 
+        virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const = 0;
 
         /// return true iff Spectrum is accepted
-        virtual bool accept(const msdata::Spectrum& spectrum) const {return false;} 
+        virtual bool accept(const msdata::Spectrum& spectrum) const {return false;}
 
         /// return true iff done accepting spectra; 
         /// this allows early termination of the iteration through the original

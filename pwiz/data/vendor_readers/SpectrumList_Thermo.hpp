@@ -1,7 +1,6 @@
 #include "utility/misc/Export.hpp"
 #include "data/msdata/MSData.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
-#include "ChromatogramList_Thermo.hpp"
 #include "utility/misc/IntegerSet.hpp"
 
 using namespace std;
@@ -28,7 +27,6 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     virtual size_t findNative(const string& nativeID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
-    virtual ChromatogramListPtr Chromatograms() const;
 
 
     private:
@@ -37,14 +35,10 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     shared_ptr<RawFile> rawfile_;
     size_t size_;
     mutable vector<SpectrumPtr> spectrumCache_;
-    mutable ChromatogramListPtr chromatograms_;
     vector<SpectrumIdentity> index_;
 
     void createIndex();
     string findPrecursorID(int precursorMsLevel, size_t index) const;
-
-    private:
-    void addSpectrumToChromatogramList(ScanInfo& scanInfo) const;
 };
 
 } // detail

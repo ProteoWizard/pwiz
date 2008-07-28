@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
                         PolarityType_Positive,
                         DataPointType_Centroid,
                         IonizationType_NSI,
-                        ScanType_Q1MS,
+                        ScanType_Full,
                         1, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
 
             scanFilter.parse(scanFilterStrings[scanFilterIndex++]);

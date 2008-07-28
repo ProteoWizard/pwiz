@@ -22,15 +22,22 @@ class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramList
 {
 public:
 
-    ChromatogramList_Thermo();
+    ChromatogramList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile);
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual size_t findNative(const string& nativeID) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
+    private:
+
+    const MSData& msd_;
+    shared_ptr<RawFile> rawfile_;
+
     map<string, size_t> idMap_;
-    vector<ChromatogramPtr> index_;
+    vector< pair<ChromatogramIdentity, string> > index_;
+
+    void createIndex();
 };
 
 } // detail

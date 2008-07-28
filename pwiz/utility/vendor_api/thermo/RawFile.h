@@ -41,6 +41,7 @@
 #include <string>
 #include <memory>
 #include <stdexcept>
+#include "boost/shared_ptr.hpp"
 
 
 namespace pwiz {
@@ -246,6 +247,14 @@ class RAWFILE_API MassList
     virtual ~MassList(){}
 };
 
+
+struct RAWFILE_API MassRange
+{
+    double low;
+    double high;
+};
+
+
 class RAWFILE_API ScanInfo
 {
     public:
@@ -302,10 +311,63 @@ class RAWFILE_API ScanInfo
 };
 
 
+class RAWFILE_API ScanEvent
+{
+    public:
+
+    //virtual MassAnalyzerType massAnalyzerType() const = 0;
+    virtual IonizationType ionizationType() const = 0;
+    //virtual ActivationType activationType() const = 0;
+    virtual ScanType scanType() const = 0;
+    virtual PolarityType polarityType() const = 0;
+
+    virtual const std::vector<MassRange>& massRanges() const = 0;
+
+    virtual ~ScanEvent(){};
+
+    /*long bIsValid;
+    enum MS_ScanData eScanData;
+    enum MS_Polarity ePolarity;
+    enum MS_MSOrder eMSOrder;
+    enum MS_Dep eDependent;
+    enum MS_Wideband eWideband;
+    long bCustom;
+    enum MS_SourceCID eSourceCID;
+    enum MS_ScanType eScanType;
+    enum MS_TurboScan eTurboScan;
+    enum MS_IonizationMode eIonizationMode;
+    enum MS_Corona eCorona;
+    enum MS_Detector eDetector;
+    double dDetectorValue;
+    enum MS_SourceCIDType eSourceCIDType;
+    long nlScanTypeIndex;
+    long nNumMassRanges;
+    struct MS_MassRange arrMassRanges[50];
+    long nNumPrecursorMasses;
+    double arrPrecursorMasses[10];
+    double arrPrecursorEnergies[10];
+    long arrPrecursorEnergiesValid[10];
+    long nNumSourceFragmentationEnergies;
+    double arrSourceFragmentationEnergies[50];
+    long arrSourceFragmentationEnergiesValid[50];*/
+};
+
+typedef boost::shared_ptr<ScanEvent> ScanEventPtr;
+
+
 struct RAWFILE_API ErrorLogItem
 {
     double rt;
     std::string errorMessage;
+};
+
+
+enum RAWFILE_API ChromatogramType
+{
+    Type_MassRange,
+    Type_TIC,
+    Type_BasePeak,
+    Type_NeutralFragment
 };
 
 
@@ -356,6 +418,7 @@ class RAWFILE_API RawFile
     virtual double value(ValueID_Double id) = 0;
     virtual std::string value(ValueID_String id) = 0;
 
+    virtual std::string getFilename() = 0;
     virtual std::string getCreationDate() = 0;
     virtual std::auto_ptr<LabelValueArray> getSequenceRowUserInfo() = 0;
 
@@ -363,6 +426,8 @@ class RAWFILE_API RawFile
     virtual void setCurrentController(ControllerType type, long controllerNumber) = 0;
     virtual long getNumberOfControllersOfType(ControllerType type) = 0;
     virtual ControllerType getControllerType(long index) = 0;
+
+    virtual ScanEventPtr getScanEvent(long index) = 0;
 
     virtual long scanNumber(double rt) = 0;
     virtual double rt(long scanNumber) = 0;
@@ -400,9 +465,9 @@ class RAWFILE_API RawFile
     virtual const std::vector<DetectorType>& getDetectors() = 0;
 
     virtual std::auto_ptr<ChromatogramData>
-    getChromatogramData(long type1,
+    getChromatogramData(ChromatogramType type1,
                         ChromatogramOperatorType op,
-                        long type2,
+                        ChromatogramType type2,
                         const std::string& filter,
                         const std::string& massRanges1,
                         const std::string& massRanges2,

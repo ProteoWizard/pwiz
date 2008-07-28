@@ -263,9 +263,9 @@ ScanFilter::parseScanType(const string& word)
 	else if (word == "Z")
 		return ScanType_Zoom;
 	else if (word == "Q1MS")
-		return ScanType_Q1MS;
+        return ScanType_Q1MS;
 	else if (word == "Q3MS")
-		return ScanType_Q3MS;
+        return ScanType_Q3MS;
 	else
 		return ScanType_Unknown;
 }
@@ -589,8 +589,16 @@ ScanFilter::parse(string filterLine)
 
 	scanType_ = parseScanType(w);
 	if (scanType_ > ScanType_Unknown) {
-		if (scanType_ == ScanType_Q1MS || scanType_ == ScanType_Q3MS)
+		if (scanType_ == ScanType_Q1MS)
+        {
 			msLevel_ = 1;
+            scanType_ = ScanType_Full;
+        }
+        else if (scanType_ == ScanType_Q3MS)
+        {
+            msLevel_ = 2;
+            scanType_ = ScanType_Full;
+        }
 
 		// "scan type" field present
 		if (s.eof()) {
