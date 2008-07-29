@@ -106,3 +106,7 @@ path-constant BOOST_SOURCE : $(PWIZ_ROOT_PATH)/libraries/boost_1_34_1 ;
 
 using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 using boost : 1.34.1 : $(BOOST_SOURCE) ;
+
+build-project pwiz ;
+build-project pwiz_tools ;
+
