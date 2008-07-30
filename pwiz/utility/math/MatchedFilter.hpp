@@ -129,23 +129,28 @@ struct KernelTraitsBase<Y(*)(X)>
 };
 
 
+namespace {
+
+template <typename Kernel>
+struct KernelConcept 
+{
+	void check()
+	{
+	    y = k(x);
+	}
+
+	typename KernelTraitsBase<Kernel>::space_type::abscissa_type x;
+	typename KernelTraitsBase<Kernel>::space_type::ordinate_type y;
+	Kernel k;
+};
+
+}
+
 template <typename Kernel>
 void checkKernelConcept()
 {
-    struct KernelConcept 
-    {
-        void check()
-        {
-            y = k(x);
-        }
-
-        typename KernelTraitsBase<Kernel>::space_type::abscissa_type x;
-        typename KernelTraitsBase<Kernel>::space_type::ordinate_type y;
-        Kernel k;
-    };
-
     // force compile of KernelConcept::check()
-    void (KernelConcept::*dummy)() = &KernelConcept::check; 
+    void (KernelConcept<Kernel>::*dummy)() = &KernelConcept<Kernel>::check; 
     (void)dummy;
 }
 
