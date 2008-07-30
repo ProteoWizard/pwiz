@@ -31,4 +31,4 @@ set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 
 REM # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo Building pwiz...
-%PWIZ_BJAM% %PWIZ_ROOT%/pwiz/build//all %*
+%PWIZ_BJAM% %PWIZ_ROOT% %*
