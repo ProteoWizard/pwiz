@@ -152,6 +152,8 @@ std::istream(new std::filebuf())
 	   // check for gzip magic header
 		gzipped = ((fb->sbumpc() == gz_magic[0]) && (fb->sbumpc() == gz_magic[1])); 
 		fb->pubseekpos(0); // rewind
+	} else {
+		this->setstate(std::ios::failbit); // could not open, set the fail flag
 	}
 	if (gzipped) { // replace streambuf with gzip handler
 		fb->close();
