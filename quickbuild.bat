@@ -11,7 +11,7 @@ call %PWIZ_ROOT%\libraries\untar_boost.bat  %PWIZ_ROOT%
 
 REM # Extract Boost.Build (for VC9 support)
 pushd %PWIZ_ROOT%\libraries
-IF EXIST boost-build GOTO SKIP_BB
+IF EXIST boost-build\jam_src\build.bat GOTO SKIP_BB
 bsdtar.exe -xkjvf boost-build.tar.bz2
 :SKIP_BB
 popd

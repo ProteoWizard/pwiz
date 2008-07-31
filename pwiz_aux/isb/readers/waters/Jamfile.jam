@@ -9,10 +9,9 @@ project
 lib pwiz_aux_isb_reader_waters
     : # sources
         Reader_Waters.cpp
-        Reader_Waters_Detail.cpp
-        SpectrumList_Waters.cpp
-        #dacserver_4-1.cpp
     : # requirements
+        <toolset>msvc:<source>Reader_Waters_Detail.cpp
+        <toolset>msvc:<source>SpectrumList_Waters.cpp
 		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements

@@ -33,4 +33,4 @@ class PWIZ_API_DECL Reader_Waters : public Reader
 } // namespace pwiz
 
 
-#endif // _READER_WATERS_HPP_ 
+#endif // _READER_WATERS_HPP_

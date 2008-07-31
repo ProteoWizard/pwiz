@@ -307,8 +307,12 @@ class HandlerScan : public SAXParser::Handler
 
             spectrum_.id = num;
             spectrum_.nativeID = num;
-            spectrum_.set(MS_ms_level, msLevel);
             spectrum_.sourceFilePosition = position;
+
+            if (msLevel.empty())
+                spectrum_.set(MS_ms_level, 1);
+            else
+                spectrum_.set(MS_ms_level, msLevel);
 
             peaksCount_ = lexical_cast<unsigned int>(peaksCount);
             spectrum_.defaultArrayLength = peaksCount_;
@@ -369,14 +373,17 @@ class HandlerScan : public SAXParser::Handler
                 scan.instrumentConfigurationPtr = 
                     InstrumentConfigurationPtr(new InstrumentConfiguration(msInstrumentID)); // placeholder 
 
-            if (retentionTime.size()>3 && 
-                retentionTime.substr(0,2)=="PT" &&
-                retentionTime[retentionTime.size()-1]=='S')
-                retentionTime = retentionTime.substr(2,retentionTime.size()-3);
-            else
-                throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
+            if (!retentionTime.empty())
+            {
+                if (retentionTime.size()>3 &&
+                    retentionTime.substr(0,2)=="PT" &&
+                    retentionTime[retentionTime.size()-1]=='S')
+                    retentionTime = retentionTime.substr(2,retentionTime.size()-3);
+                else
+                    throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
+                scan.set(MS_scan_time, retentionTime, MS_second);
+            }
 
-            scan.set(MS_scan_time, retentionTime, MS_second);
             if (!startMz.empty() && !endMz.empty())
                 scan.scanWindows.push_back(
                     ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
