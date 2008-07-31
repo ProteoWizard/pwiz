@@ -1,13 +1,20 @@
 #!/bin/bash
 
 tag=$(cat VERSION)
+bindir=~/pwiz_bin
 packagedir=build/packages/$tag
+
+echo "tag: $tag"
+echo "bindir: $bindir"
+echo "packagedir: $packagedir"
+
+read -p "<enter> to continue..."
 
 mkdir -p $packagedir
 
-zip -j $packagedir/pwiz-$tag-tools-windows-i386.zip bin/windows/i386/*
-zip -j $packagedir/pwiz-$tag-tools-linux-i386.zip bin/linux/i386/*
-zip -j $packagedir/pwiz-$tag-tools-osx-i386.zip bin/osx/i386/*
+zip -j $packagedir/pwiz-$tag-tools-windows-i386.zip $bindir/windows/i386/*
+zip -j $packagedir/pwiz-$tag-tools-linux-i386.zip $bindir/linux/i386/*
+zip -j $packagedir/pwiz-$tag-tools-osx-i386.zip $bindir/osx/i386/*
 
 tar czvf $packagedir/pwiz-$tag-src.tgz --exclude=*.svn* --exclude=*/bin* LICENSE NOTICE VERSION pwiz doc 
 
