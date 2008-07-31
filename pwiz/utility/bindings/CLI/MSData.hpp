@@ -196,11 +196,19 @@ public ref class ParamContainer
     void set(CVID cvid, bool value) {set(cvid, (value ? "true" : "false"));}
 
     /// set/add a CVParam (not recursive)
-    generic <typename value_type>
-    void set(CVID cvid, value_type value) {set(cvid, value->ToString());}
+    void set(CVID cvid, System::Int32 value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Int64 value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::UInt32 value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::UInt64 value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Single value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Double value) {set(cvid, value.ToString());}
 
-    generic <typename value_type>
-    void set(CVID cvid, value_type value, CVID units) {set(cvid, value->ToString(), units);}
+    void set(CVID cvid, System::Int32 value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Int64 value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::UInt32 value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::UInt64 value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Single value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Double value, CVID units) {set(cvid, value.ToString());}
 
     bool empty() {return base_->empty();}
 };

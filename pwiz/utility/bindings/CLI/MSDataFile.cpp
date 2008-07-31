@@ -56,13 +56,41 @@ MSDataFile::MSDataFile(System::String^ filename)
 
 void MSDataFile::write(MSData^ msd, System::String^ filename)
 {
-    b::MSDataFile::write(*msd->base_, ToStdString(filename));
+    WriteConfig^ config = gcnew WriteConfig(Format::Format_mzML);
+    config->precision = Precision::Precision_64;
+    config->byteOrder = ByteOrder::ByteOrder_LittleEndian;
+    config->compression = Compression::Compression_None;
+    write(msd, filename, config);
+}
+
+
+void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ config)
+{
+    b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+    config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
+    config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
+    config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+    b::MSDataFile::write(*msd->base_, ToStdString(filename), config2);
 }
 
 
 void MSDataFile::write(System::String^ filename)
 {
-    base_->write(ToStdString(filename));
+    WriteConfig^ config = gcnew WriteConfig(Format::Format_mzML);
+    config->precision = Precision::Precision_64;
+    config->byteOrder = ByteOrder::ByteOrder_LittleEndian;
+    config->compression = Compression::Compression_None;
+    write(filename, config);
+}
+
+
+void MSDataFile::write(System::String^ filename, WriteConfig^ config)
+{
+    b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+    config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
+    config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
+    config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+    base_->write(ToStdString(filename), config2);
 }
 
 

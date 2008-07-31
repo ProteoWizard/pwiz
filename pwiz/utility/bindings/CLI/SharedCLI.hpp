@@ -126,5 +126,27 @@ internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClas
           virtual ~ClassType() {if (base_) delete base_;} \
           boost::shared_ptr<pwiz::msdata::ClassType>* base_;
 
+namespace pwiz { namespace CLI { namespace util {
+public ref struct tribool
+{
+    enum class value_type
+    {
+        tribool_false = 0,
+        tribool_true = 1,
+        tribool_indeterminate = 2
+    };
+
+    public:
+    value_type value;
+
+    tribool() : value(value_type::tribool_indeterminate) {}
+    tribool(bool value) : value(value ? value_type::tribool_true : value_type::tribool_false) {}
+    tribool(value_type value) : value(value) {}
+
+    bool operator==(tribool rhs) {return value == rhs.value;}
+    operator bool() {return value == value_type::tribool_true;}
+    bool operator!() {return value == value_type::tribool_false;}
+};
+} } }
 
 #endif // _SHAREDCLI_HPP_

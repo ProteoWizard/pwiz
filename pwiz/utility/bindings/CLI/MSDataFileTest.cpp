@@ -33,6 +33,15 @@ using namespace pwiz::CLI::msdata;
 using namespace pwiz::util;
 
 
+public ref class test
+{
+public:
+    bool accept(Spectrum^ s)
+    {
+        return (int) s->cvParam(CVID::MS_ms_level)->value == 2;
+    }
+};
+
 //void validateWriteRead(const MSDataFile::WriteConfig& writeConfig, const DiffConfig diffConfig)
 void validateWriteRead()
 {
@@ -58,6 +67,14 @@ void validateWriteRead()
         //Diff<MSData> diff(tiny, msd1, diffConfig);
         //if (diff && os_) *os_ << diff << endl;
         //unit_assert(!diff);
+
+        Console::WriteLine(msd1->run->spectrumList->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
+
+        test^ foo = gcnew test();
+        pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum^ bar = gcnew pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum(foo, &test::accept);
+        SpectrumList^ sl = gcnew pwiz::CLI::analysis::SpectrumList_Filter(msd1->run->spectrumList, bar);
+        Console::WriteLine(sl->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
+        delete sl;
 
         // write to file #2 (member)
         msd1->write(filename2);

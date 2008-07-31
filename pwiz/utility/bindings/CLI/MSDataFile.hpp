@@ -51,24 +51,32 @@ public ref class MSDataFile : public MSData
 
     /// data format for write()
     enum class Format {Format_Text, Format_mzML, Format_mzXML};
+    enum class Precision {Precision_32, Precision_64};
+    enum class ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
+    enum class Compression {Compression_None, Compression_Zlib};
 
     /// configuration for write()
-    /*struct WriteConfig
+    ref class WriteConfig
     {
+        public:
         Format format;
-        BinaryDataEncoder::Config binaryDataEncoderConfig;
+        Precision precision;
+        ByteOrder byteOrder;
+        Compression compression;
         bool indexed;
 
-        WriteConfig(Format _format = Format_mzML)
+        WriteConfig(Format _format)
         :   format(_format), indexed(true)
         {}
-    };*/
+    };
 
     /// static write function for any MSData object
     static void write(MSData^ msd, System::String^ filename);
+    static void write(MSData^ msd, System::String^ filename, WriteConfig^ config);
 
     /// member write function 
     void write(System::String^ filename);
+    void write(System::String^ filename, WriteConfig^ config);
 };
 
 } // namespace msdata
