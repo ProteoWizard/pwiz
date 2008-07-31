@@ -6,15 +6,17 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
 
 namespace seems
 {
     public partial class SpectrumProcessingForm : DockableForm
     {
-        private ProcessingListView<pwiz.CLI.msdata.SpectrumList> processingListView;
-        public ProcessingListView<pwiz.CLI.msdata.SpectrumList> ProcessingListView { get { return processingListView; } }
+        private ProcessingListView<SpectrumList> processingListView;
+        public ProcessingListView<SpectrumList> ProcessingListView { get { return processingListView; } }
 
-        public pwiz.CLI.msdata.SpectrumList GetProcessingSpectrumList( pwiz.CLI.msdata.SpectrumList spectrumList )
+        public SpectrumList GetProcessingSpectrumList( SpectrumList spectrumList )
         { return processingListView.ProcessingWrapper( spectrumList ); }
 
         private ToolStripMenuItem deleteContextItem;
@@ -23,7 +25,7 @@ namespace seems
         {
             InitializeComponent();
 
-            processingListView = new ProcessingListView<pwiz.CLI.msdata.SpectrumList>();
+            processingListView = new ProcessingListView<SpectrumList>();
             processingListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom |
                                 AnchorStyles.Left | AnchorStyles.Right;
             processingListView.Location = new Point( 0, 0 );
@@ -62,14 +64,14 @@ namespace seems
 
         private void addNativeCentroider_Click( object sender, EventArgs e )
         {
-            ProcessingListViewItem<pwiz.CLI.msdata.SpectrumList> item = new SpectrumList_NativeCentroider_ListViewItem();
+            ProcessingListViewItem<SpectrumList> item = new SpectrumList_NativeCentroider_ListViewItem();
             item.ImageIndex = 0;
             processingListView.Add( item );
         }
 
         private void addSavitzkyGolaySmoother_Click( object sender, EventArgs e )
         {
-            ProcessingListViewItem<pwiz.CLI.msdata.SpectrumList> item = new SpectrumList_SavitzkyGolaySmoother_ListViewItem();
+            ProcessingListViewItem<SpectrumList> item = new SpectrumList_SavitzkyGolaySmoother_ListViewItem();
             item.ImageIndex = 1;
             processingListView.Add( item );
         }

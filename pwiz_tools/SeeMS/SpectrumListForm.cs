@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
 
 namespace seems
 {

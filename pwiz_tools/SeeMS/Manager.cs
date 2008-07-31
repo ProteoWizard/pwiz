@@ -7,6 +7,7 @@ using System.IO;
 using Extensions;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
 
 namespace seems
 {
@@ -58,7 +59,6 @@ namespace seems
 	/// Maps the filepath of a data source to its associated ManagedDataSource object
 	/// </summary>
 	//public class DataSourceMap : Map<string, ManagedDataSource> { }
-
 
 	/// <summary>
 	/// Manages the application
@@ -174,6 +174,11 @@ namespace seems
             showDataOverlay( hostGraph, managedDataSource, row.Tag as GraphItem );
         }
 
+        private bool acceptSpectrum( Spectrum s )
+        {
+            return s.cvParam( CVID.MS_ms_level ).value == "2";
+        }
+
 		private void initializeManagedDataSource( ManagedDataSource managedDataSource )
 		{
 			try
@@ -201,6 +206,7 @@ namespace seems
 
 				ChromatogramList cl = msDataFile.run.chromatogramList;
 				SpectrumList sl = msDataFile.run.spectrumList;
+                //sl = new SpectrumList_Filter( sl, new SpectrumList_FilterAcceptSpectrum( acceptSpectrum ) );
 
 				if( sl == null )
 					throw new Exception( "Error loading metadata: no spectrum list" );

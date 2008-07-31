@@ -129,7 +129,7 @@ namespace seems
 		{
 			currentOverlays.Add( new RefPair<DataSource, GraphItem>( dataSource, dataItem ) );
 			currentDataSource = dataSource;
-			currentGraphItem = dataItem;
+			//currentGraphItem = dataItem;
 			showData( dataItem, true );
 		}
 
@@ -235,6 +235,12 @@ namespace seems
 			// the header does not have the data points
 			pane.YAxis.Title.Text = "Intensity";
 			pane.XAxis.Title.Text = "m/z";
+
+            /*if( isOverlay )
+            {
+                pane = new ZedGraph.GraphPane();
+                zedGraphControl1.MasterPane.Add( pane );
+            }*/
 
 			PointList pointList = spectrum.PointList;
 			if( pointList.FullCount > 0 )
@@ -593,7 +599,9 @@ namespace seems
 
 		private void zedGraphControl1_ZoomEvent( ZedGraph.ZedGraphControl sender, ZedGraph.ZoomState oldState, ZedGraph.ZoomState newState )
 		{
-			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
+            Point pos = MousePosition;
+            pos = PointToClient( pos );
+            ZedGraph.GraphPane pane = zedGraphControl1.MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) );
 			int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
 			foreach( ZedGraph.CurveItem curve in pane.CurveList )
 				if( curve.Points is PointList )
@@ -618,8 +626,9 @@ namespace seems
 
 		private void GraphForm_MouseClick( object sender, MouseEventArgs e )
 		{
-			if( e.Button == MouseButtons.Middle )
-				zedGraphControl1.ZoomOut( zedGraphControl1.GraphPane );
+            ZedGraph.GraphPane pane = zedGraphControl1.MasterPane.FindChartRect( new PointF( (float) e.X, (float) e.Y ) );
+			if( pane != null && e.Button == MouseButtons.Middle )
+                zedGraphControl1.ZoomOut( pane );
 		}
 
 		private void GraphForm_ResizeBegin( object sender, EventArgs e )
@@ -634,5 +643,10 @@ namespace seems
 			zedGraphControl1.Visible = true;
 			Refresh();
 		}
+
+        private void zedGraphControl1_Paint( object sender, PaintEventArgs e )
+        {
+            zedGraphControl1.MasterPane.SetLayout( e.Graphics, ZedGraph.PaneLayout.SingleColumn );
+        }
 	}
 }

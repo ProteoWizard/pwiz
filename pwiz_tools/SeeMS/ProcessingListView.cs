@@ -6,6 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
 
 namespace seems
 {

@@ -436,7 +436,7 @@ namespace seems
             this.dockPanel.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.dockPanel.DefaultFloatingWindowSize = new System.Drawing.Size( 300, 300 );
             this.dockPanel.DocumentStyle = DigitalRune.Windows.Docking.DocumentStyle.DockingMdi;
-            this.dockPanel.Location = new System.Drawing.Point( 0, 52 );
+            this.dockPanel.Location = new System.Drawing.Point( -3, 52 );
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.Size = new System.Drawing.Size( 792, 489 );
             this.dockPanel.TabIndex = 5;
