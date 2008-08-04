@@ -132,33 +132,33 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
     string filterString = scanInfo->filter();
-
-    scan.cvParams.push_back(CVParam(MS_filter_string, filterString));
+    scan.set(MS_filter_string, filterString);
 
     string scanEvent = scanInfo->trailerExtraValue("Scan Event:");
-    scan.cvParams.push_back(CVParam(MS_preset_scan_configuration, scanEvent));
+    if (!scanEvent.empty())
+        scan.set(MS_preset_scan_configuration, scanEvent);
 
     result->set(MS_ms_level, scanInfo->msLevel());
 
     ScanType scanType = scanInfo->scanType();
     if (scanType!=ScanType_Unknown)
     {
-        result->cvParams.push_back(translateAsSpectrumType(scanType));
-        scan.cvParams.push_back(translateAsScanningMethod(scanType));
+        result->set(translateAsSpectrumType(scanType));
+        scan.set(translateAsScanningMethod(scanType));
     }
 
     PolarityType polarityType = scanInfo->polarityType();
-    if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
+    if (polarityType!=PolarityType_Unknown) scan.set(translate(polarityType));
 
     bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
 
-    if (scanInfo->isProfileScan() && !doCentroid) sd.cvParams.push_back(MS_profile_mass_spectrum);
-    else sd.cvParams.push_back(MS_centroid_mass_spectrum); 
+    if (scanInfo->isProfileScan() && !doCentroid) sd.set(MS_profile_mass_spectrum);
+    else sd.set(MS_centroid_mass_spectrum); 
 
-    scan.cvParams.push_back(CVParam(MS_scan_time, scanInfo->startTime(), MS_minute));
-    sd.cvParams.push_back(CVParam(MS_base_peak_m_z, scanInfo->basePeakMass()));
-    sd.cvParams.push_back(CVParam(MS_base_peak_intensity, scanInfo->basePeakIntensity()));
-    sd.cvParams.push_back(CVParam(MS_total_ion_current, scanInfo->totalIonCurrent()));
+    scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
+    sd.set(MS_base_peak_m_z, scanInfo->basePeakMass());
+    sd.set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+    sd.set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
     try
     {
@@ -186,40 +186,36 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
             precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
 
-        selectedIon.cvParams.push_back(CVParam(MS_m_z, scanInfo->precursorMZ(i)));
+        selectedIon.set(MS_m_z, scanInfo->precursorMZ(i));
         long precursorCharge = scanInfo->precursorCharge();
         if (precursorCharge > 0)
-            selectedIon.cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
+            selectedIon.set(MS_charge_state, precursorCharge);
         // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
 
         ActivationType activationType = scanInfo->activationType();
         if (activationType == ActivationType_Unknown)
             activationType = ActivationType_CID; // assume CID
-        precursor.activation.cvParams.push_back(CVParam(translate(activationType)));
+        precursor.activation.set(translate(activationType));
         if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
-            precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, scanInfo->precursorActivationEnergy(i)));
+            precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i));
 
         precursor.selectedIons.push_back(selectedIon);
         sd.precursors.push_back(precursor);
     }
 
+    auto_ptr<raw::MassList> massList = 
+        rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
+
+    result->defaultArrayLength = massList->size();
+
+    if (massList->size() > 0)
+    {
+        sd.set(MS_lowest_m_z_value, massList->data()[0].mass);
+        sd.set(MS_highest_m_z_value, massList->data()[massList->size()-1].mass);
+    }
+
     if (getBinaryData)
     {
-        auto_ptr<raw::MassList> massList = 
-            rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
-
-        double mzLowest = 0;
-        double mzHighest = 0;
-
-        if (massList->size() > 0)
-        {
-            mzLowest = massList->data()[0].mass;
-            mzHighest = massList->data()[massList->size()-1].mass;
-        }
-
-        sd.cvParams.push_back(CVParam(MS_lowest_m_z_value, mzLowest));
-        sd.cvParams.push_back(CVParam(MS_highest_m_z_value, mzHighest));
-
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
                                     massList->size());
     }
