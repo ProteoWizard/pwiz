@@ -29,6 +29,7 @@
 #include "DefaultReaderList.hpp"
 #include "SpectrumList_mzXML.hpp"
 #include "SpectrumList_MGF.hpp"
+#include "SpectrumList_BTDX.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "References.hpp"
@@ -213,6 +214,44 @@ class Reader_MGF : public Reader
 };
 
 
+class Reader_BTDX : public Reader
+{
+    virtual bool accept(const string& filename, const string& head) const
+    {
+        try
+        {
+            // TODO: congratulate Bruker for their unique root element name
+            string rootElement = GetXMLRootElement(head);
+            return rootElement == "root";
+        }
+        catch (runtime_error&)
+        {
+        }
+        return false;
+    }
+
+    virtual void read(const string& filename, const string& head, MSData& result) const
+    {
+        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
+        if (!is.get() || !*is)
+            throw runtime_error(("[Reader_BTDX::read] Unable to open file " + filename));
+
+        result.fileDescription.fileContent.set(MS_MSn_spectrum);
+        result.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
+        SourceFilePtr sourceFile(new SourceFile);
+        sourceFile->id = "BTDX1";
+        bfs::path p(filename);
+        sourceFile->name = p.leaf();
+        sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+        result.fileDescription.sourceFilePtrs.push_back(sourceFile);
+        result.run.id = "Run1";
+        result.run.spectrumListPtr = SpectrumListPtr(SpectrumList_BTDX::create(is, result));
+        result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
+        return;
+    }
+};
+
+
 } // namespace
 
 
@@ -222,6 +261,7 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
     push_back(ReaderPtr(new Reader_mzML));
     push_back(ReaderPtr(new Reader_mzXML));
     push_back(ReaderPtr(new Reader_MGF));
+    push_back(ReaderPtr(new Reader_BTDX));
 }
 
 

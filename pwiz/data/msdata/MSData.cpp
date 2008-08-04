@@ -514,8 +514,73 @@ PWIZ_API_DECL bool AcquisitionList::empty() const
 
 
 //
+// SelectedIon
+//
+
+
+PWIZ_API_DECL
+SelectedIon::SelectedIon(double mz)
+{
+    set(MS_m_z, mz);
+}
+
+
+PWIZ_API_DECL
+SelectedIon::SelectedIon(double mz, double intensity)
+{
+    set(MS_m_z, mz);
+    set(MS_intensity, intensity);
+}
+
+
+PWIZ_API_DECL
+SelectedIon::SelectedIon(double mz, int chargeState)
+{
+    set(MS_m_z, mz);
+    set(MS_charge_state, chargeState);
+}
+
+
+PWIZ_API_DECL
+SelectedIon::SelectedIon(double mz, double intensity, int chargeState)
+{
+    set(MS_m_z, mz);
+    set(MS_intensity, intensity);
+    set(MS_charge_state, chargeState);
+}
+
+
+//
 // Precursor
 //
+
+
+PWIZ_API_DECL
+Precursor::Precursor(double mz)
+{
+    selectedIons.push_back(SelectedIon(mz));
+}
+
+
+PWIZ_API_DECL
+Precursor::Precursor(double mz, double intensity)
+{
+    selectedIons.push_back(SelectedIon(mz, intensity));
+}
+
+
+PWIZ_API_DECL
+Precursor::Precursor(double mz, int chargeState)
+{
+    selectedIons.push_back(SelectedIon(mz, chargeState));
+}
+
+
+PWIZ_API_DECL
+Precursor::Precursor(double mz, double intensity, int chargeState)
+{
+    selectedIons.push_back(SelectedIon(mz, intensity, chargeState));
+}
 
 
 PWIZ_API_DECL bool Precursor::empty() const

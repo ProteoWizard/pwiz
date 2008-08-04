@@ -65,6 +65,7 @@ lib pwiz_data_msdata
         SpectrumList_mzML.cpp
         SpectrumList_mzXML.cpp
         SpectrumList_MGF.cpp
+        SpectrumList_BTDX.cpp
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp

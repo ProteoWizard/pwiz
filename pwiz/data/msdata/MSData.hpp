@@ -346,7 +346,18 @@ struct PWIZ_API_DECL AcquisitionList : public ParamContainer
 
 
 struct PWIZ_API_DECL IsolationWindow : public ParamContainer {};
-struct PWIZ_API_DECL SelectedIon : public ParamContainer {};
+
+
+struct PWIZ_API_DECL SelectedIon : public ParamContainer
+{
+    SelectedIon() {}
+    explicit SelectedIon(double mz);
+    explicit SelectedIon(double mz, double intensity);
+    explicit SelectedIon(double mz, int chargeState);
+    explicit SelectedIon(double mz, double intensity, int chargeState);
+};
+
+
 struct PWIZ_API_DECL Activation : public ParamContainer {};
 
 
@@ -359,6 +370,14 @@ struct PWIZ_API_DECL Precursor : public ParamContainer
     IsolationWindow isolationWindow;
     std::vector<SelectedIon> selectedIons;
     Activation activation;
+
+
+    Precursor() {}
+    explicit Precursor(double mz);
+    explicit Precursor(double mz, double intensity);
+    explicit Precursor(double mz, int chargeState);
+    explicit Precursor(double mz, double intensity, int chargeState);
+
 
     bool empty() const;
 };
