@@ -115,7 +115,7 @@ class RawFileImpl : public RawFile
     virtual long scanNumber(double rt);
     virtual double rt(long scanNumber);
 
-    virtual auto_ptr<MassList>
+    virtual MassListPtr
     getMassList(long scanNumber,
                 const string& filter,
                 CutoffType cutoffType,
@@ -124,7 +124,7 @@ class RawFileImpl : public RawFile
                 bool centroidResult,
                 WhichMassList which);
 
-    virtual auto_ptr<MassList>
+    virtual MassListPtr
     getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
                        long firstBkg1ScanNumber, long lastBkg1ScanNumber,
                        long firstBkg2ScanNumber, long lastBkg2ScanNumber,
@@ -133,6 +133,8 @@ class RawFileImpl : public RawFile
                        long cutoffValue,
                        long maxPeakCount,
                        bool centroidResult);
+
+    virtual MassListPtr getMassListFromLabelData(long scanNumber);
 
     virtual auto_ptr<StringArray> getFilters();
     virtual auto_ptr<ScanInfo> getScanInfo(long scanNumber);
@@ -163,6 +165,7 @@ class RawFileImpl : public RawFile
     private:
     friend class ScanInfoImpl;
     IXRawfilePtr raw_;
+    int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
     string filename_;
 
     InstrumentModelType instrumentModel_;
@@ -179,12 +182,32 @@ auto_ptr<RawFile> RawFile::create(const string& filename)
 
 
 RawFileImpl::RawFileImpl(const string& filename)
-:   raw_("XRawfile.XRawfile.1"),
+:   raw_(NULL),
     filename_(filename),
     instrumentModel_(InstrumentModelType_Unknown)
 {
+    // use the latest version of IXRawfile that will initialize
+    IXRawfile2Ptr raw2(NULL);
+    if (FAILED(raw2.CreateInstance("XRawfile.XRawfile.1")))
+    {
+        if (FAILED(raw_.CreateInstance("XRawfile.XRawfile.1")))
+        {
+            rawInterfaceVersion_ = 0;
+            throw RawEgg("[RawFileImpl()] Unable to initialize XRawfile interface.");
+        }
+        else
+        {
+            rawInterfaceVersion_ = 1;
+        }
+    }
+    else
+    {
+        raw_ = raw2;
+        rawInterfaceVersion_ = 2;
+    }
+
     if (raw_->Open(filename.c_str()))
-        throw RawEgg("Unable to open file " + filename);
+        throw RawEgg("[RawFileImpl()] Unable to open file " + filename);
 }
 
 
@@ -433,16 +456,61 @@ class MassListImpl : public MassList
     long firstBkg2ScanNumber_;
     long lastBkg2ScanNumber_;
 };
+
+class MassListFromLabelDataImpl : public MassList
+{
+    public:
+    MassListFromLabelDataImpl(long scanNumber, VARIANT& labels)
+    :   scanNumber_(scanNumber)
+    {
+        if (labels.vt != (VT_ARRAY | VT_R8))
+            throw RawEgg("MassListFromLabelDataImpl(): VARIANT error.");
+
+        _variant_t labels2(labels, false);
+        size_ = (long) labels2.parray->rgsabound[0].cElements;
+        data_ = new MassIntensityPair[size_];
+
+        double* pdval = (double*) labels2.parray->pvData;
+        for(long i=0; i < size_; ++i)
+        {
+	        data_[i].mass = (double) pdval[(i*6)+0];
+	        data_[i].intensity = (double) pdval[(i*6)+1];
+        }
+        // labels is freed when labels2 goes out of scope
+    }
+
+    ~MassListFromLabelDataImpl()
+    {
+        delete data_;
+    }
+
+    virtual long scanNumber() const {return scanNumber_;}
+    virtual long size() const {return size_;}
+    virtual MassIntensityPair* data() const {return data_;}
+
+    virtual double centroidPeakWidth() const {return 0;}
+    virtual long firstAvgScanNumber() const {return 0;}
+    virtual long lastAvgScanNumber() const {return 0;}
+    virtual long firstBkg1ScanNumber() const {return 0;}
+    virtual long lastBkg1ScanNumber() const {return 0;}
+    virtual long firstBkg2ScanNumber() const {return 0;}
+    virtual long lastBkg2ScanNumber() const {return 0;}
+
+    private:
+    long scanNumber_;
+    MassIntensityPair* data_;
+    long size_;
+};
 } // namespace
 
 
-auto_ptr<MassList> RawFileImpl::getMassList(long scanNumber,
-                                            const string& filter,
-                                            CutoffType cutoffType,
-                                            long cutoffValue,
-                                            long maxPeakCount,
-                                            bool centroidResult,
-                                            WhichMassList which)
+MassListPtr RawFileImpl::getMassList(long scanNumber,
+                                     const string& filter,
+                                     CutoffType cutoffType,
+                                     long cutoffValue,
+                                     long maxPeakCount,
+                                     bool centroidResult,
+                                     WhichMassList which)
 {
     _bstr_t bstrFilter(filter.c_str());
     double centroidPeakWidth = 0;
@@ -481,14 +549,14 @@ auto_ptr<MassList> RawFileImpl::getMassList(long scanNumber,
                            &variantPeakFlags,
                            &size));
 
-    return auto_ptr<MassList>(new MassListImpl(scanNumber,
-                                               variantMassList,
-                                               size,
-                                               centroidPeakWidth));
+    return MassListPtr(new MassListImpl(scanNumber,
+                                        variantMassList,
+                                        size,
+                                        centroidPeakWidth));
 }
 
 
-auto_ptr<MassList>
+MassListPtr
 RawFileImpl::getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
                                 long firstBkg1ScanNumber, long lastBkg1ScanNumber,
                                 long firstBkg2ScanNumber, long lastBkg2ScanNumber,
@@ -519,13 +587,25 @@ RawFileImpl::getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
                                          &variantPeakFlags,
                                          &size));
 
-    return auto_ptr<MassList>(new MassListImpl(0,
-                                               variantMassList,
-                                               size,
-                                               centroidPeakWidth,
-                                               firstAvgScanNumber, lastAvgScanNumber,
-                                               firstBkg1ScanNumber, lastBkg1ScanNumber,
-                                               firstBkg2ScanNumber, lastBkg2ScanNumber));
+    return MassListPtr(new MassListImpl(0,
+                                        variantMassList,
+                                        size,
+                                        centroidPeakWidth,
+                                        firstAvgScanNumber, lastAvgScanNumber,
+                                        firstBkg1ScanNumber, lastBkg1ScanNumber,
+                                        firstBkg2ScanNumber, lastBkg2ScanNumber));
+}
+
+
+MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 2)
+        throw RawEgg("[RawFileImpl::getMassListFromLabelData()] GetLabelData requires the IXRawfile2 interface.");
+
+    IXRawfile2Ptr raw2 = (IXRawfile2Ptr) raw_;
+	VARIANT varLabels;
+	raw2->GetLabelData(&varLabels, NULL, &scanNumber);
+    return MassListPtr(new MassListFromLabelDataImpl(scanNumber, varLabels));
 }
 
 
@@ -750,21 +830,18 @@ void ScanInfoImpl::parseFilterString()
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
 }
 
-#pragma warning(push)
-#pragma warning(disable:4101) // don't bark about unused RawEgg &e
 long ScanInfoImpl::precursorCharge() const
 {
     try
     {
         return trailerExtraValueLong("Charge State:");
     }
-    catch (RawEgg& e)
+    catch (RawEgg&)
     {
         // almost certainly means that the label was not present
         return 0;
     }
 }
-#pragma warning(pop)
 
 double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
 {

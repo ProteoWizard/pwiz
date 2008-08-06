@@ -128,8 +128,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     SpectrumDescription& sd = result->spectrumDescription;
     Scan& scan = sd.scan;
 
+    MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
-        findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
+        findInstrumentConfiguration(msd_, translate(analyzerType));
 
     string filterString = scanInfo->filter();
     scan.set(MS_filter_string, filterString);
@@ -152,8 +153,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
 
-    if (scanInfo->isProfileScan() && !doCentroid) sd.set(MS_profile_mass_spectrum);
-    else sd.set(MS_centroid_mass_spectrum); 
+    if (scanInfo->isProfileScan() && !doCentroid)
+    {
+        sd.set(MS_profile_mass_spectrum);
+    }
+    else
+    {
+        sd.set(MS_centroid_mass_spectrum); 
+        doCentroid = scanInfo->isProfileScan();
+    }
 
     scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
     sd.set(MS_base_peak_m_z, scanInfo->basePeakMass());
@@ -203,8 +211,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         sd.precursors.push_back(precursor);
     }
 
-    auto_ptr<raw::MassList> massList = 
-        rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
+    MassListPtr massList;
+
+    if (doCentroid &&
+        (analyzerType == MassAnalyzerType_Orbitrap ||
+         analyzerType == MassAnalyzerType_FTICR))
+    {
+        // use label data for accurate centroids on FT profile data
+        massList = rawfile_->getMassListFromLabelData(scanNumber);
+    }
+    else
+    {
+        massList = rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
+    }
 
     result->defaultArrayLength = massList->size();
 

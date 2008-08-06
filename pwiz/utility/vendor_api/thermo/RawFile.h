@@ -248,6 +248,9 @@ class RAWFILE_API MassList
 };
 
 
+typedef boost::shared_ptr<MassList> MassListPtr;
+
+
 struct RAWFILE_API MassRange
 {
     double low;
@@ -432,7 +435,7 @@ class RAWFILE_API RawFile
     virtual long scanNumber(double rt) = 0;
     virtual double rt(long scanNumber) = 0;
 
-    virtual std::auto_ptr<MassList>
+    virtual MassListPtr
     getMassList(long scanNumber,
                 const std::string& filter,
                 CutoffType cutoffType,
@@ -441,7 +444,7 @@ class RAWFILE_API RawFile
                 bool centroidResult,
                 WhichMassList which = MassList_Current) = 0;
 
-    virtual std::auto_ptr<MassList>
+    virtual MassListPtr
     getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
                        long firstBkg1ScanNumber, long lastBkg1ScanNumber,
                        long firstBkg2ScanNumber, long lastBkg2ScanNumber,
@@ -450,6 +453,9 @@ class RAWFILE_API RawFile
                        long cutoffValue,
                        long maxPeakCount,
                        bool centroidResult) = 0;
+
+    // use label data to get centroids for FTMS scans
+    virtual MassListPtr getMassListFromLabelData(long scanNumber) = 0;
 
     virtual std::auto_ptr<StringArray> getFilters() = 0;
     virtual std::auto_ptr<ScanInfo> getScanInfo(long scanNumber) = 0;
