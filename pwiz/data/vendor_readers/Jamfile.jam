@@ -38,10 +38,12 @@ lib pwiz_data_vendor_readers
     : # requirements
 		<library>../msdata//pwiz_data_msdata
 		<toolset>msvc:<library>../../utility/vendor_api/thermo//pwiz_rawfile
+		<toolset>gcc:<define>PWIZ_NO_READER_THERMO
     : # default-build
     : # usage-requirements
 		<library>../msdata//pwiz_data_msdata
 		<toolset>msvc:<library>../../utility/vendor_api/thermo//pwiz_rawfile
+		<toolset>gcc:<define>PWIZ_NO_READER_THERMO
     ;
 
 

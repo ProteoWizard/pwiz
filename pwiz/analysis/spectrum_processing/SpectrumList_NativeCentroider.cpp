@@ -25,8 +25,10 @@
 
 
 #include "SpectrumList_NativeCentroider.hpp"
+
+#ifndef PWIZ_NO_READER_THERMO
 #include "data/vendor_readers/SpectrumList_Thermo.hpp"
-#include <iostream>
+#endif
 
 
 namespace pwiz {
@@ -34,7 +36,6 @@ namespace analysis {
 
 
 using namespace msdata;
-using namespace msdata::detail;
 using namespace pwiz::util;
 
 
@@ -47,20 +48,24 @@ PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
 {
     // check to see if we're able to do native centroiding, based on the SpectrumList type
 
-    SpectrumList_Thermo* thermo = dynamic_cast<SpectrumList_Thermo*>(&*inner);
+    #ifndef PWIZ_NO_READER_THERMO
+    detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
     if (thermo)
     {
         mode_ = 1;
         return;
     }
+    #endif
 }
 
 
 PWIZ_API_DECL bool SpectrumList_NativeCentroider::accept(const msdata::SpectrumListPtr& inner)
 {
-    SpectrumList_Thermo* thermo = dynamic_cast<SpectrumList_Thermo*>(&*inner);
+    #ifndef PWIZ_NO_READER_THERMO
+    detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
     if (thermo)
         return true;
+    #endif
     return false;
 }
 
@@ -69,8 +74,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_NativeCentroider::spectrum(size_t index, 
 {
     switch (mode_)
     {
+        #ifndef PWIZ_NO_READER_THERMO
         case 1:
-            return dynamic_cast<SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+            return dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+        #endif
+
         default:
             return inner_->spectrum(index, getBinaryData);
     }

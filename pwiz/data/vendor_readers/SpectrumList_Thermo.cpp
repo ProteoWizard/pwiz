@@ -1,5 +1,6 @@
 #define PWIZ_SOURCE
 
+#ifndef PWIZ_NO_READER_THERMO
 #include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
@@ -279,3 +280,5 @@ PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, 
 } // detail
 } // msdata
 } // pwiz
+
+#endif // PWIZ_NO_READER_THERMO

@@ -1,5 +1,6 @@
 #define PWIZ_SOURCE
 
+#ifndef PWIZ_NO_READER_THERMO
 #include "data/msdata/CVTranslator.hpp"
 #include "utility/vendor_api/thermo/RawFile.h"
 #include "utility/misc/SHA1Calculator.hpp"
@@ -172,7 +173,8 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex()
     boost::regex scanEventRegex("^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+$");*/
 }
 
-
 } // detail
 } // msdata
 } // pwiz
+
+#endif // PWIZ_NO_READER_THERMO
