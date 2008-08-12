@@ -50,7 +50,9 @@ struct Config
     string configFilename;
     string outputDirectory;
     string usageOptions;
+    string pepxmlFilename;
     vector<string> commands;
+    Pseudo2DGel::Config pseudo2dConfig;
 
     Config() : outputDirectory(".") {}
 };
@@ -83,7 +85,8 @@ string usage(const Config& config)
         << "Commands:\n"
         << "\n";
 
-    printCommandUsage<Pseudo2DGel>(oss);
+    // TODO return -x options processing
+    //printCommandUsage<Pseudo2DGel>(oss);
 
     oss << endl
         << "Questions, comments, and bug reports:\n"
@@ -110,9 +113,30 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("config,c", 
             po::value<string>(&config.configFilename),
             ": configuration file (optionName=value) (ignored)")
-        ("exec,x", 
-            po::value< vector<string> >(&config.commands)->composing(),
-            ": execute command")
+        ("label,l",
+            po::value<string>(&config.pseudo2dConfig.label),
+            ": set filename label to xxx")
+        ("mzLow",
+            po::value<float>(&config.pseudo2dConfig.mzLow),
+            ": set low m/z cutoff")
+        ("mzHigh",
+            po::value<float>(&config.pseudo2dConfig.mzHigh),
+            ": set high m/z cutoff")
+        ("binCount,b",
+            po::value<int>(&config.pseudo2dConfig.binCount),
+            ": set histogram bin count")
+        ("zRadius,z",
+            po::value<float>(&config.pseudo2dConfig.zRadius),
+            ": set intensity function z-score radius [=2]")
+        ("bry",
+            ": use blue-red-yellow gradient")
+        ("binSum",
+            ": sum intensity in bins [default = max intensity]")
+        ("ms2locs,m",
+            ": indicate masses selected for ms2")
+        ("pepxml,p",
+            po::value<string>(&config.pepxmlFilename),
+            ": location of pepxml file")
         ;
 
     // save options description
@@ -143,42 +167,43 @@ Config parseCommandArgs(int argc, const char* argv[])
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
 
+    // Set the boolean values
+    if (vm.count("bry"))
+        config.pseudo2dConfig.bry = true;
+    
+    if (vm.count("binSum"))
+        config.pseudo2dConfig.binSum = true;
+    
+    if (vm.count("ms2locs"))
+        config.pseudo2dConfig.ms2 = true;
+    
     // remember filenames from command line
 
     if (vm.count(label_args))
         config.filenames = vm[label_args].as< vector<string> >();
 
+    // Add the pepxml file if available.
+    
+    if (vm.count("pepxml"))
+        config.pseudo2dConfig.peptide_id =
+            shared_ptr<PeptideID>(
+                new PeptideID_pepXml(config.pepxmlFilename)
+                );
+    
     config.usageOptions = usageOptions;
 
     return config;
 }
 
 void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
-                         const vector<string>& commands)
+                         const Config& config)
 {
     shared_ptr<MSDataCache> cache(new MSDataCache);
     analyzers.push_back(cache);
     
-    for (vector<string>::const_iterator it=commands.begin(); it!=commands.end(); ++it)
-    {
-        string name, args;
-        istringstream iss(*it);
-        iss >> name;
-        getline(iss, args);
-
-        if (name == analyzer_strings<Pseudo2DGel>::id())
-        {
-            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, args));
+            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache,
+                                                   config.pseudo2dConfig));
             analyzers.push_back(anal);
-        }
-        else
-        {
-            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, *it));
-            analyzers.push_back(anal);
-        }
-
-        break;
-    }
 }
 
 int main(int argc, const char* argv[])
@@ -198,7 +223,7 @@ int main(int argc, const char* argv[])
         shared_ptr<Pseudo2DGel> analyzer;
         
         MSDataAnalyzerContainer analyzers;
-        initializeAnalyzers(analyzers, config.commands);
+        initializeAnalyzers(analyzers, config);
         
         // Only take the first file for now.
         ExtendedReaderList readers;

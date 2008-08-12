@@ -156,6 +156,44 @@ class ImageImpl : public Image
         gdImageString(im_, font, position.x, position.y, &buffer[0], color2gd(color)); 
     }
 
+    void stringUp(const std::string& text, const Point& point, const Color& color, Size size, int align)
+    {
+        // copy text into gd-friendly (unsigned char) buffer
+
+        vector<unsigned char> buffer;
+        copy(text.begin(), text.end(), back_inserter(buffer));
+        buffer.push_back('\0');
+
+        // choose font 
+
+        gdFontPtr font;
+        switch (size)
+        {
+            case Tiny: font = gdFontGetTiny(); break;
+            case Small: font = gdFontGetSmall(); break;
+            case MediumBold: font = gdFontGetMediumBold(); break;
+            case Large: font = gdFontGetLarge(); break;
+            case Giant: font = gdFontGetGiant(); break;
+            default: throw runtime_error("[ImageImpl::string()] This isn't happening.");
+        }
+
+        // calculate position
+
+        Point position = point;
+        int length = (int)text.size() * font->w;
+        int height = font->h;
+        
+        if (align & CenterX) position.x -= height/2;
+        else if (align & Right) position.x -= height;
+            
+        if (align & CenterY) position.y -= length/2;
+        else if (align & Bottom) position.y -= length;
+
+        // draw the string vertically
+            
+        gdImageStringUp(im_, font, position.x, position.y, &buffer[0], color2gd(color)); 
+    }
+
     void rectangle(const Point& point1, const Point& point2, const Color& color, bool filled)
     {
         if (filled)

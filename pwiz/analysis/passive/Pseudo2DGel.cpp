@@ -52,9 +52,50 @@ using namespace pwiz::peptideid;
 //
 
 
+PWIZ_API_DECL Pseudo2DGel::Config::Config()
+:   mzLow(200), mzHigh(2000), binCount(640),
+    zRadius(2), bry(false), binSum(false), ms2(false)
+    
+{
+}
+
 PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 :   mzLow(200), mzHigh(2000), binCount(640),
     zRadius(2), bry(false), binSum(false), ms2(false)
+{
+    vector<string> tokens;
+    istringstream iss(args);
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+
+    static int count = 0;
+    label = lexical_cast<string>(count++);
+
+    for (vector<string>::iterator it=tokens.begin(); it!=tokens.end(); ++it)
+    {
+        if (it->find("label=") == 0)
+            label = it->substr(6);
+        else if (it->find("mzLow=") == 0)
+            mzLow = (float)atof(it->c_str()+6);
+        else if (it->find("mzHigh=") == 0)
+            mzHigh = (float)atof(it->c_str()+7);
+        else if (it->find("binCount=") == 0)
+            binCount = atoi(it->c_str()+9);
+        else if (it->find("zRadius=") == 0)
+            zRadius = (float)atof(it->c_str()+8);
+        else if (*it == "bry")
+            bry = true; 
+        else if (*it == "binSum")
+            binSum = true; 
+        else if (*it == "ms2locs")
+            ms2 = true;
+        else if (it->find("pepxml=") == 0)
+            peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
+        else 
+            cout << "[Pseudo2DGel::Config] Ignoring argument: " << *it << endl;
+    }
+}
+
+void Pseudo2DGel::Config::process(const std::string& args)
 {
     vector<string> tokens;
     istringstream iss(args);
@@ -217,6 +258,7 @@ class Pseudo2DGel::Impl
     ScanInfo ftScans_;
 
     ScanInfo ms2Scans_;
+    int idedPeptides_;
 
     int bin(double mz); // converts mz -> bin index
     void clear();
@@ -245,6 +287,9 @@ class Pseudo2DGel::Impl
     void drawLegend(Image& image, const IntensityFunction& intensityFunction,
                     const Image::Point& begin, const Image::Point& end); 
 
+    void drawMS2Legend(Image& image, const IntensityFunction& intensityFunction,
+                    const Image::Point& begin, const Image::Point& end); 
+
     void drawTIC(Image& image, const ScanList& scans, 
                  const Image::Point& begin, const Image::Point& end); 
 
@@ -262,6 +307,7 @@ Pseudo2DGel::Impl::Impl(const MSDataCache& cache, const Config& config)
 
 void Pseudo2DGel::Impl::open(const DataInfo& dataInfo)
 {
+    idedPeptides_ = 0;
     clear();
     scanBuffer_.resize(cache_.size());
 }
@@ -778,6 +824,7 @@ Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t ms2Index)
         {
             float score = (float)config_.peptide_id->record(nativeID).normalizedScore;
             color = circleColor(score);
+            idedPeptides_++;
         }
         catch(...) {}
     }
@@ -917,6 +964,8 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
 
     drawLegend(*image, *intensityFunction, Image::Point(0, titleBarHeight), Image::Point(x1, y1));
     drawScans(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
+    if (config_.ms2)
+        drawMS2Legend(*image, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
     drawTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
     drawTMZ(*image, scans, Image::Point(x1, titleBarHeight+150), Image::Point(x2, y1));
 
@@ -1054,6 +1103,46 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
         
         image.circle(center, 3, color, false);
     }
+}
+
+void Pseudo2DGel::Impl::drawMS2Legend(Image& image, 
+                               const IntensityFunction& intensityFunction,
+                               const Image::Point& begin, const Image::Point& end)
+{
+    const int xMargin = 20;
+    const int yMargin = 10 + textHeight_;
+    const int size = 20;
+
+    image.clip(begin, end - Image::Point(1,1));
+
+    for (int i=0; i<=10; i++)
+    {
+        float intensity = i / 10.;
+
+        ostringstream oss;
+        oss << i*10;
+
+        int x = xMargin + (i+1)*size;
+        int y = yMargin + textHeight_;
+
+        image.rectangle(begin + Image::Point(x, y), 
+                        begin + Image::Point(x+size, y+size), 
+                        circleColor(intensity));
+
+        image.stringUp(oss.str(), begin + Image::Point(x+3, y+size+22), Image::white(), Image::MediumBold); 
+    }
+
+    image.string("Probability", begin + Image::Point((begin.x+size*9)/2, yMargin), Image::white(), 
+                 Image::Large, Image::CenterX);
+
+    // TODO draw # peptides identified / # peptides ms2'ed
+    // draw idedPeptides_ / ms2Scans_.size();
+    ostringstream oss;
+    oss << "#id/#ms2: " << idedPeptides_ << "/" << ms2Scans_.scans.size();
+    
+    image.string(oss.str(), begin + Image::Point(begin.x+size*11, yMargin + textHeight_), Image::white(),
+                                                 Image::Large);
+    
 }
 
 void Pseudo2DGel::Impl::drawLegend(Image& image, 

@@ -55,9 +55,12 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         bool ms2;
         boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
+        Config();
         Config(const std::string& args);
         Config(const std::string& args,
                boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id);
+
+        void process(const std::string& args);
     };
 
     Pseudo2DGel(const MSDataCache& cache, const Config& config);

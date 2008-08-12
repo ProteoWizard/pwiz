@@ -74,6 +74,10 @@ class PWIZ_API_DECL Image
     virtual void string(const std::string& text, const Point& point, const Color& color,
                         Size size=Large, int align=Left|Top) = 0;
 
+    /// draw string 
+    virtual void stringUp(const std::string& text, const Point& point, const Color& color,
+                        Size size=Large, int align=Left|Top) = 0;
+
     /// draw rectangle
     virtual void rectangle(const Point& point1, const Point& point2, const Color& color,
                            bool filled=true) = 0;
