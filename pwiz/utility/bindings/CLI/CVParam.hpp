@@ -32,36 +32,40 @@ namespace pwiz {
 namespace CLI {
 namespace msdata {
 
-
-
 public ref class CVParamValue
 {
-    internal: CVParamValue(pwiz::msdata::CVParam* base);
-    internal: pwiz::msdata::CVParam* base_;
+    internal: CVParamValue(boost::shared_ptr<pwiz::msdata::CVParam>* base);
+              virtual ~CVParamValue();
+              !CVParamValue();
+    internal: boost::shared_ptr<pwiz::msdata::CVParam>* base_;
 
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
-    static operator System::String^(CVParamValue^ value) {return gcnew System::String(value->base_->value.c_str());};
-    static explicit operator float(CVParamValue^ value) {return value->base_->valueAs<float>();}
-    static operator double(CVParamValue^ value) {return value->base_->valueAs<double>();}
-    static explicit operator int(CVParamValue^ value) {return value->base_->valueAs<int>();}
-    static explicit operator System::UInt64(CVParamValue^ value) {return (System::UInt64) value->base_->valueAs<size_t>();}
-    static explicit operator bool(CVParamValue^ value) {return value->base_->value == "true";}
-    CVParamValue^ operator=(System::String^ value) {base_->value = ToStdString(value); return this;} 
+    static operator System::String^(CVParamValue^ value) {return gcnew System::String((*value->base_)->value.c_str());};
+    static explicit operator float(CVParamValue^ value) {return (*value->base_)->valueAs<float>();}
+    static operator double(CVParamValue^ value) {return (*value->base_)->valueAs<double>();}
+    static explicit operator int(CVParamValue^ value) {return (*value->base_)->valueAs<int>();}
+    static explicit operator System::UInt64(CVParamValue^ value) {return (System::UInt64) (*value->base_)->valueAs<size_t>();}
+    static explicit operator bool(CVParamValue^ value) {return (*value->base_)->value == "true";}
+    CVParamValue^ operator=(System::String^ value) {(*base_)->value = ToStdString(value); return this;} 
 };
 
 /// represents a tag-value pair, where the tag comes from the controlled vocabulary
 public ref class CVParam
 {
-    internal: CVParam(pwiz::msdata::CVParam* base);
-	internal: pwiz::msdata::CVParam* base_;
+    internal: CVParam(pwiz::msdata::CVParam* base, System::Object^ owner);
+              CVParam(pwiz::msdata::CVParam* base);
+              virtual ~CVParam();
+              !CVParam();
+    internal: boost::shared_ptr<pwiz::msdata::CVParam>* base_;
+              System::Object^ owner_;
               CVParamValue^ value_;
 
     public:
     property CVID cvid
     {
-        CVID get() {return (CVID) base_->cvid;}
-        void set(CVID value) {base_->cvid = (pwiz::msdata::CVID) value;}
+        CVID get() {return (CVID) (*base_)->cvid;}
+        void set(CVID value) {(*base_)->cvid = (pwiz::msdata::CVID) value;}
     }
 
     property CVParamValue^ value
@@ -71,8 +75,8 @@ public ref class CVParam
 
     property CVID units
     {
-        CVID get() {return (CVID) base_->units;}
-        void set(CVID value) {base_->units = (pwiz::msdata::CVID) value;}
+        CVID get() {return (CVID) (*base_)->units;}
+        void set(CVID value) {(*base_)->units = (pwiz::msdata::CVID) value;}
     }
 
     CVParam(CVID _cvid, float _value);
@@ -96,10 +100,10 @@ public ref class CVParam
     CVParam();
 
     /// convenience function to return string for the cvid 
-    property System::String^ name { System::String^ get() {return gcnew System::String(base_->name().c_str());} }
+    property System::String^ name { System::String^ get() {return gcnew System::String((*base_)->name().c_str());} }
 
     /// convenience function to return string for the units 
-    property System::String^ unitsName { System::String^ get() {return gcnew System::String(base_->unitsName().c_str());} }
+    property System::String^ unitsName { System::String^ get() {return gcnew System::String((*base_)->unitsName().c_str());} }
 
     /// convenience function to return time in seconds (throws if units not a time unit)
     double timeInSeconds();

@@ -31,12 +31,31 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
     return std::vector<value_type>(begin, begin + valueArray->Length);
 }
 
+
+#include <iostream>
+#include <fstream>
+#include "boost/preprocessor/stringize.hpp"
+#define LOG_DESTRUCT(msg) /*\
+    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
+    std::cout << "In " << msg << " destructor." << std::endl; \
+    log.close();*/
+#define LOG_CONSTRUCT(msg) /*\
+    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
+    std::cout << "In " << msg << " constructor." << std::endl; \
+    log.close();*/
+
+#define SAFEDELETE(x) if(x) {delete x; x = NULL;}
+
+
 #define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
 public ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 { \
-    internal: WrapperName(std::vector<NativeType>* base) : base_(base) {} \
-              virtual ~WrapperName() {if (base_) delete base_;} \
+    internal: WrapperName(std::vector<NativeType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+              WrapperName(std::vector<NativeType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName)) if (owner_ == nullptr) SAFEDELETE(base_);} \
+              !WrapperName() {delete this;} \
               std::vector<NativeType>* base_; \
+              System::Object^ owner_; \
     \
     public: WrapperName() : base_(new std::vector<NativeType>()) {} \
     \
@@ -46,7 +65,7 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
     \
     property CLIHandle Item[int] \
     { \
-        virtual CLIHandle get(int index) {return NativeToCLI(CLIType, base_->at((size_t) index));} \
+        virtual CLIHandle get(int index) {return NativeToCLI(NativeType, CLIType, base_->at((size_t) index));} \
         virtual void set(int index, CLIHandle value) {} \
     } \
     \
@@ -67,8 +86,8 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
                   bool isReset_; \
         \
         public: \
-        property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(CLIType, **itr_);} } \
-        property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(CLIType, **itr_);} } \
+        property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(NativeType, CLIType, **itr_);} } \
+        property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(NativeType, CLIType, **itr_);} } \
         virtual bool MoveNext() \
         { \
             if (base_->empty()) return false; \
@@ -90,40 +109,50 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 #define DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
     DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
 
-#define NATIVE_SHARED_PTR_TO_CLI(CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(&(SharedPtr)) : nullptr)
-#define NATIVE_REFERENCE_TO_CLI(CLIType, NativeRef) gcnew CLIType(&(NativeRef))
-#define NATIVE_VALUE_TO_CLI(CLIType, NativeValue) ((CLIType) NativeValue)
-#define STD_STRING_TO_CLI_STRING(CLIType, StdString) gcnew CLIType((StdString).c_str())
+#define NATIVE_SHARED_PTR_TO_CLI(SharedPtrType, CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(new SharedPtrType((SharedPtr))) : nullptr)
+#define NATIVE_REFERENCE_TO_CLI(NativeType, CLIType, NativeRef) gcnew CLIType(&(NativeRef), this)
+#define NATIVE_VALUE_TO_CLI(NativeType, CLIType, NativeValue) ((CLIType) NativeValue)
+#define STD_STRING_TO_CLI_STRING(NativeType, CLIType, StdString) gcnew CLIType((StdString).c_str())
 
 #define CLI_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
 #define CLI_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
+#define CLI_SHARED_PTR_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(**(CLIObject)->base_)
 #define CLI_VALUE_TO_NATIVE_VALUE(NativeType, CLIObject) ((NativeType) CLIObject)
 #define CLI_STRING_TO_STD_STRING(NativeType, CLIObject) ToStdString(CLIObject)
 
 
 #define DEFINE_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base) : base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          pwiz::msdata::ClassType* base_;
+internal: ClassType(pwiz::msdata::ClassType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(pwiz::msdata::ClassType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
+          !ClassType() {delete this;} \
+          pwiz::msdata::ClassType* base_; \
+          System::Object^ owner_;
 
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base) : BaseClassType(base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
-          pwiz::msdata::ClassType* base_;
+internal: ClassType(pwiz::msdata::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(pwiz::msdata::ClassType* base) : BaseClassType(base), base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
+          !ClassType() {delete this;} \
+          pwiz::msdata::ClassType* base_; \
+          System::Object^ owner_;
 
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
+internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_);} \
+          !ClassType() {delete this;} \
           boost::shared_ptr<pwiz::msdata::ClassType>* base_;
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((pwiz::msdata::BaseClassType*) &**base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
+internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((pwiz::msdata::BaseClassType*) &**base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          !ClassType() {delete this;} \
           boost::shared_ptr<pwiz::msdata::ClassType>* base_;
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((boost::shared_ptr<pwiz::msdata::BaseClassType>*) base), base_(base) {} \
-          virtual ~ClassType() {if (base_) delete base_;} \
+internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((boost::shared_ptr<pwiz::msdata::BaseClassType>*) base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          !ClassType() {delete this;} \
           boost::shared_ptr<pwiz::msdata::ClassType>* base_;
 
 namespace pwiz { namespace CLI { namespace util {

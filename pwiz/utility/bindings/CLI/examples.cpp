@@ -24,6 +24,8 @@
 #include "examples.hpp"
 #include "../../../data/msdata/examples.hpp"
 #include "spectrum_processing.hpp"
+//#include "chromatogram_processing.hpp"
+#include "Version.hpp"
 
 
 namespace pwiz {

@@ -72,34 +72,38 @@ public ref class CV
 
 public ref class UserParamValue
 {
-    internal: UserParamValue(pwiz::msdata::UserParam* base) : base_(base) {} \
-              virtual ~UserParamValue() {if (base_) delete base_;} \
-              pwiz::msdata::UserParam* base_;
+    internal: UserParamValue(boost::shared_ptr<pwiz::msdata::UserParam>* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(*base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue))}
+              virtual ~UserParamValue() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue)) SAFEDELETE(base_);}
+              !UserParamValue() {delete this;}
+              boost::shared_ptr<pwiz::msdata::UserParam>* base_;
 
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
-    static operator System::String^(UserParamValue^ value) {return gcnew System::String(value->base_->value.c_str());};
-    static explicit operator float(UserParamValue^ value) {return value->base_->valueAs<float>();}
-    static operator double(UserParamValue^ value) {return value->base_->valueAs<double>();}
-    static explicit operator int(UserParamValue^ value) {return value->base_->valueAs<int>();}
-    static explicit operator System::UInt64(UserParamValue^ value) {return (System::UInt64) value->base_->valueAs<size_t>();}
-    static explicit operator bool(UserParamValue^ value) {return value->base_->value == "true";}
-    UserParamValue^ operator=(System::String^ value) {base_->value = ToStdString(value); return this;} 
+    static operator System::String^(UserParamValue^ value) {return gcnew System::String((*value->base_)->value.c_str());};
+    static explicit operator float(UserParamValue^ value) {return (*value->base_)->valueAs<float>();}
+    static operator double(UserParamValue^ value) {return (*value->base_)->valueAs<double>();}
+    static explicit operator int(UserParamValue^ value) {return (*value->base_)->valueAs<int>();}
+    static explicit operator System::UInt64(UserParamValue^ value) {return (System::UInt64) (*value->base_)->valueAs<size_t>();}
+    static explicit operator bool(UserParamValue^ value) {return (*value->base_)->value == "true";}
+    UserParamValue^ operator=(System::String^ value) {(*base_)->value = ToStdString(value); return this;} 
 };
 
 
 public ref class UserParam
 {
-    internal: UserParam(pwiz::msdata::UserParam* base) : base_(base), value_(gcnew UserParamValue(base)) {} \
-          virtual ~UserParam() {if (base_) delete base_;} \
-          pwiz::msdata::UserParam* base_;
-          UserParamValue^ value_;
+    internal: UserParam(pwiz::msdata::UserParam* base, System::Object^ owner) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(owner), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+              UserParam(pwiz::msdata::UserParam* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(nullptr), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+              virtual ~UserParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam)) if (owner_ == nullptr) SAFEDELETE(base_);}
+              !UserParam() {delete this;}
+              boost::shared_ptr<pwiz::msdata::UserParam>* base_;
+              System::Object^ owner_;
+              UserParamValue^ value_;
 
     public:
     property System::String^ name
     {
-        System::String^ get() {return gcnew System::String(base_->name.c_str());}
-        void set(System::String^ value) {base_->name = ToStdString(value);}
+        System::String^ get() {return gcnew System::String((*base_)->name.c_str());}
+        void set(System::String^ value) {(*base_)->name = ToStdString(value);}
     }
 
     property UserParamValue^ value
@@ -109,14 +113,14 @@ public ref class UserParam
 
     property System::String^ type
     {
-        System::String^ get() {return gcnew System::String(base_->type.c_str());}
-        void set(System::String^ value) {base_->type = ToStdString(value);}
+        System::String^ get() {return gcnew System::String((*base_)->type.c_str());}
+        void set(System::String^ value) {(*base_)->type = ToStdString(value);}
     }
 
     property CVID units
     {
-        CVID get() {return (CVID) base_->units;}
-        void set(CVID value) {base_->units = (pwiz::msdata::CVID) value;}
+        CVID get() {return (CVID) (*base_)->units;}
+        void set(CVID value) {(*base_)->units = (pwiz::msdata::CVID) value;}
     }
 
     UserParam();
@@ -125,9 +129,9 @@ public ref class UserParam
     UserParam(System::String^ _name, System::String^ _value, System::String^ _type);
     UserParam(System::String^ _name, System::String^ _value, System::String^ _type, CVID _units);
 
-    bool empty() {return base_->empty();}
-    bool operator==(UserParam^ that) {return base_ == that->base_;}
-    bool operator!=(UserParam^ that) {return base_ != that->base_;}
+    bool empty() {return (*base_)->empty();}
+    bool operator==(UserParam^ that) {return (*base_) == *that->base_;}
+    bool operator!=(UserParam^ that) {return (*base_) != *that->base_;}
 };
 
 
@@ -139,7 +143,7 @@ ref class UserParamList;
 public ref class ParamContainer
 {
     internal: ParamContainer(pwiz::msdata::ParamContainer* base) : base_(base) {}
-              virtual ~ParamContainer() {if (base_) delete base_;}
+              virtual ~ParamContainer() {/*LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer)) SAFEDELETE(base_);*/}
               pwiz::msdata::ParamContainer* base_;
 
     ParamGroupList^ getParamGroups();
@@ -284,8 +288,8 @@ public ref class ParamGroup : public ParamContainer
 
 
 DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::msdata::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::msdata::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::msdata::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
 public ref class FileContent : public ParamContainer
@@ -346,17 +350,17 @@ public ref class FileDescription
     public:
     property FileContent^ fileContent
     {
-        FileContent^ get() {return gcnew FileContent(&base_->fileContent);}
+        FileContent^ get() {return gcnew FileContent(&base_->fileContent, this);}
     }
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs);}
+        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
     }
 
     property ContactList^ contacts
     {
-        ContactList^ get() {return gcnew ContactList(&base_->contacts);}
+        ContactList^ get() {return gcnew ContactList(&base_->contacts, this);}
     }
 
 
@@ -439,9 +443,9 @@ public ref class ComponentList : public ComponentBaseList
     public:
     ComponentList();
 
-    Component^ source(int index) {return gcnew Component(&base_->source((size_t) index));}
-    Component^ analyzer(int index) {return gcnew Component(&base_->analyzer((size_t) index));}
-    Component^ detector(int index) {return gcnew Component(&base_->detector((size_t) index));}
+    Component^ source(int index) {return gcnew Component(&base_->source((size_t) index), this);}
+    Component^ analyzer(int index) {return gcnew Component(&base_->analyzer((size_t) index), this);}
+    Component^ detector(int index) {return gcnew Component(&base_->detector((size_t) index), this);}
 };
 
 
@@ -459,7 +463,7 @@ public ref class Software
     property CVParam^ softwareParam
     {
         CVParam^ get() {return gcnew CVParam(&(*base_)->softwareParam);}
-        void set(CVParam^ value) {(*base_)->softwareParam = *value->base_;}
+        void set(CVParam^ value) {(*base_)->softwareParam = **value->base_;}
     }
 
     property System::String^ softwareParamVersion
@@ -490,12 +494,12 @@ public ref class InstrumentConfiguration : public ParamContainer
 
     property ComponentList^ componentList
     {
-        ComponentList^ get() {return gcnew ComponentList(&(*base_)->componentList);}
+        ComponentList^ get() {return gcnew ComponentList(&(*base_)->componentList, this);}
     }
 
     property Software^ software
     {
-        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(Software, (*base_)->softwarePtr);}
+        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
     }
 
 
@@ -540,12 +544,12 @@ public ref class DataProcessing
 
     property Software^ software
     {
-        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(Software, (*base_)->softwarePtr);}
+        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
     }
 
     property ProcessingMethodList^ processingMethods
     {
-        ProcessingMethodList^ get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods);}
+        ProcessingMethodList^ get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods, this);}
     }
 
 
@@ -579,18 +583,18 @@ public ref class AcquisitionSettings
 
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = *value->base_;}
     }
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs);}
+        SourceFileList^ get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
     }
 
     property TargetList^ targets
     {
-        TargetList^ get() {return gcnew TargetList(&(*base_)->targets);}
+        TargetList^ get() {return gcnew TargetList(&(*base_)->targets, this);}
     }
 
 
@@ -614,7 +618,7 @@ public ref class Acquisition : public ParamContainer
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, base_->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
         void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
     }
 
@@ -653,7 +657,7 @@ public ref class AcquisitionList : public ParamContainer
     public:
     property Acquisitions^ acquisitions
     {
-        Acquisitions^ get() {return gcnew Acquisitions(&base_->acquisitions);}
+        Acquisitions^ get() {return gcnew Acquisitions(&base_->acquisitions, this);}
     }
 
 
@@ -694,7 +698,7 @@ public ref class Precursor : public ParamContainer
     public:
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, base_->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
         void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
     }
 
@@ -718,18 +722,18 @@ public ref class Precursor : public ParamContainer
 
     property IsolationWindow^ isolationWindow
     {
-        IsolationWindow^ get() {return gcnew IsolationWindow(&base_->isolationWindow);}
+        IsolationWindow^ get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
         void set(IsolationWindow^ value) {base_->isolationWindow = *value->base_;}
     }
 
     property SelectedIonList^ selectedIons
     {
-        SelectedIonList^ get() {return gcnew SelectedIonList(&base_->selectedIons);}
+        SelectedIonList^ get() {return gcnew SelectedIonList(&base_->selectedIons, this);}
     }
 
     property Activation^ activation
     {
-        Activation^ get() {return gcnew Activation(&base_->activation);}
+        Activation^ get() {return gcnew Activation(&base_->activation, this);}
         void set(Activation^ value) {base_->activation = *value->base_;}
     }
 
@@ -760,13 +764,13 @@ public ref class Scan : public ParamContainer
     public:
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, base_->instrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
     }
 
     property ScanWindowList^ scanWindows
     {
-        ScanWindowList^ get() {return gcnew ScanWindowList(&base_->scanWindows);}
+        ScanWindowList^ get() {return gcnew ScanWindowList(&base_->scanWindows, this);}
     }
 
 
@@ -786,17 +790,17 @@ public ref class SpectrumDescription : public ParamContainer
     public:
     property AcquisitionList^ acquisitionList
     {
-        AcquisitionList^ get() {return gcnew AcquisitionList(&base_->acquisitionList);}
+        AcquisitionList^ get() {return gcnew AcquisitionList(&base_->acquisitionList, this);}
     }
 
     property PrecursorList^ precursors
     {
-        PrecursorList^ get() {return gcnew PrecursorList(&base_->precursors);}
+        PrecursorList^ get() {return gcnew PrecursorList(&base_->precursors, this);}
     }
 
     property Scan^ scan
     {
-        Scan^ get() {return gcnew Scan(&base_->scan);}
+        Scan^ get() {return gcnew Scan(&base_->scan, this);}
         void set(Scan^ value) {base_->scan = *value->base_;}
     }
 
@@ -817,13 +821,13 @@ public ref class BinaryDataArray : public ParamContainer
     public:
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
         void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
     property BinaryData^ data
     {
-        BinaryData^ get() {return gcnew BinaryData(&(*base_)->data);}
+        BinaryData^ get() {return gcnew BinaryData(&(*base_)->data, this);}
         void set(BinaryData^ value) {(*base_)->data = *value->base_;}
     }
 
@@ -1006,25 +1010,25 @@ public ref class Spectrum : public ParamContainer
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
         void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(SourceFile, (*base_)->sourceFilePtr);}
+        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, (*base_)->sourceFilePtr);}
         void set(SourceFile^ value) {(*base_)->sourceFilePtr = *value->base_;}
     }
 
     property SpectrumDescription^ spectrumDescription
     {
-        SpectrumDescription^ get() {return gcnew SpectrumDescription(&(*base_)->spectrumDescription);}
+        SpectrumDescription^ get() {return gcnew SpectrumDescription(&(*base_)->spectrumDescription, this);}
         void set(SpectrumDescription^ value) {(*base_)->spectrumDescription = *value->base_;}
     }
 
     property BinaryDataArrayList^ binaryDataArrays
     {
-        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs);}
+        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
         void set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
     }
  
@@ -1099,13 +1103,13 @@ public ref class Chromatogram : public ParamContainer
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(DataProcessing, (*base_)->dataProcessingPtr);}
+        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
         //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
     }
 
     property BinaryDataArrayList^ binaryDataArrays
     {
-        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs);}
+        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
         void set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
     }
  
@@ -1185,7 +1189,7 @@ public ref class SpectrumListSimple : public SpectrumList
     public:
     property Spectra^ spectra
     {
-        Spectra^ get() {return gcnew Spectra(&(*base_)->spectra);}
+        Spectra^ get() {return gcnew Spectra(&(*base_)->spectra, this);}
         void set(Spectra^ value) {(*base_)->spectra = *value->base_;}
     }
 
@@ -1243,7 +1247,7 @@ public ref class ChromatogramListSimple : public ChromatogramList
     public:
     property Chromatograms^ chromatograms
     {
-        Chromatograms^ get() {return gcnew Chromatograms(&(*base_)->chromatograms);}
+        Chromatograms^ get() {return gcnew Chromatograms(&(*base_)->chromatograms, this);}
         void set(Chromatograms^ value) {(*base_)->chromatograms = *value->base_;}
     }
 
@@ -1273,13 +1277,13 @@ public ref class Run : public ParamContainer
 
     property InstrumentConfiguration^ defaultInstrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
+        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
         void set(InstrumentConfiguration^ value) {base_->defaultInstrumentConfigurationPtr = *value->base_;}
     }
 
     property Sample^ sample
     {
-        Sample^ get() {return NATIVE_SHARED_PTR_TO_CLI(Sample, base_->samplePtr);}
+        Sample^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SamplePtr, Sample, base_->samplePtr);}
         void set(Sample^ value) {base_->samplePtr = *value->base_;}
     }
 
@@ -1291,19 +1295,19 @@ public ref class Run : public ParamContainer
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs);}
+        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
         void set(SourceFileList^ value) {base_->sourceFilePtrs = *value->base_;}
     }
 
     property SpectrumList^ spectrumList
     {
-        SpectrumList^ get() {return NATIVE_SHARED_PTR_TO_CLI(SpectrumList, base_->spectrumListPtr);}
+        SpectrumList^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SpectrumListPtr, SpectrumList, base_->spectrumListPtr);}
         void set(SpectrumList^ value) {base_->spectrumListPtr = *value->base_;}
     }
 
     property ChromatogramList^ chromatogramList
     {
-        ChromatogramList^ get() {return NATIVE_SHARED_PTR_TO_CLI(ChromatogramList, base_->chromatogramListPtr);}
+        ChromatogramList^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::ChromatogramListPtr, ChromatogramList, base_->chromatogramListPtr);}
         void set(ChromatogramList^ value) {base_->chromatogramListPtr = *value->base_;}
     }
 
@@ -1353,55 +1357,55 @@ public ref class MSData
 
     property CVList^ cvs
     {
-        CVList^ get() {return gcnew CVList(&base_->cvs);}
+        CVList^ get() {return gcnew CVList(&base_->cvs, this);}
         void set(CVList^ value) {base_->cvs = *value->base_;}
     }
 
     property FileDescription^ fileDescription
     {
-        FileDescription^ get() {return gcnew FileDescription(&base_->fileDescription);}
+        FileDescription^ get() {return gcnew FileDescription(&base_->fileDescription, this);}
         void set(FileDescription^ value) {base_->fileDescription = *value->base_;}
     }
 
     property ParamGroupList^ paramGroups
     {
-        ParamGroupList^ get() {return gcnew ParamGroupList(&base_->paramGroupPtrs);}
+        ParamGroupList^ get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
         void set(ParamGroupList^ value) {base_->paramGroupPtrs = *value->base_;}
     }
 
     property SampleList^ samples
     {
-        SampleList^ get() {return gcnew SampleList(&base_->samplePtrs);}
+        SampleList^ get() {return gcnew SampleList(&base_->samplePtrs, this);}
         void set(SampleList^ value) {base_->samplePtrs = *value->base_;}
     }
 
     property InstrumentConfigurationList^ instrumentConfigurationList
     {
-        InstrumentConfigurationList^ get() {return gcnew InstrumentConfigurationList(&base_->instrumentConfigurationPtrs);}
+        InstrumentConfigurationList^ get() {return gcnew InstrumentConfigurationList(&base_->instrumentConfigurationPtrs, this);}
         void set(InstrumentConfigurationList^ value) {base_->instrumentConfigurationPtrs = *value->base_;}
     }
 
     property SoftwareList^ softwareList
     {
-        SoftwareList^ get() {return gcnew SoftwareList(&base_->softwarePtrs);}
+        SoftwareList^ get() {return gcnew SoftwareList(&base_->softwarePtrs, this);}
         void set(SoftwareList^ value) {base_->softwarePtrs = *value->base_;}
     }
 
     property DataProcessingList^ dataProcessingList
     {
-        DataProcessingList^ get() {return gcnew DataProcessingList(&base_->dataProcessingPtrs);}
+        DataProcessingList^ get() {return gcnew DataProcessingList(&base_->dataProcessingPtrs, this);}
         void set(DataProcessingList^ value) {base_->dataProcessingPtrs = *value->base_;}
     }
 
     property AcquisitionSettingsList^ acquisitionSettingList
     {
-        AcquisitionSettingsList^ get() {return gcnew AcquisitionSettingsList(&base_->acquisitionSettingsPtrs);}
+        AcquisitionSettingsList^ get() {return gcnew AcquisitionSettingsList(&base_->acquisitionSettingsPtrs, this);}
         void set(AcquisitionSettingsList^ value) {base_->acquisitionSettingsPtrs = *value->base_;}
     }
 
     property Run^ run
     {
-        Run^ get() {return gcnew Run(&base_->run);}
+        Run^ get() {return gcnew Run(&base_->run, this);}
         //void set(Run^ value) {base_->run = *value->base_;}
     }
 

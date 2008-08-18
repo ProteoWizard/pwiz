@@ -40,9 +40,7 @@ namespace msdata {
 /// MSData object plus file I/O
 public ref class MSDataFile : public MSData
 {
-    internal: MSDataFile(pwiz::msdata::MSDataFile* base) : MSData(base), base_(base) {}
-              virtual ~MSDataFile() {}
-              pwiz::msdata::MSDataFile* base_;
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(MSDataFile, MSData);
 
     public:
     /// constructs MSData object backed by file;

@@ -36,44 +36,44 @@ namespace msdata {
 
 
 CV::CV()
-: base_(new b::CV())
+: base_(new b::CV()), owner_(nullptr)
 {}
 
 
 UserParam::UserParam()
-: base_(new b::UserParam())
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam())), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 UserParam::UserParam(System::String^ _name)
-: base_(new b::UserParam(ToStdString(_name)))
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name)))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 UserParam::UserParam(System::String^ _name, System::String^ _value)
-: base_(new b::UserParam(ToStdString(_name), ToStdString(_value)))
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value)))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 UserParam::UserParam(System::String^ _name, System::String^ _value, System::String^ _type)
-: base_(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type)))
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type)))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 UserParam::UserParam(System::String^ _name, System::String^ _value, System::String^ _type, CVID _units)
-: base_(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (b::CVID) _units))
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (b::CVID) _units))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 
 ParamGroupList^ ParamContainer::getParamGroups()
 {
-    return gcnew ParamGroupList(&base_->paramGroupPtrs);
+    return gcnew ParamGroupList(&base_->paramGroupPtrs, this);
 }
 
 CVParamList^ ParamContainer::getCVParams()
 {
-    return gcnew CVParamList(&base_->cvParams);
+    return gcnew CVParamList(&base_->cvParams, this);
 }
 
 UserParamList^ ParamContainer::getUserParams()
 {
-    return gcnew UserParamList(&base_->userParams);
+    return gcnew UserParamList(&base_->userParams, this);
 }
 
 
@@ -87,7 +87,7 @@ ParamGroup::ParamGroup(System::String^ _id)
 
 
 FileContent::FileContent()
-: ParamContainer(new b::FileContent())
+: ParamContainer(new b::FileContent()), owner_(nullptr)
 {base_ = static_cast<b::FileContent*>(ParamContainer::base_);}
 
 
@@ -109,12 +109,12 @@ SourceFile::SourceFile(System::String^ _id, System::String^ _name, System::Strin
 
 
 Contact::Contact()
-: ParamContainer(new b::Contact())
+: ParamContainer(new b::Contact()), owner_(nullptr)
 {base_ = static_cast<b::Contact*>(ParamContainer::base_);}
 
 
 FileDescription::FileDescription()
-: base_(new b::FileDescription())
+: base_(new b::FileDescription()), owner_(nullptr)
 {}
 
 
@@ -132,20 +132,20 @@ Sample::Sample(System::String^ _id, System::String^ _name)
 
 
 Component::Component()
-: ParamContainer(new b::Component())
+: ParamContainer(new b::Component()), owner_(nullptr)
 {base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 Component::Component(ComponentType type, int order)
-: ParamContainer(new b::Component((b::ComponentType) type, order))
+: ParamContainer(new b::Component((b::ComponentType) type, order)), owner_(nullptr)
 {base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 Component::Component(CVID cvid, int order)
-: ParamContainer(new b::Component((b::CVID) cvid, order))
+: ParamContainer(new b::Component((b::CVID) cvid, order)), owner_(nullptr)
 {base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 
 ComponentList::ComponentList()
-: ComponentBaseList(new b::ComponentList())
+: ComponentBaseList(new b::ComponentList()), owner_(nullptr)
 {base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_);}
 
 
@@ -158,7 +158,7 @@ Software::Software(System::String^ _id)
 {}
 
 Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^ _softwareParamVersion)
-: base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), *_softwareParam->base_, ToStdString(_softwareParamVersion))))
+: base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), **_softwareParam->base_, ToStdString(_softwareParamVersion))))
 {}
 
 
@@ -172,7 +172,7 @@ InstrumentConfiguration::InstrumentConfiguration(System::String^ _id)
 
 
 ProcessingMethod::ProcessingMethod()
-: ParamContainer(new b::ProcessingMethod())
+: ParamContainer(new b::ProcessingMethod()), owner_(nullptr)
 {base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_);}
 
 
@@ -186,7 +186,7 @@ DataProcessing::DataProcessing(System::String^ _id)
 
 
 Target::Target()
-: ParamContainer(new b::Target())
+: ParamContainer(new b::Target()), owner_(nullptr)
 {base_ = static_cast<b::Target*>(ParamContainer::base_);}
 
 
@@ -200,50 +200,50 @@ AcquisitionSettings::AcquisitionSettings(System::String^ _id)
 
 
 Acquisition::Acquisition()
-: ParamContainer(new b::Acquisition())
+: ParamContainer(new b::Acquisition()), owner_(nullptr)
 {base_ = static_cast<b::Acquisition*>(ParamContainer::base_);}
 
 
 AcquisitionList::AcquisitionList()
-: ParamContainer(new b::AcquisitionList())
+: ParamContainer(new b::AcquisitionList()), owner_(nullptr)
 {base_ = static_cast<b::AcquisitionList*>(ParamContainer::base_);}
 
 
 IsolationWindow::IsolationWindow()
-: ParamContainer(new b::IsolationWindow())
+: ParamContainer(new b::IsolationWindow()), owner_(nullptr)
 {base_ = static_cast<b::IsolationWindow*>(ParamContainer::base_);}
 
 
 SelectedIon::SelectedIon()
-: ParamContainer(new b::SelectedIon())
+: ParamContainer(new b::SelectedIon()), owner_(nullptr)
 {base_ = static_cast<b::SelectedIon*>(ParamContainer::base_);}
 
 
 Activation::Activation()
-: ParamContainer(new b::Activation())
+: ParamContainer(new b::Activation()), owner_(nullptr)
 {base_ = static_cast<b::Activation*>(ParamContainer::base_);}
 
 
 Precursor::Precursor()
-: ParamContainer(new b::Precursor())
+: ParamContainer(new b::Precursor()), owner_(nullptr)
 {base_ = static_cast<b::Precursor*>(ParamContainer::base_);}
 
 
 Scan::Scan()
-: ParamContainer(new b::Scan())
+: ParamContainer(new b::Scan()), owner_(nullptr)
 {base_ = static_cast<b::Scan*>(ParamContainer::base_);}
 
 ScanWindow::ScanWindow()
-: ParamContainer(new b::ScanWindow())
+: ParamContainer(new b::ScanWindow()), owner_(nullptr)
 {base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 ScanWindow::ScanWindow(double mzLow, double mzHigh)
-: ParamContainer(new b::ScanWindow(mzLow, mzHigh))
+: ParamContainer(new b::ScanWindow(mzLow, mzHigh)), owner_(nullptr)
 {base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 
 SpectrumDescription::SpectrumDescription()
-: ParamContainer(new b::SpectrumDescription())
+: ParamContainer(new b::SpectrumDescription()), owner_(nullptr)
 {base_ = static_cast<b::SpectrumDescription*>(ParamContainer::base_);}
 
 
@@ -293,15 +293,25 @@ void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ 
                                     System::Collections::Generic::List<double>^ intensityArray,
                                     CVID intensityUnits)
 {
-    cli::array<double>^ mzArray2 = mzArray->ToArray();
-    pin_ptr<double> mzArrayPinPtr = &mzArray2[0];
-    double* mzArrayBegin = (double*) mzArrayPinPtr;
-    cli::array<double>^ intensityArray2 = intensityArray->ToArray();
-    pin_ptr<double> intensityArrayPinPtr = &intensityArray2[0];
-    double* intensityArrayBegin = (double*) intensityArrayPinPtr;
-    (*base_)->setMZIntensityArrays(std::vector<double>(mzArrayBegin, mzArrayBegin + mzArray2->Length),
-                                   std::vector<double>(intensityArrayBegin, intensityArrayBegin + intensityArray2->Length),
-                                   (b::CVID) intensityUnits);
+    std::vector<double> mzVector;
+    if (mzArray->Count > 0)
+    {
+        cli::array<double>^ mzArray2 = mzArray->ToArray();
+        pin_ptr<double> mzArrayPinPtr = &mzArray2[0];
+        double* mzArrayBegin = (double*) mzArrayPinPtr;
+        mzVector.assign(mzArrayBegin, mzArrayBegin + mzArray2->Length);
+    }
+
+    std::vector<double> intensityVector;
+    if (intensityArray->Count > 0)
+    {
+        cli::array<double>^ intensityArray2 = intensityArray->ToArray();
+        pin_ptr<double> intensityArrayPinPtr = &intensityArray2[0];
+        double* intensityArrayBegin = (double*) intensityArrayPinPtr;
+        intensityVector.assign(intensityArrayBegin, intensityArrayBegin + intensityArray2->Length);
+    }
+
+    (*base_)->setMZIntensityArrays(mzVector, intensityVector, (b::CVID) intensityUnits);
 }
 
 
@@ -436,12 +446,12 @@ Chromatogram^ ChromatogramListSimple::chromatogram(int index, bool getBinaryData
 
 
 Run::Run()
-: ParamContainer(new b::Run())
+: ParamContainer(new b::Run()), owner_(nullptr)
 {base_ = static_cast<b::Run*>(ParamContainer::base_);}
 
 
 MSData::MSData()
-: base_(new b::MSData())
+: base_(new b::MSData()), owner_(nullptr)
 {}
 
 
