@@ -89,7 +89,7 @@ void testUserParam()
     a.name = "name";
     a.value = "value";
     a.type = "type";
-    a.units = MS_minute;
+    a.units = UO_minute;
     b = a;
 
     Diff<UserParam> diff(a, b);
@@ -98,7 +98,7 @@ void testUserParam()
     unit_assert(diff.b_a.empty());
 
     b.value = "value_changed";
-    a.units = MS_second;
+    a.units = UO_second;
     unit_assert(diff(a,b));
     if (os_) *os_ << diff << endl;
     unit_assert(diff.a_b.name == "name");
@@ -106,8 +106,8 @@ void testUserParam()
     unit_assert(diff.a_b.value == "value");
     unit_assert(diff.b_a.value == "value_changed");
     unit_assert(diff.a_b.type.empty() && diff.b_a.type.empty());
-    unit_assert(diff.a_b.units == MS_second);
-    unit_assert(diff.b_a.units == MS_minute);
+    unit_assert(diff.a_b.units == UO_second);
+    unit_assert(diff.b_a.units == UO_minute);
 }
 
 
@@ -656,7 +656,7 @@ void testSpectrumDescription()
 
     a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
+    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 
@@ -722,7 +722,7 @@ void testSpectrum()
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
     a.spectrumDescription.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
+    a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.spectrumDescription.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
 

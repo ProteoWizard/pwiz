@@ -55,9 +55,9 @@ PWIZ_API_DECL string CVParam::unitsName() const
 
 PWIZ_API_DECL double CVParam::timeInSeconds() const
 {
-    if (units == MS_second || units == UO_second) 
+    if (units == UO_second) 
         return valueAs<double>();
-    else if (units == MS_minute || units == UO_minute) 
+    else if (units == UO_minute) 
         return valueAs<double>() * 60;
     else if (units == UO_hour)
         return valueAs<double>() * 3600;

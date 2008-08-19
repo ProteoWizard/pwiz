@@ -381,7 +381,7 @@ class HandlerScan : public SAXParser::Handler
                     retentionTime = retentionTime.substr(2,retentionTime.size()-3);
                 else
                     throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
-                scan.set(MS_scan_time, retentionTime, MS_second);
+                scan.set(MS_scan_time, retentionTime, UO_second);
             }
 
             if (!startMz.empty() && !endMz.empty())

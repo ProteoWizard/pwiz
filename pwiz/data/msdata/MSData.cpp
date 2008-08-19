@@ -62,16 +62,16 @@ PWIZ_API_DECL vector<CV> defaultCVList()
     result.resize(2);
 
     CV& cv_MS = result[0];
-    cv_MS.URI = "http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"; 
+    cv_MS.URI = "http://psidev.info/ms/mzML/psi-ms.obo"; 
     cv_MS.id = "MS";
     cv_MS.fullName = cvinfo(MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Ontology).name;
-    cv_MS.version = "2.0.2";
+    cv_MS.version = "1.3.1"; // TODO: generate from cv.hpp
 
     CV& cv_UO = result[1];
     cv_UO.URI = "http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"; 
     cv_UO.id = "UO";
     cv_UO.fullName = "Unit Ontology";
-    cv_UO.version = "unknown";
+    cv_UO.version = "1.15"; // TODO: generate from cv.hpp
 
     return result;
 }

@@ -80,9 +80,9 @@ namespace {
 double retentionTime(const Scan& scan)
 {
     CVParam param = scan.cvParam(MS_scan_time);
-    if (param.units == MS_second) 
+    if (param.units == UO_second) 
         return param.valueAs<double>();
-    else if (param.units == MS_minute) 
+    else if (param.units == UO_minute) 
         return param.valueAs<double>() * 60;
     return 0;
 }

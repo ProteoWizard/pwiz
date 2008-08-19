@@ -83,7 +83,7 @@ void testUserParam()
     a.name = "abcd";
     a.value = "efgh";
     a.type = "ijkl";
-    a.units = MS_minute;
+    a.units = UO_minute;
 
     testObject(a);
 }
@@ -91,7 +91,7 @@ void testUserParam()
 
 void testCVParam()
 {
-    CVParam a(MS_m_z, "810.48", MS_mass_unit);
+    CVParam a(MS_m_z, "810.48", UO_mass_unit);
     testObject(a);
 
     CVParam b(UO_second, "123.45");
@@ -348,11 +348,11 @@ void testSpectrumDescription()
     a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
     a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
-    a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt)); 
+    a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
     
     a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS2SpectrumParams")));
-    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
+    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
     a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
     a.scan.scanWindows.push_back(ScanWindow(110.0, 905.0));
 
@@ -913,7 +913,7 @@ void initializeTestData(MSData& msd)
     s19.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
     s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, MS_minute));
+    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     s19.spectrumDescription.scan.scanWindows.resize(1);
     ScanWindow& window = s19.spectrumDescription.scan.scanWindows.front();
@@ -960,11 +960,11 @@ void initializeTestData(MSData& msd)
     precursor.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
     precursor.selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
-    precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt));
+    precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt));
 
     s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, MS_minute));
+    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
     s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
     s20.spectrumDescription.scan.scanWindows.resize(1);
     ScanWindow& window2 = s20.spectrumDescription.scan.scanWindows.front();

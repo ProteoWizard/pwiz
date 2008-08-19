@@ -66,11 +66,11 @@ class WriteCVParam
 
 const char* mzmlScanTime = 
     "<cvParam cvLabel=\"MS\" accession=\"MS:1000016\" name=\"scan time\" value=\"5.890500\" "
-    "unitAccession=\"MS:1000038\" unitName=\"minute\"/>\n";
+    "unitAccession=\"UO:0000031\" unitName=\"minute\"/>\n";
 
 const char* mzmlCollisionEnergy = 
     "<cvParam cvLabel=\"MS\" accession=\"MS:1000045\" name=\"collision energy\" value=\"35.00\" "
-    "unitAccession=\"MS:1000137\" unitName=\"electron volt\"/>\n";
+    "unitAccession=\"UO:0000266\" unitName=\"electronvolt\"/>\n";
 
 
 void test()
@@ -80,8 +80,8 @@ void test()
     params.push_back(CVParam(MS_lowest_m_z_value, 420));
     params.push_back(CVParam(MS_highest_m_z_value, 2000.012345));
     params.push_back(CVParam(MS_m_z, "goober"));
-    params.push_back(CVParam(MS_scan_time, 5.890500, MS_minute)); 
-    params.push_back(CVParam(MS_collision_energy, 35.00, MS_electron_volt)); 
+    params.push_back(CVParam(MS_scan_time, 5.890500, UO_minute)); 
+    params.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
     params.push_back(CVParam(MS_deisotoping, true)); 
     params.push_back(CVParam(MS_peak_picking, false)); 
 
@@ -120,14 +120,18 @@ void test()
     // info to write <cvParam> elements as required by mzML
 
     ostringstream ossScanTime;
-    CVParam scanTime(MS_scan_time, "5.890500", MS_minute); 
+    CVParam scanTime(MS_scan_time, "5.890500", UO_minute); 
     (WriteCVParam(ossScanTime))(scanTime);
+    if (os_) *os_ << "mzmlScanTime: " << mzmlScanTime << endl
+                  << "ossScanTime: " << ossScanTime.str() << endl;
     unit_assert(ossScanTime.str() == mzmlScanTime);
     if (os_) *os_ << "scan time in seconds: " << scanTime.timeInSeconds() << endl;
     unit_assert_equal(scanTime.timeInSeconds(), 5.8905 * 60, 1e-10);
 
     ostringstream ossCollisionEnergy;
-    (WriteCVParam(ossCollisionEnergy))(CVParam(MS_collision_energy, "35.00", MS_electron_volt));
+    (WriteCVParam(ossCollisionEnergy))(CVParam(MS_collision_energy, "35.00", UO_electronvolt));
+    if (os_) *os_ << "mzmlCollisionEnergy: " << mzmlCollisionEnergy << endl
+                  << "ossCollisionEnergy: " << ossCollisionEnergy.str() << endl;
     unit_assert(ossCollisionEnergy.str() == mzmlCollisionEnergy);
 }
 
@@ -155,14 +159,14 @@ void testIsChildOf()
     params.push_back(CVParam(MS_lowest_m_z_value, 420));
     params.push_back(CVParam(MS_plasma_desorption));
     params.push_back(CVParam(MS_collision_induced_dissociation));
-    params.push_back(CVParam(MS_electron_volt));
+    params.push_back(CVParam(UO_electronvolt));
     params.push_back(CVParam(MS_highest_m_z_value, 2400.0));
 
     vector<CVParam>::const_iterator itDiss = 
         find_if(params.begin(), params.end(), CVParamIsChildOf(MS_dissociation_method));
 
     vector<CVParam>::const_iterator itUnit = 
-        find_if(params.begin(), params.end(), CVParamIsChildOf(MS_unit));
+        find_if(params.begin(), params.end(), CVParamIsChildOf(UO_unit));
 
     if (os_)
     {
@@ -177,7 +181,7 @@ void testIsChildOf()
     }
 
     unit_assert(itDiss!=params.end() && itDiss->cvid==MS_plasma_desorption);
-    unit_assert(itUnit!=params.end() && itUnit->cvid==MS_electron_volt);
+    unit_assert(itUnit!=params.end() && itUnit->cvid==UO_electronvolt);
 }
 
 

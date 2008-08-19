@@ -59,6 +59,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/settings/"));
+    sfp_parameters->set(MS_parameter_file);
+    sfp_parameters->set(MS_SHA_1, "unknown");
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
     msd.fileDescription.contacts.resize(1);
@@ -196,7 +198,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
     s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, MS_minute);
+    s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, UO_minute);
     s19.spectrumDescription.scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
     s19.spectrumDescription.scan.set(MS_preset_scan_configuration, 3);
     s19.spectrumDescription.scan.scanWindows.resize(1);
@@ -245,11 +247,11 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
-    precursor.activation.set(MS_collision_energy, 35.00, MS_electron_volt);
+    precursor.activation.set(MS_collision_energy, 35.00, UO_electronvolt);
 
     s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
-    s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, MS_minute);
+    s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, UO_minute);
     s20.spectrumDescription.scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
     s20.spectrumDescription.scan.set(MS_preset_scan_configuration, 4);
     s20.spectrumDescription.scan.scanWindows.resize(1);
@@ -285,6 +287,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_MSn_spectrum);
     s21.set(MS_ms_level, 1);
 
+    s21.spectrumDescription.set(MS_centroid_mass_spectrum);
     s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data"));
     s21.setMZIntensityArrays(vector<double>(), vector<double>());
 
@@ -306,7 +309,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22.spectrumDescription.set(MS_total_ion_current, 4200);
     s22.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s22.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s22.spectrumDescription.scan.set(MS_scan_time, 42.0500, MS_second);
+    s22.spectrumDescription.scan.set(MS_scan_time, 42.0500, UO_second);
     s22.spectrumDescription.scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
     s22.spectrumDescription.scan.scanWindows.resize(1);
     ScanWindow& window3 = s22.spectrumDescription.scan.scanWindows.front();
@@ -425,7 +428,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     ParamGroupPtr pgActivation(new ParamGroup);
     pgActivation->id = "CommonActivationParams";
     pgActivation->set(MS_collision_induced_dissociation);
-    pgActivation->set(MS_collision_energy, 35.00, MS_electron_volt);
+    pgActivation->set(MS_collision_energy, 35.00, UO_electronvolt);
     pgActivation->set(MS_collision_gas, "nitrogen"); 
     msd.paramGroupPtrs.push_back(pgActivation);
 

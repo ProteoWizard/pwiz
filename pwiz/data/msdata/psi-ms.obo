@@ -1,9 +1,16 @@
 format-version: 1.2
-date: 12:05:2008 09:58
-saved-by: edeutsch
+date: 07:07:2008 14:30
+saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
-default-namespace: PSI-MS
-remark: version: x.y.z
+default-namespace: MS
+remark: namespace: MS
+remark: version: 1.3.1
+remark: release date: 2008-08-13
+remark: coverage: Mass spectrometer output files
+remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
+remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
+remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
+import: unit.obo
 
 [Term]
 id: MS:0000000
@@ -14,6 +21,7 @@ def: "Proteomics Standards Initiative Mass Spectrometry Ontology." [PSI:MS]
 id: MS:1000001
 name: sample number
 def: "A reference number relevant to the sample under study." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000548 ! sample attribute
 
 [Term]
@@ -32,19 +40,25 @@ relationship: part_of MS:1000479 ! purgatory
 id: MS:1000004
 name: sample mass
 def: "Total mass of sample used." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000548 ! sample attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000005
 name: sample volume
 def: "Total volume of solution used." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000548 ! sample attribute
+relationship: has_units UO:0000095 ! volume unit
 
 [Term]
 id: MS:1000006
 name: sample concentration
 def: "Concentration of sample in picomol/ul, femtomol/ul or attomol/ul solution used." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000548 ! sample attribute
+relationship: has_units UO:0000051 ! concentration unit
 
 [Term]
 id: MS:1000007
@@ -74,7 +88,9 @@ relationship: part_of MS:1000479 ! purgatory
 id: MS:1000011
 name: mass resolution
 def: "The maximum m/z value at which two peaks can be resolved, according to one of the standard measures." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000012
@@ -92,19 +108,24 @@ relationship: part_of MS:1000479 ! purgatory
 id: MS:1000014
 name: accuracy
 def: "Accuracy is the degree of conformity of a measured mass to its actual value." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000480 ! mass analyzer attribute
+relationship: has_units UO:0000166 ! parts per notation
 
 [Term]
 id: MS:1000015
 name: scan rate
 def: "Rate in (m/z)/sec for scanning analyzers." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
 
 [Term]
 id: MS:1000016
 name: scan time
-def: "The time taken for an acquisition by scanning analyzers." [PSI:MS]
+def: "The time that an analyzer started a scan, relative to the start of the run." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
+relationship: has_units UO:0000003 ! time unit
 
 [Term]
 id: MS:1000017
@@ -141,27 +162,34 @@ is_a: MS:1000480 ! mass analyzer attribute
 id: MS:1000022
 name: TOF Total Path Length
 def: "The length of the field free drift space in a time of flight mass spectrometer." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000480 ! mass analyzer attribute
+relationship: has_units UO:0000001 ! length unit
 
 [Term]
 id: MS:1000023
 name: isolation width
 def: "The total width (i.e. not half for plus-or-minus) of the gate applied around a selected precursor ion." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000024
 name: final MS exponent
 def: "Final MS level achieved when performing PFF with the ion trap (e.g. MS E10)." [PSI:MS]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1000480 ! mass analyzer attribute
 
 [Term]
 id: MS:1000025
 name: magnetic field strength
 def: "A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "B" EXACT []
 synonym: "Magnetic Field" RELATED []
 is_a: MS:1000480 ! mass analyzer attribute
+relationship: has_units UO:0000227 ! magnetic flux density
 
 [Term]
 id: MS:1000026
@@ -179,12 +207,14 @@ relationship: part_of MS:1000453 ! detector
 id: MS:1000028
 name: detector resolution
 def: "The resolving power of the detector to detect the smallest difference between two ions so that the valley between them is a specified fraction of the peak height." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000481 ! detector attribute
 
 [Term]
 id: MS:1000029
 name: sampling frequency
 def: "The rate of signal sampling (measurement) with respect to time." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "ADC Sampling Frequency" NARROW []
 is_a: MS:1000481 ! detector attribute
 
@@ -204,12 +234,13 @@ relationship: part_of MS:1000463 ! instrument
 id: MS:1000032
 name: customization
 def: "Free text description of a single customization made to the instrument; for several modifications, use several entries." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000496 ! instrument attribute
 
 [Term]
 id: MS:1000033
 name: deisotoping
-def: "The removal of isotopes to represent the fragment ion as one data point and is commonly done to reduce complexity. It is done in conjunction with the charge state deconvolution." [PSI:MS]
+def: "The removal of isotope peaks to represent the fragment ion as one data point and is commonly done to reduce complexity. It is done in conjunction with the charge state deconvolution." [PSI:MS]
 is_a: MS:1000543 ! data processing action
 
 [Term]
@@ -240,21 +271,21 @@ relationship: part_of MS:1000459 ! spectrum instrument description
 id: MS:1000038
 name: minute
 def: "Acquisition time in minutes. Replace by MS:1000016 - Scan Time." [PSI:MS]
-is_a: MS:1000550 ! time unit
+is_obsolete: true
 
 [Term]
 id: MS:1000039
 name: second
 def: "Acquisition time in seconds. Replace by MS:1000016 - Scan Time." [PSI:MS]
-is_a: MS:1000550 ! time unit
+is_obsolete: true
 
 [Term]
 id: MS:1000040
 name: m/z
-def: "Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit Thomson (Th) is deprecated." [PSI:MS]
-synonym: "Mass-to-charge ratio" EXACT []
+def: "Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated." [PSI:MS]
+synonym: "mass-to-charge ratio" EXACT []
 synonym: "Th" EXACT []
-synonym: "Thomson" EXACT []
+synonym: "thomson" EXACT []
 is_a: MS:1000455 ! ion selection attribute
 is_a: MS:1000460 ! unit
 
@@ -262,12 +293,14 @@ is_a: MS:1000460 ! unit
 id: MS:1000041
 name: charge state
 def: "The charge state of the ion, single or multiple and positive or negatively charged." [PSI:MS]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
 
 [Term]
 id: MS:1000042
 name: intensity
 def: "Intensity of ions as measured by the height or area of a peak in a mass spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
 
 [Term]
@@ -287,13 +320,16 @@ relationship: part_of MS:1000456 ! precursor activation
 id: MS:1000045
 name: collision energy
 def: "Energy for an ion experiencing collision with a stationary gas particle resulting in dissociation of the ion." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000510 ! precursor activation attribute
+relationship: has_units UO:0000111 ! energy unit
 
 [Term]
 id: MS:1000046
 name: energy unit
-def: "Energy units are represented in either eV or Joules." [PSI:MS]
+def: "Energy units are represented in either eV or Joules. Obsoleted in favor of UO:0000111" [PSI:MS]
 is_a: MS:1000460 ! unit
+is_obsolete: true
 
 [Term]
 id: MS:1000047
@@ -451,7 +487,7 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000072
 name: Electronic Ionization
-def: "The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended.\nOBSOLETE because redundant \nreplaced by MS:1000389 electron ionization" [PSI:MS]
+def: "The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. OBSOLETE because redundant replaced by MS:1000389 electron ionization" [PSI:MS]
 synonym: "EI" EXACT []
 is_obsolete: true
 
@@ -648,7 +684,7 @@ is_obsolete: true
 [Term]
 id: MS:1000103
 name: single reaction monitoring
-def: "See Selected Reaction Monitoring.\nremap to MS:1000102." [PSI:MS]
+def: "See Selected Reaction Monitoring. remap to MS:1000102." [PSI:MS]
 is_obsolete: true
 
 [Term]
@@ -672,7 +708,7 @@ is_a: MS:1000021 ! reflectron state
 [Term]
 id: MS:1000107
 name: channeltron
-def: "A horn-shaped continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse." [PSI:MS]
+def: "A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse." [PSI:MS]
 synonym: "Channeltron Detector" EXACT []
 is_a: MS:1000026 ! detector type
 
@@ -763,8 +799,9 @@ is_a: MS:1000027 ! detector acquisition mode
 
 [Term]
 id: MS:1000121
-name: ABI / SCIEX instrument model
-def: "Applied Biosystems/MDS SCIEX joint venture model." [PSI:MS]
+name: AB SCIEX instrument model
+def: "The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\"" [PSI:MS]
+synonym: "Applied Biosystems|MDS SCIEX" RELATED []
 is_a: MS:1000031 ! instrument model
 
 [Term]
@@ -829,13 +866,14 @@ is_a: MS:1000465 ! scan polarity
 [Term]
 id: MS:1000131
 name: number of counts
-def: "TODO: Add definition." [PSI:MS]
+def: "The number of counted events observed in one or a group of elements of a detector." [PSI:MS]
 is_a: MS:1000043 ! intensity unit
 
 [Term]
 id: MS:1000132
 name: percent of base peak
-def: "TODO: Add definition." [PSI:MS]
+def: "The magnitude of a peak or measurement element expressed in terms of the percentage of the magnitude of the base peak intensity." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000043 ! intensity unit
 
 [Term]
@@ -871,25 +909,26 @@ id: MS:1000137
 name: electron volt
 def: "A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J." [PSI:MS]
 synonym: "eV" EXACT []
-is_a: MS:1000046 ! energy unit
+is_obsolete: true
 
 [Term]
 id: MS:1000138
 name: percent collision energy
 def: "Collision energy required to fragment an ion represented as a percent value." [PSI:MS]
-is_a: MS:1000046 ! energy unit
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: UO:0000111 ! energy unit
 
 [Term]
 id: MS:1000139
 name: 4000 Q TRAP
 def: "Applied Biosystems/MDS SCIEX Q 4000 TRAP MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000140
-name: 4700 Proteomic Analyzer
-def: "Applied Biosystems/MDS SCIEX 4700 Proteomic Analyzer MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+name: 4700 Proteomics Analyzer
+def: "Applied Biosystems/MDS SCIEX 4700 Proteomics Analyzer MS." [PSI:MS]
+is_a: MS:1000495 ! Applied Biosystems instrument model
 
 [Term]
 id: MS:1000141
@@ -907,31 +946,31 @@ is_a: MS:1000122 ! Bruker Daltonics instrument model
 id: MS:1000143
 name: API 150EX
 def: "Applied Biosystems/MDS SCIEX API 150EX MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000144
 name: API 150EX Prep
 def: "Applied Biosystems/MDS SCIEX API 150EX Prep MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000145
 name: API 2000
 def: "Applied Biosystems/MDS SCIEX API 2000 MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000146
 name: API 3000
 def: "Applied Biosystems/MDS SCIEX API 3000 MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000147
 name: API 4000
 def: "Applied Biosystems/MDS SCIEX API 4000 MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000148
@@ -1165,13 +1204,13 @@ is_a: MS:1000125 ! Thermo Finnigan instrument model
 id: MS:1000186
 name: proteomics solution 1
 def: "Applied Biosystems/MDS SCIEX Proteomics Solution 1 MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000187
 name: Q TRAP
 def: "Applied Biosystems/MDS SCIEX Q TRAP MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000188
@@ -1189,7 +1228,7 @@ is_a: MS:1000126 ! Waters instrument model
 id: MS:1000190
 name: QSTAR
 def: "Applied Biosystems/MDS SCIEX QSTAR MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000191
@@ -1213,13 +1252,13 @@ is_a: MS:1000125 ! Thermo Finnigan instrument model
 id: MS:1000194
 name: SymBiot I
 def: "Applied Biosystems/MDS SCIEX SymBiot I MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000195
 name: SymBiot XVI
 def: "Applied Biosystems/MDS SCIEX SymBiot XVI MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1000196
@@ -1267,13 +1306,13 @@ is_a: MS:1000122 ! Bruker Daltonics instrument model
 id: MS:1000203
 name: Voyager-DE PRO
 def: "Applied Biosystems/MDS SCIEX Voyager-DE PRO MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000495 ! Applied Biosystems instrument model
 
 [Term]
 id: MS:1000204
 name: Voyager-DE STR
 def: "Applied Biosystems/MDS SCIEX Voyager-DE STR MS." [PSI:MS]
-is_a: MS:1000121 ! ABI / SCIEX instrument model
+is_a: MS:1000495 ! Applied Biosystems instrument model
 
 [Term]
 id: MS:1000205
@@ -1297,20 +1336,26 @@ is_a: MS:1000020 ! scanning method
 id: MS:1000207
 name: accurate mass
 def: "An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000208
 name: average mass
 def: "The mass of an ion or molecule calculated using the average mass of each element weighted for its natural isotopic abundance." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000209
 name: appearance energy
 def: "The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "AE" EXACT []
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000111 ! energy unit
 
 [Term]
 id: MS:1000210
@@ -1323,20 +1368,22 @@ is_a: MS:1000231 ! peak
 id: MS:1000211
 name: charge number
 def: "The total charge on an ion divided by the electron charge e." [PSI:MS]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 synonym: "z" EXACT []
 is_a: MS:1000507 ! ion attribute
 
 [Term]
 id: MS:1000212
-name: Dalton
+name: dalton
 def: "A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg." [PSI:MS]
 synonym: "Da" EXACT []
-is_a: MS:1000464 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000213
 name: electron affinity
 def: "The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "EA" EXACT []
 is_a: MS:1000507 ! ion attribute
 
@@ -1350,7 +1397,9 @@ relationship: part_of MS:1000479 ! purgatory
 id: MS:1000215
 name: exact mass
 def: "The calculated mass of an ion or molecule containing a single isotope of each atom." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000216
@@ -1362,21 +1411,24 @@ is_a: MS:1000487 ! ion optics attribute
 [Term]
 id: MS:1000217
 name: ionization cross section
-def: "A measure of the probability that a given ionization process will occur when an atom or\nmolecule interacts with a photon, electron, atom or molecule." [PSI:MS]
+def: "A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule." [PSI:MS]
 is_a: MS:1000437 ! ion reaction
 
 [Term]
 id: MS:1000218
 name: ioniazation efficiency
 def: "The ratio of the number of ions formed to the number of electrons, molecules or photons used. See Ionization Efficiency." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_obsolete: true
 
 [Term]
 id: MS:1000219
 name: ionization energy
 def: "The minimum energy required to remove an electron from an atom or molecule to produce a positive ion." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "IE" EXACT []
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000111 ! energy unit
 
 [Term]
 id: MS:1000220
@@ -1395,25 +1447,32 @@ is_a: MS:1000597 ! ion optics type
 id: MS:1000222
 name: mass defect
 def: "The difference between the monoisotipic and nominal mass of a molecule or atom." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000223
 name: mass number
 def: "The sum of the protons and neutrons in an atom, molecule or ion." [PSI:MS]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
 
 [Term]
 id: MS:1000224
 name: molecular mass
 def: "The mass of one mole of a molecular substance (6.022 1415(10) x 10^23 molecules)." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000225
 name: monoisotopic mass
 def: "The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000226
@@ -1439,7 +1498,9 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000229
 name: nominal mass
 def: "The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element rounded to the nearest integer value." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000507 ! ion attribute
+relationship: has_units UO:0000002 ! mass unit
 
 [Term]
 id: MS:1000230
@@ -1462,7 +1523,8 @@ is_obsolete: true
 [Term]
 id: MS:1000233
 name: proton affinity
-def: "The proton affinity of a species M is defined as the negative of the enthalpy change for the\nreaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states." [PSI:MS]
+def: "The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "PA" EXACT [PSI:MS]
 is_a: MS:1000507 ! ion attribute
 
@@ -1470,6 +1532,7 @@ is_a: MS:1000507 ! ion attribute
 id: MS:1000234
 name: mass resolving power
 def: "In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000444 ! m/z Separation Method
 
 [Term]
@@ -1484,6 +1547,7 @@ is_a: MS:1000626 ! chromatogram type
 id: MS:1000236
 name: transmission
 def: "The ratio of the number of ions leaving a region of a mass spectrometer to the number entering that region." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000496 ! instrument attribute
 
 [Term]
@@ -1491,7 +1555,7 @@ id: MS:1000237
 name: unified atomic mass unit
 def: "A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg." [PSI:MS]
 synonym: "u" EXACT []
-is_a: MS:1000464 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000238
@@ -1517,7 +1581,7 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000241
 name: Atmostpheric Pressure Photoionization
-def: "Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.\nOBSOLETE because redundant\nreplace by MS:1000382 atmospheric pressure photoionization" [PSI:MS]
+def: "Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization. OBSOLETE because redundant replace by MS:1000382 atmospheric pressure photoionization" [PSI:MS]
 synonym: "APPI" EXACT []
 is_obsolete: true
 
@@ -1696,7 +1760,7 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000266
 name: Laser Desorption
 alt_id: MS:1000394
-def: "The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.\nOBSOLETE as redudant, replace by laser desorption ionization MS:1000393" [PSI:MS]
+def: "The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules. OBSOLETE as redudant, replace by laser desorption ionization MS:1000393" [PSI:MS]
 synonym: "Laser Ionization MERGE" EXACT []
 synonym: "LD" EXACT []
 is_obsolete: true
@@ -1795,7 +1859,7 @@ is_a: MS:1000406 ! surface ionization
 [Term]
 id: MS:1000280
 name: suface ionization
-def: "The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.\nOBSOLETE as redudant replace by  MS:1000406 surface ionization" [PSI:MS]
+def: "The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature. OBSOLETE as redudant replace by  MS:1000406 surface ionization" [PSI:MS]
 synonym: "SI" EXACT []
 is_obsolete: true
 
@@ -1816,7 +1880,7 @@ is_a: MS:1000044 ! dissociation method
 [Term]
 id: MS:1000283
 name: Spark Source Mass Spectrometry
-def: "Mass spectrometry using spark ionization.\nOBSOLETE because redundant, replace by spark ionization MS:1000404." [PSI:MS]
+def: "Mass spectrometry using spark ionization. OBSOLETE because redundant, replace by spark ionization MS:1000404." [PSI:MS]
 synonym: "SSMS" EXACT []
 is_obsolete: true
 
@@ -1949,7 +2013,9 @@ is_a: MS:1000293 ! mass spectrometer
 id: MS:1000304
 name: accelerating voltage
 def: "The electrical potential used to impart kinetic energy to ions in a mass spectrometer." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000597 ! ion optics type
+relationship: has_units UO:0000217 ! electric potential difference
 
 [Term]
 id: MS:1000305
@@ -2062,8 +2128,7 @@ is_a: MS:1000294 ! mass spectrum
 [Term]
 id: MS:1000323
 name: constant neutral loss scan
-def: "A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different\nprecursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or\ncollision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan." [PSI:MS]
-synonym: "<new synonym>" RELATED []
+def: "A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different precursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or collision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan." [PSI:MS]
 synonym: "constant neutral mass loss scan" RELATED []
 synonym: "fixed neutral fragment scan" RELATED []
 is_a: MS:1000020 ! scanning method
@@ -2071,7 +2136,7 @@ is_a: MS:1000020 ! scanning method
 [Term]
 id: MS:1000324
 name: constant neutral gain scan
-def: "Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of\ndifferent precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell." [PSI:MS]
+def: "Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell." [PSI:MS]
 synonym: "Constant Neutral Mass Gain Scan" EXACT []
 is_a: MS:1000020 ! scanning method
 
@@ -2091,7 +2156,7 @@ is_a: MS:1000294 ! mass spectrum
 [Term]
 id: MS:1000327
 name: consecutive reaction monitoring
-def: "A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.\nOBSOLETE as redundant replace by  consecutive reaction monitoring MS:1000244." [PSI:MS]
+def: "A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored. OBSOLETE as redundant replace by  consecutive reaction monitoring MS:1000244." [PSI:MS]
 is_obsolete: true
 
 [Term]
@@ -2152,7 +2217,6 @@ is_a: MS:1000445 ! sequential m/z separation method ?
 id: MS:1000337
 name: nth generation product ion
 def: "Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated." [PSI:MS]
-synonym: "<new synonym>" RELATED []
 synonym: "granddaughter ion" RELATED []
 is_a: MS:1000342 ! product ion
 
@@ -2172,7 +2236,6 @@ is_a: MS:1000343 ! product ion spectrum
 id: MS:1000340
 name: precursor ion
 def: "An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended." [PSI:MS]
-synonym: "<new synonym>" RELATED []
 synonym: "parent ion" RELATED []
 is_a: MS:1000506 ! ion role
 
@@ -2185,8 +2248,7 @@ is_a: MS:1000294 ! mass spectrum
 [Term]
 id: MS:1000342
 name: product ion
-def: "An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular\ndissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges.\nThe term fragment ion is deprecated. The term daughter ion is deprecated." [PSI:MS]
-synonym: "<new synonym>" RELATED []
+def: "An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated." [PSI:MS]
 synonym: "daughter ion" RELATED []
 is_a: MS:1000506 ! ion role
 
@@ -2199,7 +2261,7 @@ is_a: MS:1000294 ! mass spectrum
 [Term]
 id: MS:1000344
 name: progeny ion
-def: "A charged product of a series of consecutive reactions that includes product ions, 1st\ngeneration product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+." [PSI:MS]
+def: "A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+." [PSI:MS]
 synonym: "Progeny Fragment Ion" EXACT []
 is_a: MS:1000508 ! ion chemical type
 
@@ -2224,7 +2286,7 @@ is_a: MS:1000026 ! detector type
 [Term]
 id: MS:1000348
 name: focal plane collector
-def: "A detector for spatially disperse ion beams in which all ions simultaneously impinge on the\ndetector plane." [PSI:MS]
+def: "A detector for spatially disperse ion beams in which all ions simultaneously impinge on the detector plane." [PSI:MS]
 is_a: MS:1000026 ! detector type
 
 [Term]
@@ -2489,6 +2551,7 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000392
 name: ionization efficiency
 def: "The ratio of the number of ions formed to the number of electrons, molecules or photons used." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000482 ! source attribute
 
 [Term]
@@ -2512,13 +2575,14 @@ is_a: MS:1000007 ! inlet type
 [Term]
 id: MS:1000397
 name: microelectrospray
-def: "Electrospray ionization at a solvent flow rate less than 1 ?L/min." [PSI:MS]
+def: "Electrospray ionization at a solvent flow rate of 300-800 nL/min where the flow is a result of a mechanical pump. See nanaoelectrospray." [PSI:MS]
 is_a: MS:1000073 ! electrospray ionization
 
 [Term]
 id: MS:1000398
 name: nanoelectrospray
-def: "Electrospray ionization at a flow rate less than 100 nL/min. Nanoelectrospray is synonymous with nanospray. See also electrospray ionization and microelectrospray." [PSI:MS]
+def: "Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray." [PSI:MS]
+synonym: "nanospray" EXACT []
 is_a: MS:1000073 ! electrospray ionization
 
 [Term]
@@ -2651,7 +2715,6 @@ is_a: MS:1000510 ! precursor activation attribute
 id: MS:1000420
 name: heterolytic cleavage
 def: "Fragmentation of a molecule or ion in which both electrons forming the single bond that is broken remain on one of the atoms that were originally bonded. This term is synonymous with heterolysis." [PSI:MS]
-synonym: "<new synonym>" RELATED []
 synonym: "heterolysis" RELATED []
 is_a: MS:1000437 ! ion reaction
 
@@ -2707,7 +2770,7 @@ is_a: MS:1000437 ! ion reaction
 [Term]
 id: MS:1000429
 name: ion/neutral species reaction
-def: "A process wherein a charged species interacts with a neutral reactant to produce either\nchemically different species or changes in the internal energy of one or both of the\nreactants." [PSI:MS]
+def: "A process wherein a charged species interacts with a neutral reactant to produce either chemically different species or changes in the internal energy of one or both of the reactants." [PSI:MS]
 is_a: MS:1000437 ! ion reaction
 
 [Term]
@@ -2843,17 +2906,19 @@ id: MS:1000451
 name: mass analyzer
 def: "Terms used to describe the Analyzer." [PSI:MS]
 relationship: part_of MS:1000463 ! instrument
+synonym: "analyzer" EXACT []
 
 [Term]
 id: MS:1000452
 name: data transformation
 def: "Terms used to describe types of data processing." [PSI:MS]
 relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+synonym: "data processing" EXACT []
 
 [Term]
 id: MS:1000453
 name: detector
-def: "Terms describing the detector." [PSI:MS]
+def: "The device that detects ions." [PSI:MS]
 relationship: part_of MS:1000463 ! instrument
 
 [Term]
@@ -2874,6 +2939,7 @@ id: MS:1000456
 name: precursor activation
 def: "Terms to describe the precursor activation." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
+synonym: "activation" EXACT []
 
 [Term]
 id: MS:1000457
@@ -2908,7 +2974,7 @@ relationship: part_of MS:1000479 ! purgatory
 [Term]
 id: MS:1000462
 name: ion optics
-def: "Device used in the construction of a spectrometer to focus, contain or otherwise manipulate ions." [PSI:MS]
+def: "Device used in the construction of a mass spectrometer to focus, contain or otherwise manipulate ions." [PSI:MS]
 relationship: part_of MS:1000463 ! instrument
 
 [Term]
@@ -2916,12 +2982,13 @@ id: MS:1000463
 name: instrument
 def: "Description of the instrument or the mass spectrometer." [PSI:MS]
 relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+synonym: "instrument configuration" EXACT []
 
 [Term]
 id: MS:1000464
 name: mass unit
 def: "A unit of measurement for mass." [PSI:MS]
-is_a: MS:1000460 ! unit
+is_obsolete: true
 
 [Term]
 id: MS:1000465
@@ -2938,13 +3005,13 @@ is_obsolete: true
 [Term]
 id: MS:1000467
 name: 1200 series LC/MSD SL
-def: "The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data\nacquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS." [PSI:MS]
+def: "The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
 id: MS:1000468
 name: 6110 Quadrupole LC/MS
-def: "The 6110 Quadrupole LC/MS system is a Agilent liquid chromatography\ninstrument combined with an entry level single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6110 Quadrupole mass spectrometer has m/z range of 10-1500 and 2500 u/s scan speed. It proves useful for wide range of SIM quantitative applications." [PSI:MS]
+def: "The 6110 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with an entry level single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6110 Quadrupole mass spectrometer has m/z range of 10-1500 and 2500 u/s scan speed. It proves useful for wide range of SIM quantitative applications." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
@@ -3005,7 +3072,7 @@ is_a: MS:1000490 ! Agilent instrument model
 [Term]
 id: MS:1000478
 name: 1200 series LC/MSD VL
-def: "The LC/MSD VL ion trap is part of the family of Agilent ion trap mass\nspectrometers. It has ESI, APCI and APPI ion sources and is a useful ion\ntrap when the amount of sample is not the limiting factor." [PSI:MS]
+def: "The LC/MSD VL ion trap is part of the family of Agilent ion trap mass spectrometers. It has ESI, APCI and APPI ion sources and is a useful ion trap when the amount of sample is not the limiting factor." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
@@ -3055,7 +3122,9 @@ is_a: MS:1000057 ! electrospray inlet
 id: MS:1000486
 name: source potential
 def: "Potential difference at the MS source in volts." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000482 ! source attribute
+relationship: has_units UO:0000217 ! electric potential difference
 
 [Term]
 id: MS:1000487
@@ -3142,22 +3211,28 @@ relationship: part_of MS:1000442 ! spectrum
 id: MS:1000500
 name: scan m/z upper limit
 def: "The limit of m/z over which a mass spectrometer can detect ions." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "mzRangeStop" RELATED []
 is_a: MS:1000549 ! selection window attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000501
 name: scan m/z lower limit
 def: "The limit of m/z over which a mass spectrometer can detect ions." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "mzRangeStart" RELATED []
 is_a: MS:1000549 ! selection window attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000502
 name: dwell time
 def: "The time spent gathering data across a peak." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "Scan Duration" RELATED []
 is_a: MS:1000549 ! selection window attribute
+relationship: has_units UO:0000003 ! time unit
 
 [Term]
 id: MS:1000503
@@ -3170,12 +3245,15 @@ relationship: part_of MS:1000441 ! scan
 id: MS:1000504
 name: base peak m/z
 def: "M/z value of the greatest peak in the mass spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000505
 name: base peak intensity
 def: "The intensity of the greatest peak in the mass spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
 
 [Term]
@@ -3200,25 +3278,28 @@ relationship: part_of MS:1000365 ! ion
 id: MS:1000509
 name: activation energy
 def: "Activation Energy." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000510 ! precursor activation attribute
+relationship: has_units UO:0000111 ! energy unit
 
 [Term]
 id: MS:1000510
 name: precursor activation attribute
 def: "Precursor Activation Attribute." [PSI:MS]
-relationship: part_of MS:1000456 ! precursor activation
+relationship: part_of MS:1000442 ! Spectrum
 
 [Term]
 id: MS:1000511
 name: ms level
 def: "Stages of ms achieved in a multi stage mass spectrometry experiment." [PSI:MS]
-comment: The attribute 'ms level' should be encoded in the homonymous XML attribute of the element 'dx:Spectrum', and not using the CvParam element.
+xref: value-type:xsd\:int"The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
 
 [Term]
 id: MS:1000512
 name: filter string
 def: "A string unique to Thermo instrument describing instrument settings for the scan." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
 
 [Term]
@@ -3233,6 +3314,7 @@ id: MS:1000514
 name: m/z array
 def: "A data array of mass divided by charge values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000515
@@ -3255,7 +3337,7 @@ is_a: MS:1000513 ! binary data array
 [Term]
 id: MS:1000518
 name: binary data type
-def: "Binary Data type. 16-bit integer, 32-bit integer, 32-bit float\n64-bit integer 64-bit float." [PSI:MS]
+def: "Binary Data type. 16-bit integer, 32-bit integer, 32-bit float 64-bit integer 64-bit float." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
 relationship: part_of MS:1000625 ! chromatogram
 
@@ -3311,18 +3393,23 @@ is_a: MS:1000560 ! source file type
 id: MS:1000527
 name: highest m/z value
 def: "Highest m/z value observed in the mass spectum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000528
 name: lowest m/z value
 def: "Lowest m/z value observed in the mass spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000529
 name: instrument serial number
 def: "Serial Number of the instrument." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000496 ! instrument attribute
 
 [Term]
@@ -3341,14 +3428,14 @@ relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrom
 id: MS:1000532
 name: Xcalibur
 def: "Thermo Finnigan software for data acquisition and analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000693 ! Thermo Finnigan software
 
 [Term]
 id: MS:1000533
 name: Bioworks
 def: "Thermo Finnigan software for data analysis of peptides and proteins." [PSI:MS]
 synonym: "Bioworks Browser" RELATED []
-is_a: MS:1000531 ! software
+is_a: MS:1000693 ! Thermo Finnigan software
 
 [Term]
 id: MS:1000534
@@ -3360,19 +3447,19 @@ is_a: MS:1000531 ! software
 id: MS:1000535
 name: FlexAnalysis
 def: "Bruker software for data analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000692 ! Bruker software
 
 [Term]
 id: MS:1000536
 name: data explorer
 def: "Applied Biosystems software for data acquisition and analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000691 ! Applied Biosystems software
 
 [Term]
 id: MS:1000537
 name: 4700 Explorer
 def: "Applied Biosystems software for data acquisition and analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000691 ! Applied Biosystems software
 
 [Term]
 id: MS:1000538
@@ -3384,13 +3471,13 @@ is_a: MS:1000531 ! software
 id: MS:1000539
 name: Voyager Biospectrometry Workstation System
 def: "Applied Biosystems MALDI-TOF data acquisition and analysis system." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000691 ! Applied Biosystems software
 
 [Term]
 id: MS:1000540
 name: FlexControl
 def: "Bruker software for data acquisition." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000692 ! Bruker software
 
 [Term]
 id: MS:1000541
@@ -3407,7 +3494,7 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000543
 name: data processing action
-def: "Type of data processing performed on the data file." [PSI:MS]
+def: "Data processing attribute used to describe the type of data processing performed on the data file." [PSI:MS]
 is_a: MS:1000452 ! data transformation
 
 [Term]
@@ -3452,13 +3539,13 @@ relationship: part_of MS:1000441 ! scan
 id: MS:1000550
 name: time unit
 def: "Time Unit." [PSI:MS]
-is_a: MS:1000460 ! unit
+is_obsolete: true
 
 [Term]
 id: MS:1000551
 name: Analyst
-def: "Applied Biosystems software for data acquisition and analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX software for data acquisition." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
 
 [Term]
 id: MS:1000552
@@ -3616,6 +3703,7 @@ id: MS:1000577
 name: data file
 def: "Describes the type of file and its content." [PSI:MS]
 relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+synonym: "source file" EXACT []
 
 [Term]
 id: MS:1000578
@@ -3649,14 +3737,14 @@ is_a: MS:1000559 ! spectrum type
 [Term]
 id: MS:1000582
 name: SIM spectrum
-def: "Spectrum obtained with the operation of a mass spectrometer in which the abundances of several ions of specific m/z values are recorded rather than the entire mass spectrum." [PSI:MS]
+def: "Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring)." [PSI:MS]
 is_a: MS:1000524 ! data file content
 is_a: MS:1000559 ! spectrum type
 
 [Term]
 id: MS:1000583
 name: SRM spectrum
-def: "Spectrum obtained when data is acquired from specific product ions corresponding to m/z selected precursor ions recorded via two or more stages of mass spectrometry. Selected reaction monitoring can be preformed as tandem mass spectrometry in time or\ntandem mass spectrometry in space." [PSI:MS]
+def: "Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space." [PSI:MS]
 is_a: MS:1000524 ! data file content
 is_a: MS:1000559 ! spectrum type
 
@@ -3733,6 +3821,7 @@ id: MS:1000595
 name: time array
 def: "A data array of relative time offset values from a reference time." [PSI:MS]
 is_a: MS:1000513 ! binary data array
+relationship: has_units UO:0000003 ! time unit
 
 [Term]
 id: MS:1000596
@@ -3772,7 +3861,7 @@ is_a: MS:1000531 ! software
 id: MS:1000601
 name: ProteinLynx Global Server
 def: "Waters software for data analysis." [PSI:MS]
-is_a: MS:1000531 ! software
+is_a: MS:1000694 ! Waters software
 
 [Term]
 id: MS:1000602
@@ -3949,6 +4038,7 @@ is_a: MS:1000626 ! chromatogram type
 id: MS:1000629
 name: low intensity threshold
 def: "Threshold below which some action is taken." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 
 [Term]
@@ -3961,6 +4051,7 @@ is_a: MS:1000452 ! data transformation
 id: MS:1000631
 name: high intensity threshold
 def: "Threshold above which some action is taken." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 
 [Term]
@@ -3973,109 +4064,663 @@ is_a: MS:1000126 ! Waters instrument model
 id: MS:1000633
 name: possible charge state
 def: "A possible charge state of the ion in a situation where the charge of an ion is known to be one of several possible values rather than a completely unknown value or determined to be a specific charge with reasonable certainty." [PSI:MS]
+xref: value-type:xsd\:int"The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
 
 [Term]
-id: MS:10634
+id: MS:1000634
 name: DSQ
-def: "ThermoFinnigan DSQ GC-MS"  [PSI:MS]
+def: "ThermoFinnigan DSQ GC-MS" [PSI:MS]
 is_a: MS:1000125 ! Thermo Finnigan instrument model
 
 [Term]
-id: MS:10635
+id: MS:1000635
 name: ITQ 700
-def: "Thermo Scientific ITQ 700 GC-MS"  [PSI:MS]
+def: "Thermo Scientific ITQ 700 GC-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10636
+id: MS:1000636
 name: ITQ 900
-def: "Thermo Scientific ITQ 900 GC-MS"  [PSI:MS]
+def: "Thermo Scientific ITQ 900 GC-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10637
+id: MS:1000637
 name: ITQ 1100
-def: "Thermo Scientific ITQ 1100 GC-MS"  [PSI:MS]
+def: "Thermo Scientific ITQ 1100 GC-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10638
+id: MS:1000638
 name: LTQ XL ETD
-def: "Thermo Scientific LTQ XL MS with ETD"  [PSI:MS]
+def: "Thermo Scientific LTQ XL MS with ETD" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10639
+id: MS:1000639
 name: LTQ Orbitrap XL ETD
-def: "Thermo Scientific LTQ Orbitrap XL MS with ETD"  [PSI:MS]
+def: "Thermo Scientific LTQ Orbitrap XL MS with ETD" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10640
+id: MS:1000640
 name: DFS
-def: "Thermo Scientific DFS HR GC-MS"  [PSI:MS]
+def: "Thermo Scientific DFS HR GC-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10641
+id: MS:1000641
 name: DSQ II
-def: "Thermo Scientific DSQ II GC-MS"  [PSI:MS]
+def: "Thermo Scientific DSQ II GC-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10642
+id: MS:1000642
 name: MALDI LTQ XL
-def: "Thermo Scientific MALDI LTQ XL MS"  [PSI:MS]
+def: "Thermo Scientific MALDI LTQ XL MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10643
+id: MS:1000643
 name: MALDI LTQ Orbitrap
-def: "Thermo Scientific MALDI LTQ Orbitrap MS"  [PSI:MS]
+def: "Thermo Scientific MALDI LTQ Orbitrap MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10644
+id: MS:1000644
 name: TSQ Quantum Access
-def: "Thermo Scientific TSQ Quantum Access MS."  [PSI:MS]
+def: "Thermo Scientific TSQ Quantum Access MS." [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10645
+id: MS:1000645
 name: Element XR
-def: "Thermo Scientific Element XR HR-ICP-MS"  [PSI:MS]
+def: "Thermo Scientific Element XR HR-ICP-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10646
+id: MS:1000646
 name: Element 2
-def: "Thermo Scientific Element 2 HR-ICP-MS"  [PSI:MS]
+def: "Thermo Scientific Element 2 HR-ICP-MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10647
+id: MS:1000647
 name: Element GD
-def: "Thermo Scientific Element GD Glow Discharge MS"  [PSI:MS]
+def: "Thermo Scientific Element GD Glow Discharge MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10648
+id: MS:1000648
 name: GC IsoLink
-def: "Thermo Scientific GC IsoLink Isotope Ratio MS"  [PSI:MS]
+def: "Thermo Scientific GC IsoLink Isotope Ratio MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10649
+id: MS:1000649
 name: Exactive
-def: "Thermo Scientific Exactive MS"  [PSI:MS]
+def: "Thermo Scientific Exactive MS" [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
-id: MS:10650
+id: MS:1000650
 name: Proteomics Discoverer
-def: "Thermo Scientific software for data analysis of peptides and proteins."  [PSI:MS]
-is_a: MS:1000494 ! Thermo Scientific instrument model
+def: "Thermo Scientific software for data analysis of peptides and proteins." [PSI:MS]
+is_a: MS:1000693 ! Thermo Finnigan software
+
+[Term]
+id: MS:1000651
+name: 3200 QTRAP
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200" [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000652
+name: 4800 Plus MALDI TOF-TOF Analyzer
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer" [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000653
+name: API 3200
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX API 3200 MS." [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000654
+name: API 5000
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX API 5000 MS." [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000655
+name: QSTAR Elite
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite" [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000656
+name: QSTAR Pulsar
+def: "Applied Biosystems|MDS SCIEX QSTAR Pulsar" [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000657
+name: QSTAR XL
+def: "Applied Biosystems|MDS SCIEX QSTAR XL" [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000658
+name: 4800 Proteomics Analyzer
+def: "Applied Biosystems|MDS SCIEX 4800 Proteomics Analyzer" [PSI:MS]
+is_a: MS:1000495 ! Applied Biosystems instrument model
+
+[Term]
+id: MS:1000659
+name: 4000 Series Explorer Software
+def: "AB SCIEX or Applied Biosystems software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000661
+name: GPS Explorer
+def: "AB SCIEX or Applied Biosystems software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000662
+name: LightSight Software
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX software metabolite identification." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000663
+name: ProteinPilot Software
+def: "AB SCIEX or Applied Biosystems|MDS SCIEX software for protein ID and quant." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000664
+name: TissueView Software
+def: "Applied Biosystems|MDS SCIEX software for tissue imaging." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000665
+name: MarkerView Software
+def: "Applied Biosystems|MDS SCIEX software for metabolomics and biomarker profiling." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000666
+name: MRMPilot Software
+def: "Applied Biosystems|MDS SCIEX software for MRM assay development." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000667
+name: BioAnalyst
+def: "Applied Biosystems|MDS SCIEX software for bio-related data exploration." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000668
+name: Pro ID
+def: "Applied Biosystems|MDS SCIEX software for protein identification." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000669
+name: Pro ICAT
+def: "Applied Biosystems|MDS SCIEX software for protein ID and quant by ICAT." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000670
+name: Pro Quant
+def: "Applied Biosystems|MDS SCIEX software for protein ID and quant by iTRAQ." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000671
+name: Pro BLAST
+def: "Applied Biosystems|MDS SCIEX software for MS-BLAST identification." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000672
+name: Cliquid?
+def: "AB SCIEX or Applied Biosystems software." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000673
+name: MIDAS Workflow Designer
+def: "Applied Biosystems|MDS SCIEX software for MRM assay development." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000674
+name: MultiQuant
+def: "Applied Biosystems|MDS SCIEX software for MRM-based quantitation." [PSI:MS]
+is_a: MS:1000690 ! AB SCIEX software
+
+[Term]
+id: MS:1000675
+name: 6220 Time-of-Flight LC/MS
+def: "The 6220 Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1000676
+name: 6510 Quadrupole Time-of-Flight LC/MS
+def: "The 6510 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1000677
+name: 6520 Quadrupole Time-of-Flight LC/MS
+def: "The 6520 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1000678
+name: MassHunter Data Acquisition
+def: "Software for data acquisition of 6000 series instruments." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000679
+name: MassHunter Easy Access
+def: "Software for open access data acquisition." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000680
+name: MassHunter Qualitative Analysis
+def: "Software for data analysis of data from 6000 series instruments." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000681
+name: MassHunter Quantitative Analysis
+def: "Software for quantitation of Triple Quadruople and Quadrupole Time-of-Flight data." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000682
+name: MassHunter Metabolite ID
+def: "Software for identification of metabolites." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000683
+name: MassHunter BioConfirm
+def: "Software for protein characterization." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000684
+name: Genespring MS
+def: "Software for quantitation and statistical analysis of TOF and Q-TOF LC/MS data." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000685
+name: MassHunter Mass Profiler
+def: "Software for quantitation and statistical analysis of TOF and Q-TOF LC/MS data." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000686
+name: METLIN
+def: "Personal Metabolite Database for MassHunter Workstation. Software for identification of human metabolites." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000687
+name: Spectrum Mill for MassHunter Workstation
+def: "Software for protein identification and characterization of complex protein digest mixtures." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000688
+name: 6300 Series Ion Trap Data Analysis Software
+def: "Software for data analysis of 6300 series ion trap mass spectrometers." [PSI:MS]
+is_a: MS:1000689 ! Agilent software
+
+[Term]
+id: MS:1000689
+name: Agilent software
+def: "Agilent software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000690
+name: AB SCIEX software
+def: "AB SCIEX or Applied Biosystems software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000691
+name: Applied Biosystems software
+def: "Applied Biosystems|MDS SCIEX software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000692
+name: Bruker software
+def: "Bruker software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000693
+name: Thermo Finnigan software
+def: "Thermo Finnigan software for data acquisition and analysis." [PSI:MS]
+synonym: "Bioworks Browser" RELATED []
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000694
+name: Waters software
+def: "Waters software for data acquisition and analysis." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000695
+name: apex ultra
+def: "Bruker Daltonics apex ultra" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000696
+name: autoflex III smartbeam
+def: "Bruker Daltonics autoflex III smartbeam" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000697
+name: HCT Series
+def: "Bruker Daltonics HCT Series" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000698
+name: HCTultra
+def: "Bruker Daltonics HCTultra" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000699
+name: HCTultra PTM
+def: "Bruker Daltonics HCTultra PTM Discovery System" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000700
+name: HCTultra ETD II
+def: "Bruker Daltonics HCTultra ETD II System" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000701
+name: microflex LT
+def: "Bruker Daltonics microflex MS." [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000702
+name: micrOTOF
+def: "Bruker Daltonics micrOTOF" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000703
+name: micrOTOF-Q
+def: "Bruker Daltonics micrOTOF-Q" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000704
+name: micrOTOF-Q II
+def: "Bruker Daltonics micrOTOF-Q II" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000705
+name: ultraflex III TOF/TOF
+def: "Bruker Daltonics ultraflex III TOF/TOF" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1000706
+name: apexControl
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000707
+name: BioTools
+def: "Bruker software for data analysis." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000708
+name: CLINPROT
+def: "Bruker CLINPROT software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000709
+name: CLINPROT micro
+def: "Bruker CLINPROT micro software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000710
+name: CLINPROT robot
+def: "Bruker CLINPROT robot software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000711
+name: ClinProTools
+def: "Bruker ClinProTools software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000712
+name: Compass
+def: "Bruker Compass software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000713
+name: Compass for HCT/esquire
+def: "Bruker Compass for HCT/esquire software" [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000714
+name: Compass for micrOTOF
+def: "Bruker Compass for micrOTOF software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000715
+name: Compass OpenAccess
+def: "Bruker compass OpenAccess software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000716
+name: Compass Security Pack
+def: "Bruker compass Security Pack software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000717
+name: CompassXport
+def: "Bruker stand-alone software for data conversion." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000718
+name: CompassXtract
+def: "Bruker software library for data access." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000719
+name: DataAnalysis
+def: "Bruker software for data analysis." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000720
+name: dpControl
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000721
+name: esquireControl
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000722
+name: flexImaging
+def: "Bruker software for data analysis." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000723
+name: GENOLINK
+def: "Bruker GENOLINK software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000724
+name: GenoTools
+def: "Bruker GenoTools software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000725
+name: HCTcontrol
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000726
+name: micrOTOFcontrol
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000727
+name: PolyTools
+def: "Bruker PolyTools software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000728
+name: ProfileAnalysis
+def: "Bruker software for data analysis." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000729
+name: PROTEINEER
+def: "Bruker PROTEINEER software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000730
+name: PROTEINEER dp
+def: "Bruker PROTEINEER dp software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000731
+name: PROTEINEER fc
+def: "Bruker PROTEINEER fc software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000732
+name: PROTEINEER spII
+def: "Bruker PROTEINEER spII software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000733
+name: PROTEINEER-LC
+def: "Bruker PROTEINEER-LC software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000734
+name: ProteinScape
+def: "Bruker ProteinScape software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000735
+name: PureDisk
+def: "BrukerPureDisk software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000736
+name: QuantAnalysis
+def: "Bruker software for data analysis." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000737
+name: spControl
+def: "Bruker software for data acquisition." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000738
+name: TargetAnalysis
+def: "Bruker TargetAnalysis software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000739
+name: WARP-LC
+def: "Bruker WARP-LC software." [PSI:MS]
+is_a: MS:1000692 ! Bruker software
+
+[Term]
+id: MS:1000740
+name: parameter file
+def: "Parameter file used to configure the acquisition of raw data on the instrument." [PSI:MS]
+is_a: MS:1000560 ! Source File Type
+
+[Term]
+id: MS:1000741
+name: Conversion to dta
+def: "Conversion to dta format." [PSI:MS]
+is_a: MS:1000530 ! file format conversion
+
+[Term]
+id: MS:1000742
+name: Bioworks SRF file
+def: "Thermo Finnigan SRF file format." [PSI:MS]
+is_a: MS:1000560 ! source file type
+
+
+
+[Typedef]
+id: has_units
+name: has_units
 
 [Typedef]
 id: part_of
