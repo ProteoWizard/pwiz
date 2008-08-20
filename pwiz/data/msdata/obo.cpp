@@ -203,7 +203,8 @@ void parseTagValuePair(const string& line, Term& term)
              tag == "narrow_synonym" ||
              tag == "comment" ||
              tag == "alt_id" ||
-             tag == "namespace")
+             tag == "namespace" ||
+			 tag == "xref")
         ; // ignore these tags
     else
         cerr << "[obo] Unknown tag \"" << tag << "\":\n  " << line << endl;
