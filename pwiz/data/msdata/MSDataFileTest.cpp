@@ -162,23 +162,25 @@ class TestReader : public Reader
 
     TestReader() : count(0) {}
 
-    virtual bool accept(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& filename, const std::string& head) const
     {
         if (filename.size()<=4 || filename.substr(filename.size()-4)!=".RAW")
-            return false;
+            return std::string("");
 
         for (size_t i=0; i<sizeof(rawHeader_); i++)
             if (head[i] != rawHeader_[i]) 
-                return false;
+            return std::string("");
 
         count++;
-        return true;
+        return filename;
     }
 
     virtual void read(const std::string& filename, const std::string& head, MSData& result) const
     {
         count++;
     }
+
+    const char *getType() const {return "testReader";} // satisfy inheritance
 
     mutable int count;
 };

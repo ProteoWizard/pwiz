@@ -46,6 +46,10 @@ bool _hasRAWHeader(const std::string& head)
 }
 } // namespace
 
+// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
+#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_THERMO))
+#define PWIZ_NO_READER_THERMO
+#endif
 
 #ifndef PWIZ_NO_READER_THERMO
 #include "data/msdata/CVTranslator.hpp"
@@ -224,9 +228,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 } // namespace
 
 
-PWIZ_API_DECL bool Reader_Thermo::accept(const string& filename, const string& head) const
+PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const string& head) const
 {
-    return hasRAWHeader(head);
+	return std::string(hasRAWHeader(head)?getType():"");
 }
 
 
@@ -273,14 +277,23 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL bool Reader_Thermo::accept(const string& filename, const string& head) const
+PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const string& head) const
 {
-    return false;
+   // we know what this is, but we'll throw an exception on read
+	return std::string(hasRAWHeader(head)?getType():"");
 }
 
 PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result) const
 {
-    throw runtime_error("[Reader_Thermo::read()] Not implemented."); 
+	throw ReaderFail("[Reader_Thermo::read()] Thermo RAW reader not implemented: "
+#ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
+		"support was explicitly disabled when program was built"
+#elif defined(WIN32) // wrong compiler
+		"program was built without COM support and cannot access Thermo DLLs - try building with MSVC instead of GCC"
+#else // wrong platform
+		"Thermo DLLs only work on Windows"
+#endif
+		); 
 }
 
 PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)

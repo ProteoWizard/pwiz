@@ -86,10 +86,10 @@ class Reader_mzML : public Reader
 {
     public:
 
-    virtual bool accept(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& filename, const std::string& head) const
     {
          istringstream iss(head); 
-         return type(iss) != Type_Unknown; 
+		 return std::string((type(iss) != Type_Unknown)?getType():""); 
     }
 
     virtual void read(const std::string& filename, const std::string& head, MSData& result) const
@@ -121,6 +121,7 @@ class Reader_mzML : public Reader
             }
         }
     }
+	virtual const char *getType() const {return "mzML";}
 
     private:
 
@@ -146,17 +147,18 @@ class Reader_mzML : public Reader
 
 class Reader_mzXML : public Reader
 {
-    virtual bool accept(const std::string& filename, const std::string& head) const
+	virtual std::string identify(const std::string& filename, const std::string& head) const
     {
+		std::string result;
         try
         {
             string rootElement = GetXMLRootElement(head);
-            return rootElement == "mzXML" || rootElement == "msRun";
+			result = (rootElement == "mzXML" || rootElement == "msRun")?getType():"";
         }
         catch (runtime_error&)
         {
         }
-        return false;
+        return result;
     }
 
     virtual void read(const std::string& filename, const std::string& head, MSData& result) const
@@ -183,14 +185,15 @@ class Reader_mzXML : public Reader
         serializer.read(is, result);
         return;
     }
+	virtual const char *getType() const {return "mzXML";}
 };
 
 
 class Reader_MGF : public Reader
 {
-    virtual bool accept(const string& filename, const string& head) const
+    virtual std::string identify(const string& filename, const string& head) const
     {
-        return (bal::to_lower_copy(bfs::extension(filename)) == ".mgf");
+		return std::string(((bal::to_lower_copy(bfs::extension(filename)) == ".mgf"))?getType():"");
     }
 
     virtual void read(const string& filename, const string& head, MSData& result) const
@@ -211,23 +214,25 @@ class Reader_MGF : public Reader
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
+	virtual const char *getType() const {return "MGF";}
 };
 
 
 class Reader_BTDX : public Reader
 {
-    virtual bool accept(const string& filename, const string& head) const
+    virtual std::string identify(const string& filename, const string& head) const
     {
+		std::string result;
         try
         {
             // TODO: congratulate Bruker for their unique root element name
             string rootElement = GetXMLRootElement(head);
-            return rootElement == "root";
+			result = (rootElement == "root")?getType():"";
         }
         catch (runtime_error&)
         {
         }
-        return false;
+        return result;
     }
 
     virtual void read(const string& filename, const string& head, MSData& result) const
@@ -249,6 +254,7 @@ class Reader_BTDX : public Reader
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
+	virtual const char *getType() const {return "BTDX";}
 };
 
 

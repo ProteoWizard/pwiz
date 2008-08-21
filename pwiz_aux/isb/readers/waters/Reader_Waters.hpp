@@ -20,12 +20,14 @@ class PWIZ_API_DECL Reader_Waters : public Reader
 {
     public:
 
-    virtual bool accept(const std::string& filename, 
+	virtual std::string identify(const std::string& filename, 
                         const std::string& head) const; 
 
     virtual void read(const std::string& filename, 
                       const std::string& head, 
                       MSData& result) const;
+
+	virtual const char * getType() const;
 };
 
 

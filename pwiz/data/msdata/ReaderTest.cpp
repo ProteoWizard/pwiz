@@ -47,11 +47,11 @@ class Reader1 : public Reader
 
     Config config;
 
-    virtual bool accept(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        bool result = (filename == "1"); 
-        if (os_) *os_ << "Reader1::accept(): " << boolalpha << result << endl;
-        return result;
+        bool result = (identify(filename,head) == "1"); 
+        if (os_) *os_ << "Reader1::identify(): " << boolalpha << result << endl;
+        return std::string (result?filename:std::string("")); 
     }
 
     virtual void read(const std::string& filename, 
@@ -61,6 +61,7 @@ class Reader1 : public Reader
         if (os_) *os_ << "Reader1::read()\n";
         config.done = true;
     }
+    virtual const char *getType() const {return "Reader1";} // satisfy inheritance
 };
 
 
@@ -77,11 +78,11 @@ class Reader2 : public Reader
 
     Config config;
 
-    virtual bool accept(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        bool result = (filename == "2"); 
-        if (os_) *os_ << "Reader2::accept(): " << boolalpha << result << endl;
-        return result;
+        bool result = (identify(filename,head) == "2"); 
+        if (os_) *os_ << "Reader2::identify(): " << boolalpha << result << endl;
+        return std::string (result?filename:std::string("")); 
     }
 
     virtual void read(const std::string& filename, 
@@ -91,6 +92,7 @@ class Reader2 : public Reader
         if (os_) *os_ << "Reader2::read()\n";
         config.done = true;
     }
+    const char *getType() const {return "Reader2";} // satisfy inheritance
 };
 
 

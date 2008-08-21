@@ -33,13 +33,18 @@ namespace msdata {
 
 using namespace std;
 
-
-PWIZ_API_DECL bool ReaderList::accept(const string& filename, const string& head) const
+PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const string& head) const
 {
+	std::string result;
     for (const_iterator it=begin(); it!=end(); ++it)
-        if ((*it)->accept(filename, head)) return true;
-
-    return false;
+	{
+		result = (*it)->identify(filename, head);
+        if (result.length()) 
+		{
+			break;
+		}
+	}
+    return result;
 }
 
 
@@ -51,11 +56,9 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
         (*it)->read(filename, head, result);
         return;
     }
-
-    throw runtime_error(("[ReaderList::read()] No child accepted file " +
+    throw ReaderFail((" don't know how to read " +
                         filename).c_str());
 }
-
 
 PWIZ_API_DECL ReaderList& ReaderList::operator +=(const ReaderList& rhs)
 {

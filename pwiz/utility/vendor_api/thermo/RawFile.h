@@ -42,7 +42,7 @@
 #include <memory>
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
-
+#include "data/msdata/Reader.hpp" // for ReaderFail exception defn
 
 namespace pwiz {
 namespace raw {
@@ -55,21 +55,13 @@ class RAWFILE_API RawFileLibrary
     ~RawFileLibrary();
 };
 
-
-class RawEgg : public std::runtime_error // Eggception class
+class RawEgg : public pwiz::msdata::ReaderFail // Eggception class
 {
     public:
 
     RawEgg(const std::string& error)
-    :   std::runtime_error(("[RawEgg] " + error).c_str()),
-		error_(error)        
+    :   pwiz::msdata::ReaderFail(("[ThermoRawFile] " + error).c_str())
     {}
-
-    virtual const std::string& error() const {return error_;}
-    virtual ~RawEgg() throw() {}
-
-    private:
-    std::string error_;
 };
 
 

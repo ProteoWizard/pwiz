@@ -108,19 +108,26 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 // It may have multiple functions (scan events), e.g. _FUNC001.DAT, _FUNC002.DAT, etc.
 // It may also contain some useful metadata in _extern.inf
 
-PWIZ_API_DECL bool Reader_Waters::accept(const string& filename, const string& head) const
+PWIZ_API_DECL std::string Reader_Waters::identify(const string& filename, const string& head) const
 {
+
+	std::string result;
     // Make sure target "filename" is actually a directory
     if (!bfs::is_directory(filename))
-        return false;
+        return result;
 
     // Count the number of _FUNC[0-9]{3}.DAT files
     int functionCount = 0;
     while (bfs::exists(bfs::path(filename) / (boost::format("_FUNC%03d.DAT") % (functionCount+1)).str()))
         ++functionCount;
-    return functionCount > 0;
+    if (functionCount > 0)
+		result = getType();
+    return result;
 }
 
+PWIZ_API_DECL const char * Reader_Waters::getType() const {
+	return "Waters";
+}
 
 PWIZ_API_DECL
 void Reader_Waters::read(const string& filename, 

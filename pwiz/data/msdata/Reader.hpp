@@ -27,6 +27,7 @@
 #include "utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include <string>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -37,9 +38,22 @@ class PWIZ_API_DECL Reader
 {
     public:
 
-    /// return true iff Reader can handle the file; 
+
+    /// return true iff Reader recognizes the file as one it should handle
+	/// that's not to say one it CAN handle, necessarily, as in Thermo on linux,
+	/// see comment for identify() below
+    bool accept(const std::string& filename, 
+                const std::string& head) const 
+	{
+		return (identify(filename,head).length() != 0);
+	}
+
+    /// return file type iff Reader recognizes the file, else empty; 
+	/// note: for formats requiring a 3rd party DLL identify() should
+	/// return true if it recognized the format, even though reading
+	/// may fail if the 3rd party DLL isn't actually present
     /// Reader may filter based on filename and/or head of the file
-    virtual bool accept(const std::string& filename, 
+    virtual std::string identify(const std::string& filename, 
                         const std::string& head) const = 0;
 
     /// fill in the MSData structure
@@ -47,9 +61,26 @@ class PWIZ_API_DECL Reader
                       const std::string& head,
                       MSData& result) const = 0;
 
+	virtual const char *getType() const = 0; // what kind of reader are you?
+
     virtual ~Reader(){}
 };
 
+class ReaderFail : public std::runtime_error // reader failure exception
+{
+    public:
+
+    ReaderFail(const std::string& error)
+    :   std::runtime_error(("[ReaderFail] " + error).c_str()),
+		error_(error)        
+    {}
+
+    virtual const std::string& error() const {return error_;}
+    virtual ~ReaderFail() throw() {}
+
+    private:
+    std::string error_;
+};
 
 typedef boost::shared_ptr<Reader> ReaderPtr;
 
@@ -65,11 +96,11 @@ class PWIZ_API_DECL ReaderList : public Reader,
 {
     public:
 
-    /// returns true iff some child accepts
-    virtual bool accept(const std::string& filename, 
+    /// returns child name iff some child identifies, else empty string
+	virtual std::string identify(const std::string& filename, 
                         const std::string& head) const; 
 
-    /// delegates to first child that accepts
+    /// delegates to first child that identifiess
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       MSData& result) const;
@@ -105,6 +136,9 @@ class PWIZ_API_DECL ReaderList : public Reader,
     {
         return const_cast<ReaderList*>(this)->get<reader_type>();
     }
+
+	virtual const char *getType() const {return "ReaderList";} // satisfy inheritance
+
 };
 
 
