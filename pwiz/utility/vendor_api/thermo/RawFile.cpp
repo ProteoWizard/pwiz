@@ -193,7 +193,7 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (FAILED(raw_.CreateInstance("XRawfile.XRawfile.1")))
         {
             rawInterfaceVersion_ = 0;
-            throw RawEgg("[RawFileImpl()] Unable to initialize XRawfile interface.");
+			throw RawEgg("[RawFileImpl()] Unable to initialize XRawfile interface: is Thermo DLL installed?");
         }
         else
         {
