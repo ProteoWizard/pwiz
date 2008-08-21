@@ -453,7 +453,7 @@ int main(int argc, const char* argv[])
     }
     catch (...)
     {
-        cerr << "[msdiff] Caught unknown exception.\n";
+        cerr << "[" << argv[0] << "] Caught unknown exception.\n";
     }
 
     return 1;
