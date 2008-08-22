@@ -49,7 +49,7 @@ class Reader1 : public Reader
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        bool result = (identify(filename,head) == "1"); 
+        bool result = (filename == "1"); 
         if (os_) *os_ << "Reader1::identify(): " << boolalpha << result << endl;
         return std::string (result?filename:std::string("")); 
     }
@@ -80,7 +80,7 @@ class Reader2 : public Reader
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        bool result = (identify(filename,head) == "2"); 
+        bool result = (filename == "2"); 
         if (os_) *os_ << "Reader2::identify(): " << boolalpha << result << endl;
         return std::string (result?filename:std::string("")); 
     }
