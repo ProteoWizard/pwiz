@@ -5,7 +5,6 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using Extensions;
 using DigitalRune.Windows.Docking;
 
 namespace seems

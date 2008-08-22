@@ -36,7 +36,8 @@ namespace seems
 				//"Bruker YEP",
                 //"Bruker BAF",
                 //"Bruker FID",
-				"Mascot Generic"//,
+				"Mascot Generic",
+                "Bruker Data Exchange",
 				//"Sequest DTA"
             };
 
@@ -167,7 +168,7 @@ namespace seems
                     detector += String.Join( "/", new List<string>( detectors.Values ).ToArray() );
                 }
 
-                Extensions.Set<string> contentTypes = new Extensions.Set<string>();
+                System.Collections.Generic.Set<string> contentTypes = new System.Collections.Generic.Set<string>();
                 foreach( CVParam term in msInfo.fileDescription.fileContent.cvParams )
                     contentTypes.Add( term.name );
                 contentType = String.Join( ", ", new List<string>( contentTypes.Keys ).ToArray() );
@@ -211,22 +212,31 @@ namespace seems
 
         private string getSourceTypeFromXML( string filepath )
         {
-            using( XmlTextReader reader = new XmlTextReader( new StreamReader( filepath, true ) ) )
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.ValidationType = ValidationType.None;
+            settings.ProhibitDtd = false;
+            settings.XmlResolver = null;
+            using( XmlReader reader = XmlTextReader.Create( new StreamReader( filepath, true ), settings ) )
             {
-                if( reader.Read() )
+                while( reader.Read() )
                 {
-                    switch( reader.Name.ToLower() )
+                    if( reader.NodeType == XmlNodeType.Element )
                     {
-                        case "mzml":
-                        case "indexmzml":
-                            return "mzML";
-                        case "mzxml":
-                        case "msrun":
-                            return "mzXML";
-                        //case "mzdata":
-                        //    return "mzData";
-                        default:
-                            return "unknown";
+                        switch( reader.Name.ToLower() )
+                        {
+                            case "mzml":
+                            case "indexmzml":
+                                return "mzML";
+                            case "mzxml":
+                            case "msrun":
+                                return "mzXML";
+                            //case "mzdata":
+                            //    return "mzData";
+                            case "root":
+                                return "Bruker Data Exchange";
+                            default:
+                                return "unknown";
+                        }
                     }
                 }
             }
@@ -697,7 +707,7 @@ namespace seems
 
         }
 
-        Extensions.Map<string, bool> driveReadiness = new Extensions.Map<string, bool>();
+        System.Collections.Generic.Map<string, bool> driveReadiness = new System.Collections.Generic.Map<string, bool>();
         private void lookInComboBox_DropDown( object sender, EventArgs e )
         {
             

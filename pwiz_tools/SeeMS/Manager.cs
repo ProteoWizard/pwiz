@@ -4,10 +4,11 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
-using Extensions;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
+using MSGraph;
+using ZedGraph;
 
 namespace seems
 {
@@ -32,7 +33,7 @@ namespace seems
 			spectrumListForm = new SpectrumListForm();
             spectrumProcessingForm = new SpectrumProcessingForm();
 			chromatogramListForm = new ChromatogramListForm();
-			graphInfoMap = new GraphInfoMap();
+			//graphInfoMap = new GraphInfoMap();
 		}
 
 		private DataSource source;
@@ -47,11 +48,41 @@ namespace seems
 		private ChromatogramListForm chromatogramListForm;
 		public ChromatogramListForm ChromatogramListForm { get { return chromatogramListForm; } }
 
-        //private ChromatogramProcessingForm spectrumProcessingForm;
-        //public ChromatogramProcessingForm SpectrumProcessingForm { get { return spectrumProcessingForm; } }
+        //private ChromatogramProcessingForm chromatogramProcessingForm;
+        //public ChromatogramProcessingForm ChromatogramProcessingForm { get { return chromatogramProcessingForm; } }
 
-		private GraphInfoMap graphInfoMap;
-		public GraphInfoMap GraphInfoMap { get { return graphInfoMap; } }
+		//private GraphInfoMap graphInfoMap;
+		//public GraphInfoMap GraphInfoMap { get { return graphInfoMap; } }
+
+        public Chromatogram GetChromatogram( int index )
+        { return GetChromatogram( index, false ); }
+
+        public Chromatogram GetChromatogram( int index, bool getBinaryData )
+        { return new Chromatogram( this, source.MSDataFile.run.chromatogramList.chromatogram( index, getBinaryData ) ); }
+
+        //public Chromatogram GetChromatogram( int index, bool getBinaryData, ChromatogramList chromatogramList );
+
+        public Chromatogram GetChromatogram( Chromatogram metaChromatogram, ChromatogramList chromatogramList )
+        {
+            Chromatogram chromatogram = new Chromatogram( metaChromatogram, chromatogramList.chromatogram( metaChromatogram.Index, true ) );
+            return chromatogram;
+        }
+
+        public MassSpectrum GetMassSpectrum( int index )
+        { return GetMassSpectrum( index, false ); }
+
+        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData )
+        { return GetMassSpectrum( index, getBinaryData, source.MSDataFile.run.spectrumList ); }
+
+        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData, SpectrumList spectrumList )
+        { return new MassSpectrum( this, spectrumList.spectrum( index, getBinaryData ) ); }
+
+        public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, SpectrumList spectrumList )
+        {
+            MassSpectrum spectrum = new MassSpectrum( metaSpectrum, spectrumList.spectrum( metaSpectrum.Index, true ) );
+            spectrum.Tag = metaSpectrum.Tag;
+            return spectrum;
+        }
 	}
 
 
@@ -74,6 +105,8 @@ namespace seems
 		{
 			this.mainForm = mainForm;
 			dataSourceMap = new DataSourceMap();
+
+            LoadDefaultAnnotationSettings();
 		}
 
 		public void OpenFile(string filepath)
@@ -94,9 +127,9 @@ namespace seems
 					GraphForm newGraph = OpenGraph( true );
 					DataSource source = insertResult.Element.Value.Source;
 					if( source.Chromatograms.Count > 0 )
-                        showData( newGraph, insertResult.Element.Value, source.Chromatograms[0] );
+                        showData(newGraph, source.Chromatograms[0] );
 					else
-                        showData( newGraph, insertResult.Element.Value, source.Spectra[0] );
+                        showData(newGraph, source.Spectra[0] );
 				}
 
 			} catch( Exception ex )
@@ -129,54 +162,18 @@ namespace seems
             return graphForm;
         }
 
-        public void UpdateGraph( GraphForm graphForm )
+        private GraphItem getGraphItemWithData( GraphItem item )
         {
-            List<GraphItem> graphItems = graphForm.GraphItems;
-            if( graphItems.Count == 0 )
-                return;
-            showData( graphForm, dataSourceMap[graphItems[0].Source.CurrentFilepath], graphItems[0] );
-            for( int i = 1; i < graphItems.Count; ++i )
-                showDataOverlay( graphForm, dataSourceMap[graphItems[i].Source.CurrentFilepath], graphItems[i] );
-        }
-
-        private void showData( GraphForm hostGraph, ManagedDataSource managedDataSource, GraphItem item )
-        {
+            ManagedDataSource source = item.Source;
             if( item.IsChromatogram )
             {
-                ChromatogramList cl = managedDataSource.Source.MSDataFile.run.chromatogramList;
-                hostGraph.ShowData( managedDataSource.Source, managedDataSource.Source.GetChromatogram( item as Chromatogram, cl ) );
+                ChromatogramList cl = source.Source.MSDataFile.run.chromatogramList;
+                return source.GetChromatogram( item as Chromatogram, cl );
             } else
             {
-                SpectrumList sl = managedDataSource.SpectrumProcessingForm.ProcessingListView.ProcessingWrapper(managedDataSource.Source.MSDataFile.run.spectrumList);
-                hostGraph.ShowData( managedDataSource.Source, managedDataSource.Source.GetMassSpectrum( item as MassSpectrum, sl ) );
+                SpectrumList sl = source.SpectrumProcessingForm.ProcessingListView.ProcessingWrapper( source.Source.MSDataFile.run.spectrumList );
+                return source.GetMassSpectrum( item as MassSpectrum, sl );
             }
-        }
-
-        private void showData( GraphForm hostGraph, ManagedDataSource managedDataSource, DataGridViewRow row )
-        {
-            showData( hostGraph, managedDataSource, row.Tag as GraphItem );
-        }
-
-        private void showDataOverlay( GraphForm hostGraph, ManagedDataSource managedDataSource, GraphItem item )
-        {
-            if( item.IsChromatogram )
-            {
-                hostGraph.ShowDataOverlay( managedDataSource.Source, managedDataSource.Source.GetChromatogram( item.Index, true ) );
-            } else
-            {
-                SpectrumList sl = managedDataSource.SpectrumProcessingForm.ProcessingListView.ProcessingWrapper( managedDataSource.Source.MSDataFile.run.spectrumList );
-                hostGraph.ShowDataOverlay( managedDataSource.Source, managedDataSource.Source.GetMassSpectrum( item as MassSpectrum, sl ) );
-            }
-        }
-
-        private void showDataOverlay( GraphForm hostGraph, ManagedDataSource managedDataSource, DataGridViewRow row )
-        {
-            showDataOverlay( hostGraph, managedDataSource, row.Tag as GraphItem );
-        }
-
-        private bool acceptSpectrum( Spectrum s )
-        {
-            return s.cvParam( CVID.MS_ms_level ).value == "2";
         }
 
 		private void initializeManagedDataSource( ManagedDataSource managedDataSource )
@@ -218,11 +215,12 @@ namespace seems
 					if( ticIndex < cl.size() )
 					{
 						pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( ticIndex );
-						Chromatogram ticChromatogram = new Chromatogram( source, tic );
+                        Chromatogram ticChromatogram = new Chromatogram( managedDataSource, tic );
+                        ticChromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
 						chromatogramListForm.Add( ticChromatogram );
 						source.Chromatograms.Add( ticChromatogram );
 						firstGraph = OpenGraph( true );
-						showData( firstGraph, managedDataSource, ticChromatogram );
+						showData(firstGraph, ticChromatogram );
 						firstChromatogramLoaded = true;
 						chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
 						Application.DoEvents();
@@ -262,7 +260,8 @@ namespace seems
                         if( mainForm.IsDisposed )
                             return;
 
-						Chromatogram chromatogram = new Chromatogram( source, c );
+                        Chromatogram chromatogram = new Chromatogram( managedDataSource, c );
+                        chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
 						chromatogramListForm.Add( chromatogram );
 						source.Chromatograms.Add( chromatogram );
 						if( !firstChromatogramLoaded )
@@ -271,7 +270,7 @@ namespace seems
 							chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
                             Application.DoEvents();
 							firstGraph = OpenGraph( true );
-                            showData( firstGraph, managedDataSource, chromatogram );
+                            showData(firstGraph, chromatogram );
 						}
 						Application.DoEvents();
 					}
@@ -292,7 +291,8 @@ namespace seems
                     if( mainForm.IsDisposed )
                         return;
 
-					MassSpectrum spectrum = new MassSpectrum( source, s );
+                    MassSpectrum spectrum = new MassSpectrum( managedDataSource, s );
+                    spectrum.AnnotationSettings = defaultScanAnnotationSettings;
 					spectrumListForm.Add( spectrum );
 					source.Spectra.Add( spectrum );
 					if( !firstSpectrumLoaded )
@@ -304,11 +304,11 @@ namespace seems
 						{
 							GraphForm spectrumGraph = CreateGraph();
 							spectrumGraph.Show( firstGraph.Pane, DockPaneAlignment.Bottom, 0.5 );
-                            showData( spectrumGraph, managedDataSource, spectrum );
+                            showData(spectrumGraph, spectrum );
 						} else
 						{
 							firstGraph = OpenGraph( true );
-                            showData( firstGraph, managedDataSource, spectrum );
+                            showData(firstGraph, spectrum );
 						}
 					}
 					Application.DoEvents();
@@ -355,20 +355,24 @@ namespace seems
                 {
                     menu.Items.Add( "Show as Current Graph", null, new EventHandler( graphListForm_showAsCurrentGraph ) );
                     menu.Items.Add( "Overlay on Current Graph", null, new EventHandler( graphListForm_overlayOnCurrentGraph ) );
+                    menu.Items.Add( "Stack on Current Graph", null, new EventHandler( graphListForm_stackOnCurrentGraph ) );
                 } else
                 {
                     menu.Items.Add( "Overlay All on Current Graph", null, new EventHandler( graphListForm_overlayAllOnCurrentGraph ) );
+                    menu.Items.Add( "Stack All on Current Graph", null, new EventHandler( graphListForm_showAllAsStackOnCurrentGraph ) );
                 }
             }
 
             if( selectedRows.Count == 1 )
             {
                 menu.Items.Add( "Show as New Graph", null, new EventHandler( graphListForm_showAsNewGraph ) );
-                menu.Items[0].Font = new System.Drawing.Font( menu.Items[0].Font, System.Drawing.FontStyle.Bold );
+                menu.Items[0].Font = new Font( menu.Items[0].Font, FontStyle.Bold );
                 menu.Tag = e.Chromatogram;
             } else
             {
                 menu.Items.Add( "Show All as New Graphs", null, new EventHandler( graphListForm_showAllAsNewGraph ) );
+                menu.Items.Add( "Overlay All on New Graph", null, new EventHandler( graphListForm_overlayAllOnNewGraph ) );
+                menu.Items.Add( "Stack All on New Graph", null, new EventHandler( graphListForm_showAllAsStackOnNewGraph ) );
                 menu.Tag = selectedGraphItems;
             }
 
@@ -400,9 +404,11 @@ namespace seems
                 {
                     menu.Items.Add( "Show as Current Graph", null, new EventHandler( graphListForm_showAsCurrentGraph ) );
                     menu.Items.Add( "Overlay on Current Graph", null, new EventHandler( graphListForm_overlayOnCurrentGraph ) );
+                    menu.Items.Add( "Stack on Current Graph", null, new EventHandler( graphListForm_stackOnCurrentGraph ) );
                 } else
                 {
                     menu.Items.Add( "Overlay All on Current Graph", null, new EventHandler( graphListForm_overlayAllOnCurrentGraph ) );
+                    menu.Items.Add( "Stack All on Current Graph", null, new EventHandler( graphListForm_showAllAsStackOnCurrentGraph ) );
                 }
             }
 
@@ -414,10 +420,46 @@ namespace seems
             } else
             {
                 menu.Items.Add( "Show All as New Graphs", null, new EventHandler( graphListForm_showAllAsNewGraph ) );
+                menu.Items.Add( "Overlay All on New Graph", null, new EventHandler( graphListForm_overlayAllOnNewGraph ) );
+                menu.Items.Add( "Stack All on New Graph", null, new EventHandler( graphListForm_showAllAsStackOnNewGraph ) );
                 menu.Tag = selectedGraphItems;
             }
 
             menu.Show( Form.MousePosition );
+        }
+
+        private void showData(GraphForm hostGraph, GraphItem item )
+        {
+            GraphItem gWithData = getGraphItemWithData( item );
+            Pane pane;
+            if( hostGraph.PaneList.Count == 0 || hostGraph.PaneList.Count > 1 )
+            {
+                hostGraph.PaneList.Clear();
+                pane = new Pane();
+                hostGraph.PaneList.Add( pane );
+            } else
+            {
+                pane = hostGraph.PaneList[0];
+                pane.Clear();
+            }
+            pane.Add( gWithData );
+            hostGraph.Refresh();
+        }
+
+        private void showDataOverlay(GraphForm hostGraph, GraphItem item )
+        {
+            GraphItem gWithData = getGraphItemWithData( item );
+            hostGraph.PaneList[0].Add( gWithData );
+            hostGraph.Refresh();
+        }
+
+        private void showDataStacked(GraphForm hostGraph, GraphItem item )
+        {
+            GraphItem gWithData = getGraphItemWithData( item );
+            Pane pane = new Pane();
+            pane.Add( gWithData );
+            hostGraph.PaneList.Add( pane );
+            hostGraph.Refresh();
         }
 
         void graphListForm_showAsCurrentGraph( object sender, EventArgs e )
@@ -426,7 +468,13 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
-            showData( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+
+            GraphItem gWithData = getGraphItemWithData( g );
+            currentGraphForm.PaneList.Clear();
+            Pane pane = new Pane();
+            pane.Add( gWithData );
+            currentGraphForm.PaneList.Add( pane );
+            currentGraphForm.Refresh();
         }
 
         void graphListForm_overlayOnCurrentGraph( object sender, EventArgs e )
@@ -435,7 +483,10 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
-            showDataOverlay( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+
+            GraphItem gWithData = getGraphItemWithData( g );
+            currentGraphForm.PaneList[0].Add( gWithData );
+            currentGraphForm.Refresh();
         }
 
         void graphListForm_overlayAllOnCurrentGraph( object sender, EventArgs e )
@@ -444,15 +495,28 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
             List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+
+            currentGraphForm.PaneList.Clear();
+            Pane pane = new Pane();
             foreach( GraphItem g in gList )
-                showDataOverlay( currentGraphForm, dataSourceMap[g.Source.CurrentFilepath], g );
+            {
+                GraphItem gWithData = getGraphItemWithData( g );
+                pane.Add( gWithData );
+            }
+            currentGraphForm.PaneList.Add( pane );
+            currentGraphForm.Refresh();
         }
 
         void graphListForm_showAsNewGraph( object sender, EventArgs e )
         {
             GraphForm newGraph = OpenGraph( true );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
-            showData( newGraph, dataSourceMap[g.Source.CurrentFilepath], g );
+
+            GraphItem gWithData = getGraphItemWithData( g );
+            Pane pane = new Pane();
+            pane.Add( gWithData );
+            newGraph.PaneList.Add( pane );
+            newGraph.Refresh();
         }
 
         void graphListForm_showAllAsNewGraph( object sender, EventArgs e )
@@ -461,29 +525,168 @@ namespace seems
             foreach( GraphItem g in gList )
             {
                 GraphForm newGraph = OpenGraph( true );
-                showData( newGraph, dataSourceMap[g.Source.CurrentFilepath], g );
+
+                GraphItem gWithData = getGraphItemWithData( g );
+                Pane pane = new Pane();
+                pane.Add( gWithData );
+                newGraph.PaneList.Add( pane );
+                newGraph.Refresh();
             }
+        }
+
+        void graphListForm_stackOnCurrentGraph( object sender, EventArgs e )
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+            GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
+
+            GraphItem gWithData = getGraphItemWithData( g );
+            Pane pane = new Pane();
+            pane.Add( gWithData );
+            currentGraphForm.PaneList.Add( pane );
+            currentGraphForm.Refresh();
+        }
+
+        void graphListForm_showAllAsStackOnCurrentGraph( object sender, EventArgs e )
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+            List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+
+            currentGraphForm.PaneList.Clear();
+            foreach( GraphItem g in gList )
+            {
+                GraphItem gWithData = getGraphItemWithData( g );
+                Pane pane = new Pane();
+                pane.Add( gWithData );
+                currentGraphForm.PaneList.Add( pane );
+            }
+            currentGraphForm.Refresh();
+        }
+
+        void graphListForm_overlayAllOnNewGraph( object sender, EventArgs e )
+        {
+            List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+
+            GraphForm newGraph = OpenGraph( true );
+            Pane pane = new Pane();
+            foreach( GraphItem g in gList )
+            {
+                GraphItem gWithData = getGraphItemWithData( g );
+                pane.Add( gWithData );
+            }
+            newGraph.PaneList.Add( pane );
+            newGraph.Refresh();
+        }
+
+        void graphListForm_showAllAsStackOnNewGraph( object sender, EventArgs e )
+        {
+            List<GraphItem> gList = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as List<GraphItem>;
+
+            GraphForm newGraph = OpenGraph( true );
+            foreach( GraphItem g in gList )
+            {
+                GraphItem gWithData = getGraphItemWithData( g );
+                Pane pane = new Pane();
+                pane.Add( gWithData );
+                newGraph.PaneList.Add( pane );
+            }
+            newGraph.Refresh();
         }
 
         public void ShowDataProcessing()
         {
-            if( mainForm.CurrentGraphForm != null &&
-                mainForm.CurrentGraphForm.CurrentGraphItem != null &&
-                mainForm.CurrentGraphForm.CurrentGraphItem.IsMassSpectrum )
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+
+            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
             {
-                SpectrumProcessingForm dataProcessingForm = dataSourceMap[mainForm.CurrentGraphForm.CurrentGraphItem.Source.CurrentFilepath].SpectrumProcessingForm;
+                SpectrumProcessingForm dataProcessingForm = mainForm.CurrentGraphForm.CurrentGraphItem.Source.SpectrumProcessingForm;
                 dataProcessingForm.ProcessingListView.ItemsChanged += new EventHandler(processingListView_Changed);
                 dataProcessingForm.Show( mainForm.DockPanel, DockState.Floating );
             }
         }
 
+        private AnnotationSettings defaultScanAnnotationSettings;
+        private AnnotationSettings defaultChromatogramAnnotationSettings;
+        public void LoadDefaultAnnotationSettings()
+        {
+            defaultScanAnnotationSettings = new AnnotationSettings();
+            defaultScanAnnotationSettings.ShowXValues = Properties.Settings.Default.ShowScanMzLabels;
+            defaultScanAnnotationSettings.ShowYValues = Properties.Settings.Default.ShowScanIntensityLabels;
+            defaultScanAnnotationSettings.ShowMatchedAnnotations = Properties.Settings.Default.ShowScanMatchedAnnotations;
+            defaultScanAnnotationSettings.ShowUnmatchedAnnotations = Properties.Settings.Default.ShowScanUnmatchedAnnotations;
+            defaultScanAnnotationSettings.MatchTolerance = Properties.Settings.Default.MzMatchTolerance;
+            defaultScanAnnotationSettings.MatchToleranceOverride = Properties.Settings.Default.ScanMatchToleranceOverride;
+            defaultScanAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Properties.Settings.Default.MzMatchToleranceUnit;
+
+            // ms-product-label -> (label alias, known color)
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["y"] = new Pair<string, Color>( "y", Color.Blue );
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["b"] = new Pair<string, Color>( "b", Color.Red );
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["y-NH3"] = new Pair<string, Color>( "y^", Color.Green );
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["y-H2O"] = new Pair<string, Color>( "y*", Color.Cyan );
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["b-NH3"] = new Pair<string, Color>( "b^", Color.Orange );
+            defaultScanAnnotationSettings.LabelToAliasAndColorMap["b-H2O"] = new Pair<string, Color>( "b*", Color.Violet );
+
+            defaultChromatogramAnnotationSettings = new AnnotationSettings();
+            defaultChromatogramAnnotationSettings.ShowXValues = Properties.Settings.Default.ShowChromatogramTimeLabels;
+            defaultChromatogramAnnotationSettings.ShowYValues = Properties.Settings.Default.ShowChromatogramIntensityLabels;
+            defaultChromatogramAnnotationSettings.ShowMatchedAnnotations = Properties.Settings.Default.ShowChromatogramMatchedAnnotations;
+            defaultChromatogramAnnotationSettings.ShowUnmatchedAnnotations = Properties.Settings.Default.ShowChromatogramUnmatchedAnnotations;
+            defaultChromatogramAnnotationSettings.MatchTolerance = Properties.Settings.Default.TimeMatchTolerance;
+            defaultChromatogramAnnotationSettings.MatchToleranceOverride = Properties.Settings.Default.ChromatogramMatchToleranceOverride;
+            defaultChromatogramAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Properties.Settings.Default.TimeMatchToleranceUnit;
+        }
+
+        public void ShowAnnotationSettings()
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+
+            AnnotationSettings settings;
+            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
+            {
+                settings = defaultScanAnnotationSettings;
+                ScanAnnotationSettingsForm annotationSettingsForm = new ScanAnnotationSettingsForm( settings );
+                annotationSettingsForm.ShowDialog( mainForm );
+            } else
+            {
+                settings = defaultChromatogramAnnotationSettings;
+                ChromatogramAnnotationSettingsForm annotationSettingsForm = new ChromatogramAnnotationSettingsForm( settings );
+                annotationSettingsForm.ShowDialog( mainForm );
+            }
+        }
+
+        public void ShowAnnotationManualEditForm()
+        {
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+
+            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
+            {
+                AnnotationEditForm annotationEditForm = new AnnotationEditForm( defaultScanAnnotationSettings );
+                annotationEditForm.ShowDialog( mainForm );
+            } else
+            {
+                AnnotationEditForm annotationEditForm = new AnnotationEditForm( defaultChromatogramAnnotationSettings );
+                annotationEditForm.ShowDialog( mainForm );
+            }
+        }
+
         private void processingListView_Changed( object sender, EventArgs e )
         {
-            if( mainForm.CurrentGraphForm != null &&
-                mainForm.CurrentGraphForm.CurrentGraphItem != null &&
-                mainForm.CurrentGraphForm.CurrentGraphItem.IsMassSpectrum )
+            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
+            if( currentGraphForm == null )
+                throw new Exception( "current graph should not be null" );
+
+            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
             {
-                UpdateGraph( mainForm.CurrentGraphForm );
+                mainForm.CurrentGraphForm.Refresh();
             }
         }
 
@@ -497,7 +700,7 @@ namespace seems
             if( currentGraphForm == null )
                 currentGraphForm = OpenGraph( true );
 
-            showData( currentGraphForm, dataSourceMap[e.Chromatogram.Source.CurrentFilepath], e.Chromatogram );
+            showData(currentGraphForm, e.Chromatogram );
             currentGraphForm.ZedGraphControl.Focus();
         }
 
@@ -510,23 +713,23 @@ namespace seems
             if( currentGraphForm == null )
                 currentGraphForm = OpenGraph( true );
 
-            showData(currentGraphForm, dataSourceMap[e.Spectrum.Source.CurrentFilepath], e.Spectrum );
+            showData(currentGraphForm, e.Spectrum );
             currentGraphForm.ZedGraphControl.Focus();
         }
 
         private void graphForm_PreviewKeyDown( object sender, PreviewKeyDownEventArgs e )
         {
-            if( !( sender is GraphForm ) && !( sender is ZedGraph.ZedGraphControl ) )
+            if( !( sender is GraphForm ) && !( sender is MSGraph.MSGraphControl ) )
                 throw new Exception( "Error processing keyboard input: unable to handle sender " + sender.ToString() );
 
             GraphForm graphForm;
             if( sender is GraphForm )
                 graphForm = sender as GraphForm;
             else
-                graphForm = ( sender as ZedGraph.ZedGraphControl ).Parent as GraphForm;
+                graphForm = ( sender as MSGraph.MSGraphControl ).Parent as GraphForm;
 
-            DataSource source = graphForm.DataSource;
-            GraphItem graphItem = graphForm.CurrentGraphItem;
+            GraphItem graphItem = graphForm.PaneList[0][0];
+            DataSource source = graphItem.Source.Source;
             if( source == null || graphItem == null )
                 return;
 
@@ -545,7 +748,7 @@ namespace seems
 
             gridView.Parent.Refresh(); // update chromatogram/spectrum list
             graphForm.Pane.Refresh(); // update tab text
-            showData( graphForm, dataSourceMap[source.CurrentFilepath], gridView.CurrentRow );
+            showData(graphForm, gridView.CurrentRow.Tag as GraphItem );
             Application.DoEvents();
 
             //CurrentGraphForm.ZedGraphControl.PreviewKeyDown -= new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );

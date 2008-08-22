@@ -14,13 +14,15 @@ using System.Text.RegularExpressions;
 using pwiz.CLI.msdata;
 using JWC;
 using Microsoft.Win32;
-using Extensions;
 using DigitalRune.Windows.Docking;
 
 namespace seems
 {
 	public partial class seems : Form
 	{
+        public static string Version = "0.5";
+        public static string LastModified = "8/11/2008";
+
 		private bool isLoaded = false;
 		private OpenDataSourceDialog browseToFileDialog;
 		private Manager manager;
@@ -207,19 +209,9 @@ namespace seems
 			}
 		}
 
-        private void centroidToolStripMenuItem_CheckedChanged( object sender, EventArgs e )
-        {
-            manager.UpdateGraph( CurrentGraphForm );
-        }
-
-        private void smoothToolStripMenuItem_CheckedChanged( object sender, EventArgs e )
-        {
-            manager.UpdateGraph( CurrentGraphForm );
-        }
-
 		private void peptideFragmentationToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			PeptideFragmentationForm peptideFragmentationForm = new PeptideFragmentationForm();
+			/*PeptideFragmentationForm peptideFragmentationForm = new PeptideFragmentationForm();
 			peptideFragmentationForm.ShowDialog( this );
 			if( peptideFragmentationForm.DialogResult == DialogResult.Cancel )
 				return;
@@ -259,16 +251,16 @@ namespace seems
 					}
 				}
 
-				CurrentGraphForm.ScanAnnotationSettings.setScanLabels( pointAnnotations );
-				if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
-					CurrentGraphForm.updateGraph();
-			}
+				//CurrentGraphForm.AnnotationSettings.setScanLabels( pointAnnotations );
+				//if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
+				//	CurrentGraphForm.updateGraph();
+			}*/
 		}
 
 
 		private void peptideMassMapProteinDigestToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			PeptideMassMapProteinDigestForm peptideMassMapProteinDigestForm = new PeptideMassMapProteinDigestForm();
+			/*PeptideMassMapProteinDigestForm peptideMassMapProteinDigestForm = new PeptideMassMapProteinDigestForm();
 			peptideMassMapProteinDigestForm.ShowDialog( this );
 			if( peptideMassMapProteinDigestForm.DialogResult == DialogResult.Cancel )
 				return;
@@ -312,38 +304,29 @@ namespace seems
 					}
 				}
 
-				CurrentGraphForm.ScanAnnotationSettings.setScanLabels( pointAnnotations );
-				if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
-					CurrentGraphForm.updateGraph();
-			}
+				//CurrentGraphForm.ScanAnnotationSettings.setScanLabels( pointAnnotations );
+				//if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
+				//	CurrentGraphForm.updateGraph();
+			}*/
 		}
 
 		private void clearToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			if( CurrentGraphForm.CurrentPointAnnotations.Count == 0 )
+			/*if( CurrentGraphForm.CurrentPointAnnotations.Count == 0 )
 				return;
 
 			CurrentGraphForm.CurrentPointAnnotations.Clear();
-			CurrentGraphForm.updateGraph();
+            CurrentGraphForm.Refresh();*/
 		}
 
 		private void settingsToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			if( CurrentGraphForm.CurrentGraphItem.IsMassSpectrum )
-			{
-				ScanAnnotationSettingsForm annotationSettingsForm = new ScanAnnotationSettingsForm( CurrentGraphForm );
-				annotationSettingsForm.ShowDialog( this );
-			} else
-			{
-				ChromatogramAnnotationSettingsForm annotationSettingsForm = new ChromatogramAnnotationSettingsForm( CurrentGraphForm );
-				annotationSettingsForm.ShowDialog( this );
-			}
+            manager.ShowAnnotationSettings();
 		}
 
 		private void manualEditToolStripMenuItem_Click( object sender, EventArgs e )
 		{
-			AnnotationEditForm annotationEditForm = new AnnotationEditForm( CurrentGraphForm );
-			annotationEditForm.ShowDialog( this );
+            manager.ShowAnnotationManualEditForm();
 		}
 
 		private GraphForm currentGraphForm;
@@ -421,7 +404,8 @@ namespace seems
 
 		private void aboutHelpMenuItem_Click( object sender, EventArgs e )
 		{
-			MessageBox.Show( "© 2008 Vanderbilt University", "About", MessageBoxButtons.OK, MessageBoxIcon.Information );
+            AboutForm form = new AboutForm();
+            form.ShowDialog();
 		}
 
 		// workaround for MDI Window list bug
@@ -482,6 +466,7 @@ namespace seems
 			}
 		}
 
+        #region Integration stuff
 		Point integratePeaksMouseDownLocation;
 		Point integratePeaksMouseUpLocation;
 		ZedGraph.LineItem integratePeaksLine;
@@ -510,393 +495,393 @@ namespace seems
 		{
 			peakIntegrationMode.Checked = !peakIntegrationMode.Checked;
 			setPeakIntegrationMode( peakIntegrationMode.Checked );
-		}
+        }
 
-		bool ZedGraphControl_MouseMoveEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
-		{
-			if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
-				return false;
+        bool ZedGraphControl_MouseMoveEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
+        {
+            if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
+                return false;
 
-			if( integratePeaksLine != null && e.Button == MouseButtons.Left )
-			{
-				double x = CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.ReverseTransform( (float) e.X );
-				double y = CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.ReverseTransform( (float) e.Y );
-				//CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( integratePeaksLine );
-				//integratePeaksLine = new ZedGraph.LineItem( integratePeaksLine.Location.X1, integratePeaksLine.Location.Y1, x, y );
-				//integratePeaksLine.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-				//CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Add( integratePeaksLine );
-				integratePeaksLine.Points[1].X = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Min, x ) );
-				integratePeaksLine.Points[1].Y = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Min, y ) );
+            if( integratePeaksLine != null && e.Button == MouseButtons.Left )
+            {
+                double x = CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.ReverseTransform( (float) e.X );
+                double y = CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.ReverseTransform( (float) e.Y );
+                //CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( integratePeaksLine );
+                //integratePeaksLine = new ZedGraph.LineItem( integratePeaksLine.Location.X1, integratePeaksLine.Location.Y1, x, y );
+                //integratePeaksLine.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                //CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Add( integratePeaksLine );
+                integratePeaksLine.Points[1].X = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Min, x ) );
+                integratePeaksLine.Points[1].Y = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Min, y ) );
+                /*
+                if( CurrentGraphForm.ZedGraphControl.GraphPane.CurveList[0].Points is PointList )
+                {
+                    foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
+                        CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
+                    integratePeaksAreas.Clear();
 
-				if( CurrentGraphForm.ZedGraphControl.GraphPane.CurveList[0].Points is PointList )
-				{
-					foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
-						CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
-					integratePeaksAreas.Clear();
+                    PointList pointList = (PointList) CurrentGraphForm.ZedGraphControl.GraphPane.CurveList[0].Points;
+                    if( pointList.ScaledCount == 0 )
+                        return false;
 
-					PointList pointList = (PointList) CurrentGraphForm.ZedGraphControl.GraphPane.CurveList[0].Points;
-					if( pointList.ScaledCount == 0 )
-						return false;
+                    double x1, y1, x2, y2;
+                    if( integratePeaksLine.Points[0].X > integratePeaksLine.Points[1].X )
+                    {
+                        x1 = integratePeaksLine.Points[1].X;
+                        y1 = integratePeaksLine.Points[1].Y;
+                        x2 = integratePeaksLine.Points[0].X;
+                        y2 = integratePeaksLine.Points[0].Y;
+                    } else
+                    {
+                        x1 = integratePeaksLine.Points[0].X;
+                        y1 = integratePeaksLine.Points[0].Y;
+                        x2 = integratePeaksLine.Points[1].X;
+                        y2 = integratePeaksLine.Points[1].Y;
+                    }
 
-					double x1, y1, x2, y2;
-					if( integratePeaksLine.Points[0].X > integratePeaksLine.Points[1].X )
-					{
-						x1 = integratePeaksLine.Points[1].X;
-						y1 = integratePeaksLine.Points[1].Y;
-						x2 = integratePeaksLine.Points[0].X;
-						y2 = integratePeaksLine.Points[0].Y;
-					} else
-					{
-						x1 = integratePeaksLine.Points[0].X;
-						y1 = integratePeaksLine.Points[0].Y;
-						x2 = integratePeaksLine.Points[1].X;
-						y2 = integratePeaksLine.Points[1].Y;
-					}
+                    int lowerBoundIndex = pointList.LowerBound( x1 );
+                    int upperBoundIndex = pointList.LowerBound( x2 );
+                    if( upperBoundIndex < 0 )
+                        upperBoundIndex = pointList.ScaledCount - 1;
 
-					int lowerBoundIndex = pointList.LowerBound( x1 );
-					int upperBoundIndex = pointList.LowerBound( x2 );
-					if( upperBoundIndex < 0 )
-						upperBoundIndex = pointList.ScaledCount - 1;
+                    double totalIntegratedArea = 0.0;
+                    int totalAreaPoints = 0;
+                    int totalAreaCount = 0;
 
-					double totalIntegratedArea = 0.0;
-					int totalAreaPoints = 0;
-					int totalAreaCount = 0;
+                    // integration line can be in any of these states:
 
-					// integration line can be in any of these states:
+                    // * entirely to the left of the curve:
+                    //		- no integration
+                    // * entirely to the right of the curve:
+                    //		- no integration
+                    // * entirely between two consecutive points:
+                    //		- integration is entirely interpolated based on data slope
+                    // * starts to the left of the curve and ends between two consecutive points:
+                    //		- start integration at the X value of the first data point
+                    //		- end integration at the line's right X value
+                    // * starts between two consecutive points and ends to the right of the curve:
+                    //		- start integration at the line's left X value
+                    //		- end integration at the X value of the last data point
+                    // * starts between two consecutive points and ends between two different consecutive points:
+                    //		- start integration at the line's left X value
+                    //		- end integration at the line's right X value
 
-					// * entirely to the left of the curve:
-					//		- no integration
-					// * entirely to the right of the curve:
-					//		- no integration
-					// * entirely between two consecutive points:
-					//		- integration is entirely interpolated based on data slope
-					// * starts to the left of the curve and ends between two consecutive points:
-					//		- start integration at the X value of the first data point
-					//		- end integration at the line's right X value
-					// * starts between two consecutive points and ends to the right of the curve:
-					//		- start integration at the line's left X value
-					//		- end integration at the X value of the last data point
-					// * starts between two consecutive points and ends between two different consecutive points:
-					//		- start integration at the line's left X value
-					//		- end integration at the line's right X value
+                    // * entirely above the curve:
+                    //		- no integration
+                    // * starts above the curve and ends below the curve:
+                    //		- start integration at the first intersection of the line with the curve
+                    //		- end integration at the X value where the line ends
+                    // * starts below the curve and ends above the curve:
+                    //		- start integration at the X value where the line starts
+                    //		- end integration at the last intersection of the line with the curve
+                    // * entirely below the curve:
+                    //		- start and end integration at the X values of the line
 
-					// * entirely above the curve:
-					//		- no integration
-					// * starts above the curve and ends below the curve:
-					//		- start integration at the first intersection of the line with the curve
-					//		- end integration at the X value where the line ends
-					// * starts below the curve and ends above the curve:
-					//		- start integration at the X value where the line starts
-					//		- end integration at the last intersection of the line with the curve
-					// * entirely below the curve:
-					//		- start and end integration at the X values of the line
+                    // * the Y value of the line's start point is less than 0 and the end point's is not:
+                    //		- a special area point must be added before the first area's bottom left point
+                    //		- add it at the intersection of the line with the X axis
+                    // * the Y value of the line's end point is less than 0 and the start point's is not:
+                    //		- a special area point must be added after the last area's bottom right point
+                    //		- add it at the intersection of the line with the X axis
+                    // * the Y values of both the start and end points of the line are less than 0:
+                    //		- no special points are necessary
 
-					// * the Y value of the line's start point is less than 0 and the end point's is not:
-					//		- a special area point must be added before the first area's bottom left point
-					//		- add it at the intersection of the line with the X axis
-					// * the Y value of the line's end point is less than 0 and the start point's is not:
-					//		- a special area point must be added after the last area's bottom right point
-					//		- add it at the intersection of the line with the X axis
-					// * the Y values of both the start and end points of the line are less than 0:
-					//		- no special points are necessary
+                    if( lowerBoundIndex >= 0 && x2 > x1 )
+                    {
+                        // calculate the linear function for integration line
+                        double integratePeaksLineA = ( y2 - y1 ) / ( x2 - x1 );
+                        double integratePeaksLineB = y1 - ( integratePeaksLineA * x1 );
 
-					if( lowerBoundIndex >= 0 && x2 > x1 )
-					{
-						// calculate the linear function for integration line
-						double integratePeaksLineA = ( y2 - y1 ) / ( x2 - x1 );
-						double integratePeaksLineB = y1 - ( integratePeaksLineA * x1 );
+                        // restrict the X range of the integration line to the minimum and maximum X values of the curve
+                        // interpolate the Y value of the integration line at those X values
+                        double leftInterpolatedX = Math.Max( pointList.ScaledList[0].X, x1 );
+                        double leftInterpolatedY = Math.Max( 0, integratePeaksLineA * leftInterpolatedX + integratePeaksLineB );
+                        double rightInterpolatedX = Math.Min( pointList.ScaledList[pointList.ScaledCount - 1].X, x2 );
+                        double rightInterpolatedY = Math.Max( 0, integratePeaksLineA * rightInterpolatedX + integratePeaksLineB );
 
-						// restrict the X range of the integration line to the minimum and maximum X values of the curve
-						// interpolate the Y value of the integration line at those X values
-						double leftInterpolatedX = Math.Max( pointList.ScaledList[0].X, x1 );
-						double leftInterpolatedY = Math.Max( 0, integratePeaksLineA * leftInterpolatedX + integratePeaksLineB );
-						double rightInterpolatedX = Math.Min( pointList.ScaledList[pointList.ScaledCount - 1].X, x2 );
-						double rightInterpolatedY = Math.Max( 0, integratePeaksLineA * rightInterpolatedX + integratePeaksLineB );
-						
-						List<ZedGraph.PointD> areaPoints = new List<ZedGraph.PointD>();
-						//List<List<ZedGraph.PointD>> areaTrapezoids = new List<List<ZedGraph.PointD>>();
-						for( int i = Math.Max( 1, lowerBoundIndex ); i <= upperBoundIndex; ++i )
-						{
-							ZedGraph.PointPair rightPoint = pointList.ScaledList[i];
-							ZedGraph.PointPair leftPoint = pointList.ScaledList[i - 1];
+                        List<ZedGraph.PointD> areaPoints = new List<ZedGraph.PointD>();
+                        //List<List<ZedGraph.PointD>> areaTrapezoids = new List<List<ZedGraph.PointD>>();
+                        for( int i = Math.Max( 1, lowerBoundIndex ); i <= upperBoundIndex; ++i )
+                        {
+                            ZedGraph.PointPair rightPoint = pointList.ScaledList[i];
+                            ZedGraph.PointPair leftPoint = pointList.ScaledList[i - 1];
 
-							// interpolate the Y value of the integration line at the previous and current points' X value
-							double lastPointLineY = integratePeaksLineA * leftPoint.X + integratePeaksLineB;
-							double curPointLineY = integratePeaksLineA * rightPoint.X + integratePeaksLineB;
+                            // interpolate the Y value of the integration line at the previous and current points' X value
+                            double lastPointLineY = integratePeaksLineA * leftPoint.X + integratePeaksLineB;
+                            double curPointLineY = integratePeaksLineA * rightPoint.X + integratePeaksLineB;
 
-							// calculate the linear function between the previous and current points
-							double dataA = ( rightPoint.Y - leftPoint.Y ) / ( rightPoint.X - leftPoint.X );
-							double dataB = rightPoint.Y - ( dataA * rightPoint.X );
+                            // calculate the linear function between the previous and current points
+                            double dataA = ( rightPoint.Y - leftPoint.Y ) / ( rightPoint.X - leftPoint.X );
+                            double dataB = rightPoint.Y - ( dataA * rightPoint.X );
 
-							double leftInterpolatedPointY = dataA * leftInterpolatedX + dataB;
-							double rightInterpolatedPointY = dataA * rightInterpolatedX + dataB;
+                            double leftInterpolatedPointY = dataA * leftInterpolatedX + dataB;
+                            double rightInterpolatedPointY = dataA * rightInterpolatedX + dataB;
 
-							bool leftInterpolatedPointIsAboveLine = ( leftInterpolatedPointY >= leftInterpolatedY );
-							bool rightInterpolatedPointIsAboveLine = ( rightInterpolatedPointY >= rightInterpolatedY );
+                            bool leftInterpolatedPointIsAboveLine = ( leftInterpolatedPointY >= leftInterpolatedY );
+                            bool rightInterpolatedPointIsAboveLine = ( rightInterpolatedPointY >= rightInterpolatedY );
 
-							bool leftPointIsAboveLine = ( leftPoint.Y > lastPointLineY );
-							bool rightPointIsAboveLine = ( rightPoint.Y > curPointLineY );
+                            bool leftPointIsAboveLine = ( leftPoint.Y > lastPointLineY );
+                            bool rightPointIsAboveLine = ( rightPoint.Y > curPointLineY );
 
-							bool leftPointIsLowerBound = ( i == 1 || i == lowerBoundIndex );
-							bool rightPointIsUpperBound = ( i == upperBoundIndex );
+                            bool leftPointIsLowerBound = ( i == 1 || i == lowerBoundIndex );
+                            bool rightPointIsUpperBound = ( i == upperBoundIndex );
 
-							if( !leftInterpolatedPointIsAboveLine && !rightInterpolatedPointIsAboveLine ||
-								!leftPointIsAboveLine && !rightPointIsAboveLine )
-								continue;
+                            if( !leftInterpolatedPointIsAboveLine && !rightInterpolatedPointIsAboveLine ||
+                                !leftPointIsAboveLine && !rightPointIsAboveLine )
+                                continue;
 
-							bool needIntersection = ( leftInterpolatedPointIsAboveLine != rightInterpolatedPointIsAboveLine );
+                            bool needIntersection = ( leftInterpolatedPointIsAboveLine != rightInterpolatedPointIsAboveLine );
 
-							bool areaIsEmpty = ( areaPoints.Count == 0 );
+                            bool areaIsEmpty = ( areaPoints.Count == 0 );
 
-							if( rightPointIsAboveLine || leftPointIsAboveLine )
-							{
-								if( areaIsEmpty ) // start a new area
-								{
-									if( leftPointIsLowerBound && leftInterpolatedPointIsAboveLine ) // interpolate the point on the curve above the line
-									{
-										if( y1 <= 0 && y2 > 0 )
-										{
-											double croppedBottomX = -integratePeaksLineB / integratePeaksLineA;
-											if( croppedBottomX != leftInterpolatedX )
-												areaPoints.Add( new ZedGraph.PointD( croppedBottomX, 0 ) );
-										}
-										areaPoints.Add( new ZedGraph.PointD( leftInterpolatedX, leftInterpolatedY ) ); // bottom left
-										areaPoints.Add( new ZedGraph.PointD( leftInterpolatedX, leftInterpolatedPointY ) ); // top left
+                            if( rightPointIsAboveLine || leftPointIsAboveLine )
+                            {
+                                if( areaIsEmpty ) // start a new area
+                                {
+                                    if( leftPointIsLowerBound && leftInterpolatedPointIsAboveLine ) // interpolate the point on the curve above the line
+                                    {
+                                        if( y1 <= 0 && y2 > 0 )
+                                        {
+                                            double croppedBottomX = -integratePeaksLineB / integratePeaksLineA;
+                                            if( croppedBottomX != leftInterpolatedX )
+                                                areaPoints.Add( new ZedGraph.PointD( croppedBottomX, 0 ) );
+                                        }
+                                        areaPoints.Add( new ZedGraph.PointD( leftInterpolatedX, leftInterpolatedY ) ); // bottom left
+                                        areaPoints.Add( new ZedGraph.PointD( leftInterpolatedX, leftInterpolatedPointY ) ); // top left
 
-									} else if( needIntersection ) // interpolate the intersection of line and curve
-									{
-										double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
-										double intersectY = dataA * intersectX + dataB;
+                                    } else if( needIntersection ) // interpolate the intersection of line and curve
+                                    {
+                                        double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
+                                        double intersectY = dataA * intersectX + dataB;
 
-										areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
-									}
-								}
+                                        areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
+                                    }
+                                }
 
-								if( rightPointIsUpperBound ) // end at the upper bound and add current area to the area list
-								{
-									if( rightInterpolatedPointIsAboveLine )
-									{
-										// add a new point to the current area
-										//areaPoints.Add( new ZedGraph.PointD( pointList.ScaledList[i].X, pointList.ScaledList[i].Y ) );
+                                if( rightPointIsUpperBound ) // end at the upper bound and add current area to the area list
+                                {
+                                    if( rightInterpolatedPointIsAboveLine )
+                                    {
+                                        // add a new point to the current area
+                                        //areaPoints.Add( new ZedGraph.PointD( pointList.ScaledList[i].X, pointList.ScaledList[i].Y ) );
 
-										areaPoints.Add( new ZedGraph.PointD( rightInterpolatedX, rightInterpolatedPointY ) ); // top right
-										areaPoints.Add( new ZedGraph.PointD( rightInterpolatedX, rightInterpolatedY ) ); // bottom right
-										if( y2 <= 0 && y1 > 0 ) // add another point if line extends below X axis
-										{
-											double croppedBottomX = -integratePeaksLineB / integratePeaksLineA;
-											if( croppedBottomX != rightInterpolatedX )
-												areaPoints.Add( new ZedGraph.PointD( croppedBottomX, 0 ) );
-										}
-									} else if( needIntersection ) // interpolate the intersection of line and curve
-									{
-										double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
-										double intersectY = dataA * intersectX + dataB;
+                                        areaPoints.Add( new ZedGraph.PointD( rightInterpolatedX, rightInterpolatedPointY ) ); // top right
+                                        areaPoints.Add( new ZedGraph.PointD( rightInterpolatedX, rightInterpolatedY ) ); // bottom right
+                                        if( y2 <= 0 && y1 > 0 ) // add another point if line extends below X axis
+                                        {
+                                            double croppedBottomX = -integratePeaksLineB / integratePeaksLineA;
+                                            if( croppedBottomX != rightInterpolatedX )
+                                                areaPoints.Add( new ZedGraph.PointD( croppedBottomX, 0 ) );
+                                        }
+                                    } else if( needIntersection ) // interpolate the intersection of line and curve
+                                    {
+                                        double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
+                                        double intersectY = dataA * intersectX + dataB;
 
-										areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
-									}
+                                        areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
+                                    }
 
 
-									if( areaPoints.Count == 0 )
-										continue;
+                                    if( areaPoints.Count == 0 )
+                                        continue;
 
                                     ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.FromArgb( 127, Color.Cyan ), Color.FromArgb( 127, Color.Cyan ) );
-									integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-									//integratePeaksArea.IsClosedFigure = true;
-									areaPoints.Add( areaPoints[0] );
-									integratePeaksAreas.Add( integratePeaksArea );
+                                    integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                                    //integratePeaksArea.IsClosedFigure = true;
+                                    areaPoints.Add( areaPoints[0] );
+                                    integratePeaksAreas.Add( integratePeaksArea );
 
-									double currentIntegratedArea = 0.0;
-									for( int k, j = 0; j < areaPoints.Count; ++j )
-									{
-										k = ( j + 1 ) % areaPoints.Count;
-										currentIntegratedArea += areaPoints[j].X * areaPoints[k].Y;
-										currentIntegratedArea -= areaPoints[j].Y * areaPoints[k].X;
-									}
-									totalIntegratedArea += Math.Abs( currentIntegratedArea / 2.0 );
-									totalAreaPoints += areaPoints.Count - 1;
-									++totalAreaCount;
-									areaPoints.Clear();
-								} else
-								{
-									// add a new top right point to the current area
-									areaPoints.Add( new ZedGraph.PointD( pointList.ScaledList[i].X, pointList.ScaledList[i].Y ) );
-								}
+                                    double currentIntegratedArea = 0.0;
+                                    for( int k, j = 0; j < areaPoints.Count; ++j )
+                                    {
+                                        k = ( j + 1 ) % areaPoints.Count;
+                                        currentIntegratedArea += areaPoints[j].X * areaPoints[k].Y;
+                                        currentIntegratedArea -= areaPoints[j].Y * areaPoints[k].X;
+                                    }
+                                    totalIntegratedArea += Math.Abs( currentIntegratedArea / 2.0 );
+                                    totalAreaPoints += areaPoints.Count - 1;
+                                    ++totalAreaCount;
+                                    areaPoints.Clear();
+                                } else
+                                {
+                                    // add a new top right point to the current area
+                                    areaPoints.Add( new ZedGraph.PointD( pointList.ScaledList[i].X, pointList.ScaledList[i].Y ) );
+                                }
 
-							}
+                            }
 
-							if( !rightPointIsAboveLine && !rightPointIsUpperBound )// close the current area and add it to the area list
-							{
-								double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
-								double intersectY = dataA * intersectX + dataB;
+                            if( !rightPointIsAboveLine && !rightPointIsUpperBound )// close the current area and add it to the area list
+                            {
+                                double intersectX = ( dataB - integratePeaksLineB ) / ( integratePeaksLineA - dataA );
+                                double intersectY = dataA * intersectX + dataB;
 
-								areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
+                                areaPoints.Add( new ZedGraph.PointD( intersectX, intersectY ) );
 
-								if( areaPoints.Count == 0 )
-									continue;
+                                if( areaPoints.Count == 0 )
+                                    continue;
 
                                 ZedGraph.PolyObj integratePeaksArea = new ZedGraph.PolyObj( areaPoints.ToArray(), Color.Black, Color.FromArgb( 127, Color.Cyan ), Color.FromArgb( 127, Color.Cyan ) );
-								integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-								//integratePeaksArea.IsClosedFigure = true;
-								areaPoints.Add( areaPoints[0] );
-								integratePeaksAreas.Add( integratePeaksArea );
-								double currentIntegratedArea = 0.0;
-								for( int k, j = 0; j < areaPoints.Count; ++j )
-								{
-									k = ( j + 1 ) % areaPoints.Count;
-									currentIntegratedArea += areaPoints[j].X * areaPoints[k].Y;
-									currentIntegratedArea -= areaPoints[j].Y * areaPoints[k].X;
-								}
-								totalIntegratedArea += Math.Abs( currentIntegratedArea / 2.0 );
-								totalAreaPoints += areaPoints.Count - 1;
-								++totalAreaCount;
-								areaPoints.Clear();
-							}
-						}
+                                integratePeaksArea.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                                //integratePeaksArea.IsClosedFigure = true;
+                                areaPoints.Add( areaPoints[0] );
+                                integratePeaksAreas.Add( integratePeaksArea );
+                                double currentIntegratedArea = 0.0;
+                                for( int k, j = 0; j < areaPoints.Count; ++j )
+                                {
+                                    k = ( j + 1 ) % areaPoints.Count;
+                                    currentIntegratedArea += areaPoints[j].X * areaPoints[k].Y;
+                                    currentIntegratedArea -= areaPoints[j].Y * areaPoints[k].X;
+                                }
+                                totalIntegratedArea += Math.Abs( currentIntegratedArea / 2.0 );
+                                totalAreaPoints += areaPoints.Count - 1;
+                                ++totalAreaCount;
+                                areaPoints.Clear();
+                            }
+                        }
 
-								/*if( areaPoints.Count > 2 )
-								{
-									List<ZedGraph.PointD> areaTrapezoid = new List<ZedGraph.PointD>();
-									areaTrapezoid.Add( areaPoints[areaPoints.Count - 3] ); // top left
-									areaTrapezoid.Add( areaPoints[areaPoints.Count - 2] ); // top right
-									areaTrapezoid.Add( areaPoints[areaPoints.Count - 1] ); // bottom right
+                        foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
+                            CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Add( obj );
 
-									// bottom left
-									double bottomLeftY = Math.Max( 0, integratePeaksLineA * areaPoints[areaPoints.Count - 3].X + integratePeaksLineB );
-									areaTrapezoid.Add( new ZedGraph.PointD( areaPoints[areaPoints.Count - 3].X, bottomLeftY ) );
+#if false
+                        if( areaPoints.Count > 2 )
+                        {
+                            List<ZedGraph.PointD> areaTrapezoid = new List<ZedGraph.PointD>();
+                            areaTrapezoid.Add( areaPoints[areaPoints.Count - 3] ); // top left
+                            areaTrapezoid.Add( areaPoints[areaPoints.Count - 2] ); // top right
+                            areaTrapezoid.Add( areaPoints[areaPoints.Count - 1] ); // bottom right
 
-									areaTrapezoids.Add( areaTrapezoid );
-								}*/
-						/*foreach( List<ZedGraph.PointD> trapezoidPoints in areaTrapezoids )
-						{
-							ZedGraph.PolyObj trapezoid = new ZedGraph.PolyObj( trapezoidPoints.ToArray(), Color.Black, Color.Green, Color.Green );
-							trapezoid.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-							trapezoid.IsClosedFigure = true;
-							integratePeaksAreas.Add( trapezoid );
-						}*/
-						foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
-							CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Add( obj );
-						//CurrentGraphForm.ZedGraphControl.GraphPane.Title.Text = totalIntegratedArea.ToString("f0") + " " + totalAreaPoints + " " + totalAreaCount;
-						//CurrentGraphForm.ZedGraphControl.GraphPane.Title.IsVisible = true;
-						CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = totalIntegratedArea;
-						//int currentIndex = scanNumberComboBox.SelectedIndex;
-						//object currentObject = scanNumberComboBox.SelectedItem;
-						//scanNumberComboBox.Items.RemoveAt( currentIndex );
-						//scanNumberComboBox.Items.Insert( currentIndex, currentObject );
-					}
-				}
-				CurrentGraphForm.ZedGraphControl.Refresh();
-				return false;
-			}
-			return true;
-		}
+                            // bottom left
+                            double bottomLeftY = Math.Max( 0, integratePeaksLineA * areaPoints[areaPoints.Count - 3].X + integratePeaksLineB );
+                            areaTrapezoid.Add( new ZedGraph.PointD( areaPoints[areaPoints.Count - 3].X, bottomLeftY ) );
 
-		bool ZedGraphControl_MouseUpEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
-		{
-			if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
-				return false;
+                            areaTrapezoids.Add( areaTrapezoid );
+                        }
+                        foreach( List<ZedGraph.PointD> trapezoidPoints in areaTrapezoids )
+                        {
+                            ZedGraph.PolyObj trapezoid = new ZedGraph.PolyObj( trapezoidPoints.ToArray(), Color.Black, Color.Green, Color.Green );
+                            trapezoid.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                            trapezoid.IsClosedFigure = true;
+                            integratePeaksAreas.Add( trapezoid );
+                        }
+#endif
+                        //CurrentGraphForm.ZedGraphControl.GraphPane.Title.Text = totalIntegratedArea.ToString("f0") + " " + totalAreaPoints + " " + totalAreaCount;
+                        //CurrentGraphForm.ZedGraphControl.GraphPane.Title.IsVisible = true;
+                        CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = totalIntegratedArea;
+                    }
+                }*/
+                CurrentGraphForm.ZedGraphControl.Refresh();
+                return false;
+            }
+            return true;
+        }
 
-			int x0 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Transform( integratePeaksLine.Points[0].X ) );
-			int y0 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Transform( integratePeaksLine.Points[0].Y ) );
-			int x1 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Transform( integratePeaksLine.Points[1].X ) );
-			int y1 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Transform( integratePeaksLine.Points[1].Y ) );
-			integratePeaksMouseDownLocation.X = x0;
-			integratePeaksMouseDownLocation.Y = y0;
-			integratePeaksMouseUpLocation.X = x1;
-			integratePeaksMouseUpLocation.Y = y1;
-			return false;
-		}
+        bool ZedGraphControl_MouseUpEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
+        {
+            if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
+                return false;
 
-		bool ZedGraphControl_MouseDownEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
-		{
-			if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
-				return false;
+            int x0 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Transform( integratePeaksLine.Points[0].X ) );
+            int y0 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Transform( integratePeaksLine.Points[0].Y ) );
+            int x1 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Transform( integratePeaksLine.Points[1].X ) );
+            int y1 = (int) Math.Round( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Transform( integratePeaksLine.Points[1].Y ) );
+            integratePeaksMouseDownLocation.X = x0;
+            integratePeaksMouseDownLocation.Y = y0;
+            integratePeaksMouseUpLocation.X = x1;
+            integratePeaksMouseUpLocation.Y = y1;
+            return false;
+        }
 
-			if( e.Button == MouseButtons.Left )
-			{
-				if( integratePeaksLine != null )
-				{
-					double distanceToMouseDownLocation = Math.Sqrt( Math.Pow( e.Location.X - integratePeaksMouseDownLocation.X, 2.0 ) +
-														Math.Pow( e.Location.Y - integratePeaksMouseDownLocation.Y, 2.0 ) );
-					if( distanceToMouseDownLocation < 5.0 )
-					{
-						ZedGraph.PointPair tmp = integratePeaksLine.Points[1].Clone();
-						integratePeaksLine.Points[1].X = integratePeaksLine.Points[0].X;
-						integratePeaksLine.Points[1].Y = integratePeaksLine.Points[0].Y;
-						integratePeaksLine.Points[0].X = tmp.X;
-						integratePeaksLine.Points[0].Y = tmp.Y;
-						Point tmp2 = integratePeaksMouseUpLocation;
-						integratePeaksMouseUpLocation = integratePeaksMouseDownLocation;
-						integratePeaksMouseDownLocation = tmp2;
-						return false;
-					} else
-					{
-						double distanceToMouseUpLocation = Math.Sqrt( Math.Pow( e.Location.X - integratePeaksMouseUpLocation.X, 2.0 ) +
-														Math.Pow( e.Location.Y - integratePeaksMouseUpLocation.Y, 2.0 ) );
-						if( distanceToMouseUpLocation >= 5.0 )
-						{
-							// clear existing line and start a new one
-							CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
-							integratePeaksLine = null;
-							foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
-								CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
-							integratePeaksAreas.Clear();
-							CurrentGraphForm.ZedGraphControl.Refresh();
-						} else
-							return false;
-					}
-				}
+        bool ZedGraphControl_MouseDownEvent( ZedGraph.ZedGraphControl sender, MouseEventArgs e )
+        {
+            if( CurrentGraphForm == null || !peakIntegrationMode.Checked || !CurrentGraphForm.ZedGraphControl.Focused )
+                return false;
 
-				integratePeaksMouseDownLocation = e.Location;
-				double x = CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.ReverseTransform( (float) e.X );
-				double y = CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.ReverseTransform( (float) e.Y );
-				x = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Min, x ) );
-				y = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Min, y ) );
-				integratePeaksLine = new ZedGraph.LineItem( "", new double[] { x, x }, new double[] { y, y }, Color.Black, ZedGraph.SymbolType.None );
-				integratePeaksLine.Line.IsAntiAlias = true;
-				integratePeaksLine.Symbol.Type = ZedGraph.SymbolType.Square;
-				integratePeaksLine.Symbol.IsVisible = true;
-				integratePeaksLine.Symbol.Border.Width = 2;
-				integratePeaksLine.Symbol.Border.Color = Color.Black;
-				//integratePeaksLine.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-				CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Add( integratePeaksLine );
-			}
-			return false;
-		}
+            if( e.Button == MouseButtons.Left )
+            {
+                if( integratePeaksLine != null )
+                {
+                    double distanceToMouseDownLocation = Math.Sqrt( Math.Pow( e.Location.X - integratePeaksMouseDownLocation.X, 2.0 ) +
+                                                        Math.Pow( e.Location.Y - integratePeaksMouseDownLocation.Y, 2.0 ) );
+                    if( distanceToMouseDownLocation < 5.0 )
+                    {
+                        ZedGraph.PointPair tmp = integratePeaksLine.Points[1].Clone();
+                        integratePeaksLine.Points[1].X = integratePeaksLine.Points[0].X;
+                        integratePeaksLine.Points[1].Y = integratePeaksLine.Points[0].Y;
+                        integratePeaksLine.Points[0].X = tmp.X;
+                        integratePeaksLine.Points[0].Y = tmp.Y;
+                        Point tmp2 = integratePeaksMouseUpLocation;
+                        integratePeaksMouseUpLocation = integratePeaksMouseDownLocation;
+                        integratePeaksMouseDownLocation = tmp2;
+                        return false;
+                    } else
+                    {
+                        double distanceToMouseUpLocation = Math.Sqrt( Math.Pow( e.Location.X - integratePeaksMouseUpLocation.X, 2.0 ) +
+                                                        Math.Pow( e.Location.Y - integratePeaksMouseUpLocation.Y, 2.0 ) );
+                        if( distanceToMouseUpLocation >= 5.0 )
+                        {
+                            // clear existing line and start a new one
+                            CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
+                            integratePeaksLine = null;
+                            foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
+                                CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
+                            integratePeaksAreas.Clear();
+                            CurrentGraphForm.ZedGraphControl.Refresh();
+                        } else
+                            return false;
+                    }
+                }
 
-		private void clearCurrentIntegration_Click( object sender, EventArgs e )
-		{
-			if( integratePeaksLine != null )
-			{
-				// clear existing line and start a new one
-				CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
-				integratePeaksLine = null;
-				foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
-					CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
-				integratePeaksAreas.Clear();
-				CurrentGraphForm.ZedGraphControl.Refresh();
-			}
+                integratePeaksMouseDownLocation = e.Location;
+                double x = CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.ReverseTransform( (float) e.X );
+                double y = CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.ReverseTransform( (float) e.Y );
+                x = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.XAxis.Scale.Min, x ) );
+                y = Math.Min( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Max, Math.Max( CurrentGraphForm.ZedGraphControl.GraphPane.YAxis.Scale.Min, y ) );
+                integratePeaksLine = new ZedGraph.LineItem( "", new double[] { x, x }, new double[] { y, y }, Color.Black, ZedGraph.SymbolType.None );
+                integratePeaksLine.Line.IsAntiAlias = true;
+                integratePeaksLine.Symbol.Type = ZedGraph.SymbolType.Square;
+                integratePeaksLine.Symbol.IsVisible = true;
+                integratePeaksLine.Symbol.Border.Width = 2;
+                integratePeaksLine.Symbol.Border.Color = Color.Black;
+                //integratePeaksLine.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Add( integratePeaksLine );
+            }
+            return false;
+        }
 
-			CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
-		}
+        private void clearCurrentIntegration_Click( object sender, EventArgs e )
+        {
+            if( integratePeaksLine != null )
+            {
+                // clear existing line and start a new one
+                CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
+                integratePeaksLine = null;
+                foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
+                    CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
+                integratePeaksAreas.Clear();
+                CurrentGraphForm.ZedGraphControl.Refresh();
+            }
 
-		private void clearAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			if( integratePeaksLine != null )
-			{
-				// clear existing line and start a new one
-				CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
-				integratePeaksLine = null;
-				foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
-					CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
-				integratePeaksAreas.Clear();
-				CurrentGraphForm.ZedGraphControl.Refresh();
-			}
-		}
+            CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
+        }
 
-		private void exportAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
-		{
+        private void clearAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            if( integratePeaksLine != null )
+            {
+                // clear existing line and start a new one
+                CurrentGraphForm.ZedGraphControl.GraphPane.CurveList.Remove( integratePeaksLine );
+                integratePeaksLine = null;
+                foreach( ZedGraph.PolyObj obj in integratePeaksAreas )
+                    CurrentGraphForm.ZedGraphControl.GraphPane.GraphObjList.Remove( obj );
+                integratePeaksAreas.Clear();
+                CurrentGraphForm.ZedGraphControl.Refresh();
+            }
+        }
+
+        private void exportAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
+        {
             manager.ExportIntegration();
-		}
+        }
+        #endregion
 
         private void dataProcessingButton_Click( object sender, EventArgs e )
         {

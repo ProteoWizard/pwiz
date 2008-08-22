@@ -29,39 +29,59 @@ namespace seems
 		private void InitializeComponent()
 		{
             this.components = new System.ComponentModel.Container();
-            this.zedGraphControl1 = new ZedGraph.ZedGraphControl();
+            MSGraph.MSGraphPane msGraphPane1 = new MSGraph.MSGraphPane();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager( typeof( GraphForm ) );
+            this.msGraphControl = new MSGraph.MSGraphControl();
             this.SuspendLayout();
             // 
-            // zedGraphControl1
+            // msGraphControl
             // 
-            this.zedGraphControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.zedGraphControl1.Location = new System.Drawing.Point( 0, 0 );
-            this.zedGraphControl1.Name = "zedGraphControl1";
-            this.zedGraphControl1.ScrollGrace = 0;
-            this.zedGraphControl1.ScrollMaxX = 0;
-            this.zedGraphControl1.ScrollMaxY = 0;
-            this.zedGraphControl1.ScrollMaxY2 = 0;
-            this.zedGraphControl1.ScrollMinX = 0;
-            this.zedGraphControl1.ScrollMinY = 0;
-            this.zedGraphControl1.ScrollMinY2 = 0;
-            this.zedGraphControl1.Size = new System.Drawing.Size( 464, 413 );
-            this.zedGraphControl1.TabIndex = 0;
-            this.zedGraphControl1.Paint += new System.Windows.Forms.PaintEventHandler( this.zedGraphControl1_Paint );
-            this.zedGraphControl1.MouseClick += new System.Windows.Forms.MouseEventHandler( this.GraphForm_MouseClick );
-            this.zedGraphControl1.Resize += new System.EventHandler( this.zedGraphControl1_Resize );
-            this.zedGraphControl1.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler( this.zedGraphControl1_ZoomEvent );
+            this.msGraphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.msGraphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.msGraphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
+            msGraphPane1.BaseDimension = 8F;
+            msGraphPane1.Border = ( (ZedGraph.Border) ( resources.GetObject( "msGraphPane1.Border" ) ) );
+            msGraphPane1.CurveList = ( (ZedGraph.CurveList) ( resources.GetObject( "msGraphPane1.CurveList" ) ) );
+            msGraphPane1.Fill = ( (ZedGraph.Fill) ( resources.GetObject( "msGraphPane1.Fill" ) ) );
+            msGraphPane1.GraphObjList = ( (ZedGraph.GraphObjList) ( resources.GetObject( "msGraphPane1.GraphObjList" ) ) );
+            msGraphPane1.IsAlignGrids = false;
+            msGraphPane1.IsBoundedRanges = false;
+            msGraphPane1.IsFontsScaled = true;
+            msGraphPane1.IsIgnoreInitial = false;
+            msGraphPane1.IsIgnoreMissing = false;
+            msGraphPane1.IsPenWidthScaled = false;
+            msGraphPane1.LineType = ZedGraph.LineType.Normal;
+            msGraphPane1.Margin = ( (ZedGraph.Margin) ( resources.GetObject( "msGraphPane1.Margin" ) ) );
+            msGraphPane1.Rect = ( (System.Drawing.RectangleF) ( resources.GetObject( "msGraphPane1.Rect" ) ) );
+            msGraphPane1.Tag = null;
+            msGraphPane1.TitleGap = 0.5F;
+            this.msGraphControl.GraphPane = msGraphPane1;
+            this.msGraphControl.IsEnableVZoom = false;
+            this.msGraphControl.Location = new System.Drawing.Point( 0, 0 );
+            this.msGraphControl.Name = "msGraphControl";
+            this.msGraphControl.PanButtons2 = System.Windows.Forms.MouseButtons.None;
+            this.msGraphControl.ScrollGrace = 0;
+            this.msGraphControl.ScrollMaxX = 0;
+            this.msGraphControl.ScrollMaxY = 0;
+            this.msGraphControl.ScrollMaxY2 = 0;
+            this.msGraphControl.ScrollMinX = 0;
+            this.msGraphControl.ScrollMinY = 0;
+            this.msGraphControl.ScrollMinY2 = 0;
+            this.msGraphControl.Size = new System.Drawing.Size( 464, 413 );
+            this.msGraphControl.TabIndex = 0;
             // 
             // GraphForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size( 464, 413 );
-            this.Controls.Add( this.zedGraphControl1 );
+            this.Controls.Add( this.msGraphControl );
             this.MinimumSize = new System.Drawing.Size( 100, 50 );
             this.Name = "GraphForm";
+            this.TabText = "GraphForm";
             this.Text = "GraphForm";
             this.ResizeBegin += new System.EventHandler( this.GraphForm_ResizeBegin );
-            this.MouseClick += new System.Windows.Forms.MouseEventHandler( this.GraphForm_MouseClick );
             this.ResizeEnd += new System.EventHandler( this.GraphForm_ResizeEnd );
             this.ResumeLayout( false );
 
@@ -69,6 +89,8 @@ namespace seems
 
 		#endregion
 
-		private ZedGraph.ZedGraphControl zedGraphControl1;
-	}
+        private MSGraph.MSGraphControl msGraphControl;
+
+
+    }
 }

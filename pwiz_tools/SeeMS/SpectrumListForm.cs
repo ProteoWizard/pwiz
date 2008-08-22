@@ -401,15 +401,18 @@ namespace seems
             treeViewToolTipForm.Location = toolTipLocation;
             treeViewToolTipForm.DoAutoSize();
             treeViewToolTipForm.Show();
+            leaveTimer.Start();
             this.Focus();
         }
 
 
         void leaveTimer_Tick( object sender, EventArgs e )
         {
-            leaveTimer.Stop();
             if( !treeViewToolTipForm.Bounds.Contains( Form.MousePosition ) )
+            {
                 treeViewToolTipForm.Hide();
+                leaveTimer.Stop();
+            }
         }
 
         void treeViewForm_MouseLeave( object sender, EventArgs e )
@@ -428,7 +431,8 @@ namespace seems
             }
 
             // set or reset hover timer
-            hoverTimer.Interval = 1000;
+            hoverTimer.Stop();
+            hoverTimer.Interval = 750;
             hoverTimer.Start();
             hoverCell = gridView[e.ColumnIndex, e.RowIndex];
         }

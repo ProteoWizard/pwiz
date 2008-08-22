@@ -7,7 +7,6 @@ using System.Text;
 using System.Windows.Forms;
 using System.Configuration;
 using System.Collections.Specialized;
-using Extensions;
 
 namespace seems
 {
@@ -33,9 +32,9 @@ namespace seems
 		}
 
 		private List<string> mzMatchToleranceUnitList = new List<string>();
-		private GraphForm ownerGraphForm;
+        private AnnotationSettings settings;
 
-		public ScanAnnotationSettingsForm( GraphForm graphForm )
+		public ScanAnnotationSettingsForm( AnnotationSettings settings )
 		{
 			InitializeComponent();
 
@@ -43,14 +42,14 @@ namespace seems
 			//mzMatchToleranceUnitList.Add( "ppm" );
 			//mzMatchToleranceUnitList.Add( "resolving power" );
 
-			ownerGraphForm = graphForm;
+            this.settings = settings;
 
 			matchToleranceUnitsComboBox.Items.AddRange( (object[]) mzMatchToleranceUnitList.ToArray() );
-			matchToleranceUnitsComboBox.SelectedIndex = (int) ownerGraphForm.ScanAnnotationSettings.MatchToleranceUnit;
-			matchToleranceCheckbox.Checked = ownerGraphForm.ScanAnnotationSettings.MatchToleranceOverride;
-			matchToleranceTextBox.Text = ownerGraphForm.ScanAnnotationSettings.MatchTolerance.ToString();
-			showMzLabelsCheckbox.Checked = ownerGraphForm.ScanAnnotationSettings.ShowPointMZs;
-			showIntensityLabelsCheckbox.Checked = ownerGraphForm.ScanAnnotationSettings.ShowPointIntensities;
+            matchToleranceUnitsComboBox.SelectedIndex = (int) Math.Max( 0, (int) settings.MatchToleranceUnit - (int) MatchToleranceUnits.Daltons );
+            matchToleranceCheckbox.Checked = settings.MatchToleranceOverride;
+            matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
+            showMzLabelsCheckbox.Checked = settings.ShowXValues;
+            showIntensityLabelsCheckbox.Checked = settings.ShowYValues;
 
 			if( !matchToleranceCheckbox.Checked )
 			{
@@ -58,10 +57,10 @@ namespace seems
 				matchToleranceUnitsComboBox.Enabled = false;
 			}
 
-			showMatchedAnnotationsCheckbox.Checked = ownerGraphForm.ScanAnnotationSettings.ShowMatchedAnnotations;
-			showUnmatchedAnnotationsCheckbox.Checked = ownerGraphForm.ScanAnnotationSettings.ShowUnmatchedAnnotations;
+            showMatchedAnnotationsCheckbox.Checked = settings.ShowMatchedAnnotations;
+            showUnmatchedAnnotationsCheckbox.Checked = settings.ShowUnmatchedAnnotations;
 
-			foreach( LabelToAliasAndColorPair itr in ownerGraphForm.ScanAnnotationSettings.LabelToAliasAndColorMap )
+            foreach( LabelToAliasAndColorPair itr in settings.LabelToAliasAndColorMap )
 			{
 				aliasAndColorMappingListBox.Items.Add( new LabelToAliasAndColorListItem( itr ) );
 			}
@@ -71,13 +70,11 @@ namespace seems
 		{
 			this.DialogResult = DialogResult.OK;
 
-			ScanAnnotationSettings settings = ownerGraphForm.ScanAnnotationSettings;
-
-			Properties.Settings.Default.MzMatchToleranceUnit = (int) ( settings.MatchToleranceUnit = (MassToleranceUnits) matchToleranceUnitsComboBox.SelectedIndex );
+            Properties.Settings.Default.MzMatchToleranceUnit = (int) ( settings.MatchToleranceUnit = (MatchToleranceUnits) ( matchToleranceUnitsComboBox.SelectedIndex + (int) MatchToleranceUnits.Daltons ) );
 			Properties.Settings.Default.ScanMatchToleranceOverride = settings.MatchToleranceOverride = matchToleranceCheckbox.Checked;
 			Properties.Settings.Default.MzMatchTolerance = settings.MatchTolerance = Convert.ToDouble( matchToleranceTextBox.Text );
-			Properties.Settings.Default.ShowScanMzLabels = settings.ShowPointMZs = showMzLabelsCheckbox.Checked;
-			Properties.Settings.Default.ShowScanIntensityLabels = settings.ShowPointIntensities = showIntensityLabelsCheckbox.Checked;
+            Properties.Settings.Default.ShowScanMzLabels = settings.ShowXValues = showMzLabelsCheckbox.Checked;
+            Properties.Settings.Default.ShowScanIntensityLabels = settings.ShowYValues = showIntensityLabelsCheckbox.Checked;
 			Properties.Settings.Default.ShowScanMatchedAnnotations = settings.ShowMatchedAnnotations = showMatchedAnnotationsCheckbox.Checked;
 			Properties.Settings.Default.ShowScanUnmatchedAnnotations = settings.ShowUnmatchedAnnotations = showUnmatchedAnnotationsCheckbox.Checked;
 
@@ -89,7 +86,7 @@ namespace seems
 			}
 
 			Properties.Settings.Default.Save();
-			ownerGraphForm.updateGraph();
+			//ownerGraphForm.updateGraph();
 		}
 
 		private void cancelButton_Click( object sender, EventArgs e )
@@ -108,7 +105,7 @@ namespace seems
 			Rectangle colorSampleBox = new Rectangle( e.Bounds.Location, e.Bounds.Size );
 			colorSampleBox.X = e.Bounds.Right - e.Bounds.Height * 2;
 			colorSampleBox.Location.Offset( -5, 0 );
-			e.Graphics.FillRectangle( new SolidBrush( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color ), colorSampleBox );
+			e.Graphics.FillRectangle( new SolidBrush( Color.White ), colorSampleBox );
 			int middle = colorSampleBox.Y + colorSampleBox.Height / 2;
 			e.Graphics.DrawLine( new Pen( item.mapPair.Value.second, 2 ), colorSampleBox.Left, middle, colorSampleBox.Right, middle );
 			e.DrawFocusRectangle();
@@ -116,7 +113,7 @@ namespace seems
 
 		private void addAliasAndColorMappingButton_Click( object sender, EventArgs e )
 		{
-			AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color );
+            AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( Color.White );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				aliasAndColorMappingListBox.Items.Add(
@@ -129,7 +126,7 @@ namespace seems
 		private void editAliasAndColorMappingButton_Click( object sender, EventArgs e )
 		{
 			LabelToAliasAndColorListItem item = (LabelToAliasAndColorListItem) aliasAndColorMappingListBox.SelectedItem;
-			AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color, item.mapPair.Key, item.mapPair.Value.first, item.mapPair.Value.second );
+            AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( Color.White, item.mapPair.Key, item.mapPair.Value.first, item.mapPair.Value.second );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				if( item.mapPair.Key == dialog.label )
@@ -168,7 +165,7 @@ namespace seems
 				double result;
 				if( !Double.TryParse( matchToleranceTextBox.Text, out result ) )
 				{
-					matchToleranceTextBox.Text = ownerGraphForm.ScanAnnotationSettings.MatchTolerance.ToString();
+                    matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
 				}
 			}
 		}
@@ -179,8 +176,8 @@ namespace seems
 			{
 				matchToleranceTextBox.Enabled = false;
 				matchToleranceUnitsComboBox.Enabled = false;
-				matchToleranceUnitsComboBox.SelectedIndex = (int) ownerGraphForm.ScanAnnotationSettings.MatchToleranceUnit;
-				matchToleranceTextBox.Text = ownerGraphForm.ScanAnnotationSettings.MatchTolerance.ToString();
+				matchToleranceUnitsComboBox.SelectedIndex = (int) settings.MatchToleranceUnit;
+                matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
 			} else
 			{
 				matchToleranceTextBox.Enabled = true;

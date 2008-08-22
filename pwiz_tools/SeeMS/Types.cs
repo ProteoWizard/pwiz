@@ -4,7 +4,6 @@ using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.CLI.msdata;
-using Extensions;
 
 public class Pair<T1, T2>
 {
@@ -91,21 +90,17 @@ namespace seems
 		}
 	}
 
-	public enum RetentionTimeUnits
+    public enum MatchToleranceUnits
 	{
 		Seconds = 0,
 		Minutes,
-		Hours
-	}
-
-	public enum MassToleranceUnits
-	{
-		Daltons = 0,
+		Hours,
+		Daltons,
 		PPM,
 		ResolvingPower
 	}
 
-	public abstract class GraphItem : IComparable<GraphItem>
+	public abstract class GraphItem : IComparable<GraphItem>, MSGraph.IMSGraphItemInfo
 	{
 		protected string id;
 		public string Id { get { return id; } }
@@ -113,11 +108,8 @@ namespace seems
         protected int index;
         public int Index { get { return index; } }
 
-        protected DataSource source;
-        public DataSource Source { get { return source; } }
-
-		protected PointList pointList;
-		public PointList PointList { get { return pointList; } }
+        protected ManagedDataSource source;
+        public ManagedDataSource Source { get { return source; } }
 
 		protected double totalIntegratedArea;
 		public double TotalIntegratedArea { get { return totalIntegratedArea; } set { totalIntegratedArea = value; } }
@@ -131,327 +123,202 @@ namespace seems
         }
 
         public object Tag;
-	}
+
+        public virtual MSGraph.MSGraphItemType GraphItemType
+        {
+            get
+            {
+                if( IsChromatogram )
+                    return MSGraph.MSGraphItemType.Chromatogram;
+                else
+                    return MSGraph.MSGraphItemType.Spectrum;
+            }
+        }
+
+        public virtual string Title { get { return Id; } }
+        public virtual Color Color { get { return Color.Gray; } }
+
+        public virtual void CustomizeXAxis( ZedGraph.Axis axis )
+        {
+            axis.Title.FontSpec.Family = "Arial";
+            axis.Title.FontSpec.Size = 14;
+            axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
+            axis.Title.FontSpec.Border.IsVisible = false;
+
+            if( IsChromatogram )
+            {
+                axis.Title.Text = "Time";
+            } else
+            {
+                axis.Title.Text = "m/z";
+            }
+        }
+
+        public virtual void CustomizeYAxis( ZedGraph.Axis axis )
+        {
+
+            axis.Title.FontSpec.Family = "Arial";
+            axis.Title.FontSpec.Size = 14;
+            axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
+            axis.Title.FontSpec.Border.IsVisible = false;
+
+            if( IsChromatogram )
+            {
+                axis.Title.Text = "Total Intensity";
+            } else
+            {
+                axis.Title.Text = "Intensity";
+            }
+        }
+
+        public virtual MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        {
+            get { return MSGraph.MSGraphItemDrawMethod.Stick; }
+        }
+
+        private AnnotationSettings annotationSettings;
+        public AnnotationSettings AnnotationSettings
+        {
+            get { return annotationSettings; }
+            set { annotationSettings = value; }
+        }
+
+        public virtual string AnnotatePoint( ZedGraph.PointPair point )
+        {
+            if( annotationSettings != null )
+            {
+                Map<double, SeemsPointAnnotation>.Enumerator itr = annotationSettings.PointAnnotations.Find( point.X );
+                if( itr.IsValid && itr.Current.Value != null )
+                    return itr.Current.Value.Label;
+
+                MSGraph.PointAnnotationFormat defaultAnnotationFormat = annotationSettings.DefaultAnnotationFormat;
+                if( defaultAnnotationFormat != null )
+                    return defaultAnnotationFormat.AnnotatePoint( point );
+            }
+
+            return String.Empty;
+        }
+
+        public virtual ZedGraph.IPointList Points { get { return null; } }
+    }
 
 	public class Chromatogram : GraphItem
 	{
-		public Chromatogram( DataSource source, pwiz.CLI.msdata.Chromatogram chromatogram )
+		public Chromatogram( ManagedDataSource source, pwiz.CLI.msdata.Chromatogram chromatogram )
 		{
 			this.source = source;
-			this.element = chromatogram;
+			element = chromatogram;
 			id = element.nativeID;
             index = element.index;
-
-            if( chromatogram.binaryDataArrays.Count >= 2 )
-            {
-                Map<double, double> sortedFullPointList = new Map<double, double>();
-                IList<double> timeList = chromatogram.binaryDataArrays[0].data;
-                IList<double> intensityList = chromatogram.binaryDataArrays[1].data;
-                for( int i = 0; i < (int) chromatogram.defaultArrayLength; ++i )
-                    sortedFullPointList[timeList[i]] = intensityList[i];
-                pointList = new PointList( new ZedGraph.PointPairList(
-                    new List<double>( sortedFullPointList.Keys ).ToArray(),
-                    new List<double>( sortedFullPointList.Values ).ToArray() ) );
-            }
 		}
+
+        public Chromatogram( Chromatogram metaChromatogram, pwiz.CLI.msdata.Chromatogram chromatogram )
+        {
+            source = metaChromatogram.source;
+            Tag = metaChromatogram.Tag;
+            AnnotationSettings = metaChromatogram.AnnotationSettings;
+            element = chromatogram;
+            id = element.nativeID;
+            index = element.index;
+        }
 
 		private pwiz.CLI.msdata.Chromatogram element;
 		public pwiz.CLI.msdata.Chromatogram Element { get { return element; } }
 
-		/*public new PointList PointList
+		public override ZedGraph.IPointList Points
 		{
-			get
-			{
-				//if( scan.IsCentroided == source.MSDataFile.getCentroiding(scan.MsLevel) &&
-				//	pointList.FullCount > 0 )
-				//	return pointList;
+            get
+            {
+                if( element.binaryDataArrays.Count >= 2 )
+                {
+                    Map<double, double> sortedFullPointList = new Map<double, double>();
+                    IList<double> timeList = element.binaryDataArrays[0].data;
+                    IList<double> intensityList = element.binaryDataArrays[1].data;
+                    int arrayLength = timeList.Count;
+                    for( int i = 0; i < arrayLength; ++i )
+                        sortedFullPointList[timeList[i]] = intensityList[i];
+                    return new ZedGraph.PointPairList(
+                        new List<double>( sortedFullPointList.Keys ).ToArray(),
+                        new List<double>( sortedFullPointList.Values ).ToArray() );
+                } else
+                    throw new Exception( "metachromatogram queried for data points" );
+            }
+		}
 
-				element = source.MSDataFile.run.chromatogramList.chromatogram( element.index, false );
-				pwiz.CLI.msdata.Chromatogram elementWithData = source.MSDataFile.run.chromatogramList.chromatogram( element.index, true );
-				Map<double, double> sortedFullPointList = new Map<double, double>();
-				TimeIntensityPairList pairs = null;
-				elementWithData.getTimeIntensityPairs( ref pairs );
-				for( int i = 0; i < pairs.Count; ++i )
-					sortedFullPointList[pairs[i].time] = pairs[i].intensity;
-				pointList = new PointList( new ZedGraph.PointPairList(
-					new List<double>( sortedFullPointList.Keys ).ToArray(),
-					new List<double>( sortedFullPointList.Values ).ToArray() ) );
-				return pointList;
-			}
-		}*/
+        public override MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        {
+            get { return MSGraph.MSGraphItemDrawMethod.Line; }
+        }
 	}
 
 	public class MassSpectrum : GraphItem
 	{
-        public MassSpectrum( DataSource source, pwiz.CLI.msdata.Spectrum spectrum )
+        public MassSpectrum( ManagedDataSource source, pwiz.CLI.msdata.Spectrum spectrum )
         {
             this.source = source;
-            this.element = spectrum;
+            element = spectrum;
+            id = spectrum.nativeID;
+            index = spectrum.index;
+            //retentionTime = new TimeSpan( 0, 0, 0, 0, (int) Math.Round( spectrum.spectrumDescription.scan.cvParam( CVID.MS_scan_time ).timeInSeconds() * 1000 ) );
+        }
+
+        public MassSpectrum( MassSpectrum metaSpectrum, pwiz.CLI.msdata.Spectrum spectrum )
+        {
+            source = metaSpectrum.source;
+            Tag = metaSpectrum.Tag;
+            AnnotationSettings = metaSpectrum.AnnotationSettings;
+            element = spectrum;
             id = element.nativeID;
             index = element.index;
-
-            if( spectrum.binaryDataArrays.Count >= 2 )
-            {
-                Map<double, double> sortedFullPointList = new Map<double, double>();
-                IList<double> mzList = spectrum.getMZArray().data;
-                IList<double> intensityList = spectrum.getIntensityArray().data;
-                int arrayLength = mzList.Count;
-                for( int i = 0; i < arrayLength; ++i )
-                    sortedFullPointList[mzList[i]] = intensityList[i];
-                pointList = new PointList( new ZedGraph.PointPairList(
-                    new List<double>( sortedFullPointList.Keys ).ToArray(),
-                    new List<double>( sortedFullPointList.Values ).ToArray() ) );
-            }
-
-            retentionTimeUnit = RetentionTimeUnits.Minutes;
         }
 
 		private pwiz.CLI.msdata.Spectrum element;
-		public pwiz.CLI.msdata.Spectrum Element { get { return element; } }
+        public pwiz.CLI.msdata.Spectrum Element
+        {
+            get
+            {
+                return element;
+                //return source.MSDataFile.run.spectrumList.spectrum(index);
+            }
+        }
 
-		/*public PointList PointList
+		public override ZedGraph.IPointList Points
 		{
-			get
-			{
-				//if( scan.IsCentroided == source.MSDataFile.getCentroiding(scan.MsLevel) &&
-					//pointList.FullCount > 0 )
-					//return pointList;
+            get
+            {
+                if( element.binaryDataArrays.Count >= 2 )
+                {
+                    Map<double, double> sortedFullPointList = new Map<double, double>();
+                    IList<double> mzList = element.getMZArray().data;
+                    IList<double> intensityList = element.getIntensityArray().data;
+                    int arrayLength = mzList.Count;
+                    for( int i = 0; i < arrayLength; ++i )
+                        sortedFullPointList[mzList[i]] = intensityList[i];
+                    return new ZedGraph.PointPairList(
+                        new List<double>( sortedFullPointList.Keys ).ToArray(),
+                        new List<double>( sortedFullPointList.Values ).ToArray() );
+                } else
+                    throw new Exception( "metaspectrum queried for data points" );
+            }
+		}
 
-				pwiz.CLI.msdata.SpectrumList spectrumList = source.MSDataFile.run.spectrumList;
-				if( source.DoCentroiding )
-					spectrumList = new SpectrumList_NativeCentroider( spectrumList, new List<int>( new int[] { (int) element.cvParam( CVID.MS_ms_level ).value } ) );
-				element = spectrumList.spectrum( element.index, false );
-				pwiz.CLI.msdata.Spectrum elementWithData = spectrumList.spectrum( element.index, true );
-				Map<double, double> sortedFullPointList = new Map<double, double>();
-				MZIntensityPairList pairs = null;
-				elementWithData.getMZIntensityPairs( ref pairs );
-				for( int i = 0; i < pairs.Count; ++i )
-					sortedFullPointList[pairs[i].mz] = pairs[i].intensity;
-				pointList = new PointList( new ZedGraph.PointPairList(
-					new List<double>( sortedFullPointList.Keys ).ToArray(),
-					new List<double>( sortedFullPointList.Values ).ToArray() ) );
-				return pointList;
-			}
+        public override MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        {
+            get
+            {
+                CVParam representation = element.spectrumDescription.cvParamChild(CVID.MS_spectrum_representation);
+                if( !representation.empty() && representation.cvid == CVID.MS_profile_mass_spectrum )
+                    return MSGraph.MSGraphItemDrawMethod.Line;
+                else
+                    return MSGraph.MSGraphItemDrawMethod.Stick;
+            }
+        }
+
+        /*private TimeSpan retentionTime;
+        public TimeSpan RetentionTime
+		{
+            get { return retentionTime; }
 		}*/
-
-		private RetentionTimeUnits retentionTimeUnit;
-		public RetentionTimeUnits RetentionTimeUnit
-		{
-			get { return retentionTimeUnit; }
-			set { retentionTimeUnit = value; }
-		}
-
-		public double RetentionTime
-		{
-			get
-			{
-				double time = element.spectrumDescription.scan.cvParam( CVID.MS_scan_time ).timeInSeconds();
-				switch( retentionTimeUnit )
-				{
-					default:
-					case RetentionTimeUnits.Seconds:
-						return time;
-					case RetentionTimeUnits.Minutes:
-						return time / 60.0;
-					case RetentionTimeUnits.Hours:
-						return time / 3600.0;
-				}
-			}
-		}
-	}
-
-	public class PointList : ZedGraph.IPointList, IEnumerable<ZedGraph.PointPair>
-	{
-		private ZedGraph.PointPairList fullPointList;
-		private ZedGraph.PointPairList scaledPointList;
-		private List<int> scaledMaxIndexList;
-		private int scaledWidth;
-		private double scaledMin;
-		private double scaledMax;
-		private double scaleRange;
-		private double scaleFactor;
-		private int scaledMinIndex;
-		private int scaledMaxIndex;
-
-		public PointList( ZedGraph.IPointList sourcePointList )
-		{
-			fullPointList = new ZedGraph.PointPairList( sourcePointList );
-			scaledPointList = new ZedGraph.PointPairList();
-			scaledMaxIndexList = new List<int>();
-		}
-
-		public void SetScale( int bins, double min, double max )
-		{
-			if( scaledWidth == bins && scaledMin == min && scaledMax == max )
-				return;
-
-			scaledWidth = bins;
-			scaledMin = min;
-			scaledMax = max;
-			scaleRange = max - min;
-			if( scaleRange == 0 )
-				return;
-			scaleFactor = bins / scaleRange;
-			scaledPointList.Clear();
-			scaledPointList.Capacity = bins * 4; // store 4 points for each bin (entry, min, max, exit)
-			scaledMaxIndexList.Clear();
-			scaledMaxIndexList.Capacity = bins; // store just the index of the max point for each bin
-			int lastBin = -1;
-			int curBinEntryIndex = -1;
-			int curBinMinIndex = -1;
-			int curBinMaxIndex = -1;
-			int curBinExitIndex = -1;
-			for( int i = 0; i < fullPointList.Count; ++i )
-			{
-				ZedGraph.PointPair point = fullPointList[i];
-
-				if( point.X < min )
-					continue;
-
-				if( point.X > max )
-					break;
-
-				int curBin = (int) Math.Round( scaleFactor * ( point.X - min ) );
-				if( curBin > lastBin ) // new bin, insert points of last bin
-				{
-					if( lastBin > -1 )
-					{
-						scaledMinIndex = curBinMinIndex;
-						scaledPointList.Add( fullPointList[curBinEntryIndex] );
-						if( curBinEntryIndex != curBinMinIndex )
-							scaledPointList.Add( fullPointList[curBinMinIndex] );
-						if( curBinEntryIndex != curBinMaxIndex &&
-							curBinMinIndex != curBinMaxIndex )
-							scaledPointList.Add( fullPointList[curBinMaxIndex] );
-						if( curBinEntryIndex != curBinMaxIndex &&
-							curBinMinIndex != curBinMaxIndex &&
-							curBinMaxIndex != curBinExitIndex )
-							scaledPointList.Add( fullPointList[curBinExitIndex] );
-						if( fullPointList[curBinMaxIndex].Y != 0 )
-							scaledMaxIndexList.Add( curBinMaxIndex );
-					}
-					lastBin = curBin;
-					curBinEntryIndex = i;
-					curBinMinIndex = i;
-					curBinMaxIndex = i;
-				} else // same bin, set exit point
-				{
-					curBinExitIndex = i;
-					if( point.Y > fullPointList[curBinMaxIndex].Y )
-						scaledMaxIndex = curBinMaxIndex = i;
-					else if( point.Y < fullPointList[curBinMaxIndex].Y )
-						curBinMinIndex = i;
-				}
-			}
-
-			if( lastBin > -1 )
-			{
-				scaledMinIndex = curBinMinIndex;
-				scaledPointList.Add( fullPointList[curBinEntryIndex] );
-				if( curBinEntryIndex != curBinMinIndex )
-					scaledPointList.Add( fullPointList[curBinMinIndex] );
-				if( curBinEntryIndex != curBinMaxIndex &&
-					curBinMinIndex != curBinMaxIndex )
-					scaledPointList.Add( fullPointList[curBinMaxIndex] );
-				if( curBinEntryIndex != curBinMaxIndex &&
-					curBinMinIndex != curBinMaxIndex &&
-					curBinMaxIndex != curBinExitIndex )
-					scaledPointList.Add( fullPointList[curBinExitIndex] );
-				if( fullPointList[curBinMaxIndex].Y != 0 )
-					scaledMaxIndexList.Add( curBinMaxIndex );
-			}
-		}
-
-		public int Count
-		{
-			get
-			{
-				if( ScaledCount > 0 )
-					return ScaledCount;
-				else
-					return FullCount;
-			}
-		}
-
-		public int FullCount
-		{
-			get { return fullPointList.Count; }
-		}
-
-		public int ScaledCount
-		{
-			get { return scaledPointList.Count; }
-		}
-
-		public int MaxCount
-		{
-			get { return scaledMaxIndexList.Count; }
-		}
-
-		public ZedGraph.PointPairList FullList { get { return fullPointList; } }
-		public ZedGraph.PointPairList ScaledList { get { return scaledPointList; } }
-		public List<int> ScaledMaxIndexList { get { return scaledMaxIndexList; } }
-
-		public ZedGraph.PointPair GetPointAtIndex( int index )
-		{
-			return fullPointList[index];
-		}
-
-		public int LowerBound( double x )
-		{
-			int min = 0;
-			int max = scaledPointList.Count;
-			int best = max - 1;
-			while( true )
-			{
-				int i = (max + min) / 2;
-				if( scaledPointList[i].X < x )
-				{
-					if( min == i )
-						return ( max == scaledPointList.Count ? -1 : max );
-					min = i;
-				} else
-				{
-					best = i;
-					max = i;
-					if( i == 0 )
-						break;
-				}
-			}
-			return best;
-		}
-
-		public ZedGraph.PointPair this[int index]
-		{
-			get
-			{
-				if( ScaledCount > 0 )
-					return scaledPointList[index];
-				else
-					return fullPointList[index];
-			}
-		}
-
-		public object Clone()
-		{
-			throw new Exception( "The method or operation is not implemented." );
-		}
-
-		public IEnumerator<ZedGraph.PointPair> GetEnumerator()
-		{
-			if( ScaledCount > 0 )
-				return scaledPointList.GetEnumerator();
-			else
-				return fullPointList.GetEnumerator();
-		}
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			if( ScaledCount > 0 )
-				return scaledPointList.GetEnumerator();
-			else
-				return fullPointList.GetEnumerator();
-		}
 	}
 
 	public class SeemsPointAnnotation
@@ -501,194 +368,88 @@ namespace seems
 		}
 	}
 
-	public class ChromatogramAnnotationSettings
-	{
-		public ChromatogramAnnotationSettings()
-		{
-			showPointTimes = Properties.Settings.Default.ShowChromatogramTimeLabels;
-			showPointIntensities = Properties.Settings.Default.ShowChromatogramIntensityLabels;
-			showMatchedAnnotations = Properties.Settings.Default.ShowChromatogramMatchedAnnotations;
-			showUnmatchedAnnotations = Properties.Settings.Default.ShowChromatogramUnmatchedAnnotations;
-			matchTolerance = Properties.Settings.Default.TimeMatchTolerance;
-			matchToleranceOverride = Properties.Settings.Default.ChromatogramMatchToleranceOverride;
+    public class AnnotationSettings
+    {
+        public AnnotationSettings()
+        {
+            labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
+            pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
+        }
 
-			labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
-			pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
+        public MSGraph.PointAnnotationFormat DefaultAnnotationFormat
+        {
+            get
+            {
+                if( ShowXValues && ShowYValues )
+                    return new MSGraph.PointAnnotationFormat( "{x:f2}\n{y:f2}" );
+                else if( ShowXValues )
+                    return new MSGraph.PointAnnotationFormat( "{x:f2}" );
+                else if( ShowYValues )
+                    return new MSGraph.PointAnnotationFormat( "{y:f2}" );
+                else
+                    return null;
+            }
+        }
 
-		}
+        private bool showXValues;
+        public bool ShowXValues
+        {
+            get { return showXValues; }
+            set { showXValues = value; }
+        }
 
-		private bool showPointTimes;
-		public bool ShowPointTimes
-		{
-			get { return showPointTimes; }
-			set { showPointTimes = value; }
-		}
+        private bool showYValues;
+        public bool ShowYValues
+        {
+            get { return showYValues; }
+            set { showYValues = value; }
+        }
 
-		private bool showPointIntensities;
-		public bool ShowPointIntensities
-		{
-			get { return showPointIntensities; }
-			set { showPointIntensities = value; }
-		}
+        private bool showMatchedAnnotations;
+        public bool ShowMatchedAnnotations
+        {
+            get { return showMatchedAnnotations; }
+            set { showMatchedAnnotations = value; }
+        }
 
-		private bool showMatchedAnnotations;
-		public bool ShowMatchedAnnotations
-		{
-			get { return showMatchedAnnotations; }
-			set { showMatchedAnnotations = value; }
-		}
+        private bool showUnmatchedAnnotations;
+        public bool ShowUnmatchedAnnotations
+        {
+            get { return showUnmatchedAnnotations; }
+            set { showUnmatchedAnnotations = value; }
+        }
 
-		private bool showUnmatchedAnnotations;
-		public bool ShowUnmatchedAnnotations
-		{
-			get { return showUnmatchedAnnotations; }
-			set { showUnmatchedAnnotations = value; }
-		}
+        private bool matchToleranceOverride;
+        public bool MatchToleranceOverride
+        {
+            get { return matchToleranceOverride; }
+            set { matchToleranceOverride = value; }
+        }
 
-		private bool matchToleranceOverride;
-		public bool MatchToleranceOverride
-		{
-			get { return matchToleranceOverride; }
-			set { matchToleranceOverride = value; }
-		}
+        private double matchTolerance;
+        public double MatchTolerance
+        {
+            get { return matchTolerance; }
+            set { matchTolerance = value; }
+        }
 
-		private double matchTolerance;
-		public double MatchTolerance
-		{
-			get { return matchTolerance; }
-			set { matchTolerance = value; }
-		}
+        private MatchToleranceUnits matchToleranceUnit;
+        public MatchToleranceUnits MatchToleranceUnit
+        {
+            get { return matchToleranceUnit; }
+            set { matchToleranceUnit = value; }
+        }
 
-		private RetentionTimeUnits matchToleranceUnit;
-		public RetentionTimeUnits MatchToleranceUnit
-		{
-			get { return matchToleranceUnit; }
-			set { matchToleranceUnit = value; }
-		}
+        private Map<string, Pair<string, Color>> labelToAliasAndColorMap;
+        public Map<string, Pair<string, Color>> LabelToAliasAndColorMap
+        {
+            get { return labelToAliasAndColorMap; }
+        }
 
-		private Map<string, Pair<string, Color>> labelToAliasAndColorMap;
-		public Map<string, Pair<string, Color>> LabelToAliasAndColorMap
-		{
-			get { return labelToAliasAndColorMap; }
-		}
-
-		private PointDataMap<SeemsPointAnnotation> pointAnnotations;
-		public PointDataMap<SeemsPointAnnotation> PointAnnotations
-		{
-			get { return pointAnnotations; }
-		}
-	}
-
-	public class ScanAnnotationSettings
-	{
-		public ScanAnnotationSettings()
-		{
-			showPointMZs = Properties.Settings.Default.ShowScanMzLabels;
-			showPointIntensities = Properties.Settings.Default.ShowScanIntensityLabels;
-			showMatchedAnnotations = Properties.Settings.Default.ShowScanMatchedAnnotations;
-			showUnmatchedAnnotations = Properties.Settings.Default.ShowScanUnmatchedAnnotations;
-			matchTolerance = Properties.Settings.Default.MzMatchTolerance;
-			matchToleranceOverride = Properties.Settings.Default.ScanMatchToleranceOverride;
-
-			// ms-product-label -> (label alias, known color)
-			labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
-			labelToAliasAndColorMap["y"] = new Pair<string, Color>( "y", Color.Blue );
-			labelToAliasAndColorMap["b"] = new Pair<string, Color>( "b", Color.Red );
-			labelToAliasAndColorMap["y-NH3"] = new Pair<string, Color>( "y^", Color.Green );
-			labelToAliasAndColorMap["y-H2O"] = new Pair<string, Color>( "y*", Color.Cyan );
-			labelToAliasAndColorMap["b-NH3"] = new Pair<string, Color>( "b^", Color.Orange );
-			labelToAliasAndColorMap["b-H2O"] = new Pair<string, Color>( "b*", Color.Violet );
-
-			pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
-		}
-
-		public void setScanLabels( Map<string, List<Pair<double, int>>> ionLabelToMzAndChargeMap )
-		{
-			foreach( Map<string, List<Pair<double, int>>>.MapPair ionListItr in ionLabelToMzAndChargeMap )
-			{
-				string[] labelNameIndexPair = ionListItr.Key.Split( " ".ToCharArray() );
-				foreach( Pair<double, int> ionMzChargePair in ionListItr.Value )
-				{
-					SeemsPointAnnotation annotation = pointAnnotations[ionMzChargePair.first];
-					if( labelToAliasAndColorMap.Contains( labelNameIndexPair[0] ) )
-					{
-						Pair<string, Color> labelColorPair = labelToAliasAndColorMap[labelNameIndexPair[0]];
-						if( ionMzChargePair.second > 1 )
-							annotation.Label = String.Format( "{0}{1} (+{2})", labelColorPair.first, labelNameIndexPair[1], ionMzChargePair.second );
-						else
-							annotation.Label = String.Format( "{0}{1}", labelColorPair.first, labelNameIndexPair[1] );
-
-						annotation.Color = labelColorPair.second;
-					} else
-					{
-						annotation.Label = ionListItr.Key;
-						annotation.Color = Color.Blue;
-					}
-					annotation.Point = ionMzChargePair.first;
-					annotation.Width = 2;
-				}
-			}
-		}
-
-		private bool showPointMZs;
-		public bool ShowPointMZs
-		{
-			get { return showPointMZs; }
-			set { showPointMZs = value; }
-		}
-
-		private bool showPointIntensities;
-		public bool ShowPointIntensities
-		{
-			get { return showPointIntensities; }
-			set { showPointIntensities = value; }
-		}
-
-		private bool showMatchedAnnotations;
-		public bool ShowMatchedAnnotations
-		{
-			get { return showMatchedAnnotations; }
-			set { showMatchedAnnotations = value; }
-		}
-
-		private bool showUnmatchedAnnotations;
-		public bool ShowUnmatchedAnnotations
-		{
-			get { return showUnmatchedAnnotations; }
-			set { showUnmatchedAnnotations = value; }
-		}
-
-		private bool matchToleranceOverride;
-		public bool MatchToleranceOverride
-		{
-			get { return matchToleranceOverride; }
-			set { matchToleranceOverride = value; }
-		}
-
-		private double matchTolerance;
-		public double MatchTolerance
-		{
-			get { return matchTolerance; }
-			set { matchTolerance = value; }
-		}
-
-		private MassToleranceUnits matchToleranceUnit;
-		public MassToleranceUnits MatchToleranceUnit
-		{
-			get { return matchToleranceUnit; }
-			set { matchToleranceUnit = value; }
-		}
-
-		private Map<string, Pair<string, Color>> labelToAliasAndColorMap;
-		public Map<string, Pair<string, Color>> LabelToAliasAndColorMap
-		{
-			get { return labelToAliasAndColorMap; }
-		}
-
-		private PointDataMap<SeemsPointAnnotation> pointAnnotations;
-		public PointDataMap<SeemsPointAnnotation> PointAnnotations
-		{
-			get { return pointAnnotations; }
-		}
-	}
+        private PointDataMap<SeemsPointAnnotation> pointAnnotations;
+        public PointDataMap<SeemsPointAnnotation> PointAnnotations
+        {
+            get { return pointAnnotations; }
+        }
+    }
 }

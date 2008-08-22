@@ -10,15 +10,15 @@ namespace seems
 {
 	public partial class AnnotationEditForm : Form
 	{
-		private GraphForm ownerGraphForm;
+        private AnnotationSettings settings;
 
-		public AnnotationEditForm( GraphForm graphForm )
+		public AnnotationEditForm( AnnotationSettings settings )
 		{
 			InitializeComponent();
 
-			ownerGraphForm = graphForm;
+            this.settings = settings;
 
-			PointDataMap<SeemsPointAnnotation> annotationMap = ownerGraphForm.CurrentPointAnnotations;
+			PointDataMap<SeemsPointAnnotation> annotationMap = settings.PointAnnotations;
 			foreach( SeemsPointAnnotation annotation in annotationMap.Values )
 				annotationListBox.Items.Add( new AnnotationListItem( annotation ) );
 		}
@@ -27,7 +27,7 @@ namespace seems
 		{
 			DialogResult = DialogResult.OK;
 
-			PointDataMap<SeemsPointAnnotation> annotationMap = ownerGraphForm.CurrentPointAnnotations;
+			PointDataMap<SeemsPointAnnotation> annotationMap = settings.PointAnnotations;
 			annotationMap.Clear();
 			foreach( object itr in annotationListBox.Items )
 			{
@@ -46,7 +46,7 @@ namespace seems
 
 		private void addAnnotationButton_Click( object sender, EventArgs e )
 		{
-			AnnotationEditAddEditDialog dialog = new AnnotationEditAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color );
+			AnnotationEditAddEditDialog dialog = new AnnotationEditAddEditDialog( Color.White );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				annotationListBox.Items.Add( new AnnotationListItem( dialog.annotation ) );
@@ -56,7 +56,7 @@ namespace seems
 		private void editAnnotationButton_Click( object sender, EventArgs e )
 		{
 			AnnotationListItem item = (AnnotationListItem) annotationListBox.SelectedItem;
-			AnnotationEditAddEditDialog dialog = new AnnotationEditAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color, item.annotation );
+            AnnotationEditAddEditDialog dialog = new AnnotationEditAddEditDialog( Color.White, item.annotation );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				item.annotation = dialog.annotation;
@@ -97,7 +97,7 @@ namespace seems
 			Rectangle colorSampleBox = new Rectangle( e.Bounds.Location, e.Bounds.Size );
 			colorSampleBox.X = e.Bounds.Right - e.Bounds.Height * 2;
 			colorSampleBox.Location.Offset( -5, 0 );
-			e.Graphics.FillRectangle( new SolidBrush( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color ), colorSampleBox );
+			e.Graphics.FillRectangle( new SolidBrush( Color.White ), colorSampleBox );
 			int middle = colorSampleBox.Y + colorSampleBox.Height / 2;
 			e.Graphics.DrawLine( new Pen( item.annotation.Color, item.annotation.Width ), colorSampleBox.Left, middle, colorSampleBox.Right, middle );
 			e.DrawFocusRectangle();

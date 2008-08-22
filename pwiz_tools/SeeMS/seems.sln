@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,16 @@ Global
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|Win32.ActiveCfg = Release|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

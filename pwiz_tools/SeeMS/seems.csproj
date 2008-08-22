@@ -60,6 +60,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\pwiz_bindings_cli.dll</HintPath>
     </Reference>
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\STL_Containers.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -68,7 +72,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="ZedGraph, Version=5.1.4.32252, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\ZedGraph.dll</HintPath>
+      <HintPath>MSGraphControl\ZedGraph.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +83,12 @@
       <DependentUpon>ChromatogramListForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataSource.cs" />
+    <Compile Include="Dialogs\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\AboutForm.designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\AnnotationSettingsAddEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -136,7 +146,6 @@
     <Compile Include="Dialogs\ScanAnnotationSettingsForm.Designer.cs">
       <DependentUpon>ScanAnnotationSettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Misc\Map.cs" />
     <Compile Include="Misc\MruStripMenu.cs" />
     <Compile Include="Dialogs\PeptideFragmentationForm.cs">
       <SubType>Form</SubType>
@@ -150,7 +159,6 @@
     <Compile Include="Dialogs\PeptideMassMapProteinDigestForm.Designer.cs">
       <DependentUpon>PeptideMassMapProteinDigestForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Misc\RBTree.cs" />
     <Compile Include="seems.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -200,7 +208,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Misc\Set.cs" />
     <Compile Include="SpectrumProcessingForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -220,6 +227,10 @@
   <ItemGroup>
     <EmbeddedResource Include="ChromatogramListForm.resx">
       <DependentUpon>ChromatogramListForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\AnnotationSettingsAddEditDialog.resx">
@@ -292,6 +303,12 @@
       <ProductName>.NET Framework 2.0</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

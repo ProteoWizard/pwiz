@@ -7,7 +7,6 @@ using System.Text;
 using System.Windows.Forms;
 using System.Configuration;
 using System.Collections.Specialized;
-using Extensions;
 
 namespace seems
 {
@@ -33,9 +32,9 @@ namespace seems
 		}
 
 		private List<string> matchToleranceUnitList = new List<string>();
-		private GraphForm ownerGraphForm;
+        private AnnotationSettings settings;
 
-		public ChromatogramAnnotationSettingsForm( GraphForm graphForm )
+        public ChromatogramAnnotationSettingsForm( AnnotationSettings settings )
 		{
 			InitializeComponent();
 
@@ -43,14 +42,14 @@ namespace seems
 			//matchToleranceUnitList.Add( "min." );
 			//matchToleranceUnitList.Add( "hours" );
 
-			ownerGraphForm = graphForm;
+            this.settings = settings;
 
 			matchToleranceUnitsComboBox.Items.AddRange( (object[]) matchToleranceUnitList.ToArray() );
-			matchToleranceUnitsComboBox.SelectedIndex = (int) ownerGraphForm.ChromatogramAnnotationSettings.MatchToleranceUnit;
-			matchToleranceCheckbox.Checked = ownerGraphForm.ChromatogramAnnotationSettings.MatchToleranceOverride;
-			matchToleranceTextBox.Text = ownerGraphForm.ChromatogramAnnotationSettings.MatchTolerance.ToString();
-			showTimeLabelsCheckbox.Checked = ownerGraphForm.ChromatogramAnnotationSettings.ShowPointTimes;
-			showTotalIntensityLabelsCheckbox.Checked = ownerGraphForm.ChromatogramAnnotationSettings.ShowPointIntensities;
+			matchToleranceUnitsComboBox.SelectedIndex = (int) settings.MatchToleranceUnit;
+			matchToleranceCheckbox.Checked = settings.MatchToleranceOverride;
+			matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
+			showTimeLabelsCheckbox.Checked = settings.ShowXValues;
+			showTotalIntensityLabelsCheckbox.Checked = settings.ShowYValues;
 
 			if( !matchToleranceCheckbox.Checked )
 			{
@@ -58,10 +57,10 @@ namespace seems
 				matchToleranceUnitsComboBox.Enabled = false;
 			}
 
-			showMatchedAnnotationsCheckbox.Checked = ownerGraphForm.ChromatogramAnnotationSettings.ShowMatchedAnnotations;
-			showUnmatchedAnnotationsCheckbox.Checked = ownerGraphForm.ChromatogramAnnotationSettings.ShowUnmatchedAnnotations;
+			showMatchedAnnotationsCheckbox.Checked = settings.ShowMatchedAnnotations;
+			showUnmatchedAnnotationsCheckbox.Checked = settings.ShowUnmatchedAnnotations;
 
-			foreach( LabelToAliasAndColorPair itr in ownerGraphForm.ChromatogramAnnotationSettings.LabelToAliasAndColorMap )
+			foreach( LabelToAliasAndColorPair itr in settings.LabelToAliasAndColorMap )
 			{
 				aliasAndColorMappingListBox.Items.Add( new LabelToAliasAndColorListItem( itr ) );
 			}
@@ -71,13 +70,11 @@ namespace seems
 		{
 			this.DialogResult = DialogResult.OK;
 
-			ChromatogramAnnotationSettings settings = ownerGraphForm.ChromatogramAnnotationSettings;
-
-			Properties.Settings.Default.TimeMatchToleranceUnit = (int) ( settings.MatchToleranceUnit = (RetentionTimeUnits) matchToleranceUnitsComboBox.SelectedIndex );
+			Properties.Settings.Default.TimeMatchToleranceUnit = (int) ( settings.MatchToleranceUnit = (MatchToleranceUnits) matchToleranceUnitsComboBox.SelectedIndex );
 			Properties.Settings.Default.ChromatogramMatchToleranceOverride = settings.MatchToleranceOverride = matchToleranceCheckbox.Checked;
 			Properties.Settings.Default.TimeMatchTolerance = settings.MatchTolerance = Convert.ToDouble( matchToleranceTextBox.Text );
-			Properties.Settings.Default.ShowChromatogramTimeLabels = settings.ShowPointTimes = showTimeLabelsCheckbox.Checked;
-			Properties.Settings.Default.ShowChromatogramIntensityLabels = settings.ShowPointIntensities = showTotalIntensityLabelsCheckbox.Checked;
+            Properties.Settings.Default.ShowChromatogramTimeLabels = settings.ShowXValues = showTimeLabelsCheckbox.Checked;
+            Properties.Settings.Default.ShowChromatogramIntensityLabels = settings.ShowYValues = showTotalIntensityLabelsCheckbox.Checked;
 			Properties.Settings.Default.ShowChromatogramMatchedAnnotations = settings.ShowMatchedAnnotations = showMatchedAnnotationsCheckbox.Checked;
 			Properties.Settings.Default.ShowChromatogramUnmatchedAnnotations = settings.ShowUnmatchedAnnotations = showUnmatchedAnnotationsCheckbox.Checked;
 
@@ -89,7 +86,7 @@ namespace seems
 			}
 
 			Properties.Settings.Default.Save();
-			ownerGraphForm.updateGraph();
+			//ownerGraphForm.updateGraph();
 		}
 
 		private void cancelButton_Click( object sender, EventArgs e )
@@ -108,7 +105,7 @@ namespace seems
 			Rectangle colorSampleBox = new Rectangle( e.Bounds.Location, e.Bounds.Size );
 			colorSampleBox.X = e.Bounds.Right - e.Bounds.Height * 2;
 			colorSampleBox.Location.Offset( -5, 0 );
-			e.Graphics.FillRectangle( new SolidBrush( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color ), colorSampleBox );
+            e.Graphics.FillRectangle( new SolidBrush( Color.White ), colorSampleBox );
 			int middle = colorSampleBox.Y + colorSampleBox.Height / 2;
 			e.Graphics.DrawLine( new Pen( item.mapPair.Value.second, 2 ), colorSampleBox.Left, middle, colorSampleBox.Right, middle );
 			e.DrawFocusRectangle();
@@ -116,7 +113,7 @@ namespace seems
 
 		private void addAliasAndColorMappingButton_Click( object sender, EventArgs e )
 		{
-			AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color );
+            AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( Color.White );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				aliasAndColorMappingListBox.Items.Add(
@@ -129,7 +126,7 @@ namespace seems
 		private void editAliasAndColorMappingButton_Click( object sender, EventArgs e )
 		{
 			LabelToAliasAndColorListItem item = (LabelToAliasAndColorListItem) aliasAndColorMappingListBox.SelectedItem;
-			AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( ownerGraphForm.ZedGraphControl.GraphPane.Chart.Fill.Color, item.mapPair.Key, item.mapPair.Value.first, item.mapPair.Value.second );
+            AnnotationSettingsAddEditDialog dialog = new AnnotationSettingsAddEditDialog( Color.White, item.mapPair.Key, item.mapPair.Value.first, item.mapPair.Value.second );
 			if( dialog.ShowDialog() == DialogResult.OK )
 			{
 				if( item.mapPair.Key == dialog.label )
@@ -168,7 +165,7 @@ namespace seems
 				double result;
 				if( !Double.TryParse( matchToleranceTextBox.Text, out result ) )
 				{
-					matchToleranceTextBox.Text = ownerGraphForm.ChromatogramAnnotationSettings.MatchTolerance.ToString();
+					matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
 				}
 			}
 		}
@@ -179,8 +176,8 @@ namespace seems
 			{
 				matchToleranceTextBox.Enabled = false;
 				matchToleranceUnitsComboBox.Enabled = false;
-				matchToleranceUnitsComboBox.SelectedIndex = (int) ownerGraphForm.ChromatogramAnnotationSettings.MatchToleranceUnit;
-				matchToleranceTextBox.Text = ownerGraphForm.ChromatogramAnnotationSettings.MatchTolerance.ToString();
+				matchToleranceUnitsComboBox.SelectedIndex = (int) settings.MatchToleranceUnit;
+				matchToleranceTextBox.Text = settings.MatchTolerance.ToString();
 			} else
 			{
 				matchToleranceTextBox.Enabled = true;

@@ -7,34 +7,32 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using MSGraph;
+using ZedGraph;
 
 namespace seems
 {
 	public partial class GraphForm : DockableForm
 	{
-		private bool isLoaded = false;
-
-		public bool IsLoaded
-		{
-			get { return isLoaded; }
-			set { isLoaded = value; }
-		}
-
-		private DataSource currentDataSource = null;
-		public DataSource DataSource { get { return currentDataSource; } }
+		private ManagedDataSource currentSource = null;
+        public ManagedDataSource ManagedDataSource { get { return currentSource; } }
 
 		private GraphItem currentGraphItem = null;
 		public GraphItem CurrentGraphItem { get { return (GraphItem) currentGraphItem; } }
 
-		private ChromatogramAnnotationSettings chromatogramAnnotationSettings = new ChromatogramAnnotationSettings();
+		/*private AnnotationSettings chromatogramAnnotationSettings = new ChromatogramAnnotationSettings();
 		public ChromatogramAnnotationSettings ChromatogramAnnotationSettings { get { return chromatogramAnnotationSettings; } }
 
 		private ScanAnnotationSettings scanAnnotationSettings = new ScanAnnotationSettings();
 		public ScanAnnotationSettings ScanAnnotationSettings { get { return scanAnnotationSettings; } }
+        */
+        public string CurrentSourceFilepath
+        {
+            get { return currentSource.Source.CurrentFilepath; }
+            set { currentSource.Source.SetInputFile( value ); }
+        }
 
-		public string CurrentSourceFilepath { get { return currentDataSource.CurrentFilepath; } set { currentDataSource.SetInputFile( value ); } }
-
-		public PointDataMap<SeemsPointAnnotation> CurrentPointAnnotations
+		/*public PointDataMap<SeemsPointAnnotation> CurrentPointAnnotations
 		{
 			get
 			{
@@ -43,20 +41,31 @@ namespace seems
 				else
 					return chromatogramAnnotationSettings.PointAnnotations;
 			}
-		}
+		}*/
 
-		public ZedGraph.ZedGraphControl ZedGraphControl { get { return zedGraphControl1; } }
+		public MSGraph.MSGraphControl ZedGraphControl { get { return msGraphControl; } }
 
-        public List<GraphItem> GraphItems
+        private PaneList paneList;
+        public PaneList PaneList
         {
-            get
+            get { return paneList; }
+            set
             {
-                List<GraphItem> items = new List<GraphItem>();
-                if( currentGraphItem != null )
-                    items.Add( currentGraphItem );
-                foreach( RefPair<DataSource, GraphItem> item in currentOverlays )
-                    items.Add( item.second );
-                return items;
+                paneList = value;
+                Refresh();
+            }
+        }
+
+        private ZedGraph.PaneLayout paneLayout;
+        public ZedGraph.PaneLayout PaneListLayout
+        {
+            get { return paneLayout; }
+            set
+            {
+                ZedGraph.PaneLayout oldLayout = paneLayout;
+                paneLayout = value;
+                if( oldLayout != paneLayout )
+                    Refresh();
             }
         }
 
@@ -64,74 +73,185 @@ namespace seems
 		{
 			InitializeComponent();
 
-			this.Load += GraphForm_Load;
+            paneList = new PaneList();
+            paneLayout = PaneLayout.SingleColumn;
 
-			zedGraphControl1.GraphPane.Title.IsVisible = false;
-			zedGraphControl1.GraphPane.Chart.Border.IsVisible = false;
-			zedGraphControl1.GraphPane.Y2Axis.IsVisible = false;
-			zedGraphControl1.GraphPane.X2Axis.IsVisible = false;
-			zedGraphControl1.GraphPane.XAxis.MajorTic.IsOpposite = false;
-			zedGraphControl1.GraphPane.YAxis.MajorTic.IsOpposite = false;
-			zedGraphControl1.GraphPane.XAxis.MinorTic.IsOpposite = false;
-			zedGraphControl1.GraphPane.YAxis.MinorTic.IsOpposite = false;
-			zedGraphControl1.GraphPane.IsFontsScaled = false;
-			zedGraphControl1.IsZoomOnMouseCenter = false;
-			zedGraphControl1.GraphPane.YAxis.Scale.MaxGrace = 0.1;
-			zedGraphControl1.IsEnableVZoom = false;
-			zedGraphControl1.PanButtons = MouseButtons.Left;
-			zedGraphControl1.PanModifierKeys = Keys.Control;
-			zedGraphControl1.PanButtons2 = MouseButtons.None;
-			zedGraphControl1.IsEnableHEdit = false;
-			zedGraphControl1.IsEnableVEdit = false;
-			zedGraphControl1.EditButtons = MouseButtons.Left;
-			zedGraphControl1.EditModifierKeys = Keys.None;
+            msGraphControl.MasterPane.InnerPaneGap = 1;
+
+            msGraphControl.ZoomButtons = MouseButtons.Left;
+            msGraphControl.ZoomModifierKeys = Keys.None;
+            msGraphControl.ZoomButtons2 = MouseButtons.None;
+
+            msGraphControl.UnzoomButtons = new MSGraphControl.MouseButtonClicks( MouseButtons.Middle );
+            msGraphControl.UnzoomModifierKeys = Keys.None;
+            msGraphControl.UnzoomButtons2 = new MSGraphControl.MouseButtonClicks( MouseButtons.None );
+
+            msGraphControl.UnzoomAllButtons = new MSGraphControl.MouseButtonClicks( MouseButtons.Left, 2 );
+            msGraphControl.UnzoomAllButtons2 = new MSGraphControl.MouseButtonClicks( MouseButtons.None );
+
+            msGraphControl.PanButtons = MouseButtons.Left;
+            msGraphControl.PanModifierKeys = Keys.Control;
+            msGraphControl.PanButtons2 = MouseButtons.None;
+
+            msGraphControl.ContextMenuBuilder += new MSGraphControl.ContextMenuBuilderEventHandler( GraphForm_ContextMenuBuilder );
 		}
 
-		private void GraphForm_Load( object sender, EventArgs e )
-		{
-			this.StartPosition = FormStartPosition.Manual;
-			this.Location = Properties.Settings.Default.LastGraphFormLocation;
-			this.Size = Properties.Settings.Default.LastGraphFormSize;
-			this.WindowState = Properties.Settings.Default.LastGraphFormWindowState;
-			isLoaded = true;
-		}
+        void GraphForm_ContextMenuBuilder( ZedGraphControl sender,
+                                           ContextMenuStrip menuStrip,
+                                           Point mousePt,
+                                           MSGraphControl.ContextMenuObjectState objState )
+        {
+            if( sender.MasterPane.PaneList.Count > 1 )
+            {
+                ToolStripMenuItem layoutMenu = new ToolStripMenuItem( "Stack Layout", null,
+                        new ToolStripItem[]
+                    {
+                        new ToolStripMenuItem("Single Column", null, GraphForm_StackLayoutSingleColumn),
+                        new ToolStripMenuItem("Single Row", null, GraphForm_StackLayoutSingleRow),
+                        new ToolStripMenuItem("Grid", null, GraphForm_StackLayoutGrid)
+                    }
+                    );
+                menuStrip.Items.Add( layoutMenu );
 
-		public void updateGraph()
-		{
-			updateGraph( false );
-		}
+                ToolStripMenuItem syncMenuItem = new ToolStripMenuItem( "Synchronize Zoom/Pan", null, GraphForm_SyncZoomPan );
+                syncMenuItem.Checked = msGraphControl.IsSynchronizeXAxes;
+                menuStrip.Items.Add( syncMenuItem );
+            }
+        }
 
-		public void updateGraph( bool clearOverlays )
-		{
-			if( clearOverlays )
-				currentOverlays.Clear();
+        void GraphForm_StackLayoutSingleColumn( object sender, EventArgs e )
+        {
+            PaneListLayout = PaneLayout.SingleColumn;
+        }
 
-			showData( currentGraphItem, false );
-			DataSource primaryDataSource = currentDataSource;
-			foreach( RefPair<DataSource, GraphItem> overlayDataPair in currentOverlays )
-			{
-				currentDataSource = overlayDataPair.first;
-				showData( overlayDataPair.second, true );
-			}
-			currentDataSource = primaryDataSource;
-		}
+        void GraphForm_StackLayoutSingleRow( object sender, EventArgs e )
+        {
+            PaneListLayout = PaneLayout.SingleRow;
+        }
 
-		public void ShowData( DataSource dataSource, GraphItem dataItem )
-		{
-			currentOverlays.Clear();
-			currentDataSource = dataSource;
-			currentGraphItem = dataItem;
-			showData( dataItem, false );
-		}
+        void GraphForm_StackLayoutGrid( object sender, EventArgs e )
+        {
+            PaneListLayout = PaneLayout.ForceSquare;
+        }
 
-		List<RefPair<DataSource, GraphItem>> currentOverlays = new List<RefPair<DataSource, GraphItem>>();
-		public void ShowDataOverlay( DataSource dataSource, GraphItem dataItem )
-		{
-			currentOverlays.Add( new RefPair<DataSource, GraphItem>( dataSource, dataItem ) );
-			currentDataSource = dataSource;
-			//currentGraphItem = dataItem;
-			showData( dataItem, true );
-		}
+        void GraphForm_SyncZoomPan( object sender, EventArgs e )
+        {
+            msGraphControl.IsSynchronizeXAxes = !msGraphControl.IsSynchronizeXAxes;
+        }
+
+        public override void Refresh()
+        {
+            MasterPane mp = msGraphControl.MasterPane;
+
+            if( mp.PaneList.Count != paneList.Count )
+            {
+                mp.PaneList.Clear();
+                foreach( Pane logicalPane in paneList )
+                {
+                    MSGraphPane pane = new MSGraphPane();
+                    pane.IsFontsScaled = false;
+                    mp.Add( pane );
+                }
+                //mp.SetLayout( msGraphControl.CreateGraphics(), paneLayout );
+            } else
+            {
+                for( int i=0; i < paneList.Count; ++i )
+                {
+                    MSGraphPane pane = mp.PaneList[i] as MSGraphPane;
+                    pane.CurveList.Clear();
+                    pane.GraphObjList.Clear();
+                }
+            }
+
+            for( int i = 0; i < paneList.Count; ++i )
+            {
+                Pane logicalPane = paneList[i];
+                MSGraphPane pane = mp.PaneList[i] as MSGraphPane;
+                pane.IsFontsScaled = false;
+
+                foreach( GraphItem item in logicalPane )
+                {
+                    msGraphControl.AddGraphItem( pane, item );
+                }
+
+                if( mp.PaneList.Count > 1 )
+                {
+                    //if( i < paneList.Count - 1 )
+                    {
+                        pane.XAxis.Title.IsVisible = false;
+                        pane.XAxis.Scale.IsVisible = false;
+                        pane.Margin.Bottom = 0;
+                        pane.Margin.Top = 2;
+                    }/* else
+                    {
+                        pane.XAxis.Title.IsVisible = true;
+                        pane.XAxis.Scale.IsVisible = true;
+                    }*/
+                    pane.YAxis.Title.IsVisible = false;
+                    pane.YAxis.Scale.IsVisible = false;
+                    pane.YAxis.Scale.SetupScaleData( pane, pane.YAxis );
+                } else
+                {
+                    pane.XAxis.IsVisible = true;
+                    pane.XAxis.Title.IsVisible = true;
+                    pane.XAxis.Scale.IsVisible = true;
+                    pane.YAxis.Title.IsVisible = true;
+                    pane.YAxis.Scale.IsVisible = true;
+                }
+
+                if( logicalPane.Count == 1 )
+                {
+                    pane.Legend.IsVisible = false;
+                } else
+                {
+                    pane.Legend.IsVisible = true;
+                    pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
+
+                    ZedGraph.ColorSymbolRotator rotator = new ColorSymbolRotator();
+                    foreach( MSGraphItem item in pane.CurveList )
+                    {
+                        item.BaseItem.Color = rotator.NextColor;
+                    }
+                }
+
+                if( !pane.IsZoomed )
+                    msGraphControl.RestoreScale( pane );
+                else
+                    pane.AxisChange();
+            }
+
+            mp.SetLayout( msGraphControl.CreateGraphics(), paneLayout );
+
+            /*if( isOverlay )
+            {
+                pane.Legend.IsVisible = true;
+                pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
+                for( int i = 0; i < pane.CurveList.Count; ++i )
+                {
+                    pane.CurveList[i].Color = overlayColors[i];
+                    ( pane.CurveList[i] as ZedGraph.LineItem ).Line.Width = 2;
+                }
+            } else
+            {
+                pane.Legend.IsVisible = false;
+                currentGraphItem = chromatogram;
+            }*/
+
+            //msGraphControl.RestoreScale( pane );
+            //msGraphControl.ZoomOutAll( pane );
+
+            /*bool isScaleAuto = !pane.IsZoomed;
+
+            if( isScaleAuto )
+                pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
+            else
+                pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );*/
+
+            // String.Format( "{0} - {1}", currentDataSource.Name, chromatogram.Id )
+
+            msGraphControl.Refresh();
+        }
+
 
 		private Color[] overlayColors = new Color[]
 		{
@@ -139,423 +259,286 @@ namespace seems
 			Color.Magenta, Color.Cyan, Color.LightGreen, Color.Beige,
 			Color.DarkRed, Color.DarkBlue, Color.DarkGreen, Color.DeepPink
 		};
-
-		private void showData( GraphItem dataItem, bool isOverlay )
-		{
-			if( dataItem.IsChromatogram )
-				showChromatogram( dataItem as Chromatogram, isOverlay );
-			else
-				showSpectrum( dataItem as MassSpectrum, isOverlay );
-		}
-
-		private void showChromatogram( Chromatogram chromatogram, bool isOverlay )
-		{
-			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
-
-			if( isOverlay && pane.CurveList.Count > overlayColors.Length )
-				MessageBox.Show( "SeeMS only supports up to " + overlayColors.Length + " simultaneous overlays.", "Too many overlays", MessageBoxButtons.OK, MessageBoxIcon.Stop );
-
-			// set form title
-			if( !isOverlay )
-				Text = String.Format( "{0} - {1}", currentDataSource.Name, chromatogram.Id );
-			else
-				Text += "," + chromatogram.Id;
-
-			if( !isOverlay )
-				pane.CurveList.Clear();
-
-			if( currentGraphItem != null && !currentGraphItem.IsChromatogram )
-			{
-				zedGraphControl1.RestoreScale( pane );
-				zedGraphControl1.ZoomOutAll( pane );
-			}
-			bool isScaleAuto = !pane.IsZoomed;
-
-			//pane.GraphObjList.Clear();
-
-			PointList pointList = chromatogram.PointList;
-			if( pointList.FullCount > 0 )
-			{
-				int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-
-				if( isScaleAuto )
-					pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
-				else
-					pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-				pane.YAxis.Title.Text = "Total Intensity";
-				pane.XAxis.Title.Text = "Retention Time (in minutes)";
-				pane.AddCurve( chromatogram.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
-			}
-			pane.AxisChange();
-
-			if( isOverlay )
-			{
-				pane.Legend.IsVisible = true;
-				pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
-				for( int i = 0; i < pane.CurveList.Count; ++i )
-				{
-					pane.CurveList[i].Color = overlayColors[i];
-					( pane.CurveList[i] as ZedGraph.LineItem ).Line.Width = 2;
-				}
-			} else
-			{
-				pane.Legend.IsVisible = false;
-				currentGraphItem = chromatogram;
-			}
-
-			SetDataLabelsVisible( true );
-			zedGraphControl1.Refresh();
-		}
-
-		private void showSpectrum( MassSpectrum spectrum, bool isOverlay )
-		{
-			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
-
-			if( isOverlay && pane.CurveList.Count > overlayColors.Length )
-				MessageBox.Show( "SeeMS only supports up to " + overlayColors.Length + " simultaneous overlays.", "Too many overlays", MessageBoxButtons.OK, MessageBoxIcon.Stop );
-
-			// set form title
-			if( !isOverlay )
-				Text = String.Format( "{0} - {1}", currentDataSource.Name, spectrum.Id );
-			else
-				Text += "," + spectrum.Id;
-
-			if( !isOverlay )
-				pane.CurveList.Clear();
-
-			if( currentGraphItem != null && !currentGraphItem.IsMassSpectrum )
-			{
-				zedGraphControl1.RestoreScale( pane );
-				zedGraphControl1.ZoomOutAll( pane );
-			}
-			bool isScaleAuto = !pane.IsZoomed;
-
-			//pane.GraphObjList.Clear();
-
-			// the header does not have the data points
-			pane.YAxis.Title.Text = "Intensity";
-			pane.XAxis.Title.Text = "m/z";
-
-            /*if( isOverlay )
-            {
-                pane = new ZedGraph.GraphPane();
-                zedGraphControl1.MasterPane.Add( pane );
-            }*/
-
-			PointList pointList = spectrum.PointList;
-			if( pointList.FullCount > 0 )
-			{
-				int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-				if( isScaleAuto )
-					pointList.SetScale( bins, pointList[0].X, pointList[pointList.Count - 1].X );
-				else
-					pointList.SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-
-				if( spectrum.Element.spectrumDescription.hasCVParam(pwiz.CLI.msdata.CVID.MS_centroid_mass_spectrum) )
-				{
-					ZedGraph.StickItem stick = pane.AddStick( spectrum.Id, pointList, Color.Gray );
-					stick.Symbol.IsVisible = false;
-					stick.Line.Width = 1;
-				} else
-					pane.AddCurve( spectrum.Id, pointList, Color.Gray, ZedGraph.SymbolType.None );
-			}
-			pane.AxisChange();
-
-			if( isOverlay )
-			{
-				pane.Legend.IsVisible = true;
-				pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
-				for( int i = 0; i < pane.CurveList.Count; ++i )
-				{
-					pane.CurveList[i].Color = overlayColors[i];
-					( pane.CurveList[i] as ZedGraph.LineItem ).Line.Width = 2;
-				}
-			} else
-			{
-				pane.Legend.IsVisible = false;
-				currentGraphItem = spectrum;
-			}
-
-			SetDataLabelsVisible( true );
-			zedGraphControl1.Refresh();
-		}
-
-		// create a map of point X coordinates to point indexes in descending order by the Y coordinate
+#if false
+        #region old label code
+        // create a map of point X coordinates to point indexes in descending order by the Y coordinate
 		// for each point, create a text label of the X and/or Y value (user configurable)
 		// check that the label will not overlap any other labels (how to check against data lines as well?)
 		// if no overlap, add the label and mask the 
 		private ZedGraph.GraphObjList dataLabels = new ZedGraph.GraphObjList();
-		public void SetDataLabelsVisible( bool visible )
-		{
-			// set direct references
-			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
-			ZedGraph.Axis xAxis = pane.XAxis;
-			ZedGraph.Axis yAxis = pane.YAxis;
+        public void SetDataLabelsVisible( bool visible )
+        {
+            // set direct references
+            foreach( MSGraphPane pane in msGraphControl.MasterPane.PaneList )
+            {
+                ZedGraph.Axis xAxis = pane.XAxis;
+                ZedGraph.Axis yAxis = pane.YAxis;
 
-			if( CurrentGraphItem == null )
-				return;
-
-			//zedGraphControl1.GraphPane.GraphObjList.Clear();
-			foreach( ZedGraph.GraphObj dataLabel in dataLabels )
-				zedGraphControl1.GraphPane.GraphObjList.Remove( dataLabel );
-
-			if( visible )
-			{
-				if( CurrentGraphItem.IsChromatogram )
-				{
-					if( !( ChromatogramAnnotationSettings.ShowPointTimes ||
-						ChromatogramAnnotationSettings.ShowPointIntensities ||
-						ChromatogramAnnotationSettings.ShowUnmatchedAnnotations ||
-						ChromatogramAnnotationSettings.ShowMatchedAnnotations ) )
-						return;
-				} else
-				{
-					if( !( ScanAnnotationSettings.ShowPointMZs ||
-						ScanAnnotationSettings.ShowPointIntensities ||
-						ScanAnnotationSettings.ShowUnmatchedAnnotations ||
-						ScanAnnotationSettings.ShowMatchedAnnotations ) )
-						return;
-				}
-
-				yAxis.Scale.MinAuto = false;
-				yAxis.Scale.Min = 0;
-
-				// setup axes scales to enable the Transform method
-				xAxis.Scale.SetupScaleData( pane, xAxis );
-				yAxis.Scale.SetupScaleData( pane, yAxis );
-
-				Graphics g = zedGraphControl1.CreateGraphics();
-				System.Drawing.Bitmap gmap;
-
-                if( pane.Chart.Rect.Width > 0 && pane.Chart.Rect.Height > 0 )
-                {
-                    try
-                    {
-                        //pane.Draw( g );
-                        pane.CurveList.Draw( g, pane, 1.0f );
-                        gmap = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
-                        zedGraphControl1.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
-                    } catch
-                    {
-                        return;
-                    }
-                } else
+                if( CurrentGraphItem == null )
                     return;
 
-				Region textBoundsRegion;
-				Region chartRegion = new Region( pane.Chart.Rect );
-				Region clipRegion = new Region();
-				clipRegion.MakeEmpty();
-				g.SetClip( zedGraphControl1.MasterPane.Rect, CombineMode.Replace );
-				g.SetClip( chartRegion, CombineMode.Exclude );
-				/*Bitmap clipBmp = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
-				Graphics clipG = Graphics.FromImage( clipBmp );
-				clipG.Clear( Color.White );
-				clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
-				clipBmp.Save( "C:\\clip.bmp" );*/
+                //msGraphControl.GraphPane.GraphObjList.Clear();
+                foreach( ZedGraph.GraphObj dataLabel in dataLabels )
+                    msGraphControl.GraphPane.GraphObjList.Remove( dataLabel );
 
-				PointDataMap<SeemsPointAnnotation> matchedAnnotations = new PointDataMap<SeemsPointAnnotation>();
+                if( visible )
+                {
+                    if( CurrentGraphItem.IsChromatogram )
+                    {
+                        if( !( ChromatogramAnnotationSettings.ShowPointTimes ||
+                            ChromatogramAnnotationSettings.ShowPointIntensities ||
+                            ChromatogramAnnotationSettings.ShowUnmatchedAnnotations ||
+                            ChromatogramAnnotationSettings.ShowMatchedAnnotations ) )
+                            return;
+                    } else
+                    {
+                        if( !( ScanAnnotationSettings.ShowPointMZs ||
+                            ScanAnnotationSettings.ShowPointIntensities ||
+                            ScanAnnotationSettings.ShowUnmatchedAnnotations ||
+                            ScanAnnotationSettings.ShowMatchedAnnotations ) )
+                            return;
+                    }
 
-				// add precursor label(s) for tandem mass spectra
-				if( CurrentGraphItem.IsMassSpectrum )
-				{
-					MassSpectrum scanItem = (MassSpectrum) CurrentGraphItem;
-					pwiz.CLI.msdata.PrecursorList precursorList = scanItem.Element.spectrumDescription.precursors;
-					for( int i = 0; i < precursorList.Count; ++i )
-					{
-						pwiz.CLI.msdata.Precursor precursor = precursorList[i];
-						pwiz.CLI.msdata.SelectedIonList selectedIons = precursor.selectedIons;
-						if( selectedIons.Count == 0 )
-							continue;
-						double precursorMz = (double) selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_m_z ).value;
-						pwiz.CLI.msdata.CVParam precursorChargeParam = selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_charge_state );
-						int precursorCharge = 0;
-						if( precursorChargeParam.cvid != pwiz.CLI.msdata.CVID.CVID_Unknown )
-							precursorCharge = (int) selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_charge_state ).value;
+                    yAxis.Scale.MinAuto = false;
+                    yAxis.Scale.Min = 0;
 
-						float stickLength = ( yAxis.MajorTic.Size * 5 ) / pane.Chart.Rect.Height;
-						ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, 1 + stickLength );
-						stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
-						stickOverlay.Line.Width = 3;
-						stickOverlay.Line.Style = DashStyle.Dot;
-						stickOverlay.Line.Color = Color.Green;
-						pane.GraphObjList.Add( stickOverlay );
-						dataLabels.Add( stickOverlay );
+                    // setup axes scales to enable the Transform method
+                    xAxis.Scale.SetupScaleData( pane, xAxis );
+                    yAxis.Scale.SetupScaleData( pane, yAxis );
 
-						// Create a text label from the X data value
-						string precursorLabel;
-						if( precursorCharge > 0 )
-							precursorLabel = String.Format( "{0}\n(+{1} precursor)", precursorMz.ToString( "f3" ), precursorCharge );
-						else
-							precursorLabel = String.Format( "{0}\n(precursor of unknown charge)", precursorMz.ToString( "f3" ) );
-						ZedGraph.TextObj text = new ZedGraph.TextObj( precursorLabel, precursorMz, 1 + stickLength,
-							ZedGraph.CoordType.XScaleYChartFraction, ZedGraph.AlignH.Center, ZedGraph.AlignV.Top );
-						text.ZOrder = ZedGraph.ZOrder.A_InFront;
-						text.FontSpec.FontColor = stickOverlay.Line.Color;
-						text.FontSpec.Border.IsVisible = false;
-						text.FontSpec.Fill.IsVisible = false;
-						//text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
-						text.FontSpec.Angle = 0;
+                    Graphics g = msGraphControl.CreateGraphics();
+                    System.Drawing.Bitmap gmap;
 
-						if( !detectLabelOverlap( pane, g, gmap, text, out textBoundsRegion ) )
-						{
-							pane.GraphObjList.Add( text );
-							clipRegion.Union( textBoundsRegion );
-							//g.SetClip( chartRegion, CombineMode.Replace );
-							g.SetClip( clipRegion, CombineMode.Replace );
-							//clipG.Clear( Color.White );
-							//clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
-							//clipBmp.Save( "C:\\clip.bmp" );
-							dataLabels.Add( text );
-							//text.Draw( g, pane, 1.0f );
-							//zedGraphControl1.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
-						}
-					}
-				}
+                    if( pane.Chart.Rect.Width > 0 && pane.Chart.Rect.Height > 0 )
+                    {
+                        try
+                        {
+                            //pane.Draw( g );
+                            pane.CurveList.Draw( g, pane, 1.0f );
+                            gmap = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
+                            msGraphControl.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
+                        } catch
+                        {
+                            return;
+                        }
+                    } else
+                        return;
 
-				// add automatic labels
-				foreach( ZedGraph.CurveItem curve in pane.CurveList )
-				{
-					if( !( curve.Points is PointList ) )
-						continue;
+                    Region textBoundsRegion;
+                    Region chartRegion = new Region( pane.Chart.Rect );
+                    Region clipRegion = new Region();
+                    clipRegion.MakeEmpty();
+                    g.SetClip( msGraphControl.MasterPane.Rect, CombineMode.Replace );
+                    g.SetClip( chartRegion, CombineMode.Exclude );
+                    /*Bitmap clipBmp = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
+                    Graphics clipG = Graphics.FromImage( clipBmp );
+                    clipG.Clear( Color.White );
+                    clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
+                    clipBmp.Save( "C:\\clip.bmp" );*/
 
-					PointList pointList = (PointList) curve.Points;
-					for( int i = 0; i < pointList.MaxCount; i++ )
-					{
-						ZedGraph.PointPair pt = pointList.GetPointAtIndex( pointList.ScaledMaxIndexList[i] );
-						if( pt.X < xAxis.Scale.Min || pt.Y > yAxis.Scale.Max || pt.Y < yAxis.Scale.Min )
-							continue;
-						if( pt.X > xAxis.Scale.Max )
-							break;
+                    PointDataMap<SeemsPointAnnotation> matchedAnnotations = new PointDataMap<SeemsPointAnnotation>();
 
-						StringBuilder pointLabel = new StringBuilder();
-						Color pointColor = curve.Color;
+                    // add precursor label(s) for tandem mass spectra
+                    if( CurrentGraphItem.IsMassSpectrum )
+                    {
+                        MassSpectrum scanItem = (MassSpectrum) CurrentGraphItem;
+                        pwiz.CLI.msdata.PrecursorList precursorList = scanItem.Element.spectrumDescription.precursors;
+                        for( int i = 0; i < precursorList.Count; ++i )
+                        {
+                            pwiz.CLI.msdata.Precursor precursor = precursorList[i];
+                            pwiz.CLI.msdata.SelectedIonList selectedIons = precursor.selectedIons;
+                            if( selectedIons.Count == 0 )
+                                continue;
+                            double precursorMz = (double) selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_m_z ).value;
+                            pwiz.CLI.msdata.CVParam precursorChargeParam = selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_charge_state );
+                            int precursorCharge = 0;
+                            if( precursorChargeParam.cvid != pwiz.CLI.msdata.CVID.CVID_Unknown )
+                                precursorCharge = (int) selectedIons[0].cvParam( pwiz.CLI.msdata.CVID.MS_charge_state ).value;
 
-						// Add annotation
-						double annotationX = 0.0;
-						SeemsPointAnnotation annotation = null;
-						if( CurrentGraphItem.IsMassSpectrum )
-						{
-							PointDataMap<SeemsPointAnnotation>.MapPair annotationPair = ScanAnnotationSettings.PointAnnotations.FindNear( pt.X, ScanAnnotationSettings.MatchTolerance );
-							if( annotationPair != null )
-							{
-								annotationX = annotationPair.Key;
-								annotation = annotationPair.Value;
-								matchedAnnotations.Add( annotationPair );
-							}
-						} else
-						{
-							PointDataMap<SeemsPointAnnotation>.MapPair annotationPair = ChromatogramAnnotationSettings.PointAnnotations.FindNear( pt.X, ChromatogramAnnotationSettings.MatchTolerance );
-							if( annotationPair != null )
-							{
-								annotationX = annotationPair.Key;
-								annotation = annotationPair.Value;
-								matchedAnnotations.Add( annotationPair );
-							}
-						}
+                            float stickLength = ( yAxis.MajorTic.Size * 5 ) / pane.Chart.Rect.Height;
+                            ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, 1 + stickLength );
+                            stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
+                            stickOverlay.Line.Width = 3;
+                            stickOverlay.Line.Style = DashStyle.Dot;
+                            stickOverlay.Line.Color = Color.Green;
+                            pane.GraphObjList.Add( stickOverlay );
+                            dataLabels.Add( stickOverlay );
 
-						bool showMatchedAnnotations = false;
-						if( CurrentGraphItem.IsMassSpectrum )
-							showMatchedAnnotations = ScanAnnotationSettings.ShowMatchedAnnotations;
-						else
-							showMatchedAnnotations = ChromatogramAnnotationSettings.ShowMatchedAnnotations;
+                            // Create a text label from the X data value
+                            string precursorLabel;
+                            if( precursorCharge > 0 )
+                                precursorLabel = String.Format( "{0}\n(+{1} precursor)", precursorMz.ToString( "f3" ), precursorCharge );
+                            else
+                                precursorLabel = String.Format( "{0}\n(precursor of unknown charge)", precursorMz.ToString( "f3" ) );
+                            ZedGraph.TextObj text = new ZedGraph.TextObj( precursorLabel, precursorMz, 1 + stickLength,
+                                ZedGraph.CoordType.XScaleYChartFraction, ZedGraph.AlignH.Center, ZedGraph.AlignV.Top );
+                            text.ZOrder = ZedGraph.ZOrder.A_InFront;
+                            text.FontSpec.FontColor = stickOverlay.Line.Color;
+                            text.FontSpec.Border.IsVisible = false;
+                            text.FontSpec.Fill.IsVisible = false;
+                            //text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
+                            text.FontSpec.Angle = 0;
 
-						if( showMatchedAnnotations && annotation != null )
-						{
-							pointLabel.AppendLine( annotation.Label );
-							pointColor = annotation.Color;
-							//if( curve is ZedGraph.StickItem )
-							{
-								ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( annotationX, 0, annotationX, pt.Y );
-								//stickOverlay.IsClippedToChartRect = true;
-								stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
-								stickOverlay.Line.Width = annotation.Width;
-								stickOverlay.Line.Color = pointColor;
-								zedGraphControl1.GraphPane.GraphObjList.Add( stickOverlay );
-								dataLabels.Add(stickOverlay);
-								//( (ZedGraph.StickItem) curve ).Color = pointColor;
-								//( (ZedGraph.StickItem) curve ).Line.Width = annotation.Width;
-							}
-						}
+                            if( !detectLabelOverlap( pane, g, gmap, text, out textBoundsRegion ) )
+                            {
+                                pane.GraphObjList.Add( text );
+                                clipRegion.Union( textBoundsRegion );
+                                //g.SetClip( chartRegion, CombineMode.Replace );
+                                g.SetClip( clipRegion, CombineMode.Replace );
+                                //clipG.Clear( Color.White );
+                                //clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
+                                //clipBmp.Save( "C:\\clip.bmp" );
+                                dataLabels.Add( text );
+                                //text.Draw( g, pane, 1.0f );
+                                //msGraphControl.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
+                            }
+                        }
+                    }
 
-						if( CurrentGraphItem.IsMassSpectrum )
-						{
-							if( ScanAnnotationSettings.ShowPointMZs )
-								pointLabel.AppendLine( pt.X.ToString( "f2" ) );
-							if( ScanAnnotationSettings.ShowPointIntensities )
-								pointLabel.AppendLine( pt.Y.ToString( "f2" ) );
-						} else
-						{
-							if( ChromatogramAnnotationSettings.ShowPointTimes )
-								pointLabel.AppendLine( pt.X.ToString( "f2" ) );
-							if( ChromatogramAnnotationSettings.ShowPointIntensities )
-								pointLabel.AppendLine( pt.Y.ToString( "f2" ) );
-						}
+                    // add automatic labels
+                    foreach( ZedGraph.CurveItem curve in pane.CurveList )
+                    {
+                        if( !( curve.Points is PointList ) )
+                            continue;
 
-						string pointLabelString = pointLabel.ToString();
-						if( pointLabelString.Length == 0 )
-							continue;
+                        PointList pointList = (PointList) curve.Points;
+                        for( int i = 0; i < pointList.MaxCount; i++ )
+                        {
+                            ZedGraph.PointPair pt = pointList.GetPointAtIndex( pointList.ScaledMaxIndexList[i] );
+                            if( pt.X < xAxis.Scale.Min || pt.Y > yAxis.Scale.Max || pt.Y < yAxis.Scale.Min )
+                                continue;
+                            if( pt.X > xAxis.Scale.Max )
+                                break;
 
-						// Create a text label from the X data value
-						ZedGraph.TextObj text = new ZedGraph.TextObj( pointLabelString, pt.X, yAxis.Scale.ReverseTransform( yAxis.Scale.Transform( pt.Y ) - 5 ),
-							ZedGraph.CoordType.AxisXYScale, ZedGraph.AlignH.Center, ZedGraph.AlignV.Bottom );
-						text.ZOrder = ZedGraph.ZOrder.A_InFront;
-						//text.IsClippedToChartRect = true;
-						text.FontSpec.FontColor = pointColor;
-						// Hide the border and the fill
-						text.FontSpec.Border.IsVisible = false;
-						text.FontSpec.Fill.IsVisible = false;
-						//text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
-						// Rotate the text to 90 degrees
-						text.FontSpec.Angle = 0;
+                            StringBuilder pointLabel = new StringBuilder();
+                            Color pointColor = curve.Color;
 
-						if( !detectLabelOverlap( pane, g, gmap, text, out textBoundsRegion ) )
-						{
-							pane.GraphObjList.Add( text );
-							clipRegion.Union( textBoundsRegion );
-							//g.SetClip( chartRegion, CombineMode.Replace );
-							g.SetClip( clipRegion, CombineMode.Replace );
-							//clipG.Clear( Color.White );
-							//clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
-							//clipBmp.Save( "C:\\clip.bmp" );
-							dataLabels.Add( text );
-							//text.Draw( g, pane, 1.0f );
-							//zedGraphControl1.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
-						}
-					}
-				}
+                            // Add annotation
+                            double annotationX = 0.0;
+                            SeemsPointAnnotation annotation = null;
+                            if( CurrentGraphItem.IsMassSpectrum )
+                            {
+                                PointDataMap<SeemsPointAnnotation>.MapPair annotationPair = ScanAnnotationSettings.PointAnnotations.FindNear( pt.X, ScanAnnotationSettings.MatchTolerance );
+                                if( annotationPair != null )
+                                {
+                                    annotationX = annotationPair.Key;
+                                    annotation = annotationPair.Value;
+                                    matchedAnnotations.Add( annotationPair );
+                                }
+                            } else
+                            {
+                                PointDataMap<SeemsPointAnnotation>.MapPair annotationPair = ChromatogramAnnotationSettings.PointAnnotations.FindNear( pt.X, ChromatogramAnnotationSettings.MatchTolerance );
+                                if( annotationPair != null )
+                                {
+                                    annotationX = annotationPair.Key;
+                                    annotation = annotationPair.Value;
+                                    matchedAnnotations.Add( annotationPair );
+                                }
+                            }
 
-				bool showUnmatchedAnnotations = false;
-				if( CurrentGraphItem.IsMassSpectrum )
-					showUnmatchedAnnotations = ScanAnnotationSettings.ShowUnmatchedAnnotations;
-				else
-					showUnmatchedAnnotations = ChromatogramAnnotationSettings.ShowUnmatchedAnnotations;
+                            bool showMatchedAnnotations = false;
+                            if( CurrentGraphItem.IsMassSpectrum )
+                                showMatchedAnnotations = ScanAnnotationSettings.ShowMatchedAnnotations;
+                            else
+                                showMatchedAnnotations = ChromatogramAnnotationSettings.ShowMatchedAnnotations;
 
-				if( showUnmatchedAnnotations )
-				{
-					PointDataMap<SeemsPointAnnotation> annotations = CurrentPointAnnotations;
+                            if( showMatchedAnnotations && annotation != null )
+                            {
+                                pointLabel.AppendLine( annotation.Label );
+                                pointColor = annotation.Color;
+                                //if( curve is ZedGraph.StickItem )
+                                {
+                                    ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( annotationX, 0, annotationX, pt.Y );
+                                    //stickOverlay.IsClippedToChartRect = true;
+                                    stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.AxisXYScale;
+                                    stickOverlay.Line.Width = annotation.Width;
+                                    stickOverlay.Line.Color = pointColor;
+                                    msGraphControl.GraphPane.GraphObjList.Add( stickOverlay );
+                                    dataLabels.Add( stickOverlay );
+                                    //( (ZedGraph.StickItem) curve ).Color = pointColor;
+                                    //( (ZedGraph.StickItem) curve ).Line.Width = annotation.Width;
+                                }
+                            }
 
-					foreach( PointDataMap<SeemsPointAnnotation>.MapPair annotationPair in annotations )
-					{
-						if( matchedAnnotations.Contains( annotationPair ) )
-							continue;
+                            if( CurrentGraphItem.IsMassSpectrum )
+                            {
+                                if( ScanAnnotationSettings.ShowPointMZs )
+                                    pointLabel.AppendLine( pt.X.ToString( "f2" ) );
+                                if( ScanAnnotationSettings.ShowPointIntensities )
+                                    pointLabel.AppendLine( pt.Y.ToString( "f2" ) );
+                            } else
+                            {
+                                if( ChromatogramAnnotationSettings.ShowPointTimes )
+                                    pointLabel.AppendLine( pt.X.ToString( "f2" ) );
+                                if( ChromatogramAnnotationSettings.ShowPointIntensities )
+                                    pointLabel.AppendLine( pt.Y.ToString( "f2" ) );
+                            }
 
-						float stickLength = ( yAxis.MajorTic.Size * 2 ) / pane.Chart.Rect.Height;
-						ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( annotationPair.Key, 1, annotationPair.Key, 1 + stickLength );
-						//stickOverlay.IsClippedToChartRect = true;
-						stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
-						stickOverlay.Line.Width = annotationPair.Value.Width;
-						stickOverlay.Line.Color = annotationPair.Value.Color;
-						zedGraphControl1.GraphPane.GraphObjList.Add( stickOverlay );
-						dataLabels.Add( stickOverlay );
-					}
-				}
-				g.Dispose();
-			} else
-			{
-				// remove labels
-			}
-		}
+                            string pointLabelString = pointLabel.ToString();
+                            if( pointLabelString.Length == 0 )
+                                continue;
+
+                            // Create a text label from the X data value
+                            ZedGraph.TextObj text = new ZedGraph.TextObj( pointLabelString, pt.X, yAxis.Scale.ReverseTransform( yAxis.Scale.Transform( pt.Y ) - 5 ),
+                                ZedGraph.CoordType.AxisXYScale, ZedGraph.AlignH.Center, ZedGraph.AlignV.Bottom );
+                            text.ZOrder = ZedGraph.ZOrder.A_InFront;
+                            //text.IsClippedToChartRect = true;
+                            text.FontSpec.FontColor = pointColor;
+                            // Hide the border and the fill
+                            text.FontSpec.Border.IsVisible = false;
+                            text.FontSpec.Fill.IsVisible = false;
+                            //text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
+                            // Rotate the text to 90 degrees
+                            text.FontSpec.Angle = 0;
+
+                            if( !detectLabelOverlap( pane, g, gmap, text, out textBoundsRegion ) )
+                            {
+                                pane.GraphObjList.Add( text );
+                                clipRegion.Union( textBoundsRegion );
+                                //g.SetClip( chartRegion, CombineMode.Replace );
+                                g.SetClip( clipRegion, CombineMode.Replace );
+                                //clipG.Clear( Color.White );
+                                //clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
+                                //clipBmp.Save( "C:\\clip.bmp" );
+                                dataLabels.Add( text );
+                                //text.Draw( g, pane, 1.0f );
+                                //msGraphControl.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
+                            }
+                        }
+                    }
+
+                    bool showUnmatchedAnnotations = false;
+                    if( CurrentGraphItem.IsMassSpectrum )
+                        showUnmatchedAnnotations = ScanAnnotationSettings.ShowUnmatchedAnnotations;
+                    else
+                        showUnmatchedAnnotations = ChromatogramAnnotationSettings.ShowUnmatchedAnnotations;
+
+                    if( showUnmatchedAnnotations )
+                    {
+                        PointDataMap<SeemsPointAnnotation> annotations = CurrentPointAnnotations;
+
+                        foreach( PointDataMap<SeemsPointAnnotation>.MapPair annotationPair in annotations )
+                        {
+                            if( matchedAnnotations.Contains( annotationPair ) )
+                                continue;
+
+                            float stickLength = ( yAxis.MajorTic.Size * 2 ) / pane.Chart.Rect.Height;
+                            ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( annotationPair.Key, 1, annotationPair.Key, 1 + stickLength );
+                            //stickOverlay.IsClippedToChartRect = true;
+                            stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
+                            stickOverlay.Line.Width = annotationPair.Value.Width;
+                            stickOverlay.Line.Color = annotationPair.Value.Color;
+                            msGraphControl.GraphPane.GraphObjList.Add( stickOverlay );
+                            dataLabels.Add( stickOverlay );
+                        }
+                    }
+                    g.Dispose();
+                } else
+                {
+                    // remove labels
+                }
+            }
+        }
 
 		private bool detectLabelOverlap( ZedGraph.GraphPane pane, Graphics g, Bitmap gmap, ZedGraph.TextObj text, out Region textBoundsRegion )
 		{
@@ -595,58 +578,29 @@ namespace seems
 							return true;
 			}
 			return false;
-		}
-
-		private void zedGraphControl1_ZoomEvent( ZedGraph.ZedGraphControl sender, ZedGraph.ZoomState oldState, ZedGraph.ZoomState newState )
-		{
-            Point pos = MousePosition;
-            pos = PointToClient( pos );
-            ZedGraph.GraphPane pane = zedGraphControl1.MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) );
-			int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-			foreach( ZedGraph.CurveItem curve in pane.CurveList )
-				if( curve.Points is PointList )
-					( curve.Points as PointList ).SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-			pane.AxisChange();
-			SetDataLabelsVisible( true );
-			Refresh();
-		}
-
-		private void zedGraphControl1_Resize( object sender, EventArgs e )
-		{
-			if( WindowState == FormWindowState.Minimized )
-				return;
-
-			ZedGraph.GraphPane pane = zedGraphControl1.GraphPane;
-			int bins = (int) pane.CalcChartRect( zedGraphControl1.CreateGraphics() ).Width;
-			foreach( ZedGraph.CurveItem curve in pane.CurveList )
-				if( curve.Points is PointList )
-					( curve.Points as PointList ).SetScale( bins, pane.XAxis.Scale.Min, pane.XAxis.Scale.Max );
-			SetDataLabelsVisible( true );
-		}
-
-		private void GraphForm_MouseClick( object sender, MouseEventArgs e )
-		{
-            ZedGraph.GraphPane pane = zedGraphControl1.MasterPane.FindChartRect( new PointF( (float) e.X, (float) e.Y ) );
-			if( pane != null && e.Button == MouseButtons.Middle )
-                zedGraphControl1.ZoomOut( pane );
-		}
+        }
+        #endregion
+#endif
 
 		private void GraphForm_ResizeBegin( object sender, EventArgs e )
 		{
 			SuspendLayout();
-			zedGraphControl1.Visible = false;
+			msGraphControl.Visible = false;
 		}
 
 		private void GraphForm_ResizeEnd( object sender, EventArgs e )
 		{
 			ResumeLayout();
-			zedGraphControl1.Visible = true;
+			msGraphControl.Visible = true;
 			Refresh();
 		}
-
-        private void zedGraphControl1_Paint( object sender, PaintEventArgs e )
-        {
-            zedGraphControl1.MasterPane.SetLayout( e.Graphics, ZedGraph.PaneLayout.SingleColumn );
-        }
 	}
+
+    public class Pane : List<GraphItem>
+    {
+    }
+
+    public class PaneList : List<Pane>
+    {
+    }
 }
