@@ -52,11 +52,8 @@ void testAccept(const string& filename)
     bool accepted = reader.accept(filename, head);
     if (os_) *os_ << "accepted: " << boolalpha << accepted << endl;
 
-    #ifdef _MSC_VER
-    unit_assert(accepted);
-    #else // _MSC_VER
-    unit_assert(!accepted);
-    #endif // _MSC_VER
+    unit_assert(accepted); // all platforms should accept (that is, recognize) 
+	                       // even if not all can actually read it
 }
 
 
