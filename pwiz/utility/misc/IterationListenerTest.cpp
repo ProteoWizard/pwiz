@@ -25,6 +25,7 @@
 #include "utility/misc/unit.hpp"
 #include <iostream>
 #include <string>
+#include <ctime>
 
 
 using namespace std;
@@ -38,12 +39,10 @@ class TestListener : public IterationListener
 {
     public:
     
-    TestListener(const string& name, size_t iterationPeriod)
-    :   name_(name), iterationPeriod_(iterationPeriod), count_(0) 
+    TestListener(const string& name)
+    :   name_(name), count_(0) 
     {}
 
-    virtual size_t iterationPeriod() const {return iterationPeriod_;}
-    
     virtual Status update(const UpdateMessage& updateMessage) 
     {
         if (os_) *os_ << "[" << name_ << "] " << updateMessage.iterationIndex << "/"
@@ -56,7 +55,6 @@ class TestListener : public IterationListener
     
     private:
     string name_;
-    size_t iterationPeriod_;
     size_t count_;
 };
 
@@ -88,13 +86,15 @@ void test()
 
     IterationListenerRegistry registry;
 
-    TestListener test3("test3", 3);
-    TestListener test4("test4", 4);
-    TestListener test6("test6", 6);
+    TestListener test3("test3");
+    TestListener test4("test4");
+    TestListener test5("test5");
+    TestListener test6("test6");
 
-    registry.addListener(test3);
-    registry.addListener(test4);
-    registry.addListener(test6);
+    registry.addListener(test3, 3);
+    registry.addListener(test4, 4);
+    registry.addListener(test5, 5);
+    registry.addListener(test6, 6);
 
     size_t iterationCount = 24;
     for (size_t i=0; i<iterationCount; i++)
@@ -105,6 +105,7 @@ void test()
 
     unit_assert(test3.count() == 9);
     unit_assert(test4.count() == 7);
+    unit_assert(test5.count() == 6);
     unit_assert(test6.count() == 5);
 
     if (os_) *os_ << endl;
@@ -118,14 +119,14 @@ void testCancel()
     IterationListenerRegistry registry;
 
     CancelListener cancelListener(12);
-    TestListener test3("test3", 3);
-    TestListener test4("test4", 4);
-    TestListener test6("test6", 6);
+    TestListener test3("test3");
+    TestListener test4("test4");
+    TestListener test6("test6");
 
-    registry.addListener(cancelListener);
-    registry.addListener(test3);
-    registry.addListener(test4);
-    registry.addListener(test6);
+    registry.addListener(cancelListener, 1);
+    registry.addListener(test3, 3);
+    registry.addListener(test4, 4);
+    registry.addListener(test6, 5);
 
     // typical use of IterationListenerRegistry, with proper Status_Cancel handling
 
@@ -178,12 +179,12 @@ void testRemove()
     IterationListenerRegistry registry;
 
     BadListener bad;
-    TestListener test3("test3", 3);
-    TestListener test4("test4", 4);
+    TestListener test3("test3");
+    TestListener test4("test4");
 
-    registry.addListener(test3);
-    registry.addListener(bad);
-    registry.addListener(test4);
+    registry.addListener(test3, 3);
+    registry.addListener(bad, 1);
+    registry.addListener(test4, 4);
 
     // sanity check -- verify that broadcast throws if BadListener is in the registry    
     
@@ -204,6 +205,37 @@ void testRemove()
 
     registry.removeListener(bad);
     registry.broadcastUpdateMessage(IterationListener::UpdateMessage(0,0));
+
+    if (os_) *os_ << endl;
+}
+
+
+void testTime()
+{
+    if (os_) *os_ << "testTime()\n";
+
+    IterationListenerRegistry registry;
+
+    TestListener test_iteration("test_iteration");
+    TestListener test_time("test_time");
+
+    registry.addListener(test_iteration, 1000000);
+    registry.addListenerWithTimer(test_time, 1.0); 
+
+    time_t start;
+    time(&start);
+
+    const double iterationDuration = 5.0;
+    for (int i=0; ; i++) 
+    {
+        time_t now;
+        time(&now);
+        if (difftime(now, start) > iterationDuration) break;
+
+        registry.broadcastUpdateMessage(IterationListener::UpdateMessage(i,0));
+    }
+
+    if (os_) *os_ << endl;
 }
 
 
@@ -215,6 +247,7 @@ int main(int argc, char* argv[])
         test();
         testCancel();
         testRemove();
+        testTime();
         return 0;
     }
     catch (exception& e)

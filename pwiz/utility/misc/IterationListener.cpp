@@ -22,22 +22,143 @@
 
 
 #include "IterationListener.hpp" 
+#include <vector>
+#include <map>
 #include <algorithm>
+#include <stdexcept>
+#include <ctime>
 
 
 namespace pwiz {
 namespace util {
 
 
-PWIZ_API_DECL void IterationListenerRegistry::addListener(IterationListener& listener)
+using namespace std;
+
+
+//
+// IterationListenerRegistry::Impl
+//
+
+
+class IterationListenerRegistry::Impl
 {
-    listeners_.push_back(&listener);
+    public:
+
+    void addListener(IterationListener& listener, size_t iterationPeriod)
+    {
+        listeners_.push_back(&listener);
+        callbackInfo_[&listener] = iterationPeriod;
+    }
+
+    void addListenerWithTimer(IterationListener& listener, double timePeriod)
+    {
+        listeners_.push_back(&listener);
+        callbackInfo_[&listener] = CallbackInfo(timePeriod, true);
+    }
+
+    void removeListener(IterationListener& listener)
+    {
+        listeners_.erase(remove(listeners_.begin(), listeners_.end(), &listener)); 
+        callbackInfo_.erase(&listener);
+    }
+
+    IterationListener::Status broadcastUpdateMessage(
+        const IterationListener::UpdateMessage& updateMessage) const
+    {
+        IterationListener::Status result = IterationListener::Status_Ok;
+
+        for (Listeners::const_iterator it=listeners_.begin(), end=listeners_.end(); it!=end; ++it)
+        {
+            time_t now;
+            time(&now);
+
+            bool shouldUpdate = 
+                updateMessage.iterationIndex == 0 ||
+                updateMessage.iterationIndex == updateMessage.iterationCount ||
+                callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Iteration &&
+                    updateMessage.iterationIndex % callbackInfo_[*it].iterationPeriod == 0 ||
+                callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Time &&
+                    difftime(now, callbackInfo_[*it].timestamp) >= callbackInfo_[*it].timePeriod;
+
+            if (shouldUpdate)
+            {
+                IterationListener::Status status = (*it)->update(updateMessage);
+                if (status == IterationListener::Status_Cancel) result = status;
+
+                if (callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Time)
+                    callbackInfo_[*it].timestamp = now;
+            }
+        }
+
+        return result;
+    }
+
+    private:
+
+    typedef vector<IterationListener*> Listeners;
+    Listeners listeners_;
+
+    struct CallbackInfo
+    {
+        enum PeriodType {PeriodType_Iteration, PeriodType_Time};
+        PeriodType periodType;
+
+        size_t iterationPeriod;
+        double timePeriod; // seconds
+
+        time_t timestamp;
+
+        CallbackInfo(size_t _iterationPeriod = 1)
+        :   periodType(PeriodType_Iteration),
+            iterationPeriod(_iterationPeriod),
+            timePeriod(0)
+        {}
+
+        CallbackInfo(double _timePeriod, bool mustBeTrue)
+        :   periodType(PeriodType_Time),
+            iterationPeriod(0),
+            timePeriod(_timePeriod)
+        {
+            if (mustBeTrue != true)
+                throw runtime_error("[IterationListenerRegistry::CallbackInfo] Wrong constructor."); 
+        }
+
+    };
+
+    mutable map<IterationListener*, CallbackInfo> callbackInfo_;
+};
+
+
+//
+// IterationListenerRegistry
+//
+
+
+IterationListenerRegistry::IterationListenerRegistry()
+:   impl_(new Impl)
+{}
+
+
+PWIZ_API_DECL 
+void IterationListenerRegistry::addListener(IterationListener& listener, 
+                                            size_t iterationPeriod)
+{
+    impl_->addListener(listener, iterationPeriod);
+}
+
+
+PWIZ_API_DECL 
+void IterationListenerRegistry::addListenerWithTimer(IterationListener& listener, 
+                                                     double timePeriod)
+{
+    impl_->addListenerWithTimer(listener, timePeriod);
 }
 
 
 PWIZ_API_DECL void IterationListenerRegistry::removeListener(IterationListener& listener)
 {
-    listeners_.erase(remove(listeners_.begin(), listeners_.end(), &listener)); 
+    impl_->removeListener(listener);
 }
 
 
@@ -45,16 +166,7 @@ PWIZ_API_DECL IterationListener::Status
 IterationListenerRegistry::broadcastUpdateMessage(
     const IterationListener::UpdateMessage& updateMessage) const
 {
-    IterationListener::Status result = IterationListener::Status_Ok;
-
-    for (Listeners::const_iterator it=listeners_.begin(), end=listeners_.end(); it!=end; ++it)
-    {
-        if (updateMessage.iterationIndex % (*it)->iterationPeriod() != 0) continue;
-        IterationListener::Status status = (*it)->update(updateMessage);
-        if (status == IterationListener::Status_Cancel) result = status;
-    }
-
-    return result;
+    return impl_->broadcastUpdateMessage(updateMessage);
 }
 
 

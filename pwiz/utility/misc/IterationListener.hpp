@@ -26,7 +26,7 @@
 
 
 #include "utility/misc/Export.hpp"
-#include <vector>
+#include "boost/shared_ptr.hpp"
 
 
 namespace pwiz {
@@ -38,14 +38,12 @@ class PWIZ_API_DECL IterationListener
 {
     public:
 
-    virtual size_t iterationPeriod() const {return 1;}
-
     enum Status {Status_Ok, Status_Cancel};
 
     struct UpdateMessage
     {
         size_t iterationIndex;
-        size_t iterationCount;
+        size_t iterationCount; // 0 == unknown
 
         UpdateMessage(size_t index, size_t count) 
         :   iterationIndex(index), iterationCount(count)
@@ -63,15 +61,19 @@ class PWIZ_API_DECL IterationListenerRegistry
 {
     public:
 
-    void addListener(IterationListener& listener);
+    IterationListenerRegistry();
+    void addListener(IterationListener& listener, size_t iterationPeriod);
+    void addListenerWithTimer(IterationListener& listener, double timePeriod); // seconds
     void removeListener(IterationListener& listener);
 
     IterationListener::Status broadcastUpdateMessage(
         const IterationListener::UpdateMessage& updateMessage) const;
 
     private:
-    typedef std::vector<IterationListener*> Listeners;
-    Listeners listeners_;
+    class Impl;
+    boost::shared_ptr<Impl> impl_;
+    IterationListenerRegistry(IterationListenerRegistry&);
+    IterationListenerRegistry& operator=(IterationListenerRegistry&);
 };
 
 
