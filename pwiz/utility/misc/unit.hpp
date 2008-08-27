@@ -49,17 +49,23 @@ namespace util {
 inline std::string unit_assert_message(const char* filename, int line, const char* expression)
 {
     std::ostringstream oss;
-    oss << "[" << filename << ":" << line << "] Assertion failed: " << expression; 
+    oss << "[" << filename << ":" << line << "] Assertion failed: " << expression;
     return oss.str();
 }
 
+inline std::string unit_assert_equal_message(const char* filename, int line, double x, double y, double epsilon)
+{
+    std::ostringstream oss;
+    oss << "[" << filename << ":" << line << "] Assertion failed: |" << x << " - " << y << "| < " << epsilon;
+    return oss.str();
+}
 
 #define unit_assert(x) \
     (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
 
 
 #define unit_assert_equal(x, y, epsilon) \
-    unit_assert(fabs((x)-(y)) < (epsilon))
+    (!(fabs((x)-(y)) < (epsilon)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
 
 
 #define unit_assert_matrices_equal(A, B, epsilon) \
