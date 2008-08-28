@@ -29,10 +29,11 @@
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
+#include "utility/misc/CharIndexedVector.hpp"
 
 
 using namespace std;
-
+using namespace pwiz::util;
 
 namespace pwiz {
 namespace proteome {
@@ -50,7 +51,7 @@ class Info::Impl
     private:
     void initializeRecords();
     map<Type, Record> records_;
-    map<char, const Record*> recordsSymbolIndex_;
+    CharIndexedVector<const Record*> recordsSymbolIndex_;
 };
 
 
@@ -71,7 +72,8 @@ Info::Record createRecord(const std::string& name,
     result.name = name;
     result.abbreviation = abbreviation;
     result.symbol = symbol;
-    result.formula = Chemistry::Formula(formula);
+    result.residueFormula = Chemistry::Formula(formula);
+    result.formula = result.residueFormula + Chemistry::Formula("H2O1");
     result.abundance = abundance;
     return result;
 }
@@ -81,29 +83,29 @@ Info::Record createRecord(const std::string& name,
 void Info::Impl::initializeRecords()
 {
     using namespace Chemistry;
-    records_[Alanine] = createRecord("Alanine", "Ala", 'A', "C3 H7 N1 O2 S0", .078);
-    records_[Cysteine] = createRecord("Cysteine", "Cys", 'C', "C3 H7 N1 O2 S1", .019);
-    records_[AsparticAcid] = createRecord("Aspartic Acid", "Asp", 'D', "C4 H7 N1 O4 S0", .053);
-    records_[GlutamicAcid] = createRecord("Glutamic Acid", "Glu", 'E', "C5 H9 N1 O4 S0", .063);
-    records_[Phenylalanine] = createRecord("Phenylalanine", "Phe", 'F', "C9 H11 N1 O2 S0", .039);
-    records_[Glycine] = createRecord("Glycine", "Gly", 'G', "C2 H5 N1 O2 S0", .072);
-    records_[Histidine] = createRecord("Histidine", "His", 'H', "C6 H9 N3 O2 S0", .023);
-    records_[Isoleucine] = createRecord("Isoleucine", "Ile", 'I', "C6 H13 N1 O2 S0", .053);
-    records_[Lysine] = createRecord("Lysine", "Lys", 'K', "C6 H14 N2 O2 S0", .059);
-    records_[Leucine] = createRecord("Leucine", "Leu", 'L', "C6 H13 N1 O2 S0", .091);
-    records_[Methionine] = createRecord("Methionine", "Met", 'M', "C5 H11 N1 O2 S1", .023);
-    records_[Asparagine] = createRecord("Asparagine", "Asn", 'N', "C4 H8 N2 O3 S0", .043);
-    records_[Proline] = createRecord("Proline", "Pro", 'P', "C5 H9 N1 O2 S0", .052);
-    records_[Glutamine] = createRecord("Glutamine", "Gln", 'Q', "C5 H10 N2 O3 S0", .042);
-    records_[Arginine] = createRecord("Arginine", "Arg", 'R', "C6 H14 N4 O2 S0", .051);
-    records_[Serine] = createRecord("Serine", "Ser", 'S', "C3 H7 N1 O3 S0", .068);
-    records_[Threonine] = createRecord("Threonine", "Thr", 'T', "C4 H9 N1 O3 S0", .059);
-    records_[Valine] = createRecord("Valine", "Val", 'V', "C5 H11 N1 O2 S0", .066);
-    records_[Tryptophan] = createRecord("Tryptophan", "Trp", 'W', "C11 H12 N2 O2 S0", .014);
-    records_[Tyrosine] = createRecord("Tyrosine", "Tyr", 'Y', "C9 H11 N1 O3 S0", .032);
-    records_[AspX] = createRecord("AspX", "Asx", 'B', "C4 H8 N2 O3 S0", .00);
-    records_[GlutX] = createRecord("GlutX", "Glx", 'Z', "C5 H10 N2 O3 S0", .00);
-    records_[Unknown] = createRecord("Unknown", "Unk", 'X', "C5 H8 N1 O2 S0", .00);
+    records_[Alanine] = createRecord("Alanine", "Ala", 'A', "C3 H5 N1 O1 S0", .078);
+    records_[Cysteine] = createRecord("Cysteine", "Cys", 'C', "C3 H5 N1 O1 S1", .019);
+    records_[AsparticAcid] = createRecord("Aspartic Acid", "Asp", 'D', "C4 H5 N1 O3 S0", .053);
+    records_[GlutamicAcid] = createRecord("Glutamic Acid", "Glu", 'E', "C5 H7 N1 O3 S0", .063);
+    records_[Phenylalanine] = createRecord("Phenylalanine", "Phe", 'F', "C9 H9 N1 O1 S0", .039);
+    records_[Glycine] = createRecord("Glycine", "Gly", 'G', "C2 H3 N1 O1 S0", .072);
+    records_[Histidine] = createRecord("Histidine", "His", 'H', "C6 H7 N3 O1 S0", .023);
+    records_[Isoleucine] = createRecord("Isoleucine", "Ile", 'I', "C6 H11 N1 O1 S0", .053);
+    records_[Lysine] = createRecord("Lysine", "Lys", 'K', "C6 H12 N2 O1 S0", .059);
+    records_[Leucine] = createRecord("Leucine", "Leu", 'L', "C6 H11 N1 O1 S0", .091);
+    records_[Methionine] = createRecord("Methionine", "Met", 'M', "C5 H9 N1 O1 S1", .023);
+    records_[Asparagine] = createRecord("Asparagine", "Asn", 'N', "C4 H6 N2 O2 S0", .043);
+    records_[Proline] = createRecord("Proline", "Pro", 'P', "C5 H7 N1 O1 S0", .052);
+    records_[Glutamine] = createRecord("Glutamine", "Gln", 'Q', "C5 H8 N2 O2 S0", .042);
+    records_[Arginine] = createRecord("Arginine", "Arg", 'R', "C6 H12 N4 O1 S0", .051);
+    records_[Serine] = createRecord("Serine", "Ser", 'S', "C3 H5 N1 O2 S0", .068);
+    records_[Threonine] = createRecord("Threonine", "Thr", 'T', "C4 H7 N1 O2 S0", .059);
+    records_[Valine] = createRecord("Valine", "Val", 'V', "C5 H9 N1 O1 S0", .066);
+    records_[Tryptophan] = createRecord("Tryptophan", "Trp", 'W', "C11 H10 N2 O1 S0", .014);
+    records_[Tyrosine] = createRecord("Tyrosine", "Tyr", 'Y', "C9 H9 N1 O2 S0", .032);
+    records_[AspX] = createRecord("AspX", "Asx", 'B', "C4 H6 N2 O2 S0", .00);
+    records_[GlutX] = createRecord("GlutX", "Glx", 'Z', "C5 H8 N2 O2 S0", .00);
+    records_[Unknown] = createRecord("Unknown", "Unk", 'X', "C5 H6 N1 O1 S0", .00);
     //    records_[Unknown] = createRecord("Unknown", "Unk", 'X', "C4.9384 H7.7583 N1.357701 O1.4773 S0.0417", .00);
 
 
@@ -124,13 +126,13 @@ PWIZ_API_DECL const Info::Record& Info::operator[](char symbol) const
 {
     const Info::Record* record = impl_->record(symbol);
     if (!record)
-        throw runtime_error((string("[AminoAcid::Info] Invalid amino acid symbol: ") + symbol).c_str());
+        throw runtime_error(string("[AminoAcid::Info] Invalid amino acid symbol: ") + symbol);
     return *record;
 }
 
 
 } // namespace AminoAcid
-} // namespace pwiz
 } // namespace proteome
+} // namespace pwiz
 
 

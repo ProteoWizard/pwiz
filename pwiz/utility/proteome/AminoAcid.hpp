@@ -82,6 +82,7 @@ class PWIZ_API_DECL Info
         std::string name; 
         std::string abbreviation; 
         char symbol; 
+        Chemistry::Formula residueFormula;
         Chemistry::Formula formula;
         double abundance;
     };
@@ -103,8 +104,8 @@ class PWIZ_API_DECL Info
 } // namespace AminoAcid
 
 
-} // namespace pwiz
 } // namespace proteome
+} // namespace pwiz
 
 
 #endif // _AMINOACID_HPP_  

@@ -50,8 +50,7 @@ void printRecord(ostream* os, const AminoAcid::Info::Record& record)
 {
     if (!os) return;
 
-	Chemistry::Formula water_("H2O1");
-	Chemistry::Formula residueFormula = record.formula - water_;
+	Chemistry::Formula residueFormula = record.formula;
     
     *os << record.symbol << ": " 
         << setw(14) << record.name << " " 
@@ -64,22 +63,71 @@ void printRecord(ostream* os, const AminoAcid::Info::Record& record)
 }
 
 
+struct TestAminoAcid
+{
+    double monoMass;
+    double avgMass;
+    char symbol;
+};
+
+TestAminoAcid testAminoAcids[] =
+{
+    { 71.03711, 71.07880, 'A' },    // Alanine
+    { 103.0092, 103.1388, 'C' },    // Cysteine
+    { 115.0269, 115.0886, 'D' },    // Aspartic acid
+    { 129.0426, 129.1155, 'E' },    // Glutamic acid
+    { 147.0684, 147.1766, 'F' },    // Phenylalanine
+    { 57.02146, 57.05190, 'G' },    // Glycine
+    { 137.0589, 137.1411, 'H' },    // Histidine
+    { 113.0841, 113.1594, 'I' },    // Isoleucine
+    { 128.0949, 128.1741, 'K' },    // Lysine
+    { 113.0841, 113.1594, 'L' },    // Leucine
+    { 131.0405, 131.1926, 'M' },    // Methionine
+    { 114.0429, 114.1038, 'N' },    // Asparagine
+    { 97.05276, 97.11670, 'P' },    // Proline
+    { 128.0586, 128.1307, 'Q' },    // Glutamine
+    { 156.1011, 156.1875, 'R' },    // Arginine
+    { 87.03203, 87.07820, 'S' },    // Serine
+    { 101.0477, 101.1051, 'T' },    // Threonine
+    { 186.0793, 186.2132, 'W' },    // Tryptophan
+    { 163.0633, 163.1760, 'Y' },    // Tyrosine
+    { 99.06841, 99.13260, 'V' },    // Valine
+    { 114.0429, 114.1038, 'B' },    // AspX
+    { 128.0586, 128.1307, 'Z' },    // GlutX
+    { 114.0919, 114.1674, 'X' }     // Unknown (Averagine)
+};
+
+
 void test()
 {
     AminoAcid::Info info;
+
+    unit_assert(info[Alanine].residueFormula[C] == 3);
+    unit_assert(info[Alanine].residueFormula[H] == 5);
+    unit_assert(info[Alanine].residueFormula[N] == 1);
+    unit_assert(info[Alanine].residueFormula[O] == 1);
+    unit_assert(info[Alanine].residueFormula[S] == 0);
 
     unit_assert(info[Alanine].formula[C] == 3);
     unit_assert(info[Alanine].formula[H] == 7);
     unit_assert(info[Alanine].formula[N] == 1);
     unit_assert(info[Alanine].formula[O] == 2);
     unit_assert(info[Alanine].formula[S] == 0);
-}
 
 
-void printAminoAcidInfo()
-{
-    AminoAcid::Info info;
-	Chemistry::Formula water_("H2O1");
+    // test single amino acids
+    for (int i=0; i < 22; ++i) // skip X for now
+    {
+        TestAminoAcid& aa = testAminoAcids[i];
+        Chemistry::Formula residueFormula = info[aa.symbol].residueFormula;
+        unit_assert_equal(residueFormula.monoisotopicMass(), aa.monoMass, 0.01);
+        unit_assert_equal(residueFormula.molecularWeight(), aa.avgMass, 0.01);
+        //set<char> mmNames = mm2n.getNames(aa.monoMass, EPSILON);
+        //set<char> amNames = am2n.getNames(aa.avgMass, EPSILON);
+        //unit_assert(mmNames.count(aa.symbol) > 0);
+        //unit_assert(amNames.count(aa.symbol) > 0);
+    }
+
 
     // get a copy of all the records
 
@@ -110,8 +158,8 @@ void printAminoAcidInfo()
         const AminoAcid::Info::Record& record = *it;
         printRecord(os_, record);
 
-        Chemistry::Formula residueFormula = record.formula - water_;
-        averageMonoisotopicMass += record.formula.monoisotopicMass() * record.abundance; 
+        Chemistry::Formula residueFormula = record.residueFormula;
+        averageMonoisotopicMass += residueFormula.monoisotopicMass() * record.abundance; 
         averageC += residueFormula[C] * record.abundance;
         averageH += residueFormula[H] * record.abundance;
         averageN += residueFormula[N] * record.abundance;
@@ -128,7 +176,7 @@ void printAminoAcidInfo()
     if (os_) *os_ << endl;
 
     if (os_) *os_ << "average monoisotopic mass: " << averageMonoisotopicMass << endl;
-    double averageResidueMass = averageMonoisotopicMass - water_.monoisotopicMass();
+    double averageResidueMass = averageMonoisotopicMass;
     if (os_) *os_ << "average residue mass: " << averageResidueMass << endl << endl;
 
     // sort by monoisotopic mass and print again
@@ -145,7 +193,6 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "AminoAcidTest\n";
         test();
-        printAminoAcidInfo();
         return 0;
     }
     catch (exception& e)

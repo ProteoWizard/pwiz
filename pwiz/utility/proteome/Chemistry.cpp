@@ -192,12 +192,34 @@ class Formula::Impl
 
     Impl(const string& formula);
 
+    inline void calculateMasses()
+    {
+        if (dirty)
+        {
+            dirty = false;
+
+            monoMass = avgMass = 0;
+            Element::Info info;
+            for (Data::const_iterator it=data.begin(); it!=data.end(); ++it)
+            {
+                const Element::Info::Record& r = info[it->first];
+                if (!r.isotopes.empty())
+                    monoMass += r.isotopes[0].mass * it->second;
+                avgMass += r.atomicWeight * it->second;
+            }
+        }
+    }
+
     typedef map<Element::Type, int> Data;
-    Data data; 
+    Data data;
+    double monoMass;
+    double avgMass;
+    bool dirty; // true if masses need updating
 };
 
 
 Formula::Impl::Impl(const string& formula)
+:   monoMass(0), avgMass(0), dirty(false)
 {
     // parse the formula string
 
@@ -207,6 +229,8 @@ Formula::Impl::Impl(const string& formula)
     const string& whitespace_ = " \t\n\r";
     const string& digits_ = "0123456789";
     const string& letters_ = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    Element::Info info;
 
     string::size_type index = 0;
     while (index < formula.size())
@@ -222,8 +246,14 @@ Formula::Impl::Impl(const string& formula)
         string symbol = formula.substr(indexTypeBegin, indexTypeEnd-indexTypeBegin);
         int count = atoi(formula.substr(indexCountBegin, indexCountEnd-indexCountBegin).c_str());
 
-        data[text2enum(symbol)] = count; 
+        Element::Type type = text2enum(symbol);
+        data[type] = count;
         index = formula.find_first_not_of(whitespace_, indexCountEnd);
+
+        const Element::Info::Record& r = info[type];
+        if (!r.isotopes.empty())
+            monoMass += r.isotopes[0].mass * count;
+        avgMass += r.atomicWeight * count;
     }
 }
 
@@ -251,29 +281,15 @@ PWIZ_API_DECL Formula::~Formula()
 
 PWIZ_API_DECL double Formula::monoisotopicMass() const
 {
-    Element::Info info;
-    double result = 0;
-
-    for (Impl::Data::const_iterator it=impl_->data.begin(); it!=impl_->data.end(); ++it)
-    {
-        const Element::Info::Record& r = info[it->first]; 
-        if (!r.isotopes.empty())
-            result += r.isotopes[0].mass * it->second; 
-    }
-
-    return result;
+    impl_->calculateMasses();
+    return impl_->monoMass;
 }
 
 
 PWIZ_API_DECL double Formula::molecularWeight() const
 {
-    Element::Info info;
-    double result = 0;
-
-    for (Impl::Data::const_iterator it=impl_->data.begin(); it!=impl_->data.end(); ++it)
-        result += info[it->first].atomicWeight * it->second; 
-
-    return result;
+    impl_->calculateMasses();
+    return impl_->avgMass;
 }
 
 
@@ -303,6 +319,7 @@ PWIZ_API_DECL int Formula::operator[](Element::Type e) const
 
 PWIZ_API_DECL int& Formula::operator[](Element::Type e)
 {
+    impl_->dirty = true; // worst-case
     return impl_->data[e];
 }
 
@@ -317,6 +334,7 @@ PWIZ_API_DECL Formula& Formula::operator+=(const Formula& that)
 {
     for (Map::const_iterator it=that.data().begin(); it!=that.data().end(); ++it)
         impl_->data[it->first] += it->second;
+    impl_->dirty = true;
     return *this;
 }
 
@@ -325,6 +343,7 @@ PWIZ_API_DECL Formula& Formula::operator-=(const Formula& that)
 {
     for (Map::const_iterator it=that.data().begin(); it!=that.data().end(); ++it)
         impl_->data[it->first] -= it->second;
+    impl_->dirty = true;
     return *this;
 }
 
@@ -333,6 +352,7 @@ PWIZ_API_DECL Formula& Formula::operator*=(int scalar)
 {
     for (Map::iterator it=impl_->data.begin(); it!=impl_->data.end(); ++it)
         it->second *= scalar;
+    impl_->dirty = true;
     return *this;
 }
 
