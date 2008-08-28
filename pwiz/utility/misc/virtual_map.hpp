@@ -47,9 +47,6 @@ class virtual_map
     typedef typename BaseType::value_compare value_compare;
     typedef typename BaseType::size_type size_type;
     typedef typename BaseType::mapped_type mapped_type;
-    typedef typename BaseType::referent_type referent_type;
-    typedef typename BaseType::allocator_type allocator_type;
-    typedef typename BaseType::size_type size_type;
     typedef typename BaseType::difference_type difference_type;
     typedef typename BaseType::pointer pointer;
     typedef typename BaseType::const_pointer const_pointer;
@@ -66,8 +63,8 @@ class virtual_map
     public:
 
     /// Constructs an empty map that uses the predicate _Pred to order keys, if it is supplied. The map uses the allocator _Alloc for all storage management, if it is supplied.
-    explicit virtual_map(const key_compare& _Pred = key_compare(), const allocator_type& _Alloc = allocator_type())
-        : _base(_Pred, _Alloc)
+    explicit virtual_map(const key_compare& predicate = key_compare(), const allocator_type& allocator = allocator_type())
+        : _base(predicate, allocator)
     {
     }
 

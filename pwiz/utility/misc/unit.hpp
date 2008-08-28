@@ -56,6 +56,7 @@ inline std::string unit_assert_message(const char* filename, int line, const cha
 inline std::string unit_assert_equal_message(const char* filename, int line, double x, double y, double epsilon)
 {
     std::ostringstream oss;
+    oss.precision(10);
     oss << "[" << filename << ":" << line << "] Assertion failed: |" << x << " - " << y << "| < " << epsilon;
     return oss.str();
 }

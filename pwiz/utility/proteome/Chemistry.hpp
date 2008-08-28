@@ -130,8 +130,9 @@ class PWIZ_API_DECL Formula
 {
     public:
 
-    /// formula string given by symbol/count pairs, e.g. water: "H2 O1" (whitespace optional)  
+    /// formula string given by symbol/count pairs, e.g. water: "H2 O1" (whitespace optional)
     Formula(const std::string& formula = "");
+    Formula(const char* formula);
     Formula(const Formula& formula);
     const Formula& operator=(const Formula& formula);
     ~Formula();

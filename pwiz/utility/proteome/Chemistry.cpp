@@ -262,6 +262,9 @@ PWIZ_API_DECL Formula::Formula(const string& formula)
 :   impl_(new Impl(formula))
 {}
 
+PWIZ_API_DECL Formula::Formula(const char* formula)
+:   impl_(new Impl(formula))
+{}
 
 PWIZ_API_DECL Formula::Formula(const Formula& formula)
 :   impl_(new Impl(*formula.impl_))
