@@ -4,6 +4,33 @@
 #include "utility/misc/Filesystem.hpp"
 #include "utility/misc/String.hpp"
 
+
+// A Waters RAW source (representing a "run") is actually a directory
+// It may have multiple functions (scan events), e.g. _FUNC001.DAT, _FUNC002.DAT, etc.
+// It may also contain some useful metadata in _extern.inf
+
+PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::string& filename, const std::string& head) const
+{
+
+	std::string result;
+    // Make sure target "filename" is actually a directory
+    if (!bfs::is_directory(filename))
+        return result;
+
+    // Count the number of _FUNC[0-9]{3}.DAT files
+    int functionCount = 0;
+    while (bfs::exists(bfs::path(filename) / (boost::format("_FUNC%03d.DAT") % (functionCount+1)).str()))
+        ++functionCount;
+    if (functionCount > 0)
+		result = getType();
+    return result;
+}
+
+PWIZ_API_DECL const char * pwiz::msdata::Reader_Waters::getType() const {
+	return "Waters";
+}
+
+
 #ifndef PWIZ_NO_READER_WATERS
 #include "utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
@@ -30,7 +57,7 @@ using namespace pwiz::msdata::detail;
 
 
 //
-// Reader_Thermo
+// Reader_Waters
 //
 
 namespace {
@@ -104,31 +131,6 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 } // namespace
 
 
-// A Waters RAW source (representing a "run") is actually a directory
-// It may have multiple functions (scan events), e.g. _FUNC001.DAT, _FUNC002.DAT, etc.
-// It may also contain some useful metadata in _extern.inf
-
-PWIZ_API_DECL std::string Reader_Waters::identify(const string& filename, const string& head) const
-{
-
-	std::string result;
-    // Make sure target "filename" is actually a directory
-    if (!bfs::is_directory(filename))
-        return result;
-
-    // Count the number of _FUNC[0-9]{3}.DAT files
-    int functionCount = 0;
-    while (bfs::exists(bfs::path(filename) / (boost::format("_FUNC%03d.DAT") % (functionCount+1)).str()))
-        ++functionCount;
-    if (functionCount > 0)
-		result = getType();
-    return result;
-}
-
-PWIZ_API_DECL const char * Reader_Waters::getType() const {
-	return "Waters";
-}
-
 PWIZ_API_DECL
 void Reader_Waters::read(const string& filename, 
                          const string& head,
@@ -163,14 +165,17 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL bool Reader_Waters::accept(const string& filename, const string& head) const
-{
-    return false;
-}
-
 PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result) const
 {
-    throw runtime_error("[Reader_Waters::read()] Not implemented."); 
+    throw ReaderFail("[Reader_Waters::read()] Waters RAW reader not implemented: "
+#ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
+        "support was explicitly disabled when program was built"
+#elif defined(WIN32) // wrong compiler
+        "program was built without COM support and cannot access MassLynx DLLs - try building with MSVC instead of GCC"
+#else // wrong platform
+        "requires MassLynx which only work on Windows"
+#endif
+		);
 }
 
 } // namespace msdata
