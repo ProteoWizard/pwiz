@@ -26,10 +26,6 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
     return result;
 }
 
-PWIZ_API_DECL const char * pwiz::msdata::Reader_Waters::getType() const {
-	return "Waters";
-}
-
 
 #ifndef PWIZ_NO_READER_WATERS
 #include "utility/misc/SHA1Calculator.hpp"

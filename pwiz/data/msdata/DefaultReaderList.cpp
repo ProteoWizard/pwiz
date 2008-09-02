@@ -214,7 +214,7 @@ class Reader_MGF : public Reader
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
-	virtual const char *getType() const {return "MGF";}
+	virtual const char *getType() const {return "Mascot Generic";}
 };
 
 
@@ -254,7 +254,7 @@ class Reader_BTDX : public Reader
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
-	virtual const char *getType() const {return "BTDX";}
+	virtual const char *getType() const {return "Bruker Data Exchange";}
 };
 
 

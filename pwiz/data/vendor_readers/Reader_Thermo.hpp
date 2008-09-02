@@ -43,7 +43,7 @@ class PWIZ_API_DECL Reader_Thermo : public Reader
                       const std::string& head, 
                       MSData& result) const;
 
-	virtual const char *getType() const {return "Thermo";}
+	virtual const char *getType() const {return "Thermo RAW";}
 
     /// checks header for "Finnigan" wide char string
 	static bool hasRAWHeader(const std::string& head); 
