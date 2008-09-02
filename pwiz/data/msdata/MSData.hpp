@@ -714,7 +714,7 @@ struct PWIZ_API_DECL MSData
     Run run;
 
     MSData();
-    ~MSData();
+    virtual ~MSData();
     bool empty() const;
 
     private:
