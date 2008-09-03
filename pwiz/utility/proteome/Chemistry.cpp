@@ -32,6 +32,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
+#include "utility/misc/String.hpp"
 
 
 using namespace std;
@@ -221,13 +222,16 @@ class Formula::Impl
 Formula::Impl::Impl(const string& formula)
 :   monoMass(0), avgMass(0), dirty(false)
 {
+    if (formula.empty())
+        return;
+
     // parse the formula string
 
     // this implementation is correct, but should be done with a
     // regular expression library if performance becomes an issue
 
     const string& whitespace_ = " \t\n\r";
-    const string& digits_ = "0123456789";
+    const string& digits_ = "-0123456789";
     const string& letters_ = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     Element::Info info;
@@ -241,10 +245,18 @@ Formula::Impl::Impl(const string& formula)
         string::size_type indexCountEnd = formula.find_first_not_of(digits_, indexCountBegin);
 
         if (indexTypeBegin==string::npos || indexCountBegin==string::npos) 
-            throw runtime_error(("[Formula::Impl::Impl()] Invalid formula: " + formula).c_str());
+            throw runtime_error("[Formula::Impl::Impl()] Invalid formula: " + formula);
 
         string symbol = formula.substr(indexTypeBegin, indexTypeEnd-indexTypeBegin);
-        int count = atoi(formula.substr(indexCountBegin, indexCountEnd-indexCountBegin).c_str());
+        int count;
+        try
+        {
+            count = lexical_cast<int>(formula.substr(indexCountBegin, indexCountEnd-indexCountBegin));
+        }
+        catch(bad_lexical_cast&)
+        {
+            throw runtime_error("[Formula::Impl::Impl()] Invalid count in formula: " + formula);
+        }
 
         Element::Type type = text2enum(symbol);
         data[type] = count;
@@ -303,7 +315,7 @@ PWIZ_API_DECL string Formula::formula() const
     for (Impl::Data::const_iterator it=impl_->data.begin(); it!=impl_->data.end(); ++it)
     { 
         ostringstream term;
-        if (it->second > 0)
+        if (it->second != 0)
             term << it->first << it->second;
         terms.push_back(term.str());
     }

@@ -38,6 +38,16 @@ namespace proteome {
 namespace Chemistry {
 
 
+/// the mass of a proton in unified atomic mass units
+const double Proton   = 1.00727646688;
+
+/// the mass of a neutron in unified atomic mass units
+const double Neutron  = 1.00866491560;
+
+/// the mass of an electron in unified atomic mass units
+const double Electron = 0.00054857991;
+
+
 /// struct for holding isotope information
 struct PWIZ_API_DECL MassAbundance
 {

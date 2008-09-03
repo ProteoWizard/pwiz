@@ -50,52 +50,69 @@ void testMassAbundance()
 }
 
 
+struct TestFormula
+{
+    const char* formula;
+    int numC, numH, numN, numO, numS;
+    double monoMass;
+    double avgMass;
+};
+
+const TestFormula testFormulaData[] =
+{
+    { "C1H2N3O4S5", 1, 2, 3, 4, 5, 279.864884, 280.374890 },
+    { "C1H 2N3O4 S5", 1, 2, 3, 4, 5, 279.864884, 280.374890 },
+    { "H-42", 0, -42, 0, 0, 0, -42.328651, -42.333512 },
+    { "N2C-1", -1, 0, 2, 0, 0, 28.006148-12, 28.013486-12.010736 }
+};
+
+const int testFormulaDataSize = sizeof(testFormulaData)/sizeof(TestFormula);
+
 void testFormula()
 {
     using namespace Chemistry;
 
-    Formula formula("C1H 2N3O4 S5");
-    unit_assert(formula[Element::C] == 1);
-    unit_assert(formula[Element::H] == 2);
-    unit_assert(formula[Element::N] == 3);
-    unit_assert(formula[Element::O] == 4);
-    unit_assert(formula[Element::S] == 5);
+    for (int i=0; i < testFormulaDataSize; ++i)
+    {
+        const TestFormula& testFormula = testFormulaData[i];
+        Formula formula(testFormula.formula);
 
-    unit_assert(round(formula.monoisotopicMass()) == 280);
-    unit_assert((int)formula.molecularWeight() == 280);
-    if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
+        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass));
+        unit_assert(round(formula.molecularWeight()) == round(testFormula.avgMass));
+        if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
 
-    formula[Element::C] = 6;
-    unit_assert(round(formula.monoisotopicMass()) == 340);
-    unit_assert((int)formula.molecularWeight() == 340);
-    if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
+        formula[Element::C] += 2;
+        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass+24));
+        unit_assert(round(formula.molecularWeight()) == round(testFormula.avgMass+24));
+        if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
 
-    //const Formula& constFormula = formula;
-    //constFormula[Element::C] = 1; // this won't compile, by design 
+        //const Formula& constFormula = formula;
+        //constFormula[Element::C] = 1; // this won't compile, by design 
 
-    // test copy constructor and operator!=
-    Formula formula2 = formula;
-    formula2[Element::C] = 1;
-    unit_assert(round(formula.monoisotopicMass()) == 340);
-    unit_assert(round(formula2.monoisotopicMass()) == 280);
-    if (os_) *os_ << "formula: " << formula << endl;
-    if (os_) *os_ << "formula2: " << formula2 << endl;
+        // test copy constructor and operator!=
+        Formula formula2 = formula;
+        formula2[Element::C] -= 2;
+        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass+24));
+        unit_assert(round(formula2.monoisotopicMass()) == round(testFormula.monoMass));
+        if (os_) *os_ << "formula: " << formula << endl;
+        if (os_) *os_ << "formula2: " << formula2 << endl;
 
-    // test operator= and operator==
-    formula2 = formula;
-    unit_assert(round(formula.monoisotopicMass()) == 340);
-    unit_assert(round(formula2.monoisotopicMass()) == 340);
-    if (os_) *os_ << "formula: " << formula << endl;
-    if (os_) *os_ << "formula2: " << formula2 << endl;
+        // test operator= and operator==
+        formula2 = formula;
+        unit_assert(round(formula.monoisotopicMass()) == round(formula2.monoisotopicMass()));
+        if (os_) *os_ << "formula: " << formula << endl;
+        if (os_) *os_ << "formula2: " << formula2 << endl;
 
-    // test data()
-
-    Formula::Map data = formula.data();
-    if (os_) *os_ << "map: "; 
-    for (Formula::Map::iterator it=data.begin(), end=data.end(); it!=end; ++it)
-        if (os_) *os_ << it->first << it->second << " ";
-
-    if (os_) *os_ << "\n";
+        // test data()
+        Formula::Map data = formula.data();
+        if (os_)
+        {
+            *os_ << "map: "; 
+            for (Formula::Map::iterator it=data.begin(), end=data.end(); it!=end; ++it)
+                *os_ << it->first << it->second << " ";
+            *os_ << "\n";
+        }
+    }
 }
 
 
