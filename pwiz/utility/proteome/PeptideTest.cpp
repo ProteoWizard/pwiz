@@ -67,7 +67,7 @@ void isotopeTest()
 
     cout.precision(10);
 
-    for (int i=0; i<6; i++)
+    for (size_t i=0; i<6; i++)
     {
         Peptide peptide(sequences[i]);
         MassDistribution md = calc.distribution(peptide.formula());
@@ -83,41 +83,49 @@ void isotopeTest()
 struct TestPeptide
 {
     const char* sequence;
-    double monoMass;
-    double avgMass;
+    double monoMassNeutral, monoMassPlus1, monoMassPlus2;
+    double avgMassNeutral, avgMassPlus1, avgMassPlus2;
 };
 
 TestPeptide testPeptides[] =
 {
-    { "ELK", 388.2322, 388.4643 },
-    { "DEERLICKER", 1289.6398, 1290.4571 },
-    { "ELVISLIVES", 1100.6329, 1101.3056 },
-    { "THEQICKRWNFMPSVERTHELAYDG", 3046.4178, 3048.4004 },
+    { "ELK", 388.2322, 389.24005, 195.12396, 388.4643, 389.4723, 195.2401 },
+    { "DEERLICKER", 1289.6398, 1290.6477, 645.8278, 1290.4571, 1291.465, 646.2365 },
+    { "ELVISLIVES", 1100.6329, 1101.6408, 551.3243, 1101.3056, 1102.3135, 551.6607 },
+    { "THEQICKRWNFMPSVERTHELAYDG", 3046.4178, 3047.4257, 1524.2168, 3048.4004, 3049.4083, 1525.2082 },
     //{ "(THEQICKBRWNFXMPSVERTHELAZYDG)", 3402.5874, 3404.7792 }
 };
 
-const int testPeptidesSize = sizeof(testPeptides)/sizeof(TestPeptide);
+const size_t testPeptidesSize = sizeof(testPeptides)/sizeof(TestPeptide);
 
 void peptideTest()
 {
-    for (int i=0; i < testPeptidesSize; ++i)
+    for (size_t i=0; i < testPeptidesSize; ++i)
     {
-        string sequence(testPeptides[i].sequence);
-        double monoMass = testPeptides[i].monoMass;
-        double avgMass = testPeptides[i].avgMass;
+        const TestPeptide& p = testPeptides[i];
         double BIG_EPSILON = 0.05;
 
-        Peptide peptide(sequence.begin(), sequence.end());
-        unit_assert_equal(peptide.formula().monoisotopicMass(), monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.formula().molecularWeight(), avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(), monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(), avgMass, BIG_EPSILON);
+        Peptide peptide(p.sequence);
+        if (os_) *os_ << peptide.sequence() << ": " << peptide.formula() <<
+                                               " " << peptide.monoisotopicMass() <<
+                                               " " << peptide.molecularWeight() << endl;
+        unit_assert_equal(peptide.formula().monoisotopicMass(), p.monoMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.formula().molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(), p.monoMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(true, 1), p.monoMassPlus1, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(true, 1), p.avgMassPlus1, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(true, 2), p.monoMassPlus2, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(true, 2), p.avgMassPlus2, BIG_EPSILON);
 
-        peptide = sequence; // test assignment
-        unit_assert_equal(peptide.formula().monoisotopicMass(), monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.formula().molecularWeight(), avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(), monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(), avgMass, BIG_EPSILON);
+        peptide = p.sequence; // test assignment
+        if (os_) *os_ << peptide.sequence() << ": " << peptide.formula() <<
+                                               " " << peptide.monoisotopicMass() <<
+                                               " " << peptide.molecularWeight() << endl;
+        unit_assert_equal(peptide.formula().monoisotopicMass(), p.monoMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.formula().molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(), p.monoMassNeutral, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
     }
 }
 
@@ -125,8 +133,7 @@ void peptideTest()
 struct TestModification
 {
     const char* motif;
-    const char* adductFormula;
-    const char* deductFormula;
+    const char* formula;
     double deltaMonoMass;
     double deltaAvgMass;
     bool isDynamic;
@@ -134,13 +141,13 @@ struct TestModification
 
 TestModification testModifications[] =
 {
-    { "M", "O1", "", 15.9949, 15.9994, true }, // Oxidation of M
-    { "C", "C2H3N1O1", "", 57.02146, 57.052, false }, // Carboxyamidomethylation of C
-    { "(Q", "", "N1H3", -17.02655, -17.0306, false }, // Pyroglutamic acid from Q at the N terminus
-    { "(E", "", "N1H3", -17.02655, -17.0306, true }, // Pyroglutamic acid from E at the N terminus
-    { "N!G", "", "N1H3", -17.02655, -17.0306, true }, // Succinimide from N when N terminal to G
-    //{ "[NQ]", "O1H1", "N1H3", 0.98402, 0.9847, true }, // Deamidation of N or Q
-    { "[STY]!{STY}", "H1P1O3", "", 79.96633, 79.9799, true } // Phosphorylation of S, T, or Y when not N terminal to S, T, or Y
+    { "M", "O1", 15.9949, 15.9994, true }, // Oxidation of M
+    { "C", "C2H3N1O1", 57.02146, 57.052, false }, // Carboxyamidomethylation of C
+    { "(Q", "N-1H-3", -17.02655, -17.0306, false }, // Pyroglutamic acid from Q at the N terminus
+    { "(E", "N-1H-3", -17.02655, -17.0306, true }, // Pyroglutamic acid from E at the N terminus
+    { "N!G", "N-1H-3", -17.02655, -17.0306, true }, // Succinimide from N when N terminal to G
+    //{ "[NQ]", "O1N-1H-2", 0.98402, 0.9847, true }, // Deamidation of N or Q
+    { "[STY]!{STY}", "H1P1O3", 79.96633, 79.9799, true } // Phosphorylation of S, T, or Y when not N terminal to S, T, or Y
 };
 
 struct TestModifiedPeptide
@@ -207,12 +214,12 @@ TestModifiedPeptide testModifiedPeptides[] =
     }
 };
 
-const int testModificationsSize = sizeof(testModifications)/sizeof(TestModification);
-const int testModifiedPeptidesSize = sizeof(testModifiedPeptides)/sizeof(TestModifiedPeptide);
+const size_t testModificationsSize = sizeof(testModifications)/sizeof(TestModification);
+const size_t testModifiedPeptidesSize = sizeof(testModifiedPeptides)/sizeof(TestModifiedPeptide);
 
 void modificationTest()
 {
-    for (int i=0; i < testModifiedPeptidesSize; ++i)
+    for (size_t i=0; i < testModifiedPeptidesSize; ++i)
     {
         TestModifiedPeptide& p = testModifiedPeptides[i];
         Peptide peptide(p.sequence); // mods by formula
@@ -229,12 +236,15 @@ void modificationTest()
             for (size_t i=0; i < tokens.size(); i+=2)
             {
                 TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
-                modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.adductFormula, mod.deductFormula));
+                modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.formula));
                 modMap2[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.deltaMonoMass, mod.deltaAvgMass));
                 monoDeltaMass += mod.deltaMonoMass;
                 avgDeltaMass += mod.deltaAvgMass;
             }
         }
+
+        if (os_) *os_ << peptide.sequence() << ": " << peptide.monoisotopicMass() << " " << peptide.molecularWeight() << endl;
+        if (os_) *os_ << peptide2.sequence() << ": " << peptide2.monoisotopicMass() << " " << peptide2.molecularWeight() << endl;
 
         double BIG_EPSILON = 0.05;
 
@@ -255,45 +265,239 @@ void modificationTest()
 }
 
 
-const char* mrfaSequences[] =
+struct TestFragmentation
 {
-    "MRFA",
-    "MRF",
-    "MR",
-    "M",
-    "RFA",
-    "FA",
-    "A"
+    const char* sequence;
+    double a1, aN, a1Plus2, aNPlus2;
+    double b1, bN, b1Plus2, bNPlus2;
+    double c1, cN, c1Plus2, cNPlus2;
+    double x1, xN, x1Plus2, xNPlus2;
+    double y1, yN, y1Plus2, yNPlus2;
+    double z1, zN, z1Plus2, zNPlus2;
 };
 
-
-const int mrfaSequencesSize = sizeof(mrfaSequences)/sizeof(const char*);
-
-
-void printSequenceInfo(const char* sequence)
+// test masses calculated at:
+// http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+const TestFragmentation testFragmentations[] =
 {
-    using Chemistry::Formula;
+    { "MEERKAT",
+      104.05344, 818.41949, 52.53066, 409.71368,
+      132.04836, 846.41441, 66.52811, 423.71114,
+      149.07490, 762.39328, 75.04139, 381.70057,
+      146.04538, 759.36375, 73.52662, 380.18581,
+      120.06611, 864.42497, 60.53699, 432.71642,
+      103.03956, 847.39842, 52.02372, 424.20315
+    },
 
-    Peptide peptide(sequence);
-    Formula water("H2O1");
-    Formula residueSum = peptide.formula() - water; 
-    Formula bIon = residueSum + Formula("H1");
-    Formula yIon = residueSum + Formula("H3O1");
+    { "THEQICKRWNFMPSVERTHELAYDG",
+       74.06063, 3001.42018, 37.53425, 1501.21402,
+      102.05555, 3029.41509, 51.53171, 1515.21148,
+      119.08210, 2989.42018, 60.04498, 1495.21402,
+      102.01916, 2972.35724, 51.51352, 1486.68256,
+       76.03990, 3047.42566, 38.52388, 1524.21676,
+       59.01335, 3030.39911, 30.01061, 1515.70349
+    },
+};
 
-    if (os_) *os_ 
-         << fixed << setprecision(2) 
-         << setw(6) << peptide.sequence() << " " 
-         << setw(8) << peptide.formula().monoisotopicMass() << " " 
-         << setw(8) << residueSum.monoisotopicMass() << " "
-         << setw(8) << bIon.monoisotopicMass() << " "
-         << setw(8) << yIon.monoisotopicMass() << " "
-         << endl; 
+const size_t testFragmentationsSize = sizeof(testFragmentations)/sizeof(TestFragmentation);
+
+void writeFragmentation(const Peptide& p, const Fragmentation& f, ostream& os)
+{
+    size_t length = p.sequence().length();
+
+    os << "a:";
+    for (size_t i=1; i <= length; ++i)
+        os << " " << f.a(i);
+    os << endl;
+
+    os << "b:";
+    for (size_t i=1; i <= length; ++i)
+        os << " " << f.b(i);
+    os << endl;
+
+    os << "c:";
+    for (size_t i=1; i < length; ++i)
+        os << " " << f.c(i);
+    os << endl;
+
+    os << "x:";
+    for (size_t i=1; i < length; ++i)
+        os << " " << f.x(i);
+    os << endl;
+
+    os << "y:";
+    for (size_t i=1; i <= length; ++i)
+        os << " " << f.y(i);
+    os << endl;
+
+    os << "z:";
+    for (size_t i=1; i <= length; ++i)
+        os << " " << f.z(i);
+    os << endl;
 }
-
 
 void fragmentTest()
 {
-    for_each(mrfaSequences, mrfaSequences + mrfaSequencesSize, printSequenceInfo);
+    using Chemistry::Proton;
+    const double EPSILON = 0.005;
+
+    for (size_t i=0; i < testFragmentationsSize; ++i)
+    {
+        const TestFragmentation& tf = testFragmentations[i];
+        size_t length = string(tf.sequence).length();
+        Peptide peptide(tf.sequence);
+        if (os_) *os_ << peptide.sequence() << ": " << peptide.monoisotopicMass() << endl;
+
+        Fragmentation f = peptide.fragmentation();
+        if (os_) writeFragmentation(peptide, f, *os_);
+
+        unit_assert_equal(tf.a1 - Proton, f.a(1), EPSILON);
+        unit_assert_equal(tf.b1 - Proton, f.b(1), EPSILON);
+        unit_assert_equal(tf.c1 - Proton, f.c(1), EPSILON);
+        unit_assert_equal(tf.x1 - Proton, f.x(1), EPSILON);
+        unit_assert_equal(tf.y1 - Proton, f.y(1), EPSILON);
+        unit_assert_equal(tf.z1 - Proton, f.z(1), EPSILON);
+
+        unit_assert_equal(tf.aN - Proton, f.a(length), EPSILON);
+        unit_assert_equal(tf.bN - Proton, f.b(length), EPSILON);
+        unit_assert_equal(tf.cN - Proton, f.c(length-1), EPSILON);
+        unit_assert_equal(tf.xN - Proton, f.x(length-1), EPSILON);
+        unit_assert_equal(tf.yN - Proton, f.y(length), EPSILON);
+        unit_assert_equal(tf.zN - Proton, f.z(length), EPSILON);
+
+        unit_assert_equal(tf.a1, f.a(1, 1), EPSILON);
+        unit_assert_equal(tf.b1, f.b(1, 1), EPSILON);
+        unit_assert_equal(tf.c1, f.c(1, 1), EPSILON);
+        unit_assert_equal(tf.x1, f.x(1, 1), EPSILON);
+        unit_assert_equal(tf.y1, f.y(1, 1), EPSILON);
+        unit_assert_equal(tf.z1, f.z(1, 1), EPSILON);
+
+        unit_assert_equal(tf.aN, f.a(length, 1), EPSILON);
+        unit_assert_equal(tf.bN, f.b(length, 1), EPSILON);
+        unit_assert_equal(tf.cN, f.c(length-1, 1), EPSILON);
+        unit_assert_equal(tf.xN, f.x(length-1, 1), EPSILON);
+        unit_assert_equal(tf.yN, f.y(length, 1), EPSILON);
+        unit_assert_equal(tf.zN, f.z(length, 1), EPSILON);
+
+        unit_assert_equal(tf.a1Plus2, f.a(1, 2), EPSILON);
+        unit_assert_equal(tf.b1Plus2, f.b(1, 2), EPSILON);
+        unit_assert_equal(tf.c1Plus2, f.c(1, 2), EPSILON);
+        unit_assert_equal(tf.x1Plus2, f.x(1, 2), EPSILON);
+        unit_assert_equal(tf.y1Plus2, f.y(1, 2), EPSILON);
+        unit_assert_equal(tf.z1Plus2, f.z(1, 2), EPSILON);
+
+        unit_assert_equal(tf.aNPlus2, f.a(length, 2), EPSILON);
+        unit_assert_equal(tf.bNPlus2, f.b(length, 2), EPSILON);
+        unit_assert_equal(tf.cNPlus2, f.c(length-1, 2), EPSILON);
+        unit_assert_equal(tf.xNPlus2, f.x(length-1, 2), EPSILON);
+        unit_assert_equal(tf.yNPlus2, f.y(length, 2), EPSILON);
+        unit_assert_equal(tf.zNPlus2, f.z(length, 2), EPSILON);
+    }
+
+    // test fragmentation with mods
+    {
+        Peptide p("THEQICKRWNFMPSVERTHELAYDG");
+        Modification C57("C2H3N1O1"), M16("O1");
+        (p.modifications())[5].push_back(C57);
+        (p.modifications())[11].push_back(M16);
+        Fragmentation f = p.fragmentation(true, false);
+        Fragmentation fWithMods = p.fragmentation(true, true);
+        if (os_) writeFragmentation(p, f, *os_);
+        if (os_) writeFragmentation(p, fWithMods, *os_);
+        double EPSILON = 0.00000001;
+        for (size_t i=1; i <= 5; ++i)
+        {
+            unit_assert_equal(f.a(i), fWithMods.a(i), EPSILON);
+            unit_assert_equal(f.b(i), fWithMods.b(i), EPSILON);
+            unit_assert_equal(f.c(i), fWithMods.c(i), EPSILON);
+        }
+
+        for (size_t i=6; i <= 11; ++i)
+        {
+            double deltaMass = C57.monoisotopicDeltaMass();
+            unit_assert_equal(f.a(i)+deltaMass, fWithMods.a(i), EPSILON);
+            unit_assert_equal(f.b(i)+deltaMass, fWithMods.b(i), EPSILON);
+            unit_assert_equal(f.c(i)+deltaMass, fWithMods.c(i), EPSILON);
+        }
+
+        for (size_t i=12; i <= p.sequence().length(); ++i)
+        {
+            double deltaMass = C57.monoisotopicDeltaMass() + M16.monoisotopicDeltaMass();
+            unit_assert_equal(f.a(i)+deltaMass, fWithMods.a(i), EPSILON);
+            unit_assert_equal(f.b(i)+deltaMass, fWithMods.b(i), EPSILON);
+            if (i < p.sequence().length())
+                unit_assert_equal(f.c(i)+deltaMass, fWithMods.c(i), EPSILON);
+        }
+
+        for (size_t i=1; i <= 13; ++i)
+        {
+            unit_assert_equal(f.x(i), fWithMods.x(i), EPSILON);
+            unit_assert_equal(f.y(i), fWithMods.y(i), EPSILON);
+            unit_assert_equal(f.z(i), fWithMods.z(i), EPSILON);
+        }
+
+        for (size_t i=14; i <= 19; ++i)
+        {
+            double deltaMass = M16.monoisotopicDeltaMass();
+            unit_assert_equal(f.x(i)+deltaMass, fWithMods.x(i), EPSILON);
+            unit_assert_equal(f.y(i)+deltaMass, fWithMods.y(i), EPSILON);
+            unit_assert_equal(f.z(i)+deltaMass, fWithMods.z(i), EPSILON);
+        }
+
+        for (size_t i=20; i <= p.sequence().length(); ++i)
+        {
+            double deltaMass = C57.monoisotopicDeltaMass() + M16.monoisotopicDeltaMass();
+            if (i < p.sequence().length())
+                unit_assert_equal(f.x(i)+deltaMass, fWithMods.x(i), EPSILON);
+            unit_assert_equal(f.y(i)+deltaMass, fWithMods.y(i), EPSILON);
+            unit_assert_equal(f.z(i)+deltaMass, fWithMods.z(i), EPSILON);
+        }
+    }
+
+    {
+        Peptide p("QICKRWNFMPSVERTHELAYDG");
+        Modification Q17("N-1H-3"), S80("H1P1O3");
+        (p.modifications())[ModificationMap::NTerminus].push_back(Q17); // close enough
+        (p.modifications())[10].push_back(S80);
+        Fragmentation f = p.fragmentation(true, false);
+        Fragmentation fWithMods = p.fragmentation(true, true);
+        if (os_) writeFragmentation(p, f, *os_);
+        if (os_) writeFragmentation(p, fWithMods, *os_);
+        double EPSILON = 0.00000001;
+
+        for (size_t i=0; i <= 10; ++i)
+        {
+            double deltaMass = Q17.monoisotopicDeltaMass();
+            unit_assert_equal(f.a(i)+deltaMass, fWithMods.a(i), EPSILON);
+            unit_assert_equal(f.b(i)+deltaMass, fWithMods.b(i), EPSILON);
+            unit_assert_equal(f.c(i)+deltaMass, fWithMods.c(i), EPSILON);
+        }
+
+        for (size_t i=11; i <= p.sequence().length(); ++i)
+        {
+            double deltaMass = Q17.monoisotopicDeltaMass() + S80.monoisotopicDeltaMass();
+            unit_assert_equal(f.a(i)+deltaMass, fWithMods.a(i), EPSILON);
+            unit_assert_equal(f.b(i)+deltaMass, fWithMods.b(i), EPSILON);
+            if (i < p.sequence().length())
+                unit_assert_equal(f.c(i)+deltaMass, fWithMods.c(i), EPSILON);
+        }
+
+        for (size_t i=1; i <= 11; ++i)
+        {
+            unit_assert_equal(f.x(i), fWithMods.x(i), EPSILON);
+            unit_assert_equal(f.y(i), fWithMods.y(i), EPSILON);
+            unit_assert_equal(f.z(i), fWithMods.z(i), EPSILON);
+        }
+
+        for (size_t i=12; i <= p.sequence().length(); ++i)
+        {
+            double deltaMass = S80.monoisotopicDeltaMass();
+            if (i < p.sequence().length())
+                unit_assert_equal(f.x(i)+deltaMass, fWithMods.x(i), EPSILON);
+            unit_assert_equal(f.y(i)+deltaMass, fWithMods.y(i), EPSILON);
+            unit_assert_equal(f.z(i)+deltaMass, fWithMods.z(i), EPSILON);
+        }
+    }
 }
 
 

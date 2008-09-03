@@ -29,7 +29,6 @@
 #include "Chemistry.hpp"
 #include <string>
 #include <memory>
-#include <climits>
 #include "utility/misc/virtual_map.hpp"
 
 namespace pwiz {
@@ -37,6 +36,7 @@ namespace proteome {
 
 class Modification;
 class ModificationMap;
+class Fragmentation;
 
 /// represents a peptide (sequence of amino acids)
 class PWIZ_API_DECL Peptide
@@ -44,7 +44,9 @@ class PWIZ_API_DECL Peptide
     public:
 
     Peptide(const std::string& sequence);
+    Peptide(const char* sequence);
     Peptide(std::string::const_iterator begin, std::string::const_iterator end);
+    Peptide(const char* begin, const char* end);
     Peptide(const Peptide&);
     Peptide& operator=(const Peptide&);
     ~Peptide();
@@ -59,18 +61,30 @@ class PWIZ_API_DECL Peptide
 
     /// if modified = false: returns the monoisotopic mass of sequence()+water
     /// if modified = true: returns the monoisotopic mass of sequence()+modifications()+water
-    double monoisotopicMass(bool modified = true) const;
+    /// if charge = 0: returns neutral mass
+    /// if charge > 0: returns charged m/z
+    double monoisotopicMass(bool modified = true, int charge = 0) const;
 
     /// if modified = false: returns the molecular weight of sequence()+water
     /// if modified = true: returns the molecular weight of sequence()+modifications()+water
-    double molecularWeight(bool modified = true) const;
+    /// if charge = 0: returns neutral mass
+    /// if charge > 0: returns charged m/z
+    double molecularWeight(bool modified = true, int charge = 0) const;
 
     /// the map of sequence offsets (0-based) to modifications;
     /// modifications can be added or removed from the peptide with this map
     ModificationMap& modifications();
 
+    /// the map of sequence offsets (0-based) to modifications
+    const ModificationMap& modifications() const;
+
+    /// returns a fragmentation model for the peptide;
+    /// fragment masses can calculated as mono/avg and as modified/unmodified
+    Fragmentation fragmentation(bool monoisotopic = true, bool modified = true) const;
+
     private:
     friend class ModificationMap;
+    friend class Fragmentation;
     class Impl;
     std::auto_ptr<Impl> impl_;
 };
@@ -81,18 +95,17 @@ class PWIZ_API_DECL Modification
 {
     public:
 
-    Modification(const Chemistry::Formula& adduct,
-                 const Chemistry::Formula& deduct);
+    Modification(const Chemistry::Formula& formula);
     Modification(double monoisotopicDeltaMass,
                  double averageDeltaMass);
-    Modification(const Modification& mod);
+    Modification(const Modification&);
     Modification& operator=(const Modification&);
     ~Modification();
 
     /// returns true iff the mod was constructed with formulae
     bool hasFormula() const;
 
-    /// returns the difference formula (adduct-deduct);
+    /// returns the difference formula;
     /// throws runtime_error if hasFormula() = false
     const Chemistry::Formula& formula() const;
 
@@ -117,11 +130,8 @@ class PWIZ_API_DECL ModificationMap
 {
     public:
 
-    static const int NTerminus = INT_MIN;
-    static const int CTerminus = INT_MAX;
-
-    /// creates a modification map for the given peptide
-    ModificationMap(Peptide* peptide);
+    static const int NTerminus;
+    static const int CTerminus;
 
     /// Erases all elements from the self.
     virtual void clear();
@@ -144,10 +154,59 @@ class PWIZ_API_DECL ModificationMap
 
     private:
 
+    ModificationMap(Peptide* peptide);
     Peptide* peptide;
     ModificationMap(const ModificationMap&);
     ModificationMap& operator=(const ModificationMap&);
     virtual void swap(ModificationMap&);
+    friend class Peptide::Impl;
+};
+
+
+/// provides fragment ion masses for a peptide
+class PWIZ_API_DECL Fragmentation
+{
+    public:
+
+    Fragmentation(const Peptide& peptide,
+                  bool monoisotopic,
+                  bool modified);
+    Fragmentation(const Fragmentation&);
+    ~Fragmentation();
+
+    /// returns the a ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double a(size_t length, size_t charge = 0) const;
+
+    /// returns the b ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double b(size_t length, size_t charge = 0) const;
+
+    /// returns the c ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double c(size_t length, size_t charge = 0) const;
+
+    /// returns the x ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double x(size_t length, size_t charge = 0) const;
+
+    /// returns the y ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double y(size_t length, size_t charge = 0) const;
+
+    /// returns the z ion of length <length>
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double z(size_t length, size_t charge = 0) const;
+
+    private:
+    class Impl;
+    std::auto_ptr<Impl> impl_;
 };
 
 
