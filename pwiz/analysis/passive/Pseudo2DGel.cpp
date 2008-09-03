@@ -54,14 +54,14 @@ using namespace pwiz::peptideid;
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config()
 :   mzLow(200), mzHigh(2000), binCount(640),
-    zRadius(2), bry(false), binSum(false), ms2(false)
+    zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
     
 {
 }
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 :   mzLow(200), mzHigh(2000), binCount(640),
-    zRadius(2), bry(false), binSum(false), ms2(false)
+    zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
 {
     vector<string> tokens;
     istringstream iss(args);
@@ -84,6 +84,8 @@ PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
             zRadius = (float)atof(it->c_str()+8);
         else if (*it == "bry")
             bry = true; 
+        else if (*it == "grey")
+            grey = true; 
         else if (*it == "binSum")
             binSum = true; 
         else if (*it == "ms2locs")
@@ -118,6 +120,8 @@ void Pseudo2DGel::Config::process(const std::string& args)
             zRadius = (float)atof(it->c_str()+8);
         else if (*it == "bry")
             bry = true; 
+        else if (*it == "grey")
+            grey = true; 
         else if (*it == "binSum")
             binSum = true; 
         else if (*it == "ms2locs")
@@ -240,6 +244,7 @@ class Pseudo2DGel::Impl
     struct ScanInfo {
         ScanList scans;
         vector<double> rts;
+        float minTime, maxTime;
 
         vector<int> bin; // optional
         
@@ -247,6 +252,7 @@ class Pseudo2DGel::Impl
             scans.clear();
             rts.clear();
             bin.clear();
+            minTime = maxTime = -1;
         }
 
         bool empty(){
@@ -258,7 +264,11 @@ class Pseudo2DGel::Impl
     ScanInfo ftScans_;
 
     ScanInfo ms2Scans_;
+
     int idedPeptides_;
+
+    // This is used for linear time rendering
+    vector< vector<float> > pixelBins_;
 
     int bin(double mz); // converts mz -> bin index
     void clear();
@@ -280,6 +290,10 @@ class Pseudo2DGel::Impl
                    const IntensityFunction& intensityFunction,
                    const Image::Point& begin, const Image::Point& end); 
 
+    void drawTimes(Image& image, const ScanInfo& scansInfo,
+                   const IntensityFunction& intensityFunction,
+                   const Image::Point& begin, const Image::Point& end); 
+
     void drawMS2(Image& image, const ScanInfo& scans, 
                    const IntensityFunction& intensityFunction,
                    const Image::Point& begin, const Image::Point& end); 
@@ -291,6 +305,9 @@ class Pseudo2DGel::Impl
                     const Image::Point& begin, const Image::Point& end); 
 
     void drawTIC(Image& image, const ScanList& scans, 
+                 const Image::Point& begin, const Image::Point& end); 
+
+    void drawTimeTIC(Image& image, const ScanList& scans, 
                  const Image::Point& begin, const Image::Point& end); 
 
     void drawTMZ(Image& image, const ScanList& scans, 
@@ -353,11 +370,22 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
             itScans_.scans.push_back(info.index);
             itScans_.rts.push_back(info.retentionTime);
             itScans_.bin.push_back(bin(info.basePeakMZ));
+            if (itScans_.minTime < 0)
+                itScans_.minTime = info.retentionTime;
+            
+            if (itScans_.maxTime < info.retentionTime)
+                itScans_.maxTime = info.retentionTime;
         }
         else if (info.massAnalyzerType == MS_FT_ICR){
             ftScans_.scans.push_back(info.index);
             ftScans_.rts.push_back(info.retentionTime);
             ftScans_.bin.push_back(bin(info.basePeakMZ));
+
+            if (ftScans_.minTime < 0)
+                ftScans_.minTime = info.retentionTime;
+            
+            if (ftScans_.maxTime < info.retentionTime)
+                ftScans_.maxTime = info.retentionTime;
         }
     }
     else if (info.msLevel == 2 && info.precursors.size() == 1)
@@ -772,9 +800,9 @@ class ColorMapGrey : public ColorMap
 public:
     virtual void operator()(float intensity, float& red, float& green, float& blue) const
     {
-        red = .5f + intensity / 2;
-        green = .5f + intensity / 2;
-        blue = .5f + intensity / 2;
+        red = intensity;
+        green = intensity;
+        blue = intensity;
     }
 };
 } // namespace
@@ -783,10 +811,11 @@ void Pseudo2DGel::Impl::instantiateColorMap()
 {
     if (config_.bry)
         colorMap_ = auto_ptr<ColorMap>(new ColorMapBRY);
+    else if (config_.grey)
+        colorMap_ = auto_ptr<ColorMap>(new ColorMapGrey);
     else
         colorMap_ = auto_ptr<ColorMap>(new ColorMapTouchTable);
 
-    //circleColorMap_ = shared_ptr<ColorMap>(new ColorMapGrey);
     circleColorMap_ = shared_ptr<ColorMap>(new ColorMapRB);
 }
 
@@ -958,15 +987,24 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     const int x1 = 150;
     const int y1 = titleBarHeight + 300;
     const int x2 = x1 + 4*graphMargin_ + config_.binCount;
-    const int y2 = y1 + 4*textHeight_ + (int)scans.size();
+    const int y2 = (config_.binScan ? y1 + 4*textHeight_ + (int)scans.size() :
+                    y1 + 4*textHeight_ + (int)(scanInfo.maxTime - scanInfo.minTime));
 
     auto_ptr<Image> image = Image::create(x2, y2);
 
     drawLegend(*image, *intensityFunction, Image::Point(0, titleBarHeight), Image::Point(x1, y1));
-    drawScans(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
+    if (config_.binScan)
+    {
+        drawScans(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
+        drawTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
+    }
+    else
+    {
+        drawTimes(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
+        drawTimeTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
+    }
     if (config_.ms2)
         drawMS2Legend(*image, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
-    drawTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
     drawTMZ(*image, scans, Image::Point(x1, titleBarHeight+150), Image::Point(x2, y1));
 
     // separator lines
@@ -1071,6 +1109,136 @@ void Pseudo2DGel::Impl::drawScans(Image& image,
 }
 
 
+void Pseudo2DGel::Impl::drawTimes(Image& image, 
+                                  const ScanInfo& scansInfo, 
+                                  const IntensityFunction& intensityFunction, 
+                                  const Image::Point& begin, const Image::Point& end) 
+{
+    const ScanList& scans = scansInfo.scans;
+    size_t lines = (int)(scansInfo.maxTime - scansInfo.minTime + 0.5);
+    
+    image.clip(begin, end - Image::Point(1,1));
+
+    Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
+    
+    // draw the times
+    size_t startIndex = 0;
+    size_t endIndex = 0;
+    
+    vector<size_t> weights;
+    weights.resize(lines);
+    fill(weights.begin(), weights.end(), 0);
+         
+    pixelBins_.resize(lines);
+
+    size_t tick = 0;
+    // bin the data by time windows
+    for (size_t j=0; j<scans.size(); j++)
+    {
+        size_t index = scans[j];
+        size_t rt = (int)scansInfo.rts[j];
+
+        startIndex = endIndex;
+        endIndex = (int)rt;
+
+        for (size_t k=startIndex; k<endIndex; k++)
+        {
+            if ((int)pixelBins_.at(k).size()<config_.binCount)
+            {
+                pixelBins_.at(k).resize(config_.binCount);
+                fill(pixelBins_.at(k).begin(), pixelBins_.at(k).end(), 0);
+            }
+            
+            for (int i=0; i<config_.binCount; i++)
+            {
+                float value = (float)scanBuffer_.at(index).at(i);
+                pixelBins_[k][i] = (weights.at(k) * pixelBins_.at(k).at(i) + value) / (weights.at(k) + 1);
+            }
+
+            if (tick%50 == 0 && weights.at(k) == 0)
+            {
+                ostringstream caption;
+                caption << fixed << setprecision(2) << k;
+                Image::Point position = graphBegin + Image::Point(-graphMargin_, (int)k);
+                image.string(caption.str(), position, Image::white(), Image::MediumBold, Image::CenterX | Image::CenterY); 
+            }
+
+            if (weights.at(k) == 0)
+                tick++;
+            
+            weights[k] += 1;
+        }
+    }
+
+    for (size_t j=0; j<pixelBins_.size(); j++)
+    {
+        Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
+
+        // draw the bin as a row
+        for (int i=0; i<config_.binCount; i++)
+        {
+            float value = (float)(pixelBins_.at(j).at(i));
+            float intensity = intensityFunction(value);
+            image.pixel(lineBegin + Image::Point(i, 0), color(intensity));
+        }
+    }
+
+    // draw ms2 indicators if desired
+    if (config_.ms2)
+    {
+        drawMS2(image, scansInfo, intensityFunction, begin, end);
+    }
+
+    // box
+
+    image.line(graphBegin, 
+               graphBegin + Image::Point(0,(int)lines), 
+               boxColor_); 
+
+    image.line(graphBegin + Image::Point(0,(int)lines), 
+               graphBegin + Image::Point(config_.binCount, (int)lines), 
+               boxColor_); 
+
+    image.line(graphBegin + Image::Point(config_.binCount, (int)lines),
+               graphBegin + Image::Point(config_.binCount, 0),
+               boxColor_); 
+
+    image.line(graphBegin + Image::Point(config_.binCount, 0),
+               graphBegin,
+               boxColor_); 
+
+
+    // captions
+    for (int mz=200; mz<4000; mz+=200)
+    {
+        if (mz<config_.mzLow) continue;
+        if (mz>config_.mzHigh) break;
+        
+        ostringstream caption;
+        caption << mz;
+
+        Image::Point position = graphBegin + Image::Point(bin(mz), -textHeight_); 
+        image.string(caption.str(), position, Image::white(), Image::MediumBold, Image::CenterX); 
+    }
+
+    image.string("m/z", graphBegin + Image::Point(config_.binCount/2, -textHeight_*2), 
+                 Image::white(), Image::Large, Image::CenterX);
+
+    //for (size_t j=0; j<scans.size(); j+=50)
+    //{
+    //    size_t index = scans[j];
+
+    //    ostringstream caption;
+    //    caption << fixed << setprecision(2) << cache_[index].retentionTime;
+    //    Image::Point position = graphBegin + Image::Point(-graphMargin_, (int)j);
+    //    image.string(caption.str(), position, Image::white(), Image::MediumBold, Image::CenterX | Image::CenterY); 
+    //}
+
+    image.string("rt", graphBegin + Image::Point(-graphMargin_*2, 0), 
+                 Image::white(), Image::Large, Image::Right | Image::CenterY);
+}
+
+
 void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo, 
              const IntensityFunction& intensityFunction,
              const Image::Point& begin, const Image::Point& end)
@@ -1092,9 +1260,11 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
 
     for (size_t j=0; j<ms2Scans_.scans.size(); j++)
     {
-        size_t yPixel = lower_bound(scansInfo.rts.begin(), scansInfo.rts.end(), ms2Scans_.rts[j]) -
-            scansInfo.rts.begin() - 1;
-
+        size_t yPixel = (config_.binScan ?
+                         lower_bound(scansInfo.rts.begin(), scansInfo.rts.end(), ms2Scans_.rts[j])
+                         - scansInfo.rts.begin() - 1
+                         : (int)(*lower_bound(scansInfo.rts.begin(), scansInfo.rts.end(), ms2Scans_.rts[j])));
+        
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)yPixel);
 
         Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
@@ -1280,6 +1450,109 @@ void Pseudo2DGel::Impl::drawTIC(Image& image, const ScanList& scans,
 
     image.line(graphBegin + Image::Point(graphWidth, 0), 
                graphBegin + Image::Point(graphWidth, (int)scans.size()), 
+               boxColor_); 
+
+    image.line(graphBegin,
+               graphBegin + Image::Point(graphWidth, 0), 
+               boxColor_); 
+
+    image.line(graphEnd - Image::Point(graphWidth, 1),
+               graphEnd - Image::Point(0, 1),
+               boxColor_); 
+
+    // captions
+
+    double mean = exp((logmin+logmax)/2);
+    string captionMin = shortScientific(min);
+    string captionMean = shortScientific(mean);
+    string captionMax = shortScientific(max);
+
+    image.string("TIC", graphBegin + Image::Point(graphWidth/2, -2*textHeight_), Image::white(), Image::Large, Image::CenterX);
+    image.string(captionMin, graphBegin + Image::Point(0, -textHeight_), Image::white(), Image::Small, Image::CenterX);
+    image.string(captionMean, graphBegin + Image::Point(graphWidth/2, -textHeight_), Image::white(), Image::Small, Image::CenterX);
+    image.string(captionMax, graphBegin + Image::Point(graphWidth, -textHeight_), Image::white(), Image::Small, Image::CenterX);
+}
+
+
+void Pseudo2DGel::Impl::drawTimeTIC(Image& image, const ScanList& scans, 
+                                    const Image::Point& begin, const Image::Point& end)
+{
+    image.clip(begin, end - Image::Point(1,1));
+
+    // compute min and max
+
+    double min = numeric_limits<double>::max();
+    double max = 0;
+
+    for (ScanList::const_iterator it=scans.begin(); it!=scans.end(); ++it)
+    {
+        size_t index = *it;
+        double tic = cache_[index].totalIonCurrent;
+        if (min > tic) min = tic;
+        if (max < tic) max = tic;
+    }
+
+    // draw graph
+
+    Image::Point graphBegin = begin + Image::Point(graphMargin_, 3*textHeight_); 
+    Image::Point graphEnd = end + Image::Point(-graphMargin_, -textHeight_); 
+    int graphWidth = graphEnd.x - graphBegin.x;
+
+    Image::Point last = graphBegin; 
+    bool lastPositive = false;
+
+    double logmin = log(min);
+    double logmax = log(max);
+
+    double rt = 0.;
+    for (size_t j=0; j<scans.size(); j++)
+    {
+        size_t index = scans[j];
+        double logtic = log(cache_[index].totalIonCurrent);
+        rt = cache_[index].retentionTime;
+        double t = (logtic-logmin)/(logmax-logmin); // t in [0,1]
+        int i = (int)(t * (graphEnd.x-graphBegin.x)); // pixel x-offset
+   
+        Image::Point current = graphBegin + Image::Point(i,(int)rt);
+        bool currentPositive = (t >= .5); 
+
+        Image::Point midpoint((graphEnd.x+graphBegin.x)/2, (current.y+last.y)/2); 
+
+        if (lastPositive && currentPositive)
+        {
+            image.line(last, current, positiveColor_);
+        }
+        else if (!lastPositive && !currentPositive)
+        {
+            image.line(last, current, negativeColor_);
+        }
+        else if (lastPositive && !currentPositive)
+        {
+             image.line(last, midpoint, positiveColor_);
+             image.line(current, midpoint, negativeColor_);
+        }
+        else
+        {
+             image.line(last, midpoint, negativeColor_);
+             image.line(current, midpoint, positiveColor_);
+        }
+
+        last = current; 
+        lastPositive = currentPositive;
+    }
+
+    // box
+
+    image.line(graphBegin, 
+               graphBegin + Image::Point(0, (int)rt), 
+               boxColor_); 
+
+    image.line(graphBegin + Image::Point(graphWidth/2, 0), 
+               graphBegin + Image::Point(graphWidth/2, (int)rt), 
+               boxColor_); 
+
+    image.line(graphBegin + Image::Point(graphWidth, 0), 
+               graphBegin + Image::Point(graphWidth, (int)rt), 
                boxColor_); 
 
     image.line(graphBegin,

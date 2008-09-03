@@ -51,8 +51,10 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         int binCount;
         float zRadius;
         bool bry;
+        bool grey;
         bool binSum;
         bool ms2;
+        bool binScan;
         boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
         Config();

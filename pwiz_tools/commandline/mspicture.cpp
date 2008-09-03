@@ -125,11 +125,19 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("binCount,b",
             po::value<int>(&config.pseudo2dConfig.binCount),
             ": set histogram bin count")
+        ("time,t",
+            ": render linearly to time")
+        ("scan,s",
+            ": render linearly to scans")
+        ("bry",
+            ": use blue-red-yellow gradient")
         ("zRadius,z",
             po::value<float>(&config.pseudo2dConfig.zRadius),
             ": set intensity function z-score radius [=2]")
         ("bry",
             ": use blue-red-yellow gradient")
+        ("grey",
+            ": use grey-scale gradient")
         ("binSum",
             ": sum intensity in bins [default = max intensity]")
         ("ms2locs,m",
@@ -171,6 +179,9 @@ Config parseCommandArgs(int argc, const char* argv[])
     if (vm.count("bry"))
         config.pseudo2dConfig.bry = true;
     
+    if (vm.count("grey"))
+        config.pseudo2dConfig.grey = true;
+    
     if (vm.count("binSum"))
         config.pseudo2dConfig.binSum = true;
     
@@ -190,6 +201,12 @@ Config parseCommandArgs(int argc, const char* argv[])
                 new PeptideID_pepXml(config.pepxmlFilename)
                 );
     
+    if (vm.count("time"))
+        config.pseudo2dConfig.binScan = false;
+        
+    if (vm.count("scan"))
+        config.pseudo2dConfig.binScan = true;
+
     config.usageOptions = usageOptions;
 
     return config;
