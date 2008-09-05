@@ -281,6 +281,7 @@ class Pseudo2DGel::Impl
     Image::Color circleColor(float intensity) const;
 
     // data processing and image creation
+    size_t countUniquePeptides(const ScanList& scans);
     Image::Color chooseCircleColor(size_t ms2Index);
     void writeImages(const DataInfo& dataInfo);
     auto_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
@@ -301,8 +302,9 @@ class Pseudo2DGel::Impl
     void drawLegend(Image& image, const IntensityFunction& intensityFunction,
                     const Image::Point& begin, const Image::Point& end); 
 
-    void drawMS2Legend(Image& image, const IntensityFunction& intensityFunction,
-                    const Image::Point& begin, const Image::Point& end); 
+    void drawMS2Legend(Image& image, const ScanInfo& scansInfo,
+                       const IntensityFunction& intensityFunction,
+                       const Image::Point& begin, const Image::Point& end); 
 
     void drawTIC(Image& image, const ScanList& scans, 
                  const Image::Point& begin, const Image::Point& end); 
@@ -840,6 +842,43 @@ Image::Color Pseudo2DGel::Impl::circleColor(float intensity) const
     return Image::Color(int(r*255), int(g*255), int(b*255));
 }
 
+size_t Pseudo2DGel::Impl::countUniquePeptides(const ScanList& scans)
+{
+    if (config_.peptide_id == NULL)
+        return 0;
+    
+    map<string, size_t> counts;
+
+    if (config_.peptide_id != NULL)
+    {
+        for (size_t i=0; i<scans.size(); i++)
+        {
+            size_t index = scans.at(i);
+            string nativeID = cache_[index].nativeID;
+            try
+            {
+                PeptideID::Record record = config_.peptide_id->record(nativeID);
+                string sequence = record.sequence;
+
+                // Find the actual sequence present.
+                size_t begin = sequence.find(".");
+                begin = (begin == string::npos ? 0 : begin);
+                size_t end = sequence.find(".", begin);
+                end = (end == string::npos ? sequence.size() : end);
+                
+                string s = sequence.substr(begin, end);
+                if (s.size()>0)
+                    counts[s] += 1;
+            }
+            catch(...)
+            {
+            }
+        }
+    }
+
+    return counts.size();
+}
+
 Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t ms2Index)
 {
     string nativeID = cache_[ms2Index].nativeID;
@@ -1004,7 +1043,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
         drawTimeTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
     }
     if (config_.ms2)
-        drawMS2Legend(*image, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
+        drawMS2Legend(*image, scanInfo, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
     drawTMZ(*image, scans, Image::Point(x1, titleBarHeight+150), Image::Point(x2, y1));
 
     // separator lines
@@ -1275,7 +1314,7 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
     }
 }
 
-void Pseudo2DGel::Impl::drawMS2Legend(Image& image, 
+void Pseudo2DGel::Impl::drawMS2Legend(Image& image, const ScanInfo& scansInfo, 
                                const IntensityFunction& intensityFunction,
                                const Image::Point& begin, const Image::Point& end)
 {
@@ -1305,12 +1344,20 @@ void Pseudo2DGel::Impl::drawMS2Legend(Image& image,
     image.string("Probability", begin + Image::Point((begin.x+size*9)/2, yMargin), Image::white(), 
                  Image::Large, Image::CenterX);
 
-    // TODO draw # peptides identified / # peptides ms2'ed
     // draw idedPeptides_ / ms2Scans_.size();
     ostringstream oss;
     oss << "#id/#ms2: " << idedPeptides_ << "/" << ms2Scans_.scans.size();
     
     image.string(oss.str(), begin + Image::Point(begin.x+size*11, yMargin + textHeight_), Image::white(),
+                                                 Image::Large);
+    
+    
+    size_t unique = countUniquePeptides(ms2Scans_.scans);
+
+    ostringstream oss2;
+    oss2 << "#unique: " << unique;
+
+    image.string(oss2.str(), begin + Image::Point(begin.x+size*11, yMargin + 2*textHeight_), Image::white(),
                                                  Image::Large);
     
 }
