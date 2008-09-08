@@ -113,10 +113,10 @@ void peptideTest()
         unit_assert_equal(peptide.formula().molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
         unit_assert_equal(peptide.monoisotopicMass(), p.monoMassNeutral, BIG_EPSILON);
         unit_assert_equal(peptide.molecularWeight(), p.avgMassNeutral, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(true, 1), p.monoMassPlus1, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(true, 1), p.avgMassPlus1, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(true, 2), p.monoMassPlus2, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(true, 2), p.avgMassPlus2, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(1, true), p.monoMassPlus1, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(1, true), p.avgMassPlus1, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(2, true), p.monoMassPlus2, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(2, true), p.avgMassPlus2, BIG_EPSILON);
 
         peptide = p.sequence; // test assignment
         if (os_) *os_ << peptide.sequence() << ": " << peptide.formula() <<
@@ -252,15 +252,15 @@ void modificationTest()
         unit_assert_equal(peptide.formula(true).molecularWeight(), p.avgMass, BIG_EPSILON);
         unit_assert_equal(peptide.formula(false).monoisotopicMass(), p.monoMass-monoDeltaMass, BIG_EPSILON);
         unit_assert_equal(peptide.formula(false).molecularWeight(), p.avgMass-avgDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(true), p.monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(true), p.avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(false), p.monoMass-monoDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(false), p.avgMass-avgDeltaMass, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(0, true), p.monoMass, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(0, true), p.avgMass, BIG_EPSILON);
+        unit_assert_equal(peptide.monoisotopicMass(0, false), p.monoMass-monoDeltaMass, BIG_EPSILON);
+        unit_assert_equal(peptide.molecularWeight(0, false), p.avgMass-avgDeltaMass, BIG_EPSILON);
 
-        unit_assert_equal(peptide2.monoisotopicMass(true), p.monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.molecularWeight(true), p.avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.monoisotopicMass(false), p.monoMass-monoDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.molecularWeight(false), p.avgMass-avgDeltaMass, BIG_EPSILON);
+        unit_assert_equal(peptide2.monoisotopicMass(0, true), p.monoMass, BIG_EPSILON);
+        unit_assert_equal(peptide2.molecularWeight(0, true), p.avgMass, BIG_EPSILON);
+        unit_assert_equal(peptide2.monoisotopicMass(0, false), p.monoMass-monoDeltaMass, BIG_EPSILON);
+        unit_assert_equal(peptide2.molecularWeight(0, false), p.avgMass-avgDeltaMass, BIG_EPSILON);
     }
 }
 

@@ -43,23 +43,27 @@ class Peptide::Impl
     public:
 
     Impl(Peptide* peptide, const std::string& sequence)
-        :   sequence_(sequence), mods_(peptide), dirty_(true)
+        :   sequence_(sequence), mods_(peptide)
     {
+        calculateMasses();
     }
 
     Impl(Peptide* peptide, const char* sequence)
-        :   sequence_(sequence), mods_(peptide), dirty_(true)
+        :   sequence_(sequence), mods_(peptide)
     {
+        calculateMasses();
     }
 
     Impl(Peptide* peptide, string::const_iterator begin, string::const_iterator end)
-        :   sequence_(begin, end), mods_(peptide), dirty_(true)
+        :   sequence_(begin, end), mods_(peptide)
     {
+        calculateMasses();
     }
 
     Impl(Peptide* peptide, const char* begin, const char* end)
-        :   sequence_(begin, end), mods_(peptide), dirty_(true)
+        :   sequence_(begin, end), mods_(peptide)
     {
+        calculateMasses();
     }
 
     inline const string& sequence() const
@@ -128,62 +132,36 @@ class Peptide::Impl
 
     inline double monoMass(bool modified) const
     {
-        calculateMasses();
-        return modified ? monoMassModified_ : monoMass_;
+        return modified ? monoMass_ + mods_.monoisotopicDeltaMass() : monoMass_;
     }
 
     inline double avgMass(bool modified) const
     {
-        calculateMasses();
-        return modified ? avgMassModified_ : avgMass_;
+        return modified ? avgMass_ + mods_.averageDeltaMass() : avgMass_;
     }
 
     inline ModificationMap& modifications()
     {
-        dirty_ = true;
         return mods_;
     }
 
-    inline Fragmentation fragmentation(const Peptide& peptide, bool mono, bool mods)
+    inline Fragmentation fragmentation(const Peptide& peptide, bool mono, bool mods) const
     {
-        calculateMasses();
         return Fragmentation(peptide, mono, mods);
     }
 
     private:
     string sequence_;
     ModificationMap mods_;
-    mutable double monoMass_;
-    mutable double avgMass_;
-    mutable double monoMassModified_;
-    mutable double avgMassModified_;
+    double monoMass_;
+    double avgMass_;
 
-    inline void calculateMasses() const
+    inline void calculateMasses()
     {
-        if (dirty_)
-        {
-            dirty_ = false;
-            Formula unmodifiedFormula = formula(false);
-            monoMassModified_ = monoMass_ = unmodifiedFormula.monoisotopicMass();
-            avgMassModified_ = avgMass_ = unmodifiedFormula.molecularWeight();
-
-            for (ModificationMap::const_iterator modItr = mods_.begin();
-                 modItr != mods_.end();
-                 ++modItr)
-            {
-                const ModificationList& modList = modItr->second;
-                for (size_t i=0, end=modList.size(); i < end; ++i)
-                {
-                    const Modification& mod = modList[i];
-                    monoMassModified_ += mod.monoisotopicDeltaMass();
-                    avgMassModified_ += mod.averageDeltaMass();
-                }
-            }
-        }
+        Formula unmodifiedFormula = formula(false);
+        monoMass_ = unmodifiedFormula.monoisotopicMass();
+        avgMass_ = unmodifiedFormula.molecularWeight();
     }
-
-    public:
-    mutable bool dirty_;
 };
 
 
@@ -274,13 +252,13 @@ PWIZ_API_DECL Formula Peptide::formula(bool modified) const
     return impl_->formula(modified);
 }
 
-PWIZ_API_DECL double Peptide::monoisotopicMass(bool modified, int charge) const
+PWIZ_API_DECL double Peptide::monoisotopicMass(int charge, bool modified) const
 {
     return charge == 0 ? impl_->monoMass(modified)
                        : (impl_->monoMass(modified) + Chemistry::Proton * charge) / charge;
 }
 
-PWIZ_API_DECL double Peptide::molecularWeight(bool modified, int charge) const
+PWIZ_API_DECL double Peptide::molecularWeight(int charge, bool modified) const
 {
     return charge == 0 ? impl_->avgMass(modified)
                        : (impl_->avgMass(modified) + Chemistry::Proton * charge) / charge;
@@ -330,23 +308,174 @@ PWIZ_API_DECL const Formula& Modification::formula() const {return impl_->formul
 PWIZ_API_DECL double Modification::monoisotopicDeltaMass() const {return impl_->monoisotopicDeltaMass();}
 PWIZ_API_DECL double Modification::averageDeltaMass() const {return impl_->averageDeltaMass();}
 
+
+PWIZ_API_DECL ModificationList::ModificationList()
+{
+}
+
+PWIZ_API_DECL ModificationList::ModificationList(const Modification& mod)
+:   vector<Modification>(1, mod)
+{
+}
+
+PWIZ_API_DECL double ModificationList::monoisotopicDeltaMass() const
+{
+    double mass = 0;
+    for (const_iterator itr = begin(); itr != end(); ++itr)
+        mass += itr->monoisotopicDeltaMass();
+    return mass;
+}
+
+PWIZ_API_DECL double ModificationList::averageDeltaMass() const
+{
+    double mass = 0;
+    for (const_iterator itr = begin(); itr != end(); ++itr)
+        mass += itr->averageDeltaMass();
+    return mass;
+}
+
+
 PWIZ_API_DECL const int ModificationMap::NTerminus = INT_MIN;
 PWIZ_API_DECL const int ModificationMap::CTerminus = INT_MAX;
 
-PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide)
-: peptide(peptide)
+class ModificationMap::Impl
 {
+    public:
+
+    Impl(ModificationMap* mods, Peptide* peptide)
+        :   dirty_(false),
+            monoDeltaMass_(0), avgDeltaMass_(0),
+            mods_(mods), peptide_(peptide)
+    {
+    }
+
+    inline double monoDeltaMass() const
+    {
+        calculateMasses();
+        return monoDeltaMass_;
+    }
+
+    inline double avgDeltaMass() const
+    {
+        calculateMasses();
+        return avgDeltaMass_;
+    }
+
+    mutable bool dirty_;
+    mutable double monoDeltaMass_;
+    mutable double avgDeltaMass_;
+
+    private:
+
+    ModificationMap* mods_;
+    Peptide* peptide_;
+
+    inline void calculateMasses() const
+    {
+        if (dirty_)
+        {
+            dirty_ = false;
+            monoDeltaMass_ = avgDeltaMass_ = 0;
+            for (ModificationMap::const_iterator itr = mods_->begin(); itr != mods_->end(); ++itr)
+            {
+                const ModificationList& modList = itr->second;
+                monoDeltaMass_ += modList.monoisotopicDeltaMass();
+                avgDeltaMass_ += modList.averageDeltaMass();
+            }
+        }
+    }
+};
+
+PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide)
+:   impl_(new Impl(this, peptide))
+{
+}
+
+PWIZ_API_DECL double ModificationMap::monoisotopicDeltaMass() const
+{
+    return impl_->monoDeltaMass();
+}
+
+PWIZ_API_DECL double ModificationMap::averageDeltaMass() const
+{
+    return impl_->avgDeltaMass();
+}
+
+PWIZ_API_DECL ModificationMap::iterator ModificationMap::begin()
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::begin();
+}
+
+PWIZ_API_DECL ModificationMap::iterator ModificationMap::end()
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::end();
+}
+
+PWIZ_API_DECL ModificationMap::reverse_iterator ModificationMap::rbegin()
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::rbegin();
+}
+
+PWIZ_API_DECL ModificationMap::reverse_iterator ModificationMap::rend()
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::rend();
+}
+
+PWIZ_API_DECL
+ModificationMap::mapped_type&
+ModificationMap::operator[](const ModificationMap::key_type& x)
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::operator[](x);
+}
+
+PWIZ_API_DECL
+std::pair<ModificationMap::iterator, ModificationMap::iterator>
+ModificationMap::equal_range(const ModificationMap::key_type& x)
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::equal_range(x);
+}
+
+PWIZ_API_DECL
+ModificationMap::iterator
+ModificationMap::find(const ModificationMap::key_type& x)
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::find(x);
+}
+
+PWIZ_API_DECL
+ModificationMap::iterator
+ModificationMap::lower_bound(const ModificationMap::key_type& x)
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::lower_bound(x);
+}
+
+PWIZ_API_DECL
+ModificationMap::iterator
+ModificationMap::upper_bound(const ModificationMap::key_type& x)
+{
+    impl_->dirty_ = true;
+    return virtual_map<int, ModificationList>::upper_bound(x);
 }
 
 PWIZ_API_DECL void ModificationMap::clear()
 {
-    peptide->impl_->dirty_ = true;
+    impl_->monoDeltaMass_ = impl_->avgDeltaMass_ = 0;
     virtual_map<int, ModificationList>::clear();
 }
 
 PWIZ_API_DECL void ModificationMap::erase(ModificationMap::iterator position)
 {
-    peptide->impl_->dirty_ = true;
+    const ModificationList& modList = position->second;
+    impl_->monoDeltaMass_ -= modList.monoisotopicDeltaMass();
+    impl_->avgDeltaMass_ -= modList.averageDeltaMass();
     virtual_map<int, ModificationList>::erase(position);
 }
 
@@ -354,29 +483,46 @@ PWIZ_API_DECL
 void ModificationMap::erase(ModificationMap::iterator start,
                             ModificationMap::iterator finish)
 {
-    peptide->impl_->dirty_ = true;
+    for (; start != finish; ++start)
+    {
+        const ModificationList& modList = start->second;
+        impl_->monoDeltaMass_ -= modList.monoisotopicDeltaMass();
+        impl_->avgDeltaMass_ -= modList.averageDeltaMass();
+    }
     virtual_map<int, ModificationList>::erase(start, finish);
 }
 
 PWIZ_API_DECL ModificationMap::size_type ModificationMap::erase(const key_type& x)
 {
-    peptide->impl_->dirty_ = true;
-    return virtual_map<int, ModificationList>::erase(x);
+    iterator itr = find(x);
+    if (itr != end())
+    {
+        erase(itr);
+        return 1;
+    }
+    return 0;
 }
 
 PWIZ_API_DECL
 std::pair<ModificationMap::iterator, bool> ModificationMap::insert(const value_type& x)
 {
-    peptide->impl_->dirty_ = true;
-    return virtual_map<int, ModificationList>::insert(x);
+    std::pair<ModificationMap::iterator, bool> insertResult =
+        virtual_map<int, ModificationList>::insert(x);
+    if (insertResult.second)
+    {
+        const ModificationList& modList = x.second;
+        impl_->monoDeltaMass_ += modList.monoisotopicDeltaMass();
+        impl_->avgDeltaMass_ += modList.averageDeltaMass();
+    }
+    return insertResult;
 }
 
 PWIZ_API_DECL
 ModificationMap::iterator ModificationMap::insert(ModificationMap::iterator position,
                                                   const value_type& x)
 {
-    peptide->impl_->dirty_ = true;
-    return virtual_map<int, ModificationList>::insert(position, x);
+    // ignore hint because that base function won't tell us if the insert happened or not
+    return insert(x).first;
 }
 
 PWIZ_API_DECL

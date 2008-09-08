@@ -59,17 +59,17 @@ class PWIZ_API_DECL Peptide
     /// throws an exception if modified = true and any modification has only mass information
     Chemistry::Formula formula(bool modified = false) const;
 
+    /// if charge = 0: returns neutral mass
+    /// if charge > 0: returns charged m/z
     /// if modified = false: returns the monoisotopic mass of sequence()+water
     /// if modified = true: returns the monoisotopic mass of sequence()+modifications()+water
+    double monoisotopicMass(int charge = 0, bool modified = true) const;
+
     /// if charge = 0: returns neutral mass
     /// if charge > 0: returns charged m/z
-    double monoisotopicMass(bool modified = true, int charge = 0) const;
-
     /// if modified = false: returns the molecular weight of sequence()+water
     /// if modified = true: returns the molecular weight of sequence()+modifications()+water
-    /// if charge = 0: returns neutral mass
-    /// if charge > 0: returns charged m/z
-    double molecularWeight(bool modified = true, int charge = 0) const;
+    double molecularWeight(int charge = 0, bool modified = true) const;
 
     /// the map of sequence offsets (0-based) to modifications;
     /// modifications can be added or removed from the peptide with this map
@@ -118,8 +118,21 @@ class PWIZ_API_DECL Modification
 };
 
 
-/// represents a list of modifications
-typedef std::vector<Modification> ModificationList;
+/// represents a list of modifications on a single amino acid
+class ModificationList
+    : public std::vector<Modification> // TODO: make virtual wrapper
+{
+    public:
+
+    ModificationList();
+    ModificationList(const Modification& mod);
+
+    /// returns the sum of the monoisotopic delta masses of all modifications in the list
+    double monoisotopicDeltaMass() const;
+
+    /// returns the sum of the average delta masses of all modifications in the list
+    double averageDeltaMass() const;
+};
 
 
 /// maps peptide/protein sequence indexes (0-based) to a modification list
@@ -130,8 +143,52 @@ class PWIZ_API_DECL ModificationMap
 {
     public:
 
+    // bring the const overloads into scope
+    using pwiz::util::virtual_map<int, ModificationList>::begin;
+    using pwiz::util::virtual_map<int, ModificationList>::end;
+    using pwiz::util::virtual_map<int, ModificationList>::rbegin;
+    using pwiz::util::virtual_map<int, ModificationList>::rend;
+    using pwiz::util::virtual_map<int, ModificationList>::operator[];
+    using pwiz::util::virtual_map<int, ModificationList>::equal_range;
+    using pwiz::util::virtual_map<int, ModificationList>::find;
+    using pwiz::util::virtual_map<int, ModificationList>::lower_bound;
+    using pwiz::util::virtual_map<int, ModificationList>::upper_bound;
+
     static const int NTerminus;
     static const int CTerminus;
+
+    /// returns the sum of the monoisotopic delta masses of all modifications in the map
+    double monoisotopicDeltaMass() const;
+
+    /// returns the sum of the average delta masses of all modifications in the map
+    double averageDeltaMass() const;
+
+    /// Returns an iterator pointing to the first element stored in the map. First is defined by the map's comparison operator, Compare.
+    virtual iterator begin();
+
+    /// Returns an iterator pointing to the last element stored in the map; in other words, to the off-the-end value.
+    virtual iterator end();
+
+    /// Returns a reverse_iterator pointing to the first element stored in the map. First is defined by the map's comparison operator, Compare.
+    virtual reverse_iterator rbegin();
+
+    /// Returns a reverse_iterator pointing to the last element stored in the map; in other words, to the off-the-end value).
+    virtual reverse_iterator rend();
+
+    /// If an element with the key x exists in the map, then a reference to its associated value is returned. Otherwise the pair x,T() is inserted into the map and a reference to the default object T() is returned.
+    virtual mapped_type& operator[](const key_type& x);
+
+    /// Returns the pair (lower_bound(x), upper_bound(x)).
+    virtual std::pair<iterator, iterator> equal_range(const key_type& x);
+
+    /// Searches the map for a pair with the key value x and returns an iterator to that pair if it is found. If such a pair is not found the value end() is returned.
+    virtual iterator find(const key_type& x);
+
+    /// Returns a reference to the first entry with a key greater than or equal to x.
+    virtual iterator lower_bound(const key_type& x);
+
+    /// Returns an iterator for the first entry with a key greater than x.
+    virtual iterator upper_bound(const key_type& x);
 
     /// Erases all elements from the self.
     virtual void clear();
@@ -145,7 +202,7 @@ class PWIZ_API_DECL ModificationMap
     /// Deletes the element with the key value x from the map, if one exists. Returns 1 if x existed in the map, 0 otherwise.
     virtual size_type erase(const key_type& x);
 
-    /// If a value_type with the same key as x is not present in the map, then x is inserted into the map. Otherwise, the pair is not inserted. A position may be supplied as a hint regarding where to do the insertion. If the insertion is done right after position, then it takes amortized constant time. Otherwise it takes O(log N) time.
+    /// If a value_type with the same key as x is not present in the map, then x is inserted into the map. Otherwise, the pair is not inserted.
     virtual std::pair<iterator, bool> insert(const value_type& x);
 
     /// If a value_type with the same key as x is not present in the map, then x is inserted into the map. Otherwise, the pair is not inserted. A position may be supplied as a hint regarding where to do the insertion. If the insertion is done right after position, then it takes amortized constant time. Otherwise it takes O(log N) time.
@@ -155,7 +212,8 @@ class PWIZ_API_DECL ModificationMap
     private:
 
     ModificationMap(Peptide* peptide);
-    Peptide* peptide;
+    class Impl;
+    std::auto_ptr<Impl> impl_;
     ModificationMap(const ModificationMap&);
     ModificationMap& operator=(const ModificationMap&);
     virtual void swap(ModificationMap&);
@@ -174,32 +232,38 @@ class PWIZ_API_DECL Fragmentation
     Fragmentation(const Fragmentation&);
     ~Fragmentation();
 
-    /// returns the a ion of length <length>
+    /// returns the a ion of length <length>;
+    /// example: a(1) returns the a1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double a(size_t length, size_t charge = 0) const;
 
     /// returns the b ion of length <length>
+    /// example: b(1) returns the b1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double b(size_t length, size_t charge = 0) const;
 
     /// returns the c ion of length <length>
+    /// example: c(1) returns the c1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double c(size_t length, size_t charge = 0) const;
 
     /// returns the x ion of length <length>
+    /// example: x(1) returns the x1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double x(size_t length, size_t charge = 0) const;
 
     /// returns the y ion of length <length>
+    /// example: y(1) returns the y1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double y(size_t length, size_t charge = 0) const;
 
     /// returns the z ion of length <length>
+    /// example: z(1) returns the z1 ion
     /// if <charge> = 0: returns neutral mass
     /// if <charge> > 0: returns charged m/z
     double z(size_t length, size_t charge = 0) const;
