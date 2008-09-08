@@ -26,41 +26,50 @@
 
 #include "../../../data/msdata/Version.hpp"
 #include "../../../analysis/Version.hpp"
+#include "../../../utility/proteome/Version.hpp"
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
 
-public ref class Version
+namespace msdata
 {
-    public:
-    static int Major() {return pwiz::msdata::Version::Major();}
-    static int Minor() {return pwiz::msdata::Version::Minor();}
-    static int Revision() {return pwiz::msdata::Version::Revision();}
-    static System::String^ LastModified() {return gcnew System::String(pwiz::msdata::Version::LastModified().c_str());}
-    static System::String^ ToString() {return gcnew System::String(pwiz::msdata::Version::str().c_str());}
-};
-
+    public ref class Version
+    {
+        public:
+        static int Major() {return pwiz::msdata::Version::Major();}
+        static int Minor() {return pwiz::msdata::Version::Minor();}
+        static int Revision() {return pwiz::msdata::Version::Revision();}
+        static System::String^ LastModified() {return gcnew System::String(pwiz::msdata::Version::LastModified().c_str());}
+        static System::String^ ToString() {return gcnew System::String(pwiz::msdata::Version::str().c_str());}
+    };
 }
-}
-}
 
-
-namespace pwiz {
-namespace CLI {
-namespace analysis {
-
-public ref class Version
+namespace analysis
 {
-    public:
-    static int Major() {return pwiz::analysis::Version::Major();}
-    static int Minor() {return pwiz::analysis::Version::Minor();}
-    static int Revision() {return pwiz::analysis::Version::Revision();}
-    static System::String^ LastModified() {return gcnew System::String(pwiz::analysis::Version::LastModified().c_str());}
-    static System::String^ ToString() {return gcnew System::String(pwiz::analysis::Version::str().c_str());}
-};
-
+    public ref class Version
+    {
+        public:
+        static int Major() {return pwiz::analysis::Version::Major();}
+        static int Minor() {return pwiz::analysis::Version::Minor();}
+        static int Revision() {return pwiz::analysis::Version::Revision();}
+        static System::String^ LastModified() {return gcnew System::String(pwiz::analysis::Version::LastModified().c_str());}
+        static System::String^ ToString() {return gcnew System::String(pwiz::analysis::Version::str().c_str());}
+    };
 }
+
+namespace proteome
+{
+    public ref class Version
+    {
+        public:
+        static int Major() {return pwiz::proteome::Version::Major();}
+        static int Minor() {return pwiz::proteome::Version::Minor();}
+        static int Revision() {return pwiz::proteome::Version::Revision();}
+        static System::String^ LastModified() {return gcnew System::String(pwiz::proteome::Version::LastModified().c_str());}
+        static System::String^ ToString() {return gcnew System::String(pwiz::proteome::Version::str().c_str());}
+    };
+}
+
 }
 }
 

@@ -33,6 +33,7 @@ lib pwiz_bindings_cli
     : CVParam.cpp
       MSData.cpp
       MSDataFile.cpp
+      proteome.cpp
       examples.cpp
     : <linkflags>"/MACHINE:X86 /FIXED:No /KEYFILE:$(CLI_ROOT)/signature.snk"
     ;

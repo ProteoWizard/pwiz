@@ -40,7 +40,7 @@ namespace msdata {
 /// MSData object plus file I/O
 public ref class MSDataFile : public MSData
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(MSDataFile, MSData);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
 
     public:
     /// constructs MSData object backed by file;

@@ -35,14 +35,14 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 #include <iostream>
 #include <fstream>
 #include "boost/preprocessor/stringize.hpp"
-#define LOG_DESTRUCT(msg) /*\
-    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
-    std::cout << "In " << msg << " destructor." << std::endl; \
-    log.close();*/
-#define LOG_CONSTRUCT(msg) /*\
-    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
-    std::cout << "In " << msg << " constructor." << std::endl; \
-    log.close();*/
+#define LOG_DESTRUCT(msg) \
+    /*std::ofstream log("pwiz.log", std::ios::binary | std::ios::app);*/ \
+    /*std::cout << "In " << msg << " destructor." << std::endl;*/ \
+    /*log.close();*/
+#define LOG_CONSTRUCT(msg) \
+    /*std::ofstream log("pwiz.log", std::ios::binary | std::ios::app)*/; \
+    /*std::cout << "In " << msg << " constructor." << std::endl;*/ \
+    /*log.close();*/
 
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
 
@@ -110,6 +110,7 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
     DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
 
 #define NATIVE_SHARED_PTR_TO_CLI(SharedPtrType, CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(new SharedPtrType((SharedPtr))) : nullptr)
+#define NATIVE_OWNED_SHARED_PTR_TO_CLI(SharedPtrType, CLIType, SharedPtr, Owner) ((SharedPtr).get() ? gcnew CLIType(new SharedPtrType((SharedPtr)),(Owner)) : nullptr)
 #define NATIVE_REFERENCE_TO_CLI(NativeType, CLIType, NativeRef) gcnew CLIType(&(NativeRef), this)
 #define NATIVE_VALUE_TO_CLI(NativeType, CLIType, NativeValue) ((CLIType) NativeValue)
 #define STD_STRING_TO_CLI_STRING(NativeType, CLIType, StdString) gcnew CLIType((StdString).c_str())
@@ -121,39 +122,41 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 #define CLI_STRING_TO_STD_STRING(NativeType, CLIObject) ToStdString(CLIObject)
 
 
-#define DEFINE_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(pwiz::msdata::ClassType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+#define DEFINE_INTERNAL_BASE_CODE(ns, ClassType) \
+internal: ClassType(ns::ClassType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(ns::ClassType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
           !ClassType() {delete this;} \
-          pwiz::msdata::ClassType* base_; \
+          ns::ClassType* base_; \
           System::Object^ owner_;
 
-#define DEFINE_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(pwiz::msdata::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(pwiz::msdata::ClassType* base) : BaseClassType(base), base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+#define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
+internal: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
           !ClassType() {delete this;} \
-          pwiz::msdata::ClassType* base_; \
+          ns::ClassType* base_; \
           System::Object^ owner_;
 
-#define DEFINE_SHARED_INTERNAL_BASE_CODE(ClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+#define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
+internal: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_);} \
           !ClassType() {delete this;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
+          boost::shared_ptr<ns::ClassType>* base_; \
+          System::Object^ owner_;
 
-#define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((pwiz::msdata::BaseClassType*) &**base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+#define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
+internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((ns::BaseClassType*) &**base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
+          boost::shared_ptr<ns::ClassType>* base_;
 
-#define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<pwiz::msdata::ClassType>* base) : BaseClassType((boost::shared_ptr<pwiz::msdata::BaseClassType>*) base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+#define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
+internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((boost::shared_ptr<ns::BaseClassType>*) base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
-          boost::shared_ptr<pwiz::msdata::ClassType>* base_;
+          boost::shared_ptr<ns::ClassType>* base_;
 
 namespace pwiz { namespace CLI { namespace util {
 public ref struct tribool

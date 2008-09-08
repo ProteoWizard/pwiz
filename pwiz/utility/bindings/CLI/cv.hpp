@@ -1076,7 +1076,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::St
 /// structure for holding CV term info
 public ref class CVInfo
 {
-    DEFINE_INTERNAL_BASE_CODE(CVInfo);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, CVInfo);
 
     public:
     property CVID cvid { CVID get() {return (CVID) base_->cvid;} }

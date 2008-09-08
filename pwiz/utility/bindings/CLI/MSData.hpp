@@ -36,31 +36,31 @@ namespace msdata {
 
 public ref class CV
 {
-    DEFINE_INTERNAL_BASE_CODE(CV);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, CV);
              
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String(base_->id.c_str());}
-        void set(System::String^ value) {base_->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ URI
     {
-        System::String^ get() {return gcnew System::String(base_->URI.c_str());}
-        void set(System::String^ value) {base_->URI = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ fullName
     {
-        System::String^ get() {return gcnew System::String(base_->fullName.c_str());}
-        void set(System::String^ value) {base_->fullName = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ version
     {
-        System::String^ get() {return gcnew System::String(base_->version.c_str());}
-        void set(System::String^ value) {base_->version = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -102,25 +102,25 @@ public ref class UserParam
     public:
     property System::String^ name
     {
-        System::String^ get() {return gcnew System::String((*base_)->name.c_str());}
-        void set(System::String^ value) {(*base_)->name = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property UserParamValue^ value
     {
-        UserParamValue^ get() {return value_;}
+        UserParamValue^ get();
     }
 
     property System::String^ type
     {
-        System::String^ get() {return gcnew System::String((*base_)->type.c_str());}
-        void set(System::String^ value) {(*base_)->type = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property CVID units
     {
-        CVID get() {return (CVID) (*base_)->units;}
-        void set(CVID value) {(*base_)->units = (pwiz::msdata::CVID) value;}
+        CVID get();
+        void set(CVID value);
     }
 
     UserParam();
@@ -146,26 +146,22 @@ public ref class ParamContainer
               virtual ~ParamContainer() {/*LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer)) SAFEDELETE(base_);*/}
               pwiz::msdata::ParamContainer* base_;
 
-    ParamGroupList^ getParamGroups();
-    CVParamList^ getCVParams();
-    UserParamList^ getUserParams();
-
     public:
     ParamContainer() : base_(new pwiz::msdata::ParamContainer()) {}
 
     property ParamGroupList^ paramGroups
     {
-        ParamGroupList^ get() {return getParamGroups();}
+        ParamGroupList^ get();
     }
 
     property CVParamList^ cvParams
     {
-        CVParamList^ get() {return getCVParams();}
+        CVParamList^ get();
     }
 
     property UserParamList^ userParams
     {
-        UserParamList^ get() {return getUserParams();}
+        UserParamList^ get();
     }
 
     
@@ -193,26 +189,26 @@ public ref class ParamContainer
     UserParam^ userParam(System::String^ name) {return gcnew UserParam(new pwiz::msdata::UserParam(base_->userParam(ToStdString(name))));}
 
     /// set/add a CVParam (not recursive)
-    void set(CVID cvid) {base_->set((pwiz::msdata::CVID) cvid);}
-    void set(CVID cvid, System::String^ value) {base_->set((pwiz::msdata::CVID) cvid, ToStdString(value));}
-    void set(CVID cvid, System::String^ value, CVID units) {base_->set((pwiz::msdata::CVID) cvid, ToStdString(value), (pwiz::msdata::CVID) units);}
+    void set(CVID cvid);
+    void set(CVID cvid, System::String^ value);
+    void set(CVID cvid, System::String^ value, CVID units);
 
-    void set(CVID cvid, bool value) {set(cvid, (value ? "true" : "false"));}
+    void set(CVID cvid, bool value);
 
     /// set/add a CVParam (not recursive)
-    void set(CVID cvid, System::Int32 value) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Int64 value) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::UInt32 value) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::UInt64 value) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Single value) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Double value) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Int32 value);
+    void set(CVID cvid, System::Int64 value);
+    void set(CVID cvid, System::UInt32 value);
+    void set(CVID cvid, System::UInt64 value);
+    void set(CVID cvid, System::Single value);
+    void set(CVID cvid, System::Double value);
 
-    void set(CVID cvid, System::Int32 value, CVID units) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Int64 value, CVID units) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::UInt32 value, CVID units) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::UInt64 value, CVID units) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Single value, CVID units) {set(cvid, value.ToString());}
-    void set(CVID cvid, System::Double value, CVID units) {set(cvid, value.ToString());}
+    void set(CVID cvid, System::Int32 value, CVID units);
+    void set(CVID cvid, System::Int64 value, CVID units);
+    void set(CVID cvid, System::UInt32 value, CVID units);
+    void set(CVID cvid, System::UInt64 value, CVID units);
+    void set(CVID cvid, System::Single value, CVID units);
+    void set(CVID cvid, System::Double value, CVID units);
 
     bool empty() {return base_->empty();}
 };
@@ -220,13 +216,13 @@ public ref class ParamContainer
 
 public ref class ParamGroup : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ParamGroup, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ParamGroup, ParamContainer);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -247,8 +243,8 @@ public ref class ParamGroup : public ParamContainer
     public: ParamGroupList() : base_(new std::vector<pwiz::msdata::ParamGroupPtr>()) {} \
     \
     public: \
-    property int Count { virtual int get() {return (int) base_->size();} } \
-    property bool IsReadOnly { virtual bool get() {return false;} } \
+    System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
+    void set(System::String^ value) {(*base_)->id = ToStdString(value);}
     \
     property ParamGroup^ Item[int] \
     { \
@@ -272,7 +268,7 @@ public ref class ParamGroup : public ParamContainer
         internal: std::vector<pwiz::msdata::ParamGroupPtr>::iterator* itr_; \
         \
         public: \
-        property ParamGroup^ Current { virtual ParamGroup^ get() {return NATIVE_SHARED_PTR_TO_CLI(ParamGroup, **itr_);} } \
+        property ParamGroup^ Current { virtual ParamGroup^ get(); } \
         property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NATIVE_SHARED_PTR_TO_CLI(ParamGroup, **itr_);} } \
         virtual bool MoveNext() \
         { \
@@ -294,32 +290,32 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserPa
 
 public ref class FileContent : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(FileContent, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, FileContent, ParamContainer);
     public: FileContent();
 };
 
 
 public ref class SourceFile : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(SourceFile, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, SourceFile, ParamContainer);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ name
     {
-        System::String^ get() {return gcnew System::String((*base_)->name.c_str());}
-        void set(System::String^ value) {(*base_)->name = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ location
     {
-        System::String^ get() {return gcnew System::String((*base_)->location.c_str());}
-        void set(System::String^ value) {(*base_)->location = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -334,7 +330,7 @@ public ref class SourceFile : public ParamContainer
 
 public ref class Contact : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Contact, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Contact, ParamContainer);
     public: Contact();
 };
 
@@ -345,22 +341,22 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact,
 
 public ref class FileDescription
 {
-    DEFINE_INTERNAL_BASE_CODE(FileDescription);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, FileDescription);
 
     public:
     property FileContent^ fileContent
     {
-        FileContent^ get() {return gcnew FileContent(&base_->fileContent, this);}
+        FileContent^ get();
     }
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
+        SourceFileList^ get();
     }
 
     property ContactList^ contacts
     {
-        ContactList^ get() {return gcnew ContactList(&base_->contacts, this);}
+        ContactList^ get();
     }
 
 
@@ -373,19 +369,19 @@ public ref class FileDescription
 
 public ref class Sample : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(Sample, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Sample, ParamContainer);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ name
     {
-        System::String^ get() {return gcnew System::String((*base_)->name.c_str());}
-        void set(System::String^ value) {(*base_)->name = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -408,19 +404,19 @@ public enum class ComponentType
 
 public ref class Component : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Component, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Component, ParamContainer);
 
     public:
     property ComponentType type
     {
-        ComponentType get() {return (ComponentType) base_->type;}
-        void set(ComponentType value) {base_->type = (pwiz::msdata::ComponentType) value;}
+        ComponentType get();
+        void set(ComponentType value);
     }
 
     property int order
     {
-        int get() {return base_->order;}
-        void set(int value) {base_->order = value;}
+        int get();
+        void set(int value);
     }
 
 
@@ -438,7 +434,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ComponentBaseList, pwiz::msdata::Co
 
 public ref class ComponentList : public ComponentBaseList
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(ComponentList, ComponentBaseList);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ComponentList, ComponentBaseList);
 
     public:
     ComponentList();
@@ -451,25 +447,25 @@ public ref class ComponentList : public ComponentBaseList
 
 public ref class Software
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(Software);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, Software);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property CVParam^ softwareParam
     {
-        CVParam^ get() {return gcnew CVParam(&(*base_)->softwareParam);}
-        void set(CVParam^ value) {(*base_)->softwareParam = **value->base_;}
+        CVParam^ get();
+        void set(CVParam^ value);
     }
 
     property System::String^ softwareParamVersion
     {
-        System::String^ get() {return gcnew System::String((*base_)->softwareParamVersion.c_str());}
-        void set(System::String^ value) {(*base_)->softwareParamVersion = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -483,23 +479,23 @@ public ref class Software
 
 public ref class InstrumentConfiguration : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(InstrumentConfiguration, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, InstrumentConfiguration, ParamContainer);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property ComponentList^ componentList
     {
-        ComponentList^ get() {return gcnew ComponentList(&(*base_)->componentList, this);}
+        ComponentList^ get();
     }
 
     property Software^ software
     {
-        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
+        Software^ get();
     }
 
 
@@ -512,13 +508,13 @@ public ref class InstrumentConfiguration : public ParamContainer
 
 public ref class ProcessingMethod : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(ProcessingMethod, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ProcessingMethod, ParamContainer);
 
     public:
     property int order
     {
-        int get() {return base_->order;}
-        void set(int value) {base_->order = value;}
+        int get();
+        void set(int value);
     }
 
 
@@ -533,23 +529,23 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProcessingMethodList, pwiz::msdata:
 
 public ref class DataProcessing
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(DataProcessing);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, DataProcessing);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property Software^ software
     {
-        Software^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
+        Software^ get();
     }
 
     property ProcessingMethodList^ processingMethods
     {
-        ProcessingMethodList^ get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods, this);}
+        ProcessingMethodList^ get();
     }
 
 
@@ -562,7 +558,7 @@ public ref class DataProcessing
 
 public ref class Target : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Target, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Target, ParamContainer);
     public: Target();
 };
 
@@ -572,29 +568,29 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, T
 
 public ref class AcquisitionSettings
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(AcquisitionSettings);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, AcquisitionSettings);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
-        void set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = *value->base_;}
+        InstrumentConfiguration^ get();
+        void set(InstrumentConfiguration^ value);
     }
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
+        SourceFileList^ get();
     }
 
     property TargetList^ targets
     {
-        TargetList^ get() {return gcnew TargetList(&(*base_)->targets, this);}
+        TargetList^ get();
     }
 
 
@@ -607,37 +603,37 @@ public ref class AcquisitionSettings
 
 public ref class Acquisition : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Acquisition, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Acquisition, ParamContainer);
 
     public:
     property int number
     {
-        int get() {return base_->number;}
-        void set(int value) {base_->number = value;}
+        int get();
+        void set(int value);
     }
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
-        void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
+        SourceFile^ get();
+        void set(SourceFile^ value);
     }
 
     property System::String^ spectrumID
     {
-        System::String^ get() {return gcnew System::String(base_->spectrumID.c_str());}
-        void set(System::String^ value) {base_->spectrumID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ externalSpectrumID
     {
-        System::String^ get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
-        void set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ externalNativeID
     {
-        System::String^ get() {return gcnew System::String(base_->externalNativeID.c_str());}
-        void set(System::String^ value) {base_->externalNativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 
@@ -652,12 +648,12 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Acquisitions, pwiz::msdata::Acquisi
 
 public ref class AcquisitionList : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(AcquisitionList, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, AcquisitionList, ParamContainer);
 
     public:
     property Acquisitions^ acquisitions
     {
-        Acquisitions^ get() {return gcnew Acquisitions(&base_->acquisitions, this);}
+        Acquisitions^ get();
     }
 
 
@@ -669,21 +665,21 @@ public ref class AcquisitionList : public ParamContainer
 
 public ref class IsolationWindow : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(IsolationWindow, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, IsolationWindow, ParamContainer);
     public: IsolationWindow();
 };
 
 
 public ref class SelectedIon : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(SelectedIon, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, SelectedIon, ParamContainer);
     public: SelectedIon();
 };
 
 
 public ref class Activation : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Activation, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Activation, ParamContainer);
     public: Activation();
 };
 
@@ -693,48 +689,48 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SelectedIonList, pwiz::msdata::Sele
 
 public ref class Precursor : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Precursor, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Precursor, ParamContainer);
 
     public:
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
-        void set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
+        SourceFile^ get();
+        void set(SourceFile^ value);
     }
 
     property System::String^ spectrumID
     {
-        System::String^ get() {return gcnew System::String(base_->spectrumID.c_str());}
-        void set(System::String^ value) {base_->spectrumID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ externalSpectrumID
     {
-        System::String^ get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
-        void set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ externalNativeID
     {
-        System::String^ get() {return gcnew System::String(base_->externalNativeID.c_str());}
-        void set(System::String^ value) {base_->externalNativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property IsolationWindow^ isolationWindow
     {
-        IsolationWindow^ get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
-        void set(IsolationWindow^ value) {base_->isolationWindow = *value->base_;}
+        IsolationWindow^ get();
+        void set(IsolationWindow^ value);
     }
 
     property SelectedIonList^ selectedIons
     {
-        SelectedIonList^ get() {return gcnew SelectedIonList(&base_->selectedIons, this);}
+        SelectedIonList^ get();
     }
 
     property Activation^ activation
     {
-        Activation^ get() {return gcnew Activation(&base_->activation, this);}
-        void set(Activation^ value) {base_->activation = *value->base_;}
+        Activation^ get();
+        void set(Activation^ value);
     }
 
 
@@ -746,7 +742,7 @@ public ref class Precursor : public ParamContainer
 
 public ref class ScanWindow : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(ScanWindow, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ScanWindow, ParamContainer);
 
     public:
     ScanWindow();
@@ -759,18 +755,18 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanW
 
 public ref class Scan : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Scan, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Scan, ParamContainer);
 
     public:
     property InstrumentConfiguration^ instrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
-        void set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
+        InstrumentConfiguration^ get();
+        void set(InstrumentConfiguration^ value);
     }
 
     property ScanWindowList^ scanWindows
     {
-        ScanWindowList^ get() {return gcnew ScanWindowList(&base_->scanWindows, this);}
+        ScanWindowList^ get();
     }
 
 
@@ -785,23 +781,23 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precur
 
 public ref class SpectrumDescription : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(SpectrumDescription, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumDescription, ParamContainer);
 
     public:
     property AcquisitionList^ acquisitionList
     {
-        AcquisitionList^ get() {return gcnew AcquisitionList(&base_->acquisitionList, this);}
+        AcquisitionList^ get();
     }
 
     property PrecursorList^ precursors
     {
-        PrecursorList^ get() {return gcnew PrecursorList(&base_->precursors, this);}
+        PrecursorList^ get();
     }
 
     property Scan^ scan
     {
-        Scan^ get() {return gcnew Scan(&base_->scan, this);}
-        void set(Scan^ value) {base_->scan = *value->base_;}
+        Scan^ get();
+        void set(Scan^ value);
     }
 
 
@@ -816,19 +812,19 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(BinaryData, double, double, NATIVE_VALU
 
 public ref class BinaryDataArray : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(BinaryDataArray, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, BinaryDataArray, ParamContainer);
 
     public:
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
-        void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
+        DataProcessing^ get();
+        void set(DataProcessing^ value);
     }
 
     property BinaryData^ data
     {
-        BinaryData^ get() {return gcnew BinaryData(&(*base_)->data, this);}
-        void set(BinaryData^ value) {(*base_)->data = *value->base_;}
+        BinaryData^ get();
+        void set(BinaryData^ value);
     }
 
 
@@ -840,121 +836,121 @@ public ref class BinaryDataArray : public ParamContainer
 
 public ref class MZIntensityPair
 {
-    DEFINE_INTERNAL_BASE_CODE(MZIntensityPair);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, MZIntensityPair);
 
     public:
     property double mz
     {
-        double get() {return base_->mz;}
-        void set(double value) {base_->mz = value;}
+        double get();
+        void set(double value);
     }
 
     property double intensity
     {
-        double get() {return base_->intensity;}
-        void set(double value) {base_->intensity = value;}
+        double get();
+        void set(double value);
     }
 
 
-    MZIntensityPair() : base_(new pwiz::msdata::MZIntensityPair()) {}
-    MZIntensityPair(double _mz, double _intensity) : base_(new pwiz::msdata::MZIntensityPair(_mz, _intensity)) {}
+    MZIntensityPair();
+    MZIntensityPair(double mz, double intensity);
 };
 
 
 public ref class TimeIntensityPair
 {
-    DEFINE_INTERNAL_BASE_CODE(TimeIntensityPair);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, TimeIntensityPair);
 
     public:
     property double time
     {
-        double get() {return base_->time;}
-        void set(double value) {base_->time = value;}
+        double get();
+        void set(double value);
     }
 
     property double intensity
     {
-        double get() {return base_->intensity;}
-        void set(double value) {base_->intensity = value;}
+        double get();
+        void set(double value);
     }
 
 
-    TimeIntensityPair() : base_(new pwiz::msdata::TimeIntensityPair()) {}
-    TimeIntensityPair(double _mz, double _intensity) : base_(new pwiz::msdata::TimeIntensityPair(_mz, _intensity)) {}
+    TimeIntensityPair();
+    TimeIntensityPair(double time, double intensity);
 };
 
 
 public ref class SpectrumIdentity
 {
-    DEFINE_INTERNAL_BASE_CODE(SpectrumIdentity);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumIdentity);
 
     public:
     property int index
     {
-        int get() {return (int) base_->index;}
-        void set(int value) {base_->index = (size_t) value;}
+        int get();
+        void set(int value);
     }
 
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String(base_->id.c_str());}
-        void set(System::String^ value) {base_->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ nativeID
     {
-        System::String^ get() {return gcnew System::String(base_->nativeID.c_str());}
-        void set(System::String^ value) {base_->nativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ spotID
     {
-        System::String^ get() {return gcnew System::String(base_->spotID.c_str());}
-        void set(System::String^ value) {base_->spotID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 	property System::UInt64 sourceFilePosition
     {
-        System::UInt64 get() {return (System::UInt64) base_->sourceFilePosition;}
-        void set(System::UInt64 value) {base_->sourceFilePosition = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
 
 
-    SpectrumIdentity() : base_(new pwiz::msdata::SpectrumIdentity()) {}
+    SpectrumIdentity();
 };
 
 
 public ref class ChromatogramIdentity
 {
-    DEFINE_INTERNAL_BASE_CODE(ChromatogramIdentity);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, ChromatogramIdentity);
 
     public:
     property int index
     {
-        int get() {return (int) base_->index;}
-        void set(int value) {base_->index = (size_t) value;}
+        int get();
+        void set(int value);
     }
 
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String(base_->id.c_str());}
-        void set(System::String^ value) {base_->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ nativeID
     {
-        System::String^ get() {return gcnew System::String(base_->nativeID.c_str());}
-        void set(System::String^ value) {base_->nativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 	property System::UInt64 sourceFilePosition
     {
-        System::UInt64 get() {return (System::UInt64) base_->sourceFilePosition;}
-        void set(System::UInt64 value) {base_->sourceFilePosition = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
 
 
-    ChromatogramIdentity() : base_(new pwiz::msdata::ChromatogramIdentity()) {}
+    ChromatogramIdentity();
 };
 
 
@@ -965,71 +961,71 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata
 
 public ref class Spectrum : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(Spectrum, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Spectrum, ParamContainer);
 
     public:
 
     // SpectrumIdentity
     property int index
     {
-        int get() {return (int) (*base_)->index;}
-        void set(int value) {(*base_)->index = (size_t) value;}
+        int get();
+        void set(int value);
     }
 
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ nativeID
     {
-        System::String^ get() {return gcnew System::String((*base_)->nativeID.c_str());}
-        void set(System::String^ value) {(*base_)->nativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ spotID
     {
-        System::String^ get() {return gcnew System::String((*base_)->spotID.c_str());}
-        void set(System::String^ value) {(*base_)->spotID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 	property System::UInt64 sourceFilePosition
     {
-        System::UInt64 get() {return (System::UInt64) (*base_)->sourceFilePosition;}
-        void set(System::UInt64 value) {(*base_)->sourceFilePosition = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
 
 
     // Spectrum
     property System::UInt64 defaultArrayLength
     {
-        System::UInt64 get() {return (System::UInt64) (*base_)->defaultArrayLength;}
-        void set(System::UInt64 value) {(*base_)->defaultArrayLength = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
-        void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
+        DataProcessing^ get();
+        void set(DataProcessing^ value);
     }
 
     property SourceFile^ sourceFile
     {
-        SourceFile^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, (*base_)->sourceFilePtr);}
-        void set(SourceFile^ value) {(*base_)->sourceFilePtr = *value->base_;}
+        SourceFile^ get();
+        void set(SourceFile^ value);
     }
 
     property SpectrumDescription^ spectrumDescription
     {
-        SpectrumDescription^ get() {return gcnew SpectrumDescription(&(*base_)->spectrumDescription, this);}
-        void set(SpectrumDescription^ value) {(*base_)->spectrumDescription = *value->base_;}
+        SpectrumDescription^ get();
+        void set(SpectrumDescription^ value);
     }
 
     property BinaryDataArrayList^ binaryDataArrays
     {
-        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
-        void set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
+        BinaryDataArrayList^ get();
+        void set(BinaryDataArrayList^ value);
     }
  
 
@@ -1065,52 +1061,52 @@ public ref class Spectrum : public ParamContainer
 
 public ref class Chromatogram : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(Chromatogram, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Chromatogram, ParamContainer);
 
     public:
     // ChromatogramIdentity
     property int index
     {
-        int get() {return (int) (*base_)->index;}
-        void set(int value) {(*base_)->index = (size_t) value;}
+        int get();
+        void set(int value);
     }
 
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
-        void set(System::String^ value) {(*base_)->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ nativeID
     {
-        System::String^ get() {return gcnew System::String((*base_)->nativeID.c_str());}
-        void set(System::String^ value) {(*base_)->nativeID = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
 	property System::UInt64 sourceFilePosition
     {
-        System::UInt64 get() {return (System::UInt64) (*base_)->sourceFilePosition;}
-        void set(System::UInt64 value) {(*base_)->sourceFilePosition = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
 
     
     // Chromatogram
     property System::UInt64 defaultArrayLength
     {
-        System::UInt64 get() {return (*base_)->defaultArrayLength;}
-        void set(System::UInt64 value) {(*base_)->defaultArrayLength = (size_t) value;}
+        System::UInt64 get();
+        void set(System::UInt64 value);
     }
  
     property DataProcessing^ dataProcessing
     {
-        DataProcessing^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
-        //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
+        DataProcessing^ get();
+        //void set(DataProcessing^ value);
     }
 
     property BinaryDataArrayList^ binaryDataArrays
     {
-        BinaryDataArrayList^ get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
-        void set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
+        BinaryDataArrayList^ get();
+        void set(BinaryDataArrayList^ value);
     }
  
 
@@ -1150,7 +1146,7 @@ public ref class Chromatogram : public ParamContainer
 ///
 public ref class SpectrumList
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(SpectrumList);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumList);
 
     public:
     
@@ -1184,13 +1180,13 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Spectra, pwiz::msdata::SpectrumPtr,
 /// Note:  This spectrum() implementation returns internal SpectrumPtrs.
 public ref class SpectrumListSimple : public SpectrumList
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(SpectrumListSimple, SpectrumList);
+    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::msdata, SpectrumListSimple, SpectrumList);
 
     public:
     property Spectra^ spectra
     {
-        Spectra^ get() {return gcnew Spectra(&(*base_)->spectra, this);}
-        void set(Spectra^ value) {(*base_)->spectra = *value->base_;}
+        Spectra^ get();
+        void set(Spectra^ value);
     }
 
 
@@ -1208,7 +1204,7 @@ public ref class SpectrumListSimple : public SpectrumList
 
 public ref class ChromatogramList
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(ChromatogramList);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, ChromatogramList);
 
     public:
     
@@ -1242,13 +1238,13 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Chromatograms, pwiz::msdata::Chroma
 /// Note:  This chromatogram() implementation returns internal ChromatogramPtrs.
 public ref class ChromatogramListSimple : public ChromatogramList
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ChromatogramListSimple, ChromatogramList);
+    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::msdata, ChromatogramListSimple, ChromatogramList);
 
     public:
     property Chromatograms^ chromatograms
     {
-        Chromatograms^ get() {return gcnew Chromatograms(&(*base_)->chromatograms, this);}
-        void set(Chromatograms^ value) {(*base_)->chromatograms = *value->base_;}
+        Chromatograms^ get();
+        void set(Chromatograms^ value);
     }
 
 
@@ -1266,49 +1262,49 @@ public ref class ChromatogramListSimple : public ChromatogramList
 
 public ref class Run : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(Run, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Run, ParamContainer);
 
     public:
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String(base_->id.c_str());}
-        void set(System::String^ value) {base_->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property InstrumentConfiguration^ defaultInstrumentConfiguration
     {
-        InstrumentConfiguration^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
-        void set(InstrumentConfiguration^ value) {base_->defaultInstrumentConfigurationPtr = *value->base_;}
+        InstrumentConfiguration^ get();
+        void set(InstrumentConfiguration^ value);
     }
 
     property Sample^ sample
     {
-        Sample^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SamplePtr, Sample, base_->samplePtr);}
-        void set(Sample^ value) {base_->samplePtr = *value->base_;}
+        Sample^ get();
+        void set(Sample^ value);
     }
 
     property System::String^ startTimeStamp
     {
-        System::String^ get() {return gcnew System::String(base_->startTimeStamp.c_str());}
-        void set(System::String^ value) {base_->startTimeStamp = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property SourceFileList^ sourceFiles
     {
-        SourceFileList^ get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
-        void set(SourceFileList^ value) {base_->sourceFilePtrs = *value->base_;}
+        SourceFileList^ get();
+        void set(SourceFileList^ value);
     }
 
     property SpectrumList^ spectrumList
     {
-        SpectrumList^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SpectrumListPtr, SpectrumList, base_->spectrumListPtr);}
-        void set(SpectrumList^ value) {base_->spectrumListPtr = *value->base_;}
+        SpectrumList^ get();
+        void set(SpectrumList^ value);
     }
 
     property ChromatogramList^ chromatogramList
     {
-        ChromatogramList^ get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::ChromatogramListPtr, ChromatogramList, base_->chromatogramListPtr);}
-        void set(ChromatogramList^ value) {base_->chromatogramListPtr = *value->base_;}
+        ChromatogramList^ get();
+        void set(ChromatogramList^ value);
     }
 
 
@@ -1334,79 +1330,79 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(AcquisitionSettingsList, pwiz::msda
 
 public ref class MSData
 {
-    DEFINE_INTERNAL_BASE_CODE(MSData);
+    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, MSData);
 
     public:
     property System::String^ accession
     {
-        System::String^ get() {return gcnew System::String(base_->accession.c_str());}
-        void set(System::String^ value) {base_->accession = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ id
     {
-        System::String^ get() {return gcnew System::String(base_->id.c_str());}
-        void set(System::String^ value) {base_->id = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property System::String^ version
     {
-        System::String^ get() {return gcnew System::String(base_->version.c_str());}
-        void set(System::String^ value) {base_->version = ToStdString(value);}
+        System::String^ get();
+        void set(System::String^ value);
     }
 
     property CVList^ cvs
     {
-        CVList^ get() {return gcnew CVList(&base_->cvs, this);}
-        void set(CVList^ value) {base_->cvs = *value->base_;}
+        CVList^ get();
+        void set(CVList^ value);
     }
 
     property FileDescription^ fileDescription
     {
-        FileDescription^ get() {return gcnew FileDescription(&base_->fileDescription, this);}
-        void set(FileDescription^ value) {base_->fileDescription = *value->base_;}
+        FileDescription^ get();
+        void set(FileDescription^ value);
     }
 
     property ParamGroupList^ paramGroups
     {
-        ParamGroupList^ get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
-        void set(ParamGroupList^ value) {base_->paramGroupPtrs = *value->base_;}
+        ParamGroupList^ get();
+        void set(ParamGroupList^ value);
     }
 
     property SampleList^ samples
     {
-        SampleList^ get() {return gcnew SampleList(&base_->samplePtrs, this);}
-        void set(SampleList^ value) {base_->samplePtrs = *value->base_;}
+        SampleList^ get();
+        void set(SampleList^ value);
     }
 
     property InstrumentConfigurationList^ instrumentConfigurationList
     {
-        InstrumentConfigurationList^ get() {return gcnew InstrumentConfigurationList(&base_->instrumentConfigurationPtrs, this);}
-        void set(InstrumentConfigurationList^ value) {base_->instrumentConfigurationPtrs = *value->base_;}
+        InstrumentConfigurationList^ get();
+        void set(InstrumentConfigurationList^ value);
     }
 
     property SoftwareList^ softwareList
     {
-        SoftwareList^ get() {return gcnew SoftwareList(&base_->softwarePtrs, this);}
-        void set(SoftwareList^ value) {base_->softwarePtrs = *value->base_;}
+        SoftwareList^ get();
+        void set(SoftwareList^ value);
     }
 
     property DataProcessingList^ dataProcessingList
     {
-        DataProcessingList^ get() {return gcnew DataProcessingList(&base_->dataProcessingPtrs, this);}
-        void set(DataProcessingList^ value) {base_->dataProcessingPtrs = *value->base_;}
+        DataProcessingList^ get();
+        void set(DataProcessingList^ value);
     }
 
     property AcquisitionSettingsList^ acquisitionSettingList
     {
-        AcquisitionSettingsList^ get() {return gcnew AcquisitionSettingsList(&base_->acquisitionSettingsPtrs, this);}
-        void set(AcquisitionSettingsList^ value) {base_->acquisitionSettingsPtrs = *value->base_;}
+        AcquisitionSettingsList^ get();
+        void set(AcquisitionSettingsList^ value);
     }
 
     property Run^ run
     {
-        Run^ get() {return gcnew Run(&base_->run, this);}
-        //void set(Run^ value) {base_->run = *value->base_;}
+        Run^ get();
+        //void set(Run^ value);
     }
 
 
