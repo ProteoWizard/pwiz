@@ -48,6 +48,7 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         std::string label;
         float mzLow;
         float mzHigh;
+        float timeScale;
         int binCount;
         float zRadius;
         bool bry;

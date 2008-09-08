@@ -140,6 +140,9 @@ Config parseCommandArgs(int argc, const char* argv[])
             ": use grey-scale gradient")
         ("binSum",
             ": sum intensity in bins [default = max intensity]")
+        ("timeScale",
+            po::value<float>(&config.pseudo2dConfig.timeScale),
+            ": set scale of time axis")
         ("ms2locs,m",
             ": indicate masses selected for ms2")
         ("pepxml,p",

@@ -53,14 +53,14 @@ using namespace pwiz::peptideid;
 
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config()
-:   mzLow(200), mzHigh(2000), binCount(640),
+:   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
     zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
     
 {
 }
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
-:   mzLow(200), mzHigh(2000), binCount(640),
+:   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
     zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
 {
     vector<string> tokens;
@@ -78,6 +78,8 @@ PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
             mzLow = (float)atof(it->c_str()+6);
         else if (it->find("mzHigh=") == 0)
             mzHigh = (float)atof(it->c_str()+7);
+        else if (it->find("timeScale=") == 0)
+            timeScale = (float)atof(it->c_str()+10);
         else if (it->find("binCount=") == 0)
             binCount = atoi(it->c_str()+9);
         else if (it->find("zRadius=") == 0)
@@ -114,6 +116,8 @@ void Pseudo2DGel::Config::process(const std::string& args)
             mzLow = (float)atof(it->c_str()+6);
         else if (it->find("mzHigh=") == 0)
             mzHigh = (float)atof(it->c_str()+7);
+        else if (it->find("timeScale=") == 0)
+            timeScale = (float)atof(it->c_str()+10);
         else if (it->find("binCount=") == 0)
             binCount = atoi(it->c_str()+9);
         else if (it->find("zRadius=") == 0)
@@ -1027,7 +1031,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     const int y1 = titleBarHeight + 300;
     const int x2 = x1 + 4*graphMargin_ + config_.binCount;
     const int y2 = (config_.binScan ? y1 + 4*textHeight_ + (int)scans.size() :
-                    y1 + 4*textHeight_ + (int)(scanInfo.maxTime - scanInfo.minTime));
+                    y1 + 4*textHeight_ + (int)(config_.timeScale * scanInfo.maxTime - scanInfo.minTime));
 
     auto_ptr<Image> image = Image::create(x2, y2);
 
@@ -1154,8 +1158,8 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
                                   const Image::Point& begin, const Image::Point& end) 
 {
     const ScanList& scans = scansInfo.scans;
-    size_t lines = (int)(scansInfo.maxTime - scansInfo.minTime + 0.5);
-    
+    size_t lines = (int)(config_.timeScale * scansInfo.maxTime - scansInfo.minTime + 0.5);
+
     image.clip(begin, end - Image::Point(1,1));
 
     Image::Point graphBegin = begin + Image::Point(3*graphMargin_, 3*textHeight_);
@@ -1175,10 +1179,10 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
     for (size_t j=0; j<scans.size(); j++)
     {
         size_t index = scans[j];
-        size_t rt = (int)scansInfo.rts[j];
+        size_t rt = (int)(config_.timeScale * scansInfo.rts[j]);
 
         startIndex = endIndex;
-        endIndex = (int)rt;
+        endIndex = rt;
 
         for (size_t k=startIndex; k<endIndex; k++)
         {
@@ -1209,6 +1213,7 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
         }
     }
 
+    
     for (size_t j=0; j<pixelBins_.size(); j++)
     {
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
