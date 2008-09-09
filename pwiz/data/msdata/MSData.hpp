@@ -38,14 +38,25 @@ namespace pwiz {
 namespace msdata {
 
 
+/// Information about an ontology or CV source and a short 'lookup' tag to refer to.
 struct PWIZ_API_DECL CV
 {
+    /// the short label to be used as a reference tag with which to refer to this particular Controlled Vocabulary source description (e.g., from the cvLabel attribute, in CVParamType elements).
     std::string id;
+
+    /// the URI for the resource.
     std::string URI;
+
+    /// the usual name for the resource (e.g. The PSI-MS Controlled Vocabulary).
     std::string fullName;
+
+    /// the version of the CV from which the referred-to terms are drawn.
     std::string version;
 
+    /// returns true iff id, URI, fullName, and version are all empty
     bool empty() const;
+
+    /// returns true iff id, URI, fullName, and version are all pairwise equal
     bool operator==(const CV& that) const;
 };
 
@@ -53,11 +64,19 @@ struct PWIZ_API_DECL CV
 PWIZ_API_DECL std::vector<CV> defaultCVList();
 
 
+/// Uncontrolled user parameters (essentially allowing free text). Before using these, one should verify whether there is an appropriate CV term available, and if so, use the CV term instead
 struct PWIZ_API_DECL UserParam
 {
+    /// the name for the parameter.
     std::string name;
+
+    /// the value for the parameter, where appropriate.
     std::string value;
+
+    /// the datatype of the parameter, where appropriate (e.g.: xsd:float).
     std::string type;
+
+    /// an optional CV parameter for the unit term associated with the value, if any (e.g. MS_electron_volt).
     CVID units;
 
     UserParam(const std::string& _name = "", 
@@ -65,21 +84,27 @@ struct PWIZ_API_DECL UserParam
               const std::string& _type = "",
               CVID _units = CVID_Unknown);
 
-    /// templated value access with type conversion
+
+    /// Templated value access with type conversion
     template<typename value_type>
     value_type valueAs() const
     {
         return !value.empty() ? boost::lexical_cast<value_type>(value) 
                               : boost::lexical_cast<value_type>(0);
-    } 
+    }
 
+    /// returns true iff name, value, type, and units are all empty
     bool empty() const;
+
+    /// returns true iff name, value, type, and units are all pairwise equal
     bool operator==(const UserParam& that) const;
+
+    /// returns !(this==that)
     bool operator!=(const UserParam& that) const;
 };
 
 
-/// special case for bool (outside the class for gcc 3.4, and inline for msvc)
+// Special case for bool (outside the class for gcc 3.4, and inline for msvc)
 template<>
 inline bool UserParam::valueAs<bool>() const
 {
@@ -91,19 +116,25 @@ struct ParamGroup;
 typedef boost::shared_ptr<ParamGroup> ParamGroupPtr;
 
 
+/// The base class for elements that may contain cvParams, userParams, or paramGroup references
 struct PWIZ_API_DECL ParamContainer
 {
+    /// a collection of references to ParamGroups
     std::vector<ParamGroupPtr> paramGroupPtrs;
+
+    /// a collection of controlled vocabulary terms
     std::vector<CVParam> cvParams;
+
+    /// a collection of uncontrolled user terms
     std::vector<UserParam> userParams;
     
-    /// Finds cvid in the container:
+    /// finds cvid in the container:
     /// - returns first CVParam result such that (result.cvid == cvid); 
     /// - if not found, returns CVParam(CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
     CVParam cvParam(CVID cvid) const; 
 
-    /// Finds child of cvid in the container:
+    /// finds child of cvid in the container:
     /// - returns first CVParam result such that (result.cvid is_a cvid); 
     /// - if not found, CVParam(CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
@@ -115,7 +146,7 @@ struct PWIZ_API_DECL ParamContainer
     /// returns true iff cvParams contains a child (is_a) of cvid (recursive)
     bool hasCVParamChild(CVID cvid) const;
 
-    /// Finds UserParam with specified name 
+    /// finds UserParam with specified name 
     /// - returns UserParam() if name not found 
     /// - not recursive: looks only at local userParams
     UserParam userParam(const std::string&) const; 
@@ -130,8 +161,14 @@ struct PWIZ_API_DECL ParamContainer
         set(cvid, boost::lexical_cast<std::string>(value), units);
     }
 
+    /// returns true iff the element contains no params or param groups
     bool empty() const;
+
+    /// returns true iff this and that have the exact same cvParams and userParams
+    /// - recursive: looks into paramGroupPtrs
     bool operator==(const ParamContainer& that) const;
+
+    /// returns !(this==that)
     bool operator!=(const ParamContainer& that) const;
 };
 
@@ -144,56 +181,84 @@ inline void ParamContainer::set<bool>(CVID cvid, bool value, CVID units)
 }
 
 
+/// A collection of CVParam and UserParam elements that can be referenced from elsewhere in this mzML document by using the 'paramGroupRef' element in that location to reference the 'id' attribute value of this element. 
 struct PWIZ_API_DECL ParamGroup : public ParamContainer
 {
+    /// the identifier with which to reference this ReferenceableParamGroup.
     std::string id;
 
     ParamGroup(const std::string& _id = "");
+
+    /// returns true iff the element contains no params or param groups
     bool empty() const;
 };
 
 
+/// This summarizes the different types of spectra that can be expected in the file. This is expected to aid processing software in skipping files that do not contain appropriate spectrum types for it.
 struct PWIZ_API_DECL FileContent : public ParamContainer {};
 
 
+/// Description of the source file, including location and type.
 struct PWIZ_API_DECL SourceFile : public ParamContainer
 {
+    /// an identifier for this file.
     std::string id;
+
+    /// name of the source file, without reference to location (either URI or local path).
     std::string name;
+
+    /// URI-formatted location where the file was retrieved.
     std::string location;
 
     SourceFile(const std::string _id = "",
                const std::string _name = "",
                const std::string _location = "");
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
 
+/// Description of the source file, including location and type.
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;
 
 
+/// Structure allowing the use of a controlled (cvParam) or uncontrolled vocabulary (userParam), or a reference to a predefined set of these in this mzML file (paramGroupRef).
 struct PWIZ_API_DECL Contact : public ParamContainer {};
 
 
+/// Information pertaining to the entire mzML file (i.e. not specific to any part of the data set) is stored here.
 struct PWIZ_API_DECL FileDescription
 {
+    /// this summarizes the different types of spectra that can be expected in the file. This is expected to aid processing software in skipping files that do not contain appropriate spectrum types for it.
     FileContent fileContent;
+
+    /// list and descriptions of the source files this mzML document was generated or derived from.
     std::vector<SourceFilePtr> sourceFilePtrs;
+
+    /// structure allowing the use of a controlled (cvParam) or uncontrolled vocabulary (userParam), or a reference to a predefined set of these in this mzML file (paramGroupRef)
     std::vector<Contact> contacts;
 
+    /// returns true iff all members are empty or null
     bool empty() const;
 };
 
 
+/// Expansible description of the sample used to generate the dataset, named in sampleName.
 struct PWIZ_API_DECL Sample : public ParamContainer
 {
+    /// a unique identifier across the samples with which to reference this sample description.
     std::string id;
+
+    /// an optional name for the sample description, mostly intended as a quick mnemonic.
     std::string name;
 
     Sample(const std::string _id = "",
            const std::string _name = "");
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -210,9 +275,13 @@ enum ComponentType
 };
 
 
+/// A component of an instrument corresponding to a source (i.e. ion source), an analyzer (i.e. mass analyzer), or a detector (i.e. ion detector)
 struct PWIZ_API_DECL Component : public ParamContainer
 {
+    /// the type of component (Source, Analyzer, or Detector)
     ComponentType type;
+
+    /// this attribute MUST be used to indicate the order in which the components are encountered from source to detector (e.g., in a Q-TOF, the quadrupole would have the lower order number, and the TOF the higher number of the two).
     int order;
 
     Component() : type(ComponentType_Unknown), order(0) {}
@@ -221,6 +290,8 @@ struct PWIZ_API_DECL Component : public ParamContainer
     virtual ~Component(){}
 
     void define(CVID cvid, int order);
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -230,31 +301,48 @@ struct PWIZ_API_DECL Component : public ParamContainer
 //struct PWIZ_API_DECL Detector : public Component {};
 
 
+/// List with the different components used in the mass spectrometer. At least one source, one mass analyzer and one detector need to be specified.
 struct PWIZ_API_DECL ComponentList : public std::vector<Component>
 {
+    /// returns the source component with ordinal <index+1>
     Component& source(size_t index);
+
+    /// returns the analyzer component with ordinal <index+1>
     Component& analyzer(size_t index);
+
+    /// returns the detector component with ordinal <index+1>
     Component& detector(size_t index);
 
+    /// returns the source component with ordinal <index+1>
     const Component& source(size_t index) const;
+
+    /// returns the analyzer component with ordinal <index+1>
     const Component& analyzer(size_t index) const;
+
+    /// returns the detector component with ordinal <index+1>
     const Component& detector(size_t index) const;
 };
 
 
+/// A piece of software.
 struct PWIZ_API_DECL Software
 {
+    /// an identifier for this software that is unique across all SoftwareTypes.
     std::string id;
 
+    /// a description of the software, based on CV information and a software version.
     CVParam softwareParam;
+
+    /// the software version.
     std::string softwareParamVersion;
 
     Software(const std::string& _id = "");
-
     Software(const std::string& _id,
              const CVParam& _softwareParam,
              const std::string& _softwareParamVersion);
 
+
+    /// returns true iff all members are empty or null
     bool empty() const;
 };
 
@@ -262,13 +350,21 @@ struct PWIZ_API_DECL Software
 typedef boost::shared_ptr<Software> SoftwarePtr;
 
 
+/// Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, use a ReferenceableParamGroup element.
 struct PWIZ_API_DECL InstrumentConfiguration : public ParamContainer
 {
+    /// an identifier for this instrument configuration.
     std::string id;
+
+    /// list with the different components used in the mass spectrometer. At least one source, one mass analyzer and one detector need to be specified.
     ComponentList componentList;
+
+    /// reference to a previously defined software element.
     SoftwarePtr softwarePtr;
 
     InstrumentConfiguration(const std::string& _id = "");
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -276,12 +372,16 @@ struct PWIZ_API_DECL InstrumentConfiguration : public ParamContainer
 typedef boost::shared_ptr<InstrumentConfiguration> InstrumentConfigurationPtr;
 
 
+/// Description of the default peak processing method. This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
 struct PWIZ_API_DECL ProcessingMethod : public ParamContainer
 {
+    /// this attributes allows a series of consecutive steps to be placed in the correct order.
     int order;
 
     ProcessingMethod() : order(0) {}
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -289,14 +389,22 @@ struct PWIZ_API_DECL ProcessingMethod : public ParamContainer
 typedef boost::shared_ptr<ProcessingMethod> ProcessingMethodPtr;
 
 
+/// Description of the way in which a particular software was used.
 struct PWIZ_API_DECL DataProcessing
 {
+    /// a unique identifier for this data processing that is unique across all DataProcessingTypes.
     std::string id;
+
+    /// this attribute MUST reference the 'id' of the appropriate SoftwareType.
     SoftwarePtr softwarePtr;
+
+    /// description of the default peak processing method(s). This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
     std::vector<ProcessingMethod> processingMethods;
 
     DataProcessing(const std::string& _id = "");
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -304,18 +412,29 @@ struct PWIZ_API_DECL DataProcessing
 typedef boost::shared_ptr<DataProcessing> DataProcessingPtr; 
 
 
+/// TODO
 struct PWIZ_API_DECL Target : public ParamContainer {};
 
 
+/// Description of the acquisition settings of the instrument prior to the start of the run.
 struct PWIZ_API_DECL AcquisitionSettings
 {
+    /// a unique identifier for this acquisition setting.
     std::string id;
+
+    /// this attribute MUST reference the 'id' of the appropriate instrument configuration.
     InstrumentConfigurationPtr instrumentConfigurationPtr;
+
+    /// container for a list of source file references.
     std::vector<SourceFilePtr> sourceFilePtrs;
+
+    /// target list (or 'inclusion list') configured prior to the run.
     std::vector<Target> targets;
 
     AcquisitionSettings(const std::string& _id = "");
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -323,20 +442,37 @@ struct PWIZ_API_DECL AcquisitionSettings
 typedef boost::shared_ptr<AcquisitionSettings> AcquisitionSettingsPtr; 
 
 
+/// Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
 struct PWIZ_API_DECL Acquisition : public ParamContainer
 {
+    /// a number for this acquisition.
     int number;
+
+    /// for acquisitions that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     SourceFilePtr sourceFilePtr;
+
+    /// for acquisitions that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     std::string externalNativeID;
+
+    /// for acquisitions that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     std::string externalSpectrumID;
+
+    /// for acquisitions that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
+    /// note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
     std::string spectrumID;
 
     Acquisition() : number(0) {}
 
+
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
 
+/// List and descriptions of acquisitions .
 struct PWIZ_API_DECL AcquisitionList : public ParamContainer
 {
     std::vector<Acquisition> acquisitions;
@@ -345,9 +481,11 @@ struct PWIZ_API_DECL AcquisitionList : public ParamContainer
 };
 
 
+/// This element captures the isolation (or 'selection') window configured to isolate one or more precursors.
 struct PWIZ_API_DECL IsolationWindow : public ParamContainer {};
 
 
+/// TODO
 struct PWIZ_API_DECL SelectedIon : public ParamContainer
 {
     SelectedIon() {}
@@ -358,19 +496,37 @@ struct PWIZ_API_DECL SelectedIon : public ParamContainer
 };
 
 
+/// The type and energy level used for activation.
 struct PWIZ_API_DECL Activation : public ParamContainer {};
 
 
+/// The method of precursor ion selection and activation
 struct PWIZ_API_DECL Precursor : public ParamContainer
 {
+    /// for precursor spectra that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     SourceFilePtr sourceFilePtr;
-    std::string externalNativeID;
-    std::string externalSpectrumID;
-    std::string spectrumID;
-    IsolationWindow isolationWindow;
-    std::vector<SelectedIon> selectedIons;
-    Activation activation;
 
+    /// for precursor spectra that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+    std::string externalNativeID;
+
+    /// for precursor spectra that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+    std::string externalSpectrumID;
+
+    /// reference to the id attribute of the spectrum from which the precursor was selected.
+    /// note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
+    std::string spectrumID;
+
+    /// this element captures the isolation (or 'selection') window configured to isolate one or more precursors.
+    IsolationWindow isolationWindow;
+
+    /// this list of precursor ions that were selected.
+    std::vector<SelectedIon> selectedIons;
+
+    /// the type and energy level used for activation.
+    Activation activation;
 
     Precursor() {}
     explicit Precursor(double mz);
@@ -379,10 +535,12 @@ struct PWIZ_API_DECL Precursor : public ParamContainer
     explicit Precursor(double mz, double intensity, int chargeState);
 
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
 
+/// TODO
 struct PWIZ_API_DECL ScanWindow : public ParamContainer
 {
     ScanWindow(){}
@@ -390,30 +548,47 @@ struct PWIZ_API_DECL ScanWindow : public ParamContainer
 };
 
 
+/// The instrument's 'run time' parameters; common to the whole of this spectrum.
 struct PWIZ_API_DECL Scan : public ParamContainer
 {
+    /// this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
     InstrumentConfigurationPtr instrumentConfigurationPtr;
+
+    /// container for a list of select windows.
     std::vector<ScanWindow> scanWindows;
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
 
+/// Description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
 struct PWIZ_API_DECL SpectrumDescription : public ParamContainer
 {
+    /// list and descriptions of acquisitions.
     AcquisitionList acquisitionList;
+
+    /// list and descriptions of precursors to the spectrum currently being described.
     std::vector<Precursor> precursors;
+
+    /// the instrument's 'run time' parameters; common to the whole of this spectrum.
     Scan scan;
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
 
+/// The structure into which encoded binary data goes. Byte ordering is always little endian (Intel style). Computers using a different endian style MUST convert to/from little endian when writing/reading mzML
 struct PWIZ_API_DECL BinaryDataArray : public ParamContainer
 {
+    /// this optional attribute may reference the 'id' attribute of the appropriate dataProcessing.
     DataProcessingPtr dataProcessingPtr;
+
+    /// the binary data.
     std::vector<double> data;
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -422,6 +597,7 @@ typedef boost::shared_ptr<BinaryDataArray> BinaryDataArrayPtr;
 
 
 #pragma pack(1)
+/// The data point type of a mass spectrum.
 struct PWIZ_API_DECL MZIntensityPair
 {
     double mz;
@@ -431,6 +607,7 @@ struct PWIZ_API_DECL MZIntensityPair
     :   mz(_mz), intensity(_intensity)
     {}
 
+    /// returns true iff mz and intensity are pairwise equal
     bool operator==(const MZIntensityPair& that) const;
 };
 #pragma pack()
@@ -440,6 +617,7 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MZIntensityPair& 
 
 
 #pragma pack(1)
+/// The data point type of a chromatogram.
 struct PWIZ_API_DECL TimeIntensityPair
 {
     double time;
@@ -449,6 +627,7 @@ struct PWIZ_API_DECL TimeIntensityPair
     :   time(_time), intensity(_intensity)
     {}
 
+    /// returns true iff time and intensity are pairwise equal
     bool operator==(const TimeIntensityPair& that) const;
 };
 #pragma pack()
@@ -457,39 +636,68 @@ struct PWIZ_API_DECL TimeIntensityPair
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const TimeIntensityPair& ti);
 
 
+/// Identifying information for a spectrum
 struct PWIZ_API_DECL SpectrumIdentity
 {
+    /// the zero-based, consecutive index of the spectrum in the SpectrumList.
     size_t index;
+
+    /// a unique identifier for this spectrum. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular spectrum.
     std::string id;
+
+    /// the native identifier for the spectrum, used by the acquisition software.
     std::string nativeID;
+
+    /// the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
     std::string spotID;
+
+    /// for file-based MSData implementations, this attribute may refer to the spectrum's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
     SpectrumIdentity() : index(0), sourceFilePosition(-1) {}
 };
 
 
+/// Identifying information for a chromatogram
 struct PWIZ_API_DECL ChromatogramIdentity
 {
+    /// the zero-based, consecutive index of the chromatogram in the ChromatogramList.
     size_t index;
+
+    /// a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
     std::string id;
+
+    /// the native identifier for the chromatogram, used by the acquisition software.
     std::string nativeID;
+
+    /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
     ChromatogramIdentity() : index(0), sourceFilePosition(-1) {}
 };
 
 
+/// The structure that captures the generation of a peak list (including the underlying acquisitions)
 struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 {
-    size_t defaultArrayLength; 
+    /// default length of binary data arrays contained in this element.
+    size_t defaultArrayLength;
+
+    /// this attribute can optionally reference the 'id' of the appropriate dataProcessing.
     DataProcessingPtr dataProcessingPtr;
+
+    /// this attribute can optionally reference the 'id' of the appropriate sourceFile.
     SourceFilePtr sourceFilePtr;
+
+    /// description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
     SpectrumDescription spectrumDescription;
+
+    /// list of binary data arrays.
     std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
 
     Spectrum() : defaultArrayLength(0) {}
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 
     /// copy binary data arrays into m/z-intensity pair array
@@ -520,14 +728,21 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
 
 
+/// A single chromatogram.
 struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamContainer
 {
+    /// default length of binary data arrays contained in this element.
     size_t defaultArrayLength; 
+
+    /// this attribute can optionally reference the 'id' of the appropriate dataProcessing.
     DataProcessingPtr dataProcessingPtr;
+
+    /// list of binary data arrays.
     std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
 
     Chromatogram() : defaultArrayLength(0) {}
 
+    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 
     /// copy binary data arrays into time-intensity pair array
@@ -538,11 +753,20 @@ struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamCon
     /// must determine the correct size beforehand, or an exception will be thrown
     void getTimeIntensityPairs(TimeIntensityPair* output, size_t expectedSize) const;
 
-    /// set binary data arrays 
+    /// get time array (may be null)
+    BinaryDataArrayPtr getTimeArray() const;
+
+    /// get intensity array (may be null)
+    BinaryDataArrayPtr getIntensityArray() const;
+
+    /// set binary data arrays
     void setTimeIntensityPairs(const std::vector<TimeIntensityPair>& input);
 
-    /// set binary data arrays 
+    /// set binary data arrays
     void setTimeIntensityPairs(const TimeIntensityPair* input, size_t size);
+
+    /// set time and intensity arrays separately (they must be the same size)
+    void setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID intensityUnits = CVID_Unknown);
 };
 
 
@@ -627,6 +851,28 @@ struct PWIZ_API_DECL SpectrumListSimple : public SpectrumList
 typedef boost::shared_ptr<SpectrumListSimple> SpectrumListSimplePtr;
 
 
+/// 
+/// Interface for accessing chromatograms, which may be stored in memory
+/// or backed by a data file (RAW, mzXML, mzML).  
+///
+/// Implementation notes:
+///
+/// - Implementations are expected to keep a chromatogram index in the form of
+///   vector<ChromatogramIdentity> or equivalent.  The default find*() functions search
+///   the index linearly.  Implementations may provide constant time indexing.
+///
+/// - The semantics of chromatogram() may vary slightly with implementation.  In particular,
+///   a ChromatogramList implementation that is backed by a file may choose either to cache 
+///   or discard the ChromatogramPtrs for future access, with the caveat that the client 
+///   may write to the underlying data.
+///
+/// - It is the implementation's responsibility to return a valid ChromatogramPtr from chromatogram().
+///   If this cannot be done, an exception must be thrown. 
+/// 
+/// - The 'getBinaryData' flag is a hint if false : implementations may provide valid 
+///   BinaryDataArrayPtrs on chromatogram(index, false);  implementations *must* provide 
+///   valid BinaryDataArrayPtrs on chromatogram(index, true).
+///
 class PWIZ_API_DECL ChromatogramList
 {
     public:
@@ -676,14 +922,28 @@ struct PWIZ_API_DECL ChromatogramListSimple : public ChromatogramList
 typedef boost::shared_ptr<ChromatogramListSimple> ChromatogramListSimplePtr;
 
 
+/// A run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
 struct PWIZ_API_DECL Run : public ParamContainer
 {
+    /// a unique identifier for this run.
     std::string id;
+
+    /// this attribute MUST reference the 'id' of the default instrument configuration. If a scan does not reference an instrument configuration, it implicitly refers to this configuration.
     InstrumentConfigurationPtr defaultInstrumentConfigurationPtr;
+
+    /// this attribute MUST reference the 'id' of the appropriate sample.
     SamplePtr samplePtr;
+
+    /// the optional start timestamp of the run, in UT.
     std::string startTimeStamp;
+
+    /// container for a list of source file references.
     std::vector<SourceFilePtr> sourceFilePtrs;
+
+    /// all mass spectra and the acquisitions underlying them are described and attached here. Subsidiary data arrays are also both described and attached here.
     SpectrumListPtr spectrumListPtr;
+
+    /// all chromatograms for this run.
     ChromatogramListPtr chromatogramListPtr;
 
     Run(){}
@@ -698,19 +958,45 @@ struct PWIZ_API_DECL Run : public ParamContainer
 };
 
 
+/// This is the root element of ProteoWizard; it represents the mzML element, defined as:
+/// intended to capture the use of a mass spectrometer, the data generated, and the initial processing of that data (to the level of the peak list).
 struct PWIZ_API_DECL MSData
 {
+    /// an optional accession number for the mzML document.
     std::string accession;
+
+    /// an optional id for the mzML document. It is recommended to use LSIDs when possible.
     std::string id;
+
+    /// the version of this mzML document.
     std::string version;
-    std::vector<CV> cvs; 
+
+    /// container for one or more controlled vocabulary definitions.
+    /// note: one of the <cv> elements in this list MUST be the PSI MS controlled vocabulary. All <cvParam> elements in the document MUST refer to one of the <cv> elements in this list.
+    std::vector<CV> cvs;
+
+    /// information pertaining to the entire mzML file (i.e. not specific to any part of the data set) is stored here.
     FileDescription fileDescription;
+
+    /// container for a list of referenceableParamGroups
     std::vector<ParamGroupPtr> paramGroupPtrs;
+
+    /// list and descriptions of samples.
     std::vector<SamplePtr> samplePtrs;
+
+    /// list and descriptions of instrument configurations.
     std::vector<InstrumentConfigurationPtr> instrumentConfigurationPtrs;
+
+    /// list and descriptions of software used to acquire and/or process the data in this mzML file.
     std::vector<SoftwarePtr> softwarePtrs;
+
+    /// list and descriptions of data processing applied to this data.
     std::vector<DataProcessingPtr> dataProcessingPtrs;
+
+    /// list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
     std::vector<AcquisitionSettingsPtr> acquisitionSettingsPtrs;
+
+    /// a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
     Run run;
 
     MSData();
