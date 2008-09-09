@@ -593,6 +593,7 @@ void diff(const SpectrumDescription& a,
 }
 
 
+// measure maximum relative difference between elements in the vectors
 double maxdiff(const vector<double>& a, const vector<double>& b)
 {
     if (a.size() != b.size()) 
@@ -605,7 +606,9 @@ double maxdiff(const vector<double>& a, const vector<double>& b)
 
     for (; i!=a.end(); ++i, ++j)
     {
-        double current = fabs(*i - *j);
+        double denominator = min(*i, *j);
+        if (denominator == 0) denominator = 1;
+        double current = fabs(*i - *j)/denominator;
         if (max < current) max = current;
     }
 
@@ -638,10 +641,12 @@ void diff(const BinaryDataArray& a,
         double max = maxdiff(a.data, b.data);
         if (max > config.precision)
         {
-            a_b.userParams.push_back(UserParam("Binary data arrays differ (max diff = " + 
-                                     lexical_cast<string>(max) + ")"));
-            b_a.userParams.push_back(UserParam("Binary data arrays differ (max diff = " + 
-                                     lexical_cast<string>(max) + ")"));
+            a_b.userParams.push_back(UserParam("Binary data array difference",
+                                               lexical_cast<string>(max),
+                                               "xsd:float"));
+            b_a.userParams.push_back(UserParam("Binary data array difference",
+                                               lexical_cast<string>(max),
+                                               "xsd:float"));
         }
     }    
     

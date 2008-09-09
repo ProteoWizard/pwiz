@@ -10,11 +10,6 @@ bindir=$1
 datadir=$2
 outdir=$3
 
-echo bindir: $bindir
-echo datadir: $datadir
-echo outdir: $outdir
-read -p "<Enter> to continue..." dummy
-
 msconvert_exe=$bindir/msconvert
 
 if uname | grep -iq cygwin
@@ -28,6 +23,11 @@ then
     exit 1
 fi
 
+ls -l $msconvert_exe
+echo datadir: $datadir
+echo outdir: $outdir
+
+read -p "<Enter> to continue..." dummy
 mkdir -p $outdir
 log=$outdir/log
 
@@ -40,5 +40,6 @@ outdir_base=$outdir/$(basename $datadir)
 $msconvert_exe $datadir/* -o $outdir_base.default | tee -a $log
 $msconvert_exe $datadir/* -o $outdir_base.precursor --precursorRecalculation | tee -a $log
 $msconvert_exe $datadir/* -o $outdir_base.zlib --zlib | tee -a $log
-$msconvert_exe $datadir/* -o $outdir_base.mzxml --mzXML| tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.mzxml --mzXML | tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.mzxml32 --mzXML --32 | tee -a $log
 

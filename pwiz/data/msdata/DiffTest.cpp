@@ -694,15 +694,19 @@ void testBinaryDataArray()
     b = a; 
 
     DiffConfig config;
-    config.precision = 1e-10;
+    config.precision = 1e-4;
 
-    b.data[9] += 1e-12;
+    a.data[9] = 1.00001e10;
+    b.data[9] = 1.00000e10;
+
+    // we want to verify relative precision diff (1e-5),
+    // not absolute diff (1e5)
 
     Diff<BinaryDataArray> diff(a, b, config);
     if (diff && os_) *os_ << diff << endl;
     unit_assert(!diff);
 
-    b.data[9] += 1e-9;
+    b.data[9] = 1.0002e10;
 
     diff(a, b);
         
@@ -827,6 +831,8 @@ void testChromatogram()
 
 void testSpectrumList()
 {
+    if (os_) *os_ << "testSpectrumList()\n";
+
     SpectrumListSimple aSimple, bSimple;
 
     SpectrumPtr spectrum1a = SpectrumPtr(new Spectrum);
@@ -898,6 +904,8 @@ void testSpectrumList()
 
 void testChromatogramList()
 {
+    if (os_) *os_ << "testChromatogramList()\n";
+
     ChromatogramListSimple aSimple, bSimple;
 
     ChromatogramPtr chromatogram1a = ChromatogramPtr(new Chromatogram);
@@ -983,6 +991,8 @@ void testChromatogramList()
 
 void testRun()
 {
+    if (os_) *os_ << "testRun()\n";
+
     Run a, b;
    
     a.id = "goober";
@@ -1039,6 +1049,8 @@ void testRun()
 
 void testMSData()
 {
+    if (os_) *os_ << "testMSData()\n";
+
     MSData a, b;
    
     a.id = "goober";
