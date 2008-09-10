@@ -119,12 +119,11 @@ explicit install_cvgen ;
 
 actions do_cvgen
 {
-   echo calling bjam install_cvgen 
-   bjam install_cvgen
-   cvgen $(>)
+   echo calling bjam install_cvgen
+   $(>[1]:P)/cvgen $(>)
 }
 
-make cv.hpp : psi-ms.obo unit.obo : do_cvgen ;
+make cv.hpp : psi-ms.obo unit.obo : do_cvgen : <dependency>install_cvgen ;
 explicit cv.hpp ;
 
 
