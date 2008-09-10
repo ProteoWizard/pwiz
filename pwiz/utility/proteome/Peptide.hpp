@@ -125,7 +125,7 @@ class PWIZ_API_DECL ModificationList
     public:
 
     ModificationList();
-    //ModificationList(const Modification& mod);
+    ModificationList(const Modification& mod);
 
     /// returns the sum of the monoisotopic delta masses of all modifications in the list
     double monoisotopicDeltaMass() const;
