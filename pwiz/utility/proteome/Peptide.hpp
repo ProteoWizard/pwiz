@@ -102,7 +102,7 @@ class PWIZ_API_DECL Modification
     Modification& operator=(const Modification&);
     ~Modification();
 
-    /// returns true iff the mod was constructed with formulae
+    /// returns true iff the mod was constructed with formula
     bool hasFormula() const;
 
     /// returns the difference formula;
@@ -119,13 +119,13 @@ class PWIZ_API_DECL Modification
 
 
 /// represents a list of modifications on a single amino acid
-class ModificationList
+class PWIZ_API_DECL ModificationList
     : public std::vector<Modification> // TODO: make virtual wrapper
 {
     public:
 
     ModificationList();
-    ModificationList(const Modification& mod);
+    //ModificationList(const Modification& mod);
 
     /// returns the sum of the monoisotopic delta masses of all modifications in the list
     double monoisotopicDeltaMass() const;
