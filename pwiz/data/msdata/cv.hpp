@@ -32,7 +32,7 @@
 #include "utility/misc/Export.hpp"
 
 
-// [psi-ms.obo]
+// [pwiz/data/msdata/psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
@@ -47,7 +47,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: unit.obo
 //
-// [unit.obo]
+// [pwiz/data/msdata/unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -66,1098 +66,3284 @@ namespace msdata {
 enum PWIZ_API_DECL CVID
 {
     CVID_Unknown = -1,
+
+    /// Proteomics Standards Initiative Mass Spectrometry Ontology: Proteomics Standards Initiative Mass Spectrometry Ontology.
     MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Ontology = 0,
+
+    /// sample number: A reference number relevant to the sample under study.
     MS_sample_number = 1000001,
+
+    /// sample name: A reference string relevant to the sample under study.
     MS_sample_name = 1000002,
+
+    /// sample state: The chemical phase of a pure sample, or the state of a mixed sample.
     MS_sample_state = 1000003,
+
+    /// sample mass: Total mass of sample used.
     MS_sample_mass = 1000004,
+
+    /// sample volume: Total volume of solution used.
     MS_sample_volume = 1000005,
+
+    /// sample concentration: Concentration of sample in picomol/ul, femtomol/ul or attomol/ul solution used.
     MS_sample_concentration = 1000006,
+
+    /// inlet type: The nature of the sample inlet.
     MS_inlet_type = 1000007,
+
+    /// ionization type: The method by which gas phase ions are generated from the sample.
     MS_ionization_type = 1000008,
+
+    /// analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.
     MS_analyzer_type = 1000010,
+
+    /// mass resolution: The maximum m/z value at which two peaks can be resolved, according to one of the standard measures.
     MS_mass_resolution = 1000011,
+
+    /// resolution measurement method: Which of the available standard measures is used to define whether two peaks are separate.
     MS_resolution_measurement_method = 1000012,
+
+    /// resolution type: Specify the nature of resolution for the mass analyzer. Resolution is usually either constant with respect to m/z or proportional to m/z.
     MS_resolution_type = 1000013,
+
+    /// accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.
     MS_accuracy = 1000014,
+
+    /// scan rate: Rate in (m/z)/sec for scanning analyzers.
     MS_scan_rate = 1000015,
+
+    /// scan time: The time that an analyzer started a scan, relative to the start of the run.
     MS_scan_time = 1000016,
+
+    /// Scan Function: Describes the type of mass analysis being performed. Two primary modes are: typical acquisition over a range of masses (Mass Scan), and Selected Ion Detection. The primary difference is that Selected Ion Detection produces a single value for the signal at the selected mass rather than producing a mass spectrum.
     MS_Scan_Function = 1000017,
+
+    /// scan direction: Direction in terms of m/z of the scan for scanning analyzers (low to high, or high to low).
     MS_scan_direction = 1000018,
+
+    /// scan law: Describes the function in control of the m/z scan (for scanning instruments). Commonly the scan function is linear, but in principle any function can be used.
     MS_scan_law = 1000019,
+
+    /// scanning method: Describes the acquisition data type produced by a tandem mass spectrometry experiment.
     MS_scanning_method = 1000020,
+
+    /// reflectron state: Status of the reflectron, turned on or off.
     MS_reflectron_state = 1000021,
+
+    /// TOF Total Path Length: The length of the field free drift space in a time of flight mass spectrometer.
     MS_TOF_Total_Path_Length = 1000022,
+
+    /// isolation width: The total width (i.e. not half for plus-or-minus) of the gate applied around a selected precursor ion.
     MS_isolation_width = 1000023,
+
+    /// final MS exponent: Final MS level achieved when performing PFF with the ion trap (e.g. MS E10).
     MS_final_MS_exponent = 1000024,
+
+    /// magnetic field strength: A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.
     MS_magnetic_field_strength = 1000025,
+
+    /// magnetic field strength: A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.
     MS_B = MS_magnetic_field_strength,
+
+    /// detector type: Type of detector used in the mass spectrometer.
     MS_detector_type = 1000026,
+
+    /// detector acquisition mode: Method by which detector signal is acquired by the data system.
     MS_detector_acquisition_mode = 1000027,
+
+    /// detector resolution: The resolving power of the detector to detect the smallest difference between two ions so that the valley between them is a specified fraction of the peak height.
     MS_detector_resolution = 1000028,
+
+    /// sampling frequency: The rate of signal sampling (measurement) with respect to time.
     MS_sampling_frequency = 1000029,
+
+    /// instrument model: Instrument model name not including the vendor's name.
     MS_instrument_model = 1000031,
+
+    /// customization: Free text description of a single customization made to the instrument; for several modifications, use several entries.
     MS_customization = 1000032,
+
+    /// deisotoping: The removal of isotope peaks to represent the fragment ion as one data point and is commonly done to reduce complexity. It is done in conjunction with the charge state deconvolution.
     MS_deisotoping = 1000033,
+
+    /// charge deconvolution: The determination of the mass of an ion based on the mass spectral peaks that represent multiple-charge ions.
     MS_charge_deconvolution = 1000034,
+
+    /// peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data.
     MS_peak_picking = 1000035,
+
+    /// polarity: Terms to describe the polarity setting of the instrument.
     MS_polarity = 1000037,
+
+    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_m_z = 1000040,
+
+    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_mass_to_charge_ratio = MS_m_z,
+
+    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_Th = MS_m_z,
+
+    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_thomson = MS_m_z,
+
+    /// charge state: The charge state of the ion, single or multiple and positive or negatively charged.
     MS_charge_state = 1000041,
+
+    /// intensity: Intensity of ions as measured by the height or area of a peak in a mass spectrum.
     MS_intensity = 1000042,
+
+    /// intensity unit: Intensity units are commonly arbitrary. Detected in counts per second (cps) when using counting detectors, but measured in volts when using analog detectors.
     MS_intensity_unit = 1000043,
+
+    /// dissociation method: Fragmentation method used for dissociation or fragmentation.
     MS_dissociation_method = 1000044,
+
+    /// collision energy: Energy for an ion experiencing collision with a stationary gas particle resulting in dissociation of the ion.
     MS_collision_energy = 1000045,
+
+    /// emulsion: State if the sample is in emulsion form.
     MS_emulsion = 1000047,
+
+    /// gas: State if the sample is in gaseous form.
     MS_gas = 1000048,
+
+    /// liquid: State if the sample is in liquid form.
     MS_liquid = 1000049,
+
+    /// solid: State if the sample is in solid form.
     MS_solid = 1000050,
+
+    /// solution: State if the sample is in solution form.
     MS_solution = 1000051,
+
+    /// suspension: State if the sample is in suspension form.
     MS_suspension = 1000052,
+
+    /// sample batch: Sample batch lot identifier.
     MS_sample_batch = 1000053,
+
+    /// chromatography: Chromatographic conditions used to obtain the sample.
     MS_chromatography = 1000054,
+
+    /// continuous flow fast atom bombardment: Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.
     MS_continuous_flow_fast_atom_bombardment = 1000055,
+
+    /// continuous flow fast atom bombardment: Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.
     MS_CF_FAB = MS_continuous_flow_fast_atom_bombardment,
+
+    /// direct inlet: The sample is directly inserted into the ion source, usually on the end of a heatable probe.
     MS_direct_inlet = 1000056,
+
+    /// electrospray inlet: Inlet used for introducing the liquid sample into an electrospray ionization source.
     MS_electrospray_inlet = 1000057,
+
+    /// flow injection analysis: Sample is directly injected or infused into the ionization source.
     MS_flow_injection_analysis = 1000058,
+
+    /// inductively coupled plasma: A gas discharge ion source in which the energy to the plasma is supplied by electromagnetic induction.
     MS_inductively_coupled_plasma = 1000059,
+
+    /// infusion: The continuous flow of solution of a sample into the ionization source.
     MS_infusion = 1000060,
+
+    /// jet separator: A device that separates carrier gas from gaseous analyte molecules on the basis of diffusivity.
     MS_jet_separator = 1000061,
+
+    /// membrane separator: A device to separate carrier molecules from analyte molecules on the basis of ease of diffusion across a semipermeable membrane.
     MS_membrane_separator = 1000062,
+
+    /// moving belt: Continuous moving surface in the form of a belt which passes through an ionsource carrying analyte molecules.
     MS_moving_belt = 1000063,
+
+    /// moving wire: Continuous moving surface in the form of a wire which passes through an ionsource carrying analyte molecules.
     MS_moving_wire = 1000064,
+
+    /// open split: A division of flowing stream of liquid into two streams.
     MS_open_split = 1000065,
+
+    /// particle beam: Method for generating ions from a solution of an analyte.
     MS_particle_beam = 1000066,
+
+    /// reservoir: A sample inlet method involving a reservoir.
     MS_reservoir = 1000067,
+
+    /// septum: A disc composed of a flexible material that seals the entrance to the reservoir. Can also be enterance to the vaccum chamber.
     MS_septum = 1000068,
+
+    /// thermospray inlet: A method for generating gas phase ions from a solution of an analyte by rapid heating of the sample.
     MS_thermospray_inlet = 1000069,
+
+    /// atmospheric pressure chemical ionization: Chemical ionization that takes place at atmospheric pressure as opposed to the reduced pressure is normally used for chemical ionization.
     MS_atmospheric_pressure_chemical_ionization = 1000070,
+
+    /// atmospheric pressure chemical ionization: Chemical ionization that takes place at atmospheric pressure as opposed to the reduced pressure is normally used for chemical ionization.
     MS_APCI = MS_atmospheric_pressure_chemical_ionization,
+
+    /// chemical ionization: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.
     MS_chemical_ionization = 1000071,
+
+    /// chemical ionization: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.
     MS_CI = MS_chemical_ionization,
+
+    /// electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.
     MS_electrospray_ionization = 1000073,
+
+    /// electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.
     MS_ESI = MS_electrospray_ionization,
+
+    /// fast atom bombardment ionization: The ionization of any species by the interaction of a focused beam of neutral atoms having a translational energy of several thousand eV with a sample that is typically dissolved in a solvent matrix. See also secondary ionization.
     MS_fast_atom_bombardment_ionization = 1000074,
+
+    /// fast atom bombardment ionization: The ionization of any species by the interaction of a focused beam of neutral atoms having a translational energy of several thousand eV with a sample that is typically dissolved in a solvent matrix. See also secondary ionization.
     MS_FAB = MS_fast_atom_bombardment_ionization,
+
+    /// matrix-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_matrix_assisted_laser_desorption_ionization = 1000075,
+
+    /// matrix-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_MALDI = MS_matrix_assisted_laser_desorption_ionization,
+
+    /// axial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the axis of the analyzer.
     MS_axial_ejection_linear_ion_trap = 1000078,
+
+    /// fourier transform ion cyclotron resonance mass spectrometer: A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
     MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer = 1000079,
+
+    /// fourier transform ion cyclotron resonance mass spectrometer: A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
     MS_FT_ICR = MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer,
+
+    /// magnetic sector: A device that produces a magnetic field perpendicular to a charged particle beam that deflects the beam to an extent that is proportional to the particle momentum per unit charge. For a monoenergetic beam, the deflection is proportional to m/z.
     MS_magnetic_sector = 1000080,
+
+    /// quadrupole: A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis.
     MS_quadrupole = 1000081,
+
+    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_quadrupole_ion_trap = 1000082,
+
+    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_Paul_Ion_trap = MS_quadrupole_ion_trap,
+
+    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_QIT = MS_quadrupole_ion_trap,
+
+    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_Quistor = MS_quadrupole_ion_trap,
+
+    /// radial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the radius of the analyzer.
     MS_radial_ejection_linear_ion_trap = 1000083,
+
+    /// time-of-flight: Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
     MS_time_of_flight = 1000084,
+
+    /// time-of-flight: Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
     MS_TOF = MS_time_of_flight,
+
+    /// baseline: An attribute of resolution when recording the detector response in absence of the analyte.
     MS_baseline = 1000085,
+
+    /// full width at half-maximum: A measure of resolution represented as width of the peak at half peak height.
     MS_full_width_at_half_maximum = 1000086,
+
+    /// full width at half-maximum: A measure of resolution represented as width of the peak at half peak height.
     MS_FWHM = MS_full_width_at_half_maximum,
+
+    /// ten percent valley: An attribute of resolution when the ratio between adjacent signals is 10% of the signal height.
     MS_ten_percent_valley = 1000087,
+
+    /// constant: When resolution is constant with respect to m/z.
     MS_constant = 1000088,
+
+    /// proportional: When resolution is proportional with respect to m/z.
     MS_proportional = 1000089,
+
+    /// mass scan: A variation of instrument where a selected mass is scanned.
     MS_mass_scan = 1000090,
+
+    /// selected ion detection: Please see Single Ion Monitoring.
     MS_selected_ion_detection = 1000091,
+
+    /// decreasing m/z scan: High to low direction in terms of m/z of the scan for scanning analyzers.
     MS_decreasing_m_z_scan = 1000092,
+
+    /// increasing m/z scan: Low to high direction in terms of m/z of the scan for scanning analyzers.
     MS_increasing_m_z_scan = 1000093,
+
+    /// exponential: The mass scan is done in exponential mode.
     MS_exponential = 1000094,
+
+    /// linear: The mass scan is done in linear mode.
     MS_linear = 1000095,
+
+    /// quadratic: The mass scan is done in quadratic mode.
     MS_quadratic = 1000096,
+
+    /// constant neutral mass loss: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
     MS_constant_neutral_mass_loss = 1000097,
+
+    /// multiple ion monitoring: Data acquired when monitoring the ion current of a few specific m/z values. Remap to MS:1000205 -Selected Ion Monitoring.
     MS_multiple_ion_monitoring = 1000098,
+
+    /// precursor ion scan: The specific scan function or process that will record a precursor ion spectrum.
     MS_precursor_ion_scan = 1000100,
+
+    /// product ion scan: The specific scan function or process that records product ion spectrum.
     MS_product_ion_scan = 1000101,
+
+    /// reflectron off: Reflectron is off.
     MS_reflectron_off = 1000105,
+
+    /// reflectron on: Reflectron is on.
     MS_reflectron_on = 1000106,
+
+    /// channeltron: A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse.
     MS_channeltron = 1000107,
+
+    /// channeltron: A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse.
     MS_Channeltron_Detector = MS_channeltron,
+
+    /// conversion dynode electron multiplier: A surface that is held at high potential so that ions striking the surface produce electrons that are subsequently detected.
     MS_conversion_dynode_electron_multiplier = 1000108,
+
+    /// conversion dynode photomultiplier: A detector in which ions strike a conversion dynode to produce electrons that in turn generate photons through a phosphorescent screen that are detected by a photomultiplier.
     MS_conversion_dynode_photomultiplier = 1000109,
+
+    /// daly detector: Detector consisting of a conversion dynode, scintillator and photomultiplier. The metal knob at high potential emits secondary electrons when ions impinge on the surface. The secondary electrons are accelerated onto the scintillator that produces light that is then detected by the photomultiplier detector.
     MS_daly_detector = 1000110,
+
+    /// daly detector: Detector consisting of a conversion dynode, scintillator and photomultiplier. The metal knob at high potential emits secondary electrons when ions impinge on the surface. The secondary electrons are accelerated onto the scintillator that produces light that is then detected by the photomultiplier detector.
     MS_Daly = MS_daly_detector,
+
+    /// electron multiplier tube: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons.
     MS_electron_multiplier_tube = 1000111,
+
+    /// electron multiplier tube: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons.
     MS_EMT = MS_electron_multiplier_tube,
+
+    /// faraday cup: A conducting cup or chamber that intercepts a charged particle beam and is electrically connected to a current measuring device.
     MS_faraday_cup = 1000112,
+
+    /// focal plane array: An array of detectors for spatially disperse ion beams in which all ions simultaneously impinge on the detector plane.
     MS_focal_plane_array = 1000113,
+
+    /// microchannel plate detector: A thin plate that contains a closely spaced array of channels that each act as a continuous dynode particle multiplier. A charged particle, fast neutral particle, or photon striking the plate causes a cascade of secondary electrons that ultimately exits the opposite side of the plate.
     MS_microchannel_plate_detector = 1000114,
+
+    /// microchannel plate detector: A thin plate that contains a closely spaced array of channels that each act as a continuous dynode particle multiplier. A charged particle, fast neutral particle, or photon striking the plate causes a cascade of secondary electrons that ultimately exits the opposite side of the plate.
     MS_multichannel_plate = MS_microchannel_plate_detector,
+
+    /// multi-collector: A detector system commonly used in inductively coupled plasma mass spectrometers.
     MS_multi_collector = 1000115,
+
+    /// photomultiplier: A detector for conversion of the ion/electron signal into photon(s) which are then amplified and detected.
     MS_photomultiplier = 1000116,
+
+    /// photomultiplier: A detector for conversion of the ion/electron signal into photon(s) which are then amplified and detected.
     MS_PMT = MS_photomultiplier,
+
+    /// analog-digital converter: Analog-to-digital converter (abbreviated ADC, A/D or A to D) is an electronic integrated circuit (i/c) that converts continuous signals to discrete digital numbers.
     MS_analog_digital_converter = 1000117,
+
+    /// analog-digital converter: Analog-to-digital converter (abbreviated ADC, A/D or A to D) is an electronic integrated circuit (i/c) that converts continuous signals to discrete digital numbers.
     MS_ADC = MS_analog_digital_converter,
+
+    /// pulse counting: Definition to do.
     MS_pulse_counting = 1000118,
+
+    /// time-digital converter: A device for converting a signal of sporadic pluses into a digital representation of their time indices.
     MS_time_digital_converter = 1000119,
+
+    /// time-digital converter: A device for converting a signal of sporadic pluses into a digital representation of their time indices.
     MS_TDC = MS_time_digital_converter,
+
+    /// transient recorder: A detector acquisition mode used for detecting transient signals.
     MS_transient_recorder = 1000120,
+
+    /// AB SCIEX instrument model: The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\"
     MS_AB_SCIEX_instrument_model = 1000121,
+
+    /// Bruker Daltonics instrument model: Bruker Daltonics instrument model.
     MS_Bruker_Daltonics_instrument_model = 1000122,
+
+    /// IonSpec instrument model: IonSpec corporation instrument model.
     MS_IonSpec_instrument_model = 1000123,
+
+    /// Shimadzu instrument model: Shimadzu corporation instrument model.
     MS_Shimadzu_instrument_model = 1000124,
+
+    /// Thermo Finnigan instrument model: ThermoFinnigan from Thermo Electron Corporation instrument model.
     MS_Thermo_Finnigan_instrument_model = 1000125,
+
+    /// Waters instrument model: Waters Corporation instrument model.
     MS_Waters_instrument_model = 1000126,
+
+    /// centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
     MS_centroid_mass_spectrum = 1000127,
+
+    /// centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
     MS_Discrete_Mass_Spectrum = MS_centroid_mass_spectrum,
+
+    /// profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_profile_mass_spectrum = 1000128,
+
+    /// profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_continuous_mass_spectrum = MS_profile_mass_spectrum,
+
+    /// profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_Continuum_Mass_Spectrum = MS_profile_mass_spectrum,
+
+    /// negative scan: Polarity of the scan is negative.
     MS_negative_scan = 1000129,
+
+    /// positive scan: Polarity of the scan is positive.
     MS_positive_scan = 1000130,
+
+    /// number of counts: The number of counted events observed in one or a group of elements of a detector.
     MS_number_of_counts = 1000131,
+
+    /// percent of base peak: The magnitude of a peak or measurement element expressed in terms of the percentage of the magnitude of the base peak intensity.
     MS_percent_of_base_peak = 1000132,
+
+    /// collision-induced dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
     MS_collision_induced_dissociation = 1000133,
+
+    /// collision-induced dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
     MS_CID = MS_collision_induced_dissociation,
+
+    /// plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_plasma_desorption = 1000134,
+
+    /// plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_PD = MS_plasma_desorption,
+
+    /// post-source decay: A technique specific to reflectron time-of-flight mass spectrometers where product ions of metastable transitions or collision-induced dissociations generated in the drift tube prior to entering the reflectron are m/z separated to yield product ion spectra.
     MS_post_source_decay = 1000135,
+
+    /// post-source decay: A technique specific to reflectron time-of-flight mass spectrometers where product ions of metastable transitions or collision-induced dissociations generated in the drift tube prior to entering the reflectron are m/z separated to yield product ion spectra.
     MS_PSD = MS_post_source_decay,
+
+    /// surface-induced dissociation: Fragmentation that results from the collision of an ion with a surface.
     MS_surface_induced_dissociation = 1000136,
+
+    /// surface-induced dissociation: Fragmentation that results from the collision of an ion with a surface.
     MS_SID = MS_surface_induced_dissociation,
+
+    /// percent collision energy: Collision energy required to fragment an ion represented as a percent value.
     MS_percent_collision_energy = 1000138,
+
+    /// 4000 Q TRAP: Applied Biosystems/MDS SCIEX Q 4000 TRAP MS.
     MS_4000_Q_TRAP = 1000139,
+
+    /// 4700 Proteomics Analyzer: Applied Biosystems/MDS SCIEX 4700 Proteomics Analyzer MS.
     MS_4700_Proteomics_Analyzer = 1000140,
+
+    /// APEX IV: Bruker Daltonics APEX IV MS.
     MS_APEX_IV = 1000141,
+
+    /// APEX-Q: Bruker Daltonics APEX-Q MS.
     MS_APEX_Q = 1000142,
+
+    /// API 150EX: Applied Biosystems/MDS SCIEX API 150EX MS.
     MS_API_150EX = 1000143,
+
+    /// API 150EX Prep: Applied Biosystems/MDS SCIEX API 150EX Prep MS.
     MS_API_150EX_Prep = 1000144,
+
+    /// API 2000: Applied Biosystems/MDS SCIEX API 2000 MS.
     MS_API_2000 = 1000145,
+
+    /// API 3000: Applied Biosystems/MDS SCIEX API 3000 MS.
     MS_API_3000 = 1000146,
+
+    /// API 4000: Applied Biosystems/MDS SCIEX API 4000 MS.
     MS_API_4000 = 1000147,
+
+    /// autoFlex II: Bruker Daltonics autoFlex II MS.
     MS_autoFlex_II = 1000148,
+
+    /// autoFlex TOF/TOF: Bruker Daltonics autoFlex TOF/TOF MS.
     MS_autoFlex_TOF_TOF = 1000149,
+
+    /// Auto Spec Ultima NT: Waters AutoSpec Ultima NT MS.
     MS_Auto_Spec_Ultima_NT = 1000150,
+
+    /// Bio TOF II: Bruker Daltonics BioTOF II MS.
     MS_Bio_TOF_II = 1000151,
+
+    /// Bio TOF Q: Bruker Daltonics BioTOF Q MS.
     MS_Bio_TOF_Q = 1000152,
+
+    /// DELTA plusAdvantage: ThermoFinnigan DELTA plusAdvantage MS.
     MS_DELTA_plusAdvantage = 1000153,
+
+    /// DELTAplusXP: ThermoFinnigan DELTAplusXP MS.
     MS_DELTAplusXP = 1000154,
+
+    /// ELEMENT2: ThermoFinnigan ELEMENT2 MS.
     MS_ELEMENT2 = 1000155,
+
+    /// esquire4000: Bruker Daltonics esquire4000 MS.
     MS_esquire4000 = 1000156,
+
+    /// esquire6000: Bruker Daltonics esquire6000 MS.
     MS_esquire6000 = 1000157,
+
+    /// explorer: IonSpec Explorer MS.
     MS_explorer = 1000158,
+
+    /// GCT: Waters GCT MS.
     MS_GCT = 1000159,
+
+    /// HCT: Bruker Daltonics HCT MS.
     MS_HCT = 1000160,
+
+    /// HCT Plus: Bruker Daltonics HCTPlus MS.
     MS_HCT_Plus = 1000161,
+
+    /// HiRes ESI: IonSpec HiResESI MS.
     MS_HiRes_ESI = 1000162,
+
+    /// HiRes MALDI: IonSpec HiResMALDI MS.
     MS_HiRes_MALDI = 1000163,
+
+    /// IsoPrime: Waters IsoPrime MS.
     MS_IsoPrime = 1000164,
+
+    /// IsoProbe: Waters IsoProbe MS.
     MS_IsoProbe = 1000165,
+
+    /// IsoProbe T: Waters IsoProbe T MS.
     MS_IsoProbe_T = 1000166,
+
+    /// LCQ Advantage: ThermoFinnigan LCQ Advantage MS.
     MS_LCQ_Advantage = 1000167,
+
+    /// LCQ Classic: ThermoFinnigan LCQ Classic MS.
     MS_LCQ_Classic = 1000168,
+
+    /// LCQ Deca XP Plus: ThermoFinnigan LCQ Deca XP Plus MS.
     MS_LCQ_Deca_XP_Plus = 1000169,
+
+    /// M@LDI L: Waters MALDI L MS.
     MS_M_LDI_L = 1000170,
+
+    /// M@LDI LR: Waters MALDI LR MS.
     MS_M_LDI_LR = 1000171,
+
+    /// MAT253: ThermoFinnigan MAT253 MS.
     MS_MAT253 = 1000172,
+
+    /// MAT900XP: ThermoFinnigan MAT900XP MS.
     MS_MAT900XP = 1000173,
+
+    /// MAT900XP Trap: ThermoFinnigan MAT900XP Trap MS.
     MS_MAT900XP_Trap = 1000174,
+
+    /// MAT95XP: ThermoFinnigan MAT95XP MS.
     MS_MAT95XP = 1000175,
+
+    /// MAT95XP Trap: ThermoFinnigan MAT95XP Trap MS.
     MS_MAT95XP_Trap = 1000176,
+
+    /// microFlex: Bruker Daltonics microFlex MS.
     MS_microFlex = 1000177,
+
+    /// microTOFLC: Bruker Daltonics microTOFLC MS.
     MS_microTOFLC = 1000178,
+
+    /// neptune: ThermoFinnigan NEPTUNE MS.
     MS_neptune = 1000179,
+
+    /// NG-5400: Waters NG-5400 MS.
     MS_NG_5400 = 1000180,
+
+    /// OMEGA: IonSpec OMEGA MS.
     MS_OMEGA = 1000181,
+
+    /// OMEGA-2001: IonSpec OMEGA-2001 MS.
     MS_OMEGA_2001 = 1000182,
+
+    /// OmniFlex: Bruker Daltonics OminFlex MS.
     MS_OmniFlex = 1000183,
+
+    /// Platform ICP: Waters Platform ICP MS.
     MS_Platform_ICP = 1000184,
+
+    /// PolarisQ: ThermoFinnigan PolarisQ MS.
     MS_PolarisQ = 1000185,
+
+    /// proteomics solution 1: Applied Biosystems/MDS SCIEX Proteomics Solution 1 MS.
     MS_proteomics_solution_1 = 1000186,
+
+    /// Q TRAP: Applied Biosystems/MDS SCIEX Q TRAP MS.
     MS_Q_TRAP = 1000187,
+
+    /// Q-Tof micro: Waters Q-Tof micro MS.
     MS_Q_Tof_micro = 1000188,
+
+    /// Q-Tof ultima: Waters Q-Tof Ultima MS.
     MS_Q_Tof_ultima = 1000189,
+
+    /// QSTAR: Applied Biosystems/MDS SCIEX QSTAR MS.
     MS_QSTAR = 1000190,
+
+    /// quattro micro: Waters Quattro micro MS.
     MS_quattro_micro = 1000191,
+
+    /// Quattro UItima: Waters Quattro Uitima MS.
     MS_Quattro_UItima = 1000192,
+
+    /// Surveyor MSQ: ThermoFinnigan Surveyor MSQ MS.
     MS_Surveyor_MSQ = 1000193,
+
+    /// SymBiot I: Applied Biosystems/MDS SCIEX SymBiot I MS.
     MS_SymBiot_I = 1000194,
+
+    /// SymBiot XVI: Applied Biosystems/MDS SCIEX SymBiot XVI MS.
     MS_SymBiot_XVI = 1000195,
+
+    /// TEMPUS TOF: ThermoFinnigan TEMPUS TOF MS.
     MS_TEMPUS_TOF = 1000196,
+
+    /// TRACE DSQ: ThermoFinnigan TRACE DSQ MS.
     MS_TRACE_DSQ = 1000197,
+
+    /// TRITON: ThermoFinnigan TRITON MS.
     MS_TRITON = 1000198,
+
+    /// TSQ Quantum: ThermoFinnigan TSQ Quantum MS.
     MS_TSQ_Quantum = 1000199,
+
+    /// ultima: IonSpec Ultima MS.
     MS_ultima = 1000200,
+
+    /// ultraFlex: Bruker Daltonics ultraFlex MS.
     MS_ultraFlex = 1000201,
+
+    /// ultraFlex TOF/TOF: Bruker Daltonics ultraFlex TOF/TOF MS.
     MS_ultraFlex_TOF_TOF = 1000202,
+
+    /// Voyager-DE PRO: Applied Biosystems/MDS SCIEX Voyager-DE PRO MS.
     MS_Voyager_DE_PRO = 1000203,
+
+    /// Voyager-DE STR: Applied Biosystems/MDS SCIEX Voyager-DE STR MS.
     MS_Voyager_DE_STR = 1000204,
+
+    /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_selected_ion_monitoring = 1000205,
+
+    /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_Multiple_Ion_Monitoring = MS_selected_ion_monitoring,
+
+    /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_SIM = MS_selected_ion_monitoring,
+
+    /// selected reaction monitoring: Data acquired from specific product ions corresponding to m/z selected precursor ions recorded via multiple stages of mass spectrometry. Selected reaction monitoring can be performed in time or in space.
     MS_selected_reaction_monitoring = 1000206,
+
+    /// selected reaction monitoring: Data acquired from specific product ions corresponding to m/z selected precursor ions recorded via multiple stages of mass spectrometry. Selected reaction monitoring can be performed in time or in space.
     MS_SRM = MS_selected_reaction_monitoring,
+
+    /// accurate mass: An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition.
     MS_accurate_mass = 1000207,
+
+    /// average mass: The mass of an ion or molecule calculated using the average mass of each element weighted for its natural isotopic abundance.
     MS_average_mass = 1000208,
+
+    /// appearance energy: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.
     MS_appearance_energy = 1000209,
+
+    /// appearance energy: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.
     MS_AE = MS_appearance_energy,
+
+    /// base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
     MS_base_peak = 1000210,
+
+    /// base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
     MS_BP = MS_base_peak,
+
+    /// charge number: The total charge on an ion divided by the electron charge e.
     MS_charge_number = 1000211,
+
+    /// charge number: The total charge on an ion divided by the electron charge e.
     MS_z = MS_charge_number,
+
+    /// electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.
     MS_electron_affinity = 1000213,
+
+    /// electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.
     MS_EA = MS_electron_affinity,
+
+    /// electron energy obsolete: The potential difference through which electrons are accelerated before they are used to bring about electron ionization.
     MS_electron_energy_obsolete = 1000214,
+
+    /// exact mass: The calculated mass of an ion or molecule containing a single isotope of each atom.
     MS_exact_mass = 1000215,
+
+    /// field-free region: A section of a mass spectrometer in which there are no electric or magnetic fields.
     MS_field_free_region = 1000216,
+
+    /// field-free region: A section of a mass spectrometer in which there are no electric or magnetic fields.
     MS_FFR = MS_field_free_region,
+
+    /// ionization cross section: A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule.
     MS_ionization_cross_section = 1000217,
+
+    /// ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
     MS_ionization_energy = 1000219,
+
+    /// ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
     MS_IE = MS_ionization_energy,
+
+    /// isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.
     MS_isotope_dilution_mass_spectrometry = 1000220,
+
+    /// isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.
     MS_IDMS = MS_isotope_dilution_mass_spectrometry,
+
+    /// magnetic deflection: The deflection of charged particles in a magnetic field due to a force equal to qv B where q is the particle charge, v its velocity and B the magnetic field. Magnetic deflection of an ion beam is used for m/z separation in a magnetic sector mass spectrometer.
     MS_magnetic_deflection = 1000221,
+
+    /// mass defect: The difference between the monoisotipic and nominal mass of a molecule or atom.
     MS_mass_defect = 1000222,
+
+    /// mass number: The sum of the protons and neutrons in an atom, molecule or ion.
     MS_mass_number = 1000223,
+
+    /// molecular mass: The mass of one mole of a molecular substance (6.022 1415(10) x 10^23 molecules).
     MS_molecular_mass = 1000224,
+
+    /// monoisotopic mass: The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element.
     MS_monoisotopic_mass = 1000225,
+
+    /// molecular beam mass spectrometry: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.
     MS_molecular_beam_mass_spectrometry = 1000226,
+
+    /// molecular beam mass spectrometry: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.
     MS_MBMS = MS_molecular_beam_mass_spectrometry,
+
+    /// multiphoton ionization: Photoionization of an atom or molecule in which in two or more photons are absorbed.
     MS_multiphoton_ionization = 1000227,
+
+    /// multiphoton ionization: Photoionization of an atom or molecule in which in two or more photons are absorbed.
     MS_MPI = MS_multiphoton_ionization,
+
+    /// nitrogen rule: An organic molecule containing the elements C, H, O, S, P, or halogen has an odd nominal mass if it contains an odd number of nitrogen atoms.
     MS_nitrogen_rule = 1000228,
+
+    /// nominal mass: The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element rounded to the nearest integer value.
     MS_nominal_mass = 1000229,
+
+    /// odd-electron rule: Odd-electron ions may dissociate to form either odd or even-electron ions, whereas even-electron ions generally form even-electron fragment ions.
     MS_odd_electron_rule = 1000230,
+
+    /// peak: A localized region of relatively large ion signal in a mass spectrum. Although peaks are often associated with particular ions, the terms peak and ion should not be used interchangeably.
     MS_peak = 1000231,
+
+    /// proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
     MS_proton_affinity = 1000233,
+
+    /// proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
     MS_PA = MS_proton_affinity,
+
+    /// mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.
     MS_mass_resolving_power = 1000234,
+
+    /// total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
     MS_total_ion_current_chromatogram = 1000235,
+
+    /// total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
     MS_TIC_chromatogram = MS_total_ion_current_chromatogram,
+
+    /// transmission: The ratio of the number of ions leaving a region of a mass spectrometer to the number entering that region.
     MS_transmission = 1000236,
+
+    /// accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.
     MS_accelerator_mass_spectrometry = 1000238,
+
+    /// accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.
     MS_AMS = MS_accelerator_mass_spectrometry,
+
+    /// atmospheric pressure matrix-assisted laser desorption ionization: Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.
     MS_atmospheric_pressure_matrix_assisted_laser_desorption_ionization = 1000239,
+
+    /// atmospheric pressure matrix-assisted laser desorption ionization: Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.
     MS_AP_MALDI = MS_atmospheric_pressure_matrix_assisted_laser_desorption_ionization,
+
+    /// atmospheric pressure ionization: Any ionization process in which ions are formed in the gas phase at atmospheric pressure.
     MS_atmospheric_pressure_ionization = 1000240,
+
+    /// atmospheric pressure ionization: Any ionization process in which ions are formed in the gas phase at atmospheric pressure.
     MS_API = MS_atmospheric_pressure_ionization,
+
+    /// blackbody infrared radiative dissociation: A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.
     MS_blackbody_infrared_radiative_dissociation = 1000242,
+
+    /// blackbody infrared radiative dissociation: A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.
     MS_BIRD = MS_blackbody_infrared_radiative_dissociation,
+
+    /// charge-remote fragmentation: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.
     MS_charge_remote_fragmentation = 1000243,
+
+    /// charge-remote fragmentation: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.
     MS_CRF = MS_charge_remote_fragmentation,
+
+    /// consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_consecutive_reaction_monitoring = 1000244,
+
+    /// consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_CRM = MS_consecutive_reaction_monitoring,
+
+    /// charge stripping: The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.
     MS_charge_stripping = 1000245,
+
+    /// charge stripping: The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.
     MS_CS = MS_charge_stripping,
+
+    /// delayed extraction: The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer.
     MS_delayed_extraction = 1000246,
+
+    /// delayed extraction: The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer.
     MS_DE = MS_delayed_extraction,
+
+    /// desorption ionization: The formation of ions from a solid or liquid material after the rapid vaporization of that sample.
     MS_desorption_ionization = 1000247,
+
+    /// desorption ionization: The formation of ions from a solid or liquid material after the rapid vaporization of that sample.
     MS_DI = MS_desorption_ionization,
+
+    /// direct insertion probe: A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
     MS_direct_insertion_probe = 1000248,
+
+    /// direct insertion probe: A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
     MS_DIP = MS_direct_insertion_probe,
+
+    /// direct liquid introduction: The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
     MS_direct_liquid_introduction = 1000249,
+
+    /// direct liquid introduction: The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
     MS_DLI = MS_direct_liquid_introduction,
+
+    /// electron capture dissociation: A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
     MS_electron_capture_dissociation = 1000250,
+
+    /// electron capture dissociation: A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
     MS_ECD = MS_electron_capture_dissociation,
+
+    /// even-electron ion: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.
     MS_even_electron_ion = 1000251,
+
+    /// even-electron ion: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.
     MS_EE = MS_even_electron_ion,
+
+    /// electron-induced excitation in organics: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.
     MS_electron_induced_excitation_in_organics = 1000252,
+
+    /// electron-induced excitation in organics: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.
     MS_EIEIO = MS_electron_induced_excitation_in_organics,
+
+    /// electron multiplier: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.
     MS_electron_multiplier = 1000253,
+
+    /// electron multiplier: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.
     MS_EM = MS_electron_multiplier,
+
+    /// electrostatic energy analyzer: A device consisting of conducting parallel plates, concentric cylinders or concentric spheres that separates charged particles according to their kinetic energy by means of an electric field that is constant in time.
     MS_electrostatic_energy_analyzer = 1000254,
+
+    /// electrostatic energy analyzer: A device consisting of conducting parallel plates, concentric cylinders or concentric spheres that separates charged particles according to their kinetic energy by means of an electric field that is constant in time.
     MS_ESA = MS_electrostatic_energy_analyzer,
+
+    /// flowing afterglow: An ion source immersed in a flow of helium or other inert buffer gas that carries the ions through a meter-long reactor at pressures around 100 Pa.
     MS_flowing_afterglow = 1000255,
+
+    /// flowing afterglow: An ion source immersed in a flow of helium or other inert buffer gas that carries the ions through a meter-long reactor at pressures around 100 Pa.
     MS_FA = MS_flowing_afterglow,
+
+    /// high-field asymmetric waveform ion mobility spectrometry: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.
     MS_high_field_asymmetric_waveform_ion_mobility_spectrometry = 1000256,
+
+    /// high-field asymmetric waveform ion mobility spectrometry: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.
     MS_FAIMS = MS_high_field_asymmetric_waveform_ion_mobility_spectrometry,
+
+    /// field desorption: The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.
     MS_field_desorption = 1000257,
+
+    /// field desorption: The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.
     MS_FD = MS_field_desorption,
+
+    /// field ionization: The removal of electrons from any species by interaction with a high electric field.
     MS_field_ionization = 1000258,
+
+    /// field ionization: The removal of electrons from any species by interaction with a high electric field.
     MS_FI = MS_field_ionization,
+
+    /// glow discharge ionization: The formation of ions in the gas phase and from solid samples at the cathode by application of a voltage to a low pressure gas.
     MS_glow_discharge_ionization = 1000259,
+
+    /// glow discharge ionization: The formation of ions in the gas phase and from solid samples at the cathode by application of a voltage to a low pressure gas.
     MS_GD_MS = MS_glow_discharge_ionization,
+
+    /// ion kinetic energy spectrometry: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.
     MS_ion_kinetic_energy_spectrometry = 1000260,
+
+    /// ion kinetic energy spectrometry: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.
     MS_IKES = MS_ion_kinetic_energy_spectrometry,
+
+    /// ion mobility spectrometry: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.
     MS_ion_mobility_spectrometry = 1000261,
+
+    /// ion mobility spectrometry: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.
     MS_IMS = MS_ion_mobility_spectrometry,
+
+    /// infrared multiphoton dissociation: Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.
     MS_infrared_multiphoton_dissociation = 1000262,
+
+    /// infrared multiphoton dissociation: Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.
     MS_IRMPD = MS_infrared_multiphoton_dissociation,
+
+    /// isotope ratio mass spectrometry: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.
     MS_isotope_ratio_mass_spectrometry = 1000263,
+
+    /// isotope ratio mass spectrometry: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.
     MS_IRMS = MS_isotope_ratio_mass_spectrometry,
+
+    /// ion trap: A device for spatially confining ions using electric and magnetic fields alone or in combination.
     MS_ion_trap = 1000264,
+
+    /// ion trap: A device for spatially confining ions using electric and magnetic fields alone or in combination.
     MS_IT = MS_ion_trap,
+
+    /// kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.
     MS_kinetic_energy_release_distribution = 1000265,
+
+    /// kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.
     MS_KERD = MS_kinetic_energy_release_distribution,
+
+    /// mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.
     MS_mass_analyzed_ion_kinetic_energy_spectrometry = 1000267,
+
+    /// mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.
     MS_MIKES = MS_mass_analyzed_ion_kinetic_energy_spectrometry,
+
+    /// mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.
     MS_mass_spectrometry = 1000268,
+
+    /// mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.
     MS_MS = MS_mass_spectrometry,
+
+    /// mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.
     MS_mass_spectrometry_mass_spectrometry = 1000269,
+
+    /// mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.
     MS_MS_MS = MS_mass_spectrometry_mass_spectrometry,
+
+    /// multiple stage mass spectrometry: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.
     MS_multiple_stage_mass_spectrometry = 1000270,
+
+    /// multiple stage mass spectrometry: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.
     MS_MSn = MS_multiple_stage_mass_spectrometry,
+
+    /// Negative Ion chemical ionization: Chemical ionization that results in the formation of negative ions.
     MS_Negative_Ion_chemical_ionization = 1000271,
+
+    /// Negative Ion chemical ionization: Chemical ionization that results in the formation of negative ions.
     MS_NICI = MS_Negative_Ion_chemical_ionization,
+
+    /// neutralization reionization mass spectrometry: With this technique, m/z selected ions form neutrals by charge transfer to a collision gas or by dissociation. The neutrals are separated from the remaining ions and ionized in collisions with a second gas. This method is used to investigate reaction intermediates and other unstable species.
     MS_neutralization_reionization_mass_spectrometry = 1000272,
+
+    /// neutralization reionization mass spectrometry: With this technique, m/z selected ions form neutrals by charge transfer to a collision gas or by dissociation. The neutrals are separated from the remaining ions and ionized in collisions with a second gas. This method is used to investigate reaction intermediates and other unstable species.
     MS_NRMS = MS_neutralization_reionization_mass_spectrometry,
+
+    /// photoionization: The ionization of an atom or molecule by a photon, written M + h? ? M^+ + e. The term photon impact is not recommended.
     MS_photoionization = 1000273,
+
+    /// photoionization: The ionization of an atom or molecule by a photon, written M + h? ? M^+ + e. The term photon impact is not recommended.
     MS_PI = MS_photoionization,
+
+    /// pyrolysis mass spectrometry: A mass spectrometry technique in which the sample is heated to the point of decomposition and the gaseous decomposition products are introduced into the ion source.
     MS_pyrolysis_mass_spectrometry = 1000274,
+
+    /// pyrolysis mass spectrometry: A mass spectrometry technique in which the sample is heated to the point of decomposition and the gaseous decomposition products are introduced into the ion source.
     MS_PyMS = MS_pyrolysis_mass_spectrometry,
+
+    /// collision quadrupole: A transmission quadrupole to which an oscillating potential is applied so as to focus a beam of ions through a collision gas with no m/z separation.
     MS_collision_quadrupole = 1000275,
+
+    /// collision quadrupole: A transmission quadrupole to which an oscillating potential is applied so as to focus a beam of ions through a collision gas with no m/z separation.
     MS_q = MS_collision_quadrupole,
+
+    /// resonance enhanced multiphoton ionization: Multiphoton ionization in which the ionization cross section is significantly enhanced because the energy of the incident photons is resonant with an intermediate excited state of the neutral species.
     MS_resonance_enhanced_multiphoton_ionization = 1000276,
+
+    /// resonance enhanced multiphoton ionization: Multiphoton ionization in which the ionization cross section is significantly enhanced because the energy of the incident photons is resonant with an intermediate excited state of the neutral species.
     MS_REMPI = MS_resonance_enhanced_multiphoton_ionization,
+
+    /// residual gas analyzer: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.
     MS_residual_gas_analyzer = 1000277,
+
+    /// residual gas analyzer: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.
     MS_RGA = MS_residual_gas_analyzer,
+
+    /// surface enhanced laser desorption ionization: The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.
     MS_surface_enhanced_laser_desorption_ionization = 1000278,
+
+    /// surface enhanced laser desorption ionization: The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.
     MS_SELDI = MS_surface_enhanced_laser_desorption_ionization,
+
+    /// surface enhanced neat desorption: Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
     MS_surface_enhanced_neat_desorption = 1000279,
+
+    /// surface enhanced neat desorption: Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
     MS_SEND = MS_surface_enhanced_neat_desorption,
+
+    /// selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
     MS_selected_ion_flow_tube = 1000281,
+
+    /// selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
     MS_SIFT = MS_selected_ion_flow_tube,
+
+    /// sustained off-resonance irradiation: A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.
     MS_sustained_off_resonance_irradiation = 1000282,
+
+    /// sustained off-resonance irradiation: A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.
     MS_SORI = MS_sustained_off_resonance_irradiation,
+
+    /// stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.
     MS_stored_waveform_inverse_fourier_transform = 1000284,
+
+    /// stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.
     MS_SWIFT = MS_stored_waveform_inverse_fourier_transform,
+
+    /// total ion current: The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.
     MS_total_ion_current = 1000285,
+
+    /// total ion current: The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.
     MS_TIC = MS_total_ion_current,
+
+    /// time lag focusing: Energy focusing in a time-of-flight mass spectrometer that is accomplished by introducing a time delay between the formation of the ions and the application of the accelerating voltage pulse.
     MS_time_lag_focusing = 1000286,
+
+    /// time lag focusing: Energy focusing in a time-of-flight mass spectrometer that is accomplished by introducing a time delay between the formation of the ions and the application of the accelerating voltage pulse.
     MS_TLF = MS_time_lag_focusing,
+
+    /// time-of-flight mass spectrometer: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.
     MS_time_of_flight_mass_spectrometer = 1000287,
+
+    /// time-of-flight mass spectrometer: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.
     MS_TOF_MS = MS_time_of_flight_mass_spectrometer,
+
+    /// cyclotron: A device that uses an oscillating electric field and magnetic field to accelerate charged particles.
     MS_cyclotron = 1000288,
+
+    /// double-focusing mass spectrometer: A mass spectrometer that uses a magnetic sector for m/z focusing and an electric sector for energy focusing of an ion beam.
     MS_double_focusing_mass_spectrometer = 1000289,
+
+    /// hybrid mass spectrometer: A mass spectrometer that combines m/z analyzers of different types to perform tandem mass spectrometry.
     MS_hybrid_mass_spectrometer = 1000290,
+
+    /// linear ion trap: A two dimensional Paul ion trap in which ions are confined in the axial dimension by means of an electric field at the ends of the trap.
     MS_linear_ion_trap = 1000291,
+
+    /// mass spectrograph obsolete: An instrument that separates a beam of ions according to their mass-to-charge ratio in which the ions are directed onto a focal plane detector such as a photographic plate.
     MS_mass_spectrograph_obsolete = 1000292,
+
+    /// mass spectrometer: An instrument that measures the mass-to-charge ratio and relative abundances of ions.
     MS_mass_spectrometer = 1000293,
+
+    /// mass spectrum: A plot of the relative abundance of a beam or other collection of ions as a function of the mass-to-charge ratio (m/z).
     MS_mass_spectrum = 1000294,
+
+    /// mattauch-herzog geometry: An arrangement for a double-focusing mass spectrometer in which a deflection of ?/(4 ?(2)) radians in a radial electric field is followed by a magnetic deflection of ?/2 radians.
     MS_mattauch_herzog_geometry = 1000295,
+
+    /// nier-johnson geometry: An arrangement for a double-focusing mass spectrometer in which a deflection of ?/2 radians in a radial electric field analyzer is followed by a magnetic deflection of ?/3 radians.
     MS_nier_johnson_geometry = 1000296,
+
+    /// paul ion trap: A device that permits the trapping of ions by means of an alternating current voltage. The ejection of ions with a m/z less than a prescribed value and retention of those with higher mass depends on the application of radio frequency voltages between a ring electrode and two end-cap electrodes to confine the ions in a circular path. The choice of these voltages determines the m/z below which ions are ejected.
     MS_paul_ion_trap = 1000297,
+
+    /// prolate traochoidal mass spectrometer: A mass spectrometer in which the ions of different m/z are separated by means of crossed electric and magnetic fields in such a way that the selected ions follow a prolate trochoidal path.
     MS_prolate_traochoidal_mass_spectrometer = 1000298,
+
+    /// quistor: An abbreviation of quadrupole ion storage trap. This term is synonymous with Paul Ion Trap. If so then add a synonym to paul and obsolete this term.
     MS_quistor = 1000299,
+
+    /// reflectron: A time-of-flight mass spectrometer that uses a static electric field to reverse the direction of travel of the ions entering it. A reflectron improves mass resolution by assuring that ions of the same m/z but different kinetic energy arrive at the detector at the same time.
     MS_reflectron = 1000300,
+
+    /// sector mass spectrometer: A mass spectrometer consisting of one or more magnetic sectors for m/z selection in a beam of ions. Such instruments may also have one or more electric sectors for energy selection.
     MS_sector_mass_spectrometer = 1000301,
+
+    /// tandem mass spectrometer: A mass spectrometer designed for mass spectrometry/mass spectrometry.
     MS_tandem_mass_spectrometer = 1000302,
+
+    /// transmission quadrupole mass spectrometer: A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis.
     MS_transmission_quadrupole_mass_spectrometer = 1000303,
+
+    /// accelerating voltage: The electrical potential used to impart kinetic energy to ions in a mass spectrometer.
     MS_accelerating_voltage = 1000304,
+
+    /// cyclotron motion: The circular motion of a charged particle moving at velocity v in a magnetic field B that results from the force qvB.
     MS_cyclotron_motion = 1000305,
+
+    /// dynamic mass spectrometry: A mass spectrometer in which m/z separation using one or more electric fields that vary with time.
     MS_dynamic_mass_spectrometry = 1000306,
+
+    /// einzel lens: Three element charged particle lens in which the first and third elements are held at the same voltage. Such a lens produces focusing without changing the translational energy of the particle.
     MS_einzel_lens = 1000307,
+
+    /// electric field strength: The magnitude of the force per unit charge at a given point in space.
     MS_electric_field_strength = 1000308,
+
+    /// first stability region: The region of a Mathieu stability diagram closest to the origin. Ions within this region can traverse the full length of a transmission quadrupole.
     MS_first_stability_region = 1000309,
+
+    /// fringing field: The electric or magnetic field that extends from the edge of a sector, lens or other ion optics element.
     MS_fringing_field = 1000310,
+
+    /// kinetic energy analyzer: A device for measuring the kinetic energy of charged particles using a retarding field, time-of-flight, or the extent of deflection in an electric or magnetic field.
     MS_kinetic_energy_analyzer = 1000311,
+
+    /// mass limit: The m/z value above which ions cannot be detected in a mass spectrometer.
     MS_mass_limit = 1000312,
+
+    /// scan m/z range?: The limit of m/z over which a mass spectrometer can detect ions.
     MS_scan_m_z_range_ = 1000313,
+
+    /// mass selective axial ejection: The use of mass selective instability to eject ions of selected m/z values from an ion trap.
     MS_mass_selective_axial_ejection = 1000314,
+
+    /// mass selective instability: A method for selective ejection of ions according to their m/z value in an ion trap.
     MS_mass_selective_instability = 1000315,
+
+    /// mathieu stability diagram: A graphical representation expressed in terms of reduced coordinates that describes charged particle motion in a quadrupole mass filter or quadrupole ion trap mass spectrometer.
     MS_mathieu_stability_diagram = 1000316,
+
+    /// orthogonal extraction: The pulsed acceleration of ions perpendicular to their direction of travel into a time-of-flight mass spectrometer. Ions may be extracted from a directional ion source, drift tube or m/z separation stage.
     MS_orthogonal_extraction = 1000317,
+
+    /// resonance ion ejection: A mode of ion ejection in a quadrupole ion trap that relies on a auxiliary radio frequency voltage that is applied to the end-cap electrodes. The voltage is tuned to the secular frequency of a particular ion to eject it.
     MS_resonance_ion_ejection = 1000318,
+
+    /// space charge effect: The mutual repulsion of particles of like charge that limits the current in a charged-particle beam and causes beams or packets of charged particles to expand radially over time.
     MS_space_charge_effect = 1000319,
+
+    /// static field: An electric or magnetic field that does not change in time.
     MS_static_field = 1000320,
+
+    /// 2E Mass Spectrum: A mass spectrum obtained by setting the electric sector field E to twice the value required to transmit the main ion-beam thereby allowing ions with a kinetic energy-to-charge ratio twice that of the main ion-beam to be transmitted. Product ions resulting from partial charge transfer reactions such as m^2+ + N ? m^+ + N^+ that occur in a collision cell (containing a gas, N) located in a field-free region preceding a magnetic and electric sector combination are detected. When the magnetic sector field B is scanned, a mass spectrum of singly charged product ions of doubly charged precursor ions is obtained.
     MS_2E_Mass_Spectrum = 1000321,
+
+    /// charge inversion mass spectrum: The measurement of the relative abundance of ions that result from a charge inversion reaction as a function of m/z.
     MS_charge_inversion_mass_spectrum = 1000322,
+
+    /// constant neutral loss scan: A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different precursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or collision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan.
     MS_constant_neutral_loss_scan = 1000323,
+
+    /// constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
     MS_constant_neutral_gain_scan = 1000324,
+
+    /// constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
     MS_Constant_Neutral_Mass_Gain_Scan = MS_constant_neutral_gain_scan,
+
+    /// constant neutral mass gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
     MS_constant_neutral_mass_gain_spectrum = 1000325,
+
+    /// constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
     MS_constant_neutral_mass_loss_spectrum = 1000326,
+
+    /// constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
     MS_Constant_Neutral_Mass_Loss = MS_constant_neutral_mass_loss_spectrum,
+
+    /// e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.
     MS_e_2_mass_spectrum = 1000328,
+
+    /// linked scan: A scan in an instrument with two or more m/z analysers or in a sector mass spectrometer that incorporates at least one magnetic sector and one electric sector. Two or more of the analyzers are scanned simultaneously so as to preserve a predetermined relationship between scan parameters to produce a product ion, precursor ion or constant neutral loss spectrum.
     MS_linked_scan = 1000329,
+
+    /// linked scan at constant b/e: A linked scan at constant B/E may be performed on a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector. The magnetic field B and the electric field E are scanned simultaneously while the accelerating voltage V is held constant, so as to maintain the ratio of the two fields constant. This linked scan may record a product ion spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors.
     MS_linked_scan_at_constant_b_e = 1000330,
+
+    /// Linked Scan at Constant E2/V: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector. The electric sector field, E, and the accelerating voltage, V, are scanned simultaneously, so as to maintain the ratio E2/V at a constant value. This linked scan recordss a product ion spectrum of dissociation or other reactions occurring in a field free region (FFR) preceding the two sectors.
     MS_Linked_Scan_at_Constant_E2_V = 1000331,
+
+    /// Linked Scan at Constant B2/E: A linked scan performed on a sector mass spectrometer that incorporates at least one electric sector plus one magnetic sector in either order. The accelerating voltage is fixed and the magnetic field, B, and the electric field, E, are scanned simultaneously so as to maintain the ratio B2/E at a constant value. This linked scan records a precursor ion spectrum of dissociation or other reactions occurring in the field free region preceding the two sectors. The term B2/E linked scan is not recommended.
     MS_Linked_Scan_at_Constant_B2_E = 1000332,
+
+    /// Linked Scan at Constant B[1-(E/E0)]^1/2 / E: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector placed in either order. The accelerating voltage is fixed while scanning the magnetic field, B, and electric field, E, simultaneously, so as to maintain the quantity B[1-(E/E0)]1/2/E at a constant value. This linked scan records a constant neutral mass loss (or gain) spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors. E0 is the electric field required to transmit the singly charged analog of the desired neutral fragment. The term B[1-(E/E0)]1/2/E linked scan.
     MS_Linked_Scan_at_Constant_B_1__E_E0___1_2___E = 1000333,
+
+    /// MS/MS in Time: A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time.
     MS_MS_MS_in_Time = 1000334,
+
+    /// MS/MS in Space: A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition.
     MS_MS_MS_in_Space = 1000335,
+
+    /// neutral loss: The loss of an uncharged species during a rearrangement process.
     MS_neutral_loss = 1000336,
+
+    /// nth generation product ion: Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated.
     MS_nth_generation_product_ion = 1000337,
+
+    /// nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.
     MS_nth_generation_product_ion_scan = 1000338,
+
+    /// nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.
     MS_nth_generation_product_ion_spectrum = 1000339,
+
+    /// precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.
     MS_precursor_ion = 1000340,
+
+    /// precursor ion spectrum: The mass spectrum recorded from any spectrometer in which the appropriate m/z separation function can be set to record the precursor ion or ions of selected product ions.
     MS_precursor_ion_spectrum = 1000341,
+
+    /// product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.
     MS_product_ion = 1000342,
+
+    /// product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.
     MS_product_ion_spectrum = 1000343,
+
+    /// progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
     MS_progeny_ion = 1000344,
+
+    /// progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
     MS_Progeny_Fragment_Ion = MS_progeny_ion,
+
+    /// array detector: Detector comprising several ion collection elements, arranged in a line or grid where each element is an individual detector.
     MS_array_detector = 1000345,
+
+    /// conversion dynode: A surface that is held at high potential such that ions striking the surface produce electrons that are subsequently detected.
     MS_conversion_dynode = 1000346,
+
+    /// dynode: One of a series of electrodes in a photomultiplier tube. Such an arrangement is able to amplify the current emitted by the photocathode.
     MS_dynode = 1000347,
+
+    /// focal plane collector: A detector for spatially disperse ion beams in which all ions simultaneously impinge on the detector plane.
     MS_focal_plane_collector = 1000348,
+
+    /// ion-to-photon detector: A detector in which ions strike a conversion dynode to produce electrons that in turn strike a phosphor and the resulting photons are detected by a photomultiplier.
     MS_ion_to_photon_detector = 1000349,
+
+    /// point collector: A detector in which the ion beam is focused onto a point and the individual ions arrive sequentially.
     MS_point_collector = 1000350,
+
+    /// postacceleration detector: A detector in which the charged particles are accelerated to a high velocity and impinge on a conversion dynode, emitting secondary electrons. The electrons are accelerated onto a phosphor screen, which emits photons that are in turn detected using a photomultiplier or other photon detector.
     MS_postacceleration_detector = 1000351,
+
+    /// secondary electron: Electrons that are ejected from a sample surface as a result of bombardment by a primary beam of atoms, ions or photons. WAS IN DETECTOR TYPE. Where should it go?
     MS_secondary_electron = 1000352,
+
+    /// adduct ion: Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules.
     MS_adduct_ion = 1000353,
+
+    /// aromatic ion: A planar cyclic ion that obeys the Hckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure.
     MS_aromatic_ion = 1000354,
+
+    /// analog ion: Ions that have similar chemical valence, for example the acetyl cation CH3-CO+ and the thioacetyl cation CH3-CS+.
     MS_analog_ion = 1000355,
+
+    /// anti-aromatic ion: A planar cyclic ion with 4n ? electrons and is therefore not aromatic.
     MS_anti_aromatic_ion = 1000356,
+
+    /// cationized molecule: An ion formed by the association of a cation with a neutral molecule, M, for example [M+ Na]+ and [M + K]+. The terms quasi-molecular ion and pseudo-molecular ion should not be used.
     MS_cationized_molecule = 1000357,
+
+    /// cluster ion: An ion formed by a multi-component atomic or molecular assembly of one or more ions with atoms or molecules, such as [(H20)nH]+, [(NaCl)nNa]+ and [(H3PO3)nHPO3]-.
     MS_cluster_ion = 1000358,
+
+    /// Conventional ion: A radical cation or anion in which the charge site and the unpaired electron spin are both formally located in the same atom or group of atoms, as opposed to the spatially separate electronic configuration of distonic ions. The radical cation of methanol, CH3OH+, in which the charge and spin sites are formally located at the O atom is an example of a conventional ion, whereas .CH2-OH2+ is a distonic ion.
     MS_Conventional_ion = 1000359,
+
+    /// diagnostic ion: A product ion whose formation reveals structural or compositional information of its precursor. For instance, the phenyl cation in an electron ionization mass spectrum is a diagnostic ion for benzene and derivatives.
     MS_diagnostic_ion = 1000360,
+
+    /// dimeric ion: An ion formed by ionization of a dimer or by the association of an ion with its neutral counterpart such as [M2]+ or [M-H-M]+.
     MS_dimeric_ion = 1000361,
+
+    /// distonic ion: A radical cation or anion in which the charge site and the unpaired electron spin cannot be both formally located in the same atom or group of atoms as it can be with a conventional ion. For example, CH2-OH2+ is a distonic ion whereas the radical cation of methanol, CH3OH+ is a conventional ion.
     MS_distonic_ion = 1000362,
+
+    /// enium ion: A positively charged lower-valency ion of the nonmetallic elements. The methenium ion is CH3+. Other examples are the oxenium, sulfenium, nitrenium, phosphenium, and halenium ions.
     MS_enium_ion = 1000363,
+
+    /// ion: An atomic or molecular species having a net positive or negative electric charge.
     MS_ion = 1000365,
+
+    /// Isotopologue ion: An ion that differs only in the isotopic composition of one or more of its constituent atoms. For example CH4+ and CH3D+ or 10BF3 and 11BF3. The term isotopologue is a contraction of isotopic homologue.
     MS_Isotopologue_ion = 1000366,
+
+    /// Isotopomeric ion: Isomeric ion having the same numbers of each isotopic atom but differing in their positions. Isotopomeric ions can be either configurational isomers in which two atomic isotopes exchange positions or isotopic stereoisomers. The term isotopomer is a shortening of isotopic isomer.
     MS_Isotopomeric_ion = 1000367,
+
+    /// metastable ion: An ion that is formed with internal energy higher than the threshold for dissociation but with a lifetime great enough to allow it to exit the ion source and enter the mass spectrometer where it dissociates before detection.
     MS_metastable_ion = 1000368,
+
+    /// molecular ion: An ion formed by the removal of one or more electrons to form a positive ion or the addition off one or more electrons to form a negative ion.
     MS_molecular_ion = 1000369,
+
+    /// negative ion: An atomic or molecular species having a net negative electric charge.
     MS_negative_ion = 1000370,
+
+    /// non-classical ion: Hyper-coordinated carbonium ion such as the penta-coordinated norbornyl cation. Note: Tri-coordinated carbenium ions are termed classical ions.
     MS_non_classical_ion = 1000371,
+
+    /// onium ion: A positively charged hypervalent ion of the nonmetallic elements. Examples are the methonium ion CH5+, the hydrogenonium ion H3+ and the hydronium ion H3O+. Other examples are the carbonium, oxonium, sulfonium, nitronium, diazonium, phosphonium, and halonium ions. Onium ions are not limited to monopositive ions; multiply-charged onium ions exist such as the gitonic (proximal) oxonium dication H4O2+ and the distonic oxonium dication H2O+-CH2-CH2-OH2+.
     MS_onium_ion = 1000372,
+
+    /// principal ion: Most abundant ion of an isotope cluster, such as the 11B79Br2 81Br+ ion of m/z 250 of the cluster of isotopologue molecular ions of BBr3. The term principal ion has also been used to describe ions that have been artificially isotopically enriched in one or more positions such as CH3 13CH3+ or CH2D2 +, but those are best defined as isotopologue ions.
     MS_principal_ion = 1000373,
+
+    /// positive ion: An atomic or molecular species having a net positive electric charge.
     MS_positive_ion = 1000374,
+
+    /// protonated molecule: An ion formed by interaction of a neutral molecule with a proton and represented by the symbol [M + H]+, where M is the neutral molecule. The term 'protonated molecular ion,' 'quasi-molecular ion' and 'pseudo-molecular ion' are not recommended.
     MS_protonated_molecule = 1000375,
+
+    /// radical ion: An ion, either a cation or anion, containing unpaired electrons in its ground state. The unpaired electron is denoted by a superscript dot alongside the superscript symbol for charge, such as for the molecular ion of a molecule M, that is, M+. Radical ions with more than one charge and/or more than one unpaired electron are denoted such as M(2+)(2). Unless the positions of the unpaired electron and charge can be associated with specific atoms, superscript charge designation should be placed before the superscript dot designation.
     MS_radical_ion = 1000376,
+
+    /// reference ion: A stable ion whose structure is known with certainty. These ions are usually formed by direct ionization of a neutral molecule of known structure and are used to verify by comparison the structure of an unknown ion.
     MS_reference_ion = 1000377,
+
+    /// stable ion: An ion with internal energy sufficiently low that it does not rearrange or dissociate prior to detection in a mass spectrometer.
     MS_stable_ion = 1000378,
+
+    /// unstable ion: An ion with sufficient enerrgy to dissociate within the ion source.
     MS_unstable_ion = 1000379,
+
+    /// adiabatic ionization: A process whereby an electron is removed from an atom, ion, or molecule to produce an ion in its lowest energy state.
     MS_adiabatic_ionization = 1000380,
+
+    /// associative ionization: An ionization process in which two excited atoms or molecules react to form a single positive ion and an electron.
     MS_associative_ionization = 1000381,
+
+    /// atmospheric pressure photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.
     MS_atmospheric_pressure_photoionization = 1000382,
+
+    /// autodetachment: The formation of a neutral when a negative ion in a disrtete state with an energy greater than the detachment threshold loses an electron spontaneously without further interaction with an energy source.
     MS_autodetachment = 1000383,
+
+    /// autoionization: The formation of an ion when an atom or molecule in a discrete state with an energy greater than the ionization threshold loses an electron spontaneously without further interaction with an energy source.
     MS_autoionization = 1000384,
+
+    /// charge exchange ionization: The interaction of an ion with an atom or molecule in which the charge on the ion is transferred to the neutral without the dissociation of either. Synonymous with charge transfer ionization.
     MS_charge_exchange_ionization = 1000385,
+
+    /// chemi-ionization: The reaction of a neutral molecule with an internally excited molecule to form an ion. Note that this term is not synonymous with chemical ionization.
     MS_chemi_ionization = 1000386,
+
+    /// desorption/ionization on silicon: The formation of ions by laser desorption ionization of a sample deposited on a porous silicon surface.
     MS_desorption_ionization_on_silicon = 1000387,
+
+    /// dissociative ionization: The reaction of a gas-phase molecule that results in its decomposition to form products, one of which is an ion.
     MS_dissociative_ionization = 1000388,
+
+    /// electron ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended.
     MS_electron_ionization = 1000389,
+
+    /// ion desolvation: The removal of solvent molecules clustered around a gas-phase ion by means of heating and/or collisions with gas molecules.
     MS_ion_desolvation = 1000390,
+
+    /// ion-pair formation: The reaction of a molecule to form both a positive ion and negative ion fragment among the products.
     MS_ion_pair_formation = 1000391,
+
+    /// ionization efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.
     MS_ionization_efficiency = 1000392,
+
+    /// laser desorption ionization: The formation of gas-phase ions by the interaction of a pulsed laser with a solid or liquid material.
     MS_laser_desorption_ionization = 1000393,
+
+    /// liquid secondary ionization: The ionization of any species by the interaction of a focused beam of ions with a sample that is dissolved in a solvent matrix. See also fast atom bombardment and secondary ionization.
     MS_liquid_secondary_ionization = 1000395,
+
+    /// membrane inlet: A semi-permeable membrane separator that permits the passage of gas sample directly to the mass spectrometer ion source.
     MS_membrane_inlet = 1000396,
+
+    /// microelectrospray: Electrospray ionization at a solvent flow rate of 300-800 nL/min where the flow is a result of a mechanical pump. See nanaoelectrospray.
     MS_microelectrospray = 1000397,
+
+    /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanoelectrospray = 1000398,
+
+    /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanospray = MS_nanoelectrospray,
+
+    /// penning ionization: Ionization that occurs through the interaction of two or more neutral gaseous species, at least one of which is internally excited.
     MS_penning_ionization = 1000399,
+
+    /// plasma desorption ionization: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_plasma_desorption_ionization = 1000400,
+
+    /// pre-ionization state: An electronic state capable of undergoing auto-Ionization.
     MS_pre_ionization_state = 1000401,
+
+    /// secondary ionization: The process in which ions are ejected from a sample surface as a result of bombardment by a primary beam of atoms or ions.
     MS_secondary_ionization = 1000402,
+
+    /// soft ionization: The formation of gas-phase ions without extensive fragmentation.
     MS_soft_ionization = 1000403,
+
+    /// spark ionization: The formation of ions from a solid material by an intermittent electrical discharge.
     MS_spark_ionization = 1000404,
+
+    /// surface-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are deposited on a particular surface substrate that is irradiated with a pulsed laser. See also matrix-assisted laser desorption ionization.
     MS_surface_assisted_laser_desorption_ionization = 1000405,
+
+    /// surface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
     MS_surface_ionization = 1000406,
+
+    /// thermal ionization: The ionization of a neutral species through contact with a high temperature surface.
     MS_thermal_ionization = 1000407,
+
+    /// vertical ionization: A process in which an electron is removed from or added to a molecule without a change in the positions of the atoms. The resulting ion is typically in an excited vibrational state.
     MS_vertical_ionization = 1000408,
+
+    /// association reaction: The reaction of an ion with a neutral species in which the reactants combine to form a single ion.
     MS_association_reaction = 1000409,
+
+    /// alpha-cleavage: A homolytic cleavage where the bond fission occurs between at the atom adjacent to the atom at the apparent charge site and an atom removed from the aparent charge site by two bonds.
     MS_alpha_cleavage = 1000410,
+
+    /// beta-cleavage: A homolytic cleavage where the bond fission occurs between at an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the aparent charge site by three bonds.
     MS_beta_cleavage = 1000411,
+
+    /// buffer gas: An inert gas used for collisional deactivation of internally excited ions.
     MS_buffer_gas = 1000412,
+
+    /// charge-induced fragmentation: Fragmentation of an odd electron ion in which the cleaved bond is adjacent to the apparent charge site. Synonymous with charge mediated fragmentation.
     MS_charge_induced_fragmentation = 1000413,
+
+    /// charge inversion reaction: Reaction of an ion with a neutral species in which the charge on the product ion is reversed in sign with respect to the reactant ion.
     MS_charge_inversion_reaction = 1000414,
+
+    /// charge permutation reaction: The reaction of an ion with a neutral species with a resulting change in the magnitude or sign of the charge on the reactant ion.
     MS_charge_permutation_reaction = 1000415,
+
+    /// charge stripping reaction: Reaction of a positive ion with a neutral species in which the positive charge on the product ion is greater than that on the reactant ion.
     MS_charge_stripping_reaction = 1000416,
+
+    /// charge transfer reaction: The reaction of an ion with a neutral species in which some or all of the charge of the reactant ion is transferred to the neutral species.
     MS_charge_transfer_reaction = 1000417,
+
+    /// collisional excitation: The reaction of an ion with a neutral species in which the translational energy of the collision is converted into internal energy of the ion.
     MS_collisional_excitation = 1000418,
+
+    /// collision gas: An inert gas used for collisional excitation. The term target gas is not recommended.
     MS_collision_gas = 1000419,
+
+    /// heterolytic cleavage: Fragmentation of a molecule or ion in which both electrons forming the single bond that is broken remain on one of the atoms that were originally bonded. This term is synonymous with heterolysis.
     MS_heterolytic_cleavage = 1000420,
+
+    /// high energy collision: Collision-induced dissociation process wherein the projectile ion has laboratory-frame translational energy higher than 1 keV.
     MS_high_energy_collision = 1000421,
+
+    /// high-energy collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
     MS_high_energy_collision_induced_dissociation = 1000422,
+
+    /// homolytic cleavage: Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis.
     MS_homolytic_cleavage = 1000423,
+
+    /// hydrogen/deuterium exchange: Exchange of hydrogen atoms with deuterium atoms in a molecule or pre-formed ion in solution prior to introduction into a mass spectrometer, or by reaction of an ion with a deuterated collision gas inside a mass spectrometer.
     MS_hydrogen_deuterium_exchange = 1000424,
+
+    /// ion energy loss spectrum: A plot of the relative abundance of a beam or other collection of ions as a function their loss of translational energy in reactions with neutral species.
     MS_ion_energy_loss_spectrum = 1000425,
+
+    /// ionizing collision: The reaction of an ion with a neutral species in which one or more electrons are removed from either the ion or neutral.
     MS_ionizing_collision = 1000426,
+
+    /// ion/molecule reaction: The reaction of an ion with a neutral molecule. The term ion-molecule reaction is not recommended because the hyphen suggests a single species that is that is both an ion and a molecule.
     MS_ion_molecule_reaction = 1000427,
+
+    /// ion/neutral complex: A particular type of transition state that lies between precursor and product ions on the reaction coordinate of some ion reactions.
     MS_ion_neutral_complex = 1000428,
+
+    /// ion/neutral species reaction: A process wherein a charged species interacts with a neutral reactant to produce either chemically different species or changes in the internal energy of one or both of the reactants.
     MS_ion_neutral_species_reaction = 1000429,
+
+    /// ion/neutral species exchange reaction: In this reaction an association reaction is accompanied by the subsequent or simultaneous liberation of a different neutral species as a product.
     MS_ion_neutral_species_exchange_reaction = 1000430,
+
+    /// kinetic method: An approach to determination of ion thermodynamic quantities by a bracketing procedure in which the relative probabilities of competing ion fragmentations are measured via the relative abundances of the reaction products. The extended kinetic method takes the associated entropy changes into account.
     MS_kinetic_method = 1000431,
+
+    /// low energy collisions: A collision between an ion and neutral species with translational energy approximately 1000 eV or lower.
     MS_low_energy_collisions = 1000432,
+
+    /// low-energy collision-induced dissociation: A collision-induced dissociation process wherein the precursor ion has the translational energy lower than approximately 1000 eV. This process typically requires multiple collisions and the collisional excitation is cumulative.
     MS_low_energy_collision_induced_dissociation = 1000433,
+
+    /// McLafferty Rearrangement: A dissociation reaction triggered by transfer of a hydrogen atom via a 6-member transition state to the formal radical/charge site from a carbon atom four atoms removed from the charge/radical site (the gamma-carbon); subsequent rearrangement of electron density leads to expulsion of an olefin molecule. This term was originally applied to ketone ions where the charge/radical site is the carbonyl oxygen, but it is now more widely applied.
     MS_McLafferty_Rearrangement = 1000434,
+
+    /// photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
     MS_photodissociation = 1000435,
+
+    /// photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
     MS_Multiphoton_Dissociation = MS_photodissociation,
+
+    /// partial charge transfer reaction: Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral.
     MS_partial_charge_transfer_reaction = 1000436,
+
+    /// ion reaction: Chemical transformation involving an ion.
     MS_ion_reaction = 1000437,
+
+    /// superelastic collision: Collision in which the translational energy of the fast-moving collision partner is increased at the expense of internal energy of one or both collision partners.
     MS_superelastic_collision = 1000438,
+
+    /// surface-induced reaction: A process wherein a reactant ion interacts with a surface to produce either chemically different species or a change in the internal energy of the reactant ion.
     MS_surface_induced_reaction = 1000439,
+
+    /// unimolecular dissociation: Fragmentation reaction in which the molecularity is treated as one, irrespective of whether the dissociative state is that of a metastable ion produced in the ion source or results from collisional excitation of a stable ion.
     MS_unimolecular_dissociation = 1000440,
+
+    /// scan: Function or process of the mass spectrometer where it records a spectrum.
     MS_scan = 1000441,
+
+    /// spectrum: A mass spectrum is an intensity vs m/z (mass-to-charge ratio) plot representing a chemical analysis.
     MS_spectrum = 1000442,
+
+    /// mass analyzer type: Mass analyzer separates the ions according to their mass-to-charge ratio.
     MS_mass_analyzer_type = 1000443,
+
+    /// m/z Separation Method: TODO: Add definition.
     MS_m_z_Separation_Method = 1000444,
+
+    /// sequential m/z separation method ?: TODO: Add definition.
     MS_sequential_m_z_separation_method__ = 1000445,
+
+    /// fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
     MS_fast_ion_bombardment = 1000446,
+
+    /// fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
     MS_FIB = MS_fast_ion_bombardment,
+
+    /// LTQ: Finnigan LTQ MS.
     MS_LTQ = 1000447,
+
+    /// LTQ FT: Finnigan LTQ FT MS.
     MS_LTQ_FT = 1000448,
+
+    /// LTQ Orbitrap: Finnigan LTQ Orbitrap MS.
     MS_LTQ_Orbitrap = 1000449,
+
+    /// LXQ: Finnigan LXQ MS.
     MS_LXQ = 1000450,
+
+    /// mass analyzer: Terms used to describe the Analyzer.
     MS_mass_analyzer = 1000451,
+
+    /// mass analyzer: Terms used to describe the Analyzer.
     MS_analyzer = MS_mass_analyzer,
+
+    /// data transformation: Terms used to describe types of data processing.
     MS_data_transformation = 1000452,
+
+    /// data transformation: Terms used to describe types of data processing.
     MS_data_processing = MS_data_transformation,
+
+    /// detector: The device that detects ions.
     MS_detector = 1000453,
+
+    /// instrument additional description: Additional terms to describe the instrument as outlined in the mass spec doc, Appendix 1, section 1.5.
     MS_instrument_additional_description = 1000454,
+
+    /// ion selection attribute: Ion selection properties that are associated with a value.
     MS_ion_selection_attribute = 1000455,
+
+    /// precursor activation: Terms to describe the precursor activation.
     MS_precursor_activation = 1000456,
+
+    /// precursor activation: Terms to describe the precursor activation.
     MS_activation = MS_precursor_activation,
+
+    /// sample: Terms to describe the sample.
     MS_sample = 1000457,
+
+    /// source: Terms to describe the source.
     MS_source = 1000458,
+
+    /// spectrum instrument description: Terms used to describe the spectrum.
     MS_spectrum_instrument_description = 1000459,
+
+    /// unit: Terms to describe units.
     MS_unit = 1000460,
+
+    /// additional description: Terms to describe Additional.
     MS_additional_description = 1000461,
+
+    /// ion optics: Device used in the construction of a mass spectrometer to focus, contain or otherwise manipulate ions.
     MS_ion_optics = 1000462,
+
+    /// instrument: Description of the instrument or the mass spectrometer.
     MS_instrument = 1000463,
+
+    /// instrument: Description of the instrument or the mass spectrometer.
     MS_instrument_configuration = MS_instrument,
+
+    /// scan polarity: An acquisition mode to which specifies weather polarity is negative, positive or alternating.
     MS_scan_polarity = 1000465,
+
+    /// 1200 series LC/MSD SL: The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS.
     MS_1200_series_LC_MSD_SL = 1000467,
+
+    /// 6110 Quadrupole LC/MS: The 6110 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with an entry level single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6110 Quadrupole mass spectrometer has m/z range of 10-1500 and 2500 u/s scan speed. It proves useful for wide range of SIM quantitative applications.
     MS_6110_Quadrupole_LC_MS = 1000468,
+
+    /// 6120 Quadrupole LC/MS: The 6120 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers. 6120 quadrupole mass spectrometer has m/z range of 10-1500, 2500 u/s scan speed and utilizes multiple signal acquisition.
     MS_6120_Quadrupole_LC_MS = 1000469,
+
+    /// 6130 Quadrupole LC/MS: The 6130 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 series of Agilent mass spectrometers. The 6130 quadrupole mass spectrometer has m/z range of 2-3000, 2500 u/s scan speed in standard mode and 5250 u/s speed in fast-scan mode. It also uses multiple signal acquisition.
     MS_6130_Quadrupole_LC_MS = 1000470,
+
+    /// 6140 Quadrupole LC/MS: The 6140 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6140 Quadrupole mass spectrometer has m/z range of 10-1350, 2500 u/s scan speed in standard mode and 10000 u/s speed in fast-scan mode. It also uses multiple signal acquisition.
     MS_6140_Quadrupole_LC_MS = 1000471,
+
+    /// 6210 Time-of-Flight LC/MS: The 6210 Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.
     MS_6210_Time_of_Flight_LC_MS = 1000472,
+
+    /// 6310 Ion Trap LC/MS: The 6310 Ion Trap LC/MS is a Agilent liquid chromatography instrument combined with a 6300 series Agilent ion trap. It has a mass range of 50-2200 between 0.6 to 0.35 resolution and mass range of 200-4000 with resolution of 3-4. The scan speed varies from 1650-27000 for the respective mass ranges.
     MS_6310_Ion_Trap_LC_MS = 1000473,
+
+    /// 6320 Ion Trap LC/MS: The 6320 Ion Trap LC/MS is a Agilent liquid chromatography instrument combined with a 6300 series Agilent ion trap. It has a mass range of 50-2200 between 0.6 to 0.25 resolution and mass range of 200-4000 with resolution of less than 3. The scan speed varies from 1650-27000 for the respective mass ranges.
     MS_6320_Ion_Trap_LC_MS = 1000474,
+
+    /// 6330 Ion Trap LC/MS: The 6330 Ion Trap LC/MS is a Agilent liquid chromatography instrument combined with a 6300 series Agilent ion trap. It has a mass range of 50-2200 between 0.6 to 0.25 resolution and mass range of 200-4000 with resolution of less than 3. The scan speed varies from 1650-27000 for the respective mass ranges.
     MS_6330_Ion_Trap_LC_MS = 1000475,
+
+    /// 6340 Ion Trap LC/MS: The 6340 Ion Trap LC/MS is a Agilent liquid chromatography instrument combined with a 6300 series Agilent ion trap. It has a mass range of 50-2200 between 0.6 to 0.25 resolution and mass range of 200-4000 with resolution of less than 3. The scan speed varies from 1650-27000 for the respective mass ranges.
     MS_6340_Ion_Trap_LC_MS = 1000476,
+
+    /// 6410 Triple Quadrupole LC/MS: The 6410 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. Mass range of the mass spectrometer is 15-1650 m/z, resolution is at three settings of 0.7 u (unit), 1.2 u (wide) and 2.5 u (widest). The mass accuracy for 6410 mass spectrometer is 0.1 across the mass range. The collision cell is a hexapole with linear acceleration.
     MS_6410_Triple_Quadrupole_LC_MS = 1000477,
+
+    /// 6410 Triple Quadrupole LC/MS: The 6410 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. Mass range of the mass spectrometer is 15-1650 m/z, resolution is at three settings of 0.7 u (unit), 1.2 u (wide) and 2.5 u (widest). The mass accuracy for 6410 mass spectrometer is 0.1 across the mass range. The collision cell is a hexapole with linear acceleration.
     MS_6410_Triple_Quad_LC_MS = MS_6410_Triple_Quadrupole_LC_MS,
+
+    /// 1200 series LC/MSD VL: The LC/MSD VL ion trap is part of the family of Agilent ion trap mass spectrometers. It has ESI, APCI and APPI ion sources and is a useful ion trap when the amount of sample is not the limiting factor.
     MS_1200_series_LC_MSD_VL = 1000478,
+
+    /// purgatory: Terms that will likely become obsolete unless there are wails of dissent.
     MS_purgatory = 1000479,
+
+    /// mass analyzer attribute: Analyzer properties that are associated with a value.
     MS_mass_analyzer_attribute = 1000480,
+
+    /// detector attribute: Detector attribute recognized as a value.
     MS_detector_attribute = 1000481,
+
+    /// source attribute: Property of a source device that need a value.
     MS_source_attribute = 1000482,
+
+    /// Thermo Fisher Scientific instrument model: Thermo Fisher Scientific instrument model. The company has gone through several names including Thermo Finnigan, Thermo Scientific.
     MS_Thermo_Fisher_Scientific_instrument_model = 1000483,
+
+    /// orbitrap: An ion trapping device that consists of an outer barrel-like electrode and a coaxial inner spindle-like electrode that form an electrostatic field with quadro-logarithmic potential distribution. The frequency of harmonic oscillations of the orbitally trapped ions along the axis of the electrostatic field is independent of the ion velocity and is inversely proportional to the square root of m/z so that the trap can be used as a mass analyzer.
     MS_orbitrap = 1000484,
+
+    /// nanospray inlet: Nanospray Inlet.
     MS_nanospray_inlet = 1000485,
+
+    /// source potential: Potential difference at the MS source in volts.
     MS_source_potential = 1000486,
+
+    /// ion optics attribute: Ion optics involves components that help focus ion streams in mass spectrometry.
     MS_ion_optics_attribute = 1000487,
+
+    /// Hitachi instrument model: Hitachi instrument model.
     MS_Hitachi_instrument_model = 1000488,
+
+    /// Varian instrument model: Varian instrument model.
     MS_Varian_instrument_model = 1000489,
+
+    /// Agilent instrument model: Agilent instrument model.
     MS_Agilent_instrument_model = 1000490,
+
+    /// Dionex instrument model: Dionex instrument model.
     MS_Dionex_instrument_model = 1000491,
+
+    /// Thermo Electron instrument model: Thermo Electron Corporation instrument model.
     MS_Thermo_Electron_instrument_model = 1000492,
+
+    /// Finnigan MAT instrument model: Finnigan MAT instrument model.
     MS_Finnigan_MAT_instrument_model = 1000493,
+
+    /// Thermo Scientific instrument model: Thermo Scientific instrument model.
     MS_Thermo_Scientific_instrument_model = 1000494,
+
+    /// Applied Biosystems instrument model: Applied Biosystems instrument model.
     MS_Applied_Biosystems_instrument_model = 1000495,
+
+    /// Applied Biosystems instrument model: Applied Biosystems instrument model.
     MS_ABI = MS_Applied_Biosystems_instrument_model,
+
+    /// instrument attribute: Instrument properties that are associated with a value.
     MS_instrument_attribute = 1000496,
+
+    /// zoom scan: Feature of the ion trap mass spectrometer where MSMS data is acquired over a certain mass range.
     MS_zoom_scan = 1000497,
+
+    /// full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.
     MS_full_scan = 1000498,
+
+    /// spectrum attribute: Spectrum properties that are associated with a value.
     MS_spectrum_attribute = 1000499,
+
+    /// scan m/z upper limit: The limit of m/z over which a mass spectrometer can detect ions.
     MS_scan_m_z_upper_limit = 1000500,
+
+    /// scan m/z lower limit: The limit of m/z over which a mass spectrometer can detect ions.
     MS_scan_m_z_lower_limit = 1000501,
+
+    /// dwell time: The time spent gathering data across a peak.
     MS_dwell_time = 1000502,
+
+    /// scan attribute: Scan properties that are associated with a value.
     MS_scan_attribute = 1000503,
+
+    /// base peak m/z: M/z value of the greatest peak in the mass spectrum.
     MS_base_peak_m_z = 1000504,
+
+    /// base peak intensity: The intensity of the greatest peak in the mass spectrum.
     MS_base_peak_intensity = 1000505,
+
+    /// ion role: Ion Role.
     MS_ion_role = 1000506,
+
+    /// ion attribute: Ion properties that are associated with a value.
     MS_ion_attribute = 1000507,
+
+    /// ion chemical type: Ion Type.
     MS_ion_chemical_type = 1000508,
+
+    /// activation energy: Activation Energy.
     MS_activation_energy = 1000509,
+
+    /// precursor activation attribute: Precursor Activation Attribute.
     MS_precursor_activation_attribute = 1000510,
+
+    /// ms level: Stages of ms achieved in a multi stage mass spectrometry experiment.
     MS_ms_level = 1000511,
+
+    /// filter string: A string unique to Thermo instrument describing instrument settings for the scan.
     MS_filter_string = 1000512,
+
+    /// binary data array: A data array of values.
     MS_binary_data_array = 1000513,
+
+    /// m/z array: A data array of mass divided by charge values.
     MS_m_z_array = 1000514,
+
+    /// intensity array: A data array of intensity values.
     MS_intensity_array = 1000515,
+
+    /// charge array: A data array of charge values.
     MS_charge_array = 1000516,
+
+    /// signal to noise array: A data array of signal-to-noise values.
     MS_signal_to_noise_array = 1000517,
+
+    /// binary data type: Binary Data type. 16-bit integer, 32-bit integer, 32-bit float 64-bit integer 64-bit float.
     MS_binary_data_type = 1000518,
+
+    /// 32-bit integer: Signed 32-bit integer.
     MS_32_bit_integer = 1000519,
+
+    /// 16-bit float: Signed 16-bit float.
     MS_16_bit_float = 1000520,
+
+    /// 32-bit float: Signed 32-bit float. IEEE-754.
     MS_32_bit_float = 1000521,
+
+    /// 64-bit integer: Signed 64-bit integer.
     MS_64_bit_integer = 1000522,
+
+    /// 64-bit float: Signed 64-bit float. IEEE-754.
     MS_64_bit_float = 1000523,
+
+    /// data file content: Describes the data content on the file.
     MS_data_file_content = 1000524,
+
+    /// spectrum representation: Way in which the spectrum is represented, either with regularly spaced data points or with a list of centroided peaks.
     MS_spectrum_representation = 1000525,
+
+    /// MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.
     MS_MassLynx_raw_format = 1000526,
+
+    /// highest m/z value: Highest m/z value observed in the mass spectum.
     MS_highest_m_z_value = 1000527,
+
+    /// lowest m/z value: Lowest m/z value observed in the mass spectrum.
     MS_lowest_m_z_value = 1000528,
+
+    /// instrument serial number: Serial Number of the instrument.
     MS_instrument_serial_number = 1000529,
+
+    /// file format conversion: Conversion of one file format to another.
     MS_file_format_conversion = 1000530,
+
+    /// software: Software related to the recording or transformation of spectra.
     MS_software = 1000531,
+
+    /// Xcalibur: Thermo Finnigan software for data acquisition and analysis.
     MS_Xcalibur = 1000532,
+
+    /// Bioworks: Thermo Finnigan software for data analysis of peptides and proteins.
     MS_Bioworks = 1000533,
+
+    /// Masslynx: Miromass software for data acquisition and analysis.
     MS_Masslynx = 1000534,
+
+    /// FlexAnalysis: Bruker software for data analysis.
     MS_FlexAnalysis = 1000535,
+
+    /// data explorer: Applied Biosystems software for data acquisition and analysis.
     MS_data_explorer = 1000536,
+
+    /// 4700 Explorer: Applied Biosystems software for data acquisition and analysis.
     MS_4700_Explorer = 1000537,
+
+    /// Wolf: A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology.
     MS_Wolf = 1000538,
+
+    /// Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.
     MS_Voyager_Biospectrometry_Workstation_System = 1000539,
+
+    /// FlexControl: Bruker software for data acquisition.
     MS_FlexControl = 1000540,
+
+    /// ReAdW: A software program for converting Thermo Finnigan RAW file format to mzXML or mzML. ReAdW was originally developed at the Institute for Systems Biology. Its whimsical interleaved spelling and capitalization is pronounced \"readraw\".
     MS_ReAdW = 1000541,
+
+    /// MzStar: A software program for converting Applied Biosystems wiff file format to mzXML format. MzStar was originally developed at the Institute for Systems Biology. It is now obsoleted by the MzWiff program.
     MS_MzStar = 1000542,
+
+    /// data processing action: Data processing attribute used to describe the type of data processing performed on the data file.
     MS_data_processing_action = 1000543,
+
+    /// Conversion to mzML: Conversion of a file format to Proteomics Standards Initiative mzData file format.
     MS_Conversion_to_mzML = 1000544,
+
+    /// Conversion to mzXML: Conversion of a file format to Institute of Systems Biology mzXML file format.
     MS_Conversion_to_mzXML = 1000545,
+
+    /// Conversion to mzData: Conversion of a file format to Proteomics Standards Initiative mzData file format.
     MS_Conversion_to_mzData = 1000546,
+
+    /// object attribute: Object Attribute.
     MS_object_attribute = 1000547,
+
+    /// sample attribute: Sample properties that are associated with a value.
     MS_sample_attribute = 1000548,
+
+    /// selection window attribute: Selection window properties that are associated with a value.
     MS_selection_window_attribute = 1000549,
+
+    /// Analyst: AB SCIEX or Applied Biosystems|MDS SCIEX software for data acquisition.
     MS_Analyst = 1000551,
+
+    /// maldi spot identifier: Maldi Spot Identifier.
     MS_maldi_spot_identifier = 1000552,
+
+    /// Trapper: A software program for converting Agilent MassHunter format to mzXML or mzML. Trapper was originally developed at the Institute for Systems Biology.
     MS_Trapper = 1000553,
+
+    /// LCQ Deca: ThermoFinnigan LCQ Deca.
     MS_LCQ_Deca = 1000554,
+
+    /// LTQ Orbitrap Discovery: LTQ Orbitrap Discovery.
     MS_LTQ_Orbitrap_Discovery = 1000555,
+
+    /// LTQ Orbitrap XL: LTQ Orbitrap XL.
     MS_LTQ_Orbitrap_XL = 1000556,
+
+    /// LTQ FT Ultra: LTQ FT Ultra.
     MS_LTQ_FT_Ultra = 1000557,
+
+    /// GC Quantum: GC Quantum.
     MS_GC_Quantum = 1000558,
+
+    /// spectrum type: Spectrum type.
     MS_spectrum_type = 1000559,
+
+    /// source file type: The format of the file being used. This could be a instrument or vendor specific proprietary file format or a converted open file format.
     MS_source_file_type = 1000560,
+
+    /// data file checksum type: Checksum is a form of redundancy check, a simple way to protect the integrity of data by detecting errors in data.
     MS_data_file_checksum_type = 1000561,
+
+    /// wiff file: Applied Biosystems wiff file format.
     MS_wiff_file = 1000562,
+
+    /// Xcalibur RAW file: Thermo Finnigan RAW file format.
     MS_Xcalibur_RAW_file = 1000563,
+
+    /// mzData file: Proteomics Standards Inititative mzData file format.
     MS_mzData_file = 1000564,
+
+    /// pkl file: Micromass pkl file format.
     MS_pkl_file = 1000565,
+
+    /// mzXML file: Institute of Systems Biology mzXML file format.
     MS_mzXML_file = 1000566,
+
+    /// yep file: Bruker yep file format.
     MS_yep_file = 1000567,
+
+    /// MD5: MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files.
     MS_MD5 = 1000568,
+
+    /// SHA-1: SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity.
     MS_SHA_1 = 1000569,
+
+    /// spectra combination: Method used to combine the mass spectra.
     MS_spectra_combination = 1000570,
+
+    /// sum of spectra: Spectra Sum.
     MS_sum_of_spectra = 1000571,
+
+    /// binary data compression type: Compression Type.
     MS_binary_data_compression_type = 1000572,
+
+    /// median of spectra: Spectra is combined by calculating the median of the spectra.
     MS_median_of_spectra = 1000573,
+
+    /// zlib compression: Zlib.
     MS_zlib_compression = 1000574,
+
+    /// mean of spectra: Spectra is combined by calculating the mean of the spectra.
     MS_mean_of_spectra = 1000575,
+
+    /// no compression: No Compression.
     MS_no_compression = 1000576,
+
+    /// data file: Describes the type of file and its content.
     MS_data_file = 1000577,
+
+    /// data file: Describes the type of file and its content.
     MS_source_file = MS_data_file,
+
+    /// LCQ Fleet: LCQ Fleet.
     MS_LCQ_Fleet = 1000578,
+
+    /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
     MS_MS1_spectrum = 1000579,
+
+    /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
+
+    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_MSn_spectrum = 1000580,
+
+    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_multiple_stage_mass_spectrometry_spectrum = MS_MSn_spectrum,
+
+    /// CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_CRM_spectrum = 1000581,
+
+    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_SIM_spectrum = 1000582,
+
+    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_SRM_spectrum = 1000583,
+
+    /// mzML file: Proteomics Standards Inititative mzML file format.
     MS_mzML_file = 1000584,
+
+    /// contact person attribute: Details about a person to contact in case of concern or dicussion about the file.
     MS_contact_person_attribute = 1000585,
+
+    /// contact name: Name of a contact person.
     MS_contact_name = 1000586,
+
+    /// contact address: Postal address of a contact person.
     MS_contact_address = 1000587,
+
+    /// contact URL: Uniform Resource Locator related to the contact person.
     MS_contact_URL = 1000588,
+
+    /// contact email: Email adress of the contact person.
     MS_contact_email = 1000589,
+
+    /// contact organization: Home institution of the contact person.
     MS_contact_organization = 1000590,
+
+    /// MzWiff: A software program for converting Applied Biosystems wiff file format to the mzXML or mzML format. MzWiff is currently maintained at the Institute for Systems Biology. It replaces the slower mzStar program.
     MS_MzWiff = 1000591,
+
+    /// smoothing: Application of Lowess smoothing or filters to preserve high frequency components of a peak while reducing the noise.
     MS_smoothing = 1000592,
+
+    /// baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparision between intensities of m/z values.
     MS_baseline_reduction = 1000593,
+
+    /// low intensity data point removal: The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
     MS_low_intensity_data_point_removal = 1000594,
+
+    /// low intensity data point removal: The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
     MS_thresholding = MS_low_intensity_data_point_removal,
+
+    /// time array: A data array of relative time offset values from a reference time.
     MS_time_array = 1000595,
+
+    /// measurement method: An attribute of resolution when recording the detector response in absence of the analyte.
     MS_measurement_method = 1000596,
+
+    /// ion optics type: The electrical potential used to impart kinetic energy to ions in a mass spectrometer.
     MS_ion_optics_type = 1000597,
+
+    /// electron transfer dissociation: A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them.
     MS_electron_transfer_dissociation = 1000598,
+
+    /// electron transfer dissociation: A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them.
     MS_ETD = MS_electron_transfer_dissociation,
+
+    /// pulsed q dissociation: A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected.
     MS_pulsed_q_dissociation = 1000599,
+
+    /// pulsed q dissociation: A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected.
     MS_PQD = MS_pulsed_q_dissociation,
+
+    /// Proteios: Database application and analysis platform for proteomics.
     MS_Proteios = 1000600,
+
+    /// ProteinLynx Global Server: Waters software for data analysis.
     MS_ProteinLynx_Global_Server = 1000601,
+
+    /// Shimadzu Biotech instrument model: Shimadzu Biotech instrument model.
     MS_Shimadzu_Biotech_instrument_model = 1000602,
+
+    /// Shimadzu Scientific Instruments instrument model: Shimadzu Scientific Instruments instrument model.
     MS_Shimadzu_Scientific_Instruments_instrument_model = 1000603,
+
+    /// LCMS-IT-TOF: Shimadzu Scientific Instruments LCMS-IT-TOF MS.
     MS_LCMS_IT_TOF = 1000604,
+
+    /// LCMS-2010EV: Shimadzu Scientific Instruments LCMS-2010EV MS.
     MS_LCMS_2010EV = 1000605,
+
+    /// LCMS-2010A: Shimadzu Scientific Instruments LCMS-2010A MS.
     MS_LCMS_2010A = 1000606,
+
+    /// AXIMA CFR MALDI-TOF: Shimadzu Biotech AXIMA CFR MALDI-TOF MS.
     MS_AXIMA_CFR_MALDI_TOF = 1000607,
+
+    /// AXIMA-QIT: Shimadzu Biotech AXIMA-QIT MS.
     MS_AXIMA_QIT = 1000608,
+
+    /// AXIMA-CFR plus: Shimadzu Biotech AXIMA-CFR plus MS.
     MS_AXIMA_CFR_plus = 1000609,
+
+    /// AXIMA Performance MALDI-TOF/TOF: Shimadzu Biotech AXIMA Performance MALDI-TOF/TOF MS.
     MS_AXIMA_Performance_MALDI_TOF_TOF = 1000610,
+
+    /// AXIMA Confidence MALDI-TOF: Shimadzu Biotech AXIMA Confidence MALDI-TOF (curved field reflectron) MS.
     MS_AXIMA_Confidence_MALDI_TOF = 1000611,
+
+    /// AXIMA Assurance Linear MALDI-TOF: Shimadzu Biotech AXIMA Assurance Linear MALDI-TOF MS.
     MS_AXIMA_Assurance_Linear_MALDI_TOF = 1000612,
+
+    /// dta file: Peak list file format that should be better defined FIXME.
     MS_dta_file = 1000613,
+
+    /// ProteinLynx Global Server mass spectrum XML file: Peak list file format used by ProteinLynx Global Server.
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
+
+    /// ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab SFCAP at Cedars-Sinai.
     MS_ProteoWizard = 1000615,
+
+    /// ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab SFCAP at Cedars-Sinai.
     MS_pwiz = MS_ProteoWizard,
+
+    /// preset scan configuration: A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time.
     MS_preset_scan_configuration = 1000616,
+
+    /// wavelength array: A data array of electromagnetic radiation wavelength values.
     MS_wavelength_array = 1000617,
+
+    /// highest wavelength value: Highest wavelength value observed in the uv/vis spectum.
     MS_highest_wavelength_value = 1000618,
+
+    /// lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.
     MS_lowest_wavelength_value = 1000619,
+
+    /// PDA spectrum: Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum).
     MS_PDA_spectrum = 1000620,
+
+    /// photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
     MS_photodiode_array_detector = 1000621,
+
+    /// photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
     MS_PDA = MS_photodiode_array_detector,
+
+    /// Surveyor PDA: Surveyor PDA.
     MS_Surveyor_PDA = 1000622,
+
+    /// Accela PDA: Accela PDA.
     MS_Accela_PDA = 1000623,
+
+    /// inductive detector: Inductive detector.
     MS_inductive_detector = 1000624,
+
+    /// inductive detector: Inductive detector.
     MS_image_current_detector = MS_inductive_detector,
+
+    /// chromatogram: The representation of detector response versus time.
     MS_chromatogram = 1000625,
+
+    /// chromatogram type: Broad category or type of a chromatogram.
     MS_chromatogram_type = 1000626,
+
+    /// selected ion current chromatogram: Chromatogram created by creating an array of the measurements of a specific single ion current at each time point.
     MS_selected_ion_current_chromatogram = 1000627,
+
+    /// selected ion current chromatogram: Chromatogram created by creating an array of the measurements of a specific single ion current at each time point.
     MS_SIC_chromatogram = MS_selected_ion_current_chromatogram,
+
+    /// basepeak chromatogram: Chromatogram created by creating an array of the most intense peaks at each time point.
     MS_basepeak_chromatogram = 1000628,
+
+    /// low intensity threshold: Threshold below which some action is taken.
     MS_low_intensity_threshold = 1000629,
+
+    /// data processing parameter: Data processing parameter used in the data processing performed on the data file.
     MS_data_processing_parameter = 1000630,
+
+    /// high intensity threshold: Threshold above which some action is taken.
     MS_high_intensity_threshold = 1000631,
+
+    /// Q-Tof Premier: Waters Q-Tof Premier MS.
     MS_Q_Tof_Premier = 1000632,
+
+    /// possible charge state: A possible charge state of the ion in a situation where the charge of an ion is known to be one of several possible values rather than a completely unknown value or determined to be a specific charge with reasonable certainty.
     MS_possible_charge_state = 1000633,
+
+    /// DSQ: ThermoFinnigan DSQ GC-MS
     MS_DSQ = 1000634,
+
+    /// ITQ 700: Thermo Scientific ITQ 700 GC-MS
     MS_ITQ_700 = 1000635,
+
+    /// ITQ 900: Thermo Scientific ITQ 900 GC-MS
     MS_ITQ_900 = 1000636,
+
+    /// ITQ 1100: Thermo Scientific ITQ 1100 GC-MS
     MS_ITQ_1100 = 1000637,
+
+    /// LTQ XL ETD: Thermo Scientific LTQ XL MS with ETD
     MS_LTQ_XL_ETD = 1000638,
+
+    /// LTQ Orbitrap XL ETD: Thermo Scientific LTQ Orbitrap XL MS with ETD
     MS_LTQ_Orbitrap_XL_ETD = 1000639,
+
+    /// DFS: Thermo Scientific DFS HR GC-MS
     MS_DFS = 1000640,
+
+    /// DSQ II: Thermo Scientific DSQ II GC-MS
     MS_DSQ_II = 1000641,
+
+    /// MALDI LTQ XL: Thermo Scientific MALDI LTQ XL MS
     MS_MALDI_LTQ_XL = 1000642,
+
+    /// MALDI LTQ Orbitrap: Thermo Scientific MALDI LTQ Orbitrap MS
     MS_MALDI_LTQ_Orbitrap = 1000643,
+
+    /// TSQ Quantum Access: Thermo Scientific TSQ Quantum Access MS.
     MS_TSQ_Quantum_Access = 1000644,
+
+    /// Element XR: Thermo Scientific Element XR HR-ICP-MS
     MS_Element_XR = 1000645,
+
+    /// Element 2: Thermo Scientific Element 2 HR-ICP-MS
     MS_Element_2 = 1000646,
+
+    /// Element GD: Thermo Scientific Element GD Glow Discharge MS
     MS_Element_GD = 1000647,
+
+    /// GC IsoLink: Thermo Scientific GC IsoLink Isotope Ratio MS
     MS_GC_IsoLink = 1000648,
+
+    /// Exactive: Thermo Scientific Exactive MS
     MS_Exactive = 1000649,
+
+    /// Proteomics Discoverer: Thermo Scientific software for data analysis of peptides and proteins.
     MS_Proteomics_Discoverer = 1000650,
+
+    /// 3200 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200
     MS_3200_QTRAP = 1000651,
+
+    /// 4800 Plus MALDI TOF-TOF Analyzer: AB SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer
     MS_4800_Plus_MALDI_TOF_TOF_Analyzer = 1000652,
+
+    /// API 3200: AB SCIEX or Applied Biosystems|MDS SCIEX API 3200 MS.
     MS_API_3200 = 1000653,
+
+    /// API 5000: AB SCIEX or Applied Biosystems|MDS SCIEX API 5000 MS.
     MS_API_5000 = 1000654,
+
+    /// QSTAR Elite: AB SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite
     MS_QSTAR_Elite = 1000655,
+
+    /// QSTAR Pulsar: Applied Biosystems|MDS SCIEX QSTAR Pulsar
     MS_QSTAR_Pulsar = 1000656,
+
+    /// QSTAR XL: Applied Biosystems|MDS SCIEX QSTAR XL
     MS_QSTAR_XL = 1000657,
+
+    /// 4800 Proteomics Analyzer: Applied Biosystems|MDS SCIEX 4800 Proteomics Analyzer
     MS_4800_Proteomics_Analyzer = 1000658,
+
+    /// 4000 Series Explorer Software: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
     MS_4000_Series_Explorer_Software = 1000659,
+
+    /// GPS Explorer: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
     MS_GPS_Explorer = 1000661,
+
+    /// LightSight Software: AB SCIEX or Applied Biosystems|MDS SCIEX software metabolite identification.
     MS_LightSight_Software = 1000662,
+
+    /// ProteinPilot Software: AB SCIEX or Applied Biosystems|MDS SCIEX software for protein ID and quant.
     MS_ProteinPilot_Software = 1000663,
+
+    /// TissueView Software: Applied Biosystems|MDS SCIEX software for tissue imaging.
     MS_TissueView_Software = 1000664,
+
+    /// MarkerView Software: Applied Biosystems|MDS SCIEX software for metabolomics and biomarker profiling.
     MS_MarkerView_Software = 1000665,
+
+    /// MRMPilot Software: Applied Biosystems|MDS SCIEX software for MRM assay development.
     MS_MRMPilot_Software = 1000666,
+
+    /// BioAnalyst: Applied Biosystems|MDS SCIEX software for bio-related data exploration.
     MS_BioAnalyst = 1000667,
+
+    /// Pro ID: Applied Biosystems|MDS SCIEX software for protein identification.
     MS_Pro_ID = 1000668,
+
+    /// Pro ICAT: Applied Biosystems|MDS SCIEX software for protein ID and quant by ICAT.
     MS_Pro_ICAT = 1000669,
+
+    /// Pro Quant: Applied Biosystems|MDS SCIEX software for protein ID and quant by iTRAQ.
     MS_Pro_Quant = 1000670,
+
+    /// Pro BLAST: Applied Biosystems|MDS SCIEX software for MS-BLAST identification.
     MS_Pro_BLAST = 1000671,
+
+    /// Cliquid?: AB SCIEX or Applied Biosystems software.
     MS_Cliquid_ = 1000672,
+
+    /// MIDAS Workflow Designer: Applied Biosystems|MDS SCIEX software for MRM assay development.
     MS_MIDAS_Workflow_Designer = 1000673,
+
+    /// MultiQuant: Applied Biosystems|MDS SCIEX software for MRM-based quantitation.
     MS_MultiQuant = 1000674,
+
+    /// 6220 Time-of-Flight LC/MS: The 6220 Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.
     MS_6220_Time_of_Flight_LC_MS = 1000675,
+
+    /// 6510 Quadrupole Time-of-Flight LC/MS: The 6510 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.
     MS_6510_Quadrupole_Time_of_Flight_LC_MS = 1000676,
+
+    /// 6520 Quadrupole Time-of-Flight LC/MS: The 6520 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.
     MS_6520_Quadrupole_Time_of_Flight_LC_MS = 1000677,
+
+    /// MassHunter Data Acquisition: Software for data acquisition of 6000 series instruments.
     MS_MassHunter_Data_Acquisition = 1000678,
+
+    /// MassHunter Easy Access: Software for open access data acquisition.
     MS_MassHunter_Easy_Access = 1000679,
+
+    /// MassHunter Qualitative Analysis: Software for data analysis of data from 6000 series instruments.
     MS_MassHunter_Qualitative_Analysis = 1000680,
+
+    /// MassHunter Quantitative Analysis: Software for quantitation of Triple Quadruople and Quadrupole Time-of-Flight data.
     MS_MassHunter_Quantitative_Analysis = 1000681,
+
+    /// MassHunter Metabolite ID: Software for identification of metabolites.
     MS_MassHunter_Metabolite_ID = 1000682,
+
+    /// MassHunter BioConfirm: Software for protein characterization.
     MS_MassHunter_BioConfirm = 1000683,
+
+    /// Genespring MS: Software for quantitation and statistical analysis of TOF and Q-TOF LC/MS data.
     MS_Genespring_MS = 1000684,
+
+    /// MassHunter Mass Profiler: Software for quantitation and statistical analysis of TOF and Q-TOF LC/MS data.
     MS_MassHunter_Mass_Profiler = 1000685,
+
+    /// METLIN: Personal Metabolite Database for MassHunter Workstation. Software for identification of human metabolites.
     MS_METLIN = 1000686,
+
+    /// Spectrum Mill for MassHunter Workstation: Software for protein identification and characterization of complex protein digest mixtures.
     MS_Spectrum_Mill_for_MassHunter_Workstation = 1000687,
+
+    /// 6300 Series Ion Trap Data Analysis Software: Software for data analysis of 6300 series ion trap mass spectrometers.
     MS_6300_Series_Ion_Trap_Data_Analysis_Software = 1000688,
+
+    /// Agilent software: Agilent software for data acquisition and analysis.
     MS_Agilent_software = 1000689,
+
+    /// AB SCIEX software: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
     MS_AB_SCIEX_software = 1000690,
+
+    /// Applied Biosystems software: Applied Biosystems|MDS SCIEX software for data acquisition and analysis.
     MS_Applied_Biosystems_software = 1000691,
+
+    /// Bruker software: Bruker software for data acquisition and analysis.
     MS_Bruker_software = 1000692,
+
+    /// Thermo Finnigan software: Thermo Finnigan software for data acquisition and analysis.
     MS_Thermo_Finnigan_software = 1000693,
+
+    /// Waters software: Waters software for data acquisition and analysis.
     MS_Waters_software = 1000694,
+
+    /// apex ultra: Bruker Daltonics apex ultra
     MS_apex_ultra = 1000695,
+
+    /// autoflex III smartbeam: Bruker Daltonics autoflex III smartbeam
     MS_autoflex_III_smartbeam = 1000696,
+
+    /// HCT Series: Bruker Daltonics HCT Series
     MS_HCT_Series = 1000697,
+
+    /// HCTultra: Bruker Daltonics HCTultra
     MS_HCTultra = 1000698,
+
+    /// HCTultra PTM: Bruker Daltonics HCTultra PTM Discovery System
     MS_HCTultra_PTM = 1000699,
+
+    /// HCTultra ETD II: Bruker Daltonics HCTultra ETD II System
     MS_HCTultra_ETD_II = 1000700,
+
+    /// microflex LT: Bruker Daltonics microflex MS.
     MS_microflex_LT = 1000701,
+
+    /// micrOTOF: Bruker Daltonics micrOTOF
     MS_micrOTOF = 1000702,
+
+    /// micrOTOF-Q: Bruker Daltonics micrOTOF-Q
     MS_micrOTOF_Q = 1000703,
+
+    /// micrOTOF-Q II: Bruker Daltonics micrOTOF-Q II
     MS_micrOTOF_Q_II = 1000704,
+
+    /// ultraflex III TOF/TOF: Bruker Daltonics ultraflex III TOF/TOF
     MS_ultraflex_III_TOF_TOF = 1000705,
+
+    /// apexControl: Bruker software for data acquisition.
     MS_apexControl = 1000706,
+
+    /// BioTools: Bruker software for data analysis.
     MS_BioTools = 1000707,
+
+    /// CLINPROT: Bruker CLINPROT software.
     MS_CLINPROT = 1000708,
+
+    /// CLINPROT micro: Bruker CLINPROT micro software.
     MS_CLINPROT_micro = 1000709,
+
+    /// CLINPROT robot: Bruker CLINPROT robot software.
     MS_CLINPROT_robot = 1000710,
+
+    /// ClinProTools: Bruker ClinProTools software.
     MS_ClinProTools = 1000711,
+
+    /// Compass: Bruker Compass software.
     MS_Compass = 1000712,
+
+    /// Compass for HCT/esquire: Bruker Compass for HCT/esquire software
     MS_Compass_for_HCT_esquire = 1000713,
+
+    /// Compass for micrOTOF: Bruker Compass for micrOTOF software.
     MS_Compass_for_micrOTOF = 1000714,
+
+    /// Compass OpenAccess: Bruker compass OpenAccess software.
     MS_Compass_OpenAccess = 1000715,
+
+    /// Compass Security Pack: Bruker compass Security Pack software.
     MS_Compass_Security_Pack = 1000716,
+
+    /// CompassXport: Bruker stand-alone software for data conversion.
     MS_CompassXport = 1000717,
+
+    /// CompassXtract: Bruker software library for data access.
     MS_CompassXtract = 1000718,
+
+    /// DataAnalysis: Bruker software for data analysis.
     MS_DataAnalysis = 1000719,
+
+    /// dpControl: Bruker software for data acquisition.
     MS_dpControl = 1000720,
+
+    /// esquireControl: Bruker software for data acquisition.
     MS_esquireControl = 1000721,
+
+    /// flexImaging: Bruker software for data analysis.
     MS_flexImaging = 1000722,
+
+    /// GENOLINK: Bruker GENOLINK software.
     MS_GENOLINK = 1000723,
+
+    /// GenoTools: Bruker GenoTools software.
     MS_GenoTools = 1000724,
+
+    /// HCTcontrol: Bruker software for data acquisition.
     MS_HCTcontrol = 1000725,
+
+    /// micrOTOFcontrol: Bruker software for data acquisition.
     MS_micrOTOFcontrol = 1000726,
+
+    /// PolyTools: Bruker PolyTools software.
     MS_PolyTools = 1000727,
+
+    /// ProfileAnalysis: Bruker software for data analysis.
     MS_ProfileAnalysis = 1000728,
+
+    /// PROTEINEER: Bruker PROTEINEER software.
     MS_PROTEINEER = 1000729,
+
+    /// PROTEINEER dp: Bruker PROTEINEER dp software.
     MS_PROTEINEER_dp = 1000730,
+
+    /// PROTEINEER fc: Bruker PROTEINEER fc software.
     MS_PROTEINEER_fc = 1000731,
+
+    /// PROTEINEER spII: Bruker PROTEINEER spII software.
     MS_PROTEINEER_spII = 1000732,
+
+    /// PROTEINEER-LC: Bruker PROTEINEER-LC software.
     MS_PROTEINEER_LC = 1000733,
+
+    /// ProteinScape: Bruker ProteinScape software.
     MS_ProteinScape = 1000734,
+
+    /// PureDisk: BrukerPureDisk software.
     MS_PureDisk = 1000735,
+
+    /// QuantAnalysis: Bruker software for data analysis.
     MS_QuantAnalysis = 1000736,
+
+    /// spControl: Bruker software for data acquisition.
     MS_spControl = 1000737,
+
+    /// TargetAnalysis: Bruker TargetAnalysis software.
     MS_TargetAnalysis = 1000738,
+
+    /// WARP-LC: Bruker WARP-LC software.
     MS_WARP_LC = 1000739,
+
+    /// parameter file: Parameter file used to configure the acquisition of raw data on the instrument.
     MS_parameter_file = 1000740,
+
+    /// Conversion to dta: Conversion to dta format.
     MS_Conversion_to_dta = 1000741,
+
+    /// Bioworks SRF file: Thermo Finnigan SRF file format.
     MS_Bioworks_SRF_file = 1000742,
+
+    /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
+
+    /// length unit: A base unit which is a standard measure of the distance between two points.
     UO_length_unit = 100000001,
+
+    /// mass unit: A base unit which is a standard measure of the amount of matter/energy of a physical object.
     UO_mass_unit = 100000002,
+
+    /// time unit: A base unit which is a standard measure of the dimension in which events occur in sequence.
     UO_time_unit = 100000003,
+
+    /// electric current unit: A base unit which is a standard measure of the flow of electric charge.
     UO_electric_current_unit = 100000004,
+
+    /// temperature unit: A base unit which is a standard measure of the average kinetic energy of the particles in a sample of matter.
     UO_temperature_unit = 100000005,
+
+    /// substance unit: A base unit which is a standardized quantity of an element or compound with uniform composition.
     UO_substance_unit = 100000006,
+
+    /// luminous intensity unit: A base unit which is a standard measure of the wavelength-weighted power emitted by a light source in a particular direction.
     UO_luminous_intensity_unit = 100000007,
+
+    /// meter: A length unit which is equal to the length of the path traveled by light in vacuum during a time interval of 1/299 792 458 of a second.
     UO_meter = 100000008,
+
+    /// kilogram: A mass unit which is equal to the mass of the International Prototype Kilogram kept by the BIPM at Svres, France.
     UO_kilogram = 100000009,
+
+    /// second: A time unit which is equal to the duration of 9 192 631 770 periods of the radiation corresponding to the transition between the two hyperfine levels of the ground state of the caesium 133 atom.
     UO_second = 100000010,
+
+    /// ampere: An electric current unit which is equal to the constant current which, if maintained in two straight parallel conductors of infinite length, of negligible circular cross-section, and placed 1 m apart in vacuum, would produce between these conductors a force equal to 2 x 10^[-7] newton per meter of length.
     UO_ampere = 100000011,
+
+    /// kelvin: A thermodynamic temperature unit which is equal to the fraction 1/273.16 of the thermodynamic temperature of the triple point of water.
     UO_kelvin = 100000012,
+
+    /// mole: A substance unit which is equal to the amount of substance of a molecular system which contains as many elementary entities as there are atoms in 0.012 kilogram of carbon 12.
     UO_mole = 100000013,
+
+    /// candela: A luminous intensity unit which equal to the luminous intensity, in a given direction, of a source that emits monochromatic radiation of frequency 540 x 1012 hertz and that has a radiant intensity in that direction of 1/683 watt per steradian.
     UO_candela = 100000014,
+
+    /// centimeter: A length unit which is equal to one hundredth of a meter or 10^[-2] m.
     UO_centimeter = 100000015,
+
+    /// millimeter: A length unit which is equal to one thousandth of a meter or 10^[-3] m.
     UO_millimeter = 100000016,
+
+    /// micrometer: A length unit which is equal to one millionth of a meter or 10^[-6] m.
     UO_micrometer = 100000017,
+
+    /// nanometer: A length unit which is equal to one thousandth of one millionth of a meter or 10^[-9] m.
     UO_nanometer = 100000018,
+
+    /// angstrom: A length unit which is equal to 10 [-10] m.
     UO_angstrom = 100000019,
+
+    /// picometer: A length unit which is equal to 10^[-12] m.
     UO_picometer = 100000020,
+
+    /// gram: A mass unit which is equal to one thousandth of a kilogram or 10^[-3] kg.
     UO_gram = 100000021,
+
+    /// milligram: A mass unit which is equal to one thousandth of a gram or 10^[-3] g.
     UO_milligram = 100000022,
+
+    /// microgram: A mass unit which is equal to one millionth of a gram or 10^[-6] g.
     UO_microgram = 100000023,
+
+    /// nanogram: A mass unit which is equal to one thousandth of one millionth of a gram or 10^[-9] g.
     UO_nanogram = 100000024,
+
+    /// picogram: A mass unit which is equal to 10^[-12] g.
     UO_picogram = 100000025,
+
+    /// femtogram: A mass unit which is equal to 10^[-15] g.
     UO_femtogram = 100000026,
+
+    /// degree celsius: A temperature derived unit which is equal to one Kelvin degree. However, they have their zeros at different points. The Centigrade scale has its zero at 273.15 K.
     UO_degree_celsius = 100000027,
+
+    /// millisecond: A time unit which is equal to one thousandth of a second or 10^[-3] s.
     UO_millisecond = 100000028,
+
+    /// microsecond: A time unit which is equal to one millionth of a second or 10^[-6] s.
     UO_microsecond = 100000029,
+
+    /// picosecond: A time unit which is equal to 10^[-12] s.
     UO_picosecond = 100000030,
+
+    /// minute: A time unit which is equal to 60 seconds.
     UO_minute = 100000031,
+
+    /// hour: A time unit which is equal to 3600 seconds or 60 minutes.
     UO_hour = 100000032,
+
+    /// day: A time unit which is equal to 24 hours.
     UO_day = 100000033,
+
+    /// week: A time unit which is equal to 7 days.
     UO_week = 100000034,
+
+    /// month: A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which is science is taken to be equal to 30 days.
     UO_month = 100000035,
+
+    /// year: A time unit which is equal to 12 months which is science is taken to be equal to 365.25 days.
     UO_year = 100000036,
+
+    /// milliampere: An electric current unit current which is equal to one thousandth of an ampere or 10^[-3] A.
     UO_milliampere = 100000037,
+
+    /// microampere: An electric current unit current which is equal to one millionth of an ampere or 10^[-6] A.
     UO_microampere = 100000038,
+
+    /// micromole: A substance unit equal to a millionth of a mol or 10^[-6] mol.
     UO_micromole = 100000039,
+
+    /// millimole: A substance unit equal to a thousandth of a mol or 10^[-3] mol.
     UO_millimole = 100000040,
+
+    /// nanomole: A substance unit equal to one thousandth of one millionth of a mole or 10^[-9] mol.
     UO_nanomole = 100000041,
+
+    /// picomole: A substance unit equal to 10^[-12] mol.
     UO_picomole = 100000042,
+
+    /// femtomole: A substance unit equal to 10^[-15] mol.
     UO_femtomole = 100000043,
+
+    /// attomole: A substance unit equal to 10^[-18] mol.
     UO_attomole = 100000044,
+
+    /// base unit: A unit which is one of a particular measure to which all measures of that type can be related.
     UO_base_unit = 100000045,
+
+    /// derived unit: A unit which is derived from base units.
     UO_derived_unit = 100000046,
+
+    /// area unit: A derived unit which is a standard measure of the amount of a 2-dimensional flat surface.
     UO_area_unit = 100000047,
+
+    /// acceleration unit: A derived unit which is a standard measure of the rate of change of velocity in either speed or direction.
     UO_acceleration_unit = 100000048,
+
+    /// angular velocity unit: A derived unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time.
     UO_angular_velocity_unit = 100000049,
+
+    /// angular acceleration unit: A derived unit which is a standard measure of the rate of change of angular velocity.
     UO_angular_acceleration_unit = 100000050,
+
+    /// concentration unit: A derived unit which represents a standard measurement of how much of a given substance there is mixed with another substance.
     UO_concentration_unit = 100000051,
+
+    /// mass density unit: A density unit which is a standard measure of the mass of a substance in a given volume.
     UO_mass_density_unit = 100000052,
+
+    /// luminance unit: A derived unit which is a standard measure of the luminous intensity impinging on a given area.
     UO_luminance_unit = 100000053,
+
+    /// area density unit: A density unit which is a standard measure of the mass exerting an influence on a given area.
     UO_area_density_unit = 100000054,
+
+    /// molar mass unit: A derived unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
     UO_molar_mass_unit = 100000055,
+
+    /// molar volume unit: A derived unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
     UO_molar_volume_unit = 100000056,
+
+    /// momentum unit: A derived unit which is a standard measure of the quantity of motion measured by the product of mass and velocity.
     UO_momentum_unit = 100000057,
+
+    /// rotational frequency unit: A derived unit which is a standard measure of the number of rotations in a given time.
     UO_rotational_frequency_unit = 100000058,
+
+    /// specific volume unit: A derived unit which is a standard measure of the volume of a given mass of substance (the reciprocal of density).
     UO_specific_volume_unit = 100000059,
+
+    /// speed/velocity unit: A derived unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity.
     UO_speed_velocity_unit = 100000060,
+
+    /// unit of molarity: A derived concentration unit which is a standard measure of the number of moles of a given substance per liter of solution.
     UO_unit_of_molarity = 100000061,
+
+    /// molar: A unit of concentration which expresses a concentration of 1 mole of solute per liter of solution (mol/L).
     UO_molar = 100000062,
+
+    /// millimolar: A unit of molarity which is equal to one thousandth of a molar or 10^[-3] M.
     UO_millimolar = 100000063,
+
+    /// micromolar: A unit of molarity which is equal to one millionth of a molar or 10^[-6] M.
     UO_micromolar = 100000064,
+
+    /// nanomolar: A unit of molarity which is equal to one thousandth of one millionth of a molar or 10^[-9] M.
     UO_nanomolar = 100000065,
+
+    /// picomolar: A unit of molarity which is equal to 10^[-12] M.
     UO_picomolar = 100000066,
+
+    /// unit of molality: A derived concentration unit which is a standard measure of the number of moles of a given substance per kilogram of solvent.
     UO_unit_of_molality = 100000067,
+
+    /// molal: A unit of concentration which expresses a concentration of a solution of 1 mole per kilogram of solvent (mol/kg).
     UO_molal = 100000068,
+
+    /// millimolal: A molality unit which is equal to one thousandth of a molal or 10^[-3] m.
     UO_millimolal = 100000069,
+
+    /// micromolal: A molality unit which is equal to one millionth of a molal or 10^[-6] m.
     UO_micromolal = 100000070,
+
+    /// nanomolal: A molality unit which is equal to one thousandth of one millionth of a molal or 10^[-9] m.
     UO_nanomolal = 100000071,
+
+    /// picomolal: A molality unit which is equal to 10^[-12] m.
     UO_picomolal = 100000072,
+
+    /// femtomolar: A unit of molarity which is equal to 10^[-15] M.
     UO_femtomolar = 100000073,
+
+    /// unit of normality: A unit of concentration which highlights the chemical nature of salts.
     UO_unit_of_normality = 100000074,
+
+    /// normal: A unit of concentration which is one gram equivalent of a solute per liter of solution. A gram equivalent weight or equivalent is a measure of the reactive capacity of a given molecule.
     UO_normal = 100000075,
+
+    /// mole fraction: A concentration unit which denotes the number of moles of solute as a proportion of the total number of moles in a solution.
     UO_mole_fraction = 100000076,
+
+    /// meter per second per second: An acceleration unit which is equal to the acceleration an object changing its velocity by 1meter/s over a time period that equals one second.
     UO_meter_per_second_per_second = 100000077,
+
+    /// radian per second per second: An angular unit acceleration which is equal to the angular acceleration of an object changing its angular velocity by 1rad/s over a time period that equals one second.
     UO_radian_per_second_per_second = 100000078,
+
+    /// radian per second: An angular unit velocity which is equal to about 9.54930 rpm (revolutions per minute).
     UO_radian_per_second = 100000079,
+
+    /// square meter: An area unit which is equal to an area enclosed by a square with sides each 1 meter long.
     UO_square_meter = 100000080,
+
+    /// square centimeter: An area unit which is equal to one thousand of square meter or 10^[-3] m^[2].
     UO_square_centimeter = 100000081,
+
+    /// square millimeter: An area unit which is equal to one millionth of a square meter or 10^[-6] m^[2].
     UO_square_millimeter = 100000082,
+
+    /// kilogram per cubic meter: A mass unit density which is equal to mass of an object in kilograms divided by the volume in cubic meters.
     UO_kilogram_per_cubic_meter = 100000083,
+
+    /// gram per cubic centimeter: A mass unit density which is equal to mass of an object in grams divided by the volume in cubic centimeters.
     UO_gram_per_cubic_centimeter = 100000084,
+
+    /// candela per square meter: A luminance unit which is equal to a luminous intensity of one candela radiating from a surface whose area is one square meter.
     UO_candela_per_square_meter = 100000085,
+
+    /// kilogram per square meter: An area density unit which is equal to the mass of an object in kilograms divided by the surface area in meters squared.
     UO_kilogram_per_square_meter = 100000086,
+
+    /// kilogram per mole: A molar mass unit which is equal to one kilogram of mass of one mole of chemical element or chemical compound.
     UO_kilogram_per_mole = 100000087,
+
+    /// gram per mole: A molar mass unit which is equal to one gram of mass of one mole of chemical element or chemical compound.
     UO_gram_per_mole = 100000088,
+
+    /// cubic meter per mole: A molar volume unit which is equal to 1 cubic meter occupied by one mole of a substance in the form of a solid, liquid, or gas.
     UO_cubic_meter_per_mole = 100000089,
+
+    /// cubic centimeter per mole: A molar volume unit which is equal to 1 cubic centimeter occupied by one mole of a substance in the form of a solid, liquid, or gas.
     UO_cubic_centimeter_per_mole = 100000090,
+
+    /// kilogram meter per second: A momentum unit which is equal to the momentum of a one kilogram mass object with a speed of one meter per second.
     UO_kilogram_meter_per_second = 100000091,
+
+    /// one turn per second: A rotational frequency unit which is equal to 1 complete turn in a period of time that equals to 1 second.
     UO_one_turn_per_second = 100000092,
+
+    /// cubic meter per kilogram: A specific volume unit which is equal to one cubic meter volume occupied by one kilogram of a particular substance.
     UO_cubic_meter_per_kilogram = 100000093,
+
+    /// meter per second: A speed/velocity unit which is equal to the speed of an object traveling 1 meter distance in one second.
     UO_meter_per_second = 100000094,
+
+    /// volume unit: A derived unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas.
     UO_volume_unit = 100000095,
+
+    /// cubic meter: A volume unit which is equal to the volume of a cube with edges one meter in length. One cubic meter equals to 1000 liters.
     UO_cubic_meter = 100000096,
+
+    /// cubic centimeter: A volume unit which is equal to one millionth of a cubic meter or 10^[-9] m^[3], or to 1 ml.
     UO_cubic_centimeter = 100000097,
+
+    /// milliliter: A volume unit which is equal to one thousandth of a liter or 10^[-3] L, or to 1 cubic centimeter.
     UO_milliliter = 100000098,
+
+    /// liter: A volume unit which is equal to one thousandth of a cubic meter or 10^[-3] m^[3], or to 1 decimeter.
     UO_liter = 100000099,
+
+    /// cubic decimeter: A volume unit which is equal to one thousand of a cubic meter or 10^[-3] m^[3], or to 1 L.
     UO_cubic_decimeter = 100000100,
+
+    /// microliter: A volume unit which is equal to one millionth of a liter or 10^[-6] L.
     UO_microliter = 100000101,
+
+    /// nanoliter: A volume unit which is equal to one thousandth of one millionth of a liter or 10^[-9] L.
     UO_nanoliter = 100000102,
+
+    /// picoliter: A volume unit which is equal to 10^[-12] L.
     UO_picoliter = 100000103,
+
+    /// femtoliter: A volume unit which is equal to 10^[-15] L.
     UO_femtoliter = 100000104,
+
+    /// frequency unit: A derived unit which is a standard measure of the number of repetitive actions in a particular time.
     UO_frequency_unit = 100000105,
+
+    /// hertz: A frequency unit which is equal to 1 complete cycle of a recurring phenomenon in 1 second.
     UO_hertz = 100000106,
+
+    /// force unit: A derived unit which is a standard measure of the force is applied when a mass is accelerated.
     UO_force_unit = 100000107,
+
+    /// newton: A force unit which is equal to the force required to cause an acceleration of 1m/s2 of a mass of 1 Kg in the direction of the force.
     UO_newton = 100000108,
+
+    /// pressure unit: A derived unit which is a standard measure of the force applied to a given area.
     UO_pressure_unit = 100000109,
+
+    /// pascal: A pressure unit which is equal to the pressure or stress on a surface caused by a force of 1 newton spread over a surface of 1 m^[2].
     UO_pascal = 100000110,
+
+    /// energy unit: A derived unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc).
     UO_energy_unit = 100000111,
+
+    /// joule: An energy unit which is equal to the energy required when a force of 1 newton moves an object 1 meter in the direction of the force.
     UO_joule = 100000112,
+
+    /// power unit: A derived unit which is a standard measure power or the rate of doing work.
     UO_power_unit = 100000113,
+
+    /// watt: A power unit which is equal to the power used when work is done at the rate of 1 joule per second.
     UO_watt = 100000114,
+
+    /// illuminance unit: A derived unit which is a standard measure of the luminous flux incident on a unit area.
     UO_illuminance_unit = 100000115,
+
+    /// lux: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 m^[2].
     UO_lux = 100000116,
+
+    /// luminous flux unit: A derived unit which is a standard measure of the flow of radiant energy.
     UO_luminous_flux_unit = 100000117,
+
+    /// lumen: A luminous flux unit which is equal to the luminous flux emitted into 1 steradian by a point source of 1 candela.
     UO_lumen = 100000118,
+
+    /// catalytic activity unit: A derived unit which is a standard measure of the amount of the action of a catalyst.
     UO_catalytic_activity_unit = 100000119,
+
+    /// katal: A catalytic unit activity which is equal to the activity of a catalyst in moles per second, such as the amount of an enzyme needed to transform one mole of substrate per second.
     UO_katal = 100000120,
+
+    /// angle unit: A derived unit which is a standard measure of the figure or space formed by the junction of two lines or planes.
     UO_angle_unit = 100000121,
+
+    /// plane angle unit: A derived unit which is a standard measure of the angle formed by two straight lines in the same plane.
     UO_plane_angle_unit = 100000122,
+
+    /// radian: A plane angle unit which is equal to the angle subtended at the center of a circle by an arc equal in length to the radius of the circle, approximately 57 degrees 17 minutes and 44.6 seconds.
     UO_radian = 100000123,
+
+    /// solid angle unit: A derived unit which is a standard measure of the angle formed by three or more planes intersecting at a common point.
     UO_solid_angle_unit = 100000124,
+
+    /// steradian: A solid angle unit which is equal to the solid angle subtended at the center of a sphere by an area on the surface of the sphere that is equal to the radius squared.
     UO_steradian = 100000125,
+
+    /// temperature derived unit: A derived unit which represents a standard measurement of temperature in a particular temperature scale.
     UO_temperature_derived_unit = 100000126,
+
+    /// radiation unit: A derived unit which is a standard measure of the amount of radiation emitted by a given radiation source as well as the amount of radiation absorbed or deposited in a specific material by a radiation source.
     UO_radiation_unit = 100000127,
+
+    /// activity (of a radionuclide) unit: A derived unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance.
     UO_activity__of_a_radionuclide__unit = 100000128,
+
+    /// absorbed dose unit: A derived unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue.
     UO_absorbed_dose_unit = 100000129,
+
+    /// dose equivalent unit: A derived unit which is a standard measure of the expression of dose in terms of its biological effect.
     UO_dose_equivalent_unit = 100000130,
+
+    /// exposure unit: A derived unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured.
     UO_exposure_unit = 100000131,
+
+    /// becquerel: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second (dps).
     UO_becquerel = 100000132,
+
+    /// curie: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which there are 3.7 x 10^[10] atom disintegration per second (dps).
     UO_curie = 100000133,
+
+    /// gray: An absorbed dose unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter.
     UO_gray = 100000134,
+
+    /// rad: An absorbed dose unit which is equal to 0.01 gray (Gy).
     UO_rad = 100000135,
+
+    /// roentgen: An exposure unit which is equal to the amount of radiation required to liberate positive and negative charges of one electrostatic unit of charge in 1 cm^[3] of air at standard temperature and pressure (STP). This corresponds to the generation of approximately 2.0810^[9] ion pairs.
     UO_roentgen = 100000136,
+
+    /// sievert: A dose equivalent unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter.
     UO_sievert = 100000137,
+
+    /// millisievert: A dose equivalent unit which is equal to one thousandth of a sievert or 10^[-3] Sv.
     UO_millisievert = 100000138,
+
+    /// microsievert: A dose equivalent unit which is equal to one millionth of a sievert or 10^[-6] Sv.
     UO_microsievert = 100000139,
+
+    /// Roentgen equivalent man: A dose equivalent unit which when multiplied by hundred is equal to one sievert or 1 Sv. 1 Sv is equal to 100 rem.
     UO_Roentgen_equivalent_man = 100000140,
+
+    /// microgray: An absorbed dose unit which is equal to one millionth of a gray or 10^[-6] Gy.
     UO_microgray = 100000141,
+
+    /// milligray: An absorbed dose unit which is equal to one thousandth of a gray or 10^[-3] Gy.
     UO_milligray = 100000142,
+
+    /// nanogray: An absorbed dose unit which is equal to one thousandth of a millionth of a gray or 10^[-9] Gy.
     UO_nanogray = 100000143,
+
+    /// nanosievert: A dose equivalent unit which is equal to one thousandth of a millionth of a sievert or 10^[-9] Sv.
     UO_nanosievert = 100000144,
+
+    /// millicurie: An activity (of a radionuclide) unit which is equal to one thousandth of a curie or 10^[-3] Ci.
     UO_millicurie = 100000145,
+
+    /// microcurie: An activity (of a radionuclide) unit which is equal to one millionth of a curie or 10^[-6] Ci.
     UO_microcurie = 100000146,
+
+    /// disintegrations per minute: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per minute or there is one atom disintegration per minute.
     UO_disintegrations_per_minute = 100000147,
+
+    /// counts per minute: An activity (of a radionuclide) unit which is equal to the number of light emissions produced by ionizing radiation in one minute.
     UO_counts_per_minute = 100000148,
+
+    /// time derived unit: A derived unit which is a standard measure of the dimension in which events occur in sequence.
     UO_time_derived_unit = 100000149,
+
+    /// nanosecond: A time unit which is equal to one thousandth of one millionth of a second or 10^[-9] s.
     UO_nanosecond = 100000150,
+
+    /// century: A time unit which is equal to 100 years.
     UO_century = 100000151,
+
+    /// half life: A time unit which represents the period over which the activity or concentration of a specified chemical or element falls to half its original activity or concentration.
     UO_half_life = 100000152,
+
+    /// foot candle: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 foot^[2]. One footcandle is equal to 10.76 lux.
     UO_foot_candle = 100000153,
+
+    /// irradiance unit: A derived unit which is a standard measure of the power of electromagnetic radiation at a surface, per unit area.
     UO_irradiance_unit = 100000154,
+
+    /// watt per square meter: An irradiance unit which is equal to 1 watt of radiant power incident per one square meter surface area.
     UO_watt_per_square_meter = 100000155,
+
+    /// einstein per square meter per second: An irradiance unit which is equal to one einstein per square meter per second. One einstein is one mole of photons, regardless of their frequency. Therefore, the number of photons in an einstein is Avogadro's number.
     UO_einstein_per_square_meter_per_second = 100000156,
+
+    /// light unit: A derived unit which is a standard measure of the intensity of light.
     UO_light_unit = 100000157,
+
+    /// watt per steradian per square meter: A radiance unit which is equal to one watt of radiant power incident per steradian solid angle per one square meter projected area of the source, as viewed from the given direction.
     UO_watt_per_steradian_per_square_meter = 100000158,
+
+    /// radiant intensity unit: A derived unit which is a standard measure of the intensity of electromagnetic radiation.
     UO_radiant_intensity_unit = 100000159,
+
+    /// microeinstein per square meter per second: An irradiance unit which is equal to one microeinstein per square meter per second or 10^[-6] microeinstein/sm^[2].
     UO_microeinstein_per_square_meter_per_second = 100000160,
+
+    /// radiance unit: A derived unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves.
     UO_radiance_unit = 100000161,
+
+    /// watt per steradian: A radiant intensity unit which is equal to one kilogram meter squared per second cubed per steradian.
     UO_watt_per_steradian = 100000162,
+
+    /// mass percentage: A dimensionless concentration unit which denotes the mass of a substance in a mixture as a percentage of the mass of the entire mixture.
     UO_mass_percentage = 100000163,
+
+    /// mass volume percentage: A dimensionless concentration unit which denotes the mass of the substance in a mixture as a percentage of the volume of the entire mixture.
     UO_mass_volume_percentage = 100000164,
+
+    /// volume percentage: A dimensionless concentration unit which denotes the volume of the solute in mL per 100 mL of the resulting solution.
     UO_volume_percentage = 100000165,
+
+    /// parts per notation: A dimensionless concentration notation which describes the amount of one substance in another. It is the ratio of the amount of the substance of interest to the amount of that substance plus the amount of the substance.
     UO_parts_per_notation = 100000166,
+
+    /// parts per hundred: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 100 regardless of the units of measure as long as they are the same.
     UO_parts_per_hundred = 100000167,
+
+    /// parts per thousand: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1000 regardless of the units of measure as long as they are the same.
     UO_parts_per_thousand = 100000168,
+
+    /// parts per million: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[6].
     UO_parts_per_million = 100000169,
+
+    /// parts per billion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure as long as they are the same or 1 part in 10^[9].
     UO_parts_per_billion = 100000170,
+
+    /// parts per trillion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[12].
     UO_parts_per_trillion = 100000171,
+
+    /// parts per quadrillion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[15].
     UO_parts_per_quadrillion = 100000172,
+
+    /// gram per milliliter: A mass unit density which is equal to mass of an object in grams divided by the volume in milliliter.
     UO_gram_per_milliliter = 100000173,
+
+    /// kilogram per liter: A mass unit density which is equal to mass of an object in kilograms divided by the volume in liters.
     UO_kilogram_per_liter = 100000174,
+
+    /// gram per liter: A mass unit density which is equal to mass of an object in grams divided by the volume in liters.
     UO_gram_per_liter = 100000175,
+
+    /// milligram per milliliter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in milliliters.
     UO_milligram_per_milliliter = 100000176,
+
+    /// unit per volume unit: A derived concentration unit which is a standard measure of the number of units, as an agreed arbitrary amount, of a given substance per a specific volume of solution.
     UO_unit_per_volume_unit = 100000177,
+
+    /// unit per milliliter: A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one milliliter.
     UO_unit_per_milliliter = 100000178,
+
+    /// unit per liter: A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one liter.
     UO_unit_per_liter = 100000179,
+
+    /// mass per unit volume: A concentration unit which is a standard measure of the mass of a substance in a given volume (density).
     UO_mass_per_unit_volume = 100000180,
+
+    /// enzyme unit: A catalytic unit activity which is equal to the amount of the enzyme that catalyzes the conversion of 1 micro mole of substrate per minute.
     UO_enzyme_unit = 100000181,
+
+    /// density unit: A derived unit which is a standard measure of the influence exerted by some mass.
     UO_density_unit = 100000182,
+
+    /// linear density unit: A density unit which is a standard measure of the mass exerting an influence on a one-dimensional object.
     UO_linear_density_unit = 100000183,
+
+    /// kilogram per meter: An area density unit which is equal to the mass of an object in kilograms divided by one meter.
     UO_kilogram_per_meter = 100000184,
+
+    /// degree: A plane angle unit which is equal to 1/360 of a full rotation or 1.7453310^[-2] rad.
     UO_degree = 100000185,
+
+    /// dimensionless unit: A derived unit which is a standard measure of physical quantity consisting of only a numerical number without any units.
     UO_dimensionless_unit = 100000186,
+
+    /// percent: A dimensionless ratio unit which denotes numbers as fractions of 100.
     UO_percent = 100000187,
+
+    /// pi: A dimensionless unit which denoted an irrational real number, approximately equal to 3.14159 which is the ratio of a circle's circumference to its diameter in Euclidean geometry.
     UO_pi = 100000188,
+
+    /// count: A dimensionless unit which denotes a simple count of things.
     UO_count = 100000189,
+
+    /// ratio: A dimensionless unit which denotes an amount or magnitude of one quantity relative to another.
     UO_ratio = 100000190,
+
+    /// fraction: A dimensionless ratio unit which relates the part (the numerator) to the whole (the denominator).
     UO_fraction = 100000191,
+
+    /// molecule count: A dimensionless count unit which denotes the number of molecules.
     UO_molecule_count = 100000192,
+
+    /// purity percentage: A dimensionless percent unit which denotes the homogeneity of a biomaterial.
     UO_purity_percentage = 100000193,
+
+    /// confluence percentage: A dimensionless percent unit which denotes the density of an attached or monolayer culture (e.g., cell culture).
     UO_confluence_percentage = 100000194,
+
+    /// degree fahrenheit: A temperature derived unit which is equal to 5/9ths of a kelvin. Negative 40 degrees Fahrenheit is equal to negative 40 degrees Celsius.
     UO_degree_fahrenheit = 100000195,
+
+    /// pH: A dimensionless concentration notation which denotes the acidity of a solution in terms of activity of hydrogen ions (H+).
     UO_pH = 100000196,
+
+    /// liter per kilogram: A specific volume unit which is equal to one liter volume occupied by one kilogram of a particular substance.
     UO_liter_per_kilogram = 100000197,
+
+    /// milliliter per kilogram: A specific volume unit which is equal to a thousandth of a liter per kilogram or 10^[-3] l/kg.
     UO_milliliter_per_kilogram = 100000198,
+
+    /// microliter per kilogram: A specific volume unit which is equal to one millionth of a liter per kilogram or 10^[-6] l/kg.
     UO_microliter_per_kilogram = 100000199,
+
+    /// cell concentration unit: A concentration unit which denotes the average cell number in a given volume.
     UO_cell_concentration_unit = 100000200,
+
+    /// cells per milliliter: A unit of cell concentration which is equal to one cell in a volume of 1 milliliter.
     UO_cells_per_milliliter = 100000201,
+
+    /// catalytic (activity) concentration unit: A concentration unit which is a standard measure of the amount of the action of a catalyst in a given volume.
     UO_catalytic__activity__concentration_unit = 100000202,
+
+    /// katal per cubic meter: A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one cubic meter.
     UO_katal_per_cubic_meter = 100000203,
+
+    /// katal per liter: A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one thousandth of a cubic meter.
     UO_katal_per_liter = 100000204,
+
+    /// volume per unit volume: A dimensionless concentration unit which denotes the given volume of the solute in the total volume of the resulting solution.
     UO_volume_per_unit_volume = 100000205,
+
+    /// milliliter per cubic meter: A volume per unit volume unit which is equal to one millionth of a liter of solute in one cubic meter of solution.
     UO_milliliter_per_cubic_meter = 100000206,
+
+    /// milliliter per liter: A volume per unit volume unit which is equal to one millionth of a liter of solute in one liter of solution.
     UO_milliliter_per_liter = 100000207,
+
+    /// gram per deciliter: A mass density unit which is equal to mass of an object in grams divided by the volume in deciliters.
     UO_gram_per_deciliter = 100000208,
+
+    /// deciliter: A volume unit which is equal to one tenth of a liter or 10^[-1] L.
     UO_deciliter = 100000209,
+
+    /// colony forming unit: A dimensionless count unit which a measure of viable bacterial numbers.
     UO_colony_forming_unit = 100000210,
+
+    /// plaque forming unit: A dimensionless count unit which a measure of plague forming units in a given volume.
     UO_plaque_forming_unit = 100000211,
+
+    /// colony forming unit per volume: A concentration unit which a measure of viable bacterial numbers in a given volume.
     UO_colony_forming_unit_per_volume = 100000212,
+
+    /// colony forming unit per milliliter: A colony forming unit which a measure of viable bacterial numbers in one milliliter.
     UO_colony_forming_unit_per_milliliter = 100000213,
+
+    /// plaque forming unit per volume: A concentration unit which a measure of plague forming units in a given volume.
     UO_plaque_forming_unit_per_volume = 100000214,
+
+    /// plaque forming unit per milliliter: A concentration unit which a measure of plague forming units in one milliliter.
     UO_plaque_forming_unit_per_milliliter = 100000215,
+
+    /// disintegrations per second: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second.
     UO_disintegrations_per_second = 100000216,
+
+    /// electric potential difference: A derived unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field.
     UO_electric_potential_difference = 100000217,
+
+    /// volt: An electric potential difference unit which is equal to the work per unit charge. One volt is the potential difference required to move one coulomb of charge between two points in a circuit while using one joule of energy.
     UO_volt = 100000218,
+
+    /// electric charge: A derived unit which is a standard measure of the quantity of unbalanced electricity in a body (either positive or negative) and construed as an excess or deficiency of electrons.
     UO_electric_charge = 100000219,
+
+    /// coulomb: An electrical charge unit which is equal to the amount of charge transferred by a current of 1 ampere in 1 second.
     UO_coulomb = 100000220,
+
+    /// dalton: An independently to the base SI units defined mass unit which is equal to one twelfth of the mass of an unbound atom of the carbon-12 nuclide, at rest and in its ground state.
     UO_dalton = 100000221,
+
+    /// kilodalton: A mass unit which is equal to one thousand daltons.
     UO_kilodalton = 100000222,
+
+    /// watt-hour: An energy unit which is equal to the amount of electrical energy equivalent to a one-watt load drawing power for one hour.
     UO_watt_hour = 100000223,
+
+    /// kilowatt-hour: An energy unit which is equal to 1,000 watt-hours.
     UO_kilowatt_hour = 100000224,
+
+    /// magnetic flux: A derived unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.
     UO_magnetic_flux = 100000225,
+
+    /// weber: A magnetic flux unit which is equal to the amount of flux that when linked with a single turn of wire for an interval of one second will induce an electromotive force of one volt.
     UO_weber = 100000226,
+
+    /// magnetic flux density: A derived unit which is a standard measure of the strength of a magnetic field.
     UO_magnetic_flux_density = 100000227,
+
+    /// tesla: A magnetic flux density unit which is equal to one weber per square meter.
     UO_tesla = 100000228,
+
+    /// volt-hour: A magnetic flux unit which is equal to 3600 Wb.
     UO_volt_hour = 100000229,
+
+    /// kilovolt-hour: A magnetic flux unit which is equal to one thousand volt-hours.
     UO_kilovolt_hour = 100000230,
+
+    /// information unit: A unit which is a standard measure of the amount of information.
     UO_information_unit = 100000231,
+
+    /// bit: An information unit which refers to a digit in the binary numeral system, which consists of base 2 digits (ie there are only 2 possible values: 0 or 1).
     UO_bit = 100000232,
+
+    /// byte: An information unit which is equal to 8 bits.
     UO_byte = 100000233,
+
+    /// kilobyte: An information unit which is equal to 1000 bytes.
     UO_kilobyte = 100000234,
+
+    /// megabyte: An information unit which is equal to 1000 kB.
     UO_megabyte = 100000235,
+
+    /// image resolution unit: An information unit which is a standard measure of the detail an image holds.
     UO_image_resolution_unit = 100000236,
+
+    /// chroma sampling unit: An image resolution unit which is a standard measure of the amount of spatial detail in an image.
     UO_chroma_sampling_unit = 100000237,
+
+    /// dynamic range unit: An image resolution unit which is a standard measure of the amount of contrast available in a pixel.
     UO_dynamic_range_unit = 100000238,
+
+    /// spatial resolution unit: An image resolution unit which is a standard measure of the way luminance and chrominance may be sampled at different levels.
     UO_spatial_resolution_unit = 100000239,
+
+    /// dots per inch: A spatial resolution unit which is a standard measure of the printing resolution, in particular the number of individual dots of ink a printer or toner can produce within a linear one-inch space.
     UO_dots_per_inch = 100000240,
+
+    /// micron: A spatial resolution unit which is equal to a pixel size of one micrometer.
     UO_micron = 100000241,
+
+    /// pixels per inch: A spatial resolution unit which is a standard measure of the resolution of a computer display, related to the size of the display in inches and the total number of pixels in the horizontal and vertical directions.
     UO_pixels_per_inch = 100000242,
+
+    /// pixels per millimeter: A spatial resolution unit which is a standard measure of the number of pixels in one millimeter length or width of a digital image divided by the physical length or width of a printed image.
     UO_pixels_per_millimeter = 100000243,
+
+    /// base pair: A length unit which contains one nucleotide.
     UO_base_pair = 100000244,
+
+    /// kibibyte: An information unit which is equal to 1024 B.
     UO_kibibyte = 100000245,
+
+    /// mebibyte: An information unit which is equal to 1024 KiB.
     UO_mebibyte = 100000246,
+
+    /// millivolt: An electric potential difference unit which is equal to one thousandth of a volt or 10^[-3] V.
     UO_millivolt = 100000247,
+
+    /// kilovolt: An electric potential difference unit which is equal to one thousand volts or 10^[3] V.
     UO_kilovolt = 100000248,
+
+    /// microvolt: An electric potential difference unit which is equal to one millionth of a volt or 10^[-6] V.
     UO_microvolt = 100000249,
+
+    /// nanovolt: An electric potential difference unit which is equal to one billionth of a volt or 10^[-12] V.
     UO_nanovolt = 100000250,
+
+    /// picovolt: An electric potential difference unit which is equal to one trillionth of a volt or 10^[-12] V.
     UO_picovolt = 100000251,
+
+    /// megavolt: An electric potential difference unit which is equal to one million volts or 10^[6] V.
     UO_megavolt = 100000252,
+
+    /// surface tension unit: A unit which is a standard measure of the ability of a liguid to attraction of molecules at its surface as a result of unbalanced molecular cohesive forces.
     UO_surface_tension_unit = 100000253,
+
+    /// newton per meter: A surface tension unit which is equal to one newton per meter.
     UO_newton_per_meter = 100000254,
+
+    /// dyne per cm: A surface tension unit which is equal to one dyne per centimeter.
     UO_dyne_per_cm = 100000255,
+
+    /// viscosity unit: A derived unit which is a standard measure of the internal resistance of fluids to flow.
     UO_viscosity_unit = 100000256,
+
+    /// pascal second: A viscosity unit which is equal to one pascale per second.
     UO_pascal_second = 100000257,
+
+    /// poise: A viscosity unit which is equal to one dyne second per square centimeter.
     UO_poise = 100000258,
+
+    /// decibel: An ratio unit which is an indicator of sound power per unit area.
     UO_decibel = 100000259,
+
+    /// effective dose unit: 
     UO_effective_dose_unit = 100000260,
+
+    /// conduction unit: A derived unit which represents a standard measurement of the transmission of an entity through a medium.
     UO_conduction_unit = 100000261,
+
+    /// electrical conduction unit: A derived unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor).
     UO_electrical_conduction_unit = 100000262,
+
+    /// heat conduction unit: A derived unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature.
     UO_heat_conduction_unit = 100000263,
+
+    /// siemens: An electrical conduction unit which is equal to A/V.
     UO_siemens = 100000264,
+
+    /// watt per meter kelvin: An heat conduction unit which is equal to one watt divided by meter kelvin.
     UO_watt_per_meter_kelvin = 100000265,
+
+    /// electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.
     UO_electronvolt = 100000266
 }; // enum CVID
 

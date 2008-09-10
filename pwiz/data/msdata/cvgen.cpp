@@ -158,16 +158,18 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
-        os << ",\n";
-        os << "    " << enumName(*it) << " = " << enumValue(*it, obo-obos.begin());
+        os << ",\n\n"
+           << "    /// " << it->name << ": " << it->def << "\n"
+           << "    " << enumName(*it) << " = " << enumValue(*it, obo-obos.begin());
         
         if (obo->prefix == "MS") // add synonyms for PSI-MS only
         {
             for (vector<string>::const_iterator syn=it->exactSynonyms.begin(); 
                  syn!=it->exactSynonyms.end(); ++syn)
             {
-                os << ",\n";
-                os << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
+                os << ",\n\n"
+                   << "    /// " << it->name << ": " << it->def << "\n"
+                   << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
             }
         }
     }
