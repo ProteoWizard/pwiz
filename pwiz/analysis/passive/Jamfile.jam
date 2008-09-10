@@ -28,11 +28,19 @@ project
     ;
 
 
-lib pwiz_analysis_passive
+lib pwiz_analysis_passive_core
     : # sources 
         MSDataAnalyzer.cpp
         MSDataAnalyzerApplication.cpp
         MSDataCache.cpp 
+    : # requirements
+    : # default-build
+    : # usage-requirements
+; 
+
+
+lib pwiz_analysis_passive
+    : # sources 
         MetadataReporter.cpp
         SpectrumTable.cpp
         SpectrumBinaryData.cpp
@@ -42,6 +50,7 @@ lib pwiz_analysis_passive
         RegionSIC.cpp
         Pseudo2DGel.cpp
     : # requirements
+        <library>pwiz_analysis_passive_core
         <library>../peptideid//pwiz_analysis_peptideid
         <library>../../utility/misc//pwiz_utility_image
         <library>../../utility/math//pwiz_utility_math
@@ -49,8 +58,9 @@ lib pwiz_analysis_passive
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
-    :  # default-build
-    :  # usage-requirements
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_analysis_passive_core
         <library>../peptideid//pwiz_analysis_peptideid
         <library>../../utility/misc//pwiz_utility_image
         <library>../../utility/math//pwiz_utility_math

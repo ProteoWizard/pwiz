@@ -39,13 +39,13 @@ lib pwiz_analysis_spectrum_processing
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
         <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
-        <library>../../analysis/passive//pwiz_analysis_passive
+        <library>../../analysis/passive//pwiz_analysis_passive_core
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
         <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
-        <library>../../analysis/passive//pwiz_analysis_passive
+        <library>../../analysis/passive//pwiz_analysis_passive_core
     ;
 
 
