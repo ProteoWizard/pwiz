@@ -22,19 +22,8 @@ import path ;
 
 extension.declare boost ;
 
-# On Windows, iostreams does not by default support zlib and bzip2 compression
-if [ modules.peek : NT ]
-{
-   feature.feature boost-iostreams-zlib : off on : composite link-incompatible propagated ;
-   feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
-}
-else if [ modules.peek : UNIX ]
-{
-   feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-zlib>on : <linkflags>-lz ;
-   feature.feature boost-iostreams-bzip2 : on off : composite link-incompatible propagated ;
-   feature.compose <boost-iostreams-bzip2>on : <linkflags>-lbz2 ;
-}
+feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
+feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
 
 feature.feature boost-interprocess : : free ;
 feature.feature boost-asio : : free ;
@@ -48,6 +37,9 @@ rule boost-tag ( name : type ? : property-set )
 
 rule init ( version ? : location : options * )
 {
+		path-constant ZLIB_SOURCE : $(location)/../zlib-1.2.3 ;
+		using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+
     version ?= default ;
     local requirements = [ extension.define boost $(version) : $(location) : $(options) ] ;
     requirements =
@@ -116,9 +108,10 @@ rule init ( version ? : location : options * )
             <threading>multi
             <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
             <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/zlib.cpp
-            <toolset>msvc,<boost-iostreams-zlib>on:<link>static
+            <boost-iostreams-zlib>on:<library>/ext/zlib//z
+            #<toolset>msvc,<boost-iostreams-zlib>on:<link>static
             <boost-iostreams-bzip2>on:<source>$(location)/libs/iostreams/src/bzip2.cpp
-            <toolset>msvc,<boost-iostreams-bzip2>on:<link>static
+            #<toolset>msvc,<boost-iostreams-bzip2>on:<link>static
             <define>BOOST_IOSTREAMS_NO_LIB=1
         :
         :   <define>BOOST_IOSTREAMS_NO_LIB=1

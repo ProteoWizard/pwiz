@@ -41,9 +41,11 @@ lib pwiz_utility_misc
     : # requirements
         <warnings>all
         <library>/ext/boost//filesystem
+        <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
         <library>/ext/boost//filesystem
+        <library>/ext/zlib//z
     ;
 
 
