@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "IterationListener.hpp" 
 #include <vector>
 #include <map>
@@ -135,7 +137,7 @@ class IterationListenerRegistry::Impl
 //
 
 
-IterationListenerRegistry::IterationListenerRegistry()
+PWIZ_API_DECL IterationListenerRegistry::IterationListenerRegistry()
 :   impl_(new Impl)
 {}
 

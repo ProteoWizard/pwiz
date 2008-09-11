@@ -80,7 +80,7 @@ class Peptide::Impl
 
         // add N terminus formula and modifications
         formula += Formula("H1");
-        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus)
+        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -114,7 +114,7 @@ class Peptide::Impl
 
         // add C terminus formula and modifications
         formula += Formula("H1O1");
-        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus)
+        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -280,6 +280,11 @@ PWIZ_API_DECL Fragmentation Peptide::fragmentation(bool monoisotopic, bool modif
 }
 
 
+PWIZ_API_DECL Modification::Modification()
+:   impl_(new Impl(0, 0))
+{
+}
+
 PWIZ_API_DECL Modification::Modification(const Chemistry::Formula& formula)
 :   impl_(new Impl(formula))
 {
@@ -335,8 +340,8 @@ PWIZ_API_DECL double ModificationList::averageDeltaMass() const
 }
 
 
-PWIZ_API_DECL const int ModificationMap::NTerminus = INT_MIN;
-PWIZ_API_DECL const int ModificationMap::CTerminus = INT_MAX;
+int ModificationMap::NTerminus() {return INT_MIN;}
+int ModificationMap::CTerminus() {return INT_MAX;}
 
 class ModificationMap::Impl
 {
@@ -575,7 +580,7 @@ class Fragmentation::Impl
         const ModificationMap& mods = peptide.modifications();
         ModificationMap::const_iterator modItr = mods.begin();
 
-        if (modified && modItr != mods.end() && modItr->first == ModificationMap::NTerminus)
+        if (modified && modItr != mods.end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -605,7 +610,7 @@ class Fragmentation::Impl
             masses[i] = mass;
         }
 
-        if (modified && modItr != mods.end() && modItr->first == ModificationMap::CTerminus)
+        if (modified && modItr != mods.end() && modItr->first == ModificationMap::CTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -682,6 +687,7 @@ class Fragmentation::Impl
     static double zMonoMass, zAvgMass;
 };
 
+PWIZ_API_DECL
 Fragmentation::Fragmentation(const Peptide& peptide,
                              bool monoisotopic,
                              bool modified)
@@ -689,12 +695,12 @@ Fragmentation::Fragmentation(const Peptide& peptide,
 {
 }
 
-Fragmentation::Fragmentation(const Fragmentation& other)
+PWIZ_API_DECL Fragmentation::Fragmentation(const Fragmentation& other)
 :   impl_(new Impl(*other.impl_))
 {
 }
 
-Fragmentation::~Fragmentation() {}
+PWIZ_API_DECL Fragmentation::~Fragmentation() {}
 
 Chemistry::Formula Fragmentation::Impl::aFormula;
 Chemistry::Formula Fragmentation::Impl::bFormula;
@@ -717,17 +723,17 @@ double Fragmentation::Impl::xAvgMass;
 double Fragmentation::Impl::yAvgMass;
 double Fragmentation::Impl::zAvgMass;
 
-double Fragmentation::a(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::a(size_t length, size_t charge) const
 {
     return impl_->a(length, charge);
 }
 
-double Fragmentation::b(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::b(size_t length, size_t charge) const
 {
     return impl_->b(length, charge);
 }
 
-double Fragmentation::c(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::c(size_t length, size_t charge) const
 {
     if (length == impl_->maxLength)
         throw runtime_error("[Fragmentation::c()] c for full peptide length is impossible");
@@ -735,7 +741,7 @@ double Fragmentation::c(size_t length, size_t charge) const
     return impl_->c(length, charge);
 }
 
-double Fragmentation::x(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::x(size_t length, size_t charge) const
 {
     if (length == impl_->maxLength)
         throw runtime_error("[Fragmentation::x()] x for full peptide length is impossible");
@@ -743,12 +749,12 @@ double Fragmentation::x(size_t length, size_t charge) const
     return impl_->x(length, charge);
 }
 
-double Fragmentation::y(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::y(size_t length, size_t charge) const
 {
     return impl_->y(length, charge);
 }
 
-double Fragmentation::z(size_t length, size_t charge) const
+PWIZ_API_DECL double Fragmentation::z(size_t length, size_t charge) const
 {
     return impl_->z(length, charge);
 }

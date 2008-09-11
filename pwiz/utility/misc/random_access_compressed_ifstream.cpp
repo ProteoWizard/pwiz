@@ -31,6 +31,10 @@
 * For conditions of distribution and use, see copyright notice in zlib.h
 Version 1.0  29 May 2005  Mark Adler */
 
+
+#define PWIZ_SOURCE
+
+
 #include <stdio.h>
 
 #include "zlib.h"
@@ -142,6 +146,7 @@ private:
 #define gzio_raw_readerror(s) (s->infile->bad())
 
 // constructor
+PWIZ_API_DECL
 random_access_compressed_ifstream::random_access_compressed_ifstream(const char *path) :
 std::istream(new std::filebuf()) 
 {
@@ -165,6 +170,7 @@ std::istream(new std::filebuf())
 	}
 }
 
+PWIZ_API_DECL
 bool random_access_compressed_ifstream::is_open() const { // for ease of use as ifstream replacement
 	if (NONE == compressionType) {
 		return ((std::filebuf *)rdbuf())->is_open();
@@ -173,6 +179,7 @@ bool random_access_compressed_ifstream::is_open() const { // for ease of use as 
 	}
 }
 
+PWIZ_API_DECL
 void random_access_compressed_ifstream::close() {
 	if (NONE == compressionType) {
 		((std::filebuf *)rdbuf())->close();
@@ -181,6 +188,7 @@ void random_access_compressed_ifstream::close() {
 	}
 }
 
+PWIZ_API_DECL
 random_access_compressed_ifstream::~random_access_compressed_ifstream()
 {
 	delete rdbuf();

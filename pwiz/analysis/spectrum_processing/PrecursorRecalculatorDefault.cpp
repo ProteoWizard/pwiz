@@ -21,6 +21,8 @@
 //
 
 
+#define PWIZ_SOURCE
+
 #include "PrecursorRecalculatorDefault.hpp"
 #include <iostream>
 
@@ -127,12 +129,13 @@ void PrecursorRecalculatorDefault::Impl::recalculate(const MZIntensityPair* begi
 // PrecursorRecalculatorDefault
 //
 
-
+PWIZ_API_DECL
 PrecursorRecalculatorDefault::PrecursorRecalculatorDefault(const Config& config)
 :   impl_(new Impl(config))
 {}
 
 
+PWIZ_API_DECL
 void PrecursorRecalculatorDefault::recalculate(const MZIntensityPair* begin,
                                                const MZIntensityPair* end,
                                                const PrecursorInfo& initialEstimate,

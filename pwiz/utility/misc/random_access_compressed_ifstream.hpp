@@ -46,15 +46,16 @@ Version 1.0  29 May 2005  Mark Adler */
 #include <sys/stat.h>
 #include <fstream>
 #include "boost/iostreams/positioning.hpp"
+#include "utility/misc/Export.hpp"
 
 
 namespace pwiz {
 namespace util {
 
 typedef boost::iostreams::stream_offset random_access_compressed_ifstream_off_t;
-class random_access_compressed_streambuf; // forward ref
+//class random_access_compressed_streambuf; // forward ref
 
-class random_access_compressed_ifstream : public std::istream {
+class PWIZ_API_DECL random_access_compressed_ifstream : public std::istream {
 public:
 	random_access_compressed_ifstream(const char *fname); // optional arg to learn compression state
 	virtual ~random_access_compressed_ifstream(); // destructor

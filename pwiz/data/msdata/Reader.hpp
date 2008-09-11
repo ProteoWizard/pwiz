@@ -66,7 +66,7 @@ class PWIZ_API_DECL Reader
     virtual ~Reader(){}
 };
 
-class ReaderFail : public std::runtime_error // reader failure exception
+class PWIZ_API_DECL ReaderFail : public std::runtime_error // reader failure exception
 {
     public:
 
@@ -143,7 +143,7 @@ class PWIZ_API_DECL ReaderList : public Reader,
 
 
 /// returns a list containing the lhs and rhs as readers
-ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs);
+PWIZ_API_DECL ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs);
 
 
 } // namespace msdata

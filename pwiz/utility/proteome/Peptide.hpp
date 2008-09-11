@@ -91,9 +91,13 @@ class PWIZ_API_DECL Peptide
 
 
 /// represents a post-translational modification (PTM)
+/// modification formula or masses must be provided at instantiation
 class PWIZ_API_DECL Modification
 {
     public:
+
+    /// constructs a zero-mass modification (provided for MSVC compatibility)
+    Modification();
 
     Modification(const Chemistry::Formula& formula);
     Modification(double monoisotopicDeltaMass,
@@ -136,8 +140,8 @@ class PWIZ_API_DECL ModificationList
 
 
 /// maps peptide/protein sequence indexes (0-based) to a modification list
-/// * ModificationMap::NTerminus is the index for specifying N terminal mods
-/// * ModificationMap::CTerminus is the index for specifying C terminal mods
+/// * ModificationMap::NTerminus() returns the index for specifying N terminal mods
+/// * ModificationMap::CTerminus() returns the index for specifying C terminal mods
 class PWIZ_API_DECL ModificationMap
     : public pwiz::util::virtual_map<int, ModificationList>
 {
@@ -154,8 +158,8 @@ class PWIZ_API_DECL ModificationMap
     using pwiz::util::virtual_map<int, ModificationList>::lower_bound;
     using pwiz::util::virtual_map<int, ModificationList>::upper_bound;
 
-    static const int NTerminus;
-    static const int CTerminus;
+    static int NTerminus();
+    static int CTerminus();
 
     /// returns the sum of the monoisotopic delta masses of all modifications in the map
     double monoisotopicDeltaMass() const;

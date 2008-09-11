@@ -457,7 +457,7 @@ void fragmentTest()
     {
         Peptide p("QICKRWNFMPSVERTHELAYDG");
         Modification Q17("N-1H-3"), S80("H1P1O3");
-        (p.modifications())[ModificationMap::NTerminus].push_back(Q17); // close enough
+        (p.modifications())[ModificationMap::NTerminus()].push_back(Q17); // close enough
         (p.modifications())[10].push_back(S80);
         Fragmentation f = p.fragmentation(true, false);
         Fragmentation fWithMods = p.fragmentation(true, true);
