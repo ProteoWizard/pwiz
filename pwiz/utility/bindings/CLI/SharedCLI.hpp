@@ -122,12 +122,12 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 #define CLI_STRING_TO_STD_STRING(NativeType, CLIObject) ToStdString(CLIObject)
 
 
-#define DEFINE_INTERNAL_BASE_CODE(ns, ClassType) \
-internal: ClassType(ns::ClassType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(ns::ClassType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
-          !ClassType() {delete this;} \
-          ns::ClassType* base_; \
+#define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
+internal: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
+          !CLIType() {delete this;} \
+          NativeType* base_; \
           System::Object^ owner_;
 
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \

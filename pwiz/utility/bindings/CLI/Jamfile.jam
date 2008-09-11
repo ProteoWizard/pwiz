@@ -51,6 +51,36 @@ notfile update_embedded_manifest : @do_update_embedded_manifest : pwiz_bindings_
 #notfile update_embedded_manifest_test : @do_update_embedded_manifest : pwiz_bindings_cli/<location>$(CLI_ROOT)/test : <location>$(CLI_ROOT)/test ;
 
 
+#
+# cvgen is a program that generates cv.hpp from .obo files (passed as args)
+# usage:
+#  bjam cv.hpp (creates cv.hpp in the source directory)
+#
+
+exe cvgen_cli
+    : cvgen_cli.cpp
+      ../../../data/msdata//pwiz_data_msdata_obo
+    : <link>static
+    ;
+explicit cvgen_cli ;
+
+
+install install_cvgen_cli
+    : cvgen_cli
+    : <location>.
+    ;
+explicit install_cvgen_cli ;
+
+actions do_cvgen_cli
+{
+   echo calling bjam install_cvgen_cli
+   $(>[1]:P:T)\\..\\..\\utility\\bindings\\CLI\\cvgen_cli $(>)
+}
+
+make cv.hpp : ../../../data/msdata/psi-ms.obo ../../../data/msdata/unit.obo : do_cvgen_cli : <dependency>install_cvgen_cli ;
+explicit cv.hpp ;
+
+
 #unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
 #unit-test MSDataFileTest : MSDataFileTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
 

@@ -51,6 +51,10 @@ void CV::fullName::set(System::String^ value) {base_->fullName = ToStdString(val
 System::String^ CV::version::get() {return gcnew System::String(base_->version.c_str());}
 void CV::version::set(System::String^ value) {base_->version = ToStdString(value);}
 
+bool CV::empty()
+{
+    return base_->empty();
+}
 
 
 UserParam::UserParam()
@@ -73,7 +77,6 @@ UserParam::UserParam(System::String^ _name, System::String^ _value, System::Stri
 : base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (b::CVID) _units))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
-
 System::String^ UserParam::name::get() {return gcnew System::String((*base_)->name.c_str());}
 void UserParam::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
 
@@ -83,12 +86,47 @@ void UserParam::type::set(System::String^ value) {(*base_)->type = ToStdString(v
 CVID UserParam::units::get() {return (CVID) (*base_)->units;}
 void UserParam::units::set(CVID value) {(*base_)->units = (pwiz::msdata::CVID) value;}
 
-UserParamValue^ UserParam::value::get() {return value_;}	
+UserParamValue^ UserParam::value::get() {return value_;}
+
+bool UserParam::empty()
+{
+    return (*base_)->empty();
+}
 
 
 ParamGroupList^ ParamContainer::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
 CVParamList^ ParamContainer::cvParams::get() {return gcnew CVParamList(&base_->cvParams, this);}
 UserParamList^ ParamContainer::userParams::get() {return gcnew UserParamList(&base_->userParams, this);}
+
+CVParam^ ParamContainer::cvParam(CVID cvid)
+{
+    return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParam((pwiz::msdata::CVID) cvid)));
+}
+
+CVParam^ ParamContainer::cvParamChild(CVID cvid)
+{
+    return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParamChild((pwiz::msdata::CVID) cvid)));
+}
+
+bool ParamContainer::hasCVParam(CVID cvid)
+{
+    return base_->hasCVParam((pwiz::msdata::CVID) cvid);
+}
+
+bool ParamContainer::hasCVParamChild(CVID cvid)
+{
+    return base_->hasCVParamChild((pwiz::msdata::CVID) cvid);
+}
+
+UserParam^ ParamContainer::userParam(System::String^ name)
+{
+    return gcnew UserParam(new pwiz::msdata::UserParam(base_->userParam(ToStdString(name))));
+}
+
+bool ParamContainer::empty()
+{
+    return base_->empty();
+}
 
 void ParamContainer::set(CVID cvid) {base_->set((pwiz::msdata::CVID) cvid);}
 void ParamContainer::set(CVID cvid, System::String^ value) {base_->set((pwiz::msdata::CVID) cvid, ToStdString(value));}
@@ -121,6 +159,11 @@ ParamGroup::ParamGroup(System::String^ _id)
 System::String^ ParamGroup::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void ParamGroup::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
+bool ParamGroup::empty()
+{
+    return (*base_)->empty();
+}
+
 
 FileContent::FileContent()
 : ParamContainer(new b::FileContent()), owner_(nullptr)
@@ -152,6 +195,11 @@ void SourceFile::name::set(System::String^ value) {(*base_)->name = ToStdString(
 System::String^ SourceFile::location::get() {return gcnew System::String((*base_)->location.c_str());}
 void SourceFile::location::set(System::String^ value) {(*base_)->location = ToStdString(value);}
 
+bool SourceFile::empty()
+{
+    return (*base_)->empty();
+}
+
 
 Contact::Contact()
 : ParamContainer(new b::Contact()), owner_(nullptr)
@@ -165,6 +213,11 @@ FileDescription::FileDescription()
 FileContent^ FileDescription::fileContent::get() {return gcnew FileContent(&base_->fileContent, this);}
 SourceFileList^ FileDescription::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
 ContactList^ FileDescription::contacts::get() {return gcnew ContactList(&base_->contacts, this);}
+
+bool FileDescription::empty()
+{
+    return base_->empty();
+}
 
 
 Sample::Sample()
@@ -185,6 +238,11 @@ void Sample::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 System::String^ Sample::name::get() {return gcnew System::String((*base_)->name.c_str());}
 void Sample::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
 
+bool Sample::empty()
+{
+    return (*base_)->empty();
+}
+
 
 Component::Component()
 : ParamContainer(new b::Component()), owner_(nullptr)
@@ -204,10 +262,35 @@ void Component::type::set(ComponentType value) {base_->type = (pwiz::msdata::Com
 int Component::order::get() {return base_->order;}
 void Component::order::set(int value) {base_->order = value;}
 
+void Component::define(CVID cvid, int order)
+{
+    base_->define((pwiz::msdata::CVID) cvid, order);
+}
+
+bool Component::empty()
+{
+    return base_->empty();
+}
+
 
 ComponentList::ComponentList()
 : ComponentBaseList(new b::ComponentList()), owner_(nullptr)
 {base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_);}
+
+Component^ ComponentList::source(int index)
+{
+    return gcnew Component(&base_->source((size_t) index), this);
+}
+
+Component^ ComponentList::analyzer(int index)
+{
+    return gcnew Component(&base_->analyzer((size_t) index), this);
+}
+
+Component^ ComponentList::detector(int index)
+{
+    return gcnew Component(&base_->detector((size_t) index), this);
+}
 
 
 Software::Software()
@@ -231,6 +314,11 @@ void Software::softwareParam::set(CVParam^ value) {(*base_)->softwareParam = **v
 System::String^ Software::softwareParamVersion::get() {return gcnew System::String((*base_)->softwareParamVersion.c_str());}
 void Software::softwareParamVersion::set(System::String^ value) {(*base_)->softwareParamVersion = ToStdString(value);}
 
+bool Software::empty()
+{
+    return (*base_)->empty();
+}
+
 
 InstrumentConfiguration::InstrumentConfiguration()
 : ParamContainer(new b::InstrumentConfiguration())
@@ -246,12 +334,23 @@ void InstrumentConfiguration::id::set(System::String^ value) {(*base_)->id = ToS
 ComponentList^ InstrumentConfiguration::componentList::get() {return gcnew ComponentList(&(*base_)->componentList, this);}
 Software^ InstrumentConfiguration::software::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
 
+bool InstrumentConfiguration::empty()
+{
+    return (*base_)->empty();
+}
+
+
 ProcessingMethod::ProcessingMethod()
 : ParamContainer(new b::ProcessingMethod()), owner_(nullptr)
 {base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_);}
 
 int ProcessingMethod::order::get() {return base_->order;}
 void ProcessingMethod::order::set(int value) {base_->order = value;}
+
+bool ProcessingMethod::empty()
+{
+    return base_->empty();
+}
 
 
 DataProcessing::DataProcessing()
@@ -267,6 +366,11 @@ void DataProcessing::id::set(System::String^ value) {(*base_)->id = ToStdString(
 
 Software^ DataProcessing::software::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
 ProcessingMethodList^ DataProcessing::processingMethods::get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods, this);}
+
+bool DataProcessing::empty()
+{
+    return (*base_)->empty();
+}
 
 
 Target::Target()
@@ -292,10 +396,16 @@ SourceFileList^ AcquisitionSettings::sourceFiles::get() {return gcnew SourceFile
 
 TargetList^ AcquisitionSettings::targets::get() {return gcnew TargetList(&(*base_)->targets, this);}
 
+bool AcquisitionSettings::empty()
+{
+    return (*base_)->empty();
+}
+
 
 Acquisition::Acquisition()
 : ParamContainer(new b::Acquisition()), owner_(nullptr)
 {base_ = static_cast<b::Acquisition*>(ParamContainer::base_);}
+
 int Acquisition::number::get() {return base_->number;}
 void Acquisition::number::set(int value) {base_->number = value;}
 
@@ -311,12 +421,22 @@ void Acquisition::externalSpectrumID::set(System::String^ value) {base_->externa
 System::String^ Acquisition::externalNativeID::get() {return gcnew System::String(base_->externalNativeID.c_str());}
 void Acquisition::externalNativeID::set(System::String^ value) {base_->externalNativeID = ToStdString(value);}
 
+bool Acquisition::empty()
+{
+    return base_->empty();
+}
+
 
 AcquisitionList::AcquisitionList()
 : ParamContainer(new b::AcquisitionList()), owner_(nullptr)
 {base_ = static_cast<b::AcquisitionList*>(ParamContainer::base_);}
 	
 Acquisitions^ AcquisitionList::acquisitions::get() {return gcnew Acquisitions(&base_->acquisitions, this);}
+
+bool AcquisitionList::empty()
+{
+    return base_->empty();
+}
 
 
 IsolationWindow::IsolationWindow()
@@ -358,6 +478,11 @@ SelectedIonList^ Precursor::selectedIons::get() {return gcnew SelectedIonList(&b
 Activation^ Precursor::activation::get() {return gcnew Activation(&base_->activation, this);}
 void Precursor::activation::set(Activation^ value) {base_->activation = *value->base_;}
 
+bool Precursor::empty()
+{
+    return base_->empty();
+}
+
 
 Scan::Scan()
 : ParamContainer(new b::Scan()), owner_(nullptr)
@@ -365,6 +490,11 @@ Scan::Scan()
 
 InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
 void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
+
+bool Scan::empty()
+{
+    return base_->empty();
+}
 
 ScanWindowList^ Scan::scanWindows::get() {return gcnew ScanWindowList(&base_->scanWindows, this);}
 
@@ -388,6 +518,11 @@ PrecursorList^ SpectrumDescription::precursors::get() {return gcnew PrecursorLis
 Scan^ SpectrumDescription::scan::get() {return gcnew Scan(&base_->scan, this);}
 void SpectrumDescription::scan::set(Scan^ value) {base_->scan = *value->base_;}
 
+bool SpectrumDescription::empty()
+{
+    return base_->empty();
+}
+
 
 BinaryDataArray::BinaryDataArray()
 : ParamContainer(new b::BinaryDataArray())
@@ -398,6 +533,11 @@ void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->data
 
 BinaryData^ BinaryDataArray::data::get() {return gcnew BinaryData(&(*base_)->data, this);}
 void BinaryDataArray::data::set(BinaryData^ value) {(*base_)->data = *value->base_;}
+
+bool BinaryDataArray::empty()
+{
+    return (*base_)->empty();
+}
 
 
 MZIntensityPair::MZIntensityPair()
@@ -553,6 +693,11 @@ void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ 
     (*base_)->setMZIntensityArrays(mzVector, intensityVector, (b::CVID) intensityUnits);
 }
 
+bool Spectrum::empty()
+{
+    return (*base_)->empty();
+}
+
 
 Chromatogram::Chromatogram()
 : ParamContainer(new b::Chromatogram())
@@ -589,6 +734,11 @@ void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
 void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input)
 {
     (*base_)->setTimeIntensityPairs(*input->base_);
+}
+
+bool Chromatogram::empty()
+{
+    return (*base_)->empty();
 }
 
 
@@ -635,6 +785,16 @@ SpectrumListSimple::SpectrumListSimple()
 
 Spectra^ SpectrumListSimple::spectra::get() {return gcnew Spectra(&(*base_)->spectra, this);}
 void SpectrumListSimple::spectra::set(Spectra^ value) {(*base_)->spectra = *value->base_;}
+
+int SpectrumListSimple::size()
+{
+    return (*base_)->size();
+}
+
+bool SpectrumListSimple::empty()
+{
+    return (*base_)->empty();
+}
 
 SpectrumIdentity^ SpectrumListSimple::spectrumIdentity(int index)
 {
@@ -695,6 +855,16 @@ ChromatogramListSimple::ChromatogramListSimple()
 Chromatograms^ ChromatogramListSimple::chromatograms::get() {return gcnew Chromatograms(&(*base_)->chromatograms, this);}
 void ChromatogramListSimple::chromatograms::set(Chromatograms^ value) {(*base_)->chromatograms = *value->base_;}
 
+int ChromatogramListSimple::size()
+{
+    return (*base_)->size();
+}
+
+bool ChromatogramListSimple::empty()
+{
+    return (*base_)->empty();
+}
+
 ChromatogramIdentity^ ChromatogramListSimple::chromatogramIdentity(int index)
 {
     return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)));
@@ -736,6 +906,11 @@ void Run::spectrumList::set(SpectrumList^ value) {base_->spectrumListPtr = *valu
 ChromatogramList^ Run::chromatogramList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(pwiz::msdata::ChromatogramListPtr, ChromatogramList, base_->chromatogramListPtr, this);}
 void Run::chromatogramList::set(ChromatogramList^ value) {base_->chromatogramListPtr = *value->base_;}
 
+bool Run::empty()
+{
+    return base_->empty();
+}
+
 
 MSData::MSData()
 : base_(new b::MSData()), owner_(nullptr)
@@ -776,6 +951,8 @@ void MSData::acquisitionSettingList::set(AcquisitionSettingsList^ value) {base_-
 
 Run^ MSData::run::get()  {return gcnew Run(&base_->run, this);}
 //void set(Run^ value) {base_->run = *value->base_;}
+
+bool MSData::empty() {return base_->empty();}
 
 
 } // namespace msdata

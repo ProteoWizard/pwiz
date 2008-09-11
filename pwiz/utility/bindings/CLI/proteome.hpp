@@ -1,13 +1,11 @@
 #ifndef _PROTEOME_HPP_CLI_
 #define _PROTEOME_HPP_CLI_
 
-#include "SharedCLI.hpp"
-#include "utility/proteome/Chemistry.hpp"
-#include "utility/proteome/Peptide.hpp"
 
 namespace pwiz {
 namespace CLI {
 namespace proteome {
+
 
 public ref class Chemistry
 {
@@ -16,17 +14,17 @@ public ref class Chemistry
     /// <summary>
 	/// the mass of a proton in unified atomic mass units
 	/// </summary>
-    static const double Proton = pwiz::proteome::Chemistry::Proton;
+    static property double Proton { double get(); }
 
     /// <summary>
 	/// the mass of a neutron in unified atomic mass units
 	/// </summary>
-    static const double Neutron = pwiz::proteome::Chemistry::Proton;
+    static property double Neutron { double get(); }
 
     /// <summary>
 	/// the mass of an electron in unified atomic mass units
 	/// </summary>
-    static const double Electron = pwiz::proteome::Chemistry::Proton;
+    static property double Electron { double get(); }
 };
 
 ref class Fragmentation;
@@ -36,8 +34,6 @@ ref class Fragmentation;
 /// </summary>
 public ref class Peptide
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::proteome, Peptide);
-
     public:
 
     Peptide(System::String^ sequence);
@@ -59,6 +55,10 @@ public ref class Peptide
     /// fragment masses can calculated as mono/avg and as modified/unmodified
     /// </summary>
     Fragmentation^ fragmentation(bool monoisotopic, bool modified);
+
+    internal:
+    ref class Impl;
+    Impl^ impl_;
 };
 
 
@@ -67,8 +67,6 @@ public ref class Peptide
 /// </summary>
 public ref class Fragmentation
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::proteome, Fragmentation);
-
     public:
 
     Fragmentation(Peptide^ peptide,
@@ -76,46 +74,50 @@ public ref class Fragmentation
                   bool modified);
 
     /// <summary>
-    /// returns the a ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the a ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double a(int length, int charge);
 
     /// <summary>
-    /// returns the b ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the b ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double b(int length, int charge);
 
     /// <summary>
-    /// returns the c ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the c ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double c(int length, int charge);
 
     /// <summary>
-    /// returns the x ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the x ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double x(int length, int charge);
 
     /// <summary>
-    /// returns the y ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the y ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double y(int length, int charge);
 
     /// <summary>
-    /// returns the z ion of length <length>
-    /// if <charge> = 0: returns neutral mass
-    /// if <charge> > 0: returns charged m/z
+    /// returns the z ion of length &lt;length&gt;
+    /// if &lt;charge&gt; = 0: returns neutral mass
+    /// if &lt;charge&gt; > 0: returns charged m/z
     /// </summary>
     double z(int length, int charge);
+
+    internal:
+    ref class Impl;
+    Impl^ impl_;
 };
 
 } // namespace proteome

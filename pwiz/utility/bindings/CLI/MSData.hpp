@@ -36,7 +36,7 @@ namespace msdata {
 
 public ref class CV
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, CV);
+    DEFINE_INTERNAL_BASE_CODE(CV, pwiz::msdata::CV);
              
     public:
     property System::String^ id
@@ -66,7 +66,7 @@ public ref class CV
 
     CV();
 
-    bool empty() {return base_->empty();}
+    bool empty();
 };
 
 
@@ -129,7 +129,7 @@ public ref class UserParam
     UserParam(System::String^ _name, System::String^ _value, System::String^ _type);
     UserParam(System::String^ _name, System::String^ _value, System::String^ _type, CVID _units);
 
-    bool empty() {return (*base_)->empty();}
+    bool empty();
     bool operator==(UserParam^ that) {return (*base_) == *that->base_;}
     bool operator!=(UserParam^ that) {return (*base_) != *that->base_;}
 };
@@ -169,24 +169,24 @@ public ref class ParamContainer
     /// - returns first CVParam result such that (result.pwiz::msdata::CVID == pwiz::msdata::CVID); 
     /// - if not found, returns CVParam(pwiz::msdata::CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
-    CVParam^ cvParam(CVID cvid) {return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParam((pwiz::msdata::CVID) cvid)));}
+    CVParam^ cvParam(CVID cvid);
 
     /// Finds child of pwiz::msdata::CVID in the container:
     /// - returns first CVParam result such that (result.pwiz::msdata::CVID is_a pwiz::msdata::CVID); 
     /// - if not found, CVParam(pwiz::msdata::CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
-    CVParam^ cvParamChild(CVID cvid) {return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParamChild((pwiz::msdata::CVID) cvid)));}
+    CVParam^ cvParamChild(CVID cvid);
 
     /// returns true iff cvParams contains exact pwiz::msdata::CVID (recursive)
-    bool hasCVParam(CVID cvid) {return base_->hasCVParam((pwiz::msdata::CVID) cvid);}
+    bool hasCVParam(CVID cvid);
 
     /// returns true iff cvParams contains a child (is_a) of pwiz::msdata::CVID (recursive)
-    bool hasCVParamChild(CVID cvid) {return base_->hasCVParamChild((pwiz::msdata::CVID) cvid);}
+    bool hasCVParamChild(CVID cvid);
 
     /// Finds UserParam with specified name 
     /// - returns UserParam() if name not found 
     /// - not recursive: looks only at local userParams
-    UserParam^ userParam(System::String^ name) {return gcnew UserParam(new pwiz::msdata::UserParam(base_->userParam(ToStdString(name))));}
+    UserParam^ userParam(System::String^ name);
 
     /// set/add a CVParam (not recursive)
     void set(CVID cvid);
@@ -210,7 +210,7 @@ public ref class ParamContainer
     void set(CVID cvid, System::Single value, CVID units);
     void set(CVID cvid, System::Double value, CVID units);
 
-    bool empty() {return base_->empty();}
+    bool empty();
 };
 
 
@@ -229,7 +229,7 @@ public ref class ParamGroup : public ParamContainer
     ParamGroup();
     ParamGroup(System::String^ _id);
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 };
 
 
@@ -324,7 +324,7 @@ public ref class SourceFile : public ParamContainer
     SourceFile(System::String^ _id, System::String^ _name);
     SourceFile(System::String^ _id, System::String^ _name, System::String^ _location);
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 };
 
 
@@ -341,7 +341,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact,
 
 public ref class FileDescription
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, FileDescription);
+    DEFINE_INTERNAL_BASE_CODE(FileDescription, pwiz::msdata::FileDescription);
 
     public:
     property FileContent^ fileContent
@@ -363,7 +363,7 @@ public ref class FileDescription
     FileDescription();
 
 
-    bool empty() {return base_->empty();}
+    bool empty();
 };
 
 
@@ -389,7 +389,7 @@ public ref class Sample : public ParamContainer
     Sample(System::String^ _id);
     Sample(System::String^ _id, System::String^ _name);
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 };
 
 
@@ -424,8 +424,8 @@ public ref class Component : public ParamContainer
     Component(ComponentType type, int order);
     Component(CVID cvid, int order);
 
-    void define(CVID cvid, int order) {base_->define((pwiz::msdata::CVID) cvid, order);}
-    bool empty() new {return base_->empty();}
+    void define(CVID cvid, int order);
+    bool empty() new;
 };
 
 
@@ -439,9 +439,9 @@ public ref class ComponentList : public ComponentBaseList
     public:
     ComponentList();
 
-    Component^ source(int index) {return gcnew Component(&base_->source((size_t) index), this);}
-    Component^ analyzer(int index) {return gcnew Component(&base_->analyzer((size_t) index), this);}
-    Component^ detector(int index) {return gcnew Component(&base_->detector((size_t) index), this);}
+    Component^ source(int index);
+    Component^ analyzer(int index);
+    Component^ detector(int index);
 };
 
 
@@ -473,7 +473,7 @@ public ref class Software
     Software(System::String^ _id);
     Software(System::String^ _id, CVParam^ _softwareParam, System::String^ _softwareParamVersion);
 
-    bool empty() {return (*base_)->empty();}
+    bool empty();
 };
 
 
@@ -502,7 +502,7 @@ public ref class InstrumentConfiguration : public ParamContainer
     InstrumentConfiguration();
     InstrumentConfiguration(System::String^ _id);
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 };
 
 
@@ -520,7 +520,7 @@ public ref class ProcessingMethod : public ParamContainer
 
     ProcessingMethod();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -552,7 +552,7 @@ public ref class DataProcessing
     DataProcessing();
     DataProcessing(System::String^ _id);
 
-    bool empty() {return (*base_)->empty();}
+    bool empty();
 };
 
 
@@ -597,7 +597,7 @@ public ref class AcquisitionSettings
     AcquisitionSettings();
     AcquisitionSettings(System::String^ _id);
 
-    bool empty() {return (*base_)->empty();}
+    bool empty();
 };
 
 
@@ -639,7 +639,7 @@ public ref class Acquisition : public ParamContainer
 
     Acquisition();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -659,7 +659,7 @@ public ref class AcquisitionList : public ParamContainer
 
     AcquisitionList();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -736,7 +736,7 @@ public ref class Precursor : public ParamContainer
 
     Precursor();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -772,7 +772,7 @@ public ref class Scan : public ParamContainer
 
     Scan();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -803,7 +803,7 @@ public ref class SpectrumDescription : public ParamContainer
 
     SpectrumDescription();
 
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 };
 
 
@@ -830,13 +830,13 @@ public ref class BinaryDataArray : public ParamContainer
 
     BinaryDataArray();
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 };
 
 
 public ref class MZIntensityPair
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, MZIntensityPair);
+    DEFINE_INTERNAL_BASE_CODE(MZIntensityPair, pwiz::msdata::MZIntensityPair);
 
     public:
     property double mz
@@ -859,7 +859,7 @@ public ref class MZIntensityPair
 
 public ref class TimeIntensityPair
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, TimeIntensityPair);
+    DEFINE_INTERNAL_BASE_CODE(TimeIntensityPair, pwiz::msdata::TimeIntensityPair);
 
     public:
     property double time
@@ -882,7 +882,7 @@ public ref class TimeIntensityPair
 
 public ref class SpectrumIdentity
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumIdentity);
+    DEFINE_INTERNAL_BASE_CODE(SpectrumIdentity, pwiz::msdata::SpectrumIdentity);
 
     public:
     property int index
@@ -922,7 +922,7 @@ public ref class SpectrumIdentity
 
 public ref class ChromatogramIdentity
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, ChromatogramIdentity);
+    DEFINE_INTERNAL_BASE_CODE(ChromatogramIdentity, pwiz::msdata::ChromatogramIdentity);
 
     public:
     property int index
@@ -1031,7 +1031,7 @@ public ref class Spectrum : public ParamContainer
 
     Spectrum();
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(MZIntensityPairList^% output);
@@ -1112,7 +1112,7 @@ public ref class Chromatogram : public ParamContainer
 
     Chromatogram();
 
-    bool empty() new {return (*base_)->empty();}
+    bool empty() new;
 
     /// copy binary data arrays into time-intensity pair array
     void getTimeIntensityPairs(TimeIntensityPairList^% output);
@@ -1194,8 +1194,8 @@ public ref class SpectrumListSimple : public SpectrumList
 
     // SpectrumList implementation
 
-    virtual int size() override {return (*base_)->size();}
-    virtual bool empty() override {return (*base_)->empty();}
+    virtual int size() override;
+    virtual bool empty() override;
     virtual SpectrumIdentity^ spectrumIdentity(int index) override;
     virtual Spectrum^ spectrum(int index) override;
     virtual Spectrum^ spectrum(int index, bool getBinaryData) override;
@@ -1252,8 +1252,8 @@ public ref class ChromatogramListSimple : public ChromatogramList
 
     // ChromatogramList implementation
 
-    virtual int size() override {return (*base_)->size();}
-    virtual bool empty() override {return (*base_)->empty();}
+    virtual int size() override;
+    virtual bool empty() override;
     virtual ChromatogramIdentity^ chromatogramIdentity(int index) override;
     virtual Chromatogram^ chromatogram(int index) override;
     virtual Chromatogram^ chromatogram(int index, bool getBinaryData) override;
@@ -1309,7 +1309,7 @@ public ref class Run : public ParamContainer
 
 
     Run();
-    bool empty() new {return base_->empty();}
+    bool empty() new;
 
     internal:
     // no copying - any implementation must handle:
@@ -1330,7 +1330,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(AcquisitionSettingsList, pwiz::msda
 
 public ref class MSData
 {
-    DEFINE_INTERNAL_BASE_CODE(pwiz::msdata, MSData);
+    DEFINE_INTERNAL_BASE_CODE(MSData, pwiz::msdata::MSData);
 
     public:
     property System::String^ accession
@@ -1408,7 +1408,7 @@ public ref class MSData
 
     MSData();
 
-    bool empty() {return base_->empty();}
+    bool empty();
 
     internal:
     // no copying
