@@ -54,7 +54,9 @@ class Serializer_mzXML::Impl
     :   config_(config)
     {}
 
-    void write(ostream& os, const MSData& msd) const;
+    void write(ostream& os, const MSData& msd,
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+
     void read(shared_ptr<istream> is, MSData& msd) const;
 
     private:
@@ -439,16 +441,41 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
 
 
 void write_scans(XMLWriter& xmlWriter, const MSData& msd, 
-                 const Serializer_mzXML::Config& config, vector<IndexEntry>& index)
+                 const Serializer_mzXML::Config& config, vector<IndexEntry>& index,
+                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
+    bool canceled = false;
+
     for (size_t i=0; i<sl->size(); i++)
     {
+        // send progress updates, handling cancel
+
+        IterationListener::Status status = IterationListener::Status_Ok;
+
+        if (iterationListenerRegistry)
+            status = iterationListenerRegistry->broadcastUpdateMessage(
+                IterationListener::UpdateMessage(i, sl->size()));
+
+        if (status == IterationListener::Status_Cancel) 
+        {
+            canceled = true;
+            break;
+        }
+
+        // write the spectrum 
+ 
         SpectrumPtr spectrum = sl->spectrum(i, true);
         index.push_back(write_scan(xmlWriter, *spectrum, msd.run.spectrumListPtr, config));
     }
+
+    // final progress update
+
+    if (iterationListenerRegistry && !canceled)
+        iterationListenerRegistry->broadcastUpdateMessage(
+            IterationListener::UpdateMessage(sl->size(), sl->size()));
 }
 
 
@@ -476,7 +503,8 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
 } // namespace
 
 
-void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd) const
+void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     SHA1OutputObserver sha1OutputObserver;
     XMLWriter::Config config;
@@ -493,7 +521,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd) const
     write_msInstruments(xmlWriter, msd, cvTranslator_);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);
     vector<IndexEntry> index;
-    write_scans(xmlWriter, msd, config_, index);
+    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry);
     xmlWriter.endElement(); // msRun 
 
     stream_offset indexOffset = xmlWriter.positionNext();
@@ -818,9 +846,10 @@ PWIZ_API_DECL Serializer_mzXML::Serializer_mzXML(const Config& config)
 {}
 
 
-PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd) const
+PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd,
+   const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
-    return impl_->write(os, msd);
+    return impl_->write(os, msd, iterationListenerRegistry);
 }
 
 

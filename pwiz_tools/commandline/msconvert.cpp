@@ -25,6 +25,7 @@
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
@@ -378,6 +379,18 @@ void wrapSpectrumList_recalculatePrecursors(MSData& msd)
 }
 
 
+class UserFeedbackIterationListener : public IterationListener
+{
+    public:
+
+    virtual Status update(const UpdateMessage& updateMessage)
+    {
+        cout << updateMessage.iterationIndex << "/" << updateMessage.iterationCount << endl;
+        return Status_Ok;
+    }
+};
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     // read in data file
@@ -404,12 +417,20 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     if (config.recalculatePrecursors)
         wrapSpectrumList_recalculatePrecursors(msd);
+
+    // handle progress updates if requested
+
+    IterationListenerRegistry iterationListenerRegistry;
+    UserFeedbackIterationListener feedback;
+    const size_t iterationPeriod = 100;
+    iterationListenerRegistry.addListener(feedback, iterationPeriod);
+    IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
  
     // write out the new data file
 
     string outputFilename = config.outputFilename(filename);
     cout << "writing output file: " << outputFilename << endl;
-    msd.write(outputFilename, config.writeConfig);
+    msd.write(outputFilename, config.writeConfig, pILR);
 
     cout << endl;
 }

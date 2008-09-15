@@ -29,6 +29,7 @@
 #include "MSData.hpp"
 #include "Reader.hpp"
 #include "BinaryDataEncoder.hpp"
+#include "utility/misc/IterationListener.hpp"
 
 
 namespace pwiz {
@@ -58,14 +59,17 @@ struct PWIZ_API_DECL MSDataFile : public MSData
         {}
     };
 
-    /// static write function for any MSData object
+    /// static write function for any MSData object;
+    /// iterationListenerRegistry may be used for progress updates
     static void write(const MSData& msd,
                       const std::string& filename,
-                      const WriteConfig& config = WriteConfig());
+                      const WriteConfig& config = WriteConfig(),
+                      const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
     /// member write function 
     void write(const std::string& filename,
-               const WriteConfig& config = WriteConfig());
+               const WriteConfig& config = WriteConfig(),
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 };
 
 

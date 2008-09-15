@@ -24,6 +24,7 @@
 #include "IO.hpp"
 #include "Diff.hpp"
 #include "utility/misc/unit.hpp"
+#include "boost/lexical_cast.hpp"
 #include <iostream>
 #include <iterator>
 
@@ -34,6 +35,7 @@ using namespace pwiz::minimxml;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 using boost::iostreams::stream_offset;
+using boost::lexical_cast;
 
 
 ostream* os_ = 0;
@@ -589,6 +591,105 @@ void testSpectrumListWithPositions()
 }
 
 
+class TestIterationListener : public IterationListener
+{
+    public:
+
+    virtual Status update(const UpdateMessage& updateMessage) 
+    {
+        indices_.push_back(updateMessage.iterationIndex); 
+        return Status_Ok;
+    }
+
+    const vector<size_t>& indices() const {return indices_;}
+
+    private:
+    vector<size_t> indices_;
+};
+
+
+class TestIterationListener_WithCancel : public IterationListener
+{
+    public:
+
+    virtual Status update(const UpdateMessage& updateMessage) 
+    {
+        if (updateMessage.iterationIndex == 6) return Status_Cancel;
+        indices_.push_back(updateMessage.iterationIndex); 
+        return Status_Ok;
+    }
+
+    const vector<size_t>& indices() const {return indices_;}
+
+    private:
+    vector<size_t> indices_;
+};
+
+
+void testSpectrumListWriteProgress()
+{
+    if (os_) *os_ << "testSpectrumListWriteProgress()\n  ";
+
+    SpectrumListSimple a;
+
+    for (size_t i=0; i<11; i++)
+    {    
+        SpectrumPtr spectrum(new Spectrum);
+        spectrum->id = "goober_" + lexical_cast<string>(i);
+        spectrum->index = i;
+        spectrum->nativeID = lexical_cast<string>(420 + i);
+        spectrum->defaultArrayLength = 666;
+        a.spectra.push_back(spectrum);
+    }
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+
+    TestIterationListener listener;
+    IterationListenerRegistry registry;
+    registry.addListener(listener, 3); // callbacks: 0,3,6,9,11
+
+    IO::write(writer, a, BinaryDataEncoder::Config(), 0, &registry);
+
+    if (os_) 
+    {
+        *os_ << "callback indices: ";
+        copy(listener.indices().begin(), listener.indices().end(), 
+             ostream_iterator<size_t>(*os_, " "));
+        *os_ << "\n\n";
+    }
+
+    unit_assert(listener.indices().size() == 5);
+    unit_assert(listener.indices()[0] == 0);
+    unit_assert(listener.indices()[1] == 3);
+    unit_assert(listener.indices()[2] == 6);
+    unit_assert(listener.indices()[3] == 9);
+    unit_assert(listener.indices()[4] == 11);
+
+    // test #2, this time with cancel at index 6
+
+    TestIterationListener_WithCancel cancelListener;
+    IterationListenerRegistry registry2;
+    registry2.addListener(cancelListener, 3); // callbacks: 0,3, cancel at 6
+    
+    ostringstream oss2;
+    XMLWriter writer2(oss2);
+    IO::write(writer2, a, BinaryDataEncoder::Config(), 0, &registry2);
+
+    if (os_) 
+    {
+        *os_ << "callback indices: ";
+        copy(cancelListener.indices().begin(), cancelListener.indices().end(), 
+             ostream_iterator<size_t>(*os_, " "));
+        *os_ << "\n\n";
+    }
+
+    unit_assert(cancelListener.indices().size() == 2);
+    unit_assert(cancelListener.indices()[0] == 0);
+    unit_assert(cancelListener.indices()[1] == 3);
+}
+
+
 void testChromatogramList()
 {
     ChromatogramListSimple a;
@@ -1104,6 +1205,7 @@ void test()
     testChromatogram();
     testSpectrumList();
     testSpectrumListWithPositions();
+    testSpectrumListWriteProgress();
     testChromatogramList();
     testChromatogramListWithPositions();
     testRun();

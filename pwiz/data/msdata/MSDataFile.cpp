@@ -39,6 +39,7 @@ namespace msdata {
 
 
 using namespace std;
+using namespace pwiz::util;
 using boost::shared_ptr;
 
 
@@ -90,9 +91,10 @@ PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reade
 
 PWIZ_API_DECL
 void MSDataFile::write(const string& filename,
-                       const WriteConfig& config)
+                       const WriteConfig& config,
+                       const IterationListenerRegistry* iterationListenerRegistry)
 {
-    write(*this, filename, config); 
+    write(*this, filename, config, iterationListenerRegistry); 
 }
 
 
@@ -110,7 +112,8 @@ shared_ptr<ostream> openFile(const string& filename)
 }
 
 
-void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& config)
+void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& config,
+                 const IterationListenerRegistry* iterationListenerRegistry)
 {
     switch (config.format)
     {
@@ -125,7 +128,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializerConfig.binaryDataEncoderConfig = config.binaryDataEncoderConfig;
             serializerConfig.indexed = config.indexed;
             Serializer_mzML serializer(serializerConfig);
-            serializer.write(os, msd);
+            serializer.write(os, msd, iterationListenerRegistry);
             break;
         }
         case MSDataFile::Format_mzXML:
@@ -134,7 +137,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializerConfig.binaryDataEncoderConfig = config.binaryDataEncoderConfig;
             serializerConfig.indexed = config.indexed;
             Serializer_mzXML serializer(serializerConfig);
-            serializer.write(os, msd);
+            serializer.write(os, msd, iterationListenerRegistry);
             break;            
         }
         default:
@@ -151,10 +154,11 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
 PWIZ_API_DECL
 void MSDataFile::write(const MSData& msd,
                        const string& filename,
-                       const WriteConfig& config)
+                       const WriteConfig& config,
+                       const IterationListenerRegistry* iterationListenerRegistry)
 {
     shared_ptr<ostream> os = openFile(filename);
-    writeStream(*os, msd, config);
+    writeStream(*os, msd, config, iterationListenerRegistry);
 }
 
 

@@ -39,6 +39,7 @@ namespace IO {
 using namespace std;
 using namespace minimxml;
 using namespace minimxml::SAXParser;
+using namespace util;
 using boost::lexical_cast;
 using boost::shared_ptr;
 
@@ -2068,20 +2069,48 @@ PWIZ_API_DECL void read(std::istream& is, Chromatogram& chromatogram,
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
            const BinaryDataEncoder::Config& config,
-           vector<boost::iostreams::stream_offset>* spectrumPositions)
+           vector<boost::iostreams::stream_offset>* spectrumPositions,
+           const IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(spectrumList.size())));
     writer.startElement("spectrumList", attributes);
 
+    bool canceled = false;
+
     for (size_t i=0; i<spectrumList.size(); i++)
     {
+        // send progress updates, handling cancel
+
+        IterationListener::Status status = IterationListener::Status_Ok;
+
+        if (iterationListenerRegistry)
+            status = iterationListenerRegistry->broadcastUpdateMessage(
+                IterationListener::UpdateMessage(i, spectrumList.size()));
+
+        if (status == IterationListener::Status_Cancel) 
+        {
+            canceled = true;
+            break;
+        }
+ 
+        // save write position
+
         if (spectrumPositions)
             spectrumPositions->push_back(writer.positionNext());
+
+        // write the spectrum
+
         SpectrumPtr spectrum = spectrumList.spectrum(i, true);
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
         write(writer, *spectrum, config);
     }
+
+    // final progress update
+
+    if (iterationListenerRegistry && !canceled)
+        iterationListenerRegistry->broadcastUpdateMessage(
+            IterationListener::UpdateMessage(spectrumList.size(), spectrumList.size()));
 
     writer.endElement();
 }
@@ -2207,7 +2236,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const Run& run,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
-           vector<boost::iostreams::stream_offset>* chromatogramPositions)
+           vector<boost::iostreams::stream_offset>* chromatogramPositions,
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", run.id));
@@ -2234,7 +2264,7 @@ void write(minimxml::XMLWriter& writer, const Run& run,
     }
 
     if (run.spectrumListPtr.get())
-        write(writer, *run.spectrumListPtr, config, spectrumPositions);
+        write(writer, *run.spectrumListPtr, config, spectrumPositions, iterationListenerRegistry);
 
     if (run.chromatogramListPtr.get())
         write(writer, *run.chromatogramListPtr, config, chromatogramPositions);
@@ -2353,7 +2383,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
-           vector<boost::iostreams::stream_offset>* chromatogramPositions)
+           vector<boost::iostreams::stream_offset>* chromatogramPositions,
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_1.0.0"));
@@ -2385,7 +2416,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
     writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettingsList");
 
-    write(writer, msd.run, config, spectrumPositions, chromatogramPositions);
+    write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
 
     writer.endElement();
 }
