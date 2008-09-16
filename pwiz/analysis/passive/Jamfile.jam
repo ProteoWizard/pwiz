@@ -34,8 +34,12 @@ lib pwiz_analysis_passive_core
         MSDataAnalyzerApplication.cpp
         MSDataCache.cpp 
     : # requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
     : # default-build
     : # usage-requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
 ; 
 
 
@@ -56,8 +60,6 @@ lib pwiz_analysis_passive
         <library>../../utility/math//pwiz_utility_math
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>/ext/boost//program_options
-        <library>/ext/boost//filesystem
     : # default-build
     : # usage-requirements
         <library>pwiz_analysis_passive_core
@@ -66,8 +68,6 @@ lib pwiz_analysis_passive
         <library>../../utility/math//pwiz_utility_math
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>/ext/boost//program_options
-        <library>/ext/boost//filesystem
     ;
 
 
