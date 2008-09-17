@@ -67,39 +67,27 @@ public:
 
     CharIndexedVectorIterator& operator++()
     {	// preincrement
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (*this);
     }
 
     CharIndexedVectorIterator operator++(int)
     {	// postincrement
         CharIndexedVectorIterator _Tmp = *this;
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (_Tmp);
     }
 
     CharIndexedVectorIterator& operator--()
     {	// predecrement
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (*this);
     }
 
     CharIndexedVectorIterator operator--(int)
     {	// postdecrement
         CharIndexedVectorIterator _Tmp = *this;
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (_Tmp);
     }
 
@@ -112,6 +100,11 @@ public:
     CharIndexedVectorIterator& operator-=(difference_type _Off)
     {	// decrement by integer
         return (*this += -_Off);
+    }
+
+    bool operator<(const CharIndexedVectorIterator& rhs)
+    {
+        return m_itr < rhs.m_itr;
     }
 };
 
@@ -152,39 +145,27 @@ public:
 
     CharIndexedVectorConstIterator& operator++()
     {	// preincrement
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (*this);
     }
 
     CharIndexedVectorConstIterator operator++(int)
     {	// postincrement
         CharIndexedVectorConstIterator _Tmp = *this;
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (_Tmp);
     }
 
     CharIndexedVectorConstIterator& operator--()
     {	// predecrement
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (*this);
     }
 
     CharIndexedVectorConstIterator operator--(int)
     {	// postdecrement
         CharIndexedVectorConstIterator _Tmp = *this;
-        do
-        {
-            ++m_itr;
-        } while (*m_itr == T());
+        ++m_itr;
         return (_Tmp);
     }
 
@@ -197,6 +178,11 @@ public:
     CharIndexedVectorConstIterator& operator-=(difference_type _Off)
     {	// decrement by integer
         return (*this += -_Off);
+    }
+
+    bool operator<(const CharIndexedVectorConstIterator& rhs)
+    {
+        return m_itr < rhs.m_itr;
     }
 };
 
@@ -217,11 +203,7 @@ struct CharIndexedVector : public boost::array<T, 129>
 
     size_t size() const
     {
-        size_t numResidues = 0;
-        for (size_t i=0; i < 128; ++i)
-            if (type::operator[](i) != T())
-                ++ numResidues;
-        return numResidues;
+        return 128;
     }
 
     void erase(const char c)
@@ -254,10 +236,10 @@ struct CharIndexedVector : public boost::array<T, 129>
         return type::operator[]((size_t) c);
     }
 
-    const_iterator begin() const    {return ++ const_iterator(type::begin());}
-    const_iterator end() const      {return -- const_iterator(type::end());}
-    iterator begin()                {return ++ iterator(type::begin());}
-    iterator end()                  {return -- iterator(type::end());}
+    const_iterator begin() const    {return type::begin();}
+    const_iterator end() const      {return type::end();}
+    iterator begin()                {return type::begin();}
+    iterator end()                  {return type::end();}
 };
 
 } // namespace util
