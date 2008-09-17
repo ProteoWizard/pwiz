@@ -53,7 +53,10 @@ rule init ( version ? : location : options * )
         #~ <warnings>off
         ;
 
-    lib pthread : : <name>pthread <link>shared ;
+    lib pthread : : <name>pthread <link>shared : 
+        : <toolset>gcc:<linkflags>-pthread # sometimes segfaults when not defined -- dk
+        ;
+
     explicit pthread ;
     local regex_pthread_requirement ;
     if [ modules.peek : UNIX ]

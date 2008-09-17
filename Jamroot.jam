@@ -79,7 +79,17 @@ project pwiz
 
 # external library declarations
 
-lib pthread : : <name>pthread <link>shared ;
+lib pthread 
+    : # sources
+    : # requirements
+        <name>pthread  
+        <link>shared
+        <toolset>gcc:<linkflags>-pthread # sometimes segfault without this -- dk
+    : # default-build
+    : # usage-requirements
+        <toolset>gcc:<linkflags>-pthread # sometimes segfault without this -- dk
+    ;
+
 lib jpeg png z ;
 lib gd : jpeg png z : <name>gd ;
 lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/gd-2.0.33 ;
