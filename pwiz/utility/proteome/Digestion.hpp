@@ -171,6 +171,8 @@ class PWIZ_API_DECL Digestion
     const_iterator end() const;
 
     private:
+	friend class const_iterator;
+	friend class const_iterator::Impl;
     class Impl;
     std::auto_ptr<Impl> impl_;
 };
