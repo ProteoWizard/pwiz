@@ -138,6 +138,11 @@ class PWIZ_API_DECL Digestion
         std::auto_ptr<Impl> impl_;
     };
 
+    private:
+    class Impl; // forward-declared for const_iterator
+
+    public:
+
     /// provides forward-only, read-only iteration to enumerate peptides
     class PWIZ_API_DECL const_iterator
     {
@@ -163,6 +168,8 @@ class PWIZ_API_DECL Digestion
         const_iterator(const Digestion& digestion);
 
         friend class Digestion;
+        friend class Digestion::Impl;
+
         class Impl;
         std::auto_ptr<Impl> impl_;
     };
@@ -173,7 +180,6 @@ class PWIZ_API_DECL Digestion
     private:
 	friend class const_iterator;
 	friend class const_iterator::Impl;
-    class Impl;
     std::auto_ptr<Impl> impl_;
 };
 
