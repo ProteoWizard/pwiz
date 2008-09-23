@@ -60,7 +60,7 @@ class PWIZ_API_DECL TextWriter
             os_ << ", " << cvParam.value;
         os_ << std::endl; 
         return *this;    
-    }
+   }
 
     TextWriter& operator()(const UserParam& userParam)
     {
@@ -79,7 +79,8 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const MSData& msd)
+
+    TextWriter& operator()(const MSData& msd, bool metadata_only=false)
     {
         (*this)("msdata:");
         child()
@@ -102,8 +103,10 @@ class PWIZ_API_DECL TextWriter
             child()("softwareList: ", msd.softwarePtrs);
         if (!msd.dataProcessingPtrs.empty())
             child()("dataProcessingList: ", msd.dataProcessingPtrs);
+
         if (!msd.run.empty())
-            child()(msd.run);
+            child()(msd.run, metadata_only);
+
         return *this;
     }
     
@@ -307,7 +310,7 @@ class PWIZ_API_DECL TextWriter
         return p.get() ? (*this)(*p) : *this;
     }
  
-    TextWriter& operator()(const Run& run)
+    TextWriter& operator()(const Run& run, bool metadata_only=false)
     {
         (*this)("run:");
         child()("id: " + run.id);
@@ -325,6 +328,9 @@ class PWIZ_API_DECL TextWriter
                  it!=run.sourceFilePtrs.end(); ++it)
                  child().child()("sourceFileRef: " + (*it)->id);
         }
+       
+	if (metadata_only) return *this;
+
         if (run.spectrumListPtr.get())
             child()(run.spectrumListPtr);
         if (run.chromatogramListPtr.get())

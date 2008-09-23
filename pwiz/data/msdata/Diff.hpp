@@ -389,6 +389,7 @@ struct Diff<ChromatogramList>
 ///
 /// stream insertion of Diff results
 ///
+
 template <typename object_type>
 std::ostream& operator<<(std::ostream& os, const Diff<object_type>& diff)
 {
@@ -409,6 +410,7 @@ std::ostream& operator<<(std::ostream& os, const Diff<object_type>& diff)
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff);
 
 } // namespace msdata
 } // namespace pwiz

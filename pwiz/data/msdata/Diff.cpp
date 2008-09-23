@@ -894,7 +894,6 @@ void diff(const Run& a,
     }
 }
 
-
 PWIZ_API_DECL
 void diff(const MSData& a,
           const MSData& b,
@@ -928,7 +927,83 @@ void diff(const MSData& a,
 }
 
 
+std::ostream& os_write_spectra(std::ostream& os, const SpectrumListPtr a_b, const SpectrumListPtr b_a)
+{
+
+  TextWriter write(os, 1);
+  
+  if(a_b->size()!=b_a->size())
+    {
+      os<<"in SpectrumList diff: SpectrumList sizes differ"<<endl;
+      return os;
+    }
+  
+  for(size_t index(0);index<(*a_b).size();index++)
+    {
+
+      os<<"+\n";
+      write(*(a_b->spectrum(index)));
+   
+      os<<"-\n";
+      write(*(b_a->spectrum(index)));
+    
+    }
+
+  return os;
+}
+
+std::ostream& os_write_chromatograms(std::ostream& os, const ChromatogramListPtr a_b, const ChromatogramListPtr b_a)
+{
+  
+  TextWriter write(os,1);
+
+  if(a_b->size()!=b_a->size())
+    {
+      os<<"in ChromatogramList diff: ChromatogramList sizes differ"<<endl;
+      return os;
+    }
+
+ 
+
+  for(size_t index=0;index<a_b->size();index++)
+    {
+
+      os<<"+\n";
+      write(*(a_b->chromatogram(index)));  
+
+      os<<"-\n";
+      write(*(b_a->chromatogram(index)));
+      
+    }
+
+  return os;
+}
 } // namespace diff_impl
+
+
+std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
+{
+  using namespace diff_impl;
+
+  TextWriter write(os,1);
+
+  if(!diff.a_b.empty()|| !diff.b_a.empty())
+    {
+      os<<"+\n";
+      write(diff.a_b,true);
+      os<<"-\n";
+      write(diff .b_a,true);
+     
+      os_write_spectra(std::cout,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
+
+      os_write_chromatograms(std::cout,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
+
+    }
+
+  return os;
+
+}
+
 } // namespace msdata
 } // namespace pwiz
 

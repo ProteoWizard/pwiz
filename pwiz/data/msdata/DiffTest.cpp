@@ -20,7 +20,6 @@
 // limitations under the License.
 //
 
-
 #include "Diff.hpp"
 #include "examples.hpp"
 #include "utility/misc/unit.hpp"
@@ -1188,8 +1187,70 @@ void testBinaryDataOnly()
     unit_assert(!diff_data);
 }
 
+void testMSDiffUpdate()
+
+{
+  if(os_) *os_<<"testMSDiffUpdate()"<<endl;
+
+  MSData tiny1;
+  MSData tiny2;
+
+  examples::initializeTiny(tiny1);
+  examples::initializeTiny(tiny2);
+
+  Diff<MSData> diff_initial(tiny1,tiny2);
+  unit_assert(!diff_initial);
+
+  //inflict metadata differences
+
+  tiny1.id="ego";
+  tiny1.run.id="superego";
+  
+  //inflict spectral differences
+
+  SpectrumPtr tiny1_s0 = tiny1.run.spectrumListPtr->spectrum(0);
+  SpectrumPtr tiny2_s1 = tiny2.run.spectrumListPtr->spectrum(1);
+
+  tiny1_s0->id = "tiny1";
+  tiny2_s1->id = "tiny2";
+
+  AcquisitionList& a1=(tiny1_s0->spectrumDescription).acquisitionList;
+  AcquisitionList& a2=(tiny2_s1->spectrumDescription).acquisitionList;
+
+  
+  a1.acquisitions.push_back(Acquisition());
+  a1.acquisitions.back().number=144;
+
+  a2.acquisitions.push_back(Acquisition());
+  a2.acquisitions.back().number=288;
+
+  //inflict chromatogram differences
+
+  ChromatogramPtr tiny1_c0=tiny1.run.chromatogramListPtr->chromatogram(0);
+
+  tiny1_c0->id="zumas";
+
+  //test metadata, spectral, chromatogram differences
+
+  Diff<MSData> diff_changed(tiny1,tiny2);
+  unit_assert(diff_changed);
+
+  if(os_) *os_<<diff_changed;
+
+  tiny1.run.spectrumListPtr.reset();
+  
+  Diff<MSData> diff_changed_changed(tiny1,tiny2);
+  unit_assert(diff_changed_changed);
+
+
+  if(os_) *os_<<diff_changed_changed;
+
+  
+  
+}
 
 void test()
+
 {
     testString();
     testCV();
@@ -1222,6 +1283,8 @@ void test()
     testRun();
     testMSData();
     testBinaryDataOnly();
+    testMSDiffUpdate();
+
 }
 
 
