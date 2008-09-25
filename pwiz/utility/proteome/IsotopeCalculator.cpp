@@ -214,7 +214,8 @@ MassDistribution IsotopeCalculator::Impl::distribution(const Formula& formula,
 
     vector<MassDistribution> distributions; 
 
-    for (Formula::Map::const_iterator it=formula.data().begin(); it!=formula.data().end(); ++it)
+    Formula::Map formulaData = formula.data();
+    for (Formula::Map::const_iterator it=formulaData.begin(); it!=formulaData.end(); ++it)
     {
         Element::Type e = it->first;
         int atomCount = it->second;

@@ -30,7 +30,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <map>
+#include "utility/misc/virtual_map.hpp"
 
 
 namespace pwiz {
@@ -78,8 +78,9 @@ namespace Element {
 /// enumeration of the elements
 enum PWIZ_API_DECL Type
 {
-    H, He, Li, Be, B, C, N, O, F, Ne, 
-    Na, Mg, Al, Si, P, S, Cl, Ar, K, Ca, 
+    C, H, O, N, S, P,
+    He, Li, Be, B, F, Ne, 
+    Na, Mg, Al, Si, Cl, Ar, K, Ca, 
     Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, 
     Ga, Ge, As, Se, Br, Kr, Rb, Sr, Y, Zr, 
     Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd, In, Sn, 
@@ -135,6 +136,8 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Info::Record& rec
 } // namespace Element
 
 
+class CompositionMap;
+
 /// class to represent a chemical formula
 class PWIZ_API_DECL Formula
 {
@@ -157,7 +160,7 @@ class PWIZ_API_DECL Formula
 
     // direct access to the map, for iteration
     typedef std::map<Element::Type, int> Map;
-    const Map& data() const;
+    Map data() const;
 
     // operations
     Formula& operator+=(const Formula& that);    

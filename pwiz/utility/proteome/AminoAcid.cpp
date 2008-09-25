@@ -50,7 +50,7 @@ class Info::Impl
 
     private:
     void initializeRecords();
-    map<Type, Record> records_;
+    vector<Record> records_;
     CharIndexedVector<const Record*> recordsSymbolIndex_;
 };
 
@@ -83,6 +83,7 @@ Info::Record createRecord(const std::string& name,
 void Info::Impl::initializeRecords()
 {
     using namespace Chemistry;
+    records_.resize(Unknown+1);
     records_[Alanine] = createRecord("Alanine", "Ala", 'A', "C3 H5 N1 O1 S0", .078);
     records_[Cysteine] = createRecord("Cysteine", "Cys", 'C', "C3 H5 N1 O1 S1", .019);
     records_[AsparticAcid] = createRecord("Aspartic Acid", "Asp", 'D', "C4 H5 N1 O3 S0", .053);
@@ -112,8 +113,8 @@ void Info::Impl::initializeRecords()
     //Averagine is really C4.9384H7.7583N1.3577O1.4773S0.0417 
 
     // create the symbol index for the records
-    for (map<Type,Record>::iterator it=records_.begin(); it!=records_.end(); ++it)
-        recordsSymbolIndex_[it->second.symbol] = &it->second;
+    for (vector<Record>::iterator it=records_.begin(); it!=records_.end(); ++it)
+        recordsSymbolIndex_[it->symbol] = &*it;
 }
 
 

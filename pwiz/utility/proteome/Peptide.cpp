@@ -40,6 +40,8 @@ using namespace Chemistry;
 
 class Peptide::Impl
 {
+    static auto_ptr<AminoAcid::Info> info_;
+
     public:
 
     Impl(Peptide* peptide, const std::string& sequence)
@@ -66,6 +68,18 @@ class Peptide::Impl
         calculateMasses();
     }
 
+    Impl(Peptide* peptide, const Impl& other)
+        :   sequence_(other.sequence_), mods_(peptide),
+            monoMass_(other.monoMass_), avgMass_(other.avgMass_)
+    {
+        for (ModificationMap::const_iterator itr = other.mods_.begin();
+             itr != other.mods_.end();
+             ++itr)
+        {
+            mods_.insert(*itr);
+        }
+    }
+
     inline const string& sequence() const
     {
         return sequence_;
@@ -73,13 +87,15 @@ class Peptide::Impl
 
     inline Formula formula(bool modified) const
     {
-        AminoAcid::Info info;
+        const static Formula H1("H1");
+        const static Formula O1H1("O1H1");
+        AminoAcid::Info& info = *info_;
         Formula formula;
 
         ModificationMap::const_iterator modItr = mods_.begin();
 
         // add N terminus formula and modifications
-        formula += Formula("H1");
+        formula += H1;
         if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
@@ -113,7 +129,7 @@ class Peptide::Impl
         }
 
         // add C terminus formula and modifications
-        formula += Formula("H1O1");
+        formula += O1H1;
         if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
@@ -158,12 +174,14 @@ class Peptide::Impl
 
     inline void calculateMasses()
     {
+        if (!info_.get()) info_.reset(new AminoAcid::Info);
         Formula unmodifiedFormula = formula(false);
         monoMass_ = unmodifiedFormula.monoisotopicMass();
         avgMass_ = unmodifiedFormula.molecularWeight();
     }
 };
 
+auto_ptr<AminoAcid::Info> Peptide::Impl::info_;
 
 PWIZ_API_DECL Peptide::Peptide(const string& sequence) : impl_(new Impl(this, sequence)) {}
 PWIZ_API_DECL Peptide::Peptide(const char* sequence) : impl_(new Impl(this, sequence)) {}
@@ -175,13 +193,13 @@ PWIZ_API_DECL Peptide::Peptide(const char* begin, const char* end)
 :   impl_(new Impl(this, begin, end)) {}
 
 PWIZ_API_DECL Peptide::Peptide(const Peptide& other)
-:   impl_(new Impl(this, other.sequence()))
+:   impl_(new Impl(this, *other.impl_))
 {
 }
 
 PWIZ_API_DECL Peptide& Peptide::operator=(const Peptide& rhs)
 {
-    impl_.reset(new Impl(this, rhs.sequence()));
+    impl_.reset(new Impl(this, *rhs.impl_));
     return *this;
 }
 
