@@ -49,10 +49,62 @@ enum PWIZ_API_DECL ProteolyticEnzyme
 };
 
 
+/// peptide subclass that contains extra metadata provided by digestion
+class PWIZ_API_DECL DigestedPeptide : public Peptide
+{
+    public:
+
+    DigestedPeptide(const std::string& sequence);
+    DigestedPeptide(const char* sequence);
+
+    DigestedPeptide(std::string::const_iterator begin,
+                    std::string::const_iterator end,
+                    size_t offset,
+                    size_t missedCleavages,
+                    bool NTerminusIsSpecific,
+                    bool CTerminusIsSpecific);
+
+    DigestedPeptide(const DigestedPeptide&);
+    DigestedPeptide& operator=(const DigestedPeptide&);
+    ~DigestedPeptide();
+
+    /// returns the offset of the N terminus of the peptide
+    /// in the polypeptide from which it was digested
+    size_t offset() const;
+
+    /// returns the number of missed cleavage sites in the peptide
+    size_t missedCleavages() const;
+
+    /// returns the number of termini that matched to the digestion rules
+    size_t specificTermini() const;
+
+    /// returns true iff the N terminus matched the digestion rules
+    bool NTerminusIsSpecific() const;
+
+    /// returns true iff the C terminus matched the digestion rules
+    bool CTerminusIsSpecific() const;
+
+    private:
+    size_t offset_;
+    size_t missedCleavages_;
+    bool NTerminusIsSpecific_;
+    bool CTerminusIsSpecific_;
+};
+
+
 /// enumerates the peptides from proteolytic digestion of a polypeptide or protein;
 class PWIZ_API_DECL Digestion
 {
     public:
+
+    /// sets the number of peptide termini that must match to a digestion motif
+    /// note: castable to int; i.e. non=0, semi=1, fully=2
+    enum PWIZ_API_DECL Specificity
+    {
+        NonSpecific = 0, /// neither termini must match digestion motif(s)
+        SemiSpecific = 1, /// either or both termini must match digestion motif(s)
+        FullySpecific = 2 /// both termini must match digestion motif(s)
+    };
 
     /// sets constraints for valid peptides produced by iterating the digestion
     struct PWIZ_API_DECL Config
@@ -65,11 +117,14 @@ class PWIZ_API_DECL Digestion
         int minimumLength;
         int maximumLength;
 
+        Specificity minimumSpecificity; 
+
         Config(int maximumMissedCleavages = 100000,
                //double minimumMass = 0,
                //double maximumMass = 100000,
                int minimumLength = 0,
-               int maximumLength = 100000);
+               int maximumLength = 100000,
+               Specificity minimumSpecificity = FullySpecific);
     };
 
     struct Motif;
@@ -150,15 +205,15 @@ class PWIZ_API_DECL Digestion
         const_iterator(const const_iterator& rhs);
         ~const_iterator();
 
-        const Peptide& operator*() const;
-        const Peptide* operator->() const;
+        const DigestedPeptide& operator*() const;
+        const DigestedPeptide* operator->() const;
         const_iterator& operator++();
         const_iterator operator++(int);
         bool operator!=(const const_iterator& that) const; 
         bool operator==(const const_iterator& that) const; 
 
         typedef std::forward_iterator_tag iterator_category;
-        typedef Peptide value_type;
+        typedef DigestedPeptide value_type;
         typedef size_t difference_type;
         typedef value_type* pointer;
         typedef value_type& reference;

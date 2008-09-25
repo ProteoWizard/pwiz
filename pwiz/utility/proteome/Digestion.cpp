@@ -41,24 +41,105 @@ using namespace pwiz::util;
 
 
 PWIZ_API_DECL
+DigestedPeptide::DigestedPeptide(const string& sequence)
+:   Peptide(sequence)
+{
+}
+
+PWIZ_API_DECL
+DigestedPeptide::DigestedPeptide(const char* sequence)
+:   Peptide(sequence)
+{
+}
+
+PWIZ_API_DECL
+DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
+                                 std::string::const_iterator end,
+                                 size_t offset,
+                                 size_t missedCleavages,
+                                 bool NTerminusIsSpecific,
+                                 bool CTerminusIsSpecific)
+:   Peptide(begin, end),
+    offset_(offset),
+    missedCleavages_(missedCleavages),
+    NTerminusIsSpecific_(NTerminusIsSpecific),
+    CTerminusIsSpecific_(CTerminusIsSpecific)
+{
+}
+
+PWIZ_API_DECL DigestedPeptide::DigestedPeptide(const DigestedPeptide& other)
+:   Peptide(other),
+    offset_(other.offset_),
+    missedCleavages_(other.missedCleavages_),
+    NTerminusIsSpecific_(other.NTerminusIsSpecific_),
+    CTerminusIsSpecific_(other.CTerminusIsSpecific_)
+{
+}
+
+PWIZ_API_DECL DigestedPeptide& DigestedPeptide::operator=(const DigestedPeptide& rhs)
+{
+    Peptide::operator=(rhs);
+    offset_ = rhs.offset_;
+    missedCleavages_ = rhs.missedCleavages_;
+    NTerminusIsSpecific_ = rhs.NTerminusIsSpecific_;
+    CTerminusIsSpecific_ = rhs.CTerminusIsSpecific_;
+    return *this;
+}
+
+PWIZ_API_DECL DigestedPeptide::~DigestedPeptide()
+{
+}
+
+PWIZ_API_DECL size_t DigestedPeptide::offset() const
+{
+    return offset_;
+}
+
+PWIZ_API_DECL size_t DigestedPeptide::missedCleavages() const
+{
+    return missedCleavages_;
+}
+
+PWIZ_API_DECL size_t DigestedPeptide::specificTermini() const
+{
+    return (size_t) NTerminusIsSpecific_ + (size_t) CTerminusIsSpecific_;
+}
+
+PWIZ_API_DECL bool DigestedPeptide::NTerminusIsSpecific() const
+{
+    return NTerminusIsSpecific_;
+}
+
+PWIZ_API_DECL bool DigestedPeptide::CTerminusIsSpecific() const
+{
+    return CTerminusIsSpecific_;
+}
+
+
+PWIZ_API_DECL
 Digestion::Config::Config(int maximumMissedCleavages,
                           //double minimumMass,
                           //double maximumMass,
                           int minimumLength,
-                          int maximumLength)
+                          int maximumLength,
+                          Specificity minimumSpecificity)
 :   maximumMissedCleavages(maximumMissedCleavages),
     //minimumMass(minimumMass), maximumMass(maximumMass),
-    minimumLength(minimumLength), maximumLength(maximumLength)
+    minimumLength(minimumLength), maximumLength(maximumLength),
+    minimumSpecificity(minimumSpecificity)
 {
 }
 
 
 class Digestion::Motif::Impl
 {
+    static auto_ptr<AminoAcid::Info> info_;
+
     public:
     Impl(const string& motif)
         :   motif_(motif)
     {
+        if (!info_.get()) info_.reset(new AminoAcid::Info);
         parseMotif();
     }
 
@@ -108,7 +189,7 @@ class Digestion::Motif::Impl
     private:
     inline void parseMotif()
     {
-        AminoAcid::Info info;
+        //AminoAcid::Info& info = *info_;
         vector<char> multiResidueBlock;
 		int multiResidueBlockMode = 0; // 0=off 1=contained residues are included 2=contained residues are excluded
         bool parsedSiteDelimiter = false;
@@ -196,6 +277,9 @@ class Digestion::Motif::Impl
     vector<IsValidAA> cFilters_;
 };
 
+auto_ptr<AminoAcid::Info> Digestion::Motif::Impl::info_;
+
+
 PWIZ_API_DECL
 Digestion::Motif::Motif(const string& motif)
 :   impl_(new Impl(motif))
@@ -243,6 +327,18 @@ class Digestion::Impl
             {
                 case ProteolyticEnzyme_Trypsin:
                     motifs_.push_back(Motif("[KR]|"));
+                    break;
+                case ProteolyticEnzyme_Chymotrypsin:
+                    motifs_.push_back(Motif("[FWY]|"));
+                    break;
+                case ProteolyticEnzyme_Clostripain:
+                    motifs_.push_back(Motif("R|"));
+                    break;
+                case ProteolyticEnzyme_CyanogenBromide:
+                    motifs_.push_back(Motif("M|[^ST]"));
+                    break;
+                case ProteolyticEnzyme_Pepsin:
+                    motifs_.push_back(Motif("[FWY]|"));
                     break;
             }
         }
@@ -355,35 +451,16 @@ class Digestion::const_iterator::Impl
         digestionImpl_.digest();
         try
         {
-            begin_ = end_ = sites_.end();
-
-            // iteration requires at least 2 digestion sites
-            if (sites_.size() < 2)
-                return;
-
-            // try each possible pair of digestion sites;
-            // initialize begin_ and end_ to the first pair that meet
-            // config's filtering criteria
-            for (size_t i=0; i < sites_.size(); ++i)
+            switch (config_.minimumSpecificity)
             {
-                int testBegin = sites_[i];
-
-                for (size_t j=1; j < sites_.size(); ++j)
-                {
-                    int testEnd = sites_[j];
-                    int curLength = testEnd - testBegin;
-
-                    if (curLength > config_.maximumLength)
-                        break;
-                    if (curLength < config_.minimumLength)
-                        continue;
-
-                    begin_ = sites_.begin()+i;
-                    end_ = sites_.begin()+j;
+                default:
+                case FullySpecific:
+                    initFullySpecific();
                     break;
-                }
 
-                if (begin_ != sites_.end())
+                case SemiSpecific: // TODO: optimize semi-specific
+                case NonSpecific:
+                    initNonSpecific();
                     break;
             }
         }
@@ -393,13 +470,115 @@ class Digestion::const_iterator::Impl
         }
     }
 
-    const Peptide& peptide() const
+    inline void initFullySpecific()
+    {
+        begin_ = end_ = sites_.end();
+
+        // iteration requires at least 2 digestion sites
+        if (sites_.size() < 2)
+            return;
+
+        // try each possible pair of digestion sites;
+        // initialize begin_ and end_ to the first pair that meet
+        // config's filtering criteria
+        for (size_t i=0; i < sites_.size(); ++i)
+        {
+            int testBegin = sites_[i];
+
+            for (size_t j=1; j < sites_.size(); ++j)
+            {
+                int testEnd = sites_[j];
+
+                int curMissedCleavages = int(end_ - begin_)-1;
+                if (curMissedCleavages > config_.maximumMissedCleavages)
+                    break;
+
+                int curLength = testEnd - testBegin;
+                if (curLength > config_.maximumLength)
+                    break;
+                if (curLength < config_.minimumLength)
+                    continue;
+
+                begin_ = sites_.begin()+i;
+                end_ = sites_.begin()+j;
+                break;
+            }
+
+            if (begin_ != sites_.end())
+                break;
+        }
+    }
+
+    inline void initNonSpecific()
+    {
+        begin_ = end_ = sites_.begin();
+        beginNonSpecific_ = endNonSpecific_ = sequence_.length();
+        int maxLength = (int) sequence_.length();
+
+        // try each possible pair of digestion sites;
+        // initialize beginNonSpecific_ and beginNonSpecific_ to the first pair that meet
+        // config's filtering criteria
+        for (int testBegin = -1; testBegin < maxLength; ++testBegin)
+        {
+            for (int testEnd = testBegin+config_.minimumLength; testEnd <maxLength; ++testEnd)
+            {
+                // this can happen if minimumLength is high enough
+                int curMissedCleavages = int(end_ - begin_)-1;
+                if (curMissedCleavages > config_.maximumMissedCleavages)
+                    break;
+
+                int curLength = testEnd - testBegin;
+                if (curLength > config_.maximumLength)
+                    break;
+
+                beginNonSpecific_ = testBegin;
+                endNonSpecific_ = testEnd;
+                while (begin_ != sites_.end() && *begin_ <= beginNonSpecific_)
+                    ++begin_;
+                if (begin_ != sites_.end())
+                {
+                    end_ = begin_--;
+                    while (end_ != sites_.end() && *end_ < endNonSpecific_)
+                        ++end_;
+                }
+                break;
+            }
+
+            if (beginNonSpecific_ != maxLength)
+                break;
+        }
+    }
+
+    const DigestedPeptide& peptide() const
     {
         try
         {
             if (!peptide_.get())
             {
-                peptide_.reset(new Peptide(sequence_.begin()+(*begin_+1), sequence_.begin()+(*end_+1)));
+                switch (config_.minimumSpecificity)
+                {
+                    default:
+                    case FullySpecific:
+                        peptide_.reset(
+                            new DigestedPeptide(sequence_.begin()+(*begin_+1),
+                                                sequence_.begin()+(*end_+1),
+                                                *begin_+1,
+                                                int(end_ - begin_)-1,
+                                                true,
+                                                true));
+                        break;
+
+                    case SemiSpecific:
+                    case NonSpecific:
+                        peptide_.reset(
+                            new DigestedPeptide(sequence_.begin()+(beginNonSpecific_+1),
+                                                sequence_.begin()+(endNonSpecific_+1),
+                                                beginNonSpecific_+1,
+                                                int(end_ - begin_)-1,
+                                                begin_ != sites_.end() && *begin_ == beginNonSpecific_,
+                                                end_ != sites_.end() && *end_ == endNonSpecific_));
+                        break;
+                }
             }
             return *peptide_;
         }
@@ -409,18 +588,40 @@ class Digestion::const_iterator::Impl
         }
     }
 
-    inline Impl& operator++()
+    inline void nextFullySpecific()
     {
-        try
+        bool newBegin = (end_ == sites_.end());
+        if (!newBegin)
         {
-            peptide_.release();
-
-            bool newBegin = (end_ == sites_.end());
-            if (!newBegin)
+            // advance end_ to the next digestion site
+            bool foundNextValidSitePair = false;
+            for (++end_; end_ != sites_.end(); ++end_)
             {
-                // advance end_ to the next digestion site
-                bool foundNextValidSitePair = false;
-                for (++end_; end_ != sites_.end(); ++end_)
+                int curMissedCleavages = int(end_ - begin_)-1;
+                if (curMissedCleavages > config_.maximumMissedCleavages)
+                    break;
+
+                int curLength = *end_ - *begin_;
+                if (curLength > config_.maximumLength)
+                    break;
+                if (curLength < config_.minimumLength)
+                    continue;
+
+                foundNextValidSitePair = true;
+                break;
+            }
+
+            // there may not be another site that makes a valid site pair
+            newBegin = !foundNextValidSitePair;
+        }
+
+        if (newBegin)
+        {
+            // advance to the next valid digestion site pair
+            bool foundNextValidSitePair = false;
+            for (++begin_; begin_ != sites_.end(); ++begin_)
+            {
+                for (end_ = begin_+1; end_ != sites_.end(); ++end_)
                 {
                     int curMissedCleavages = int(end_ - begin_)-1;
                     if (curMissedCleavages > config_.maximumMissedCleavages)
@@ -436,35 +637,105 @@ class Digestion::const_iterator::Impl
                     break;
                 }
 
-                // there may not be another site that makes a valid site pair
-                newBegin = !foundNextValidSitePair;
+                if (foundNextValidSitePair)
+                    break;
+            }
+        }
+    }
+
+    inline void nextNonSpecific()
+    {
+        int maxLength = (int) sequence_.length();
+        bool newBegin = (endNonSpecific_ == maxLength);
+        if (!newBegin)
+        {
+            // advance endNonSpecific_ to the next digestion site
+            bool foundNextValidSitePair = false;
+            end_ = begin_;
+            for (++endNonSpecific_; endNonSpecific_ < maxLength; ++endNonSpecific_)
+            {
+                while (end_ != sites_.end() && *end_ < endNonSpecific_)
+                    ++end_;
+
+                int curMissedCleavages = int(end_ - begin_)-1;
+                if (curMissedCleavages > config_.maximumMissedCleavages)
+                    break;
+
+                int curLength = endNonSpecific_ - beginNonSpecific_;
+                if (curLength > config_.maximumLength)
+                    break;
+                if (curLength < config_.minimumLength)
+                    continue;
+
+                foundNextValidSitePair = true;
+                break;
             }
 
-            if (newBegin)
+            // there may not be another site that makes a valid site pair
+            newBegin = !foundNextValidSitePair;
+        }
+
+        if (newBegin)
+        {
+            // advance to the next valid digestion site pair
+            bool foundNextValidSitePair = false;
+            for (++beginNonSpecific_; beginNonSpecific_ < maxLength; ++beginNonSpecific_)
             {
-                // advance to the next valid digestion site pair
-                bool foundNextValidSitePair = false;
-                for (++begin_; begin_ != sites_.end(); ++begin_)
+                while (begin_ != sites_.end() && *begin_ <= beginNonSpecific_)
+                    ++begin_;
+                end_ = begin_--;
+
+                for (endNonSpecific_ = beginNonSpecific_+config_.minimumLength; endNonSpecific_ < maxLength; ++endNonSpecific_)
                 {
-                    for (end_ = begin_+1; end_ != sites_.end(); ++end_)
-                    {
-                        int curMissedCleavages = int(end_ - begin_)-1;
-                        if (curMissedCleavages > config_.maximumMissedCleavages)
-                            break;
+                    while (end_ != sites_.end() && *end_ < endNonSpecific_)
+                        ++end_;
 
-                        int curLength = *end_ - *begin_;
-                        if (curLength > config_.maximumLength)
-                            break;
-                        if (curLength < config_.minimumLength)
-                            continue;
-
-                        foundNextValidSitePair = true;
+                    int curMissedCleavages = int(end_ - begin_)-1;
+                    if (curMissedCleavages > config_.maximumMissedCleavages)
                         break;
-                    }
 
-                    if (foundNextValidSitePair)
+                    int curLength = endNonSpecific_ - beginNonSpecific_;
+                    if (curLength > config_.maximumLength)
                         break;
+                    if (curLength < config_.minimumLength)
+                        continue;
+
+                    foundNextValidSitePair = true;
+                    break;
                 }
+
+                if (foundNextValidSitePair)
+                    break;
+            }
+        }
+    }
+
+    inline Impl& operator++()
+    {
+        try
+        {
+            peptide_.release();
+
+            switch (config_.minimumSpecificity)
+            {
+                default:
+                case FullySpecific:
+                    nextFullySpecific();
+                    break;
+
+                case SemiSpecific:
+                    while (beginNonSpecific_ < (int) sequence_.length())
+                    {
+                        nextNonSpecific();
+                        if ((begin_ != sites_.end() && *begin_ == beginNonSpecific_) ||
+                            (end_ != sites_.end() && *end_ == endNonSpecific_))
+                            break;
+                    }
+                    break;
+
+                case NonSpecific:
+                    nextNonSpecific();
+                    break;
             }
         }
         catch (exception& e)
@@ -482,14 +753,42 @@ class Digestion::const_iterator::Impl
         return tmp;
     }
 
+    inline bool atEnd()
+    {
+        switch (config_.minimumSpecificity)
+        {
+            default:
+            case FullySpecific:
+                return begin_ == sites_.end();
+                break;
+
+            case SemiSpecific: // TODO: optimize semi-specific
+            case NonSpecific:
+                return beginNonSpecific_ == (int) sequence_.length();
+                break;
+        }
+    }
+
     private:
     const Digestion::Impl& digestionImpl_;
     const Config& config_;
     const string& sequence_;
     const vector<int>& sites_;
-    vector<int>::const_iterator begin_; // iterator to the current peptide's N terminal offset-1
-    vector<int>::const_iterator end_; // iterator to the current peptide's C terminal offset
-    mutable auto_ptr<Peptide> peptide_;
+
+    // used for all digests
+    // fully specific: iterator to the current peptide's N terminal offset-1
+    // semi- and non-specific: iterator to the previous valid digestion site before or at beginNonSpecific_
+    vector<int>::const_iterator begin_;
+
+    // fully specific: iterator to the current peptide's C terminal offset
+    // semi- and non-specific: iterator to the next valid digestion site at or after endNonSpecific_
+    vector<int>::const_iterator end_;
+
+    // used for semi- and non-specific digest
+    int beginNonSpecific_;
+    int endNonSpecific_;
+
+    mutable auto_ptr<DigestedPeptide> peptide_;
     friend class Digestion::const_iterator;
 };
 
@@ -512,12 +811,12 @@ PWIZ_API_DECL Digestion::const_iterator::~const_iterator()
 {
 }
 
-PWIZ_API_DECL const Peptide& Digestion::const_iterator::operator*() const
+PWIZ_API_DECL const DigestedPeptide& Digestion::const_iterator::operator*() const
 {
     return impl_->peptide();
 }
 
-PWIZ_API_DECL const Peptide* Digestion::const_iterator::operator->() const
+PWIZ_API_DECL const DigestedPeptide* Digestion::const_iterator::operator->() const
 {
     return &(impl_->peptide());
 }
@@ -551,9 +850,9 @@ PWIZ_API_DECL bool Digestion::const_iterator::operator==(const Digestion::const_
     else if (!gotThis && !gotThat) // end() == end()
         return true;
     else if (gotThis)
-        return this->impl_->begin_ == this->impl_->sites_.end();
+        return this->impl_->atEnd();
     else // gotThat
-        return that.impl_->begin_ == that.impl_->sites_.end();
+        return that.impl_->atEnd();
 }
 
 } // namespace proteome
