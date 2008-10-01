@@ -42,6 +42,7 @@ lib pwiz_utility_misc
         <warnings>all
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
+        <toolset>msvc:<source>COMInitializer.cpp
     : # default-build
     : # usage-requirements
         <library>/ext/boost//filesystem
