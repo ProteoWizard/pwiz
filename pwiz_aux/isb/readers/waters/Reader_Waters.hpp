@@ -19,6 +19,8 @@ namespace msdata {
 class PWIZ_API_DECL Reader_Waters : public Reader
 {
     public:
+    Reader_Waters();
+    ~Reader_Waters();
 
 	virtual std::string identify(const std::string& filename, 
                         const std::string& head) const; 

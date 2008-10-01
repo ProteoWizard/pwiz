@@ -29,6 +29,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
 
 #ifndef PWIZ_NO_READER_WATERS
 #include "utility/misc/SHA1Calculator.hpp"
+#include "utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
 //#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/foreach.hpp>
@@ -127,14 +128,21 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 } // namespace
 
 
+PWIZ_API_DECL Reader_Waters::Reader_Waters()
+{
+    g_COMInitializer.initialize();
+}
+
+PWIZ_API_DECL Reader_Waters::~Reader_Waters()
+{
+    g_COMInitializer.uninitialize();
+}
+
 PWIZ_API_DECL
 void Reader_Waters::read(const string& filename, 
                          const string& head,
                          MSData& result) const
 {
-    // TODO: care about handling COM init/uninit gracefully and globally?
-    CoInitialize(NULL);
-
     SpectrumList_Waters* sl = new SpectrumList_Waters(result, filename);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     //result.run.chromatogramListPtr = sl->Chromatograms();
@@ -160,6 +168,9 @@ namespace pwiz {
 namespace msdata {
 
 using namespace std;
+
+PWIZ_API_DECL Reader_Waters::Reader_Waters() {}
+PWIZ_API_DECL Reader_Waters::~Reader_Waters() {}
 
 PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result) const
 {
