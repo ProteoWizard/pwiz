@@ -11,11 +11,23 @@ lib pwiz_aux_msrc_reader_bruker
         Reader_Bruker.cpp
     : # requirements
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
+        <toolset>msvc:<dependency>CompassXtractMS.dll
+        <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
+        <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
+        <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
+        <toolset>msvc:<dependency>libfftw3-3.dll
+        <toolset>msvc:<dependency>libfftw3f-3.dll
 		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
 		<toolset>gcc:<define>PWIZ_NO_READER_BRUKER
     : # default-build
     : # usage-requirements
 		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+		<toolset>msvc:<dependency>CompassXtractMS.dll
+        <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
+        <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
+        <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
+        <toolset>msvc:<dependency>libfftw3-3.dll
+        <toolset>msvc:<dependency>libfftw3f-3.dll
 		<toolset>gcc:<define>PWIZ_NO_READER_BRUKER
     ;
 
