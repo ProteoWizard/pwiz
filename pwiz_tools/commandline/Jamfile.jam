@@ -20,11 +20,17 @@
 # limitations under the License.
 #
 
+project
+		: requirements
+				<library>../../pwiz/data/msdata//pwiz_data_msdata
+	      <library>../../pwiz/data/vendor_readers
+	      <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
+	      <library>../../pwiz_aux/isb/readers/waters
+	      <library>../../pwiz_aux/msrc/data/vendor_readers
+    ;
 
 exe msdiff 
     : msdiff.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/data/vendor_readers
       /ext/boost//program_options
     : <include>../../..
     ;
@@ -32,9 +38,6 @@ exe msdiff
 
 exe msconvert 
     : msconvert.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/data/vendor_readers
-      ../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
       /ext/boost//program_options
       /ext/boost//filesystem
     : <include>../../..

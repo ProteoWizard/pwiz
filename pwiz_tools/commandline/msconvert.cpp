@@ -25,6 +25,8 @@
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
@@ -443,6 +445,7 @@ void go(const Config& config)
     boost::filesystem::create_directories(config.outputPath);
 
     ExtendedReaderList readers;
+    readers += ReaderPtr(new Reader_Waters) + ReaderPtr(new Reader_Bruker);
 
     for (vector<string>::const_iterator it=config.filenames.begin(); 
          it!=config.filenames.end(); ++it)

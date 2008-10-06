@@ -30,6 +30,10 @@
 #include "data/vendor_readers/SpectrumList_Thermo.hpp"
 #endif
 
+#ifndef PWIZ_NO_READER_BRUKER
+#include "pwiz_aux/msrc/data/vendor_readers/SpectrumList_Bruker.hpp"
+#endif
+
 
 namespace pwiz {
 namespace analysis {
@@ -56,6 +60,15 @@ PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
         return;
     }
     #endif
+
+    #ifndef PWIZ_NO_READER_BRUKER
+    detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
+    if (bruker)
+    {
+        mode_ = 2;
+        return;
+    }
+    #endif
 }
 
 
@@ -66,6 +79,13 @@ PWIZ_API_DECL bool SpectrumList_NativeCentroider::accept(const msdata::SpectrumL
     if (thermo)
         return true;
     #endif
+
+    #ifndef PWIZ_NO_READER_BRUKER
+    detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
+    if (bruker)
+        return true;
+    #endif
+
     return false;
 }
 
@@ -77,6 +97,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_NativeCentroider::spectrum(size_t index, 
         #ifndef PWIZ_NO_READER_THERMO
         case 1:
             return dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+        #endif
+
+        #ifndef PWIZ_NO_READER_BRUKER
+        case 2:
+            return dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
         #endif
 
         default:
