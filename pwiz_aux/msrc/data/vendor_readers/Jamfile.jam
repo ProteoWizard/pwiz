@@ -19,6 +19,7 @@ lib pwiz_aux_msrc_reader_bruker
         <toolset>msvc:<dependency>libfftw3f-3.dll
 		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
 		<toolset>gcc:<define>PWIZ_NO_READER_BRUKER
+		<toolset>darwin:<define>PWIZ_NO_READER_BRUKER
     : # default-build
     : # usage-requirements
 		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
@@ -29,6 +30,7 @@ lib pwiz_aux_msrc_reader_bruker
         <toolset>msvc:<dependency>libfftw3-3.dll
         <toolset>msvc:<dependency>libfftw3f-3.dll
 		<toolset>gcc:<define>PWIZ_NO_READER_BRUKER
+		<toolset>darwin:<define>PWIZ_NO_READER_BRUKER
     ;
 
 
