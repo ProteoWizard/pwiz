@@ -102,8 +102,11 @@ Config parseCommandLine(int argc, const char* argv[])
 
     ostringstream usage;
     usage << "Usage: msconvert [options] [filenames]\n"
-          << "Convert mass spec data file formats.\n\n";
-
+          << "Convert mass spec data file formats.\n"
+          << "\n"
+          << "Return value: # of failed files.\n"
+          << "\n";
+        
     Config config;
     string filelistFilename;
 
@@ -438,7 +441,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 }
 
 
-void go(const Config& config)
+int go(const Config& config)
 {
     cout << config;
 
@@ -446,6 +449,8 @@ void go(const Config& config)
 
     ExtendedReaderList readers;
     readers += ReaderPtr(new Reader_Waters) + ReaderPtr(new Reader_Bruker);
+
+    int failedFileCount = 0;
 
     for (vector<string>::const_iterator it=config.filenames.begin(); 
          it!=config.filenames.end(); ++it)
@@ -456,10 +461,13 @@ void go(const Config& config)
         }
         catch (exception& e)
         {
+            failedFileCount++;
             cout << e.what() << endl;
             cout << "Error processing file " << *it << "\n\n"; 
         }
     }
+
+    return failedFileCount;
 }
 
 
@@ -468,8 +476,7 @@ int main(int argc, const char* argv[])
     try
     {
         Config config = parseCommandLine(argc, argv);        
-        go(config);
-        return 0;
+        return go(config);
     }
     catch (exception& e)
     {
