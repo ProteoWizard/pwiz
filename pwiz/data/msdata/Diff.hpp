@@ -238,14 +238,14 @@ void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
-          const DiffConfig& config);
+          const DiffConfig& config, double& maxPrecisionDiff);
 
 PWIZ_API_DECL
 void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
           ChromatogramListSimple& b_a,
-          const DiffConfig& config);
+          const DiffConfig& config, double& maxPrecisionDiff);
 
 PWIZ_API_DECL
 void diff(const Run& a,
@@ -293,6 +293,7 @@ struct Diff
                const DiffConfig& config = DiffConfig())
     :   config_(config)
     {
+        
         diff_impl::diff(a, b, a_b, b_a, config_);
     }
 
@@ -307,6 +308,7 @@ struct Diff
     Diff& operator()(const object_type& a,
                            const object_type& b)
     {
+        
         diff_impl::diff(a, b, a_b, b_a, config_);
         return *this;
     }
@@ -326,9 +328,10 @@ struct Diff<SpectrumList>
     Diff(const SpectrumList& a,
                const SpectrumList& b,
                const DiffConfig& config = DiffConfig())
-    :   config_(config)
+      :   config_(config)
     {
-        diff_impl::diff(a, b, a_b, b_a, config_);
+        double maxPrecisionDiff=0;
+        diff_impl::diff(a, b, a_b, b_a, config_, maxPrecisionDiff);
     }
 
     SpectrumListSimple a_b;
@@ -340,16 +343,18 @@ struct Diff<SpectrumList>
     operator bool() {return !(a_b.empty() && b_a.empty());}
 
     Diff& operator()(const SpectrumList& a,
-                           const SpectrumList& b)
-    {
-        diff_impl::diff(a, b, a_b, b_a, config_);
+		   const SpectrumList& b)
+ 
+   {
+        double maxPrecisionDiff=0;
+        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
         return *this;
-    }
+   }
+
 
     private:
     DiffConfig config_;
 };
-
 
 template <>
 struct Diff<ChromatogramList>
@@ -361,9 +366,11 @@ struct Diff<ChromatogramList>
     Diff(const ChromatogramList& a,
                const ChromatogramList& b,
                const DiffConfig& config = DiffConfig())
-    :   config_(config)
+
+      :   config_(config)
     {
-        diff_impl::diff(a, b, a_b, b_a, config_);
+        double maxPrecisionDiff=0;
+        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
     }
 
     ChromatogramListSimple a_b;
@@ -376,15 +383,15 @@ struct Diff<ChromatogramList>
 
     Diff& operator()(const ChromatogramList& a,
                      const ChromatogramList& b)
-    {
-        diff_impl::diff(a, b, a_b, b_a, config_);
+    {   
+        double maxPrecisionDiff=0;
+        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
         return *this;
     }
 
     private:
     DiffConfig config_;
 };
-
 
 ///
 /// stream insertion of Diff results

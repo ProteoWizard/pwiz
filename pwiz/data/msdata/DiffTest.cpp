@@ -919,9 +919,11 @@ void testChromatogramList()
     ChromatogramList& a = aSimple;
     ChromatogramList& b = bSimple;
 
+    
     Diff<ChromatogramList> diff(a, b);
     DiffConfig config_ignore;
     config_ignore.ignoreChromatograms = true;
+
     Diff<ChromatogramList> diffIgnore(a, b, config_ignore);
     unit_assert(!diff);
     unit_assert(!diffIgnore);
@@ -1184,8 +1186,228 @@ void testBinaryDataOnly()
 
     Diff<MSData> diff_data(tiny, tinier, config);
     if (os_ && diff_data) *os_ << diff_data << endl;
-    unit_assert(!diff_data);
+    unit_assert(!diff_data); 
 }
+
+
+void testMaxPrecisionDiff()
+
+{ 
+  if (os_)
+    {
+      *os_ <<"testMaxPrecisionDiff()\n";
+    }
+
+  double epsilon = numeric_limits<double>::epsilon(); 
+
+  BinaryDataArrayPtr a(new BinaryDataArray);
+  BinaryDataArrayPtr b(new BinaryDataArray);
+  BinaryDataArrayPtr c(new BinaryDataArray);
+  BinaryDataArrayPtr d(new BinaryDataArray);
+  BinaryDataArrayPtr e(new BinaryDataArray);
+  BinaryDataArrayPtr f(new BinaryDataArray);
+
+  std::vector<double> data1;
+  std::vector<double> data2;
+ 
+  data1.push_back(3.0);
+  data2.push_back(3.0000001);
+  
+  e->data = data1;
+  f->data = data2;
+
+  DiffConfig config;
+  config.precision=1e-6;
+
+  Diff<BinaryDataArray> diff_toosmall(*e,*f,config);
+  
+  //not diff for diff of 1e-7
+  unit_assert(!diff_toosmall);
+
+  data1.push_back(2.0);
+  data2.push_back(2.0001);
+  
+  c->data = data1;
+  d->data = data2;
+
+  data1.push_back(1.0);
+  data2.push_back(1.001);
+
+  a->data = data1;
+  b->data = data2;
+
+  Diff<BinaryDataArray> diff(*a,*b,config);
+  
+  //diff 
+  unit_assert(diff);
+
+  if(os_) *os_<<diff<<endl;
+
+
+  Diff<BinaryDataArray> diff2(*c,*d,config);
+
+  //diff
+  unit_assert(diff2);
+  
+  if(os_) *os_<<diff2<<endl;
+
+  // BinaryDataArray UserParam is set
+  unit_assert(!diff.a_b.userParams.empty());
+  unit_assert(!diff.b_a.userParams.empty());
+
+  // and correctly 
+  double maxBin_a_b=boost::lexical_cast<double>(diff.a_b.userParam("Binary data array difference").value); 
+  double maxBin_b_a=boost::lexical_cast<double>(diff.a_b.userParam("Binary data array difference").value); 
+
+  unit_assert_equal(maxBin_a_b,.001,epsilon);
+  unit_assert_equal(maxBin_b_a,.001,epsilon); 
+  
+  Run run_a, run_b;
+ 
+  shared_ptr<SpectrumListSimple> sls_a(new SpectrumListSimple);
+  shared_ptr<SpectrumListSimple> sls_b(new SpectrumListSimple);
+ 
+  SpectrumPtr spa(new Spectrum);
+  SpectrumPtr spb(new Spectrum);
+  SpectrumPtr spc(new Spectrum);
+  SpectrumPtr spd(new Spectrum);
+
+  spa->binaryDataArrayPtrs.push_back(a);
+  spb->binaryDataArrayPtrs.push_back(b);
+  spc->binaryDataArrayPtrs.push_back(c);
+  spd->binaryDataArrayPtrs.push_back(d);
+  
+  sls_a->spectra.push_back(spa);
+  sls_a->spectra.push_back(spc);
+  sls_b->spectra.push_back(spb);
+  sls_b->spectra.push_back(spc);
+  
+  shared_ptr<ChromatogramListSimple> cls_a(new ChromatogramListSimple);
+  shared_ptr<ChromatogramListSimple> cls_b(new ChromatogramListSimple);
+
+  ChromatogramPtr cpa(new Chromatogram);
+  ChromatogramPtr cpb(new Chromatogram);
+  ChromatogramPtr cpc(new Chromatogram);
+  ChromatogramPtr cpd(new Chromatogram);
+
+  cpa->binaryDataArrayPtrs.push_back(a);
+  cpb->binaryDataArrayPtrs.push_back(b);
+  cpc->binaryDataArrayPtrs.push_back(c);
+  cpd->binaryDataArrayPtrs.push_back(d);
+  
+  cls_a->chromatograms.push_back(cpa);
+  cls_a->chromatograms.push_back(cpc);
+  cls_b->chromatograms.push_back(cpb);
+  cls_b->chromatograms.push_back(cpd);
+  
+  run_a.spectrumListPtr = sls_a;
+  run_b.spectrumListPtr = sls_b;
+
+  run_a.chromatogramListPtr = cls_a;
+  run_b.chromatogramListPtr = cls_b;
+
+  // Run user param is written for both Spectrum and Chromatogram binary data array difference user params, if present, with the correct value (max of the Spectrum and Chromatogram user params over the SpectrumList/ ChromatogramList respectively)
+
+  Diff<Run> diff_run(run_a,run_b,config);
+  
+  // diff
+  
+  unit_assert(diff_run); 
+
+
+  // Run user params are set
+
+  unit_assert(!diff_run.a_b.userParams.empty());
+  unit_assert(!diff_run.b_a.userParams.empty()); 
+
+
+  // and correctly
+  
+  double maxSpecList_a_b=boost::lexical_cast<double>(diff_run.a_b.userParam("Spectrum binary data array difference").value);
+  double maxSpecList_b_a=boost::lexical_cast<double>(diff_run.b_a.userParam("Spectrum binary data array difference").value);
+  
+  double maxChrList_a_b=boost::lexical_cast<double>(diff_run.a_b.userParam("Chromatogram binary data array difference").value);
+  double maxChrList_b_a=boost::lexical_cast<double>(diff_run.b_a.userParam("Chromatogram binary data array difference").value);
+  
+  unit_assert_equal(maxSpecList_a_b,.001,epsilon);
+  unit_assert_equal(maxSpecList_b_a,.001,epsilon);
+  unit_assert_equal(maxChrList_a_b,.001,epsilon);
+  unit_assert_equal(maxChrList_b_a,.001,epsilon);
+
+  // test that Spectrum UserParam is written upon finding a binary data diff, with the correct value
+
+  // user params are set  
+  unit_assert(!diff_run.a_b.spectrumListPtr->spectrum(0)->userParams.empty());
+  unit_assert(!diff_run.b_a.spectrumListPtr->spectrum(0)->userParams.empty()); //user params are set
+  
+  // and correctly
+  
+  double maxSpec_a_b=boost::lexical_cast<double>(diff_run.a_b.spectrumListPtr->spectrum(0)->userParam("Binary data array difference").value);
+  double maxSpec_b_a=boost::lexical_cast<double>(diff_run.b_a.spectrumListPtr->spectrum(0)->userParam("Binary data array difference").value);
+
+  unit_assert_equal(maxSpec_a_b,.001,epsilon);
+  unit_assert_equal(maxSpec_b_a,.001,epsilon); 
+
+
+  // test that Chromatogram UserParam is written upon finding a binary data diff, with the correct value
+
+  // user params are set
+  unit_assert(!diff_run.a_b.chromatogramListPtr->chromatogram(0)->userParams.empty());
+  unit_assert(!diff_run.b_a.chromatogramListPtr->chromatogram(0)->userParams.empty());
+
+  // and correctly
+
+  double maxChr_a_b=boost::lexical_cast<double>(diff_run.a_b.chromatogramListPtr->chromatogram(0)->userParam("Binary data array difference").value);
+  double maxChr_b_a=boost::lexical_cast<double>(diff_run.b_a.chromatogramListPtr->chromatogram(0)->userParam("Binary data array difference").value);
+ 
+  unit_assert_equal(maxChr_a_b,.001,epsilon);
+  unit_assert_equal(maxChr_b_a,.001,epsilon);
+
+  if(os_) *os_<<diff_run<<endl;
+
+
+
+  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig, double)
+
+  shared_ptr<SpectrumListSimple> sls_a_a(new SpectrumListSimple);
+  shared_ptr<SpectrumListSimple> sls_A_A(new SpectrumListSimple);
+
+  double maxPrecisionNonDiffSpec=0;
+  diff_impl::diff(*sls_a, *sls_a,*sls_a_a,*sls_A_A,config,maxPrecisionNonDiffSpec);
+  unit_assert_equal(maxPrecisionNonDiffSpec,0,epsilon);
+
+
+  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig, double)
+  
+  shared_ptr<SpectrumListSimple> sls_a_b(new SpectrumListSimple);
+  shared_ptr<SpectrumListSimple> sls_b_a(new SpectrumListSimple);
+
+  double maxPrecisionDiffSpec=0;
+  diff_impl::diff(*sls_a, *sls_b,*sls_a_b,*sls_b_a,config,maxPrecisionDiffSpec);
+  unit_assert_equal(maxPrecisionDiffSpec,.001,epsilon);
+
+
+  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig, double)
+
+  shared_ptr<ChromatogramListSimple> cls_a_a(new ChromatogramListSimple);
+  shared_ptr<ChromatogramListSimple> cls_A_A(new ChromatogramListSimple);
+
+  double maxPrecisionNonDiffChr=0;
+  diff_impl::diff(*cls_a, *cls_a,*cls_a_a,*cls_A_A,config,maxPrecisionNonDiffChr);
+  unit_assert_equal(maxPrecisionNonDiffChr,0,epsilon);
+
+  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig, double)
+
+  shared_ptr<ChromatogramListSimple> cls_a_b(new ChromatogramListSimple);
+  shared_ptr<ChromatogramListSimple> cls_b_a(new ChromatogramListSimple);
+
+  double maxPrecisionDiffChr=0;
+  diff_impl::diff(*cls_a,*cls_b,*cls_a_b,*cls_b_a,config,maxPrecisionDiffChr);
+  unit_assert_equal(maxPrecisionDiffSpec,.001,epsilon);
+
+  
+}
+
 
 void testMSDiffUpdate()
 
@@ -1235,18 +1457,15 @@ void testMSDiffUpdate()
   Diff<MSData> diff_changed(tiny1,tiny2);
   unit_assert(diff_changed);
 
-  if(os_) *os_<<diff_changed;
+  if(os_) *os_<<diff_changed<<endl;
 
   tiny1.run.spectrumListPtr.reset();
   
   Diff<MSData> diff_changed_changed(tiny1,tiny2);
   unit_assert(diff_changed_changed);
 
-
-  if(os_) *os_<<diff_changed_changed;
-
-  
-  
+  if(os_) *os_<<diff_changed_changed<<endl;
+    
 }
 
 void test()
@@ -1283,6 +1502,7 @@ void test()
     testRun();
     testMSData();
     testBinaryDataOnly();
+    testMaxPrecisionDiff();
     testMSDiffUpdate();
 
 }

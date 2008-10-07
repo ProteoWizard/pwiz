@@ -28,7 +28,6 @@
 #include <cmath>
 #include <stdexcept>
 
-
 namespace pwiz {
 namespace msdata {
 namespace diff_impl {
@@ -610,10 +609,14 @@ double maxdiff(const vector<double>& a, const vector<double>& b)
         if (denominator == 0) denominator = 1;
         double current = fabs(*i - *j)/denominator;
         if (max < current) max = current;
+
     }
 
     return max;
 }
+
+
+const char* userParamName_BinaryDataArrayDifference_ = "Binary data array difference";
 
 
 PWIZ_API_DECL
@@ -639,14 +642,15 @@ void diff(const BinaryDataArray& a,
     else
     {
         double max = maxdiff(a.data, b.data);
-        if (max > config.precision)
+       
+        if (max > config.precision + numeric_limits<double>::epsilon())
         {
-            a_b.userParams.push_back(UserParam("Binary data array difference",
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
                                                lexical_cast<string>(max),
                                                "xsd:float"));
-            b_a.userParams.push_back(UserParam("Binary data array difference",
+            b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
                                                lexical_cast<string>(max),
-                                               "xsd:float"));
+					       "xsd:float"));
         }
     }    
     
@@ -664,7 +668,7 @@ void diff(const vector<BinaryDataArrayPtr>& a,
           const vector<BinaryDataArrayPtr>& b,
           vector<BinaryDataArrayPtr>& a_b,
           vector<BinaryDataArrayPtr>& b_a,
-          const DiffConfig& config)
+          const DiffConfig& config, double& maxPrecisionDiff)
 {
     if (a.size() != b.size())
         throw runtime_error("[Diff::diff(vector<BinaryDataArrayPtr>)] Sizes differ.");
@@ -678,12 +682,24 @@ void diff(const vector<BinaryDataArrayPtr>& a,
         BinaryDataArrayPtr temp_a_b(new BinaryDataArray);
         BinaryDataArrayPtr temp_b_a(new BinaryDataArray);
         diff(**i, **j, *temp_a_b, *temp_b_a, config); 
+
         if (!temp_a_b->empty() || !temp_b_a->empty())
         {
             a_b.push_back(temp_a_b);
             b_a.push_back(temp_b_a);
         }
+
+	//if UserParam with binary data diff exists, cast it to a double and compare with maxPrecisionDiff
+
+	if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())	  
+	  {
+            double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+            if(max>maxPrecisionDiff) maxPrecisionDiff=max;
+	    
+	  }
+	
     }
+
 }
 
 
@@ -721,9 +737,23 @@ void diff(const Spectrum& a,
                                  lexical_cast<string>(b.binaryDataArrayPtrs.size())));
     }
     else
-    {
-        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config);
+    { 
+
+      double maxPrecisionDiff=0;
+      diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config, maxPrecisionDiff);
+      
+      if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
+  
+      {
+	a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+                                               lexical_cast<string>(maxPrecisionDiff),
+                                               "xsd:float"));      
+        b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+					 lexical_cast<string>(maxPrecisionDiff),
+					 "xsd:float"));
+      }
+
     }
 
     // provide context
@@ -768,10 +798,24 @@ void diff(const Chromatogram& a,
         b_a.userParams.push_back(UserParam("Binary data array count: " + 
                                  lexical_cast<string>(b.binaryDataArrayPtrs.size())));
     }
+
     else
     {
-        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config);
+      double maxPrecisionDiff=0;
+      diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config, maxPrecisionDiff);
+     
+      if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
+  
+      {
+	a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+                                               lexical_cast<string>(maxPrecisionDiff),
+                                               "xsd:float"));      
+        b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+					 lexical_cast<string>(maxPrecisionDiff),
+					 "xsd:float"));
+      }
+
     }
 
     // provide context
@@ -790,12 +834,13 @@ void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
-          const DiffConfig& config)
+          const DiffConfig& config, double& maxPrecisionDiff)
 {
     a_b.spectra.clear();
     b_a.spectra.clear();
     
     if (a.size() != b.size())
+
     {
         SpectrumPtr dummy(new Spectrum);
         dummy->userParams.push_back(UserParam("SpectrumList sizes differ"));
@@ -806,12 +851,18 @@ void diff(const SpectrumList& a,
     for (unsigned int i=0; i<a.size(); i++)
     { 
         SpectrumPtr temp_a_b(new Spectrum);        
-        SpectrumPtr temp_b_a(new Spectrum);        
+        SpectrumPtr temp_b_a(new Spectrum);
         diff(*a.spectrum(i, true), *b.spectrum(i, true), *temp_a_b, *temp_b_a, config);
         if (!temp_a_b->empty() || !temp_b_a->empty())
         {
             a_b.spectra.push_back(temp_a_b);
             b_a.spectra.push_back(temp_b_a);
+	    
+	    if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())
+	      {
+                double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+                if(max>maxPrecisionDiff) maxPrecisionDiff=max;
+	      }
         }
     }
 }
@@ -822,7 +873,7 @@ void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
           ChromatogramListSimple& b_a,
-          const DiffConfig& config)
+          const DiffConfig& config, double& maxPrecisionDiff)
 {
     a_b.chromatograms.clear();
     b_a.chromatograms.clear();
@@ -847,9 +898,19 @@ void diff(const ChromatogramList& a,
             a_b.chromatograms.push_back(temp_a_b);
             b_a.chromatograms.push_back(temp_b_a);
         }
+
+	if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())
+	  {
+	    double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+	    if(max>maxPrecisionDiff) 
+	      {
+		maxPrecisionDiff=max;
+	
+	      }
+	  }	
+
     }
 }
-
 
 PWIZ_API_DECL
 void diff(const Run& a,
@@ -867,7 +928,7 @@ void diff(const Run& a,
         vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     }
-
+  
     // special handling for SpectrumList diff
     shared_ptr<SpectrumListSimple> temp_a_b(new SpectrumListSimple); 
     shared_ptr<SpectrumListSimple> temp_b_a(new SpectrumListSimple);
@@ -875,8 +936,19 @@ void diff(const Run& a,
     b_a.spectrumListPtr = temp_b_a; 
     SpectrumListPtr temp_a = a.spectrumListPtr.get() ? a.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
     SpectrumListPtr temp_b = b.spectrumListPtr.get() ? b.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
-    diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config);
-
+    double maxPrecisionDiffSpec=0;
+    diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config,maxPrecisionDiffSpec);
+    
+    if (maxPrecisionDiffSpec>(config.precision+numeric_limits<double>::epsilon()))
+      {
+          a_b.userParams.push_back(UserParam("Spectrum binary data array difference",
+					     lexical_cast<string>(maxPrecisionDiffSpec),
+					     "xsd:float"));
+          b_a.userParams.push_back(UserParam("Spectrum binary data array difference",
+					     lexical_cast<string>(maxPrecisionDiffSpec),
+					     "xsd:float"));
+      }
+    
     // special handling for ChromatogramList diff
     shared_ptr<ChromatogramListSimple> cl_temp_a_b(new ChromatogramListSimple); 
     shared_ptr<ChromatogramListSimple> cl_temp_b_a(new ChromatogramListSimple);
@@ -884,7 +956,19 @@ void diff(const Run& a,
     b_a.chromatogramListPtr = cl_temp_b_a; 
     ChromatogramListPtr cl_temp_a = a.chromatogramListPtr.get() ? a.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
     ChromatogramListPtr cl_temp_b = b.chromatogramListPtr.get() ? b.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
-    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config);
+
+    double maxPrecisionDiffChr=0;
+    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config,maxPrecisionDiffChr);
+   
+    if (maxPrecisionDiffChr>(config.precision+numeric_limits<double>::epsilon()))
+      {
+        a_b.userParams.push_back(UserParam("Chromatogram binary data array difference",
+                                             lexical_cast<string>(maxPrecisionDiffChr),
+                                             "xsd:float"));
+	b_a.userParams.push_back(UserParam("Chromatogram binary data array difference",
+					   lexical_cast<string>(maxPrecisionDiffChr),
+					   "xsd:float"));
+      }
 
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
@@ -917,7 +1001,7 @@ void diff(const MSData& a,
     }
 
     diff(a.run, b.run, a_b.run, b_a.run, config);
-
+    
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
     {
@@ -978,6 +1062,7 @@ std::ostream& os_write_chromatograms(std::ostream& os, const ChromatogramListPtr
 
   return os;
 }
+
 } // namespace diff_impl
 
 
@@ -988,12 +1073,14 @@ std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
   TextWriter write(os,1);
 
   if(!diff.a_b.empty()|| !diff.b_a.empty())
+
     {
       os<<"+\n";
       write(diff.a_b,true);
       os<<"-\n";
-      write(diff .b_a,true);
-     
+      write(diff.b_a,true);
+      
+
       os_write_spectra(std::cout,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
 
       os_write_chromatograms(std::cout,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
@@ -1003,7 +1090,6 @@ std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
   return os;
 
 }
-
 } // namespace msdata
 } // namespace pwiz
 

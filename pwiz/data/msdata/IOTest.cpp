@@ -64,6 +64,60 @@ void testObject(const object_type& a)
     Diff<object_type> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
+
+    
+}
+
+
+void testObject_SpectrumList(const SpectrumList& a)
+{
+  if (os_) *os_ << "testObject_SpectrumList(): " << endl;
+
+  // write 'a' out to a stream
+
+  ostringstream oss;
+  XMLWriter writer(oss);
+  IO::write(writer, a);
+  if (os_) *os_ << oss.str() << endl;
+
+  // read 'b' in from stream
+
+  SpectrumListSimple b;
+  istringstream iss(oss.str());
+  IO::read(iss, b);
+
+  // compare 'a' and 'b'
+
+  Diff<SpectrumList> diff(a,b);
+  if (diff && os_) *os_ << "diff:\n" << diff << endl;
+  unit_assert(!diff);
+
+
+}
+
+void testObject_ChromatogramList(const ChromatogramList& a)
+
+{
+  if (os_) *os_ << "testObject_ChromatogramList(): " << endl;
+
+  // write 'a' out to a stream
+
+  ostringstream oss;
+  XMLWriter writer(oss);
+  IO::write(writer, a);
+  if (os_) *os_ << oss.str() << endl;
+
+  // read 'b' in from stream
+
+  ChromatogramListSimple b;
+  istringstream iss(oss.str());
+  IO::read(iss, b);
+
+  // compare 'a' and 'b'
+
+  Diff<ChromatogramList> diff(a,b);
+  if (diff && os_) *os_ << "diff:\n" << diff << endl;
+  unit_assert(!diff);
 }
 
 
@@ -546,7 +600,7 @@ void testSpectrumList()
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
 
-    testObject(a);
+    testObject_SpectrumList(a);
 }
 
 
@@ -709,7 +763,7 @@ void testChromatogramList()
     a.chromatograms.push_back(chromatogram1);
     a.chromatograms.push_back(chromatogram2);
 
-    testObject(a);
+    testObject_ChromatogramList(a);
 }
 
 
