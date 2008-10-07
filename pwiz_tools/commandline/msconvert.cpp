@@ -233,10 +233,12 @@ Config parseCommandLine(int argc, const char* argv[])
 
     // check stuff
 
-    usage << endl
+    usage << "\n"
           << "Questions, comments, and bug reports:\n"
           << "http://proteowizard.sourceforge.net\n"
-          << "support@proteowizard.org\n";
+          << "support@proteowizard.org\n"
+          << "\n"
+          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if (config.filenames.empty())
         throw runtime_error(usage.str());

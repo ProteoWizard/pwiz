@@ -136,7 +136,9 @@ string usage(const MSDataAnalyzerApplication& app)
     oss << endl
         << "Questions, comments, and bug reports:\n"
         << "http://proteowizard.sourceforge.net\n"
-        << "support@proteowizard.org\n";
+        << "support@proteowizard.org\n"
+        << "\n"
+        << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return oss.str();
 }
