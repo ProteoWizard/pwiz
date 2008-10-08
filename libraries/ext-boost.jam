@@ -204,14 +204,18 @@ rule init ( version ? : location : options * )
             <location-prefix>thread
             <use>boost
             <threading>multi
-            <define>BOOST_THREAD_BUILD_DLL=1
+            #<define>BOOST_THREAD_BUILD_DLL=1
             <define>BOOST_THREAD_NO_LIB=1
+            <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+            <link>static:<define>BOOST_THREAD_BUILD_LIB=1
             <toolset>msvc:<cxxflags>/wd4275
             <toolset>msvc:<cxxflags>/wd4251
         :
         :   <threading>multi
-            <define>BOOST_THREAD_USE_DLL=1
+            #<define>BOOST_THREAD_USE_DLL=1
             <define>BOOST_THREAD_NO_LIB=1
+            <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+            <link>static:<define>BOOST_THREAD_BUILD_LIB=1
         ;
     
     lib regex
