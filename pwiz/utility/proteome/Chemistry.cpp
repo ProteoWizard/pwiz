@@ -33,6 +33,7 @@
 #include <numeric>
 #include <algorithm>
 #include "utility/misc/String.hpp"
+#include "boost/thread/tss.hpp"
 
 
 using namespace std;
@@ -87,57 +88,56 @@ class Info::Impl
     const Info::Record& record(Type type) const;
 
     private:
-    // keep only one copy of the data
-    static vector<Record> data_;
-    static bool dataInitialized_;
+    // keep only one copy of the data per thread
+    static boost::thread_specific_ptr< vector<Record> > data_;
     void initializeData();
 };
 
 
 Info::Impl::Impl() 
 {
-    if (!dataInitialized_) 
-        initializeData();
+    initializeData();
 }
 
 
 const Info::Record& Info::Impl::record(Type type) const
 {
-    if (data_.size() < size_t(type))
+    if (data_->size() < size_t(type))
         throw runtime_error("[Chemistry::Element::Info::Impl::record()]  Record not found.");
 
-    return data_[type];
+    return (*data_)[type];
 }
 
 
-vector<Info::Record> Info::Impl::data_;
-bool Info::Impl::dataInitialized_ = false;
+boost::thread_specific_ptr< vector<Info::Record> > Info::Impl::data_;
 
 
 void Info::Impl::initializeData()
 {
-    // iterate through the ChemistryData array and put it in our own data structure
-
-    ChemistryData::Element* it = ChemistryData::elements();
-    ChemistryData::Element* end = ChemistryData::elements() + ChemistryData::elementsSize();
-
-    data_.resize(ChemistryData::elementsSize());
-
-    for (; it!=end; ++it)
+    if (!data_.get())
     {
-        Info::Record record;
-        record.type = it->type;
-        record.symbol = it->symbol;
-        record.atomicNumber = it->atomicNumber;
-        record.atomicWeight = it->atomicWeight;
-        
-        for (ChemistryData::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
-            record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
+        data_.reset(new vector<Info::Record>);
 
-        data_[it->type] = record;        
+        // iterate through the ChemistryData array and put it in our own data structure
+        ChemistryData::Element* it = ChemistryData::elements();
+        ChemistryData::Element* end = ChemistryData::elements() + ChemistryData::elementsSize();
+
+        data_->resize(ChemistryData::elementsSize());
+
+        for (; it!=end; ++it)
+        {
+            Info::Record record;
+            record.type = it->type;
+            record.symbol = it->symbol;
+            record.atomicNumber = it->atomicNumber;
+            record.atomicWeight = it->atomicWeight;
+            
+            for (ChemistryData::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
+                record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
+
+            (*data_)[it->type] = record;        
+        }
     }
-    
-    dataInitialized_ = true;
 }
 
 

@@ -45,7 +45,7 @@ class PWIZ_API_DECL Peptide
     Peptide(const char* begin, const char* end);
     Peptide(const Peptide&);
     Peptide& operator=(const Peptide&);
-    ~Peptide();
+    virtual ~Peptide();
 
     /// returns the sequence of amino acids making up the peptide
     const std::string& sequence() const;

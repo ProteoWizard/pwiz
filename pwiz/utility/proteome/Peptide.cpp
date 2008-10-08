@@ -29,6 +29,7 @@
 #include <iostream>
 #include <climits>
 #include "utility/misc/Exception.hpp"
+#include "boost/thread/tss.hpp"
 
 namespace pwiz {
 namespace proteome {
@@ -40,7 +41,7 @@ using namespace Chemistry;
 
 class Peptide::Impl
 {
-    static auto_ptr<AminoAcid::Info> info_;
+    static boost::thread_specific_ptr<AminoAcid::Info> info_;
 
     public:
 
@@ -181,7 +182,7 @@ class Peptide::Impl
     }
 };
 
-auto_ptr<AminoAcid::Info> Peptide::Impl::info_;
+boost::thread_specific_ptr<AminoAcid::Info> Peptide::Impl::info_;
 
 PWIZ_API_DECL Peptide::Peptide(const string& sequence) : impl_(new Impl(this, sequence)) {}
 PWIZ_API_DECL Peptide::Peptide(const char* sequence) : impl_(new Impl(this, sequence)) {}

@@ -64,6 +64,9 @@ project pwiz
         # don't call 'strip' -- causes 'Bus error' in some cases
         #  e.g. find_if with inline predicate
         <toolset>darwin:<debug-symbols>on
+        
+        # use of boost::thread requires multithreaded runtime
+        <threading>multi
 
     : build-dir build
     : usage-requirements
@@ -74,6 +77,7 @@ project pwiz
         <runtime-link>static
         #<warnings-as-errors>on
         <warnings>all
+        <threading>multi
     ;
 
 
@@ -90,12 +94,12 @@ lib pthread
         <toolset>gcc:<linkflags>-pthread # sometimes segfault without this -- dk
     ;
 
-lib jpeg png z ;
-lib gd : jpeg png z : <name>gd ;
+lib jpeg png z : : <threading>multi ;
+lib gd : jpeg png z : <name>gd <threading>multi ;
 lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/gd-2.0.33 ;
 
-lib fftw3 ;
-lib fftw3 : : <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/api ;
+lib fftw3 : : <threading>multi ;
+lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/api ;
 
 local .boost-build-file = [ modules.peek : .boost-build-file ] ;
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;

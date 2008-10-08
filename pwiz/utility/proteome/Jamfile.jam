@@ -34,8 +34,10 @@ lib pwiz_utility_proteome
       Digestion.cpp
     : <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
       <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+      <library>/ext/boost//thread
       <library>/ext/zlib//z
     : <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+      <library>/ext/boost//thread
       <library>/ext/zlib//z
     ;
 
