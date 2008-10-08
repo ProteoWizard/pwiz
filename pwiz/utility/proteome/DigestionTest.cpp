@@ -29,6 +29,7 @@
 #include <iostream>
 #include <iterator>
 #include "boost/foreach.hpp"
+#include <set>
 
 using namespace std;
 using namespace pwiz::util;

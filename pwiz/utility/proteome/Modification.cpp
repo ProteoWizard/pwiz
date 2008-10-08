@@ -123,7 +123,7 @@ PWIZ_API_DECL bool Modification::hasFormula() const {return impl_->hasFormula();
 PWIZ_API_DECL const Formula& Modification::formula() const {return impl_->formula();}
 PWIZ_API_DECL double Modification::monoisotopicDeltaMass() const {return impl_->monoisotopicDeltaMass();}
 PWIZ_API_DECL double Modification::averageDeltaMass() const {return impl_->averageDeltaMass();}
-
+PWIZ_API_DECL bool Modification::operator==(const Modification& rhs) const {return impl_->monoisotopicDeltaMass() == rhs.impl_->monoisotopicDeltaMass() && impl_->averageDeltaMass() == rhs.impl_->averageDeltaMass();}
 
 PWIZ_API_DECL ModificationList::ModificationList()
 {

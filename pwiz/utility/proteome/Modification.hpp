@@ -62,6 +62,9 @@ class PWIZ_API_DECL Modification
     double monoisotopicDeltaMass() const;
     double averageDeltaMass() const;
 
+    /// returns true iff delta masses are equal
+    bool operator==(const Modification& rhs) const;
+
     private:
     class Impl;
     std::auto_ptr<Impl> impl_;
