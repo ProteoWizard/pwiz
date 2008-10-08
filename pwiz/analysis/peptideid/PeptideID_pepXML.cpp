@@ -35,7 +35,7 @@ namespace pwiz {
 namespace peptideid {
 
 using namespace std;
-using namespace boost;
+using namespace boost; // TODO: avoid this
 using namespace pwiz::minimxml::SAXParser;
 
 typedef map<std::string, PeptideID::Record> record_map;
@@ -121,10 +121,10 @@ public:
                   rt_multimap* rtMap)
     {
         if (recordMap == NULL)
-            throw new exception();
+            throw new runtime_error("null pointer");
         
         if (rtMap == NULL)
-            throw new exception();
+            throw new runtime_error("null pointer");
         
         this->recordMap = recordMap;
         this->rtMap = rtMap;
@@ -214,7 +214,7 @@ PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(istream* in)
     : pimpl(new Impl(in))
 {
     if (in == NULL)
-        throw new exception();
+        throw new runtime_error("null pointer");
 
     PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
 

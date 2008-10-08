@@ -29,7 +29,7 @@ project pwiz
     : requirements 
         <include>$(PWIZ_ROOT_PATH)/pwiz
         <include>$(PWIZ_ROOT_PATH)/pwiz_aux
-        <include>$(PWIZ_ROOT_PATH)/libraries/boost_1_34_1
+        <include>$(PWIZ_ROOT_PATH)/libraries/boost_1_36_0
         <include>$(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3
 
         <toolset>gcc,<link>shared:<runtime-link>shared
@@ -116,11 +116,12 @@ else if [ modules.peek : UNIX ]
 }
 
 #path-constant ZLIB_SOURCE : $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3 ;
-path-constant BOOST_SOURCE : $(PWIZ_ROOT_PATH)/libraries/boost_1_34_1 ;
+path-constant BOOST_SOURCE : $(PWIZ_ROOT_PATH)/libraries/boost_1_36_0 ;
 
 #using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
-using ext-boost : 1.34.1 : $(BOOST_SOURCE) ;
+using ext-boost : 1.36.0 : $(BOOST_SOURCE) ;
 
+#use-project /boost : $(BOOST_SOURCE) ;
 
 # build/install
 

@@ -65,6 +65,7 @@ exe txt2mzml
     : txt2mzml.cpp
       ../data/msdata//pwiz_data_msdata
       ../data/vendor_readers
+      /ext/boost//filesystem
     : <include>../..
     ;
 

@@ -133,13 +133,13 @@ Digestion::Config::Config(int maximumMissedCleavages,
 
 class Digestion::Motif::Impl
 {
-    static auto_ptr<AminoAcid::Info> info_;
+    //static auto_ptr<AminoAcid::Info> info_;
 
     public:
     Impl(const string& motif)
         :   motif_(motif)
     {
-        if (!info_.get()) info_.reset(new AminoAcid::Info);
+        //if (!info_.get()) info_.reset(new AminoAcid::Info);
         parseMotif();
     }
 
@@ -277,7 +277,7 @@ class Digestion::Motif::Impl
     vector<IsValidAA> cFilters_;
 };
 
-auto_ptr<AminoAcid::Info> Digestion::Motif::Impl::info_;
+//auto_ptr<AminoAcid::Info> Digestion::Motif::Impl::info_;
 
 
 PWIZ_API_DECL
@@ -714,7 +714,7 @@ class Digestion::const_iterator::Impl
     {
         try
         {
-            peptide_.release();
+            peptide_.reset();
 
             switch (config_.minimumSpecificity)
             {

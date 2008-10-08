@@ -31,6 +31,8 @@
 #include "utility/misc/Exception.hpp"
 #include "boost/thread/tss.hpp"
 
+extern "C" void tss_cleanup_implemented() {} // workaround for TSS linker error?
+
 namespace pwiz {
 namespace proteome {
 

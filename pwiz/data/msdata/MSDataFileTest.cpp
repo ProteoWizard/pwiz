@@ -216,12 +216,6 @@ int main(int argc, char* argv[])
         testReader();
         return 0;
     }
-    catch (boost::filesystem::filesystem_path_error& e)
-    {
-        string target = e.what();
-        boost::filesystem::system_message(e.system_error(), target);
-        cerr << target << endl;
-    }
     catch (exception& e)
     {
         cerr << e.what() << endl;

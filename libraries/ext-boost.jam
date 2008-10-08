@@ -50,6 +50,9 @@ rule init ( version ? : location : options * )
         <toolset>msvc:<define>BOOST_WINDOWS_API
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+        <link>shared:<define>BOOST_ALL_DYN_LINK=1
+        <link>static:<define>BOOST_ALL_STATIC_LINK=1
+        <define>BOOST_ALL_NO_LIB=1
         #~ <warnings>off
         ;
 
@@ -84,10 +87,15 @@ rule init ( version ? : location : options * )
             <use>boost
             <threading>multi
             <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
+            <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
             <define>BOOST_FILESYSTEM_NO_LIB=1
+            <library>system
         :
         :   <define>BOOST_FILESYSTEM_NO_LIB=1
             <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
+            <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
+            <link>shared:<define>BOOST_ALL_DYN_LINK=1
+            <library>system
         ;
 
     lib program_options
@@ -126,51 +134,49 @@ rule init ( version ? : location : options * )
     modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
     local serialization_sources =
-        basic_archive
-        basic_archive_impl
-        basic_iarchive
-        basic_oarchive
-        basic_iserializer
-        basic_oserializer
-        basic_pointer_iserializer
-        basic_pointer_oserializer
-        basic_serializer_map
-        basic_text_iprimitive
-        basic_text_oprimitive
-        basic_xml_archive
-        binary_iarchive
-        binary_oarchive
-        extended_type_info
-        extended_type_info_no_rtti
-        extended_type_info_typeid
-        polymorphic_iarchive
-        polymorphic_oarchive
-        stl_port
-        text_iarchive
-        text_oarchive
-        void_cast
-        xml_grammar
-        xml_iarchive
-        xml_oarchive
+      basic_archive
+      basic_iarchive
+      basic_iserializer
+      basic_oarchive
+      basic_oserializer
+      basic_pointer_iserializer
+      basic_pointer_oserializer
+      basic_serializer_map
+      basic_text_iprimitive
+      basic_text_oprimitive
+      basic_xml_archive
+      binary_iarchive
+      binary_oarchive
+      extended_type_info
+      extended_type_info_typeid
+      extended_type_info_no_rtti
+      polymorphic_iarchive
+      polymorphic_oarchive
+      stl_port
+      text_iarchive
+      text_oarchive
+      void_cast
+      xml_grammar
+      xml_iarchive
+      xml_oarchive
     ;
 
-   local wserialization_sources = 
-        codecvt_null
-        utf8_codecvt_facet
-        basic_text_wiprimitive
-        basic_text_woprimitive
-        binary_wiarchive
-        binary_woarchive
-        text_wiarchive
-        text_woarchive
-        xml_wgrammar
-        xml_wiarchive
-        xml_woarchive
+    local wserialization_sources = 
+      basic_text_wiprimitive
+      basic_text_woprimitive
+      text_wiarchive
+      text_woarchive
+      utf8_codecvt_facet
+      xml_wgrammar
+      xml_wiarchive
+      xml_woarchive
+      codecvt_null
     ;
 
     lib serialization
         :   $(location)/libs/serialization/src/$(serialization_sources).cpp
-        :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
+        :   $(requirements) <toolset>msvc:<cxxflags>/Gy
+            # wtf is this? <dependency>$(location)/libs/config/test/all//BOOST_NO_STD_LOCALE
             <location-prefix>serialization
             <use>boost
             #<threading>multi
@@ -194,30 +200,60 @@ rule init ( version ? : location : options * )
             <define>BOOST_SERIALIZATION_NO_LIB=1
         ;
 
+    local thread_sources ;
+    if [ modules.peek : NT ]
+    {
+      thread_sources =
+            win32/thread
+            win32/exceptions
+            win32/tss_dll
+            win32/tss_pe
+          ;
+    } else
+    {
+      thread_sources =
+            pthread/thread
+            pthread/exceptions
+            pthread/once
+          ;
+    }
+
     lib thread
-        :   [ set.difference
-                [ glob $(location)/libs/thread/src/*.cpp ]
-                :
-                [ glob $(location)/libs/thread/src/tss_null.cpp ]
-                ]
+        :   $(location)/libs/thread/src/$(thread_sources).cpp
         :   $(requirements)
             <location-prefix>thread
             <use>boost
-            <threading>multi
-            #<define>BOOST_THREAD_BUILD_DLL=1
-            <define>BOOST_THREAD_NO_LIB=1
             <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-            <link>static:<define>BOOST_THREAD_BUILD_LIB=1
-            <toolset>msvc:<cxxflags>/wd4275
-            <toolset>msvc:<cxxflags>/wd4251
+            <define>BOOST_THREAD_NO_LIB=1
+            <library>date_time
         :
         :   <threading>multi
-            #<define>BOOST_THREAD_USE_DLL=1
+            <link>shared:<define>BOOST_THREAD_USE_DLL=1
             <define>BOOST_THREAD_NO_LIB=1
-            <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-            <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+            <library>date_time
         ;
-    
+
+    local date_time_sources =
+        greg_month
+        greg_weekday
+        date_generators
+      ;
+
+    lib date_time
+        :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
+        :   $(requirements)
+            <location-prefix>date_time
+            <use>boost
+            <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+            <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
+            <define>DATE_TIME_INLINE
+            <define>BOOST_DATE_TIME_NO_LIB=1
+        :
+        :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+            <define>DATE_TIME_INLINE
+            <define>BOOST_DATE_TIME_NO_LIB=1
+        ;
+
     lib regex
         :   [ glob $(location)/libs/regex/src/*.cpp ]
         :   $(requirements)
@@ -232,7 +268,21 @@ rule init ( version ? : location : options * )
         :   <define>BOOST_REGEX_NO_LIB=1
             <link>shared:<define>BOOST_REGEX_DYN_LINK=1
         ;
-    
+
+    lib system
+        :   $(location)/libs/system/src/error_code.cpp
+        :   $(requirements)
+            <location-prefix>system
+            <use>boost
+            <define>BOOST_SYSTEM_NO_LIB=1
+            <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
+            <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1
+        :
+        :   <define>BOOST_SYSTEM_NO_LIB=1
+            <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
+            <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1
+        ;
+
     if <boost-interprocess> in $(requirements:G)
     {
         local i = [ property.select <boost-interprocess> : $(requirements) ] ;
