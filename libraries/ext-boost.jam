@@ -180,6 +180,7 @@ rule init ( version ? : location : options * )
             <location-prefix>serialization
             <use>boost
             #<threading>multi
+            <toolset>gcc:<warnings>on # gcc 4.1.2 error on extra semicolon instead of warning with -pedantic
             <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
             <define>BOOST_SERIALIZATION_NO_LIB=1
         :
