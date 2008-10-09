@@ -94,8 +94,8 @@ void test()
 
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("name1", "value1"));
-    attributes.push_back(make_pair("name2", lexical_cast<string>(420)));
-    attributes.push_back(make_pair("name3", lexical_cast<string>(0.666)));
+    attributes.push_back(make_pair("name2", "420"));
+    attributes.push_back(make_pair("name3", "0.666"));
     writer.startElement("root", attributes);
 
     unit_assert(writer.position() == 87);
