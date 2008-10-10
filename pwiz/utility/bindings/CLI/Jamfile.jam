@@ -41,7 +41,7 @@ lib pwiz_bindings_cli
 
 actions do_update_embedded_manifest
 {
-    call "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    call "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     REM echo $(>)
     sn.exe /q /Ra $(>[0]) $(CLI_ROOT)/signature.snk
 }
