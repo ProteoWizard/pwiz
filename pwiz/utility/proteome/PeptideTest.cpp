@@ -28,6 +28,8 @@
 #include <iomanip>
 #include <algorithm>
 #include "utility/misc/String.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 
 
 using namespace std;
@@ -89,10 +91,10 @@ struct TestPeptide
 
 TestPeptide testPeptides[] =
 {
-    { "ELK", 388.2322, 389.24005, 195.12396, 388.4643, 389.4723, 195.2401 },
-    { "DEERLICKER", 1289.6398, 1290.6477, 645.8278, 1290.4571, 1291.465, 646.2365 },
-    { "ELVISLIVES", 1100.6329, 1101.6408, 551.3243, 1101.3056, 1102.3135, 551.6607 },
-    { "THEQICKRWNFMPSVERTHELAYDG", 3046.4178, 3047.4257, 1524.2168, 3048.4004, 3049.4083, 1525.2082 },
+    { "ELK", 388.2322, 389.24005, 195.12396, 388.45918, 389.4665, 195.2369 },
+    { "DEERLICKER", 1289.6398, 1290.6477, 645.8278, 1290.44644, 1291.4537, 646.2305 },
+    { "ELVISLIVES", 1100.6329, 1101.6408, 551.3243, 1101.29052, 1102.2978, 551.6525 },
+    { "THEQICKRWNFMPSVERTHELAYDG", 3046.4178, 3047.4257, 1524.2168, 3048.37046, 3049.3777, 1525.1925 },
     //{ "(THEQICKBRWNFXMPSVERTHELAZYDG)", 3402.5874, 3404.7792 }
 };
 
@@ -103,7 +105,7 @@ void peptideTest()
     for (size_t i=0; i < testPeptidesSize; ++i)
     {
         const TestPeptide& p = testPeptides[i];
-        double BIG_EPSILON = 0.05;
+        double BIG_EPSILON = 0.001;
 
         Peptide peptide(p.sequence);
         if (os_) *os_ << peptide.sequence() << ": " << peptide.formula() <<
@@ -163,54 +165,54 @@ TestModifiedPeptide testModifiedPeptides[] =
     // M+16
     { "MEERKAT",
       "0 0",
-      879.41205, 879.98369
+      879.41205, 879.97844
     },
 
     // C+57
     { "THEQICKRWNFMPSVERTHELAYDG",
       "1 5",
-      3103.43929, 3105.45241
+      3103.43929, 3105.4218
     },
 
     // C+57, M+16
     { "THEQICKRWNFMPSVERTHELAYDG",
       "0 11 1 5",
-      3119.43419, 3121.45181
+      3119.43419, 3121.4212
     },
 
     // C+57, Q-17
     { "QICKRWNFMPSVERTHELAYDG",
       "2 0 1 2",
-      2719.26356, 2721.06016
+      2719.26356, 2721.0341
     },
 
     // no mods
-    { "ELVISLIVES", 0, 1100.63293, 1101.30557 },
+    { "ELVISLIVES", 0, 1100.63293, 1101.29052 },
 
     // E-17
     { "ELVISLIVES",
       "3 0",
-      1083.60638, 1084.27497
+      1083.60638, 1084.26
     },
 
     // no mods
-    { "PINGPNG", 0, 667.32898, 667.71964 },
+    { "PINGPNG", 0, 667.32898, 667.7112 },
 
     // N-17
     { "PINGPNG",
       "4 2",
-      650.30243, 650.68904
+      650.30243, 650.6807
     },
 
     //{ "(QINT)",,}, // Q-17
 
     // no mods
-    { "MISSISSIPPI", 0, 1143.62099, 1144.3918 },
+    { "MISSISSIPPI", 0, 1143.62099, 1144.3815 },
 
     // S+80, S+80
     { "MISSISSIPPI",
       "5 3 5 5",
-      1303.55365, 1304.3516
+      1303.55365, 1304.3413
     }
 };
 
@@ -246,7 +248,7 @@ void modificationTest()
         if (os_) *os_ << peptide.sequence() << ": " << peptide.monoisotopicMass() << " " << peptide.molecularWeight() << endl;
         if (os_) *os_ << peptide2.sequence() << ": " << peptide2.monoisotopicMass() << " " << peptide2.molecularWeight() << endl;
 
-        double BIG_EPSILON = 0.05;
+        double BIG_EPSILON = 0.001;
 
         unit_assert_equal(peptide.formula(true).monoisotopicMass(), p.monoMass, BIG_EPSILON);
         unit_assert_equal(peptide.formula(true).molecularWeight(), p.avgMass, BIG_EPSILON);
@@ -501,6 +503,25 @@ void fragmentTest()
 }
 
 
+void testThreadSafetyWorker(boost::barrier* testBarrier)
+{
+    testBarrier->wait(); // wait until all threads have started
+
+    peptideTest();
+    fragmentTest();
+}
+
+void testThreadSafety()
+{
+    const int testThreadCount = 100;
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+    testThreadGroup.join_all();
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -512,6 +533,7 @@ int main(int argc, char* argv[])
         peptideTest();
         modificationTest();
         fragmentTest();
+        testThreadSafety();
         return 0;
     }
     catch (exception& e)

@@ -28,11 +28,14 @@
 #include <stdexcept>
 #include <functional>
 #include <algorithm>
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
+using namespace pwiz::proteome::Chemistry;
 using namespace pwiz::proteome::Chemistry::Element;
 using namespace pwiz::proteome::AminoAcid;
 
@@ -50,16 +53,16 @@ void printRecord(ostream* os, const AminoAcid::Info::Record& record)
 {
     if (!os) return;
 
-	Chemistry::Formula residueFormula = record.formula;
-    
     *os << record.symbol << ": " 
         << setw(14) << record.name << " " 
         << setw(11) << record.formula << " " 
         << setprecision(3)
         << setw(5) << record.abundance << " "
-        << fixed 
-        << setw(7) << record.formula.monoisotopicMass() << " "
-        << setw(7) << residueFormula.monoisotopicMass() << endl;
+        << fixed << setprecision(6)
+        << setw(10) << record.formula.monoisotopicMass() << " "
+        << setw(10) << record.formula.molecularWeight() << " "
+        << setw(10) << record.residueFormula.monoisotopicMass() << " "
+        << setw(10) << record.residueFormula.molecularWeight() << endl;
 }
 
 
@@ -70,37 +73,56 @@ struct TestAminoAcid
     char symbol;
 };
 
+// masses copied from http://www.unimod.org/xml/unimod.xml
 TestAminoAcid testAminoAcids[] =
 {
-    { 71.03711, 71.07880, 'A' },    // Alanine
-    { 103.0092, 103.1388, 'C' },    // Cysteine
-    { 115.0269, 115.0886, 'D' },    // Aspartic acid
-    { 129.0426, 129.1155, 'E' },    // Glutamic acid
-    { 147.0684, 147.1766, 'F' },    // Phenylalanine
-    { 57.02146, 57.05190, 'G' },    // Glycine
-    { 137.0589, 137.1411, 'H' },    // Histidine
-    { 113.0841, 113.1594, 'I' },    // Isoleucine
-    { 128.0949, 128.1741, 'K' },    // Lysine
-    { 113.0841, 113.1594, 'L' },    // Leucine
-    { 131.0405, 131.1926, 'M' },    // Methionine
-    { 114.0429, 114.1038, 'N' },    // Asparagine
-    { 97.05276, 97.11670, 'P' },    // Proline
-    { 128.0586, 128.1307, 'Q' },    // Glutamine
-    { 156.1011, 156.1875, 'R' },    // Arginine
-    { 87.03203, 87.07820, 'S' },    // Serine
-    { 101.0477, 101.1051, 'T' },    // Threonine
-    { 186.0793, 186.2132, 'W' },    // Tryptophan
-    { 163.0633, 163.1760, 'Y' },    // Tyrosine
-    { 99.06841, 99.13260, 'V' },    // Valine
-    { 114.0429, 114.1038, 'B' },    // AspX
-    { 128.0586, 128.1307, 'Z' },    // GlutX
-    { 114.0919, 114.1674, 'X' }     // Unknown (Averagine)
+    { 71.0371140, 71.07790, 'A' },    // Alanine
+    { 156.101111, 156.1857, 'R' },    // Arginine
+    { 114.042927, 114.1026, 'N' },    // Asparagine
+    { 115.026943, 115.0874, 'D' },    // Aspartic acid
+    { 103.009185, 103.1429, 'C' },    // Cysteine
+    { 129.042593, 129.1140, 'E' },    // Glutamic acid
+    { 128.058578, 128.1292, 'Q' },    // Glutamine
+    { 57.0214640, 57.05130, 'G' },    // Glycine
+    { 137.058912, 137.1393, 'H' },    // Histidine
+    { 113.084064, 113.1576, 'I' },    // Isoleucine
+    { 113.084064, 113.1576, 'L' },    // Leucine
+    { 128.094963, 128.1723, 'K' },    // Lysine
+    { 131.040485, 131.1961, 'M' },    // Methionine
+    { 147.068414, 147.1739, 'F' },    // Phenylalanine
+    { 97.0527640, 97.11520, 'P' },    // Proline
+    { 87.0320280, 87.07730, 'S' },    // Serine
+    { 101.047679, 101.1039, 'T' },    // Threonine
+    { 186.079313, 186.2099, 'W' },    // Tryptophan
+    { 163.063329, 163.1733, 'Y' },    // Tyrosine
+    { 99.0684140, 99.13110, 'V' },    // Valine
+    { 114.042927, 114.1026, 'B' },    // AspX
+    { 128.058578, 128.1292, 'Z' },    // GlutX
+    { 114.091900, 114.1674, 'X' }     // Unknown (Averagine)
 };
 
 
 void test()
 {
     AminoAcid::Info info;
+
+    // get a copy of all the records
+
+    vector<AminoAcid::Info::Record> records;
+
+    for (char symbol='A'; symbol<='Z'; symbol++)
+    {
+        try 
+        {
+            const AminoAcid::Info::Record& record = info[symbol];
+            records.push_back(record);
+        }
+        catch (exception&)
+        {}
+    }
+
+    for (vector<AminoAcid::Info::Record>::iterator it=records.begin(); it!=records.end(); ++it)
+        printRecord(os_, *it);
 
     unit_assert(info[Alanine].residueFormula[C] == 3);
     unit_assert(info[Alanine].residueFormula[H] == 5);
@@ -120,29 +142,14 @@ void test()
     {
         TestAminoAcid& aa = testAminoAcids[i];
         Chemistry::Formula residueFormula = info[aa.symbol].residueFormula;
-        unit_assert_equal(residueFormula.monoisotopicMass(), aa.monoMass, 0.01);
-        unit_assert_equal(residueFormula.molecularWeight(), aa.avgMass, 0.01);
+        unit_assert_equal(residueFormula.monoisotopicMass(), aa.monoMass, 0.00001);
+        unit_assert_equal(residueFormula.molecularWeight(), aa.avgMass, 0.0001);
         //set<char> mmNames = mm2n.getNames(aa.monoMass, EPSILON);
         //set<char> amNames = am2n.getNames(aa.avgMass, EPSILON);
         //unit_assert(mmNames.count(aa.symbol) > 0);
         //unit_assert(amNames.count(aa.symbol) > 0);
     }
 
-
-    // get a copy of all the records
-
-    vector<AminoAcid::Info::Record> records;
-
-    for (char symbol='A'; symbol<='Z'; symbol++)
-    {
-        try 
-        {
-            const AminoAcid::Info::Record& record = info[symbol];
-            records.push_back(record);
-        }
-        catch (exception&)
-        {}
-    }
 
     // compute some averages
 
@@ -156,7 +163,6 @@ void test()
     for (vector<AminoAcid::Info::Record>::iterator it=records.begin(); it!=records.end(); ++it)
     {
         const AminoAcid::Info::Record& record = *it;
-        printRecord(os_, record);
 
         Chemistry::Formula residueFormula = record.residueFormula;
         averageMonoisotopicMass += residueFormula.monoisotopicMass() * record.abundance; 
@@ -186,6 +192,29 @@ void test()
 }
 
 
+void testThreadSafetyWorker(boost::barrier* testBarrier)
+{
+    testBarrier->wait(); // wait until all threads have started
+
+    // test thread-specific singleton access with instance
+    unit_assert(AminoAcid::Info::instance->operator[](Glycine).symbol == 'G');
+
+    // test thread-specific singleton access with lease
+    AminoAcid::Info::lease info;
+    unit_assert(info->operator[](Glycine).symbol == 'G');
+}
+
+void testThreadSafety()
+{
+    const int testThreadCount = 100;
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+    testThreadGroup.join_all();
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -193,6 +222,7 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "AminoAcidTest\n";
         test();
+        testThreadSafety();
         return 0;
     }
     catch (exception& e)

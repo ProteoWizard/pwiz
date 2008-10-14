@@ -35,6 +35,7 @@
 #include "utility/misc/String.hpp"
 #include "boost/thread/tss.hpp"
 
+//extern "C" void tss_cleanup_implemented() {} // workaround for TSS linker error?
 
 using namespace std;
 
@@ -88,55 +89,45 @@ class Info::Impl
     const Info::Record& record(Type type) const;
 
     private:
-    // keep only one copy of the data per thread
-    static boost::thread_specific_ptr< vector<Record> > data_;
+    vector<Record> data_;
     void initializeData();
 };
 
 
 Info::Impl::Impl() 
 {
+    //cout << "[Chemistry::Element::Info::initialize()]" << endl;
     initializeData();
 }
 
-
 const Info::Record& Info::Impl::record(Type type) const
 {
-    if (data_->size() < size_t(type))
+    if (data_.size() <= size_t(type))
         throw runtime_error("[Chemistry::Element::Info::Impl::record()]  Record not found.");
 
-    return (*data_)[type];
+    return data_[type];
 }
-
-
-boost::thread_specific_ptr< vector<Info::Record> > Info::Impl::data_;
-
 
 void Info::Impl::initializeData()
 {
-    if (!data_.get())
+    // iterate through the ChemistryData array and put it in our own data structure
+    ChemistryData::Element* it = ChemistryData::elements();
+    ChemistryData::Element* end = ChemistryData::elements() + ChemistryData::elementsSize();
+
+    data_.resize(ChemistryData::elementsSize());
+
+    for (; it!=end; ++it)
     {
-        data_.reset(new vector<Info::Record>);
+        Info::Record record;
+        record.type = it->type;
+        record.symbol = it->symbol;
+        record.atomicNumber = it->atomicNumber;
+        record.atomicWeight = it->atomicWeight;
+        
+        for (ChemistryData::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
+            record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
 
-        // iterate through the ChemistryData array and put it in our own data structure
-        ChemistryData::Element* it = ChemistryData::elements();
-        ChemistryData::Element* end = ChemistryData::elements() + ChemistryData::elementsSize();
-
-        data_->resize(ChemistryData::elementsSize());
-
-        for (; it!=end; ++it)
-        {
-            Info::Record record;
-            record.type = it->type;
-            record.symbol = it->symbol;
-            record.atomicNumber = it->atomicNumber;
-            record.atomicWeight = it->atomicWeight;
-            
-            for (ChemistryData::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
-                record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
-
-            (*data_)[it->type] = record;        
-        }
+        data_[it->type] = record;        
     }
 }
 
@@ -144,6 +135,7 @@ void Info::Impl::initializeData()
 // Info implementation
 
 PWIZ_API_DECL Info::Info() : impl_(new Impl) {}
+PWIZ_API_DECL Info::Info(boost::restricted) : impl_(new Impl) {}
 PWIZ_API_DECL Info::~Info() {} // auto destruction of impl_
 PWIZ_API_DECL const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
 
@@ -191,8 +183,6 @@ Element::Type text2enum(const string& text)
 
 class Formula::Impl
 {
-    static auto_ptr<Element::Info> info_;
-
     public:
 
     Impl(const string& formula);
@@ -201,7 +191,7 @@ class Formula::Impl
     {
         if (dirty)
         {
-            Element::Info& info = *info_;
+            Element::Info::lease info;
             dirty = false;
 
             monoMass = avgMass = 0;
@@ -210,7 +200,7 @@ class Formula::Impl
                 int count = CHONSP_data[i];
                 if (count != 0)
                 {
-                    const Element::Info::Record& r = info[Element::Type(i)];
+                    const Element::Info::Record& r = info->operator[](Element::Type(i));
                     if (!r.isotopes.empty())
                         monoMass += r.isotopes[0].mass * count;
                     avgMass += r.atomicWeight * count;
@@ -219,7 +209,7 @@ class Formula::Impl
 
             for (Data::const_iterator it=data.begin(); it!=data.end(); ++it)
             {
-                const Element::Info::Record& r = info[it->first];
+                const Element::Info::Record& r = info->operator[](it->first);
                 if (!r.isotopes.empty())
                     monoMass += r.isotopes[0].mass * it->second;
                 avgMass += r.atomicWeight * it->second;
@@ -235,7 +225,6 @@ class Formula::Impl
     bool dirty; // true if masses need updating
 };
 
-auto_ptr<Element::Info> Formula::Impl::info_;
 
 Formula::Impl::Impl(const string& formula)
 :   monoMass(0), avgMass(0), dirty(false)
@@ -254,8 +243,7 @@ Formula::Impl::Impl(const string& formula)
     const string& digits_ = "-0123456789";
     const string& letters_ = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    if (!info_.get()) info_.reset(new Element::Info);
-    Element::Info& info = *info_;
+    Element::Info::lease info;
 
     string::size_type index = 0;
     while (index < formula.size())
@@ -287,7 +275,7 @@ Formula::Impl::Impl(const string& formula)
 
         index = formula.find_first_not_of(whitespace_, indexCountEnd);
 
-        const Element::Info::Record& r = info[type];
+        const Element::Info::Record& r = info->operator[](type);
         if (!r.isotopes.empty())
             monoMass += r.isotopes[0].mass * count;
         avgMass += r.atomicWeight * count;

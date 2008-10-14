@@ -29,11 +29,14 @@
 #include <iomanip>
 #include <stdexcept>
 #include <iterator>
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
+using namespace Chemistry;
 
 
 ostream* os_ = 0;
@@ -41,7 +44,6 @@ ostream* os_ = 0;
 
 void testMassAbundance()
 {
-    using namespace Chemistry;
     MassAbundance ma(1, 2);
     MassAbundance ma2(1, 4);
     unit_assert(ma != ma2);
@@ -60,30 +62,31 @@ struct TestFormula
 
 const TestFormula testFormulaData[] =
 {
-    { "C1H2N3O4S5", 1, 2, 3, 4, 5, 279.864884, 280.374890 },
-    { "C1H 2N3O4 S5", 1, 2, 3, 4, 5, 279.864884, 280.374890 },
+    { "C1H2N3O4S5", 1, 2, 3, 4, 5, 279.864884, 280.36928 },
+    { "C1H 2N3O4 S5", 1, 2, 3, 4, 5, 279.864884, 280.36928 },
     { "H-42", 0, -42, 0, 0, 0, -42.328651, -42.333512 },
-    { "N2C-1", -1, 0, 2, 0, 0, 28.006148-12, 28.013486-12.010736 }
+    { "N2C-1", -1, 0, 2, 0, 0, 28.006148-12, 28.013486-12.0107 },
+    { "C39H67N11O10", 39, 67, 11, 10, 0, 849.507238, 850.01698 }
 };
 
 const int testFormulaDataSize = sizeof(testFormulaData)/sizeof(TestFormula);
 
 void testFormula()
 {
-    using namespace Chemistry;
-
     for (int i=0; i < testFormulaDataSize; ++i)
     {
         const TestFormula& testFormula = testFormulaData[i];
         Formula formula(testFormula.formula);
 
-        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass));
-        unit_assert(round(formula.molecularWeight()) == round(testFormula.avgMass));
+        const double EPSILON = 0.001;
+
+        unit_assert_equal(formula.monoisotopicMass(), testFormula.monoMass, EPSILON);
+        unit_assert_equal(formula.molecularWeight(), testFormula.avgMass, EPSILON);
         if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
 
         formula[Element::C] += 2;
-        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass+24));
-        unit_assert(round(formula.molecularWeight()) == round(testFormula.avgMass+24));
+        unit_assert_equal(formula.monoisotopicMass(), testFormula.monoMass+24, EPSILON);
+        unit_assert_equal(formula.molecularWeight(), testFormula.avgMass+12.0107*2, EPSILON);
         if (os_) *os_ << formula << " " << formula.monoisotopicMass() << " " << formula.molecularWeight() << endl;
 
         //const Formula& constFormula = formula;
@@ -92,14 +95,14 @@ void testFormula()
         // test copy constructor and operator!=
         Formula formula2 = formula;
         formula2[Element::C] -= 2;
-        unit_assert(round(formula.monoisotopicMass()) == round(testFormula.monoMass+24));
-        unit_assert(round(formula2.monoisotopicMass()) == round(testFormula.monoMass));
+        unit_assert_equal(formula.monoisotopicMass(), testFormula.monoMass+24, EPSILON);
+        unit_assert_equal(formula2.monoisotopicMass(), testFormula.monoMass, EPSILON);
         if (os_) *os_ << "formula: " << formula << endl;
         if (os_) *os_ << "formula2: " << formula2 << endl;
 
         // test operator= and operator==
         formula2 = formula;
-        unit_assert(round(formula.monoisotopicMass()) == round(formula2.monoisotopicMass()));
+        unit_assert_equal(formula.monoisotopicMass(), formula2.monoisotopicMass(), EPSILON);
         if (os_) *os_ << "formula: " << formula << endl;
         if (os_) *os_ << "formula2: " << formula2 << endl;
 
@@ -118,8 +121,7 @@ void testFormula()
 
 void testFormulaOperations()
 {
-    using namespace Chemistry; 
-    using namespace Element; 
+    using namespace Element;
 
     Formula water("H2O1");
     Formula a("C1 H2 N3 O4 S5");
@@ -142,7 +144,6 @@ void testFormulaOperations()
 
 void testInfo()
 {
-    using namespace Chemistry;
     Element::Info info;
 
     if (os_)
@@ -156,23 +157,18 @@ void testInfo()
 
 void infoExample()
 {
-    using namespace Chemistry;
-    using namespace Element;
-
-    Info info;
+    Element::Info info;
    
     if (os_)
     {
-        *os_ << "Sulfur isotopes: " << info[S].isotopes.size() << endl
-             << info[S].isotopes;
+        *os_ << "Sulfur isotopes: " << info[Element::S].isotopes.size() << endl
+             << info[Element::S].isotopes;
     }
 }
 
 
 void testPolysiloxane()
 {
-    using namespace Chemistry;
-
     Formula formula("Si6C12H36O6");
 
     if (os_) 
@@ -183,6 +179,29 @@ void testPolysiloxane()
              << formula.molecularWeight() << endl
              << "ion: " << Ion::mz(formula.monoisotopicMass(), 1) << endl;
     }
+}
+
+
+void testThreadSafetyWorker(boost::barrier* testBarrier)
+{
+    testBarrier->wait(); // wait until all threads have started
+
+    // test thread-specific singleton access with instance
+    unit_assert_equal(Element::Info::instance->operator[](Element::C).atomicNumber, 6.0, 0);
+
+    // test thread-specific singleton access with lease
+    Element::Info::lease info;
+    unit_assert_equal(info->operator[](Element::C).atomicNumber, 6.0, 0);
+}
+
+void testThreadSafety()
+{
+    const int testThreadCount = 100;
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+    testThreadGroup.join_all();
 }
 
 
@@ -199,6 +218,7 @@ int main(int argc, char* argv[])
         testInfo();
         infoExample();
         testPolysiloxane();
+        testThreadSafety();
         return 0;
     }
     catch (exception& e)

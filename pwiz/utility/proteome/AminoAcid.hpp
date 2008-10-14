@@ -29,6 +29,7 @@
 #include "Chemistry.hpp"
 #include <string>
 #include <memory>
+#include "boost/utility/thread_specific_singleton.hpp"
 
 
 namespace pwiz {
@@ -69,12 +70,14 @@ enum PWIZ_API_DECL Type
 
 
 /// class for accessing information about the amino acids
-class PWIZ_API_DECL Info 
+class PWIZ_API_DECL Info : public boost::thread_specific_singleton<Info>
 {
     public:
 
     Info();
     ~Info();
+
+    Info(boost::restricted);
 
     /// struct for holding data for a single amino acid
     struct Record 

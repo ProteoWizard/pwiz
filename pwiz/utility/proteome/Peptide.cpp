@@ -29,7 +29,7 @@
 #include <iostream>
 #include <climits>
 #include "utility/misc/Exception.hpp"
-#include "boost/thread/tss.hpp"
+#include "boost/utility/thread_specific_singleton.hpp"
 
 extern "C" void tss_cleanup_implemented() {} // workaround for TSS linker error?
 
@@ -43,8 +43,6 @@ using namespace Chemistry;
 
 class Peptide::Impl
 {
-    static boost::thread_specific_ptr<AminoAcid::Info> info_;
-
     public:
 
     Impl(Peptide* peptide, const std::string& sequence)
@@ -83,6 +81,10 @@ class Peptide::Impl
         }
     }
 
+    ~Impl()
+    {
+    }
+
     inline const string& sequence() const
     {
         return sequence_;
@@ -92,7 +94,7 @@ class Peptide::Impl
     {
         const static Formula H1("H1");
         const static Formula O1H1("O1H1");
-        AminoAcid::Info& info = *info_;
+        AminoAcid::Info::lease info;
         Formula formula;
 
         ModificationMap::const_iterator modItr = mods_.begin();
@@ -114,7 +116,7 @@ class Peptide::Impl
 
         for (size_t i=0, end=sequence_.length(); i < end; ++i)
         {
-            formula += info[sequence_[i]].residueFormula; // add AA residue formula
+            formula += info->operator[](sequence_[i]).residueFormula; // add AA residue formula
 
             // add modification formulae
             if (modified && modItr != mods_.end() && modItr->first == (int) i)
@@ -177,14 +179,12 @@ class Peptide::Impl
 
     inline void calculateMasses()
     {
-        if (!info_.get()) info_.reset(new AminoAcid::Info);
         Formula unmodifiedFormula = formula(false);
         monoMass_ = unmodifiedFormula.monoisotopicMass();
         avgMass_ = unmodifiedFormula.molecularWeight();
     }
 };
 
-boost::thread_specific_ptr<AminoAcid::Info> Peptide::Impl::info_;
 
 PWIZ_API_DECL Peptide::Peptide(const string& sequence) : impl_(new Impl(this, sequence)) {}
 PWIZ_API_DECL Peptide::Peptide(const char* sequence) : impl_(new Impl(this, sequence)) {}
@@ -258,41 +258,19 @@ class Fragmentation::Impl
 {
     public:
     Impl(const Peptide& peptide, bool mono, bool modified)
-        :   NTerminalDeltaMass(0), CTerminalDeltaMass(0),
-            aMass(mono ? aMonoMass : aAvgMass),
-            bMass(mono ? bMonoMass : bAvgMass),
-            cMass(mono ? cMonoMass : cAvgMass),
-            xMass(mono ? xMonoMass : xAvgMass),
-            yMass(mono ? yMonoMass : yAvgMass),
-            zMass(mono ? zMonoMass : zAvgMass)
+        :   NTerminalDeltaMass(0), CTerminalDeltaMass(0)
     {
-        if (aFormula.formula().empty())
-        {
-            aFormula = Formula("C-1O-1");
-            bFormula = Formula(""); // proton only
-            cFormula = Formula("N1H3");
-            xFormula = Formula("C1O1H-2") + Formula("H2O1");
-            yFormula = Formula("H2O1");
-            zFormula = Formula("N-1H-3") + Formula("H2O1");
-
-            aMonoMass = aFormula.monoisotopicMass();
-            bMonoMass = bFormula.monoisotopicMass();
-            cMonoMass = cFormula.monoisotopicMass();
-            xMonoMass = xFormula.monoisotopicMass();
-            yMonoMass = yFormula.monoisotopicMass();
-            zMonoMass = zFormula.monoisotopicMass();
-
-            aAvgMass = aFormula.molecularWeight();
-            bAvgMass = bFormula.molecularWeight();
-            cAvgMass = cFormula.molecularWeight();
-            xAvgMass = xFormula.molecularWeight();
-            yAvgMass = yFormula.molecularWeight();
-            zAvgMass = zFormula.molecularWeight();
-        }
+        StaticData::lease staticData;
+        aMass = (mono ? staticData->aFormula.monoisotopicMass() : staticData->aFormula.molecularWeight());
+        bMass = (mono ? staticData->bFormula.monoisotopicMass() : staticData->bFormula.molecularWeight());
+        cMass = (mono ? staticData->cFormula.monoisotopicMass() : staticData->cFormula.molecularWeight());
+        xMass = (mono ? staticData->xFormula.monoisotopicMass() : staticData->xFormula.molecularWeight());
+        yMass = (mono ? staticData->yFormula.monoisotopicMass() : staticData->yFormula.molecularWeight());
+        zMass = (mono ? staticData->zFormula.monoisotopicMass() : staticData->zFormula.molecularWeight());
 
         const string& sequence = peptide.sequence();
         maxLength = sequence.length();
-        AminoAcid::Info info;
+        AminoAcid::Info::lease info;
 
         const ModificationMap& mods = peptide.modifications();
         ModificationMap::const_iterator modItr = mods.begin();
@@ -312,7 +290,7 @@ class Fragmentation::Impl
         masses.resize(maxLength, 0);
         for (size_t i=0, end=maxLength; i < end; ++i)
         {
-            const Formula& f = info[sequence[i]].residueFormula;
+            const Formula& f = info->operator[](sequence[i]).residueFormula;
             mass += (mono ? f.monoisotopicMass() : f.molecularWeight());
             if (modified && modItr != mods.end() && modItr->first == (int) i)
             {
@@ -336,6 +314,14 @@ class Fragmentation::Impl
                 CTerminalDeltaMass += (mono ? mod.monoisotopicDeltaMass() : mod.averageDeltaMass());
             }
         }
+    }
+
+    Impl(const Impl& other)
+    {
+    }
+
+    ~Impl()
+    {
     }
 
     inline double a(size_t length, size_t charge) const
@@ -382,26 +368,32 @@ class Fragmentation::Impl
 
     double NTerminalDeltaMass;
     double CTerminalDeltaMass;
-    double& aMass;
-    double& bMass;
-    double& cMass;
-    double& xMass;
-    double& yMass;
-    double& zMass;
+    double aMass;
+    double bMass;
+    double cMass;
+    double xMass;
+    double yMass;
+    double zMass;
 
-    static Chemistry::Formula aFormula;
-    static Chemistry::Formula bFormula;
-    static Chemistry::Formula cFormula;
-    static Chemistry::Formula xFormula;
-    static Chemistry::Formula yFormula;
-    static Chemistry::Formula zFormula;
+    struct StaticData : public boost::thread_specific_singleton<StaticData>
+    {
+        StaticData(boost::restricted)
+        {
+            aFormula = Formula("C-1O-1");
+            bFormula = Formula(""); // proton only
+            cFormula = Formula("N1H3");
+            xFormula = Formula("C1O1H-2") + Formula("H2O1");
+            yFormula = Formula("H2O1");
+            zFormula = Formula("N-1H-3") + Formula("H2O1");
+        }
 
-    static double aMonoMass, aAvgMass;
-    static double bMonoMass, bAvgMass;
-    static double cMonoMass, cAvgMass;
-    static double xMonoMass, xAvgMass;
-    static double yMonoMass, yAvgMass;
-    static double zMonoMass, zAvgMass;
+        Chemistry::Formula aFormula;
+        Chemistry::Formula bFormula;
+        Chemistry::Formula cFormula;
+        Chemistry::Formula xFormula;
+        Chemistry::Formula yFormula;
+        Chemistry::Formula zFormula;
+    };
 };
 
 PWIZ_API_DECL
@@ -418,27 +410,6 @@ PWIZ_API_DECL Fragmentation::Fragmentation(const Fragmentation& other)
 }
 
 PWIZ_API_DECL Fragmentation::~Fragmentation() {}
-
-Chemistry::Formula Fragmentation::Impl::aFormula;
-Chemistry::Formula Fragmentation::Impl::bFormula;
-Chemistry::Formula Fragmentation::Impl::cFormula;
-Chemistry::Formula Fragmentation::Impl::xFormula;
-Chemistry::Formula Fragmentation::Impl::yFormula;
-Chemistry::Formula Fragmentation::Impl::zFormula;
-
-double Fragmentation::Impl::aMonoMass;
-double Fragmentation::Impl::bMonoMass;
-double Fragmentation::Impl::cMonoMass;
-double Fragmentation::Impl::xMonoMass;
-double Fragmentation::Impl::yMonoMass;
-double Fragmentation::Impl::zMonoMass;
-
-double Fragmentation::Impl::aAvgMass;
-double Fragmentation::Impl::bAvgMass;
-double Fragmentation::Impl::cAvgMass;
-double Fragmentation::Impl::xAvgMass;
-double Fragmentation::Impl::yAvgMass;
-double Fragmentation::Impl::zAvgMass;
 
 PWIZ_API_DECL double Fragmentation::a(size_t length, size_t charge) const
 {

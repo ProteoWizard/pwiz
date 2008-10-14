@@ -133,13 +133,10 @@ Digestion::Config::Config(int maximumMissedCleavages,
 
 class Digestion::Motif::Impl
 {
-    //static auto_ptr<AminoAcid::Info> info_;
-
     public:
     Impl(const string& motif)
         :   motif_(motif)
     {
-        //if (!info_.get()) info_.reset(new AminoAcid::Info);
         parseMotif();
     }
 
@@ -189,7 +186,6 @@ class Digestion::Motif::Impl
     private:
     inline void parseMotif()
     {
-        //AminoAcid::Info& info = *info_;
         vector<char> multiResidueBlock;
 		int multiResidueBlockMode = 0; // 0=off 1=contained residues are included 2=contained residues are excluded
         bool parsedSiteDelimiter = false;
@@ -276,8 +272,6 @@ class Digestion::Motif::Impl
     vector<IsValidAA> nFilters_;
     vector<IsValidAA> cFilters_;
 };
-
-//auto_ptr<AminoAcid::Info> Digestion::Motif::Impl::info_;
 
 
 PWIZ_API_DECL

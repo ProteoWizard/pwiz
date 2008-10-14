@@ -31,6 +31,7 @@
 #include <memory>
 #include <vector>
 #include "utility/misc/virtual_map.hpp"
+#include "boost/utility/thread_specific_singleton.hpp"
 
 
 namespace pwiz {
@@ -98,12 +99,14 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, Type type);
 
 
 /// class for obtaining information about elements
-class PWIZ_API_DECL Info
+class PWIZ_API_DECL Info : public boost::thread_specific_singleton<Info>
 {
     public:
 
     Info();
     ~Info();
+
+    Info(boost::restricted);
 
     /// structure for holding info about an element
     struct Record

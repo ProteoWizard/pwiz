@@ -66,7 +66,7 @@ inline std::string unit_assert_equal_message(const char* filename, int line, dou
 
 
 #define unit_assert_equal(x, y, epsilon) \
-    (!(fabs((x)-(y)) < (epsilon)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+    (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
 
 
 #define unit_assert_matrices_equal(A, B, epsilon) \

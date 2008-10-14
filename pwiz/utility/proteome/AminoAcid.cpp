@@ -119,6 +119,7 @@ void Info::Impl::initializeRecords()
 
 
 PWIZ_API_DECL Info::Info() : impl_(new Impl) {}
+PWIZ_API_DECL Info::Info(boost::restricted) : impl_(new Impl) {}
 PWIZ_API_DECL Info::~Info() {} // automatic destruction of impl_
 PWIZ_API_DECL const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
 
