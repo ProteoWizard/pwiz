@@ -191,6 +191,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         Precursor precursor;
         SelectedIon selectedIon;
 
+        // isolationWindow
+
+        double isolationWidth = 0;
+
+        try
+        {
+            string isolationWidthTag = "MS" + lexical_cast<string>(scanInfo->msLevel()) + " Isolation Width:";
+            isolationWidth = scanInfo->trailerExtraValueDouble(isolationWidthTag);
+        }
+        catch (RawEgg&)
+        {}
+
+        precursor.isolationWindow.set(MS_m_z, scanInfo->precursorMZ(i, false));
+        precursor.isolationWindow.set(MS_isolation_width, isolationWidth);
+
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
             precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
