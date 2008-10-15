@@ -155,25 +155,25 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const Info::Record& r)
 
 namespace { 
 
-map<string, Element::Type> mapTextEnum_;
-
-void initializeTextEnumMap()
+struct Text2EnumMap : public map<string, Element::Type>,
+                      public boost::thread_specific_singleton<Text2EnumMap>
 {
-    for (ChemistryData::Element* it = ChemistryData::elements(); 
-         it != ChemistryData::elements() + ChemistryData::elementsSize();
-         ++it)
-        mapTextEnum_[it->symbol] = it->type;
-}
+    Text2EnumMap(boost::restricted)
+    {
+        for (ChemistryData::Element* it = ChemistryData::elements(); 
+             it != ChemistryData::elements() + ChemistryData::elementsSize();
+             ++it)
+            insert(make_pair(it->symbol, it->type));
+    }
+};
 
 Element::Type text2enum(const string& text)
 {
-    if (mapTextEnum_.empty())
-        initializeTextEnumMap();
-    
-    if (!mapTextEnum_.count(text))
+    Text2EnumMap::lease text2EnumMap;
+    Text2EnumMap::const_iterator itr = text2EnumMap->find(text);
+    if (itr == text2EnumMap->end())
         throw runtime_error(("[Chemistry::text2enum()] Error translating symbol " + text).c_str());
-
-    return mapTextEnum_[text];
+    return itr->second;
 }
 
 } // namespace

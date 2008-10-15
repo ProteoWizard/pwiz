@@ -192,6 +192,9 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     // test thread-specific singleton access with lease
     Element::Info::lease info;
     unit_assert_equal(info->operator[](Element::C).atomicNumber, 6.0, 0);
+
+    testFormula();
+    testFormulaOperations();
 }
 
 void testThreadSafety()
