@@ -274,7 +274,7 @@ computeCorrelation(typename KernelTraits<Kernel>::samples_type::const_iterator s
     }
 
     double normDot = norm(result.dot);
-    result.e2 = std::max(normData - normDot, 0.);
+    result.e2 = (std::max)(normData - normDot, 0.);
     result.tan2angle = normDot>0 ? result.e2/normDot : std::numeric_limits<double>::infinity();
 }
 
