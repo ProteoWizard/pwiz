@@ -29,6 +29,9 @@ project
 ;
 
 
+lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
+
+
 lib pwiz_utility_misc
     : # sources
         Base64.cpp 
@@ -40,13 +43,17 @@ lib pwiz_utility_misc
         SHA1.cpp
     : # requirements
         <warnings>all
-        <library>/ext/boost//filesystem
-        <library>/ext/zlib//z
         <toolset>msvc:<source>COMInitializer.cpp
+        <toolset>msvc:<library>ole32
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
+        <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
         <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
         <library>/ext/zlib//z
+        <toolset>msvc:<library>ole32
     ;
 
 
@@ -70,7 +77,13 @@ unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
 unit-test IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc ;
 unit-test FilesystemTest : FilesystemTest.cpp pwiz_utility_misc ;
 unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ; 
-unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ; 
+unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
+
+import modules ;
+if [ modules.peek : NT ]
+{
+    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc ;
+}
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;
 install bin : sha1calc : <location>. ;
