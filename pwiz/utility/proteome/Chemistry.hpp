@@ -31,7 +31,6 @@
 #include <memory>
 #include <vector>
 #include "utility/misc/virtual_map.hpp"
-#include "boost/utility/thread_specific_singleton.hpp"
 
 
 namespace pwiz {
@@ -99,38 +98,24 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, Type type);
 
 
 /// class for obtaining information about elements
-class PWIZ_API_DECL Info : public boost::thread_specific_singleton<Info>
+namespace Info
 {
-    public:
 
-    Info();
-    ~Info();
 
-    Info(boost::restricted);
-
-    /// structure for holding info about an element
-    struct Record
-    {
-        Type type;
-        std::string symbol;
-        int atomicNumber;
-        double atomicWeight;
-        MassDistribution isotopes;
-    };
-
-    /// retrieve the record for an element
-    const Record& operator[](Type type) const;
-
-    private:
-
-    /// hidden implementation
-    class Impl;
-    std::auto_ptr<Impl> impl_;
-
-    // don't allow copying
-    Info(const Info&);
-    const Info& operator=(const Info&);
+struct PWIZ_API_DECL Record
+{
+    Type type;
+    std::string symbol;
+    int atomicNumber;
+    double atomicWeight;
+    MassDistribution isotopes;
 };
+
+/// retrieve the record for an element
+PWIZ_API_DECL const Record& record(Type type);
+
+
+} // namespace Info
 
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Info::Record& record);

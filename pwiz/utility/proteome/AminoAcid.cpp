@@ -30,6 +30,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "utility/misc/CharIndexedVector.hpp"
+#include "boost/utility/singleton.hpp"
 
 
 using namespace std;
@@ -40,13 +41,19 @@ namespace proteome {
 namespace AminoAcid {
 
 
-class Info::Impl
+namespace Info {
+
+
+class RecordData : public boost::singleton<RecordData>
 {
     public:
+    RecordData(boost::restricted)
+    {
+        initializeRecords();
+    }
 
-    Impl();
-    const Record& record(Type type) {return records_[type];}
-    const Record* record(char symbol) {return recordsSymbolIndex_[symbol];}
+    inline const Record& record(Type type) {return records_[type];}
+    inline const Record* record(char symbol) {return recordsSymbolIndex_[symbol];}
 
     private:
     void initializeRecords();
@@ -55,20 +62,14 @@ class Info::Impl
 };
 
 
-Info::Impl::Impl()
-{
-    initializeRecords();
-}
-
-
 namespace {
-Info::Record createRecord(const std::string& name,
-                          const std::string& abbreviation,
-                          char symbol,
-                          const std::string& formula, 
-                          double abundance)
+Record createRecord(const std::string& name,
+                    const std::string& abbreviation,
+                    char symbol,
+                    const std::string& formula, 
+                    double abundance)
 {
-    Info::Record result;
+    Record result;
     result.name = name;
     result.abbreviation = abbreviation;
     result.symbol = symbol;
@@ -80,7 +81,7 @@ Info::Record createRecord(const std::string& name,
 } // namespace
 
 
-void Info::Impl::initializeRecords()
+void RecordData::initializeRecords()
 {
     using namespace Chemistry;
     records_.resize(Unknown+1);
@@ -118,19 +119,19 @@ void Info::Impl::initializeRecords()
 }
 
 
-PWIZ_API_DECL Info::Info() : impl_(new Impl) {}
-PWIZ_API_DECL Info::Info(boost::restricted) : impl_(new Impl) {}
-PWIZ_API_DECL Info::~Info() {} // automatic destruction of impl_
-PWIZ_API_DECL const Info::Record& Info::operator[](Type type) const {return impl_->record(type);}
+PWIZ_API_DECL const Record& record(Type type) {return RecordData::instance->record(type);}
 
 
-PWIZ_API_DECL const Info::Record& Info::operator[](char symbol) const 
+PWIZ_API_DECL const Record& record(char symbol) 
 {
-    const Info::Record* record = impl_->record(symbol);
+    const Record* record = RecordData::instance->record(symbol);
     if (!record)
         throw runtime_error(string("[AminoAcid::Info] Invalid amino acid symbol: ") + symbol);
     return *record;
 }
+
+
+} // namespace Info
 
 
 } // namespace AminoAcid

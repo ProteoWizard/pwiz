@@ -114,8 +114,7 @@ void testProbabilites(const IsotopeCalculator& calc)
 {
     using namespace Chemistry;
 
-    Element::Info info;
-    const MassDistribution& md = info[Element::C].isotopes;
+    const MassDistribution& md = Element::Info::record(Element::C).isotopes;
 
     if (os_) *os_ << "C distribution: " << md << endl;
 

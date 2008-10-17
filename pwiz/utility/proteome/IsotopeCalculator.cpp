@@ -56,8 +56,6 @@ class IsotopeCalculator::Impl
     double abundanceCutoff_;
     double massPrecision_; 
 
-    Element::Info info_;
-
     auto_vector<IsotopeTable> tableStorage_;
     typedef map<Element::Type, const IsotopeTable*> TableMap;
     TableMap tableMap_;
@@ -282,7 +280,7 @@ void IsotopeCalculator::Impl::initializeIsotopeTables()
 {
     for (TableInfo* it=tableInfo_; it!=tableInfo_+tableInfoSize_; ++it)
     {
-        auto_ptr<IsotopeTable> temp(new IsotopeTable(info_[it->element].isotopes, 
+        auto_ptr<IsotopeTable> temp(new IsotopeTable(Element::Info::record(it->element).isotopes, 
                                                      it->maxAtomCount, 
                                                      abundanceCutoff_));
         tableMap_[it->element] = temp.get(); // store pointer in the map
@@ -295,7 +293,7 @@ MassDistribution IsotopeCalculator::Impl::distributionManually(Element::Type e,
                                                                         int atomCount) const
 {
     throw runtime_error("[IsotopeCalculator::distribution()] No table for element " 
-        + info_[e].symbol); 
+        + Element::Info::record(e).symbol); 
 }
 
 

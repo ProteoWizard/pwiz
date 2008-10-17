@@ -37,36 +37,14 @@
 #include "boost/shared_ptr.hpp"
 #include <vector>
 #include <algorithm>
+#include "utility/misc/COMInitializer.hpp"
+
 
 using namespace pwiz::raw;
+using namespace pwiz::util;
 using namespace XRawfile;
 using namespace std;
 using boost::shared_ptr;
-
-namespace {
-bool libraryInitialized_ = false;
-} // namespace
-
-
-RawFileLibrary::RawFileLibrary()
-{
-    if (!libraryInitialized_)
-    {
-        CoInitialize(NULL);
-        RawFileValues::initializeMaps();
-        libraryInitialized_ = true;
-    }
-}
-
-
-RawFileLibrary::~RawFileLibrary()
-{
-    if (libraryInitialized_)
-    {
-        CoUninitialize();
-        libraryInitialized_ = false;
-    }
-}
 
 
 namespace {
@@ -175,7 +153,7 @@ class RawFileImpl : public RawFile
 };
 
 
-auto_ptr<RawFile> RawFile::create(const string& filename)
+RAWFILE_API auto_ptr<RawFile> RawFile::create(const string& filename)
 {
     return auto_ptr<RawFile>(new RawFileImpl(filename));
 }
@@ -186,6 +164,8 @@ RawFileImpl::RawFileImpl(const string& filename)
     filename_(filename),
     instrumentModel_(InstrumentModelType_Unknown)
 {
+    COMInitializer::initialize();
+
     // use the latest version of IXRawfile that will initialize
     IXRawfile2Ptr raw2(NULL);
     if (FAILED(raw2.CreateInstance("XRawfile.XRawfile.1")))
@@ -214,6 +194,8 @@ RawFileImpl::RawFileImpl(const string& filename)
 RawFileImpl::~RawFileImpl()
 {
     raw_->Close();
+    raw_ = NULL;
+    COMInitializer::uninitialize();
 }
 
 

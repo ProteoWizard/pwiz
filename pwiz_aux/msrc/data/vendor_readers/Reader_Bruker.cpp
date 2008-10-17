@@ -185,12 +185,12 @@ class Reader_Bruker::Impl
     public:
     Impl()
     {
-        g_COMInitializer.initialize();
+        COMInitializer::initialize();
     }
 
     ~Impl()
     {
-        g_COMInitializer.uninitialize();
+        COMInitializer::uninitialize();
     }
 
     // EDAL is CompassXtract's namespace

@@ -1066,6 +1066,7 @@ std::ostream& os_write_chromatograms(std::ostream& os, const ChromatogramListPtr
 } // namespace diff_impl
 
 
+PWIZ_API_DECL
 std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
 {
   using namespace diff_impl;

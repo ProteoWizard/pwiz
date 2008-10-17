@@ -144,12 +144,10 @@ void testFormulaOperations()
 
 void testInfo()
 {
-    Element::Info info;
-
     if (os_)
     {
         for (Element::Type e=Element::H; e<=Element::Ca; e=(Element::Type)(e+1))
-            *os_ << info[e].symbol << " " << info[e].atomicNumber << endl;
+            *os_ << Element::Info::record(e).symbol << " " << Element::Info::record(e).atomicNumber << endl;
         *os_ << endl;
     }
 }
@@ -157,12 +155,10 @@ void testInfo()
 
 void infoExample()
 {
-    Element::Info info;
-   
     if (os_)
     {
-        *os_ << "Sulfur isotopes: " << info[Element::S].isotopes.size() << endl
-             << info[Element::S].isotopes;
+        *os_ << "Sulfur isotopes: " << Element::Info::record(Element::S).isotopes.size() << endl
+             << Element::Info::record(Element::S).isotopes;
     }
 }
 
@@ -186,12 +182,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
 
-    // test thread-specific singleton access with instance
-    unit_assert_equal(Element::Info::instance->operator[](Element::C).atomicNumber, 6.0, 0);
-
-    // test thread-specific singleton access with lease
-    Element::Info::lease info;
-    unit_assert_equal(info->operator[](Element::C).atomicNumber, 6.0, 0);
+    unit_assert_equal(Element::Info::record(Element::C).atomicNumber, 6.0, 0);
 
     testFormula();
     testFormulaOperations();

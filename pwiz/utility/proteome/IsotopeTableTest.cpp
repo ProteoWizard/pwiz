@@ -214,9 +214,8 @@ void test4()
 void testSulfur()
 {
     using namespace Chemistry;
-    Element::Info info;
 
-    IsotopeTable table(info[Element::Se].isotopes, 10, 1e-10);
+    IsotopeTable table(Element::Info::record(Element::Se).isotopes, 10, 1e-10);
    
     cout << table << endl; 
 

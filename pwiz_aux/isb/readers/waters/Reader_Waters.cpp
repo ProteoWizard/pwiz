@@ -130,12 +130,12 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 
 PWIZ_API_DECL Reader_Waters::Reader_Waters()
 {
-    g_COMInitializer.initialize();
+    COMInitializer::initialize();
 }
 
 PWIZ_API_DECL Reader_Waters::~Reader_Waters()
 {
-    g_COMInitializer.uninitialize();
+    COMInitializer::uninitialize();
 }
 
 PWIZ_API_DECL

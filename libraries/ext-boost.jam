@@ -224,12 +224,17 @@ rule init ( version ? : location : options * )
         :   $(requirements)
             <location-prefix>thread
             <use>boost
+            <link>shared:<define>BOOST_THREAD_DYN_LINK=1
             <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+            <link>static:<define>BOOST_THREAD_BUILD_LIB=1
             <define>BOOST_THREAD_NO_LIB=1
+            <link>static:<source>$(location)/../tss_workaround.cpp
             <library>date_time
         :
         :   <threading>multi
+            <link>shared:<define>BOOST_THREAD_DYN_LINK=1
             <link>shared:<define>BOOST_THREAD_USE_DLL=1
+            <link>static:<define>BOOST_THREAD_USE_LIB=1
             <define>BOOST_THREAD_NO_LIB=1
             <library>date_time
         ;

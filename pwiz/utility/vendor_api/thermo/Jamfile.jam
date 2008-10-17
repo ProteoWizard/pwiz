@@ -31,6 +31,10 @@ lib pwiz_rawfile
       RawFile.cpp
       RawFileValues.cpp
     : <toolset>msvc,<link>shared:<define>RAWFILE_DYN_LINK
+      <library>../../../data/msdata//pwiz_data_msdata
+      <library>/ext/boost//thread
+    : <library>../../../data/msdata//pwiz_data_msdata
+      <library>/ext/boost//thread
     ;
 
 unit-test ScanFilterTest

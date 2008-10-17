@@ -93,8 +93,6 @@ PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 
 namespace {
 
-auto_ptr<RawFileLibrary> rawFileLibrary_;
-
 string creationDateToStartTimeStamp(string creationDate)
 {
 	// input format: "6/27/2007 15:23:45"
@@ -239,12 +237,6 @@ void Reader_Thermo::read(const string& filename,
                          const string& head,
                          MSData& result) const
 {
-    // initialize RawFileLibrary
-
-	if (!rawFileLibrary_.get()) {
-		rawFileLibrary_.reset(new RawFileLibrary());
-	}
-
     // instantiate RawFile, share ownership with SpectrumList_Thermo
 
     shared_ptr<RawFile> rawfile(RawFile::create(filename).release());

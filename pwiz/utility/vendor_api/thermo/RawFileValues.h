@@ -33,6 +33,7 @@
 //#endif
 
 #include <map>
+#include "boost/utility/singleton.hpp"
 
 
 namespace pwiz {
@@ -78,21 +79,19 @@ struct ValueDescriptor
 
 
 template<typename id_type>
-struct ValueData
+struct ValueData : public boost::singleton< ValueData<id_type> >
 {
-    typedef std::map<id_type, ValueDescriptor<id_type>*> map_type;
-    static ValueDescriptor<id_type> descriptors_[];
-    static map_type descriptorMap_;
+    ValueData(boost::restricted);
+    std::vector< ValueDescriptor<id_type> > descriptors_;
+    typedef std::map<id_type, const ValueDescriptor<id_type>*> map_type;
+    map_type descriptorMap_;
 };
 
 
-void initializeMaps();
-
-
 template<typename id_type>
-ValueDescriptor<id_type>* descriptor(id_type id)
+const ValueDescriptor<id_type>* descriptor(id_type id)
 {
-    ValueDescriptor<id_type>* d = ValueData<id_type>::descriptorMap_[id];
+    const ValueDescriptor<id_type>* d = ValueData<id_type>::instance->descriptorMap_[id];
     if (d)
         return d;
 

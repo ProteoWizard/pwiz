@@ -22,7 +22,8 @@
 
 
 lib pwiz_utility_proteome
-    : AminoAcid.cpp 
+    : # sources
+      AminoAcid.cpp 
       Chemistry.cpp 
       ChemistryData.cpp 
       IPIFASTADatabase.cpp 
@@ -32,11 +33,14 @@ lib pwiz_utility_proteome
       Peptide.cpp
       Modification.cpp
       Digestion.cpp
-    : <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    : # requirements
+      <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
       <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
       <library>/ext/boost//thread
       <library>/ext/zlib//z
-    : <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+    : # default-build
+    : # usage-requirements
+      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
       <library>/ext/boost//thread
       <library>/ext/zlib//z
     ;

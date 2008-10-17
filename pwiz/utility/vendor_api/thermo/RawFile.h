@@ -43,19 +43,14 @@
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
 #include "data/msdata/Reader.hpp" // for ReaderFail exception defn
+#include "boost/utility/thread_specific_singleton.hpp"
+
 
 namespace pwiz {
 namespace raw {
 
 
-class RAWFILE_API RawFileLibrary
-{
-    public:
-    RawFileLibrary();
-    ~RawFileLibrary();
-};
-
-class RawEgg : public pwiz::msdata::ReaderFail // Eggception class
+class RAWFILE_API RawEgg : public pwiz::msdata::ReaderFail // Eggception class
 {
     public:
 

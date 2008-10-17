@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
         
         const char* filename = argv[1]; 
 
-        RawFileLibrary rawFileLibrary;
-
         RawFilePtr rawfile(filename);
         rawfile->setCurrentController(Controller_MS, 1);
 

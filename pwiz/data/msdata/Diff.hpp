@@ -417,7 +417,7 @@ std::ostream& operator<<(std::ostream& os, const Diff<object_type>& diff)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff);
 
 } // namespace msdata
 } // namespace pwiz

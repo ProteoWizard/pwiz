@@ -32,8 +32,7 @@ namespace pwiz {
 namespace raw {
 namespace RawFileValues {
 
-
-ValueDescriptor<ValueID_Long> ValueData<ValueID_Long>::descriptors_[] =
+ValueDescriptor<ValueID_Long> ValueID_Long_descriptors[] =
 {
     {VersionNumber, &IXRawfile::GetVersionNumber, "VersionNumber"},
     {IsError, &IXRawfile::IsError, "IsError"},
@@ -63,8 +62,7 @@ ValueDescriptor<ValueID_Long> ValueData<ValueID_Long>::descriptors_[] =
     {ValueID_Long_Count, 0, 0}
 };
 
-
-ValueDescriptor<ValueID_Double> ValueData<ValueID_Double>::descriptors_[] =
+ValueDescriptor<ValueID_Double> ValueID_Double_descriptors[] =
 {
     {SeqRowInjectionVolume, &IXRawfile::GetSeqRowInjectionVolume, "SeqRowInjectionVolume"},
     {SeqRowSampleWeight, &IXRawfile::GetSeqRowSampleWeight, "SeqRowSampleWeight"},
@@ -85,7 +83,7 @@ ValueDescriptor<ValueID_Double> ValueData<ValueID_Double>::descriptors_[] =
 };
 
 
-ValueDescriptor<ValueID_String> ValueData<ValueID_String>::descriptors_[] =
+ValueDescriptor<ValueID_String> ValueID_String_descriptors[] =
 {
     {FileName, &IXRawfile::GetFileName, "FileName"},
     {CreatorID, &IXRawfile::GetCreatorID, "CreatorID"},
@@ -121,25 +119,37 @@ ValueDescriptor<ValueID_String> ValueData<ValueID_String>::descriptors_[] =
 };
 
 
-ValueData<ValueID_Long>::map_type ValueData<ValueID_Long>::descriptorMap_;
-ValueData<ValueID_Double>::map_type ValueData<ValueID_Double>::descriptorMap_;
-ValueData<ValueID_String>::map_type ValueData<ValueID_String>::descriptorMap_;
-
-
-template<typename id_type>
-void initializeMap()
+ValueData<ValueID_Long>::ValueData(boost::restricted)
 {
-    ValueDescriptor<id_type>* vd = ValueData<id_type>::descriptors_;
+    ValueDescriptor<ValueID_Long>* vd = ValueID_Long_descriptors;
     for (;!(vd->function == 0 && vd->name == 0); vd++)
-        ValueData<id_type>::descriptorMap_[vd->id] = vd;
+        descriptors_.push_back(*vd);
+    for (vector<ValueDescriptor<ValueID_Long> >::const_iterator itr = descriptors_.begin();
+        itr != descriptors_.end();
+        ++itr)
+        descriptorMap_[itr->id] = &*itr;
 }
 
-
-void initializeMaps()
+ValueData<ValueID_Double>::ValueData(boost::restricted)
 {
-    initializeMap<ValueID_Long>();
-    initializeMap<ValueID_Double>();
-    initializeMap<ValueID_String>();
+    ValueDescriptor<ValueID_Double>* vd = ValueID_Double_descriptors;
+    for (;!(vd->function == 0 && vd->name == 0); vd++)
+        descriptors_.push_back(*vd);
+    for (vector<ValueDescriptor<ValueID_Double> >::const_iterator itr = descriptors_.begin();
+        itr != descriptors_.end();
+        ++itr)
+        descriptorMap_[itr->id] = &*itr;
+}
+
+ValueData<ValueID_String>::ValueData(boost::restricted)
+{
+    ValueDescriptor<ValueID_String>* vd = ValueID_String_descriptors;
+    for (;!(vd->function == 0 && vd->name == 0); vd++)
+        descriptors_.push_back(*vd);
+    for (vector<ValueDescriptor<ValueID_String> >::const_iterator itr = descriptors_.begin();
+        itr != descriptors_.end();
+        ++itr)
+        descriptorMap_[itr->id] = &*itr;
 }
 
 

@@ -104,8 +104,6 @@ TestAminoAcid testAminoAcids[] =
 
 void test()
 {
-    AminoAcid::Info info;
-
     // get a copy of all the records
 
     vector<AminoAcid::Info::Record> records;
@@ -114,7 +112,7 @@ void test()
     {
         try 
         {
-            const AminoAcid::Info::Record& record = info[symbol];
+            const AminoAcid::Info::Record& record = AminoAcid::Info::record(symbol);
             records.push_back(record);
         }
         catch (exception&)
@@ -124,24 +122,24 @@ void test()
     for (vector<AminoAcid::Info::Record>::iterator it=records.begin(); it!=records.end(); ++it)
         printRecord(os_, *it);
 
-    unit_assert(info[Alanine].residueFormula[C] == 3);
-    unit_assert(info[Alanine].residueFormula[H] == 5);
-    unit_assert(info[Alanine].residueFormula[N] == 1);
-    unit_assert(info[Alanine].residueFormula[O] == 1);
-    unit_assert(info[Alanine].residueFormula[S] == 0);
+    unit_assert(AminoAcid::Info::record(Alanine).residueFormula[C] == 3);
+    unit_assert(AminoAcid::Info::record(Alanine).residueFormula[H] == 5);
+    unit_assert(AminoAcid::Info::record(Alanine).residueFormula[N] == 1);
+    unit_assert(AminoAcid::Info::record(Alanine).residueFormula[O] == 1);
+    unit_assert(AminoAcid::Info::record(Alanine).residueFormula[S] == 0);
 
-    unit_assert(info[Alanine].formula[C] == 3);
-    unit_assert(info[Alanine].formula[H] == 7);
-    unit_assert(info[Alanine].formula[N] == 1);
-    unit_assert(info[Alanine].formula[O] == 2);
-    unit_assert(info[Alanine].formula[S] == 0);
+    unit_assert(AminoAcid::Info::record(Alanine).formula[C] == 3);
+    unit_assert(AminoAcid::Info::record(Alanine).formula[H] == 7);
+    unit_assert(AminoAcid::Info::record(Alanine).formula[N] == 1);
+    unit_assert(AminoAcid::Info::record(Alanine).formula[O] == 2);
+    unit_assert(AminoAcid::Info::record(Alanine).formula[S] == 0);
 
 
     // test single amino acids
     for (int i=0; i < 22; ++i) // skip X for now
     {
         TestAminoAcid& aa = testAminoAcids[i];
-        Chemistry::Formula residueFormula = info[aa.symbol].residueFormula;
+        Chemistry::Formula residueFormula = AminoAcid::Info::record(aa.symbol).residueFormula;
         unit_assert_equal(residueFormula.monoisotopicMass(), aa.monoMass, 0.00001);
         unit_assert_equal(residueFormula.molecularWeight(), aa.avgMass, 0.0001);
         //set<char> mmNames = mm2n.getNames(aa.monoMass, EPSILON);
@@ -196,12 +194,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
 
-    // test thread-specific singleton access with instance
-    unit_assert(AminoAcid::Info::instance->operator[](Glycine).symbol == 'G');
-
-    // test thread-specific singleton access with lease
-    AminoAcid::Info::lease info;
-    unit_assert(info->operator[](Glycine).symbol == 'G');
+    unit_assert(AminoAcid::Info::record(Glycine).symbol == 'G');
 }
 
 void testThreadSafety()

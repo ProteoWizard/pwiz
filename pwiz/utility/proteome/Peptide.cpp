@@ -29,9 +29,8 @@
 #include <iostream>
 #include <climits>
 #include "utility/misc/Exception.hpp"
-#include "boost/utility/thread_specific_singleton.hpp"
+#include "boost/utility/singleton.hpp"
 
-extern "C" void tss_cleanup_implemented() {} // workaround for TSS linker error?
 
 namespace pwiz {
 namespace proteome {
@@ -94,7 +93,6 @@ class Peptide::Impl
     {
         const static Formula H1("H1");
         const static Formula O1H1("O1H1");
-        AminoAcid::Info::lease info;
         Formula formula;
 
         ModificationMap::const_iterator modItr = mods_.begin();
@@ -116,7 +114,7 @@ class Peptide::Impl
 
         for (size_t i=0, end=sequence_.length(); i < end; ++i)
         {
-            formula += info->operator[](sequence_[i]).residueFormula; // add AA residue formula
+            formula += AminoAcid::Info::record(sequence_[i]).residueFormula; // add AA residue formula
 
             // add modification formulae
             if (modified && modItr != mods_.end() && modItr->first == (int) i)
@@ -270,7 +268,6 @@ class Fragmentation::Impl
 
         const string& sequence = peptide.sequence();
         maxLength = sequence.length();
-        AminoAcid::Info::lease info;
 
         const ModificationMap& mods = peptide.modifications();
         ModificationMap::const_iterator modItr = mods.begin();
@@ -290,7 +287,7 @@ class Fragmentation::Impl
         masses.resize(maxLength, 0);
         for (size_t i=0, end=maxLength; i < end; ++i)
         {
-            const Formula& f = info->operator[](sequence[i]).residueFormula;
+            const Formula& f = AminoAcid::Info::record(sequence[i]).residueFormula;
             mass += (mono ? f.monoisotopicMass() : f.molecularWeight());
             if (modified && modItr != mods.end() && modItr->first == (int) i)
             {
@@ -375,7 +372,7 @@ class Fragmentation::Impl
     double yMass;
     double zMass;
 
-    struct StaticData : public boost::thread_specific_singleton<StaticData>
+    struct StaticData : public boost::singleton<StaticData>
     {
         StaticData(boost::restricted)
         {
