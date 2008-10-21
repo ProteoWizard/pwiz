@@ -2,6 +2,14 @@
 #define _PROTEOME_HPP_CLI_
 
 
+#pragma warning( push )
+#pragma warning( disable : 4635 )
+#include "SharedCLI.hpp"
+#include "utility/proteome/Chemistry.hpp"
+#include "utility/proteome/Peptide.hpp"
+#pragma warning( pop )
+
+
 namespace pwiz {
 namespace CLI {
 namespace proteome {
@@ -28,37 +36,99 @@ public ref class Chemistry
 };
 
 ref class Fragmentation;
+ref class ModificationMap;
 
 /// <summary>
 /// represents a peptide (sequence of amino acids)
 /// </summary>
 public ref class Peptide
 {
-    public:
+    DEFINE_INTERNAL_BASE_CODE(Peptide, pwiz::proteome::Peptide);
 
+    public:
     Peptide(System::String^ sequence);
 
+    /// <summary>
+    /// returns the sequence of amino acids using standard single character symbols
+    /// </summary>
     property System::String^ sequence {System::String^ get();}
 
+    /// <summary>
+    /// returns the unmodified chemical composition of the peptide (sequence()+water)
+    /// </summary>
+    System::String^ formula();
+
+    /// <summary>
+    /// returns the (possibly modified) chemical composition of the peptide
+    /// <para>- if modified = false: returns the composition formula of sequence()+water</para>
+    /// <para>- if modified = true: returns the composition formula of sequence()+modifications()+water</para>
+    /// <para>- note: throws an exception if modified = true and any modification has only mass information</para>
+    /// </summary>
+    System::String^ formula(bool modified);
+
+    /// <summary>
+    /// returns the monoisotopic mass of the modified peptide at neutral charge (sequence()+modifications()+water)
+    /// </summary>
     double monoisotopicMass();
+
+    /// <summary>
+    /// returns the monoisotopic mass of the (possibly modified) peptide at neutral charge
+    /// <para>- if modified = false: returns the monoisotopic mass of sequence()+water</para>
+    /// <para>- if modified = true: returns the monoisotopic mass of sequence()+modifications()+water</para>
+    /// </summary>
     double monoisotopicMass(bool modified);
+
+    /// <summary>
+    /// returns the monoisotopic mass of the modified peptide at charge &lt;charge&gt;
+    /// <para>- if charge = 0: returns the monoisotopic mass of the modified peptide at neutral charge (sequence()+modifications()+water)</para>
+    /// </summary>
     double monoisotopicMass(int charge);
+
+    /// <summary>
+    /// <para>if charge = 0: returns neutral mass</para>
+    /// <para>if charge > 0: returns charged m/z</para>
+    /// <para>if modified = false: returns the monoisotopic mass of sequence()+water</para>
+    /// <para>if modified = true: returns the monoisotopic mass of sequence()+modifications()+water</para>
+    /// </summary>
     double monoisotopicMass(bool modified, int charge);
 
+    /// <summary>
+    /// returns the molecular weight of the modified peptide at neutral charge (sequence()+modifications()+water)
+    /// </summary>
     double molecularWeight();
+
+    /// <summary>
+    /// returns the molecular weight of the (possibly modified) peptide at neutral charge
+    /// <para>- if modified = false: returns the molecular weight of sequence()+water</para>
+    /// <para>- if modified = true: returns the molecular weight of sequence()+modifications()+water</para>
+    /// </summary>
     double molecularWeight(bool modified);
+
+    /// <summary>
+    /// returns the molecular weight of the modified peptide at charge &lt;charge&gt;
+    /// <para>- if charge = 0: returns the molecular weight of the modified peptide at neutral charge (sequence()+modifications()+water)</para>
+    /// </summary>
     double molecularWeight(int charge);
+
+    /// <summary>
+    /// <para>- if charge = 0: returns neutral mass</para>
+    /// <para>- if charge > 0: returns charged m/z</para>
+    /// <para>- if modified = false: returns the molecular weight of sequence()+water</para>
+    /// <para>- if modified = true: returns the molecular weight of sequence()+modifications()+water</para>
+    /// </summary>
     double molecularWeight(bool modified, int charge);
 
     /// <summary>
+    /// the map of sequence offsets (0-based) to modifications;
+    /// <para>- modifications can be added or removed from the peptide with this map</para>
+    /// </summary>
+    ModificationMap^ modifications();
+
+    /// <summary>
     /// returns a fragmentation model for the peptide;
-    /// fragment masses can calculated as mono/avg and as modified/unmodified
+    /// <para>- fragment masses can calculated as mono/avg and as modified/unmodified</para>
     /// </summary>
     Fragmentation^ fragmentation(bool monoisotopic, bool modified);
-
-    internal:
-    ref class Impl;
-    Impl^ impl_;
 };
 
 
@@ -67,57 +137,140 @@ public ref class Peptide
 /// </summary>
 public ref class Fragmentation
 {
-    public:
+    DEFINE_INTERNAL_BASE_CODE(Fragmentation, pwiz::proteome::Fragmentation);
 
+    public:
     Fragmentation(Peptide^ peptide,
                   bool monoisotopic,
                   bool modified);
 
     /// <summary>
     /// returns the a ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double a(int length, int charge);
 
     /// <summary>
     /// returns the b ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double b(int length, int charge);
 
     /// <summary>
     /// returns the c ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double c(int length, int charge);
 
     /// <summary>
     /// returns the x ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double x(int length, int charge);
 
     /// <summary>
     /// returns the y ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double y(int length, int charge);
 
     /// <summary>
     /// returns the z ion of length &lt;length&gt;
-    /// if &lt;charge&gt; = 0: returns neutral mass
-    /// if &lt;charge&gt; > 0: returns charged m/z
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double z(int length, int charge);
+};
 
-    internal:
-    ref class Impl;
-    Impl^ impl_;
+
+/// <summary>
+/// represents a post-translational modification (PTM)
+/// <para>- note: modification formula or masses must be provided at instantiation</para>
+/// </summary>
+public ref class Modification
+{
+    DEFINE_INTERNAL_BASE_CODE(Modification, pwiz::proteome::Modification);
+
+    public:
+    Modification(System::String^ formula);
+    Modification(double monoisotopicDeltaMass,
+                 double averageDeltaMass);
+
+    /// <summary>
+    /// returns true iff the mod was constructed with formula
+    /// </summary>
+    bool hasFormula();
+
+    /// <summary>
+    /// returns the difference formula;
+    /// <para>- note: throws runtime_error if hasFormula() = false</para>
+    /// </summary>
+    System::String^ formula();
+
+    /// <summary>
+    /// returns the monoisotopic delta mass of the modification
+    /// </summary>
+    double monoisotopicDeltaMass();
+
+    /// <summary>
+    /// returns the average delta mass of the modification
+    /// </summary>
+    double averageDeltaMass();
+};
+
+
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ModificationBaseList, pwiz::proteome::Modification, Modification, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+/// represents a list of modifications on a single amino acid
+public ref class ModificationList : public ModificationBaseList
+{
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::proteome, ModificationList, ModificationBaseList);
+
+    public:
+    ModificationList();
+    ModificationList(Modification^ mod);
+
+    /// <summary>
+    /// returns the sum of the monoisotopic delta masses of all modifications in the list
+    /// </summary>
+    double monoisotopicDeltaMass();
+
+    /// <summary>
+    /// returns the sum of the average delta masses of all modifications in the list
+    /// </summary>
+    double averageDeltaMass();
+};
+
+DEFINE_VIRTUAL_MAP_WRAPPER(ModificationBaseMap, \
+                           int, int, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE, \
+                           pwiz::proteome::ModificationList, ModificationList, ModificationList^, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+/// <summary>
+/// maps peptide/protein sequence indexes (0-based) to a modification list
+/// <para>- ModificationMap.NTerminus() returns the index for specifying N terminal mods</para>
+/// <para>- ModificationMap.CTerminus() returns the index for specifying C terminal mods</para>
+/// </summary>
+public ref class ModificationMap : public ModificationBaseMap
+{
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::proteome, ModificationMap, ModificationBaseMap);
+    ModificationMap(); // internal default constructor
+
+    public:
+
+    /// <summary>
+    /// returns the index for specifying N terminal mods
+    /// </summary>
+    static int NTerminus();
+
+    /// <summary>
+    /// returns the index for specifying C terminal mods
+    /// </summary>
+    static int CTerminus();
 };
 
 } // namespace proteome

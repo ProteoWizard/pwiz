@@ -26,10 +26,13 @@
 #define _MSDATAFILE_HPP_CLI_
 
 
+#pragma warning( push )
+#pragma warning( disable : 4635 )
 #include "MSData.hpp"
 #include "../../../data/msdata/MSDataFile.hpp"
 //#include "Reader.hpp"
 //#include "BinaryDataEncoder.hpp"
+#pragma warning( pop )
 
 
 namespace pwiz {
@@ -37,23 +40,32 @@ namespace CLI {
 namespace msdata {
 
 
+/// <summary>
 /// MSData object plus file I/O
+/// </summary>
 public ref class MSDataFile : public MSData
 {
     DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
 
     public:
-    /// constructs MSData object backed by file;
-    /// reader==0 -> use DefaultReaderList 
-    MSDataFile(System::String^ filename);
 
-    /// data format for write()
+    /// <summary>
+    /// constructs MSData object backed by file
+    /// </summary>
+    MSDataFile(System::String^ path);
+
+    /// <summary>
+    /// supported data formats for write()
+    /// </summary>
     enum class Format {Format_Text, Format_mzML, Format_mzXML};
+
     enum class Precision {Precision_32, Precision_64};
     enum class ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
     enum class Compression {Compression_None, Compression_Zlib};
 
-    /// configuration for write()
+    /// <summary>
+    /// configuration options for write()
+    /// </summary>
     ref class WriteConfig
     {
         public:
@@ -68,12 +80,30 @@ public ref class MSDataFile : public MSData
         {}
     };
 
-    /// static write function for any MSData object
+    /// <summary>
+    /// static write function for any MSData object with the default configuration (mzML, 64-bit, no compression)
+    /// </summary>
     static void write(MSData^ msd, System::String^ filename);
+
+    /// <summary>
+    /// static write function for any MSData object with the specified configuration
+    /// </summary>
     static void write(MSData^ msd, System::String^ filename, WriteConfig^ config);
 
-    /// member write function 
+    /// <summary>
+    /// returns a string describing the type of MS source &lt;path&gt; represents
+    /// <para>- returns an empty string if the format is unknown or unsupported</para>
+    /// </summary>
+    static System::String^ identify(System::String^ path);
+
+    /// <summary>
+    /// member write function with the default configuration (mzML, 64-bit, no compression)
+    /// </summary>
     void write(System::String^ filename);
+
+    /// <summary>
+    /// member write function with the specified configuration
+    /// </summary>
     void write(System::String^ filename, WriteConfig^ config);
 };
 

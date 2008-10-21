@@ -3349,33 +3349,83 @@ public enum class CVID
 }; // enum CVID
 
 
+/// <summary>
+/// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
+/// </summary>
 DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::msdata::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+
+/// <summary>
+/// A list of enumerated System.Strings; implements IList&lt;System.String&gt;
+/// </summary>
 DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::String, STD_STRING_TO_CLI_STRING, CLI_STRING_TO_STD_STRING);
 
-
+/// <summary>
+/// A utility class for getting detailed information about a particular CVID (CV term)
+/// </summary>
 public ref class CVInfo
 {
     DEFINE_INTERNAL_BASE_CODE(CVInfo, pwiz::msdata::CVInfo);
     public:
+
+    /// <summary>
+    /// returns the CVID corresponding this CVInfo instance describes
+    /// <para>- note: for PSI-MS terms, the CVID always corresponds with the accession number
+    /// </summary>
     property CVID cvid { CVID get() {return (CVID) base_->cvid;} }
+
+    /// <summary>
+    /// returns the accession id of the term in the form: "prefix:number", e.g. "MS:1000001"
+    /// </summary>
     property System::String^ id { System::String^ get() {return gcnew System::String(base_->id.c_str());} }
+
+    /// <summary>
+    /// the full name of the term, e.g. "sample number"
+    /// </summary>
     property System::String^ name { System::String^ get() {return gcnew System::String(base_->name.c_str());} }
+
+    /// <summary>
+    /// returns the full text definition of the term
+    /// </summary>
     property System::String^ def { System::String^ get() {return gcnew System::String(base_->def.c_str());} }
 
+    /// <summary>
+    /// returns a list of terms which this term has an IS_A relationship with
+    /// </summary>
     property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA);} }
+
+    /// <summary>
+    /// returns a list of terms which this term has a PART_OF relationship with
+    /// </summary>
     property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf);} }
+
+    /// <summary>
+    /// returns a list of term names synonymous with this term
+    /// </summary>
     property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
+
     CVInfo() : base_(new pwiz::msdata::CVInfo()) {}
 
+    /// <summary>
     /// returns CV term info for the specified CVID
+    /// </summary>
     CVInfo(CVID cvid) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo((pwiz::msdata::CVID) cvid))) {}
 
-    /// returns CV term info for the specified id (accession number)
+    /// <summary>
+    /// returns CV term info for the specified id in the form: "prefix:number"
+    /// </summary>
     CVInfo(System::String^ id) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo(ToStdString(id)))) {}
 
+    /// <summary>
+    /// returns the shortest synonym from exactSynonyms()
+    /// </summary>
     System::String^ shortName() {return gcnew System::String(base_->shortName().c_str());}
+
+    /// <summary>
+    /// returns the prefix of the id, e.g. "MS" for PSI-MS terms
+    /// </summary>
     System::String^ prefix() {return gcnew System::String(base_->prefix().c_str());}
 };
+
 
 } // namespace msdata
 } // namespace CLI

@@ -7,19 +7,22 @@ project
         <toolset>msvc:<build>yes
         <library>../../../data/msdata//pwiz_data_msdata/<link>static
         <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static
+        <library>../../../utility/proteome/<link>static
         <library>../../../data/vendor_readers//pwiz_data_vendor_readers/<link>static
-        <library>../../../../pwiz_aux/isb/readers/waters//pwiz_aux_isb_reader_waters/<link>static
-        <library>../../../analysis/spectrum_processing//pwiz_analysis_spectrum_processing/<link>static
-        <library>../../../analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing/<link>static
+        <library>../../../../pwiz_aux/isb/readers/waters/<link>static
+        <library>../../../../pwiz_aux/msrc/data/vendor_readers/<link>static
+        <library>../../../analysis/spectrum_processing/<link>static
+        <library>../../../analysis/chromatogram_processing/<link>static
+        <library>/ext/boost//thread # link=shared required for thread specific storage
         <link>shared
         <runtime-link>shared
         <cxxflags>"/EHa /clr"
         <define>UNICODE
         <define>_UNICODE
     : usage-requirements
-        <cxxflags>"/EHa /clr /FU pwiz_bindings_cli.dll"
-        <define>UNICODE
-        <define>_UNICODE
+      <cxxflags>"/EHa /clr /FU pwiz_bindings_cli.dll"
+      <define>UNICODE
+      <define>_UNICODE
     : default-build
         release
         <build>no
@@ -28,20 +31,33 @@ project
 
 path-constant CLI_ROOT : . ;
 
+# build XDC documentation from source files
+obj CVParam    : CVParam.cpp    : <cxxflags>"/doc$(CLI_ROOT)/CVParam.xdc" ;
+obj MSData     : MSData.cpp     : <cxxflags>"/doc$(CLI_ROOT)/MSData.xdc" ;
+obj MSDataFile : MSDataFile.cpp : <cxxflags>"/doc$(CLI_ROOT)/MSDataFile.xdc" ;
+obj proteome   : proteome.cpp   : <cxxflags>"/doc$(CLI_ROOT)/proteome.xdc" ;
+obj examples   : examples.cpp   : <cxxflags>"/doc$(CLI_ROOT)/examples.xdc" ;
 
 lib pwiz_bindings_cli
-    : CVParam.cpp
-      MSData.cpp
-      MSDataFile.cpp
-      proteome.cpp
-      examples.cpp
-    : <linkflags>"/MACHINE:X86 /FIXED:No /KEYFILE:$(CLI_ROOT)/signature.snk"
+    : #sources
+      CVParam
+      MSData
+      MSDataFile
+      proteome
+      examples
+    : #requirements
+      <linkflags>"/MACHINE:X86 /FIXED:No /KEYFILE:$(CLI_ROOT)/signature.snk"
+    : #default-build
+    : #usage-requirements
+      <library>/ext/boost//thread
     ;
 
 
 actions do_update_embedded_manifest
 {
-    call "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    REM support both MSVC 8 and 9
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     REM echo $(>)
     sn.exe /q /Ra $(>[0]) $(CLI_ROOT)/signature.snk
 }
@@ -49,6 +65,18 @@ actions do_update_embedded_manifest
 import notfile ;
 notfile update_embedded_manifest : @do_update_embedded_manifest : pwiz_bindings_cli ;
 #notfile update_embedded_manifest_test : @do_update_embedded_manifest : pwiz_bindings_cli/<location>$(CLI_ROOT)/test : <location>$(CLI_ROOT)/test ;
+
+# merge XDC files to create XML documentation alongside the output assembly
+actions do_merge_xdc_files
+{
+    REM support both MSVC 8 and 9
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    xdcmake.exe /nologo $(CLI_ROOT)/*.xdc /out:$(>[0]:D)/pwiz_bindings_cli.xml
+    del $(CLI_ROOT)\\*.xdc
+}
+
+notfile merge_xdc_files : @do_merge_xdc_files : pwiz_bindings_cli ;
 
 
 #
@@ -79,6 +107,19 @@ actions do_cvgen_cli
 
 make cv.hpp : ../../../data/msdata/psi-ms.obo ../../../data/msdata/unit.obo : do_cvgen_cli : <dependency>install_cvgen_cli ;
 explicit cv.hpp ;
+
+
+import package ;
+local install-requirements = <install-dependencies>on ;
+install-requirements += <install-default-prefix>"C:/Program Files/ProteoWizard/bin" ;
+
+package.install install
+    : $(install-requirements) release
+    : 
+    : pwiz_bindings_cli
+    : # no headers
+    ;
+explicit install ;
 
 
 #unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;

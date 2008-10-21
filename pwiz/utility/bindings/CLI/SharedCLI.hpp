@@ -35,82 +35,37 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 #include <iostream>
 #include <fstream>
 #include "boost/preprocessor/stringize.hpp"
+
+#define GC_DEBUG 0
+
+#if (GC_DEBUG == 1)
 #define LOG_DESTRUCT(msg) \
-    /*std::ofstream log("pwiz.log", std::ios::binary | std::ios::app);*/ \
-    /*std::cout << "In " << msg << " destructor." << std::endl;*/ \
-    /*log.close();*/
+    std::cout << "In " << msg << " destructor." << std::endl;
 #define LOG_CONSTRUCT(msg) \
-    /*std::ofstream log("pwiz.log", std::ios::binary | std::ios::app)*/; \
-    /*std::cout << "In " << msg << " constructor." << std::endl;*/ \
-    /*log.close();*/
+    std::cout << "In " << msg << " constructor." << std::endl;
+#elif (GC_DEBUG == 2)
+#define LOG_DESTRUCT(msg) \
+    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
+    log << "In " << msg << " destructor." << std::endl; \
+    log.close();
+#define LOG_CONSTRUCT(msg) \
+    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
+    log << "In " << msg << " constructor." << std::endl; \
+    log.close();
+#else
+#define LOG_DESTRUCT(msg)
+#define LOG_CONSTRUCT(msg)
+#endif
 
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
 
-
-#define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
-public ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
-{ \
-    internal: WrapperName(std::vector<NativeType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              WrapperName(std::vector<NativeType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName)) if (owner_ == nullptr) SAFEDELETE(base_);} \
-              !WrapperName() {delete this;} \
-              std::vector<NativeType>* base_; \
-              System::Object^ owner_; \
-    \
-    public: WrapperName() : base_(new std::vector<NativeType>()) {} \
-    \
-    public: \
-    property int Count { virtual int get() {return (int) base_->size();} } \
-    property bool IsReadOnly { virtual bool get() {return false;} } \
-    \
-    property CLIHandle Item[int] \
-    { \
-        virtual CLIHandle get(int index) {return NativeToCLI(NativeType, CLIType, base_->at((size_t) index));} \
-        virtual void set(int index, CLIHandle value) {} \
-    } \
-    \
-    virtual void Add(CLIHandle item) {base_->push_back(CLIToNative(NativeType, item));} \
-    virtual void Clear() {base_->clear();} \
-    virtual bool Contains(CLIHandle item) {return std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)) != base_->end();} \
-    virtual void CopyTo(array<CLIHandle>^ arrayTarget, int arrayIndex) {} \
-    virtual bool Remove(CLIHandle item) {std::vector<NativeType>::iterator itr = std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
-    virtual int IndexOf(CLIHandle item) {return (int) (std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item))-base_->begin());} \
-    virtual void Insert(int index, CLIHandle item) {base_->insert(base_->begin() + index, CLIToNative(NativeType, item));} \
-    virtual void RemoveAt(int index) {base_->erase(base_->begin() + index);} \
-    \
-    ref class Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
-    { \
-        public: Enumerator(std::vector<NativeType>* base) : base_(base), itr_(new std::vector<NativeType>::iterator), isReset_(true) {} \
-        internal: std::vector<NativeType>* base_; \
-                  std::vector<NativeType>::iterator* itr_; \
-                  bool isReset_; \
-        \
-        public: \
-        property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(NativeType, CLIType, **itr_);} } \
-        property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(NativeType, CLIType, **itr_);} } \
-        virtual bool MoveNext() \
-        { \
-            if (base_->empty()) return false; \
-            else if (isReset_) {isReset_ = false; *itr_ = base_->begin();} \
-            else if (*itr_+1 == base_->end()) return false; \
-            else ++*itr_; \
-            return true; \
-        } \
-        virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
-        ~Enumerator() {delete itr_;} \
-    }; \
-    virtual System::Collections::Generic::IEnumerator<CLIHandle>^ GetEnumerator() {return gcnew Enumerator(base_);} \
-    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
-};
-
-
-#define DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
-    DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType^, NativeToCLI, CLIToNative)
-#define DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
-    DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
+#include "vector.hpp"
+#include "map.hpp"
+#include "virtual_map.hpp"
 
 #define NATIVE_SHARED_PTR_TO_CLI(SharedPtrType, CLIType, SharedPtr) ((SharedPtr).get() ? gcnew CLIType(new SharedPtrType((SharedPtr))) : nullptr)
 #define NATIVE_OWNED_SHARED_PTR_TO_CLI(SharedPtrType, CLIType, SharedPtr, Owner) ((SharedPtr).get() ? gcnew CLIType(new SharedPtrType((SharedPtr)),(Owner)) : nullptr)
+
 #define NATIVE_REFERENCE_TO_CLI(NativeType, CLIType, NativeRef) gcnew CLIType(&(NativeRef), this)
 #define NATIVE_VALUE_TO_CLI(NativeType, CLIType, NativeValue) ((CLIType) NativeValue)
 #define STD_STRING_TO_CLI_STRING(NativeType, CLIType, StdString) gcnew CLIType((StdString).c_str())
@@ -124,19 +79,18 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
 internal: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) { LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
           !CLIType() {delete this;} \
           NativeType* base_; \
           System::Object^ owner_;
 
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-internal: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+internal: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
           !ClassType() {delete this;} \
-          ns::ClassType* base_; \
-          System::Object^ owner_;
+          ns::ClassType* base_;
 
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
 internal: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \

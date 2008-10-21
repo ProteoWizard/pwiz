@@ -93,6 +93,9 @@ bool UserParam::empty()
     return (*base_)->empty();
 }
 
+bool UserParam::operator==(UserParam^ that) {return (*base_) == *that->base_;}
+bool UserParam::operator!=(UserParam^ that) {return (*base_) != *that->base_;}
+
 
 ParamGroupList^ ParamContainer::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
 CVParamList^ ParamContainer::cvParams::get() {return gcnew CVParamList(&base_->cvParams, this);}
@@ -166,8 +169,8 @@ bool ParamGroup::empty()
 
 
 FileContent::FileContent()
-: ParamContainer(new b::FileContent()), owner_(nullptr)
-{base_ = static_cast<b::FileContent*>(ParamContainer::base_);}
+: ParamContainer(new b::FileContent())
+{owner_ = nullptr; base_ = static_cast<b::FileContent*>(ParamContainer::base_);}
 
 
 SourceFile::SourceFile()
@@ -202,13 +205,13 @@ bool SourceFile::empty()
 
 
 Contact::Contact()
-: ParamContainer(new b::Contact()), owner_(nullptr)
-{base_ = static_cast<b::Contact*>(ParamContainer::base_);}
+: ParamContainer(new b::Contact())
+{owner_ = nullptr; base_ = static_cast<b::Contact*>(ParamContainer::base_);}
 
 
 FileDescription::FileDescription()
-: base_(new b::FileDescription()), owner_(nullptr)
-{}
+: base_(new b::FileDescription())
+{owner_ = nullptr; }
 
 FileContent^ FileDescription::fileContent::get() {return gcnew FileContent(&base_->fileContent, this);}
 SourceFileList^ FileDescription::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
@@ -245,16 +248,16 @@ bool Sample::empty()
 
 
 Component::Component()
-: ParamContainer(new b::Component()), owner_(nullptr)
-{base_ = static_cast<b::Component*>(ParamContainer::base_);}
+: ParamContainer(new b::Component())
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 Component::Component(ComponentType type, int order)
-: ParamContainer(new b::Component((b::ComponentType) type, order)), owner_(nullptr)
-{base_ = static_cast<b::Component*>(ParamContainer::base_);}
+: ParamContainer(new b::Component((b::ComponentType) type, order))
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 Component::Component(CVID cvid, int order)
-: ParamContainer(new b::Component((b::CVID) cvid, order)), owner_(nullptr)
-{base_ = static_cast<b::Component*>(ParamContainer::base_);}
+: ParamContainer(new b::Component((b::CVID) cvid, order))
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 ComponentType Component::type::get() {return (ComponentType) base_->type;}
 void Component::type::set(ComponentType value) {base_->type = (pwiz::msdata::ComponentType) value;}
@@ -274,8 +277,8 @@ bool Component::empty()
 
 
 ComponentList::ComponentList()
-: ComponentBaseList(new b::ComponentList()), owner_(nullptr)
-{base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_);}
+: ComponentBaseList(new b::ComponentList())
+{owner_ = nullptr; base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_);}
 
 Component^ ComponentList::source(int index)
 {
@@ -341,8 +344,8 @@ bool InstrumentConfiguration::empty()
 
 
 ProcessingMethod::ProcessingMethod()
-: ParamContainer(new b::ProcessingMethod()), owner_(nullptr)
-{base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_);}
+: ParamContainer(new b::ProcessingMethod())
+{owner_ = nullptr; base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_);}
 
 int ProcessingMethod::order::get() {return base_->order;}
 void ProcessingMethod::order::set(int value) {base_->order = value;}
@@ -374,8 +377,8 @@ bool DataProcessing::empty()
 
 
 Target::Target()
-: ParamContainer(new b::Target()), owner_(nullptr)
-{base_ = static_cast<b::Target*>(ParamContainer::base_);}
+: ParamContainer(new b::Target())
+{owner_ = nullptr; base_ = static_cast<b::Target*>(ParamContainer::base_);}
 
 
 AcquisitionSettings::AcquisitionSettings()
@@ -403,8 +406,8 @@ bool AcquisitionSettings::empty()
 
 
 Acquisition::Acquisition()
-: ParamContainer(new b::Acquisition()), owner_(nullptr)
-{base_ = static_cast<b::Acquisition*>(ParamContainer::base_);}
+: ParamContainer(new b::Acquisition())
+{owner_ = nullptr; base_ = static_cast<b::Acquisition*>(ParamContainer::base_);}
 
 int Acquisition::number::get() {return base_->number;}
 void Acquisition::number::set(int value) {base_->number = value;}
@@ -428,8 +431,8 @@ bool Acquisition::empty()
 
 
 AcquisitionList::AcquisitionList()
-: ParamContainer(new b::AcquisitionList()), owner_(nullptr)
-{base_ = static_cast<b::AcquisitionList*>(ParamContainer::base_);}
+: ParamContainer(new b::AcquisitionList())
+{owner_ = nullptr; base_ = static_cast<b::AcquisitionList*>(ParamContainer::base_);}
 	
 Acquisitions^ AcquisitionList::acquisitions::get() {return gcnew Acquisitions(&base_->acquisitions, this);}
 
@@ -440,23 +443,23 @@ bool AcquisitionList::empty()
 
 
 IsolationWindow::IsolationWindow()
-: ParamContainer(new b::IsolationWindow()), owner_(nullptr)
-{base_ = static_cast<b::IsolationWindow*>(ParamContainer::base_);}
+: ParamContainer(new b::IsolationWindow())
+{owner_ = nullptr; base_ = static_cast<b::IsolationWindow*>(ParamContainer::base_);}
 
 
 SelectedIon::SelectedIon()
-: ParamContainer(new b::SelectedIon()), owner_(nullptr)
-{base_ = static_cast<b::SelectedIon*>(ParamContainer::base_);}
+: ParamContainer(new b::SelectedIon())
+{owner_ = nullptr; base_ = static_cast<b::SelectedIon*>(ParamContainer::base_);}
 
 
 Activation::Activation()
-: ParamContainer(new b::Activation()), owner_(nullptr)
-{base_ = static_cast<b::Activation*>(ParamContainer::base_);}
+: ParamContainer(new b::Activation())
+{owner_ = nullptr; base_ = static_cast<b::Activation*>(ParamContainer::base_);}
 
 
 Precursor::Precursor()
-: ParamContainer(new b::Precursor()), owner_(nullptr)
-{base_ = static_cast<b::Precursor*>(ParamContainer::base_);}
+: ParamContainer(new b::Precursor())
+{owner_ = nullptr; base_ = static_cast<b::Precursor*>(ParamContainer::base_);}
 
 SourceFile^ Precursor::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
 void Precursor::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
@@ -485,8 +488,8 @@ bool Precursor::empty()
 
 
 Scan::Scan()
-: ParamContainer(new b::Scan()), owner_(nullptr)
-{base_ = static_cast<b::Scan*>(ParamContainer::base_);}
+: ParamContainer(new b::Scan())
+{owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_);}
 
 InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
 void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
@@ -500,17 +503,17 @@ ScanWindowList^ Scan::scanWindows::get() {return gcnew ScanWindowList(&base_->sc
 
 
 ScanWindow::ScanWindow()
-: ParamContainer(new b::ScanWindow()), owner_(nullptr)
-{base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
+: ParamContainer(new b::ScanWindow())
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 ScanWindow::ScanWindow(double mzLow, double mzHigh)
-: ParamContainer(new b::ScanWindow(mzLow, mzHigh)), owner_(nullptr)
-{base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
+: ParamContainer(new b::ScanWindow(mzLow, mzHigh))
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 
 SpectrumDescription::SpectrumDescription()
-: ParamContainer(new b::SpectrumDescription()), owner_(nullptr)
-{base_ = static_cast<b::SpectrumDescription*>(ParamContainer::base_);}
+: ParamContainer(new b::SpectrumDescription())
+{owner_ = nullptr; base_ = static_cast<b::SpectrumDescription*>(ParamContainer::base_);}
 
 AcquisitionList^ SpectrumDescription::acquisitionList::get() {return gcnew AcquisitionList(&base_->acquisitionList, this);}
 PrecursorList^ SpectrumDescription::precursors::get() {return gcnew PrecursorList(&base_->precursors, this);}
@@ -882,8 +885,8 @@ Chromatogram^ ChromatogramListSimple::chromatogram(int index, bool getBinaryData
 
 
 Run::Run()
-: ParamContainer(new b::Run()), owner_(nullptr)
-{base_ = static_cast<b::Run*>(ParamContainer::base_);}
+: ParamContainer(new b::Run())
+{owner_ = nullptr; base_ = static_cast<b::Run*>(ParamContainer::base_);}
 
 System::String^ Run::id::get() {return gcnew System::String(base_->id.c_str());}
 void Run::id::set(System::String^ value) {base_->id = ToStdString(value);}
@@ -913,8 +916,8 @@ bool Run::empty()
 
 
 MSData::MSData()
-: base_(new b::MSData()), owner_(nullptr)
-{}
+: base_(new b::MSData())
+{owner_ = nullptr; }
 
 System::String^ MSData::accession::get() {return gcnew System::String(base_->accession.c_str());}
 void MSData::accession::set(System::String^ value) {base_->accession = ToStdString(value);}

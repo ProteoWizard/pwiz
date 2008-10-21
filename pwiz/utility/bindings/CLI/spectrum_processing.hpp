@@ -2,6 +2,8 @@
 #define _SPECTRUM_PROCESSING_HPP_CLI_
 
 
+#pragma warning( push )
+#pragma warning( disable : 4635 )
 //#include "SpectrumListWrapper.hpp"
 #include "SharedCLI.hpp"
 #include "analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -11,16 +13,26 @@
 #include "utility/misc/IntegerSet.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
+#pragma warning( pop )
+
 
 using boost::shared_ptr;
+
 
 namespace pwiz {
 namespace CLI {
 namespace analysis {
 
+
+/// <summary>
+/// Delegate for filtering spectra in SpectrumList_Filter
+/// </summary>
 public delegate bool SpectrumList_FilterAcceptSpectrum(msdata::Spectrum^);
 private delegate bool SpectrumList_FilterAcceptSpectrumWrapper(const pwiz::msdata::Spectrum*);
 
+/// <summary>
+/// Base predicate intended to be overriden with custom predicate for filtering spectra in SpectrumList_Filter
+/// </summary>
 class SpectrumList_FilterPredicate : public pwiz::analysis::SpectrumList_Filter::Predicate
 {
     bool(*filterDelegatePtr)(const pwiz::msdata::Spectrum*);
@@ -52,7 +64,9 @@ void nullDeallocate(pwiz::msdata::Spectrum* s)
     // do nothing
 }
 
+/// <summary>
 /// SpectrumList implementation filtered by a user's predicate
+/// </summary>
 public ref class SpectrumList_Filter : public msdata::SpectrumList
 {
     internal: virtual ~SpectrumList_Filter()
@@ -109,9 +123,15 @@ public ref class SpectrumList_Filter : public msdata::SpectrumList
 };
 
 
+/// <summary>
+/// Delegate for comparing spectra in SpectrumList_Sorter
+/// </summary>
 public delegate bool SpectrumList_Sorter_LessThan(msdata::Spectrum^, msdata::Spectrum^);
 private delegate bool SpectrumList_Sorter_LessThanWrapper(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
 
+/// <summary>
+/// Base predicate intended to be overriden with custom predicate for comparing spectra in SpectrumList_Sorter
+/// </summary>
 class SpectrumList_SorterPredicate : public pwiz::analysis::SpectrumList_Sorter::Predicate
 {
     bool(*sorterDelegatePtr)(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
@@ -135,7 +155,9 @@ class SpectrumList_SorterPredicate : public pwiz::analysis::SpectrumList_Sorter:
     }
 };
 
+/// <summary>
 /// SpectrumList implementation sorted by a user's predicate
+/// </summary>
 public ref class SpectrumList_Sorter : public msdata::SpectrumList
 {
     internal: virtual ~SpectrumList_Sorter()
@@ -174,7 +196,9 @@ public ref class SpectrumList_Sorter : public msdata::SpectrumList
 };
 
 
+/// <summary>
 /// SpectrumList implementation to return native centroided spectrum data
+/// </summary>
 public ref class SpectrumList_NativeCentroider : public msdata::SpectrumList
 {
     internal: virtual ~SpectrumList_NativeCentroider()
@@ -201,7 +225,9 @@ public ref class SpectrumList_NativeCentroider : public msdata::SpectrumList
 };
 
 
+/// <summary>
 /// SpectrumList implementation to smooth intensities with SG method
+/// </summary>
 public ref class SpectrumList_SavitzkyGolaySmoother : public msdata::SpectrumList
 {
     internal: virtual ~SpectrumList_SavitzkyGolaySmoother()

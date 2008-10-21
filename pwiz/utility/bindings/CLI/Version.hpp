@@ -21,18 +21,28 @@
 // limitations under the License.
 //
 
+
 #ifndef _VERSION_HPP_CLI_
 #define _VERSION_HPP_CLI_
 
+
+#pragma warning( push )
+#pragma warning( disable : 4635 )
 #include "../../../data/msdata/Version.hpp"
 #include "../../../analysis/Version.hpp"
 #include "../../../utility/proteome/Version.hpp"
+#pragma warning( pop )
+
 
 namespace pwiz {
 namespace CLI {
 
+
 namespace msdata
 {
+    /// <summary>
+    /// version information for the msdata namespace
+    /// </summary>
     public ref class Version
     {
         public:
@@ -44,8 +54,12 @@ namespace msdata
     };
 }
 
+
 namespace analysis
 {
+    /// <summary>
+    /// version information for the analysis namespace
+    /// </summary>
     public ref class Version
     {
         public:
@@ -57,8 +71,12 @@ namespace analysis
     };
 }
 
+
 namespace proteome
 {
+    /// <summary>
+    /// version information for the proteome namespace
+    /// </summary>
     public ref class Version
     {
         public:
@@ -69,6 +87,7 @@ namespace proteome
         static System::String^ ToString() {return gcnew System::String(pwiz::proteome::Version::str().c_str());}
     };
 }
+
 
 }
 }

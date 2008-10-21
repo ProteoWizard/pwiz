@@ -23,13 +23,33 @@
 
 #include "MSDataFile.hpp"
 #include "utility/misc/Exception.hpp"
+#include "utility/misc/Filesystem.hpp"
+#include "utility/misc/random_access_compressed_ifstream.hpp"
+//#include "boost/system/error_code.hpp"
+#include <WinError.h>
 
 #include "data/vendor_readers/ExtendedReaderList.hpp"
-#define ReaderListType pwiz::msdata::ExtendedReaderList
-
+#include "data/vendor_readers/Reader_Thermo.hpp"
 #include "isb/readers/waters/Reader_Waters.hpp"
+#include "msrc/data/vendor_readers/Reader_Bruker.hpp"
 
 namespace b = pwiz::msdata;
+
+namespace {
+
+boost::shared_ptr<b::DefaultReaderList> readerList;
+void initializeReaderList()
+{
+    if (!readerList.get())
+    {
+        readerList.reset(new b::DefaultReaderList);
+        *readerList += b::ReaderPtr(new b::Reader_Thermo);
+        *readerList += b::ReaderPtr(new b::Reader_Waters);
+        *readerList += b::ReaderPtr(new b::Reader_Bruker);
+    }
+}
+
+} // namespace
 
 
 namespace pwiz {
@@ -37,22 +57,60 @@ namespace CLI {
 namespace msdata {
 
 
-MSDataFile::MSDataFile(System::String^ filename)
+MSDataFile::MSDataFile(System::String^ path)
 : MSData(0)
 {
     try
     {
-        ReaderListType readerList;
-        readerList.push_back(b::ReaderPtr(new b::Reader_Waters));
-        base_ = new b::MSDataFile(ToStdString(filename), (b::Reader*) &readerList);
+        initializeReaderList();
+        base_ = new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get());
         MSData::base_ = base_;
     }
     catch(exception& e)
     {
         throw gcnew System::Exception(gcnew System::String(e.what()));
     }
+    catch(...)
+    {
+        throw gcnew System::Exception("[MSDataFile::MSDataFile()] Unhandled exception");
+    }
 }
 
+System::String^ MSDataFile::identify(System::String^ path)
+{
+    string path2(ToStdString(path));
+    try
+    {
+        initializeReaderList();
+        string head;
+        if (!bfs::is_directory(path2))
+        {
+            pwiz::util::random_access_compressed_ifstream is(path2.c_str());
+            if (!is)
+                throw runtime_error(("[MSDataFile::identify()] Unable to open file \"" + path2 + "\"").c_str());
+
+            head.resize(512, '\0');
+            is.read(&head[0], (std::streamsize)head.size());
+        }
+        return gcnew System::String(readerList->identify(path2, head).c_str());
+    }
+    catch(bfs::filesystem_error& e)
+    {
+        if (e.code() == boost::system::errc::permission_denied)
+            return gcnew System::String("");
+
+        string error = "[MSDataFile::identify()] Unable to identify path \"" + path2 + "\": " + e.what();
+        throw gcnew System::Exception(gcnew System::String(error.c_str()));
+    }
+    catch(exception& e)
+    {
+        throw gcnew System::Exception(gcnew System::String(e.what()));
+    }
+    catch(...)
+    {
+        throw gcnew System::Exception(gcnew System::String("[MSDataFile::identify()] Unhandled exception"));
+    }
+}
 
 void MSDataFile::write(MSData^ msd, System::String^ filename)
 {
@@ -66,11 +124,22 @@ void MSDataFile::write(MSData^ msd, System::String^ filename)
 
 void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ config)
 {
-    b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
-    config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
-    config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
-    config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-    b::MSDataFile::write(*msd->base_, ToStdString(filename), config2);
+    try
+    {
+        b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+        config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
+        config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
+        config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+        b::MSDataFile::write(*msd->base_, ToStdString(filename), config2);
+    }
+    catch(exception& e)
+    {
+        throw gcnew System::Exception(gcnew System::String(e.what()));
+    }
+    catch(...)
+    {
+        throw gcnew System::Exception(gcnew System::String("[MSDataFile::write()] Unhandled exception"));
+    }
 }
 
 
@@ -86,11 +155,22 @@ void MSDataFile::write(System::String^ filename)
 
 void MSDataFile::write(System::String^ filename, WriteConfig^ config)
 {
-    b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
-    config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
-    config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
-    config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-    base_->write(ToStdString(filename), config2);
+    try
+    {
+        b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+        config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
+        config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
+        config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+        base_->write(ToStdString(filename), config2);
+    }
+    catch(exception& e)
+    {
+        throw gcnew System::Exception(gcnew System::String(e.what()));
+    }
+    catch(...)
+    {
+        throw gcnew System::Exception(gcnew System::String("[MSDataFile::write()] Unhandled exception"));
+    }
 }
 
 
