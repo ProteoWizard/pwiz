@@ -23,6 +23,7 @@
 
 #include "MSDataFile.hpp"
 #include "Diff.hpp"
+#include "IO.hpp"
 #include "examples.hpp"
 #include "utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
@@ -60,6 +61,10 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // read back into an MSDataFile object
         MSDataFile msd1(filename1);
 
+        // hack -- remove last sourceFilePtr
+        vector<SourceFilePtr>& sfs = msd1.fileDescription.sourceFilePtrs;
+        if (!sfs.empty()) sfs.erase(sfs.end()-1);
+
         // compare
         Diff<MSData> diff(tiny, msd1, diffConfig);
         if (diff && os_) *os_ << diff << endl;
@@ -71,11 +76,14 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // read back into another MSDataFile object
         MSDataFile msd2(filename2);
 
+        // hack -- remove last sourceFilePtr
+        vector<SourceFilePtr>& sfs2 = msd2.fileDescription.sourceFilePtrs;
+        if (!sfs2.empty()) sfs2.erase(sfs2.end()-1);
+
         // compare
         diff(tiny, msd2);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
-
 
 	    // now give the gzip read a workout
 	    std::string cmd("gzip ");
@@ -84,6 +92,10 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         {
 		    filename1+=".gz";
 		    MSDataFile msd1(filename1);
+
+            // hack -- remove last sourceFilePtr
+            vector<SourceFilePtr>& sfs3 = msd1.fileDescription.sourceFilePtrs;
+            if (!sfs3.empty()) sfs3.erase(sfs3.end()-1);
 
             // compare
             Diff<MSData> diff(tiny, msd1, diffConfig);
@@ -203,6 +215,54 @@ void testReader()
 
     // remove temp file
     boost::filesystem::remove(filename);
+
+    if (os_) *os_ << endl;
+}
+
+
+void testSHA1()
+{
+    if (os_) *os_ << "testSHA1()\n";
+
+    // write out a test file
+
+    string filename = filenameBase_ + ".SHA1Test";
+    MSData tiny;
+    examples::initializeTiny(tiny);
+    MSDataFile::write(tiny, filename);
+
+    // read in without SHA-1 calculation
+
+    MSDataFile msd(filename);
+
+    if (os_)
+    {
+        *os_ << "no SHA-1:\n";
+        pwiz::minimxml::XMLWriter writer(*os_);
+        IO::write(writer, *msd.fileDescription.sourceFilePtrs.back());
+    }
+
+    unit_assert(!msd.fileDescription.sourceFilePtrs.empty());
+    unit_assert(!msd.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
+
+    // read in with SHA-1 calculation
+
+    MSDataFile msd_sha1(filename, 0, true);
+
+    if (os_)
+    {
+        *os_ << "with SHA-1:\n";
+        pwiz::minimxml::XMLWriter writer(*os_);
+        IO::write(writer, *msd_sha1.fileDescription.sourceFilePtrs.back());
+    }
+
+    unit_assert(!msd_sha1.fileDescription.sourceFilePtrs.empty());
+    unit_assert(msd_sha1.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
+
+    // clean up
+
+    boost::filesystem::remove(filename);
+    if (os_) *os_ << endl;
 }
 
 
@@ -214,6 +274,7 @@ int main(int argc, char* argv[])
         test();
         //demo();
         testReader();
+        testSHA1();
         return 0;
     }
     catch (exception& e)

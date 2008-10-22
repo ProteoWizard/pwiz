@@ -81,6 +81,14 @@ string GetXMLRootElementFromFile(const string& filepath)
     return GetXMLRootElement(file);
 }
 
+void appendSourceFile(const string& filename, MSData& msd)
+{
+    SourceFilePtr sourceFile(new SourceFile);
+    bfs::path p(filename);
+    sourceFile->id = sourceFile->name = p.leaf();
+    sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+    msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+}
 
 class Reader_mzML : public Reader
 {
@@ -120,7 +128,10 @@ class Reader_mzML : public Reader
                 throw runtime_error("[MSDataFile::Reader_mzML] This isn't happening."); 
             }
         }
+
+        appendSourceFile(filename, result);
     }
+
 	virtual const char *getType() const {return "mzML";}
 
     private:
@@ -172,6 +183,7 @@ class Reader_mzXML : public Reader
             // assume there is a scan index
             Serializer_mzXML serializer;
             serializer.read(is, result);
+            appendSourceFile(filename, result);
             return;
         }
         catch (SpectrumList_mzXML::index_not_found&)
@@ -183,6 +195,7 @@ class Reader_mzXML : public Reader
         config.indexed = false;
         Serializer_mzXML serializer(config);
         serializer.read(is, result);
+        appendSourceFile(filename, result);
         return;
     }
 	virtual const char *getType() const {return "mzXML";}

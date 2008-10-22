@@ -42,7 +42,8 @@ struct PWIZ_API_DECL MSDataFile : public MSData
     /// constructs MSData object backed by file;
     /// reader==0 -> use DefaultReaderList 
     MSDataFile(const std::string& filename, 
-               const Reader* reader = 0);
+               const Reader* reader = 0,
+               bool calculateSourceFileChecksum = false);
 
     /// data format for write()
     enum PWIZ_API_DECL Format {Format_Text, Format_mzML, Format_mzXML};

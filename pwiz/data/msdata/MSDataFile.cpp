@@ -28,10 +28,11 @@
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "DefaultReaderList.hpp"
-#include <fstream>
-#include <stdexcept>
 #include "utility/misc/Filesystem.hpp"
 #include "utility/misc/random_access_compressed_ifstream.hpp"
+#include "utility/misc/SHA1Calculator.hpp"
+#include <fstream>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -58,10 +59,27 @@ void readFile(const string& filename, MSData& msd, const Reader& reader, const s
 shared_ptr<DefaultReaderList> defaultReaderList_;
 
 
+void calculateSHA1ForLastSourceFile(MSData& msd)
+{
+    if (msd.fileDescription.sourceFilePtrs.empty()) return;
+
+    SourceFile& sf = *msd.fileDescription.sourceFilePtrs.back();
+    if (sf.hasCVParam(MS_SHA_1)) return;
+
+    const string uriPrefix = "file://";
+    if (sf.location.substr(0,uriPrefix.size()) != uriPrefix) return;
+    bfs::path p(sf.location.substr(uriPrefix.size()));
+    p /= sf.name;
+
+    string sha1 = SHA1Calculator::hashFile(p.string());
+    sf.set(MS_SHA_1, sha1); 
+}
+
 } // namespace
 
 
-PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reader)
+PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reader,
+                                     bool calculateSourceFileChecksum)
 {
     // peek at head of file 
 
@@ -86,6 +104,9 @@ PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reade
             defaultReaderList_ = shared_ptr<DefaultReaderList>(new DefaultReaderList);
         readFile(filename, *this, *defaultReaderList_, head);
     }
+
+    if (calculateSourceFileChecksum)
+        calculateSHA1ForLastSourceFile(*this);
 }
 
 

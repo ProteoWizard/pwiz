@@ -403,7 +403,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     // read in data file
 
     cout << "processing file: " << filename << endl;
-    MSDataFile msd(filename, &readers);
+
+    const bool calculateSHA1 = true;
+    MSDataFile msd(filename, &readers, calculateSHA1);
 
     // process the data 
 
