@@ -93,6 +93,10 @@ class Peptide::Impl
     {
         const static Formula H1("H1");
         const static Formula O1H1("O1H1");
+
+        if (sequence_.empty())
+            return Formula();
+
         Formula formula;
 
         ModificationMap::const_iterator modItr = mods_.begin();

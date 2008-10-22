@@ -134,6 +134,11 @@ PWIZ_API_DECL ModificationList::ModificationList(const Modification& mod)
 {
 }
 
+PWIZ_API_DECL ModificationList::ModificationList(const std::vector<Modification>& mods)
+:   vector<Modification>(mods.begin(), mods.end())
+{
+}
+
 PWIZ_API_DECL double ModificationList::monoisotopicDeltaMass() const
 {
     double mass = 0;

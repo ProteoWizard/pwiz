@@ -79,6 +79,7 @@ class PWIZ_API_DECL ModificationList
 
     ModificationList();
     ModificationList(const Modification& mod);
+    ModificationList(const std::vector<Modification>& mods);
 
     /// returns the sum of the monoisotopic delta masses of all modifications in the list
     double monoisotopicDeltaMass() const;
