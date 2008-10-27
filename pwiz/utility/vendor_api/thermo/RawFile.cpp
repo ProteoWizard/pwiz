@@ -586,7 +586,10 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
 
     IXRawfile2Ptr raw2 = (IXRawfile2Ptr) raw_;
 	VARIANT varLabels;
-	raw2->GetLabelData(&varLabels, NULL, &scanNumber);
+    VariantInit(&varLabels);
+    VARIANT varFlags;
+    VariantInit(&varFlags);
+	raw2->GetLabelData(&varLabels, &varFlags, &scanNumber);
     return MassListPtr(new MassListFromLabelDataImpl(scanNumber, varLabels));
 }
 
