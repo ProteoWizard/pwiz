@@ -231,33 +231,34 @@ void testSHA1()
     examples::initializeTiny(tiny);
     MSDataFile::write(tiny, filename);
 
-    // read in without SHA-1 calculation
-
-    MSDataFile msd(filename);
-
-    if (os_)
     {
-        *os_ << "no SHA-1:\n";
-        pwiz::minimxml::XMLWriter writer(*os_);
-        IO::write(writer, *msd.fileDescription.sourceFilePtrs.back());
+        // read in without SHA-1 calculation
+        MSDataFile msd(filename);
+
+        if (os_)
+        {
+            *os_ << "no SHA-1:\n";
+            pwiz::minimxml::XMLWriter writer(*os_);
+            IO::write(writer, *msd.fileDescription.sourceFilePtrs.back());
+        }
+
+        unit_assert(!msd.fileDescription.sourceFilePtrs.empty());
+        unit_assert(!msd.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
+
+        // read in with SHA-1 calculation
+
+        MSDataFile msd_sha1(filename, 0, true);
+
+        if (os_)
+        {
+            *os_ << "with SHA-1:\n";
+            pwiz::minimxml::XMLWriter writer(*os_);
+            IO::write(writer, *msd_sha1.fileDescription.sourceFilePtrs.back());
+        }
+
+        unit_assert(!msd_sha1.fileDescription.sourceFilePtrs.empty());
+        unit_assert(msd_sha1.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
     }
-
-    unit_assert(!msd.fileDescription.sourceFilePtrs.empty());
-    unit_assert(!msd.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
-
-    // read in with SHA-1 calculation
-
-    MSDataFile msd_sha1(filename, 0, true);
-
-    if (os_)
-    {
-        *os_ << "with SHA-1:\n";
-        pwiz::minimxml::XMLWriter writer(*os_);
-        IO::write(writer, *msd_sha1.fileDescription.sourceFilePtrs.back());
-    }
-
-    unit_assert(!msd_sha1.fileDescription.sourceFilePtrs.empty());
-    unit_assert(msd_sha1.fileDescription.sourceFilePtrs.back()->hasCVParam(MS_SHA_1));
 
     // clean up
 
