@@ -104,8 +104,8 @@ void PrecursorRecalculatorDefault::Impl::recalculate(const MZIntensityPair* begi
     double mzLow = initialEstimate.mz - config_.mzLeftWidth;
     double mzHigh = initialEstimate.mz + config_.mzRightWidth;
 
-    const MZIntensityPair* low = lower_bound(begin, end, mzLow, HasLowerMZ());
-    const MZIntensityPair* high = lower_bound(begin, end, mzHigh, HasLowerMZ());
+    const MZIntensityPair* low = lower_bound(begin, end, MZIntensityPair(mzLow, 0), HasLowerMZ());
+    const MZIntensityPair* high = lower_bound(begin, end, MZIntensityPair(mzHigh, 0), HasLowerMZ());
 
     // peak detection
 

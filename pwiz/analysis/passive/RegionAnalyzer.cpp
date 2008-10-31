@@ -220,10 +220,10 @@ void RegionAnalyzer::update(const DataInfo& dataInfo,
     // find m/z range via binary search 
 
     vector<MZIntensityPair>::const_iterator begin = 
-        lower_bound(info.data.begin(), info.data.end(), impl_->config.mzRange.first, HasLowerMZ());
+        lower_bound(info.data.begin(), info.data.end(), MZIntensityPair(impl_->config.mzRange.first, 0), HasLowerMZ());
 
     vector<MZIntensityPair>::const_iterator end = 
-        upper_bound(info.data.begin(), info.data.end(), impl_->config.mzRange.second, HasLowerMZ());
+        upper_bound(info.data.begin(), info.data.end(), MZIntensityPair(impl_->config.mzRange.second, 0), HasLowerMZ());
 
     // calculate
 
