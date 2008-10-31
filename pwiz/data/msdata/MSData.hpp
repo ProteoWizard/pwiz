@@ -603,8 +603,12 @@ struct PWIZ_API_DECL MZIntensityPair
     double mz;
     double intensity;
 
-    MZIntensityPair(double _mz = 0, double _intensity = 0)
-    :   mz(_mz), intensity(_intensity)
+    MZIntensityPair()
+    :   mz(0), intensity(0)
+    {}
+
+    MZIntensityPair(double mz, double intensity)
+    :   mz(mz), intensity(intensity)
     {}
 
     /// returns true iff mz and intensity are pairwise equal
@@ -623,8 +627,12 @@ struct PWIZ_API_DECL TimeIntensityPair
     double time;
     double intensity;
 
-    TimeIntensityPair(double _time = 0, double _intensity = 0)
-    :   time(_time), intensity(_intensity)
+    TimeIntensityPair()
+    :   time(0), intensity(0)
+    {}
+
+    TimeIntensityPair(double time, double intensity)
+    :   time(time), intensity(intensity)
     {}
 
     /// returns true iff time and intensity are pairwise equal
@@ -825,6 +833,10 @@ class PWIZ_API_DECL SpectrumList
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Spectrum* is valid 
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
+
+    /// returns the data processing affecting spectra retrieved through this interface
+    /// - may return a null shared pointer
+    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
     virtual ~SpectrumList(){} 
 };

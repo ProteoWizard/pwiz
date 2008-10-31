@@ -37,6 +37,7 @@ namespace msdata {
 
 using namespace std;
 using boost::lexical_cast;
+using boost::shared_ptr;
 
 
 //
@@ -1046,6 +1047,12 @@ PWIZ_API_DECL IndexList SpectrumList::findSpotID(const string& spotID) const
         if (spectrumIdentity(index).spotID == spotID) 
             result.push_back(index);
     return result;
+}
+
+
+PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList::dataProcessingPtr() const
+{
+    return shared_ptr<const DataProcessing>();
 }
 
 

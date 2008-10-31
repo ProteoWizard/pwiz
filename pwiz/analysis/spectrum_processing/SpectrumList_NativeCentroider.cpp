@@ -43,7 +43,8 @@ using namespace msdata;
 using namespace pwiz::util;
 
 
-PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
+PWIZ_API_DECL
+SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
     const msdata::SpectrumListPtr& inner,
     const IntegerSet& msLevelsToCentroid)
 :   SpectrumListWrapper(inner),
@@ -57,7 +58,6 @@ PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
     if (thermo)
     {
         mode_ = 1;
-        return;
     }
     #endif
 
@@ -66,9 +66,18 @@ PWIZ_API_DECL SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
     if (bruker)
     {
         mode_ = 2;
-        return;
     }
     #endif
+
+    // add processing methods to the copy of the inner SpectrumList's data processing
+    ProcessingMethod method;
+    method.order = dp_->processingMethods.size();
+    method.set(MS_peak_picking);
+    if (mode_ == 1)
+        method.userParams.push_back(UserParam("Thermo/Xcalibur peak picking"));
+    else if (mode_ == 2)
+        method.userParams.push_back(UserParam("Bruker/Agilent/CompassXtract peak picking"));
+    dp_->processingMethods.push_back(method);
 }
 
 
@@ -92,21 +101,28 @@ PWIZ_API_DECL bool SpectrumList_NativeCentroider::accept(const msdata::SpectrumL
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_NativeCentroider::spectrum(size_t index, bool getBinaryData) const
 {
+    SpectrumPtr centroidSpectrum;
+
     switch (mode_)
     {
         #ifndef PWIZ_NO_READER_THERMO
         case 1:
-            return dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+            centroidSpectrum = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+            break;
         #endif
 
         #ifndef PWIZ_NO_READER_BRUKER
         case 2:
-            return dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+            centroidSpectrum = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
+            break;
         #endif
 
         default:
             return inner_->spectrum(index, getBinaryData);
     }
+
+    centroidSpectrum->dataProcessingPtr = dp_;
+    return centroidSpectrum;
 }
 
 

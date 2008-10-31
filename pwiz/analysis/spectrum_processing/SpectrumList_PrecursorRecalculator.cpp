@@ -119,7 +119,13 @@ SpectrumList_PrecursorRecalculator::Impl::Impl(const MSData& msd)
 PWIZ_API_DECL SpectrumList_PrecursorRecalculator::SpectrumList_PrecursorRecalculator(
     const MSData& msd)
 :   SpectrumListWrapper(msd.run.spectrumListPtr), impl_(new Impl(msd))
-{}
+{
+    // add processing methods to the copy of the inner SpectrumList's data processing
+    ProcessingMethod method;
+    method.order = dp_->processingMethods.size();
+    method.userParams.push_back(UserParam("precursor recalculation", "msPrefix defaults"));
+    dp_->processingMethods.push_back(method);
+}
 
 
 namespace{

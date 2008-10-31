@@ -1,11 +1,10 @@
 //
-// SpectrumList_NativeCentroider.cpp
+// SpectrumList_SavitzkyGolaySmoother.cpp
 //
 //
-// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
 //
-// Copyright 2008 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -43,7 +42,12 @@ PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother::SpectrumList_SavitzkyGolaySmoo
 :   SpectrumListWrapper(inner),
     msLevelsToSmooth_(msLevelsToSmooth)
 {
-    
+    // add processing methods to the copy of the inner SpectrumList's data processing
+    ProcessingMethod method;
+    method.order = dp_->processingMethods.size();
+    method.set(MS_smoothing);
+    method.userParams.push_back(UserParam("Savitzky-Golay smoothing (9 point window)"));
+    dp_->processingMethods.push_back(method);
 }
 
 
@@ -62,14 +66,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_SavitzkyGolaySmoother::spectrum(size_t in
 
     try
     {
-        vector<double>& intensities = s->binaryDataArrayPtrs[1]->data;
-        vector<double> smoothedIntensities = SavitzkyGolaySmoother<double>::smooth_copy(intensities);
+        vector<double>& intensities = s->getIntensityArray()->data;
+        vector<double> smoothedIntensities;
+        SavitzkyGolaySmoother<double>::smooth(intensities, smoothedIntensities);
         intensities.swap(smoothedIntensities);
     }
     catch(std::exception& e)
     {
         throw std::runtime_error(std::string("[SpectrumList_SavitzskyGolaySmoother] Error smoothing intensity data: ") + e.what());
     }
+
+    s->dataProcessingPtr = dp_;
     return s;
 }
 

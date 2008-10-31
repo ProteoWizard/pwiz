@@ -39,7 +39,9 @@ class PWIZ_API_DECL SpectrumListWrapper : public msdata::SpectrumList
     public:
 
     SpectrumListWrapper(const msdata::SpectrumListPtr& inner)
-    :   inner_(inner)
+    :   inner_(inner),
+        dp_(inner->dataProcessingPtr().get() ? new msdata::DataProcessing(*inner->dataProcessingPtr())
+                                             : new msdata::DataProcessing("pwiz_Spectrum_Processing"))
     {
         if (!inner.get()) throw std::runtime_error("[SpectrumListWrapper] Null SpectrumListPtr.");
     }
@@ -48,10 +50,11 @@ class PWIZ_API_DECL SpectrumListWrapper : public msdata::SpectrumList
     virtual bool empty() const {return inner_->empty();}
     virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);} 
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
-
+    virtual const boost::shared_ptr<const msdata::DataProcessing> dataProcessingPtr() const {return dp_;}
     protected:
 
     msdata::SpectrumListPtr inner_;
+    msdata::DataProcessingPtr dp_;
 };
 
 

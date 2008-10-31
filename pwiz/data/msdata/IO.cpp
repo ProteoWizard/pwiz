@@ -2409,11 +2409,39 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     write(writer, msd.fileDescription);
 
+    vector<DataProcessingPtr> dataProcessingPtrs(msd.dataProcessingPtrs);
+    if (msd.run.spectrumListPtr.get())
+    {
+        // populate data processing list by querying SpectrumList
+        // - add data processing only if it is non-null
+        // - ideally we'd check if it was used by spectra before writing it,
+        //   but we can't since the elements haven't been accessed yet
+        const boost::shared_ptr<const DataProcessing> cdp = msd.run.spectrumListPtr->dataProcessingPtr();
+        if (cdp.get())
+        {
+            DataProcessingPtr dp = boost::const_pointer_cast<DataProcessing>(cdp);
+            bool isUnique = true;
+            do
+            {
+                // good-faith effort to make the id unique
+                isUnique = true;
+                for (size_t i=0; i < dataProcessingPtrs.size(); ++i)
+                    if (dp->id == dataProcessingPtrs[i]->id)
+                    {
+                        isUnique = false;
+                        dp->id = "more_" + dp->id;
+                        break;
+                    }
+            } while (!isUnique);
+            dataProcessingPtrs.push_back(dp);
+        }
+    }
+
     writeList(writer, msd.paramGroupPtrs, "referenceableParamGroupList");
     writeList(writer, msd.samplePtrs, "sampleList");
     writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
     writeList(writer, msd.softwarePtrs, "softwareList");
-    writeList(writer, msd.dataProcessingPtrs, "dataProcessingList");
+    writeList(writer, dataProcessingPtrs, "dataProcessingList");
     writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettingsList");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);

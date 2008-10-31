@@ -47,8 +47,8 @@ class PWIZ_API_DECL SpectrumList_NativeCentroider : public SpectrumListWrapper
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     private:
-        const util::IntegerSet msLevelsToCentroid_;
-        int mode_;
+    const util::IntegerSet msLevelsToCentroid_;
+    int mode_;
 };
 
 

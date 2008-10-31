@@ -4,8 +4,7 @@
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
 //
-// Copyright 2008 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -25,7 +24,6 @@
 #define _SAVITZKYGOLAYSMOOTHER_HPP_
 
 
-#include "utility/misc/Export.hpp"
 #include <vector>
 
 
@@ -39,20 +37,32 @@ class SavitzkyGolaySmoother
     public:
     static std::vector<T> smooth_copy(const std::vector<T>& data)
     {
+        typename std::vector<T> smoothedData;
+        return smooth(data, smoothedData);
+    }
+
+    /// smooths to an existing vector
+    static std::vector<T>& smooth(const std::vector<T>& data, std::vector<T>& smoothedData)
+    {
         if (data.size() < 9)
-            return data;
-        typename std::vector<T>::const_iterator start;
-        typename std::vector<T> smoothedData(data.begin(), data.begin()+4);
-        for (start = data.begin();
-            (start+8) != data.end();
-            ++start)
         {
-            T sum = 59 * *(start+4) + 54 * (*(start+3) + *(start+5)) +
-                    39 * (*(start+2) + *(start+6)) + 14 * (*(start+1) + *(start+7)) -
-                    21 * (*start + *(start+8));
-            smoothedData.push_back(sum / 231);
+            smoothedData.assign(data.begin(), data.end());
         }
-        smoothedData.insert(smoothedData.end(), data.end()-4, data.end());
+        else
+        {
+            typename std::vector<T>::const_iterator start;
+            smoothedData.assign(data.begin(), data.begin()+4);
+            for (start = data.begin();
+                (start+8) != data.end();
+                ++start)
+            {
+                T sum = 59 * *(start+4) + 54 * (*(start+3) + *(start+5)) +
+                        39 * (*(start+2) + *(start+6)) + 14 * (*(start+1) + *(start+7)) -
+                        21 * (*start + *(start+8));
+                smoothedData.push_back(sum / 231);
+            }
+            smoothedData.insert(smoothedData.end(), data.end()-4, data.end());
+        }
         return smoothedData;
     }
 };
