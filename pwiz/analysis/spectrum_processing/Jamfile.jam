@@ -34,6 +34,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_NativeCentroider.cpp
         SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_SavitzkyGolaySmoother.cpp
+        SpectrumList_Thresholder.cpp
         PrecursorRecalculatorDefault.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
@@ -59,8 +60,8 @@ lib pwiz_analysis_spectrum_processing
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test SpectrumList_ThresholderTest : SpectrumList_ThresholderTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_spectrum_processing ;
-
 
 # Special run targets for tests with data files.
 # We pass in single input file, to which bjam prepends the full path from current
