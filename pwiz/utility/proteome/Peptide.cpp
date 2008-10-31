@@ -361,6 +361,12 @@ class Fragmentation::Impl
                            : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton*charge) / charge;
     }
 
+    inline double zRadical(size_t length, size_t charge) const
+    {
+        return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton
+                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton*(charge+1)) / charge;
+    }
+
     size_t maxLength;
 
     private:
@@ -446,6 +452,11 @@ PWIZ_API_DECL double Fragmentation::y(size_t length, size_t charge) const
 PWIZ_API_DECL double Fragmentation::z(size_t length, size_t charge) const
 {
     return impl_->z(length, charge);
+}
+
+PWIZ_API_DECL double Fragmentation::zRadical(size_t length, size_t charge) const
+{
+    return impl_->zRadical(length, charge);
 }
 
 } // namespace proteome

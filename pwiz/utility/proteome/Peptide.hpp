@@ -140,6 +140,12 @@ class PWIZ_API_DECL Fragmentation
     /// if <charge> > 0: returns charged m/z
     double z(size_t length, size_t charge = 0) const;
 
+    /// returns the z radical ion of length <length>
+    /// example: zRadical(1) returns the z1* ion
+    /// if <charge> = 0: returns neutral mass
+    /// if <charge> > 0: returns charged m/z
+    double zRadical(size_t length, size_t charge = 0) const;
+
     private:
     class Impl;
     std::auto_ptr<Impl> impl_;
