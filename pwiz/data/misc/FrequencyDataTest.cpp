@@ -44,10 +44,11 @@ ostream* os_;
 
 void diff(const string& filename1, const string& filename2)
 {
-    string command = "diff " + filename1 + " " + filename2;
-    int result = system(command.c_str());
-    unit_assert(result==0);
-    if (os_) *os_ << command << ": success\n";
+	ifstream file1(filename1.c_str()), file2(filename2.c_str());
+	string line1, line2;
+	while (getline(file1, line1) && getline(file2, line2))
+	    unit_assert(line1 == line2);
+    if (os_) *os_ << "diff " << filename1 << " " << filename2 << ": success\n";
 }
 
 
