@@ -111,19 +111,20 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 if [ modules.peek : NT ]
 {
 	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.bat $(PWIZ_ROOT_PATH)" : no-output ;
+	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.bat $(PWIZ_ROOT_PATH)" : no-output ;
+	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_gd.bat $(PWIZ_ROOT_PATH)" : no-output ;
+# TODO: warn about GPL? ... SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_fftw.bat $(PWIZ_ROOT_PATH)" : no-output ;
 }
 else if [ modules.peek : UNIX ]
 {
 	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.sh $(PWIZ_ROOT_PATH)" : no-output ;
+	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.sh $(PWIZ_ROOT_PATH)" : no-output ;
 }
 
-#path-constant ZLIB_SOURCE : $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3 ;
 path-constant BOOST_SOURCE : $(PWIZ_ROOT_PATH)/libraries/boost_1_36_0 ;
 
-#using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 using ext-boost : 1.36.0 : $(BOOST_SOURCE) ;
 
-#use-project /boost : $(BOOST_SOURCE) ;
 
 # build/install
 
