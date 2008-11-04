@@ -86,6 +86,8 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
     boost::shared_ptr<Impl> impl_;
     Pseudo2DGel(Pseudo2DGel&);
     Pseudo2DGel& operator=(Pseudo2DGel&);
+
+    friend class prob_comp;
 };
 
 
@@ -101,11 +103,18 @@ struct analyzer_strings<Pseudo2DGel>
         result.push_back("label=xxxx (set filename label to xxxx)");
         result.push_back("mzLow=N (set low m/z cutoff)");
         result.push_back("mzHigh=N (set high m/z cutoff)");
+        result.push_back("timeScale=N (set scaling factor for time axis)");
         result.push_back("binCount=N (set histogram bin count)");
         result.push_back("zRadius=N (set intensity function z-score radius [=2])");
+        result.push_back("scan (render y-axis linear with scans)");
+        result.push_back("time (render y-axis linear with time)");
         result.push_back("bry (use blue-red-yellow gradient)");
+        result.push_back("grey (use grey-scale gradient)");
         result.push_back("binSum (sum intensity in bins [default = max intensity])");
         result.push_back("ms2locs (indicate masses selected for ms2)");
+        result.push_back("pepxml=xxx (set ms2 id's from pepxml file xxx)");
+        result.push_back("msi=xxx (set ms2 id's from msinspect output file xxx)");
+        result.push_back("flat=xxx (set ms2 id's from tab delim file xxx)");
         return result; 
     }
 };

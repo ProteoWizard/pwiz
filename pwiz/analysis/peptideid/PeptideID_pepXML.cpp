@@ -31,6 +31,39 @@
 #include "PeptideID_pepXML.hpp"
 #include "utility/minimxml/SAXParser.hpp"
 
+
+namespace {
+
+using namespace std;
+using namespace boost; // TODO: avoid this
+using namespace pwiz::peptideid;
+
+struct local_iterator : public PeptideID::iterator
+{
+    local_iterator(map<string, PeptideID::Record>::const_iterator it,
+                   map<string, PeptideID::Record>::const_iterator)
+        : it(it), end(end)
+    {}
+    
+    virtual PeptideID::Record next()
+    {
+        PeptideID::Record record = (*it).second;
+        it++;
+        
+        return record;
+    }
+    
+    virtual bool hasNext()
+    {
+        return it != end;
+    }
+
+    map<string, PeptideID::Record>::const_iterator it;
+    map<string, PeptideID::Record>::const_iterator end;
+};
+
+}
+
 namespace pwiz {
 namespace peptideid {
 
@@ -39,7 +72,7 @@ using namespace boost; // TODO: avoid this
 using namespace pwiz::minimxml::SAXParser;
 
 typedef map<std::string, PeptideID::Record> record_map;
-typedef multimap<double, shared_ptr<PeptideID::Record>, less<double> > rt_multimap;
+typedef multimap<double, shared_ptr<PeptideID::Record>, less<double> > double_multimap;
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -54,7 +87,7 @@ public:
     Source source;
     
     record_map recordMap;
-    rt_multimap rtMap;
+    double_multimap rtMap;
     
     Impl(const string& filename)
     {
@@ -77,19 +110,19 @@ public:
         this->in = in;
     }
     
-    PeptideID::Record record(const string& nativeID)
+    PeptideID::Record record(const Location& location)
     {
-        record_map::iterator rec = recordMap.find(nativeID);
+        record_map::iterator rec = recordMap.find(location.nativeID);
 
         if (rec == recordMap.end())
-            throw new range_error(nativeID.c_str());
+            throw new range_error(location.nativeID.c_str());
 
         return (*rec).second;
     }
 
-    rt_multimap::const_iterator record(double retention_time_sec) 
+    double_multimap::const_iterator record(double retention_time_sec) 
     {
-        rt_multimap::const_iterator recs = rtMap.find(retention_time_sec);
+        double_multimap::const_iterator recs = rtMap.find(retention_time_sec);
 
         if (recs == rtMap.end())
         {
@@ -100,6 +133,7 @@ public:
 
         return recs;
     }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -118,7 +152,7 @@ public:
     static const char* probability_attr;
 
     PepXMLHandler(record_map* recordMap,
-                  rt_multimap* rtMap)
+                  double_multimap* rtMap)
     {
         if (recordMap == NULL)
             throw new runtime_error("null pointer");
@@ -139,9 +173,9 @@ public:
     endElement(const string& name,
                stream_offset position);
 
-private:
+    // isntance variables
     record_map* recordMap;
-    rt_multimap* rtMap;
+    double_multimap* rtMap;
     string current;
 };
 
@@ -221,14 +255,19 @@ PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(istream* in)
     parse(*in, pxh);
 }
 
-PWIZ_API_DECL PeptideID::Record PeptideID_pepXml::record(const std::string& nativeID) const
+PWIZ_API_DECL PeptideID::Record PeptideID_pepXml::record(const Location& location) const
 {
-    return pimpl->record(nativeID);
+    return pimpl->record(location);
 }
 
-rt_multimap::const_iterator PeptideID_pepXml::record(double retention_time_sec) const
+double_multimap::const_iterator PeptideID_pepXml::record(double retention_time_sec) const
 {
     return pimpl->record(retention_time_sec);
+}
+
+PWIZ_API_DECL shared_ptr<PeptideID::iterator> PeptideID_pepXml::getIterator() const
+{
+    return shared_ptr<PeptideID::iterator>(new local_iterator(pimpl->recordMap.begin(), pimpl->recordMap.end()));
 }
 
 } // namespace peptideid

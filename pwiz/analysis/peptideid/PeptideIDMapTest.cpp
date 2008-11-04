@@ -45,17 +45,17 @@ void test()
     record->sequence = "KESSNER";
     record->normalizedScore = .6;
 
-    PeptideID::Record result = peptideIDMap.record("goober");
+    PeptideID::Record result = peptideIDMap.record(PeptideID::Location("goober", 0, 0));
     unit_assert(result.nativeID.empty());
     unit_assert(result.sequence.empty());
     unit_assert_equal(result.normalizedScore, 0, 1e-15);
 
-    result = peptideIDMap.record("1");
+    result = peptideIDMap.record(PeptideID::Location("1", 0, 0));
     unit_assert(result.nativeID == "1");
     unit_assert(result.sequence == "DARREN");
     unit_assert_equal(result.normalizedScore, .5, 1e-15);
 
-    result = peptideIDMap.record("2");
+    result = peptideIDMap.record(PeptideID::Location("2", 0, 0));
     unit_assert(result.nativeID == "2");
     unit_assert(result.sequence == "KESSNER");
     unit_assert_equal(result.normalizedScore, .6, 1e-15);

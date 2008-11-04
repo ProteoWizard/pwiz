@@ -26,6 +26,7 @@
 
 
 #include "utility/misc/Export.hpp"
+#include <boost/shared_ptr.hpp>
 #include <string>
 
 
@@ -39,25 +40,55 @@ class PWIZ_API_DECL PeptideID
 {
     public:
 
+    struct PWIZ_API_DECL Location
+    {
+        std::string nativeID;
+        double mz;
+        double retentionTimeSec;
+
+        Location(){}
+        Location(std::string nativeID, double retentionTimeSec, double mz)
+            : nativeID(nativeID), mz(mz), retentionTimeSec(retentionTimeSec)
+        {}
+    };
+    
     struct PWIZ_API_DECL Record
     {
         std::string nativeID;
         std::string sequence;
+        double mz;
         double retentionTimeSec;
         double normalizedScore; // in [0,1] 
 
         Record() : normalizedScore(0) {}
     };
 
-    virtual Record record(const std::string& nativeID) const = 0;
+    class PWIZ_API_DECL iterator
+    {
+        virtual Record next() = 0;
 
-    virtual ~PeptideID() {} 
+        virtual bool hasNext() = 0;        
+    };
+    
+    virtual Record record(const Location& location) const = 0;
+
+    virtual ~PeptideID() {}
+
+    virtual boost::shared_ptr<iterator> getIterator() const = 0;
+    
 };
 
+class location_less
+{
+public:
+    bool operator()(const PeptideID::Location& a, const PeptideID::Location& b) const
+    {
+        return a.nativeID.compare(b.nativeID) < 0 && a.mz < b.mz && a.retentionTimeSec < b.retentionTimeSec;
+    }
+};
 
 } // namespace peptideid
 } // namespace pwiz
-
 
 #endif // _PEPTIDEID_HPP_
 

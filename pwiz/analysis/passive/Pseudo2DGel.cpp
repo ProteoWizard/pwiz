@@ -26,6 +26,7 @@
 #include "Pseudo2DGel.hpp"
 #include "utility/misc/Image.hpp"
 #include "analysis/peptideid/PeptideID_pepXML.hpp"
+#include "analysis/peptideid/PeptideID_flat.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>
@@ -63,40 +64,7 @@ PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 :   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
     zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
 {
-    vector<string> tokens;
-    istringstream iss(args);
-    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
-
-    static int count = 0;
-    label = lexical_cast<string>(count++);
-
-    for (vector<string>::iterator it=tokens.begin(); it!=tokens.end(); ++it)
-    {
-        if (it->find("label=") == 0)
-            label = it->substr(6);
-        else if (it->find("mzLow=") == 0)
-            mzLow = (float)atof(it->c_str()+6);
-        else if (it->find("mzHigh=") == 0)
-            mzHigh = (float)atof(it->c_str()+7);
-        else if (it->find("timeScale=") == 0)
-            timeScale = (float)atof(it->c_str()+10);
-        else if (it->find("binCount=") == 0)
-            binCount = atoi(it->c_str()+9);
-        else if (it->find("zRadius=") == 0)
-            zRadius = (float)atof(it->c_str()+8);
-        else if (*it == "bry")
-            bry = true; 
-        else if (*it == "grey")
-            grey = true; 
-        else if (*it == "binSum")
-            binSum = true; 
-        else if (*it == "ms2locs")
-            ms2 = true;
-        else if (it->find("pepxml=") == 0)
-            peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
-        else 
-            cout << "[Pseudo2DGel::Config] Ignoring argument: " << *it << endl;
-    }
+    process(args);
 }
 
 void Pseudo2DGel::Config::process(const std::string& args)
@@ -122,6 +90,10 @@ void Pseudo2DGel::Config::process(const std::string& args)
             binCount = atoi(it->c_str()+9);
         else if (it->find("zRadius=") == 0)
             zRadius = (float)atof(it->c_str()+8);
+        else if (*it == "scan")
+            binScan = true;
+        else if (*it == "time")
+            binScan = false;
         else if (*it == "bry")
             bry = true; 
         else if (*it == "grey")
@@ -132,6 +104,14 @@ void Pseudo2DGel::Config::process(const std::string& args)
             ms2 = true;
         else if (it->find("pepxml=") == 0)
             peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
+        else if (it->find("msi=") == 0)
+            peptide_id = shared_ptr<PeptideID>(
+                new PeptideID_flat(it->c_str()+4,
+                                   shared_ptr<FlatRecordBuilder>(new MSInspectRecordBuilder())));
+        else if (it->find("flat=") == 0)
+            peptide_id = shared_ptr<PeptideID>(
+                new PeptideID_flat(it->c_str()+5,
+                                   shared_ptr<FlatRecordBuilder>(new FlatRecordBuilder())));
         else 
             cout << "[Pseudo2DGel::Config] Ignoring argument: " << *it << endl;
     }
@@ -167,49 +147,8 @@ class ColorMap
 
 namespace {
 
-struct prob_comp
-{
-    const MSDataCache& cache_;
-    const Pseudo2DGel::Config& config_;
-    
-    prob_comp(const MSDataCache& cache,
-              const Pseudo2DGel::Config& config)
-        : cache_(cache), config_(config)
-    {}
-    
-    // Compares 
-    bool operator()(const size_t& x, const size_t& y) const
-    {
-        bool result = x < y;
 
-        try
-        {
-            string nativeID_x = cache_[x].nativeID;
-            string nativeID_y = cache_[y].nativeID;
-            
-            if (config_.peptide_id != NULL)
-            {
-                PeptideID::Record x_record = config_.peptide_id->
-                    record(nativeID_x);
-                double x_score  = x_record.normalizedScore;
-                double y_score = config_.peptide_id->record(nativeID_x)
-                    .normalizedScore;
-                result = x_score < y_score;
-            }
-        }
-        catch(range_error re)
-        {
-            cerr << "caught range_error: "<<re.what()<<endl;;
-        }
-        catch(...)
-        {
-        }
-        
-        return result;
-    }
-};    
-
-}
+} // namespace
 
 class Pseudo2DGel::Impl
 {
@@ -271,6 +210,10 @@ class Pseudo2DGel::Impl
 
     int idedPeptides_;
 
+    // Returns the score for this ms2 scan, it's precursor. Throws
+    // an exception if no such scores exists or if both have a value.
+    double getScore(size_t cachedIndex);
+    
     // This is used for linear time rendering
     vector< vector<float> > pixelBins_;
 
@@ -317,9 +260,45 @@ class Pseudo2DGel::Impl
                  const Image::Point& begin, const Image::Point& end); 
 
     void drawTMZ(Image& image, const ScanList& scans, 
-                 const Image::Point& begin, const Image::Point& end); 
+                 const Image::Point& begin, const Image::Point& end);
+
+    friend class prob_comp;
 };
 
+struct prob_comp
+{
+    Pseudo2DGel::Impl* impl;
+    
+    prob_comp(Pseudo2DGel::Impl* impl)
+        : impl(impl)
+    {}
+    
+    // Compares 
+    bool operator()(const size_t& x, const size_t& y) const
+    {
+        bool result = x < y;
+
+        try
+        {
+            string nativeID_x = impl->cache_[x].nativeID;
+            string nativeID_y = impl->cache_[y].nativeID;
+            
+            if (impl->config_.peptide_id != NULL)
+            {
+                double x_score = impl->getScore(x);
+                double y_score = impl->getScore(y);
+                result = x_score < y_score;
+            }
+        }
+        catch(range_error re)
+        {
+            // cerr << "caught range_error: "<<re.what()<<endl;;
+        }
+        catch(...) {}
+
+        return result;
+    }
+};    
 
 Pseudo2DGel::Impl::Impl(const MSDataCache& cache, const Config& config)
 :   cache_(cache), config_(config)
@@ -408,6 +387,57 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
 void Pseudo2DGel::Impl::close(const DataInfo& dataInfo)
 {
     writeImages(dataInfo);
+}
+
+double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
+{
+    cout << "getScore: " << cachedIndex << "\n\t";
+    if (cachedIndex >= cache_.size())
+        throw out_of_range("ms2 index out of bounds");
+    
+    double score = -1;
+
+    if (cache_[cachedIndex].precursors.size() == 0)
+    {
+        ostringstream oss;
+        oss << "No precursors found for ms2 w/ nativeID "
+            << cache_[cachedIndex].nativeID;
+        throw logic_error(oss.str());
+    }
+
+    const string* nativeID = &cache_[cachedIndex].nativeID;
+    double mz1, mz;
+    mz1 = mz = cache_[cachedIndex].basePeakMZ;
+    double retentionTime1, retentionTime;
+    retentionTime1 = retentionTime = cache_[cachedIndex].retentionTime;
+
+    PeptideID::Location locMs2(*nativeID, mz,retentionTime);
+
+    try
+    {
+        PeptideID::Record rMs2 = config_.peptide_id->record(locMs2);
+        score = rMs2.normalizedScore;
+    }
+    catch(...)
+    {
+        size_t idx = cache_[cachedIndex].precursors[0].index;
+
+        nativeID = &cache_[idx].nativeID;
+        mz = cache_[idx].basePeakMZ;
+        retentionTime = cache_[idx].retentionTime;
+        
+        PeptideID::Location locMs1(*nativeID, mz, retentionTime);
+
+        PeptideID::Record rMs1 = config_.peptide_id->record(locMs1);
+        score = rMs1.normalizedScore;
+    }
+
+    if (score > 0)
+        cout << "score greater than 0" << endl;
+    else
+        cout << "zero score" << endl;
+    
+    return score;
 }
 
 int Pseudo2DGel::Impl::bin(double mz)
@@ -858,10 +888,12 @@ size_t Pseudo2DGel::Impl::countUniquePeptides(const ScanList& scans)
         for (size_t i=0; i<scans.size(); i++)
         {
             size_t index = scans.at(i);
-            string nativeID = cache_[index].nativeID;
             try
             {
-                PeptideID::Record record = config_.peptide_id->record(nativeID);
+                PeptideID::Record record = config_.peptide_id->record(
+                    PeptideID::Location(cache_[index].nativeID,
+                                        cache_[index].retentionTime,
+                                        cache_[index].basePeakMZ));
                 string sequence = record.sequence;
 
                 // Find the actual sequence present.
@@ -874,27 +906,28 @@ size_t Pseudo2DGel::Impl::countUniquePeptides(const ScanList& scans)
                 if (s.size()>0)
                     counts[s] += 1;
             }
-            catch(...)
-            {
-            }
+            catch(...) {}
         }
     }
 
     return counts.size();
 }
 
-Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t ms2Index)
+Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t cachedIndex)
 {
-    string nativeID = cache_[ms2Index].nativeID;
     Image::Color color;
-    
+
     if (config_.peptide_id != NULL)
     {
         color = Image::Color(0x64, 0x95, 0xED);
         color = Image::white();
         try
         {
-            float score = (float)config_.peptide_id->record(nativeID).normalizedScore;
+            float score = getScore(cachedIndex);
+            //float score = (float)config_.peptide_id->record(
+            //                        PeptideID::Location(cache_[ms2Index].nativeID,
+            //                            cache_[ms2Index].basePeakMZ,
+            //                            cache_[ms2Index].retentionTime)).normalizedScore;
             color = circleColor(score);
             idedPeptides_++;
         }
@@ -1283,6 +1316,16 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
 }
 
 
+// TODO move to PeptideID file
+ostream& operator<<(ostream& out, const PeptideID::Record record)
+{
+    out << "[PeptideID::Record nativeID=" << record.nativeID
+        << ", retentionTimeSec=" << record.retentionTimeSec
+        << ", m/z=" << record.mz << "]";
+
+    return out;
+}
+
 void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo, 
              const IntensityFunction& intensityFunction,
              const Image::Point& begin, const Image::Point& end)
@@ -1292,13 +1335,12 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
     // If a peptide_id object has been configured, then sort the scans
     // by probability.
 
-    // TODO copy the ms2's into a new vector
     ScanList orderedScans(scansInfo.scans.size());
     copy(scansInfo.scans.begin(), scansInfo.scans.end(), orderedScans.begin());
 
     if (config_.peptide_id != NULL)
     {
-        prob_comp comp(cache_, config_);
+        prob_comp comp(this);
         sort(orderedScans.begin(), orderedScans.end(), comp);
     }
 
@@ -1312,7 +1354,7 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)yPixel);
 
         Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
-            
+        
         Image::Color color = chooseCircleColor(ms2Scans_.scans[j]);
         
         image.circle(center, 3, color, false);

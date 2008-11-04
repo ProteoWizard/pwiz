@@ -60,8 +60,8 @@ void testIStream()
 
     PeptideID_pepXml ppXml(&xml);
 
-    std::string id("1");
-    PeptideID::Record bf = ppXml.record(id);
+    PeptideID::Location loc("1", 1.0, 0.);
+    PeptideID::Record bf = ppXml.record(loc);
 
     unit_assert(bf.nativeID == "1");
     unit_assert(bf.sequence == "ABC");
@@ -75,8 +75,8 @@ void testFilename()
     PeptideID_pepXml ppXml(&xml);
 
 
-    std::string id("1");
-    PeptideID::Record bf = ppXml.record(id);
+    PeptideID::Location loc("1", 1.0, 0.);
+    PeptideID::Record bf = ppXml.record(loc);
 
     unit_assert(bf.nativeID == "1");
     unit_assert(bf.sequence == "ABC");

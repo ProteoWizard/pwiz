@@ -29,6 +29,7 @@
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/passive/Pseudo2DGel.hpp"
 #include "pwiz/analysis/peptideid/PeptideID_pepXML.hpp"
+#include "pwiz/analysis/peptideid/PeptideID_flat.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -50,7 +51,7 @@ struct Config
     string configFilename;
     string outputDirectory;
     string usageOptions;
-    string pepxmlFilename;
+    string peptideFilename;
     vector<string> commands;
     Pseudo2DGel::Config pseudo2dConfig;
 
@@ -74,7 +75,7 @@ void printCommandUsage(ostream& os)
 string usage(const Config& config)
 {
     ostringstream oss;
-
+    
     oss << "Usage: mspaint [options] [mzxml_filename]\n"
         << "MassSpecPaint - command line access to mass spec data files with pep.xml annotation\n"
         << "\n"
@@ -82,9 +83,14 @@ string usage(const Config& config)
         << "\n"
         << config.usageOptions
         << "\n"
-        << "Commands:\n"
-        << "\n";
-
+        << "Commands:\n";
+    
+    vector<string> usage = analyzer_strings<Pseudo2DGel>::argsUsage();
+    for (vector<string>::const_iterator it=usage.begin(); it!=usage.end(); ++it)
+        oss << "      " << *it << endl;
+    
+    oss << "\n";
+    
     // TODO return -x options processing
     //printCommandUsage<Pseudo2DGel>(oss);
 
@@ -124,6 +130,9 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("mzHigh",
             po::value<float>(&config.pseudo2dConfig.mzHigh),
             ": set high m/z cutoff")
+        ("timeScale",
+            po::value<float>(&config.pseudo2dConfig.timeScale),
+            ": set scale of time axis")
         ("binCount,b",
             po::value<int>(&config.pseudo2dConfig.binCount),
             ": set histogram bin count")
@@ -142,14 +151,17 @@ Config parseCommandArgs(int argc, const char* argv[])
             ": use grey-scale gradient")
         ("binSum",
             ": sum intensity in bins [default = max intensity]")
-        ("timeScale",
-            po::value<float>(&config.pseudo2dConfig.timeScale),
-            ": set scale of time axis")
         ("ms2locs,m",
             ": indicate masses selected for ms2")
         ("pepxml,p",
-            po::value<string>(&config.pepxmlFilename),
-            ": location of pepxml file")
+            po::value<string>(&config.peptideFilename),
+            ": pepxml file location")
+        ("msi,i",
+            po::value<string>(&config.peptideFilename),
+            ": msInspect output file location")
+        ("flat,f",
+            po::value<string>(&config.peptideFilename),
+            ": peptide file location (nativeID rt mz score seq)")
         ;
 
     // save options description
@@ -203,15 +215,27 @@ Config parseCommandArgs(int argc, const char* argv[])
     if (vm.count("pepxml"))
         config.pseudo2dConfig.peptide_id =
             shared_ptr<PeptideID>(
-                new PeptideID_pepXml(config.pepxmlFilename)
+                new PeptideID_pepXml(config.peptideFilename)
                 );
+    else if (vm.count("flat"))
+        config.pseudo2dConfig.peptide_id =
+            shared_ptr<PeptideID>(
+                new PeptideID_flat(
+                    config.peptideFilename, shared_ptr<FlatRecordBuilder>(
+                        new FlatRecordBuilder())));
+    else if (vm.count("msi"))
+        config.pseudo2dConfig.peptide_id =
+            shared_ptr<PeptideID>(
+                new PeptideID_flat(
+                    config.peptideFilename, shared_ptr<FlatRecordBuilder>(
+                        new MSInspectRecordBuilder())));
     
-    if (vm.count("time"))
-        config.pseudo2dConfig.binScan = false;
-        
     if (vm.count("scan"))
         config.pseudo2dConfig.binScan = true;
 
+    if (vm.count("time"))
+        config.pseudo2dConfig.binScan = false;
+        
     config.usageOptions = usageOptions;
 
     return config;
@@ -230,6 +254,8 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
 
 int main(int argc, const char* argv[])
 {
+    size_t tick1 = clock();
+
     namespace bfs = boost::filesystem;
     try
     {
@@ -258,9 +284,15 @@ int main(int argc, const char* argv[])
         dataInfo.log = NULL;
 
         MSDataAnalyzerDriver driver(analyzers);
-
+        
         driver.analyze(dataInfo);
+        
+        size_t tick2 = clock();
 
+        cout << " *** run time:" << 1.*tick2/CLOCKS_PER_SEC
+             << " - " << 1.*tick1/CLOCKS_PER_SEC << " = "
+             << 1.*(tick2 - tick1)/CLOCKS_PER_SEC << endl;
+        
         return 0;
     }
     catch (exception& e)
@@ -271,7 +303,7 @@ int main(int argc, const char* argv[])
     {
         cerr << "Caught unknown exception.\n";
     }
-    
+
     return 1;
 }
 

@@ -25,21 +25,56 @@
 
 #include "PeptideIDMap.hpp"
 
+using namespace std;
+using namespace pwiz::peptideid;
+
+namespace {
+
+struct local_iterator : public PeptideID::iterator
+{
+    local_iterator(map<string, PeptideID::Record>::const_iterator it,
+                   map<string, PeptideID::Record>::const_iterator)
+        : it(it), end(end)
+    {}
+    
+    virtual PeptideID::Record next()
+    {
+        PeptideID::Record record = (*it).second;
+        it++;
+        
+        return record;
+    }
+    
+    virtual bool hasNext()
+    {
+        return it != end;
+    }
+
+    map<string, PeptideID::Record>::const_iterator it;
+    map<string, PeptideID::Record>::const_iterator end;
+};
+
+}
 
 namespace pwiz {
 namespace peptideid {
 
 
 using namespace std;
+using namespace boost;
 
 
-PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const string& nativeID) const
+PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const Location& location) const
 {
-    map<string,PeptideID::Record>::const_iterator it = this->find(nativeID);
+    map<string,PeptideID::Record>::const_iterator it = this->find(location.nativeID);
     if (it != this->end()) return it->second;
     return PeptideID::Record();
 }
 
+PWIZ_API_DECL shared_ptr<PeptideID::iterator> PeptideIDMap::getIterator() const
+{
+    return shared_ptr<PeptideID::iterator>(new local_iterator(begin(), end()));
+}
 
 } // namespace peptideid
 } // namespace pwiz

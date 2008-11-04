@@ -57,11 +57,12 @@ public:
 
     /// A range_error is thrown if the nativeID isn't associated with
     /// a Record.
-    virtual Record record(const std::string& nativeID) const;
+    virtual Record record(const Location& location) const;
 
     virtual std::multimap<double, boost::shared_ptr<PeptideID::Record> >::const_iterator
         record(double retention_time_sec) const;
-    
+
+    virtual boost::shared_ptr<iterator> getIterator() const;
 private:
     class Impl;
     boost::shared_ptr<Impl> pimpl;

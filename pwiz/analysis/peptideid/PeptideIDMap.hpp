@@ -38,7 +38,9 @@ class PWIZ_API_DECL PeptideIDMap : public PeptideID,
                                    public std::map<std::string, PeptideID::Record>
 {
     public:
-    virtual Record record(const std::string& nativeID) const;
+    virtual Record record(const pwiz::peptideid::PeptideID::Location& location) const;
+
+    virtual boost::shared_ptr<PeptideID::iterator> getIterator() const;
 };
 
 

@@ -24,6 +24,7 @@
 lib pwiz_analysis_peptideid
     :   PeptideIDMap.cpp 
         PeptideID_pepXML.cpp
+        PeptideID_flat.cpp
         ../../utility/minimxml//pwiz_utility_minimxml
     :	<toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
@@ -37,4 +38,6 @@ lib pwiz_analysis_peptideid
 unit-test PeptideIDMapTest : PeptideIDMapTest.cpp pwiz_analysis_peptideid ;
 
 unit-test PeptideID_pepXMLTest : PeptideID_pepXMLTest.cpp pwiz_analysis_peptideid ;
+
+unit-test PeptideID_flatTest : PeptideID_flatTest.cpp pwiz_analysis_peptideid ;
 
