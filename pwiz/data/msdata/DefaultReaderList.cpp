@@ -90,6 +90,12 @@ void appendSourceFile(const string& filename, MSData& msd)
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
 
+void fillInCommonMetadata(const string& filename, MSData& msd)
+{
+    appendSourceFile(filename, msd);
+    msd.cvs = defaultCVList();
+}
+
 class Reader_mzML : public Reader
 {
     public:
@@ -129,7 +135,7 @@ class Reader_mzML : public Reader
             }
         }
 
-        appendSourceFile(filename, result);
+        fillInCommonMetadata(filename, result);
     }
 
 	virtual const char *getType() const {return "mzML";}
@@ -183,7 +189,7 @@ class Reader_mzXML : public Reader
             // assume there is a scan index
             Serializer_mzXML serializer;
             serializer.read(is, result);
-            appendSourceFile(filename, result);
+            fillInCommonMetadata(filename, result);
             return;
         }
         catch (SpectrumList_mzXML::index_not_found&)
@@ -195,7 +201,7 @@ class Reader_mzXML : public Reader
         config.indexed = false;
         Serializer_mzXML serializer(config);
         serializer.read(is, result);
-        appendSourceFile(filename, result);
+        fillInCommonMetadata(filename, result);
         return;
     }
 	virtual const char *getType() const {return "mzXML";}

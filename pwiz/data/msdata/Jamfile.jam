@@ -43,9 +43,11 @@ lib pwiz_data_msdata_obo
         obo.cpp 
     : # usage
         <library>/ext/boost//regex
+        <library>/ext/boost//system
     : # default-build
     : # usage-requirements 
         <library>/ext/boost//regex
+        <library>/ext/boost//system
     ;
 
 

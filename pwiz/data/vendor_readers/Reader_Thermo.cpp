@@ -177,12 +177,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 
 void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
-    msd.cvs.resize(1);
-    CV& cv = msd.cvs.front();
-    cv.URI = "psi-ms.obo"; 
-    cv.id = "MS";
-    cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
-    cv.version = "1.0";
+    msd.cvs = defaultCVList();
 
     msd.fileDescription.fileContent.cvParams.push_back(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
 
