@@ -94,6 +94,19 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
 {
     appendSourceFile(filename, msd);
     msd.cvs = defaultCVList();
+
+    SoftwarePtr softwarePwiz(new Software);
+    softwarePwiz->id = "pwiz";
+    softwarePwiz->softwareParam = MS_pwiz;
+    softwarePwiz->softwareParamVersion = "1.0"; // TODO: global version number
+    msd.softwarePtrs.push_back(softwarePwiz);
+
+    DataProcessingPtr dpPwiz(new DataProcessing);
+    dpPwiz->id = "pwiz_Reader_conversion";
+    dpPwiz->softwarePtr = softwarePwiz;
+    dpPwiz->processingMethods.push_back(ProcessingMethod());
+    dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
+    msd.dataProcessingPtrs.push_back(dpPwiz);
 }
 
 class Reader_mzML : public Reader

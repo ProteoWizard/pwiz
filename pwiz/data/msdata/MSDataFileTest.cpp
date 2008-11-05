@@ -61,9 +61,13 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // read back into an MSDataFile object
         MSDataFile msd1(filename1);
 
-        // hack -- remove last sourceFilePtr
+        // hack -- remove metadata ptrs appended on read
         vector<SourceFilePtr>& sfs = msd1.fileDescription.sourceFilePtrs;
         if (!sfs.empty()) sfs.erase(sfs.end()-1);
+        vector<SoftwarePtr>& sws = msd1.softwarePtrs;
+        if (!sws.empty()) sws.erase(sws.end()-1);
+        vector<DataProcessingPtr>& dps = msd1.dataProcessingPtrs;
+        if (!dps.empty()) dps.erase(dps.end()-1);
 
         // compare
         Diff<MSData> diff(tiny, msd1, diffConfig);
@@ -76,9 +80,13 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // read back into another MSDataFile object
         MSDataFile msd2(filename2);
 
-        // hack -- remove last sourceFilePtr
+        // hack -- remove metadata ptrs appended on read
         vector<SourceFilePtr>& sfs2 = msd2.fileDescription.sourceFilePtrs;
         if (!sfs2.empty()) sfs2.erase(sfs2.end()-1);
+        vector<SoftwarePtr>& sws2 = msd2.softwarePtrs;
+        if (!sws2.empty()) sws2.erase(sws2.end()-1);
+        vector<DataProcessingPtr>& dps2 = msd2.dataProcessingPtrs;
+        if (!dps2.empty()) dps2.erase(dps2.end()-1);
 
         // compare
         diff(tiny, msd2);
@@ -93,9 +101,13 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
 		    filename1+=".gz";
 		    MSDataFile msd1(filename1);
 
-            // hack -- remove last sourceFilePtr
+            // hack -- remove metadata ptrs appended on read
             vector<SourceFilePtr>& sfs3 = msd1.fileDescription.sourceFilePtrs;
             if (!sfs3.empty()) sfs3.erase(sfs3.end()-1);
+            vector<SoftwarePtr>& sws3 = msd1.softwarePtrs;
+            if (!sws3.empty()) sws3.erase(sws3.end()-1);
+            vector<DataProcessingPtr>& dps3 = msd1.dataProcessingPtrs;
+            if (!dps3.empty()) dps3.erase(dps3.end()-1);
 
             // compare
             Diff<MSData> diff(tiny, msd1, diffConfig);
