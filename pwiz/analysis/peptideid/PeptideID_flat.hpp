@@ -38,6 +38,8 @@ namespace peptideid {
 class PWIZ_API_DECL FlatRecordBuilder
 {
 public:
+    virtual ~FlatRecordBuilder() {}
+    
     virtual PeptideID::Record build(const std::vector<std::string>& fields) const;
 
     virtual bool header() const;
@@ -52,6 +54,8 @@ public:
 class PWIZ_API_DECL MSInspectRecordBuilder : public FlatRecordBuilder
 {
 public:
+    virtual ~MSInspectRecordBuilder() {}
+    
     virtual PeptideID::Record build(const std::vector<std::string>& fields) const;
 
     virtual bool header() const;
@@ -92,7 +96,7 @@ public:
     /// a Record.
     virtual Record record(const Location& location) const;
 
-    virtual boost::shared_ptr<iterator> getIterator() const;
+    virtual boost::shared_ptr<Iterator> iterator() const;
 
 private:
     class Impl;

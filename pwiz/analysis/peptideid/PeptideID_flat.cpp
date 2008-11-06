@@ -61,7 +61,7 @@ struct redirect
     }
 };
 
-struct local_iterator : pwiz::peptideid::PeptideID::iterator
+struct local_iterator : pwiz::peptideid::PeptideID::Iterator
 {
     local_iterator(vector<PeptideID::Record>::const_iterator it,
                    vector<PeptideID::Record>::const_iterator end)
@@ -237,9 +237,9 @@ PeptideID::Record PeptideID_flat::record(const Location& location) const
     return pimpl->record(location);
 }
 
-shared_ptr<PeptideID::iterator> PeptideID_flat::getIterator() const
+shared_ptr<PeptideID::Iterator> PeptideID_flat::iterator() const
 {
-    return shared_ptr<PeptideID::iterator>(new local_iterator(pimpl->records.begin(), pimpl->records.end()));
+    return shared_ptr<PeptideID::Iterator>(new local_iterator(pimpl->records.begin(), pimpl->records.end()));
 }
 
 ////////////////////////////////////////////////////////////////////////////

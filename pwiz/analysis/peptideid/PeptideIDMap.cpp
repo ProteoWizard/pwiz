@@ -30,7 +30,7 @@ using namespace pwiz::peptideid;
 
 namespace {
 
-struct local_iterator : public PeptideID::iterator
+struct local_iterator : public PeptideID::Iterator
 {
     local_iterator(map<string, PeptideID::Record>::const_iterator it,
                    map<string, PeptideID::Record>::const_iterator)
@@ -71,9 +71,9 @@ PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const Location& location) c
     return PeptideID::Record();
 }
 
-PWIZ_API_DECL shared_ptr<PeptideID::iterator> PeptideIDMap::getIterator() const
+PWIZ_API_DECL shared_ptr<PeptideID::Iterator> PeptideIDMap::iterator() const
 {
-    return shared_ptr<PeptideID::iterator>(new local_iterator(begin(), end()));
+    return shared_ptr<PeptideID::Iterator>(new local_iterator(begin(), end()));
 }
 
 } // namespace peptideid

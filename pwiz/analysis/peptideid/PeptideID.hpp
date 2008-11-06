@@ -63,8 +63,11 @@ class PWIZ_API_DECL PeptideID
         Record() : normalizedScore(0) {}
     };
 
-    class PWIZ_API_DECL iterator
+    class PWIZ_API_DECL Iterator
     {
+    public:
+        virtual ~Iterator() {}
+        
         virtual Record next() = 0;
 
         virtual bool hasNext() = 0;        
@@ -74,7 +77,7 @@ class PWIZ_API_DECL PeptideID
 
     virtual ~PeptideID() {}
 
-    virtual boost::shared_ptr<iterator> getIterator() const = 0;
+    virtual boost::shared_ptr<Iterator> iterator() const = 0;
     
 };
 

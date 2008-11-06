@@ -62,7 +62,7 @@ public:
     virtual std::multimap<double, boost::shared_ptr<PeptideID::Record> >::const_iterator
         record(double retention_time_sec) const;
 
-    virtual boost::shared_ptr<iterator> getIterator() const;
+    virtual boost::shared_ptr<Iterator> iterator() const;
 private:
     class Impl;
     boost::shared_ptr<Impl> pimpl;

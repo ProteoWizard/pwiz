@@ -38,7 +38,7 @@ using namespace std;
 using namespace boost; // TODO: avoid this
 using namespace pwiz::peptideid;
 
-struct local_iterator : public PeptideID::iterator
+struct local_iterator : public PeptideID::Iterator
 {
     local_iterator(map<string, PeptideID::Record>::const_iterator it,
                    map<string, PeptideID::Record>::const_iterator)
@@ -265,9 +265,9 @@ double_multimap::const_iterator PeptideID_pepXml::record(double retention_time_s
     return pimpl->record(retention_time_sec);
 }
 
-PWIZ_API_DECL shared_ptr<PeptideID::iterator> PeptideID_pepXml::getIterator() const
+PWIZ_API_DECL shared_ptr<PeptideID::Iterator> PeptideID_pepXml::iterator() const
 {
-    return shared_ptr<PeptideID::iterator>(new local_iterator(pimpl->recordMap.begin(), pimpl->recordMap.end()));
+    return shared_ptr<PeptideID::Iterator>(new local_iterator(pimpl->recordMap.begin(), pimpl->recordMap.end()));
 }
 
 } // namespace peptideid
