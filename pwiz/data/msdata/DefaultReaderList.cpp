@@ -33,6 +33,7 @@
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "References.hpp"
+#include "pwiz_release_version.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
 #include "utility/misc/random_access_compressed_ifstream.hpp"
@@ -98,7 +99,7 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz";
     softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = "1.0"; // TODO: global version number
+    softwarePwiz->softwareParamVersion = pwiz_release_version();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

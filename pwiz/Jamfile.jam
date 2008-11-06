@@ -25,3 +25,5 @@ build-project utility ;
 build-project data ;
 build-project analysis ;
 
+lib pwiz_release_version : pwiz_release_version.cpp ;
+ 

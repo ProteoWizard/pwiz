@@ -24,8 +24,10 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo.hpp"
+#include "pwiz_release_version.hpp"
 #include "utility/misc/Filesystem.hpp"
 #include "utility/misc/String.hpp"
+
 
 namespace {
 // helper function used by both forms (real and stubbed) of Reader_Thermo
@@ -198,9 +200,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     SoftwarePtr softwarePwiz(new Software);
-    softwarePwiz->id = "pwiz_Reader_Thermo";
+    softwarePwiz->id = "pwiz";
     softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = "1.0"; 
+    softwarePwiz->softwareParamVersion = pwiz_release_version();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

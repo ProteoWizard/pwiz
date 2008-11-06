@@ -30,6 +30,7 @@
 #include "pwiz/analysis/passive/RegionTIC.hpp"
 #include "pwiz/analysis/passive/RegionSIC.hpp"
 #include "pwiz/analysis/passive/Pseudo2DGel.hpp"
+#include "pwiz/pwiz_release_version.hpp"
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
@@ -138,6 +139,7 @@ string usage(const MSDataAnalyzerApplication& app)
         << "http://proteowizard.sourceforge.net\n"
         << "support@proteowizard.org\n"
         << "\n"
+        << "ProteoWizard release: " << pwiz::pwiz_release_version() << endl
         << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return oss.str();
