@@ -21,6 +21,7 @@
 //
 
 
+#define PWIZ_SOURCE
 #include "pwiz_release_version.hpp"
 
 
@@ -30,7 +31,7 @@ const std::string pwiz_release_version_ = "1.3.1";
 
 
 namespace pwiz {
-const std::string& pwiz_release_version() {return pwiz_release_version_;}
+PWIZ_API_DECL const std::string& pwiz_release_version() {return pwiz_release_version_;}
 } // namespace pwiz
 
 

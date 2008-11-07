@@ -25,11 +25,12 @@
 #define _PWIZ_RELEASE_VERSION_HPP_
 
 
+#include "utility/misc/Export.hpp"
 #include <string>
 
 
 namespace pwiz {
-const std::string& pwiz_release_version();
+PWIZ_API_DECL const std::string& pwiz_release_version();
 } // namespace pwiz
 
 

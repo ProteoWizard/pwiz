@@ -25,5 +25,11 @@ build-project utility ;
 build-project data ;
 build-project analysis ;
 
+
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
 lib pwiz_release_version : pwiz_release_version.cpp ;
  
