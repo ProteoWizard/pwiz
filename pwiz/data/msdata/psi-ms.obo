@@ -4,13 +4,13 @@ saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 1.3.1
-remark: release date: 2008-08-13
+remark: version: 1.4.0
+remark: release date: 2008-11-10
 remark: coverage: Mass spectrometer output files
 remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-import: unit.obo
+import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 
 [Term]
 id: MS:0000000
@@ -3463,9 +3463,10 @@ is_a: MS:1000691 ! Applied Biosystems software
 
 [Term]
 id: MS:1000538
-name: Wolf
-def: "A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology." [PSI:MS]
+name: massWolf
+def: "A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology." [PSI:MS]
 is_a: MS:1000531 ! software
+synonym: "wolf" EXACT []
 
 [Term]
 id: MS:1000539
@@ -4716,6 +4717,11 @@ name: Bioworks SRF file
 def: "Thermo Finnigan SRF file format." [PSI:MS]
 is_a: MS:1000560 ! source file type
 
+[Term]
+id: MS:1000743
+name: TSQ Quantum Ultra AM
+def: "Thermo Scientific TSQ Quantum Ultra AM." [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
 
 
 [Typedef]

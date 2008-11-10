@@ -32,22 +32,22 @@
 #include "utility/misc/Export.hpp"
 
 
-// [pwiz/data/msdata/psi-ms.obo]
+// [msdata/psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.3.1
-//   remark: release date: 2008-08-13
+//   remark: version: 1.4.0
+//   remark: release date: 2008-11-10
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: unit.obo
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
-// [pwiz/data/msdata/unit.obo]
+// [msdata/unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -1906,8 +1906,11 @@ enum PWIZ_API_DECL CVID
     /// 4700 Explorer: Applied Biosystems software for data acquisition and analysis.
     MS_4700_Explorer = 1000537,
 
-    /// Wolf: A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology.
-    MS_Wolf = 1000538,
+    /// massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
+    MS_massWolf = 1000538,
+
+    /// massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
+    MS_wolf = MS_massWolf,
 
     /// Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.
     MS_Voyager_Biospectrometry_Workstation_System = 1000539,
@@ -2544,6 +2547,9 @@ enum PWIZ_API_DECL CVID
 
     /// Bioworks SRF file: Thermo Finnigan SRF file format.
     MS_Bioworks_SRF_file = 1000742,
+
+    /// TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.
+    MS_TSQ_Quantum_Ultra_AM = 1000743,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
