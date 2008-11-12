@@ -22,16 +22,16 @@
 //
 
 #include "MSDataFile.hpp"
-#include "utility/misc/Exception.hpp"
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/random_access_compressed_ifstream.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 //#include "boost/system/error_code.hpp"
 #include <WinError.h>
 
-#include "data/vendor_readers/ExtendedReaderList.hpp"
-#include "data/vendor_readers/Reader_Thermo.hpp"
-#include "isb/readers/waters/Reader_Waters.hpp"
-#include "msrc/data/vendor_readers/Reader_Bruker.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz/data/vendor_readers/Reader_Thermo.hpp"
+#include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
 
 namespace b = pwiz::msdata;
 

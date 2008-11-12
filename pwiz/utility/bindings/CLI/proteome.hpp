@@ -5,8 +5,8 @@
 #pragma warning( push )
 #pragma warning( disable : 4635 )
 #include "SharedCLI.hpp"
-#include "utility/proteome/Chemistry.hpp"
-#include "utility/proteome/Peptide.hpp"
+#include "pwiz/utility/proteome/Chemistry.hpp"
+#include "pwiz/utility/proteome/Peptide.hpp"
 #pragma warning( pop )
 
 

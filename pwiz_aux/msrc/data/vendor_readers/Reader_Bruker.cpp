@@ -82,8 +82,8 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 
 
 #ifndef PWIZ_NO_READER_BRUKER
-#include "utility/misc/SHA1Calculator.hpp"
-#include "utility/misc/COMInitializer.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
 #include <boost/foreach.hpp>
 //#include "Reader_Bruker_Detail.hpp"

@@ -6,11 +6,11 @@
 #pragma warning( disable : 4635 )
 //#include "SpectrumListWrapper.hpp"
 #include "SharedCLI.hpp"
-#include "analysis/spectrum_processing/SpectrumList_Filter.hpp"
-#include "analysis/spectrum_processing/SpectrumList_Sorter.hpp"
-#include "analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
-#include "analysis/spectrum_processing/SpectrumList_SavitzkyGolaySmoother.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_SavitzkyGolaySmoother.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
 #pragma warning( pop )

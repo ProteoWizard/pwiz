@@ -25,8 +25,8 @@
 #define _CHROMATOGRAMLIST_SAVITZKYGOLAYSMOOTHER_HPP_CLI_
 
 
-#include "analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 
 namespace pwiz {
 namespace CLI {

@@ -1,5 +1,5 @@
 //
-// pwiz_release_version.hpp
+// Version.hpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,8 +21,8 @@
 //
 
 
-#ifndef _PWIZ_RELEASE_VERSION_HPP_
-#define _PWIZ_RELEASE_VERSION_HPP_
+#ifndef _PWIZ_VERSION_HPP_
+#define _PWIZ_VERSION_HPP_
 
 
 #include "utility/misc/Export.hpp"
@@ -30,8 +30,17 @@
 
 
 namespace pwiz {
-PWIZ_API_DECL const std::string& pwiz_release_version();
+
+struct PWIZ_API_DECL Version
+{
+    static int Major();
+    static int Minor();
+    static int Revision();
+    static std::string str();
+    static std::string LastModified();
+};
+
 } // namespace pwiz
 
 
-#endif // _PWIZ_RELEASE_VERSION_HPP_
+#endif // _PWIZ_VERSION_HPP_

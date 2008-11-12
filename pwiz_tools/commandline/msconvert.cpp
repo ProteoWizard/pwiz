@@ -31,7 +31,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
-#include "pwiz/pwiz_release_version.hpp"
+#include "pwiz/Version.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -239,7 +239,7 @@ Config parseCommandLine(int argc, const char* argv[])
           << "http://proteowizard.sourceforge.net\n"
           << "support@proteowizard.org\n"
           << "\n"
-          << "ProteoWizard release: " << pwiz::pwiz_release_version() << endl
+          << "ProteoWizard release: " << pwiz::Version::str() << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if (config.filenames.empty())

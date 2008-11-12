@@ -23,7 +23,7 @@
 
 #include "MSData.hpp"
 //#include "../../../data/msdata/MSData.hpp"
-#include "utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 using System::Exception;
 using System::String;
 

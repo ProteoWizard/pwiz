@@ -28,8 +28,8 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
 
 
 #ifndef PWIZ_NO_READER_WATERS
-#include "utility/misc/SHA1Calculator.hpp"
-#include "utility/misc/COMInitializer.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
 //#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/foreach.hpp>

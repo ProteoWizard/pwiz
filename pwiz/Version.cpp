@@ -1,5 +1,5 @@
 //
-// pwiz_release_version.cpp
+// Version.cpp
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -22,16 +22,22 @@
 
 
 #define PWIZ_SOURCE
-#include "pwiz_release_version.hpp"
-
-
-namespace {
-const std::string pwiz_release_version_ = "1.3.1";
-} // namespace
+#include "pwiz/Version.hpp"
 
 
 namespace pwiz {
-PWIZ_API_DECL const std::string& pwiz_release_version() {return pwiz_release_version_;}
+
+
+using std::string;
+
+
+int Version::Major()                {return 1;}
+int Version::Minor()                {return 4;}
+int Version::Revision()             {return 0;}
+string Version::str()               {return "1.4.0";}
+string Version::LastModified()      {return "11/12/2008";}
+
+
 } // namespace pwiz
 
 

@@ -77,7 +77,7 @@ lib pwiz_data_msdata
         Reader.cpp
         References.cpp
     : # requirements
-        <library>../..//pwiz_release_version
+        <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
@@ -86,7 +86,7 @@ lib pwiz_data_msdata
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
-        <library>../..//pwiz_release_version
+        <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on

@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo.hpp"
-#include "pwiz/pwiz_release_version.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
@@ -202,7 +202,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz";
     softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = pwiz_release_version();
+    softwarePwiz->softwareParamVersion = pwiz::msdata::Version::str();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);
