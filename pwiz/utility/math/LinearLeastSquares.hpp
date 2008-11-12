@@ -23,7 +23,7 @@
 #define _LINEARLEASTSQUARES_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <iostream>
 #include "LinearSolver.hpp"
 #include "Types.hpp"

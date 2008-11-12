@@ -22,7 +22,7 @@
 
 
 #include "LinearSolver.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/banded.hpp>
 #include <iostream>

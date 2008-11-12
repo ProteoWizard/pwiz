@@ -25,9 +25,9 @@
 #define _TRUNCATEDLORENTZIANESTIMATOR_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "TruncatedLorentzianParameters.hpp"
-#include "data/misc/FrequencyData.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
 #include <memory>
 #include <iosfwd>
 

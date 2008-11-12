@@ -26,7 +26,7 @@
 #include "TransientData.hpp"
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "scoped_array.hpp"
-#include "utility/misc/endian.hpp"
+#include "pwiz/utility/misc/endian.hpp"
 #include "fftw3.h"
 #include <iostream>
 #include <iomanip>

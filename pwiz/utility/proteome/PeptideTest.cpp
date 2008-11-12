@@ -23,11 +23,11 @@
 
 #include "Peptide.hpp"
 #include "IsotopeCalculator.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 

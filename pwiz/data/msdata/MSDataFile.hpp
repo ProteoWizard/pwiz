@@ -25,11 +25,11 @@
 #define _MSDATAFILE_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "Reader.hpp"
 #include "BinaryDataEncoder.hpp"
-#include "utility/misc/IterationListener.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 
 
 namespace pwiz {

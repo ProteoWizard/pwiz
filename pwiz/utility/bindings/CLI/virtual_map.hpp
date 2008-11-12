@@ -1,4 +1,4 @@
-#include "utility/misc/virtual_map.hpp"
+#include "pwiz/utility/misc/virtual_map.hpp"
 
 #define DEFINE_VIRTUAL_MAP_WRAPPER(WrapperName, NativeKeyType, CLIKeyType, CLIKeyHandle, NativeKeyToCLI, CLIKeyToNative, NativeValueType, CLIValueType, CLIValueHandle, NativeValueToCLI, CLIValueToNative) \
 public ref class WrapperName : public System::Collections::Generic::IDictionary<CLIKeyHandle, CLIValueHandle> \

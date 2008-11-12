@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "RegionAnalyzer.hpp"
-#include "utility/math/Parabola.hpp"
+#include "pwiz/utility/math/Parabola.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

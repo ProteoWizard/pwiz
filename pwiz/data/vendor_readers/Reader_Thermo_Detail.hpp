@@ -1,9 +1,9 @@
 #ifndef _READER_THERMO_DETAIL_HPP_ 
 #define _READER_THERMO_DETAIL_HPP_ 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/MSData.hpp"
-#include "utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <vector>
 
 using namespace pwiz::raw;

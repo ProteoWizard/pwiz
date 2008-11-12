@@ -25,7 +25,7 @@
 #define _DIFF_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "TextWriter.hpp"
 

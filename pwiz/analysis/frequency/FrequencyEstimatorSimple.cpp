@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "FrequencyEstimatorSimple.hpp"
-#include "utility/math/Parabola.hpp"
+#include "pwiz/utility/math/Parabola.hpp"
 #include "MagnitudeLorentzian.hpp"
 #include <iostream>
 #include <stdexcept>

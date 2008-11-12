@@ -23,8 +23,8 @@
 
 #include "SpectrumIterator.hpp"
 #include "MSData.hpp"
-#include "utility/misc/IntegerSet.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
 #include <algorithm>

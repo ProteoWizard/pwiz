@@ -24,8 +24,8 @@
 #include "SpectrumList_mzML.hpp"
 #include "Serializer_mzML.hpp" // depends on Serializer_mzML::write() only
 #include "examples.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 
 

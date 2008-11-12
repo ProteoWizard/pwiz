@@ -22,8 +22,8 @@
 
 
 #include "SpectrumList_Filter.hpp"
-#include "utility/misc/unit.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
 

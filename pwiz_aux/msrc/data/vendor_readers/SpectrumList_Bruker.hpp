@@ -21,9 +21,9 @@
 //
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/MSData.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #import "CompassXtractMS.dll"
 #include <map>
 

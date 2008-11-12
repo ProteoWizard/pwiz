@@ -25,10 +25,10 @@
 
 #include "SpectrumList_MGF.hpp"
 #include "References.hpp"
-#include "utility/misc/String.hpp"
-#include "utility/misc/Stream.hpp"
-#include "utility/misc/Container.hpp"
-#include "utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 
 namespace pwiz {
 namespace msdata {

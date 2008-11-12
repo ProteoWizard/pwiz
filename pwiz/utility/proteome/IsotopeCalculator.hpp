@@ -25,7 +25,7 @@
 #define _ISOTOPECALCULATOR_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include <memory>
 

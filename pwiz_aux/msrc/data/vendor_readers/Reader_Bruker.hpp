@@ -25,8 +25,8 @@
 #define _READER_BRUKER_HPP_ 
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/Reader.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include <memory>
 
 

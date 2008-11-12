@@ -28,9 +28,9 @@
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "DefaultReaderList.hpp"
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/random_access_compressed_ifstream.hpp"
-#include "utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include <fstream>
 #include <stdexcept>
 

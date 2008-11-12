@@ -21,13 +21,13 @@
 
 
 #include "SpectrumList_Thresholder.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <vector>
 #include <iostream>
 #include <iterator>
-#include "data/msdata/examples.hpp"
-#include "data/msdata/TextWriter.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/data/msdata/examples.hpp"
+#include "pwiz/data/msdata/TextWriter.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 
 using namespace std;

@@ -23,7 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "SAXParser.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <stack>

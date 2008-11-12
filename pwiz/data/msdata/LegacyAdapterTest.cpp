@@ -24,7 +24,7 @@
 #include "LegacyAdapter.hpp"
 #include "CVTranslator.hpp"
 #include "TextWriter.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/lambda/bind.hpp"
 #include <iostream>

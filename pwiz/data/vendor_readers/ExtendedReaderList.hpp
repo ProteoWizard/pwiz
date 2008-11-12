@@ -25,8 +25,8 @@
 #define _EXTENDEDREADERLIST_HPP_
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/DefaultReaderList.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/DefaultReaderList.hpp"
 
 
 namespace pwiz {

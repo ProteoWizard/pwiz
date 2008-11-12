@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "MagnitudeLorentzian.hpp"
-#include "utility/math/Parabola.hpp"
+#include "pwiz/utility/math/Parabola.hpp"
 #include <cmath>
 #include <algorithm>
 #include <iostream>

@@ -22,9 +22,9 @@
 
 
 #include "PrecursorRecalculatorDefault.hpp"
-#include "data/msdata/BinaryDataEncoder.hpp"
-#include "analysis/peakdetect/PeakFamilyDetectorFT.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/data/msdata/BinaryDataEncoder.hpp"
+#include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

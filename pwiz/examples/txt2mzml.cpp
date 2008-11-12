@@ -22,7 +22,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include <iostream>

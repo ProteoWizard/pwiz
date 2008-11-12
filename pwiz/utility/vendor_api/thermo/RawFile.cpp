@@ -37,7 +37,7 @@
 #include "boost/shared_ptr.hpp"
 #include <vector>
 #include <algorithm>
-#include "utility/misc/COMInitializer.hpp"
+#include "pwiz/utility/misc/COMInitializer.hpp"
 
 
 using namespace pwiz::raw;

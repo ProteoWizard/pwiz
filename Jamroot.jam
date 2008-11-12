@@ -27,8 +27,7 @@ path-constant PWIZ_ROOT_PATH : . ;
 
 project pwiz 
     : requirements 
-        <include>$(PWIZ_ROOT_PATH)/pwiz
-        <include>$(PWIZ_ROOT_PATH)/pwiz_aux
+        <include>$(PWIZ_ROOT_PATH)
         <include>$(PWIZ_ROOT_PATH)/libraries/boost_1_36_0
         <include>$(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3
 

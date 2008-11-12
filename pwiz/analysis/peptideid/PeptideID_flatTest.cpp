@@ -27,8 +27,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "PeptideID_flat.hpp"
-#include "utility/minimxml/SAXParser.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 
 using namespace std;
 using namespace boost;

@@ -2,8 +2,8 @@
 #define _READER_WATERS_HPP_ 
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/Reader.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 // DAC usage is msvc only - mingw doesn't provide com support

@@ -27,8 +27,8 @@
 #include "Digestion.hpp"
 #include "Peptide.hpp"
 #include "AminoAcid.hpp"
-#include "utility/misc/CharIndexedVector.hpp"
-#include "utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/CharIndexedVector.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 
 namespace pwiz {
 namespace proteome {

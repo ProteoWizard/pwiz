@@ -22,8 +22,8 @@
 
 
 #include "SpectrumList_PrecursorRecalculator.hpp"
-#include "data/msdata/MSDataFile.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
 #include <iostream>
 

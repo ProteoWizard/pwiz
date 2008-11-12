@@ -28,8 +28,8 @@
 #include "SpectrumList_mzML.hpp"
 #include "ChromatogramList_mzML.hpp"
 #include "SHA1OutputObserver.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
-#include "utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 #include <stdexcept>
 #include <iostream>
 

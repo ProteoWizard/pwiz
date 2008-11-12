@@ -25,8 +25,8 @@
 #include <string>
 
 #include "PeptideID_pepXML.hpp"
-#include "utility/minimxml/SAXParser.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 
 using namespace std;
 using namespace pwiz::util;

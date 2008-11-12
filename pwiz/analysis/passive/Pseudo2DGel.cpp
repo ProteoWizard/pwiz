@@ -24,9 +24,9 @@
 #define PWIZ_SOURCE
 
 #include "Pseudo2DGel.hpp"
-#include "utility/misc/Image.hpp"
-#include "analysis/peptideid/PeptideID_pepXML.hpp"
-#include "analysis/peptideid/PeptideID_flat.hpp"
+#include "pwiz/utility/misc/Image.hpp"
+#include "pwiz/analysis/peptideid/PeptideID_pepXML.hpp"
+#include "pwiz/analysis/peptideid/PeptideID_flat.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

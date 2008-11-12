@@ -46,7 +46,7 @@ Version 1.0  29 May 2005  Mark Adler */
 #include <sys/stat.h>
 #include <fstream>
 #include "boost/iostreams/positioning.hpp"
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 
 
 namespace pwiz {

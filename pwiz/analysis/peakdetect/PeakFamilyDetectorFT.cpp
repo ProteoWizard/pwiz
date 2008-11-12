@@ -24,9 +24,9 @@
 #define PWIZ_SOURCE
 
 #include "PeakFamilyDetectorFT.hpp"
-#include "analysis/frequency/PeakDetectorMatchedFilter.hpp"
-#include "data/misc/FrequencyData.hpp"
-#include "utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/analysis/frequency/PeakDetectorMatchedFilter.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
+#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
 #include <fstream>
 
 

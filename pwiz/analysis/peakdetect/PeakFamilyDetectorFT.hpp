@@ -25,9 +25,9 @@
 #define _PEAKFAMILYDETECTORFT_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "PeakFamilyDetector.hpp"
-#include "data/misc/PeakData.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
 
 
 namespace pwiz {

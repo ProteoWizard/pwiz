@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "MSDataCache.hpp"
-#include "data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include <stdexcept>
 #include <list>
 #include <iostream>

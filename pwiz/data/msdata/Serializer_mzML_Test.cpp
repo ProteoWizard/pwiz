@@ -24,7 +24,7 @@
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
 #include "examples.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iostream>
 #include <fstream>

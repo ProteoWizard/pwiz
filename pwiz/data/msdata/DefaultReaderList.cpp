@@ -23,9 +23,9 @@
 
 #define PWIZ_SOURCE
 
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/String.hpp"
-#include "utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include "DefaultReaderList.hpp"
 #include "SpectrumList_mzXML.hpp"
 #include "SpectrumList_MGF.hpp"
@@ -33,10 +33,10 @@
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "References.hpp"
-#include "pwiz_release_version.hpp"
+#include "pwiz/pwiz_release_version.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
-#include "utility/misc/random_access_compressed_ifstream.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 
 namespace pwiz {
 namespace msdata {

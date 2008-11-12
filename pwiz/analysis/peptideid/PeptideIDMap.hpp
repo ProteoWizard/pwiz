@@ -25,7 +25,7 @@
 #define _PEPTIDEIDMAP_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "PeptideID.hpp"
 #include <map>
 

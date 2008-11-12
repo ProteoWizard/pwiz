@@ -1,7 +1,7 @@
-#include "utility/misc/Export.hpp"
-#include "data/msdata/MSData.hpp"
-#include "utility/vendor_api/thermo/RawFile.h"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 
 using namespace std;
 using boost::shared_ptr;

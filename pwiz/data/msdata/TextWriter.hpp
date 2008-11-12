@@ -25,7 +25,7 @@
 #define _TEXTWRITER_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>

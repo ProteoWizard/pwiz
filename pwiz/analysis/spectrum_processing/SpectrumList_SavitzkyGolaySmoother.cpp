@@ -25,7 +25,7 @@
 
 #include "SpectrumList_SavitzkyGolaySmoother.hpp"
 #include "SavitzkyGolaySmoother.hpp"
-#include "utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
 
 namespace pwiz {

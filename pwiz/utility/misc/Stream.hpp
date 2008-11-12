@@ -25,7 +25,7 @@
 #include <fstream>
 #include <sstream>
 #include <boost/iostreams/operations.hpp>
-#include <utility/misc/optimized_lexical_cast.hpp>
+#include <pwiz/utility/misc/optimized_lexical_cast.hpp>
 
 using std::iostream;
 using std::istream;

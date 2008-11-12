@@ -29,7 +29,7 @@
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
-#include "utility/misc/CharIndexedVector.hpp"
+#include "pwiz/utility/misc/CharIndexedVector.hpp"
 #include "boost/utility/singleton.hpp"
 
 

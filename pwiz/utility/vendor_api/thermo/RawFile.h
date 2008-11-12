@@ -42,7 +42,7 @@
 #include <memory>
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
-#include "data/msdata/Reader.hpp" // for ReaderFail exception defn
+#include "pwiz/data/msdata/Reader.hpp" // for ReaderFail exception defn
 #include "boost/utility/thread_specific_singleton.hpp"
 
 

@@ -22,8 +22,8 @@
 
 
 #include "SpectrumInfo.hpp"
-#include "data/msdata/examples.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/data/msdata/examples.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 
 

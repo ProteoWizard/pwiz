@@ -24,7 +24,7 @@
 #include "RAMPAdapter.hpp"
 #include "MSDataFile.hpp"
 #include "examples.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iterator>

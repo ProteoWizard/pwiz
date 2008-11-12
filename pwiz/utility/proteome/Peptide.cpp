@@ -28,7 +28,7 @@
 #include "AminoAcid.hpp"
 #include <iostream>
 #include <climits>
-#include "utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include "boost/utility/singleton.hpp"
 
 

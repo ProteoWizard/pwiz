@@ -25,11 +25,11 @@
 #define _IO_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "BinaryDataEncoder.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
-#include "utility/misc/IterationListener.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include "boost/iostreams/positioning.hpp"
 
 

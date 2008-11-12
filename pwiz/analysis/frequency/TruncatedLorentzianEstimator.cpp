@@ -25,7 +25,7 @@
 
 #include "TruncatedLorentzianEstimator.hpp"
 #include "ParameterEstimator.hpp"
-#include "utility/math/Parabola.hpp"
+#include "pwiz/utility/math/Parabola.hpp"
 #include <fstream>
 
 

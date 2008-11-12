@@ -23,8 +23,8 @@
 
 #include "SpectrumList_MGF.hpp"
 #include "TextWriter.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iterator>
 

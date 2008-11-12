@@ -25,8 +25,8 @@
 #define _PARAMETRIZEDFUNCTION_HPP_
 
 
-#include "utility/misc/Export.hpp"
-#include "data/misc/SampleDatum.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/misc/SampleDatum.hpp"
 
 
 #include "boost/numeric/ublas/vector.hpp"

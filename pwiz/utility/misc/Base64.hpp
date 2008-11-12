@@ -24,7 +24,7 @@
 #ifndef _BASE64_HPP_
 #define _BASE64_HPP_
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <cstddef> // for size_t
 
 

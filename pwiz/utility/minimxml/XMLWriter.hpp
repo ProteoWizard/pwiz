@@ -24,7 +24,8 @@
 #ifndef _XMLWRITER_HPP_
 #define _XMLWRITER_HPP_
 
-#include "utility/misc/Export.hpp"
+
+#include "pwiz/utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iosfwd>

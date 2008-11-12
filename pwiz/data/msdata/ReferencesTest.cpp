@@ -22,9 +22,9 @@
 
 
 #include "References.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
-#include "utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
 
 
 using namespace std;

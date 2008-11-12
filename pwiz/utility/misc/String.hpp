@@ -28,7 +28,7 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include "utility/misc/optimized_lexical_cast.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 using std::string;
 using std::getline;

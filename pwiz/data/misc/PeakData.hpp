@@ -25,8 +25,8 @@
 #define _PEAKDATA_HPP_
 
 
-#include "utility/misc/Export.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <string>

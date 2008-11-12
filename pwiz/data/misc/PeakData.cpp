@@ -25,7 +25,7 @@
 
 
 #include "PeakData.hpp"
-#include "utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
 #include <complex>
 #include <iterator>

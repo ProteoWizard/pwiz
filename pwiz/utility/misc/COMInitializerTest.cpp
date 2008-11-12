@@ -21,8 +21,8 @@
 
 
 #include "COMInitializer.hpp"
-#include "utility/misc/unit.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <iostream>
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"

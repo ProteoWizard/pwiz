@@ -24,8 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "MSDataAnalyzerApplication.hpp"
-#include "data/vendor_readers/ExtendedReaderList.hpp"
-#include "data/msdata/MSDataFile.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"

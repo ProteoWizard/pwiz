@@ -26,12 +26,12 @@
 #define _MODIFICATION_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "Chemistry.hpp"
 #include "Peptide.hpp"
 #include <string>
 #include <memory>
-#include "utility/misc/virtual_map.hpp"
+#include "pwiz/utility/misc/virtual_map.hpp"
 
 namespace pwiz {
 namespace proteome {

@@ -24,8 +24,8 @@
 #ifndef _MSDATA_HPP_
 #define _MSDATA_HPP_
 
-#include "utility/misc/Export.hpp"
 
+#include "pwiz/utility/misc/Export.hpp"
 #include "CVParam.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"

@@ -25,12 +25,12 @@
 #define _CHEMISTRY_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <iosfwd>
 #include <string>
 #include <memory>
 #include <vector>
-#include "utility/misc/virtual_map.hpp"
+#include "pwiz/utility/misc/virtual_map.hpp"
 
 
 namespace pwiz {

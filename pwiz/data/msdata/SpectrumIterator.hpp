@@ -25,9 +25,9 @@
 #define _SPECTRUMITERATOR_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 
 
 namespace pwiz {

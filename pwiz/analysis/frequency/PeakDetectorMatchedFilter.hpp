@@ -25,9 +25,9 @@
 #define _PEAKDETECTORMATCHEDFILTER_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "PeakDetector.hpp"
-#include "utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
 #include <memory>
 #include <complex>
 

@@ -19,7 +19,7 @@
 
 #include "RawFile.h"
 #include "ScanFilter.h"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <vector>
 

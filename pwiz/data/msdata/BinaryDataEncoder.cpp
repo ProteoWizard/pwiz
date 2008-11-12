@@ -24,8 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "BinaryDataEncoder.hpp"
-#include "utility/misc/Base64.hpp"
-#include "utility/misc/endian.hpp"
+#include "pwiz/utility/misc/Base64.hpp"
+#include "pwiz/utility/misc/endian.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/iostreams/filtering_streambuf.hpp"
 #include "boost/iostreams/filtering_stream.hpp"

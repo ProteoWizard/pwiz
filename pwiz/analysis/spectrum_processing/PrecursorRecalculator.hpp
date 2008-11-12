@@ -25,7 +25,7 @@
 #define _PRECURSORRECALCULATOR_HPP_ 
 
 
-#include "data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 
 
 namespace pwiz {

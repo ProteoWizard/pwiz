@@ -25,8 +25,8 @@
 #define _MSDATACACHE_HPP_
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/SpectrumInfo.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "MSDataAnalyzer.hpp"
 
 

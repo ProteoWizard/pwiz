@@ -2,9 +2,9 @@
 #define _CHROMATOGRAMLIST_THERMO_
 
 
-#include "utility/misc/Export.hpp"
-#include "data/msdata/MSData.hpp"
-#include "utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <map>
 #include <vector>
 

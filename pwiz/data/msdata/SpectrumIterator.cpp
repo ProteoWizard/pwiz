@@ -25,7 +25,7 @@
 
 #include "SpectrumIterator.hpp"
 #include "MSData.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <iostream>
 #include <stdexcept>
 

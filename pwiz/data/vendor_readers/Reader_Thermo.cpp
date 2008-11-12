@@ -24,9 +24,9 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo.hpp"
-#include "pwiz_release_version.hpp"
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/pwiz_release_version.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 
 namespace {
@@ -54,9 +54,9 @@ bool _hasRAWHeader(const std::string& head)
 #endif
 
 #ifndef PWIZ_NO_READER_THERMO
-#include "data/msdata/CVTranslator.hpp"
-#include "utility/vendor_api/thermo/RawFile.h"
-#include "utility/misc/SHA1Calculator.hpp"
+#include "pwiz/data/msdata/CVTranslator.hpp"
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string.hpp"

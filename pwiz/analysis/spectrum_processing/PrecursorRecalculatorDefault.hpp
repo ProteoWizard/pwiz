@@ -26,7 +26,7 @@
 
 
 #include "PrecursorRecalculator.hpp"
-#include "analysis/peakdetect/PeakFamilyDetector.hpp"
+#include "pwiz/analysis/peakdetect/PeakFamilyDetector.hpp"
 
 
 namespace pwiz {

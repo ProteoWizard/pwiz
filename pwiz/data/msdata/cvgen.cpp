@@ -136,7 +136,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "#define " << includeGuard << "\n\n\n"
        << "#include <string>\n"
        << "#include <vector>\n"
-       << "#include \"utility/misc/Export.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Export.hpp\"\n"
        << "\n\n";
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)

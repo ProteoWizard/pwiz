@@ -1,12 +1,12 @@
 #define PWIZ_SOURCE
 
 #ifndef PWIZ_NO_READER_THERMO
-#include "data/msdata/CVTranslator.hpp"
-#include "utility/vendor_api/thermo/RawFile.h"
-#include "utility/misc/SHA1Calculator.hpp"
+#include "pwiz/data/msdata/CVTranslator.hpp"
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
-#include "utility/misc/String.hpp"
-#include "utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
 

@@ -23,7 +23,7 @@
 #ifndef _PEPTIDEID_PEPXML_HPP_
 #define _PEPTIDEID_PEPXML_HPP_
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <map>
 #include <boost/shared_ptr.hpp>
 

@@ -1,10 +1,10 @@
 #define PWIZ_SOURCE
 
-#include "utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "Reader_Waters_Detail.hpp"
 #include "SpectrumList_Waters.hpp"
 #include <iostream>

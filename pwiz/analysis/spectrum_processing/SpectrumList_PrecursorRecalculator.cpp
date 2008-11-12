@@ -25,8 +25,8 @@
 
 #include "SpectrumList_PrecursorRecalculator.hpp"
 #include "PrecursorRecalculatorDefault.hpp"
-#include "analysis/peakdetect/PeakFamilyDetectorFT.hpp"
-#include "analysis/passive/MSDataCache.hpp"
+#include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
+#include "pwiz/analysis/passive/MSDataCache.hpp"
 #include <stdexcept>
 #include <iostream>
 

@@ -22,9 +22,9 @@
 
 
 #include "PeakDetectorNaive.hpp"
-#include "data/misc/FrequencyData.hpp"
-#include "data/misc/PeakData.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iterator>
 

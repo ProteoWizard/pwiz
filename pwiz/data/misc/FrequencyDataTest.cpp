@@ -23,9 +23,9 @@
 
 #include "FrequencyData.hpp"
 #include "FrequencyDataTestData.hpp"
-#include "data/misc/CalibrationParameters.hpp"
-#include "utility/misc/unit.hpp"
-#include "utility/misc/Filesystem.hpp"
+#include "pwiz/data/misc/CalibrationParameters.hpp"
+#include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iomanip>

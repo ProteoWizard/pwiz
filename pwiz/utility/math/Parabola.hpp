@@ -25,7 +25,7 @@
 #define _PARABOLA_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <vector>
 #include <iosfwd>
 

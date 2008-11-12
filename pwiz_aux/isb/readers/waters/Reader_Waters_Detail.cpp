@@ -1,8 +1,8 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Waters_Detail.hpp"
-#include "utility/misc/Container.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {

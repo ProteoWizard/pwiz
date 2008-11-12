@@ -1,7 +1,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo_Detail.hpp"
-#include "utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
 namespace pwiz {
 namespace msdata {

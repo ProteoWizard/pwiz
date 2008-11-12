@@ -22,7 +22,7 @@
 
 
 #include "BinaryDataEncoder.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem.hpp"
 #include <iostream>
 #include <iomanip>

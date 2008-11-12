@@ -22,8 +22,8 @@
 
 
 #include "MSDataAnalyzerApplication.hpp"
-#include "data/msdata/MSDataFile.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iterator>

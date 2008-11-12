@@ -27,7 +27,7 @@
 #include "Modification.hpp"
 #include "Peptide.hpp"
 #include <climits>
-#include "utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 
 namespace pwiz {
 namespace proteome {

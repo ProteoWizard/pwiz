@@ -27,7 +27,7 @@
 #include "SpectrumList_NativeCentroider.hpp"
 
 #ifndef PWIZ_NO_READER_THERMO
-#include "data/vendor_readers/SpectrumList_Thermo.hpp"
+#include "pwiz/data/vendor_readers/SpectrumList_Thermo.hpp"
 #endif
 
 #ifndef PWIZ_NO_READER_BRUKER

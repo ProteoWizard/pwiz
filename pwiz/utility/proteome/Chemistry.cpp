@@ -32,7 +32,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "boost/utility/singleton.hpp"
 
 

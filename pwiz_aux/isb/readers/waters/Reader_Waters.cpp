@@ -1,8 +1,8 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Waters.hpp"
-#include "utility/misc/Filesystem.hpp"
-#include "utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 
 // A Waters RAW source (representing a "run") is actually a directory

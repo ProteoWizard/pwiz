@@ -25,7 +25,7 @@
 
 #include "FrequencyEstimatorPhysicalModel.hpp"
 #include "TruncatedLorentzianEstimator.hpp"
-#include "data/misc/PeakData.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>

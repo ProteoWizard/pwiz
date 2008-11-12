@@ -25,7 +25,7 @@
 #define _TRUNCATEDLORENTZIAN_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "ParametrizedFunction.hpp"
 #include <complex>
 #include <memory>

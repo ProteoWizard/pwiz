@@ -25,13 +25,13 @@
 #define _PSEUDO2DGEL_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include <boost/shared_ptr.hpp>
 
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
-#include "analysis/peptideid/PeptideID.hpp"
+#include "pwiz/analysis/peptideid/PeptideID.hpp"
 
 
 namespace pwiz {

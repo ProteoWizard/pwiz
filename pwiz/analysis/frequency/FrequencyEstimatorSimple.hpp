@@ -25,7 +25,7 @@
 #define _FREQUENCYESTIMATORSIMPLE_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "FrequencyEstimator.hpp" 
 #include <memory>
 

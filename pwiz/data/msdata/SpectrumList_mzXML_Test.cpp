@@ -25,8 +25,8 @@
 #include "Serializer_mzXML.hpp" // depends on Serializer_mzXML::write() only
 #include "TextWriter.hpp"
 #include "examples.hpp"
-#include "utility/minimxml/XMLWriter.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iterator>
 

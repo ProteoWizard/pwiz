@@ -29,7 +29,7 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "PeptideID.hpp"
 
 namespace pwiz {

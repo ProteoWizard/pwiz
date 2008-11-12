@@ -25,7 +25,7 @@
 #include "pwiz/analysis/passive/MSDataAnalyzerApplication.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/analysis/passive/MetadataReporter.hpp"
-#include "data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/passive/Pseudo2DGel.hpp"
 #include "pwiz/analysis/peptideid/PeptideID_pepXML.hpp"

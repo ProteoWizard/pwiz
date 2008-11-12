@@ -25,8 +25,8 @@
 #define _CHROMATOGRAMLIST_SAVITZKYGOLAYSMOOTHER_HPP_ 
 
 
-#include "utility/misc/Export.hpp"
-#include "utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "ChromatogramListWrapper.hpp"
 
 

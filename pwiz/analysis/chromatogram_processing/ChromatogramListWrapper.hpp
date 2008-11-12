@@ -26,7 +26,7 @@
 #define _CHROMATOGRAMLISTWRAPPER_HPP_ 
 
 
-#include "data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 #include <stdexcept>
 
 

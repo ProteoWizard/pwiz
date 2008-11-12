@@ -25,9 +25,9 @@
 #define _DERIVATIVETEST_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "ParametrizedFunction.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iomanip>
 #include <exception>
 #include <stdexcept>

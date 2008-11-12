@@ -29,7 +29,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "PeptideID_pepXML.hpp"
-#include "utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 
 
 namespace {

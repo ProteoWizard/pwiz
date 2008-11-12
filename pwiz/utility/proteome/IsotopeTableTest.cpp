@@ -22,7 +22,7 @@
 
 
 #include "IsotopeTable.hpp"
-#include "utility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>

@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumTable.hpp"
-#include "data/msdata/TextWriter.hpp"
+#include "pwiz/data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include <iostream>

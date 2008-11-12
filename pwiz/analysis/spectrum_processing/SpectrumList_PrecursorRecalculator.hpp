@@ -25,7 +25,7 @@
 #define _SPECTRUMLIST_PRECURSORRECALCULATOR_HPP_
 
 
-#include "utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "SpectrumListWrapper.hpp"
 
 
