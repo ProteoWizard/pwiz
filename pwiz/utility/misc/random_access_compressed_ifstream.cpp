@@ -145,11 +145,23 @@ private:
 
 #define gzio_raw_readerror(s) (s->infile->bad())
 
+// default ctor
+PWIZ_API_DECL
+random_access_compressed_ifstream::random_access_compressed_ifstream() :
+std::istream(new std::filebuf()) {
+	compressionType = NONE;
+}
+
 // constructor
 PWIZ_API_DECL
 random_access_compressed_ifstream::random_access_compressed_ifstream(const char *path) :
 std::istream(new std::filebuf()) 
 {
+	open(path);
+}
+
+PWIZ_API_DECL
+void random_access_compressed_ifstream::open(const char *path) {
 	std::filebuf *fb = (std::filebuf *)rdbuf();
 	fb->open(path,std::ios::binary|std::ios::in);
 	bool gzipped = false;
@@ -181,10 +193,16 @@ bool random_access_compressed_ifstream::is_open() const { // for ease of use as 
 
 PWIZ_API_DECL
 void random_access_compressed_ifstream::close() {
-	if (NONE == compressionType) {
-		((std::filebuf *)rdbuf())->close();
-	} else {
-		((random_access_compressed_streambuf *)rdbuf())->close();
+	if (rdbuf()) {
+		if (NONE == compressionType) {
+			((std::filebuf *)rdbuf())->close();
+		} else {
+			((random_access_compressed_streambuf *)rdbuf())->close();
+			// in case object gets reused
+			delete rdbuf();
+			rdbuf(new std::filebuf()); 
+			compressionType = NONE;
+		}
 	}
 }
 
@@ -574,7 +592,7 @@ std::streampos random_access_compressed_streambuf::seekoff(std::streamoff offset
 }
 
 std::streampos random_access_compressed_streambuf::my_seekg(std::streampos offset, std::ios_base::seekdir whence,std::ios_base::openmode Mode) {
-	if (!this->infile->is_open() || (!(Mode & std::ios_base::in)) ||
+	if (!this->infile || !this->infile->is_open() || (!(Mode & std::ios_base::in)) ||
 		this->z_err == Z_ERRNO || this->z_err == Z_DATA_ERROR) {
 			return -1;
 	 }

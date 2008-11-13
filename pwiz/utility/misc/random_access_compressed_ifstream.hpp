@@ -57,8 +57,10 @@ typedef boost::iostreams::stream_offset random_access_compressed_ifstream_off_t;
 
 class PWIZ_API_DECL random_access_compressed_ifstream : public std::istream {
 public:
+	random_access_compressed_ifstream(); // default ctor
 	random_access_compressed_ifstream(const char *fname); // optional arg to learn compression state
 	virtual ~random_access_compressed_ifstream(); // destructor
+	void open(const char *fname); // for ease of use as ifstream replacement
 	bool is_open() const; // for ease of use as ifstream replacement
 	void close(); // for ease of use as ifstream replacement
 	enum eCompressionType {NONE, GZIP}; // maybe add bz2 etc later?
