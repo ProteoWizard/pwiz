@@ -39,13 +39,13 @@
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.3.1
-//   remark: release date: 2008-08-13
+//   remark: version: 1.6.0
+//   remark: release date: 2008-13-13
 //   remark: coverage: Mass spectrometer output files
-//   remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
+//   remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: unit.obo
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
 // [pwiz\utility\bindings\CLI\..\..\..\data\msdata\unit.obo]
 //   format-version: 1.0
@@ -1907,8 +1907,11 @@ public enum class CVID
     /// <summary>4700 Explorer: Applied Biosystems software for data acquisition and analysis.</summary>
     MS_4700_Explorer = 1000537,
 
-    /// <summary>Wolf: A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology.</summary>
-    MS_Wolf = 1000538,
+    /// <summary>massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.</summary>
+    MS_massWolf = 1000538,
+
+    /// <summary>massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.</summary>
+    MS_wolf = MS_massWolf,
 
     /// <summary>Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.</summary>
     MS_Voyager_Biospectrometry_Workstation_System = 1000539,
@@ -2545,6 +2548,33 @@ public enum class CVID
 
     /// <summary>Bioworks SRF file: Thermo Finnigan SRF file format.</summary>
     MS_Bioworks_SRF_file = 1000742,
+
+    /// <summary>TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.</summary>
+    MS_TSQ_Quantum_Ultra_AM = 1000743,
+
+    /// <summary>selected m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
+    MS_selected_m_z = 1000744,
+
+    /// <summary>retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.</summary>
+    MS_retention_time_alignment = 1000745,
+
+    /// <summary>high intensity data point removal: The removal of very high intensity data points.</summary>
+    MS_high_intensity_data_point_removal = 1000746,
+
+    /// <summary>completion time: The time that a data processing action was finished.</summary>
+    MS_completion_time = 1000747,
+
+    /// <summary>SSQ 7000: ThermoFinnigan SSQ 7000 MS.</summary>
+    MS_SSQ_7000 = 1000748,
+
+    /// <summary>TSQ 7000: ThermoFinnigan TSQ 7000 MS.</summary>
+    MS_TSQ_7000 = 1000749,
+
+    /// <summary>TSQ: ThermoFinnigan TSQ MS.</summary>
+    MS_TSQ = 1000750,
+
+    /// <summary>TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.</summary>
+    MS_TSQ_Quantum_Ultra = 1000751,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,

@@ -111,8 +111,11 @@ lib pwiz_data_msdata_examples
 #
 
 exe cvgen
-    : cvgen.cpp
-      pwiz_data_msdata_obo 
+    : # sources
+        cvgen.cpp
+        pwiz_data_msdata_obo
+    : # requirements
+        <library>/ext/boost//filesystem
     ;
 explicit cvgen ;
 
@@ -126,7 +129,7 @@ explicit install_cvgen ;
 actions do_cvgen
 {
    echo calling bjam install_cvgen
-   $(>[1]:P)/cvgen $(>)
+   "$(>[1]:P)/cvgen" $(>)
 }
 
 make cv.hpp : psi-ms.obo unit.obo : do_cvgen : <dependency>install_cvgen ;

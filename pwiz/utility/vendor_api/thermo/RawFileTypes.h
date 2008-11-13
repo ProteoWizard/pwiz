@@ -37,7 +37,7 @@ enum RAWFILE_API InstrumentModelType
     InstrumentModelType_TSQ,
 
     // Thermo Electron
-    InstrumentModelType_Element2,
+    InstrumentModelType_Element_2,
 
     // Thermo Finnigan
     InstrumentModelType_Delta_Plus_Advantage,
@@ -75,8 +75,9 @@ enum RAWFILE_API InstrumentModelType
     InstrumentModelType_MALDI_LTQ_Orbitrap,
     InstrumentModelType_TSQ_Quantum,
     InstrumentModelType_TSQ_Quantum_Access,
+    InstrumentModelType_TSQ_Quantum_Ultra,
+    InstrumentModelType_TSQ_Quantum_Ultra_AM,
     InstrumentModelType_Element_XR,
-    InstrumentModelType_Element_2,
     InstrumentModelType_Element_GD,
     InstrumentModelType_GC_IsoLink,
     InstrumentModelType_Exactive,
@@ -97,7 +98,8 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "SSQ 7000")                return InstrumentModelType_SSQ_7000;
     else if (type == "TSQ 7000")                return InstrumentModelType_TSQ_7000;
     else if (type == "TSQ")                     return InstrumentModelType_TSQ;
-    else if (type == "ELEMENT2")                return InstrumentModelType_Element2;
+    else if (type == "ELEMENT2" ||
+             type == "ELEMENT 2")               return InstrumentModelType_Element_2;
     else if (type == "DELTA PLUSADVANTAGE")     return InstrumentModelType_Delta_Plus_Advantage;
     else if (type == "DELTAPLUSXP")             return InstrumentModelType_Delta_Plus_XP;
 	else if (type == "LCQ ADVANTAGE")           return InstrumentModelType_LCQ_Advantage;
@@ -132,8 +134,9 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "MALDI LTQ ORBITRAP")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
     else if (type == "TSQ QUANTUM")             return InstrumentModelType_TSQ_Quantum;
     else if (type == "TSQ QUANTUM ACCESS")      return InstrumentModelType_TSQ_Quantum_Access;
+    else if (type == "TSQ QUANTUM ULTRA")       return InstrumentModelType_TSQ_Quantum_Ultra;
+    else if (type == "TSQ QUANTUM ULTRA AM")    return InstrumentModelType_TSQ_Quantum_Ultra_AM;
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
-    else if (type == "ELEMENT 2")               return InstrumentModelType_Element_2;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
     else if (type == "EXACTIVE")                return InstrumentModelType_Exactive;
@@ -232,7 +235,6 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
             ionSources.push_back(IonizationType_GD);
             break;
 
-        case InstrumentModelType_Element2:
         case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_2:
         case InstrumentModelType_Delta_Plus_Advantage:
@@ -298,6 +300,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_XL:
+        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
             if (scanFilterType == ScanFilterMassAnalyzerType_FTMS)
                 return MassAnalyzerType_Orbitrap;
@@ -323,6 +326,8 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Ultra:
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_GC_Quantum:
             return MassAnalyzerType_Triple_Quadrupole;
 
@@ -339,7 +344,6 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ:
         case InstrumentModelType_LXQ:
         case InstrumentModelType_LTQ_XL_ETD:
-        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
             return MassAnalyzerType_Linear_Ion_Trap;
@@ -355,7 +359,6 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Tempus_TOF:
             return MassAnalyzerType_TOF;
 
-        case InstrumentModelType_Element2:
         case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_2:
         case InstrumentModelType_Element_GD:
@@ -448,7 +451,6 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
             massAnalyzers.push_back(MassAnalyzerType_TOF);
             break;
 
-        case InstrumentModelType_Element2:
         case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_2:
         case InstrumentModelType_Element_GD:
@@ -533,7 +535,6 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
             detectors.push_back(DetectorType_Photo_Diode_Array);
 
         case InstrumentModelType_Element_GD:
-        case InstrumentModelType_Element2:
         case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_2:
         case InstrumentModelType_Delta_Plus_Advantage:

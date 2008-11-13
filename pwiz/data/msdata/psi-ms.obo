@@ -4,10 +4,10 @@ saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 1.4.0
-remark: release date: 2008-11-10
+remark: version: 1.6.0
+remark: release date: 2008-13-13
 remark: coverage: Mass spectrometer output files
-remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
+remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
@@ -286,7 +286,6 @@ def: "Three-character symbol m/z is used to denote the quantity formed by dividi
 synonym: "mass-to-charge ratio" EXACT []
 synonym: "Th" EXACT []
 synonym: "thomson" EXACT []
-is_a: MS:1000455 ! ion selection attribute
 is_a: MS:1000460 ! unit
 
 [Term]
@@ -372,6 +371,7 @@ id: MS:1000053
 name: sample batch
 def: "Sample batch lot identifier." [PSI:MS]
 is_a: MS:1000548 ! sample attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000054
@@ -1018,7 +1018,7 @@ is_a: MS:1000125 ! Thermo Finnigan instrument model
 id: MS:1000155
 name: ELEMENT2
 def: "ThermoFinnigan ELEMENT2 MS." [PSI:MS]
-is_a: MS:1000492 ! Thermo Electron instrument model
+relationship: part_of MS:1000479 ! purgatory
 
 [Term]
 id: MS:1000156
@@ -1897,6 +1897,7 @@ name: total ion current
 def: "The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum." [PSI:MS]
 synonym: "TIC" EXACT []
 is_a: MS:1000499 ! spectrum attribute
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000286
@@ -2014,7 +2015,7 @@ id: MS:1000304
 name: accelerating voltage
 def: "The electrical potential used to impart kinetic energy to ions in a mass spectrometer." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000597 ! ion optics type
+is_a: MS:1000487 ! ion optics attribute
 relationship: has_units UO:0000217 ! electric potential difference
 
 [Term]
@@ -2040,6 +2041,7 @@ id: MS:1000308
 name: electric field strength
 def: "The magnitude of the force per unit charge at a given point in space." [PSI:MS]
 is_a: MS:1000487 ! ion optics attribute
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000309
@@ -3552,7 +3554,7 @@ is_a: MS:1000690 ! AB SCIEX software
 id: MS:1000552
 name: maldi spot identifier
 def: "Maldi Spot Identifier." [PSI:MS]
-is_a: MS:1000482 ! source attribute
+relationship: part_of MS:1000479 ! purgatory
 
 [Term]
 id: MS:1000553
@@ -3649,12 +3651,14 @@ id: MS:1000568
 name: MD5
 def: "MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files." [PSI:MS]
 is_a: MS:1000561 ! data file checksum type
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000569
 name: SHA-1
 def: "SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity." [PSI:MS]
 is_a: MS:1000561 ! data file checksum type
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000570
@@ -3767,30 +3771,35 @@ id: MS:1000586
 name: contact name
 def: "Name of a contact person." [PSI:MS]
 is_a: MS:1000585 ! contact person attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000587
 name: contact address
 def: "Postal address of a contact person." [PSI:MS]
 is_a: MS:1000585 ! contact person attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000588
 name: contact URL
 def: "Uniform Resource Locator related to the contact person." [PSI:MS]
 is_a: MS:1000585 ! contact person attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000589
 name: contact email
 def: "Email adress of the contact person." [PSI:MS]
 is_a: MS:1000585 ! contact person attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000590
 name: contact organization
 def: "Home institution of the contact person." [PSI:MS]
 is_a: MS:1000585 ! contact person attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000591
@@ -3953,8 +3962,8 @@ is_a: MS:1000531 ! software
 id: MS:1000616
 name: preset scan configuration
 def: "A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time." [PSI:MS]
-comment: The attribute 'ms level' should be encoded in the homonymous XML attribute of the element 'dx:Spectrum', and not using the CvParam element.
 is_a: MS:1000503 ! scan attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000617
@@ -3967,12 +3976,14 @@ id: MS:1000618
 name: highest wavelength value
 def: "Highest wavelength value observed in the uv/vis spectum." [PSI:MS]
 is_a: MS:1000499 ! spectrum attribute
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000619
 name: lowest wavelength value
 def: "Lowest wavelength value observed in the uv/vis spectrum." [PSI:MS]
 is_a: MS:1000499 ! spectrum attribute
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000620
@@ -4721,6 +4732,56 @@ is_a: MS:1000560 ! source file type
 id: MS:1000743
 name: TSQ Quantum Ultra AM
 def: "Thermo Scientific TSQ Quantum Ultra AM." [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1000744
+name: selected m/z
+def: "Mass-to-charge ratio of the ion selected for fragmentation" [PSI:MS]
+is_a: MS:1000455 ! ion selection attribute
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+relationship: has_units MS:1000040 ! m/z
+
+[Term]
+id: MS:1000745
+name: retention time alignment
+def: "The correction of the spectrum scan times, as used e.g. in label-free proteomics." [PSI:MS]
+is_a: MS:1000543 ! data processing action
+
+[Term]
+id: MS:1000746
+name: high intensity data point removal
+def: "The removal of very high intensity data points." [PSI:MS]
+is_a: MS:1000543 ! data processing action
+
+[Term]
+id: MS:1000747
+name: completion time
+def: "The time that a data processing action was finished." [PSI:MS]
+is_a: MS:1000630 ! data processing parameter
+
+[Term]
+id: MS:1000748
+name: SSQ 7000
+def: "ThermoFinnigan SSQ 7000 MS." [PSI:MS]
+is_a: MS:1000493 ! Finnigan MAT instrument model
+
+[Term]
+id: MS:1000749
+name: TSQ 7000
+def: "ThermoFinnigan TSQ 7000 MS." [PSI:MS]
+is_a: MS:1000493 ! Finnigan MAT instrument model
+
+[Term]
+id: MS:1000750
+name: TSQ
+def: "ThermoFinnigan TSQ MS." [PSI:MS]
+is_a: MS:1000493 ! Finnigan MAT instrument model
+
+[Term]
+id: MS:1000751
+name: TSQ Quantum Ultra
+def: "Thermo Scientific TSQ Quantum Ultra." [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
 

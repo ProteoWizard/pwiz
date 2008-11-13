@@ -32,22 +32,22 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [msdata/psi-ms.obo]
+// [pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.4.0
-//   remark: release date: 2008-11-10
+//   remark: version: 1.6.0
+//   remark: release date: 2008-13-13
 //   remark: coverage: Mass spectrometer output files
-//   remark: creator: Eric Deutsch <edeutsch@systemsbiology.org>
+//   remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
-// [msdata/unit.obo]
+// [pwiz\data\msdata\unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -2550,6 +2550,30 @@ enum PWIZ_API_DECL CVID
 
     /// TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.
     MS_TSQ_Quantum_Ultra_AM = 1000743,
+
+    /// selected m/z: Mass-to-charge ratio of the ion selected for fragmentation
+    MS_selected_m_z = 1000744,
+
+    /// retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.
+    MS_retention_time_alignment = 1000745,
+
+    /// high intensity data point removal: The removal of very high intensity data points.
+    MS_high_intensity_data_point_removal = 1000746,
+
+    /// completion time: The time that a data processing action was finished.
+    MS_completion_time = 1000747,
+
+    /// SSQ 7000: ThermoFinnigan SSQ 7000 MS.
+    MS_SSQ_7000 = 1000748,
+
+    /// TSQ 7000: ThermoFinnigan TSQ 7000 MS.
+    MS_TSQ_7000 = 1000749,
+
+    /// TSQ: ThermoFinnigan TSQ MS.
+    MS_TSQ = 1000750,
+
+    /// TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.
+    MS_TSQ_Quantum_Ultra = 1000751,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,

@@ -12,10 +12,35 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
 {
     switch (instrumentModelType)
     {
+        // Finnigan MAT
+        case InstrumentModelType_MAT253:                    return MS_MAT253;
+        case InstrumentModelType_MAT900XP:                  return MS_MAT900XP;
+        case InstrumentModelType_MAT900XP_Trap:             return MS_MAT900XP_Trap;
+        case InstrumentModelType_MAT95XP:                   return MS_MAT95XP;
+        case InstrumentModelType_MAT95XP_Trap:              return MS_MAT95XP_Trap;
+        case InstrumentModelType_SSQ_7000:                  return MS_SSQ_7000;
+        case InstrumentModelType_TSQ_7000:                  return MS_TSQ_7000;
+        case InstrumentModelType_TSQ:                       return MS_TSQ;
+
+        // Thermo Electron
+        case InstrumentModelType_Element_2:                 return MS_Element_2;
+
+        // Thermo Finnigan
+        case InstrumentModelType_Delta_Plus_XP:             return MS_DELTAplusXP;
+        case InstrumentModelType_Delta_Plus_Advantage:      return MS_DELTA_plusAdvantage;
         case InstrumentModelType_LCQ_Advantage:             return MS_LCQ_Advantage;
         case InstrumentModelType_LCQ_Classic:               return MS_LCQ_Classic;
         case InstrumentModelType_LCQ_Deca:                  return MS_LCQ_Deca;
         case InstrumentModelType_LCQ_Deca_XP_Plus:          return MS_LCQ_Deca_XP_Plus;
+        case InstrumentModelType_Neptune:                   return MS_neptune;
+        case InstrumentModelType_DSQ:                       return MS_DSQ;
+        case InstrumentModelType_PolarisQ:                  return MS_PolarisQ;
+        case InstrumentModelType_Surveyor_MSQ:              return MS_Surveyor_MSQ;
+        case InstrumentModelType_Tempus_TOF:                return MS_TEMPUS_TOF;
+        case InstrumentModelType_Trace_DSQ:                 return MS_TRACE_DSQ;
+        case InstrumentModelType_Triton:                    return MS_TRITON;
+
+        // Thermo Scientific
         case InstrumentModelType_LCQ_Fleet:                 return MS_LCQ_Fleet;
         case InstrumentModelType_LTQ:                       return MS_LTQ;
         case InstrumentModelType_LTQ_FT:                    return MS_LTQ_FT;
@@ -24,25 +49,26 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_Discovery:    return MS_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
+        case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
+        case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
+        case InstrumentModelType_ITQ_1100:                  return MS_ITQ_1100;
+        case InstrumentModelType_GC_Quantum:                return MS_GC_Quantum;
+        case InstrumentModelType_LTQ_XL_ETD:                return MS_LTQ_XL_ETD;
+        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:       return MS_LTQ_Orbitrap_XL_ETD;
+        case InstrumentModelType_DFS:                       return MS_DFS;
+        case InstrumentModelType_DSQ_II:                    return MS_DSQ_II;
+        case InstrumentModelType_MALDI_LTQ_XL:              return MS_MALDI_LTQ_XL;
+        case InstrumentModelType_MALDI_LTQ_Orbitrap:        return MS_MALDI_LTQ_Orbitrap;
         case InstrumentModelType_TSQ_Quantum:               return MS_TSQ_Quantum;
         case InstrumentModelType_TSQ_Quantum_Access:        return MS_TSQ_Quantum_Access;
-        case InstrumentModelType_GC_Quantum:                return MS_GC_Quantum;
-        case InstrumentModelType_Delta_Plus_XP:             return MS_DELTAplusXP;
-        case InstrumentModelType_Delta_Plus_Advantage:      return MS_DELTA_plusAdvantage;
-        case InstrumentModelType_Element2:                  return MS_ELEMENT2;
-        case InstrumentModelType_MAT253:                    return MS_MAT253;
-        case InstrumentModelType_MAT900XP:                  return MS_MAT900XP;
-        case InstrumentModelType_MAT900XP_Trap:             return MS_MAT900XP_Trap;
-        case InstrumentModelType_MAT95XP:                   return MS_MAT95XP;
-        case InstrumentModelType_MAT95XP_Trap:              return MS_MAT95XP_Trap;
-        case InstrumentModelType_Neptune:                   return MS_neptune;
-        case InstrumentModelType_PolarisQ:                  return MS_PolarisQ;
-        case InstrumentModelType_Surveyor_MSQ:              return MS_Surveyor_MSQ;
+        case InstrumentModelType_TSQ_Quantum_Ultra:         return MS_TSQ_Quantum_Ultra;
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:      return MS_TSQ_Quantum_Ultra_AM;
+        case InstrumentModelType_Element_XR:                return MS_Element_XR;
+        case InstrumentModelType_Element_GD:                return MS_Element_GD;
+        case InstrumentModelType_GC_IsoLink:                return MS_GC_IsoLink;
+        case InstrumentModelType_Exactive:                  return MS_Exactive;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
-        case InstrumentModelType_Tempus_TOF:                return MS_TEMPUS_TOF;
-        case InstrumentModelType_Trace_DSQ:                 return MS_TRACE_DSQ;
-        case InstrumentModelType_Triton:                    return MS_TRITON;
         case InstrumentModelType_Unknown:
         default:
             return CVID_Unknown;
@@ -94,6 +120,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_XL:
+        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -123,7 +150,6 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_LTQ:
         case InstrumentModelType_LXQ:
         case InstrumentModelType_LTQ_XL_ETD:
-        case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
             configurations.push_back(InstrumentConfiguration());
@@ -148,6 +174,8 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Ultra:
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_GC_Quantum:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -170,9 +198,8 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
             break;
 
         case InstrumentModelType_Tempus_TOF:
-        case InstrumentModelType_Element2:
-        case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_2:
+        case InstrumentModelType_Element_XR:
         case InstrumentModelType_Element_GD:
         case InstrumentModelType_Delta_Plus_Advantage:
         case InstrumentModelType_Delta_Plus_XP:
