@@ -33,8 +33,8 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/Version.hpp"
 #include "boost/program_options.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/convenience.hpp"
+#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -102,7 +102,7 @@ Config parseCommandLine(int argc, const char* argv[])
     namespace po = boost::program_options;
 
     ostringstream usage;
-    usage << "Usage: msconvert [options] [filenames]\n"
+    usage << "Usage: msconvert [options] [filemasks]\n"
           << "Convert mass spec data file formats.\n"
 #ifndef _MSC_VER
           << "Note: the use of mass spec vendor DLLs is not enabled in this \n"
@@ -221,7 +221,17 @@ Config parseCommandLine(int argc, const char* argv[])
     // remember filenames from command line
 
     if (vm.count(label_args))
+    {
         config.filenames = vm[label_args].as< vector<string> >();
+
+        // expand the filenames by globbing to handle wildcards
+        vector<string> globbedFilenames;
+        BOOST_FOREACH(const string& filename, config.filenames)
+        {
+            FindFilesByMask(filename, globbedFilenames);
+        }
+        config.filenames = globbedFilenames;
+    }
 
     // parse filelist if required
 
@@ -398,7 +408,7 @@ class UserFeedbackIterationListener : public IterationListener
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        cout << updateMessage.iterationIndex << "/" << updateMessage.iterationCount << endl;
+        cout << updateMessage.iterationIndex << "/" << updateMessage.iterationCount << '\r' << flush;
         return Status_Ok;
     }
 };
