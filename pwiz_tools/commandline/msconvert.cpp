@@ -104,6 +104,10 @@ Config parseCommandLine(int argc, const char* argv[])
     ostringstream usage;
     usage << "Usage: msconvert [options] [filenames]\n"
           << "Convert mass spec data file formats.\n"
+#ifndef _MSC_VER
+          << "Note: the use of mass spec vendor DLLs is not enabled in this \n"
+          << "(non-MSVC) build, this means no Thermo, Bruker, Waters etc input.\n"
+#endif
           << "\n"
           << "Return value: # of failed files.\n"
           << "\n";
@@ -454,7 +458,10 @@ int go(const Config& config)
     boost::filesystem::create_directories(config.outputPath);
 
     ExtendedReaderList readers;
+#ifdef _MSC_VER
+// vendor DLL usage is msvc only - mingw doesn't provide com support
     readers += ReaderPtr(new Reader_Waters) + ReaderPtr(new Reader_Bruker);
+#endif
 
     int failedFileCount = 0;
 
