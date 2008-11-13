@@ -1,0 +1,46 @@
+#
+# Jamfile (pwiz_tools) 
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2008 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+actions do_seems_release_build
+{
+    REM support both MSVC 8 and 9
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    echo Building SeeMS in release configuration...
+    msbuild $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS/seems.sln /p:Configuration=Release /nologo /verbosity:minimal
+}
+
+actions do_seems_debug_build
+{
+    REM support both MSVC 8 and 9
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    echo Building SeeMS in debug configuration...
+    msbuild $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS/seems.sln /p:Configuration=Debug /nologo /verbosity:minimal
+}
+
+import modules ;
+import notfile ;
+if [ modules.peek : NT ]
+{
+    notfile seems_release_build : @do_seems_release_build : ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli : release ;
+    #notfile seems_debug_build : @do_seems_debug_build : ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli : debug ;
+}
