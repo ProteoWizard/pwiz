@@ -30,6 +30,7 @@
 #include "pwiz/data/vendor_readers/SpectrumList_Thermo.hpp"
 #endif
 
+#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
 #ifndef PWIZ_NO_READER_BRUKER
 #include "pwiz_aux/msrc/data/vendor_readers/SpectrumList_Bruker.hpp"
 #endif
