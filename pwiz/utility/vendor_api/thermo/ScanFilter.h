@@ -75,6 +75,7 @@ class RAWFILE_API ScanFilter
 	TriBool detectorSet_;
 	TriBool turboScanOn_;
 	TriBool dependentActive_; // t: data-dependent active; f: non active
+    TriBool supplementalCIDOn_;
 	TriBool widebandOn_; // wideband activation
 	AccurateMassType accurateMassType_;
 	ScanType scanType_;

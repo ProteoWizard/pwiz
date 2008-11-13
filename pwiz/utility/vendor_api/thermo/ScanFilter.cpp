@@ -108,6 +108,9 @@ Dependent Type
 d			data dependent active
 !d			data dependent not-active
 
+Supplemental CID
+sa			supplemental cid
+
 Wideband
 w			wideband activation on
 !w			wideband activation off
@@ -149,7 +152,6 @@ ecd			electron capture dissociation
 pqd			pulsed q dissociation
 etd			electron transfer dissociation
 hcd			high energy collision dissociation
-sa			supplemental cid
 ptr			proton transfer reaction
 
 Free Region			(Sectors only)
@@ -348,6 +350,10 @@ ScanFilter::print()
 		cout << "data dependent: " << dependentActive_ << endl;
 	}
 
+    if (supplementalCIDOn_ != TriBool_Unknown) {
+        cout << "supplemental CID: " << supplementalCIDOn_ << endl;
+    }
+
 	if (widebandOn_ != TriBool_Unknown) {
 		cout << "wideband: " << widebandOn_ << endl;
 	}
@@ -389,6 +395,7 @@ ScanFilter::initialize()
     detectorSet_ = TriBool_Unknown;
     turboScanOn_ = TriBool_Unknown;
     dependentActive_ = TriBool_Unknown;
+    supplementalCIDOn_ = TriBool_Unknown;
     widebandOn_ = TriBool_Unknown;
 
     msLevel_ = 0;
@@ -558,6 +565,20 @@ ScanFilter::parse(string filterLine)
 		s >> w;
 		advance = false;
 	}
+
+
+    // supplemental CID activation
+    if (w == "SA") {
+        supplementalCIDOn_ = TriBool_True;
+        advance = true;
+    }
+    if (advance) {
+        if (s.eof()) {
+            return 1;
+        }
+        s >> w;
+        advance = false;
+    }
 
 
 	// wideband

@@ -20,6 +20,7 @@
 #include "RawFile.h"
 #include "ScanFilter.h"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <iostream>
 #include <vector>
 
@@ -29,12 +30,13 @@ using namespace pwiz::raw;
 
 
 void testFilter(const ScanFilter& scanFilter,
-                TriBool accurateMassType,
+                AccurateMassType accurateMassType,
                 TriBool coronaOn,
                 TriBool detectorSet,
                 TriBool photoIonizationOn,
                 TriBool sourceCIDOn,
                 TriBool turboScanOn,
+                TriBool supplementalCIDOn,
                 TriBool widebandOn,
                 TriBool dependentActive,
                 ScanFilterMassAnalyzerType massAnalyzerType,
@@ -54,6 +56,7 @@ void testFilter(const ScanFilter& scanFilter,
     unit_assert(scanFilter.photoIonizationOn_ == photoIonizationOn);
     unit_assert(scanFilter.sourceCIDOn_ == sourceCIDOn);
     unit_assert(scanFilter.turboScanOn_ == turboScanOn);
+    unit_assert(scanFilter.supplementalCIDOn_ == supplementalCIDOn);
     unit_assert(scanFilter.widebandOn_ == widebandOn);
     unit_assert(scanFilter.dependentActive_ == dependentActive);
 
@@ -64,13 +67,14 @@ void testFilter(const ScanFilter& scanFilter,
     unit_assert(scanFilter.scanType_ == scanType);
 
     unit_assert(scanFilter.msLevel_ == msLevel);
-    unit_assert(scanFilter.cidParentMass_.size() == scanFilter.cidEnergy_.size() &&
-                cidParentMass.size() == cidParentEnergy.size() &&
-                scanFilter.cidEnergy_.size() == cidParentMass.size());
+    unit_assert(scanFilter.cidParentMass_.size() == scanFilter.cidEnergy_.size());
+    unit_assert(cidParentMass.size() == cidParentEnergy.size());
+    unit_assert(scanFilter.cidEnergy_.size() == cidParentMass.size());
     unit_assert(cidParentMass.size() == (size_t) scanFilter.msLevel_-1);
     for (int i=0; i < scanFilter.msLevel_-1; ++i)
     {
-        unit_assert(scanFilter.cidParentMass_[i] == cidParentMass[i] && scanFilter.cidEnergy_[i] == cidParentEnergy[i]);
+        unit_assert(scanFilter.cidParentMass_[i] == cidParentMass[i]);
+        unit_assert(scanFilter.cidEnergy_[i] == cidParentEnergy[i]);
     }
 
     unit_assert(scanFilter.scanRangeMin_.size() == scanFilter.scanRangeMax_.size() &&
@@ -81,23 +85,121 @@ void testFilter(const ScanFilter& scanFilter,
 
     for (size_t i=0; i < scanFilter.scanRangeMin_.size(); ++i)
     {
-        unit_assert(scanFilter.scanRangeMin_[i] == scanRangeMin[i] &&
-                    scanFilter.scanRangeMax_[i] == scanRangeMax[i]);
+        unit_assert(scanFilter.scanRangeMin_[i] == scanRangeMin[i]);
+        unit_assert(scanFilter.scanRangeMax_[i] == scanRangeMax[i]);
     }
 }
 
 
-const char* scanFilterStrings[] =
+struct TestScanFilter
 {
-    "ITMS + c NSI Full ms [400.00-2000.00]",
-    "ITMS + c NSI d Full ms2 400.30@cid30.00 [80.00-1330.00]",
-    "ITMS + c NSI d Full ms3 400.30@cid30.00 329.73@cid30.00 [100.00-1615.00]",
-    "FTMS + p NSI Full ms [400.00-1800.00]",
-    "+ c ESI Full ms [400.00-1600.00]",
-    "+ c d Full ms2 400.29@cid35.00 [100.00-1215.00]",
-    "+ c NSI Q1MS [400.000-900.000]",
-    "+ c NSI SRM ms2 448.711@cid19.00 [375.175-375.180, 537.265-537.270, 652.291-652.297, 749.344-749.350]"
+    const char* filter;
+
+    // space-delimited doubles
+	const char* cidParentMassArray; // one entry per ms level for level >= 2
+	const char* cidEnergyArray; // relative units; one entry per ms level for level >= 2
+	const char* scanRangeMinArray;
+	const char* scanRangeMaxArray;
+
+	int msLevel;
+
+    ScanFilterMassAnalyzerType massAnalyzerType;
+	PolarityType polarityType;
+	DataPointType dataPointType;
+	IonizationType ionizationType;
+	AccurateMassType accurateMassType;
+	ScanType scanType;
+	ActivationType activationType;
+
+    TriBool coronaOn;
+	TriBool photoIonizationOn;
+	TriBool sourceCIDOn;
+	TriBool detectorSet;
+	TriBool turboScanOn;
+	TriBool dependentActive;
+    TriBool supplementalCIDOn;
+	TriBool widebandOn;
 };
+
+const TestScanFilter testScanFilters[] =
+{
+    {"ITMS + c NSI Full ms [400.00-2000.00]",
+     "", "", "400", "2000", 1,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"ITMS + c NSI d Full ms2 400.30@cid30.00 [80.00-1330.00]",
+     "400.30", "30", "80", "1330", 2,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown},
+
+    {"ITMS + c NSI d Full ms3 400.30@cid30.00 329.73@cid30.00 [100.00-1615.00]",
+     "400.30 329.73", "30 30", "100", "1615", 3,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown},
+
+    {"FTMS + p NSI Full ms [400.00-1800.00]",
+     "", "", "400", "1800", 1,
+     ScanFilterMassAnalyzerType_FTMS, PolarityType_Positive, DataPointType_Profile,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"+ c ESI Full ms [400.00-1600.00]",
+     "", "", "400", "1600", 1,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_ESI, AccurateMass_Unknown, ScanType_Full, ActivationType_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"- c d Full ms2 400.29@cid35.00 [100.00-1215.00]",
+     "400.29", "35", "100", "1215", 2,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
+     IonizationType_Unknown, AccurateMass_Unknown, ScanType_Full, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown},
+
+    {"- c d sa Full ms2 300.26@etd60.00 [50.00-915.00]",
+     "300.26", "60", "50", "915", 2,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
+     IonizationType_Unknown, AccurateMass_Unknown, ScanType_Full, ActivationType_ETD,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_True, TriBool_Unknown},
+
+    {"- c NSI Q1MS [400.000-900.000]",
+     "", "", "400", "900", 1,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"- c NSI SRM ms2 448.711@cid19.00 [375.175-375.180, 537.265-537.270, 652.291-652.297, 749.344-749.350]",
+     "448.711", "19", "375.175 537.265 652.291 749.344", "375.18 537.27 652.297 749.35", 2,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_SRM, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown}
+};
+
+const size_t testScanFiltersSize = sizeof(testScanFilters) / sizeof(TestScanFilter);
+
+vector<double> parseDoubleArray(const string& doubleArray)
+{
+    vector<double> doubleVector;
+    vector<string> tokens;
+    bal::split(tokens, doubleArray, bal::is_space());
+    if (!tokens.empty() && !tokens[0].empty())
+        for (size_t i=0; i < tokens.size(); ++i)
+            doubleVector.push_back(lexical_cast<double>(tokens[i]));
+    return doubleVector;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -108,169 +210,45 @@ int main(int argc, char* argv[])
         else if (argc == 1)
         {
             // unit test static strings
-            size_t scanFilterIndex = 0;
-            ScanFilter scanFilter;
-            vector<double> cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax;
+            for (size_t i=0; i < testScanFiltersSize; ++i)
+            {
+                const TestScanFilter& f = testScanFilters[i];
+                try
+                {
+                    vector<double> cidParentMass = parseDoubleArray(f.cidParentMassArray);
+                    vector<double> cidParentEnergy = parseDoubleArray(f.cidEnergyArray);
+                    vector<double> scanRangeMin = parseDoubleArray(f.scanRangeMinArray);
+                    vector<double> scanRangeMax = parseDoubleArray(f.scanRangeMaxArray);
 
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            scanRangeMin.push_back(400.00); scanRangeMax.push_back(2000.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_Unknown, // data-dependent?
-                        ScanFilterMassAnalyzerType_ITMS,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_NSI,
-                        ScanType_Full,
-                        1, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
+                    ScanFilter scanFilter;
+                    scanFilter.parse(f.filter);
 
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            cidParentMass.push_back(400.30); cidParentEnergy.push_back(30.00);
-            scanRangeMin.push_back(80.00); scanRangeMax.push_back(1330.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_True, // data-dependent?
-                        ScanFilterMassAnalyzerType_ITMS,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_NSI,
-                        ScanType_Full,
-                        2, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            cidParentMass.push_back(400.30); cidParentEnergy.push_back(30.00);
-            cidParentMass.push_back(329.73); cidParentEnergy.push_back(30.00);
-            scanRangeMin.push_back(100.00); scanRangeMax.push_back(1615.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_True, // data-dependent?
-                        ScanFilterMassAnalyzerType_ITMS,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_NSI,
-                        ScanType_Full,
-                        3, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            scanRangeMin.push_back(400.00); scanRangeMax.push_back(1800.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_Unknown, // data-dependent?
-                        ScanFilterMassAnalyzerType_FTMS,
-                        PolarityType_Positive,
-                        DataPointType_Profile,
-                        IonizationType_NSI,
-                        ScanType_Full,
-                        1, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            scanRangeMin.push_back(400.00); scanRangeMax.push_back(1600.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_Unknown, // data-dependent?
-                        ScanFilterMassAnalyzerType_Unknown,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_ESI,
-                        ScanType_Full,
-                        1, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            cidParentMass.push_back(400.29); cidParentEnergy.push_back(35.00);
-            scanRangeMin.push_back(100.00); scanRangeMax.push_back(1215.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_True, // data-dependent?
-                        ScanFilterMassAnalyzerType_Unknown,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_Unknown,
-                        ScanType_Full,
-                        2, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            scanRangeMin.push_back(400.00); scanRangeMax.push_back(900.00);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_Unknown, // data-dependent?
-                        ScanFilterMassAnalyzerType_Unknown,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_NSI,
-                        ScanType_Full,
-                        1, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
-
-            scanFilter.parse(scanFilterStrings[scanFilterIndex++]);
-            cidParentMass.clear(); cidParentEnergy.clear(); scanRangeMin.clear(); scanRangeMax.clear();
-            cidParentMass.push_back(448.711); cidParentEnergy.push_back(19.00);
-            scanRangeMin.push_back(375.175); scanRangeMax.push_back(375.180);
-            scanRangeMin.push_back(537.265); scanRangeMax.push_back(537.270);
-            scanRangeMin.push_back(652.291); scanRangeMax.push_back(652.297);
-            scanRangeMin.push_back(749.344); scanRangeMax.push_back(749.350);
-            testFilter (scanFilter,
-                        TriBool_Unknown, // accurate mass?
-                        TriBool_Unknown, // corona?
-                        TriBool_Unknown, // detector?
-                        TriBool_Unknown, // photo ionization?
-                        TriBool_Unknown, // source CID?
-                        TriBool_Unknown, // turbo scan?
-                        TriBool_Unknown, // wideband?
-                        TriBool_Unknown, // data-dependent?
-                        ScanFilterMassAnalyzerType_Unknown,
-                        PolarityType_Positive,
-                        DataPointType_Centroid,
-                        IonizationType_NSI,
-                        ScanType_SRM,
-                        2, cidParentMass, cidParentEnergy, scanRangeMin, scanRangeMax);
+                    testFilter(scanFilter,
+                               f.accurateMassType,
+                               f.coronaOn,
+                               f.detectorSet,
+                               f.photoIonizationOn,
+                               f.sourceCIDOn,
+                               f.turboScanOn,
+                               f.supplementalCIDOn,
+                               f.widebandOn,
+                               f.dependentActive,
+                               f.massAnalyzerType,
+                               f.polarityType,
+                               f.dataPointType,
+                               f.ionizationType,
+                               f.scanType,
+                               f.msLevel,
+                               cidParentMass,
+                               cidParentEnergy,
+                               scanRangeMin,
+                               scanRangeMax);
+                }
+                catch (exception& e)
+                {
+                    cout << "Unit test on filter \"" << f.filter << "\" failed:\n" << e.what() << endl;
+                }
+            }
         }
         return 0;
     }
