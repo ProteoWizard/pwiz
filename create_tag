@@ -1,6 +1,8 @@
 #!/bin/bash
 
-tag=$(sed 's/\./_/g' VERSION)
+pushd $(dirname $0) > /dev/null
+
+tag=$(get_version | sed 's/\./_/g')
 
 from=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/trunk/pwiz
 to=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/tags/pwiz_$tag

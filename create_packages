@@ -1,7 +1,9 @@
 #!/bin/bash
 
-tag=$(cat VERSION)
-bindir=~/pwiz_bin
+pushd $(dirname $0) > /dev/null
+
+tag=$(get_version)
+bindir=build
 packagedir=build/packages/$tag
 
 echo "tag: $tag"
@@ -10,14 +12,24 @@ echo "packagedir: $packagedir"
 
 read -p "<enter> to continue..."
 
+rm -rf $packagedir
 mkdir -p $packagedir
 
-zip -j $packagedir/pwiz-$tag-tools-windows-i386.zip $bindir/windows/i386/*
-zip -j $packagedir/pwiz-$tag-tools-linux-i386.zip $bindir/linux/i386/*
-zip -j $packagedir/pwiz-$tag-tools-osx-i386.zip $bindir/osx/i386/*
+package_windows=pwiz-$tag-tools-windows-i386.zip
+package_linux=pwiz-$tag-tools-linux-i386.zip
+package_osx=pwiz-$tag-tools-osx-i386.zip
+package_src=pwiz-$tag-src.tgz
 
-tar czvf $packagedir/pwiz-$tag-src.tgz --exclude=*.svn* --exclude=*/bin* LICENSE NOTICE VERSION pwiz doc 
+echo "Creating $package_windows."
+zip -j $packagedir/$package_windows $bindir/msvc-release/*
+echo "Creating $package_linux."
+zip -j $packagedir/$package_linux $bindir/gcc-release/*
+echo "Creating $package_osx."
+zip -j $packagedir/$package_osx $bindir/darwin-release/*
+echo "Creating $package_src."
+tar czvf $packagedir/$package_src --exclude=*.svn* --exclude=*/bin* --exclude=build --exclude=libraries --exclude=example_data .
 
 echo
 echo $packagedir
 ls -lt $packagedir
+

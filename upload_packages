@@ -1,6 +1,8 @@
 #!/bin/bash
 
-packagedir=build/packages/$(cat VERSION)
+pushd $(dirname $0) > /dev/null
+
+packagedir=build/packages/$(get_version)
 
 ls -lt $packagedir
 
