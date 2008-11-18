@@ -22,13 +22,20 @@
 #       include <boost/thread/once.hpp>
 #   endif
 
+#   if defined(__GNUC__) && __GNUC__ >= 4
+#     define BOOST_UTILITY_SINGLETON_API __attribute__ ((visibility("default")))
+#     pragma GCC visibility push(hidden)
+#   else
+#     define BOOST_UTILITY_SINGLETON_API
+#   endif
+
 namespace boost
 {
     namespace detail { struct singleton_context; }
 
     template< class Derived, int DisposalSlot = 0, 
         typename SubsystemTag = void >
-    class singleton : boost::noncopyable
+    class BOOST_UTILITY_SINGLETON_API singleton : boost::noncopyable
     {
         class instance_proxy;
       public:
@@ -73,7 +80,7 @@ namespace boost
     }
 
     template< class Derived, int DisposalSlot, typename SubsystemTag >
-    class singleton<Derived,DisposalSlot,SubsystemTag>::instance_proxy
+    class BOOST_UTILITY_SINGLETON_API singleton<Derived,DisposalSlot,SubsystemTag>::instance_proxy
     {
 #   if BOOST_WORKAROUND(BOOST_MSVC, <= 1400)
         // friends don't work correctly prior to VS 2005 SP1
@@ -144,7 +151,7 @@ namespace boost
     };
 
     template< class Derived, int DisposalSlot, typename SubsystemTag >
-    class singleton<Derived,DisposalSlot,SubsystemTag>::lease
+    class BOOST_UTILITY_SINGLETON_API singleton<Derived,DisposalSlot,SubsystemTag>::lease
 #   if BOOST_WORKAROUND(BOOST_MSVC, <= 1400)
       : singleton<Derived,DisposalSlot,SubsystemTag>::instance_proxy
 #   endif
@@ -197,5 +204,8 @@ namespace boost
 
 } // namespace boost
 
-#endif
+#   if defined(__GNUC__) && __GNUC__ >= 4
+#     pragma GCC visibility pop
+#   endif
 
+#endif
