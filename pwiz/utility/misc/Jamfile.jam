@@ -45,13 +45,13 @@ lib pwiz_utility_misc
         <warnings>all
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
+        <toolset>msvc:<library>/ext/boost//thread
         <library>/ext/boost//filesystem
-        <library>/ext/boost//thread
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
+        <toolset>msvc:<library>/ext/boost//thread
         <library>/ext/boost//filesystem
-        <library>/ext/boost//thread
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
     ;
