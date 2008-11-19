@@ -1,8 +1,9 @@
 #!/bin/bash
 
-pushd $(dirname $0) > /dev/null
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
 
-packagedir=build/packages/$(get_version)
+packagedir=build/packages/$(scripts/release/get_version)
 
 ls -lt $packagedir
 

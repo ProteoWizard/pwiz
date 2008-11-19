@@ -1,6 +1,7 @@
 #!/bin/bash
 
-pushd $(dirname $0) > /dev/null
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
 
 # parse version string from pwiz/Version.cpp Version::str() implementation
 version_string=$(cat pwiz/Version.cpp | grep 'Version::str()' | awk -F\" '{print $2}')
