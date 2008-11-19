@@ -26,7 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <list>
-
+#include <ostream>
 
 namespace pwiz {
 namespace util {

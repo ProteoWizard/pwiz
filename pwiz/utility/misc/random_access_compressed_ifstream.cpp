@@ -44,6 +44,7 @@ Version 1.0  29 May 2005  Mark Adler */
 #include <assert.h>
 #include <errno.h>
 #include <iostream>
+#include <string.h>
 
 namespace pwiz {
 namespace util {
@@ -194,10 +195,10 @@ bool random_access_compressed_ifstream::is_open() const { // for ease of use as 
 PWIZ_API_DECL
 void random_access_compressed_ifstream::close() {
 	if (rdbuf()) {
-		if (NONE == compressionType) {
-			((std::filebuf *)rdbuf())->close();
-		} else {
-			((random_access_compressed_streambuf *)rdbuf())->close();
+	if (NONE == compressionType) {
+		((std::filebuf *)rdbuf())->close();
+	} else {
+		((random_access_compressed_streambuf *)rdbuf())->close();
 			// in case object gets reused
 			delete rdbuf();
 			rdbuf(new std::filebuf()); 

@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <stack>
 #include <algorithm>
+#include <string.h>
 
 
 namespace pwiz {

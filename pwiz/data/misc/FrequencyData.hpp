@@ -30,6 +30,7 @@
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <complex>
+#include <memory>
 
 
 namespace pwiz {

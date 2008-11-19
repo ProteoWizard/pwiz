@@ -27,6 +27,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <string.h>
 
 
 namespace pwiz {
