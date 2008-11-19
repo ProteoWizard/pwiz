@@ -200,20 +200,26 @@ bool CSHA1::HashFile(const char* szFileName)
 		ulRest = 0;
 	}
 
+	bool result = true;
 	for(i = 0; i < ulBlocks; i++)
 	{
-		fread(uData, 1, SHA1_MAX_FILE_BUFFER, fIn);
+		if (SHA1_MAX_FILE_BUFFER != fread(uData, 1, SHA1_MAX_FILE_BUFFER, fIn)) {
+			result = false;
+			break;
+		}
 		Update((UINT_8*)uData, SHA1_MAX_FILE_BUFFER);
 	}
 
 	if(ulRest != 0)
 	{
-		fread(uData, 1, ulRest, fIn);
+		if (ulRest != fread(uData, 1, ulRest, fIn)) {
+			result = false;
+		}
 		Update((UINT_8*)uData, ulRest);
 	}
 
 	fclose(fIn); fIn = NULL;
-	return true;
+	return result;
 }
 #endif
 
