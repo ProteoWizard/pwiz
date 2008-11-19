@@ -17,8 +17,11 @@
             <ul>
                 <li><code>build</code> &nbsp; [everything is built here]</li>
                 <li><code>doc</code> &nbsp; [documentation]</li>
+                <li><code>example_data</code> &nbsp; [some example data files]</li>
                 <li><code>libraries</code> &nbsp; [3rd party library archives]</li>
-                <li><code>pwiz</code> &nbsp; [all source files] </li>
+                <li><code>pwiz</code> &nbsp; [main source tree -- all Apache licensed] </li>
+                <li><code>pwiz_aux</code> &nbsp; [non-Apache licensed contributed code] </li>
+                <li><code>pwiz_tools</code> &nbsp; [source code for tools] </li>
             </ul>
         </ul>
     </p>
@@ -33,48 +36,56 @@
         of the same name.
 
         <ul>
-            <li><h4>level 0 (base):</h4>
+            <li><h4>level 0 (pwiz/utility):</h4>
             <ul>                
-                <li><code>util:&nbsp;</code> Utility classes (Base64, SHA-1, 
-                    2D drawing, unit testing) 
-                </li>
                 <li><code>math:&nbsp;</code> Mathematics classes (linear algebra, statistics,
                     special mathematical functions)
                 </li>
+                <li><code>misc:&nbsp;</code> Miscellaneous standalone utility classes (Base64, SHA-1, 
+                    2D drawing, unit testing) 
+                </li>
                 <li><code>minimxml:&nbsp;</code> XML parsing and writing
+                </li>
+                <li><code>proteome:&nbsp;</code> Chemical formula, peptide, and isotope calculations.
+                </li>
+                <li><code>vendor_api:&nbsp;</code> Vendor-specific API wrappers (Windows only)
                 </li>
             </ul> 
             </li>
 
-            <li><h4>level 1 (data):</h4> 
+            <li><h4>level 1 (pwiz/data):</h4> 
             <ul>
                 <li><code>msdata:&nbsp;</code> Mass spec file format abstraction layer. 
                 </li>
-                <li><code>data:&nbsp;</code> Library containing classes for handling FT transient data,
+                <li><code>misc:&nbsp;</code> Library containing classes for handling FT transient data,
                     complex frequency data, MS1 peak data.
                 </li>
-                <li><code>rawfile:&nbsp;</code> C++ interface to XCalibur COM object XRawfile2
-                    (Windows/MSVC only).
+                <li><code>vendor_readers:&nbsp;</code> Vendor-specific Reader implementations 
                 </li> 
             </ul> 
             </li>
 
-            <li><h4>level 2 (analysis):</h4>
+            <li><h4>level 2 (pwiz/analysis):</h4>
             <ul>
-                <li><code>analysis:&nbsp;</code> Analysis modules and interfaces. 
+                <li><code>chromatogram_processing:&nbsp;</code> Chromatogram analysis
                 </li>
-                <li><code>peaks:&nbsp;</code> Library of routines for frequency-domain 
-                    peak detection.
+                <li><code>frequency:&nbsp;</code> Library of routines for frequency-domain peak detection.
                 </li>
-                <li><code>proteome:&nbsp;</code> Library containing classes for handling chemical
-                    formulas, peptides, and IPI FASTA database parsing.
+                <li><code>passive:&nbsp;</code> Event-driven analysis modules
+                </li>
+                <li><code>peakdetect:&nbsp;</code> General interface for peak detection
+                </li>
+                <li><code>peptideid:&nbsp;</code> Modules handling peptide id info abstraction and parsing
+                </li>
+                <li><code>spectrum_processing:&nbsp;</code> Spectrum analysis
                 </li>
             </ul>
             </li>
 
-            <li><h4>level 3 (tools):</h4>
+            <li><h4>level 3 (pwiz_tools):</h4>
             <ul>
-                <li><code>tools:&nbsp;</code> Command-line tools.</li>
+                <li><code>commandline:&nbsp;</code> Command-line tools</li>
+                <li><code>SeeMS:&nbsp;</code> Graphic data visualization program (Windows only)</li>
             </ul>
             </li>
         </ul>
