@@ -3,6 +3,7 @@
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Modifieing author: Robert Burke <Robert.Burke@cshs.org>
 //
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
@@ -56,6 +57,7 @@ class PWIZ_API_DECL PeptideID
     {
         std::string nativeID;
         std::string sequence;
+        std::string protein_descr;
         double mz;
         double retentionTimeSec;
         double normalizedScore; // in [0,1] 
@@ -79,6 +81,14 @@ class PWIZ_API_DECL PeptideID
 
     virtual boost::shared_ptr<Iterator> iterator() const = 0;
     
+};
+
+struct nativeID_less
+{
+    bool operator()(const PeptideID::Record& a, const PeptideID::Record& b) const
+    {
+        return atof(a.nativeID.c_str()) < atof(b.nativeID.c_str());
+    }
 };
 
 class location_less

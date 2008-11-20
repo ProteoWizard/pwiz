@@ -38,24 +38,40 @@ using namespace std;
 using namespace boost; // TODO: avoid this
 using namespace pwiz::peptideid;
 
+ostream& operator<<(ostream& os, const PeptideID::Record& rec)
+{
+    os << "\tnativeID: " << rec.nativeID << endl;
+    os << "\tsequence: " << rec.sequence << endl;
+    os << "\tprotein_descr: " << rec.protein_descr << endl;
+    return os;
+}
+
 struct local_iterator : public PeptideID::Iterator
 {
     local_iterator(map<string, PeptideID::Record>::const_iterator it,
-                   map<string, PeptideID::Record>::const_iterator)
+                   map<string, PeptideID::Record>::const_iterator end)
         : it(it), end(end)
     {}
     
     virtual PeptideID::Record next()
     {
+        cout << "this: " << (it == end) << endl;
+        cout << (*it).first << endl;
+        cout << (*it).second << endl;
         PeptideID::Record record = (*it).second;
+        cout << "that" << endl;
         it++;
+        cout << "the other" << endl;
         
         return record;
     }
     
     virtual bool hasNext()
     {
-        return it != end;
+        map<string, PeptideID::Record>::const_iterator it2=it;
+        it2++;
+        
+        return it2 != end;
     }
 
     map<string, PeptideID::Record>::const_iterator it;
@@ -145,6 +161,7 @@ public:
     static const char* spectrum_query_tag;
     static const char* search_hit_tag;
     static const char* peptide_attr;
+    static const char* protein_descr_attr;
     static const char* peptideprophet_result_tag;
     static const char* start_scan_attr;
     static const char* retention_time_sec_attr;
@@ -183,6 +200,7 @@ public:
 const char* PepXMLHandler::spectrum_query_tag = "spectrum_query";
 const char* PepXMLHandler::search_hit_tag = "search_hit";
 const char* PepXMLHandler::peptide_attr = "peptide";
+const char* PepXMLHandler::protein_descr_attr = "protein_descr";
 const char* PepXMLHandler::peptideprophet_result_tag = "peptideprophet_result";
 const char* PepXMLHandler::start_scan_attr = "start_scan";
 const char* PepXMLHandler::retention_time_sec_attr = "retention_time_sec";
@@ -204,7 +222,10 @@ Handler::Status PepXMLHandler::startElement(const std::string& name,
     }
     else if (name == search_hit_tag)
     {
+        (*recordMap)[current].sequence = "";
+        (*recordMap)[current].protein_descr = "";
         getAttribute(attributes, peptide_attr, (*recordMap)[current].sequence);
+        getAttribute(attributes, protein_descr_attr, (*recordMap)[current].protein_descr);
     }
     else if (name == peptideprophet_result_tag)
     {
