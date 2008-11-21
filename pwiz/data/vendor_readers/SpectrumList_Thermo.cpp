@@ -68,19 +68,23 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findNative(const string& nativeID) con
 }
 
 
+PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList_Thermo::dataProcessingPtr() const
+{
+    return msd_.dataProcessingPtrs[0]; // created by Reader_Thermo::fillInMetadata()
+}
+
+
 InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType)
 {
     if (msd.instrumentConfigurationPtrs.empty())
-        throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()] No instruments defined.");
+        return InstrumentConfigurationPtr();
 
     for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
          end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
         if ((*it)->componentList.analyzer(0).hasCVParam(massAnalyzerType))
             return *it;
 
-    throw runtime_error("[SpectrumList_Thermo::findInstrumentConfiguration()] "\
-                        "Instrument configuration not found for mass analyzer type: " +
-                        cvinfo(massAnalyzerType).name);
+    return InstrumentConfigurationPtr();
 }
 
 
