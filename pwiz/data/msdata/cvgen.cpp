@@ -221,9 +221,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "#define PWIZ_SOURCE\n\n"
        << "#include \"" << basename << ".hpp\"\n"
-       << "#include \"utility/misc/String.hpp\"\n"
-       << "#include \"utility/misc/Container.hpp\"\n"
-       << "#include \"utility/misc/Exception.hpp\"\n"
+       << "#include \"pwiz/utility/misc/String.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Container.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Exception.hpp\"\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
