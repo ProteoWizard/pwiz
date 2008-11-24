@@ -90,12 +90,13 @@ struct PWIZ_API_DECL Scan
 {
     size_t index;
     std::string nativeID;
+    int scanNumber; // TODO: remove
     double retentionTime;
     double observationDuration;
     CalibrationParameters calibrationParameters;
     std::vector<PeakFamily> peakFamilies;
     
-    Scan() : index(0), nativeID(0), retentionTime(0), observationDuration(0) {}
+    Scan() : index(0), scanNumber(0), retentionTime(0), observationDuration(0) {}
 
     void printSimple(std::ostream& os) const; // TODO: remove at some point
 };
