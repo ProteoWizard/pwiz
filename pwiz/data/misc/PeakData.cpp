@@ -109,6 +109,22 @@ struct HandlerPeak : public SAXParser::Handler
     }
 };
 
+struct HandlerPeakData : public SAXParser::Handler
+{
+  PeakData* peakData;
+  HandlerPeakData(PeakData* _peakData) : peakData(_peakData) {}
+
+  virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
+  {
+    if (name != "PeakData")
+      throw runtime_error(("[HandlerPeakData] Unexpected element name: " + name).c_str());
+    getAttribute(attributes, "sourceFilename", peakData->sourceFilename);
+
+    return Status::Ok;
+
+  }
+
+};
 
 void Peak::read(istream& is)
 {
@@ -158,7 +174,8 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakF
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
 {
-    os << "scan (#" << scan.scanNumber 
+  os   << "index: " << scan.index 
+       << "scan (#" << scan.nativeID
        << " rt:" << scan.retentionTime
        << " T:" << scan.observationDuration
        << " A:" << scan.calibrationParameters.A
@@ -171,8 +188,6 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
 //
 // PeakData 
 //
-
-
 
 } // namespace pwiz
 } // namespace data
@@ -230,7 +245,7 @@ void serialize(Archive& ar, pwiz::data::CalibrationParameters& cp, const unsigne
 template <typename Archive>
 void serialize(Archive& ar, pwiz::data::peakdata::Scan& scan, const unsigned int version)
 {
-    ar & make_nvp("scanNumber", scan.scanNumber);
+    ar & make_nvp("nativeID", scan.nativeID);
     ar & make_nvp("retentionTime", scan.retentionTime);
     ar & make_nvp("observationDuration", scan.observationDuration);
     ar & make_nvp("calibrationParameters", scan.calibrationParameters);
@@ -345,7 +360,8 @@ void writePeakFamily(MinimXML::Writer& writer, const PeakFamily& peakFamily)
 
 void writeScan(MinimXML::Writer& writer, const Scan& scan)
 {
-    writer.pushAttribute("scanNumber", (long)scan.scanNumber);
+    writer.pushAttribute("index", scan.index);
+    writer.pushAttribute("nativeID", (long)scan.nativeID);
     writer.pushAttribute("retentionTime", scan.retentionTime);
     writer.pushAttribute("observationDuration", scan.observationDuration);
     writer.startElement("scan");
@@ -387,11 +403,15 @@ void writeSoftware(MinimXML::Writer& writer, const Software& software)
 } // namespace
 
 
-void PeakData::writeXML(std::ostream& os) const
+void PeakData::write(XMLWriter& writer) const
 {
-    os.precision(12);
 
-    throw runtime_error("[PeakData::writeXML()] Needs to be reimplemented.");
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("sourceFilename",sourceFilename));
+
+    writer.startElement("PeakData",attributes);
+    writer.endElement();
+
 /*
     auto_ptr<MinimXML::Writer> writer(MinimXML::Writer::create(os));
     writer->prolog();
@@ -416,6 +436,12 @@ void PeakData::writeXML(std::ostream& os) const
 
     writer->endElement();
 */
+}
+
+void PeakData::read(istream& is)
+{
+  HandlerPeakData handlerPeakData(this);
+  SAXParser::parse(is, handlerPeakData);
 }
 
 

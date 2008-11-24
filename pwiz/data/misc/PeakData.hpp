@@ -88,13 +88,14 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& pd);
 
 struct PWIZ_API_DECL Scan
 {
-    int scanNumber;
+    size_t index;
+    std::string nativeID;
     double retentionTime;
     double observationDuration;
     CalibrationParameters calibrationParameters;
     std::vector<PeakFamily> peakFamilies;
     
-    Scan() : scanNumber(0), retentionTime(0), observationDuration(0) {}
+    Scan() : index(0), nativeID(0), retentionTime(0), observationDuration(0) {}
 
     void printSimple(std::ostream& os) const; // TODO: remove at some point
 };
@@ -108,7 +109,7 @@ struct PWIZ_API_DECL Software
     std::string name;
     std::string version;
     std::string source;
-
+    
     typedef std::vector<std::pair<std::string,std::string> > Parameters;
     Parameters parameters;
 };
@@ -120,8 +121,8 @@ struct PWIZ_API_DECL PeakData
     Software software; 
     std::vector<Scan> scans;
 
-    // temp XML writing for peakaboo
-    void writeXML(std::ostream& os) const;
+    void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
+    void read(std::istream& is) ;
 };
 
 

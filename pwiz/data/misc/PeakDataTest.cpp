@@ -161,10 +161,39 @@ void testPeak()
     unit_assert(peak == peakIn);
 }
 
+void testPeakDataWriter()
+{
+  if (os_)
+    {
+      *os_ << "testPeakDataWriter(): " <<endl;
+    }
+
+  PeakData peakData;
+  peakData.sourceFilename = "FunRun";
+
+  ostringstream oss;
+  XMLWriter writer(oss);
+  peakData.write(writer);
+
+  if (os_)
+    {
+      *os_ << "Writing PeakData with XML writer..." <<endl;
+      XMLWriter writer(*os_);
+      peakData.write(writer);
+    }
+  
+  PeakData peakData2;
+  istringstream iss(oss.str());
+  peakData2.read(iss);
+
+  unit_assert(peakData2.sourceFilename == peakData.sourceFilename);
+
+}
 
 void test()
 {
     testPeak();
+    testPeakDataWriter();
 }
 
 
