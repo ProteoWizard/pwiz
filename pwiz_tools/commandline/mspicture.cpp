@@ -77,7 +77,7 @@ string usage(const Config& config)
 {
     ostringstream oss;
     
-    oss << "Usage: mspaint [options] [mzxml_filename]\n"
+    oss << "Usage: mspicture [options] [mzxml_filename]\n"
         << "MassSpecPaint - command line access to mass spec data files with pep.xml annotation\n"
         << "\n"
         << "Options:\n" 

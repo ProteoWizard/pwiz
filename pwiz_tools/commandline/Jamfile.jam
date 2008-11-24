@@ -62,6 +62,14 @@ exe mspicture
     ;
 
 
+exe pepsum
+    : pepsum.cpp
+      ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
+      ../../pwiz/utility/misc//pwiz_utility_image
+    : <include>../../..
+    ;
+
+
 exe peakaboo
     : peakaboo.cpp
     : <include>../../..
