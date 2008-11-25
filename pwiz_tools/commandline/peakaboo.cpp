@@ -21,10 +21,10 @@
 //
 
 
+#include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp" // TODO: pwiz_tools/common/FullReaderList
 #include "pwiz/utility/misc/Timer.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -138,7 +138,7 @@ void processFile(const string& filename, const Config& config)
 
     // open file
 
-    ExtendedReaderList readers;
+    FullReaderList readers;
     MSDataFile msd(filename, &readers);
 
     if (!msd.run.spectrumListPtr)

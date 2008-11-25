@@ -21,12 +21,10 @@
 //
 
 
+#include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
-#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
-#include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
@@ -105,6 +103,7 @@ Config parseCommandLine(int argc, const char* argv[])
     usage << "Usage: msconvert [options] [filemasks]\n"
           << "Convert mass spec data file formats.\n"
 #ifndef _MSC_VER
+          << "\n"
           << "Note: the use of mass spec vendor DLLs is not enabled in this \n"
           << "(non-MSVC) build, this means no Thermo, Bruker, Waters etc input.\n"
 #endif
@@ -467,11 +466,7 @@ int go(const Config& config)
 
     boost::filesystem::create_directories(config.outputPath);
 
-    ExtendedReaderList readers;
-#ifdef _MSC_VER
-// vendor DLL usage is msvc only - mingw doesn't provide com support
-    readers += ReaderPtr(new Reader_Waters) + ReaderPtr(new Reader_Bruker);
-#endif
+    FullReaderList readers;
 
     int failedFileCount = 0;
 
