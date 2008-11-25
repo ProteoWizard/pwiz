@@ -21,14 +21,16 @@
 //
 
 
-//#include "MassPeakDetectorFT.hpp"
-
 #include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
+#include "pwiz/analysis/passive/MSDataCache.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp" // TODO: pwiz_tools/common/FullReaderList
 #include "pwiz/utility/misc/Timer.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/shared_ptr.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -38,9 +40,14 @@
 
 
 using namespace pwiz;
+using namespace pwiz::analysis;
 using namespace pwiz::data;
+using namespace pwiz::msdata;
 using namespace pwiz::util;
+using namespace pwiz::minimxml;
 using namespace std;
+using boost::shared_ptr;
+using boost::lexical_cast;
 
 
 struct Config
@@ -48,16 +55,16 @@ struct Config
     vector<string> filenames;
     string outputPath;
     string extension;
-    int scanBegin;
-    int scanEnd;
+    size_t indexBegin;
+    size_t indexEnd;
     double mzLow;
     double mzHigh;
 
     Config()
     :   outputPath("."), 
         extension(".peaks"),
-        scanBegin(1),
-        scanEnd(numeric_limits<int>::max()),
+        indexBegin(1),
+        indexEnd(numeric_limits<int>::max()),
         mzLow(200),
         mzHigh(2000)
     {}
@@ -75,29 +82,73 @@ string Config::outputFilename(const string& filename) const
 }
 
 
+CVID getMassAnalyzerType(const MSData& msd)
+{
+    CVID result = CVID_Unknown;
+
+    for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
+         end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
+    {
+        if (!it->get()) continue;
+        const InstrumentConfiguration& ic = **it;
+        result = ic.componentList.analyzer(0).cvParamChild(MS_mass_analyzer_type).cvid;
+
+        // return FT or orbi (rather than ion trap) for hybrid instruments
+        if (result == MS_FT_ICR ||
+            result == MS_orbitrap)
+            return result;
+    }
+
+    return result;
+}
+
+
+shared_ptr<PeakFamilyDetector> createPeakFamilyDetector(const MSData& msd)
+{
+    CVID massAnalyzerType = getMassAnalyzerType(msd);
+
+    switch (massAnalyzerType)
+    {
+        case MS_FT_ICR:
+        {
+            PeakFamilyDetectorFT::Config config;
+            config.cp = CalibrationParameters::thermo_FT();
+            return shared_ptr<PeakFamilyDetector>(new PeakFamilyDetectorFT(config));
+        }
+        case MS_orbitrap:
+        {
+            PeakFamilyDetectorFT::Config config;
+            config.cp = CalibrationParameters::thermo_Orbitrap();
+            return shared_ptr<PeakFamilyDetector>(new PeakFamilyDetectorFT(config));
+        }
+        default:
+        {
+            throw runtime_error(("[peakaboo] Mass analyzer not supported: " + 
+                                cvinfo(massAnalyzerType).name).c_str());
+        }
+    }
+}
+
+
 void processFile(const string& filename, const Config& config)
 {
     cout << "\nProcessing file: " << filename << endl; 
     string outputFilename = config.outputFilename(filename);
     cout << "outputFilename: " << outputFilename << endl; 
 
-/*    
-    // TODO: use MSData
-    using msrun::MSRun;
-    auto_ptr<MSRun> msrun = MSRun::create(filename);
-    cout << "scans: " << msrun->scanCount() << endl;
+    // open file
 
-    // TODO: use PeakFamilyDetector
-    // instantiate MassPeakDetector
-    MassPeakDetectorFT::Config mpdConfig;
-    //mpdConfig.log = &cout;
-    mpdConfig.cp = data::CalibrationParameters::thermo(); // TODO: grab cp from mzxml
-    if (msrun->instrument(0)->model()=="LTQ Orbitrap XL")
-    {
-        cout << "Using Orbitrap settings." << endl;
-        mpdConfig.cp.setOrbi();
-    }
-    auto_ptr<MassPeakDetector> mpd = MassPeakDetectorFT::create(mpdConfig);
+    ExtendedReaderList readers;
+    MSDataFile msd(filename, &readers);
+
+    if (!msd.run.spectrumListPtr)
+        throw runtime_error("[peakaboo] No SpectrumList.");
+
+    cout << "scans: " << msd.run.spectrumListPtr->size() << endl;
+    
+    // instantiate peak family detector
+
+    shared_ptr<PeakFamilyDetector> pfd = createPeakFamilyDetector(msd);    
 
     // construct peak data
 
@@ -105,53 +156,55 @@ void processFile(const string& filename, const Config& config)
     peakData.sourceFilename = boost::filesystem::path(filename).leaf();
 
     peakData.software.name = "peakaboo";
-    peakData.software.version = "1.0";
+    peakData.software.version = "1.1";
     peakData.software.source = "Spielberg Family Center for Applied Proteomics";
 
-    int scanBegin = max(1, config.scanBegin);
-    int scanEnd = min(msrun->scanCount(), (long)config.scanEnd);
+    size_t indexBegin = max((size_t)0, config.indexBegin);
+    size_t indexEnd = min(msd.run.spectrumListPtr->size(), config.indexEnd+1);
 
-    using boost::lexical_cast;
-    peakData.software.parameters.push_back(make_pair("scanBegin", lexical_cast<string>(scanBegin)));
-    peakData.software.parameters.push_back(make_pair("scanEnd", lexical_cast<string>(scanEnd)));
+    peakData.software.parameters.push_back(make_pair("indexBegin", lexical_cast<string>(config.indexBegin)));
+    peakData.software.parameters.push_back(make_pair("indexEnd", lexical_cast<string>(config.indexEnd)));
     peakData.software.parameters.push_back(make_pair("mzLow", lexical_cast<string>(config.mzLow)));
     peakData.software.parameters.push_back(make_pair("mzHigh", lexical_cast<string>(config.mzHigh)));
 
-    for (int i=scanBegin; i<=scanEnd; i++)
+    MSDataCache cache;
+    cache.open(msd);
+    
+    for (size_t i=indexBegin; i<indexEnd; i++)
     {
-        // TODO: use MSData, probably MSDataCache
-        auto_ptr<msrun::Scan> scan = msrun->scan(i);
-        if (!scan.get())
+        const SpectrumInfo info = cache.spectrumInfo(i, true);
+
+        // TODO: use a SpectrumList filter here, and for index range
+        if (info.massAnalyzerType != MS_FT_ICR && 
+            info.massAnalyzerType != MS_orbitrap)
         {
-            cerr << "Warning: Missing scan " << i << endl;
+            cerr << "Skipping non-FT index " << i << endl;
             continue;
         }
 
-        if (scan->instrumentType() != msrun::Instrument::Type_FT) // TODO: handle Orbi also
-        {
-            cerr << "Skipping non-FT scan " << i << endl;
-            continue;
-        }
-
-        // TODO: use PeakFamilyDetector to fill in pdScan.peakFamilies
-        // TODO: fill in pdScan metadata
         peakdata::Scan pdScan;
-        pdScan.scanNumber = i;
-        pdScan.retentionTime = scan->retentionTime();
-        vector<MassPeakDetector::MassPeak> peaks = mpd->findPeaks(*scan, 
-                                                                 config.mzLow, 
-                                                                 config.mzHigh, 
-                                                                 pdScan);
-        
+        //pdScan.scanNumber = i; //TODO: fill in index and nativeID, other metadata
+        pdScan.retentionTime = info.retentionTime;
+
+        if (info.data.empty())
+        {
+            cerr << "Scan index " << i << " has no data.\n";
+            continue;
+        }
+
+        // TODO: find begin and end MZIntensityPairs properly
+        const MZIntensityPair* begin = &info.data[0];
+        const MZIntensityPair* end = &info.data[0] + info.data.size();
+
+        pfd->detect(begin, end, pdScan.peakFamilies);
         peakData.scans.push_back(pdScan);
     }
 
-    // TODO: re-implement peakdata IO functions using new minimxml writer
-    // output peak data XML
+    cout << "peak data scans: " << peakData.scans.size() << endl; // TODO: remove
 
     ofstream os(outputFilename.c_str());
-    peakData.writeXML(os);
-*/
+    XMLWriter writer(os);
+    peakData.write(writer);
 }
 
 
@@ -206,12 +259,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
             ": set extension for output files")
-        ("scanBegin",
-            po::value<int>(&config.scanBegin)->default_value(config.scanBegin),
-            ": beginning scan")
-        ("scanEnd",
-            po::value<int>(&config.scanEnd)->default_value(config.scanEnd),
-            ": ending scan")
+        ("indexBegin",
+            po::value<size_t>(&config.indexBegin)->default_value(config.indexBegin),
+            ": first 0-based index (n.b. usually scanNumber - 1)")
+        ("indexEnd",
+            po::value<size_t>(&config.indexEnd)->default_value(config.indexEnd),
+            ": last 0-based index")
         ("mzLow",
             po::value<double>(&config.mzLow)->default_value(config.mzLow),
             ": set mz low cutoff")
