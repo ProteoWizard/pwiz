@@ -24,6 +24,7 @@
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/utility/misc/Timer.hpp"
 #include "boost/filesystem/path.hpp"
@@ -55,16 +56,16 @@ struct Config
     vector<string> filenames;
     string outputPath;
     string extension;
-    size_t indexBegin;
-    size_t indexEnd;
+    size_t scanBegin;
+    size_t scanEnd;
     double mzLow;
     double mzHigh;
 
     Config()
     :   outputPath("."), 
         extension(".peaks"),
-        indexBegin(1),
-        indexEnd(numeric_limits<int>::max()),
+        scanBegin(1),
+        scanEnd(numeric_limits<int>::max()),
         mzLow(200),
         mzHigh(2000)
     {}
@@ -130,6 +131,12 @@ shared_ptr<PeakFamilyDetector> createPeakFamilyDetector(const MSData& msd)
 }
 
 
+struct HasLowerMZ
+{
+    bool operator()(const MZIntensityPair& a, const MZIntensityPair& b) {return a.mz < b.mz;}
+};
+
+
 void processFile(const string& filename, const Config& config)
 {
     cout << "\nProcessing file: " << filename << endl; 
@@ -159,22 +166,30 @@ void processFile(const string& filename, const Config& config)
     peakData.software.version = "1.1";
     peakData.software.source = "Spielberg Family Center for Applied Proteomics";
 
-    size_t indexBegin = max((size_t)0, config.indexBegin);
-    size_t indexEnd = min(msd.run.spectrumListPtr->size(), config.indexEnd+1);
-
-    peakData.software.parameters.push_back(make_pair("indexBegin", lexical_cast<string>(config.indexBegin)));
-    peakData.software.parameters.push_back(make_pair("indexEnd", lexical_cast<string>(config.indexEnd)));
+    peakData.software.parameters.push_back(make_pair("scanBegin", lexical_cast<string>(config.scanBegin)));
+    peakData.software.parameters.push_back(make_pair("scanEnd", lexical_cast<string>(config.scanEnd)));
     peakData.software.parameters.push_back(make_pair("mzLow", lexical_cast<string>(config.mzLow)));
     peakData.software.parameters.push_back(make_pair("mzHigh", lexical_cast<string>(config.mzHigh)));
+
+    // scan number filtering
+
+    IntegerSet scanNumberSet(config.scanBegin, config.scanEnd);
+
+    msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr,
+                                  SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet)));
+
+    // initialize cache
 
     MSDataCache cache;
     cache.open(msd);
     
-    for (size_t i=indexBegin; i<indexEnd; i++)
+    for (size_t i=0; i<cache.size(); i++)
     {
+        // get spectrum info from cache
+
         const SpectrumInfo info = cache.spectrumInfo(i, true);
 
-        // TODO: use a SpectrumList filter here, and for index range
+        // TODO: use general SpectrumList filtering
         if (info.massAnalyzerType != MS_FT_ICR && 
             info.massAnalyzerType != MS_orbitrap)
         {
@@ -182,8 +197,11 @@ void processFile(const string& filename, const Config& config)
             continue;
         }
 
+        // fill in scan metadata
+
         peakdata::Scan pdScan;
-        //pdScan.scanNumber = i; //TODO: fill in index and nativeID, other metadata
+        pdScan.index = info.index;
+        pdScan.nativeID = info.nativeID;
         pdScan.retentionTime = info.retentionTime;
 
         if (info.data.empty())
@@ -192,15 +210,17 @@ void processFile(const string& filename, const Config& config)
             continue;
         }
 
-        // TODO: find begin and end MZIntensityPairs properly
-        const MZIntensityPair* begin = &info.data[0];
-        const MZIntensityPair* end = &info.data[0] + info.data.size();
+        // find peaks
+
+        const MZIntensityPair* begin = lower_bound(&info.data.front(), &info.data.back(), 
+                                                   MZIntensityPair(config.mzLow,0), HasLowerMZ());
+
+        const MZIntensityPair* end = lower_bound(&info.data.front(), &info.data.back(), 
+                                                 MZIntensityPair(config.mzHigh,0), HasLowerMZ());
 
         pfd->detect(begin, end, pdScan.peakFamilies);
         peakData.scans.push_back(pdScan);
     }
-
-    cout << "peak data scans: " << peakData.scans.size() << endl; // TODO: remove
 
     ofstream os(outputFilename.c_str());
     XMLWriter writer(os);
@@ -259,12 +279,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
             ": set extension for output files")
-        ("indexBegin",
-            po::value<size_t>(&config.indexBegin)->default_value(config.indexBegin),
-            ": first 0-based index (n.b. usually scanNumber - 1)")
-        ("indexEnd",
-            po::value<size_t>(&config.indexEnd)->default_value(config.indexEnd),
-            ": last 0-based index")
+        ("scanBegin",
+            po::value<size_t>(&config.scanBegin)->default_value(config.scanBegin),
+            ": set first scan")
+        ("scanEnd",
+            po::value<size_t>(&config.scanEnd)->default_value(config.scanEnd),
+            ": set last scan")
         ("mzLow",
             po::value<double>(&config.mzLow)->default_value(config.mzLow),
             ": set mz low cutoff")
