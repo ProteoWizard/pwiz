@@ -1,0 +1,247 @@
+User Label 0: Study
+User Label 1: Client
+User Label 2: Laboratory
+User Label 3: Company
+User Label 4: Phone
+Record count: 8
+
+Record #1
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 1.234
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 1
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: 
+L4 Company: 
+L5 Phone: 
+Instrument Method: 
+Process Method: 
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #2
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 999
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 1
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: 
+L4 Company: 
+L5 Phone: 
+Instrument Method: 
+Process Method: 
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #3
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10.4
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 1
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: 
+L4 Company: 
+L5 Phone: 
+Instrument Method: 
+Process Method: 
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #4
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10.4
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: 
+L4 Company: 
+L5 Phone: 
+Instrument Method: 
+Process Method: 
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #5
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 0
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 10.435
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: 
+L4 Company: 
+L5 Phone: 
+Instrument Method: 
+Process Method: 
+File Name: data05
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #6
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 0
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 1.234
+Dil Factor: 0
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: laboratory
+L4 Company: 
+L5 Phone: phone
+Instrument Method: 
+Process Method: 
+File Name: data06
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #7
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 0
+Sample Wt: 0
+Sample Vol: 1.2345
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: laboratory
+L4 Company: 
+L5 Phone: phone
+Instrument Method: 
+Process Method: 
+File Name: data07
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #8
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 0
+Sample Wt: 1.2345
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: 
+Sample ID: 1
+Comment: 
+L1 Study: 
+L2 Client: 
+L3 Laboratory: laboratory
+L4 Company: 
+L5 Phone: phone
+Instrument Method: 
+Process Method: 
+File Name: data08
+Path: C:\Xcalibur\Data
+Position: 1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+

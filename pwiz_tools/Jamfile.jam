@@ -23,3 +23,4 @@
 
 build-project commandline ;
 build-project SeeMS ;
+build-project sld ;
