@@ -1782,6 +1782,12 @@ public ref class SpectrumList
     /// <para>- client may assume the underlying Spectrum^ is valid</para>
     /// </summary>
     virtual Spectrum^ spectrum(int index, bool getBinaryData);
+
+    /// <summary>
+    /// returns the data processing affecting spectra retrieved through this interface
+    /// <para>- may return a null shared pointer</para>
+    /// </summary>
+    virtual DataProcessing^ dataProcessing();
 };
 
 

@@ -70,7 +70,7 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 #define NATIVE_VALUE_TO_CLI(NativeType, CLIType, NativeValue) ((CLIType) NativeValue)
 #define STD_STRING_TO_CLI_STRING(NativeType, CLIType, StdString) gcnew CLIType((StdString).c_str())
 
-#define CLI_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
+#define CLI_TO_NATIVE_SHARED_PTR(NativeType, CLIObject) (CLIObject == nullptr ? NativeType() : NativeType(*(CLIObject)->base_))
 #define CLI_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(*(CLIObject)->base_)
 #define CLI_SHARED_PTR_TO_NATIVE_REFERENCE(NativeType, CLIObject) NativeType(**(CLIObject)->base_)
 #define CLI_VALUE_TO_NATIVE_VALUE(NativeType, CLIObject) ((NativeType) CLIObject)

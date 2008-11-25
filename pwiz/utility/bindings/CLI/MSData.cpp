@@ -24,11 +24,16 @@
 #include "MSData.hpp"
 //#include "../../../data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "comdef.h" // for _com_error
+
+
 using System::Exception;
 using System::String;
+using boost::shared_ptr;
 
 
 namespace b = pwiz::msdata;
+
 
 namespace pwiz {
 namespace CLI {
@@ -311,7 +316,7 @@ Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^
 System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Software::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-CVParam^ Software::softwareParam::get() {return gcnew CVParam(&(*base_)->softwareParam);}
+CVParam^ Software::softwareParam::get() {return gcnew CVParam(&(*base_)->softwareParam, this);}
 void Software::softwareParam::set(CVParam^ value) {(*base_)->softwareParam = **value->base_;}
 
 System::String^ Software::softwareParamVersion::get() {return gcnew System::String((*base_)->softwareParamVersion.c_str());}
@@ -392,8 +397,8 @@ AcquisitionSettings::AcquisitionSettings(System::String^ _id)
 System::String^ AcquisitionSettings::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void AcquisitionSettings::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-InstrumentConfiguration^ AcquisitionSettings::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
-void AcquisitionSettings::instrumentConfiguration::set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = *value->base_;}
+InstrumentConfiguration^ AcquisitionSettings::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(b::InstrumentConfigurationPtr, InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
+void AcquisitionSettings::instrumentConfiguration::set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
 
 SourceFileList^ AcquisitionSettings::sourceFiles::get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
 
@@ -412,8 +417,8 @@ Acquisition::Acquisition()
 int Acquisition::number::get() {return base_->number;}
 void Acquisition::number::set(int value) {base_->number = value;}
 
-SourceFile^ Acquisition::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
-void Acquisition::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
+SourceFile^ Acquisition::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
+void Acquisition::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
 System::String^ Acquisition::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
 void Acquisition::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
@@ -461,8 +466,8 @@ Precursor::Precursor()
 : ParamContainer(new b::Precursor())
 {owner_ = nullptr; base_ = static_cast<b::Precursor*>(ParamContainer::base_);}
 
-SourceFile^ Precursor::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
-void Precursor::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = *value->base_;}
+SourceFile^ Precursor::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
+void Precursor::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
 System::String^ Precursor::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
 void Precursor::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
@@ -492,7 +497,7 @@ Scan::Scan()
 {owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_);}
 
 InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
-void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = *value->base_;}
+void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
 
 bool Scan::empty()
 {
@@ -531,8 +536,8 @@ BinaryDataArray::BinaryDataArray()
 : ParamContainer(new b::BinaryDataArray())
 {base_ = new boost::shared_ptr<b::BinaryDataArray>(static_cast<b::BinaryDataArray*>(ParamContainer::base_));}
 
-DataProcessing^ BinaryDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
-void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
+DataProcessing^ BinaryDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
+void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
 
 BinaryData^ BinaryDataArray::data::get() {return gcnew BinaryData(&(*base_)->data, this);}
 void BinaryDataArray::data::set(BinaryData^ value) {(*base_)->data = *value->base_;}
@@ -626,11 +631,11 @@ void Spectrum::sourceFilePosition::set(System::UInt64 value) {(*base_)->sourceFi
 System::UInt64 Spectrum::defaultArrayLength::get() {return (System::UInt64) (*base_)->defaultArrayLength;}
 void Spectrum::defaultArrayLength::set(System::UInt64 value) {(*base_)->defaultArrayLength = (size_t) value;}
  
-DataProcessing^ Spectrum::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
-void Spectrum::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
+DataProcessing^ Spectrum::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
+void Spectrum::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
 
-SourceFile^ Spectrum::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SourceFilePtr, SourceFile, (*base_)->sourceFilePtr);}
-void Spectrum::sourceFile::set(SourceFile^ value) {(*base_)->sourceFilePtr = *value->base_;}
+SourceFile^ Spectrum::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, (*base_)->sourceFilePtr);}
+void Spectrum::sourceFile::set(SourceFile^ value) {(*base_)->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
 SpectrumDescription^ Spectrum::spectrumDescription::get() {return gcnew SpectrumDescription(&(*base_)->spectrumDescription, this);}
 void Spectrum::spectrumDescription::set(SpectrumDescription^ value) {(*base_)->spectrumDescription = *value->base_;}
@@ -778,7 +783,18 @@ Spectrum^ SpectrumList::spectrum(int index)
 Spectrum^ SpectrumList::spectrum(int index, bool getBinaryData)
 {
     try { return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData))); }
-    catch (exception& e) { throw gcnew Exception(gcnew String(e.what())); }
+    catch (exception& e) { throw gcnew Exception("[SpectrumList::spectrum()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[SpectrumList::spectrum()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[SpectrumList::spectrum()] Unhandled exception"); }
+}
+
+DataProcessing^ SpectrumList::dataProcessing()
+{
+    const shared_ptr<const b::DataProcessing> cdp = (*base_)->dataProcessingPtr();
+    if (!cdp.get())
+        return nullptr;
+    b::DataProcessingPtr dp = boost::const_pointer_cast<b::DataProcessing>(cdp);
+    return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, dp);
 }
 
 
@@ -842,12 +858,15 @@ int ChromatogramList::findNative(System::String^ nativeID)
 
 Chromatogram^ ChromatogramList::chromatogram(int index)
 {
-    return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, false)));
+    return chromatogram(index, false);
 }
 
 Chromatogram^ ChromatogramList::chromatogram(int index, bool getBinaryData)
 {
-    return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));
+    try { return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData))); }
+    catch (exception& e) { throw gcnew Exception("[ChromatogramList::chromatogram()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ChromatogramList::chromatogram()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ChromatogramList::chromatogram()] Unhandled exception"); }
 }
 
 
@@ -891,11 +910,11 @@ Run::Run()
 System::String^ Run::id::get() {return gcnew System::String(base_->id.c_str());}
 void Run::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
-InstrumentConfiguration^ Run::defaultInstrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
-void Run::defaultInstrumentConfiguration::set(InstrumentConfiguration^ value) {base_->defaultInstrumentConfigurationPtr = *value->base_;}
+InstrumentConfiguration^ Run::defaultInstrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(b::InstrumentConfigurationPtr, InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
+void Run::defaultInstrumentConfiguration::set(InstrumentConfiguration^ value) {base_->defaultInstrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
 
-Sample^ Run::sample::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SamplePtr, Sample, base_->samplePtr);}
-void Run::sample::set(Sample^ value) {base_->samplePtr = *value->base_;}
+Sample^ Run::sample::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SamplePtr, Sample, base_->samplePtr);}
+void Run::sample::set(Sample^ value) {base_->samplePtr = CLI_TO_NATIVE_SHARED_PTR(b::SamplePtr, value);}
 
 System::String^ Run::startTimeStamp::get() {return gcnew System::String(base_->startTimeStamp.c_str());}
 void Run::startTimeStamp::set(System::String^ value) {base_->startTimeStamp = ToStdString(value);}
@@ -903,10 +922,10 @@ void Run::startTimeStamp::set(System::String^ value) {base_->startTimeStamp = To
 SourceFileList^ Run::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
 void Run::sourceFiles::set(SourceFileList^ value) {base_->sourceFilePtrs = *value->base_;}
 
-SpectrumList^ Run::spectrumList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(pwiz::msdata::SpectrumListPtr, SpectrumList, base_->spectrumListPtr, this);}
+SpectrumList^ Run::spectrumList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(b::SpectrumListPtr, SpectrumList, base_->spectrumListPtr, this);}
 void Run::spectrumList::set(SpectrumList^ value) {base_->spectrumListPtr = *value->base_;}
 
-ChromatogramList^ Run::chromatogramList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(pwiz::msdata::ChromatogramListPtr, ChromatogramList, base_->chromatogramListPtr, this);}
+ChromatogramList^ Run::chromatogramList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(b::ChromatogramListPtr, ChromatogramList, base_->chromatogramListPtr, this);}
 void Run::chromatogramList::set(ChromatogramList^ value) {base_->chromatogramListPtr = *value->base_;}
 
 bool Run::empty()
