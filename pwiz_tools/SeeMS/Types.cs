@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
@@ -100,8 +101,19 @@ namespace seems
 		ResolvingPower
 	}
 
+    public interface IDataView
+    {
+        IList<ManagedDataSource> Sources { get; }
+        IList<GraphItem> DataItems { get; }
+    }
+
 	public abstract class GraphItem : IComparable<GraphItem>, MSGraph.IMSGraphItemInfo
 	{
+        public GraphItem()
+        {
+            dataProcessing = new DataProcessing();
+        }
+
 		protected string id;
 		public string Id { get { return id; } }
 
@@ -110,6 +122,9 @@ namespace seems
 
         protected ManagedDataSource source;
         public ManagedDataSource Source { get { return source; } }
+
+        protected DataProcessing dataProcessing;
+        public DataProcessing DataProcessing { get { return dataProcessing; } set { dataProcessing = value; } }
 
 		protected double totalIntegratedArea;
 		public double TotalIntegratedArea { get { return totalIntegratedArea; } set { totalIntegratedArea = value; } }
@@ -183,20 +198,26 @@ namespace seems
             set { annotationSettings = value; }
         }
 
-        public virtual string AnnotatePoint( ZedGraph.PointPair point )
+        public virtual MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
         {
             if( annotationSettings != null )
             {
                 Map<double, SeemsPointAnnotation>.Enumerator itr = annotationSettings.PointAnnotations.Find( point.X );
                 if( itr.IsValid && itr.Current.Value != null )
-                    return itr.Current.Value.Label;
+                    return new MSGraph.PointAnnotation( itr.Current.Value.Label );
 
-                MSGraph.PointAnnotationFormat defaultAnnotationFormat = annotationSettings.DefaultAnnotationFormat;
-                if( defaultAnnotationFormat != null )
-                    return defaultAnnotationFormat.AnnotatePoint( point );
+                return annotationSettings.AnnotatePoint( point );
             }
 
-            return String.Empty;
+            return null;
+        }
+
+        public virtual ZedGraph.GraphObjList NonPointAnnotations
+        {
+            get
+            {
+                return null;
+            }
         }
 
         public virtual ZedGraph.IPointList Points { get { return null; } }
@@ -279,6 +300,54 @@ namespace seems
             {
                 return element;
                 //return source.MSDataFile.run.spectrumList.spectrum(index);
+            }
+        }
+
+        /// <summary>
+        /// add precursor and non-matched annotations
+        /// </summary>
+        public override ZedGraph.GraphObjList NonPointAnnotations
+        {
+            get
+            {
+                ZedGraph.GraphObjList objs = new ZedGraph.GraphObjList();
+                foreach( Precursor p in element.spectrumDescription.precursors )
+                    foreach( SelectedIon si in p.selectedIons )
+                    {
+                        double precursorMz = (double) si.cvParam( CVID.MS_m_z ).value;
+                        int precursorCharge = 0;
+                        CVParam precursorChargeParam = si.cvParam( CVID.MS_charge_state );
+                        if( precursorChargeParam.empty() )
+                            precursorChargeParam = si.cvParam( CVID.MS_possible_charge_state );
+                        if( !precursorChargeParam.empty() )
+                            precursorCharge = (int) precursorChargeParam.value;
+
+                        
+                        double stickLength = 0.1;// ( yAxis.MajorTic.Size * 5 ) / pane.Chart.Rect.Height;
+                        ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, 1 + stickLength );
+                        stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
+                        stickOverlay.Line.Width = 3;
+                        stickOverlay.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
+                        stickOverlay.Line.Color = Color.Green;
+                        objs.Add( stickOverlay );
+
+                        // Create a text label from the X data value
+                        string precursorLabel;
+                        if( precursorCharge > 0 )
+                            precursorLabel = String.Format( "{0}\n(+{1} precursor)", precursorMz.ToString( "f3" ), precursorCharge );
+                        else
+                            precursorLabel = String.Format( "{0}\n(precursor of unknown charge)", precursorMz.ToString( "f3" ) );
+                        ZedGraph.TextObj text = new ZedGraph.TextObj( precursorLabel, precursorMz, 1 + stickLength,
+                            ZedGraph.CoordType.XScaleYChartFraction, ZedGraph.AlignH.Center, ZedGraph.AlignV.Top );
+                        text.ZOrder = ZedGraph.ZOrder.A_InFront;
+                        text.FontSpec.FontColor = stickOverlay.Line.Color;
+                        text.FontSpec.Border.IsVisible = false;
+                        text.FontSpec.Fill.IsVisible = false;
+                        //text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
+                        text.FontSpec.Angle = 0;
+                        objs.Add( text );
+                    }
+                return objs;
             }
         }
 
@@ -376,19 +445,19 @@ namespace seems
             pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
         }
 
-        public MSGraph.PointAnnotationFormat DefaultAnnotationFormat
+        public MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
         {
-            get
-            {
-                if( ShowXValues && ShowYValues )
-                    return new MSGraph.PointAnnotationFormat( "{x:f2}\n{y:f2}" );
-                else if( ShowXValues )
-                    return new MSGraph.PointAnnotationFormat( "{x:f2}" );
-                else if( ShowYValues )
-                    return new MSGraph.PointAnnotationFormat( "{y:f2}" );
-                else
-                    return null;
-            }
+            string label = null;
+            if( ShowXValues && ShowYValues )
+                label = String.Format( "{0:f2}\n{1:f2}", point.X, point.Y );
+            else if( ShowXValues )
+                label = String.Format( "{0:f2}", point.X );
+            else if( ShowYValues )
+                label = String.Format( "{0:f2}", point.Y );
+
+            if( label != null )
+                return new MSGraph.PointAnnotation( label );
+            return null;
         }
 
         private bool showXValues;

@@ -860,7 +860,7 @@ namespace seems
                 CurrentGraphForm.ZedGraphControl.Refresh();
             }
 
-            CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
+            //CurrentGraphForm.CurrentGraphItem.TotalIntegratedArea = 0.0;
         }
 
         private void clearAllIntegrationsToolStripMenuItem_Click( object sender, EventArgs e )
@@ -886,6 +886,11 @@ namespace seems
         private void dataProcessingButton_Click( object sender, EventArgs e )
         {
             manager.ShowDataProcessing();
+        }
+
+        private void previewAsMzMLToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            manager.ShowCurrentSourceAsMzML();
         }
 	}
 }

@@ -193,6 +193,13 @@ namespace seems.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap Thresholder {
+            get {
+                object obj = ResourceManager.GetObject("Thresholder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap up {
             get {
                 object obj = ResourceManager.GetObject("up", resourceCulture);

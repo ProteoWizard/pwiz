@@ -5,16 +5,38 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 
 namespace seems
 {
-    public partial class TreeViewForm : Form
+    public partial class TreeViewForm : DockableForm, IDataView
     {
+        private GraphItem graphItem;
+
+        #region IDataView Members
+        public IList<ManagedDataSource> Sources
+        {
+            get
+            {
+                return new List<ManagedDataSource>( new ManagedDataSource[] { graphItem.Source } );
+            }
+        }
+
+        public IList<GraphItem> DataItems
+        {
+            get
+            {
+                return new List<GraphItem>( new GraphItem[] { graphItem } );
+            }
+        }
+        #endregion
+
         public TreeView TreeView { get { return treeView; } }
 
-        public TreeViewForm()
+        public TreeViewForm( GraphItem item )
         {
             InitializeComponent();
+            graphItem = item;
         }
 
         private void updateNodeBounds( TreeNode node, bool expandedOnly, ref Size bounds )

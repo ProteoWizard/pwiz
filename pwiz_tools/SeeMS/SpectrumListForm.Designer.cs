@@ -40,14 +40,13 @@ namespace seems
             this.msLevel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ScanTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DataPoints = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.InstrumentConfigurationID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.BasePeakMZ = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.BasePeakIntensity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TotalIntensity = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.DataProcessing = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Polarity = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.PrecursorInfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ScanInfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.InstrumentConfigurationID = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.DataProcessing = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.PrecursorInfo = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.ScanInfo = new System.Windows.Forms.DataGridViewLinkColumn();
             ( (System.ComponentModel.ISupportInitialize) ( this.gridView ) ).BeginInit();
             this.selectColumnsMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -71,12 +70,11 @@ namespace seems
             this.msLevel,
             this.ScanTime,
             this.DataPoints,
-            this.InstrumentConfigurationID,
             this.BasePeakMZ,
             this.BasePeakIntensity,
             this.TotalIntensity,
+            this.InstrumentConfigurationID,
             this.DataProcessing,
-            this.Polarity,
             this.PrecursorInfo,
             this.ScanInfo} );
             this.gridView.Cursor = System.Windows.Forms.Cursors.Hand;
@@ -90,7 +88,6 @@ namespace seems
             this.gridView.TabIndex = 10;
             this.gridView.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseClick );
             this.gridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_ColumnHeaderMouseClick );
-            this.gridView.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler( this.gridView_CellMouseEnter );
             this.gridView.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseDoubleClick );
             // 
             // selectColumnsMenuStrip
@@ -98,12 +95,12 @@ namespace seems
             this.selectColumnsMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
             this.selectColumnsToolStripMenuItem} );
             this.selectColumnsMenuStrip.Name = "selectColumnsMenuStrip";
-            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 170, 26 );
+            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 160, 26 );
             // 
             // selectColumnsToolStripMenuItem
             // 
             this.selectColumnsToolStripMenuItem.Name = "selectColumnsToolStripMenuItem";
-            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 169, 22 );
+            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 159, 22 );
             this.selectColumnsToolStripMenuItem.Text = "Select Columns...";
             this.selectColumnsToolStripMenuItem.Click += new System.EventHandler( this.selectColumnsToolStripMenuItem_Click );
             // 
@@ -160,13 +157,6 @@ namespace seems
             this.DataPoints.ReadOnly = true;
             this.DataPoints.ToolTipText = "Number of M/Z Data Points";
             // 
-            // InstrumentConfigurationID
-            // 
-            this.InstrumentConfigurationID.HeaderText = "IC Id";
-            this.InstrumentConfigurationID.Name = "InstrumentConfigurationID";
-            this.InstrumentConfigurationID.ReadOnly = true;
-            this.InstrumentConfigurationID.ToolTipText = "Instrument Configuration";
-            // 
             // BasePeakMZ
             // 
             this.BasePeakMZ.HeaderText = "BP m/z";
@@ -185,24 +175,32 @@ namespace seems
             this.TotalIntensity.Name = "TotalIntensity";
             this.TotalIntensity.ReadOnly = true;
             // 
+            // InstrumentConfigurationID
+            // 
+            this.InstrumentConfigurationID.HeaderText = "IC Id";
+            this.InstrumentConfigurationID.Name = "InstrumentConfigurationID";
+            this.InstrumentConfigurationID.ReadOnly = true;
+            this.InstrumentConfigurationID.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.InstrumentConfigurationID.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.InstrumentConfigurationID.ToolTipText = "Instrument Configuration";
+            this.InstrumentConfigurationID.TrackVisitedState = false;
+            // 
             // DataProcessing
             // 
             this.DataProcessing.HeaderText = "DP Id";
             this.DataProcessing.Name = "DataProcessing";
             this.DataProcessing.ReadOnly = true;
+            this.DataProcessing.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.DataProcessing.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.DataProcessing.ToolTipText = "Data Processing";
-            // 
-            // Polarity
-            // 
-            this.Polarity.HeaderText = "Polarity";
-            this.Polarity.Name = "Polarity";
-            this.Polarity.ReadOnly = true;
             // 
             // PrecursorInfo
             // 
             this.PrecursorInfo.HeaderText = "Precursor Info";
             this.PrecursorInfo.Name = "PrecursorInfo";
             this.PrecursorInfo.ReadOnly = true;
+            this.PrecursorInfo.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.PrecursorInfo.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.PrecursorInfo.ToolTipText = "Information related to the precursor (if applicable)";
             // 
             // ScanInfo
@@ -210,6 +208,8 @@ namespace seems
             this.ScanInfo.HeaderText = "Scan Info";
             this.ScanInfo.Name = "ScanInfo";
             this.ScanInfo.ReadOnly = true;
+            this.ScanInfo.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.ScanInfo.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.ScanInfo.ToolTipText = "Information related to the scan and the acquisitions composing it";
             // 
             // SpectrumListForm
@@ -242,13 +242,12 @@ namespace seems
         private System.Windows.Forms.DataGridViewTextBoxColumn msLevel;
         private System.Windows.Forms.DataGridViewTextBoxColumn ScanTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn DataPoints;
-        private System.Windows.Forms.DataGridViewTextBoxColumn InstrumentConfigurationID;
         private System.Windows.Forms.DataGridViewTextBoxColumn BasePeakMZ;
         private System.Windows.Forms.DataGridViewTextBoxColumn BasePeakIntensity;
         private System.Windows.Forms.DataGridViewTextBoxColumn TotalIntensity;
-        private System.Windows.Forms.DataGridViewTextBoxColumn DataProcessing;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Polarity;
-        private System.Windows.Forms.DataGridViewTextBoxColumn PrecursorInfo;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ScanInfo;
+        private System.Windows.Forms.DataGridViewLinkColumn InstrumentConfigurationID;
+        private System.Windows.Forms.DataGridViewLinkColumn DataProcessing;
+        private System.Windows.Forms.DataGridViewLinkColumn PrecursorInfo;
+        private System.Windows.Forms.DataGridViewLinkColumn ScanInfo;
 	}
 }

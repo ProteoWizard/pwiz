@@ -41,6 +41,8 @@ namespace seems
                 String.Format( "{0} ({1})", pwiz.CLI.msdata.Version.ToString(), pwiz.CLI.msdata.Version.LastModified() ) );
             componentListView.Items.Add( "ProteoWizard Analysis" ).SubItems.Add(
                 String.Format( "{0} ({1})", pwiz.CLI.analysis.Version.ToString(), pwiz.CLI.analysis.Version.LastModified() ) );
+            componentListView.Items.Add( "ProteoWizard Proteome" ).SubItems.Add(
+                String.Format( "{0} ({1})", pwiz.CLI.proteome.Version.ToString(), pwiz.CLI.proteome.Version.LastModified() ) );
         }
     }
 }

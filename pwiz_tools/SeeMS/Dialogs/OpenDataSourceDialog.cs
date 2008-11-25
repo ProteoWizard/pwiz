@@ -169,9 +169,13 @@ namespace seems
                 }
 
                 System.Collections.Generic.Set<string> contentTypes = new System.Collections.Generic.Set<string>();
-                foreach( CVParam term in msInfo.fileDescription.fileContent.cvParams )
-                    contentTypes.Add( term.name );
-                contentType = String.Join( ", ", new List<string>( contentTypes.Keys ).ToArray() );
+                CVParamList cvParams = msInfo.fileDescription.fileContent.cvParams;
+                if( cvParams.Count > 0 )
+                {
+                    foreach( CVParam term in msInfo.fileDescription.fileContent.cvParams )
+                        contentTypes.Add( term.name );
+                    contentType = String.Join( ", ", new List<string>( contentTypes.Keys ).ToArray() );
+                }
             }
 
             public string[] ToArray()
@@ -210,66 +214,28 @@ namespace seems
             }
         }
 
-        private string getSourceTypeFromXML( string filepath )
-        {
-            XmlReaderSettings settings = new XmlReaderSettings();
-            settings.ValidationType = ValidationType.None;
-            settings.ProhibitDtd = false;
-            settings.XmlResolver = null;
-            using( XmlReader reader = XmlTextReader.Create( new StreamReader( filepath, true ), settings ) )
-            {
-                while( reader.Read() )
-                {
-                    if( reader.NodeType == XmlNodeType.Element )
-                    {
-                        switch( reader.Name.ToLower() )
-                        {
-                            case "mzml":
-                            case "indexmzml":
-                                return "mzML";
-                            case "mzxml":
-                            case "msrun":
-                                return "mzXML";
-                            //case "mzdata":
-                            //    return "mzData";
-                            case "root":
-                                return "Bruker Data Exchange";
-                            default:
-                                return "unknown";
-                        }
-                    }
-                }
-            }
-            return "unknown";
-        }
-
         private string getSourceType( DirectoryInfo dirInfo )
         {
-            if( dirInfo.Name.EndsWith( ".raw" ) &&
-                dirInfo.GetFiles( "_FUNC*.DAT" ).Length > 0 )
-                return "Waters RAW";
-            return "File Folder";
+            try
+            {
+                string type = MSDataFile.identify( dirInfo.FullName );
+                if( type == String.Empty )
+                    return "File Folder";
+                return type;
+            } catch
+            {
+                return "";
+            }
         }
 
         private string getSourceType( FileInfo fileInfo )
         {
-            //if( fileInfo.Name == "fid" )
-            //    return "Bruker FID";
-
-            switch( fileInfo.Extension.ToLower() )
+            try
             {
-                case ".raw": return "Thermo RAW";
-                //case ".wiff": return "Analyst WIFF";
-                case ".mgf": return "Mascot Generic";
-                //case ".dta": return "Sequest DTA";
-                //case ".yep": return "Bruker YEP";
-                //case ".baf": return "Bruker BAF";
-                //case ".ms2": return "MS2";
-                case ".mzxml": return "mzXML";
-                //case ".mzdata": return "mzData";
-                case ".mzml": return "mzML";
-                case ".xml": return getSourceTypeFromXML( fileInfo.FullName );
-                default: return "unknown";
+                return MSDataFile.identify( fileInfo.FullName );
+            } catch
+            {
+                return "";
             }
         }
 
@@ -288,12 +254,12 @@ namespace seems
             if( sourceInfo.type == "File Folder" )
             {
                 return sourceInfo;
-            } else if( sourceInfo.type != "unknown" )
+            } else if( sourceInfo.type != String.Empty )
             {
                 try
                 {
-                    MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
-                    sourceInfo.populateFromMSData( msInfo );
+                    //MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
+                    //sourceInfo.populateFromMSData( msInfo );
                     
                 } catch
                 {
@@ -302,7 +268,7 @@ namespace seems
                 }
 
                 sourceInfo.size = 0;
-                foreach( FileInfo fileInfo in dirInfo.GetFiles() )
+                foreach( FileInfo fileInfo in dirInfo.GetFiles("*", SearchOption.AllDirectories) )
                     sourceInfo.size += (UInt64) fileInfo.Length;
                 return sourceInfo;
             }
@@ -314,7 +280,7 @@ namespace seems
             SourceInfo sourceInfo = new SourceInfo();
             sourceInfo.type = getSourceType( fileInfo );
             sourceInfo.name = fileInfo.Name;
-            if( sourceInfo.type != "unknown" )
+            if( sourceInfo.type != String.Empty )
             {
                 if( listView.View != View.Details ||
                     ( sourceTypeComboBox.SelectedIndex > 0 &&
@@ -348,29 +314,35 @@ namespace seems
             // subitems: Name, Type, Spectra, Size, Date Modified
             foreach( DirectoryInfo subdirInfo in dirInfo.GetDirectories() )
             {
-                SourceInfo sourceInfo = getSourceInfo( subdirInfo );
-                if( sourceInfo != null )
+                try
                 {
-                    if( sourceInfo.type == "File Folder" ||
-                        sourceTypeComboBox.SelectedIndex == 0 ||
-                        sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type )
+                    SourceInfo sourceInfo = getSourceInfo( subdirInfo );
+                    if( sourceInfo != null )
                     {
-                        ListViewItem item;
-                        if( sourceInfo.type == "File Folder" )
-                            item = new ListViewItem( sourceInfo.ToArray(), 0 );
-                        else
-                            item = new ListViewItem( sourceInfo.ToArray(), 2 );
-                        item.SubItems[3].Tag = (object) sourceInfo.size;
-                        item.SubItems[4].Tag = (object) sourceInfo.dateModified;
-                        listView.Items.Add( item );
+                        if( sourceInfo.type == "File Folder" ||
+                            sourceTypeComboBox.SelectedIndex == 0 ||
+                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type )
+                        {
+                            ListViewItem item;
+                            if( sourceInfo.type == "File Folder" )
+                                item = new ListViewItem( sourceInfo.ToArray(), 0 );
+                            else
+                                item = new ListViewItem( sourceInfo.ToArray(), 2 );
+                            item.SubItems[3].Tag = (object) sourceInfo.size;
+                            item.SubItems[4].Tag = (object) sourceInfo.dateModified;
+                            listView.Items.Add( item );
+                        }
+                        Application.DoEvents();
+                        if( abortPopulateList )
+                        {
+                            //MessageBox.Show( "abort" );
+                            abortPopulateList = false;
+                            break;
+                        }
                     }
-                    Application.DoEvents();
-                    if( abortPopulateList )
-                    {
-                        //MessageBox.Show( "abort" );
-                        abortPopulateList = false;
-                        break;
-                    }
+                } catch
+                {
+                    // skip errors
                 }
             }
 

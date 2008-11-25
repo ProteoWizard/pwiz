@@ -40,6 +40,9 @@ namespace MSGraph
         // returns a range (subset) of the point list downsampled for a given width (in pixels)
         public void SetScale( int width, double min, double max )
         {
+            if( fullPointList.Count == 0 )
+                return;
+
             min = Math.Max( min, fullPointList[0].X );
             max = Math.Min( max, fullPointList[fullPointList.Count - 1].X );
 
@@ -125,7 +128,7 @@ namespace MSGraph
                     curBinMinIndex != curBinMaxIndex &&
                     curBinMaxIndex != curBinExitIndex )
                     scaledPointList.Add( fullPointList[curBinExitIndex] );
-                if( fullPointList[curBinMaxIndex].Y != 0 )
+                if( fullPointList[curBinMaxIndex].Y != 0 && lastBin > 0 )
                     scaledMaxIndexList[lastBin-1] = curBinMaxIndex;
             }
         }

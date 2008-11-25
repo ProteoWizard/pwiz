@@ -41,6 +41,11 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,6 +56,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -264,6 +270,9 @@
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Misc\SpectrumIcon.ico" />
+    <EmbeddedResource Include="ProcessingListView.resx">
+      <DependentUpon>ProcessingListView.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SpectrumListForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>SpectrumListForm.cs</DependentUpon>
@@ -278,10 +287,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="boost_date_time-vc80-mt.dll">
+    <Content Include="boost_date_time-vc90-mt.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="boost_thread-vc80-mt.dll">
+    <Content Include="boost_thread-vc90-mt.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Misc\Centroider.ico" />
@@ -291,23 +300,19 @@
     <None Include="Misc\Images\MyNetworkPlaces.png" />
     <Content Include="Misc\DataProcessing.ico" />
     <Content Include="Misc\Images\back.png" />
-    <Content Include="Misc\Images\Centroider.bmp" />
     <None Include="Misc\Images\Centroider.png" />
-    <Content Include="Misc\Images\DataProcessing.bmp" />
     <None Include="Misc\Images\DataProcessing.png" />
     <Content Include="Misc\Images\file.png" />
     <Content Include="Misc\Images\folder.png" />
     <Content Include="Misc\Images\LocalDrive.png" />
     <Content Include="Misc\Images\NetworkDrive.png" />
     <Content Include="Misc\Images\OpticalDrive.png" />
-    <None Include="Misc\Images\PeakIntegral.bmp" />
     <None Include="Misc\Images\PeakIntegral.png" />
     <None Include="Misc\Images\PeakIntegralActive.png" />
-    <Content Include="Misc\Images\Smoother.bmp" />
     <None Include="Misc\Images\Smoother.png" />
+    <None Include="Misc\Images\Thresholder.png" />
     <Content Include="Misc\Images\up.png" />
     <Content Include="Misc\Images\views.png" />
-    <Content Include="Misc\Images\PeakIntegralActive.bmp" />
     <None Include="Misc\Images\RecentDocuments.png" />
     <Content Include="Misc\Smoother.ico" />
     <Content Include="Misc\SpectrumSVG-template.svg">
@@ -345,6 +350,16 @@
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="EDAL">
+      <Guid>{8E79B9A2-107E-4E91-A0FF-01F2591103F3}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

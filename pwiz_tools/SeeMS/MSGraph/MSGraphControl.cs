@@ -22,8 +22,14 @@ namespace MSGraph
             IsEnableVPan = false;
             IsEnableHEdit = false;
             IsEnableVEdit = false;
+
             EditButtons = MouseButtons.Left;
             EditModifierKeys = Keys.None;
+
+            unzoomButtons_ = new MouseButtonClicks( MouseButtons.Middle );
+            unzoomButtons2_ = new MouseButtonClicks( MouseButtons.None );
+            unzoomAllButtons_ = new MouseButtonClicks( MouseButtons.Left, 2 );
+            unzoomAllButtons2_ = new MouseButtonClicks( MouseButtons.None );
 
             ZoomEvent += new ZoomEventHandler( MSGraphControl_ZoomEvent );
             MouseMoveEvent += new ZedMouseEventHandler( MSGraphControl_MouseMoveEvent );

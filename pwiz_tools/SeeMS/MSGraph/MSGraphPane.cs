@@ -104,9 +104,11 @@ namespace MSGraph
             string baseLabel = "";
             foreach( MSGraphItem item in this.CurveList )
             {
-                string label = item.GraphItemInfo.AnnotatePoint( new PointPair( 0, 0 ) );
-                if( label.Length > baseLabel.Length )
-                    baseLabel = label;
+                PointAnnotation annotation = item.GraphItemInfo.AnnotatePoint( new PointPair( 0, 0 ) );
+                if( annotation != null &&
+                    annotation.Label != null &&
+                    annotation.Label.Length > baseLabel.Length )
+                    baseLabel = annotation.Label;
             }
 
             TextObj baseTextObj = new TextObj( baseLabel, 0, 0 );
@@ -147,11 +149,20 @@ namespace MSGraph
                     if( xAxisPixel - yPixel < 3 )
                         continue;
 
-                    string pointLabel = item.GraphItemInfo.AnnotatePoint( pt );
-                    if( pointLabel == String.Empty )
+                    PointAnnotation annotation = item.GraphItemInfo.AnnotatePoint( pt );
+                    if( annotation == null )
                         continue;
 
-                    float pointLabelWidth = labelLengthToWidthRatio * pointLabel.Length;
+                    if( annotation.ExtraAnnotation != null )
+                    {
+                        this.GraphObjList.Add( annotation.ExtraAnnotation );
+                        pointAnnotations_.Add( annotation.ExtraAnnotation );
+                    }
+
+                    if( annotation.Label == null || annotation.Label == String.Empty )
+                        continue;
+
+                    float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Length;
 
                     // do fast check for overlap against all MSGraphItems
                     double labelY = yAxis.Scale.ReverseTransform( yPixel - 5 );
@@ -173,31 +184,27 @@ namespace MSGraph
                     if( overlap )
                         continue;
 
-                    TextObj text = new TextObj( pointLabel, pt.X, labelY,
+                    TextObj text = new TextObj( annotation.Label, pt.X, labelY,
                                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom );
                     text.ZOrder = ZOrder.A_InFront;
                     //text.IsClippedToChartRect = true;
-                    text.FontSpec.FontColor = item.BaseItem.Color;
-                    // Hide the border and the fill
-                    text.FontSpec.Border.IsVisible = false;
-                    text.FontSpec.Fill.IsVisible = false;
-                    //text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
-                    // Rotate the text to 90 degrees
-                    text.FontSpec.Angle = 0;
+                    text.FontSpec = annotation.FontSpec;
 
                     if( !detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item.BaseItem is StickItem ) )
                     {
                         this.GraphObjList.Add( text );
-                        clipRegion.Union( textBoundsRegion );
-                        //g.SetClip( chartRegion, CombineMode.Replace );
-                        g.SetClip( clipRegion, CombineMode.Replace );
-                        //clipG.Clear( Color.White );
-                        //clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
-                        //clipBmp.Save( "C:\\clip.bmp" );
                         pointAnnotations_.Add( text );
-                        //text.Draw( g, pane, 1.0f );
-                        //msGraphControl.DrawToBitmap( gmap, Rectangle.Round( pane.Rect ) );
+
+
+                        clipRegion.Union( textBoundsRegion );
+                        g.SetClip( clipRegion, CombineMode.Replace );
                     }
+                }
+
+                if( item.GraphItemInfo.NonPointAnnotations != null )
+                {
+                    GraphObjList.AddRange( item.GraphItemInfo.NonPointAnnotations );
+                    pointAnnotations_.AddRange( item.GraphItemInfo.NonPointAnnotations );
                 }
             }
         }

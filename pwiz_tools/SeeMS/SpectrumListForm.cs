@@ -17,10 +17,10 @@ namespace seems
 	public partial class SpectrumListForm : DockableForm
 	{
 		private List<MassSpectrum> spectrumList;
-        private Timer hoverTimer;
-        private Timer leaveTimer;
-        private TreeViewForm treeViewToolTipForm;
-        private DataGridViewCell hoverCell;
+        //private Timer hoverTimer;
+        //private Timer leaveTimer;
+        //private TreeViewForm treeViewToolTipForm;
+        //private DataGridViewCell hoverCell;
 
 		public DataGridView GridView { get { return gridView; } }
 
@@ -63,55 +63,119 @@ namespace seems
             gridView.Columns["BasePeakMZ"].ToolTipText = new CVInfo( CVID.MS_base_peak_m_z ).def;
             gridView.Columns["BasePeakIntensity"].ToolTipText = new CVInfo( CVID.MS_base_peak_intensity ).def;
             gridView.Columns["TotalIntensity"].ToolTipText = new CVInfo( CVID.MS_total_ion_current ).def;
-            gridView.Columns["Polarity"].ToolTipText = new CVInfo( CVID.MS_polarity ).def;
+
+            gridView.Columns["Index"].ValueType = Type.GetType( "System.Int32" );
+            gridView.Columns["msLevel"].ValueType = Type.GetType( "System.Int32" );
+            gridView.Columns["ScanTime"].ValueType = Type.GetType( "System.Double" );
+            gridView.Columns["DataPoints"].ValueType = Type.GetType( "System.UInt64" );
+            gridView.Columns["BasePeakMZ"].ValueType = Type.GetType( "System.Double" );
+            gridView.Columns["BasePeakIntensity"].ValueType = Type.GetType( "System.Double" );
+            gridView.Columns["TotalIntensity"].ValueType = Type.GetType( "System.Double" );
+
+            gridView.SortCompare += new DataGridViewSortCompareEventHandler( gridView_SortCompare );
 
 			foreach( MassSpectrum spectrum in spectrumList )
 			{
 				Add( spectrum );
 			}
 
-            hoverTimer = new Timer();
+            /*hoverTimer = new Timer();
             hoverTimer.Tick += new EventHandler( hoverTimer_Tick );
             hoverCell = null;
 
-            treeViewToolTipForm = new TreeViewForm();
-            treeViewToolTipForm.MouseLeave += new EventHandler( treeViewForm_MouseLeave );
-
             leaveTimer = new Timer();
             leaveTimer.Interval = 50;
-            leaveTimer.Tick += new EventHandler( leaveTimer_Tick );
+            leaveTimer.Tick += new EventHandler( leaveTimer_Tick );*/
+        }
+
+        void gridView_SortCompare( object sender, DataGridViewSortCompareEventArgs e )
+        {
+            switch( e.Column.Index )
+            {
+                case 13: // precursor info
+                    string[] precursors1 = e.CellValue1.ToString().Split( ",".ToCharArray() );
+                    string[] precursors2 = e.CellValue2.ToString().Split( ",".ToCharArray() );
+                    double precursor1, precursor2;
+                    if( Double.TryParse( precursors1[0], out precursor1 ) &&
+                        Double.TryParse( precursors2[0], out precursor2 ) )
+                        e.SortResult = precursor1.CompareTo( precursor2 );
+                    else
+                        e.SortResult = precursors1[0].CompareTo( precursors2[0] );
+                    break;
+
+                default:
+                    if( Type.GetTypeCode( e.Column.ValueType ) == TypeCode.Double )
+                        e.SortResult = ( (Double) e.CellValue1 ).CompareTo( e.CellValue2 );
+                    else if( Type.GetTypeCode( e.Column.ValueType ) == TypeCode.Int32 )
+                        e.SortResult = ( (Int32) e.CellValue1 ).CompareTo( e.CellValue2 );
+                    else if( Type.GetTypeCode( e.Column.ValueType ) == TypeCode.UInt64 )
+                        e.SortResult = ( (UInt64) e.CellValue1 ).CompareTo( e.CellValue2 );
+                    else
+                        e.SortResult = e.CellValue1.ToString().CompareTo( e.CellValue2.ToString() );
+                    break;
+            }
+            e.Handled = true;
         }
 
 		public void Add( MassSpectrum spectrum )
 		{
-			Spectrum s = spectrum.Element;
-			SpectrumDescription sd = s.spectrumDescription;
-			Scan scan = sd.scan;
-			InstrumentConfiguration ic = scan.instrumentConfiguration;
-			DataProcessing dp = s.dataProcessing;
+            int rowIndex = gridView.Rows.Add();
+			gridView.Rows[rowIndex].Tag = spectrum;
+            spectrum.Tag = gridView.Rows[rowIndex];
+
+            if( spectrum.Element.spotID.Length > 0 )
+                gridView.Columns["SpotId"].Visible = true;
+
+            UpdateRow( rowIndex );
+		}
+
+        public void UpdateAllRows()
+        {
+            for( int i = 0; i < gridView.Rows.Count; ++i )
+                UpdateRow( i );
+        }
+
+        public void UpdateRow( int rowIndex )
+        {
+            UpdateRow( rowIndex, null );
+        }
+
+        public void UpdateRow( int rowIndex, SpectrumList spectrumList )
+        {
+            DataGridViewRow row = gridView.Rows[rowIndex];
+
+            Spectrum s;
+            if( spectrumList != null )
+            {
+                s = spectrumList.spectrum( (row.Tag as MassSpectrum).Index, false );
+                row.Tag = new MassSpectrum( row.Tag as MassSpectrum, s );
+            } else
+                s = ( row.Tag as MassSpectrum ).Element;
+
+            SpectrumDescription sd = s.spectrumDescription;
+            Scan scan = sd.scan;
+            InstrumentConfiguration ic = scan.instrumentConfiguration;
+            DataProcessing dp = s.dataProcessing;
 
             CVParam param;
 
             param = s.cvParam( CVID.MS_ms_level );
-            int msLevel = param.cvid != CVID.CVID_Unknown ? Convert.ToInt32( (string) param.value ) : 0;
+            int msLevel = !param.empty() ? (int) param.value : 0;
 
             param = scan.cvParam( CVID.MS_scan_time );
-            double scanTime = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+            double scanTime = !param.empty() ? (double) param.value : 0;
 
             param = sd.cvParam( CVID.MS_base_peak_m_z );
-            double bpmz = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+            double bpmz = !param.empty() ? (double) param.value : 0;
 
             param = sd.cvParam( CVID.MS_base_peak_intensity );
-            double bpi = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
+            double bpi = !param.empty() ? (double) param.value : 0;
 
             param = sd.cvParam( CVID.MS_total_ion_current );
-            double tic = param.cvid != CVID.CVID_Unknown ? Convert.ToDouble( (string) param.value ) : 0;
-
-            param = scan.cvParamChild( CVID.MS_polarity );
-            string polarity = param.cvid != CVID.CVID_Unknown ? param.name : "unknown";
+            double tic = !param.empty() ? (double) param.value : 0;
 
             StringBuilder precursorInfo = new StringBuilder();
-            if( sd.precursors.Count == 0 )
+            if( msLevel == 1 || sd.precursors.Count == 0 )
                 precursorInfo.Append( "n/a" );
             else
             {
@@ -134,8 +198,8 @@ namespace seems
                 foreach( Acquisition a in sd.acquisitionList.acquisitions )
                 {
                     if( scanInfo.Length > 0 )
-                        scanInfo.Append( ",");
-                    scanInfo.Append( a.number.ToString());
+                        scanInfo.Append( "," );
+                    scanInfo.Append( a.number.ToString() );
                 }
             if( scan.scanWindows.Count > 0 )
             {
@@ -152,30 +216,26 @@ namespace seems
             if( scanInfo.Length == 0 )
                 scanInfo.Append( "unknown" );
 
-			int rowIndex = gridView.Rows.Add(
-				s.id, s.nativeID, s.index, s.spotID,
-				s.cvParamChild( CVID.MS_spectrum_type ).name,
+            row.SetValues(
+                s.id, s.nativeID, s.index, s.spotID,
+                s.cvParamChild( CVID.MS_spectrum_type ).name,
                 msLevel,
                 scanTime,
                 s.defaultArrayLength,
-				( ic != null ? ic.id : "unknown" ),
                 bpmz,
                 bpi,
                 tic,
-				( dp != null ? dp.id : "unknown" ),
-                polarity,
-				precursorInfo.ToString(),
+                ( ic == null || ic.id.Length == 0 ? "unknown" : ic.id ),
+                ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id ),
+                precursorInfo.ToString(),
                 scanInfo.ToString()
-			);
-			gridView.Rows[rowIndex].Tag = spectrum;
-            spectrum.Tag = gridView.Rows[rowIndex];
-
-            if( s.spotID.Length > 0 )
-                gridView.Columns["SpotId"].Visible = true;
-		}
+            );
+        }
 
 		private void gridView_CellMouseClick( object sender, DataGridViewCellMouseEventArgs e )
 		{
+            if( e.RowIndex > -1 && gridView.Columns[e.ColumnIndex] is DataGridViewLinkColumn )
+                gridView_ShowCellToolTip( gridView[e.ColumnIndex, e.RowIndex] );
 			OnCellClick( e );
 		}
 
@@ -264,11 +324,12 @@ namespace seems
             Spectrum s = spectrum.Element;
             SpectrumDescription sd = s.spectrumDescription;
 
-            TreeView tv = treeViewToolTipForm.TreeView;
-            tv.Nodes.Clear();
+            TreeViewForm treeViewForm = new TreeViewForm( spectrum );
+            TreeView tv = treeViewForm.TreeView;
 
             if( gridView.Columns[cell.ColumnIndex].Name == "PrecursorInfo" )
             {
+                treeViewForm.Text = "Precursor Details";
                 if( sd.precursors.Count == 0 )
                     tv.Nodes.Add( "No precursor information available." );
                 else
@@ -319,6 +380,7 @@ namespace seems
                 }
             } else if( gridView.Columns[cell.ColumnIndex].Name == "ScanInfo" )
             {
+                treeViewForm.Text = "Scan Configuration Details";
                 if( sd.scan.empty() )
                     tv.Nodes.Add( "No scan details available." );
                 else
@@ -347,6 +409,7 @@ namespace seems
                 }
             } else if( gridView.Columns[cell.ColumnIndex].Name == "InstrumentConfigurationID" )
             {
+                treeViewForm.Text = "Instrument Configuration Details";
                 InstrumentConfiguration ic = sd.scan.instrumentConfiguration;
                 if( ic == null || ic.empty() )
                     tv.Nodes.Add( "No instrument configuration details available." );
@@ -392,21 +455,41 @@ namespace seems
                         swNode.Nodes.Add( "Version: " + sw.softwareParamVersion );
                     }
                 }
+            } else if( gridView.Columns[cell.ColumnIndex].Name == "DataProcessing" )
+            {
+                treeViewForm.Text = "Data Processing Details";
+                DataProcessing dp = s.dataProcessing;
+                if( dp == null || dp.empty() )
+                    tv.Nodes.Add( "No data processing details available." );
+                else
+                {
+                    TreeNode dpNode = tv.Nodes.Add( String.Format( "Data Processing ({0})", dp.id ) );
+
+                    if( dp.processingMethods.Count == 0 )
+                        dpNode.Nodes.Add( "No component list available." );
+                    else
+                    {
+                        TreeNode pmNode = dpNode.Nodes.Add( "Processing Methods" );
+                        foreach( ProcessingMethod pm in dp.processingMethods )
+                        {
+                            addParamsToTreeNode( pm as ParamContainer, pmNode );
+                        }
+                    }
+                }
             } else
                 return;
 
             tv.ExpandAll();
-            Point toolTipLocation = Form.MousePosition;
-            toolTipLocation.Offset( -5, -5 );
-            treeViewToolTipForm.Location = toolTipLocation;
-            treeViewToolTipForm.DoAutoSize();
-            treeViewToolTipForm.Show();
-            leaveTimer.Start();
+            treeViewForm.StartPosition = FormStartPosition.CenterParent;
+            treeViewForm.AutoSize = true;
+            //treeViewForm.DoAutoSize();
+            treeViewForm.Show( this.DockPanel );
+            //leaveTimer.Start();
             this.Focus();
         }
 
 
-        void leaveTimer_Tick( object sender, EventArgs e )
+        /*void leaveTimer_Tick( object sender, EventArgs e )
         {
             if( !treeViewToolTipForm.Bounds.Contains( Form.MousePosition ) )
             {
@@ -452,7 +535,7 @@ namespace seems
                 return;
 
             gridView_ShowCellToolTip( hoverCell );
-        }
+        }*/
 	}
 
     public class SpectrumListCellClickEventArgs : DataGridViewCellMouseEventArgs

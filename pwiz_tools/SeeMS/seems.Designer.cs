@@ -43,6 +43,7 @@ namespace seems
             this.exitFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.previewAsMzMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cascadeWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tileVerticalWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -148,30 +149,30 @@ namespace seems
             // openFileMenuItem
             // 
             this.openFileMenuItem.Name = "openFileMenuItem";
-            this.openFileMenuItem.Size = new System.Drawing.Size( 143, 22 );
+            this.openFileMenuItem.Size = new System.Drawing.Size( 136, 22 );
             this.openFileMenuItem.Text = "&Open";
             this.openFileMenuItem.Click += new System.EventHandler( this.openFile_Click );
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size( 140, 6 );
+            this.toolStripSeparator2.Size = new System.Drawing.Size( 133, 6 );
             // 
             // recentFilesFileMenuItem
             // 
             this.recentFilesFileMenuItem.Name = "recentFilesFileMenuItem";
-            this.recentFilesFileMenuItem.Size = new System.Drawing.Size( 143, 22 );
+            this.recentFilesFileMenuItem.Size = new System.Drawing.Size( 136, 22 );
             this.recentFilesFileMenuItem.Text = "Recent Files";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size( 140, 6 );
+            this.toolStripSeparator3.Size = new System.Drawing.Size( 133, 6 );
             // 
             // exitFileMenuItem
             // 
             this.exitFileMenuItem.Name = "exitFileMenuItem";
-            this.exitFileMenuItem.Size = new System.Drawing.Size( 143, 22 );
+            this.exitFileMenuItem.Size = new System.Drawing.Size( 136, 22 );
             this.exitFileMenuItem.Text = "E&xit";
             this.exitFileMenuItem.Click += new System.EventHandler( this.exitFileMenuItem_Click );
             // 
@@ -184,10 +185,18 @@ namespace seems
             // 
             // viewToolStripMenuItem
             // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
+            this.previewAsMzMLToolStripMenuItem} );
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size( 41, 20 );
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size( 42, 20 );
             this.viewToolStripMenuItem.Text = "View";
-            this.viewToolStripMenuItem.Visible = false;
+            // 
+            // previewAsMzMLToolStripMenuItem
+            // 
+            this.previewAsMzMLToolStripMenuItem.Name = "previewAsMzMLToolStripMenuItem";
+            this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size( 160, 22 );
+            this.previewAsMzMLToolStripMenuItem.Text = "Preview as mzML";
+            this.previewAsMzMLToolStripMenuItem.Click += new System.EventHandler( this.previewAsMzMLToolStripMenuItem_Click );
             // 
             // windowToolStripMenuItem
             // 
@@ -199,62 +208,62 @@ namespace seems
             this.closeAllWindowMenuItem,
             this.toolStripSeparator1} );
             this.windowToolStripMenuItem.Name = "windowToolStripMenuItem";
-            this.windowToolStripMenuItem.Size = new System.Drawing.Size( 57, 20 );
+            this.windowToolStripMenuItem.Size = new System.Drawing.Size( 58, 20 );
             this.windowToolStripMenuItem.Text = "Window";
             this.windowToolStripMenuItem.DropDownOpening += new System.EventHandler( this.windowToolStripMenuItem_DropDownOpening );
             // 
             // cascadeWindowMenuItem
             // 
             this.cascadeWindowMenuItem.Name = "cascadeWindowMenuItem";
-            this.cascadeWindowMenuItem.Size = new System.Drawing.Size( 153, 22 );
+            this.cascadeWindowMenuItem.Size = new System.Drawing.Size( 144, 22 );
             this.cascadeWindowMenuItem.Text = "&Cascade";
             this.cascadeWindowMenuItem.Click += new System.EventHandler( this.cascadeWindowMenuItem_Click );
             // 
             // tileVerticalWindowMenuItem
             // 
             this.tileVerticalWindowMenuItem.Name = "tileVerticalWindowMenuItem";
-            this.tileVerticalWindowMenuItem.Size = new System.Drawing.Size( 153, 22 );
+            this.tileVerticalWindowMenuItem.Size = new System.Drawing.Size( 144, 22 );
             this.tileVerticalWindowMenuItem.Text = "Tile &Vertical";
             this.tileVerticalWindowMenuItem.Click += new System.EventHandler( this.tileVerticalWindowMenuItem_Click );
             // 
             // tileHorizontalWindowMenuItem
             // 
             this.tileHorizontalWindowMenuItem.Name = "tileHorizontalWindowMenuItem";
-            this.tileHorizontalWindowMenuItem.Size = new System.Drawing.Size( 153, 22 );
+            this.tileHorizontalWindowMenuItem.Size = new System.Drawing.Size( 144, 22 );
             this.tileHorizontalWindowMenuItem.Text = "Tile &Horizontal";
             this.tileHorizontalWindowMenuItem.Click += new System.EventHandler( this.tileHorizontalWindowMenuItem_Click );
             // 
             // arrangeIconsWindowMenuItem
             // 
             this.arrangeIconsWindowMenuItem.Name = "arrangeIconsWindowMenuItem";
-            this.arrangeIconsWindowMenuItem.Size = new System.Drawing.Size( 153, 22 );
+            this.arrangeIconsWindowMenuItem.Size = new System.Drawing.Size( 144, 22 );
             this.arrangeIconsWindowMenuItem.Text = "&Arrange Icons";
             this.arrangeIconsWindowMenuItem.Click += new System.EventHandler( this.arrangeIconsWindowMenuItem_Click );
             // 
             // closeAllWindowMenuItem
             // 
             this.closeAllWindowMenuItem.Name = "closeAllWindowMenuItem";
-            this.closeAllWindowMenuItem.Size = new System.Drawing.Size( 153, 22 );
+            this.closeAllWindowMenuItem.Size = new System.Drawing.Size( 144, 22 );
             this.closeAllWindowMenuItem.Text = "Close All";
             this.closeAllWindowMenuItem.Click += new System.EventHandler( this.closeAllWindowMenuItem_Click );
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size( 150, 6 );
+            this.toolStripSeparator1.Size = new System.Drawing.Size( 141, 6 );
             // 
             // helpToolStripMenuItem1
             // 
             this.helpToolStripMenuItem1.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem} );
             this.helpToolStripMenuItem1.Name = "helpToolStripMenuItem1";
-            this.helpToolStripMenuItem1.Size = new System.Drawing.Size( 40, 20 );
+            this.helpToolStripMenuItem1.Size = new System.Drawing.Size( 41, 20 );
             this.helpToolStripMenuItem1.Text = "Help";
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size( 114, 22 );
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size( 105, 22 );
             this.aboutToolStripMenuItem.Text = "&About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler( this.aboutHelpMenuItem_Click );
             // 
@@ -300,7 +309,7 @@ namespace seems
             this.clearToolStripMenuItem} );
             this.annotateToolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.annotateToolStripDropDownButton.Name = "annotateToolStripDropDownButton";
-            this.annotateToolStripDropDownButton.Size = new System.Drawing.Size( 65, 22 );
+            this.annotateToolStripDropDownButton.Size = new System.Drawing.Size( 63, 22 );
             this.annotateToolStripDropDownButton.Text = "Annotate";
             // 
             // peptideMassMappingToolStripMenuItem
@@ -309,13 +318,13 @@ namespace seems
             this.annotateMassMapProteinDigestToolStripMenuItem,
             this.fromSinglePeptideToolStripMenuItem} );
             this.peptideMassMappingToolStripMenuItem.Name = "peptideMassMappingToolStripMenuItem";
-            this.peptideMassMappingToolStripMenuItem.Size = new System.Drawing.Size( 206, 22 );
+            this.peptideMassMappingToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
             this.peptideMassMappingToolStripMenuItem.Text = "Peptide Mass Mapping...";
             // 
             // annotateMassMapProteinDigestToolStripMenuItem
             // 
             this.annotateMassMapProteinDigestToolStripMenuItem.Name = "annotateMassMapProteinDigestToolStripMenuItem";
-            this.annotateMassMapProteinDigestToolStripMenuItem.Size = new System.Drawing.Size( 193, 22 );
+            this.annotateMassMapProteinDigestToolStripMenuItem.Size = new System.Drawing.Size( 183, 22 );
             this.annotateMassMapProteinDigestToolStripMenuItem.Text = "From Protein Digestion";
             this.annotateMassMapProteinDigestToolStripMenuItem.Click += new System.EventHandler( this.peptideMassMapProteinDigestToolStripMenuItem_Click );
             // 
@@ -325,39 +334,39 @@ namespace seems
             this.annotateMassMapSinglePeptideTextBox} );
             this.fromSinglePeptideToolStripMenuItem.Enabled = false;
             this.fromSinglePeptideToolStripMenuItem.Name = "fromSinglePeptideToolStripMenuItem";
-            this.fromSinglePeptideToolStripMenuItem.Size = new System.Drawing.Size( 193, 22 );
+            this.fromSinglePeptideToolStripMenuItem.Size = new System.Drawing.Size( 183, 22 );
             this.fromSinglePeptideToolStripMenuItem.Text = "From Single Peptide";
             // 
             // annotateMassMapSinglePeptideTextBox
             // 
             this.annotateMassMapSinglePeptideTextBox.Name = "annotateMassMapSinglePeptideTextBox";
-            this.annotateMassMapSinglePeptideTextBox.Size = new System.Drawing.Size( 150, 21 );
+            this.annotateMassMapSinglePeptideTextBox.Size = new System.Drawing.Size( 150, 20 );
             // 
             // peptideFragmentationToolStripMenuItem
             // 
             this.peptideFragmentationToolStripMenuItem.Name = "peptideFragmentationToolStripMenuItem";
-            this.peptideFragmentationToolStripMenuItem.Size = new System.Drawing.Size( 206, 22 );
+            this.peptideFragmentationToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
             this.peptideFragmentationToolStripMenuItem.Text = "Peptide Fragmentation...";
             this.peptideFragmentationToolStripMenuItem.Click += new System.EventHandler( this.peptideFragmentationToolStripMenuItem_Click );
             // 
             // manualEditToolStripMenuItem
             // 
             this.manualEditToolStripMenuItem.Name = "manualEditToolStripMenuItem";
-            this.manualEditToolStripMenuItem.Size = new System.Drawing.Size( 206, 22 );
+            this.manualEditToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
             this.manualEditToolStripMenuItem.Text = "Manual Edit...";
             this.manualEditToolStripMenuItem.Click += new System.EventHandler( this.manualEditToolStripMenuItem_Click );
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size( 206, 22 );
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
             this.settingsToolStripMenuItem.Text = "Settings...";
             this.settingsToolStripMenuItem.Click += new System.EventHandler( this.settingsToolStripMenuItem_Click );
             // 
             // clearToolStripMenuItem
             // 
             this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size( 206, 22 );
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
             this.clearToolStripMenuItem.Text = "Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler( this.clearToolStripMenuItem_Click );
             // 
@@ -382,7 +391,7 @@ namespace seems
             // 
             this.peakIntegrationMode.CheckOnClick = true;
             this.peakIntegrationMode.Name = "peakIntegrationMode";
-            this.peakIntegrationMode.Size = new System.Drawing.Size( 162, 22 );
+            this.peakIntegrationMode.Size = new System.Drawing.Size( 152, 22 );
             this.peakIntegrationMode.Text = "Integrate Peaks";
             this.peakIntegrationMode.Visible = false;
             this.peakIntegrationMode.Click += new System.EventHandler( this.integratePeaksButton_Click );
@@ -390,21 +399,21 @@ namespace seems
             // clearCurrentIntegration
             // 
             this.clearCurrentIntegration.Name = "clearCurrentIntegration";
-            this.clearCurrentIntegration.Size = new System.Drawing.Size( 162, 22 );
+            this.clearCurrentIntegration.Size = new System.Drawing.Size( 152, 22 );
             this.clearCurrentIntegration.Text = "Clear (current)";
             this.clearCurrentIntegration.Click += new System.EventHandler( this.clearCurrentIntegration_Click );
             // 
             // clearAllIntegrationsToolStripMenuItem
             // 
             this.clearAllIntegrationsToolStripMenuItem.Name = "clearAllIntegrationsToolStripMenuItem";
-            this.clearAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
+            this.clearAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
             this.clearAllIntegrationsToolStripMenuItem.Text = "Clear (all)";
             this.clearAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.clearAllIntegrationsToolStripMenuItem_Click );
             // 
             // exportAllIntegrationsToolStripMenuItem
             // 
             this.exportAllIntegrationsToolStripMenuItem.Name = "exportAllIntegrationsToolStripMenuItem";
-            this.exportAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 162, 22 );
+            this.exportAllIntegrationsToolStripMenuItem.Size = new System.Drawing.Size( 152, 22 );
             this.exportAllIntegrationsToolStripMenuItem.Text = "Export";
             this.exportAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.exportAllIntegrationsToolStripMenuItem_Click );
             // 
@@ -519,5 +528,6 @@ namespace seems
 		private System.Windows.Forms.ToolStripMenuItem exportAllIntegrationsToolStripMenuItem;
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
         private System.Windows.Forms.ToolStripButton dataProcessingButton;
+        private System.Windows.Forms.ToolStripMenuItem previewAsMzMLToolStripMenuItem;
 	}
 }

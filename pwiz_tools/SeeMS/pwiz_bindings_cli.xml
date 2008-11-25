@@ -1,142 +1,393 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        msdatafile
+        examples
     </assembly>
     <members>
-        <member name="M:pwiz.msdata.Reader_Thermo.hasRAWHeader(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-checks header for "Finnigan" wide char string
-</member>
-        <member name="T:pwiz.msdata.ExtendedReaderList">
-default ReaderList, extended to include vendor readers
-</member>
-        <member name="T:pwiz.msdata.DefaultReaderList">
-default Reader list
-</member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.write(System.String,pwiz.CLI.msdata.MSDataFile.WriteConfig)">
+        <member name="T:pwiz.CLI.proteome.Version">
             <summary>
-member write function with the specified configuration
+version information for the proteome namespace
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.write(System.String)">
+        <member name="T:pwiz.CLI.analysis.Version">
             <summary>
-member write function with the default configuration (mzML, 64-bit, no compression)
+version information for the analysis namespace
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.identify(System.String)">
+        <member name="T:pwiz.CLI.msdata.Version">
             <summary>
-returns a string describing the type of MS source &lt;path&gt; represents
-<para>- returns an empty string if the format is unknown or unsupported</para></summary>
-        </member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.write(pwiz.CLI.msdata.MSData,System.String,pwiz.CLI.msdata.MSDataFile.WriteConfig)">
-            <summary>
-static write function for any MSData object with the specified configuration
+version information for the msdata namespace
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.write(pwiz.CLI.msdata.MSData,System.String)">
+        <member name="M:pwiz.CLI.analysis.SpectrumList_ChargeStateCalculator.accept(pwiz.CLI.msdata.SpectrumList)">
+charge calculation works on any SpectrumList
+</member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_ChargeStateCalculator">
             <summary>
-static write function for any MSData object with the default configuration (mzML, 64-bit, no compression)
+SpectrumList implementation that assigns (probable) charge states to tandem mass spectra
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.MSDataFile.WriteConfig">
+        <member name="M:pwiz.CLI.analysis.SpectrumList_Thresholder.accept(pwiz.CLI.msdata.SpectrumList)">
+thresholding works on any SpectrumList
+</member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_Thresholder">
             <summary>
-configuration options for write()
+SpectrumList implementation that returns spectra with low or high intensity data points removed (depending on the configuration)
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.MSDataFile.Format">
+        <member name="T:pwiz.CLI.analysis.ThresholdingOrientation">
             <summary>
-supported data formats for write()
+determines the orientation of the thresholding
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.MSDataFile.#ctor(System.String)">
+        <member name="T:pwiz.CLI.analysis.ThresholdingBy_Type">
             <summary>
-constructs MSData object backed by file
+determines the method of thresholding and the meaning of the threshold value
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.MSDataFile">
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff">
             <summary>
-MSData object plus file I/O
+keep data points that are part of the {threshold} [most|least] intense fraction
+- {threshold} is the fraction of TIC to keep, i.e. the TIC of the kept data points is {threshold} * original TIC
 </summary>
         </member>
-        <member name="M:pwiz.msdata.MSDataFile.write(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSDataFile.WriteConfig!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.util.IterationListenerRegistry!System.Runtime.CompilerServices.IsConst*)">
-member write function 
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity">
+            <summary>
+keep data points [more|less] relatively intense than {threshold}
+- {threshold} is each data point's fraction of the total intensity, aka total ion current (in the range [0,1])
+</summary>
+        </member>
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity">
+            <summary>
+keep data points [more|less] relatively intense than {threshold}
+- {threshold} is each data point's fraction of the base peak intensity (in the range [0,1])
+</summary>
+        </member>
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity">
+keep data points ranked [better|worse] than {threshold}
+- {threshold} is rounded to the nearest integer
+- rank 1 is the most intense
+keep data points ranked [better|worse] than {threshold}
+- rank 1 is the most intense
+<summary>
+keep data points [more|less] absolutely intense than {threshold}
+</summary></member>
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_CountAfterTies">
+            <summary>
+keep the {threshold} [most|least] intense data points
+- {threshold} is rounded to the nearest integer
+- if the {threshold} falls within equally intense data points, all data points with that intensity are kept
+</summary>
+        </member>
+        <member name="F:pwiz.CLI.analysis.ThresholdingBy_Type.ThresholdingBy_Count">
+            <summary>
+keep the {threshold} [most|least] intense data points
+- {threshold} is rounded to the nearest integer
+- if the {threshold} falls within equally intense data points, all data points with that intensity are removed
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_SavitzkyGolaySmoother">
+            <summary>
+SpectrumList implementation to smooth intensities with SG method
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_NativeCentroider">
+            <summary>
+SpectrumList implementation to return native centroided spectrum data
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_Sorter">
+            <summary>
+SpectrumList implementation sorted by a user's predicate
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_SorterPredicate">
+            <summary>
+Base predicate intended to be overriden with custom predicate for comparing spectra in SpectrumList_Sorter
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_Sorter_LessThan">
+            <summary>
+Delegate for comparing spectra in SpectrumList_Sorter
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_Filter">
+            <summary>
+SpectrumList implementation filtered by a user's predicate
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_FilterPredicate">
+            <summary>
+Base predicate intended to be overriden with custom predicate for filtering spectra in SpectrumList_Filter
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_FilterAcceptSpectrum">
+            <summary>
+Delegate for filtering spectra in SpectrumList_Filter
+</summary>
+        </member>
+        <member name="M:pwiz.analysis.SpectrumList_ChargeStateCalculator.spectrum(System.UInt32,System.Boolean)">
+charge calculation requires binary data to function, so returned spectra will always provide the binary data
 </member>
-        <member name="M:pwiz.msdata.MSDataFile.write(pwiz.msdata.MSData!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSDataFile.WriteConfig!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.util.IterationListenerRegistry!System.Runtime.CompilerServices.IsConst*)">
-static write function for any MSData object;
-iterationListenerRegistry may be used for progress updates
+        <member name="M:pwiz.analysis.SpectrumList_ChargeStateCalculator.accept(boost.shared_ptr&lt;pwiz.msdata.SpectrumList&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+accepts any tandem mass spectrum
 </member>
-        <member name="T:pwiz.msdata.MSDataFile.WriteConfig">
-configuration for write()
+        <member name="T:pwiz.analysis.SpectrumList_ChargeStateCalculator">
+SpectrumList implementation that assigns (probable) charge states to tandem mass spectra
 </member>
-        <member name="T:pwiz.msdata.MSDataFile.Format">
-data format for write()
+        <member name="M:pwiz.analysis.SpectrumList_Thresholder.accept(boost.shared_ptr&lt;pwiz.msdata.SpectrumList&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+thresholding works on any SpectrumList
 </member>
-        <member name="M:pwiz.msdata.MSDataFile.#ctor(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.Reader!System.Runtime.CompilerServices.IsConst*)">
-constructs MSData object backed by file;
-reader==0 -&gt; use DefaultReaderList 
+        <member name="T:pwiz.analysis.SpectrumList_Thresholder">
+SpectrumList implementation that returns spectra with low or high intensity data points removed (depending on the configuration)
 </member>
-        <member name="T:pwiz.msdata.MSDataFile">
-MSData object plus file I/O
+        <member name="T:pwiz.analysis.ThresholdingOrientation">
+determines the orientation of the thresholding
 </member>
-        <member name="T:pwiz.util.IterationListenerRegistry">
-handles registration of IterationListeners and broadcast of update messages
+        <member name="T:pwiz.analysis.ThresholdingBy_Type">
+determines the method of thresholding and the meaning of the threshold value
 </member>
-        <member name="T:pwiz.util.IterationListener">
-interface to be implemented by clients who want progress callbacks
+        <member name="T:pwiz.analysis.SpectrumList_SavitzkyGolaySmoother">
+SpectrumList implementation to return spectral data smoothed with the Savitzky-Golay method
 </member>
-        <member name="M:pwiz.msdata.BinaryDataEncoder.decode(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-decode text-encoded data as binary 
+        <member name="T:pwiz.analysis.SpectrumList_NativeCentroider">
+SpectrumList implementation to return native centroided spectrum data
 </member>
-        <member name="M:pwiz.msdata.BinaryDataEncoder.encode(System.Double!System.Runtime.CompilerServices.IsConst*,System.UInt32,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-encode binary data as a text string
+        <member name="M:pwiz.analysis.SpectrumList_Sorter.size">
+\name SpectrumList interface
 </member>
-        <member name="M:pwiz.msdata.BinaryDataEncoder.encode(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-encode binary data as a text string
+        <member name="T:pwiz.analysis.SpectrumList_Sorter.Predicate">
+client-implemented sort predicate -- called during construction of
+SpectrumList_Sorter to sort the underlying spectrum list
 </member>
-        <member name="T:pwiz.msdata.BinaryDataEncoder.Config">
-encoding/decoding configuration 
+        <member name="T:pwiz.analysis.SpectrumList_Sorter">
+Provides a custom-sorted spectrum list
 </member>
-        <member name="T:pwiz.msdata.BinaryDataEncoder">
-binary-to-text encoding
+        <member name="M:pwiz.analysis.SpectrumList_Filter.size">
+\name SpectrumList interface
 </member>
-        <member name="M:pwiz.msdata.op_Addition(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-returns a list containing the lhs and rhs as readers
+        <member name="M:pwiz.analysis.SpectrumList_Filter.Predicate.done">
+return true iff done accepting spectra; 
+this allows early termination of the iteration through the original
+SpectrumList, possibly using assumptions about the order of the
+iteration (e.g. index is increasing, nativeID interpreted as scan number is
+increasing, ...)
 </member>
-        <member name="M:pwiz.msdata.ReaderList.op_Addition(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-returns a concatenated list of all the Readers from the lhs and rhs operands
+        <member name="M:pwiz.analysis.SpectrumList_Filter.Predicate.accept(pwiz.msdata.Spectrum!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+return true iff Spectrum is accepted
 </member>
-        <member name="M:pwiz.msdata.ReaderList.op_Addition(pwiz.msdata.ReaderList!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-returns a concatenated list of all the Readers from the lhs and rhs operands
+        <member name="M:pwiz.analysis.SpectrumList_Filter.Predicate.accept(pwiz.msdata.SpectrumIdentity!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+return values:
+ true: accept the Spectrum
+ false: reject the Spectrum
+ indeterminate: need to see the full Spectrum object to decide
 </member>
-        <member name="M:pwiz.msdata.ReaderList.op_AdditionAssignment(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-appends the rhs Reader to the list
+        <member name="T:pwiz.analysis.SpectrumList_Filter.Predicate">
+client-implemented filter predicate -- called during construction of
+SpectrumList_Filter to create the filtered list of spectra
 </member>
-        <member name="M:pwiz.msdata.ReaderList.op_AdditionAssignment(pwiz.msdata.ReaderList!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-appends all of the rhs operand's Readers to the list
+        <member name="T:pwiz.analysis.SpectrumList_Filter">
+SpectrumList filter, for creating Spectrum sub-lists
 </member>
-        <member name="M:pwiz.msdata.ReaderList.read(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSData*!System.Runtime.CompilerServic">
-delegates to first child that identifiess
+        <member name="M:boost.logic.op_Inequality(boost.logic.tribool,=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t))">
+\overload
+
 </member>
-        <member name="M:pwiz.msdata.ReaderList.identify(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-returns child name iff some child identifies, else empty string
+        <member name="M:boost.logic.op_Inequality(=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t),boost.logic.tribool)">
+\overload
+
 </member>
-        <member name="M:pwiz.msdata.Reader.read(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSData*!System.Runtime.CompilerServices.I">
-fill in the MSData structure
+        <member name="M:boost.logic.op_Inequality(System.Boolean,boost.logic.tribool)">
+\overload
+
 </member>
-        <member name="M:pwiz.msdata.Reader.identify(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-return file type iff Reader recognizes the file, else empty; 
-note: for formats requiring a 3rd party DLL identify() should
-return true if it recognized the format, even though reading
-may fail if the 3rd party DLL isn't actually present
-Reader may filter based on filename and/or head of the file
+        <member name="M:boost.logic.op_Inequality(boost.logic.tribool,System.Boolean)">
+\overload
+
 </member>
-        <member name="M:pwiz.msdata.Reader.accept(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-return true iff Reader recognizes the file as one it should handle
-that's not to say one it CAN handle, necessarily, as in Thermo on linux,
-see comment for identify() below
+        <member name="M:boost.logic.op_Equality(boost.logic.tribool,=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t))">
+\overload
+
 </member>
-        <member name="T:pwiz.msdata.Reader">
-interface for file readers
+        <member name="M:boost.logic.op_Equality(=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t),boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_Equality(System.Boolean,boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_Equality(boost.logic.tribool,System.Boolean)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalOr(boost.logic.tribool,=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t))">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalOr(=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t),boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalOr(System.Boolean,boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalOr(boost.logic.tribool,System.Boolean)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalAnd(boost.logic.tribool,=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t))">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalAnd(=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t),boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalAnd(System.Boolean,boost.logic.tribool)">
+\overload
+
+</member>
+        <member name="M:boost.logic.op_LogicalAnd(boost.logic.tribool,System.Boolean)">
+\overload
+
+</member>
+        <member name="T:boost.logic.tribool.value_t">
+The actual stored value in this 3-state boolean, which may be false, true,
+or indeterminate.
+
+</member>
+        <member name="M:boost.logic.tribool.op_Implicit~ boost.logic.tribool.dummy::*">
+ Use a 3-state boolean in a boolean context. Will evaluate true in a
+ boolean context only when the 3-state boolean is definitely true.
+
+ \returns true if the 3-state boolean is true, false otherwise
+ \throws nothrow
+
+</member>
+        <member name="M:boost.logic.tribool.#ctor(=FUNC:System.Boolean(boost.logic.tribool,boost.logic.detail.indeterminate_t))">
+ Construct a new 3-state boolean value with an indeterminate value.
+
+ \throws nothrow
+
+</member>
+        <member name="M:boost.logic.tribool.#ctor(System.Boolean)">
+ Construct a new 3-state boolean value with the given boolean
+ value, which may be \c true or \c false.
+
+ \throws nothrow
+
+</member>
+        <member name="M:boost.logic.tribool.#ctor">
+ Construct a new 3-state boolean value with the value 'false'.
+
+ \throws nothrow
+
+</member>
+        <member name="T:boost.logic.tribool.dummy">
+INTERNAL ONLY
+</member>
+        <member name="T:boost.logic.tribool">
+ \brief A 3-state boolean type.
+
+ 3-state boolean values are either true, false, or
+ indeterminate.
+
+</member>
+        <member name="M:boost.logic.indeterminate(boost.logic.tribool,boost.logic.detail.indeterminate_t)">
+ \brief Keyword and test function for the indeterminate tribool value
+
+ The \c indeterminate function has a dual role. It's first role is
+ as a unary function that tells whether the tribool value is in the
+ "indeterminate" state. It's second role is as a keyword
+ representing the indeterminate (just like "true" and "false"
+ represent the true and false states). If you do not like the name
+ "indeterminate", and would prefer to use a different name, see the
+ macro \c BOOST_TRIBOOL_THIRD_STATE.
+
+ \returns <tt>x.value == tribool::indeterminate_value</tt>
+ \throws nothrow
+
+</member>
+        <member name="D:boost.logic.indeterminate_keyword_t">
+INTERNAL ONLY
+The type of the 'indeterminate' keyword. This has the same type as the
+function 'indeterminate' so that we can recognize when the keyword is
+used.
+
+</member>
+        <member name="T:boost.logic.detail.indeterminate_t">
+ INTERNAL ONLY
+
+ \brief A type used only to uniquely identify the 'indeterminate'
+ function/keyword.
+
+</member>
+        <member name="M:pwiz.util.IntegerSet.hasUpperBound(System.Int32)">
+true iff n is an upper bound for the IntegerSet 
+</member>
+        <member name="M:pwiz.util.IntegerSet.contains(System.Int32)">
+true iff n is in the IntegerSet
+</member>
+        <member name="M:pwiz.util.IntegerSet.empty">
+true iff IntegerSet is empty
+</member>
+        <member name="D:pwiz.util.IntegerSet.const_iterator">
+\name const iterator interface to the virtual container 
+</member>
+        <member name="M:pwiz.util.IntegerSet.parse(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+insert intervals by parsing a string representing a 
+whitespace-delimited list of closed intervals:
+  parse(" [-3,2]  [5,5] [8,9] ");  // insert(-3,2); insert(5); insert(8,9);
+</member>
+        <member name="M:pwiz.util.IntegerSet.insert(System.Int32,System.Int32)">
+insert an interval of integers into the virtual container
+</member>
+        <member name="M:pwiz.util.IntegerSet.insert(System.Int32)">
+insert a single integer into the virtual container
+</member>
+        <member name="M:pwiz.util.IntegerSet.insert(pwiz.util.IntegerSet.Interval)">
+\name write access to the virtual container 
+insert an interval of integers into the virtual container
+</member>
+        <member name="M:pwiz.util.IntegerSet.#ctor(System.Int32,System.Int32)">
+construction with a single interval
+</member>
+        <member name="M:pwiz.util.IntegerSet.#ctor(System.Int32)">
+construction with a single integer
+</member>
+        <member name="M:pwiz.util.IntegerSet.#ctor">
+default construction
+</member>
+        <member name="D:pwiz.util.IntegerSet.Iterator.iterator_category">
+\name standard iterator typedefs 
+</member>
+        <member name="M:pwiz.util.IntegerSet.Iterator.op_Increment">
+\name forward iterator operators
+</member>
+        <member name="M:pwiz.util.IntegerSet.Iterator.#ctor(pwiz.util.IntegerSet!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+initialized to beginning of the IntegerSet
+</member>
+        <member name="M:pwiz.util.IntegerSet.Iterator.#ctor">
+\name instantiation 
+default constructed Iterator marks end of any IntegerSet
+</member>
+        <member name="T:pwiz.util.IntegerSet.Iterator">
+forward iterator providing readonly access to the virtual container 
+</member>
+        <member name="D:pwiz.util.IntegerSet.Intervals">
+collection of Interval objects
+</member>
+        <member name="T:pwiz.util.IntegerSet.Interval">
+a single closed interval of integers 
+</member>
+        <member name="T:pwiz.util.IntegerSet">
+a virtual container of integers, accessible via an iterator interface,
+stored as union of intervals
+</member>
+        <member name="T:pwiz.analysis.SpectrumListWrapper">
+Inheritable pass-through implementation for wrapping a SpectrumList 
 </member>
         <member name="P:pwiz.CLI.msdata.MSData.run">
             <summary>
@@ -1405,6 +1656,10 @@ returns the number of chromatograms
         <member name="T:pwiz.msdata.SpectrumListSimple">
 Simple writeable in-memory implementation of SpectrumList.
 Note:  This spectrum() implementation returns internal SpectrumPtrs.
+</member>
+        <member name="M:pwiz.msdata.SpectrumList.dataProcessingPtr">
+returns the data processing affecting spectra retrieved through this interface
+- may return a null shared pointer
 </member>
         <member name="M:pwiz.msdata.SpectrumList.spectrum(System.UInt32,System.Boolean)">
 retrieve a spectrum by index
@@ -2852,6 +3107,33 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.UO_unit">
             <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ_Quantum_Ultra">
+            <summary>TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ">
+            <summary>TSQ: ThermoFinnigan TSQ MS.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ_7000">
+            <summary>TSQ 7000: ThermoFinnigan TSQ 7000 MS.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_SSQ_7000">
+            <summary>SSQ 7000: ThermoFinnigan SSQ 7000 MS.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_completion_time">
+            <summary>completion time: The time that a data processing action was finished.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_high_intensity_data_point_removal">
+            <summary>high intensity data point removal: The removal of very high intensity data points.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_retention_time_alignment">
+            <summary>retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_selected_m_z">
+            <summary>selected m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ_Quantum_Ultra_AM">
+            <summary>TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Bioworks_SRF_file">
             <summary>Bioworks SRF file: Thermo Finnigan SRF file format.</summary>
         </member>
@@ -3488,8 +3770,11 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_Voyager_Biospectrometry_Workstation_System">
             <summary>Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_Wolf">
-            <summary>Wolf: A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_wolf">
+            <summary>massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_massWolf">
+            <summary>massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_4700_Explorer">
             <summary>4700 Explorer: Applied Biosystems software for data acquisition and analysis.</summary>
@@ -6149,6 +6434,33 @@ length unit: A base unit which is a standard measure of the distance between two
         <member name="F:UO_unit">
 unit: A unit of measurement is a standardized quantity of a physical quality.
 </member>
+        <member name="F:MS_TSQ_Quantum_Ultra">
+TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.
+</member>
+        <member name="F:MS_TSQ">
+TSQ: ThermoFinnigan TSQ MS.
+</member>
+        <member name="F:MS_TSQ_7000">
+TSQ 7000: ThermoFinnigan TSQ 7000 MS.
+</member>
+        <member name="F:MS_SSQ_7000">
+SSQ 7000: ThermoFinnigan SSQ 7000 MS.
+</member>
+        <member name="F:MS_completion_time">
+completion time: The time that a data processing action was finished.
+</member>
+        <member name="F:MS_high_intensity_data_point_removal">
+high intensity data point removal: The removal of very high intensity data points.
+</member>
+        <member name="F:MS_retention_time_alignment">
+retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.
+</member>
+        <member name="F:MS_selected_m_z">
+selected m/z: Mass-to-charge ratio of the ion selected for fragmentation
+</member>
+        <member name="F:MS_TSQ_Quantum_Ultra_AM">
+TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.
+</member>
         <member name="F:MS_Bioworks_SRF_file">
 Bioworks SRF file: Thermo Finnigan SRF file format.
 </member>
@@ -6785,8 +7097,11 @@ FlexControl: Bruker software for data acquisition.
         <member name="F:MS_Voyager_Biospectrometry_Workstation_System">
 Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.
 </member>
-        <member name="F:MS_Wolf">
-Wolf: A software for converting Waters raw directory format to mzXML or mzML. Wolf was originally developed at the Institute for Systems Biology.
+        <member name="F:MS_wolf">
+massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
+</member>
+        <member name="F:MS_massWolf">
+massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
 </member>
         <member name="F:MS_4700_Explorer">
 4700 Explorer: Applied Biosystems software for data acquisition and analysis.
@@ -8639,6 +8954,18 @@ Proteomics Standards Initiative Mass Spectrometry Ontology: Proteomics Standards
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.SpectrumList'. -->
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ChromatogramList'. -->
         <!-- Discarding badly formed XML document comment for member 'F:pwiz.msdata.MSData.cvs'. -->
-        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ReaderList'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:boost.logic.op_LogicalNot(boost.logic.tribool)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:boost.logic.op_LogicalAnd(boost.logic.tribool,boost.logic.tribool)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:boost.logic.op_LogicalOr(boost.logic.tribool,boost.logic.tribool)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:boost.logic.op_Equality(boost.logic.tribool,boost.logic.tribool)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:boost.logic.op_Inequality(boost.logic.tribool,boost.logic.tribool)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.analysis.SpectrumList_Sorter.Predicate.less(pwiz.msdata.SpectrumIdentity!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.SpectrumIdentity!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.analysis.SpectrumList_Sorter.Predicate.less(pwiz.msdata.Spectrum!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.Spectrum!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_Count'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_CountAfterTies'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_AbsoluteIntensity'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfBasePeakIntensity'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfTotalIntensity'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfTotalIntensityCutoff'. -->
     </members>
 </doc>

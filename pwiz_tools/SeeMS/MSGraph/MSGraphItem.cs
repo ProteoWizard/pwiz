@@ -20,32 +20,48 @@ namespace MSGraph
         Stick
     }
 
-    public class PointAnnotationFormat
+    public class PointAnnotation
     {
-        private string format;
-
-        public PointAnnotationFormat()
+        private string label;
+        public string Label
         {
-            this.format = String.Empty;
+            get { return label; }
+            set { label = value; }
         }
 
-        public PointAnnotationFormat( string format )
+        private GraphObj extraAnnotation;
+        public GraphObj ExtraAnnotation
         {
-            StringBuilder fb = new StringBuilder( format );
-            fb.Replace( "{x", "{0" );
-            fb.Replace( "{y", "{1" );
-            this.format = fb.ToString();
-            String.Format( this.format, 123, 456 );
+            get { return extraAnnotation; }
+            set { extraAnnotation = value; }
         }
 
-        public override string ToString()
+        private FontSpec fontSpec;
+        public FontSpec FontSpec
         {
-            return format;
+            get { return fontSpec; }
+            set { fontSpec = value; }
         }
 
-        public string AnnotatePoint( PointPair point )
+        public PointAnnotation()
         {
-            return String.Format( format, point.X, point.Y );
+            label = string.Empty;
+            extraAnnotation = null;
+            fontSpec = new FontSpec();
+        }
+
+        public PointAnnotation( string label )
+        {
+            this.label = label;
+            extraAnnotation = null;
+            fontSpec = new FontSpec();
+        }
+
+        public PointAnnotation( string label, FontSpec fontSpec )
+        {
+            this.label = label;
+            extraAnnotation = null;
+            this.fontSpec = fontSpec;
         }
     }
 
@@ -75,7 +91,10 @@ namespace MSGraph
 
         // return a string to use as a label when graphing the data point;
         // if the returned value is null or empty, there is no annotation
-        string AnnotatePoint( PointPair point );
+        PointAnnotation AnnotatePoint( PointPair point );
+
+        // return a list of ZedGraph objects to display on the graph
+        ZedGraph.GraphObjList NonPointAnnotations { get; }
 
         // the entire point list of the graph
         IPointList Points { get; }
@@ -91,7 +110,8 @@ namespace MSGraph
             item_ = info.GraphItemDrawMethod == MSGraphItemDrawMethod.Line ?
                     new LineItem( info.Title, points_, info.Color, SymbolType.None ) :
                     new StickItem( info.Title, points_, info.Color );
-            ( item_ as LineItem ).Line.IsAntiAlias = true;
+            if( info.GraphItemDrawMethod == MSGraphItemDrawMethod.Line )
+                ( item_ as LineItem ).Line.IsAntiAlias = true;
             graphItemInfo_ = info;
         }
 

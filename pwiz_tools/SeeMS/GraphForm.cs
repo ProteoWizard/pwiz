@@ -12,13 +12,41 @@ using ZedGraph;
 
 namespace seems
 {
-	public partial class GraphForm : DockableForm
+	public partial class GraphForm : DockableForm, IDataView
 	{
-		private ManagedDataSource currentSource = null;
-        public ManagedDataSource ManagedDataSource { get { return currentSource; } }
+        #region IDataView Members
+        public IList<ManagedDataSource> Sources
+        {
+            get
+            {
+                List<ManagedDataSource> sources = new List<ManagedDataSource>();
+                for( int i = 0; i < paneList.Count; ++i )
+                {
+                    Pane logicalPane = paneList[i];
 
-		private GraphItem currentGraphItem = null;
-		public GraphItem CurrentGraphItem { get { return (GraphItem) currentGraphItem; } }
+                    foreach( GraphItem item in logicalPane )
+                        sources.Add( item.Source );
+                }
+                return sources;
+            }
+        }
+
+        public IList<GraphItem> DataItems
+        {
+            get
+            {
+                List<GraphItem> graphItems = new List<GraphItem>();
+                for( int i = 0; i < paneList.Count; ++i )
+                {
+                    Pane logicalPane = paneList[i];
+
+                    foreach( GraphItem item in logicalPane )
+                        graphItems.Add( item );
+                }
+                return graphItems;
+            }
+        }
+        #endregion
 
 		/*private AnnotationSettings chromatogramAnnotationSettings = new ChromatogramAnnotationSettings();
 		public ChromatogramAnnotationSettings ChromatogramAnnotationSettings { get { return chromatogramAnnotationSettings; } }
@@ -26,11 +54,6 @@ namespace seems
 		private ScanAnnotationSettings scanAnnotationSettings = new ScanAnnotationSettings();
 		public ScanAnnotationSettings ScanAnnotationSettings { get { return scanAnnotationSettings; } }
         */
-        public string CurrentSourceFilepath
-        {
-            get { return currentSource.Source.CurrentFilepath; }
-            set { currentSource.Source.SetInputFile( value ); }
-        }
 
 		/*public PointDataMap<SeemsPointAnnotation> CurrentPointAnnotations
 		{
@@ -213,6 +236,9 @@ namespace seems
                         item.BaseItem.Color = rotator.NextColor;
                     }
                 }
+
+                if( paneList.Count > 0 && paneList[0].Count > 0 )
+                    this.Text = this.TabText = paneList[0][0].Id;
 
                 if( !pane.IsZoomed )
                     msGraphControl.RestoreScale( pane );
@@ -594,7 +620,7 @@ namespace seems
 			msGraphControl.Visible = true;
 			Refresh();
 		}
-	}
+    }
 
     public class Pane : List<GraphItem>
     {

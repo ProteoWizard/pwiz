@@ -44,10 +44,10 @@ namespace seems
             this.componentListView.FullRowSelect = true;
             this.componentListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.componentListView.LabelWrap = false;
-            this.componentListView.Location = new System.Drawing.Point( 12, 115 );
+            this.componentListView.Location = new System.Drawing.Point( 12, 117 );
             this.componentListView.Name = "componentListView";
             this.componentListView.Scrollable = false;
-            this.componentListView.Size = new System.Drawing.Size( 262, 89 );
+            this.componentListView.Size = new System.Drawing.Size( 262, 108 );
             this.componentListView.TabIndex = 0;
             this.componentListView.UseCompatibleStateImageBehavior = false;
             this.componentListView.View = System.Windows.Forms.View.Details;
@@ -81,7 +81,7 @@ namespace seems
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size( 284, 214 );
+            this.ClientSize = new System.Drawing.Size( 286, 237 );
             this.Controls.Add( this.aboutTextBox );
             this.Controls.Add( this.componentListView );
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
