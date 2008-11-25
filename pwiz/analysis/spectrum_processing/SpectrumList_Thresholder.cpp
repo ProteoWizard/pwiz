@@ -127,6 +127,7 @@ namespace
             {
                 s->getMZArray()->data.clear();
                 s->getIntensityArray()->data.clear();
+                s->defaultArrayLength = 0;
                 return;
             }
         }
