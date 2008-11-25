@@ -100,23 +100,25 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    // returned cached Spectrum if possible
-
-    if (!getBinaryData && spectrumCache_[index].get())
-        return spectrumCache_[index];
-
-    // allocate a new Spectrum
-
-    SpectrumPtr result(new Spectrum);
-    if (!result.get())
-        throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
-
     // get rawfile::ScanInfo and translate
-
     long scanNumber = static_cast<int>(index) + 1;
     auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(scanNumber);
     if (!scanInfo.get())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
+
+    // returned cached Spectrum if possible (check consistency of centroid)
+    if (!getBinaryData && spectrumCache_[index].get())
+    {
+        bool doCentroid = msLevelsToCentroid.contains(spectrumCache_[index]->cvParam(MS_ms_level).valueAs<int>());
+        bool cachedCentroid = spectrumCache_[index]->spectrumDescription.hasCVParam(MS_centroid_mass_spectrum);
+        if (doCentroid == cachedCentroid)
+            return spectrumCache_[index];
+    }
+
+    // allocate a new Spectrum
+    SpectrumPtr result(new Spectrum);
+    if (!result.get())
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
 
     result->index = index;
     result->id = scanNumberToSpectrumID(scanNumber);
