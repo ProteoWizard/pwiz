@@ -74,12 +74,17 @@ struct PWIZ_API_DECL PeakFamily
     int charge;
     double score;
     std::vector<Peak> peaks;
-
+    
     PeakFamily() : mzMonoisotopic(0), charge(0), score(0) {}
     double sumAmplitude() const {return 0;}
     double sumArea() const {return 0;}
 
     void printSimple(std::ostream& os) const; // TODO: remove at some point
+    void write(minimxml::XMLWriter& writer) const;
+    void read(std::istream& is);
+
+    bool operator==(const PeakFamily& that) const;
+    bool operator!=(const PeakFamily& that) const;
 };
 
 
@@ -95,10 +100,18 @@ struct PWIZ_API_DECL Scan
     double observationDuration;
     CalibrationParameters calibrationParameters;
     std::vector<PeakFamily> peakFamilies;
+
     
     Scan() : index(0), scanNumber(0), retentionTime(0), observationDuration(0) {}
 
+
     void printSimple(std::ostream& os) const; // TODO: remove at some point
+    void write(minimxml::XMLWriter& writer) const;
+    void read(std::istream& is);
+  
+    bool operator==(const Scan& scan) const;
+    bool operator!=(const Scan& scan) const;
+
 };
 
 
@@ -107,12 +120,33 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& pd);
 
 struct PWIZ_API_DECL Software
 {
+
     std::string name;
     std::string version;
     std::string source;
+
+    struct Parameter
+    {
+      std::string name;
+      std::string value;
+      
+      Parameter() : name(""), value("") {};
+      Parameter(std::string name_, std::string value_) : name(name_), value(value_) {}
+      void write(minimxml::XMLWriter& xmlWriter) const;
+      void read(std::istream& is);
+      bool operator==(const Parameter& that) const;
+      bool operator!=(const Parameter& that) const;
+    };
+   
+    std::vector<Parameter> parameters;
     
-    typedef std::vector<std::pair<std::string,std::string> > Parameters;
-    Parameters parameters;
+    Software() : name(""), version(""), source(""), parameters(0) {}
+    void write(minimxml::XMLWriter& xmlWriter) const;
+    void read(std::istream& is);
+  
+    bool operator==(const Software& that) const;
+    bool operator!=(const Software& that) const;
+
 };
 
 
@@ -123,7 +157,11 @@ struct PWIZ_API_DECL PeakData
     std::vector<Scan> scans;
 
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
-    void read(std::istream& is) ;
+    void read(std::istream& is);
+
+    bool operator==(const PeakData& that) const;
+    bool operator!=(const PeakData& that) const;
+
 };
 
 
