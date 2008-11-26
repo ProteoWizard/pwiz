@@ -2426,7 +2426,8 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
                 // good-faith effort to make the id unique
                 isUnique = true;
                 for (size_t i=0; i < dataProcessingPtrs.size(); ++i)
-                    if (dp->id == dataProcessingPtrs[i]->id)
+                    if ((dp != dataProcessingPtrs[i]) &&
+						(dp->id == dataProcessingPtrs[i]->id))
                     {
                         isUnique = false;
                         dp->id = "more_" + dp->id;
