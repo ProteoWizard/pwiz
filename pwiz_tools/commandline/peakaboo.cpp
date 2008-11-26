@@ -166,10 +166,10 @@ void processFile(const string& filename, const Config& config)
     peakData.software.version = "1.1";
     peakData.software.source = "Spielberg Family Center for Applied Proteomics";
 
-    peakData.software.parameters.push_back(make_pair("scanBegin", lexical_cast<string>(config.scanBegin)));
-    peakData.software.parameters.push_back(make_pair("scanEnd", lexical_cast<string>(config.scanEnd)));
-    peakData.software.parameters.push_back(make_pair("mzLow", lexical_cast<string>(config.mzLow)));
-    peakData.software.parameters.push_back(make_pair("mzHigh", lexical_cast<string>(config.mzHigh)));
+    peakData.software.parameters.push_back(peakdata::Software::Parameter("scanBegin", lexical_cast<string>(config.scanBegin)));
+    peakData.software.parameters.push_back(peakdata::Software::Parameter("scanEnd", lexical_cast<string>(config.scanEnd)));
+    peakData.software.parameters.push_back(peakdata::Software::Parameter("mzLow", lexical_cast<string>(config.mzLow)));
+    peakData.software.parameters.push_back(peakdata::Software::Parameter("mzHigh", lexical_cast<string>(config.mzHigh)));
 
     // scan number filtering
 
@@ -223,6 +223,7 @@ void processFile(const string& filename, const Config& config)
     }
 
     ofstream os(outputFilename.c_str());
+    os.precision(12);
     XMLWriter writer(os);
     peakData.write(writer);
 }
