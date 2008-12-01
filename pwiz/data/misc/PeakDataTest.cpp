@@ -36,10 +36,103 @@ using namespace pwiz::data::peakdata;
 
 ostream* os_ = 0;
 
+PeakFamily initializePeakFamily()
+{
+    PeakFamily peakFamily;
+
+    peakFamily.mzMonoisotopic = 329.86;
+    peakFamily.charge = 3;
+    peakFamily.score = 0.11235811;
+
+    Peak peak;
+    Peak a;
+    Peak boo;
+
+    peak.mz = 329.86;
+    a.mz = 109.87;
+    boo.mz = 6.022141730;
+
+    peakFamily.peaks.push_back(peak);
+    peakFamily.peaks.push_back(a);
+    peakFamily.peaks.push_back(boo);
+ 
+    return peakFamily;
+
+}
+
+Scan initializeScan()
+{
+    Scan scan;
+    scan.index = 12;
+    scan.nativeID = "24";
+    scan.scanNumber = 24;
+    scan.retentionTime = 12.345;
+    scan.observationDuration = 6.78;
+
+    scan.calibrationParameters.A = 987.654;
+    scan.calibrationParameters.B = 321.012;
+    
+    PeakFamily flintstones = initializePeakFamily();
+    PeakFamily jetsons = initializePeakFamily();
+
+    scan.peakFamilies.push_back(flintstones);
+    scan.peakFamilies.push_back(jetsons);
+
+    return scan;
+}
+
+Software initializeSoftware()
+{
+    Software software;
+    software.name = "World of Warcraft";
+    software.version = "Wrath of the Lich King";
+    software.source = "Blizzard Entertainment";
+
+    Software::Parameter parameter1("Burke ping","level 70");
+    Software::Parameter parameter2("Kate ping", "level 0");
+
+    software.parameters.push_back(parameter1);
+    software.parameters.push_back(parameter2);
+
+    return software;
+
+}
+
+PeakData initializePeakData()
+{
+    PeakData pd;
+
+    Software software = initializeSoftware();
+    pd.software = software;
+
+    Scan scan = initializeScan();
+
+    pd.scans.push_back(scan);
+    pd.scans.push_back(scan);
+
+    return pd;
+
+}
+
+Peakel initializePeakel()
+{
+    Peakel pkl;
+    pkl.mz = 432.1;
+    pkl.retentionTime = 1234.56;
+    pkl.maxIntensity = 9876.54;
+    pkl.totalIntensity = 32123.45;
+    pkl.mzVariance = 6.023;
+
+    PeakFamily peakFamily = initializePeakFamily();
+    
+    pkl.peaks = peakFamily.peaks;
+    
+    return pkl;
+}
 
 void testPeak()
 {
-    // instantiate a Peak
+  // instantiate a Peak
 
     if (os_) *os_ << "testPeak() ... " <<endl;
     Peak peak;
@@ -61,12 +154,12 @@ void testPeak()
 
     peak.write(writer);
     if (os_) *os_ << oss.str() << endl;
-    
+
     // allocate a new Peak
 
     Peak peakIn;
 
-    if (os_) *os_ << peakIn << endl; 
+    if (os_) *os_ << peakIn << endl;
     unit_assert(peak != peakIn);
 
     // read from stream into new Peak
@@ -76,161 +169,202 @@ void testPeak()
 
     // verify that new Peak is the same as old Peak
 
-    unit_assert(peak == peakIn); 
+    unit_assert(peak == peakIn);
     // write out the xml if -v and if test is passed
     if (os_) *os_ << "Testing Peak ... " << oss.str() << endl;
+
 }
 
-void testTheRest()
+void testPeakFamily()
 {
 
-  // instantiante a PeakFamily
-  if (os_) *os_ << "testPeakFamily() ... " << endl;
-  PeakFamily jetsons;
+    // initialize a PeakFamily
+    
+    PeakFamily jetsons = initializePeakFamily();
 
-  jetsons.mzMonoisotopic = 329.86;
-  jetsons.charge = 3;
-  jetsons.score = 0.11235811;
+    // write out XML to a stream                                                                                                                                                    
 
-  Peak peak;
-  Peak a;
-  Peak boo;
-
-  peak.mz = 329.86;
-  a.mz = 109.87;
-  boo.mz = 6.022141730;
-
-  jetsons.peaks.push_back(peak);
-  jetsons.peaks.push_back(a);
-  jetsons.peaks.push_back(boo);
-
-  // write out XML to a stream                                                                          
-
-  ostringstream oss;
-  XMLWriter writer(oss);
+    ostringstream oss;
+    XMLWriter writer(oss);
 
 
-  jetsons.write(writer);
-  if (os_) *os_  << oss.str() << endl;
+    jetsons.write(writer);
+    if (os_) *os_    << oss.str() << endl;
 
-  // instantiate new PeakFamily
+    // instantiate new PeakFamily
 
-  PeakFamily flintstones;
+    PeakFamily flintstones;
 
-  // read from stream into new PeakFamily                                                                     
-  istringstream iss(oss.str());
-  flintstones.read(iss);
+    // read from stream into new PeakFamily                                                                                                                                       
+    istringstream iss(oss.str());
+    flintstones.read(iss);
 
-  // verify that new PeakFamily is the same as old PeakFamily                                                       
-  if (os_)
-    {
-      *os_ << flintstones << endl;
-      XMLWriter osWriter(*os_);
-      flintstones.write(osWriter);
-    }
+    // verify that new PeakFamily is the same as old PeakFamily                                                                                                             
+    if (os_)
+        {
+            *os_ << flintstones << endl;
+            XMLWriter osWriter(*os_);
+            flintstones.write(osWriter);
+        }
 
-  unit_assert(flintstones == jetsons);
-  if (os_) *os_  << "Testing PeakFamily ... " << endl << oss.str() <<endl;
+    unit_assert(flintstones == jetsons);
+    if (os_) *os_    << "Testing PeakFamily ... " << endl << oss.str() <<endl;
+}
 
-  // instantiate a new Scan
+void testScan()
+{
+    // initialize a new Scan
 
-  Scan scan;
-  
-  scan.index = 12;
-  scan.nativeID = "24";
-  scan.scanNumber = 24;
-  scan.retentionTime = 12.345;
-  scan.observationDuration = 6.78;
-  
-  scan.calibrationParameters.A = 987.654;
-  scan.calibrationParameters.B = 321.012;
+    Scan scan = initializeScan();
 
-  scan.peakFamilies.push_back(flintstones);
-  scan.peakFamilies.push_back(jetsons);
-  
-  // write out XML to a stream                                          
-  ostringstream oss_scan;
-  XMLWriter writer_scan(oss_scan);
-  scan.write(writer_scan);
+    // write out XML to a stream                                                                                    
+    ostringstream oss_scan;
+    XMLWriter writer_scan(oss_scan);
+    scan.write(writer_scan);
 
-   // instantiate a second Scan
-  Scan scan2;
+     // instantiate a second Scan
+    Scan scan2;
 
-  // read it back in
-  istringstream iss_scan(oss_scan.str());
-   scan2.read(iss_scan);
-  
+    // read it back in
+    istringstream iss_scan(oss_scan.str());
+    scan2.read(iss_scan);
+    
  
 
-  // assert that the two Scans are equal
+    // assert that the two Scans are equal
 
-  unit_assert(scan == scan2);
-  if (os_) *os_  << "Testing Scan ... " << endl << oss_scan.str() << endl;
+    unit_assert(scan == scan2);
+    if (os_) *os_    << "Testing Scan ... " << endl << oss_scan.str() << endl;
+
+}
+
+void testSoftware()
+{
+    // initialize a new Software
+    
+    Software software = initializeSoftware();
+
+    // write out XML to a stream
+    ostringstream oss_soft;
+    XMLWriter writer_soft(oss_soft);
+    software.write(writer_soft);
+
+    // instantiate another Software
+    Software software2;
  
-  // instantiate a new Software
-  
-  Software software;
-  software.name = "World of Warcraft";
-  software.version = "Wrath of the Lich King";
-  software.source = "Blizzard Entertainment";
-  
-  Software::Parameter parameter1("Burke ping","level 70");
-  Software::Parameter parameter2("Kate ping", "level 0");
-  
-  software.parameters.push_back(parameter1);
-  software.parameters.push_back(parameter2);
+    // read it back in
+    istringstream iss_soft(oss_soft.str());
+    software2.read(iss_soft);
 
-  // write out XML to a stream
-  ostringstream oss_soft;
-  XMLWriter writer_soft(oss_soft);
-  software.write(writer_soft);
+    // assert that the two Softwares are equal
+     
+    unit_assert(software == software2);
+    if (os_) *os_    << "Testing Software ... " << endl << oss_soft.str() <<endl;
 
-  // instantiate another Software
-  Software software2;
- 
-  // read it back in
-  istringstream iss_soft(oss_soft.str());
-  software2.read(iss_soft);
+}
 
-  // assert that the two Softwares are equal
-   
-  unit_assert(software == software2);
-  if (os_) *os_  << "Testing Software ... " << endl << oss_soft.str() <<endl;
+void testPeakData()
+{
+    // initialize a PeakData
 
-  // instantiate a PeakData
+    PeakData pd = initializePeakData();
 
-  PeakData pd;
-  
-  pd.software = software;
-  pd.scans.push_back(scan);
-  pd.scans.push_back(scan);
-  
-  ostringstream oss_pd;
-  XMLWriter writer_pd(oss_pd);
-  pd.write(writer_pd);
-  
-  // instantiate another PeakData
+    ostringstream oss_pd;
+    XMLWriter writer_pd(oss_pd);
+    pd.write(writer_pd);
+    
+    // instantiate another PeakData
 
-  PeakData pd2;
+    PeakData pd2;
 
-  // read into it
+    // read into it
 
-  istringstream iss_pd(oss_pd.str());
-  pd2.read(iss_pd);
+    istringstream iss_pd(oss_pd.str());
+    pd2.read(iss_pd);
 
-  // assert that the two PeakData are equal
+    // assert that the two PeakData are equal
 
-  unit_assert(pd == pd2);
-  if (os_) *os_  << "Testing PeakData ... " << endl << oss_pd.str()<<endl;
+    unit_assert(pd == pd2);
+    if (os_) *os_    << "Testing PeakData ... " << endl << oss_pd.str()<<endl;
+
+}
+
+void testPeakel()
+{
+    // initialize a peakel
+
+    Peakel dill = initializePeakel();
+
+
+    // write it out
+    ostringstream oss_pkl;
+    XMLWriter writer_pkl(oss_pkl);
+    dill.write(writer_pkl);
+
+    // instantiate another Peakel
+
+    Peakel gherkin;
+    
+    // read into it
+    istringstream iss_pkl(oss_pkl.str());
+    gherkin.read(iss_pkl);
+    
+    // assert that the two Peakels are equal
+
+    unit_assert(dill == gherkin);
+    if (os_) *os_ << "Testing Peakel ... " << endl << oss_pkl.str() << endl;
+
+}
+
+void testFeature()
+{
+    //    initialize a new Feature
+    
+    Feature feature;
+    feature.mzMonoisotopic = 1863.0101;
+    feature.retentionTime = 1492.1012;
+    feature.charge = 3;
+    feature.totalIntensity = 1776.0704;
+    feature.rtVariance = 1969.0720;
+    
+    Peakel stateFair = initializePeakel();
+    Peakel deli = initializePeakel();
+
+    feature.peakels.push_back(stateFair);
+    feature.peakels.push_back(deli);
+
+    // write it out
+    ostringstream oss_f;
+    XMLWriter writer_f(oss_f);
+    feature.write(writer_f);
+
+    // instantiate another feature
+
+    Feature feature2;
+
+    // read into it
+
+    istringstream iss(oss_f.str());
+    feature2.read(iss);
+
+    // assert that the two Features are equal
+
+    unit_assert(feature == feature2);
+    if (os_) *os_ << "Testing Feature ... " << endl << oss_f.str() << endl;
 
 }
 
 void test()
 {
  
-  testPeak();
-  testTheRest();
- 
+    testPeak();
+    testPeakFamily();
+    testScan();
+    testSoftware();
+    testPeakData();
+    testPeakel();
+    testFeature();
+
 }
 
 
@@ -241,8 +375,8 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "PeakDataTest\n";
-     
-	test(); 
+         
+	    test(); 
         return 0;
     }
     catch (exception& e)

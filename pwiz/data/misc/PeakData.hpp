@@ -124,15 +124,16 @@ struct PWIZ_API_DECL Software
 
     struct Parameter
     {
-      std::string name;
-      std::string value;
+        std::string name;
+        std::string value;
       
-      Parameter() : name(""), value("") {};
-      Parameter(std::string name_, std::string value_) : name(name_), value(value_) {}
-      void write(minimxml::XMLWriter& xmlWriter) const;
-      void read(std::istream& is);
-      bool operator==(const Parameter& that) const;
-      bool operator!=(const Parameter& that) const;
+        Parameter() : name(""), value("") {};
+        Parameter(std::string name_, std::string value_) : name(name_), value(value_) {}
+        void write(minimxml::XMLWriter& xmlWriter) const;
+        void read(std::istream& is);
+        bool operator==(const Parameter& that) const;
+        bool operator!=(const Parameter& that) const;
+
     };
    
     std::vector<Parameter> parameters;
@@ -166,23 +167,42 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 
 struct PWIZ_API_DECL Peakel
 {
+    Peakel(){}
+
     double mz;
     double retentionTime;
     double maxIntensity;
     double totalIntensity;
     double mzVariance;
     std::vector<Peak> peaks;
+    
+    void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
+    void read(std::istream& is);
+    
+    bool operator==(const Peakel& that) const;
+    bool operator!=(const Peakel& that) const;
+
 };
 
 
 struct PWIZ_API_DECL Feature
 {
+
+    Feature(){}
+
     double mzMonoisotopic;
     double retentionTime;
     int charge;
     double totalIntensity;
     double rtVariance; // calculated from child Peakels?
     std::vector<Peakel> peakels;
+
+    void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
+    void read(std::istream& is);
+  
+    bool operator==(const Feature& that) const;
+    bool operator!=(const Feature& that) const;
+
 };
  
 
