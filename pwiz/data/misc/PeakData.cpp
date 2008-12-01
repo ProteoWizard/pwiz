@@ -39,7 +39,6 @@ namespace peakdata {
 using namespace std;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
-
 using boost::lexical_cast;
 
 
@@ -112,6 +111,7 @@ struct HandlerPeak : public SAXParser::Handler
     }
 };
 
+
 void Peak::read(istream& is)
 {
     HandlerPeak handler(this);
@@ -121,36 +121,23 @@ void Peak::read(istream& is)
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const Peak& peak)
 {
-    os << "<"
-       << peak.mz << ","
-       << peak.intensity << ","
-       << peak.area << ","
-       << peak.error << ","
-       << peak.frequency << ","
-       << peak.phase << ","
-       << peak.decay << ">";
-
+    XMLWriter writer(os);
+    peak.write(writer);
     return os;
 }
 
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peak& peak)
+{
+    peak.read(is);
+    return is;
+}
 
 
 //
 // PeakFamily
 //
 
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily)
-{
-    os << "peakFamily ("
-       << "mzMonoisotopic:" << peakFamily.mzMonoisotopic << " "
-       << "charge:" << peakFamily.charge << " "
-       << "score:" << peakFamily.score << " "
-       << "peaks:" << peakFamily.peaks.size() << ")\n"; 
-
-    copy(peakFamily.peaks.begin(), peakFamily.peaks.end(), ostream_iterator<Peak>(os, "\n")); 
-    return os;
-}
 
 void PeakFamily::write(XMLWriter& writer) const
 {  
@@ -256,23 +243,25 @@ bool PeakFamily::operator!=(const PeakFamily& that) const
 }
 
 
+PWIZ_API_DECL ostream& operator<<(ostream& os, const PeakFamily& pf)
+{
+    XMLWriter writer(os);
+    pf.write(writer);
+    return os;
+}
+
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakFamily& peakFamily)
+{
+    peakFamily.read(is);
+    return is;
+}
+
 
 //
 // Scan 
 //
 
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan)
-{
-  os   << "index: " << scan.index 
-       << "scan (#" << scan.nativeID
-       << " rt:" << scan.retentionTime
-       << " T:" << scan.observationDuration
-       << " A:" << scan.calibrationParameters.A
-       << " B:" << scan.calibrationParameters.B << ")\n";
-    copy(scan.peakFamilies.begin(), scan.peakFamilies.end(), ostream_iterator<PeakFamily>(os, "")); 
-    return os;
-}
 
 void Scan::write(XMLWriter& writer) const
 {
@@ -307,6 +296,7 @@ void Scan::write(XMLWriter& writer) const
   writer.endElement();
 
 }
+
 
 struct HandlerScan : public SAXParser::Handler
 {
@@ -372,6 +362,7 @@ private:
   unsigned int _peakFamilyCount;
 };
 
+
 void Scan::read(istream& is)
 {
   HandlerScan handlerScan(this);
@@ -393,14 +384,33 @@ bool Scan::operator==(const Scan& scan) const
 
 }
 
+
 bool Scan::operator!=(const Scan& scan) const
 {
   return !(*this == scan);
 
 }
+
+
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Scan& scan)
+{
+    XMLWriter writer(os);
+    scan.write(writer);
+    return os;
+}
+
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Scan& scan)
+{
+    scan.read(is);
+    return is;
+}
+
+
 //
 // Software
 //
+
 
 void Software::Parameter::write(XMLWriter& writer) const
 {
@@ -408,9 +418,9 @@ void Software::Parameter::write(XMLWriter& writer) const
   attributes.push_back(make_pair("name", boost::lexical_cast<string>(name)));
   attributes.push_back(make_pair("value", boost::lexical_cast<string>(value)));
   writer.startElement("parameter", attributes, XMLWriter::EmptyElement);
-
-
 }
+
+
 void Software::write(XMLWriter& writer) const
 
 {
@@ -458,6 +468,7 @@ struct HandlerParameter : public SAXParser::Handler
   }
 
 };
+
 
 struct HandlerSoftware : public SAXParser::Handler
 {
@@ -515,12 +526,14 @@ void Software::Parameter::read(istream& is)
 
 }
 
+
 void Software::read(istream& is)
 {
   HandlerSoftware handlerSoftware(this);
   parse(is, handlerSoftware);
 
 }
+
 
 bool Software::Parameter::operator==(const Software::Parameter& that) const
 {
@@ -529,11 +542,13 @@ bool Software::Parameter::operator==(const Software::Parameter& that) const
 
 }
 
+
 bool Software::Parameter::operator!=(const Software::Parameter& that) const
 {
   return !(*this == that);
 
 }
+
 
 bool Software::operator==(const Software& that) const
 {
@@ -544,15 +559,18 @@ bool Software::operator==(const Software& that) const
 
 }
 
+
 bool Software::operator!=(const Software& that) const
 {
   return !(*this == that);
 
 }
 
+
 //
 // PeakData
 //
+
 
 void PeakData::write(XMLWriter& writer) const
 {
@@ -572,6 +590,7 @@ void PeakData::write(XMLWriter& writer) const
   writer.endElement();
   writer.endElement();
 }
+
 
 struct HandlerPeakData : public SAXParser::Handler
 {
@@ -627,157 +646,39 @@ private:
 
 };
 
+
 void PeakData::read(istream& is)
 {
   HandlerPeakData handlerPeakData(this);
   SAXParser::parse(is, handlerPeakData);
 }
 
+
 bool PeakData::operator==(const PeakData& that) const
 {
   return sourceFilename == that.sourceFilename &&
     software == that.software &&
     scans == that.scans;
-
 }
+
 
 bool PeakData::operator!=(const PeakData& that) const
 {
-  return !(*this == that);
-
+    return !(*this == that);
 }
-
-} // namespace peakdata
-} // namespace data
-} // namespace pwiz
-
-
-////////////////////
-/////  below here is old stuff
-////////////////////
-
-//#include "util_old/MinimXML.hpp"
-
-// note: boost/archive headers must precede boost/serialization headers
-// (as of Boost v1.33.1)
-#include "boost/archive/xml_oarchive.hpp"
-#include "boost/archive/xml_iarchive.hpp"
-#include "boost/serialization/vector.hpp"
-
-
-namespace boost {
-namespace serialization {
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::peakdata::Peak& peak, const unsigned int version)
-{
-    ar & make_nvp("mz", peak.mz);
-    ar & make_nvp("frequency", peak.frequency);
-    ar & make_nvp("intensity", peak.intensity);
-    ar & make_nvp("phase", peak.phase);
-    ar & make_nvp("decay", peak.decay);
-    ar & make_nvp("error", peak.error);
-    ar & make_nvp("area", peak.area);
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::peakdata::PeakFamily& peakFamily, const unsigned int version)
-{
-    ar & make_nvp("mzMonoisotopic", peakFamily.mzMonoisotopic);
-    ar & make_nvp("charge", peakFamily.charge);
-    ar & make_nvp("peaks", peakFamily.peaks);
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::CalibrationParameters& cp, const unsigned int version)
-{
-    ar & make_nvp("A", cp.A);
-    ar & make_nvp("B", cp.B);
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::peakdata::Scan& scan, const unsigned int version)
-{
-    ar & make_nvp("nativeID", scan.nativeID);
-    ar & make_nvp("retentionTime", scan.retentionTime);
-    ar & make_nvp("observationDuration", scan.observationDuration);
-    ar & make_nvp("calibrationParameters", scan.calibrationParameters);
-    ar & make_nvp("peakFamilies", scan.peakFamilies);
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::peakdata::Software& software, const unsigned int version)
-{
-    ar & make_nvp("name", software.name);
-    ar & make_nvp("version", software.version);
-    ar & make_nvp("source", software.source);
-
-    // don't know why archiving "map" chokes
-    //ar & make_nvp("parameters", software.parameters);
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, pwiz::data::peakdata::PeakData& pd, const unsigned int version)
-{
-    ar & make_nvp("sourceFilename", pd.sourceFilename);
-    ar & make_nvp("software", pd.software);
-    ar & make_nvp("scans", pd.scans);
-}
-
-} // namespace serialization
-} // namespace boost
-
-
-namespace pwiz {
-namespace data {
-namespace peakdata {
-
-
-using namespace std;
-//using namespace pwiz::util;
-
-
-PWIZ_API_DECL void PeakFamily::printSimple(std::ostream& os) const
-{
-    if (peaks.empty())
-        os << 0 << " " << complex<double>(0.) << " " << 0 << endl;
-    else
-        os << peaks[0].frequency << " "
-           << polar(peaks[0].intensity, peaks[0].phase) << " "
-           << charge << endl; 
-}
-
-
-PWIZ_API_DECL void Scan::printSimple(std::ostream& os) const
-{
-    for (vector<PeakFamily>::const_iterator it=peakFamilies.begin(); it!=peakFamilies.end(); ++it)
-        it->printSimple(os);
-}
-
-
-using boost::serialization::make_nvp;
-using boost::archive::xml_iarchive;
-using boost::archive::xml_oarchive;
 
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd)
 {
-    xml_oarchive oa(os);
-    oa << make_nvp("peakdata", pd);
+    XMLWriter writer(os);
+    pd.write(writer);
     return os;
 }
 
 
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 {
-    xml_iarchive ia(is);
-    ia >> make_nvp("peakdata", pd);
+    pd.read(is);
     return is;
 }
 
@@ -785,6 +686,5 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 } // namespace peakdata 
 } // namespace data 
 } // namespace pwiz
-
 
 

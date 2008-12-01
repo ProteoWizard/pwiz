@@ -101,7 +101,7 @@ void testFind()
         for (unsigned int i=0; i<pd.scans.size(); i++)
         {
             *os_ << "scan " << i << ":\n"; 
-            pd.scans[i].printSimple(*os_);    
+            *os_ << pd.scans[i] << endl;
         }
     }
 }

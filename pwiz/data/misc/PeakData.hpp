@@ -30,7 +30,6 @@
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <string>
-#include <map>
 
 
 namespace pwiz {
@@ -39,7 +38,7 @@ namespace peakdata {
 
 
 const int PeakDataFormatVersion_Major = 1;
-const int PeakDataFormatVersion_Minor = 0;
+const int PeakDataFormatVersion_Minor = 1;
 
 
 struct PWIZ_API_DECL Peak
@@ -50,7 +49,7 @@ struct PWIZ_API_DECL Peak
     double area;
     double error; 
 
-    // FT-specific info
+    // FT-specific info // TODO: move this
     double frequency;
     double phase;
     double decay;
@@ -65,7 +64,8 @@ struct PWIZ_API_DECL Peak
 };
 
 
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peak& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peak& peak);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peak& peak);
 
 
 struct PWIZ_API_DECL PeakFamily 
@@ -79,7 +79,6 @@ struct PWIZ_API_DECL PeakFamily
     double sumAmplitude() const {return 0;}
     double sumArea() const {return 0;}
 
-    void printSimple(std::ostream& os) const; // TODO: remove at some point
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
 
@@ -88,7 +87,8 @@ struct PWIZ_API_DECL PeakFamily
 };
 
 
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakFamily& peakFamily);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakFamily& peakFamily);
 
 
 struct PWIZ_API_DECL Scan
@@ -101,21 +101,18 @@ struct PWIZ_API_DECL Scan
     CalibrationParameters calibrationParameters;
     std::vector<PeakFamily> peakFamilies;
 
-    
     Scan() : index(0), scanNumber(0), retentionTime(0), observationDuration(0) {}
 
-
-    void printSimple(std::ostream& os) const; // TODO: remove at some point
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
   
     bool operator==(const Scan& scan) const;
     bool operator!=(const Scan& scan) const;
-
 };
 
 
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& pd);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Scan& scan);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Scan& scan);
 
 
 struct PWIZ_API_DECL Software
@@ -146,7 +143,6 @@ struct PWIZ_API_DECL Software
   
     bool operator==(const Software& that) const;
     bool operator!=(const Software& that) const;
-
 };
 
 
@@ -161,13 +157,11 @@ struct PWIZ_API_DECL PeakData
 
     bool operator==(const PeakData& that) const;
     bool operator!=(const PeakData& that) const;
-
 };
 
 
-// xml serialization
-PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 
 
 } // namespace peakdata 

@@ -116,7 +116,7 @@ void testFind(FrequencyData& fd, const IsotopeEnvelopeEstimator& isotopeEnvelope
     if (os_) 
     {
         *os_ << "peaks found: " << data.scans[0].peakFamilies.size() << endl;
-        data.scans[0].printSimple(*os_);
+        *os_ << data.scans[0];
         *os_ << "scores: " << scores.size() << endl;
         copy(scores.begin(), scores.end(),
             ostream_iterator<PeakDetectorMatchedFilter::Score>(*os_, "\n"));
