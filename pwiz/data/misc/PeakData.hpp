@@ -164,6 +164,28 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 
 
+struct PWIZ_API_DECL Peakel
+{
+    double mz;
+    double retentionTime;
+    double maxIntensity;
+    double totalIntensity;
+    double mzVariance;
+    std::vector<Peak> peaks;
+};
+
+
+struct PWIZ_API_DECL Feature
+{
+    double mzMonoisotopic;
+    double retentionTime;
+    int charge;
+    double totalIntensity;
+    double rtVariance; // calculated from child Peakels?
+    std::vector<Peakel> peakels;
+};
+ 
+
 } // namespace peakdata 
 } // namespace data 
 } // namespace pwiz
