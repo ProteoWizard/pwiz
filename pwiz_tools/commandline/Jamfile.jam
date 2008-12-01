@@ -73,16 +73,15 @@ exe peakaboo
     : peakaboo.cpp
     : <include>../../..
     ;
-explicit peakaboo ; # don't build by default during dev
 
 
-alias mstools : msdiff msconvert msaccess mspicture ;
+alias mstools : msdiff msconvert msaccess mspicture peakaboo ;
 
 
 # local install for testing
 
 install bin 
-    : mstools peakaboo
+    : mstools
     : <location>bin ;
 
 explicit bin ;
