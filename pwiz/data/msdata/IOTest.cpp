@@ -668,7 +668,7 @@ class TestIterationListener_WithCancel : public IterationListener
 
     virtual Status update(const UpdateMessage& updateMessage) 
     {
-        if (updateMessage.iterationIndex == 6) return Status_Cancel;
+        if (updateMessage.iterationIndex == 5) return Status_Cancel;
         indices_.push_back(updateMessage.iterationIndex); 
         return Status_Ok;
     }
@@ -701,7 +701,7 @@ void testSpectrumListWriteProgress()
 
     TestIterationListener listener;
     IterationListenerRegistry registry;
-    registry.addListener(listener, 3); // callbacks: 0,3,6,9,11
+    registry.addListener(listener, 3); // callbacks: 0,2,5,8,10
 
     IO::write(writer, a, BinaryDataEncoder::Config(), 0, &registry);
 
@@ -715,16 +715,16 @@ void testSpectrumListWriteProgress()
 
     unit_assert(listener.indices().size() == 5);
     unit_assert(listener.indices()[0] == 0);
-    unit_assert(listener.indices()[1] == 3);
-    unit_assert(listener.indices()[2] == 6);
-    unit_assert(listener.indices()[3] == 9);
-    unit_assert(listener.indices()[4] == 11);
+    unit_assert(listener.indices()[1] == 2);
+    unit_assert(listener.indices()[2] == 5);
+    unit_assert(listener.indices()[3] == 8);
+    unit_assert(listener.indices()[4] == 10);
 
     // test #2, this time with cancel at index 6
 
     TestIterationListener_WithCancel cancelListener;
     IterationListenerRegistry registry2;
-    registry2.addListener(cancelListener, 3); // callbacks: 0,3, cancel at 6
+    registry2.addListener(cancelListener, 3); // callbacks: 0,2, cancel at 5
     
     ostringstream oss2;
     XMLWriter writer2(oss2);
@@ -740,7 +740,7 @@ void testSpectrumListWriteProgress()
 
     unit_assert(cancelListener.indices().size() == 2);
     unit_assert(cancelListener.indices()[0] == 0);
-    unit_assert(cancelListener.indices()[1] == 3);
+    unit_assert(cancelListener.indices()[1] == 2);
 }
 
 

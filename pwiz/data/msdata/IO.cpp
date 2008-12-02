@@ -2076,8 +2076,6 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
     attributes.push_back(make_pair("count", lexical_cast<string>(spectrumList.size())));
     writer.startElement("spectrumList", attributes);
 
-    bool canceled = false;
-
     for (size_t i=0; i<spectrumList.size(); i++)
     {
         // send progress updates, handling cancel
@@ -2088,11 +2086,8 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
             status = iterationListenerRegistry->broadcastUpdateMessage(
                 IterationListener::UpdateMessage(i, spectrumList.size()));
 
-        if (status == IterationListener::Status_Cancel) 
-        {
-            canceled = true;
+        if (status == IterationListener::Status_Cancel)
             break;
-        }
  
         // save write position
 
@@ -2105,12 +2100,6 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
         write(writer, *spectrum, config);
     }
-
-    // final progress update
-
-    if (iterationListenerRegistry && !canceled)
-        iterationListenerRegistry->broadcastUpdateMessage(
-            IterationListener::UpdateMessage(spectrumList.size(), spectrumList.size()));
 
     writer.endElement();
 }
@@ -2166,7 +2155,8 @@ PWIZ_API_DECL void read(std::istream& is, SpectrumListSimple& spectrumListSimple
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList,
            const BinaryDataEncoder::Config& config,
-           vector<boost::iostreams::stream_offset>* chromatogramPositions)
+           vector<boost::iostreams::stream_offset>* chromatogramPositions,
+           const IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(chromatogramList.size())));
@@ -2174,8 +2164,24 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
 
     for (size_t i=0; i<chromatogramList.size(); i++)
     {
+        // send progress updates, handling cancel
+
+        IterationListener::Status status = IterationListener::Status_Ok;
+
+        if (iterationListenerRegistry)
+            status = iterationListenerRegistry->broadcastUpdateMessage(
+                IterationListener::UpdateMessage(i, chromatogramList.size()));
+
+        if (status == IterationListener::Status_Cancel)
+            break;
+ 
+        // save write position
+
         if (chromatogramPositions)
             chromatogramPositions->push_back(writer.positionNext());
+
+        // write the chromatogram
+
         ChromatogramPtr chromatogram = chromatogramList.chromatogram(i, true);
         if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
         write(writer, *chromatogram, config);
@@ -2267,7 +2273,7 @@ void write(minimxml::XMLWriter& writer, const Run& run,
         write(writer, *run.spectrumListPtr, config, spectrumPositions, iterationListenerRegistry);
 
     if (run.chromatogramListPtr.get())
-        write(writer, *run.chromatogramListPtr, config, chromatogramPositions);
+        write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry);
 
     writer.endElement();
 }

@@ -99,11 +99,10 @@ void test()
     size_t iterationCount = 24;
     for (size_t i=0; i<iterationCount; i++)
         registry.broadcastUpdateMessage(IterationListener::UpdateMessage(i, iterationCount));
-    registry.broadcastUpdateMessage(IterationListener::UpdateMessage(iterationCount, iterationCount));
 
     // validate
 
-    unit_assert(test3.count() == 9);
+    unit_assert(test3.count() == 9); // 0 2 5 8 11 14 17 20 23
     unit_assert(test4.count() == 7);
     unit_assert(test5.count() == 6);
     unit_assert(test6.count() == 5);

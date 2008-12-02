@@ -180,7 +180,8 @@ PWIZ_API_DECL void read(std::istream& is, SpectrumListSimple& spectrumListSimple
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList, 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
-           std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0);
+           std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 PWIZ_API_DECL void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple);
 
 

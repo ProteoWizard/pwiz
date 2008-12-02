@@ -77,9 +77,9 @@ class IterationListenerRegistry::Impl
 
             bool shouldUpdate = 
                 updateMessage.iterationIndex == 0 ||
-                updateMessage.iterationIndex == updateMessage.iterationCount ||
+                updateMessage.iterationIndex+1 >= updateMessage.iterationCount ||
                 callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Iteration &&
-                    updateMessage.iterationIndex % callbackInfo_[*it].iterationPeriod == 0 ||
+                    (updateMessage.iterationIndex+1) % callbackInfo_[*it].iterationPeriod == 0 ||
                 callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Time &&
                     difftime(now, callbackInfo_[*it].timestamp) >= callbackInfo_[*it].timePeriod;
 

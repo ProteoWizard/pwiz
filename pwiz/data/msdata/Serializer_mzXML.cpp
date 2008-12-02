@@ -447,8 +447,6 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
-    bool canceled = false;
-
     for (size_t i=0; i<sl->size(); i++)
     {
         // send progress updates, handling cancel
@@ -459,23 +457,14 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
             status = iterationListenerRegistry->broadcastUpdateMessage(
                 IterationListener::UpdateMessage(i, sl->size()));
 
-        if (status == IterationListener::Status_Cancel) 
-        {
-            canceled = true;
+        if (status == IterationListener::Status_Cancel)
             break;
-        }
 
         // write the spectrum 
  
         SpectrumPtr spectrum = sl->spectrum(i, true);
         index.push_back(write_scan(xmlWriter, *spectrum, msd.run.spectrumListPtr, config));
     }
-
-    // final progress update
-
-    if (iterationListenerRegistry && !canceled)
-        iterationListenerRegistry->broadcastUpdateMessage(
-            IterationListener::UpdateMessage(sl->size(), sl->size()));
 }
 
 
