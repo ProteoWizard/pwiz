@@ -4,13 +4,13 @@ saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 1.6.0
-remark: release date: 2008-13-13
+remark: version: 1.9.0
+remark: release date: 2008-11-25
 remark: coverage: Mass spectrometer output files
 remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
+import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 
 [Term]
 id: MS:0000000
@@ -1612,7 +1612,7 @@ id: MS:1000245
 name: charge stripping
 def: "The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion." [PSI:MS]
 synonym: "CS" EXACT []
-relationship: part_of MS:1000456 ! precursor activation
+is_a: MS:1000510 ! precursor activation attribute
 
 [Term]
 id: MS:1000246
@@ -1620,7 +1620,6 @@ name: delayed extraction
 def: "The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer." [PSI:MS]
 synonym: "DE" EXACT []
 is_a: MS:1000597 ! ion optics type
-relationship: part_of MS:1000456 ! precursor activation
 
 [Term]
 id: MS:1000247
@@ -3288,7 +3287,7 @@ relationship: has_units UO:0000111 ! energy unit
 id: MS:1000510
 name: precursor activation attribute
 def: "Precursor Activation Attribute." [PSI:MS]
-relationship: part_of MS:1000442 ! Spectrum
+relationship: part_of MS:1000456 ! precursor activation
 
 [Term]
 id: MS:1000511
@@ -3810,7 +3809,7 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000592
 name: smoothing
-def: "Application of Lowess smoothing or filters to preserve high frequency components of a peak while reducing the noise." [PSI:MS]
+def: "A process of reducing spikes of intensity in order to reduce noise while preserving real peak signal. Many algorithms can be applied for this process." [PSI:MS]
 is_a: MS:1000543 ! data processing action
 
 [Term]
@@ -4076,7 +4075,7 @@ is_a: MS:1000126 ! Waters instrument model
 id: MS:1000633
 name: possible charge state
 def: "A possible charge state of the ion in a situation where the charge of an ion is known to be one of several possible values rather than a completely unknown value or determined to be a specific charge with reasonable certainty." [PSI:MS]
-xref: value-type:xsd\:int"The allowed value-type for this CV term."
+xref: value-type:xsd\:int" The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
 
 [Term]
@@ -4759,6 +4758,7 @@ id: MS:1000747
 name: completion time
 def: "The time that a data processing action was finished." [PSI:MS]
 is_a: MS:1000630 ! data processing parameter
+xref: value-type:xsd\:date "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000748
@@ -4784,6 +4784,221 @@ name: TSQ Quantum Ultra
 def: "Thermo Scientific TSQ Quantum Ultra." [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
 
+[Term]
+id: MS:1000752
+name: TOPP software
+def: "TOPP (The OpenMS proteomics pipeline) software." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1000753
+name: BaselineFilter
+def: "Removes the baseline from profile spectra using a top-hat filter." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000754
+name: DBExporter
+def: "Exports data from an OpenMS database to a file." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000755
+name: DBImporter
+def: "Imports data to an OpenMS database." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000756
+name: FileConverter
+def: "Converts between different MS file formats." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000757
+name: FileFilter
+def: "Extracts or manipulates portions of data from peak, feature or consensus feature files." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000758
+name: FileMerger
+def: "Merges several MS files into one file." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000759
+name: InternalCalibration
+def: "Applies an internal calibration." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000760
+name: MapAligner
+def: "Corrects retention time distortions between maps." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000761
+name: MapNormalizer
+def: "Normalizes peak intensities in an MS run." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000762
+name: NoiseFilter
+def: "Removes noise from profile spectra by using different smoothing techniques." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000763
+name: PeakPicker
+def: "Finds mass spectrometric peaks in profile mass spectra." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000764
+name: Resampler
+def: "Transforms an LC/MS map into a resampled map or a png image." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000765
+name: SpectraFilter
+def: "Applies a filter to peak spectra." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000766
+name: TOFCalibration
+def: "Applies time of flight calibration." [PSI:MS]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1000767
+name: native spectrum identifier format
+def: "Describes how the native spectrum identifiers are formated." [PSI:MS]
+synonym: "nativeID format" EXACT []
+relationship: part_of MS:1000577 ! data file
+
+[Term]
+id: MS:1000768
+name: Thermo nativeID format
+def: "controller=xsd:nonNegativeInteger scan=xsd:positiveInteger." [PSI:MS]
+comment: controller=0 is usually the mass spectrometer
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000769
+name: Waters nativeID format
+def: "function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000770
+name: WIFF nativeID format
+def: "sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000771
+name: Bruker/Agilent YEP nativeID format
+def: "scan=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000772
+name: Bruker BAF nativeID format
+def: "scan=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000773
+name: Bruker FID nativeID format
+def: "file=xsd:IDREF" [PSI:MS]
+comment: The nativeID must be the same as the source file ID.
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000774
+name: multiple peak list nativeID format
+def: "index=xsd:nonNegativeInteger" [PSI:MS]
+comment: Used for conversion of peak list files with multiple spectra, i.e. MGF, PKL, merged DTA files. Index is the spectrum number in the file, starting from 0.
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000775
+name: single peak list nativeID format
+def: "file=xsd:IDREF" [PSI:MS]
+comment: The nativeID must be the same as the source file ID. Used for conversion of peak list files with one spectrum per file, typically folder of PKL or DTAs, each sourceFileRef is different.
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000776
+name: scan number only nativeID format
+def: "scan=xsd:nonNegativeInteger" [PSI:MS]
+comment: Used for conversion from mzXML, or DTA folder where native scan numbers can be derived.
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000777
+name: spectrum identifier nativeID format
+def: "spectrum=xsd:nonNegativeInteger" [PSI:MS]
+comment: Used for conversion from mzData. The spectrum id attribute is referenced.
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000778
+name: charge state calculation
+def: "A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm." [PSI:MS]
+is_a: MS:1000543 ! data processing action
+
+[Term]
+id: MS:1000779
+name: below precursor intensity dominance charge state calculation
+def: "Infers charge state as single or amibiguously multiple by determining the fraction of intensity below the precursor m/z." [PSI:MS]
+is_a: MS:1000778 ! charge state calculation
+
+[Term]
+id: MS:1000780
+name: precursor recalculation
+def: "A process that recalculates existing precursor selected ions with one or more algorithmically determined precursor selected ions." [PSI:MS]
+is_a: MS:1000543 ! data processing action
+
+[Term]
+id: MS:1000781
+name: msPrefix precursor recalculation
+def: "Recalculates one or more precursor selected ions by peak detection in the isolation windows of high accuracy MS precursor scans." [PSI:MS]
+is_a: MS:1000780 ! precursor recalculation
+
+[Term]
+id: MS:1000782
+name: Savitzky-Golay smoothing
+def: "Reduces intensity spikes by applying local polynomial regression (of degree k) on a distribution (of at least k+1 equally spaced points) to determine the smoothed value for each point. It tends to preserve features of the distribution such as relative maxima, minima and width, which are usually 'flattened' by other adjacent averaging techniques." [PSI:MS]
+is_a: MS:1000592 ! smoothing
+
+[Term]
+id: MS:1000783
+name: LOWESS smoothing
+def: "Reduces intensity spikes by applying a modeling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible." [PSI:MS]
+is_a: MS:1000592 ! smoothing
+
+[Term]
+id: MS:1000784
+name: Gaussian smoothing
+def: "Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function." [PSI:MS]
+synonym: "Weierstrass transform" EXACT []
+synonym: "binomial smoothing" EXACT []
+is_a: MS:1000592 ! smoothing
+
+[Term]
+id: MS:1000785
+name: moving average smoothing
+def: "Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect." [PSI:MS]
+synonym: "box smoothing" EXACT []
+synonym: "boxcar smoothing" EXACT []
+synonym: "sliding average smoothing" EXACT []
+is_a: MS:1000592 ! smoothing
 
 [Typedef]
 id: has_units
