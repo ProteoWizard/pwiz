@@ -67,6 +67,7 @@ lib pwiz_data_msdata
         MSDataFile.cpp 
         Serializer_mzML.cpp
         Serializer_mzXML.cpp
+        Serializer_MGF.cpp
         SpectrumInfo.cpp
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp

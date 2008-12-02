@@ -117,6 +117,7 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_text = false;
     bool format_mzML = false;
     bool format_mzXML = false;
+    bool format_MGF = false;
     bool precision_32 = false;
     bool precision_64 = false;
     bool mz_precision_32 = false;
@@ -136,13 +137,16 @@ Config parseCommandLine(int argc, const char* argv[])
             ": set output directory [.]")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
-			": set extension for output files [mzML|mzXML|txt]")
+			": set extension for output files [mzML|mzXML|mgf|txt]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
 			": write mzML format [default]")
         ("mzXML",
             po::value<bool>(&format_mzXML)->zero_tokens(),
 			": write mzXML format")
+        ("mgf",
+            po::value<bool>(&format_MGF)->zero_tokens(),
+			": write Mascot generic format")
         ("text",
             po::value<bool>(&format_text)->zero_tokens(),
 			": write ProteoWizard internal text format")
@@ -263,6 +267,7 @@ Config parseCommandLine(int argc, const char* argv[])
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
+    if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
 
     if (config.extension.empty())
     {
@@ -276,6 +281,9 @@ Config parseCommandLine(int argc, const char* argv[])
                 break;
             case MSDataFile::Format_mzXML:
                 config.extension = ".mzXML";
+                break;
+            case MSDataFile::Format_MGF:
+                config.extension = ".mgf";
                 break;
             default:
                 throw runtime_error("[msconvert] Unsupported format."); 
@@ -407,7 +415,12 @@ class UserFeedbackIterationListener : public IterationListener
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        cout << updateMessage.iterationIndex << "/" << updateMessage.iterationCount << '\r' << flush;
+        // add tabs to erase all of the previous line
+        cout << updateMessage.iterationIndex+1 << "/" << updateMessage.iterationCount << "\t\t\t\r" << flush;
+
+        // spectrum and chromatogram lists both iterate; put them on different lines
+        if (updateMessage.iterationIndex+1 == updateMessage.iterationCount)
+            cout << endl;
         return Status_Ok;
     }
 };
@@ -446,6 +459,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     IterationListenerRegistry iterationListenerRegistry;
     UserFeedbackIterationListener feedback;
+    // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
     const size_t iterationPeriod = 100;
     iterationListenerRegistry.addListener(feedback, iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 

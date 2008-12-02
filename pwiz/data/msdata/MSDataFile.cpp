@@ -27,6 +27,7 @@
 #include "TextWriter.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
+#include "Serializer_MGF.hpp"
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
@@ -159,7 +160,13 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializerConfig.indexed = config.indexed;
             Serializer_mzXML serializer(serializerConfig);
             serializer.write(os, msd, iterationListenerRegistry);
-            break;            
+            break;
+        }
+        case MSDataFile::Format_MGF:
+        {
+            Serializer_MGF serializer;
+            serializer.write(os, msd, iterationListenerRegistry);
+            break;
         }
         default:
         {
@@ -196,6 +203,9 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
         case MSDataFile::Format_mzXML:
             os << "mzXML";
             return os;
+        case MSDataFile::Format_MGF:
+            os << "MGF";
+            return os;
         default:
             os << "Unknown";
             return os;
@@ -205,8 +215,11 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& config)
 {
-    os << config.format << " " << config.binaryDataEncoderConfig
-       << " indexed=\"" << boolalpha << config.indexed << "\"";
+    os << config.format;
+    if (config.format == MSDataFile::Format_mzML ||
+        config.format == MSDataFile::Format_mzXML)
+        os << " " << config.binaryDataEncoderConfig
+           << " indexed=\"" << boolalpha << config.indexed << "\"";
     return os;
 }
 

@@ -32,6 +32,7 @@
 #include "SpectrumList_BTDX.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
+#include "Serializer_MGF.hpp"
 #include "References.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "boost/regex.hpp"
@@ -235,16 +236,9 @@ class Reader_MGF : public Reader
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_MGF::read] Unable to open file " + filename));
 
-        result.fileDescription.fileContent.set(MS_MSn_spectrum);
-        SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = "MGF1";
-        bfs::path p(filename);
-        sourceFile->name = p.leaf();
-        sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
-        result.fileDescription.sourceFilePtrs.push_back(sourceFile);
-        result.run.id = "Run1";
-        result.run.spectrumListPtr = SpectrumListPtr(SpectrumList_MGF::create(is, result));
-        result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
+        Serializer_MGF serializer;
+        serializer.read(is, result);
+        fillInCommonMetadata(filename, result);
         return;
     }
 	virtual const char *getType() const {return "Mascot Generic";}

@@ -46,7 +46,7 @@ struct PWIZ_API_DECL MSDataFile : public MSData
                bool calculateSourceFileChecksum = false);
 
     /// data format for write()
-    enum PWIZ_API_DECL Format {Format_Text, Format_mzML, Format_mzXML};
+    enum PWIZ_API_DECL Format {Format_Text, Format_mzML, Format_mzXML, Format_MGF};
 
     /// configuration for write()
     struct PWIZ_API_DECL WriteConfig
