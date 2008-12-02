@@ -32,29 +32,29 @@
 #include "SharedCLI.hpp"
 
 
-// [pwiz\utility\bindings\CLI\..\..\..\data\msdata\psi-ms.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\utility\bindings\CLI\..\..\..\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.6.0
-//   remark: release date: 2008-13-13
+//   remark: version: 1.9.0
+//   remark: release date: 2008-11-25
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 //
-// [pwiz\utility\bindings\CLI\..\..\..\data\msdata\unit.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\utility\bindings\CLI\..\..\..\data\msdata\unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
 //   auto-generated-by: OBO-Edit 1.100-beta22
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/quality.obo?revision=1.95
+//   import: http://purl.org/obo/obo-all/quality/quality.obo
 //
 
 
@@ -2078,7 +2078,7 @@ public enum class CVID
     /// <summary>MzWiff: A software program for converting Applied Biosystems wiff file format to the mzXML or mzML format. MzWiff is currently maintained at the Institute for Systems Biology. It replaces the slower mzStar program.</summary>
     MS_MzWiff = 1000591,
 
-    /// <summary>smoothing: Application of Lowess smoothing or filters to preserve high frequency components of a peak while reducing the noise.</summary>
+    /// <summary>smoothing: A process of reducing spikes of intensity in order to reduce noise while preserving real peak signal. Many algorithms can be applied for this process.</summary>
     MS_smoothing = 1000592,
 
     /// <summary>baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparision between intensities of m/z values.</summary>
@@ -2575,6 +2575,126 @@ public enum class CVID
 
     /// <summary>TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.</summary>
     MS_TSQ_Quantum_Ultra = 1000751,
+
+    /// <summary>TOPP software: TOPP (The OpenMS proteomics pipeline) software.</summary>
+    MS_TOPP_software = 1000752,
+
+    /// <summary>BaselineFilter: Removes the baseline from profile spectra using a top-hat filter.</summary>
+    MS_BaselineFilter = 1000753,
+
+    /// <summary>DBExporter: Exports data from an OpenMS database to a file.</summary>
+    MS_DBExporter = 1000754,
+
+    /// <summary>DBImporter: Imports data to an OpenMS database.</summary>
+    MS_DBImporter = 1000755,
+
+    /// <summary>FileConverter: Converts between different MS file formats.</summary>
+    MS_FileConverter = 1000756,
+
+    /// <summary>FileFilter: Extracts or manipulates portions of data from peak, feature or consensus feature files.</summary>
+    MS_FileFilter = 1000757,
+
+    /// <summary>FileMerger: Merges several MS files into one file.</summary>
+    MS_FileMerger = 1000758,
+
+    /// <summary>InternalCalibration: Applies an internal calibration.</summary>
+    MS_InternalCalibration = 1000759,
+
+    /// <summary>MapAligner: Corrects retention time distortions between maps.</summary>
+    MS_MapAligner = 1000760,
+
+    /// <summary>MapNormalizer: Normalizes peak intensities in an MS run.</summary>
+    MS_MapNormalizer = 1000761,
+
+    /// <summary>NoiseFilter: Removes noise from profile spectra by using different smoothing techniques.</summary>
+    MS_NoiseFilter = 1000762,
+
+    /// <summary>PeakPicker: Finds mass spectrometric peaks in profile mass spectra.</summary>
+    MS_PeakPicker = 1000763,
+
+    /// <summary>Resampler: Transforms an LC/MS map into a resampled map or a png image.</summary>
+    MS_Resampler = 1000764,
+
+    /// <summary>SpectraFilter: Applies a filter to peak spectra.</summary>
+    MS_SpectraFilter = 1000765,
+
+    /// <summary>TOFCalibration: Applies time of flight calibration.</summary>
+    MS_TOFCalibration = 1000766,
+
+    /// <summary>native spectrum identifier format: Describes how the native spectrum identifiers are formated.</summary>
+    MS_native_spectrum_identifier_format = 1000767,
+
+    /// <summary>native spectrum identifier format: Describes how the native spectrum identifiers are formated.</summary>
+    MS_nativeID_format = MS_native_spectrum_identifier_format,
+
+    /// <summary>Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.</summary>
+    MS_Thermo_nativeID_format = 1000768,
+
+    /// <summary>Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    MS_Waters_nativeID_format = 1000769,
+
+    /// <summary>WIFF nativeID format: sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger.</summary>
+    MS_WIFF_nativeID_format = 1000770,
+
+    /// <summary>Bruker/Agilent YEP nativeID format: scan=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_Agilent_YEP_nativeID_format = 1000771,
+
+    /// <summary>Bruker BAF nativeID format: scan=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_BAF_nativeID_format = 1000772,
+
+    /// <summary>Bruker FID nativeID format: file=xsd:IDREF</summary>
+    MS_Bruker_FID_nativeID_format = 1000773,
+
+    /// <summary>multiple peak list nativeID format: index=xsd:nonNegativeInteger</summary>
+    MS_multiple_peak_list_nativeID_format = 1000774,
+
+    /// <summary>single peak list nativeID format: file=xsd:IDREF</summary>
+    MS_single_peak_list_nativeID_format = 1000775,
+
+    /// <summary>scan number only nativeID format: scan=xsd:nonNegativeInteger</summary>
+    MS_scan_number_only_nativeID_format = 1000776,
+
+    /// <summary>spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger</summary>
+    MS_spectrum_identifier_nativeID_format = 1000777,
+
+    /// <summary>charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.</summary>
+    MS_charge_state_calculation = 1000778,
+
+    /// <summary>below precursor intensity dominance charge state calculation: Infers charge state as single or amibiguously multiple by determining the fraction of intensity below the precursor m/z.</summary>
+    MS_below_precursor_intensity_dominance_charge_state_calculation = 1000779,
+
+    /// <summary>precursor recalculation: A process that recalculates existing precursor selected ions with one or more algorithmically determined precursor selected ions.</summary>
+    MS_precursor_recalculation = 1000780,
+
+    /// <summary>msPrefix precursor recalculation: Recalculates one or more precursor selected ions by peak detection in the isolation windows of high accuracy MS precursor scans.</summary>
+    MS_msPrefix_precursor_recalculation = 1000781,
+
+    /// <summary>Savitzky-Golay smoothing: Reduces intensity spikes by applying local polynomial regression (of degree k) on a distribution (of at least k+1 equally spaced points) to determine the smoothed value for each point. It tends to preserve features of the distribution such as relative maxima, minima and width, which are usually 'flattened' by other adjacent averaging techniques.</summary>
+    MS_Savitzky_Golay_smoothing = 1000782,
+
+    /// <summary>LOWESS smoothing: Reduces intensity spikes by applying a modeling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible.</summary>
+    MS_LOWESS_smoothing = 1000783,
+
+    /// <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+    MS_Gaussian_smoothing = 1000784,
+
+    /// <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+    MS_Weierstrass_transform = MS_Gaussian_smoothing,
+
+    /// <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+    MS_binomial_smoothing = MS_Gaussian_smoothing,
+
+    /// <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+    MS_moving_average_smoothing = 1000785,
+
+    /// <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+    MS_box_smoothing = MS_moving_average_smoothing,
+
+    /// <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+    MS_boxcar_smoothing = MS_moving_average_smoothing,
+
+    /// <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+    MS_sliding_average_smoothing = MS_moving_average_smoothing,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,
@@ -3421,17 +3541,17 @@ public ref class CVInfo
     /// <summary>
     /// returns a list of terms which this term has an IS_A relationship with
     /// </summary>
-    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA, this);} }
+    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA);} }
 
     /// <summary>
     /// returns a list of terms which this term has a PART_OF relationship with
     /// </summary>
-    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf, this);} }
+    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf);} }
 
     /// <summary>
     /// returns a list of term names synonymous with this term
     /// </summary>
-    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms, this);} }
+    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
 
     CVInfo() : base_(new pwiz::msdata::CVInfo()) {}
 
