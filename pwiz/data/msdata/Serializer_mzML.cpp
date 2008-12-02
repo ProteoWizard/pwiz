@@ -83,16 +83,13 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         for (unsigned int i=0; i<positions.size(); ++i)
         {
-            SpectrumPtr spectrum = spectrumListPtr->spectrum(i, false);
-            if (!spectrum.get())
-                throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Error retrieving spectrum index " 
-                                    + lexical_cast<string>(i));
+            const SpectrumIdentity& spectrum = spectrumListPtr->spectrumIdentity(i);
 
             XMLWriter::Attributes attributes;
-            attributes.push_back(make_pair("idRef", spectrum->id));
-            attributes.push_back(make_pair("nativeID", spectrum->nativeID));
-            if (!spectrum->spotID.empty())
-                attributes.push_back(make_pair("spotID", spectrum->spotID));
+            attributes.push_back(make_pair("idRef", spectrum.id));
+            attributes.push_back(make_pair("nativeID", spectrum.nativeID));
+            if (!spectrum.spotID.empty())
+                attributes.push_back(make_pair("spotID", spectrum.spotID));
 
             xmlWriter.startElement("offset", attributes);
             xmlWriter.characters(lexical_cast<string>(positions[i]));
@@ -115,19 +112,16 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
     if (chromatogramListPtr.get())
     {
         if (chromatogramListPtr->size() != positions.size())
-            throw runtime_error("[serializer_mzml::writechromatogramindex()] sizes differ.");
+            throw runtime_error("[Serializer_mzML::WriteChromatogramIndex()] sizes differ.");
 
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         for (unsigned int i=0; i<positions.size(); ++i)
         {
-            ChromatogramPtr chromatogram = chromatogramListPtr->chromatogram(i, false);
-            if (!chromatogram.get())
-                throw runtime_error("[Serializer_mzML::writeChromatogramIndex()] Error retrieving chromatogram index " 
-                                    + lexical_cast<string>(i));
+            const ChromatogramIdentity& chromatogram = chromatogramListPtr->chromatogramIdentity(i);
 
             XMLWriter::Attributes Attributes;
-            Attributes.push_back(make_pair("idRef", chromatogram->id));        
-            Attributes.push_back(make_pair("nativeID", chromatogram->nativeID));        
+            Attributes.push_back(make_pair("idRef", chromatogram.id));        
+            Attributes.push_back(make_pair("nativeID", chromatogram.nativeID));        
 
             xmlWriter.startElement("offset", Attributes);
             xmlWriter.characters(lexical_cast<string>(positions[i]));
@@ -188,7 +182,7 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
         XMLWriter::Attributes attributes; 
         attributes.push_back(make_pair("count", "2"));
         xmlWriter.startElement("indexList", attributes);
-         
+
         writeSpectrumIndex(xmlWriter, msd.run.spectrumListPtr, spectrumPositions);
         writeChromatogramIndex(xmlWriter, msd.run.chromatogramListPtr, chromatogramPositions);
 
