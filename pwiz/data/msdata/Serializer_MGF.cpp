@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "boost/foreach.hpp"
+#include "boost/algorithm/string/join.hpp"
 
 
 namespace pwiz {
