@@ -32,6 +32,12 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp" // for charcounter defn
+#include "boost/iostreams/device/file.hpp"
+#include "boost/iostreams/filtering_stream.hpp" 
+#include "boost/iostreams/filter/gzip.hpp" 
+
+
 #include <fstream>
 #include <stdexcept>
 
@@ -123,14 +129,30 @@ void MSDataFile::write(const string& filename,
 namespace {
 
 
-shared_ptr<ostream> openFile(const string& filename)
+shared_ptr<ostream> openFile(const string& filename, bool gzipped)
 {
-    shared_ptr<ostream> result(new ofstream(filename.c_str(), ios::binary));
+	if (gzipped) 
+	{   // use boost's filter stack to count outgoing bytes, and gzip them
+		boost::iostreams::filtering_ostream *filt = new boost::iostreams::filtering_ostream();
+		shared_ptr<ostream> result(filt);
+		if (filt)
+		{
+		filt->push(pwiz::minimxml::charcounter()); // for counting bytes before compression
+		filt->push(boost::iostreams::gzip_compressor(9)); // max compression
+		filt->push(boost::iostreams::file_sink(filename.c_str(), ios::binary));
+		}
+		if (!result.get() || !*result || !filt->good())
+			throw runtime_error(("[MSDataFile::openFile()] Unable to open file " + filename).c_str());
+	    return result; 
+	} else 
+	{
+		shared_ptr<ostream> result(new ofstream(filename.c_str(), ios::binary));
 
-    if (!result.get() || !*result)
-        throw runtime_error(("[MSDataFile::openFile()] Unable to open file " + filename).c_str());
+		if (!result.get() || !*result)
+			throw runtime_error(("[MSDataFile::openFile()] Unable to open file " + filename).c_str());
 
-    return result; 
+		return result; 		
+	}
 }
 
 
@@ -185,7 +207,7 @@ void MSDataFile::write(const MSData& msd,
                        const WriteConfig& config,
                        const IterationListenerRegistry* iterationListenerRegistry)
 {
-    shared_ptr<ostream> os = openFile(filename);
+    shared_ptr<ostream> os = openFile(filename,config.gzipped);
     writeStream(*os, msd, config, iterationListenerRegistry);
 }
 

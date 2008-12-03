@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
+#include "boost/iostreams/filter/counter.hpp"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -120,6 +121,57 @@ class PWIZ_API_DECL XMLWriter
     XMLWriter& operator=(const XMLWriter&);
 };
     
+
+//
+// Template name: basic_charcounter.
+// Template paramters:
+//      Ch - The character type.
+// Description: Filter which counts characters.  
+// Based on boost's basic_counter, but
+// without the line counting, and couting using 
+// stream_offset instead of int
+//
+template<typename Ch>
+class basic_charcounter  {
+public:
+    typedef Ch char_type;
+    struct category
+		: boost::iostreams::dual_use,
+          boost::iostreams::filter_tag,
+          boost::iostreams::multichar_tag,
+          boost::iostreams::optimally_buffered_tag
+        { };
+    explicit basic_charcounter(int first_char = 0)
+        : chars_(first_char)
+        { }
+    boost::iostreams::stream_offset characters() const { return chars_; }
+    std::streamsize optimal_buffer_size() const { return 0; }
+
+    template<typename Source>
+    std::streamsize read(Source& src, char_type* s, std::streamsize n)
+    {
+		std::streamsize result = boost::iostreams::read(src, s, n);
+        if (result == -1)
+            return -1;
+        chars_ += result;
+        return result;
+    }
+
+    template<typename Sink>
+    std::streamsize write(Sink& snk, const char_type* s, std::streamsize n)
+    {
+		std::streamsize result = boost::iostreams::write(snk, s, n);
+        chars_ += result;
+        return result;
+    }
+private:
+    boost::iostreams::stream_offset chars_;
+};
+BOOST_IOSTREAMS_PIPABLE(basic_charcounter, 1)
+
+
+typedef basic_charcounter<char>     charcounter;
+typedef basic_charcounter<wchar_t>  wcharcounter;
 
 } // namespace minimxml
 } // namespace pwiz

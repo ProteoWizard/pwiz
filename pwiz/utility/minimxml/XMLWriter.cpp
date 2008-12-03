@@ -26,6 +26,8 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "boost/iostreams/filtering_stream.hpp" 
+#include "boost/iostreams/filter/counter.hpp"
 #include <stack>
 using std::stack;
 
@@ -224,7 +226,16 @@ void XMLWriter::Impl::characters(const string& text)
 XMLWriter::stream_offset XMLWriter::Impl::position() const
 {
     os_ << flush;
-    return boost::iostreams::position_to_offset(os_.tellp()); 
+	// check to see if we're actually writing to a gzip file 
+	boost::iostreams::filtering_ostream *zipper = dynamic_cast<boost::iostreams::filtering_ostream *>(&os_);
+	if (zipper) 
+	{  // os_ is actually a boost::iostreams::filtering_ostream with gzip and a counter
+		return zipper->component<0, pwiz::minimxml::charcounter>()->characters();
+	}
+	else
+	{  // OK to do a simple ftellp because seek is implemented, unlike with gzip
+	    return boost::iostreams::position_to_offset(os_.tellp()); 
+	}
 }
 
 

@@ -54,9 +54,10 @@ struct PWIZ_API_DECL MSDataFile : public MSData
         Format format;
         BinaryDataEncoder::Config binaryDataEncoderConfig;
         bool indexed;
+		bool gzipped; // if true, file is written as .gz
 
-        WriteConfig(Format _format = Format_mzML)
-        :   format(_format), indexed(true)
+        WriteConfig(Format _format = Format_mzML,bool _gzipped = false)
+        :   format(_format), indexed(true), gzipped(_gzipped)
         {}
     };
 

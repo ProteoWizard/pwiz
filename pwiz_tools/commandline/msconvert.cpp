@@ -126,6 +126,7 @@ Config parseCommandLine(int argc, const char* argv[])
     bool intensity_precision_64 = false;
     bool noindex = false;
     bool zlib = false;
+    bool gzip = false;
 
     po::options_description od_config("Options");
     od_config.add_options()
@@ -183,6 +184,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
 			": use zlib compression for binary data")
+        ("gzip,g",
+            po::value<bool>(&gzip)->zero_tokens(),
+			": gzip entire output file (adds .gz to filename)")
         ("stripIT",
             po::value<bool>(&config.stripITScans)->zero_tokens(),
 			": strip ion trap ms1 scans")
@@ -269,6 +273,8 @@ Config parseCommandLine(int argc, const char* argv[])
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
     if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
 
+    config.writeConfig.gzipped = gzip; // if true, file is written as .gz
+
     if (config.extension.empty())
     {
         switch (config.writeConfig.format)
@@ -288,6 +294,10 @@ Config parseCommandLine(int argc, const char* argv[])
             default:
                 throw runtime_error("[msconvert] Unsupported format."); 
         }
+		if (config.writeConfig.gzipped) 
+		{
+			config.extension += ".gz";
+		}
     }
 
     // default BinaryDataEncoder precision
