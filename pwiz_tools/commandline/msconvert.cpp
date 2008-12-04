@@ -26,9 +26,7 @@
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/Version.hpp"
 #include "boost/program_options.hpp"
 #include "boost/foreach.hpp"
@@ -48,19 +46,15 @@ using boost::shared_ptr;
 struct Config
 {
     vector<string> filenames;
+    vector<string> filters;
     string outputPath;
     string extension;
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
-    string msLevelsToCentroid;
-    bool stripITScans;
-    string indexSubset;
-    string scanSubset;
-    bool recalculatePrecursors;
 
     Config()
-    :   outputPath("."), verbose(false), stripITScans(false), recalculatePrecursors(false)
+    :   outputPath("."), verbose(false)
     {}
 
     string outputFilename(const string& inputFilename) const;
@@ -82,15 +76,16 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "outputPath: " << config.outputPath << endl;
     os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
-    os << "msLevelsToCentroid: " << config.msLevelsToCentroid << endl;
-    os << "stripITScans: " << boolalpha << config.stripITScans << endl;
-    os << "indexSubset: " << config.indexSubset << endl;
-    os << "scanSubset: " << config.scanSubset << endl;
-    os << "recalculatePrecursors: " << boolalpha << config.recalculatePrecursors << endl;
+    os << endl;
+
+    os << "filters:\n  ";
+    copy(config.filters.begin(), config.filters.end(), ostream_iterator<string>(os,"\n  "));
+    os << endl;
 
     os << "filenames:\n  ";
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os,"\n  "));
     os << endl;
+
     return os;
 }
 
@@ -178,27 +173,15 @@ Config parseCommandLine(int argc, const char* argv[])
         ("contactInfo,i",
             po::value<string>(&config.contactFilename),
 			": filename for contact info")
-        ("centroid,c",
-            po::value<string>(&config.msLevelsToCentroid)->default_value(config.msLevelsToCentroid),
-			": centroid spectrum data for msLevel ranges (list of closed intervals, e.g. \"[2,3] [5,7]\")")
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
 			": use zlib compression for binary data")
         ("gzip,g",
             po::value<bool>(&gzip)->zero_tokens(),
 			": gzip entire output file (adds .gz to filename)")
-        ("stripIT",
-            po::value<bool>(&config.stripITScans)->zero_tokens(),
-			": strip ion trap ms1 scans")
-        ("indexSubset",
-            po::value<string>(&config.indexSubset)->default_value(config.indexSubset),
-			": specify subset of spectrum indices (list of closed intervals, e.g. \"[0,3] [5,5] [11,13]\")")
-        ("scanSubset",
-            po::value<string>(&config.scanSubset)->default_value(config.scanSubset),
-			": specify subset of scan numbers (list of closed intervals, e.g. \"[1,4] [6,6] [12,14]\")")
-        ("precursorRecalculation,p",
-            po::value<bool>(&config.recalculatePrecursors)->zero_tokens(),
-			": recalculate precursor info based on ms1 data (msprefix)")
+        ("filter",
+            po::value< vector<string> >(&config.filters),
+			(": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
         ;
 
     // append options description to usage string
@@ -350,75 +333,6 @@ void addContactInfo(MSData& msd, const string& contactFilename)
 }
 
 
-void wrapSpectrumList_indexSubset(MSData& msd, const string& indexSubsetString)
-{
-    IntegerSet indexSet;
-    indexSet.parse(indexSubsetString);
-
-    shared_ptr<SpectrumList_Filter> 
-        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
-                                       SpectrumList_FilterPredicate_IndexSet(indexSet)));
-
-    msd.run.spectrumListPtr = filter;
-}
-
-
-void wrapSpectrumList_scanSubset(MSData& msd, const string& scanSubsetString)
-{
-    IntegerSet scanNumberSet;
-    scanNumberSet.parse(scanSubsetString);
-
-    shared_ptr<SpectrumList_Filter> 
-        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
-                                       SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet)));
-
-    msd.run.spectrumListPtr = filter;
-}
-
-
-void wrapSpectrumList_nativeCentroider(MSData& msd, const string& msLevelsToCentroidString)
-{
-    IntegerSet msLevelsToCentroid;
-    msLevelsToCentroid.parse(msLevelsToCentroidString);
-
-    shared_ptr<SpectrumList_NativeCentroider> 
-        nativeCentroider(new SpectrumList_NativeCentroider(msd.run.spectrumListPtr,
-                                                           msLevelsToCentroid));
-    msd.run.spectrumListPtr = nativeCentroider;
-}
-
-
-struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
-{
-    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
-    {
-        return boost::logic::indeterminate; // need full Spectrum
-    }
-
-    virtual bool accept(const Spectrum& spectrum) const
-    {
-        SpectrumInfo info(spectrum);
-        return !(info.msLevel==1 && cvIsA(info.massAnalyzerType, MS_ion_trap));
-    }
-};
-
-
-void wrapSpectrumList_stripIT(MSData& msd)
-{
-    shared_ptr<SpectrumList_Filter> 
-        filter(new SpectrumList_Filter(msd.run.spectrumListPtr, 
-                                       StripIonTrapSurveyScans()));
-    msd.run.spectrumListPtr = filter;    
-}
-
-
-void wrapSpectrumList_recalculatePrecursors(MSData& msd)
-{
-    shared_ptr<SpectrumList_PrecursorRecalculator> pr(new SpectrumList_PrecursorRecalculator(msd));
-    msd.run.spectrumListPtr = pr;    
-}
-
-
 class UserFeedbackIterationListener : public IterationListener
 {
     public:
@@ -450,20 +364,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     if (!config.contactFilename.empty())
         addContactInfo(msd, config.contactFilename);
 
-    if (!config.msLevelsToCentroid.empty()) // wrap immediately above native SpectrumList
-        wrapSpectrumList_nativeCentroider(msd, config.msLevelsToCentroid);
-
-    if (!config.indexSubset.empty())
-        wrapSpectrumList_indexSubset(msd, config.indexSubset); 
-
-    if (!config.scanSubset.empty())
-        wrapSpectrumList_scanSubset(msd, config.scanSubset); 
-
-    if (config.stripITScans)
-        wrapSpectrumList_stripIT(msd);
-
-    if (config.recalculatePrecursors)
-        wrapSpectrumList_recalculatePrecursors(msd);
+    SpectrumListFactory::wrap(msd, config.filters);
 
     // handle progress updates if requested
 
