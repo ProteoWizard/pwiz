@@ -23,8 +23,10 @@
 
 #define PWIZ_SOURCE
 #include "pwiz/Version.hpp"
-
-
+#include <sstream>
+#ifdef PWIZ_USER_VERSION_INFO_H // in case you need to add any info version of your own
+#include PWIZ_USER_VERSION_INFO_H  // must define PWIZ_USER_VERSION_INFO_H_STR for use below
+#endif
 namespace pwiz {
 
 
@@ -34,9 +36,18 @@ using std::string;
 int Version::Major()                {return 1;}
 int Version::Minor()                {return 4;}
 int Version::Revision()             {return 0;}
-string Version::str()               {return "1.4.0";}
 string Version::LastModified()      {return "11/12/2008";}
-
+string Version::str()               
+{
+	std::ostringstream v;
+	v << Major(); v << ".";
+	v << Minor(); v << ".";
+	v << Revision();
+#ifdef PWIZ_USER_VERSION_INFO_H
+	v << " (" << PWIZ_USER_VERSION_INFO_H_STR << ")";
+#endif
+	return v.str();
+}
 
 } // namespace pwiz
 
