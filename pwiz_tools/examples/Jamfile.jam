@@ -23,48 +23,49 @@
 
 exe hello_msdata
     : hello_msdata.cpp
-      ../data/msdata/examples.cpp
-      ../data/msdata//pwiz_data_msdata
+      ../../pwiz/data/msdata/examples.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata
     : <include>../..
     ;
 
 
 exe hello_ramp
     : hello_ramp.cpp
-      ../data/msdata//pwiz_data_msdata
-    : <include>../.. <include>../data/msdata/ramp
+      ../../pwiz/data/msdata//pwiz_data_msdata
+    : <include>../.. 
+      <include>../../pwiz/data/msdata/ramp
       <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
     ;
 
 
 exe hello_analyzer
     : hello_analyzer.cpp
-      ../data/msdata//pwiz_data_msdata
-      ../analysis/passive//pwiz_analysis_passive
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
     : <include>../..
     ;
 
 
 exe hello_analyzer_2
     : hello_analyzer_2.cpp
-      ../data/msdata//pwiz_data_msdata
-      ../analysis/passive//pwiz_analysis_passive
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
     : <include>../..
     ;
 
 
 exe mscat
     : mscat.cpp
-      ../data/msdata//pwiz_data_msdata
-      ../data/vendor_readers
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      ../../pwiz/data/vendor_readers
     : <include>../..
     ;
 
 
 exe txt2mzml
     : txt2mzml.cpp
-      ../data/msdata//pwiz_data_msdata
-      ../data/vendor_readers
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      ../../pwiz/data/vendor_readers
       /ext/boost//filesystem
     : <include>../..
     ;

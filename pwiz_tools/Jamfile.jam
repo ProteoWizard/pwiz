@@ -21,6 +21,9 @@
 #
 
 
+build-project common ;
 build-project commandline ;
+build-project examples ;
 build-project SeeMS ;
 build-project sld ;
+

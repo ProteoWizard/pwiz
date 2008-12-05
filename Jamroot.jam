@@ -136,7 +136,7 @@ build-project pwiz_tools ;
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
-      pwiz/examples
+      pwiz_tools/examples
     : <install-type>EXE
       <toolset>gcc,<variant>release:<location>build/gcc-release
       <toolset>gcc,<variant>debug:<location>build/gcc-debug
@@ -150,7 +150,7 @@ install executables
 install libraries 
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
-      pwiz/examples
+      pwiz_tools/examples
     : <install-type>LIB
       <install-dependencies>on
       <toolset>gcc,<variant>release:<location>build/gcc-release
