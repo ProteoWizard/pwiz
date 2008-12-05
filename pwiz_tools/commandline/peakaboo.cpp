@@ -185,42 +185,49 @@ void processFile(const string& filename, const Config& config)
     
     for (size_t i=0; i<cache.size(); i++)
     {
-        // get spectrum info from cache
-
-        const SpectrumInfo info = cache.spectrumInfo(i, true);
-
-        // TODO: use general SpectrumList filtering
-        if (info.massAnalyzerType != MS_FT_ICR && 
-            info.massAnalyzerType != MS_orbitrap)
+        try
         {
-            cerr << "Skipping non-FT index " << i << endl;
-            continue;
+            // get spectrum info from cache
+
+            const SpectrumInfo info = cache.spectrumInfo(i, true);
+
+            // TODO: use general SpectrumList filtering
+            if (info.massAnalyzerType != MS_FT_ICR && 
+                info.massAnalyzerType != MS_orbitrap)
+            {
+                cerr << "Skipping non-FT index " << i << endl;
+                continue;
+            }
+
+            // fill in scan metadata
+
+            peakdata::Scan pdScan;
+            pdScan.index = info.index;
+            pdScan.nativeID = info.nativeID;
+            pdScan.scanNumber = lexical_cast<int>(info.nativeID); // TODO: decide what to do with scan numbers
+            pdScan.retentionTime = info.retentionTime;
+
+            if (info.data.empty())
+            {
+                cerr << "Scan index " << i << " has no data.\n";
+                continue;
+            }
+
+            // find peaks
+
+            const MZIntensityPair* begin = lower_bound(&info.data.front(), &info.data.back(), 
+                                                       MZIntensityPair(config.mzLow,0), HasLowerMZ());
+
+            const MZIntensityPair* end = lower_bound(&info.data.front(), &info.data.back(), 
+                                                     MZIntensityPair(config.mzHigh,0), HasLowerMZ());
+
+            pfd->detect(begin, end, pdScan.peakFamilies);
+            peakData.scans.push_back(pdScan);
         }
-
-        // fill in scan metadata
-
-        peakdata::Scan pdScan;
-        pdScan.index = info.index;
-        pdScan.nativeID = info.nativeID;
-        pdScan.scanNumber = lexical_cast<int>(info.nativeID); // TODO: decide what to do with scan numbers
-        pdScan.retentionTime = info.retentionTime;
-
-        if (info.data.empty())
+        catch (...)
         {
-            cerr << "Scan index " << i << " has no data.\n";
-            continue;
+            cerr << "Caught exception in scan index " << i << endl;
         }
-
-        // find peaks
-
-        const MZIntensityPair* begin = lower_bound(&info.data.front(), &info.data.back(), 
-                                                   MZIntensityPair(config.mzLow,0), HasLowerMZ());
-
-        const MZIntensityPair* end = lower_bound(&info.data.front(), &info.data.back(), 
-                                                 MZIntensityPair(config.mzHigh,0), HasLowerMZ());
-
-        pfd->detect(begin, end, pdScan.peakFamilies);
-        peakData.scans.push_back(pdScan);
     }
 
     ofstream os(outputFilename.c_str());
