@@ -22,7 +22,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "pwiz_tools/common/FullReaderList.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -59,7 +59,7 @@ void cat(const char* filename)
 {
     // open the data file
 
-    ExtendedReaderList readers; // for vendor Reader support
+    FullReaderList readers; // for vendor Reader support
     MSDataFile msd(filename, &readers);
 
     // verify that we have a SpectrumList

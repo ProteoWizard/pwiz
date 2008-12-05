@@ -31,19 +31,12 @@ project
 lib pwiz_analysis_passive_core
     : # sources 
         MSDataAnalyzer.cpp
-        MSDataAnalyzerApplication.cpp
         MSDataCache.cpp 
     : # requirements
-        <library>/ext/boost//program_options
-        <library>/ext/boost//filesystem
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/vendor_readers//pwiz_data_vendor_readers
     : # default-build
     : # usage-requirements
-        <library>/ext/boost//program_options
-        <library>/ext/boost//filesystem
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/vendor_readers//pwiz_data_vendor_readers
 ; 
 
 
@@ -77,7 +70,6 @@ lib pwiz_analysis_passive
 
 
 unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
-unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_analysis_passive ;
 unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_passive ;
 unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
 

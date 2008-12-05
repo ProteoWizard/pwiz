@@ -30,15 +30,23 @@ project
 lib pwiz_tools_common
     : # sources
         FullReaderList.cpp 
+        MSDataAnalyzerApplication.cpp
     : # requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers
-    : # default-build
+        <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
+: # default-build
     : # usage-requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers
+        <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
     ;
 
+unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common  ;
 

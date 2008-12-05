@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "MSDataAnalyzer.hpp"
+#include "pwiz/analysis/passive/MSDataAnalyzer.hpp"
 
 
 namespace pwiz {

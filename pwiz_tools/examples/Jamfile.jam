@@ -40,24 +40,21 @@ exe hello_ramp
 
 exe hello_analyzer
     : hello_analyzer.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      ../common  
     : <include>../..
     ;
 
 
 exe hello_analyzer_2
     : hello_analyzer_2.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      ../common  
     : <include>../..
     ;
 
 
 exe mscat
     : mscat.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/data/vendor_readers
+      ../common
     : <include>../..
     ;
 
@@ -65,7 +62,6 @@ exe mscat
 exe txt2mzml
     : txt2mzml.cpp
       ../../pwiz/data/msdata//pwiz_data_msdata
-      ../../pwiz/data/vendor_readers
       /ext/boost//filesystem
     : <include>../..
     ;
