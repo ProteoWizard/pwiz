@@ -66,9 +66,11 @@ void test()
         "file2",
         "file3",
         "file4",
+        "--filter", "coffee",
         "-x", "command1",
         "-x", "command2",
-        tempFilename_
+        tempFilename_,
+        "--filter", "news media"
     };
 
     int argc = sizeof(argv)/sizeof(const char*);
@@ -85,10 +87,14 @@ void test()
         *os_ << "commands:\n";
         copy(app.commands.begin(), app.commands.end(), ostream_iterator<string>(*os_, "\n"));
         *os_ << endl;
+        *os_ << "filters:\n";
+        copy(app.filters.begin(), app.filters.end(), ostream_iterator<string>(*os_, "\n"));
+        *os_ << endl;
     }
 
     unit_assert(app.filenames.size() == 6);
     unit_assert(app.commands.size() == 3);
+    unit_assert(app.filters.size() == 2);
 
     MSData temp;
     MSDataFile::write(temp, tempFilename_);

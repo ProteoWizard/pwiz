@@ -50,7 +50,7 @@ namespace {
 typedef SpectrumListPtr (*FilterCreator)(const MSData& msd, const string& arg);
 
 
-SpectrumListPtr filterCreator_indexSubset(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_index(const MSData& msd, const string& arg)
 {
     IntegerSet indexSet;
     indexSet.parse(arg);
@@ -61,7 +61,7 @@ SpectrumListPtr filterCreator_indexSubset(const MSData& msd, const string& arg)
 }
 
 
-SpectrumListPtr filterCreator_scanSubset(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_scanNumber(const MSData& msd, const string& arg)
 {
     IntegerSet scanNumberSet;
     scanNumberSet.parse(arg);
@@ -69,6 +69,17 @@ SpectrumListPtr filterCreator_scanSubset(const MSData& msd, const string& arg)
     return SpectrumListPtr(new 
         SpectrumList_Filter(msd.run.spectrumListPtr, 
                             SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet)));
+}
+
+
+SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg)
+{
+    IntegerSet scanEventSet;
+    scanEventSet.parse(arg);
+
+    return SpectrumListPtr(new 
+        SpectrumList_Filter(msd.run.spectrumListPtr, 
+                            SpectrumList_FilterPredicate_ScanEventSet(scanEventSet)));
 }
 
 
@@ -120,8 +131,9 @@ struct JumpTableEntry
 
 JumpTableEntry jumpTable_[] =
 {
-    {"indexSubset", "[indexRangeBegin,indexRangeEnd] ...", filterCreator_indexSubset},
-    {"scanSubset", "[scanRangeBegin,scanRangeEnd] ...", filterCreator_scanSubset},
+    {"index", "[indexBegin,indexEnd] ...", filterCreator_index},
+    {"scanNumber", "[scanNumberBegin,scanNumberEnd] ...", filterCreator_scanNumber},
+    {"scanEvent", "[scanEventBegin,scanEventEnd] ...", filterCreator_scanEvent},
     {"nativeCentroid", "[msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},

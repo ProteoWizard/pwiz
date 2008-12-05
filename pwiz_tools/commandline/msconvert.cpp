@@ -272,10 +272,10 @@ Config parseCommandLine(int argc, const char* argv[])
           << "msconvert data.RAW -o my_output_dir\n"
           << endl
           << "# extract scan indices 5...10 and 20...25\n"
-          << "msconvert data.RAW --filter \"indexSubset [5,10] [20,25]\"\n"
+          << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
           << endl
           << "# multiple filters: select scan numbers and recalculate precursors\n"
-          << "msconvert data.RAW --filter \"scanSubset [500,1000]\" --filter \"precursorRecalculation\"\n"
+          << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
           << endl
           << "# use a configuration file\n"
           << "msconvert data.RAW -c config.txt\n"
@@ -283,7 +283,7 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# example configuration file\n"
           << "mzXML=true\n"
           << "zlib=true\n"
-          << "filter=\"indexSubset [3,7]\"\n"
+          << "filter=\"index [3,7]\"\n"
           << "filter=\"precursorRecalculation\"\n"
           << endl
           << endl

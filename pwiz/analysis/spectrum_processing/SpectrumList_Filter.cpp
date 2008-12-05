@@ -179,5 +179,25 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanNumberSet::done() const
 }
 
 
+//
+// SpectrumList_FilterPredicate_ScanEventSet 
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet::SpectrumList_FilterPredicate_ScanEventSet(const IntegerSet& scanEventSet)
+:   scanEventSet_(scanEventSet)
+{}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanEventSet::accept(const msdata::Spectrum& spectrum) const
+{
+    CVParam param = spectrum.spectrumDescription.scan.cvParam(MS_preset_scan_configuration);
+    if (param.cvid == CVID_Unknown) return false;
+    int scanEvent = lexical_cast<int>(param.value);
+    bool result = scanEventSet_.contains(scanEvent);
+    return result;
+}
+
+
 } // namespace analysis
 } // namespace pwiz

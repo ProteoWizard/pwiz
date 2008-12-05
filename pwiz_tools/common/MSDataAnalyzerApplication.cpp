@@ -26,6 +26,7 @@
 #include "MSDataAnalyzerApplication.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"
@@ -54,18 +55,21 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
 
     po::options_description od_config("");
     od_config.add_options()
-        ("outdir,o",
-            po::value<string>(&outputDirectory)->default_value(outputDirectory),
-            ": output directory")
         ("filelist,f",
             po::value<string>(&filelistFilename),
             ": text file containing filenames to process")
+        ("outdir,o",
+            po::value<string>(&outputDirectory)->default_value(outputDirectory),
+            ": output directory")
         ("config,c", 
             po::value<string>(&configFilename),
             ": configuration file (optionName=value)")
         ("exec,x", 
-            po::value< vector<string> >(&commands)->composing(),
+            po::value< vector<string> >(&commands),
             ": execute command")
+        ("filter",
+            po::value< vector<string> >(&filters),
+			(": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
         ;
 
     // save options description
@@ -140,6 +144,8 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
             if (log) *log << "[MSDataAnalyzerApplication] Analyzing file: " << *it << endl;
 
             MSDataFile msd(*it, &readers);
+            SpectrumListFactory::wrap(msd, filters);
+
             MSDataAnalyzer::DataInfo dataInfo(msd);
             dataInfo.sourceFilename = bfs::path(*it).leaf();
             dataInfo.outputDirectory = outputDirectory;

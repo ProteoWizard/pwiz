@@ -51,6 +51,7 @@ SpectrumListPtr createSpectrumList()
         vector<MZIntensityPair> pairs(i);
         spectrum->setMZIntensityPairs(pairs);
         spectrum->set(MS_ms_level, i%3==0?1:2);
+        spectrum->spectrumDescription.scan.set(MS_preset_scan_configuration, i%4);
         sl->spectra.push_back(spectrum);
     }
 
@@ -64,6 +65,7 @@ SpectrumListPtr createSpectrumList()
             *os_ << spectrum->index << " " 
                  << spectrum->nativeID << " "
                  << "ms" << spectrum->cvParam(MS_ms_level).value << " "
+                 << "scanEvent:" << spectrum->spectrumDescription.scan.cvParam(MS_preset_scan_configuration).value << " "
                  << endl;
         }
 
@@ -260,6 +262,40 @@ void testScanNumberSet(SpectrumListPtr sl)
 }
 
 
+void testScanEventSet(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testScanEventSet:\n";
+
+    IntegerSet scanEventSet;
+    scanEventSet.insert(0,0);
+    scanEventSet.insert(2,3);
+
+    SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_ScanEventSet(scanEventSet));
+    
+    if (os_)
+    {
+        *os_ << "size: " << filter.size() << endl;
+
+        for (size_t i=0, end=filter.size(); i<end; i++)
+        {
+            SpectrumPtr spectrum = filter.spectrum(i);
+            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+        }
+
+        *os_ << endl;
+    }
+
+    unit_assert(filter.size() == 7);
+    unit_assert(filter.spectrumIdentity(0).nativeID == "100");
+    unit_assert(filter.spectrumIdentity(1).nativeID == "102");
+    unit_assert(filter.spectrumIdentity(2).nativeID == "103");
+    unit_assert(filter.spectrumIdentity(3).nativeID == "104");
+    unit_assert(filter.spectrumIdentity(4).nativeID == "106");
+    unit_assert(filter.spectrumIdentity(5).nativeID == "107");
+    unit_assert(filter.spectrumIdentity(6).nativeID == "108");
+}
+
+
 void test()
 {
     SpectrumListPtr sl = createSpectrumList();
@@ -268,6 +304,7 @@ void test()
     testSelectedIndices(sl);
     testIndexSet(sl);
     testScanNumberSet(sl);
+    testScanEventSet(sl);
 }
 
 

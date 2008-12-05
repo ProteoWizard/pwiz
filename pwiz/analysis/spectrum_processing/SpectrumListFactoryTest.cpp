@@ -49,10 +49,10 @@ void testWrap()
     unit_assert(msd.run.spectrumListPtr.get());
     unit_assert(msd.run.spectrumListPtr->size() > 2);
 
-    SpectrumListFactory::wrap(msd, "scanSubset [19,20]");
+    SpectrumListFactory::wrap(msd, "scanNumber [19,20]");
     unit_assert(msd.run.spectrumListPtr->size() == 2);
 
-    SpectrumListFactory::wrap(msd, "indexSubset [1,1]");
+    SpectrumListFactory::wrap(msd, "index [1,1]");
     unit_assert(msd.run.spectrumListPtr->size() == 1);
     unit_assert(msd.run.spectrumListPtr->spectrumIdentity(0).nativeID == "20");
 }

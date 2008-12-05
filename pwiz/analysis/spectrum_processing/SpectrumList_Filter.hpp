@@ -106,6 +106,18 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet : public Spectrum
 };
 
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_ScanEventSet(const util::IntegerSet& scanEventSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual bool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    util::IntegerSet scanEventSet_;
+};
+
+
 } // namespace analysis
 } // namespace pwiz
 

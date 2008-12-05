@@ -38,6 +38,7 @@ lib pwiz_tools_common
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
+        <library>../../pwiz/analysis/spectrum_processing
 : # default-build
     : # usage-requirements
         <library>/ext/boost//program_options
@@ -46,6 +47,7 @@ lib pwiz_tools_common
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
+        <library>../../pwiz/analysis/spectrum_processing
     ;
 
 unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common  ;

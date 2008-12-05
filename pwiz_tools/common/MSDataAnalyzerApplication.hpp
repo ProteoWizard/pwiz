@@ -42,6 +42,7 @@ struct PWIZ_API_DECL MSDataAnalyzerApplication
     std::string usageOptions;
     std::string outputDirectory;
     std::vector<std::string> filenames;
+    std::vector<std::string> filters;
     std::vector<std::string> commands;
 
     /// construct and parse command line, filling in the various structure fields
