@@ -21,7 +21,7 @@
 //
 
 
-#include "pwiz/analysis/passive/MSDataAnalyzerApplication.hpp"
+#include "pwiz_tools/common/MSDataAnalyzerApplication.hpp"
 #include <iostream>
 
 
