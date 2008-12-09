@@ -147,6 +147,16 @@ install executables
     ;
 
 
+install bgddll
+    : libraries/bgd.dll
+    :
+      <toolset>msvc,<variant>release:<location>build/msvc-release
+      <toolset>msvc,<variant>debug:<location>build/msvc-debug
+      <toolset>gcc:<build>no
+      <toolset>darwin:<build>no
+    ;
+
+
 install libraries 
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
