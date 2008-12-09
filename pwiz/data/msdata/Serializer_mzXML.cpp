@@ -746,8 +746,12 @@ struct Handler_dataProcessing : public SAXParser::Handler
             registerSoftware(msd_, type, name, version, cvTranslator_);
             return Status::Ok;
         }
+        else if (name == "processingOperation")
+        {   // ignore its only attribute, which is "comment"
+            return Status::Ok;
+        }
 
-        throw runtime_error(("[SpectrumList_mzML::Handler_dataProcessing] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[SpectrumList_mzXML::Handler_dataProcessing] Unexpected element name: " + name).c_str());
     }
 
     private:
