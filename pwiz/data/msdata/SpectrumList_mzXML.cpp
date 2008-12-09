@@ -64,7 +64,7 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     map<string,size_t> idToIndex_;
     mutable vector<SpectrumPtr> spectrumCache_;
 
-    void readIndex();
+    bool readIndex(); // return false if index is not present
     void createIndex();
     void createMaps();
     string getPrecursorID(size_t index) const;
@@ -74,9 +74,10 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
 SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSData& msd, bool indexed)
 :   is_(is), msd_(msd)
 {
+	bool gotIndex = false;
     if (indexed)
-        readIndex(); 
-    else
+        gotIndex = readIndex(); 
+    if (!gotIndex)
         createIndex();
 
     createMaps();
@@ -618,7 +619,7 @@ class HandlerIndex : public SAXParser::Handler
 };
 
 
-void SpectrumList_mzXMLImpl::readIndex()
+bool SpectrumList_mzXMLImpl::readIndex()
 {
     // find <indexOffset>
 
@@ -635,7 +636,7 @@ void SpectrumList_mzXMLImpl::readIndex()
 
     string::size_type indexIndexOffset = buffer.find("<indexOffset>");
     if (indexIndexOffset == string::npos)
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] <indexOffset> not found."); 
+        return false; // no index present 
 
     is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
     if (!*is_)
@@ -659,6 +660,7 @@ void SpectrumList_mzXMLImpl::readIndex()
     SAXParser::parse(*is_, handlerIndex);
     if (index_.empty())
         throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty."); 
+	return true;
 }
 
 
