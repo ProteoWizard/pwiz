@@ -149,21 +149,16 @@ install executables
 
 install bgddll
     : libraries/bgd.dll
-    :
-      <toolset>msvc,<variant>release:<location>build/msvc-release
+    : <toolset>msvc,<variant>release:<location>build/msvc-release
       <toolset>msvc,<variant>debug:<location>build/msvc-debug
       <toolset>gcc:<build>no
       <toolset>darwin:<build>no
     ;
 
 
-install libraries 
-    : pwiz_tools/commandline
-      pwiz_tools/sld//sldout
-      pwiz_tools/examples
-    : <install-type>LIB
-      <install-dependencies>on
-      <toolset>gcc,<variant>release:<location>build/gcc-release
+install package_docs
+    : doc/package/readme.txt
+    : <toolset>gcc,<variant>release:<location>build/gcc-release
       <toolset>gcc,<variant>debug:<location>build/gcc-debug
       <toolset>msvc,<variant>release:<location>build/msvc-release
       <toolset>msvc,<variant>debug:<location>build/msvc-debug
@@ -171,5 +166,4 @@ install libraries
       <toolset>darwin,<variant>debug:<location>build/darwin-debug
     ;
 
-explicit libraries ;
 
