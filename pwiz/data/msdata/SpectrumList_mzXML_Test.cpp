@@ -66,22 +66,9 @@ void test(bool indexed)
     dummy.instrumentConfigurationPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
     dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));
 
-    if (!indexed)
-    {
-        bool caught = false;
-
-        try 
-        {
-            SpectrumListPtr temp = SpectrumList_mzXML::create(is, dummy, true);
-        }
-        catch (SpectrumList_mzXML::index_not_found&)
-        {
-            if (os_) *os_ << "Caught index_not_found: ok!\n";
-            caught = true;
-        }
-        
-        unit_assert(caught);
-    }
+    // note: used to have a test here to check that an exception would be thrown on 
+	// on an unindexed input file, but index is an optional element so the right thing to
+	// do is just create it
 
     SpectrumListPtr sl = SpectrumList_mzXML::create(is, dummy, indexed);
 
