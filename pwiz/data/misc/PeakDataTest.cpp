@@ -138,6 +138,7 @@ void testPeak()
     Peak peak;
 
     peak.mz = 1;
+    peak.retentionTime = 1.5;
     peak.intensity = 2;
     peak.area = 3;
     peak.error = 4;
@@ -171,7 +172,7 @@ void testPeak()
 
     unit_assert(peak == peakIn);
     // write out the xml if -v and if test is passed
-    if (os_) *os_ << "Testing Peak ... " << oss.str() << endl;
+    if (os_) *os_ << "Testing Peak ... " << endl << oss.str() << endl;
 
 }
 
@@ -189,23 +190,16 @@ void testPeakFamily()
 
 
     jetsons.write(writer);
-    if (os_) *os_    << oss.str() << endl;
 
     // instantiate new PeakFamily
 
     PeakFamily flintstones;
 
-    // read from stream into new PeakFamily                                                                                                                                       
+    // read from stream into new PeakFamily                                                                                                                                   
     istringstream iss(oss.str());
     flintstones.read(iss);
 
-    // verify that new PeakFamily is the same as old PeakFamily                                                                                                             
-    if (os_)
-        {
-            *os_ << flintstones << endl;
-            XMLWriter osWriter(*os_);
-            flintstones.write(osWriter);
-        }
+    // verify that new PeakFamily is the same as old PeakFamily                                                                 
 
     unit_assert(flintstones == jetsons);
     if (os_) *os_    << "Testing PeakFamily ... " << endl << oss.str() <<endl;

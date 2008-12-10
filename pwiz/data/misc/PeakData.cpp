@@ -48,7 +48,7 @@ using boost::lexical_cast;
 
 
 Peak::Peak()
-:   mz(0), intensity(0), area(0), error(0),
+:   mz(0), retentionTime(0),intensity(0), area(0), error(0),
     frequency(0), phase(0), decay(0) 
 {}
 
@@ -56,6 +56,7 @@ Peak::Peak()
 bool Peak::operator==(const Peak& that) const
 {
     return mz == that.mz &&
+           retentionTime == that.retentionTime &&
            intensity == that.intensity &&
            area == that.area &&
            error == that.error &&
@@ -75,6 +76,7 @@ void Peak::write(minimxml::XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
+    attributes.push_back(make_pair("retentionTime", lexical_cast<string>(retentionTime)));
     attributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
     attributes.push_back(make_pair("area", lexical_cast<string>(area)));
     attributes.push_back(make_pair("error", lexical_cast<string>(error)));
@@ -99,6 +101,7 @@ struct HandlerPeak : public SAXParser::Handler
             throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "mz", peak->mz);
+        getAttribute(attributes, "retentionTime", peak->retentionTime);
         getAttribute(attributes, "intensity", peak->intensity);
         getAttribute(attributes, "area", peak->area);
         getAttribute(attributes, "error", peak->error);
@@ -708,7 +711,7 @@ void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     XMLWriter::Attributes attributes_p;
     attributes_p.push_back(make_pair("count", boost::lexical_cast<string>(peaks.size())));
 
-    xmlWriter.startElement("peaks", attributes);
+    xmlWriter.startElement("peaks", attributes_p);
     
     vector<Peak>::const_iterator peak_it = peaks.begin();
     for(; peak_it != peaks.end(); ++peak_it) 
@@ -804,6 +807,20 @@ bool Peakel::operator!=(const Peakel& that) const
 }
 
 
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peakel& peakel)
+{
+    XMLWriter writer(os);
+    peakel.write(writer);
+    return os;
+}
+
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel)
+{
+    peakel.read(is);
+    return is;
+}
+
 ///
 /// Feature
 ///
@@ -811,6 +828,7 @@ bool Peakel::operator!=(const Peakel& that) const
 void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("uniqueID", boost::lexical_cast<string>(uniqueID)));
     attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
     attributes.push_back(make_pair("retentionTime", boost::lexical_cast<string>(retentionTime)));
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
@@ -822,7 +840,7 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     XMLWriter::Attributes attributes_pkl;
     attributes_pkl.push_back(make_pair("count", boost::lexical_cast<string>(peakels.size())));
   
-    xmlWriter.startElement("peakels",attributes);
+    xmlWriter.startElement("peakels",attributes_pkl);
   
     vector<Peakel>::const_iterator pkl_it = peakels.begin();
     for(; pkl_it != peakels.end(); ++pkl_it)
@@ -843,6 +861,7 @@ struct HandlerFeature : public SAXParser::Handler
     {
       if (name == "feature")
         {
+            getAttribute(attributes,"uniqueID", feature->uniqueID);
             getAttribute(attributes,"mzMonoisotopic", feature->mzMonoisotopic);
             getAttribute(attributes,"retentionTime", feature->retentionTime);
             getAttribute(attributes,"charge", feature->charge);
@@ -902,7 +921,8 @@ void Feature::read(istream& is)
 
 bool Feature::operator==(const Feature& that) const
 {
-    return mzMonoisotopic == that.mzMonoisotopic &&
+    return uniqueID == that.uniqueID &&
+      mzMonoisotopic == that.mzMonoisotopic &&
       retentionTime == that.retentionTime &&
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&
@@ -915,6 +935,22 @@ bool Feature::operator!=(const Feature& that) const
     return !(*this==that);
 
 }
+
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Feature& feature)
+{
+    XMLWriter writer(os);
+    feature.write(writer);
+    return os;
+}
+
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature)
+{
+    feature.read(is);
+    return is;
+}
+
 
 } // namespace peakdata 
 } // namespace data 

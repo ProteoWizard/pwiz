@@ -45,6 +45,7 @@ struct PWIZ_API_DECL Peak
 {
     // general peak info
     double mz;
+    double retentionTime;
     double intensity;
     double area;
     double error; 
@@ -184,12 +185,16 @@ struct PWIZ_API_DECL Peakel
 
 };
 
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peakel& peakel);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel);
+
 
 struct PWIZ_API_DECL Feature
 {
 
     Feature(){}
-
+    
+    size_t uniqueID; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;
     double retentionTime;
     int charge;
@@ -205,6 +210,8 @@ struct PWIZ_API_DECL Feature
 
 };
  
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Feature& feature);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature);
 
 } // namespace peakdata 
 } // namespace data 
