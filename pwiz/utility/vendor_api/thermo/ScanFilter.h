@@ -3,7 +3,7 @@
     Description: parsing for Thermo/Xcalibur "filter line".
     Date: July 25, 2007
 
-    Copyright (C) 2007 Joshua Tasman, ISB Seattle
+    Copyright (C) 2007 Natalie Tasman, ISB Seattle
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
