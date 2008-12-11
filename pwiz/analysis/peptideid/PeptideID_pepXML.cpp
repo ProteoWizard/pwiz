@@ -246,6 +246,13 @@ PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(const char* filename)
 {
     ifstream in(filename);
 
+    if (in.bad())
+    {
+        ostringstream oss;
+        oss << "Unable to open file " << filename;
+        throw std::ios_base::failure(oss.str());
+    }
+    
     PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
 
     parse(in, pxh);
@@ -256,6 +263,13 @@ PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(const string& filename)
 {
     ifstream in(filename.c_str());
 
+    if (in.bad())
+    {
+        ostringstream oss;
+        oss << "Unable to open file " << filename;
+        throw std::ios_base::failure(oss.str());
+    }
+    
     PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
     parse(in, pxh);
 }
@@ -264,7 +278,9 @@ PWIZ_API_DECL PeptideID_pepXml::PeptideID_pepXml(istream* in)
     : pimpl(new Impl(in))
 {
     if (in == NULL)
-        throw new runtime_error("null pointer");
+        throw runtime_error("null pointer");
+    else if (in->bad())
+        throw std::ios_base::failure("Unable to open input stream");
 
     PepXMLHandler pxh(&(pimpl->recordMap), &(pimpl->rtMap));
 
