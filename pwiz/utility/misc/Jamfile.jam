@@ -76,8 +76,10 @@ unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;
 unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
 unit-test IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc ;
 unit-test FilesystemTest : FilesystemTest.cpp pwiz_utility_misc ;
-unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ; 
+unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ;
 unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
+unit-test mru_list_test : mru_list_test.cpp ;
+
 
 import modules ;
 if [ modules.peek : NT ]

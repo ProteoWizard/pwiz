@@ -24,6 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <boost/iostreams/operations.hpp>
 #include <pwiz/utility/misc/optimized_lexical_cast.hpp>
 
@@ -49,6 +50,15 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::flush;
+
+using std::setprecision;
+using std::setw;
+using std::setfill;
+using std::setbase;
+
+using std::showbase;
+using std::showpoint;
+using std::showpos;
 
 namespace bio = boost::iostreams;
 using boost::lexical_cast;
