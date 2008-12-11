@@ -55,13 +55,8 @@ struct local_iterator : public PeptideID::Iterator
     
     virtual PeptideID::Record next()
     {
-        cout << "this: " << (it == end) << endl;
-        cout << (*it).first << endl;
-        cout << (*it).second << endl;
         PeptideID::Record record = (*it).second;
-        cout << "that" << endl;
         it++;
-        cout << "the other" << endl;
         
         return record;
     }

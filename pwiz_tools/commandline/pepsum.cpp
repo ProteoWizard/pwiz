@@ -222,7 +222,7 @@ int main(int argc, const char* argv[])
 
         size_t tick2 = clock();
 
-        cout << "delta t = " << (tick2 - tick1) << endl;
+//        cout << "delta t = " << (tick2 - tick1) << endl;
     }
     catch(exception& e)
     {
