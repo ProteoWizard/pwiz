@@ -87,10 +87,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         if (index > index_.size())
             throw runtime_error("[SpectrumList_MGF::spectrum] Index out of bounds");
 
-        // returned cached Spectrum if possible
-        if (!getBinaryData && spectrumCache_.size() > index && spectrumCache_[index].get())
-            return spectrumCache_[index];
-
         // allocate Spectrum object and read it in
         SpectrumPtr result(new Spectrum);
         if (!result.get())
@@ -106,13 +102,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
         parseSpectrum(*result, getBinaryData);
 
-        if (!getBinaryData)
-        {
-            if (spectrumCache_.size() <= index)
-                spectrumCache_.resize(index+1);
-            spectrumCache_[index] = result;
-        }
-
         // resolve any references into the MSData object
         References::resolve(*result, msd_);
 
@@ -124,7 +113,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     const MSData& msd_;
     vector<SpectrumIdentity> index_;
     map<string, size_t> idToIndex_;
-    mutable vector<SpectrumPtr> spectrumCache_;
 
     void parseSpectrum(Spectrum& spectrum, bool getBinaryData) const
     {

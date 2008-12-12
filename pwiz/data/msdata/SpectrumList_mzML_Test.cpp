@@ -113,11 +113,7 @@ void test(bool indexed)
     unit_assert(sl->spectrumIdentity(0).nativeID == "19");
     unit_assert(sl->spectrumIdentity(0).spotID.empty());
  
-    SpectrumPtr s_cache = sl->spectrum(0); // cache read
-    unit_assert(s_cache.get() == s.get());
-
     s = sl->spectrum(0, true); // read with binary data
-    unit_assert(s_cache.get() != s.get());
 
     vector<MZIntensityPair> pairs;
     s->getMZIntensityPairs(pairs);

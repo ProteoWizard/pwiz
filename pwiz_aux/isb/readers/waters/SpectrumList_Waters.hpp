@@ -44,7 +44,6 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumList
     string rawpath_;
     size_t size_;
     short functionCount_;
-    mutable vector<SpectrumPtr> spectrumCache_;
     vector<pair<SpectrumIdentity, pair<short, long> > > index_;
 
     // nativeIdToIndexMap_[<function #>][<scan #>] == index

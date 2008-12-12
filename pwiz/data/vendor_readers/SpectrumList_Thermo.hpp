@@ -35,7 +35,6 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     const MSData& msd_;
     shared_ptr<RawFile> rawfile_;
     size_t size_;
-    mutable vector<SpectrumPtr> spectrumCache_;
     vector<SpectrumIdentity> index_;
 
     void createIndex();

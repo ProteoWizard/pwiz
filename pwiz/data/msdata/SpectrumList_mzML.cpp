@@ -66,7 +66,6 @@ class SpectrumList_mzMLImpl : public SpectrumList
     map<string,size_t> idToIndex_;
     map<string,size_t> nativeIDToIndex_;
     map<string,IndexList> spotIDToIndexList_;
-    mutable vector<SpectrumPtr> spectrumCache_;
 
     void readIndex();
     void createIndex();
@@ -83,7 +82,6 @@ SpectrumList_mzMLImpl::SpectrumList_mzMLImpl(shared_ptr<istream> is, const MSDat
         createIndex();
 
     createMaps();
-    spectrumCache_.resize(index_.size());
 }
 
 
@@ -121,11 +119,6 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Index out of bounds.");
 
-    // returned cached Spectrum if possible
-
-    if (!getBinaryData && spectrumCache_[index].get())
-        return spectrumCache_[index];
-
     // allocate Spectrum object and read it in
 
     SpectrumPtr result(new Spectrum);
@@ -142,11 +135,6 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
     // resolve any references into the MSData object
 
     References::resolve(*result, msd_);
-
-    // save to cache if no binary data
-
-    if (!getBinaryData && !spectrumCache_[index].get())
-        spectrumCache_[index] = result; 
 
     return result;
 }

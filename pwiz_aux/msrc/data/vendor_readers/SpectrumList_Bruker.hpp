@@ -70,7 +70,6 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
     string rootpath_;
     SpectrumList_Bruker_Format format_;
     size_t size_;
-    mutable vector<SpectrumPtr> spectrumCache_;
     vector<SpectrumIdentity> index_;
 
     // nativeIdToIndexMap_[<function #>][<scan #>] == index

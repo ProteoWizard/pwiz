@@ -26,7 +26,6 @@ string scanNumberToSpectrumID(long scanNumber)
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(rawfile->value(NumSpectra)),
-    spectrumCache_(size_),
     index_(size_)
 {
     createIndex();
@@ -105,15 +104,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(scanNumber);
     if (!scanInfo.get())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
-
-    // returned cached Spectrum if possible (check consistency of centroid)
-    if (!getBinaryData && spectrumCache_[index].get())
-    {
-        bool doCentroid = msLevelsToCentroid.contains(spectrumCache_[index]->cvParam(MS_ms_level).valueAs<int>());
-        bool cachedCentroid = spectrumCache_[index]->spectrumDescription.hasCVParam(MS_centroid_mass_spectrum);
-        if (doCentroid == cachedCentroid)
-            return spectrumCache_[index];
-    }
 
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
@@ -260,11 +250,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
                                     massList->size());
     }
-
-    // save to cache if no binary data
-
-    if (!getBinaryData && !spectrumCache_[index].get())
-        spectrumCache_[index] = result; 
 
     return result;
 }

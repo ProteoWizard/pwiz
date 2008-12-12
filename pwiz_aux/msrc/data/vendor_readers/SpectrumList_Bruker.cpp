@@ -111,10 +111,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         throw runtime_error(("[SpectrumList_Bruker::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    // returned cached Spectrum if possible
-    if (!getBinaryData && spectrumCache_[index].get())
-        return spectrumCache_[index];
-
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
     if (!result.get())
@@ -328,11 +324,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     HRESULT hr = SafeArrayDestroyData(pfIntensities.parray);
     hr = SafeArrayDestroyData(pfMasses.parray);
 
-    // save to cache if no binary data
-
-    if (!getBinaryData && !spectrumCache_[index].get())
-        spectrumCache_[index] = result; 
-
     return result;
 }
 
@@ -351,8 +342,6 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
         si.id = "S" + si.nativeID;
         nativeIdToIndexMap_[si.nativeID] = si.index;
     }
-
-    spectrumCache_.resize(size_);
 
     BOOST_FOREACH(CVID spectrumType, spectrumTypes)
     {
