@@ -1,0 +1,25 @@
+
+
+function get_platform()
+{
+    if uname | grep -i darwin > /dev/null
+    then
+        echo "darwin"
+        return
+    fi
+
+    if uname | grep -i linux > /dev/null
+    then
+        echo "gcc"
+        return
+    fi
+
+    if uname | grep -i cygwin > /dev/null
+    then
+        echo "msvc"
+        return
+    fi
+
+    echo "unknown"
+}
+
