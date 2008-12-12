@@ -696,6 +696,45 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 /// Peakel
 ///
 
+void Peakel::calculateMetadata()
+{
+    // wipe out any metadata that may have been set
+    mz = 0;
+    retentionTime = 0;
+    mzVariance = 0;
+    maxIntensity = 0;
+    totalIntensity = 0;
+
+    // calculate mz and retentionTime mean
+    vector<Peak>::iterator calc_mean_it = peaks.begin();
+    for(; calc_mean_it != peaks.end(); ++calc_mean_it)
+        {
+            mz += calc_mean_it->mz;
+            retentionTime += calc_mean_it->retentionTime;
+        }
+    mz = mz / peaks.size();
+    retentionTime = retentionTime / peaks.size();
+
+    // calculate mz and retentionTime variance
+    vector<Peak>::iterator calc_var_it = peaks.begin();
+    for(; calc_var_it != peaks.end(); ++calc_var_it)
+        {
+            mzVariance += (calc_var_it->mz - mz)*(calc_var_it->mz - mz);
+        }
+    mzVariance = mzVariance / peaks.size();
+
+    // calculate intensity metadata.  Could go inside one of the above loops, left it out for clarity
+    vector<Peak>::iterator calc_intensity_it = peaks.begin();
+    for(; calc_intensity_it != peaks.end(); ++calc_intensity_it)
+        {
+            if (calc_intensity_it->intensity > maxIntensity) maxIntensity = calc_intensity_it->intensity;
+            totalIntensity += calc_intensity_it->intensity;
+        }
+
+    return;
+}
+
+
 void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
 
@@ -825,10 +864,62 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel)
 /// Feature
 ///
 
+
+void Feature::calculateMetadata()
+{
+    // wipe out any metadata that may have been set
+    mzMonoisotopic = 0;
+    retentionTime = 0;
+    rtVariance = 0;
+    totalIntensity = 0;
+
+    // calculate metadata of each peakel
+    vector<Peakel>::iterator calc_pkl_it = peakels.begin();
+    for(; calc_pkl_it != peakels.end(); ++calc_pkl_it)
+        {          
+            calc_pkl_it->calculateMetadata();
+        }
+
+    // write mzMonoisotopic (mz of first peakel)
+    mzMonoisotopic = peakels.begin()->mz;
+
+    // calculate retentionTime (mean of peakel retentionTimes)
+    vector<Peakel>::iterator calc_mean_it = peakels.begin();
+    for(; calc_mean_it != peakels.end(); ++calc_mean_it)
+        {
+            retentionTime += calc_mean_it->retentionTime;
+
+        }
+
+    retentionTime = retentionTime / peakels.size();
+
+    // calculate rtVariance ( variance of peakel retentionTimes)
+    vector<Peakel>::iterator calc_var_it = peakels.begin();
+    for(; calc_var_it != peakels.end(); ++calc_var_it)
+        {
+            rtVariance += (calc_var_it->retentionTime - retentionTime) * (calc_var_it->retentionTime - retentionTime);
+            
+        }
+
+    rtVariance = rtVariance / peakels.size();
+
+
+    // calculate totalIntensity ( could go in one of the above loops, left out for clarity)
+
+    vector<Peakel>::iterator calc_intensity_it = peakels.begin();
+    for(; calc_intensity_it != peakels.end(); ++calc_intensity_it)
+        {
+            totalIntensity += calc_intensity_it->totalIntensity;
+        }
+    
+}
+
+
+
 void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("uniqueID", boost::lexical_cast<string>(uniqueID)));
+    attributes.push_back(make_pair("id", boost::lexical_cast<string>(id)));
     attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
     attributes.push_back(make_pair("retentionTime", boost::lexical_cast<string>(retentionTime)));
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
@@ -861,7 +952,7 @@ struct HandlerFeature : public SAXParser::Handler
     {
       if (name == "feature")
         {
-            getAttribute(attributes,"uniqueID", feature->uniqueID);
+            getAttribute(attributes,"id", feature->id);
             getAttribute(attributes,"mzMonoisotopic", feature->mzMonoisotopic);
             getAttribute(attributes,"retentionTime", feature->retentionTime);
             getAttribute(attributes,"charge", feature->charge);
@@ -921,7 +1012,7 @@ void Feature::read(istream& is)
 
 bool Feature::operator==(const Feature& that) const
 {
-    return uniqueID == that.uniqueID &&
+    return id == that.id &&
       mzMonoisotopic == that.mzMonoisotopic &&
       retentionTime == that.retentionTime &&
       charge == that.charge &&

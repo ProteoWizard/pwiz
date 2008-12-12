@@ -177,6 +177,8 @@ struct PWIZ_API_DECL Peakel
     double mzVariance;
     std::vector<Peak> peaks;
     
+    void calculateMetadata();
+
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);
     
@@ -194,13 +196,15 @@ struct PWIZ_API_DECL Feature
 
     Feature(){}
     
-    size_t uniqueID; // assigned by feature detection, for easier lookup 
+    std::string id; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;
     double retentionTime;
     int charge;
     double totalIntensity;
     double rtVariance; // calculated from child Peakels?
     std::vector<Peakel> peakels;
+    
+    void calculateMetadata();
 
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);
