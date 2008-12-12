@@ -24,19 +24,19 @@
 
 #include "FeatureDetectorSimple.hpp"
 
-#include <vector>
-#include <map>
-#include <iostream>
-
-#include "boost/tuple/tuple_comparison.hpp"
-
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "boost/iostreams/positioning.hpp"
-
 #include "pwiz/data/msdata/SpectrumIterator.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 
+#include "boost/tuple/tuple_comparison.hpp"
+
+#include <vector>
+#include <map>
+#include <iostream>
+
+namespace{
 
 using namespace std;
 
@@ -44,31 +44,6 @@ using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
-
-class  FeatureDetectorSimple::Impl
-{
-public:
-    
-    Impl(PeakFamilyDetector& pfd) : _pfd(pfd) {}
-
-    void detect(const MSData& msd, vector<Feature>& result) const;
-    void makeFeature(const PeakFamily& pf, Feature& result, size_t& id) const;
-    void updatePeakel(const Peak& peak, const Peakel& pre, Peakel& post) const;
-    void updateFeature(const PeakFamily& pf, const Feature& pre, Feature& post) const;
-
-    
-private:
-    
-    PeakFamilyDetector& _pfd;
-
-};
-
-
-FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pfd(pfd), _pimpl(new Impl(pfd)){}
-void FeatureDetectorSimple::detect(const MSData& msd, std::vector<Feature>& result) const 
-{
-    _pimpl->detect(msd,result);
-}
 
 // helper function to fill in Peak retentionTime attribute
 struct SetRT
@@ -86,127 +61,125 @@ private:
 
 };
 
-void FeatureDetectorSimple::Impl::makeFeature(const PeakFamily& pf, Feature& result, size_t& id) const
-{
-    result.uniqueID = id;
-    result.mzMonoisotopic = pf.mzMonoisotopic;
-    result.retentionTime = pf.peaks.begin()->retentionTime; 
-    result.rtVariance = 0; // assumes all peaks in a peak family have the same rt
-    result.charge = pf.charge;
-    for(vector<Peak>::const_iterator peak_it = pf.peaks.begin(); peak_it != pf.peaks.end(); ++peak_it) 
-    {
-        // sum peak intensities for totalIntensity attribute
-        result.totalIntensity += peak_it->intensity;
-        
-        // initialize peakels, one for each peak in the PeakFamily
-        Peakel peakel;
-        peakel.mz = peak_it->mz;
-        peakel.retentionTime = peak_it->retentionTime;
-        peakel.maxIntensity = peak_it->intensity;
-        peakel.mzVariance = 0;
-        peakel.peaks.push_back(*peak_it);
-        
-        result.peakels.push_back(peakel);
-    }
-
-    return;
-}
-
-void FeatureDetectorSimple::Impl::updatePeakel(const Peak& peak, const Peakel& pre, Peakel& post) const
-{
-    post.peaks = pre.peaks;
-
-    if (peak.intensity > pre.maxIntensity) post.maxIntensity = peak.intensity;
-    else post.maxIntensity = pre.maxIntensity;
-    post.totalIntensity = pre.totalIntensity + peak.intensity;
-    
-    post.peaks.push_back(peak);
-
-    // calculate mz and retentionTime for Peakel (currently both mean)
-    post.mz = (pre.mz * pre.peaks.size() + peak.mz) / post.peaks.size();
-    post.retentionTime = (pre.retentionTime * pre.peaks.size() + peak.retentionTime) / post.peaks.size();
-
-    // calculate mzVariance 
-    post.mzVariance = 0;
-    for(vector<Peak>::iterator it = post.peaks.begin(); it != post.peaks.end(); ++it)
-        {
-            post.mzVariance += (it->mz - post.mz)*(it->mz - post.mz);
-        }
-
-    post.mzVariance = post.mzVariance / post.peaks.size();
-
-    return;
-}
-
-void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, const Feature& pre, Feature& post) const
-{
-
-    
-    // copy unchanged attributes
-    post.uniqueID = pre.uniqueID;
-    post.mzMonoisotopic = pre.mzMonoisotopic;
-    post.charge = pre.charge;
-
-    // change those that need change
-   
-    post.totalIntensity = pre.totalIntensity;
-
-    vector<Peakel>::const_iterator peakel_it = pre.peakels.begin();
-    vector<Peak>::const_iterator peak_it = pf.peaks.begin();
-
-    for(; peak_it != pf.peaks.end(); ++peakel_it, ++peak_it)
-    { 
-        // update totalIntensity
-        post.totalIntensity += peak_it->intensity;
-        
-        // update Peakels 
-        Peakel postPeakel;
-        updatePeakel(*peak_it, *peakel_it, postPeakel);
-        post.peakels.push_back(postPeakel);
-
-    }
-
-    post.retentionTime = 0;
-    post.rtVariance = 0;
-
-    // calculate retentionTime: currently mean across peakels
-    vector<Peakel>::const_iterator mean_it = post.peakels.begin();
-    for(; mean_it != post.peakels.end(); ++mean_it)
-        {
-            post.retentionTime += mean_it -> retentionTime;
-        
-        }
-
-    post.retentionTime = post.retentionTime / post.peakels.size();
-    
-    // calculate rtVariance
-    vector<Peakel>::const_iterator var_it = post.peakels.begin();
-    for(; var_it != post.peakels.end(); ++var_it)
-        {
-            post.rtVariance += (var_it->retentionTime - post.retentionTime)*(var_it->retentionTime - post.retentionTime);
-        
-        }
-
-    post.rtVariance = post.rtVariance / post.peakels.size(); 
-
-    return;
-
-}
+// define keys for matching a PeakFamily to a Feature. FeatureKey captures all the attributes of a PeakFamily necessary to match it to an existing Feature, provided that the Feature and PeakFamily are contiguous in the retention time dimension.  FeatureKey is a tuple of the (mzMonoisotopic, charge, peaks.size()) attributes of a PeakFamily.
 
 typedef boost::tuple<double,int,int> FeatureKey;
+
 bool operator==(const FeatureKey& a, const FeatureKey& b) 
 {
-    return (fabs(a.get<0>() - b.get<0>())) < 10 &&
+    return (fabs(a.get<0>() - b.get<0>())) < .001 && // accurate to 10e-3
                 a.get<1>() == b.get<1>() &&
                 a.get<2>() == b.get<2>();
 }
 
-void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& detected) const 
+} // anonymous namespace
+
+using namespace std;
+
+using namespace pwiz::analysis;
+using namespace pwiz::data;
+using namespace pwiz::data::peakdata;
+using namespace pwiz::msdata;
+
+class  FeatureDetectorSimple::Impl
+{
+public:
+    
+    Impl(PeakFamilyDetector& pfd) : _pfd(pfd) {}
+
+    typedef string FeatureID;
+
+    void detect(const MSData& msd, vector<Feature>& result) const;
+    Feature makeFeature(const PeakFamily& pf, FeatureID& id) const;
+    void updatePeakel(const Peak& peak, Peakel& peakel) const;
+    void updateFeature(const PeakFamily& pf, Feature& feature) const;
+    void getMetadata(vector<Feature>& result) const;
+    
+private:
+    
+    PeakFamilyDetector& _pfd;
+
+};
+
+
+FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pfd(pfd), _pimpl(new Impl(pfd)){}
+void FeatureDetectorSimple::detect(const MSData& msd, std::vector<Feature>& result) const 
+{
+    _pimpl->detect(msd,result);
+}
+
+Feature FeatureDetectorSimple::Impl::makeFeature(const PeakFamily& pf, FeatureID& id) const
+{
+    Feature result;
+    result.id = id;
+    result.charge = pf.charge;
+
+    result.charge = pf.charge;
+    for(vector<Peak>::const_iterator peak_it = pf.peaks.begin(); peak_it != pf.peaks.end(); ++peak_it) 
+    {   
+        // initialize peakels, one for each peak in the PeakFamily
+        Peakel peakel; 
+        updatePeakel(*peak_it, peakel);
+        result.peakels.push_back(peakel);
+    }
+
+    return result;
+}
+
+void FeatureDetectorSimple::Impl::updatePeakel(const Peak& peak, Peakel& peakel) const
+{    
+    peakel.peaks.push_back(peak);   
+    return;
+}
+
+void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, Feature& feature) const
 {   
 
-    // initialize buffer map
+    // iterate through peakels, adding new peaks and updating attributes
+    vector<Peakel>::iterator peakel_it = feature.peakels.begin();
+    vector<Peak>::const_iterator peak_it = pf.peaks.begin();
 
-    typedef size_t FeatureID;
+    for(; peak_it != pf.peaks.end(); ++peakel_it, ++peak_it)
+    {      
+        // update appropriate peakel
+        updatePeakel(*peak_it, *peakel_it);
+
+    }
+
+    return;
+
+}
+
+void FeatureDetectorSimple::Impl::getMetadata(vector<Feature>& detected) const
+{
+  
+    vector<Feature>::iterator feat_it = detected.begin();
+    for(; feat_it != detected.end(); ++feat_it)
+        {
+            feat_it->calculateMetadata();
+          
+        }
+
+    return;
+
+}
+
+
+// TODO Make this interpretable to a normal human
+
+// FeatureDetectorSimple::Impl::detect uses two maps to find
+// features. The first is rewritten with every scan,
+// and is keyed by FeatureKeys mapping to FeatureIDs.  These 
+// FeatureIDs correspond to features that
+// will be eligible to be updated by PeakFamilys found in the next
+// scan. The second map stores all detected features, keyed by these
+// FeatureIDs, regardless of eligibility for update.  The first map is
+// rolled over the scan set, updating the second as it goes.
+
+
+void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& detected) const 
+{   
+    // initialize buffer map    
    
     map<FeatureKey, FeatureID> bufferMap;
     map<FeatureID, Feature> featureMap;
@@ -215,13 +188,12 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
     MSDataCache cache;
     cache.open(msd);
 
-    for(size_t spectrum_index = 0; spectrum_index < cache.size(); spectrum_index ++ ) 
+    for(size_t spectrum_index = 0; spectrum_index < cache.size(); spectrum_index ++) 
     {
         
         map<FeatureKey, FeatureID> updatedBufferMap;
         const SpectrumInfo info = cache.spectrumInfo(spectrum_index, true); //getBinaryData ? 
        
-
         // call peak family detector on each scan
       
         vector<MZIntensityPair> mzIntensityPairs = info.data;       
@@ -236,11 +208,11 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         
         for(; result_it != result.end(); ++result_it)
             {
-                // get RT attribute
+                // set RT attribute
                 for_each(result_it->peaks.begin(), result_it->peaks.end(), SetRT(rt));
               
                 // make keys for search
-                FeatureKey featureKey(floor(result_it->mzMonoisotopic*100)/100, result_it->charge, result_it->peaks.size());
+                FeatureKey featureKey(floor(result_it->mzMonoisotopic*100)/100, result_it->charge, result_it->peaks.size()); // no digits past 10e-3
                 map<FeatureKey,FeatureID>::iterator location = bufferMap.find(featureKey);
                 
 
@@ -248,11 +220,10 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
                     {   
 
                         // feature doesn't exist, make new feature
-                        Feature feature;
-                        FeatureID featureID = ++featureCount;
-                        makeFeature(*result_it, feature, featureID);
-
                         
+                        FeatureID featureID = boost::lexical_cast<string>(++featureCount);
+                        Feature feature = makeFeature(*result_it,featureID);
+
                         featureMap.insert(pair<FeatureID, Feature>(featureID, feature));
                         updatedBufferMap.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
                                         
@@ -262,17 +233,10 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
                 else
                     {
                         // update existing feature
-                        FeatureID featureID = location->second;
-                        Feature feature = featureMap[featureID];
-                        Feature updatedFeature;
+                        FeatureID foundID = location->second;
+                        updateFeature(*result_it, featureMap[foundID]);
+                        updatedBufferMap.insert(pair<FeatureKey, FeatureID>(featureKey,foundID));
                         
-                        updateFeature(*result_it, feature, updatedFeature);
-
-                        featureMap.erase(featureID);
-                        featureMap.insert(pair<FeatureID, Feature>(featureID, updatedFeature));
-                        
-                        updatedBufferMap.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
-
                     }
                    
             }
@@ -281,21 +245,29 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         bufferMap.swap(updatedBufferMap);
     }
  
-        
+    
+    // write output vector<Feature>
     map<FeatureID, Feature>::iterator the_it = featureMap.begin();
     for(; the_it != featureMap.end(); ++the_it)
         {
             if(the_it->second.peakels.begin()->peaks.size()>1) // for now only write features lasting > 1 scan
                 {
                     detected.push_back(the_it->second);
+
                 }
         }
+    
+    // write metadata attributes
+    getMetadata(detected);
+    
 
-    return;
+    return; 
 }
 
 
 /*
+
+
 
     //
     // output files and plotting tools
@@ -318,7 +290,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
 
             
 
-            if(the_it->second.peakels.begin()->peaks.size()>=1) // for now only write stuff found in > 1 scan NOT
+            if(the_it->second.peakels.begin()->peaks.size()>1) // for now only write stuff found in > 1 scan 
                 {
                     detected.push_back(the_it->second);
                     
@@ -362,6 +334,5 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         
 }
 */
-
     
 

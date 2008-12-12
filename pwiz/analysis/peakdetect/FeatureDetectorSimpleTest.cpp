@@ -23,12 +23,14 @@
 #include "FeatureDetectorSimple.hpp"
 #include "PeakFamilyDetectorFT.hpp"
 
+#include "pwiz/utility/misc/unit.hpp"
+
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "boost/iostreams/positioning.hpp"
 
 #include "boost/filesystem/path.hpp"
-#include "pwiz/utility/misc/unit.hpp"
+
 
 using namespace std;
 
@@ -92,12 +94,13 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
 
     vector<Feature>::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
     
+    // assert that it is found, correctly, in the data
     unit_assert(bombessin2_hopeful != output_features.end());
 
-    // assert that it is found, correctly, in the data
+
     if (os_) *os_ << "\n[FeatureDetectorSimple] Bombessin detected at charge state +2 ... " << endl << *bombessin2_hopeful << endl;
 
-
+    
     // do the same for the +3 feature
 
     Feature bombessin3_truth;
@@ -105,10 +108,11 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     bombessin3_truth.retentionTime = 1866;
     
     vector<Feature>::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
-
+  
+    // assert that it is found, correctly, in the data
     unit_assert(bombessin3_hopeful != output_features.end());
 
-    // assert that it is found, correctly, in the data
+   
     if (os_) *os_ << "\n[FeatureDetectorSimple] Bombessin detected at charge state +3 ... " << endl << *bombessin3_hopeful << endl;
 
     return;
