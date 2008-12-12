@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
 
 namespace pwiz {
@@ -34,7 +34,7 @@ namespace analysis {
 
 
 /// SpectrumList wrapper that recalculates precursor info on spectrum() requests 
-class PWIZ_API_DECL SpectrumList_PrecursorRecalculator : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_PrecursorRecalculator : public msdata::SpectrumListWrapper
 {
     public:
 

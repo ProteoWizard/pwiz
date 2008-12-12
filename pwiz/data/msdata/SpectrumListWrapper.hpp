@@ -30,35 +30,35 @@
 
 
 namespace pwiz {
-namespace analysis {
+namespace msdata {
 
 
 /// Inheritable pass-through implementation for wrapping a SpectrumList 
-class PWIZ_API_DECL SpectrumListWrapper : public msdata::SpectrumList
+class PWIZ_API_DECL SpectrumListWrapper : public SpectrumList
 {
     public:
 
-    SpectrumListWrapper(const msdata::SpectrumListPtr& inner)
+    SpectrumListWrapper(const SpectrumListPtr& inner)
     :   inner_(inner),
-        dp_(inner->dataProcessingPtr().get() ? new msdata::DataProcessing(*inner->dataProcessingPtr())
-                                             : new msdata::DataProcessing("pwiz_Spectrum_Processing"))
+        dp_(inner->dataProcessingPtr().get() ? new DataProcessing(*inner->dataProcessingPtr())
+                                             : new DataProcessing("pwiz_Spectrum_Processing"))
     {
         if (!inner.get()) throw std::runtime_error("[SpectrumListWrapper] Null SpectrumListPtr.");
     }
 
     virtual size_t size() const {return inner_->size();}
     virtual bool empty() const {return inner_->empty();}
-    virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);} 
-    virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
-    virtual const boost::shared_ptr<const msdata::DataProcessing> dataProcessingPtr() const {return dp_;}
+    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);} 
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
+    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
     protected:
 
-    msdata::SpectrumListPtr inner_;
-    msdata::DataProcessingPtr dp_;
+    SpectrumListPtr inner_;
+    DataProcessingPtr dp_;
 };
 
 
-} // namespace analysis 
+} // namespace msdata 
 } // namespace pwiz
 
 

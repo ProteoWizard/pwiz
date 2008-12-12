@@ -26,7 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
 
 namespace pwiz {
@@ -34,7 +34,7 @@ namespace analysis {
 
 
 /// SpectrumList implementation that assigns (probable) charge states to tandem mass spectra
-class PWIZ_API_DECL SpectrumList_ChargeStateCalculator : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_ChargeStateCalculator : public msdata::SpectrumListWrapper
 {
     public:
     SpectrumList_ChargeStateCalculator(const msdata::SpectrumListPtr& inner,

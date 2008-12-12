@@ -6,6 +6,7 @@
 #pragma warning( disable : 4635 )
 //#include "SpectrumListWrapper.hpp"
 #include "SharedCLI.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
@@ -23,6 +24,36 @@ using boost::shared_ptr;
 
 namespace pwiz {
 namespace CLI {
+
+
+namespace msdata {
+
+
+/// <summary>
+/// Inheritable pass-through implementation for wrapping a SpectrumList 
+/// </summary>
+public ref class SpectrumListWrapper : public msdata::SpectrumList
+{
+   internal: virtual ~SpectrumListWrapper()
+              {
+                  // base class destructor will delete the shared pointer
+              }
+              pwiz::msdata::SpectrumListWrapper* base_;
+
+    public:
+
+    SpectrumListWrapper(SpectrumList^ inner)
+    : SpectrumList(0)
+    {
+        base_ = new pwiz::msdata::SpectrumListWrapper(*inner->base_);
+        SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    }
+};
+
+
+} // namespace msdata
+
+
 namespace analysis {
 
 

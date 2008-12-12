@@ -26,7 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
 
 namespace pwiz {
@@ -81,7 +81,7 @@ enum ThresholdingOrientation
 
 
 /// SpectrumList implementation that returns spectra with low or high intensity data points removed (depending on the configuration)
-class PWIZ_API_DECL SpectrumList_Thresholder : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_Thresholder : public msdata::SpectrumListWrapper
 {
     public:
 

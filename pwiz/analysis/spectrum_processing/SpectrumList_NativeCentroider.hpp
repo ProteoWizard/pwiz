@@ -27,7 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
 
 namespace pwiz {
@@ -35,7 +35,7 @@ namespace analysis {
 
 
 /// SpectrumList implementation to return native centroided spectrum data
-class PWIZ_API_DECL SpectrumList_NativeCentroider : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_NativeCentroider : public msdata::SpectrumListWrapper
 {
     public:
 

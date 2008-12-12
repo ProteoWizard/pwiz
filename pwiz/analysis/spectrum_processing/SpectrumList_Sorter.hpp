@@ -27,7 +27,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "boost/logic/tribool.hpp"
 
 
@@ -36,7 +36,7 @@ namespace analysis {
 
 
 /// Provides a custom-sorted spectrum list
-class PWIZ_API_DECL SpectrumList_Sorter : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_Sorter : public msdata::SpectrumListWrapper
 {
     public:
 

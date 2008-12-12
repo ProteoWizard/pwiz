@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "boost/logic/tribool.hpp"
 
@@ -36,7 +36,7 @@ namespace analysis {
 
 
 /// SpectrumList filter, for creating Spectrum sub-lists
-class PWIZ_API_DECL SpectrumList_Filter : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
 {
     public:
 

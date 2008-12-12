@@ -74,6 +74,7 @@ lib pwiz_data_msdata
         SpectrumList_mzXML.cpp
         SpectrumList_MGF.cpp
         SpectrumList_BTDX.cpp
+        SpectrumListCache.cpp
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
@@ -162,6 +163,8 @@ unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;
 unit-test SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
+unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_data_msdata ;
+unit-test SpectrumListCacheTest : SpectrumListCacheTest.cpp pwiz_data_msdata ;
 
 
 # special run target for BinaryDataEncoderTest, which needs external data 

@@ -24,11 +24,9 @@
 #include "SpectrumListWrapper.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/lexical_cast.hpp"
 #include <iostream>
 
 
-using namespace pwiz::analysis;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace std;

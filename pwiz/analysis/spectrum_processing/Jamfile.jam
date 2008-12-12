@@ -59,7 +59,6 @@ lib pwiz_analysis_spectrum_processing
 #
 
 
-unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_ThresholderTest : SpectrumList_ThresholderTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;

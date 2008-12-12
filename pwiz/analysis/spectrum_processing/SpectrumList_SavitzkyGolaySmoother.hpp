@@ -26,7 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
 
 namespace pwiz {
@@ -34,7 +34,7 @@ namespace analysis {
 
 
 /// SpectrumList implementation to return spectral data smoothed with the Savitzky-Golay method
-class PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother : public SpectrumListWrapper
+class PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother : public msdata::SpectrumListWrapper
 {
     public:
 
