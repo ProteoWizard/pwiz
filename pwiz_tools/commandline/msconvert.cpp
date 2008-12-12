@@ -298,10 +298,10 @@ Config parseCommandLine(int argc, const char* argv[])
     // check stuff
 
     if (config.filenames.empty())
-        throw runtime_error(usage.str());
+        throw runtime_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML;
-    if (count > 1) throw runtime_error(usage.str());
+    int count = format_text + format_mzML + format_mzXML + format_MGF;
+    if (count > 1) throw runtime_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
@@ -334,21 +334,33 @@ Config parseCommandLine(int argc, const char* argv[])
 		}
     }
 
-    // default BinaryDataEncoder precision
+    // precision defaults
 
-    count = precision_32 + precision_64;
-    if (count > 1) throw runtime_error(usage.str());
-    config.writeConfig.binaryDataEncoderConfig.precision = precision_32 ? 
-                                                           BinaryDataEncoder::Precision_32 :
-                                                           BinaryDataEncoder::Precision_64;
-
-    // precision overrides
-
-    count = mz_precision_32 + mz_precision_64 + intensity_precision_32 + intensity_precision_64;
-    if (count > 2) throw runtime_error(usage.str());
-
+    config.writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
     config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_64;
     config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+
+    // handle precision flags
+
+    if (precision_32 && precision_64 ||
+        mz_precision_32 && mz_precision_64 ||
+        intensity_precision_32 && intensity_precision_64)
+        throw runtime_error("[msconvert] Incompatible precision flags.");
+
+    if (precision_32)
+    {
+        config.writeConfig.binaryDataEncoderConfig.precision
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array]
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] 
+            = BinaryDataEncoder::Precision_32;
+    }
+    else if (precision_64)
+    {
+        config.writeConfig.binaryDataEncoderConfig.precision
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array]
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] 
+            = BinaryDataEncoder::Precision_64;
+    }
 
     if (mz_precision_32)
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_32;
@@ -358,6 +370,8 @@ Config parseCommandLine(int argc, const char* argv[])
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
     if (intensity_precision_64)
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_64;
+
+    // other flags
 
     if (noindex)
         config.writeConfig.indexed = false;
