@@ -192,6 +192,46 @@ Config parseCommandLine(int argc, const char* argv[])
 
     usage << od_config;
 
+    // extra usage
+
+    usage << "Examples:\n"
+          << endl
+          << "# convert data.RAW to data.mzML\n"
+          << "msconvert data.RAW\n"
+          << endl
+          << "# convert data.RAW to data.mzXML\n"
+          << "msconvert data.RAW --mzXML\n"
+          << endl
+          << "# put output file in my_output_dir\n"
+          << "msconvert data.RAW -o my_output_dir\n"
+          << endl
+          << "# extract scan indices 5...10 and 20...25\n"
+          << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
+          << endl
+          << "# multiple filters: select scan numbers and recalculate precursors\n"
+          << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
+          << endl
+          << "# use a configuration file\n"
+          << "msconvert data.RAW -c config.txt\n"
+          << endl
+          << "# example configuration file\n"
+          << "mzXML=true\n"
+          << "zlib=true\n"
+          << "filter=\"index [3,7]\"\n"
+          << "filter=\"precursorRecalculation\"\n"
+          << endl
+          << endl
+
+          << "Questions, comments, and bug reports:\n"
+          << "http://proteowizard.sourceforge.net\n"
+          << "support@proteowizard.org\n"
+          << "\n"
+          << "ProteoWizard release: " << pwiz::Version::str() << endl
+          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+
+    if (argc <= 1)
+        throw runtime_error(usage.str().c_str());
+
     // handle positional arguments
 
     const char* label_args = "args";
@@ -257,43 +297,6 @@ Config parseCommandLine(int argc, const char* argv[])
             if (is) config.filenames.push_back(filename);
         }
     }
-
-    // extra usage
-
-    usage << "Examples:\n"
-          << endl
-          << "# convert data.RAW to data.mzML\n"
-          << "msconvert data.RAW\n"
-          << endl
-          << "# convert data.RAW to data.mzXML\n"
-          << "msconvert data.RAW --mzXML\n"
-          << endl
-          << "# put output file in my_output_dir\n"
-          << "msconvert data.RAW -o my_output_dir\n"
-          << endl
-          << "# extract scan indices 5...10 and 20...25\n"
-          << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
-          << endl
-          << "# multiple filters: select scan numbers and recalculate precursors\n"
-          << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
-          << endl
-          << "# use a configuration file\n"
-          << "msconvert data.RAW -c config.txt\n"
-          << endl
-          << "# example configuration file\n"
-          << "mzXML=true\n"
-          << "zlib=true\n"
-          << "filter=\"index [3,7]\"\n"
-          << "filter=\"precursorRecalculation\"\n"
-          << endl
-          << endl
-
-          << "Questions, comments, and bug reports:\n"
-          << "http://proteowizard.sourceforge.net\n"
-          << "support@proteowizard.org\n"
-          << "\n"
-          << "ProteoWizard release: " << pwiz::Version::str() << endl
-          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     // check stuff
 
