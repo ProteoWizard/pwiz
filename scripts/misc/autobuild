@@ -1,0 +1,72 @@
+#!/bin/bash
+
+
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
+
+source scripts/include/common
+
+toolset=$(get_toolset)
+os=$(get_os)
+date_tag=$(date +%y%m%d_%H%M)
+outdir=build/autobuild/${date_tag}_${os}
+log=$outdir/log
+err=$outdir/err
+
+mkdir -p $outdir
+
+echo "autobuild" | tee -a $log $err
+date | tee -a $log $err
+uname -a | tee -a $log $err
+echo "toolset: $toolset" | tee -a $log $err
+echo "os: $os" | tee -a $log $err
+echo "date_tag: $date_tag" | tee -a $log $err
+echo "outdir: $outdir" | tee -a $log $err
+echo | tee -a $log $err
+
+
+echo "Updating snapshot." | tee -a $log $err
+if ! svn update >> $log 2>> $err
+then
+    echo "Error updating snapshot." | tee -a $log $err
+    exit 1
+fi
+echo | tee -a $log $err
+
+
+echo "Building all." | tee -a $log $err
+rm -rf build/$toolset-release/*
+if ! bjam  >> $log 2>> $err # TODO: -a
+then
+    echo "Error in build." | tee -a $log $err
+    exit 1
+fi
+echo | tee -a $log $err
+
+
+echo "Testing build." | tee -a $log $err
+if ! scripts/test/test_msconvert >> $log 2>> $err
+then
+    echo "Error in test_msconvert." | tee -a $log $err
+    exit 1
+fi
+echo | tee -a $log $err
+
+
+echo "Creating package." | tee -a $log $err
+package_name=$outdir/${date_tag}_${os}.zip
+if ! zip -j $package_name build/${toolset}-release/* >> $log 2>> $err
+then
+    echo "Error creating package." | tee -a $log $err
+    exit 1
+fi
+echo | tee -a $log $err
+
+
+if [ "$1" != "" -a -d "$1" ]
+then
+    echo "Copying files to $1." | tee -a $log $err
+    cp -rv $outdir $1 
+fi
+
+

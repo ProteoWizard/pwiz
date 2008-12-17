@@ -7,23 +7,23 @@ pushd $pwiz_root > /dev/null
 
 source scripts/include/common
 
-platform=$(get_platform)
-bindir=build/$platform-release
+toolset=$(get_toolset)
+bindir=build/$toolset-release
 
-echo "platform: $platform"
+echo "toolset: $toolset"
 echo "bindir: $bindir"
 ls -ltr $bindir
 
 datafile=example_data/small.pwiz.mzML
-if [ "$platform" = "msvc" ] ; then datafile=example_data/small.RAW ; fi
+if [ "$toolset" = "msvc" ] ; then datafile=example_data/small.RAW ; fi
 
 outdir=build/test
 
 msconvert_exe=$bindir/msconvert
-if [ "$platform" = "msvc" ] ; then msconvert_exe+=.exe ; fi
+if [ "$toolset" = "msvc" ] ; then msconvert_exe+=.exe ; fi
 
 msdiff_exe=$bindir/msdiff
-if [ "$platform" = "msvc" ] ; then msdiff_exe+=.exe ; fi
+if [ "$toolset" = "msvc" ] ; then msdiff_exe+=.exe ; fi
 
 echo "datafile: $datafile"
 echo "outdir: $outdir"
@@ -79,7 +79,7 @@ function check_not_diff()
 
 
 input_ext=.mzML
-if [ "$platform" = "msvc" ]; then input_ext=.RAW; fi
+if [ "$toolset" = "msvc" ]; then input_ext=.RAW; fi
 
 
 
