@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 pwiz_root=$(dirname $0)/../..
 pushd $pwiz_root > /dev/null
 
@@ -9,7 +8,8 @@ source scripts/include/common
 toolset=$(get_toolset)
 os=$(get_os)
 date_tag=$(date +%y%m%d_%H%M)
-outdir=build/autobuild/${date_tag}_${os}
+outdir_base=${date_tag}_${os}
+outdir=build/autobuild/$outdir_base
 log=$outdir/log
 err=$outdir/err
 
@@ -36,7 +36,7 @@ echo | tee -a $log $err
 
 echo "Building all." | tee -a $log $err
 rm -rf build/$toolset-release/*
-if ! bjam  >> $log 2>> $err # TODO: -a
+if ! bjam -a >> $log 2>> $err
 then
     echo "Error in build." | tee -a $log $err
     exit 1
@@ -54,7 +54,8 @@ echo | tee -a $log $err
 
 
 echo "Creating package." | tee -a $log $err
-package_name=$outdir/${date_tag}_${os}.zip
+package_name_base=${date_tag}_${os}.zip
+package_name=$outdir/$package_name_base
 if ! zip -j $package_name build/${toolset}-release/* >> $log 2>> $err
 then
     echo "Error creating package." | tee -a $log $err
@@ -65,8 +66,11 @@ echo | tee -a $log $err
 
 if [ "$1" != "" -a -d "$1" ]
 then
+    postdir=$1
     echo "Copying files to $1." | tee -a $log $err
-    cp -rv $outdir $1 
+    cp -rv $outdir $postdir
+    latest_name_base=latest_${os}.zip
+    cp $postdir/$outdir_base/$package_name_base $postdir/$latest_name_base
 fi
 
 
