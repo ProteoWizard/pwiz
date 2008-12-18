@@ -208,7 +208,8 @@ void testNoiseFloor()
 void cleanTests()
 {
     if (os_) *os_ << "Deleting FrequencyDataTest.output*.txt\n";
-    vector<string> filepaths = FindFilesByMask("FrequencyDataTest.output*.*");
+    vector<bfs::path> filepaths;
+    expand_pathmask("FrequencyDataTest.output*.*", filepaths);
     for (size_t i=0; i < filepaths.size(); ++i)
         boost::filesystem::remove(filepaths[i]);
 }

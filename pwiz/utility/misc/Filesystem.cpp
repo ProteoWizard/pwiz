@@ -95,51 +95,56 @@ PWIZ_API_DECL void expand_pathmask(const bfs::path& pathmask,
 #endif
 }
 
-PWIZ_API_DECL void FindFilesByMask(const string& mask, vector<string>& matchingFilepaths)
+
+using boost::uintmax_t;
+
+PWIZ_API_DECL
+string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviationType)
 {
-#ifdef WIN32
-    bfs::path maskPathname = bfs::path(mask).branch_path();
-	WIN32_FIND_DATA fdata;
-	HANDLE srcFile = FindFirstFileEx(mask.c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
-	if (srcFile == INVALID_HANDLE_VALUE)
-		return; // no matches
+    uintmax_t G, M, K;
+    string GS, MS, KS;
 
-    do {
-	    matchingFilepaths.push_back( (maskPathname / fdata.cFileName).string() );
-    } while (FindNextFile(srcFile, &fdata));
+    switch (abbreviationType)
+    {
+        default:
+        case ByteSizeAbbreviation_IEC:
+            G = (M = (K = 1024) << 10) << 10;
+            GS = " GiB"; MS = " MiB"; KS = " KiB";
+            break;
 
-	FindClose(srcFile);
+        case ByteSizeAbbreviation_JEDEC:
+            G = (M = (K = 1024) << 10) << 10;
+            GS = " GB"; MS = " MB"; KS = " KB";
+            break;
 
-#else
+        case ByteSizeAbbreviation_SI:
+            G = (M = (K = 1000) * 1000) * 1000;
+            GS = " GB"; MS = " MB"; KS = " KB";
+            break;
+    }
 
-	glob_t globbuf;
-	int rv = glob(mask.c_str(), 0, NULL, &globbuf);
-	if(rv > 0 && rv != GLOB_NOMATCH)
-		throw runtime_error("FindFilesByMask(): glob() error");
+    string suffix;
 
-	DIR* curDir = opendir(".");
-	struct stat curEntryData;
+    if( byteSize >= G )
+    {
+        byteSize /= G;
+        suffix = GS;
+    } else if( byteSize >= M )
+    {
+        byteSize /= M;
+        suffix = MS;
+    } else if( byteSize >= K )
+    {
+        byteSize /= K;
+        suffix = KS;
+    } else
+    {
+        suffix = " B";
+    }
 
-	for (size_t i=0; i < globbuf.gl_pathc; ++i)
-	{
-		stat(globbuf.gl_pathv[i], &curEntryData);
-		if (S_ISREG( curEntryData.st_mode))
-			matchingFilepaths.push_back(globbuf.gl_pathv[i]);
-	}
-	closedir(curDir);
-
-	globfree(&globbuf);
-
-#endif
+    return lexical_cast<string>(byteSize) + suffix;
 }
 
-
-PWIZ_API_DECL vector<string> FindFilesByMask(const std::string& mask)
-{
-    vector<string> matchingFilepaths;
-    FindFilesByMask(mask, matchingFilepaths);
-    return matchingFilepaths;
-}
 
 } // util
 } // pwiz

@@ -277,12 +277,15 @@ Config parseCommandLine(int argc, const char* argv[])
         config.filenames = vm[label_args].as< vector<string> >();
 
         // expand the filenames by globbing to handle wildcards
-        vector<string> globbedFilenames;
+        vector<bfs::path> globbedFilenames;
         BOOST_FOREACH(const string& filename, config.filenames)
         {
-            FindFilesByMask(filename, globbedFilenames);
+            expand_pathmask(bfs::path(filename), globbedFilenames);
         }
-        config.filenames = globbedFilenames;
+
+        config.filenames.clear();
+        BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+            config.filenames.push_back(filename.string());
     }
 
     // parse filelist if required

@@ -25,7 +25,6 @@ project
     : requirements
         <library>../common
         <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-
     ;
 
 exe msdiff 
@@ -39,6 +38,16 @@ exe msconvert
     : msconvert.cpp
       /ext/boost//program_options
       /ext/boost//filesystem
+    : <include>../../..
+    ;
+
+
+exe msdir
+    : msdir.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      /ext/boost//date_time
     : <include>../../..
     ;
 
@@ -75,7 +84,7 @@ exe peakaboo
     ;
 
 
-alias mstools : msdiff msconvert msaccess mspicture peakaboo ;
+alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo ;
 
 
 # local install for testing

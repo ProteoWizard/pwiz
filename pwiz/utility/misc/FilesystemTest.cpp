@@ -42,7 +42,7 @@ using boost::system::system_error;
 #   define D ";"              // path separator
 #else
 #   define ABS "./"           // POSIX filesystems don't have the same problem,
-#   define REL "./relative"   // so all tests are relative
+#   define REL "./relative"   // so all tests are relative (avoids permission issues)
 #   define A "/"
 #   define D ":"
 #endif
@@ -149,7 +149,7 @@ set<bfs::path> parsePathArray(const string& pathArray)
 }
 
 
-void test()
+void testExpandPathmask()
 {
     // create a filesystem tree for testing
     createTestPath();
@@ -189,11 +189,41 @@ void test()
     deleteTestPath();
 }
 
+
+void testAbbreviateByteSize()
+{
+    unit_assert(abbreviate_byte_size(1) == "1 B");
+    unit_assert(abbreviate_byte_size(999) == "999 B");
+    unit_assert(abbreviate_byte_size(1000) == "1 KB");
+    unit_assert(abbreviate_byte_size(999999) == "999 KB");
+    unit_assert(abbreviate_byte_size(1000000) == "1 MB");
+    unit_assert(abbreviate_byte_size(999999999) == "999 MB");
+    unit_assert(abbreviate_byte_size(1000000000) == "1 GB");
+
+    unit_assert(abbreviate_byte_size(1, ByteSizeAbbreviation_IEC) == "1 B");
+    unit_assert(abbreviate_byte_size(1023, ByteSizeAbbreviation_IEC) == "1023 B");
+    unit_assert(abbreviate_byte_size(1024, ByteSizeAbbreviation_IEC) == "1 KiB");
+    unit_assert(abbreviate_byte_size((1024 << 10)-1, ByteSizeAbbreviation_IEC) == "1023 KiB");
+    unit_assert(abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_IEC) == "1 MiB");
+    unit_assert(abbreviate_byte_size((1024 << 20)-1, ByteSizeAbbreviation_IEC) == "1023 MiB");
+    unit_assert(abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_IEC) == "1 GiB");
+
+    unit_assert(abbreviate_byte_size(1, ByteSizeAbbreviation_JEDEC) == "1 B");
+    unit_assert(abbreviate_byte_size(1023, ByteSizeAbbreviation_JEDEC) == "1023 B");
+    unit_assert(abbreviate_byte_size(1024, ByteSizeAbbreviation_JEDEC) == "1 KB");
+    unit_assert(abbreviate_byte_size((1024 << 10)-1, ByteSizeAbbreviation_JEDEC) == "1023 KB");
+    unit_assert(abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_JEDEC) == "1 MB");
+    unit_assert(abbreviate_byte_size((1024 << 20)-1, ByteSizeAbbreviation_JEDEC) == "1023 MB");
+    unit_assert(abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_JEDEC) == "1 GB");
+}
+
+
 int main()
 {
     try
     {
-        test();
+        testExpandPathmask();
+        testAbbreviateByteSize();
         return 0;
     }
     catch (exception& e)
