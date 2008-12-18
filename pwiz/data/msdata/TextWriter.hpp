@@ -328,42 +328,52 @@ class PWIZ_API_DECL TextWriter
                  it!=run.sourceFilePtrs.end(); ++it)
                  child().child()("sourceFileRef: " + (*it)->id);
         }
-       
-	if (metadata_only) return *this;
 
         if (run.spectrumListPtr.get())
-            child()(run.spectrumListPtr);
+            child()(run.spectrumListPtr, metadata_only);
         if (run.chromatogramListPtr.get())
-            child()(run.chromatogramListPtr);
+            child()(run.chromatogramListPtr, metadata_only);
         return *this;
     }
 
-    TextWriter& operator()(const SpectrumList& spectrumList)
+    TextWriter& operator()(const SpectrumList& spectrumList, bool metadata_only=false)
     {
-        (*this)("spectrumList:");
-        for (size_t index=0; index<spectrumList.size(); ++index)
-            child()
-                (*spectrumList.spectrum(index, true)); 
+        std::string text("spectrumList (" + boost::lexical_cast<std::string>(spectrumList.size()) + " spectra)");
+        if (!metadata_only)
+            text += ":";
+
+        (*this)(text);
+
+        if (!metadata_only)
+            for (size_t index=0; index<spectrumList.size(); ++index)
+                child()
+                    (*spectrumList.spectrum(index, true));
         return *this;
     }
 
-    TextWriter& operator()(const SpectrumListPtr& p)
+    TextWriter& operator()(const SpectrumListPtr& p, bool metadata_only=false)
     {
-        return p.get() ? (*this)(*p) : *this;
+        return p.get() ? (*this)(*p, metadata_only) : *this;
     }
 
-    TextWriter& operator()(const ChromatogramList& chromatogramList)
+    TextWriter& operator()(const ChromatogramList& chromatogramList, bool metadata_only=false)
     {
-        (*this)("chromatogramList:");
-        for (size_t index=0; index<chromatogramList.size(); ++index)
-            child()
-                (*chromatogramList.chromatogram(index, true)); 
+        std::string text("chromatogramList (" + boost::lexical_cast<std::string>(chromatogramList.size()) + " chromatograms)");
+        if (!metadata_only)
+            text += ":";
+
+        (*this)(text);
+
+        if (!metadata_only)
+            for (size_t index=0; index<chromatogramList.size(); ++index)
+                child()
+                    (*chromatogramList.chromatogram(index, true)); 
         return *this;
     }
 
-    TextWriter& operator()(const ChromatogramListPtr& p)
+    TextWriter& operator()(const ChromatogramListPtr& p, bool metadata_only=false)
     {
-        return p.get() ? (*this)(*p) : *this;
+        return p.get() ? (*this)(*p, metadata_only) : *this;
     }
 
     TextWriter& operator()(const Spectrum& spectrum)
