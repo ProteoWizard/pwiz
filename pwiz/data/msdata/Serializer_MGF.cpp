@@ -27,7 +27,6 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "boost/foreach.hpp"
-#include "boost/algorithm/string/join.hpp"
 
 
 namespace pwiz {
@@ -58,6 +57,7 @@ class Serializer_MGF::Impl
 void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
+    os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
@@ -70,13 +70,13 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             CVParam scanTimeParam = s->spectrumDescription.cvParam(MS_scan_time);
             if (!scanTimeParam.empty())
-                os << "RTINSECONDS=" << scanTimeParam.valueAs<double>() << '\n';
+                os << "RTINSECONDS=" << scanTimeParam.value << '\n';
 
             if (!s->spectrumDescription.precursors.empty() &&
                 !s->spectrumDescription.precursors[0].selectedIons.empty())
             {
                 const SelectedIon& si = s->spectrumDescription.precursors[0].selectedIons[0];
-                os << "PEPMASS=" << si.cvParam(MS_m_z).valueAs<double>() << '\n';
+                os << "PEPMASS=" << si.cvParam(MS_m_z).value << '\n';
 
                 CVParam chargeParam = si.cvParam(MS_charge_state);
                 if (chargeParam.empty())
