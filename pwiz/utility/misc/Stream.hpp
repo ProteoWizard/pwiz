@@ -26,7 +26,10 @@
 #include <sstream>
 #include <iomanip>
 #include <boost/iostreams/operations.hpp>
-#include <pwiz/utility/misc/optimized_lexical_cast.hpp>
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+
+namespace bio = boost::iostreams;
 
 using std::iostream;
 using std::istream;
@@ -47,7 +50,7 @@ using std::streamsize;
 
 using std::cin;
 using std::cout;
-using std::cin;
+using std::cerr;
 using std::endl;
 using std::flush;
 
@@ -60,6 +63,5 @@ using std::showbase;
 using std::showpoint;
 using std::showpos;
 
-namespace bio = boost::iostreams;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;

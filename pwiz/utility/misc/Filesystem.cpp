@@ -48,7 +48,54 @@ using std::runtime_error;
 namespace pwiz {
 namespace util {
 
-void FindFilesByMask(const string& mask, vector<string>& matchingFilepaths)
+PWIZ_API_DECL void expand_pathmask(const bfs::path& pathmask,
+                                   vector<bfs::path>& matchingPaths)
+{
+    using bfs::path;
+
+#ifdef WIN32
+    path maskParentPath = pathmask.branch_path();
+	WIN32_FIND_DATA fdata;
+	HANDLE srcFile = FindFirstFileEx(pathmask.string().c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
+	if (srcFile == INVALID_HANDLE_VALUE)
+		return; // no matches
+
+    do
+    {
+        if (strcmp(fdata.cFileName, ".") != 0 &&
+            strcmp(fdata.cFileName, "..") != 0)
+	        matchingPaths.push_back( maskParentPath / fdata.cFileName );
+    }
+    while (FindNextFile(srcFile, &fdata));
+
+	FindClose(srcFile);
+
+#else
+
+	glob_t globbuf;
+	int rv = glob(pathmask.string().c_str(), 0, NULL, &globbuf);
+	if(rv > 0 && rv != GLOB_NOMATCH)
+		throw runtime_error("FindFilesByMask(): glob() error");
+
+	DIR* curDir = opendir(".");
+	struct stat curEntryData;
+
+	for (size_t i=0; i < globbuf.gl_pathc; ++i)
+	{
+		stat(globbuf.gl_pathv[i], &curEntryData);
+		if (S_ISDIR(curEntryData.st_mode) ||
+            S_ISREG(curEntryData.st_mode) ||
+            S_ISLNK(curEntryData.st_mode))
+			matchingPaths.push_back(globbuf.gl_pathv[i]);
+	}
+	closedir(curDir);
+
+	globfree(&globbuf);
+
+#endif
+}
+
+PWIZ_API_DECL void FindFilesByMask(const string& mask, vector<string>& matchingFilepaths)
 {
 #ifdef WIN32
     bfs::path maskPathname = bfs::path(mask).branch_path();
