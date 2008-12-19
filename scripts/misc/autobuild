@@ -39,7 +39,7 @@ function copy_files()
 
 
 echo "Updating snapshot." | tee -a $log $err
-if  svn update >> $log 2>> $err
+if ! svn update >> $log 2>> $err
 then
     echo "Error updating snapshot." | tee -a $log $err
     copy_files $1
