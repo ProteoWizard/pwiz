@@ -25,10 +25,24 @@ echo "outdir: $outdir" | tee -a $log $err
 echo | tee -a $log $err
 
 
+function copy_files()
+{
+    if [ "$1" != "" -a -d "$1" ]
+    then
+        postdir=$1
+        echo "Copying files to $1." | tee -a $log $err
+        cp -rv $outdir $postdir
+        latest_name_base=latest_${os}.zip
+        cp $postdir/$outdir_base/$package_name_base $postdir/$latest_name_base
+    fi
+}
+
+
 echo "Updating snapshot." | tee -a $log $err
-if ! svn update >> $log 2>> $err
+if  svn update >> $log 2>> $err
 then
     echo "Error updating snapshot." | tee -a $log $err
+    copy_files $1
     exit 1
 fi
 echo | tee -a $log $err
@@ -39,6 +53,7 @@ rm -rf build/$toolset-release/*
 if ! bjam -a >> $log 2>> $err
 then
     echo "Error in build." | tee -a $log $err
+    copy_files $1
     exit 1
 fi
 echo | tee -a $log $err
@@ -48,6 +63,7 @@ echo "Testing build." | tee -a $log $err
 if ! scripts/test/test_msconvert >> $log 2>> $err
 then
     echo "Error in test_msconvert." | tee -a $log $err
+    copy_files $1
     exit 1
 fi
 echo | tee -a $log $err
@@ -59,18 +75,12 @@ package_name=$outdir/$package_name_base
 if ! zip -j $package_name build/${toolset}-release/* >> $log 2>> $err
 then
     echo "Error creating package." | tee -a $log $err
+    copy_files $1
     exit 1
 fi
 echo | tee -a $log $err
 
 
-if [ "$1" != "" -a -d "$1" ]
-then
-    postdir=$1
-    echo "Copying files to $1." | tee -a $log $err
-    cp -rv $outdir $postdir
-    latest_name_base=latest_${os}.zip
-    cp $postdir/$outdir_base/$package_name_base $postdir/$latest_name_base
-fi
+copy_files $1
 
 
