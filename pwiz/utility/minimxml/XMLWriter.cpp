@@ -23,16 +23,20 @@
 #define PWIZ_SOURCE
 
 #include "XMLWriter.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
 #include "boost/iostreams/filtering_stream.hpp" 
 #include "boost/iostreams/filter/counter.hpp"
+#include <iostream>
 #include <stack>
-using std::stack;
+
 
 namespace pwiz {
 namespace minimxml {
+
+
+using namespace std;
+namespace bio = boost::iostreams;
 
 
 class XMLWriter::Impl
