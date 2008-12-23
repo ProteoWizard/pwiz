@@ -587,9 +587,13 @@ SoftwarePtr registerSoftware(MSData& msd,
     // see if we already registered this Software 
     for (vector<SoftwarePtr>::const_iterator it=msd.softwarePtrs.begin();
          it!=msd.softwarePtrs.end(); ++it)
-        if ((*it)->softwareParam.cvid == cvTranslator.translate(name) &&
-            (*it)->softwareParamVersion == version)
+    {
+        CVParam softwareParam = (*it)->cvParamChild(MS_software);
+
+        if (softwareParam.cvid == cvTranslator.translate(name) &&
+            (*it)->version == version)
             result = *it;
+    }
 
     // create a new entry
     if (!result.get()) 

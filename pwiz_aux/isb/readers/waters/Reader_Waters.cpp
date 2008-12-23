@@ -3,6 +3,7 @@
 #include "Reader_Waters.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 
 
 // A Waters RAW source (representing a "run") is actually a directory
@@ -100,14 +101,14 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 
     SoftwarePtr softwareMassLynx(new Software);
     softwareMassLynx->id = "MassLynx";
-    softwareMassLynx->softwareParam = MS_Masslynx;
-    softwareMassLynx->softwareParamVersion = "4.1";
+    softwareMassLynx->set(MS_Masslynx);
+    softwareMassLynx->version = "4.1";
     msd.softwarePtrs.push_back(softwareMassLynx);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz_Reader_Waters";
-    softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = "1.0"; 
+    softwarePwiz->set(MS_pwiz);
+    softwarePwiz->version = pwiz::msdata::Version::str();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

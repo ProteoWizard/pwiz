@@ -164,6 +164,9 @@ struct PWIZ_API_DECL ParamContainer
     /// returns true iff the element contains no params or param groups
     bool empty() const;
 
+    /// clears the collections
+    void clear();
+
     /// returns true iff this and that have the exact same cvParams and userParams
     /// - recursive: looks into paramGroupPtrs
     bool operator==(const ParamContainer& that) const;
@@ -325,22 +328,19 @@ struct PWIZ_API_DECL ComponentList : public std::vector<Component>
 
 
 /// A piece of software.
-struct PWIZ_API_DECL Software
+struct PWIZ_API_DECL Software : public ParamContainer
 {
     /// an identifier for this software that is unique across all SoftwareTypes.
     std::string id;
 
-    /// a description of the software, based on CV information and a software version.
-    CVParam softwareParam;
-
     /// the software version.
-    std::string softwareParamVersion;
+    std::string version;
 
     Software(const std::string& _id = "");
-    Software(const std::string& _id,
-             const CVParam& _softwareParam,
-             const std::string& _softwareParamVersion);
 
+    Software(const std::string& _id,
+             const CVParam& _param,
+             const std::string& _version);
 
     /// returns true iff all members are empty or null
     bool empty() const;

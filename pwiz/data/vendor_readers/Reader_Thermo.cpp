@@ -195,14 +195,14 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
-    softwareXcalibur->softwareParam = MS_Xcalibur;
-    softwareXcalibur->softwareParamVersion = rawfile.value(InstSoftwareVersion);
+    softwareXcalibur->set(MS_Xcalibur);
+    softwareXcalibur->version = rawfile.value(InstSoftwareVersion);
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz";
-    softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = pwiz::msdata::Version::str();
+    softwarePwiz->set(MS_pwiz);
+    softwarePwiz->version = pwiz::msdata::Version::str();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

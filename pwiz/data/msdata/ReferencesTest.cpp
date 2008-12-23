@@ -146,16 +146,16 @@ void testInstrumentConfiguration()
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("booger")));
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
-    msd.softwarePtrs[1]->softwareParamVersion = "4.20";
+    msd.softwarePtrs[1]->version = "4.20";
 
-    unit_assert(instrumentConfiguration.softwarePtr->softwareParamVersion.empty());
+    unit_assert(instrumentConfiguration.softwarePtr->version.empty());
     unit_assert(instrumentConfiguration.paramGroupPtrs[0]->userParams.empty());
 
     References::resolve(instrumentConfiguration, msd);
 
     unit_assert(!instrumentConfiguration.paramGroupPtrs[0]->userParams.empty());
     unit_assert(!instrumentConfiguration.componentList.source(0).paramGroupPtrs[0]->userParams.empty());
-    unit_assert(instrumentConfiguration.softwarePtr->softwareParamVersion == "4.20");
+    unit_assert(instrumentConfiguration.softwarePtr->version == "4.20");
 }
 
 
@@ -173,15 +173,15 @@ void testDataProcessing()
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("booger")));
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
-    msd.softwarePtrs[1]->softwareParamVersion = "4.20";
+    msd.softwarePtrs[1]->version = "4.20";
 
-    unit_assert(dataProcessing.softwarePtr->softwareParamVersion.empty());
+    unit_assert(dataProcessing.softwarePtr->version.empty());
     unit_assert(dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
 
     References::resolve(dataProcessing, msd);
 
     unit_assert(!dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
-    unit_assert(dataProcessing.softwarePtr->softwareParamVersion == "4.20");
+    unit_assert(dataProcessing.softwarePtr->version == "4.20");
 }
 
 

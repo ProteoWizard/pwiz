@@ -400,14 +400,14 @@ void testSoftware()
     Software a, b;
 
     a.id = "msdata";
-    a.softwareParam = MS_ionization_type;
-    a.softwareParamVersion = "4.20";
+    a.version = "4.20";
+    a.set(MS_ionization_type);
     b = a;
 
     Diff<Software> diff(a, b);
     unit_assert(!diff);
 
-    b.softwareParamVersion = "4.21";
+    b.version = "4.21";
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -429,10 +429,10 @@ void testInstrumentConfiguration()
     b = a;
 
     a.softwarePtr = SoftwarePtr(new Software("XCalibur"));
-    a.softwarePtr->softwareParamVersion = "4.20";
+    a.softwarePtr->version = "4.20";
 
     b.softwarePtr = SoftwarePtr(new Software("XCalibur"));
-    b.softwarePtr->softwareParamVersion = "4.20";
+    b.softwarePtr->version = "4.20";
 
     Diff<InstrumentConfiguration> diff(a, b);
     unit_assert(!diff);
@@ -477,10 +477,10 @@ void testDataProcessing()
     b = a;
 
     a.softwarePtr = SoftwarePtr(new Software("msdata")); 
-    a.softwarePtr->softwareParamVersion = "4.20";
+    a.softwarePtr->version = "4.20";
 
     b.softwarePtr = SoftwarePtr(new Software("msdata")); 
-    b.softwarePtr->softwareParamVersion = "4.20";
+    b.softwarePtr->version = "4.20";
 
     ProcessingMethod pm1, pm2, pm3;
     pm1.userParams.push_back(UserParam("abc"));

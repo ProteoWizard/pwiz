@@ -175,11 +175,14 @@ void testSoftware()
 
     adapter.name(" XcaLibur  ");
     if (os_) *os_ << "software name: " << adapter.name() << endl;
-    unit_assert(software->softwareParam.cvid == MS_Xcalibur); 
+    CVParam softwareParam = software->cvParamChild(MS_software);
+    unit_assert(softwareParam.cvid == MS_Xcalibur); 
     unit_assert(adapter.name() == "Xcalibur");
+
     adapter.name("goober");
     if (os_) *os_ << "software name: " << adapter.name() << endl;
-    unit_assert(software->softwareParam.cvid == CVID_Unknown); 
+    softwareParam = software->cvParamChild(MS_software);
+    unit_assert(softwareParam.cvid == CVID_Unknown); 
     unit_assert(adapter.name() == "goober");
 
     adapter.version("4.20");

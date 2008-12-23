@@ -29,6 +29,7 @@
 #include "boost/lexical_cast.hpp"
 #include <stdexcept>
 #include <functional>
+#include <iostream>
 
 
 namespace pwiz {
@@ -738,23 +739,17 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", software.id));
+    attributes.push_back(make_pair("version", software.version));
     writer.startElement("software", attributes);
-
-    attributes.clear();
-    const CVInfo& info = cvinfo(software.softwareParam.cvid);
-    attributes.push_back(make_pair("cvRef", info.id.substr(0,2)));
-    attributes.push_back(make_pair("accession", info.id));
-    attributes.push_back(make_pair("name", info.name));
-    attributes.push_back(make_pair("version", software.softwareParamVersion));
-    writer.startElement("softwareParam", attributes, XMLWriter::EmptyElement);
-
+    writeParamContainer(writer, software);
     writer.endElement();
 }
 
 
-struct HandlerSoftware : public SAXParser::Handler
+struct HandlerSoftware : public HandlerParamContainer
 {
     Software* software;
+
     HandlerSoftware(Software* _software = 0) : software(_software) {}
 
     virtual Status startElement(const string& name, 
@@ -767,20 +762,25 @@ struct HandlerSoftware : public SAXParser::Handler
         if (name == "software")
         {
             getAttribute(attributes, "id", software->id);
+            getAttribute(attributes, "version", software->version);
             return Status::Ok;
         }
-        else if (name == "softwareParam")
+
+        else if (name == "softwareParam") // mzML 1.0
         {
+            cerr << "[IO::HandlerSoftware] Warning - mzML 1.0: <softwareParam>\n";
+
             string accession;
             getAttribute(attributes, "accession", accession);
             if (!accession.empty())
-                software->softwareParam.cvid = cvinfo(accession).cvid;
+                software->set(cvinfo(accession).cvid);
 
-            getAttribute(attributes, "version", software->softwareParamVersion);
+            getAttribute(attributes, "version", software->version);
             return Status::Ok;
         }
 
-        throw runtime_error(("[IO::HandlerSoftware] Unexpected element name: " + name).c_str());
+        HandlerParamContainer::paramContainer = software;
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
 };
 

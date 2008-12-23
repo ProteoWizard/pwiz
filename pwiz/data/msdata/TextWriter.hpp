@@ -251,8 +251,8 @@ class PWIZ_API_DECL TextWriter
         (*this)("software:");
         child()
             ("id: " + software.id)
-            (software.softwareParam)
-            ("version: " + software.softwareParamVersion);
+            ("version: " + software.version)
+            (static_cast<const ParamContainer&>(software));
         return *this;
     }
 

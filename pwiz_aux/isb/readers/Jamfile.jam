@@ -1,5 +1,5 @@
 #
-# Jamfile (pwiz_aux) 
+# Jamfile (isb/readers) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -21,7 +21,5 @@
 #
 
 
-build-project isb ; 
-build-project sfcap ;
-build-project msrc/data/vendor_readers ;
+build-project waters ; 
 

@@ -104,8 +104,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
-    softwareXcalibur->softwareParam = MS_Xcalibur;
-    softwareXcalibur->softwareParamVersion = "2.0.5";
+    softwareXcalibur->set(MS_Xcalibur);
+    softwareXcalibur->version = "2.0.5";
     instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
 
     msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
@@ -114,13 +114,13 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     SoftwarePtr softwareBioworks(new Software);
     softwareBioworks->id = "Bioworks";
-    softwareBioworks->softwareParam = MS_Bioworks;
-    softwareBioworks->softwareParamVersion = "3.3.1 sp1";
+    softwareBioworks->set(MS_Bioworks);
+    softwareBioworks->version = "3.3.1 sp1";
      
     SoftwarePtr softwarepwiz(new Software);
     softwarepwiz->id = "pwiz";
-    softwarepwiz->softwareParam = MS_pwiz;
-    softwarepwiz->softwareParamVersion = "1.0";
+    softwarepwiz->set(MS_pwiz);
+    softwarepwiz->version = "1.0";
 
     msd.softwarePtrs.push_back(softwareBioworks);
     msd.softwarePtrs.push_back(softwarepwiz);

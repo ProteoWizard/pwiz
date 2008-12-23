@@ -135,7 +135,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 	    bool inBeginIons = false;
         bool inPeakList = false;
         double tic = 0;
-        double basePeakMZ;
+        double basePeakMZ = 0;
         double basePeakIntensity = 0;
         spectrum.defaultArrayLength = 0;
         spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), UO_electronvolt);

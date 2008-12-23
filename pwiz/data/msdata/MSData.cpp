@@ -214,6 +214,14 @@ PWIZ_API_DECL bool ParamContainer::empty() const
 }
 
 
+PWIZ_API_DECL void ParamContainer::clear()
+{
+    paramGroupPtrs.clear();
+    cvParams.clear();
+    userParams.clear();
+}
+
+
 PWIZ_API_DECL bool ParamContainer::operator==(const ParamContainer& that) const
 {
     return !Diff<ParamContainer>(*this, that);
@@ -399,8 +407,7 @@ PWIZ_API_DECL const Component& ComponentList::detector(size_t index) const
 
 PWIZ_API_DECL bool Software::empty() const
 {
-    return id.empty() && softwareParam.cvid==CVID_Unknown && 
-           softwareParamVersion.empty();
+    return id.empty() && version.empty() && ParamContainer::empty();
 }
 
 
@@ -416,10 +423,12 @@ PWIZ_API_DECL Software::Software(const string& _id)
 
 PWIZ_API_DECL
 Software::Software(const string& _id,
-                   const CVParam& _softwareParam,
-                   const string& _softwareParamVersion)
-:   id(_id), softwareParam(_softwareParam), softwareParamVersion(_softwareParamVersion)
-{}
+                   const CVParam& _param,
+                   const string& _version)
+:   id(_id), version(_version)
+{
+    cvParams.push_back(_param);    
+}
 
 
 //

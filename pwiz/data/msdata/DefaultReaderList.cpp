@@ -99,8 +99,8 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz";
-    softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = pwiz::msdata::Version::str();
+    softwarePwiz->set(MS_pwiz);
+    softwarePwiz->version = pwiz::msdata::Version::str();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

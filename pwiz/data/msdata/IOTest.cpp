@@ -243,8 +243,8 @@ void testSoftware()
 {
     Software a;
     a.id = "goober";
-    a.softwareParam = MS_ionization_type;
-    a.softwareParamVersion = "4.20";
+    a.set(MS_ionization_type);
+    a.version = "4.20";
     testObject(a);
 }
 
@@ -979,8 +979,8 @@ void initializeTestData(MSData& msd)
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
-    softwareXcalibur->softwareParam = MS_Xcalibur;
-    softwareXcalibur->softwareParamVersion = "2.0.5";
+    softwareXcalibur->set(MS_Xcalibur);
+    softwareXcalibur->version = "2.0.5";
     instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
 
     msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
@@ -989,13 +989,13 @@ void initializeTestData(MSData& msd)
 
     SoftwarePtr softwareBioworks(new Software);
     softwareBioworks->id = "Bioworks";
-    softwareBioworks->softwareParam = MS_Bioworks;
-    softwareBioworks->softwareParamVersion = "3.3.1 sp1";
+    softwareBioworks->set(MS_Bioworks);
+    softwareBioworks->version = "3.3.1 sp1";
      
     SoftwarePtr software_pwiz(new Software);
     software_pwiz->id = "pwiz";
-    software_pwiz->softwareParam = MS_pwiz;
-    software_pwiz->softwareParamVersion = "1.0";
+    software_pwiz->set(MS_pwiz);
+    software_pwiz->version = "1.0";
 
     msd.softwarePtrs.push_back(softwareBioworks);
     msd.softwarePtrs.push_back(software_pwiz);

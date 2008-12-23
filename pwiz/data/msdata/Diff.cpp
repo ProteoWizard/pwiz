@@ -383,9 +383,9 @@ void diff(const Software& a,
           Software& b_a,
           const DiffConfig& config)
 {
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.softwareParam, b.softwareParam, a_b.softwareParam, b_a.softwareParam, config);
-    diff(a.softwareParamVersion, b.softwareParamVersion, a_b.softwareParamVersion, b_a.softwareParamVersion, config);
+    diff(a.version, b.version, a_b.version, b_a.version, config);
 
     // provide id for context
     if (!a_b.empty() || !b_a.empty()) 

@@ -26,6 +26,7 @@
 #include "Reader_Bruker.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 
 
 // A Bruker Analysis source (representing a "run") is actually a directory
@@ -152,14 +153,14 @@ void fillInMetadata(const string& rootpath, MSData& msd)
 
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
-    software->softwareParam = MS_CompassXtract;
-    software->softwareParamVersion = "1.0";
+    software->set(MS_CompassXtract);
+    software->version = "1.0";
     msd.softwarePtrs.push_back(software);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz_Reader_Bruker";
-    softwarePwiz->softwareParam = MS_pwiz;
-    softwarePwiz->softwareParamVersion = "1.0"; 
+    softwarePwiz->set(MS_pwiz);
+    softwarePwiz->version = pwiz::msdata::Version::str();
     msd.softwarePtrs.push_back(softwarePwiz);
 
     DataProcessingPtr dpPwiz(new DataProcessing);

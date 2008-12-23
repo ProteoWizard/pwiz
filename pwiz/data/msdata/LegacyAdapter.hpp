@@ -91,8 +91,8 @@ class PWIZ_API_DECL LegacyAdapter_Instrument
 /// <software type="acquisition" name="XCalibur" version="4.20">
 ///
 /// MSData:
-///   name: Software::softwareParam 
-///   version: Software::softwareParamVersion
+///   name: Software::cvParams(0)
+///   version: Software::version
 ///   type: DataProcessing::processingMethods[?].userParams[?]
 ///
 /// Note: setting 'type' may create a DataProcessing object, which needs an id.

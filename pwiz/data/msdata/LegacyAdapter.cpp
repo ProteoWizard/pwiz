@@ -336,8 +336,10 @@ LegacyAdapter_Software::LegacyAdapter_Software(SoftwarePtr software,
 
 PWIZ_API_DECL string LegacyAdapter_Software::name() const
 {
-    if (impl_->software->softwareParam.cvid != CVID_Unknown)
-        return impl_->software->softwareParam.name();
+    CVParam softwareParam = impl_->software->cvParamChild(MS_software);
+
+    if (softwareParam.cvid != CVID_Unknown)
+        return softwareParam.name();
 
     string result = getProcessingMethodUserParamValue("name", impl_->software, impl_->msd);
     return !result.empty() ? result : "unknown software name";
@@ -346,9 +348,15 @@ PWIZ_API_DECL string LegacyAdapter_Software::name() const
 
 PWIZ_API_DECL void LegacyAdapter_Software::name(const string& value)
 {
-    impl_->software->softwareParam = impl_->cvTranslator.translate(value);
+    impl_->software->clear();
 
-    if (impl_->software->softwareParam.cvid == CVID_Unknown)
+    CVParam softwareParam = impl_->cvTranslator.translate(value);
+
+    if (softwareParam.cvid != CVID_Unknown)
+    {
+        impl_->software->cvParams.push_back(softwareParam);
+    }
+    else
     {
         ProcessingMethod& pm = getProcessingMethod(impl_->software, impl_->msd);
         removeUserParams(pm.userParams, "name");
@@ -359,13 +367,13 @@ PWIZ_API_DECL void LegacyAdapter_Software::name(const string& value)
 
 PWIZ_API_DECL string LegacyAdapter_Software::version() const
 {
-    return impl_->software->softwareParamVersion;
+    return impl_->software->version;
 }
 
 
 PWIZ_API_DECL void LegacyAdapter_Software::version(const string& value)
 {
-    impl_->software->softwareParamVersion = value;
+    impl_->software->version = value;
 }
 
 
