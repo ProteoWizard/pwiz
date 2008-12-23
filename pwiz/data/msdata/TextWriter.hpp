@@ -97,10 +97,12 @@ class PWIZ_API_DECL TextWriter
             child()("paramGroupList: ", msd.paramGroupPtrs);
         if (!msd.samplePtrs.empty())
             child()("sampleList: " , msd.samplePtrs);
-        if (!msd.instrumentConfigurationPtrs.empty())
-            child()("instrumentConfigurationList: ", msd.instrumentConfigurationPtrs);
         if (!msd.softwarePtrs.empty())
             child()("softwareList: ", msd.softwarePtrs);
+        if (!msd.scanSettingsPtrs.empty())
+            child()("scanSettingsList: ", msd.scanSettingsPtrs);
+        if (!msd.instrumentConfigurationPtrs.empty())
+            child()("instrumentConfigurationList: ", msd.instrumentConfigurationPtrs);
         if (!msd.dataProcessingPtrs.empty())
             child()("dataProcessingList: ", msd.dataProcessingPtrs);
 
@@ -294,9 +296,9 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
     
-    TextWriter& operator()(const AcquisitionSettings& as)
+    TextWriter& operator()(const ScanSettings& as)
     {
-        (*this)("acquisitionSettings:");
+        (*this)("scanSettings:");
         child()
             ("id: " + as.id);
         if (as.instrumentConfigurationPtr.get() && !as.instrumentConfigurationPtr->empty())
@@ -306,7 +308,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const AcquisitionSettingsPtr& p)
+    TextWriter& operator()(const ScanSettingsPtr& p)
     {
         return p.get() ? (*this)(*p) : *this;
     }

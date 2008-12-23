@@ -144,11 +144,11 @@ PWIZ_API_DECL void resolve(DataProcessing& dataProcessing, const MSData& msd)
 }
 
 
-PWIZ_API_DECL void resolve(AcquisitionSettings& acquisitionSettings, const MSData& msd)
+PWIZ_API_DECL void resolve(ScanSettings& scanSettings, const MSData& msd)
 {
-    resolve(acquisitionSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
-    resolve(acquisitionSettings.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
-    resolve(acquisitionSettings.targets, msd);
+    resolve(scanSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
+    resolve(scanSettings.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
+    resolve(scanSettings.targets, msd);
 }
 
 
@@ -233,7 +233,7 @@ PWIZ_API_DECL void resolve(MSData& msd)
     resolve(msd.samplePtrs, msd);
     resolve(msd.instrumentConfigurationPtrs, msd);
     resolve(msd.dataProcessingPtrs, msd);
-    resolve(msd.acquisitionSettingsPtrs, msd);
+    resolve(msd.scanSettingsPtrs, msd);
     resolve(msd.run, msd);
 
     // if we're using SpectrumListSimple, resolve the references in each Spectrum

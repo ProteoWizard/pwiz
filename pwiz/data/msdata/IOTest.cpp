@@ -299,9 +299,9 @@ void testDataProcessing()
 }
 
 
-void testAcquisitionSettings()
+void testScanSettings()
 {
-    AcquisitionSettings a;
+    ScanSettings a;
 
     a.id = "as1";
     a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
@@ -1029,7 +1029,7 @@ void initializeTestData(MSData& msd)
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dp_msconvert);
 
-    AcquisitionSettingsPtr as1(new AcquisitionSettings("as1"));
+    ScanSettingsPtr as1(new ScanSettings("as1"));
     as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
     as1->sourceFilePtrs.push_back(sfp_parameters);
     Target t1;
@@ -1038,7 +1038,7 @@ void initializeTestData(MSData& msd)
     t2.set(MS_m_z, 1200);
     as1->targets.push_back(t1);
     as1->targets.push_back(t2);
-    msd.acquisitionSettingsPtrs.push_back(as1);
+    msd.scanSettingsPtrs.push_back(as1);
 
     // run
 
@@ -1245,7 +1245,7 @@ void test()
     testProcessingMethod();
     testDataProcessing();
     testNamedParamContainer<Target>();
-    testAcquisitionSettings();
+    testScanSettings();
     testAcquisition();
     testAcquisitionList();
     testNamedParamContainer<IsolationWindow>();

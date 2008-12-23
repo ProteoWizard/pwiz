@@ -185,16 +185,16 @@ void testDataProcessing()
 }
 
 
-void testAcquisitionSettings()
+void testScanSettings()
 {
-    if (os_) *os_ << "testAcquisitionSettings()\n"; 
+    if (os_) *os_ << "testScanSettings()\n"; 
 
-    AcquisitionSettings acquisitionSettings;
-    acquisitionSettings.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
-    acquisitionSettings.targets.push_back(Target());
-    acquisitionSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    acquisitionSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
-    acquisitionSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
+    ScanSettings scanSettings;
+    scanSettings.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
+    scanSettings.targets.push_back(Target());
+    scanSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    scanSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+    scanSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -207,18 +207,18 @@ void testAcquisitionSettings()
     msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2"))); 
     msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
 
-    unit_assert(acquisitionSettings.instrumentConfigurationPtr->paramGroupPtrs.empty());
-    unit_assert(acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
-    unit_assert(acquisitionSettings.sourceFilePtrs[0]->name.empty());
-    unit_assert(acquisitionSettings.sourceFilePtrs[1]->name.empty());
+    unit_assert(scanSettings.instrumentConfigurationPtr->paramGroupPtrs.empty());
+    unit_assert(scanSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+    unit_assert(scanSettings.sourceFilePtrs[0]->name.empty());
+    unit_assert(scanSettings.sourceFilePtrs[1]->name.empty());
 
-    References::resolve(acquisitionSettings, msd);
+    References::resolve(scanSettings, msd);
 
-    unit_assert(acquisitionSettings.instrumentConfigurationPtr->cvParam(MS_m_z).valueAs<int>() == 200);
-    unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs.empty());
-    unit_assert(!acquisitionSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
-    unit_assert(acquisitionSettings.sourceFilePtrs[0]->name == "goo2.raw");
-    unit_assert(acquisitionSettings.sourceFilePtrs[1]->name == "goo1.raw");
+    unit_assert(scanSettings.instrumentConfigurationPtr->cvParam(MS_m_z).valueAs<int>() == 200);
+    unit_assert(!scanSettings.targets.back().paramGroupPtrs.empty());
+    unit_assert(!scanSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
+    unit_assert(scanSettings.sourceFilePtrs[0]->name == "goo2.raw");
+    unit_assert(scanSettings.sourceFilePtrs[1]->name == "goo1.raw");
 }
 
 
@@ -542,7 +542,7 @@ void test()
     testComponentList();
     testInstrumentConfiguration();
     testDataProcessing();
-    testAcquisitionSettings();
+    testScanSettings();
     testAcquisition();
     testAcquisitionList();
     testPrecursor();

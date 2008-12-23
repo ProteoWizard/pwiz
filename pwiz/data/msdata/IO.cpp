@@ -1022,38 +1022,38 @@ PWIZ_API_DECL void read(std::istream& is, Target& t)
 
 
 //
-// AcquisitionSettings
+// ScanSettings
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSettings)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", lexical_cast<string>(acquisitionSettings.id)));
-    if (acquisitionSettings.instrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("instrumentConfigurationRef", acquisitionSettings.instrumentConfigurationPtr->id)); 
+    attributes.push_back(make_pair("id", lexical_cast<string>(scanSettings.id)));
+    if (scanSettings.instrumentConfigurationPtr.get())
+        attributes.push_back(make_pair("instrumentConfigurationRef", scanSettings.instrumentConfigurationPtr->id)); 
 
-    writer.startElement("acquisitionSettings", attributes);
+    writer.startElement("scanSettings", attributes);
 
-    if (!acquisitionSettings.sourceFilePtrs.empty()) 
+    if (!scanSettings.sourceFilePtrs.empty()) 
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionSettings.sourceFilePtrs.size())));
+        attributes.push_back(make_pair("count", lexical_cast<string>(scanSettings.sourceFilePtrs.size())));
         writer.startElement("sourceFileRefList", attributes);
-        for (vector<SourceFilePtr>::const_iterator it=acquisitionSettings.sourceFilePtrs.begin(); 
-             it!=acquisitionSettings.sourceFilePtrs.end(); ++it)
+        for (vector<SourceFilePtr>::const_iterator it=scanSettings.sourceFilePtrs.begin(); 
+             it!=scanSettings.sourceFilePtrs.end(); ++it)
              writeSourceFileRef(writer, **it);
         writer.endElement(); // sourceFileRefList
     }
 
-    if (!acquisitionSettings.targets.empty())
+    if (!scanSettings.targets.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionSettings.targets.size())));
+        attributes.push_back(make_pair("count", lexical_cast<string>(scanSettings.targets.size())));
         writer.startElement("targetList", attributes);
 
-        for (vector<Target>::const_iterator it=acquisitionSettings.targets.begin(); 
-             it!=acquisitionSettings.targets.end(); ++it)
+        for (vector<Target>::const_iterator it=scanSettings.targets.begin(); 
+             it!=scanSettings.targets.end(); ++it)
              write(writer, *it);
 
         writer.endElement(); // targetList
@@ -1063,12 +1063,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionSettings&
 }
 
     
-struct HandlerAcquisitionSettings : public HandlerParamContainer
+struct HandlerScanSettings : public HandlerParamContainer
 {
-    AcquisitionSettings* acquisitionSettings;
+    ScanSettings* scanSettings;
 
-    HandlerAcquisitionSettings(AcquisitionSettings* _acquisitionSettings = 0)
-    :   acquisitionSettings(_acquisitionSettings), 
+    HandlerScanSettings(ScanSettings* _scanSettings = 0)
+    :   scanSettings(_scanSettings), 
         handlerTarget_("target")
     {}
 
@@ -1076,18 +1076,18 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!acquisitionSettings)
-            throw runtime_error("[IO::HandlerAcquisitionSettings] Null acquisitionSettings.");
+        if (!scanSettings)
+            throw runtime_error("[IO::HandlerScanSettings] Null scanSettings.");
 
-        if (name == "acquisitionSettings")
+        if (name == "scanSettings")
         {
-            getAttribute(attributes, "id", acquisitionSettings->id);
+            getAttribute(attributes, "id", scanSettings->id);
 
             // note: placeholder
             string instrumentConfigurationRef;
             getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
             if (!instrumentConfigurationRef.empty())
-                acquisitionSettings->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
+                scanSettings->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
 
             return Status::Ok;
         }
@@ -1101,17 +1101,17 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
             string sourceFileRef;
             getAttribute(attributes, "ref", sourceFileRef);
             if (!sourceFileRef.empty())
-                acquisitionSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
+                scanSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
             return Status::Ok;
      }
         else if (name=="target")
         {
-            acquisitionSettings->targets.push_back(Target());
-            handlerTarget_.paramContainer = &acquisitionSettings->targets.back();
+            scanSettings->targets.push_back(Target());
+            handlerTarget_.paramContainer = &scanSettings->targets.back();
             return Status(Status::Delegate, &handlerTarget_);
         }
 
-        throw runtime_error(("[IO::HandlerAcquisitionSettings] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[IO::HandlerScanSettings] Unexpected element name: " + name).c_str());
     }
 
     private:
@@ -1119,9 +1119,9 @@ struct HandlerAcquisitionSettings : public HandlerParamContainer
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, AcquisitionSettings& acquisitionSettings)
+PWIZ_API_DECL void read(std::istream& is, ScanSettings& scanSettings)
 {
-    HandlerAcquisitionSettings handler(&acquisitionSettings);
+    HandlerScanSettings handler(&scanSettings);
     SAXParser::parse(is, handler);
 }
 
@@ -2460,10 +2460,10 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     writeList(writer, msd.paramGroupPtrs, "referenceableParamGroupList");
     writeList(writer, msd.samplePtrs, "sampleList");
-    writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
     writeList(writer, msd.softwarePtrs, "softwareList");
+    writeList(writer, msd.scanSettingsPtrs, "scanSettingsList");
+    writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
     writeList(writer, dataProcessingPtrs, "dataProcessingList");
-    writeList(writer, msd.acquisitionSettingsPtrs, "acquisitionSettingsList");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
 
@@ -2499,7 +2499,7 @@ struct HandlerMSData : public SAXParser::Handler
                  name == "instrumentConfigurationList" || 
                  name == "softwareList" ||
                  name == "dataProcessingList" ||
-                 name == "acquisitionSettingsList")
+                 name == "scanSettingsList")
         {
             // ignore these, unless we want to validate the count attribute
             return Status::Ok;
@@ -2545,11 +2545,11 @@ struct HandlerMSData : public SAXParser::Handler
             handlerDataProcessing_.dataProcessing = msd->dataProcessingPtrs.back().get();
             return Status(Status::Delegate, &handlerDataProcessing_);
         }
-        else if (name == "acquisitionSettings")
+        else if (name == "scanSettings")
         {
-            msd->acquisitionSettingsPtrs.push_back(AcquisitionSettingsPtr(new AcquisitionSettings));            
-            handlerAcquisitionSettings_.acquisitionSettings = msd->acquisitionSettingsPtrs.back().get();
-            return Status(Status::Delegate, &handlerAcquisitionSettings_);
+            msd->scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings));            
+            handlerScanSettings_.scanSettings = msd->scanSettingsPtrs.back().get();
+            return Status(Status::Delegate, &handlerScanSettings_);
         }
         else if (name == "run")
         {
@@ -2568,7 +2568,7 @@ struct HandlerMSData : public SAXParser::Handler
     HandlerInstrumentConfiguration handlerInstrumentConfiguration_;
     HandlerSoftware handlerSoftware_;
     HandlerDataProcessing handlerDataProcessing_;
-    HandlerAcquisitionSettings handlerAcquisitionSettings_;
+    HandlerScanSettings handlerScanSettings_;
     HandlerRun handlerRun_;
 };
 

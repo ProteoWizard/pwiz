@@ -415,7 +415,7 @@ struct PWIZ_API_DECL Target : public ParamContainer {};
 
 
 /// Description of the acquisition settings of the instrument prior to the start of the run.
-struct PWIZ_API_DECL AcquisitionSettings
+struct PWIZ_API_DECL ScanSettings
 {
     /// a unique identifier for this acquisition setting.
     std::string id;
@@ -429,7 +429,7 @@ struct PWIZ_API_DECL AcquisitionSettings
     /// target list (or 'inclusion list') configured prior to the run.
     std::vector<Target> targets;
 
-    AcquisitionSettings(const std::string& _id = "");
+    ScanSettings(const std::string& _id = "");
 
 
     /// returns true iff the element contains no params and all members are empty or null
@@ -437,7 +437,7 @@ struct PWIZ_API_DECL AcquisitionSettings
 };
 
 
-typedef boost::shared_ptr<AcquisitionSettings> AcquisitionSettingsPtr; 
+typedef boost::shared_ptr<ScanSettings> ScanSettingsPtr; 
 
 
 /// Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
@@ -994,17 +994,17 @@ struct PWIZ_API_DECL MSData
     /// list and descriptions of samples.
     std::vector<SamplePtr> samplePtrs;
 
-    /// list and descriptions of instrument configurations.
-    std::vector<InstrumentConfigurationPtr> instrumentConfigurationPtrs;
-
     /// list and descriptions of software used to acquire and/or process the data in this mzML file.
     std::vector<SoftwarePtr> softwarePtrs;
 
+    /// list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
+    std::vector<ScanSettingsPtr> scanSettingsPtrs;
+
+    /// list and descriptions of instrument configurations.
+    std::vector<InstrumentConfigurationPtr> instrumentConfigurationPtrs;
+
     /// list and descriptions of data processing applied to this data.
     std::vector<DataProcessingPtr> dataProcessingPtrs;
-
-    /// list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
-    std::vector<AcquisitionSettingsPtr> acquisitionSettingsPtrs;
 
     /// a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
     Run run;

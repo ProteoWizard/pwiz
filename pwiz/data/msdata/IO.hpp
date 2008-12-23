@@ -104,8 +104,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Target& t);
 PWIZ_API_DECL void read(std::istream& is, Target& t);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionSettings& acquisitionSettings);
-PWIZ_API_DECL void read(std::istream& is, AcquisitionSettings& acquisitionSettings);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& acquisitionSettings);
+PWIZ_API_DECL void read(std::istream& is, ScanSettings& acquisitionSettings);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Acquisition& acquisition);

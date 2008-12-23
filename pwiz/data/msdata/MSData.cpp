@@ -480,16 +480,16 @@ PWIZ_API_DECL bool DataProcessing::empty() const
 
 
 //
-// AcquisitionSettings 
+// ScanSettings 
 //
 
 
-PWIZ_API_DECL AcquisitionSettings::AcquisitionSettings(const string& _id)
+PWIZ_API_DECL ScanSettings::ScanSettings(const string& _id)
 :   id(_id)
 {}
 
 
-PWIZ_API_DECL bool AcquisitionSettings::empty() const
+PWIZ_API_DECL bool ScanSettings::empty() const
 {
     return id.empty() && 
            (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) && 
@@ -1176,8 +1176,9 @@ PWIZ_API_DECL bool MSData::empty() const
            fileDescription.empty() &&
            paramGroupPtrs.empty() &&
            samplePtrs.empty() &&
-           instrumentConfigurationPtrs.empty() && 
            softwarePtrs.empty() &&
+           scanSettingsPtrs.empty() &&
+           instrumentConfigurationPtrs.empty() && 
            dataProcessingPtrs.empty() &&
            run.empty();
 }

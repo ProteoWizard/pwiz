@@ -515,16 +515,16 @@ void testDataProcessing()
 }
 
 
-void testAcquisitionSettings()
+void testScanSettings()
 {
-    if (os_) *os_ << "testAcquisitionSettings()\n";
+    if (os_) *os_ << "testScanSettings()\n";
 
-    AcquisitionSettings a, b;
+    ScanSettings a, b;
     a.id = "as1";
 
     b = a;
 
-    Diff<AcquisitionSettings> diff(a, b);
+    Diff<ScanSettings> diff(a, b);
     unit_assert(!diff);
 
     a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")); 
@@ -1080,7 +1080,7 @@ void testMSData()
     b.softwarePtrs.push_back(SoftwarePtr(new Software("software")));
     a.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dataProcessing")));
     b.run.id = "run";
-    b.acquisitionSettingsPtrs.push_back(AcquisitionSettingsPtr(new AcquisitionSettings("acquisitionSettings")));
+    b.scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings("scanSettings")));
    
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -1116,8 +1116,8 @@ void testMSData()
     unit_assert(diff.a_b.run.empty());
     unit_assert(!diff.b_a.run.empty());
 
-    unit_assert(diff.a_b.acquisitionSettingsPtrs.empty());
-    unit_assert(!diff.b_a.acquisitionSettingsPtrs.empty());
+    unit_assert(diff.a_b.scanSettingsPtrs.empty());
+    unit_assert(!diff.b_a.scanSettingsPtrs.empty());
 }
 
 
@@ -1498,7 +1498,7 @@ void test()
     testInstrumentConfiguration();
     testProcessingMethod();
     testDataProcessing();
-    testAcquisitionSettings();
+    testScanSettings();
     testAcquisition();
     testAcquisitionList();
     testPrecursor();

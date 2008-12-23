@@ -471,10 +471,10 @@ void diff(const DataProcessing& a,
 
 
 PWIZ_API_DECL
-void diff(const AcquisitionSettings& a,
-          const AcquisitionSettings& b,
-          AcquisitionSettings& a_b,
-          AcquisitionSettings& b_a,
+void diff(const ScanSettings& a,
+          const ScanSettings& b,
+          ScanSettings& a_b,
+          ScanSettings& b_a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
@@ -994,10 +994,10 @@ void diff(const MSData& a,
         diff(a.fileDescription, b.fileDescription, a_b.fileDescription, b_a.fileDescription, config);
         vector_diff_deep(a.paramGroupPtrs, b.paramGroupPtrs, a_b.paramGroupPtrs, b_a.paramGroupPtrs, config);
         vector_diff_deep(a.samplePtrs, b.samplePtrs, a_b.samplePtrs, b_a.samplePtrs, config);
-        vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
         vector_diff_deep(a.softwarePtrs, b.softwarePtrs, a_b.softwarePtrs, b_a.softwarePtrs, config);
+        vector_diff_deep(a.scanSettingsPtrs, b.scanSettingsPtrs, a_b.scanSettingsPtrs, b_a.scanSettingsPtrs, config);
+        vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
         vector_diff_deep(a.dataProcessingPtrs, b.dataProcessingPtrs, a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
-        vector_diff_deep(a.acquisitionSettingsPtrs, b.acquisitionSettingsPtrs, a_b.acquisitionSettingsPtrs, b_a.acquisitionSettingsPtrs, config);
     }
 
     diff(a.run, b.run, a_b.run, b_a.run, config);

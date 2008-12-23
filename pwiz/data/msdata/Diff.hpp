@@ -171,10 +171,10 @@ void diff(const DataProcessing& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const AcquisitionSettings& a,
-          const AcquisitionSettings& b,
-          AcquisitionSettings& a_b,
-          AcquisitionSettings& b_a,
+void diff(const ScanSettings& a,
+          const ScanSettings& b,
+          ScanSettings& a_b,
+          ScanSettings& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
