@@ -461,7 +461,17 @@ void testProcessingMethod()
     a.order = 420;
     b.order = 421;
     diff(a, b);
-        
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+
+    b.order = 420;
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    a.softwarePtr = SoftwarePtr(new Software("pwiz"));
+    b.softwarePtr = SoftwarePtr(new Software("pwiz2"));
+    diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
 }
@@ -476,16 +486,16 @@ void testDataProcessing()
 
     b = a;
 
-    a.softwarePtr = SoftwarePtr(new Software("msdata")); 
-    a.softwarePtr->version = "4.20";
-
-    b.softwarePtr = SoftwarePtr(new Software("msdata")); 
-    b.softwarePtr->version = "4.20";
-
     ProcessingMethod pm1, pm2, pm3;
     pm1.userParams.push_back(UserParam("abc"));
     pm2.userParams.push_back(UserParam("def"));
     pm3.userParams.push_back(UserParam("ghi"));
+
+    pm1.softwarePtr = SoftwarePtr(new Software("msdata")); 
+    pm1.softwarePtr->version = "4.20";
+
+    pm2.softwarePtr = SoftwarePtr(new Software("msdata")); 
+    pm2.softwarePtr->version = "4.20";
 
     a.processingMethods.push_back(pm1);
     a.processingMethods.push_back(pm2);
@@ -495,7 +505,7 @@ void testDataProcessing()
     Diff<DataProcessing> diff(a, b);
     unit_assert(!diff);
 
-    b.softwarePtr = SoftwarePtr(new Software("Xcalibur")); 
+    pm2.softwarePtr = SoftwarePtr(new Software("Xcalibur")); 
     a.processingMethods.push_back(pm3);
     
     diff(a, b);

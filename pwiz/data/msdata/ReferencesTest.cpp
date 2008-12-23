@@ -164,9 +164,9 @@ void testDataProcessing()
     if (os_) *os_ << "testDataProcessing()\n"; 
 
     DataProcessing dataProcessing;
-    dataProcessing.softwarePtr = SoftwarePtr(new Software("msdata"));
     dataProcessing.processingMethods.push_back(ProcessingMethod());
     dataProcessing.processingMethods.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    dataProcessing.processingMethods.back().softwarePtr = SoftwarePtr(new Software("msdata"));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -175,13 +175,13 @@ void testDataProcessing()
     msd.softwarePtrs.push_back(SoftwarePtr(new Software("msdata")));
     msd.softwarePtrs[1]->version = "4.20";
 
-    unit_assert(dataProcessing.softwarePtr->version.empty());
+    unit_assert(dataProcessing.processingMethods.back().softwarePtr->version.empty());
     unit_assert(dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
 
     References::resolve(dataProcessing, msd);
 
     unit_assert(!dataProcessing.processingMethods.back().paramGroupPtrs[0]->userParams.empty());
-    unit_assert(dataProcessing.softwarePtr->version == "4.20");
+    unit_assert(dataProcessing.processingMethods.back().softwarePtr->version == "4.20");
 }
 
 
@@ -374,15 +374,17 @@ void testBinaryDataArray()
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("msdata")));
-    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    msd.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
+    msd.dataProcessingPtrs.back()->processingMethods.back().softwarePtr = SoftwarePtr(new Software("software"));
     
     unit_assert(binaryDataArray.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!binaryDataArray.dataProcessingPtr->softwarePtr.get());
+    unit_assert(binaryDataArray.dataProcessingPtr->processingMethods.empty());
 
     References::resolve(binaryDataArray, msd);
 
     unit_assert(!binaryDataArray.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(binaryDataArray.dataProcessingPtr->softwarePtr.get());
+    unit_assert(binaryDataArray.dataProcessingPtr->processingMethods.size() == 1);
+    unit_assert(binaryDataArray.dataProcessingPtr->processingMethods.back().softwarePtr.get());
 }
 
 
@@ -402,12 +404,13 @@ void testSpectrum()
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
-    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    msd.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
+    msd.dataProcessingPtrs.back()->processingMethods.back().softwarePtr = SoftwarePtr(new Software("software"));
     msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
     msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
     
     unit_assert(spectrum.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!spectrum.dataProcessingPtr->softwarePtr.get());
+    unit_assert(spectrum.dataProcessingPtr->processingMethods.empty());
     unit_assert(spectrum.sourceFilePtr->name.empty());
     unit_assert(spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
@@ -415,7 +418,8 @@ void testSpectrum()
     References::resolve(spectrum, msd);
 
     unit_assert(!spectrum.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(spectrum.dataProcessingPtr->softwarePtr.get());
+    unit_assert(spectrum.dataProcessingPtr->processingMethods.size() == 1);
+    unit_assert(spectrum.dataProcessingPtr->processingMethods.back().softwarePtr.get());
     unit_assert(spectrum.sourceFilePtr->name == "goo.raw");
     unit_assert(!spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
     unit_assert(!spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
@@ -436,16 +440,18 @@ void testChromatogram()
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
-    msd.dataProcessingPtrs.back()->softwarePtr = SoftwarePtr(new Software("software"));
+    msd.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
+    msd.dataProcessingPtrs.back()->processingMethods.back().softwarePtr = SoftwarePtr(new Software("software"));
     
     unit_assert(chromatogram.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!chromatogram.dataProcessingPtr->softwarePtr.get());
+    unit_assert(chromatogram.dataProcessingPtr->processingMethods.empty());
     unit_assert(chromatogram.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 
     References::resolve(chromatogram, msd);
 
     unit_assert(!chromatogram.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(chromatogram.dataProcessingPtr->softwarePtr.get());
+    unit_assert(chromatogram.dataProcessingPtr->processingMethods.size() == 1);
+    unit_assert(chromatogram.dataProcessingPtr->processingMethods.back().softwarePtr.get());
     unit_assert(!chromatogram.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 }
 

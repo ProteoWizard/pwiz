@@ -456,7 +456,9 @@ PWIZ_API_DECL bool InstrumentConfiguration::empty() const
 
 PWIZ_API_DECL bool ProcessingMethod::empty() const
 {
-    return order==0 && ParamContainer::empty();
+    return order==0 && 
+        (!softwarePtr.get() || softwarePtr->empty()) && 
+        ParamContainer::empty();
 }
 
 
@@ -473,7 +475,6 @@ PWIZ_API_DECL DataProcessing::DataProcessing(const string& _id)
 PWIZ_API_DECL bool DataProcessing::empty() const
 {
     return id.empty() && 
-           (!softwarePtr.get() || softwarePtr->empty()) && 
            processingMethods.empty(); 
 }
 

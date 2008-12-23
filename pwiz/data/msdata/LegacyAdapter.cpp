@@ -275,30 +275,33 @@ namespace {
 
 ProcessingMethod& getProcessingMethod(SoftwarePtr software, MSData& msd)
 {
-    DataProcessingPtr dp;
+    // find ProcessingMethod associated with Software
 
-    // find DataProcessing associated with Software
     for (vector<DataProcessingPtr>::const_iterator it=msd.dataProcessingPtrs.begin();
          it!=msd.dataProcessingPtrs.end(); ++it)
-        if (it->get() && (*it)->softwarePtr.get()==software.get())
-            dp = *it;
-
-    // create a new DataProcessing if we didn't find one
-    if (!dp.get())
     {
-        const string& softwareID = software->id;
-        if (softwareID.empty())
-            throw runtime_error("[LegacyAdapter_Software::getProcessingMethod()] "
-                                "Software::id not set.");
+        if (!it->get()) continue;    
 
-        dp = DataProcessingPtr(new DataProcessing(softwareID + " processing"));
-        dp->softwarePtr = software; 
-        msd.dataProcessingPtrs.push_back(dp);
+        for (vector<ProcessingMethod>::iterator jt=(*it)->processingMethods.begin();
+             jt!=(*it)->processingMethods.end(); ++jt)
+        {
+            if (jt->softwarePtr.get()==software.get())
+                return *jt;
+        }
     }
 
-    // get ProcessingMethod 0
-    if (dp->processingMethods.empty()) dp->processingMethods.push_back(ProcessingMethod());
-    return dp->processingMethods[0];
+    // create a new DataProcessing if we didn't find one
+
+    const string& softwareID = software->id;
+    if (softwareID.empty())
+        throw runtime_error("[LegacyAdapter_Software::getProcessingMethod()] "
+                            "Software::id not set.");
+
+    DataProcessingPtr dp = DataProcessingPtr(new DataProcessing(softwareID + " processing"));
+    dp->processingMethods.push_back(ProcessingMethod());
+    dp->processingMethods.back().softwarePtr = software; 
+    msd.dataProcessingPtrs.push_back(dp);
+    return dp->processingMethods.back();
 }
 
 
@@ -309,11 +312,13 @@ string getProcessingMethodUserParamValue(const string& name,
     for (vector<DataProcessingPtr>::const_iterator it=msd.dataProcessingPtrs.begin();
          it!=msd.dataProcessingPtrs.end(); ++it)
     {
-        if (!it->get() || (*it)->softwarePtr.get()!=software.get()) continue;
+        if (!it->get()) continue;
 
         for (vector<ProcessingMethod>::const_iterator jt=(*it)->processingMethods.begin();            
              jt!=(*it)->processingMethods.end(); ++jt)
         {
+            if (jt->softwarePtr.get() != software.get()) continue;
+
             UserParam result = jt->userParam(name);
             if (!result.empty())
                 return result.value;

@@ -130,10 +130,10 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
     dpXcalibur->id = "XcaliburProcessing";
-    dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
     procXcal.order = 1;
+    procXcal.softwarePtr = softwareXcalibur;
     procXcal.set(MS_deisotoping, false);
     procXcal.set(MS_charge_deconvolution, false);
     procXcal.set(MS_peak_picking, true);
@@ -142,10 +142,10 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     DataProcessingPtr dppwiz(new DataProcessing);
     dppwiz->id = "pwizconversion";
-    dppwiz->softwarePtr = softwarepwiz;
 
     ProcessingMethod procpwiz;
     procpwiz.order = 2;
+    procpwiz.softwarePtr = softwarepwiz;
     procpwiz.set(MS_Conversion_to_mzML);
 
     dppwiz->processingMethods.push_back(procpwiz);
@@ -461,6 +461,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
 
     ProcessingMethod procMIAPE;
     procMIAPE.order = 1;
+    procMIAPE.softwarePtr = msd.softwarePtrs.back();
     procMIAPE.set(MS_deisotoping, false);
     procMIAPE.set(MS_charge_deconvolution, false);
     procMIAPE.set(MS_peak_picking, true);
@@ -473,7 +474,6 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     DataProcessingPtr dpMIAPE(new DataProcessing);
     msd.dataProcessingPtrs.push_back(dpMIAPE);
     dpMIAPE->id = "MIAPE_example";
-    dpMIAPE->softwarePtr = msd.softwarePtrs.back();
     dpMIAPE->processingMethods.push_back(procMIAPE);
 
     // acquisition settings

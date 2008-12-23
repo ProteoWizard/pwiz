@@ -131,9 +131,15 @@ PWIZ_API_DECL void resolve(InstrumentConfiguration& instrumentConfiguration, con
 }
 
 
+PWIZ_API_DECL void resolve(ProcessingMethod& processingMethod, const MSData& msd)
+{
+    resolve(static_cast<ParamContainer&>(processingMethod), msd);
+    resolve(processingMethod.softwarePtr, msd.softwarePtrs); 
+}
+
+
 PWIZ_API_DECL void resolve(DataProcessing& dataProcessing, const MSData& msd)
 {
-    resolve(dataProcessing.softwarePtr, msd.softwarePtrs); 
     resolve(dataProcessing.processingMethods, msd);
 }
 

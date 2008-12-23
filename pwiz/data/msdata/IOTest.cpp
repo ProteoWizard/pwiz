@@ -270,6 +270,7 @@ void testProcessingMethod()
     a.cvParams.push_back(CVParam(MS_deisotoping, false)); 
     a.cvParams.push_back(CVParam(MS_charge_deconvolution, false)); 
     a.cvParams.push_back(CVParam(MS_peak_picking, true)); 
+    a.softwarePtr = SoftwarePtr(new Software("pwiz"));
     testObject(a);
 }
 
@@ -279,7 +280,6 @@ void testDataProcessing()
     DataProcessing a;
 
     a.id = "msdata processing";
-    a.softwarePtr = SoftwarePtr(new Software("msdata"));
 
     ProcessingMethod pm1, pm2;
 
@@ -287,6 +287,7 @@ void testDataProcessing()
     pm1.cvParams.push_back(CVParam(MS_deisotoping, false)); 
     pm1.cvParams.push_back(CVParam(MS_charge_deconvolution, false)); 
     pm1.cvParams.push_back(CVParam(MS_peak_picking, true)); 
+    pm1.softwarePtr = SoftwarePtr(new Software("msdata"));
 
     pm2.order = 421;
     pm2.userParams.push_back(UserParam("testing"));
@@ -1005,10 +1006,10 @@ void initializeTestData(MSData& msd)
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
     dpXcalibur->id = "Xcalibur Processing";
-    dpXcalibur->softwarePtr = softwareXcalibur;
     
     ProcessingMethod procXcal;
     procXcal.order = 1;
+    procXcal.softwarePtr = softwareXcalibur;
     procXcal.cvParams.push_back(CVParam(MS_deisotoping, false));
     procXcal.cvParams.push_back(CVParam(MS_charge_deconvolution, false));
     procXcal.cvParams.push_back(CVParam(MS_peak_picking, true));
@@ -1017,10 +1018,10 @@ void initializeTestData(MSData& msd)
 
     DataProcessingPtr dp_msconvert(new DataProcessing);
     dp_msconvert->id = "pwiz conversion";
-    dp_msconvert->softwarePtr = software_pwiz;
 
     ProcessingMethod proc_msconvert;
     proc_msconvert.order = 2;
+    proc_msconvert.softwarePtr = software_pwiz;
     proc_msconvert.cvParams.push_back(MS_Conversion_to_mzML);
 
     dp_msconvert->processingMethods.push_back(proc_msconvert);

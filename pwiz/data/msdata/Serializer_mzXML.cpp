@@ -205,8 +205,15 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
 
     for (vector<DataProcessingPtr>::const_iterator it=msd.dataProcessingPtrs.begin();
          it!=msd.dataProcessingPtrs.end(); ++it)
-        if (it->get() && (*it)->softwarePtr.get()) 
-            writeSoftware(xmlWriter, (*it)->softwarePtr, msd, cvTranslator);
+    {
+        if (!it->get()) continue;
+
+        for (vector<ProcessingMethod>::const_iterator jt=(*it)->processingMethods.begin();
+             jt!=(*it)->processingMethods.end(); ++jt)
+
+        if (jt->softwarePtr.get()) 
+            writeSoftware(xmlWriter, jt->softwarePtr, msd, cvTranslator);
+    }
 
     xmlWriter.endElement(); // dataProcessing
 }

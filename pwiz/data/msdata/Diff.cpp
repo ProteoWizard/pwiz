@@ -447,6 +447,7 @@ void diff(const ProcessingMethod& a,
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff_numeric(a.order, b.order, a_b.order, b_a.order, config);
+    ptr_diff(a.softwarePtr, b.softwarePtr, a_b.softwarePtr, b_a.softwarePtr, config);
 }
 
 
@@ -458,7 +459,6 @@ void diff(const DataProcessing& a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    ptr_diff(a.softwarePtr, b.softwarePtr, a_b.softwarePtr, b_a.softwarePtr, config);
     vector_diff_diff(a.processingMethods, b.processingMethods, a_b.processingMethods, b_a.processingMethods, config);
 
     // provide id for context

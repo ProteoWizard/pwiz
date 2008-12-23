@@ -876,6 +876,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& pr
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("order", lexical_cast<string>(processingMethod.order)));
+    if (processingMethod.softwarePtr.get())
+        attributes.push_back(make_pair("softwareRef", processingMethod.softwarePtr->id)); 
+
     writer.startElement("processingMethod", attributes);
     writeParamContainer(writer, processingMethod);
     writer.endElement();
@@ -885,6 +888,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& pr
 struct HandlerProcessingMethod : public HandlerParamContainer
 {
     ProcessingMethod* processingMethod;
+    string defaultSoftwareRef; 
 
     HandlerProcessingMethod(ProcessingMethod* _processingMethod = 0)
     :   processingMethod(_processingMethod)
@@ -900,6 +904,15 @@ struct HandlerProcessingMethod : public HandlerParamContainer
         if (name == "processingMethod")
         {
             getAttribute(attributes, "order", processingMethod->order);
+
+            // note: placeholder
+            string softwareRef;
+            getAttribute(attributes, "softwareRef", softwareRef);
+            if (!softwareRef.empty())
+                processingMethod->softwarePtr = SoftwarePtr(new Software(softwareRef));
+            else if (!defaultSoftwareRef.empty())
+                processingMethod->softwarePtr = SoftwarePtr(new Software(defaultSoftwareRef));
+
             return Status::Ok;
         }
 
@@ -925,8 +938,6 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataProcessing& data
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", lexical_cast<string>(dataProcessing.id)));
-    if (dataProcessing.softwarePtr.get())
-        attributes.push_back(make_pair("softwareRef", dataProcessing.softwarePtr->id)); 
 
     writer.startElement("dataProcessing", attributes);
 
@@ -957,11 +968,14 @@ struct HandlerDataProcessing : public HandlerParamContainer
         {
             getAttribute(attributes, "id", dataProcessing->id);
 
-            // note: placeholder
+            // mzML 1.0
             string softwareRef;
             getAttribute(attributes, "softwareRef", softwareRef);
             if (!softwareRef.empty())
-                dataProcessing->softwarePtr = SoftwarePtr(new Software(softwareRef));
+            {
+                cerr << "[IO::HandlerDataProcessing] Warning - mzML 1.0: dataProcessing::softwareRef\n";
+                handlerProcessingMethod_.defaultSoftwareRef = softwareRef;
+            }
 
             return Status::Ok;
         }

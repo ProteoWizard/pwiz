@@ -207,8 +207,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     DataProcessingPtr dpPwiz(new DataProcessing);
     dpPwiz->id = "pwiz_Reader_Thermo_conversion";
-    dpPwiz->softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.push_back(ProcessingMethod());
+    dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
     msd.dataProcessingPtrs.push_back(dpPwiz);
 

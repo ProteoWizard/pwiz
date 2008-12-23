@@ -378,8 +378,10 @@ struct PWIZ_API_DECL ProcessingMethod : public ParamContainer
     /// this attributes allows a series of consecutive steps to be placed in the correct order.
     int order;
 
-    ProcessingMethod() : order(0) {}
+    /// this attribute MUST reference the 'id' of the appropriate SoftwareType.
+    SoftwarePtr softwarePtr;
 
+    ProcessingMethod() : order(0) {}
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
@@ -395,14 +397,10 @@ struct PWIZ_API_DECL DataProcessing
     /// a unique identifier for this data processing that is unique across all DataProcessingTypes.
     std::string id;
 
-    /// this attribute MUST reference the 'id' of the appropriate SoftwareType.
-    SoftwarePtr softwarePtr;
-
     /// description of the default peak processing method(s). This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
     std::vector<ProcessingMethod> processingMethods;
 
     DataProcessing(const std::string& _id = "");
-
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;

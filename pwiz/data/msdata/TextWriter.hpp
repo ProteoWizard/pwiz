@@ -265,7 +265,10 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("processingMethod:");
         child()
-            ("order: " + boost::lexical_cast<std::string>(processingMethod.order))
+            ("order: " + boost::lexical_cast<std::string>(processingMethod.order));
+        if (processingMethod.softwarePtr.get() && !processingMethod.softwarePtr->empty())
+            child()("softwareRef: " + processingMethod.softwarePtr->id);
+        child()
             (static_cast<const ParamContainer&>(processingMethod));
         return *this;
     }
@@ -275,8 +278,6 @@ class PWIZ_API_DECL TextWriter
         (*this)("dataProcessing:");
         child()
             ("id: " + dp.id);
-        if (dp.softwarePtr.get() && !dp.softwarePtr->empty())
-            child()("softwareRef: " + dp.softwarePtr->id);
         for_each(dp.processingMethods.begin(), dp.processingMethods.end(), child());
         return *this;
     }

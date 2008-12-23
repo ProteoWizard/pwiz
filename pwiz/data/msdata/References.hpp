@@ -41,6 +41,7 @@ PWIZ_API_DECL void resolve(ParamContainer& paramContainer, const MSData& msd);
 PWIZ_API_DECL void resolve(FileDescription& fileDescription, const MSData& msd);
 PWIZ_API_DECL void resolve(ComponentList& componentList, const MSData& msd);
 PWIZ_API_DECL void resolve(InstrumentConfiguration& instrumentConfiguration, const MSData& msd);
+PWIZ_API_DECL void resolve(ProcessingMethod& processingMethod, const MSData& msd);
 PWIZ_API_DECL void resolve(DataProcessing& dataProcesssing, const MSData& msd);
 PWIZ_API_DECL void resolve(AcquisitionSettings& dataProcesssing, const MSData& msd);
 PWIZ_API_DECL void resolve(Acquisition& acquisition, const MSData& msd);
