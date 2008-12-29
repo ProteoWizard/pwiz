@@ -154,7 +154,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     msd.dataProcessingPtrs.push_back(dppwiz);
 
     ScanSettingsPtr as1(new ScanSettings("as1"));
-    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
     as1->sourceFilePtrs.push_back(sfp_parameters);
 
     Target t1;
@@ -479,7 +478,6 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     // acquisition settings
     
     ScanSettingsPtr as1(new ScanSettings("acquisition_settings_MIAPE_example"));
-    as1->instrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0]; 
     as1->sourceFilePtrs.push_back(sfp_parameters);
 
     Target t1;

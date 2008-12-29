@@ -420,9 +420,6 @@ struct PWIZ_API_DECL ScanSettings
     /// a unique identifier for this acquisition setting.
     std::string id;
 
-    /// this attribute MUST reference the 'id' of the appropriate instrument configuration.
-    InstrumentConfigurationPtr instrumentConfigurationPtr;
-
     /// container for a list of source file references.
     std::vector<SourceFilePtr> sourceFilePtrs;
 

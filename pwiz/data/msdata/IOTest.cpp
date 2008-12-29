@@ -304,7 +304,6 @@ void testScanSettings()
     ScanSettings a;
 
     a.id = "as1";
-    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
 
     Target t1, t2;
 
@@ -1030,7 +1029,6 @@ void initializeTestData(MSData& msd)
     msd.dataProcessingPtrs.push_back(dp_msconvert);
 
     ScanSettingsPtr as1(new ScanSettings("as1"));
-    as1->instrumentConfigurationPtr = instrumentConfigurationPtr;
     as1->sourceFilePtrs.push_back(sfp_parameters);
     Target t1;
     t1.set(MS_m_z, 1000);

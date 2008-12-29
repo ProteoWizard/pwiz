@@ -1030,8 +1030,6 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", lexical_cast<string>(scanSettings.id)));
-    if (scanSettings.instrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("instrumentConfigurationRef", scanSettings.instrumentConfigurationPtr->id)); 
 
     writer.startElement("scanSettings", attributes);
 
@@ -1082,13 +1080,6 @@ struct HandlerScanSettings : public HandlerParamContainer
         if (name == "scanSettings")
         {
             getAttribute(attributes, "id", scanSettings->id);
-
-            // note: placeholder
-            string instrumentConfigurationRef;
-            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
-            if (!instrumentConfigurationRef.empty())
-                scanSettings->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
-
             return Status::Ok;
         }
         else if (name=="sourceFileRefList" || name=="targetList")

@@ -478,7 +478,6 @@ void diff(const ScanSettings& a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    ptr_diff(a.instrumentConfigurationPtr, b.instrumentConfigurationPtr, a_b.instrumentConfigurationPtr, b_a.instrumentConfigurationPtr, config);
     vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
     vector_diff_diff(a.targets, b.targets, a_b.targets, b_a.targets, config);
 

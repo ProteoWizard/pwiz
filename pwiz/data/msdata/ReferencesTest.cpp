@@ -190,7 +190,6 @@ void testScanSettings()
     if (os_) *os_ << "testScanSettings()\n"; 
 
     ScanSettings scanSettings;
-    scanSettings.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("msdata"));
     scanSettings.targets.push_back(Target());
     scanSettings.targets.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     scanSettings.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
@@ -199,22 +198,17 @@ void testScanSettings()
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("booger")));
-    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("msdata")));
-    msd.instrumentConfigurationPtrs[1]->set(MS_m_z, 200);
     msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1"))); 
     msd.fileDescription.sourceFilePtrs.back()->name = "goo1.raw";
     msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2"))); 
     msd.fileDescription.sourceFilePtrs.back()->name = "goo2.raw";
 
-    unit_assert(scanSettings.instrumentConfigurationPtr->paramGroupPtrs.empty());
     unit_assert(scanSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
     unit_assert(scanSettings.sourceFilePtrs[0]->name.empty());
     unit_assert(scanSettings.sourceFilePtrs[1]->name.empty());
 
     References::resolve(scanSettings, msd);
 
-    unit_assert(scanSettings.instrumentConfigurationPtr->cvParam(MS_m_z).valueAs<int>() == 200);
     unit_assert(!scanSettings.targets.back().paramGroupPtrs.empty());
     unit_assert(!scanSettings.targets.back().paramGroupPtrs[0]->userParams.empty());
     unit_assert(scanSettings.sourceFilePtrs[0]->name == "goo2.raw");

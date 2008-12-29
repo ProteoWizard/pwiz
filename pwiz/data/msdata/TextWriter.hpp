@@ -301,8 +301,6 @@ class PWIZ_API_DECL TextWriter
         (*this)("scanSettings:");
         child()
             ("id: " + as.id);
-        if (as.instrumentConfigurationPtr.get() && !as.instrumentConfigurationPtr->empty())
-            child()("instrumentConfigurationRef: " + as.instrumentConfigurationPtr->id);
         for_each(as.targets.begin(), as.targets.end(), child());
         child()("sourceFileList: ", as.sourceFilePtrs);
         return *this;

@@ -492,7 +492,6 @@ PWIZ_API_DECL ScanSettings::ScanSettings(const string& _id)
 PWIZ_API_DECL bool ScanSettings::empty() const
 {
     return id.empty() && 
-           (!instrumentConfigurationPtr.get() || instrumentConfigurationPtr->empty()) && 
            sourceFilePtrs.empty() &&
            targets.empty();
 }

@@ -146,7 +146,6 @@ PWIZ_API_DECL void resolve(DataProcessing& dataProcessing, const MSData& msd)
 
 PWIZ_API_DECL void resolve(ScanSettings& scanSettings, const MSData& msd)
 {
-    resolve(scanSettings.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs); 
     resolve(scanSettings.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
     resolve(scanSettings.targets, msd);
 }

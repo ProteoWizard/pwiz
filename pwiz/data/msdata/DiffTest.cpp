@@ -527,7 +527,6 @@ void testScanSettings()
     Diff<ScanSettings> diff(a, b);
     unit_assert(!diff);
 
-    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration")); 
     b.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
     a.targets.resize(2);
    
@@ -535,8 +534,6 @@ void testScanSettings()
         
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-    unit_assert(diff.a_b.instrumentConfigurationPtr.get());
-    unit_assert(!diff.b_a.instrumentConfigurationPtr.get());
     unit_assert(diff.a_b.sourceFilePtrs.empty());
     unit_assert(diff.b_a.sourceFilePtrs.size() == 1);
     unit_assert(diff.a_b.targets.size() == 2);
