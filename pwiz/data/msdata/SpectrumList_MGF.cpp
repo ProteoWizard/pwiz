@@ -125,9 +125,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
         spectrum.set(MS_MSn_spectrum);
         spectrum.set(MS_ms_level, 2);
-        spectrum.spectrumDescription.set(MS_centroid_mass_spectrum);
-        spectrum.spectrumDescription.precursors.push_back(Precursor());
-        Precursor& precursor = spectrum.spectrumDescription.precursors.back();
+        spectrum.set(MS_centroid_mass_spectrum);
+        spectrum.precursors.push_back(Precursor());
+        Precursor& precursor = spectrum.precursors.back();
         precursor.selectedIons.push_back(SelectedIon());
         SelectedIon& selectedIon = precursor.selectedIons.back();
 
@@ -202,7 +202,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 bal::trim(value);
                                 // TODO: handle (multiple) time ranges?
                                 double scanTime = lexical_cast<double>(value);
-                                spectrum.spectrumDescription.scan.set(MS_scan_time, scanTime, UO_second);
+                                spectrum.scanList.scans.push_back(Scan());
+                                spectrum.scanList.scans.back().set(MS_scan_time, scanTime, UO_second);
                             }
                             else
 				            {
@@ -249,9 +250,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             }
         }
 
-        spectrum.spectrumDescription.set(MS_total_ion_current, tic);
-        spectrum.spectrumDescription.set(MS_base_peak_m_z, basePeakMZ);
-        spectrum.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity);
+        spectrum.set(MS_total_ion_current, tic);
+        spectrum.set(MS_base_peak_m_z, basePeakMZ);
+        spectrum.set(MS_base_peak_intensity, basePeakIntensity);
     }
 
     void createIndex()

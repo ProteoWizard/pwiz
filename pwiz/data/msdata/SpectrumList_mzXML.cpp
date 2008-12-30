@@ -316,7 +316,8 @@ class HandlerScan : public SAXParser::Handler
             peaksCount_ = lexical_cast<unsigned int>(peaksCount);
             spectrum_.defaultArrayLength = peaksCount_;
 
-            Scan& scan = spectrum_.spectrumDescription.scan;
+            spectrum_.scanList.scans.push_back(Scan());
+            Scan& scan = spectrum_.scanList.scans.back();
 
             scan.set(MS_preset_scan_configuration, scanEvent);
 
@@ -358,11 +359,11 @@ class HandlerScan : public SAXParser::Handler
             }
 
             // assume centroid if not specified
-            if (!spectrum_.spectrumDescription.hasCVParam(MS_centroid_mass_spectrum) &&
+            if (!spectrum_.hasCVParam(MS_centroid_mass_spectrum) &&
                 centroided == "1")
-                spectrum_.spectrumDescription.set(MS_centroid_mass_spectrum);
+                spectrum_.set(MS_centroid_mass_spectrum);
             else
-                spectrum_.spectrumDescription.set(MS_profile_mass_spectrum);
+                spectrum_.set(MS_profile_mass_spectrum);
 
             collisionEnergy_ = collisionEnergy;
 
@@ -388,22 +389,22 @@ class HandlerScan : public SAXParser::Handler
                     ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
             
             if (!lowMz.empty())
-                spectrum_.spectrumDescription.set(MS_lowest_m_z_value, lowMz);
+                spectrum_.set(MS_lowest_m_z_value, lowMz);
             if (!highMz.empty())
-                spectrum_.spectrumDescription.set(MS_highest_m_z_value, highMz);
+                spectrum_.set(MS_highest_m_z_value, highMz);
             if (!basePeakMz.empty())
-                spectrum_.spectrumDescription.set(MS_base_peak_m_z, basePeakMz);
+                spectrum_.set(MS_base_peak_m_z, basePeakMz);
             if (!basePeakIntensity.empty())
-                spectrum_.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity);
+                spectrum_.set(MS_base_peak_intensity, basePeakIntensity);
             if (!totIonCurrent.empty()) 
-                spectrum_.spectrumDescription.set(MS_total_ion_current, totIonCurrent);
+                spectrum_.set(MS_total_ion_current, totIonCurrent);
 
             return Status::Ok;
         }
         else if (name == "precursorMz")
         {
-            spectrum_.spectrumDescription.precursors.push_back(Precursor());
-            Precursor& precursor = spectrum_.spectrumDescription.precursors.back();
+            spectrum_.precursors.push_back(Precursor());
+            Precursor& precursor = spectrum_.precursors.back();
             if (!collisionEnergy_.empty())
                 precursor.activation.set(MS_collision_energy, collisionEnergy_);
             handlerPrecursor_.precursor = &precursor; 
@@ -422,22 +423,15 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "scanOrigin")
         {
-            AcquisitionList& al = spectrum_.spectrumDescription.acquisitionList;
-            Acquisition a;
             string num, parentFileID;
             getAttribute(attributes, "num", num);
             getAttribute(attributes, "parentFileID", parentFileID);
-            a.number = lexical_cast<int>(num);
-            if (parentFileID.empty()) // local spectrumRef
-            {
-                a.spectrumID = num;
-            }
-            else
-            {
-                a.sourceFilePtr = SourceFilePtr(new SourceFile(parentFileID));
-                a.externalNativeID = num;
-            }
-            al.acquisitions.push_back(a);
+
+            Scan s;
+            s.userParams.push_back(UserParam("num", num));
+            s.userParams.push_back(UserParam("parentFileID", parentFileID));
+            spectrum_.scanList.scans.push_back(s);
+
             return Status::Ok;
         }
 
@@ -474,7 +468,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
 
     // if file-level dataProcessing says the file is centroid, ignore the centroided attribute
     if (msd_.fileDescription.fileContent.hasCVParam(MS_centroid_mass_spectrum))
-        result->spectrumDescription.set(MS_centroid_mass_spectrum);
+        result->set(MS_centroid_mass_spectrum);
 
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);
@@ -482,24 +476,16 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     // hack to get parent scanNumber if precursorScanNum wasn't set
 
     if (result->cvParam(MS_ms_level).valueAs<int>() > 1 &&
-        !result->spectrumDescription.precursors.empty() &&
-        result->spectrumDescription.precursors.front().spectrumID.empty())
+        !result->precursors.empty() &&
+        result->precursors.front().spectrumID.empty())
     {
         // MCC: I see your hack and I raise you a hack!
         // * precursorScanNum is optional
         // * the precursor scan is not necessarily in the mzXML
-        if (result->spectrumDescription.precursors.front().spectrumID == "0")
-            result->spectrumDescription.precursors.front().spectrumID.clear();
+        if (result->precursors.front().spectrumID == "0")
+            result->precursors.front().spectrumID.clear();
         else
-            result->spectrumDescription.precursors.front().spectrumID = getPrecursorID(index);
-    }
-
-    // we can set instrumentPtr if it wasn't set and there is a single Instrument 
-
-    if (!result->spectrumDescription.scan.instrumentConfigurationPtr.get() &&
-        msd_.instrumentConfigurationPtrs.size() == 1)
-    {
-        result->spectrumDescription.scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs[0];
+            result->precursors.front().spectrumID = getPrecursorID(index);
     }
 
     // resolve any references into the MSData object

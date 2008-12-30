@@ -126,12 +126,12 @@ void test()
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
         s->setMZIntensityArrays(inputMZArray, inputIntensityArray);
 
-        s->spectrumDescription.precursors.push_back(Precursor(t.inputPrecursorMZ));
+        s->precursors.push_back(Precursor(t.inputPrecursorMZ));
         vector<double> inputChargeStateArray = parseDoubleArray(t.inputChargeStateArray);
         CVID inputChargeStateTerm = inputChargeStateArray.size() > 1 ? MS_possible_charge_state : MS_charge_state;
         BOOST_FOREACH(int z, inputChargeStateArray)
         {
-            s->spectrumDescription.precursors[0].selectedIons[0].cvParams.push_back(CVParam(inputChargeStateTerm, z));
+            s->precursors[0].selectedIons[0].cvParams.push_back(CVParam(inputChargeStateTerm, z));
         }
 
         SpectrumListPtr calculator(new SpectrumList_ChargeStateCalculator(
@@ -145,7 +145,7 @@ void test()
         CVID outputChargeStateTerm = outputChargeStateArray.size() > 1 ? MS_possible_charge_state : MS_charge_state;
 
         SpectrumPtr calculatedSpectrum = calculator->spectrum(0, true);
-        BOOST_FOREACH(CVParam cvParam, s->spectrumDescription.precursors[0].selectedIons[0].cvParams)
+        BOOST_FOREACH(CVParam cvParam, s->precursors[0].selectedIons[0].cvParams)
         {
             if (cvParam.cvid != MS_charge_state && cvParam.cvid != MS_possible_charge_state)
                 continue;

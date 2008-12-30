@@ -90,13 +90,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
         return s;
 
     // return precursorless MS/MS as-is
-    if (s->spectrumDescription.precursors.empty() ||
-        s->spectrumDescription.precursors[0].selectedIons.empty())
+    if (s->precursors.empty() ||
+        s->precursors[0].selectedIons.empty())
         return s;
 
     // use first selected ion in first precursor
     // TODO: how to deal with multiple precursors and/or selected ions?
-    SelectedIon& selectedIon = s->spectrumDescription.precursors[0].selectedIons[0];
+    SelectedIon& selectedIon = s->precursors[0].selectedIons[0];
 
     // if overriding, erase any existing charge-state-related CV params;
     // otherwise:

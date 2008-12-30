@@ -191,7 +191,9 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet::SpectrumList_FilterPred
 
 PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanEventSet::accept(const msdata::Spectrum& spectrum) const
 {
-    CVParam param = spectrum.spectrumDescription.scan.cvParam(MS_preset_scan_configuration);
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+    CVParam param = scan.cvParam(MS_preset_scan_configuration);
     if (param.cvid == CVID_Unknown) return false;
     int scanEvent = lexical_cast<int>(param.value);
     bool result = scanEventSet_.contains(scanEvent);

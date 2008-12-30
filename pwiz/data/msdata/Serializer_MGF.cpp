@@ -68,14 +68,14 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             os << "BEGIN IONS\n";
             os << "TITLE=" << s->nativeID << '\n';
 
-            CVParam scanTimeParam = s->spectrumDescription.cvParam(MS_scan_time);
+            CVParam scanTimeParam = s->cvParam(MS_scan_time);
             if (!scanTimeParam.empty())
                 os << "RTINSECONDS=" << scanTimeParam.value << '\n';
 
-            if (!s->spectrumDescription.precursors.empty() &&
-                !s->spectrumDescription.precursors[0].selectedIons.empty())
+            if (!s->precursors.empty() &&
+                !s->precursors[0].selectedIons.empty())
             {
-                const SelectedIon& si = s->spectrumDescription.precursors[0].selectedIons[0];
+                const SelectedIon& si = s->precursors[0].selectedIons[0];
                 os << "PEPMASS=" << si.cvParam(MS_m_z).value << '\n';
 
                 CVParam chargeParam = si.cvParam(MS_charge_state);

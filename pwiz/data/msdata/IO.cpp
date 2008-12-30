@@ -973,7 +973,7 @@ struct HandlerDataProcessing : public HandlerParamContainer
             getAttribute(attributes, "softwareRef", softwareRef);
             if (!softwareRef.empty())
             {
-                cerr << "[IO::HandlerDataProcessing] Warning - mzML 1.0: dataProcessing::softwareRef\n";
+                cerr << "[IO::HandlerDataProcessing] Warning - mzML 1.0: <dataProcessing>::softwareRef\n";
                 handlerProcessingMethod_.defaultSoftwareRef = softwareRef;
             }
 
@@ -1113,149 +1113,6 @@ struct HandlerScanSettings : public HandlerParamContainer
 PWIZ_API_DECL void read(std::istream& is, ScanSettings& scanSettings)
 {
     HandlerScanSettings handler(&scanSettings);
-    SAXParser::parse(is, handler);
-}
-
-
-//
-// Acquisition
-//
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Acquisition& acquisition)
-{
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("number", lexical_cast<string>(acquisition.number)));
-
-    if (acquisition.spectrumID.empty())
-    {
-        if (acquisition.externalNativeID.empty() && acquisition.externalSpectrumID.empty())
-            throw runtime_error("[IO::write] Acquisition elements must have a spectrum reference");
-        if (!acquisition.sourceFilePtr.get())
-            throw runtime_error("[IO::write] External spectrum references must refer to a source file");
-
-        attributes.push_back(make_pair("sourceFileRef", acquisition.sourceFilePtr->id)); 
-        if (acquisition.externalNativeID.empty())
-            attributes.push_back(make_pair("externalSpectrumID", acquisition.externalSpectrumID)); 
-        else
-            attributes.push_back(make_pair("externalNativeID", acquisition.externalNativeID)); 
-    }
-    else
-        attributes.push_back(make_pair("spectrumRef", acquisition.spectrumID));
-
-    writer.startElement("acquisition", attributes);
-
-    writeParamContainer(writer, acquisition);
-    
-    writer.endElement();
-}
-
-    
-struct HandlerAcquisition : public HandlerParamContainer
-{
-    Acquisition* acquisition;
-
-    HandlerAcquisition(Acquisition* _acquisition = 0)
-    :   acquisition(_acquisition)
-    {}
-
-    virtual Status startElement(const string& name, 
-                                const Attributes& attributes,
-                                stream_offset position)
-    {
-        if (!acquisition)
-            throw runtime_error("[IO::HandlerAcquisition] Null acquisition.");
-
-        if (name == "acquisition")
-        {
-            getAttribute(attributes, "number", acquisition->number);
-            getAttribute(attributes, "spectrumRef", acquisition->spectrumID);
-            getAttribute(attributes, "externalSpectrumID", acquisition->externalSpectrumID);
-            getAttribute(attributes, "externalNativeID", acquisition->externalNativeID);
-
-            // note: placeholder
-            string sourceFileRef;
-            getAttribute(attributes, "sourceFileRef", sourceFileRef);
-            if (!sourceFileRef.empty())
-                acquisition->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
-
-            return Status::Ok;
-        }
-
-        HandlerParamContainer::paramContainer = acquisition;
-        return HandlerParamContainer::startElement(name, attributes, position);
-    }
-
-    private:
-    HandlerProcessingMethod handlerProcessingMethod_;
-};
-
-
-PWIZ_API_DECL void read(std::istream& is, Acquisition& acquisition)
-{
-    HandlerAcquisition handler(&acquisition);
-    SAXParser::parse(is, handler);
-}
-
-
-//
-// AcquisitionList
-//
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionList& acquisitionList)
-{
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(acquisitionList.acquisitions.size())));
-    writer.startElement("acquisitionList", attributes);
-    writeParamContainer(writer, acquisitionList);
-    
-    for (vector<Acquisition>::const_iterator it=acquisitionList.acquisitions.begin(); 
-         it!=acquisitionList.acquisitions.end(); ++it)
-         write(writer, *it);
-    
-    writer.endElement();
-}
-
-    
-struct HandlerAcquisitionList : public HandlerParamContainer
-{
-    AcquisitionList* acquisitionList;
-
-    HandlerAcquisitionList(AcquisitionList* _acquisitionList = 0)
-    :   acquisitionList(_acquisitionList)
-    {}
-
-    virtual Status startElement(const string& name, 
-                                const Attributes& attributes,
-                                stream_offset position)
-    {
-        if (!acquisitionList)
-            throw runtime_error("[IO::HandlerAcquisitionList] Null acquisitionList.");
-
-        if (name == "acquisitionList")
-        {
-            return Status::Ok;
-        }
-        else if (name == "acquisition")
-        {
-            acquisitionList->acquisitions.push_back(Acquisition());
-            handlerAcquisition_.acquisition = &acquisitionList->acquisitions.back(); 
-            return Status(Status::Delegate, &handlerAcquisition_);
-        }
-
-        HandlerParamContainer::paramContainer = acquisitionList;
-        return HandlerParamContainer::startElement(name, attributes, position);
-    }
-
-    private:
-    HandlerAcquisition handlerAcquisition_;
-};
-
-
-PWIZ_API_DECL void read(std::istream& is, AcquisitionList& acquisitionList)
-{
-    HandlerAcquisitionList handler(&acquisitionList);
     SAXParser::parse(is, handler);
 }
 
@@ -1554,92 +1411,63 @@ PWIZ_API_DECL void read(std::istream& is, Scan& scan)
 
 
 //
-// SpectrumDescription
+// ScanList
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumDescription& spectrumDescription)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList)
 {
-    writer.startElement("spectrumDescription");
-    writeParamContainer(writer, spectrumDescription);
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("count", lexical_cast<string>(scanList.scans.size())));
+    writer.startElement("scanList", attributes);
+    writeParamContainer(writer, scanList);
     
-    if (!spectrumDescription.acquisitionList.empty())
-        write(writer, spectrumDescription.acquisitionList);
-
-    if (!spectrumDescription.precursors.empty())
-    {
-        XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(spectrumDescription.precursors.size())));
-        writer.startElement("precursorList", attributes);
-        
-        for (vector<Precursor>::const_iterator it=spectrumDescription.precursors.begin(); 
-             it!=spectrumDescription.precursors.end(); ++it)
-             write(writer, *it);
-     
-        writer.endElement();
-    }
-
-    if (!spectrumDescription.scan.empty())
-        write(writer, spectrumDescription.scan);
-
+    for (vector<Scan>::const_iterator it=scanList.scans.begin(); 
+         it!=scanList.scans.end(); ++it)
+         write(writer, *it);
+    
     writer.endElement();
 }
 
     
-struct HandlerSpectrumDescription : public HandlerParamContainer
+struct HandlerScanList : public HandlerParamContainer
 {
-    SpectrumDescription* spectrumDescription;
+    ScanList* scanList;
 
-    HandlerSpectrumDescription(SpectrumDescription* _spectrumDescription = 0)
-    :   spectrumDescription(_spectrumDescription)
+    HandlerScanList(ScanList* _scanList = 0)
+    :   scanList(_scanList)
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!spectrumDescription)
-            throw runtime_error("[IO::HandlerSpectrumDescription] Null spectrumDescription.");
+        if (!scanList)
+            throw runtime_error("[IO::HandlerScanList] Null scanList.");
 
-        if (name == "spectrumDescription")
+        if (name == "scanList")
         {
             return Status::Ok;
-        }
-        else if (name == "acquisitionList")
-        {
-            handlerAcquisitionList_.acquisitionList = &spectrumDescription->acquisitionList;
-            return Status(Status::Delegate, &handlerAcquisitionList_);
-        }
-        else if (name == "precursorList")
-        {
-            return Status::Ok;
-        }
-        else if (name == "precursor")
-        {
-            spectrumDescription->precursors.push_back(Precursor());
-            handlerPrecursor_.precursor = &spectrumDescription->precursors.back();
-            return Status(Status::Delegate, &handlerPrecursor_);
         }
         else if (name == "scan")
         {
-            handlerScan_.scan = &spectrumDescription->scan;
+            scanList->scans.push_back(Scan());
+            handlerScan_.scan = &scanList->scans.back(); 
             return Status(Status::Delegate, &handlerScan_);
         }
 
-        HandlerParamContainer::paramContainer = spectrumDescription;
+        HandlerParamContainer::paramContainer = scanList;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
     private:
-    HandlerAcquisitionList handlerAcquisitionList_;
-    HandlerPrecursor handlerPrecursor_;
     HandlerScan handlerScan_;
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, SpectrumDescription& spectrumDescription)
+PWIZ_API_DECL void read(std::istream& is, ScanList& scanList)
 {
-    HandlerSpectrumDescription handler(&spectrumDescription);
+    HandlerScanList handler(&scanList);
     SAXParser::parse(is, handler);
 }
 
@@ -1862,8 +1690,23 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
     writer.startElement("spectrum", attributes);
 
     writeParamContainer(writer, spectrum);
-    write(writer, spectrum.spectrumDescription);
-    
+
+    if (!spectrum.scanList.empty())
+        write(writer, spectrum.scanList);
+
+    if (!spectrum.precursors.empty())
+    {
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.precursors.size())));
+        writer.startElement("precursorList", attributes);
+        
+        for (vector<Precursor>::const_iterator it=spectrum.precursors.begin(); 
+             it!=spectrum.precursors.end(); ++it)
+             write(writer, *it);
+     
+        writer.endElement();
+    }
+   
     if (!spectrum.binaryDataArrayPtrs.empty())
     {
         attributes.clear();
@@ -1923,10 +1766,20 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             return Status::Ok;
         }
-        else if (name == "spectrumDescription")
+        else if (name == "scanList")
         {
-            handlerSpectrumDescription_.spectrumDescription = &spectrum->spectrumDescription;
-            return Status(Status::Delegate, &handlerSpectrumDescription_);
+            handlerScanList_.scanList = &spectrum->scanList;
+            return Status(Status::Delegate, &handlerScanList_);
+        }
+        else if (name == "precursorList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "precursor")
+        {
+            spectrum->precursors.push_back(Precursor());
+            handlerPrecursor_.precursor = &spectrum->precursors.back();
+            return Status(Status::Delegate, &handlerPrecursor_);
         }
         else if (name == "binaryDataArray")
         {
@@ -1942,14 +1795,28 @@ struct HandlerSpectrum : public HandlerParamContainer
         {
             return Status::Ok;
         }
+        else if (name == "spectrumDescription") // mzML 1.0
+        {
+            cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrumDescription>\n";
+            return Status::Ok;
+        }
+        else if (name == "scan") // mzML 1.0
+        {
+            cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>/<scan>\n";
+            spectrum->scanList.scans.push_back(Scan());
+            handlerScan_.scan = &spectrum->scanList.scans.back();
+            return Status(Status::Delegate, &handlerScan_);
+        }
 
         HandlerParamContainer::paramContainer = spectrum;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
     private:
-    HandlerSpectrumDescription handlerSpectrumDescription_;
+    HandlerScanList handlerScanList_;
+    HandlerPrecursor handlerPrecursor_;
     HandlerBinaryDataArray handlerBinaryDataArray_;
+    HandlerScan handlerScan_;
 };
 
 

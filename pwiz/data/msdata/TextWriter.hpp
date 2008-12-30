@@ -390,8 +390,10 @@ class PWIZ_API_DECL TextWriter
             ("defaultArrayLength: " + boost::lexical_cast<std::string>(spectrum.defaultArrayLength))
             (spectrum.dataProcessingPtr)
             (static_cast<const ParamContainer&>(spectrum));
-        if (!spectrum.spectrumDescription.empty())
-            child()(spectrum.spectrumDescription);
+        if (!spectrum.scanList.empty())
+            child()(spectrum.scanList);
+        if (!spectrum.precursors.empty())
+            child()("precursorList: ", spectrum.precursors);
         for_each(spectrum.binaryDataArrayPtrs.begin(), spectrum.binaryDataArrayPtrs.end(), child()); 
         return *this;
     }
@@ -407,23 +409,6 @@ class PWIZ_API_DECL TextWriter
             (chromatogram.dataProcessingPtr)
             (static_cast<const ParamContainer&>(chromatogram));
         for_each(chromatogram.binaryDataArrayPtrs.begin(), chromatogram.binaryDataArrayPtrs.end(), child()); 
-        return *this;
-    }
-
-    TextWriter& operator()(const SpectrumDescription& spectrumDescription)
-    {
-        (*this)("spectrumDescription:");
-        child()(static_cast<const ParamContainer&>(spectrumDescription));
-
-        if (!spectrumDescription.acquisitionList.empty())
-            child()(spectrumDescription.acquisitionList);
-
-        if (!spectrumDescription.precursors.empty())
-            child()("precursorList: ", spectrumDescription.precursors);
-
-        if (!spectrumDescription.scan.empty())
-            child()(spectrumDescription.scan);
-
         return *this;
     }
 
@@ -498,23 +483,11 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const Acquisition& acquisition)
+    TextWriter& operator()(const ScanList& scanList)
     {
-        (*this)("acquisition:");
-        child()
-            ("number: " + boost::lexical_cast<std::string>(acquisition.number));
-        if (acquisition.sourceFilePtr.get())
-            child()("sourceFileRef: " + acquisition.sourceFilePtr->id);
-        if (!acquisition.spectrumID.empty())
-            child()("spectrumRef: " + acquisition.spectrumID);
-        child()
-            (static_cast<const ParamContainer&>(acquisition));
-        return *this;
-    }
-
-    TextWriter& operator()(const AcquisitionList& acquisitionList)
-    {
-        (*this)("acquisitionList:", acquisitionList.acquisitions);
+        (*this)
+            (static_cast<const ParamContainer&>(scanList))
+            ("scanList:", scanList.scans);
         return *this;
     }
 

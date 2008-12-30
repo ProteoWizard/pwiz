@@ -152,8 +152,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
         result->spotID = (format("%dx%d") % laserAimX % laserAimY).str();
     }
 
-    SpectrumDescription& sd = result->spectrumDescription;
-    Scan& scan = sd.scan;
+    Scan dummy;
+    Scan& scan = result->scanList.scans.empty() ? dummy : result->scanList.scans[0];
 
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
@@ -173,13 +173,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     //else sd.cvParams.push_back(MS_centroid_mass_spectrum); 
 
     if (pScanStats_->Continuum > 0)
-        sd.set(MS_profile_mass_spectrum);
+        result->set(MS_profile_mass_spectrum);
     else
-        sd.set(MS_centroid_mass_spectrum);
+        result->set(MS_centroid_mass_spectrum);
 
-    sd.set(MS_base_peak_m_z, pScanStats_->BPM);
-    sd.set(MS_base_peak_intensity, pScanStats_->BPI);
-    sd.set(MS_total_ion_current, pScanStats_->TIC);
+    result->set(MS_base_peak_m_z, pScanStats_->BPM);
+    result->set(MS_base_peak_intensity, pScanStats_->BPI);
+    result->set(MS_total_ion_current, pScanStats_->TIC);
 
     // TODO: get correct values
     scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass));
@@ -205,7 +205,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
         precursor.activation.set(MS_collision_energy, pExScanStats_->CollisionEnergy);
 
         precursor.selectedIons.push_back(selectedIon);
-        sd.precursors.push_back(precursor);
+        result->precursors.push_back(precursor);
     }
 
     long numPeaks = pScanStats_->PeaksInScan;

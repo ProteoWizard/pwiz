@@ -51,7 +51,8 @@ SpectrumListPtr createSpectrumList()
         vector<MZIntensityPair> pairs(i);
         spectrum->setMZIntensityPairs(pairs);
         spectrum->set(MS_ms_level, i%3==0?1:2);
-        spectrum->spectrumDescription.scan.set(MS_preset_scan_configuration, i%4);
+        spectrum->scanList.scans.push_back(Scan());
+        spectrum->scanList.scans[0].set(MS_preset_scan_configuration, i%4);
         sl->spectra.push_back(spectrum);
     }
 
@@ -65,7 +66,7 @@ SpectrumListPtr createSpectrumList()
             *os_ << spectrum->index << " " 
                  << spectrum->nativeID << " "
                  << "ms" << spectrum->cvParam(MS_ms_level).value << " "
-                 << "scanEvent:" << spectrum->spectrumDescription.scan.cvParam(MS_preset_scan_configuration).value << " "
+                 << "scanEvent:" << spectrum->scanList.scans[0].cvParam(MS_preset_scan_configuration).value << " "
                  << endl;
         }
 

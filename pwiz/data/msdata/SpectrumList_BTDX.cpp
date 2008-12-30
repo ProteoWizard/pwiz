@@ -163,9 +163,9 @@ class HandlerPeaks : public SAXParser::Handler
     {
         if (name == "ms_peaks")
         {
-            spectrum_.spectrumDescription.set(MS_TIC, totalIntensity_);
-            spectrum_.spectrumDescription.set(MS_base_peak_m_z, basePeakMz_);
-            spectrum_.spectrumDescription.set(MS_base_peak_intensity, basePeakIntensity_);
+            spectrum_.set(MS_TIC, totalIntensity_);
+            spectrum_.set(MS_base_peak_m_z, basePeakMz_);
+            spectrum_.set(MS_base_peak_intensity, basePeakIntensity_);
             return Status::Done;
         }
         return Status::Ok;
@@ -217,7 +217,8 @@ class HandlerCompound : public SAXParser::Handler
                     rtUnits = UO_minute;
                 else if (rt_unit == "h")
                     rtUnits = UO_hour;
-                spectrum_.spectrumDescription.scan.set(MS_scan_time, rt, rtUnits);
+                spectrum_.scanList.scans.push_back(Scan());
+                spectrum_.scanList.scans.back().set(MS_scan_time, rt, rtUnits);
             }
 
             return Status::Ok;
@@ -246,9 +247,9 @@ class HandlerCompound : public SAXParser::Handler
             //double snValue = lexical_cast<double>(sn);
             int zValue = lexical_cast<int>(z);
 
-            spectrum_.spectrumDescription.precursors.push_back(
+            spectrum_.precursors.push_back(
                 Precursor(mzValue, iValue, zValue));
-            // TODO: support sn: spectrum_.spectrumDescription.precursors.back().set(MS_signal_to_noise, sn);
+            // TODO: support sn: spectrum_.precursors.back().set(MS_signal_to_noise, sn);
             return Status::Ok;
         }
         else if (name == "ms_spectrum")
@@ -299,7 +300,7 @@ SpectrumPtr SpectrumList_BTDXImpl::spectrum(size_t index, bool getBinaryData) co
 
     result->index = index;
     result->set(MS_MSn_spectrum);
-    result->spectrumDescription.set(MS_centroid_mass_spectrum);
+    result->set(MS_centroid_mass_spectrum);
 
     is_->seekg(offset_to_position(index_[index].sourceFilePosition));
     if (!*is_)

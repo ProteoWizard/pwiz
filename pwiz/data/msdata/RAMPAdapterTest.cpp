@@ -200,6 +200,12 @@ void test(const string& filename)
         copy(begin, begin+10, ostream_iterator<MZIntensityPair>(*os_, "\n"));
         *os_ << endl;
     }
+    
+    // last scan
+
+    ScanHeaderStruct header4;
+    adapter.getScanHeader(3, header4);
+    if (os_) *os_ << header4;
 
     // RunHeader
 
@@ -211,7 +217,7 @@ void test(const string& filename)
     unit_assert(runHeader.startMZ == 0);
     unit_assert(runHeader.endMZ == 0);
     unit_assert_equal(runHeader.dStartTime, header1.retentionTime, 1e-6);
-    unit_assert_equal(runHeader.dEndTime, header2.retentionTime, 1e-6);
+    unit_assert_equal(runHeader.dEndTime, header4.retentionTime, 1e-6);
 
     if (os_)
         *os_ << "RunHeader:\n" << runHeader << endl;

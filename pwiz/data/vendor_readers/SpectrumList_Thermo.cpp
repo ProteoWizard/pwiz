@@ -122,8 +122,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
     }
 
-    SpectrumDescription& sd = result->spectrumDescription;
-    Scan& scan = sd.scan;
+    Scan dummy;
+    Scan& scan = result->scanList.scans.empty() ? dummy : result->scanList.scans[0];
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -152,18 +152,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     if (scanInfo->isProfileScan() && !doCentroid)
     {
-        sd.set(MS_profile_mass_spectrum);
+        result->set(MS_profile_mass_spectrum);
     }
     else
     {
-        sd.set(MS_centroid_mass_spectrum); 
+        result->set(MS_centroid_mass_spectrum); 
         doCentroid = scanInfo->isProfileScan();
     }
 
     scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
-    sd.set(MS_base_peak_m_z, scanInfo->basePeakMass());
-    sd.set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
-    sd.set(MS_total_ion_current, scanInfo->totalIonCurrent());
+    result->set(MS_base_peak_m_z, scanInfo->basePeakMass());
+    result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+    result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
     try
     {
@@ -220,7 +220,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i));
 
         precursor.selectedIons.push_back(selectedIon);
-        sd.precursors.push_back(precursor);
+        result->precursors.push_back(precursor);
     }
 
     MassListPtr massList;
@@ -241,8 +241,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     if (massList->size() > 0)
     {
-        sd.set(MS_lowest_m_z_value, massList->data()[0].mass);
-        sd.set(MS_highest_m_z_value, massList->data()[massList->size()-1].mass);
+        result->set(MS_lowest_m_z_value, massList->data()[0].mass);
+        result->set(MS_highest_m_z_value, massList->data()[massList->size()-1].mass);
     }
 
     if (getBinaryData)

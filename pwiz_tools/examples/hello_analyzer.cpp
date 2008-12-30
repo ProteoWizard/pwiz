@@ -48,10 +48,13 @@ class HelloAnalyzer : public MSDataAnalyzer
     virtual void update(const DataInfo& dataInfo, 
                         const Spectrum& spectrum) 
     {
+        Scan dummy;
+        const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+
         cout << "spectrum: " << spectrum.index << " " 
                              << spectrum.id << " "
                              << "ms" << spectrum.cvParam(MS_ms_level).value << " "
-                             << spectrum.spectrumDescription.scan.cvParam(MS_filter_string).value
+                             << scan.cvParam(MS_filter_string).value
                              << endl;
     }
 

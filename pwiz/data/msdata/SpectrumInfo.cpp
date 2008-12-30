@@ -73,33 +73,34 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
     *this = SpectrumInfo();
     clearBinaryData();
 
-    const SpectrumDescription& sd = spectrum.spectrumDescription;
-
     id = spectrum.id;
     nativeID = spectrum.nativeID;
     index = spectrum.index;
     scanNumber = nativeIDToScanNumber(spectrum.nativeID);
 
-    massAnalyzerType = sd.scan.instrumentConfigurationPtr.get() ? 
-                       sd.scan.instrumentConfigurationPtr->componentList.analyzer(0)
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+
+    massAnalyzerType = scan.instrumentConfigurationPtr.get() ? 
+                       scan.instrumentConfigurationPtr->componentList.analyzer(0)
                            .cvParamChild(MS_mass_analyzer_type).cvid :
                        CVID_Unknown;
 
-    scanEvent = sd.scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
+    scanEvent = scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
-    retentionTime = sd.scan.cvParam(MS_scan_time).timeInSeconds();
-    filterString = sd.scan.cvParam(MS_filter_string).value;
-    mzLow = sd.cvParam(MS_lowest_m_z_value).valueAs<double>();        
-    mzHigh = sd.cvParam(MS_highest_m_z_value).valueAs<double>();        
-    basePeakMZ = sd.cvParam(MS_base_peak_m_z).valueAs<double>();    
-    basePeakIntensity = sd.cvParam(MS_base_peak_intensity).valueAs<double>();    
-    totalIonCurrent = sd.cvParam(MS_total_ion_current).valueAs<double>();
+    retentionTime = scan.cvParam(MS_scan_time).timeInSeconds();
+    filterString = scan.cvParam(MS_filter_string).value;
+    mzLow = spectrum.cvParam(MS_lowest_m_z_value).valueAs<double>();        
+    mzHigh = spectrum.cvParam(MS_highest_m_z_value).valueAs<double>();        
+    basePeakMZ = spectrum.cvParam(MS_base_peak_m_z).valueAs<double>();    
+    basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).valueAs<double>();    
+    totalIonCurrent = spectrum.cvParam(MS_total_ion_current).valueAs<double>();
 
-    UserParam userParamMonoisotopicMZ = sd.scan.userParam("[Thermo Trailer Extra]Monoisotopic M/Z:");
+    UserParam userParamMonoisotopicMZ = scan.userParam("[Thermo Trailer Extra]Monoisotopic M/Z:");
     if (!userParamMonoisotopicMZ.name.empty())
         thermoMonoisotopicMZ = userParamMonoisotopicMZ.valueAs<double>();        
  
-    for (vector<Precursor>::const_iterator it=sd.precursors.begin(); it!=sd.precursors.end(); ++it)
+    for (vector<Precursor>::const_iterator it=spectrum.precursors.begin(); it!=spectrum.precursors.end(); ++it)
     {
         PrecursorInfo precursorInfo;
         precursorInfo.index = 0; // TODO

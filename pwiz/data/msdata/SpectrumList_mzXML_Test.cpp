@@ -107,10 +107,12 @@ void test(bool indexed)
     unit_assert(s->nativeID == "19");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
-    unit_assert(s->spectrumDescription.scan.hasCVParam(MS_positive_scan));
-    unit_assert(s->spectrumDescription.scan.hasCVParam(MS_scan_time));
-    unit_assert(s->spectrumDescription.scan.cvParam(MS_preset_scan_configuration).valueAs<int>() == 3);
-    unit_assert(s->spectrumDescription.cvParam(MS_base_peak_intensity).value == "120053");
+    unit_assert(s->scanList.scans.size() == 1);
+    Scan& scan = s->scanList.scans[0];
+    unit_assert(scan.hasCVParam(MS_positive_scan));
+    unit_assert(scan.hasCVParam(MS_scan_time));
+    unit_assert(scan.cvParam(MS_preset_scan_configuration).valueAs<int>() == 3);
+    unit_assert(s->cvParam(MS_base_peak_intensity).value == "120053");
     unit_assert(s->defaultArrayLength == 15);
     unit_assert(s->binaryDataArrayPtrs.size() == 2);
     unit_assert(s->binaryDataArrayPtrs[0]->hasCVParam(MS_m_z_array));
@@ -136,8 +138,8 @@ void test(bool indexed)
     for (int i=0; i<15; i++)
         unit_assert(pairs[i].mz==i && pairs[i].intensity==15-i);
 
-    unit_assert(s->spectrumDescription.scan.instrumentConfigurationPtr.get());
-    InstrumentConfiguration& instrumentConfiguration = *s->spectrumDescription.scan.instrumentConfigurationPtr;
+    unit_assert(scan.instrumentConfigurationPtr.get());
+    InstrumentConfiguration& instrumentConfiguration = *scan.instrumentConfigurationPtr;
     unit_assert(!instrumentConfiguration.cvParams.empty()); // references resolved
     unit_assert(instrumentConfiguration.userParams.size() == 1 &&
                 instrumentConfiguration.userParams[0].name == "doobie");
@@ -155,10 +157,13 @@ void test(bool indexed)
     unit_assert(s->nativeID == "20");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
-    unit_assert(s->spectrumDescription.scan.cvParam(MS_preset_scan_configuration).valueAs<int>() == 4);
 
-    unit_assert(s->spectrumDescription.precursors.size() == 1);
-    Precursor& precursor = s->spectrumDescription.precursors[0];
+    unit_assert(s->scanList.scans.size() == 1);
+    Scan& scan20 = s->scanList.scans[0];
+    unit_assert(scan20.cvParam(MS_preset_scan_configuration).valueAs<int>() == 4);
+
+    unit_assert(s->precursors.size() == 1);
+    Precursor& precursor = s->precursors[0];
     unit_assert(precursor.selectedIons.size() == 1);
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_m_z));
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_intensity));

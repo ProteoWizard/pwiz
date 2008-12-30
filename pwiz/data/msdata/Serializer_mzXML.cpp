@@ -109,10 +109,12 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
         if (!sl.empty())
         {
             SpectrumPtr spectrum = sl.spectrum(0);
-            startTime = getRetentionTime(spectrum->spectrumDescription.scan);
+            if (!spectrum->scanList.scans.empty())
+                startTime = getRetentionTime(spectrum->scanList.scans[0]);
 
             spectrum = sl.spectrum(sl.size()-1);
-            endTime = getRetentionTime(spectrum->spectrumDescription.scan);
+            if (!spectrum->scanList.scans.empty())
+                endTime = getRetentionTime(spectrum->scanList.scans[0]);
         }
     }
 
@@ -266,13 +268,13 @@ int idToScanNumber(const string& id, const SpectrumListPtr spectrumListPtr)
 }
 
 
-vector<PrecursorInfo> getPrecursorInfo(const SpectrumDescription& sd, 
+vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum, 
                                        const SpectrumListPtr spectrumListPtr)
 {
     vector<PrecursorInfo> result;
 
-    for (vector<Precursor>::const_iterator it=sd.precursors.begin();
-         it!=sd.precursors.end(); ++it)
+    for (vector<Precursor>::const_iterator it=spectrum.precursors.begin();
+         it!=spectrum.precursors.end(); ++it)
     {
         PrecursorInfo info;
         if (!it->spectrumID.empty())
@@ -356,8 +358,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     
     // get info
 
-    const SpectrumDescription description = spectrum.spectrumDescription;
-    const Scan& scan = description.scan;
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
 
     CVParam spectrumTypeParam = spectrum.cvParamChild(MS_spectrum_type);
     CVParam scanTypeParam = scan.cvParamChild(MS_scanning_method);
@@ -397,14 +399,14 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     string msLevel = spectrum.cvParam(MS_ms_level).value;
     string polarity = getPolarity(scan);
     string retentionTime = getRetentionTime(scan);
-    string lowMz = description.cvParam(MS_lowest_m_z_value).value;
-    string highMz = description.cvParam(MS_highest_m_z_value).value;
-    string basePeakMz = description.cvParam(MS_base_peak_m_z).value;
-    string basePeakIntensity = description.cvParam(MS_base_peak_intensity).value;
-    string totIonCurrent = description.cvParam(MS_total_ion_current).value;
-    bool isCentroided = description.hasCVParam(MS_centroid_mass_spectrum);
+    string lowMz = spectrum.cvParam(MS_lowest_m_z_value).value;
+    string highMz = spectrum.cvParam(MS_highest_m_z_value).value;
+    string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
+    string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
+    string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
+    bool isCentroided = spectrum.hasCVParam(MS_centroid_mass_spectrum);
 
-    vector<PrecursorInfo> precursorInfo = getPrecursorInfo(description, spectrumListPtr);
+    vector<PrecursorInfo> precursorInfo = getPrecursorInfo(spectrum, spectrumListPtr);
 
     vector<MZIntensityPair> mzIntensityPairs;
     spectrum.getMZIntensityPairs(mzIntensityPairs);

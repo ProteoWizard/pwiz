@@ -106,12 +106,12 @@ void test()
     unit_assert(s->nativeID == "0");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
-    unit_assert_equal(s->spectrumDescription.cvParam(MS_total_ion_current).valueAs<double>(), 64.992226, 1e-5);
-    unit_assert_equal(s->spectrumDescription.cvParam(MS_base_peak_m_z).valueAs<double>(), 231.38884, 1e-5);
-    unit_assert_equal(s->spectrumDescription.cvParam(MS_base_peak_intensity).valueAs<double>(), 26.545113, 1e-5);
+    unit_assert_equal(s->cvParam(MS_total_ion_current).valueAs<double>(), 64.992226, 1e-5);
+    unit_assert_equal(s->cvParam(MS_base_peak_m_z).valueAs<double>(), 231.38884, 1e-5);
+    unit_assert_equal(s->cvParam(MS_base_peak_intensity).valueAs<double>(), 26.545113, 1e-5);
 
-    unit_assert(s->spectrumDescription.precursors.size() == 1);
-    Precursor& precursor0 = s->spectrumDescription.precursors[0];
+    unit_assert(s->precursors.size() == 1);
+    Precursor& precursor0 = s->precursors[0];
     unit_assert(precursor0.selectedIons.size() == 1);
     unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-5);
 
@@ -150,10 +150,11 @@ void test()
     unit_assert(s->nativeID == "1");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
-    unit_assert_equal(s->spectrumDescription.scan.cvParam(MS_scan_time).timeInSeconds(), 123.456, 1e-5);
+    unit_assert(s->scanList.scans.size() == 1);
+    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_time).timeInSeconds(), 123.456, 1e-5);
 
-    unit_assert(s->spectrumDescription.precursors.size() == 1);
-    Precursor& precursor1 = s->spectrumDescription.precursors[0];
+    unit_assert(s->precursors.size() == 1);
+    Precursor& precursor1 = s->precursors[0];
     unit_assert(precursor1.selectedIons.size() == 1);
     unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_m_z).valueAs<double>(), 837.34, 1e-5);
     unit_assert(precursor1.selectedIons[0].cvParam(MS_charge_state).value == "2");

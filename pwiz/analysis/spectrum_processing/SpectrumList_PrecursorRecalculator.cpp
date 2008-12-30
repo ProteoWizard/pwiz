@@ -133,9 +133,9 @@ namespace{
 PrecursorRecalculator::PrecursorInfo getInitialEstimate(const Spectrum& spectrum)
 {
     PrecursorRecalculator::PrecursorInfo result;
-    if (spectrum.spectrumDescription.precursors.empty()) return result;
+    if (spectrum.precursors.empty()) return result;
 
-    const Precursor& precursor = spectrum.spectrumDescription.precursors[0];
+    const Precursor& precursor = spectrum.precursors[0];
     if (precursor.selectedIons.empty()) return result;
 
     const SelectedIon& selectedIon = precursor.selectedIons[0];
@@ -148,10 +148,10 @@ PrecursorRecalculator::PrecursorInfo getInitialEstimate(const Spectrum& spectrum
 void encodePrecursorInfo(Spectrum& spectrum, 
                          vector<PrecursorRecalculator::PrecursorInfo> precursorInfos)
 {
-    if (spectrum.spectrumDescription.precursors.empty() ||
+    if (spectrum.precursors.empty() ||
         precursorInfos.empty()) return;
 
-    Precursor& precursor = spectrum.spectrumDescription.precursors[0];
+    Precursor& precursor = spectrum.precursors[0];
     precursor.selectedIons.clear();
 
     for (vector<PrecursorRecalculator::PrecursorInfo>::const_iterator it=precursorInfos.begin(), 

@@ -125,8 +125,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     result->id = si.id;
     result->nativeID = si.nativeID;
 
-    SpectrumDescription& sd = result->spectrumDescription;
-    Scan& scan = sd.scan;
+    Scan dummy;
+    Scan& scan = result->scanList.scans.empty() ? dummy : result->scanList.scans[0];
 
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
@@ -274,7 +274,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         SafeArrayDestroyData(isolationModesArray);
 
         if (precursor.selectedIons.size() > 0 || !precursor.isolationWindow.empty())
-            sd.precursors.push_back(precursor);
+            result->precursors.push_back(precursor);
     }
 
     VARIANT pfIntensities;
@@ -285,11 +285,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
     if (getCentroid && numDataPoints > 0)
     {
-        sd.set(MS_centroid_mass_spectrum);
+        result->set(MS_centroid_mass_spectrum);
     }
     else
     {
-        sd.set(MS_profile_mass_spectrum);
+        result->set(MS_profile_mass_spectrum);
         HRESULT hr = SafeArrayDestroyData(pfIntensities.parray);
         hr = SafeArrayDestroyData(pfMasses.parray);
         numDataPoints = pSpectrum->GetMassIntensityValues(EDAL::SpectrumType_Profile, &pfMasses, &pfIntensities);

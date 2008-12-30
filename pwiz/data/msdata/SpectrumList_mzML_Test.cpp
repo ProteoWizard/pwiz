@@ -121,9 +121,11 @@ void test(bool indexed)
     for (int i=0; i<15; i++)
         unit_assert(pairs[i].mz==i && pairs[i].intensity==15-i);
 
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.size() == 1);
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->id == "CommonMS1SpectrumParams");
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->cvParams.size() == 2);
+    unit_assert(s->scanList.scans.size() == 1);
+    Scan& scan19 = s->scanList.scans[0];
+    unit_assert(scan19.paramGroupPtrs.size() == 1);
+    unit_assert(scan19.paramGroupPtrs.back()->id == "CommonMS1SpectrumParams");
+    unit_assert(scan19.paramGroupPtrs.back()->cvParams.size() == 2);
 
     // check scan 20
 
@@ -145,9 +147,11 @@ void test(bool indexed)
     for (int i=0; i<10; i++)
         unit_assert(pairs[i].mz==2*i && pairs[i].intensity==(10-i)*2);
 
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.size() == 1);
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->id == "CommonMS2SpectrumParams");
-    unit_assert(s->spectrumDescription.scan.paramGroupPtrs.back()->cvParams.size() == 2);
+    unit_assert(s->scanList.scans.size() == 1);
+    Scan& scan20 = s->scanList.scans[0];
+    unit_assert(scan20.paramGroupPtrs.size() == 1);
+    unit_assert(scan20.paramGroupPtrs.back()->id == "CommonMS2SpectrumParams");
+    unit_assert(scan20.paramGroupPtrs.back()->cvParams.size() == 2);
 
     // check scan 22 (MALDI)
     s = sl->spectrum(3, true);

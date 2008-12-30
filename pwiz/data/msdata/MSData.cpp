@@ -497,32 +497,6 @@ PWIZ_API_DECL bool ScanSettings::empty() const
 }
 
 
-
-//
-// Acquisition
-//
-
-
-PWIZ_API_DECL bool Acquisition::empty() const
-{
-    return number==0 && 
-           (!sourceFilePtr.get() || sourceFilePtr->empty()) && 
-           spectrumID.empty() &&
-           ParamContainer::empty();
-}
-
-
-//
-// AcquisitionList
-//
-
-
-PWIZ_API_DECL bool AcquisitionList::empty() const
-{
-    return acquisitions.empty() && ParamContainer::empty();
-}
-
-
 //
 // SelectedIon
 //
@@ -627,16 +601,13 @@ PWIZ_API_DECL bool Scan::empty() const
 
 
 //
-// SpectrumDescription
+// ScanList
 //
 
 
-PWIZ_API_DECL bool SpectrumDescription::empty() const
+PWIZ_API_DECL bool ScanList::empty() const
 {
-    return acquisitionList.empty() &&
-           precursors.empty() && 
-           scan.empty() &&
-           ParamContainer::empty();
+    return scans.empty() && ParamContainer::empty();
 }
 
 
@@ -702,7 +673,8 @@ PWIZ_API_DECL bool Spectrum::empty() const
            defaultArrayLength==0 &&
            (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
            (!sourceFilePtr.get() || sourceFilePtr->empty()) && 
-           spectrumDescription.empty() &&
+           scanList.empty() &&
+           precursors.empty() && 
            binaryDataArrayPtrs.empty() &&
            ParamContainer::empty();
 }

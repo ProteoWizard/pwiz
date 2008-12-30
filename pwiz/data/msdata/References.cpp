@@ -151,20 +151,6 @@ PWIZ_API_DECL void resolve(ScanSettings& scanSettings, const MSData& msd)
 }
 
 
-PWIZ_API_DECL void resolve(Acquisition& acquisition, const MSData& msd)
-{
-    resolve(static_cast<ParamContainer&>(acquisition), msd);
-    resolve(acquisition.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
-}
-
-
-PWIZ_API_DECL void resolve(AcquisitionList& acquisitionList, const MSData& msd)
-{
-    resolve(static_cast<ParamContainer&>(acquisitionList), msd);
-    resolve(acquisitionList.acquisitions, msd);
-}
-
-
 PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(precursor), msd);
@@ -183,12 +169,10 @@ PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd)
 }
 
 
-PWIZ_API_DECL void resolve(SpectrumDescription& spectrumDescription, const MSData& msd)
+PWIZ_API_DECL void resolve(ScanList& scanList, const MSData& msd)
 {
-    resolve(static_cast<ParamContainer&>(spectrumDescription), msd);
-    resolve(spectrumDescription.acquisitionList, msd);
-    resolve(spectrumDescription.precursors, msd);
-    resolve(spectrumDescription.scan, msd);
+    resolve(static_cast<ParamContainer&>(scanList), msd);
+    resolve(scanList.scans, msd);
 }
 
 
@@ -204,7 +188,8 @@ PWIZ_API_DECL void resolve(Spectrum& spectrum, const MSData& msd)
     resolve(static_cast<ParamContainer&>(spectrum), msd);
     resolve(spectrum.dataProcessingPtr, msd.dataProcessingPtrs);
     resolve(spectrum.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
-    resolve(spectrum.spectrumDescription, msd);
+    resolve(spectrum.scanList, msd);
+    resolve(spectrum.precursors, msd);
     resolve(spectrum.binaryDataArrayPtrs, msd);
 }
 

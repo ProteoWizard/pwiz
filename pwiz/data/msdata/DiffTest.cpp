@@ -541,61 +541,6 @@ void testScanSettings()
 }
 
 
-void testAcquisition()
-{
-    if (os_) *os_ << "testAcquisition()\n";
-
-    Acquisition a, b;
-    a.number = 420;
-    a.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
-    a.spectrumID = "1234";
-    b = a;
-
-    Diff<Acquisition> diff(a, b);
-    unit_assert(!diff);
-
-    a.sourceFilePtr = SourceFilePtr(new SourceFile("test.mzxml"));
-    
-    diff(a, b);
-        
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-}
-
-
-void testAcquisitionList()
-{
-    if (os_) *os_ << "testAcquisitionList()\n";
-
-    AcquisitionList a, b;
-
-    Acquisition a1;
-    a1.number = 420;
-    a1.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
-    a1.spectrumID = "1234";
-
-    Acquisition a2;
-    a2.number = 421;
-    a2.sourceFilePtr = SourceFilePtr(new SourceFile("test.mzxml"));
-    a2.spectrumID = "5678";
-
-    a.acquisitions.push_back(a1);
-    a.acquisitions.push_back(a2);
-    b.acquisitions.push_back(a2);
-    b.acquisitions.push_back(a1);
-
-    Diff<AcquisitionList> diff(a, b);
-    unit_assert(!diff);
-
-    a.cvParams.push_back(MS_reflectron_on); 
-    
-    diff(a, b);
-        
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-}
-
-
 void testPrecursor()
 {
     if (os_) *os_ << "testPrecursor()\n";
@@ -654,36 +599,34 @@ void testScan()
 }
 
 
-void testSpectrumDescription()
+void testScanList()
 {
-    if (os_) *os_ << "testSpectrumDescription()\n";
+    if (os_) *os_ << "testScanList()\n";
 
-    SpectrumDescription a, b;
+    ScanList a, b;
 
-    a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
-    a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
-    a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
+    Scan a1;
+    a1.set(MS_filter_string, "booger");
+    a1.set(MS_scan_time, "4.20", UO_minute);
 
-    b = a; 
+    Scan a2;
+    a1.set(MS_filter_string, "goober");
+    a1.set(MS_scan_time, "6.66", UO_minute);
 
-    Diff<SpectrumDescription> diff(a, b);
+    a.scans.push_back(a1);
+    a.scans.push_back(a2);
+    b.scans.push_back(a2);
+    b.scans.push_back(a1);
+
+    Diff<ScanList> diff(a, b);
     unit_assert(!diff);
 
-    a.acquisitionList.acquisitions.push_back(Acquisition());
-    a.acquisitionList.acquisitions.back().number = 420;
-    a.scan.cvParams.push_back(MS_m_z);
-    b.precursors.push_back(Precursor());
-    b.precursors.back().cvParams.push_back(MS_reflectron_on);
-
+    a.cvParams.push_back(MS_reflectron_on); 
+    
     diff(a, b);
         
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-    unit_assert(diff.a_b.acquisitionList.acquisitions.size() == 1);
-    unit_assert(diff.a_b.scan.cvParams.size() == 1);
-    unit_assert(diff.b_a.precursors.size() == 1);
 }
 
 
@@ -730,11 +673,12 @@ void testSpectrum()
     a.id = "goober";
     a.index = 1;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
-    a.spectrumDescription.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
-    a.spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
-    a.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.spectrumDescription.scan.scanWindows.push_back(ScanWindow(400.0, 1800.0));
+    a.scanList.scans.push_back(Scan());
+    a.scanList.scans.back().instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
+    a.scanList.scans.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
+    a.scanList.scans.back().cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
+    a.scanList.scans.back().cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
+    a.scanList.scans.back().scanWindows.push_back(ScanWindow(400.0, 1800.0));
 
     b = a; 
 
@@ -749,8 +693,8 @@ void testSpectrum()
     b.defaultArrayLength = 22;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata 2"));
     b.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
-    a.spectrumDescription.precursors.push_back(Precursor());
-    a.spectrumDescription.precursors.back().spectrumID = "666";
+    a.precursors.push_back(Precursor());
+    a.precursors.back().spectrumID = "666";
     a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
     a.binaryDataArrayPtrs.back()->data.resize(6);
     b.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
@@ -767,7 +711,7 @@ void testSpectrum()
     unit_assert(diff.a_b.nativeID == "420");
     unit_assert(diff.a_b.defaultArrayLength == 0);
     unit_assert(diff.a_b.dataProcessingPtr->id == "msdata 2");
-    unit_assert(diff.a_b.spectrumDescription.precursors.size() == 1);
+    unit_assert(diff.a_b.precursors.size() == 1);
     unit_assert(diff.a_b.binaryDataArrayPtrs.empty());
 
     unit_assert(diff.b_a.index == 4);
@@ -775,7 +719,7 @@ void testSpectrum()
     unit_assert(diff.b_a.nativeID.empty());
     unit_assert(diff.b_a.defaultArrayLength == 22);
     unit_assert(diff.b_a.dataProcessingPtr->id == "msdata");
-    unit_assert(diff.b_a.spectrumDescription.precursors.empty());
+    unit_assert(diff.b_a.precursors.empty());
     unit_assert(diff.b_a.binaryDataArrayPtrs.empty());
 
     b = a;
@@ -1148,12 +1092,13 @@ void testBinaryDataOnly()
         to->index = from->index;
         to->nativeID = from->nativeID;
         to->defaultArrayLength = from->defaultArrayLength;
+        to->scanList = from->scanList;
 
-        to->spectrumDescription.precursors.resize(from->spectrumDescription.precursors.size());
-        for (size_t precursorIndex=0; precursorIndex<from->spectrumDescription.precursors.size(); ++precursorIndex)
+        to->precursors.resize(from->precursors.size());
+        for (size_t precursorIndex=0; precursorIndex<from->precursors.size(); ++precursorIndex)
         {
-            Precursor& precursorTo = to->spectrumDescription.precursors[precursorIndex];
-            Precursor& precursorFrom = from->spectrumDescription.precursors[precursorIndex];
+            Precursor& precursorTo = to->precursors[precursorIndex];
+            Precursor& precursorFrom = from->precursors[precursorIndex];
             precursorTo.selectedIons = precursorFrom.selectedIons;
         }
     }
@@ -1417,7 +1362,6 @@ void testMaxPrecisionDiff()
 
 
 void testMSDiffUpdate()
-
 {
   if(os_) *os_<<"testMSDiffUpdate()"<<endl;
 
@@ -1442,16 +1386,6 @@ void testMSDiffUpdate()
 
   tiny1_s0->id = "tiny1";
   tiny2_s1->id = "tiny2";
-
-  AcquisitionList& a1=(tiny1_s0->spectrumDescription).acquisitionList;
-  AcquisitionList& a2=(tiny2_s1->spectrumDescription).acquisitionList;
-
-  
-  a1.acquisitions.push_back(Acquisition());
-  a1.acquisitions.back().number=144;
-
-  a2.acquisitions.push_back(Acquisition());
-  a2.acquisitions.back().number=288;
 
   //inflict chromatogram differences
 
@@ -1496,11 +1430,9 @@ void test()
     testProcessingMethod();
     testDataProcessing();
     testScanSettings();
-    testAcquisition();
-    testAcquisitionList();
     testPrecursor();
     testScan();
-    testSpectrumDescription();
+    testScanList();
     testBinaryDataArray();
     testSpectrum();
     testChromatogram();

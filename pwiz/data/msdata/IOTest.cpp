@@ -320,43 +320,6 @@ void testScanSettings()
 }
 
 
-void testAcquisition()
-{
-    Acquisition a;
-
-    a.number = 420;
-    //a.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
-    a.spectrumID = "1234";
-    a.cvParams.push_back(MS_reflectron_on);
-   
-    testObject(a);
-}
-
-
-void testAcquisitionList()
-{
-    AcquisitionList a;
-
-    Acquisition a1;
-    a1.number = 420;
-    //a1.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
-    a1.spectrumID = "1234";
-    a1.cvParams.push_back(MS_reflectron_on);
-
-    Acquisition a2;
-    a2.number = 421;
-    //a2.sourceFilePtr = SourceFilePtr(new SourceFile("test.mzxml"));
-    a2.spectrumID = "5678";
-    a1.cvParams.push_back(MS_reflectron_off);
-
-    a.acquisitions.push_back(a1);
-    a.acquisitions.push_back(a2);
-    a.cvParams.push_back(MS_m_z);
-   
-    testObject(a);
-}
-
-
 void testPrecursor()
 {
     Precursor a;
@@ -387,35 +350,20 @@ void testScan()
 }
 
 
-void testSpectrumDescription()
+void testScanList()
 {
-    SpectrumDescription a;
+    ScanList a;
 
-    a.cvParams.push_back(MS_centroid_mass_spectrum);
-    a.cvParams.push_back(CVParam(MS_lowest_m_z_value, 320.39));
-    a.cvParams.push_back(CVParam(MS_highest_m_z_value, 1003.56));
-    a.cvParams.push_back(CVParam(MS_base_peak_m_z, 456.347));
-    a.cvParams.push_back(CVParam(MS_base_peak_intensity, 23433));
-    a.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e7));
+    Scan a1;
+    a1.cvParams.push_back(MS_reflectron_on);
 
-    a.precursors.push_back(Precursor());
-    a.precursors.back().spectrumID = "19";
-    a.precursors.back().selectedIons.resize(1);
-    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
-    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
-    a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
-    a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
-    
-    a.scan.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
-    a.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS2SpectrumParams")));
-    a.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
-    a.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
-    a.scan.scanWindows.push_back(ScanWindow(110.0, 905.0));
+    Scan a2;
+    a1.cvParams.push_back(MS_reflectron_off);
 
-    a.acquisitionList.acquisitions.push_back(Acquisition());
-    a.acquisitionList.acquisitions.back().number = 420;
-    a.acquisitionList.acquisitions.back().spectrumID = "1234";
-
+    a.scans.push_back(a1);
+    a.scans.push_back(a2);
+    a.cvParams.push_back(MS_m_z);
+   
     testObject(a);
 }
 
@@ -487,9 +435,27 @@ void testSpectrum()
     for (size_t i=0; i<a.defaultArrayLength; i++)
         a.binaryDataArrayPtrs.back()->data.push_back(i*2);
     a.binaryDataArrayPtrs.back()->set(MS_intensity_array);
-    a.spectrumDescription.cvParams.push_back(MS_reflectron_on);
+    a.cvParams.push_back(MS_reflectron_on);
     a.cvParams.push_back(MS_MSn_spectrum);
 
+    a.precursors.push_back(Precursor());
+    a.precursors.back().spectrumID = "19";
+    a.precursors.back().selectedIons.resize(1);
+    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
+    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
+    a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
+    a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
+
+    a.scanList.scans.push_back(Scan());
+    Scan& scan = a.scanList.scans.back();
+    scan.set(MS_scan_time, 4.20);
+    scan.set(MS_filter_string, "doobie");
+
+    a.scanList.scans.push_back(Scan());
+    Scan& scan2 = a.scanList.scans.back();
+    scan2.set(MS_scan_time, 4.21);
+    scan2.set(MS_filter_string, "doo");
+ 
     // write 'a' out to a stream
 
     ostringstream oss;
@@ -588,14 +554,14 @@ void testSpectrumList()
     spectrum1->index = 0;
     spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
-    spectrum1->spectrumDescription.userParams.push_back(UserParam("description1"));
+    spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
     spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
-    spectrum2->spectrumDescription.userParams.push_back(UserParam("description2"));
+    spectrum2->userParams.push_back(UserParam("description2"));
     
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
@@ -615,14 +581,14 @@ void testSpectrumListWithPositions()
     spectrum1->index = 0;
     spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
-    spectrum1->spectrumDescription.userParams.push_back(UserParam("description1"));
+    spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
     spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
-    spectrum2->spectrumDescription.userParams.push_back(UserParam("description2"));
+    spectrum2->userParams.push_back(UserParam("description2"));
     
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
@@ -641,7 +607,7 @@ void testSpectrumListWithPositions()
 
     unit_assert(positions.size() == 2);
     unit_assert(positions[0] == 27);
-    unit_assert(positions[1] == 208);
+    unit_assert(positions[1] == 153);
 }
 
 
@@ -828,14 +794,14 @@ void testRun()
     spectrum1->index = 0;
     spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
-    spectrum1->spectrumDescription.userParams.push_back(UserParam("description1"));
+    spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
     spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
-    spectrum2->spectrumDescription.userParams.push_back(UserParam("description2"));
+    spectrum2->userParams.push_back(UserParam("description2"));
     
     spectrumListSimple->spectra.push_back(spectrum1);
     spectrumListSimple->spectra.push_back(spectrum2);
@@ -1059,18 +1025,20 @@ void initializeTestData(MSData& msd)
     s19.defaultArrayLength = 10;
     s19.cvParams.push_back(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
-    s19.spectrumDescription.cvParams.push_back(MS_centroid_mass_spectrum);
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_lowest_m_z_value, 400.39));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_highest_m_z_value, 1795.56));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, 445.347));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, 120053));
-    s19.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
-    s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
-    s19.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    s19.spectrumDescription.scan.scanWindows.resize(1);
-    ScanWindow& window = s19.spectrumDescription.scan.scanWindows.front();
+    s19.cvParams.push_back(MS_centroid_mass_spectrum);
+    s19.cvParams.push_back(CVParam(MS_lowest_m_z_value, 400.39));
+    s19.cvParams.push_back(CVParam(MS_highest_m_z_value, 1795.56));
+    s19.cvParams.push_back(CVParam(MS_base_peak_m_z, 445.347));
+    s19.cvParams.push_back(CVParam(MS_base_peak_intensity, 120053));
+    s19.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
+    s19.scanList.scans.push_back(Scan());
+    Scan& s19scan = s19.scanList.scans.back();
+    s19scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s19scan.paramGroupPtrs.push_back(pg1);
+    s19scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
+    s19scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
+    s19scan.scanWindows.resize(1);
+    ScanWindow& window = s19scan.scanWindows.front();
     window.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 400.000000));
     window.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 1800.000000));
 
@@ -1100,15 +1068,15 @@ void initializeTestData(MSData& msd)
     s20.cvParams.push_back(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.spectrumDescription.cvParams.push_back(MS_centroid_mass_spectrum);
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_lowest_m_z_value, 320.39));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_highest_m_z_value, 1003.56));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_m_z, 456.347));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_base_peak_intensity, 23433));
-    s20.spectrumDescription.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
+    s20.cvParams.push_back(MS_centroid_mass_spectrum);
+    s20.cvParams.push_back(CVParam(MS_lowest_m_z_value, 320.39));
+    s20.cvParams.push_back(CVParam(MS_highest_m_z_value, 1003.56));
+    s20.cvParams.push_back(CVParam(MS_base_peak_m_z, 456.347));
+    s20.cvParams.push_back(CVParam(MS_base_peak_intensity, 23433));
+    s20.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
 
-    s20.spectrumDescription.precursors.resize(1);
-    Precursor& precursor = s20.spectrumDescription.precursors.front();
+    s20.precursors.resize(1);
+    Precursor& precursor = s20.precursors.front();
     precursor.spectrumID= s19.id;
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
@@ -1116,12 +1084,14 @@ void initializeTestData(MSData& msd)
     precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
     precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt));
 
-    s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
-    s20.spectrumDescription.scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
-    s20.spectrumDescription.scan.scanWindows.resize(1);
-    ScanWindow& window2 = s20.spectrumDescription.scan.scanWindows.front();
+    s20.scanList.scans.push_back(Scan());
+    Scan& s20scan = s20.scanList.scans.back();
+    s20scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s20scan.paramGroupPtrs.push_back(pg2);
+    s20scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
+    s20scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
+    s20scan.scanWindows.resize(1);
+    ScanWindow& window2 = s20scan.scanWindows.front();
     window2.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 110.000000));
     window2.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 905.000000));
 
@@ -1244,15 +1214,13 @@ void test()
     testDataProcessing();
     testNamedParamContainer<Target>();
     testScanSettings();
-    testAcquisition();
-    testAcquisitionList();
     testNamedParamContainer<IsolationWindow>();
     testNamedParamContainer<SelectedIon>();
     testNamedParamContainer<Activation>();
     testPrecursor();
     testNamedParamContainer<ScanWindow>();
     testScan();
-    testSpectrumDescription();
+    testScanList();
     testBinaryDataArray();
     testSpectrum();
     testChromatogram();

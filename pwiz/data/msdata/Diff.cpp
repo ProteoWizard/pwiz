@@ -491,38 +491,6 @@ void diff(const ScanSettings& a,
 
 
 PWIZ_API_DECL
-void diff(const Acquisition& a,
-          const Acquisition& b,
-          Acquisition& a_b,
-          Acquisition& b_a,
-          const DiffConfig& config)
-{
-    diff_numeric(a.number, b.number, a_b.number, b_a.number, config);
-    ptr_diff(a.sourceFilePtr, b.sourceFilePtr, a_b.sourceFilePtr, b_a.sourceFilePtr, config);
-    diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
-
-    // provide number for context
-    if (!a_b.empty() || !b_a.empty()) 
-    {
-        a_b.number = a.number; 
-        b_a.number = b.number; 
-    }
-}
-
-
-PWIZ_API_DECL
-void diff(const AcquisitionList& a,
-          const AcquisitionList& b,
-          AcquisitionList& a_b,
-          AcquisitionList& b_a,
-          const DiffConfig& config)
-{
-    vector_diff_diff(a.acquisitions, b.acquisitions, a_b.acquisitions, b_a.acquisitions, config);
-    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-}
-
-
-PWIZ_API_DECL
 void diff(const Precursor& a,
           const Precursor& b,
           Precursor& a_b,
@@ -573,21 +541,14 @@ void diff(const Scan& a,
 
 
 PWIZ_API_DECL
-void diff(const SpectrumDescription& a,
-          const SpectrumDescription& b,
-          SpectrumDescription& a_b,
-          SpectrumDescription& b_a,
+void diff(const ScanList& a,
+          const ScanList& b,
+          ScanList& a_b,
+          ScanList& b_a,
           const DiffConfig& config)
 {
-    // important scan metadata
-    vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
-
-    if (!config.ignoreMetadata)
-    {
-        diff(a.acquisitionList, b.acquisitionList, a_b.acquisitionList, b_a.acquisitionList, config);
-        diff(a.scan, b.scan, a_b.scan, b_a.scan, config);
-        diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    }
+    vector_diff_diff(a.scans, b.scans, a_b.scans, b_a.scans, config);
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
 
@@ -686,19 +647,15 @@ void diff(const vector<BinaryDataArrayPtr>& a,
         {
             a_b.push_back(temp_a_b);
             b_a.push_back(temp_b_a);
+
+            //if UserParam with binary data diff exists, cast it to a double and compare with maxPrecisionDiff
+            if(!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
+            {
+                double max = lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+                if (max>maxPrecisionDiff) maxPrecisionDiff=max;
+            }
         }
-
-	//if UserParam with binary data diff exists, cast it to a double and compare with maxPrecisionDiff
-
-	if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())	  
-	  {
-            double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
-            if(max>maxPrecisionDiff) maxPrecisionDiff=max;
-	    
-	  }
-	
     }
-
 }
 
 
@@ -716,7 +673,7 @@ void diff(const Spectrum& a,
     diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
     diff(a.nativeID, b.nativeID, a_b.nativeID, b_a.nativeID, config);
     diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
-    diff(a.spectrumDescription, b.spectrumDescription, a_b.spectrumDescription, b_a.spectrumDescription, config);
+    vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
 
     if (!config.ignoreMetadata)
     {
@@ -724,6 +681,7 @@ void diff(const Spectrum& a,
         ptr_diff(a.dataProcessingPtr, b.dataProcessingPtr, a_b.dataProcessingPtr, b_a.dataProcessingPtr, config);
         ptr_diff(a.sourceFilePtr, b.sourceFilePtr, a_b.sourceFilePtr, b_a.sourceFilePtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+        diff(a.scanList, b.scanList, a_b.scanList, b_a.scanList, config);
     }
 
     // special handling for binary data arrays
@@ -852,16 +810,17 @@ void diff(const SpectrumList& a,
         SpectrumPtr temp_a_b(new Spectrum);        
         SpectrumPtr temp_b_a(new Spectrum);
         diff(*a.spectrum(i, true), *b.spectrum(i, true), *temp_a_b, *temp_b_a, config);
+
         if (!temp_a_b->empty() || !temp_b_a->empty())
         {
             a_b.spectra.push_back(temp_a_b);
             b_a.spectra.push_back(temp_b_a);
 	    
-	    if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())
-	      {
+            if(!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
+            {
                 double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
-                if(max>maxPrecisionDiff) maxPrecisionDiff=max;
-	      }
+                if (max>maxPrecisionDiff) maxPrecisionDiff=max;
+            }
         }
     }
 }
@@ -1081,10 +1040,9 @@ std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
       write(diff.b_a,true);
       
 
-      os_write_spectra(std::cout,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
+      os_write_spectra(os,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
 
-      os_write_chromatograms(std::cout,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
-
+      os_write_chromatograms(os,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
     }
 
   return os;

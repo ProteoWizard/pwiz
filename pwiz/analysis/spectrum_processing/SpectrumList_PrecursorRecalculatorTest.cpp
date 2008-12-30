@@ -41,8 +41,8 @@ ostream* os_ = 0;
 
 void verifyPrecursorInfo(const Spectrum& spectrum, double precursorMZ, int precursorCharge)
 {
-    unit_assert(!spectrum.spectrumDescription.precursors.empty()); 
-    const Precursor& precursor = spectrum.spectrumDescription.precursors[0];
+    unit_assert(!spectrum.precursors.empty()); 
+    const Precursor& precursor = spectrum.precursors[0];
     unit_assert(!precursor.selectedIons.empty());
     const SelectedIon& selectedIon = precursor.selectedIons[0];
 

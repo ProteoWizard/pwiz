@@ -216,60 +216,6 @@ void testScanSettings()
 }
 
 
-void testAcquisition()
-{
-    if (os_) *os_ << "testAcquisition()\n"; 
-
-    Acquisition acquisition;
-    acquisition.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    acquisition.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
-
-    MSData msd;
-    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
-    msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
-    
-    unit_assert(acquisition.sourceFilePtr->name.empty());
-    unit_assert(acquisition.paramGroupPtrs[0]->userParams.empty());
-
-    References::resolve(acquisition, msd);
-
-    unit_assert(!acquisition.sourceFilePtr->name.empty());
-    unit_assert(!acquisition.paramGroupPtrs[0]->userParams.empty());
-}
-
-
-void testAcquisitionList()
-{
-    if (os_) *os_ << "testAcquisitionList()\n"; 
-
-    AcquisitionList acquisitionList;
-    acquisitionList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    acquisitionList.acquisitions.push_back(Acquisition());
-    acquisitionList.acquisitions.back().sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
-    acquisitionList.acquisitions.push_back(Acquisition());
-    acquisitionList.acquisitions.back().sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
-
-    MSData msd;
-    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
-    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("dummy")));
-    msd.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf"))); 
-    msd.fileDescription.sourceFilePtrs.back()->name = "goo.raw";
-    
-    unit_assert(acquisitionList.acquisitions[0].sourceFilePtr->name.empty());
-    unit_assert(acquisitionList.acquisitions[1].sourceFilePtr->name.empty());
-    unit_assert(acquisitionList.paramGroupPtrs[0]->userParams.empty());
-
-    References::resolve(acquisitionList, msd);
-
-    unit_assert(acquisitionList.acquisitions[0].sourceFilePtr->name == "goo.raw");
-    unit_assert(acquisitionList.acquisitions[1].sourceFilePtr->name == "goo.raw");
-    unit_assert(!acquisitionList.paramGroupPtrs[0]->userParams.empty());
-}
-
-
 void testPrecursor()
 {
     if (os_) *os_ << "testPrecursor()\n"; 
@@ -327,32 +273,28 @@ void testScan()
 }
 
 
-void testSpectrumDescription()
+void testScanList()
 {
-    if (os_) *os_ << "testSpectrumDescription()\n"; 
+    if (os_) *os_ << "testScanList()\n"; 
 
-    SpectrumDescription spectrumDescription;
-    spectrumDescription.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    spectrumDescription.acquisitionList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    spectrumDescription.precursors.push_back(Precursor());
-    spectrumDescription.precursors.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
-    spectrumDescription.scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    ScanList scanList;
+    scanList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    scanList.scans.push_back(Scan());
+    Scan& scan = scanList.scans.back();
+    scan.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
     
-    unit_assert(spectrumDescription.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(spectrumDescription.acquisitionList.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(spectrumDescription.precursors.back().paramGroupPtrs.back()->userParams.empty());
-    unit_assert(spectrumDescription.scan.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(scanList.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(scan.paramGroupPtrs[0]->userParams.empty());
 
-    References::resolve(spectrumDescription, msd);
+    References::resolve(scanList, msd);
 
-    unit_assert(!spectrumDescription.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!spectrumDescription.acquisitionList.paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!spectrumDescription.precursors.back().paramGroupPtrs.back()->userParams.empty());
-    unit_assert(!spectrumDescription.scan.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!scanList.paramGroupPtrs[0]->userParams.empty());
+    unit_assert(!scan.paramGroupPtrs[0]->userParams.empty());
 }
 
 
@@ -390,10 +332,16 @@ void testSpectrum()
     spectrum.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     spectrum.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
     spectrum.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
-    spectrum.spectrumDescription.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrum.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    spectrum.scanList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrum.precursors.push_back(Precursor());
+    spectrum.precursors.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
     spectrum.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
     spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
+ 
     MSData msd;
     msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
@@ -406,7 +354,9 @@ void testSpectrum()
     unit_assert(spectrum.paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.dataProcessingPtr->processingMethods.empty());
     unit_assert(spectrum.sourceFilePtr->name.empty());
-    unit_assert(spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.scanList.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.precursors.back().paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 
     References::resolve(spectrum, msd);
@@ -415,7 +365,9 @@ void testSpectrum()
     unit_assert(spectrum.dataProcessingPtr->processingMethods.size() == 1);
     unit_assert(spectrum.dataProcessingPtr->processingMethods.back().softwarePtr.get());
     unit_assert(spectrum.sourceFilePtr->name == "goo.raw");
-    unit_assert(!spectrum.spectrumDescription.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.scanList.paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.precursors.back().paramGroupPtrs.back()->userParams.empty());
     unit_assert(!spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 }
 
@@ -537,11 +489,9 @@ void test()
     testInstrumentConfiguration();
     testDataProcessing();
     testScanSettings();
-    testAcquisition();
-    testAcquisitionList();
     testPrecursor();
     testScan();
-    testSpectrumDescription();
+    testScanList();
     testBinaryDataArray();
     testSpectrum();
     testChromatogram();

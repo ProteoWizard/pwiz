@@ -437,45 +437,6 @@ struct PWIZ_API_DECL ScanSettings
 typedef boost::shared_ptr<ScanSettings> ScanSettingsPtr; 
 
 
-/// Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
-struct PWIZ_API_DECL Acquisition : public ParamContainer
-{
-    /// a number for this acquisition.
-    int number;
-
-    /// for acquisitions that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
-    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-    SourceFilePtr sourceFilePtr;
-
-    /// for acquisitions that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-    std::string externalNativeID;
-
-    /// for acquisitions that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-    std::string externalSpectrumID;
-
-    /// for acquisitions that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
-    /// note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
-    std::string spectrumID;
-
-    Acquisition() : number(0) {}
-
-
-    /// returns true iff the element contains no params and all members are empty or null
-    bool empty() const;
-};
-
-
-/// List and descriptions of acquisitions .
-struct PWIZ_API_DECL AcquisitionList : public ParamContainer
-{
-    std::vector<Acquisition> acquisitions;
-
-    bool empty() const;
-};
-
-
 /// This element captures the isolation (or 'selection') window configured to isolate one or more precursors.
 struct PWIZ_API_DECL IsolationWindow : public ParamContainer {};
 
@@ -557,19 +518,11 @@ struct PWIZ_API_DECL Scan : public ParamContainer
 };
 
 
-/// Description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
-struct PWIZ_API_DECL SpectrumDescription : public ParamContainer
+/// List and descriptions of scans.
+struct PWIZ_API_DECL ScanList : public ParamContainer
 {
-    /// list and descriptions of acquisitions.
-    AcquisitionList acquisitionList;
+    std::vector<Scan> scans;
 
-    /// list and descriptions of precursors to the spectrum currently being described.
-    std::vector<Precursor> precursors;
-
-    /// the instrument's 'run time' parameters; common to the whole of this spectrum.
-    Scan scan;
-
-    /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 };
 
@@ -692,11 +645,15 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     /// this attribute can optionally reference the 'id' of the appropriate sourceFile.
     SourceFilePtr sourceFilePtr;
 
-    /// description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
-    SpectrumDescription spectrumDescription;
+    /// list of scans
+    ScanList scanList;
+
+    /// list and descriptions of precursors to the spectrum currently being described.
+    std::vector<Precursor> precursors;
 
     /// list of binary data arrays.
     std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
+
 
     Spectrum() : defaultArrayLength(0) {}
 

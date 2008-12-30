@@ -44,11 +44,9 @@ PWIZ_API_DECL void resolve(InstrumentConfiguration& instrumentConfiguration, con
 PWIZ_API_DECL void resolve(ProcessingMethod& processingMethod, const MSData& msd);
 PWIZ_API_DECL void resolve(DataProcessing& dataProcesssing, const MSData& msd);
 PWIZ_API_DECL void resolve(ScanSettings& dataProcesssing, const MSData& msd);
-PWIZ_API_DECL void resolve(Acquisition& acquisition, const MSData& msd);
-PWIZ_API_DECL void resolve(AcquisitionList& acquisitionList, const MSData& msd);
 PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd);
 PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd);
-PWIZ_API_DECL void resolve(SpectrumDescription& spectrumDescription, const MSData& msd);
+PWIZ_API_DECL void resolve(ScanList& List, const MSData& msd);
 PWIZ_API_DECL void resolve(BinaryDataArray& binaryDataArray, const MSData& msd);
 PWIZ_API_DECL void resolve(Spectrum& spectrum, const MSData& msd);
 PWIZ_API_DECL void resolve(Chromatogram& chromatogram, const MSData& msd);

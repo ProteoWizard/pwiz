@@ -178,20 +178,6 @@ void diff(const ScanSettings& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Acquisition& a,
-          const Acquisition& b,
-          Acquisition& a_b,
-          Acquisition& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const AcquisitionList& a,
-          const AcquisitionList& b,
-          AcquisitionList& a_b,
-          AcquisitionList& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const Precursor& a,
           const Precursor& b,
           Precursor& a_b,
@@ -206,10 +192,10 @@ void diff(const Scan& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const SpectrumDescription& a,
-          const SpectrumDescription& b,
-          SpectrumDescription& a_b,
-          SpectrumDescription& b_a,
+void diff(const ScanList& a,
+          const ScanList& b,
+          ScanList& a_b,
+          ScanList& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

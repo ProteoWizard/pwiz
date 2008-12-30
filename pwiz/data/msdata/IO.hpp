@@ -104,17 +104,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Target& t);
 PWIZ_API_DECL void read(std::istream& is, Target& t);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& acquisitionSettings);
-PWIZ_API_DECL void read(std::istream& is, ScanSettings& acquisitionSettings);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSettings);
+PWIZ_API_DECL void read(std::istream& is, ScanSettings& scanSettings);
 
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Acquisition& acquisition);
-PWIZ_API_DECL void read(std::istream& is, Acquisition& acquisition);
-    
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AcquisitionList& acquisitionList);
-PWIZ_API_DECL void read(std::istream& is, AcquisitionList& acquisitionList);
-    
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IsolationWindow& isolationWindow);
 PWIZ_API_DECL void read(std::istream& is, IsolationWindow& isolationWindow);
@@ -140,8 +132,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan);
 PWIZ_API_DECL void read(std::istream& is, Scan& scan);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumDescription& spectrumDescription);
-PWIZ_API_DECL void read(std::istream& is, SpectrumDescription& spectrumDescription);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList);
+PWIZ_API_DECL void read(std::istream& is, ScanList& scanList);
     
 
 PWIZ_API_DECL

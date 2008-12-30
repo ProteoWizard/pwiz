@@ -189,19 +189,22 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.set(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
 
-    s19.spectrumDescription.set(MS_centroid_mass_spectrum);
-    s19.spectrumDescription.set(MS_lowest_m_z_value, 400.39);
-    s19.spectrumDescription.set(MS_highest_m_z_value, 1795.56);
-    s19.spectrumDescription.set(MS_base_peak_m_z, 445.347);
-    s19.spectrumDescription.set(MS_base_peak_intensity, 120053);
-    s19.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
-    s19.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s19.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s19.spectrumDescription.scan.set(MS_scan_time, 5.890500, UO_minute);
-    s19.spectrumDescription.scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
-    s19.spectrumDescription.scan.set(MS_preset_scan_configuration, 3);
-    s19.spectrumDescription.scan.scanWindows.resize(1);
-    ScanWindow& window = s19.spectrumDescription.scan.scanWindows.front();
+    s19.set(MS_centroid_mass_spectrum);
+    s19.set(MS_lowest_m_z_value, 400.39);
+    s19.set(MS_highest_m_z_value, 1795.56);
+    s19.set(MS_base_peak_m_z, 445.347);
+    s19.set(MS_base_peak_intensity, 120053);
+    s19.set(MS_total_ion_current, 1.66755e+007);
+
+    s19.scanList.scans.push_back(Scan());
+    Scan& s19scan = s19.scanList.scans.back();
+    s19scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s19scan.paramGroupPtrs.push_back(pg1);
+    s19scan.set(MS_scan_time, 5.890500, UO_minute);
+    s19scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
+    s19scan.set(MS_preset_scan_configuration, 3);
+    s19scan.scanWindows.resize(1);
+    ScanWindow& window = s19.scanList.scans.back().scanWindows.front();
     window.set(MS_scan_m_z_lower_limit, 400.000000);
     window.set(MS_scan_m_z_upper_limit, 1800.000000);
 
@@ -231,15 +234,15 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.spectrumDescription.set(MS_centroid_mass_spectrum);
-    s20.spectrumDescription.set(MS_lowest_m_z_value, 320.39);
-    s20.spectrumDescription.set(MS_highest_m_z_value, 1003.56);
-    s20.spectrumDescription.set(MS_base_peak_m_z, 456.347);
-    s20.spectrumDescription.set(MS_base_peak_intensity, 23433);
-    s20.spectrumDescription.set(MS_total_ion_current, 1.66755e+007);
+    s20.set(MS_centroid_mass_spectrum);
+    s20.set(MS_lowest_m_z_value, 320.39);
+    s20.set(MS_highest_m_z_value, 1003.56);
+    s20.set(MS_base_peak_m_z, 456.347);
+    s20.set(MS_base_peak_intensity, 23433);
+    s20.set(MS_total_ion_current, 1.66755e+007);
 
-    s20.spectrumDescription.precursors.resize(1);
-    Precursor& precursor = s20.spectrumDescription.precursors.front();
+    s20.precursors.resize(1);
+    Precursor& precursor = s20.precursors.front();
     precursor.spectrumID= s19.id;
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_m_z, 445.34);
@@ -248,13 +251,15 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, UO_electronvolt);
 
-    s20.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s20.spectrumDescription.scan.paramGroupPtrs.push_back(pg2);
-    s20.spectrumDescription.scan.set(MS_scan_time, 5.990500, UO_minute);
-    s20.spectrumDescription.scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
-    s20.spectrumDescription.scan.set(MS_preset_scan_configuration, 4);
-    s20.spectrumDescription.scan.scanWindows.resize(1);
-    ScanWindow& window2 = s20.spectrumDescription.scan.scanWindows.front();
+    s20.scanList.scans.push_back(Scan());
+    Scan& s20scan = s20.scanList.scans.back();
+    s20scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s20scan.paramGroupPtrs.push_back(pg2);
+    s20scan.set(MS_scan_time, 5.990500, UO_minute);
+    s20scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
+    s20scan.set(MS_preset_scan_configuration, 4);
+    s20scan.scanWindows.resize(1);
+    ScanWindow& window2 = s20scan.scanWindows.front();
     window2.set(MS_scan_m_z_lower_limit, 110.000000);
     window2.set(MS_scan_m_z_upper_limit, 905.000000);
 
@@ -286,8 +291,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_MSn_spectrum);
     s21.set(MS_ms_level, 1);
 
-    s21.spectrumDescription.set(MS_centroid_mass_spectrum);
-    s21.spectrumDescription.userParams.push_back(UserParam("example", "spectrum with no data"));
+    s21.set(MS_centroid_mass_spectrum);
+    s21.userParams.push_back(UserParam("example", "spectrum with no data"));
     s21.setMZIntensityArrays(vector<double>(), vector<double>());
 
     // spectrum with MALDI spot information
@@ -300,18 +305,20 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22.set(MS_MSn_spectrum);
     s22.set(MS_ms_level, 1);
     
-    s22.spectrumDescription.set(MS_centroid_mass_spectrum);
-    s22.spectrumDescription.set(MS_lowest_m_z_value, 142.39);
-    s22.spectrumDescription.set(MS_highest_m_z_value, 942.56);
-    s22.spectrumDescription.set(MS_base_peak_m_z, 422.42);
-    s22.spectrumDescription.set(MS_base_peak_intensity, 42);
-    s22.spectrumDescription.set(MS_total_ion_current, 4200);
-    s22.spectrumDescription.scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s22.spectrumDescription.scan.paramGroupPtrs.push_back(pg1);
-    s22.spectrumDescription.scan.set(MS_scan_time, 42.0500, UO_second);
-    s22.spectrumDescription.scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
-    s22.spectrumDescription.scan.scanWindows.resize(1);
-    ScanWindow& window3 = s22.spectrumDescription.scan.scanWindows.front();
+    s22.set(MS_centroid_mass_spectrum);
+    s22.set(MS_lowest_m_z_value, 142.39);
+    s22.set(MS_highest_m_z_value, 942.56);
+    s22.set(MS_base_peak_m_z, 422.42);
+    s22.set(MS_base_peak_intensity, 42);
+    s22.set(MS_total_ion_current, 4200);
+    s22.scanList.scans.push_back(Scan());
+    Scan& s22scan = s22.scanList.scans.back();
+    s22scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s22scan.paramGroupPtrs.push_back(pg1);
+    s22scan.set(MS_scan_time, 42.0500, UO_second);
+    s22scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
+    s22scan.scanWindows.resize(1);
+    ScanWindow& window3 = s22scan.scanWindows.front();
     window3.set(MS_scan_m_z_lower_limit, 100.000000);
     window3.set(MS_scan_m_z_upper_limit, 1000.000000);
 

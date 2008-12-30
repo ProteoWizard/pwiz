@@ -106,28 +106,30 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 {
     const SpectrumList& spectrumList = *msd_.run.spectrumListPtr;
     SpectrumPtr spectrum = spectrumList.spectrum(index);
-    const SpectrumDescription& sd = spectrum->spectrumDescription;
+
+    Scan dummy;
+    Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
 
     result.seqNum = static_cast<int>(index + 1);
     result.acquisitionNum = scanNumber(spectrum->nativeID);
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
-    result.totIonCurrent = sd.cvParam(MS_total_ion_current).valueAs<double>();
-    result.retentionTime = sd.scan.cvParam(MS_scan_time).timeInSeconds();
-    result.basePeakMZ = sd.cvParam(MS_base_peak_m_z).valueAs<double>();    
-    result.basePeakIntensity = sd.cvParam(MS_base_peak_intensity).valueAs<double>();    
+    result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
+    result.retentionTime = scan.cvParam(MS_scan_time).timeInSeconds();
+    result.basePeakMZ = spectrum->cvParam(MS_base_peak_m_z).valueAs<double>();    
+    result.basePeakIntensity = spectrum->cvParam(MS_base_peak_intensity).valueAs<double>();    
     result.collisionEnergy = 0;
-    result.ionisationEnergy = sd.cvParam(MS_ionization_energy).valueAs<double>();
-    result.lowMZ = sd.cvParam(MS_lowest_m_z_value).valueAs<double>();        
-    result.highMZ = sd.cvParam(MS_highest_m_z_value).valueAs<double>();        
+    result.ionisationEnergy = spectrum->cvParam(MS_ionization_energy).valueAs<double>();
+    result.lowMZ = spectrum->cvParam(MS_lowest_m_z_value).valueAs<double>();        
+    result.highMZ = spectrum->cvParam(MS_highest_m_z_value).valueAs<double>();        
     result.precursorScanNum = 0;
     result.precursorMZ = 0;
     result.precursorCharge = 0;
     result.precursorIntensity = 0;
 
-    if (!sd.precursors.empty())
+    if (!spectrum->precursors.empty())
     {
-        const Precursor& precursor = sd.precursors[0];
+        const Precursor& precursor = spectrum->precursors[0];
         result.collisionEnergy = precursor.activation.cvParam(MS_collision_energy).valueAs<double>();
         size_t precursorIndex = msd_.run.spectrumListPtr->find(precursor.spectrumID);
 
@@ -144,7 +146,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 
     BOOST_STATIC_ASSERT(SCANTYPE_LENGTH > 4);
     memset(result.scanType, 0, SCANTYPE_LENGTH);
-    CVParam paramScanType = sd.scan.cvParamChild(MS_scanning_method);
+    CVParam paramScanType = scan.cvParamChild(MS_scanning_method);
     if (paramScanType.cvid == MS_full_scan) strcpy(result.scanType, "Full");
     if (paramScanType.cvid == MS_zoom_scan) strcpy(result.scanType, "Zoom");
 
@@ -179,11 +181,17 @@ void RAMPAdapter::Impl::getRunHeader(RunHeaderStruct& result) const
     result.startMZ = 0; // TODO
     result.endMZ = 0; // TODO
 
-    SpectrumPtr spectrum = spectrumList.spectrum(0, false);
-    result.dStartTime = retentionTime(spectrum->spectrumDescription.scan);
+    if (spectrumList.size() == 0) return;
 
-    spectrum = spectrumList.spectrum(1, false);
-    result.dEndTime = retentionTime(spectrum->spectrumDescription.scan);
+    Scan dummy;
+
+    SpectrumPtr firstSpectrum = spectrumList.spectrum(0, false);
+    Scan& firstScan = firstSpectrum->scanList.scans.empty() ? dummy : firstSpectrum->scanList.scans[0];
+    result.dStartTime = retentionTime(firstScan);
+
+    SpectrumPtr lastSpectrum = spectrumList.spectrum(spectrumList.size()-1, false);
+    Scan& lastScan = lastSpectrum->scanList.scans.empty() ? dummy : lastSpectrum->scanList.scans[0];
+    result.dEndTime = retentionTime(lastScan);
 }
 
 
