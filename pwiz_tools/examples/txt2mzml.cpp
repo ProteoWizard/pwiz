@@ -47,7 +47,7 @@ void flush(SpectrumListSimple& sl, const string& nativeID, const string& msLevel
     // fill in a new Spectrum and append it to the SpectrumList
     SpectrumPtr spectrum(new Spectrum);
     spectrum->index = sl.size();
-    spectrum->nativeID = nativeID;
+    spectrum->id = "scan=" + nativeID;
     spectrum->set(MS_ms_level, msLevel);
     spectrum->setMZIntensityPairs(pairs);
     sl.spectra.push_back(spectrum);

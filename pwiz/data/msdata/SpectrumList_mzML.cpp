@@ -54,7 +54,6 @@ class SpectrumList_mzMLImpl : public SpectrumList
     virtual size_t size() const {return index_.size();}
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
-    virtual size_t findNative(const std::string& nativeID) const;
     virtual IndexList findSpotID(const std::string& spotID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
 
@@ -64,7 +63,6 @@ class SpectrumList_mzMLImpl : public SpectrumList
     const MSData& msd_;
     vector<SpectrumIdentity> index_;
     map<string,size_t> idToIndex_;
-    map<string,size_t> nativeIDToIndex_;
     map<string,IndexList> spotIDToIndexList_;
 
     void readIndex();
@@ -98,13 +96,6 @@ size_t SpectrumList_mzMLImpl::find(const string& id) const
 {
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
     return it!=idToIndex_.end() ? it->second : size();
-}
-
-
-size_t SpectrumList_mzMLImpl::findNative(const string& nativeID) const
-{
-    map<string,size_t>::const_iterator it=nativeIDToIndex_.find(nativeID);
-    return it!=nativeIDToIndex_.end() ? it->second : size();
 }
 
 
@@ -186,7 +177,6 @@ struct HandlerOffset : public SAXParser::Handler
             throw runtime_error(("[SpectrumList_mzML::HandlerOffset] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "idRef", spectrumIdentity->id);
-        getAttribute(attributes, "nativeID", spectrumIdentity->nativeID);
         getAttribute(attributes, "spotID", spectrumIdentity->spotID);
 
         return Status::Ok;
@@ -327,7 +317,6 @@ class HandlerIndexCreator : public SAXParser::Handler
             SpectrumIdentity si;
             getAttribute(attributes, "index", index);
             getAttribute(attributes, "id", si.id);
-            getAttribute(attributes, "nativeID", si.nativeID);
             getAttribute(attributes, "spotID", si.spotID);
 
             si.index = lexical_cast<int>(index);
@@ -370,7 +359,7 @@ void SpectrumList_mzMLImpl::createMaps()
     it=index_.begin();
     for (size_t i=0; i!=index_.size(); ++i, ++it)
     {
-        idToIndex_[it->id] = nativeIDToIndex_[it->nativeID] = i;
+        idToIndex_[it->id] = i;
         if (!it->spotID.empty())
             spotIDToIndexList_[it->spotID].push_back(i);
     }   

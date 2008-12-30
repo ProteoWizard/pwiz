@@ -215,7 +215,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PrecursorRecalculator::spectrum(size_t in
         cerr << e.what() << endl
              << "[SpectrumList_PrecursorRecalculator] Caught exception in spectrum index "
              << originalSpectrum->index << " (" << originalSpectrum->id << ","
-             << originalSpectrum->nativeID << ")\n";
+             << ")\n";
         return originalSpectrum;
     }
 

@@ -47,7 +47,7 @@ SpectrumListPtr createSpectrumList()
     {
         SpectrumPtr spectrum(new Spectrum);
         spectrum->index = i;
-        spectrum->nativeID = lexical_cast<string>(100+i);
+        spectrum->id = "scan=" + lexical_cast<string>(100+i);
         vector<MZIntensityPair> pairs(i);
         spectrum->setMZIntensityPairs(pairs);
         spectrum->set(MS_ms_level, i%3==0?1:2);
@@ -64,7 +64,7 @@ SpectrumListPtr createSpectrumList()
         {
             SpectrumPtr spectrum = sl->spectrum(i, false);
             *os_ << spectrum->index << " " 
-                 << spectrum->nativeID << " "
+                 << spectrum->id << " "
                  << "ms" << spectrum->cvParam(MS_ms_level).value << " "
                  << "scanEvent:" << spectrum->scanList.scans[0].cvParam(MS_preset_scan_configuration).value << " "
                  << endl;
@@ -98,12 +98,12 @@ void testEven(SpectrumListPtr sl)
     {
         const SpectrumIdentity& id = filter.spectrumIdentity(i); 
         unit_assert(id.index == i);
-        unit_assert(id.nativeID == lexical_cast<string>(100+i*2));
+        unit_assert(id.id == "scan=" + lexical_cast<string>(100+i*2));
 
         SpectrumPtr spectrum = filter.spectrum(i);
-        if (os_) *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+        if (os_) *os_ << spectrum->index << " " << spectrum->id << endl;
         unit_assert(spectrum->index == i);
-        unit_assert(spectrum->nativeID == lexical_cast<string>(100+i*2));
+        unit_assert(spectrum->id == "scan=" + lexical_cast<string>(100+i*2));
     }
 
     if (os_) *os_ << endl;
@@ -138,16 +138,16 @@ void testEvenMS2(SpectrumListPtr sl)
         for (size_t i=0, end=filter.size(); i<end; i++)
         {
             SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+            *os_ << spectrum->index << " " << spectrum->id << endl;
         }
 
         *os_ << endl;
     }
 
     unit_assert(filter.size() == 3);
-    unit_assert(filter.spectrumIdentity(0).nativeID == "102");
-    unit_assert(filter.spectrumIdentity(1).nativeID == "104");
-    unit_assert(filter.spectrumIdentity(2).nativeID == "108");
+    unit_assert(filter.spectrumIdentity(0).id == "scan=102");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=108");
 }
 
 
@@ -186,16 +186,16 @@ void testSelectedIndices(SpectrumListPtr sl)
         for (size_t i=0, end=filter.size(); i<end; i++)
         {
             SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+            *os_ << spectrum->index << " " << spectrum->id << endl;
         }
 
         *os_ << endl;
     }
 
     unit_assert(filter.size() == 3);
-    unit_assert(filter.spectrumIdentity(0).nativeID == "101");
-    unit_assert(filter.spectrumIdentity(1).nativeID == "103");
-    unit_assert(filter.spectrumIdentity(2).nativeID == "105");
+    unit_assert(filter.spectrumIdentity(0).id == "scan=101");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=105");
 }
 
 
@@ -217,18 +217,18 @@ void testIndexSet(SpectrumListPtr sl)
         for (size_t i=0, end=filter.size(); i<end; i++)
         {
             SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+            *os_ << spectrum->index << " " << spectrum->id << endl;
         }
 
         *os_ << endl;
     }
 
     unit_assert(filter.size() == 5);
-    unit_assert(filter.spectrumIdentity(0).nativeID == "103");
-    unit_assert(filter.spectrumIdentity(1).nativeID == "104");
-    unit_assert(filter.spectrumIdentity(2).nativeID == "105");
-    unit_assert(filter.spectrumIdentity(3).nativeID == "107");
-    unit_assert(filter.spectrumIdentity(4).nativeID == "109");
+    unit_assert(filter.spectrumIdentity(0).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=105");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=107");
+    unit_assert(filter.spectrumIdentity(4).id == "scan=109");
 }
 
 
@@ -249,17 +249,17 @@ void testScanNumberSet(SpectrumListPtr sl)
         for (size_t i=0, end=filter.size(); i<end; i++)
         {
             SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+            *os_ << spectrum->index << " " << spectrum->id << endl;
         }
 
         *os_ << endl;
     }
 
     unit_assert(filter.size() == 4);
-    unit_assert(filter.spectrumIdentity(0).nativeID == "102");
-    unit_assert(filter.spectrumIdentity(1).nativeID == "103");
-    unit_assert(filter.spectrumIdentity(2).nativeID == "104");
-    unit_assert(filter.spectrumIdentity(3).nativeID == "107");
+    unit_assert(filter.spectrumIdentity(0).id == "scan=102");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=107");
 }
 
 
@@ -280,20 +280,20 @@ void testScanEventSet(SpectrumListPtr sl)
         for (size_t i=0, end=filter.size(); i<end; i++)
         {
             SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->nativeID << endl;
+            *os_ << spectrum->index << " " << spectrum->id << endl;
         }
 
         *os_ << endl;
     }
 
     unit_assert(filter.size() == 7);
-    unit_assert(filter.spectrumIdentity(0).nativeID == "100");
-    unit_assert(filter.spectrumIdentity(1).nativeID == "102");
-    unit_assert(filter.spectrumIdentity(2).nativeID == "103");
-    unit_assert(filter.spectrumIdentity(3).nativeID == "104");
-    unit_assert(filter.spectrumIdentity(4).nativeID == "106");
-    unit_assert(filter.spectrumIdentity(5).nativeID == "107");
-    unit_assert(filter.spectrumIdentity(6).nativeID == "108");
+    unit_assert(filter.spectrumIdentity(0).id == "scan=100");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=102");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(4).id == "scan=106");
+    unit_assert(filter.spectrumIdentity(5).id == "scan=107");
+    unit_assert(filter.spectrumIdentity(6).id == "scan=108");
 }
 
 

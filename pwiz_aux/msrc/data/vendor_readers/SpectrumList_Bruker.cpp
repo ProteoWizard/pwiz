@@ -85,6 +85,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Bruker::spectrumIdentity(size
 }
 
 
+/*
 PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 {
     string nativeID = bal::trim_left_copy_if(id, bal::is_any_of("S"));
@@ -99,6 +100,7 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::findNative(const string& nativeID) con
         return size_;
     return scanItr->second;
 }
+*/
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const
 {
@@ -123,7 +125,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
     result->index = si.index;
     result->id = si.id;
-    result->nativeID = si.nativeID;
 
     Scan dummy;
     Scan& scan = result->scanList.scans.empty() ? dummy : result->scanList.scans[0];
@@ -338,9 +339,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
         index_.push_back(SpectrumIdentity());
         SpectrumIdentity& si = index_.back();
         si.index = i;
-        si.nativeID = lexical_cast<string>(i);
-        si.id = "S" + si.nativeID;
-        nativeIdToIndexMap_[si.nativeID] = si.index;
+        si.id = "scan=" + lexical_cast<string>(i);
+        //nativeIdToIndexMap_[si.nativeID] = si.index;
     }
 
     BOOST_FOREACH(CVID spectrumType, spectrumTypes)

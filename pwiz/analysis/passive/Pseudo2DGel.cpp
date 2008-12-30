@@ -280,8 +280,8 @@ struct prob_comp
 
         try
         {
-            string nativeID_x = impl->cache_[x].nativeID;
-            string nativeID_y = impl->cache_[y].nativeID;
+            string nativeID_x = id::value(impl->cache_[x].id, "scan");
+            string nativeID_y = id::value(impl->cache_[y].id, "scan");
             
             if (impl->config_.peptide_id != NULL)
             {
@@ -400,11 +400,13 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
     if (cache_[cachedIndex].precursors.size() == 0)
     {
         ostringstream oss;
-        oss << "No precursors found for ms2 w/ nativeID "
-            << cache_[cachedIndex].nativeID;
+        oss << "No precursors found for ms2 w/ scan number "
+            << id::value(cache_[cachedIndex].id, "scan");
         throw logic_error(oss.str());
     }
 
+    // TODO: commented out until nativeID usage can be fixed -- dk
+    /*
     const string* nativeID = &cache_[cachedIndex].nativeID;
     double mz1, mz;
     mz1 = mz = cache_[cachedIndex].basePeakMZ;
@@ -431,6 +433,7 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
         PeptideID::Record rMs1 = config_.peptide_id->record(locMs1);
         score = rMs1.normalizedScore;
     }
+    */
 
     if (score > 0)
         cout << "score greater than 0" << endl;
@@ -891,7 +894,7 @@ size_t Pseudo2DGel::Impl::countUniquePeptides(const ScanList& scans)
             try
             {
                 PeptideID::Record record = config_.peptide_id->record(
-                    PeptideID::Location(cache_[index].nativeID,
+                    PeptideID::Location(lexical_cast<string>(cache_[index].scanNumber), // TODO check nativeID usage -- dk
                                         cache_[index].retentionTime,
                                         cache_[index].basePeakMZ));
                 string sequence = record.sequence;

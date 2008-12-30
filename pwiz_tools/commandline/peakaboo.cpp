@@ -203,8 +203,8 @@ void processFile(const string& filename, const Config& config)
 
             peakdata::Scan pdScan;
             pdScan.index = info.index;
-            pdScan.nativeID = info.nativeID;
-            pdScan.scanNumber = lexical_cast<int>(info.nativeID); // TODO: decide what to do with scan numbers
+            pdScan.nativeID = info.id;
+            pdScan.scanNumber = id::valueAs<int>(info.id, "scan"); // TODO: decide what to do with scan numbers
             pdScan.retentionTime = info.retentionTime;
 
             if (info.data.empty())

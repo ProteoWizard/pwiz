@@ -254,20 +254,6 @@ struct PrecursorInfo
 };
 
 
-int idToScanNumber(const string& id, const SpectrumListPtr spectrumListPtr)
-{
-    if (!spectrumListPtr.get()) return -1;
-
-    size_t index = spectrumListPtr->find(id);
-    if (index == spectrumListPtr->size()) return -1;
-
-    string nativeID = spectrumListPtr->spectrumIdentity(index).nativeID;
-    if (nativeID.empty()) return -1;
-
-    return lexical_cast<int>(nativeID);
-}
-
-
 vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum, 
                                        const SpectrumListPtr spectrumListPtr)
 {
@@ -278,7 +264,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
     {
         PrecursorInfo info;
         if (!it->spectrumID.empty())
-            info.scanNum = lexical_cast<string>(idToScanNumber(it->spectrumID, spectrumListPtr));
+            info.scanNum = id::value(it->spectrumID, "scan");
         if (!it->selectedIons.empty())
         { 
             info.mz = it->selectedIons[0].cvParam(MS_m_z).value;
@@ -353,7 +339,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
                       const Serializer_mzXML::Config& config)
 {
     IndexEntry result;
-    result.scanNumber = lexical_cast<int>(spectrum.nativeID);
+    result.scanNumber = id::valueAs<int>(spectrum.id, "scan");
     result.offset = xmlWriter.positionNext();
     
     // get info
@@ -414,7 +400,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     // write out xml
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("num", spectrum.nativeID));
+    attributes.push_back(make_pair("num", id::value(spectrum.id, "scan")));
     if (!scanEvent.empty())
         attributes.push_back(make_pair("scanEvent", scanEvent));
     if (!scanType.empty())
@@ -487,7 +473,7 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
     for (vector<IndexEntry>::const_iterator it=index.begin(); it!=index.end(); ++it)
     {
         XMLWriter::Attributes entryAttributes;
-        entryAttributes.push_back(make_pair("id", lexical_cast<string>(it->scanNumber)));
+        entryAttributes.push_back(make_pair("id", "scan="+lexical_cast<string>(it->scanNumber)));
         xmlWriter.startElement("offset", entryAttributes);
         xmlWriter.characters(lexical_cast<string>(it->offset));
         xmlWriter.endElement(); // offset

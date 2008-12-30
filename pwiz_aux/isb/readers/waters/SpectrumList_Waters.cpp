@@ -57,7 +57,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size
     return index_[index].first;
 }
 
-
+/*
 PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 {
     vector<string> tokens;
@@ -114,7 +114,7 @@ PWIZ_API_DECL size_t SpectrumList_Waters::findNative(const string& nativeID) con
         return size();
     return scanItr->second;
 }
-
+*/
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
@@ -143,7 +143,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
     result->index = si.index;
     result->id = si.id;
-    result->nativeID = si.nativeID;
 
     float laserAimX = pExScanStats_->LaserAimXPos;
     float laserAimY = pExScanStats_->LaserAimYPos;
@@ -283,8 +282,9 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             pair<SpectrumIdentity, pair<short, long> >& indexPair = index_.back();
             SpectrumIdentity& si = indexPair.first;
             si.index = index_.size()-1;
-            si.nativeID = (format("%d,%d") % curFunction % (i+1)).str();
-            si.id = "S" + si.nativeID;
+            //si.nativeID = (format("%d,%d") % curFunction % (i+1)).str(); // TODO: fix
+            si.id = "scan=" + (format("%d,%d") % curFunction % (i+1)).str(); // TODO: fix
+            //si.id = "S" + si.nativeID;
             nativeIdToIndexMap_[curFunction][i+1] = si.index;
             indexPair.second.first = curFunction;
             indexPair.second.second = i+1;

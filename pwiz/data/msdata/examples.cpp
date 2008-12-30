@@ -182,9 +182,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
 
     Spectrum& s19 = *spectrumList->spectra[0];
-    s19.id = "S19";
+    s19.id = "scan=19";
     s19.index = 0;
-    s19.nativeID = "19";
 
     s19.set(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
@@ -227,9 +226,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.defaultArrayLength = s19_mz->data.size();
 
     Spectrum& s20 = *spectrumList->spectra[1];
-    s20.id = "S20";
+    s20.id = "scan=20";
     s20.index = 1;
-    s20.nativeID = "20";
 
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
@@ -284,9 +282,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     // spectrum with no data
 
     Spectrum& s21 = *spectrumList->spectra[2]; 
-    s21.id = "S21";
+    s21.id = "scan=21";
     s21.index = 2;
-    s21.nativeID = "21";
 
     s21.set(MS_MSn_spectrum);
     s21.set(MS_ms_level, 1);
@@ -297,9 +294,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     // spectrum with MALDI spot information
     Spectrum& s22 = *spectrumList->spectra[3];
-    s22.id = "S22";
+    s22.id = "scan=22";
     s22.index = 3;
-    s22.nativeID = "22";
     s22.spotID = "A1,42x42,4242x4242";
 
     s22.set(MS_MSn_spectrum);
@@ -351,7 +347,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     Chromatogram& tic = *chromatogramList->chromatograms[0];
     tic.id = "tic";
     tic.index = 0;
-    tic.nativeID = "tic native";
     tic.defaultArrayLength = 15;
     tic.dataProcessingPtr = dpXcalibur;
     tic.set(MS_total_ion_current_chromatogram);
@@ -376,7 +371,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     Chromatogram& sic = *chromatogramList->chromatograms[1];
     sic.id = "sic";
     sic.index = 1;
-    sic.nativeID = "sic native";
     sic.defaultArrayLength = 10;
     sic.dataProcessingPtr = dppwiz;
     sic.set(MS_total_ion_current_chromatogram);

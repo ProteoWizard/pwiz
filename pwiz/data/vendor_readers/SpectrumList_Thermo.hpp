@@ -24,7 +24,6 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumList
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual size_t findNative(const string& nativeID) const;
     virtual const shared_ptr<const DataProcessing> dataProcessingPtr() const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;

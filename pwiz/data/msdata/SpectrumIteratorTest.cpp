@@ -53,7 +53,7 @@ void initializeSpectrumList(SpectrumListSimple& spectrumList)
     for (int i=0; i<=10; i++)
     {
         SpectrumPtr spectrum(new Spectrum);
-        spectrum->nativeID = lexical_cast<string>(i*5);
+        spectrum->id = lexical_cast<string>(i*5);
         
         spectrum->cvParams.push_back(i%2 ? 
             MS_FT_ICR :
@@ -97,7 +97,7 @@ void printSpectrumList(ostream& os, const SpectrumList& sl)
     for (unsigned int i=0; i<sl.size(); i++)
     {
         SpectrumPtr spectrum = sl.spectrum(i);
-        os << spectrum->nativeID << " "
+        os << spectrum->id << " "
            << anal(spectrum->cvParamChild(MS_mass_analyzer)) << endl;
 
         vector<MZIntensityPair> mziPairs;
@@ -114,13 +114,13 @@ void testBasic(const SpectrumList& sl)
 
     SpectrumIterator it(sl);
 
-    unit_assert(it->nativeID == "0");
+    unit_assert(it->id == "0");
     unit_assert((*it).cvParamChild(MS_mass_analyzer_type) == MS_ion_trap);
     unit_assert(it->binaryDataArrayPtrs.size() == 2);
 
     ++it; ++it; ++it; ++it; ++it; // advance to scan 5
 
-    unit_assert(it->nativeID == "25");
+    unit_assert(it->id == "25");
     unit_assert(it->cvParamChild(MS_mass_analyzer_type) == MS_FT_ICR);
     unit_assert(it->binaryDataArrayPtrs.size() == 2 &&
                 it->binaryDataArrayPtrs[0]->data.size() == 5);
@@ -129,7 +129,7 @@ void testBasic(const SpectrumList& sl)
 
 void doSomething(const Spectrum& spectrum)
 {
-    if (os_) *os_ << "spectrum: " << spectrum.nativeID << " "
+    if (os_) *os_ << "spectrum: " << spectrum.id << " "
                   << anal(spectrum.cvParamChild(MS_mass_analyzer)) << endl; 
     
     vector<MZIntensityPair> pairs;
@@ -141,7 +141,7 @@ void doSomething(const Spectrum& spectrum)
         *os_ << endl;
     }
   
-    unit_assert((int)pairs.size()*5 == lexical_cast<int>(spectrum.nativeID));
+    unit_assert((int)pairs.size()*5 == lexical_cast<int>(spectrum.id));
 }
 
 
@@ -174,7 +174,7 @@ void testIntegerSet(const SpectrumList& spectrumList)
 
 inline int getScanNumber(const Spectrum& spectrum) 
 {
-    return lexical_cast<int>(spectrum.nativeID);
+    return lexical_cast<int>(spectrum.id);
 }
 
 
@@ -248,10 +248,10 @@ void testMSDataConstruction()
     FTSieve sieve;
     for (SpectrumIterator it(msd, sieve); it!=SpectrumIterator(); ++it, ++i)
     {
-        if (os_) *os_ << it->nativeID << " "
+        if (os_) *os_ << it->id << " "
                       << anal(it->cvParamChild(MS_mass_analyzer)) << endl;
 
-        unit_assert(it->nativeID == lexical_cast<string>(5+i*10));
+        unit_assert(it->id == lexical_cast<string>(5+i*10));
     }
 }
 

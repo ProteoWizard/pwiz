@@ -423,7 +423,6 @@ void testSpectrum()
     
     a.index = 123;
     a.id = "goo";
-    a.nativeID = "420";
     a.defaultArrayLength = 666;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
     a.sourceFilePtr = SourceFilePtr(new SourceFile("sf"));
@@ -498,7 +497,6 @@ void testChromatogram()
     
     a.index = 123;
     a.id = "goo";
-    a.nativeID = "420";
     a.defaultArrayLength = 666;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp"));
     a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
@@ -552,14 +550,12 @@ void testSpectrumList()
     SpectrumPtr spectrum1(new Spectrum);
     spectrum1->id = "goober";
     spectrum1->index = 0;
-    spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
     spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
-    spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
     
@@ -579,14 +575,12 @@ void testSpectrumListWithPositions()
     SpectrumPtr spectrum1(new Spectrum);
     spectrum1->id = "goober";
     spectrum1->index = 0;
-    spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
     spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
-    spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
     
@@ -607,7 +601,7 @@ void testSpectrumListWithPositions()
 
     unit_assert(positions.size() == 2);
     unit_assert(positions[0] == 27);
-    unit_assert(positions[1] == 153);
+    unit_assert(positions[1] == 138);
 }
 
 
@@ -657,7 +651,6 @@ void testSpectrumListWriteProgress()
         SpectrumPtr spectrum(new Spectrum);
         spectrum->id = "goober_" + lexical_cast<string>(i);
         spectrum->index = i;
-        spectrum->nativeID = lexical_cast<string>(420 + i);
         spectrum->defaultArrayLength = 666;
         a.spectra.push_back(spectrum);
     }
@@ -717,13 +710,11 @@ void testChromatogramList()
     ChromatogramPtr chromatogram1(new Chromatogram);
     chromatogram1->id = "goober";
     chromatogram1->index = 0;
-    chromatogram1->nativeID = "420";
     chromatogram1->defaultArrayLength = 666;
 
     ChromatogramPtr chromatogram2(new Chromatogram);
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
-    chromatogram2->nativeID = "421";
     chromatogram2->defaultArrayLength = 667;
     
     a.chromatograms.push_back(chromatogram1);
@@ -742,13 +733,11 @@ void testChromatogramListWithPositions()
     ChromatogramPtr chromatogram1(new Chromatogram);
     chromatogram1->id = "goober";
     chromatogram1->index = 0;
-    chromatogram1->nativeID = "420";
     chromatogram1->defaultArrayLength = 666;
 
     ChromatogramPtr chromatogram2(new Chromatogram);
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
-    chromatogram2->nativeID = "421";
     chromatogram2->defaultArrayLength = 667;
     
     a.chromatograms.push_back(chromatogram1);
@@ -768,7 +757,7 @@ void testChromatogramListWithPositions()
 
     unit_assert(positions.size() == 2);
     unit_assert(positions[0] == 31);
-    unit_assert(positions[1] == 128);
+    unit_assert(positions[1] == 113);
 }
 
 
@@ -792,14 +781,12 @@ void testRun()
     SpectrumPtr spectrum1(new Spectrum);
     spectrum1->id = "goober";
     spectrum1->index = 0;
-    spectrum1->nativeID = "420";
     spectrum1->defaultArrayLength = 666;
     spectrum1->userParams.push_back(UserParam("description1"));
 
     SpectrumPtr spectrum2(new Spectrum);
     spectrum2->id = "raisinet";
     spectrum2->index = 1;
-    spectrum2->nativeID = "421";
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
     
@@ -815,13 +802,11 @@ void testRun()
     ChromatogramPtr chromatogram1(new Chromatogram);
     chromatogram1->id = "goober";
     chromatogram1->index = 0;
-    chromatogram1->nativeID = "420";
     chromatogram1->defaultArrayLength = 666;
 
     ChromatogramPtr chromatogram2(new Chromatogram);
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
-    chromatogram2->nativeID = "421";
     chromatogram2->defaultArrayLength = 667;
     
     chromatogramListSimple->chromatograms.push_back(chromatogram1);
@@ -1021,7 +1006,6 @@ void initializeTestData(MSData& msd)
     Spectrum& s19 = *spectrumList->spectra[0];
     s19.id = "S19";
     s19.index = 0;
-    s19.nativeID = "19";
     s19.defaultArrayLength = 10;
     s19.cvParams.push_back(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
@@ -1062,7 +1046,6 @@ void initializeTestData(MSData& msd)
     Spectrum& s20 = *spectrumList->spectra[1];
     s20.id = "S20";
     s20.index = 1;
-    s20.nativeID = "20";
     s20.defaultArrayLength = 10;
 
     s20.cvParams.push_back(MS_MSn_spectrum);
@@ -1122,7 +1105,6 @@ void initializeTestData(MSData& msd)
     Chromatogram& tic = *chromatogramList->chromatograms[0];
     tic.id = "tic";
     tic.index = 0;
-    tic.nativeID = "tic";
     tic.defaultArrayLength = 10;
     tic.cvParams.push_back(MS_total_ion_current_chromatogram);
 

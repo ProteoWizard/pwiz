@@ -29,7 +29,10 @@
 #include <iterator>
 #include "boost/lexical_cast.hpp"
 #include "boost/format.hpp"
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/split.hpp"
 #include "Diff.hpp"
+
 
 namespace pwiz {
 namespace msdata {
@@ -661,6 +664,46 @@ PWIZ_API_DECL bool TimeIntensityPair::operator==(const TimeIntensityPair& that) 
 
 
 //
+// id
+//
+
+
+namespace id {
+
+
+pair<string,string> stringToPair(const string& nameValuePair)
+{
+    string::size_type indexEquals = nameValuePair.find('=');
+    if (indexEquals==string::npos || indexEquals+1>=nameValuePair.size())
+        throw runtime_error(("[MSData::stringToPair] Bad format: " + nameValuePair).c_str());
+
+    return make_pair(nameValuePair.substr(0,indexEquals), nameValuePair.substr(indexEquals+1)); 
+}
+
+
+PWIZ_API_DECL map<string,string> parse(const string& id)
+{
+    vector<string> pairs;
+    boost::split(pairs, id, boost::is_any_of(" \t\n\r"));
+
+    map<string,string> result;
+    transform(pairs.begin(), pairs.end(), inserter(result, result.end()), stringToPair);
+
+    return result;
+}
+
+
+PWIZ_API_DECL string value(const string& id, const string& name)
+{
+    map<string,string> temp = parse(id);
+    return temp[name];
+}
+
+
+} // namespace id
+
+
+//
 // Spectrum 
 //
 
@@ -669,7 +712,6 @@ PWIZ_API_DECL bool Spectrum::empty() const
 {
     return index==0 &&
            id.empty() &&
-           nativeID.empty() &&
            defaultArrayLength==0 &&
            (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
            (!sourceFilePtr.get() || sourceFilePtr->empty()) && 
@@ -887,7 +929,6 @@ PWIZ_API_DECL bool Chromatogram::empty() const
 {
     return index==0 &&
            id.empty() &&
-           nativeID.empty() &&
            defaultArrayLength==0 &&
            (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
            binaryDataArrayPtrs.empty() &&
@@ -1012,12 +1053,13 @@ PWIZ_API_DECL size_t SpectrumList::find(const string& id) const
 }
 
 
-PWIZ_API_DECL size_t SpectrumList::findNative(const string& nativeID) const
+PWIZ_API_DECL IndexList SpectrumList::findNameValue(const string& name, const string& value) const
 {
+    IndexList result;
     for (size_t index=0; index<size(); ++index)
-        if (spectrumIdentity(index).nativeID == nativeID) 
-            return index;
-    return size();
+        if (id::value(spectrumIdentity(index).id, name) == value)
+            result.push_back(index);
+    return result;
 }
 
 
@@ -1074,15 +1116,6 @@ PWIZ_API_DECL size_t ChromatogramList::find(const string& id) const
 {
     for (size_t index=0; index<size(); ++index)
         if (chromatogramIdentity(index).id == id) 
-            return index;
-    return size();
-}
-
-
-PWIZ_API_DECL size_t ChromatogramList::findNative(const string& nativeID) const
-{
-    for (size_t index=0; index<size(); ++index)
-        if (chromatogramIdentity(index).nativeID == nativeID) 
             return index;
     return size();
 }

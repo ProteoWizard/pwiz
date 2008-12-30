@@ -83,14 +83,18 @@ void test(bool indexed)
 
     unit_assert(sl.get());
     unit_assert(sl->size() == 4);
-    unit_assert(sl->find ("S19") == 0);
-    unit_assert(sl->findNative("19") == 0);
-    unit_assert(sl->find("S20") == 1);
-    unit_assert(sl->findNative("20") == 1);
-    unit_assert(sl->find("S21") == 2);
-    unit_assert(sl->findNative("21") == 2);
-    unit_assert(sl->find("S22") == 3);
-    unit_assert(sl->findNative("22") == 3);
+    unit_assert(sl->find ("scan=19") == 0);
+    IndexList indexList = sl->findNameValue("scan", "19");
+    unit_assert(indexList.size()==1 && indexList[0]==0);
+    unit_assert(sl->find("scan=20") == 1);
+    indexList = sl->findNameValue("scan", "20");
+    unit_assert(indexList.size()==1 && indexList[0]==1);
+    unit_assert(sl->find("scan=21") == 2);
+    indexList = sl->findNameValue("scan", "21");
+    unit_assert(indexList.size()==1 && indexList[0]==2);
+    unit_assert(sl->find("scan=22") == 3);
+    indexList = sl->findNameValue("scan", "22");
+    unit_assert(indexList.size()==1 && indexList[0]==3);
 
     unit_assert(sl->findSpotID("A1").empty());
     IndexList spotIndexList = sl->findSpotID("A1,42x42,4242x4242");
@@ -102,15 +106,13 @@ void test(bool indexed)
 
     SpectrumPtr s = sl->spectrum(0); // read without binary data
     unit_assert(s.get());
-    unit_assert(s->id == "S19");
-    unit_assert(s->nativeID == "19");
+    unit_assert(s->id == "scan=19");
     unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
     unit_assert(s->binaryDataArrayPtrs.empty());
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
-    unit_assert(sl->spectrumIdentity(0).id == "S19");
-    unit_assert(sl->spectrumIdentity(0).nativeID == "19");
+    unit_assert(sl->spectrumIdentity(0).id == "scan=19");
     unit_assert(sl->spectrumIdentity(0).spotID.empty());
  
     s = sl->spectrum(0, true); // read with binary data
@@ -131,14 +133,12 @@ void test(bool indexed)
 
     s = sl->spectrum(1, true);
     unit_assert(s.get());
-    unit_assert(s->id == "S20");
-    unit_assert(s->nativeID == "20");
+    unit_assert(s->id == "scan=20");
     unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
 
     unit_assert(sl->spectrumIdentity(1).index == 1);
-    unit_assert(sl->spectrumIdentity(1).id == "S20");
-    unit_assert(sl->spectrumIdentity(1).nativeID == "20");
+    unit_assert(sl->spectrumIdentity(1).id == "scan=20");
     unit_assert(sl->spectrumIdentity(1).spotID.empty());
 
     pairs.clear();
@@ -156,14 +156,12 @@ void test(bool indexed)
     // check scan 22 (MALDI)
     s = sl->spectrum(3, true);
     unit_assert(s.get());
-    unit_assert(s->id == "S22");
-    unit_assert(s->nativeID == "22");
+    unit_assert(s->id == "scan=22");
     unit_assert(s->spotID == "A1,42x42,4242x4242");
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
 
     unit_assert(sl->spectrumIdentity(3).index == 3);
-    unit_assert(sl->spectrumIdentity(3).id == "S22");
-    unit_assert(sl->spectrumIdentity(3).nativeID == "22");
+    unit_assert(sl->spectrumIdentity(3).id == "scan=22");
     unit_assert(sl->spectrumIdentity(3).spotID == "A1,42x42,4242x4242");
 }
 

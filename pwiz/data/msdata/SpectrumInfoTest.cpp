@@ -47,8 +47,7 @@ void test()
     info.update(*tiny.run.spectrumListPtr->spectrum(0));
     
     unit_assert(info.index == 0);
-    unit_assert(info.id == "S19");
-    unit_assert(info.nativeID == "19");
+    unit_assert(info.id == "scan=19");
     unit_assert(info.scanNumber == 19);
     unit_assert(info.massAnalyzerType == MS_QIT);
     unit_assert(info.msLevel == 1);
@@ -66,8 +65,7 @@ void test()
 
     info.update(*tiny.run.spectrumListPtr->spectrum(1), true);
     unit_assert(info.index == 1);
-    unit_assert(info.id == "S20");
-    unit_assert(info.nativeID == "20");
+    unit_assert(info.id == "scan=20");
     unit_assert(info.scanNumber == 20);
     unit_assert(info.massAnalyzerType == MS_QIT);
     unit_assert(info.msLevel == 2);

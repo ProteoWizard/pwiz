@@ -52,10 +52,10 @@ void testRead(const string& rawpath)
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(spectrum->index == 0);
     unit_assert(spectrum->id == "S1,1");
-    unit_assert(spectrum->nativeID == "1,1");
+    //unit_assert(spectrum->nativeID == "1,1");
     unit_assert(sl.spectrumIdentity(0).index == 0);
     unit_assert(sl.spectrumIdentity(0).id == "S1,1");
-    unit_assert(sl.spectrumIdentity(0).nativeID == "1,1");
+    //unit_assert(sl.spectrumIdentity(0).nativeID == "1,1");
     //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
 
     vector<MZIntensityPair> data;
@@ -66,10 +66,10 @@ void testRead(const string& rawpath)
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(spectrum->index == 1);
     unit_assert(spectrum->id == "S1,2"); // derived from scan number
-    unit_assert(spectrum->nativeID == "1,2"); // scan number
+    //unit_assert(spectrum->nativeID == "1,2"); // scan number
     unit_assert(sl.spectrumIdentity(1).index == 1);
     unit_assert(sl.spectrumIdentity(1).id == "S1,2");
-    unit_assert(sl.spectrumIdentity(1).nativeID == "1,2");
+    //unit_assert(sl.spectrumIdentity(1).nativeID == "1,2");
     //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
 
     spectrum->getMZIntensityPairs(data);
@@ -81,7 +81,7 @@ void testRead(const string& rawpath)
     unit_assert(spectrum->id == "S1,3"); // scan number
     unit_assert(sl.spectrumIdentity(2).index == 2);
     unit_assert(sl.spectrumIdentity(2).id == "S1,3");
-    unit_assert(sl.spectrumIdentity(2).nativeID == "1,3");
+    //unit_assert(sl.spectrumIdentity(2).nativeID == "1,3");
     //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 2); 
  
     spectrum->getMZIntensityPairs(data);
@@ -90,7 +90,7 @@ void testRead(const string& rawpath)
     spectrum = sl.spectrum(5, true);
     unit_assert(sl.spectrumIdentity(5).index == 5);
     unit_assert(sl.spectrumIdentity(5).id == "S1,6");
-    unit_assert(sl.spectrumIdentity(5).nativeID == "1,6");
+    //unit_assert(sl.spectrumIdentity(5).nativeID == "1,6");
     //unit_assert(spectrum->spectrumDescription.precursors.size() == 1);
 
     // test file-level metadata 

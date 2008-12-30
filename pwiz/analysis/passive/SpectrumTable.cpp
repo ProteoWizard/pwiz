@@ -74,7 +74,6 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
 
     const size_t width_index = 7;
     const size_t width_id = 12;
-    const size_t width_nativeID = 12;
     const size_t width_massAnalyzerType = 9;
     const size_t width_scanEvent = 7;
     const size_t width_msLevel = 8;
@@ -91,7 +90,6 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
     os << setfill(' ')
        << setw(width_index) << "# index"
        << setw(width_id) << "id"
-       << setw(width_nativeID) << "nativeID"
        << setw(width_scanEvent) << "event"
        << setw(width_massAnalyzerType) << "analyzer"
        << setw(width_msLevel) << "msLevel"
@@ -110,7 +108,6 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
     {
         os << setw(width_index) << it->index 
            << setw(width_id) << it->id 
-           << setw(width_nativeID) << it->nativeID
            << setw(width_scanEvent) << it->scanEvent 
            << setw(width_massAnalyzerType) << it->massAnalyzerTypeAbbreviation()
            << setw(width_msLevel) << "ms" + lexical_cast<string>(it->msLevel)

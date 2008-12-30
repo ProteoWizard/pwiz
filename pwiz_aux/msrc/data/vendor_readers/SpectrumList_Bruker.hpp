@@ -58,8 +58,8 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
                         EDAL::IMSAnalysisPtr& pAnalysis);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
-    virtual size_t find(const string& id) const;
-    virtual size_t findNative(const string& nativeID) const;
+    //virtual size_t find(const string& id) const;
+    //virtual size_t findNative(const string& nativeID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
@@ -73,7 +73,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
     vector<SpectrumIdentity> index_;
 
     // nativeIdToIndexMap_[<function #>][<scan #>] == index
-    map<string, size_t> nativeIdToIndexMap_;
+    //map<string, size_t> nativeIdToIndexMap_;
 
     void createIndex();
     //string findPrecursorID(int precursorMsLevel, size_t index) const;

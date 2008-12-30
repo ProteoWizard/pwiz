@@ -601,9 +601,6 @@ struct PWIZ_API_DECL SpectrumIdentity
     /// a unique identifier for this spectrum. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular spectrum.
     std::string id;
 
-    /// the native identifier for the spectrum, used by the acquisition software.
-    std::string nativeID;
-
     /// the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
     std::string spotID;
 
@@ -623,14 +620,31 @@ struct PWIZ_API_DECL ChromatogramIdentity
     /// a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
     std::string id;
 
-    /// the native identifier for the chromatogram, used by the acquisition software.
-    std::string nativeID;
-
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
     ChromatogramIdentity() : index(0), sourceFilePosition(-1) {}
 };
+
+
+namespace id {
+
+/// parses an id string into a map<string,string>
+PWIZ_API_DECL std::map<std::string,std::string> parse(const std::string& id);
+
+/// convenience function to extract a named value from an id string
+PWIZ_API_DECL std::string value(const std::string& id, const std::string& name);
+
+/// templated convenience function to extract a named value from an id string 
+template<typename value_type>
+PWIZ_API_DECL value_type valueAs(const std::string& id, const std::string& name)
+{
+    std::string result = value(id, name);
+    return !result.empty() ? boost::lexical_cast<value_type>(result) 
+                          : boost::lexical_cast<value_type>(0);
+}
+
+} // namespace id
 
 
 /// The structure that captures the generation of a peak list (including the underlying acquisitions)
@@ -775,8 +789,8 @@ class PWIZ_API_DECL SpectrumList
     /// find id in the spectrum index (returns size() on failure)
     virtual size_t find(const std::string& id) const;
 
-    /// find nativeID in the spectrum index (returns size() on failure)
-    virtual size_t findNative(const std::string& nativeID) const;
+    /// find all spectrum indexes with specified name/value pair 
+    virtual IndexList findNameValue(const std::string& name, const std::string& value) const;
 
     /// find all spectrum indexes with spotID (returns empty vector on failure)
     virtual IndexList findSpotID(const std::string& spotID) const;
@@ -852,9 +866,6 @@ class PWIZ_API_DECL ChromatogramList
 
     /// find id in the chromatogram index (returns size() on failure)
     virtual size_t find(const std::string& id) const;
-
-    /// find nativeID in the chromatogram index (returns size() on failure)
-    virtual size_t findNative(const std::string& nativeID) const;
 
     /// retrieve a chromatogram by index
     /// - binary data arrays will be provided if (getBinaryData == true);

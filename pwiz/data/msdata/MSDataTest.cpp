@@ -107,8 +107,7 @@ void testSpectrumListSimple()
 
     SpectrumPtr spectrum0(new Spectrum);
     spectrum0->index = 0;
-    spectrum0->id = "id1";
-    spectrum0->nativeID = "420";
+    spectrum0->id = "scan=1";
 
     // add m/z values 0,...,9
     BinaryDataArrayPtr bd_mz(new BinaryDataArray);
@@ -127,8 +126,7 @@ void testSpectrumListSimple()
     
     SpectrumPtr spectrum1(new Spectrum);
     spectrum1->index = 1;
-    spectrum1->id = "id2";
-    spectrum1->nativeID = "666";
+    spectrum1->id = "scan=2";
     spectrum1->cvParams.push_back(MS_MSn_spectrum);
     spectrum1->cvParams.push_back(CVParam(MS_ionization_type, 420));
 
@@ -145,28 +143,31 @@ void testSpectrumListSimple()
     // verify index()
     const SpectrumList& spectrumList = *data.run.spectrumListPtr;
     unit_assert(spectrumList.size() == 2);
-    unit_assert(spectrumList.find("id1") == 0);
-    unit_assert(spectrumList.find("id2") == 1);
-    unit_assert(spectrumList.findNative("420") == 0);
-    unit_assert(spectrumList.findNative("666") == 1);
+    unit_assert(spectrumList.find("scan=1") == 0);
+    unit_assert(spectrumList.find("scan=2") == 1);
+
+    // verify findNameValue
+
+    IndexList result = spectrumList.findNameValue("scan", "1");
+    unit_assert(result.size()==1 && result[0]==0);
+
+    result = spectrumList.findNameValue("scan", "2");
+    unit_assert(result.size()==1 && result[0]==1);
 
     // verify spectrumIdentity()
 
     const SpectrumIdentity& identity0 = spectrumList.spectrumIdentity(0);
     unit_assert(identity0.index == spectrum0->index);
     unit_assert(identity0.id == spectrum0->id);
-    unit_assert(identity0.nativeID == spectrum0->nativeID);
 
     const SpectrumIdentity& identity1 = spectrumList.spectrumIdentity(1);
     unit_assert(identity1.index == spectrum1->index);
     unit_assert(identity1.id == spectrum1->id);
-    unit_assert(identity1.nativeID == spectrum1->nativeID);
 
     // verify spectrum 0
     SpectrumPtr spectrum = spectrumList.spectrum(0);
     unit_assert(spectrum->index == spectrum0->index);
     unit_assert(spectrum->id == spectrum0->id);
-    unit_assert(spectrum->nativeID == spectrum0->nativeID);
     
     // verify no extra copying of binary data arrays
     unit_assert(spectrum->binaryDataArrayPtrs.size() == 2);
@@ -216,7 +217,6 @@ void testSpectrumListSimple()
     spectrum = spectrumList.spectrum(1);
     unit_assert(spectrum->index == spectrum1->index);
     unit_assert(spectrum->id == spectrum1->id);
-    unit_assert(spectrum->nativeID == spectrum1->nativeID);
 }
 
 
@@ -247,6 +247,20 @@ void testChromatograms()
 }
 
 
+void testIDParsing()
+{
+    string id = "hair=blue favorite=420 age=36.175 upsideDown=1";
+
+    map<string,string> parsedID = id::parse(id); 
+    unit_assert(parsedID.size() == 4);
+
+    unit_assert(id::value(id, "hair") == "blue");
+    unit_assert(id::valueAs<int>(id, "favorite") == 420);
+    unit_assert_equal(id::valueAs<double>(id, "age"), 36.175, 1e-6);
+    unit_assert(id::valueAs<bool>(id, "upsideDown") == true);
+}
+
+
 int main()
 {
     try
@@ -254,6 +268,7 @@ int main()
         testParamContainer();
         testSpectrumListSimple();
         testChromatograms();
+        testIDParsing();
         return 0;
     }
     catch (exception& e)

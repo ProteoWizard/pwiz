@@ -64,7 +64,7 @@ void initialize(MSData& msd)
         SpectrumPtr spectrum(new Spectrum);
         sl->spectra.push_back(spectrum);
         spectrum->index = i;
-        spectrum->nativeID = lexical_cast<string>(18+(int)i);
+        spectrum->id = "scan=" + lexical_cast<string>(18+(int)i);
         spectrum->scanList.scans.push_back(Scan());
         spectrum->scanList.scans.back().cvParams.push_back(CVParam(MS_scan_time, 420+i, UO_second));
         spectrum->setMZIntensityPairs((MZIntensityPair*)data_[i], 7);

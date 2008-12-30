@@ -94,7 +94,7 @@ void cat(const char* filename)
         for (vector<MZIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
         {
             cout << " "
-                 << setw(columnWidth) << spectrum->nativeID
+                 << setw(columnWidth) << id::value(spectrum->id, "scan")
                  << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
                  << setw(columnWidth) << fixed << setprecision(4) << it->mz
                  << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;

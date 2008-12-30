@@ -61,7 +61,8 @@ class RAMPAdapter::Impl
 
     size_t index(int scanNumber) const 
     {
-        return msd_.run.spectrumListPtr->findNative(lexical_cast<string>(scanNumber));
+        IndexList result = msd_.run.spectrumListPtr->findNameValue("scan", lexical_cast<string>(scanNumber));
+        return result.empty() ? 0 : result[0];
     }
 
     void getScanHeader(size_t index, ScanHeaderStruct& result) const;
@@ -87,18 +88,6 @@ double retentionTime(const Scan& scan)
     return 0;
 }
 
-int scanNumber(const string& nativeID)
-{
-    try 
-    {
-        return lexical_cast<int>(nativeID);
-    }
-    catch (bad_lexical_cast&) 
-    {
-        return 0;
-    }
-}
-
 } // namespace
 
 
@@ -111,7 +100,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
     Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
 
     result.seqNum = static_cast<int>(index + 1);
-    result.acquisitionNum = scanNumber(spectrum->nativeID);
+    result.acquisitionNum = id::valueAs<int>(spectrum->id, "scan");
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
@@ -134,7 +123,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
         size_t precursorIndex = msd_.run.spectrumListPtr->find(precursor.spectrumID);
 
         if (precursorIndex < spectrumList.size())
-            result.precursorScanNum = scanNumber(spectrumList.spectrum(precursorIndex)->nativeID);
+            result.precursorScanNum = id::valueAs<int>(spectrumList.spectrum(precursorIndex)->id, "scan");
 
         if (!precursor.selectedIons.empty())
         {

@@ -119,7 +119,6 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
 
     const size_t width_index = 7;
     const size_t width_id = 12;
-    const size_t width_nativeID = 12;
     const size_t width_scanEvent = 7;
     const size_t width_massAnalyzerType = 9;
     const size_t width_msLevel = 8;
@@ -131,7 +130,6 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
     osPeaks << "# " << dataInfo.sourceFilename << endl
         << setw(width_index) << "# index"
         << setw(width_id) << "id"
-        << setw(width_nativeID) << "nativeID"
         << setw(width_scanEvent) << "event"
         << setw(width_massAnalyzerType) << "analyzer"
         << setw(width_msLevel) << "msLevel"
@@ -152,7 +150,6 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
         if (spectrumStats.sumIntensity)
         osPeaks << setw(width_index) << info.index
             << setw(width_id) << info.id
-            << setw(width_nativeID) << info.nativeID
             << setw(width_scanEvent) << info.scanEvent
             << setw(width_massAnalyzerType) << info.massAnalyzerTypeAbbreviation()
             << setw(width_msLevel) << "ms" + lexical_cast<string>(info.msLevel)
@@ -184,7 +181,6 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
     const SpectrumInfo& apexInfo = cache_[stats.indexApex];
     const RegionAnalyzer::SpectrumStats& apexStats = regionAnalyzer_->spectrumStats()[stats.indexApex];
     osSummary << "apex_id: " << apexInfo.id << endl
-              << "apex_nativeID: " << apexInfo.nativeID << endl
               << "apex_rt: " << apexInfo.retentionTime << endl
               << "apex_mz: " << apexStats.peak.mz << endl
               << "apex_intensity: " << apexStats.peak.intensity << endl;

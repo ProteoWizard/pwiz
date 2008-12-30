@@ -119,7 +119,6 @@ PWIZ_API_DECL const RegionAnalyzer::Stats& RegionAnalyzer::stats() const
 namespace {
 const size_t width_index_ = 7;
 const size_t width_id_ = 12;
-const size_t width_nativeID_ = 12;
 const size_t width_scanEvent_ = 7;
 const size_t width_massAnalyzerType_ = 9;
 const size_t width_msLevel_ = 8;
@@ -151,7 +150,6 @@ PWIZ_API_DECL void RegionAnalyzer::open(const DataInfo& dataInfo)
         impl_->osDump << "# " << dataInfo.sourceFilename << endl
             << setw(width_index_) << "# index"
             << setw(width_id_) << "id"
-            << setw(width_nativeID_) << "nativeID"
             << setw(width_scanEvent_) << "event"
             << setw(width_massAnalyzerType_) << "analyzer"
             << setw(width_msLevel_) << "msLevel"
@@ -237,7 +235,6 @@ void RegionAnalyzer::update(const DataInfo& dataInfo,
         if (impl_->osDump) impl_->osDump
             << setw(width_index_) << info.index
             << setw(width_id_) << info.id
-            << setw(width_nativeID_) << info.nativeID
             << setw(width_scanEvent_) << info.scanEvent
             << setw(width_massAnalyzerType_) << info.massAnalyzerTypeAbbreviation()
             << setw(width_msLevel_) << "ms" + lexical_cast<string>(info.msLevel)

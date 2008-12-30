@@ -54,7 +54,7 @@ void testWrap()
 
     SpectrumListFactory::wrap(msd, "index [1,1]");
     unit_assert(msd.run.spectrumListPtr->size() == 1);
-    unit_assert(msd.run.spectrumListPtr->spectrumIdentity(0).nativeID == "20");
+    unit_assert(msd.run.spectrumListPtr->spectrumIdentity(0).id == "scan=20");
 }
 
 

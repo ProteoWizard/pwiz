@@ -50,7 +50,6 @@ void clearSpectrumMetadata(Spectrum& spectrum)
     fresh.index = spectrum.index;
     fresh.spotID = spectrum.spotID;
     fresh.defaultArrayLength = spectrum.defaultArrayLength;
-    fresh.nativeID = spectrum.nativeID;
     swap(spectrum, fresh);
     swap(spectrum.binaryDataArrayPtrs, fresh.binaryDataArrayPtrs);
 }

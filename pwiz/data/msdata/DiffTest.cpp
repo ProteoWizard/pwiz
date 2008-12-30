@@ -689,7 +689,6 @@ void testSpectrum()
     unit_assert(!diff);
 
     b.index = 4;
-    a.nativeID = "420";
     b.defaultArrayLength = 22;
     a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata 2"));
     b.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
@@ -708,7 +707,6 @@ void testSpectrum()
 
     unit_assert(diff.a_b.index == 1);
     unit_assert(diff.a_b.id == "goober");
-    unit_assert(diff.a_b.nativeID == "420");
     unit_assert(diff.a_b.defaultArrayLength == 0);
     unit_assert(diff.a_b.dataProcessingPtr->id == "msdata 2");
     unit_assert(diff.a_b.precursors.size() == 1);
@@ -716,7 +714,6 @@ void testSpectrum()
 
     unit_assert(diff.b_a.index == 4);
     unit_assert(diff.b_a.id == "goober");
-    unit_assert(diff.b_a.nativeID.empty());
     unit_assert(diff.b_a.defaultArrayLength == 22);
     unit_assert(diff.b_a.dataProcessingPtr->id == "msdata");
     unit_assert(diff.b_a.precursors.empty());
@@ -786,10 +783,10 @@ void testSpectrumList()
     SpectrumListSimple aSimple, bSimple;
 
     SpectrumPtr spectrum1a = SpectrumPtr(new Spectrum);
-    spectrum1a->nativeID = "420";
+    spectrum1a->id = "420";
 
     SpectrumPtr spectrum1b = SpectrumPtr(new Spectrum);
-    spectrum1b->nativeID = "420";
+    spectrum1b->id = "420";
    
     aSimple.spectra.push_back(spectrum1a); 
     bSimple.spectra.push_back(spectrum1b); 
@@ -803,7 +800,7 @@ void testSpectrumList()
     // check: different SpectrumList::size()
     
     SpectrumPtr spectrum2 = SpectrumPtr(new Spectrum);
-    spectrum2->nativeID = "421";
+    spectrum2->id = "421";
     aSimple.spectra.push_back(spectrum2);
 
     diff(a, b);
@@ -815,20 +812,20 @@ void testSpectrumList()
     // check: same SpectrumList::size(), different last scan number 
 
     SpectrumPtr spectrum3 = SpectrumPtr(new Spectrum);
-    spectrum3->nativeID = "422";
+    spectrum3->id = "422";
     bSimple.spectra.push_back(spectrum3);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
     unit_assert(diff.a_b.spectra.size() == 1);
-    unit_assert(diff.a_b.spectra[0]->nativeID == "421");
+    unit_assert(diff.a_b.spectra[0]->id == "421");
     unit_assert(diff.b_a.spectra.size() == 1);
-    unit_assert(diff.b_a.spectra[0]->nativeID == "422");
+    unit_assert(diff.b_a.spectra[0]->id == "422");
 
     // check: scan numbers match, binary data slightly different
    
-    spectrum3->nativeID = "421";
+    spectrum3->id = "421";
     BinaryDataArrayPtr b1(new BinaryDataArray);
     BinaryDataArrayPtr b2(new BinaryDataArray);
     b1->data.resize(10);
@@ -859,10 +856,10 @@ void testChromatogramList()
     ChromatogramListSimple aSimple, bSimple;
 
     ChromatogramPtr chromatogram1a = ChromatogramPtr(new Chromatogram);
-    chromatogram1a->nativeID = "420";
+    chromatogram1a->id = "420";
 
     ChromatogramPtr chromatogram1b = ChromatogramPtr(new Chromatogram);
-    chromatogram1b->nativeID = "420";
+    chromatogram1b->id = "420";
    
     aSimple.chromatograms.push_back(chromatogram1a); 
     bSimple.chromatograms.push_back(chromatogram1b); 
@@ -882,7 +879,7 @@ void testChromatogramList()
     // check: different ChromatogramList::size()
     
     ChromatogramPtr chromatogram2 = ChromatogramPtr(new Chromatogram);
-    chromatogram2->nativeID = "421";
+    chromatogram2->id = "421";
     aSimple.chromatograms.push_back(chromatogram2);
 
     diff(a, b);
@@ -898,23 +895,23 @@ void testChromatogramList()
     // check: same ChromatogramList::size(), different last scan number 
 
     ChromatogramPtr chromatogram3 = ChromatogramPtr(new Chromatogram);
-    chromatogram3->nativeID = "422";
+    chromatogram3->id = "422";
     bSimple.chromatograms.push_back(chromatogram3);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
     unit_assert(diff.a_b.chromatograms.size() == 1);
-    unit_assert(diff.a_b.chromatograms[0]->nativeID == "421");
+    unit_assert(diff.a_b.chromatograms[0]->id == "421");
     unit_assert(diff.b_a.chromatograms.size() == 1);
-    unit_assert(diff.b_a.chromatograms[0]->nativeID == "422");
+    unit_assert(diff.b_a.chromatograms[0]->id == "422");
 
     diffIgnore(a,b);
     unit_assert(!diffIgnore);
 
     // check: scan numbers match, binary data slightly different
    
-    chromatogram3->nativeID = "421";
+    chromatogram3->id = "421";
     BinaryDataArrayPtr b1(new BinaryDataArray);
     BinaryDataArrayPtr b2(new BinaryDataArray);
     b1->data.resize(10);
@@ -1090,7 +1087,6 @@ void testBinaryDataOnly()
         // copy "important" scan metadata
 
         to->index = from->index;
-        to->nativeID = from->nativeID;
         to->defaultArrayLength = from->defaultArrayLength;
         to->scanList = from->scanList;
 
@@ -1120,7 +1116,6 @@ void testBinaryDataOnly()
         // copy "important" scan metadata
 
         to->index = from->index;
-        to->nativeID = from->nativeID;
         to->defaultArrayLength = from->defaultArrayLength;
     }
 

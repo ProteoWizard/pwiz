@@ -59,7 +59,6 @@ class ChromatogramList_mzMLImpl : public ChromatogramList
     virtual size_t size() const {return index_.size();}
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
-    virtual size_t findNative(const std::string& nativeID) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
 
 
@@ -68,7 +67,6 @@ class ChromatogramList_mzMLImpl : public ChromatogramList
     const MSData& msd_;
     vector<ChromatogramIdentity> index_;
     map<string,size_t> idToIndex_;
-    map<string,size_t> nativeIDToIndex_;
     mutable vector<ChromatogramPtr> chromatogramCache_;
 
     void readIndex();
@@ -103,13 +101,6 @@ size_t ChromatogramList_mzMLImpl::find(const string& id) const
 {
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
     return it!=idToIndex_.end() ? it->second : size();
-}
-
-
-size_t ChromatogramList_mzMLImpl::findNative(const string& nativeID) const
-{
-    map<string,size_t>::const_iterator it=nativeIDToIndex_.find(nativeID);
-    return it!=nativeIDToIndex_.end() ? it->second : size();
 }
 
 
@@ -195,7 +186,6 @@ struct HandlerOffset : public SAXParser::Handler
             throw runtime_error(("[ChromatogramList_mzML::HandlerOffset] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "idRef", chromatogramIdentity->id);
-        getAttribute(attributes, "nativeID", chromatogramIdentity->nativeID);
 
         return Status::Ok;
     }
@@ -347,15 +337,13 @@ class HandlerIndexCreator : public SAXParser::Handler
     {
         if (name == "chromatogram")
         {
-            string index, id, nativeID;
+            string index, id;
             getAttribute(attributes, "index", index);
             getAttribute(attributes, "id", id);
-            getAttribute(attributes, "nativeID", nativeID);
 
             ChromatogramIdentity si;
             si.index = lexical_cast<size_t>(index);
             si.id = id;
-            si.nativeID = nativeID;
             si.sourceFilePosition = position;
 
             if (si.index != index_.size())
@@ -393,7 +381,7 @@ void ChromatogramList_mzMLImpl::createMaps()
 {
     vector<ChromatogramIdentity>::const_iterator it=index_.begin();
     for (size_t i=0; i!=index_.size(); ++i, ++it)
-        idToIndex_[it->id] = nativeIDToIndex_[it->nativeID] = i;
+        idToIndex_[it->id] = i;
 }
 
 

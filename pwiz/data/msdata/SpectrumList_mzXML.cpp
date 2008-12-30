@@ -140,7 +140,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
             
-            precursor->spectrumID = precursorScanNum;
+            precursor->spectrumID = "scan=" + precursorScanNum;
 
             precursor->selectedIons.push_back(SelectedIon());
 
@@ -304,8 +304,7 @@ class HandlerScan : public SAXParser::Handler
             getAttribute(attributes, "startMz", startMz);
             getAttribute(attributes, "endMz", endMz);
 
-            spectrum_.id = num;
-            spectrum_.nativeID = num;
+            spectrum_.id = "scan=" + num;
             spectrum_.sourceFilePosition = position;
 
             if (msLevel.empty())
@@ -542,7 +541,6 @@ struct HandlerOffset : public SAXParser::Handler
             throw runtime_error(("[SpectrumList_mzXML::HandlerOffset] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "id", spectrumIdentity->id);
-        spectrumIdentity->nativeID = spectrumIdentity->id; 
 
         return Status::Ok;
     }
@@ -657,7 +655,7 @@ class HandlerIndexCreator : public SAXParser::Handler
 
             SpectrumIdentity si;
             si.index = index_.size();
-            si.id = si.nativeID = scanNumber;
+            si.id = "scan=" + scanNumber;
             si.sourceFilePosition = position;
 
             index_.push_back(si);

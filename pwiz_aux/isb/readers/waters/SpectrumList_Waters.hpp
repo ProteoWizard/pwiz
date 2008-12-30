@@ -32,8 +32,10 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumList
     SpectrumList_Waters(const MSData& msd, const string& rawpath);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
+/*
     virtual size_t find(const string& id) const;
     virtual size_t findNative(const string& nativeID) const;
+*/
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     //virtual ChromatogramListPtr Chromatograms() const;
 

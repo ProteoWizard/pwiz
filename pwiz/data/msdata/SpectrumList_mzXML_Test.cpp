@@ -83,28 +83,31 @@ void test(bool indexed)
 
     unit_assert(sl.get());
     unit_assert(sl->size() == 4);
-    unit_assert(sl->find("19") == 0);
-    unit_assert(sl->findNative("19") == 0);
-    unit_assert(sl->find("20") == 1);
-    unit_assert(sl->findNative("20") == 1);
-    unit_assert(sl->find("21") == 2);
-    unit_assert(sl->findNative("21") == 2);
-    unit_assert(sl->find("22") == 3);
-    unit_assert(sl->findNative("22") == 3);
+
+    unit_assert(sl->find("scan=19") == 0);
+    IndexList indexList = sl->findNameValue("scan", "19");
+    unit_assert(indexList.size()==1 && indexList[0]==0);
+    unit_assert(sl->find("scan=20") == 1);
+    indexList = sl->findNameValue("scan", "20");
+    unit_assert(indexList.size()==1 && indexList[0]==1);
+    unit_assert(sl->find("scan=21") == 2);
+    indexList = sl->findNameValue("scan", "21");
+    unit_assert(indexList.size()==1 && indexList[0]==2);
+    unit_assert(sl->find("scan=22") == 3);
+    indexList = sl->findNameValue("scan", "22");
+    unit_assert(indexList.size()==1 && indexList[0]==3);
 
     // check scan 19
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
-    unit_assert(sl->spectrumIdentity(0).id == "19");
-    unit_assert(sl->spectrumIdentity(0).nativeID == "19");
+    unit_assert(sl->spectrumIdentity(0).id == "scan=19");
     unit_assert(sl->spectrumIdentity(0).sourceFilePosition != -1);
 
     SpectrumPtr s = sl->spectrum(0, false);
 
     unit_assert(s.get());
-    unit_assert(s->id == "19");
+    unit_assert(s->id == "scan=19");
     unit_assert(s->index == 0);
-    unit_assert(s->nativeID == "19");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
     unit_assert(s->scanList.scans.size() == 1);
@@ -147,14 +150,12 @@ void test(bool indexed)
     // check scan 20
 
     unit_assert(sl->spectrumIdentity(1).index == 1);
-    unit_assert(sl->spectrumIdentity(1).id == "20");
-    unit_assert(sl->spectrumIdentity(1).nativeID == "20");
+    unit_assert(sl->spectrumIdentity(1).id == "scan=20");
 
     s = sl->spectrum(1, true);
     unit_assert(s.get());
-    unit_assert(s->id == "20");
+    unit_assert(s->id == "scan=20");
     unit_assert(s->index == 1);
-    unit_assert(s->nativeID == "20");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
 
@@ -169,7 +170,7 @@ void test(bool indexed)
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_intensity));
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_charge_state));
     unit_assert(precursor.activation.hasCVParam(MS_collision_energy));
-    unit_assert(precursor.spectrumID == "19"); // Serializer_mzXML::read() sets id="19", not "S19"
+    unit_assert(precursor.spectrumID == "scan=19"); // Serializer_mzXML::read() sets
 
     pairs.clear();
     s->getMZIntensityPairs(pairs);

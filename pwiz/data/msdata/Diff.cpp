@@ -671,7 +671,6 @@ void diff(const Spectrum& a,
 
     // important scan metadata
     diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
-    diff(a.nativeID, b.nativeID, a_b.nativeID, b_a.nativeID, config);
     diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
     vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
 
@@ -717,9 +716,7 @@ void diff(const Spectrum& a,
     if (!a_b.empty() || !b_a.empty()) 
     {
         a_b.id = a.id; 
-        a_b.nativeID = a.nativeID; 
         b_a.id = b.id; 
-        b_a.nativeID = b.nativeID; 
     }
 }
 
@@ -736,7 +733,6 @@ void diff(const Chromatogram& a,
 
     // important scan metadata
     diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
-    diff(a.nativeID, b.nativeID, a_b.nativeID, b_a.nativeID, config);
     diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
 
     if (!config.ignoreMetadata)
@@ -779,9 +775,7 @@ void diff(const Chromatogram& a,
     if (!a_b.empty() || !b_a.empty()) 
     {
         a_b.id = a.id; 
-        a_b.nativeID = a.nativeID; 
         b_a.id = b.id; 
-        b_a.nativeID = b.nativeID; 
     }
 }
 

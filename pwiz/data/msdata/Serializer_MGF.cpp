@@ -66,7 +66,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1)
         {
             os << "BEGIN IONS\n";
-            os << "TITLE=" << s->nativeID << '\n';
+            os << "TITLE=" << s->id << '\n';
 
             CVParam scanTimeParam = s->cvParam(MS_scan_time);
             if (!scanTimeParam.empty())

@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
 			filename += ".gz";
 	        test(filename); // run it again with a gzipped file
 		}
-       boost::filesystem::remove(filename);
+        boost::filesystem::remove(filename);
         return 0;
     }
     catch (exception& e)

@@ -53,30 +53,14 @@ PWIZ_API_DECL SpectrumInfo::SpectrumInfo(const Spectrum& spectrum)
 }
 
 
-namespace {
-int nativeIDToScanNumber(const string& nativeID)
-{
-    try
-    {
-        return lexical_cast<int>(nativeID);
-    }
-    catch (bad_lexical_cast&)
-    {
-        return 0;
-    }
-}
-} // namespace
-
-
 PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinaryData)
 {
     *this = SpectrumInfo();
     clearBinaryData();
 
     id = spectrum.id;
-    nativeID = spectrum.nativeID;
     index = spectrum.index;
-    scanNumber = nativeIDToScanNumber(spectrum.nativeID);
+    scanNumber = id::valueAs<int>(spectrum.id, "scan");
 
     Scan dummy;
     const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];

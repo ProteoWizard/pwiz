@@ -99,7 +99,7 @@ SpectrumBinaryData::updateRequested(const DataInfo& dataInfo,
     {
         try
         {
-            size_t scanNumber = lexical_cast<size_t>(spectrumIdentity.nativeID);
+            size_t scanNumber = id::valueAs<size_t>(spectrumIdentity.id, "scan");
             if (scanNumber>=config_.begin && scanNumber<config_.end)
                 return UpdateRequest_Full;
         }

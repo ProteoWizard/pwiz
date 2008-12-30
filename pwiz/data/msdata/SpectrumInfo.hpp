@@ -49,7 +49,6 @@ struct PWIZ_API_DECL SpectrumInfo
 
     size_t index;
     std::string id;
-    std::string nativeID;
     int scanNumber;
     CVID massAnalyzerType;
     int scanEvent;

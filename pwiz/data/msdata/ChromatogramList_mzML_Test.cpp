@@ -72,22 +72,18 @@ void test(bool indexed)
 
     unit_assert(sl.get());
     unit_assert(sl->size() == 2);
-    unit_assert(sl->find ("tic") == 0);
-    unit_assert(sl->findNative("tic native") == 0);
+    unit_assert(sl->find("tic") == 0);
     unit_assert(sl->find("sic") == 1);
-    unit_assert(sl->findNative("sic native") == 1);
 
     // check tic
 
     ChromatogramPtr s = sl->chromatogram(0); // read without binary data
     unit_assert(s.get());
     unit_assert(s->id == "tic");
-    unit_assert(s->nativeID == "tic native");
     unit_assert(s->binaryDataArrayPtrs.empty());
 
     unit_assert(sl->chromatogramIdentity(0).index == 0);
     unit_assert(sl->chromatogramIdentity(0).id == "tic");
-    unit_assert(sl->chromatogramIdentity(0).nativeID == "tic native");
  
     ChromatogramPtr s_cache = sl->chromatogram(0); // cache read
     unit_assert(s_cache.get() == s.get());
@@ -106,11 +102,9 @@ void test(bool indexed)
     s = sl->chromatogram(1, true);
     unit_assert(s.get());
     unit_assert(s->id == "sic");
-    unit_assert(s->nativeID == "sic native");
 
     unit_assert(sl->chromatogramIdentity(1).index == 1);
     unit_assert(sl->chromatogramIdentity(1).id == "sic");
-    unit_assert(sl->chromatogramIdentity(1).nativeID == "sic native");
 
     pairs.clear();
     s->getTimeIntensityPairs(pairs);

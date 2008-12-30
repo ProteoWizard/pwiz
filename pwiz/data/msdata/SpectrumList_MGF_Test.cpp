@@ -87,15 +87,12 @@ void test()
     unit_assert(sl.get());
     unit_assert(sl->size() == 2);
     unit_assert(sl->find("small.pwiz.0003.0003.2") == 0);
-    unit_assert(sl->findNative("0") == 0);
     unit_assert(sl->find("small.pwiz.0004.0004.2") == 1);
-    unit_assert(sl->findNative("1") == 1);
 
     // check scan 0
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
     unit_assert(sl->spectrumIdentity(0).id == "small.pwiz.0003.0003.2");
-    unit_assert(sl->spectrumIdentity(0).nativeID == "0");
     unit_assert(sl->spectrumIdentity(0).sourceFilePosition != -1);
 
     SpectrumPtr s = sl->spectrum(0, false);
@@ -103,7 +100,6 @@ void test()
     unit_assert(s.get());
     unit_assert(s->id == "small.pwiz.0003.0003.2");
     unit_assert(s->index == 0);
-    unit_assert(s->nativeID == "0");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
     unit_assert_equal(s->cvParam(MS_total_ion_current).valueAs<double>(), 64.992226, 1e-5);
@@ -141,13 +137,11 @@ void test()
 
     unit_assert(sl->spectrumIdentity(1).index == 1);
     unit_assert(sl->spectrumIdentity(1).id == "small.pwiz.0004.0004.2");
-    unit_assert(sl->spectrumIdentity(1).nativeID == "1");
 
     s = sl->spectrum(1, true);
     unit_assert(s.get());
     unit_assert(s->id == "small.pwiz.0004.0004.2");
     unit_assert(s->index == 1);
-    unit_assert(s->nativeID == "1");
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
     unit_assert(s->scanList.scans.size() == 1);

@@ -26,7 +26,6 @@ public:
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual size_t findNative(const string& nativeID) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
     private:

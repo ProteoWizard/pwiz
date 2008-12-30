@@ -76,8 +76,7 @@ void test()
         simple->spectra.push_back(SpectrumPtr(new Spectrum));
         Spectrum& s = *simple->spectra.back();
         s.index = i;
-        s.id = "S" + lexical_cast<string>(i);
-        s.nativeID = lexical_cast<string>(i);
+        s.id = "scan=" + lexical_cast<string>(i);
     }
 
     // check MyWrapper 
@@ -88,19 +87,17 @@ void test()
     unit_assert(wrapper->size() == 10);
     for (size_t i=0; i<spectrumCount; i++)
     {
-        string id = "S" + lexical_cast<string>(i);
-        string nativeID = lexical_cast<string>(i);
+        string id = "scan=" + lexical_cast<string>(i);
 
         unit_assert(wrapper->find(id) == i);
-        unit_assert(wrapper->findNative(nativeID) == i);
+        IndexList indexList = wrapper->findNameValue("scan", lexical_cast<string>(i));
+        unit_assert(indexList.size()==1 && indexList[0]==i);
 
         const SpectrumIdentity& identity = wrapper->spectrumIdentity(i);
         unit_assert(identity.id == id);
-        unit_assert(identity.nativeID == nativeID);
 
         SpectrumPtr s = wrapper->spectrum(i);
         unit_assert(s->id == id);
-        unit_assert(s->nativeID == nativeID);
     }
 
     // check FilterWrapper
@@ -111,19 +108,18 @@ void test()
 
     for (size_t i=0; i<filterWrapper->size(); i++)
     {
-        string id = "S" + lexical_cast<string>(i*2);
-        string nativeID = lexical_cast<string>(i*2);
+        string id = "scan=" + lexical_cast<string>(i*2);
+        string scanNumber = lexical_cast<string>(i*2);
 
         unit_assert(filterWrapper->find(id) == i);
-        unit_assert(filterWrapper->findNative(nativeID) == i);
+        IndexList indexList = filterWrapper->findNameValue("scan", scanNumber);
+        unit_assert(indexList.size()==1 && indexList[0]==i);
 
         const SpectrumIdentity& identity = filterWrapper->spectrumIdentity(i);
         unit_assert(identity.id == id);
-        unit_assert(identity.nativeID == nativeID);
 
         SpectrumPtr s = filterWrapper->spectrum(i);
         unit_assert(s->id == id);
-        unit_assert(s->nativeID == nativeID);
     }
 }
 

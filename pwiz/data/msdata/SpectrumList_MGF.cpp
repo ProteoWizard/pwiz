@@ -93,7 +93,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             throw runtime_error("[SpectrumList_MGF::spectrum] Out of memory");
 
         result->index = index;
-        result->nativeID = lexical_cast<string>(index);
         result->sourceFilePosition = index_[index].sourceFilePosition;
 
         is_->seekg(bio::offset_to_position(result->sourceFilePosition));
@@ -160,8 +159,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 			    inBeginIons = false;
                 inPeakList = false;
 
-                if (spectrum.id.empty())
-                    spectrum.id = spectrum.nativeID;
+                //if (spectrum.id.empty()) spectrum.id = spectrum.nativeID; // TODO: check and remove
                 break;
             }
             else
@@ -277,8 +275,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 index_.push_back(SpectrumIdentity());
 			    curIdentityItr = index_.begin() + (index_.size()-1);
                 curIdentityItr->index = index_.size()-1;
-                curIdentityItr->nativeID = lexical_cast<string>(index_.size()-1);
-                curIdentityItr->id = curIdentityItr->nativeID;
+                curIdentityItr->id = lexical_cast<string>(index_.size()-1);
 			    curIdentityItr->sourceFilePosition = size_t(is_->tellg())-lineStr.length()-1;
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
 			    inBeginIons = true;

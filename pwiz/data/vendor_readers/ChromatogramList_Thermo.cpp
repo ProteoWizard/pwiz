@@ -47,12 +47,6 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 }
 
 
-PWIZ_API_DECL size_t ChromatogramList_Thermo::findNative(const string& nativeID) const
-{
-    return find(nativeID);
-}
-
-
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
 { 
     if (index>size())
@@ -63,6 +57,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     ChromatogramPtr result(new Chromatogram);
     result->index = ci.index;
     result->id = ci.id;
+    
+    // TODO: commented out nativeID usage until Matt can look at this -- dk
+/*
     result->nativeID = ci.nativeID;
 
     if (ci.nativeID == "TIC") // generate TIC for entire run
@@ -114,7 +111,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             result->setTimeIntensityPairs(data, cd->size());
         }
     }
-
+*/
     return result;
 }
 
@@ -125,8 +122,11 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex()
     index_.push_back(make_pair(ChromatogramIdentity(), ""));
     ChromatogramIdentity& ci = index_.back().first;
     ci.index = index_.size()-1;
-    ci.id = ci.nativeID = "TIC";
+    ci.id = "TIC";
     idMap_[ci.id] = ci.index;
+
+    // commented out until Matt can look at nativeID usage -- dk
+    /*
 
     // for certain filter types, support additional chromatograms
     auto_ptr<StringArray> filterArray = rawfile_->getFilters();
@@ -145,6 +145,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex()
             index_.push_back(make_pair(ChromatogramIdentity(), filterArray->item(i)));
             ChromatogramIdentity& ci = index_.back().first;
             ci.index = index_.size()-1;
+
             ci.nativeID = precursorMZ;
             ci.id = "SRM TIC " + ci.nativeID;
             idMap_[ci.id] = idMap_[ci.nativeID] = ci.index;
@@ -163,6 +164,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex()
             }
         }
     }
+    */
 
     /*ostringstream imStream;
     std::auto_ptr<LabelValueArray> imArray = rawfile_->getInstrumentMethods();

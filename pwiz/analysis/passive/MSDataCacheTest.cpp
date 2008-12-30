@@ -26,12 +26,14 @@
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
+#include "boost/lexical_cast.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using boost::shared_ptr;
+using boost::lexical_cast;
 
 
 ostream* os_ = 0;
@@ -46,7 +48,7 @@ void testMetadata(MSDataCache& cache)
     unit_assert(cache.size() == 4);
 
     unit_assert(cache[0].index == 0);
-    unit_assert(cache[0].id == "S19");
+    unit_assert(cache[0].id == "scan=19");
     unit_assert(cache[0].scanNumber == 19); // TODO: change to nativeID 
     unit_assert(cache[0].massAnalyzerType == MS_QIT);
     unit_assert(cache[0].msLevel == 1);
@@ -56,7 +58,7 @@ void testMetadata(MSDataCache& cache)
     unit_assert(cache[0].precursors.empty());
 
     unit_assert(cache[1].index == 1);
-    unit_assert(cache[1].id == "S20");
+    unit_assert(cache[1].id == "scan=20");
     unit_assert(cache[1].scanNumber == 20); // TODO:  change to nativeID
     unit_assert(cache[1].massAnalyzerType == MS_QIT);
     unit_assert(cache[1].msLevel == 2);
@@ -119,6 +121,7 @@ void testMRU()
         SpectrumPtr spectrum(new Spectrum);
         spectrum->setMZIntensityPairs(pairs);        
         spectrum->index = i;
+        spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);
     }
 
@@ -196,7 +199,7 @@ void testUpdateRequest()
         SpectrumPtr spectrum(new Spectrum);
         spectrum->setMZIntensityPairs(pairs);        
         spectrum->index = i;
-        spectrum->id = "something";
+        spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);
     }
 
@@ -218,7 +221,7 @@ void testUpdateRequest()
 
         // cache has only been updated with the spectra requested by EvenRequester
 
-        unit_assert(i%2==0 && info.index==i && info.id=="something" ||
+        unit_assert(i%2==0 && info.index==i && info.id=="scan="+lexical_cast<string>(i) ||
                     i%2==1 && info.index==(size_t)-1&& info.id.empty());
     }
 
@@ -238,7 +241,7 @@ void testAutomaticUpdate()
         SpectrumPtr spectrum(new Spectrum);
         spectrum->setMZIntensityPairs(pairs);        
         spectrum->index = i;
-        spectrum->id = "something";
+        spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);
     }
 
@@ -271,10 +274,10 @@ void testAutomaticUpdate()
     unit_assert(info7.data.size() == 100);
     unit_assert(info5.data.size() == 0);
 
-    unit_assert(info5.index==5 && info5.id=="something");
-    unit_assert(cache[5].index==5 && cache[5].id=="something");
-    unit_assert(info7.index==7 && info7.id=="something");
-    unit_assert(cache[7].index==7 && cache[7].id=="something");
+    unit_assert(info5.index==5 && info5.id=="scan=5");
+    unit_assert(cache[5].index==5 && cache[5].id=="scan=5");
+    unit_assert(info7.index==7 && info7.id=="scan=7");
+    unit_assert(cache[7].index==7 && cache[7].id=="scan=7");
 
     for (size_t i=0; i<cache.size(); i++)
         if (i!=5 && i!=7)

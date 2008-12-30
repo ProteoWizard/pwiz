@@ -19,7 +19,7 @@ namespace detail {
 
 string scanNumberToSpectrumID(long scanNumber)
 {
-    return "S" + lexical_cast<string>(scanNumber); 
+    return "scan=" + lexical_cast<string>(scanNumber); 
 }
 
 
@@ -58,12 +58,6 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     catch (bad_lexical_cast&) {}
 
     return size();
-}
-
-
-PWIZ_API_DECL size_t SpectrumList_Thermo::findNative(const string& nativeID) const
-{
-    return find(nativeID);
 }
 
 
@@ -112,7 +106,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     result->index = index;
     result->id = scanNumberToSpectrumID(scanNumber);
-    result->nativeID = lexical_cast<string>(scanNumber);
 
     if (scanInfo->ionizationType() == IonizationType_MALDI)
     {
@@ -263,7 +256,6 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         si.index = i;
         long scanNumber = (long)i+1;
         si.id = scanNumberToSpectrumID(scanNumber); 
-        si.nativeID = lexical_cast<string>(scanNumber);
     }
 }
 

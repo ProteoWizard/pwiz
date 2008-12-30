@@ -1678,7 +1678,6 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("index", lexical_cast<string>(spectrum.index)));
     attributes.push_back(make_pair("id", spectrum.id));
-    attributes.push_back(make_pair("nativeID", spectrum.nativeID));
     if (!spectrum.spotID.empty())
         attributes.push_back(make_pair("spotID", spectrum.spotID));
     attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(spectrum.defaultArrayLength)));
@@ -1748,9 +1747,16 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             getAttribute(attributes, "id", spectrum->id);
             getAttribute(attributes, "index", spectrum->index);
-            getAttribute(attributes, "nativeID", spectrum->nativeID);
             getAttribute(attributes, "spotID", spectrum->spotID);
             getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
+
+            string nativeID;
+            getAttribute(attributes, "nativeID", nativeID);
+            if (!nativeID.empty())
+            {
+                cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
+                spectrum->id = "scan=" + nativeID;
+            }
 
             // note: placeholder
             string dataProcessingRef;
@@ -1840,7 +1846,6 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("index", lexical_cast<string>(chromatogram.index)));
     attributes.push_back(make_pair("id", chromatogram.id));
-    attributes.push_back(make_pair("nativeID", chromatogram.nativeID));
     attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(chromatogram.defaultArrayLength)));
     if (chromatogram.dataProcessingPtr.get())
         attributes.push_back(make_pair("dataProcessingRef", chromatogram.dataProcessingPtr->id));
@@ -1890,7 +1895,6 @@ struct HandlerChromatogram : public HandlerParamContainer
 
             getAttribute(attributes, "id", chromatogram->id);
             getAttribute(attributes, "index", chromatogram->index);
-            getAttribute(attributes, "nativeID", chromatogram->nativeID);
             getAttribute(attributes, "defaultArrayLength", chromatogram->defaultArrayLength);
 
             // note: placeholder

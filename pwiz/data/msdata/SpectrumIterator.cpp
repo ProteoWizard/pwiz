@@ -175,7 +175,7 @@ void SpectrumIterator::Impl::advanceToValidScanNumber()
 
     for (; currentScanNumber_!=scanNumbers_.end(); ++currentScanNumber_)
     {
-        currentIndex_ = spectrumList_.findNative(lexical_cast<string>(*currentScanNumber_));
+        currentIndex_ = spectrumList_.find(lexical_cast<string>(*currentScanNumber_)); // TODO: fix
         if (currentIndex_ < spectrumList_.size())
             break; 
     }

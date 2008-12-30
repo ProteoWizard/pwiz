@@ -205,7 +205,6 @@ class HandlerCompound : public SAXParser::Handler
             getAttribute(attributes, "rt_unit", rt_unit);
 
             spectrum_.id = cmpdnr;
-            spectrum_.nativeID = cmpdnr;
             spectrum_.sourceFilePosition = position;
 
             if (!rt.empty())
@@ -339,7 +338,7 @@ class HandlerIndexCreator : public SAXParser::Handler
 
             SpectrumIdentity si;
             si.index = index_.size();
-            si.id = si.nativeID = cmpdNumber;
+            si.id = cmpdNumber;
             si.sourceFilePosition = position;
 
             index_.push_back(si);

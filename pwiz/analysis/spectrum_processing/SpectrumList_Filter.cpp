@@ -166,7 +166,7 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPre
 
 PWIZ_API_DECL tribool SpectrumList_FilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
-    int scanNumber = lexical_cast<int>(spectrumIdentity.nativeID);
+    int scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
     if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
     bool result = scanNumberSet_.contains(scanNumber);
     return result;
