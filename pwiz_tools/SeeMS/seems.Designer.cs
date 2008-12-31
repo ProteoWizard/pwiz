@@ -1,6 +1,6 @@
 namespace seems
 {
-	partial class seems
+	partial class seemsForm
 	{
 
 		/// <summary>
@@ -29,7 +29,7 @@ namespace seems
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager( typeof( seems ) );
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager( typeof( seemsForm ) );
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
@@ -44,6 +44,7 @@ namespace seems
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previewAsMzMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.eventLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cascadeWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tileVerticalWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,21 +56,14 @@ namespace seems
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.openFileToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.annotateToolStripDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
-            this.peptideMassMappingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.annotateMassMapProteinDigestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fromSinglePeptideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.annotateMassMapSinglePeptideTextBox = new System.Windows.Forms.ToolStripTextBox();
-            this.peptideFragmentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.manualEditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.dataProcessingButton = new System.Windows.Forms.ToolStripButton();
+            this.annotationButton = new System.Windows.Forms.ToolStripButton();
             this.integratePeaksToolStripButton = new System.Windows.Forms.ToolStripSplitButton();
             this.peakIntegrationMode = new System.Windows.Forms.ToolStripMenuItem();
             this.clearCurrentIntegration = new System.Windows.Forms.ToolStripMenuItem();
             this.clearAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAllIntegrationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dataProcessingButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripPanel2 = new System.Windows.Forms.ToolStripPanel();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.statusStrip1.SuspendLayout();
@@ -186,7 +180,8 @@ namespace seems
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.previewAsMzMLToolStripMenuItem} );
+            this.previewAsMzMLToolStripMenuItem,
+            this.eventLogToolStripMenuItem} );
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size( 42, 20 );
             this.viewToolStripMenuItem.Text = "View";
@@ -197,6 +192,13 @@ namespace seems
             this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size( 160, 22 );
             this.previewAsMzMLToolStripMenuItem.Text = "Preview as mzML";
             this.previewAsMzMLToolStripMenuItem.Click += new System.EventHandler( this.previewAsMzMLToolStripMenuItem_Click );
+            // 
+            // eventLogToolStripMenuItem
+            // 
+            this.eventLogToolStripMenuItem.Name = "eventLogToolStripMenuItem";
+            this.eventLogToolStripMenuItem.Size = new System.Drawing.Size( 160, 22 );
+            this.eventLogToolStripMenuItem.Text = "Event Log";
+            this.eventLogToolStripMenuItem.Click += new System.EventHandler( this.eventLogToolStripMenuItem_Click );
             // 
             // windowToolStripMenuItem
             // 
@@ -272,9 +274,10 @@ namespace seems
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
             this.openFileToolStripButton,
-            this.annotateToolStripDropDownButton,
-            this.integratePeaksToolStripButton,
-            this.dataProcessingButton} );
+            this.toolStripSeparator4,
+            this.dataProcessingButton,
+            this.annotationButton,
+            this.integratePeaksToolStripButton} );
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip1.Location = new System.Drawing.Point( 0, 24 );
             this.toolStrip1.Name = "toolStrip1";
@@ -297,78 +300,32 @@ namespace seems
             this.openFileToolStripButton.ToolTipText = "Open specified source file";
             this.openFileToolStripButton.Click += new System.EventHandler( this.openFile_Click );
             // 
-            // annotateToolStripDropDownButton
+            // toolStripSeparator4
             // 
-            this.annotateToolStripDropDownButton.BackColor = System.Drawing.SystemColors.Control;
-            this.annotateToolStripDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.annotateToolStripDropDownButton.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.peptideMassMappingToolStripMenuItem,
-            this.peptideFragmentationToolStripMenuItem,
-            this.manualEditToolStripMenuItem,
-            this.settingsToolStripMenuItem,
-            this.clearToolStripMenuItem} );
-            this.annotateToolStripDropDownButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.annotateToolStripDropDownButton.Name = "annotateToolStripDropDownButton";
-            this.annotateToolStripDropDownButton.Size = new System.Drawing.Size( 63, 22 );
-            this.annotateToolStripDropDownButton.Text = "Annotate";
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size( 6, 25 );
             // 
-            // peptideMassMappingToolStripMenuItem
+            // dataProcessingButton
             // 
-            this.peptideMassMappingToolStripMenuItem.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.annotateMassMapProteinDigestToolStripMenuItem,
-            this.fromSinglePeptideToolStripMenuItem} );
-            this.peptideMassMappingToolStripMenuItem.Name = "peptideMassMappingToolStripMenuItem";
-            this.peptideMassMappingToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
-            this.peptideMassMappingToolStripMenuItem.Text = "Peptide Mass Mapping...";
+            this.dataProcessingButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.dataProcessingButton.Enabled = false;
+            this.dataProcessingButton.Image = global::seems.Properties.Resources.DataProcessing;
+            this.dataProcessingButton.ImageTransparentColor = System.Drawing.Color.White;
+            this.dataProcessingButton.Name = "dataProcessingButton";
+            this.dataProcessingButton.Size = new System.Drawing.Size( 23, 22 );
+            this.dataProcessingButton.Text = "Manage Data Processing";
+            this.dataProcessingButton.Click += new System.EventHandler( this.dataProcessingButton_Click );
             // 
-            // annotateMassMapProteinDigestToolStripMenuItem
+            // annotationButton
             // 
-            this.annotateMassMapProteinDigestToolStripMenuItem.Name = "annotateMassMapProteinDigestToolStripMenuItem";
-            this.annotateMassMapProteinDigestToolStripMenuItem.Size = new System.Drawing.Size( 183, 22 );
-            this.annotateMassMapProteinDigestToolStripMenuItem.Text = "From Protein Digestion";
-            this.annotateMassMapProteinDigestToolStripMenuItem.Click += new System.EventHandler( this.peptideMassMapProteinDigestToolStripMenuItem_Click );
-            // 
-            // fromSinglePeptideToolStripMenuItem
-            // 
-            this.fromSinglePeptideToolStripMenuItem.DropDownItems.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.annotateMassMapSinglePeptideTextBox} );
-            this.fromSinglePeptideToolStripMenuItem.Enabled = false;
-            this.fromSinglePeptideToolStripMenuItem.Name = "fromSinglePeptideToolStripMenuItem";
-            this.fromSinglePeptideToolStripMenuItem.Size = new System.Drawing.Size( 183, 22 );
-            this.fromSinglePeptideToolStripMenuItem.Text = "From Single Peptide";
-            // 
-            // annotateMassMapSinglePeptideTextBox
-            // 
-            this.annotateMassMapSinglePeptideTextBox.Name = "annotateMassMapSinglePeptideTextBox";
-            this.annotateMassMapSinglePeptideTextBox.Size = new System.Drawing.Size( 150, 20 );
-            // 
-            // peptideFragmentationToolStripMenuItem
-            // 
-            this.peptideFragmentationToolStripMenuItem.Name = "peptideFragmentationToolStripMenuItem";
-            this.peptideFragmentationToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
-            this.peptideFragmentationToolStripMenuItem.Text = "Peptide Fragmentation...";
-            this.peptideFragmentationToolStripMenuItem.Click += new System.EventHandler( this.peptideFragmentationToolStripMenuItem_Click );
-            // 
-            // manualEditToolStripMenuItem
-            // 
-            this.manualEditToolStripMenuItem.Name = "manualEditToolStripMenuItem";
-            this.manualEditToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
-            this.manualEditToolStripMenuItem.Text = "Manual Edit...";
-            this.manualEditToolStripMenuItem.Click += new System.EventHandler( this.manualEditToolStripMenuItem_Click );
-            // 
-            // settingsToolStripMenuItem
-            // 
-            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
-            this.settingsToolStripMenuItem.Text = "Settings...";
-            this.settingsToolStripMenuItem.Click += new System.EventHandler( this.settingsToolStripMenuItem_Click );
-            // 
-            // clearToolStripMenuItem
-            // 
-            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size( 194, 22 );
-            this.clearToolStripMenuItem.Text = "Clear";
-            this.clearToolStripMenuItem.Click += new System.EventHandler( this.clearToolStripMenuItem_Click );
+            this.annotationButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.annotationButton.Enabled = false;
+            this.annotationButton.Image = global::seems.Properties.Resources.Annotation;
+            this.annotationButton.ImageTransparentColor = System.Drawing.Color.White;
+            this.annotationButton.Name = "annotationButton";
+            this.annotationButton.Size = new System.Drawing.Size( 23, 22 );
+            this.annotationButton.Text = "Manage Annotations";
+            this.annotationButton.Click += new System.EventHandler( this.annotationButton_Click );
             // 
             // integratePeaksToolStripButton
             // 
@@ -379,6 +336,7 @@ namespace seems
             this.clearCurrentIntegration,
             this.clearAllIntegrationsToolStripMenuItem,
             this.exportAllIntegrationsToolStripMenuItem} );
+            this.integratePeaksToolStripButton.Enabled = false;
             this.integratePeaksToolStripButton.ForeColor = System.Drawing.SystemColors.ControlText;
             this.integratePeaksToolStripButton.Image = global::seems.Properties.Resources.PeakIntegral;
             this.integratePeaksToolStripButton.ImageTransparentColor = System.Drawing.Color.White;
@@ -417,16 +375,6 @@ namespace seems
             this.exportAllIntegrationsToolStripMenuItem.Text = "Export";
             this.exportAllIntegrationsToolStripMenuItem.Click += new System.EventHandler( this.exportAllIntegrationsToolStripMenuItem_Click );
             // 
-            // dataProcessingButton
-            // 
-            this.dataProcessingButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.dataProcessingButton.Image = global::seems.Properties.Resources.DataProcessing;
-            this.dataProcessingButton.ImageTransparentColor = System.Drawing.Color.White;
-            this.dataProcessingButton.Name = "dataProcessingButton";
-            this.dataProcessingButton.Size = new System.Drawing.Size( 23, 22 );
-            this.dataProcessingButton.Text = "Configure Data Processing";
-            this.dataProcessingButton.Click += new System.EventHandler( this.dataProcessingButton_Click );
-            // 
             // toolStripPanel2
             // 
             this.toolStripPanel2.Controls.Add( this.statusStrip1 );
@@ -450,7 +398,7 @@ namespace seems
             this.dockPanel.Size = new System.Drawing.Size( 792, 489 );
             this.dockPanel.TabIndex = 5;
             // 
-            // seems
+            // seemsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -463,10 +411,9 @@ namespace seems
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size( 400, 150 );
-            this.Name = "seems";
+            this.Name = "seemsForm";
             this.Text = "SeeMS";
             this.ResizeBegin += new System.EventHandler( this.seems_ResizeBegin );
-            this.MdiChildActivate += new System.EventHandler( this.seems_MdiChildActivate );
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler( this.seems_FormClosing );
             this.Resize += new System.EventHandler( this.seems_Resize );
             this.ResizeEnd += new System.EventHandler( this.seems_ResizeEnd );
@@ -493,15 +440,6 @@ namespace seems
 		private System.Windows.Forms.ToolStripPanel toolStripPanel1;
 		private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton openFileToolStripButton;
-		private System.Windows.Forms.ToolStripDropDownButton annotateToolStripDropDownButton;
-		private System.Windows.Forms.ToolStripMenuItem peptideMassMappingToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem annotateMassMapProteinDigestToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem fromSinglePeptideToolStripMenuItem;
-		private System.Windows.Forms.ToolStripTextBox annotateMassMapSinglePeptideTextBox;
-		private System.Windows.Forms.ToolStripMenuItem peptideFragmentationToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem manualEditToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
 		private System.Windows.Forms.ToolStripPanel toolStripPanel2;
 		private System.Windows.Forms.MenuStrip menuStrip1;
 		private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
@@ -529,5 +467,8 @@ namespace seems
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
         private System.Windows.Forms.ToolStripButton dataProcessingButton;
         private System.Windows.Forms.ToolStripMenuItem previewAsMzMLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton annotationButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem eventLogToolStripMenuItem;
 	}
 }

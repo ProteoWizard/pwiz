@@ -10,7 +10,7 @@ namespace seems
 {
 	static class Program
 	{
-		static seems MainForm;
+		static seemsForm MainForm;
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -31,8 +31,9 @@ namespace seems
 			// Add the event handler for handling non-UI thread exceptions to the event. 
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler( CurrentDomain_UnhandledException );
 
-			MainForm = new seems( args );
-			Application.Run( MainForm );
+			MainForm = new seemsForm( args );
+            if( !MainForm.IsDisposed )
+			    Application.Run( MainForm );
 		}
 
 		private static void UIThread_UnhandledException( object sender, ThreadExceptionEventArgs e )

@@ -67,127 +67,56 @@ namespace MSGraph
 
     public interface IMSGraphItemInfo
     {
-        // describes the kind of item this is (Chromatogram, Spectrum, or something else);
-        // only items of the same type may be overlayed on a GraphPane
+        /// <summary>
+        /// gets the kind of item this is (Chromatogram, Spectrum, or something else);
+        /// only items of the same type may be overlayed on a GraphPane
+        /// </summary>
         MSGraphItemType GraphItemType { get; }
 
-        // determines the drawing method to use for this graph;
-        // (e.g. line graphs for profile items and stick graphs for centroided items)
+        /// <summary>
+        /// gets the drawing method to use for this graph;
+        /// (e.g. line graphs for profile items and stick graphs for centroided items)
+        /// </summary>
         MSGraphItemDrawMethod GraphItemDrawMethod { get; }
 
-        // the title to show for the graph
+        /// <summary>
+        /// gets the title to show for the graph
+        /// </summary>
         string Title { get; }
 
-        // the color to draw the graph
+        /// <summary>
+        /// gets the color to draw the graph
+        /// </summary>
         Color Color { get; }
 
-        // customize the X axis to use when graphing this item;
-        // when a GraphPane's type changes, this function is used to setup the X axis
+        /// <summary>
+        /// customize the X axis to use when graphing this item;
+        /// when a GraphPane's type changes, this function is used to setup the X axis
+        /// </summary>
         void CustomizeXAxis( Axis axis );
 
-        // customize the Y axis to use when graphing this item;
-        // when a GraphPane's type changes, this function is used to setup the Y axis
+        /// <summary>
+        /// customize the Y axis to use when graphing this item;
+        /// when a GraphPane's type changes, this function is used to setup the Y axis
+        /// </summary>
         void CustomizeYAxis( Axis axis );
 
-        // return a string to use as a label when graphing the data point;
-        // if the returned value is null or empty, there is no annotation
+        /// <summary>
+        /// return a string to use as a label when graphing the data point;
+        /// if the returned value is null or empty, there is no annotation
+        /// </summary>
         PointAnnotation AnnotatePoint( PointPair point );
 
-        // return a list of ZedGraph objects to display on the graph
-        ZedGraph.GraphObjList NonPointAnnotations { get; }
+        /// <summary>
+        /// fill in a list of ZedGraph objects to display on the graph;
+        /// the list may change depending on the state of the pointList
+        /// and the annotations that have already been added
+        /// </summary>
+        void AddAnnotations( MSPointList pointList, GraphObjList annotations );
 
-        // the entire point list of the graph
+        /// <summary>
+        /// gets the entire point list of the graph
+        /// </summary>
         IPointList Points { get; }
-    }
-
-    public class MSGraphItem : LineItem
-    {
-        public MSGraphItem( IMSGraphItemInfo info )
-            : base( info.Title )
-        {
-            points_ = new MSPointList( info.Points );
-
-            item_ = info.GraphItemDrawMethod == MSGraphItemDrawMethod.Line ?
-                    new LineItem( info.Title, points_, info.Color, SymbolType.None ) :
-                    new StickItem( info.Title, points_, info.Color );
-            if( info.GraphItemDrawMethod == MSGraphItemDrawMethod.Line )
-                ( item_ as LineItem ).Line.IsAntiAlias = true;
-            graphItemInfo_ = info;
-        }
-
-        private CurveItem item_;
-        public CurveItem BaseItem
-        {
-            get { return item_; }
-        }
-
-        private MSPointList points_;
-        public new MSPointList Points
-        {
-            get { return points_; }
-        }
-
-        private IMSGraphItemInfo graphItemInfo_;
-        public IMSGraphItemInfo GraphItemInfo
-        {
-            get { return graphItemInfo_; }
-        }
-
-        #region Forwarding overrides
-        public override Axis BaseAxis( GraphPane pane )
-        {
-            return item_.BaseAxis( pane );
-        }
-
-        public override bool Equals( object obj )
-        {
-            return item_.Equals( obj );
-        }
-
-        public override void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
-        {
-            item_.DrawLegendKey( g, pane, rect, scaleFactor );
-        }
-
-        public override bool GetCoords( GraphPane pane, int i, out string coords )
-        {
-            return item_.GetCoords( pane, i, out coords );
-        }
-
-        public override int GetHashCode()
-        {
-            return item_.GetHashCode();
-        }
-
-        public override void GetObjectData( System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context )
-        {
-            item_.GetObjectData( info, context );
-        }
-
-        public override void GetRange( out double xMin, out double xMax, out double yMin, out double yMax, bool ignoreInitial, bool isBoundedRanges, GraphPane pane )
-        {
-            item_.GetRange( out xMin, out xMax, out yMin, out yMax, ignoreInitial, isBoundedRanges, pane );
-        }
-
-        public override void MakeUnique( ColorSymbolRotator rotator )
-        {
-            item_.MakeUnique( rotator );
-        }
-
-        public override string ToString()
-        {
-            return item_.ToString();
-        }
-
-        public override Axis ValueAxis( GraphPane pane )
-        {
-            return item_.ValueAxis( pane );
-        }
-        #endregion
-
-        public override void Draw( Graphics g, GraphPane pane, int pos, float scaleFactor )
-        {
-            item_.Draw( g, pane, pos, scaleFactor );
-        }
     }
 }

@@ -55,11 +55,7 @@ namespace seems
 	public class PointDataMap<T> : Map< double, T >
 		where T: new()
 	{
-		public PointDataMap()
-		{
-		}
-
-		public MapPair FindNear( double x, double tolerance )
+        public Enumerator FindNear( double x, double tolerance )
 		{
 			Enumerator cur, min, max;
 
@@ -70,6 +66,7 @@ namespace seems
 				return null; // no peaks
 
 			MutableKeyValuePair<double, T> best = min.Current;
+            Enumerator bestEnum = min;
 
 			// find the peak closest to the desired mz
 			double minDiff = Math.Abs( x - best.Key );
@@ -81,15 +78,30 @@ namespace seems
 				{
 					minDiff = curDiff;
 					best = cur.Current;
+                    bestEnum = (Enumerator) cur.Clone();
 				}
 				cur.MoveNext();
-				if( ( !max.IsValid && !cur.IsValid ) || cur.Current == max.Current )
+				if( !cur.IsValid || (max.IsValid && cur.Current == max.Current) )
 					break;
 			}
 
-			return new MapPair( best.Key, best.Value );
+            return bestEnum;
+			//return new MapPair( best.Key, best.Value );
 		}
 	}
+
+    public class PointMap : PointDataMap<double>
+    {
+        public PointMap()
+		{
+		}
+
+        public PointMap( ZedGraph.IPointList pointList )
+        {
+            for( int i = 0; i < pointList.Count; ++i )
+                Add( pointList[i].X, pointList[i].Y );
+        }
+    }
 
     public enum MatchToleranceUnits
 	{
@@ -112,6 +124,7 @@ namespace seems
         public GraphItem()
         {
             dataProcessing = new DataProcessing();
+            annotationList = new List<IAnnotation>();
         }
 
 		protected string id;
@@ -125,6 +138,9 @@ namespace seems
 
         protected DataProcessing dataProcessing;
         public DataProcessing DataProcessing { get { return dataProcessing; } set { dataProcessing = value; } }
+
+        protected List<IAnnotation> annotationList;
+        public List<IAnnotation> AnnotationList { get { return annotationList; } set { annotationList = value; } }
 
 		protected double totalIntegratedArea;
 		public double TotalIntegratedArea { get { return totalIntegratedArea; } set { totalIntegratedArea = value; } }
@@ -212,12 +228,11 @@ namespace seems
             return null;
         }
 
-        public virtual ZedGraph.GraphObjList NonPointAnnotations
+        public virtual void AddAnnotations( MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
-            get
-            {
-                return null;
-            }
+            PointMap points = new PointMap( Points );
+            foreach( IAnnotation annotation in annotationList )
+                annotation.Update( pointList, annotations );
         }
 
         public virtual ZedGraph.IPointList Points { get { return null; } }
@@ -225,32 +240,63 @@ namespace seems
 
 	public class Chromatogram : GraphItem
 	{
-		public Chromatogram( ManagedDataSource source, pwiz.CLI.msdata.Chromatogram chromatogram )
+		public Chromatogram( ManagedDataSource source, int index, ChromatogramList chromatogramList )
 		{
-			this.source = source;
-			element = chromatogram;
-			id = element.nativeID;
-            index = element.index;
+            this.source = source;
+            this.chromatogramList = chromatogramList;
+            this.index = index;
+			//element = chromatogram;
+			id = Element.nativeID;
+            //index = element.index;
 		}
 
         public Chromatogram( Chromatogram metaChromatogram, pwiz.CLI.msdata.Chromatogram chromatogram )
         {
             source = metaChromatogram.source;
+            this.chromatogramList = metaChromatogram.chromatogramList;
+            this.index = index;
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
-            element = chromatogram;
-            id = element.nativeID;
-            index = element.index;
+            //element = chromatogram;
+            id = Element.nativeID;
         }
 
-		private pwiz.CLI.msdata.Chromatogram element;
-		public pwiz.CLI.msdata.Chromatogram Element { get { return element; } }
+        private ChromatogramList chromatogramList;
+        public ChromatogramList ChromatogramList
+        {
+            get { return chromatogramList; }
+            set { chromatogramList = value; }
+        }
+
+        // cache the most recently accessed element and the chromatogram list used to get it
+        // note: this breaks if you access Element from a "using" block (but why?)
+        private static pwiz.CLI.msdata.ChromatogramList lastSpectrumListUsed = null;
+        private static pwiz.CLI.msdata.Chromatogram lastElementAccessed = null;
+
+        public pwiz.CLI.msdata.Chromatogram Element
+        {
+            get
+            {
+                // retrieve cached element if it's still valid
+                if( lastSpectrumListUsed == null ||
+                    lastElementAccessed == null ||
+                    !ReferenceEquals( chromatogramList, lastSpectrumListUsed ) ||
+                    index != lastElementAccessed.index )
+                {
+                    lastSpectrumListUsed = chromatogramList;
+                    lastElementAccessed = chromatogramList.chromatogram( index );
+                }
+                return lastElementAccessed;
+            }
+        }
+
+        public ChromatogramListForm OwningListForm { get { return source.ChromatogramListForm; } }
 
 		public override ZedGraph.IPointList Points
 		{
             get
             {
-                if( element.binaryDataArrays.Count >= 2 )
+                using( pwiz.CLI.msdata.Chromatogram element = chromatogramList.chromatogram( index, true ) )
                 {
                     Map<double, double> sortedFullPointList = new Map<double, double>();
                     IList<double> timeList = element.binaryDataArrays[0].data;
@@ -261,8 +307,7 @@ namespace seems
                     return new ZedGraph.PointPairList(
                         new List<double>( sortedFullPointList.Keys ).ToArray(),
                         new List<double>( sortedFullPointList.Values ).ToArray() );
-                } else
-                    throw new Exception( "metachromatogram queried for data points" );
+                }
             }
 		}
 
@@ -274,44 +319,69 @@ namespace seems
 
 	public class MassSpectrum : GraphItem
 	{
-        public MassSpectrum( ManagedDataSource source, pwiz.CLI.msdata.Spectrum spectrum )
+        public MassSpectrum( ManagedDataSource source, int index, SpectrumList spectrumList )
         {
             this.source = source;
-            element = spectrum;
-            id = spectrum.nativeID;
-            index = spectrum.index;
-            //retentionTime = new TimeSpan( 0, 0, 0, 0, (int) Math.Round( spectrum.spectrumDescription.scan.cvParam( CVID.MS_scan_time ).timeInSeconds() * 1000 ) );
+            this.spectrumList = spectrumList;
+            this.index = index;
+            //element = spectrum;
+            //using( Spectrum element = Element )
+            {
+                id = Element.nativeID;
+            }
         }
 
         public MassSpectrum( MassSpectrum metaSpectrum, pwiz.CLI.msdata.Spectrum spectrum )
         {
             source = metaSpectrum.source;
+            spectrumList = metaSpectrum.spectrumList;
+            index = metaSpectrum.index;
             Tag = metaSpectrum.Tag;
             AnnotationSettings = metaSpectrum.AnnotationSettings;
-            element = spectrum;
-            id = element.nativeID;
-            index = element.index;
+            //element = spectrum;
+            id = metaSpectrum.id;
         }
 
-		private pwiz.CLI.msdata.Spectrum element;
+        private SpectrumList spectrumList;
+        public SpectrumList SpectrumList
+        {
+            get { return spectrumList; }
+            set { spectrumList = value; }
+        }
+
+        // cache the most recently accessed element and the spectrum list used to get it
+        // note: this breaks if you access Element from a "using" block (but why?)
+        private static pwiz.CLI.msdata.SpectrumList lastSpectrumListUsed = null;
+		private static pwiz.CLI.msdata.Spectrum lastElementAccessed = null;
+
         public pwiz.CLI.msdata.Spectrum Element
         {
             get
             {
-                return element;
-                //return source.MSDataFile.run.spectrumList.spectrum(index);
+                // retrieve cached element if it's still valid
+                if( lastSpectrumListUsed == null ||
+                    lastElementAccessed == null ||
+                    !ReferenceEquals( spectrumList, lastSpectrumListUsed ) ||
+                    index != lastElementAccessed.index )
+                {
+                    lastSpectrumListUsed = spectrumList;
+                    lastElementAccessed = spectrumList.spectrum( index );
+                }
+                return lastElementAccessed;
             }
         }
+
+        public SpectrumListForm OwningListForm { get { return source.SpectrumListForm; } }
 
         /// <summary>
         /// add precursor and non-matched annotations
         /// </summary>
-        public override ZedGraph.GraphObjList NonPointAnnotations
+        public override void AddAnnotations( MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
-            get
+            base.AddAnnotations( pointList, annotations );
+            //using( Spectrum element = Element )
             {
-                ZedGraph.GraphObjList objs = new ZedGraph.GraphObjList();
-                foreach( Precursor p in element.spectrumDescription.precursors )
+                foreach( Precursor p in Element.spectrumDescription.precursors )
                     foreach( SelectedIon si in p.selectedIons )
                     {
                         double precursorMz = (double) si.cvParam( CVID.MS_m_z ).value;
@@ -322,14 +392,14 @@ namespace seems
                         if( !precursorChargeParam.empty() )
                             precursorCharge = (int) precursorChargeParam.value;
 
-                        
+
                         double stickLength = 0.1;// ( yAxis.MajorTic.Size * 5 ) / pane.Chart.Rect.Height;
                         ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, 1 + stickLength );
                         stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
                         stickOverlay.Line.Width = 3;
                         stickOverlay.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
                         stickOverlay.Line.Color = Color.Green;
-                        objs.Add( stickOverlay );
+                        annotations.Add( stickOverlay );
 
                         // Create a text label from the X data value
                         string precursorLabel;
@@ -345,9 +415,8 @@ namespace seems
                         text.FontSpec.Fill.IsVisible = false;
                         //text.FontSpec.Fill = new Fill( Color.FromArgb( 100, Color.White ) );
                         text.FontSpec.Angle = 0;
-                        objs.Add( text );
+                        annotations.Add( text );
                     }
-                return objs;
             }
         }
 
@@ -355,7 +424,7 @@ namespace seems
 		{
             get
             {
-                if( element.binaryDataArrays.Count >= 2 )
+                using( Spectrum element = spectrumList.spectrum( index, true ) )
                 {
                     Map<double, double> sortedFullPointList = new Map<double, double>();
                     IList<double> mzList = element.getMZArray().data;
@@ -366,8 +435,7 @@ namespace seems
                     return new ZedGraph.PointPairList(
                         new List<double>( sortedFullPointList.Keys ).ToArray(),
                         new List<double>( sortedFullPointList.Values ).ToArray() );
-                } else
-                    throw new Exception( "metaspectrum queried for data points" );
+                }
             }
 		}
 
@@ -375,7 +443,7 @@ namespace seems
         {
             get
             {
-                CVParam representation = element.spectrumDescription.cvParamChild(CVID.MS_spectrum_representation);
+                CVParam representation = Element.spectrumDescription.cvParamChild(CVID.MS_spectrum_representation);
                 if( !representation.empty() && representation.cvid == CVID.MS_profile_mass_spectrum )
                     return MSGraph.MSGraphItemDrawMethod.Line;
                 else
@@ -443,8 +511,11 @@ namespace seems
         {
             labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
             pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
+            pointFontSpec = new ZedGraph.FontSpec( "Arial", 10, Color.Gray, false, false, false );
+            pointFontSpec.Border.IsVisible = false;
         }
 
+        private ZedGraph.FontSpec pointFontSpec;
         public MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
         {
             string label = null;
@@ -456,7 +527,7 @@ namespace seems
                 label = String.Format( "{0:f2}", point.Y );
 
             if( label != null )
-                return new MSGraph.PointAnnotation( label );
+                return new MSGraph.PointAnnotation( label, pointFontSpec );
             return null;
         }
 

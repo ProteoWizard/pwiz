@@ -163,8 +163,15 @@ namespace MSGraph
         public PointPairList ScaledList { get { return scaledPointList; } }
         public List<int> ScaledMaxIndexList { get { return scaledMaxIndexList; } }
 
+        /// <summary>
+        /// Returns the index of the point in the scaled list with the lowest X value greater than or equal to 'x'; returns -1 if no such value is in the list
+        /// </summary>
         public int LowerBound( double x )
         {
+            if( scaledPointList.Count == 0 ||
+                scaledPointList[scaledPointList.Count - 1].X < x )
+                return -1;
+
             int min = 0;
             int max = scaledPointList.Count;
             int best = max - 1;

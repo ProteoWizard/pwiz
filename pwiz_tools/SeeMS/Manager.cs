@@ -9,6 +9,7 @@ using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using MSGraph;
 using ZedGraph;
+using CommandLine.Utility;
 
 namespace seems
 {
@@ -27,7 +28,7 @@ namespace seems
 	{
 		public ManagedDataSource() { }
 
-		public ManagedDataSource( DataSource source )
+		public ManagedDataSource( SpectrumSource source )
 		{
 			this.source = source;
 			spectrumListForm = new SpectrumListForm();
@@ -37,8 +38,8 @@ namespace seems
 			//graphInfoMap = new GraphInfoMap();
 		}
 
-		private DataSource source;
-		public DataSource Source { get { return source; } }
+		private SpectrumSource source;
+		public SpectrumSource Source { get { return source; } }
 
 		private SpectrumListForm spectrumListForm;
 		public SpectrumListForm SpectrumListForm { get { return spectrumListForm; } }
@@ -53,12 +54,10 @@ namespace seems
 		//public GraphInfoMap GraphInfoMap { get { return graphInfoMap; } }
 
         public Chromatogram GetChromatogram( int index )
-        { return GetChromatogram( index, false ); }
+        { return GetChromatogram( index, source.MSDataFile.run.chromatogramList ); }
 
-        public Chromatogram GetChromatogram( int index, bool getBinaryData )
-        { return new Chromatogram( this, source.MSDataFile.run.chromatogramList.chromatogram( index, getBinaryData ) ); }
-
-        //public Chromatogram GetChromatogram( int index, bool getBinaryData, ChromatogramList chromatogramList );
+        public Chromatogram GetChromatogram( int index, ChromatogramList chromatogramList )
+        { return new Chromatogram( this, index, chromatogramList ); }
 
         public Chromatogram GetChromatogram( Chromatogram metaChromatogram, ChromatogramList chromatogramList )
         {
@@ -67,20 +66,17 @@ namespace seems
         }
 
         public MassSpectrum GetMassSpectrum( int index )
-        { return GetMassSpectrum( index, false ); }
+        { return GetMassSpectrum( index, source.MSDataFile.run.spectrumList ); }
 
-        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData )
-        { return GetMassSpectrum( index, getBinaryData, source.MSDataFile.run.spectrumList ); }
-
-        public MassSpectrum GetMassSpectrum( int index, bool getBinaryData, SpectrumList spectrumList )
-        { return new MassSpectrum( this, spectrumList.spectrum( index, getBinaryData ) ); }
+        public MassSpectrum GetMassSpectrum( int index, SpectrumList spectrumList )
+        { return new MassSpectrum( this, index, spectrumList ); }
 
         public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, SpectrumList spectrumList )
         {
             MassSpectrum spectrum = new MassSpectrum( metaSpectrum, spectrumList.spectrum( metaSpectrum.Index, true ) );
-            MassSpectrum realMetaSpectrum = ( metaSpectrum.Tag as DataGridViewRow ).Tag as MassSpectrum;
+            //MassSpectrum realMetaSpectrum = ( metaSpectrum.Tag as DataGridViewRow ).Tag as MassSpectrum;
             //realMetaSpectrum.Element.dataProcessing = spectrum.Element.dataProcessing;
-            realMetaSpectrum.Element.defaultArrayLength = spectrum.Element.defaultArrayLength;
+            //realMetaSpectrum.Element.defaultArrayLength = spectrum.Element.defaultArrayLength;
             return spectrum;
         }
 	}
@@ -98,10 +94,11 @@ namespace seems
 	/// </summary>
 	public class Manager
 	{
-		private seems mainForm;
+		private seemsForm mainForm;
 		private DataSourceMap dataSourceMap;
 
         private SpectrumProcessingForm spectrumProcessingForm;
+        private SpectrumAnnotationForm spectrumAnnotationForm;
         private DataProcessing spectrumGlobalDataProcessing;
 
         public IList<GraphForm> CurrentGraphFormList
@@ -118,7 +115,7 @@ namespace seems
             }
         }
 
-        public Manager( seems mainForm )
+        public Manager( seemsForm mainForm )
         {
             this.mainForm = mainForm;
             dataSourceMap = new DataSourceMap();
@@ -127,14 +124,75 @@ namespace seems
             spectrumProcessingForm.ProcessingChanged += new EventHandler( processingListView_Changed );
             spectrumProcessingForm.GlobalProcessingOverrideButton.Click += new EventHandler( processingOverrideButton_Click );
             spectrumProcessingForm.RunProcessingOverrideButton.Click += new EventHandler( processingOverrideButton_Click );
+            spectrumProcessingForm.GotFocus += new EventHandler( form_GotFocus );
+            spectrumProcessingForm.HideOnClose = true;
+
+            spectrumAnnotationForm = new SpectrumAnnotationForm();
+            spectrumAnnotationForm.AnnotationChanged += new EventHandler( spectrumAnnotationForm_AnnotationChanged );
+            spectrumAnnotationForm.GotFocus += new EventHandler( form_GotFocus );
+            spectrumAnnotationForm.HideOnClose = true;
 
             spectrumGlobalDataProcessing = new DataProcessing();
 
             LoadDefaultAnnotationSettings();
         }
 
-		public void OpenFile(string filepath)
+        public void ParseArgs( string[] args )
+        {
+            try
+            {
+                Arguments argParser = new Arguments( args );
+
+                if( argParser["help"] != null ||
+                    argParser["h"] != null ||
+                    argParser["?"] != null )
+                {
+                    Console.WriteLine( "TODO" );
+                    mainForm.Close();
+                    return;
+                }
+
+                mainForm.BringToFront();
+                mainForm.Focus();
+                mainForm.Activate();
+                mainForm.Show();
+                Application.DoEvents();
+
+                if( argParser["datasource"] != null )
+                {
+                    if( argParser["spectrum"] != null )
+                    {
+                        if( argParser["annotation"] != null )
+                            OpenFile( argParser["datasource"], Convert.ToInt32( argParser["spectrum"] ), argParser["annotation"] );
+                        else
+                            OpenFile( argParser["datasource"], Convert.ToInt32( argParser["spectrum"] ) );
+                    } else
+                        OpenFile( argParser["datasource"] );
+                }
+            } catch( Exception ex )
+            {
+                string message = ex.Message;
+                if( ex.InnerException != null )
+                    message += "\n\nAdditional information: " + ex.InnerException.Message;
+                MessageBox.Show( message,
+                                "Error parsing command line arguments",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
+                                0, false );
+            }
+        }
+
+        public void OpenFile( string filepath )
+        {
+            OpenFile( filepath, -1 );
+        }
+
+        public void OpenFile(string filepath, int index)
 		{
+            OpenFile( filepath, -1, "" );
+        }
+
+        public void OpenFile( string filepath, int index, string annotation )
+        {
 			try
 			{
 				mainForm.SetProgressPercentage(0);
@@ -144,12 +202,12 @@ namespace seems
 				if( insertResult.WasInserted )
 				{
 					// file was not already open; create a new data source
-					insertResult.Element.Value = new ManagedDataSource( new DataSource( filepath ) );
-					initializeManagedDataSource( insertResult.Element.Value );
+					insertResult.Element.Value = new ManagedDataSource( new SpectrumSource( filepath ) );
+					initializeManagedDataSource( insertResult.Element.Value, index, annotation );
 				} else
 				{
 					GraphForm newGraph = OpenGraph( true );
-					DataSource source = insertResult.Element.Value.Source;
+					SpectrumSource source = insertResult.Element.Value.Source;
 					if( source.Chromatograms.Count > 0 )
                         showData(newGraph, source.Chromatograms[0] );
 					else
@@ -172,6 +230,8 @@ namespace seems
 		{
 			GraphForm graphForm = new GraphForm();
             graphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( graphForm_PreviewKeyDown );
+            graphForm.GotFocus += new EventHandler( form_GotFocus );
+            graphForm.ItemGotFocus += new EventHandler( form_GotFocus );
             return graphForm;
 		}
 
@@ -179,6 +239,8 @@ namespace seems
         {
             GraphForm graphForm = new GraphForm();
             graphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( graphForm_PreviewKeyDown );
+            graphForm.GotFocus += new EventHandler( form_GotFocus );
+            graphForm.ItemGotFocus += new EventHandler( form_GotFocus );
             graphForm.Show( mainForm.DockPanel, DockState.Document );
             if( giveFocus )
                 graphForm.Activate();
@@ -186,30 +248,37 @@ namespace seems
             return graphForm;
         }
 
-        private GraphItem getGraphItemWithData( GraphItem item )
+        void form_GotFocus( object sender, EventArgs e )
         {
-            ManagedDataSource source = item.Source;
-            if( item.IsChromatogram )
+            GraphForm form = sender as GraphForm;
+            if( form != null &&
+                form.FocusedPane != null &&
+                form.FocusedPane.CurrentItemType == MSGraphItemType.Spectrum )
             {
-                ChromatogramList cl = source.Source.MSDataFile.run.chromatogramList;
-                return source.GetChromatogram( item as Chromatogram, cl );
+                mainForm.AnnotationButton.Enabled = true;
+                mainForm.DataProcessingButton.Enabled = true;
+                mainForm.SetStatusLabel( form.FocusedItem.Label.Text + " item got focus." );
+
+                //spectrumProcessingForm.UpdateProcessing( form.FocusedItem.Tag as MassSpectrum );
+                spectrumAnnotationForm.UpdateAnnotations( form.FocusedItem.Tag as MassSpectrum );
             } else
             {
-                SpectrumList sl = spectrumProcessingForm.GetProcessingSpectrumList( source.Source.MSDataFile.run.spectrumList );
-                return source.GetMassSpectrum( item as MassSpectrum, sl );
+                mainForm.AnnotationButton.Enabled = false;
+                mainForm.DataProcessingButton.Enabled = false;
+                mainForm.SetStatusLabel( sender.ToString() + " form got focus." );
             }
         }
 
         private MassSpectrum getMetaSpectrum( MassSpectrum spectrum )
         {
-            return ( spectrum.Tag as DataGridViewRow ).Tag as MassSpectrum;
+            return spectrum.OwningListForm.GetSpectrum( spectrum.OwningListForm.IndexOf( spectrum ) );
         }
 
-		private void initializeManagedDataSource( ManagedDataSource managedDataSource )
+		private void initializeManagedDataSource( ManagedDataSource managedDataSource, int index, string annotation )
         {
 			try
 			{
-				DataSource source = managedDataSource.Source;
+				SpectrumSource source = managedDataSource.Source;
 				MSDataFile msDataFile = source.MSDataFile;
 				ChromatogramListForm chromatogramListForm = managedDataSource.ChromatogramListForm;
 				SpectrumListForm spectrumListForm = managedDataSource.SpectrumListForm;
@@ -219,12 +288,15 @@ namespace seems
 				chromatogramListForm.ShowIcon = false;
                 chromatogramListForm.CellDoubleClick += new ChromatogramListCellDoubleClickHandler( chromatogramListForm_CellDoubleClick );
                 chromatogramListForm.CellClick += new ChromatogramListCellClickHandler( chromatogramListForm_CellClick );
+                chromatogramListForm.GotFocus += new EventHandler( form_GotFocus );
 
 				spectrumListForm.Text = source.Name + " spectra";
 				spectrumListForm.TabText = source.Name + " spectra";
 				spectrumListForm.ShowIcon = false;
                 spectrumListForm.CellDoubleClick += new SpectrumListCellDoubleClickHandler( spectrumListForm_CellDoubleClick );
-                spectrumListForm.CellClick += new SpectrumListCellClickHandler(spectrumListForm_CellClick);
+                spectrumListForm.CellClick += new SpectrumListCellClickHandler( spectrumListForm_CellClick );
+                spectrumListForm.FilterChanged += new SpectrumListFilterChangedHandler( spectrumListForm_FilterChanged );
+                spectrumListForm.GotFocus += new EventHandler( form_GotFocus );
 
 				bool firstChromatogramLoaded = false;
 				bool firstSpectrumLoaded = false;
@@ -237,6 +309,49 @@ namespace seems
 				if( sl == null )
 					throw new Exception( "Error loading metadata: no spectrum list" );
 				
+                // conditionally load the spectrum at the specified index first
+                if( index > -1 )
+                {
+                    MassSpectrum spectrum = managedDataSource.GetMassSpectrum( index );
+
+                    spectrum.AnnotationSettings = defaultScanAnnotationSettings;
+                    spectrumListForm.Add( spectrum );
+                    source.Spectra.Add( spectrum );
+
+                    firstSpectrumLoaded = true;
+                    spectrumListForm.Show( mainForm.DockPanel, DockState.DockBottom );
+                    Application.DoEvents();
+
+                    if( !String.IsNullOrEmpty( annotation ) )
+                    {
+                        string[] annotationArgs = annotation.Split( " ".ToCharArray() );
+                        if( annotationArgs.Length == 3 &&
+                            annotationArgs[0] == "pfr" ) // peptide fragmentation
+                        {
+                            string sequence = annotationArgs[1];
+                            string seriesArgs = annotationArgs[2];
+                            string[] seriesList = seriesArgs.Split( ",".ToCharArray() );
+                            bool a, b, c, x, y, z;
+                            a = b = c = x = y = z = false;
+                            foreach( string series in seriesList )
+                                switch( series )
+                                {
+                                    case "a": a = true; break;
+                                    case "b": b = true; break;
+                                    case "c": c = true; break;
+                                    case "x": x = true; break;
+                                    case "y": y = true; break;
+                                    case "z": z = true; break;
+                                }
+                            IAnnotation pfr = new PeptideFragmentationAnnotation( sequence, a, b, c, x, y, z );
+                            spectrum.AnnotationList.Add( pfr );
+                        }
+                    }
+
+                    firstGraph = OpenGraph( true );
+                    showData( firstGraph, spectrum );
+                }
+
 				int ticIndex = 0;
 				if( cl != null )
 				{
@@ -244,34 +359,25 @@ namespace seems
 					if( ticIndex < cl.size() )
 					{
 						pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( ticIndex );
-                        Chromatogram ticChromatogram = new Chromatogram( managedDataSource, tic );
+                        Chromatogram ticChromatogram = managedDataSource.GetChromatogram( ticIndex );
                         ticChromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
 						chromatogramListForm.Add( ticChromatogram );
 						source.Chromatograms.Add( ticChromatogram );
-						firstGraph = OpenGraph( true );
-						showData(firstGraph, ticChromatogram );
-						firstChromatogramLoaded = true;
-						chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
-						Application.DoEvents();
+                        if( !firstSpectrumLoaded )
+                        {
+                            firstGraph = OpenGraph( true );
+                            showData( firstGraph, ticChromatogram );
+                            firstChromatogramLoaded = true;
+                            chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
+                            Application.DoEvents();
+                        }
 					}
 				}
 
+                // get spectrum type from fileContent if possible, otherwise from first spectrum
 				CVParam spectrumType = msDataFile.fileDescription.fileContent.cvParamChild( CVID.MS_spectrum_type );
 				if( spectrumType.cvid == CVID.CVID_Unknown && !sl.empty() )
 					spectrumType = sl.spectrum( 0 ).cvParamChild( CVID.MS_spectrum_type );
-
-				if( spectrumType.cvid == CVID.MS_SRM_spectrum )
-				{
-					//if( cl != null && cl.empty() )
-					//	throw new Exception( "Error loading metadata: SRM file contains no chromatograms" );
-
-				} else //if( spectrumType.cvid == CVID.MS_MS1_spectrum ||
-					   //    spectrumType.cvid == CVID.MS_MSn_spectrum )
-				{
-					if( sl.empty() )
-						throw new Exception( "Error loading metadata: MSn file contains no spectra" );
-				}// else
-				//	throw new Exception( "Error loading metadata: unable to open files with spectrum type \"" + spectrumType.name + "\"" );
 
 				if( cl != null )
 				{
@@ -280,20 +386,20 @@ namespace seems
 					{
 						if( i == ticIndex )
 							continue;
-						pwiz.CLI.msdata.Chromatogram c = cl.chromatogram( i );
 
-						mainForm.SetStatusLabel( String.Format( "Loading chromatograms from source file ({0} of {1})...",
-										( i + 1 ), cl.size() ) );
+                        Chromatogram chromatogram = managedDataSource.GetChromatogram( ticIndex );
+
+						mainForm.SetStatusLabel( String.Format( "Loading chromatograms from {2} ({0} of {1})...",
+                                        ( i + 1 ), cl.size(), managedDataSource.Source.Name ) );
 						mainForm.SetProgressPercentage( ( i + 1 ) * 100 / cl.size() );
 
                         if( mainForm.IsDisposed )
                             return;
 
-                        Chromatogram chromatogram = new Chromatogram( managedDataSource, c );
                         chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
 						chromatogramListForm.Add( chromatogram );
 						source.Chromatograms.Add( chromatogram );
-						if( !firstChromatogramLoaded )
+						if( !firstSpectrumLoaded && !firstChromatogramLoaded )
 						{
 							firstChromatogramLoaded = true;
 							chromatogramListForm.Show( mainForm.DockPanel, DockState.DockBottom );
@@ -308,21 +414,20 @@ namespace seems
 				// get all scans by sequential access
 				for( int i = 0; i < sl.size(); ++i )
 				{
-					pwiz.CLI.msdata.Spectrum s = sl.spectrum( i );
+                    if( i == index ) // skip the preloaded spectrum
+                        continue;
+
+                    MassSpectrum spectrum = managedDataSource.GetMassSpectrum( i );
 
 					if( ( ( i + 1 ) % 100 ) == 0 || ( i + 1 ) == sl.size() )
 					{
-						mainForm.SetStatusLabel( String.Format( "Loading spectra from source file ({0} of {1})...",
-										( i + 1 ), sl.size() ) );
+						mainForm.SetStatusLabel( String.Format( "Loading spectra from {2} ({0} of {1})...",
+										( i + 1 ), sl.size(), managedDataSource.Source.Name ) );
 						mainForm.SetProgressPercentage( ( i + 1 ) * 100 / sl.size() );
 					}
 
                     if( mainForm.IsDisposed )
                         return;
-
-                    MassSpectrum spectrum = new MassSpectrum( managedDataSource, s );
-                    if( s.dataProcessing == null )
-                        s.dataProcessing = new DataProcessing();
 
                     spectrum.AnnotationSettings = defaultScanAnnotationSettings;
 					spectrumListForm.Add( spectrum );
@@ -424,7 +529,7 @@ namespace seems
             foreach( DataGridViewCell cell in spectrumListForm.GridView.SelectedCells )
             {
                 if( selectedRows.Insert( cell.RowIndex ).WasInserted )
-                    selectedGraphItems.Add( cell.OwningRow.Tag as GraphItem );
+                    selectedGraphItems.Add( spectrumListForm.GetSpectrum( cell.RowIndex ) as GraphItem );
             }
 
             if( selectedRows.Count == 0 )
@@ -465,7 +570,6 @@ namespace seems
         #region various methods to create graph forms
         private void showData( GraphForm hostGraph, GraphItem item )
         {
-            GraphItem gWithData = getGraphItemWithData( item );
             Pane pane;
             if( hostGraph.PaneList.Count == 0 || hostGraph.PaneList.Count > 1 )
             {
@@ -477,22 +581,20 @@ namespace seems
                 pane = hostGraph.PaneList[0];
                 pane.Clear();
             }
-            pane.Add( gWithData );
+            pane.Add( item );
             hostGraph.Refresh();
         }
 
         private void showDataOverlay(GraphForm hostGraph, GraphItem item )
         {
-            GraphItem gWithData = getGraphItemWithData( item );
-            hostGraph.PaneList[0].Add( gWithData );
+            hostGraph.PaneList[0].Add( item );
             hostGraph.Refresh();
         }
 
         private void showDataStacked(GraphForm hostGraph, GraphItem item )
         {
-            GraphItem gWithData = getGraphItemWithData( item );
             Pane pane = new Pane();
-            pane.Add( gWithData );
+            pane.Add( item );
             hostGraph.PaneList.Add( pane );
             hostGraph.Refresh();
         }
@@ -504,10 +606,9 @@ namespace seems
                 throw new Exception( "current graph should not be null" );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
 
-            GraphItem gWithData = getGraphItemWithData( g );
             currentGraphForm.PaneList.Clear();
             Pane pane = new Pane();
-            pane.Add( gWithData );
+            pane.Add( g );
             currentGraphForm.PaneList.Add( pane );
             currentGraphForm.Refresh();
         }
@@ -519,8 +620,7 @@ namespace seems
                 throw new Exception( "current graph should not be null" );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
 
-            GraphItem gWithData = getGraphItemWithData( g );
-            currentGraphForm.PaneList[0].Add( gWithData );
+            currentGraphForm.PaneList[0].Add( g );
             currentGraphForm.Refresh();
         }
 
@@ -535,8 +635,7 @@ namespace seems
             Pane pane = new Pane();
             foreach( GraphItem g in gList )
             {
-                GraphItem gWithData = getGraphItemWithData( g );
-                pane.Add( gWithData );
+                pane.Add( g );
             }
             currentGraphForm.PaneList.Add( pane );
             currentGraphForm.Refresh();
@@ -547,9 +646,8 @@ namespace seems
             GraphForm newGraph = OpenGraph( true );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
 
-            GraphItem gWithData = getGraphItemWithData( g );
             Pane pane = new Pane();
-            pane.Add( gWithData );
+            pane.Add( g );
             newGraph.PaneList.Add( pane );
             newGraph.Refresh();
         }
@@ -561,9 +659,8 @@ namespace seems
             {
                 GraphForm newGraph = OpenGraph( true );
 
-                GraphItem gWithData = getGraphItemWithData( g );
                 Pane pane = new Pane();
-                pane.Add( gWithData );
+                pane.Add( g );
                 newGraph.PaneList.Add( pane );
                 newGraph.Refresh();
             }
@@ -576,9 +673,8 @@ namespace seems
                 throw new Exception( "current graph should not be null" );
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
 
-            GraphItem gWithData = getGraphItemWithData( g );
             Pane pane = new Pane();
-            pane.Add( gWithData );
+            pane.Add( g );
             currentGraphForm.PaneList.Add( pane );
             currentGraphForm.Refresh();
         }
@@ -593,9 +689,8 @@ namespace seems
             currentGraphForm.PaneList.Clear();
             foreach( GraphItem g in gList )
             {
-                GraphItem gWithData = getGraphItemWithData( g );
                 Pane pane = new Pane();
-                pane.Add( gWithData );
+                pane.Add( g );
                 currentGraphForm.PaneList.Add( pane );
             }
             currentGraphForm.Refresh();
@@ -609,8 +704,7 @@ namespace seems
             Pane pane = new Pane();
             foreach( GraphItem g in gList )
             {
-                GraphItem gWithData = getGraphItemWithData( g );
-                pane.Add( gWithData );
+                pane.Add( g );
             }
             newGraph.PaneList.Add( pane );
             newGraph.Refresh();
@@ -623,9 +717,8 @@ namespace seems
             GraphForm newGraph = OpenGraph( true );
             foreach( GraphItem g in gList )
             {
-                GraphItem gWithData = getGraphItemWithData( g );
                 Pane pane = new Pane();
-                pane.Add( gWithData );
+                pane.Add( g );
                 newGraph.PaneList.Add( pane );
             }
             newGraph.Refresh();
@@ -635,12 +728,11 @@ namespace seems
         void graphListForm_showTableOfDataPoints( object sender, EventArgs e )
         {
             GraphItem g = ( ( sender as ToolStripMenuItem ).Owner as ContextMenuStrip ).Tag as GraphItem;
-            GraphItem gWithData = getGraphItemWithData( g );
 
             DockableForm form = new DockableForm();
             form.Text = g.Id + " Data";
             DataGridView table = new DataGridView();
-            table.Tag = gWithData;
+            table.Tag = g;
             table.Dock = DockStyle.Fill;
             table.VirtualMode = true;
             table.CellValueNeeded += new DataGridViewCellValueEventHandler( table_CellValueNeeded );
@@ -651,7 +743,7 @@ namespace seems
             table.RowHeadersVisible = false;
             table.Columns.Add( "mz", "m/z" );
             table.Columns.Add( "intensity", "Intensity" );
-            table.Rows.Insert(0, gWithData.Points.Count);
+            table.Rows.Insert(0, g.Points.Count);
 
             form.Controls.Add( table );
             form.Show( mainForm.DockPanel, DockState.Floating );
@@ -672,10 +764,10 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
 
-            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
+            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.Spectrum )
             {
-                spectrumProcessingForm.UpdateProcessing( currentGraphForm.PaneList[0][0] as MassSpectrum );
-                spectrumProcessingForm.HideOnClose = true;
+                spectrumProcessingForm.UpdateProcessing( currentGraphForm.FocusedItem.Tag as MassSpectrum );
+                mainForm.DockPanel.DefaultFloatingWindowSize = spectrumProcessingForm.Size;
                 spectrumProcessingForm.Show( mainForm.DockPanel, DockState.Floating );
             }
         }
@@ -711,40 +803,40 @@ namespace seems
             defaultChromatogramAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Properties.Settings.Default.TimeMatchToleranceUnit;
         }
 
-        public void ShowAnnotationSettings()
+        public void ShowAnnotationForm()
         {
             GraphForm currentGraphForm = mainForm.CurrentGraphForm;
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
 
-            AnnotationSettings settings;
-            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
+            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.Spectrum )
             {
-                settings = defaultScanAnnotationSettings;
-                ScanAnnotationSettingsForm annotationSettingsForm = new ScanAnnotationSettingsForm( settings );
-                annotationSettingsForm.ShowDialog( mainForm );
-            } else
-            {
-                settings = defaultChromatogramAnnotationSettings;
-                ChromatogramAnnotationSettingsForm annotationSettingsForm = new ChromatogramAnnotationSettingsForm( settings );
-                annotationSettingsForm.ShowDialog( mainForm );
+                spectrumAnnotationForm.UpdateAnnotations( currentGraphForm.FocusedItem.Tag as MassSpectrum );
+                mainForm.DockPanel.DefaultFloatingWindowSize = spectrumAnnotationForm.Size;
+                spectrumAnnotationForm.Show( mainForm.DockPanel, DockState.Floating );
             }
         }
 
-        public void ShowAnnotationManualEditForm()
+        void spectrumAnnotationForm_AnnotationChanged( object sender, EventArgs e )
         {
-            GraphForm currentGraphForm = mainForm.CurrentGraphForm;
-            if( currentGraphForm == null )
-                throw new Exception( "current graph should not be null" );
-
-            if( currentGraphForm.PaneList[0][0].IsMassSpectrum )
+            if( sender is SpectrumAnnotationForm )
             {
-                AnnotationEditForm annotationEditForm = new AnnotationEditForm( defaultScanAnnotationSettings );
-                annotationEditForm.ShowDialog( mainForm );
-            } else
-            {
-                AnnotationEditForm annotationEditForm = new AnnotationEditForm( defaultChromatogramAnnotationSettings );
-                annotationEditForm.ShowDialog( mainForm );
+                foreach( GraphForm form in CurrentGraphFormList )
+                {
+                    bool refresh = false;
+                    foreach( Pane pane in form.PaneList )
+                        for( int i = 0; i < pane.Count && !refresh; ++i )
+                        {
+                            if( pane[i].IsMassSpectrum &&
+                                pane[i].Id == spectrumAnnotationForm.CurrentSpectrum.Id )
+                            {
+                                refresh = true;
+                                break;
+                            }
+                        }
+                    if( refresh )
+                        form.Refresh();
+                }
             }
         }
 
@@ -762,9 +854,10 @@ namespace seems
                             if( pane[i].IsMassSpectrum &&
                                 pane[i].Id == spf.CurrentSpectrum.Id )
                             {
-                                pane[i] = getGraphItemWithData( pane[i] );
+                                ( pane[i] as MassSpectrum ).SpectrumList = spectrumProcessingForm.ProcessingListView.ProcessingWrapper( pane[i].Source.Source.MSDataFile.run.spectrumList );
                                 pane[i].Source.SpectrumListForm.UpdateRow(
-                                    ( pane[i].Tag as DataGridViewRow ).Index );
+                                    pane[i].Source.SpectrumListForm.IndexOf( spf.CurrentSpectrum ),
+                                    (pane[i] as MassSpectrum).SpectrumList );
                             }
                         }
                     form.Refresh();
@@ -793,9 +886,12 @@ namespace seems
                 {
                     foreach( DataGridViewRow row in source.SpectrumListForm.GridView.Rows )
                     {
+                        if( !row.Displayed )
+                            continue;
+
+                        source.SpectrumListForm.GetSpectrum(row.Index).DataProcessing = spectrumProcessingForm.ProcessingListView.DataProcessing;
                         source.SpectrumListForm.UpdateRow( row.Index,
                             spectrumProcessingForm.ProcessingListView.ProcessingWrapper( source.Source.MSDataFile.run.spectrumList ) );
-                        ( row.Tag as MassSpectrum ).DataProcessing = spectrumProcessingForm.ProcessingListView.DataProcessing;
                         Application.DoEvents();
                     }
                 }
@@ -805,10 +901,10 @@ namespace seems
                     foreach( Pane pane in form.PaneList )
                         for( int i = 0; i < pane.Count; ++i )
                         {
-                            if( pane[i].IsMassSpectrum && global ||
-                                ( !global && spectrumProcessingForm.CurrentSpectrum.Source == pane[i].Source ) )
+                            if( pane[i].IsMassSpectrum && ( global ||
+                                ( !global && spectrumProcessingForm.CurrentSpectrum.Source == pane[i].Source ) ) )
                             {
-                                pane[i] = getGraphItemWithData( pane[i] );
+                                ( pane[i] as MassSpectrum ).SpectrumList = spectrumProcessingForm.ProcessingListView.ProcessingWrapper( pane[i].Source.Source.MSDataFile.run.spectrumList );
                             }
                         }
                     form.Refresh();
@@ -839,8 +935,17 @@ namespace seems
                 currentGraphForm = OpenGraph( true );
 
             spectrumProcessingForm.UpdateProcessing( e.Spectrum );
+            spectrumAnnotationForm.UpdateAnnotations( e.Spectrum );
             showData( currentGraphForm, e.Spectrum );
             currentGraphForm.ZedGraphControl.Focus();
+        }
+
+        private void spectrumListForm_FilterChanged( object sender, SpectrumListFilterChangedEventArgs e )
+        {
+            if( e.Matches == e.Total )
+                mainForm.SetStatusLabel( "Filters reset to show all spectra." );
+            else
+                mainForm.SetStatusLabel( String.Format( "{0} of {1} spectra matched the filter settings.", e.Matches, e.Total ) );
         }
 
         private void graphForm_PreviewKeyDown( object sender, PreviewKeyDownEventArgs e )
@@ -854,30 +959,34 @@ namespace seems
             else
                 graphForm = ( sender as MSGraph.MSGraphControl ).Parent as GraphForm;
 
-            GraphItem graphItem = graphForm.PaneList[0][0];
-            DataSource source = graphItem.Source.Source;
+            GraphItem graphItem = graphForm.FocusedItem.Tag as GraphItem;
+            SpectrumSource source = graphItem.Source.Source;
             if( source == null || graphItem == null )
                 return;
 
-            if( !( graphItem.Tag is DataGridViewRow ) )
-                throw new Exception( "Error processing keyboard input: unable to determine source row" );
-            DataGridViewRow row = graphItem.Tag as DataGridViewRow;
-            DataGridView gridView = row.DataGridView;
+            DataGridView gridView = graphItem.IsChromatogram ? ( graphItem as Chromatogram ).OwningListForm.GridView
+                                                             : ( graphItem as MassSpectrum ).OwningListForm.GridView;
+            int rowIndex = graphItem.IsChromatogram ? 0
+                                                    : ( graphItem as MassSpectrum ).OwningListForm.IndexOf( graphItem as MassSpectrum );
 
             int key = (int) e.KeyCode;
-            if( key == (int) Keys.Left && row.Index > 0 )
-                gridView.CurrentCell = gridView.Rows[row.Index - 1].Cells[gridView.CurrentCell.ColumnIndex];
-            else if( key == (int) Keys.Right && row.Index < gridView.RowCount - 1 )
-                gridView.CurrentCell = gridView.Rows[row.Index + 1].Cells[gridView.CurrentCell.ColumnIndex];
+            if( ( key == (int) Keys.Left || key == (int) Keys.Up ) && rowIndex > 0 )
+                gridView.CurrentCell = gridView[gridView.CurrentCell.ColumnIndex, rowIndex - 1];
+            else if( ( key == (int) Keys.Right || key == (int) Keys.Down ) && rowIndex < gridView.RowCount - 1 )
+                gridView.CurrentCell = gridView[gridView.CurrentCell.ColumnIndex, rowIndex + 1];
             else
                 return;
 
             if( graphItem.IsMassSpectrum ) // update spectrum processing form
-                spectrumProcessingForm.UpdateProcessing( gridView.CurrentRow.Tag as MassSpectrum );
+            {
+                MassSpectrum spectrum = ( graphItem as MassSpectrum ).OwningListForm.GetSpectrum( gridView.CurrentCellAddress.Y );
+                spectrumProcessingForm.UpdateProcessing( spectrum );
+                spectrumAnnotationForm.UpdateAnnotations( spectrum );
+            }
 
             gridView.Parent.Refresh(); // update chromatogram/spectrum list
             graphForm.Pane.Refresh(); // update tab text
-            showData( graphForm, gridView.CurrentRow.Tag as GraphItem );
+            showData( graphForm, ( graphItem as MassSpectrum ).OwningListForm.GetSpectrum( gridView.CurrentCellAddress.Y ) );
             Application.DoEvents();
 
             //CurrentGraphForm.ZedGraphControl.PreviewKeyDown -= new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
@@ -887,7 +996,7 @@ namespace seems
 
         public void ExportIntegration()
         {
-			SaveFileDialog exportDialog = new SaveFileDialog();
+			/*SaveFileDialog exportDialog = new SaveFileDialog();
             string filepath = mainForm.CurrentGraphForm.Sources[0].Source.CurrentFilepath;
             exportDialog.InitialDirectory = Path.GetDirectoryName( filepath );
 			exportDialog.OverwritePrompt = true;
@@ -903,7 +1012,7 @@ namespace seems
                     writer.WriteLine( "{0},{1}", g.Id, g.TotalIntegratedArea );
                 }
 				writer.Close();
-			}
+			}*/
 		}
 
         public void ShowCurrentSourceAsMzML()

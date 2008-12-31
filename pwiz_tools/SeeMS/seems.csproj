@@ -5,7 +5,7 @@
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2399F68B-D886-4D94-AB4B-700FE3E46849}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>seems</RootNamespace>
     <AssemblyName>seems</AssemblyName>
@@ -24,6 +24,11 @@
     </UpgradeBackupLocation>
     <TargetFrameworkSubset>
     </TargetFrameworkSubset>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -41,11 +46,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>2.0</OldToolsVersion>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -68,6 +68,10 @@
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DataGridViewAutoFilter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\DataGridViewAutoFilter.dll</HintPath>
+    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.2.0.0, Culture=neutral, PublicKeyToken=83b2c390cd515404, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\DigitalRune.Windows.Docking.dll</HintPath>
@@ -86,16 +90,23 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZedGraph, Version=5.1.4.32252, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
+    <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>MSGraph\ZedGraph.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChromatogramListForm.cs">
+    <Compile Include="Annotation.cs" />
+    <Compile Include="Dialogs\AnnotationPanels.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Dialogs\AnnotationPanels.Designer.cs">
+      <DependentUpon>AnnotationPanels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ChromatogramListForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ChromatogramListForm.Designer.cs">
+    <Compile Include="Dialogs\ChromatogramListForm.Designer.cs">
       <DependentUpon>ChromatogramListForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataSource.cs" />
@@ -132,22 +143,38 @@
     <Compile Include="Dialogs\SelectColumnsDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Dialogs\SpectrumAnnotationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumAnnotationForm.Designer.cs">
+      <DependentUpon>SpectrumAnnotationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Manager.cs" />
+    <Compile Include="Misc\Arguments.cs" />
     <Compile Include="Misc\FileSizeFormatProvider.cs" />
     <Compile Include="Misc\ListViewColumnSorter.cs" />
-    <Compile Include="ProcessingListView.cs">
+    <Compile Include="Misc\SpectrumDataSet.cs">
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Misc\SpectrumDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ProcessingListView.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="SpectrumListForm.cs">
+    <Compile Include="Dialogs\SpectrumListForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SpectrumListForm.Designer.cs">
+    <Compile Include="Dialogs\SpectrumListForm.Designer.cs">
       <DependentUpon>SpectrumListForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="GraphForm.cs">
+    <Compile Include="Dialogs\GraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GraphForm.Designer.cs">
+    <Compile Include="Dialogs\GraphForm.Designer.cs">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\AnnotationEditForm.cs">
@@ -224,16 +251,16 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="SpectrumProcessingForm.cs">
+    <Compile Include="Dialogs\SpectrumProcessingForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SpectrumProcessingForm.Designer.cs">
+    <Compile Include="Dialogs\SpectrumProcessingForm.Designer.cs">
       <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="TreeViewForm.cs">
+    <Compile Include="Dialogs\TreeViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TreeViewForm.Designer.cs">
+    <Compile Include="Dialogs\TreeViewForm.Designer.cs">
       <DependentUpon>TreeViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Types.cs">
@@ -241,7 +268,10 @@
     <Compile Include="Misc\WebBrowserCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ChromatogramListForm.resx">
+    <EmbeddedResource Include="Dialogs\AnnotationPanels.resx">
+      <DependentUpon>AnnotationPanels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ChromatogramListForm.resx">
       <DependentUpon>ChromatogramListForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -265,23 +295,26 @@
       <SubType>Designer</SubType>
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GraphForm.resx">
+    <EmbeddedResource Include="Dialogs\SpectrumAnnotationForm.resx">
+      <DependentUpon>SpectrumAnnotationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\GraphForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Misc\SpectrumIcon.ico" />
-    <EmbeddedResource Include="ProcessingListView.resx">
+    <EmbeddedResource Include="Dialogs\ProcessingListView.resx">
       <DependentUpon>ProcessingListView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SpectrumListForm.resx">
+    <EmbeddedResource Include="Dialogs\SpectrumListForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>SpectrumListForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SpectrumProcessingForm.resx">
+    <EmbeddedResource Include="Dialogs\SpectrumProcessingForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="TreeViewForm.resx">
+    <EmbeddedResource Include="Dialogs\TreeViewForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>TreeViewForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -314,9 +347,40 @@
     <Content Include="Misc\Images\up.png" />
     <Content Include="Misc\Images\views.png" />
     <None Include="Misc\Images\RecentDocuments.png" />
+    <None Include="Misc\SpectrumDataSet.xsc">
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="Misc\SpectrumDataSet.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>SpectrumDataSet.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Misc\SpectrumDataSet.xss">
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+    </None>
     <Content Include="Misc\Smoother.ico" />
     <Content Include="Misc\SpectrumSVG-template.svg">
     </Content>
+    <None Include="Resources\Annotation.png" />
+    <None Include="Resources\views.png" />
+    <None Include="Resources\up.png" />
+    <None Include="Resources\Thresholder.png" />
+    <None Include="Resources\Smoother.png" />
+    <None Include="Resources\RecentDocuments.png" />
+    <None Include="Resources\PeakIntegralActive.png" />
+    <None Include="Resources\PeakIntegral.png" />
+    <None Include="Resources\OpticalDrive.png" />
+    <None Include="Resources\NetworkDrive.png" />
+    <None Include="Resources\MyNetworkPlaces.png" />
+    <None Include="Resources\MyDocuments.png" />
+    <None Include="Resources\MyComputer.png" />
+    <None Include="Resources\LocalDrive.png" />
+    <None Include="Resources\folder.png" />
+    <None Include="Resources\file.png" />
+    <None Include="Resources\Desktop.png" />
+    <None Include="Resources\Centroider.png" />
+    <None Include="Resources\back.png" />
+    <None Include="Resources\DataProcessing.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -346,12 +410,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="MSGraph\MSGraph.csproj">
-      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
-      <Name>MSGraph</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <COMReference Include="EDAL">
       <Guid>{8E79B9A2-107E-4E91-A0FF-01F2591103F3}</Guid>
       <VersionMajor>1</VersionMajor>
@@ -360,6 +418,12 @@
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

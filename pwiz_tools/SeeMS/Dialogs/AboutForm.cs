@@ -18,7 +18,7 @@ namespace seems
             InitializeComponent();
 
             aboutTextBox.Text = aboutTextBox.Text.Replace( "<<version>>",
-                String.Format( "{0} ({1})", seems.Version, seems.LastModified ) );
+                String.Format( "{0} ({1})", seemsForm.Version, seemsForm.LastModified ) );
 
             foreach( System.Reflection.Assembly a in AppDomain.CurrentDomain.GetAssemblies() )
             {

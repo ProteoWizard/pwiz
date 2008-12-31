@@ -18,7 +18,7 @@ using DigitalRune.Windows.Docking;
 
 namespace seems
 {
-	public partial class seems : Form
+	public partial class seemsForm : Form
 	{
         public static string Version = "0.5";
         public static string LastModified = "8/11/2008";
@@ -37,11 +37,27 @@ namespace seems
 		public ToolStripStatusLabel StatusLabel { get { return toolStripStatusLabel1; } }
 		public ToolStripProgressBar StatusProgressBar { get { return toolStripProgressBar1; } }
 		public GraphForm CurrentGraphForm { get { return ( ActiveMdiChild is GraphForm ? (GraphForm) ActiveMdiChild : null ); } }
-		public ToolStripDropDownButton AnnotateButton { get { return annotateToolStripDropDownButton; } }
 
-		public seems( string[] args )
+        public ToolStripButton DataProcessingButton { get { return dataProcessingButton; } }
+		public ToolStripButton AnnotationButton { get { return annotationButton; } }
+
+        private static Form eventLog = new Form();
+        private static TextBox eventTextBox = new TextBox();
+        public static Form EventLog { get { return eventLog; } }
+        public static void LogEvent( object sender, EventArgs e )
+        {
+            eventTextBox.AppendText( String.Format( "sender: {0}  args: {1}\r\n", sender, e ) );
+        }
+
+		public seemsForm( string[] args )
 		{
 			InitializeComponent();
+
+            eventTextBox.Dock = DockStyle.Fill;
+            eventTextBox.Multiline = true;
+            eventTextBox.ScrollBars = ScrollBars.Vertical;
+            eventTextBox.ReadOnly = true;
+            eventLog.Controls.Add( eventTextBox );
 
 			this.Load += seems_Load;
 			this.Resize += seems_Resize;
@@ -61,38 +77,8 @@ namespace seems
 
 			manager = new Manager(this);
 
-			if( args.Length > 0 )
-			{
-				this.BringToFront();
-				this.Focus();
-				this.Activate();
-				this.Show();
-				Application.DoEvents();
-
-				try
-				{
-					openFile( args[0] );
-
-					if( args.Length > 1 )
-					{
-						try
-						{
-							//browserForm.ElementNumberComboBox.SelectedIndex = Convert.ToInt32( args[1] );
-						} catch
-						{
-						}
-					}
-				} catch( Exception ex )
-				{
-					string message = ex.Message;
-					if( ex.InnerException != null )
-						message += "\n\nAdditional information: " + ex.InnerException.Message;
-					MessageBox.Show( message,
-									"Error recovering from crash",
-									MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-									0, false );
-				}
-			}
+            if( args.Length > 0 )
+                manager.ParseArgs( args );
 		}
 
 		private void seems_Load( object sender, EventArgs e )
@@ -136,11 +122,11 @@ namespace seems
 
 		private void openFile( string filepath )
 		{
+            // update recent files list
+            recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
+            recentFilesMenu.SaveToRegistry();
+
 			manager.OpenFile(filepath);
-			
-			// update recent files list
-			recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
-			recentFilesMenu.SaveToRegistry();
 		}
 
 		private delegate void SetStatusLabelCallback( string status );
@@ -207,163 +193,6 @@ namespace seems
                 foreach( string dataSource in browseToFileDialog.DataSources )
                     openFile( dataSource );
 			}
-		}
-
-		private void peptideFragmentationToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			/*PeptideFragmentationForm peptideFragmentationForm = new PeptideFragmentationForm();
-			peptideFragmentationForm.ShowDialog( this );
-			if( peptideFragmentationForm.DialogResult == DialogResult.Cancel )
-				return;
-
-			if( peptideFragmentationForm.MsProductReportXml != null )
-			{
-				Map<string, List<Pair<double, int>>> pointAnnotations = new Map<string, List<Pair<double, int>>>();
-
-				XmlTextReader reader = new XmlTextReader( new StringReader( peptideFragmentationForm.MsProductReportXml ) );
-
-				string ionSeriesName = "immonium";
-				string ionSeriesIndex = "";
-				int previousLabelCount = CurrentGraphForm.CurrentPointAnnotations.Count;
-				while( reader.Read() )
-				{
-					switch( reader.NodeType )
-					{
-						case XmlNodeType.Element:
-							if( reader.Name == "mz" )
-							{
-								string[] ionMzChargeStr = reader.ReadElementContentAsString().Split( ",".ToCharArray() );
-								double ionMz = Convert.ToDouble( ionMzChargeStr[0] );
-								int ionCharge = Convert.ToInt32( ionMzChargeStr[1] );
-								pointAnnotations[ionSeriesName + ionSeriesIndex].Add( new Pair<double, int>( ionMz, ionCharge ) );
-							} else if( reader.Name[0] == 'i' )
-							{
-								Int32 test;
-								if( Int32.TryParse( reader.Name.Substring( 1 ), out test ) )
-								{
-									ionSeriesIndex = " " + reader.Name.Substring( 1 );
-								}
-							} else if( reader.Name == "name" )
-							{
-								ionSeriesName = reader.ReadElementContentAsString();
-							}
-							break;
-					}
-				}
-
-				//CurrentGraphForm.AnnotationSettings.setScanLabels( pointAnnotations );
-				//if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
-				//	CurrentGraphForm.updateGraph();
-			}*/
-		}
-
-
-		private void peptideMassMapProteinDigestToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			/*PeptideMassMapProteinDigestForm peptideMassMapProteinDigestForm = new PeptideMassMapProteinDigestForm();
-			peptideMassMapProteinDigestForm.ShowDialog( this );
-			if( peptideMassMapProteinDigestForm.DialogResult == DialogResult.Cancel )
-				return;
-
-			if( peptideMassMapProteinDigestForm.MsDigestReportXml != null )
-			{
-				Map<string, List<Pair<double, int>>> pointAnnotations = new Map<string, List<Pair<double, int>>>();
-
-				XmlTextReader reader = new XmlTextReader( new StringReader( peptideMassMapProteinDigestForm.MsDigestReportXml ) );
-
-				double peptideMonoMz = 0, peptideAvgMz = 0;
-				int peptideCharge = 0;
-				string peptideSequence;
-				int previousLabelCount = CurrentGraphForm.CurrentPointAnnotations.Count;
-				while( reader.Read() )
-				{
-					switch( reader.NodeType )
-					{
-						case XmlNodeType.Element:
-							if( reader.Name == "peptide" )
-							{
-								peptideMonoMz = peptideAvgMz = 0;
-								peptideCharge = 0;
-								peptideSequence = "";
-							} else if( reader.Name == "mi_m_over_z" )
-							{
-								peptideMonoMz = Convert.ToDouble( reader.ReadElementContentAsString() );
-							} else if( reader.Name == "av_m_over_z" )
-							{
-								peptideAvgMz = Convert.ToDouble( reader.ReadElementContentAsString() );
-							} else if( reader.Name == "charge" )
-							{
-								peptideCharge = Convert.ToInt32( reader.ReadElementContentAsString() );
-							} else if( reader.Name == "database_sequence" )
-							{
-								peptideSequence = reader.ReadElementContentAsString();
-								if( peptideMonoMz > 0 ) pointAnnotations[peptideSequence].Add( new Pair<double, int>( peptideMonoMz, peptideCharge ) );
-								if( peptideAvgMz > 0 ) pointAnnotations[peptideSequence].Add( new Pair<double, int>( peptideAvgMz, peptideCharge ) );
-							}
-							break;
-					}
-				}
-
-				//CurrentGraphForm.ScanAnnotationSettings.setScanLabels( pointAnnotations );
-				//if( CurrentGraphForm.CurrentPointAnnotations.Count > previousLabelCount )
-				//	CurrentGraphForm.updateGraph();
-			}*/
-		}
-
-		private void clearToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-			/*if( CurrentGraphForm.CurrentPointAnnotations.Count == 0 )
-				return;
-
-			CurrentGraphForm.CurrentPointAnnotations.Clear();
-            CurrentGraphForm.Refresh();*/
-		}
-
-		private void settingsToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-            manager.ShowAnnotationSettings();
-		}
-
-		private void manualEditToolStripMenuItem_Click( object sender, EventArgs e )
-		{
-            manager.ShowAnnotationManualEditForm();
-		}
-
-		private GraphForm currentGraphForm;
-		private void seems_MdiChildActivate( object sender, EventArgs e )
-		{
-			if( CurrentGraphForm != null )
-			{
-				/*if( CurrentGraphForm.DataSource != null )
-				{
-					dataSourceComboBox.SelectedItem = CurrentGraphForm.DataSource;
-					dataSourceComboBox.Refresh();
-				}
-
-				if( CurrentGraphForm.CurrentGraphItemIndex >= 0 )
-				{
-					scanNumberComboBox.SelectedIndex = CurrentGraphForm.CurrentGraphItemIndex;
-					scanNumberComboBox.UpdateTextBox();
-					scanNumberComboBox.Refresh();
-				}*/
-
-				if( CurrentGraphForm != currentGraphForm )
-				{
-					currentGraphForm = CurrentGraphForm;
-					/*CurrentGraphForm.LostFocus += new EventHandler( GraphForm_LostFocus );
-					CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( GraphForm_PreviewKeyDown );
-					CurrentGraphForm.FormClosing += new FormClosingEventHandler( GraphForm_FormClosing );
-					CurrentGraphForm.Resize += new EventHandler( GraphForm_Resize );
-					CurrentGraphForm.LocationChanged += new EventHandler( GraphForm_LocationChanged );*/
-					//pendingActivation = false;
-				}
-			}// else
-			//	setScanControls( false );
-
-			/*if( ActiveMdiChild == null )
-			{
-				dataSourceComboBox.Enabled = false;
-			}*/
 		}
 
 		private void cascadeWindowMenuItem_Click( object sender, EventArgs e )
@@ -891,6 +720,16 @@ namespace seems
         private void previewAsMzMLToolStripMenuItem_Click( object sender, EventArgs e )
         {
             manager.ShowCurrentSourceAsMzML();
+        }
+
+        private void annotationButton_Click( object sender, EventArgs e )
+        {
+            manager.ShowAnnotationForm();
+        }
+
+        private void eventLogToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            eventLog.Show();
         }
 	}
 }

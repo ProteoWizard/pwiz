@@ -60,6 +60,13 @@ namespace seems.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap Annotation {
+            get {
+                object obj = ResourceManager.GetObject("Annotation", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap back {
             get {
                 object obj = ResourceManager.GetObject("back", resourceCulture);

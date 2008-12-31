@@ -51,12 +51,12 @@ namespace MSGraph
                 return;
 
             foreach( CurveItem curve in CurveList )
-                if( curve is MSGraphItem )
+                if( curve.Points is MSPointList )
                 {
                     if( !IsZoomed ) //pane.XAxis.Scale.MinAuto && pane.XAxis.Scale.MaxAuto )
-                        ( curve as MSGraphItem ).Points.SetScale( bins );
+                        ( curve.Points as MSPointList ).SetScale( bins );
                     else
-                        ( curve as MSGraphItem ).Points.SetScale( XAxis.Scale, bins );
+                        ( curve.Points as MSPointList ).SetScale( XAxis.Scale, bins );
                 }
 
             AxisChange();
@@ -73,6 +73,7 @@ namespace MSGraph
         {
             foreach( GraphObj pa in pointAnnotations_ )
                 this.GraphObjList.Remove( pa );
+            pointAnnotations_.Clear();
 
             Axis xAxis = this.XAxis;
             Axis yAxis = this.YAxis;
@@ -102,13 +103,17 @@ namespace MSGraph
 
             // some dummy labels for very fast clipping
             string baseLabel = "";
-            foreach( MSGraphItem item in this.CurveList )
+            foreach( CurveItem item in this.CurveList )
             {
-                PointAnnotation annotation = item.GraphItemInfo.AnnotatePoint( new PointPair( 0, 0 ) );
-                if( annotation != null &&
-                    annotation.Label != null &&
-                    annotation.Label.Length > baseLabel.Length )
-                    baseLabel = annotation.Label;
+                IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
+                if( info != null )
+                {
+                    PointAnnotation annotation = info.AnnotatePoint( new PointPair( 0, 0 ) );
+                    if( annotation != null &&
+                        annotation.Label != null &&
+                        annotation.Label.Length > baseLabel.Length )
+                        baseLabel = annotation.Label;
+                }
             }
 
             TextObj baseTextObj = new TextObj( baseLabel, 0, 0 );
@@ -125,13 +130,18 @@ namespace MSGraph
             float xAxisPixel = yAxis.Scale.Transform( 0 );
 
             // add automatic labels for MSGraphItems
-            foreach( MSGraphItem item in CurveList )
+            foreach( CurveItem item in CurveList )
             {
-                if( item.GraphItemInfo.ToString().Length == 0 )
+                IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
+                MSPointList points = item.Points as MSPointList;
+                if( info == null || points == null )
                     continue;
 
-                PointPairList fullList = item.Points.FullList;
-                List<int> maxIndexList = item.Points.ScaledMaxIndexList;
+                if( info.ToString().Length == 0 )
+                    continue;
+
+                PointPairList fullList = points.FullList;
+                List<int> maxIndexList = points.ScaledMaxIndexList;
                 for( int i = 0; i < maxIndexList.Count; ++i )
                 {
                     if( maxIndexList[i] < 0 )
@@ -149,7 +159,7 @@ namespace MSGraph
                     if( xAxisPixel - yPixel < 3 )
                         continue;
 
-                    PointAnnotation annotation = item.GraphItemInfo.AnnotatePoint( pt );
+                    PointAnnotation annotation = info.AnnotatePoint( pt );
                     if( annotation == null )
                         continue;
 
@@ -167,18 +177,22 @@ namespace MSGraph
                     // do fast check for overlap against all MSGraphItems
                     double labelY = yAxis.Scale.ReverseTransform( yPixel - 5 );
                     bool overlap = false;
-                    foreach( MSGraphItem item2 in CurveList )
+                    foreach( CurveItem item2 in CurveList )
                     {
-                        int nearestMaxIndex = item2.Points.GetNearestMaxIndexToBin( i );
-                        if( nearestMaxIndex < 0 )
-                            continue;
-                        RectangleF r = new RectangleF( (float) pt.X - pointLabelWidth / 2,
-                                                       (float) labelY - baseLabelHeight,
-                                                       pointLabelWidth,
-                                                       baseLabelHeight );
-                        overlap = detectLabelCurveOverlap( this, item2.Points.FullList, nearestMaxIndex, item2.BaseItem is StickItem, r );
-                        if( overlap )
-                            break;
+                        MSPointList points2 = item.Points as MSPointList;
+                        if( points2 != null )
+                        {
+                            int nearestMaxIndex = points.GetNearestMaxIndexToBin( i );
+                            if( nearestMaxIndex < 0 )
+                                continue;
+                            RectangleF r = new RectangleF( (float) pt.X - pointLabelWidth / 2,
+                                                           (float) labelY - baseLabelHeight,
+                                                           pointLabelWidth,
+                                                           baseLabelHeight );
+                            overlap = detectLabelCurveOverlap( this, points.FullList, nearestMaxIndex, item2 is StickItem, r );
+                            if( overlap )
+                                break;
+                        }
                     }
 
                     if( overlap )
@@ -190,7 +204,7 @@ namespace MSGraph
                     //text.IsClippedToChartRect = true;
                     text.FontSpec = annotation.FontSpec;
 
-                    if( !detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item.BaseItem is StickItem ) )
+                    if( !detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem ) )
                     {
                         this.GraphObjList.Add( text );
                         pointAnnotations_.Add( text );
@@ -200,12 +214,26 @@ namespace MSGraph
                         g.SetClip( clipRegion, CombineMode.Replace );
                     }
                 }
+            }
 
-                if( item.GraphItemInfo.NonPointAnnotations != null )
-                {
-                    GraphObjList.AddRange( item.GraphItemInfo.NonPointAnnotations );
-                    pointAnnotations_.AddRange( item.GraphItemInfo.NonPointAnnotations );
-                }
+            // add manual annotations
+            foreach( CurveItem item in CurveList )
+            {
+                IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
+                MSPointList points = item.Points as MSPointList;
+                if( info == null || points == null )
+                    continue;
+
+                info.AddAnnotations( points, pointAnnotations_ );
+                foreach( GraphObj obj in pointAnnotations_ )
+                    if( !GraphObjList.Contains( obj ) )
+                        GraphObjList.Add( obj );
+                /*GraphObjList objsToRemove = new GraphObjList();
+                foreach( GraphObj obj in GraphObjList )
+                    if( !pointAnnotations_.Contains( obj ) )
+                        objsToRemove.Add( obj );
+                foreach( GraphObj obj in objsToRemove )
+                    GraphObjList.Remove( obj );*/
             }
         }
 

@@ -17,7 +17,7 @@ namespace seems
 	public class ProgressReportEventArgs : EventArgs
 	{
 		// Summary:
-		//     Gets the percentage complete of a DataSource operation.
+		//     Gets the percentage complete of a SpectrumSource operation.
 		//
 		// Returns:
 		//     An integer representing the current percentage complete. Range: [0,100]
@@ -38,10 +38,10 @@ namespace seems
 	public class StatusReportEventArgs : EventArgs
 	{
 		// Summary:
-		//     Gets a string describing the status of a DataSource operation.
+		//     Gets a string describing the status of a SpectrumSource operation.
 		//
 		// Returns:
-		//     A string representing the current status of DataSource operation.
+		//     A string representing the current status of SpectrumSource operation.
 		public string Status { get { return status; } }
 		private string status;
 
@@ -53,10 +53,10 @@ namespace seems
 
 	public class SetInputFileCompletedEventArgs : EventArgs
 	{
-		public DataSource DataSource { get { return dataSource; } }
-		private DataSource dataSource;
+		public SpectrumSource DataSource { get { return dataSource; } }
+		private SpectrumSource dataSource;
 
-		internal SetInputFileCompletedEventArgs( DataSource dataSource )
+		internal SetInputFileCompletedEventArgs( SpectrumSource dataSource )
 		{
 			this.dataSource = dataSource;
 		}
@@ -66,7 +66,7 @@ namespace seems
 	public delegate void StatusReportEventHandler( object sender, StatusReportEventArgs e );
 	public delegate void SetInputFileCompletedEventHandler( object sender, SetInputFileCompletedEventArgs e );
 
-	public class DataSource
+	public class SpectrumSource
 	{
 		private MSDataFile msDataFile;
 		private string sourceFilepath;
@@ -105,12 +105,12 @@ namespace seems
 		private EventWaitHandle setInputFileWaitHandle;
 		public EventWaitHandle SetInputFileEventWaitHandle { get { return setInputFileWaitHandle; } }
 
-		public DataSource()
+		public SpectrumSource()
 		{
 			// create empty data source
 		}
 
-		public DataSource( string filepath )
+		public SpectrumSource( string filepath )
 		{
 			msDataFile = new MSDataFile(filepath);
 			sourceFilepath = filepath;

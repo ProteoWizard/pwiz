@@ -281,7 +281,23 @@ namespace MSGraph
         #endregion
 
         #region MS graph management functions
-        public MSGraphItem AddGraphItem( MSGraphPane pane, IMSGraphItemInfo item )
+        private CurveItem makeMSGraphItem(IMSGraphItemInfo item)
+        {
+            CurveItem newCurve = item.GraphItemDrawMethod == MSGraphItemDrawMethod.Line ?
+                new LineItem( item.Title, new MSPointList( item.Points ), item.Color, SymbolType.None ) :
+                new StickItem( item.Title, new MSPointList( item.Points ), item.Color );
+
+            if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.Line )
+            {
+                ( newCurve as LineItem ).Line.IsAntiAlias = true;
+                ( newCurve as LineItem ).Line.IsOptimizedDraw = true;
+            }
+
+            newCurve.Tag = item;
+            return newCurve;
+        }
+
+        public CurveItem AddGraphItem( MSGraphPane pane, IMSGraphItemInfo item )
         {
             if( item.GraphItemType != pane.CurrentItemType )
             {
@@ -293,9 +309,9 @@ namespace MSGraph
             }
 
             Graphics g = CreateGraphics();
-            MSGraphItem newItem = new MSGraphItem( item );
+            CurveItem newItem = makeMSGraphItem( item );
             pane.CurveList.Add( newItem );
-            pane.SetScale(g);
+            pane.SetScale( g );
             return newItem;
         }
         #endregion
