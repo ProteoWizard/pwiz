@@ -281,10 +281,8 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             index_.push_back(make_pair(SpectrumIdentity(), make_pair(0,0)));
             pair<SpectrumIdentity, pair<short, long> >& indexPair = index_.back();
             SpectrumIdentity& si = indexPair.first;
-            si.index = index_.size()-1;
-            //si.nativeID = (format("%d,%d") % curFunction % (i+1)).str(); // TODO: fix
-            si.id = "scan=" + (format("%d,%d") % curFunction % (i+1)).str(); // TODO: fix
-            //si.id = "S" + si.nativeID;
+            si.index = i;
+            si.id = (format("function=%d process=0 scan=%d") % curFunction % (i+1)).str();
             nativeIdToIndexMap_[curFunction][i+1] = si.index;
             indexPair.second.first = curFunction;
             indexPair.second.second = i+1;
