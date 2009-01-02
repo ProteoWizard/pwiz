@@ -79,9 +79,9 @@ void testRead(const string& filename)
     SpectrumPtr spectrum = sl.spectrum(0, true);
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(spectrum->index == 0);
-    unit_assert(spectrum->id == "scan=1"); // derived from scan number
+    unit_assert(spectrum->id == "controller=0 scan=1"); // derived from scan number
     unit_assert(sl.spectrumIdentity(0).index == 0);
-    unit_assert(sl.spectrumIdentity(0).id == "scan=1");
+    unit_assert(sl.spectrumIdentity(0).id == "controller=0 scan=1");
     unit_assert(spectrum->scanList.scans.size() == 1);
     int scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 1);
@@ -95,9 +95,9 @@ void testRead(const string& filename)
     spectrum = sl.spectrum(1, true);
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(spectrum->index == 1);
-    unit_assert(spectrum->id == "scan=2"); // derived from scan number
+    unit_assert(spectrum->id == "controller=0 scan=2"); // derived from scan number
     unit_assert(sl.spectrumIdentity(1).index == 1);
-    unit_assert(sl.spectrumIdentity(1).id == "scan=2");
+    unit_assert(sl.spectrumIdentity(1).id == "controller=0 scan=2");
     unit_assert(spectrum->scanList.scans.size() == 1);
     scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 2);
@@ -110,9 +110,9 @@ void testRead(const string& filename)
     spectrum = sl.spectrum(2, true);
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(spectrum->index == 2);
-    unit_assert(spectrum->id == "S3"); // scan number
+    unit_assert(spectrum->id == "controller=0 scan=3"); // scan number
     unit_assert(sl.spectrumIdentity(2).index == 2);
-    unit_assert(sl.spectrumIdentity(2).id == "scan=3");
+    unit_assert(sl.spectrumIdentity(2).id == "controller=0 scan=3");
     unit_assert(spectrum->scanList.scans.size() == 1);
     scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
     unit_assert(scanEvent == 3);
@@ -124,17 +124,17 @@ void testRead(const string& filename)
     unit_assert(spectrum->precursors.size() == 1);
     const Precursor& precursor = spectrum->precursors[0];
     const SelectedIon& selectedIon = precursor.selectedIons[0];
-    unit_assert(precursor.spectrumID == "scan=2"); // previous ms1 scan
+    unit_assert(precursor.spectrumID == "controller=0 scan=2"); // previous ms1 scan
     unit_assert_equal(selectedIon.cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-15);
     unit_assert_equal(selectedIon.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
 
     spectrum = sl.spectrum(5, true);
     if (os_) TextWriter(*os_,0)(*spectrum); 
     unit_assert(sl.spectrumIdentity(5).index == 5);
-    unit_assert(sl.spectrumIdentity(5).id == "scan=6");
+    unit_assert(sl.spectrumIdentity(5).id == "controller=0 scan=6");
     unit_assert(spectrum->precursors.size() == 1);
     const Precursor& precursor2 = spectrum->precursors[0];
-    unit_assert(precursor2.spectrumID == "scan=2"); // previous ms1 scan
+    unit_assert(precursor2.spectrumID == "controller=0 scan=2"); // previous ms1 scan
 
     // test chromatogram list
     unit_assert(msd.run.chromatogramListPtr.get());

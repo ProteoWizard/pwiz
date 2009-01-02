@@ -19,7 +19,7 @@ namespace detail {
 
 string scanNumberToSpectrumID(long scanNumber)
 {
-    return "scan=" + lexical_cast<string>(scanNumber); 
+    return "controller=0 scan=" + lexical_cast<string>(scanNumber); 
 }
 
 
@@ -115,8 +115,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
     }
 
-    Scan dummy;
-    Scan& scan = result->scanList.scans.empty() ? dummy : result->scanList.scans[0];
+    Scan scan;
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -170,6 +169,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     }
 
     scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
+    result->scanList.scans.push_back(scan);
 
     for (long i=0, precursorCount=scanInfo->precursorCount(); i<precursorCount; i++)
     {
