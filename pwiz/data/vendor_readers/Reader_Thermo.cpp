@@ -181,14 +181,15 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    msd.fileDescription.fileContent.cvParams.push_back(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
+    msd.fileDescription.fileContent.set(MS_Thermo_nativeID_format);
+    msd.fileDescription.fileContent.set(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
 
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
     sourceFile->id = "RAW1";
     sourceFile->name = p.leaf();
     sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
-    sourceFile->cvParams.push_back(MS_Xcalibur_RAW_file);
+    sourceFile->set(MS_Xcalibur_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = stringToIDREF(p.leaf());
@@ -209,7 +210,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     dpPwiz->id = "pwiz_Reader_Thermo_conversion";
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
-    dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
+    dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
     msd.dataProcessingPtrs.push_back(dpPwiz);
 
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
