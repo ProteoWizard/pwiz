@@ -9,6 +9,7 @@ project
 lib pwiz_aux_msrc_reader_bruker
     : # sources
         Reader_Bruker.cpp
+        Reader_Bruker_Detail.cpp
     : # requirements
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
         <toolset>msvc:<dependency>CompassXtractMS.dll

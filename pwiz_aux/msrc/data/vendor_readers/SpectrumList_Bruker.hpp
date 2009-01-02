@@ -24,6 +24,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "Reader_Bruker_Detail.hpp"
 #import "CompassXtractMS.dll"
 #include <map>
 
@@ -35,14 +36,6 @@ using boost::bad_lexical_cast;
 namespace pwiz {
 namespace msdata {
 namespace detail {
-
-
-enum PWIZ_API_DECL SpectrumList_Bruker_Format
-{
-    FID,
-    YEP,
-    BAF
-};
 
 
 //

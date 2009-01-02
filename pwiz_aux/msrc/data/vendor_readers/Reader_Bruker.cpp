@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Bruker.hpp"
+#include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
@@ -37,48 +38,16 @@ PWIZ_API_DECL
 std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
                                                   const std::string& head) const
 {
-    bfs::path sourcePath(filename);
-
-    // Make sure target "filename" is actually a directory since
-    // all Bruker formats are directory-based
-    if (!bfs::is_directory(sourcePath))
+    switch (detail::format(filename))
     {
-        // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf
-        std::string leaf = sourcePath.leaf();
-        if (leaf == "fid")
-            return "Bruker FID";
-        else if(leaf == "Analysis.yep")
-            return "Bruker YEP";
-        else if(leaf == "Analysis.baf")
-            return "Bruker BAF";
-        else
+        case pwiz::msdata::detail::SpectrumList_Bruker_Format_FID: return "Bruker FID";
+        case pwiz::msdata::detail::SpectrumList_Bruker_Format_YEP: return "Bruker YEP";
+        case pwiz::msdata::detail::SpectrumList_Bruker_Format_BAF: return "Bruker BAF";
+
+        case pwiz::msdata::detail::SpectrumList_Bruker_Format_Unknown:
+        default:
             return "";
     }
-
-    // Check for fid-based data;
-    // Every directory within the queried directory should have a "1/1SRef"
-    // subdirectory with a fid file in it, but we check only the first
-    // directory for efficiency. This can fail, but those failures are acceptable.
-    // Alternatively, a directory closer to the fid file can be identified.
-    bfs::directory_iterator itr(sourcePath);
-    if (itr != bfs::directory_iterator())
-        if (bfs::exists(itr->path() / "1/1SRef/fid") ||
-            bfs::exists(itr->path() / "1SRef/fid") ||
-            bfs::exists(itr->path() / "fid") ||
-            bfs::exists(sourcePath / "fid"))
-            return "Bruker FID";
-
-    // Check for yep-based data;
-    // The directory should have a file named "Analysis.yep"
-    if (bfs::exists(sourcePath / "Analysis.yep"))
-        return "Bruker YEP";
-
-    // Check for baf-based data;
-    // The directory should have a file named "Analysis.baf"
-    if (bfs::exists(sourcePath / "Analysis.baf"))
-        return "Bruker BAF";
-
-    return "";
 }
 
 
@@ -212,6 +181,10 @@ void Reader_Bruker::read(const string& filename,
                          const string& head,
                          MSData& result) const
 {
+    SpectrumList_Bruker_Format format = detail::format(filename);
+    if (format == SpectrumList_Bruker_Format_Unknown)
+        throw ReaderFail("[Reader_Bruker::read()] Path given is not a recognized Bruker format");
+
     // use and check for a successful creation with HRESULT
     HRESULT hr = impl_->pAnalysis.CreateInstance("EDAL.MSAnalysis");
     if (FAILED(hr))
@@ -230,12 +203,19 @@ void Reader_Bruker::read(const string& filename,
 
         string error((const char*) lpMsgBuf);
         LocalFree(lpMsgBuf);
-        throw ReaderFail("[Reader_Bruker::Reader_Bruker()] Error initializing CompassXtract: " + error);
+        throw ReaderFail("[Reader_Bruker::read()] Error initializing CompassXtract: " + error);
     }
 
-    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, filename, detail::FID, impl_->pAnalysis);
+    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, filename, format, impl_->pAnalysis);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     //result.run.chromatogramListPtr = sl->Chromatograms();
+
+    switch (format)
+    {
+        case SpectrumList_Bruker_Format_FID: result.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format);
+        case SpectrumList_Bruker_Format_YEP: result.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format);
+        case SpectrumList_Bruker_Format_BAF: result.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format);
+    }
 
     fillInMetadata(filename, result);
 }
