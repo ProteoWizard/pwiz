@@ -151,7 +151,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     dppwiz->processingMethods.push_back(procpwiz);
  
     msd.dataProcessingPtrs.push_back(dpXcalibur);
-    msd.dataProcessingPtrs.push_back(dppwiz);
+    //msd.dataProcessingPtrs.push_back(dppwiz);
 
     ScanSettingsPtr as1(new ScanSettings("as1"));
     as1->sourceFilePtrs.push_back(sfp_parameters);
@@ -176,6 +176,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
     msd.run.spectrumListPtr = spectrumList;
 
+    spectrumList->dp = dppwiz;
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
@@ -292,6 +293,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.userParams.push_back(UserParam("example", "spectrum with no data"));
     s21.setMZIntensityArrays(vector<double>(), vector<double>());
 
+    s21.scanList.scans.push_back(Scan());
+
     // spectrum with MALDI spot information
     Spectrum& s22 = *spectrumList->spectra[3];
     s22.id = "scan=22";
@@ -341,6 +344,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     shared_ptr<ChromatogramListSimple> chromatogramList(new ChromatogramListSimple);
     msd.run.chromatogramListPtr = chromatogramList;
 
+    chromatogramList->dp = dppwiz;
     chromatogramList->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
     chromatogramList->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 

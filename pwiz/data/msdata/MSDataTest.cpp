@@ -105,6 +105,10 @@ void testSpectrumListSimple()
 
     shared_ptr<SpectrumListSimple> spectrumListSimple(new SpectrumListSimple);
 
+    unit_assert(spectrumListSimple->empty());
+    spectrumListSimple->dp = DataProcessingPtr(new DataProcessing("dp"));
+    unit_assert(!spectrumListSimple->empty());
+
     SpectrumPtr spectrum0(new Spectrum);
     spectrum0->index = 0;
     spectrum0->id = "scan=1";
@@ -217,6 +221,11 @@ void testSpectrumListSimple()
     spectrum = spectrumList.spectrum(1);
     unit_assert(spectrum->index == spectrum1->index);
     unit_assert(spectrum->id == spectrum1->id);
+
+    // verify DataProcessingPtr
+
+    unit_assert(spectrumList.dataProcessingPtr().get() &&
+                spectrumList.dataProcessingPtr()->id == "dp");
 }
 
 
@@ -232,6 +241,9 @@ void testChromatograms()
         cls.chromatograms.back()->setTimeIntensityPairs(pairs);
     }
 
+    DataProcessingPtr dp(new DataProcessing("dp"));
+    cls.dp = dp;
+
     ChromatogramList& cl = cls;
 
     unit_assert(cl.size() == 3);
@@ -244,6 +256,9 @@ void testChromatograms()
         for (size_t j=0; j<10; j++) 
             unit_assert(result[j].time==j  && result[j].intensity==10*i+j);
     }
+
+    unit_assert(cl.dataProcessingPtr().get() &&
+                cl.dataProcessingPtr()->id == "dp");
 }
 
 
@@ -261,6 +276,24 @@ void testIDParsing()
 }
 
 
+void testCurrentDataProcessing()
+{
+    MSData msd;
+    SpectrumListSimplePtr sl(new SpectrumListSimple);
+    msd.run.spectrumListPtr = sl;
+
+    unit_assert(!msd.currentDataProcessingPtr().get());
+    
+    sl->dp = DataProcessingPtr(new DataProcessing("dp"));
+    unit_assert(msd.currentDataProcessingPtr().get() &&
+                msd.currentDataProcessingPtr()->id == "dp");
+
+    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+    unit_assert(msd.currentDataProcessingPtr().get() &&
+                msd.currentDataProcessingPtr()->id == "more_dp");
+}
+
+
 int main()
 {
     try
@@ -269,6 +302,7 @@ int main()
         testSpectrumListSimple();
         testChromatograms();
         testIDParsing();
+        testCurrentDataProcessing();
         return 0;
     }
     catch (exception& e)

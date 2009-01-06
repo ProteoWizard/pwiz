@@ -345,6 +345,9 @@ class PWIZ_API_DECL TextWriter
 
         (*this)(text);
 
+        if (spectrumList.dataProcessingPtr().get())
+            child()(*spectrumList.dataProcessingPtr());
+
         if (!metadata_only)
             for (size_t index=0; index<spectrumList.size(); ++index)
                 child()
@@ -364,6 +367,9 @@ class PWIZ_API_DECL TextWriter
             text += ":";
 
         (*this)(text);
+
+        if (chromatogramList.dataProcessingPtr().get())
+            child()(*chromatogramList.dataProcessingPtr());
 
         if (!metadata_only)
             for (size_t index=0; index<chromatogramList.size(); ++index)

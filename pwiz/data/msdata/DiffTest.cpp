@@ -797,6 +797,15 @@ void testSpectrumList()
     Diff<SpectrumList> diff(a, b);
     unit_assert(!diff);
 
+    // check: dataProcessingPtr
+
+    aSimple.dp = DataProcessingPtr(new DataProcessing("dp"));
+    diff(a, b);
+    unit_assert(diff);
+    aSimple.dp = DataProcessingPtr();
+    diff(a, b);
+    unit_assert(!diff);
+
     // check: different SpectrumList::size()
     
     SpectrumPtr spectrum2 = SpectrumPtr(new Spectrum);
@@ -866,7 +875,6 @@ void testChromatogramList()
     
     ChromatogramList& a = aSimple;
     ChromatogramList& b = bSimple;
-
     
     Diff<ChromatogramList> diff(a, b);
     DiffConfig config_ignore;
@@ -875,6 +883,15 @@ void testChromatogramList()
     Diff<ChromatogramList> diffIgnore(a, b, config_ignore);
     unit_assert(!diff);
     unit_assert(!diffIgnore);
+
+    // check: dataProcessingPtr
+
+    aSimple.dp = DataProcessingPtr(new DataProcessing("dp"));
+    diff(a, b);
+    unit_assert(diff);
+    aSimple.dp = DataProcessingPtr();
+    diff(a, b);
+    unit_assert(!diff);
 
     // check: different ChromatogramList::size()
     

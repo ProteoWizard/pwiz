@@ -1041,7 +1041,10 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* 
 //
 
 
-PWIZ_API_DECL bool SpectrumList::empty() const {return size()==0;}
+PWIZ_API_DECL bool SpectrumList::empty() const 
+{
+    return size()==0 && !dataProcessingPtr().get();
+}
 
 
 PWIZ_API_DECL size_t SpectrumList::find(const string& id) const
@@ -1104,12 +1107,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBin
 } 
 
 
+PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumListSimple::dataProcessingPtr() const
+{
+    return dp;
+}
+
+
 //
 // ChromatogramList (default implementations)
 //
 
 
-PWIZ_API_DECL bool ChromatogramList::empty() const {return size()==0;}
+PWIZ_API_DECL bool ChromatogramList::empty() const
+{
+    return size()==0 && !dataProcessingPtr().get();
+}
 
 
 PWIZ_API_DECL size_t ChromatogramList::find(const string& id) const
@@ -1118,6 +1130,12 @@ PWIZ_API_DECL size_t ChromatogramList::find(const string& id) const
         if (chromatogramIdentity(index).id == id) 
             return index;
     return size();
+}
+
+
+PWIZ_API_DECL const shared_ptr<const DataProcessing> ChromatogramList::dataProcessingPtr() const
+{
+    return shared_ptr<const DataProcessing>();
 }
 
 
@@ -1146,6 +1164,12 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index,
 } 
 
 
+PWIZ_API_DECL const shared_ptr<const DataProcessing> ChromatogramListSimple::dataProcessingPtr() const
+{
+    return dp;
+}
+
+
 //
 // Run
 //
@@ -1168,8 +1192,10 @@ PWIZ_API_DECL bool Run::empty() const
 // MSData
 //
 
+
 PWIZ_API_DECL MSData::MSData() {}
 PWIZ_API_DECL MSData::~MSData() {}
+
 
 PWIZ_API_DECL bool MSData::empty() const
 {
@@ -1185,6 +1211,33 @@ PWIZ_API_DECL bool MSData::empty() const
            instrumentConfigurationPtrs.empty() && 
            dataProcessingPtrs.empty() &&
            run.empty();
+}
+
+
+PWIZ_API_DECL DataProcessingPtr MSData::currentDataProcessingPtr() const
+{
+    if (!run.spectrumListPtr.get() || !run.spectrumListPtr->dataProcessingPtr().get())
+        return DataProcessingPtr();
+
+    // make a copy of the SpectrumList dataProcessing
+    DataProcessingPtr dp(new DataProcessing(*run.spectrumListPtr->dataProcessingPtr()));
+
+    bool isUnique = true;
+    do
+    {
+        // good-faith effort to make the id unique
+        isUnique = true;
+        for (size_t i=0; i < dataProcessingPtrs.size(); ++i)
+            if ((dp != dataProcessingPtrs[i]) &&
+                (dp->id == dataProcessingPtrs[i]->id))
+            {
+                isUnique = false;
+                dp->id = "more_" + dp->id;
+                break;
+            }
+    } while (!isUnique);
+
+    return dp;
 }
 
 

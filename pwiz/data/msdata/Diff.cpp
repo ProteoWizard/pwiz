@@ -789,7 +789,20 @@ void diff(const SpectrumList& a,
 {
     a_b.spectra.clear();
     b_a.spectra.clear();
-    
+    a_b.dp = DataProcessingPtr();
+    b_a.dp = DataProcessingPtr();
+
+    DataProcessingPtr temp_a_dp(a.dataProcessingPtr().get() ? 
+                                new DataProcessing(*a.dataProcessingPtr()) :
+                                0); 
+
+    DataProcessingPtr temp_b_dp(b.dataProcessingPtr().get() ? 
+                                new DataProcessing(*b.dataProcessingPtr()) :
+                                0); 
+
+    if (!config.ignoreMetadata)
+        ptr_diff(temp_a_dp, temp_b_dp, a_b.dp, b_a.dp, config);
+
     if (a.size() != b.size())
 
     {
@@ -829,9 +842,22 @@ void diff(const ChromatogramList& a,
 {
     a_b.chromatograms.clear();
     b_a.chromatograms.clear();
+    a_b.dp = DataProcessingPtr();
+    b_a.dp = DataProcessingPtr();
 
     if (config.ignoreChromatograms) return;
     
+    DataProcessingPtr temp_a_dp(a.dataProcessingPtr().get() ? 
+                                new DataProcessing(*a.dataProcessingPtr()) :
+                                0); 
+
+    DataProcessingPtr temp_b_dp(b.dataProcessingPtr().get() ? 
+                                new DataProcessing(*b.dataProcessingPtr()) :
+                                0); 
+
+    if (!config.ignoreMetadata)
+        ptr_diff(temp_a_dp, temp_b_dp, a_b.dp, b_a.dp, config);
+
     if (a.size() != b.size())
     {
         ChromatogramPtr dummy(new Chromatogram);

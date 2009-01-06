@@ -561,6 +561,7 @@ void testSpectrumList()
     
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
+    a.dp = DataProcessingPtr(new DataProcessing("dp"));
 
     testObject_SpectrumList(a);
 }
@@ -601,7 +602,7 @@ void testSpectrumListWithPositions()
 
     unit_assert(positions.size() == 2);
     unit_assert(positions[0] == 27);
-    unit_assert(positions[1] == 138);
+    unit_assert(positions[1] == 179);
 }
 
 
@@ -719,6 +720,7 @@ void testChromatogramList()
     
     a.chromatograms.push_back(chromatogram1);
     a.chromatograms.push_back(chromatogram2);
+    a.dp = DataProcessingPtr(new DataProcessing("dp"));
 
     testObject_ChromatogramList(a);
 }

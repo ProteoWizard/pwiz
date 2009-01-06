@@ -65,6 +65,15 @@ void testWriteRead()
     MSData msd;
     examples::initializeTiny(msd);
 
+    // hack -- move SpectrumList::dataProcessingPtr to msd::dataProcessingPtrs // TODO
+    SpectrumListSimple& sl = dynamic_cast<SpectrumListSimple&>(*msd.run.spectrumListPtr);
+    msd.dataProcessingPtrs.push_back(sl.dp);
+    sl.dp = DataProcessingPtr();
+
+    // hack -- remove ChromatogramList::dataProcessingPtr // TODO
+    ChromatogramListSimple& cl = dynamic_cast<ChromatogramListSimple&>(*msd.run.chromatogramListPtr);
+    cl.dp = DataProcessingPtr();
+
     Serializer_mzML::Config config;
     unit_assert(config.binaryDataEncoderConfig.precision == BinaryDataEncoder::Precision_64);
     testWriteRead(msd, config);

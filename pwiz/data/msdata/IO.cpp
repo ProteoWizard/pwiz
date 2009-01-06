@@ -1690,8 +1690,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
 
     writeParamContainer(writer, spectrum);
 
-    if (!spectrum.scanList.empty())
-        write(writer, spectrum.scanList);
+    write(writer, spectrum.scanList);
 
     if (!spectrum.precursors.empty())
     {
@@ -1950,6 +1949,11 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(spectrumList.size())));
+
+    if (spectrumList.dataProcessingPtr().get())
+        attributes.push_back(make_pair("defaultDataProcessingRef", 
+                                        spectrumList.dataProcessingPtr()->id));
+
     writer.startElement("spectrumList", attributes);
 
     for (size_t i=0; i<spectrumList.size(); i++)
@@ -1999,6 +2003,12 @@ struct HandlerSpectrumListSimple : public HandlerParamContainer
 
         if (name == "spectrumList")
         {
+            // note: placeholder
+            string defaultDataProcessingRef;
+            getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef);
+            if (!defaultDataProcessingRef.empty())
+                spectrumListSimple->dp = DataProcessingPtr(new DataProcessing(defaultDataProcessingRef));
+
             return Status::Ok;
         }
         else if (name == "spectrum")
@@ -2036,6 +2046,11 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(chromatogramList.size())));
+
+    if (chromatogramList.dataProcessingPtr().get())
+        attributes.push_back(make_pair("defaultDataProcessingRef", 
+                                        chromatogramList.dataProcessingPtr()->id));
+
     writer.startElement("chromatogramList", attributes);
 
     for (size_t i=0; i<chromatogramList.size(); i++)
@@ -2085,6 +2100,12 @@ struct HandlerChromatogramListSimple : public HandlerParamContainer
 
         if (name == "chromatogramList")
         {
+            // note: placeholder
+            string defaultDataProcessingRef;
+            getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef);
+            if (!defaultDataProcessingRef.empty())
+                chromatogramListSimple->dp = DataProcessingPtr(new DataProcessing(defaultDataProcessingRef));
+
             return Status::Ok;
         }
         else if (name == "chromatogram")
@@ -2291,40 +2312,15 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     write(writer, msd.fileDescription);
 
-    vector<DataProcessingPtr> dataProcessingPtrs(msd.dataProcessingPtrs);
-    if (msd.run.spectrumListPtr.get())
-    {
-        // populate data processing list by querying SpectrumList
-        // - add data processing only if it is non-null
-        // - ideally we'd check if it was used by spectra before writing it,
-        //   but we can't since the elements haven't been accessed yet
-        const boost::shared_ptr<const DataProcessing> cdp = msd.run.spectrumListPtr->dataProcessingPtr();
-        if (cdp.get())
-        {
-            DataProcessingPtr dp = boost::const_pointer_cast<DataProcessing>(cdp);
-            bool isUnique = true;
-            do
-            {
-                // good-faith effort to make the id unique
-                isUnique = true;
-                for (size_t i=0; i < dataProcessingPtrs.size(); ++i)
-                    if ((dp != dataProcessingPtrs[i]) &&
-						(dp->id == dataProcessingPtrs[i]->id))
-                    {
-                        isUnique = false;
-                        dp->id = "more_" + dp->id;
-                        break;
-                    }
-            } while (!isUnique);
-            dataProcessingPtrs.push_back(dp);
-        }
-    }
-
     writeList(writer, msd.paramGroupPtrs, "referenceableParamGroupList");
     writeList(writer, msd.samplePtrs, "sampleList");
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.scanSettingsPtrs, "scanSettingsList");
     writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
+
+    vector<DataProcessingPtr> dataProcessingPtrs(msd.dataProcessingPtrs);
+    DataProcessingPtr current = msd.currentDataProcessingPtr();
+    if (current.get()) dataProcessingPtrs.push_back(current);
     writeList(writer, dataProcessingPtrs, "dataProcessingList");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);

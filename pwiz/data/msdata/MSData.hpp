@@ -816,13 +816,15 @@ typedef boost::shared_ptr<SpectrumList> SpectrumListPtr;
 struct PWIZ_API_DECL SpectrumListSimple : public SpectrumList
 {
     std::vector<SpectrumPtr> spectra;
+    DataProcessingPtr dp;
 
     // SpectrumList implementation
 
     virtual size_t size() const {return spectra.size();}
-    virtual bool empty() const {return spectra.empty();}
+    virtual bool empty() const {return spectra.empty() && !dp.get();}
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 };
 
 
@@ -872,6 +874,10 @@ class PWIZ_API_DECL ChromatogramList
     /// - client may assume the underlying Chromatogram* is valid 
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const = 0;
 
+    /// returns the data processing affecting spectra retrieved through this interface
+    /// - may return a null shared pointer
+    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
+
     virtual ~ChromatogramList(){} 
 };
 
@@ -884,13 +890,15 @@ typedef boost::shared_ptr<ChromatogramList> ChromatogramListPtr;
 struct PWIZ_API_DECL ChromatogramListSimple : public ChromatogramList
 {
     std::vector<ChromatogramPtr> chromatograms;
+    DataProcessingPtr dp;
 
     // ChromatogramList implementation
 
     virtual size_t size() const {return chromatograms.size();}
-    virtual bool empty() const {return chromatograms.empty();}
+    virtual bool empty() const {return chromatograms.empty() && !dp.get();}
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 };
 
 
@@ -970,6 +978,9 @@ struct PWIZ_API_DECL MSData
 
     /// list and descriptions of data processing applied to this data.
     std::vector<DataProcessingPtr> dataProcessingPtrs;
+
+    /// current data processing, held in SpectrumList
+    DataProcessingPtr currentDataProcessingPtr() const;
 
     /// a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
     Run run;
