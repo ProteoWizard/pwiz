@@ -350,7 +350,34 @@ struct PWIZ_API_DECL Software : public ParamContainer
 typedef boost::shared_ptr<Software> SoftwarePtr;
 
 
-/// Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, use a ReferenceableParamGroup element.
+/// TODO
+struct PWIZ_API_DECL Target : public ParamContainer {};
+
+
+/// Description of the acquisition settings of the instrument prior to the start of the run.
+struct PWIZ_API_DECL ScanSettings
+{
+    /// a unique identifier for this acquisition setting.
+    std::string id;
+
+    /// container for a list of source file references.
+    std::vector<SourceFilePtr> sourceFilePtrs;
+
+    /// target list (or 'inclusion list') configured prior to the run.
+    std::vector<Target> targets;
+
+    ScanSettings(const std::string& _id = "");
+
+
+    /// returns true iff the element contains no params and all members are empty or null
+    bool empty() const;
+};
+
+
+typedef boost::shared_ptr<ScanSettings> ScanSettingsPtr;
+
+
+/// Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, reference the appropriate ScanSettings element.
 struct PWIZ_API_DECL InstrumentConfiguration : public ParamContainer
 {
     /// an identifier for this instrument configuration.
@@ -361,6 +388,9 @@ struct PWIZ_API_DECL InstrumentConfiguration : public ParamContainer
 
     /// reference to a previously defined software element.
     SoftwarePtr softwarePtr;
+
+    /// reference to a scan settings element defining global scan settings used by this configuration
+    ScanSettingsPtr scanSettingsPtr;
 
     InstrumentConfiguration(const std::string& _id = "");
 
@@ -407,34 +437,7 @@ struct PWIZ_API_DECL DataProcessing
 };
 
 
-typedef boost::shared_ptr<DataProcessing> DataProcessingPtr; 
-
-
-/// TODO
-struct PWIZ_API_DECL Target : public ParamContainer {};
-
-
-/// Description of the acquisition settings of the instrument prior to the start of the run.
-struct PWIZ_API_DECL ScanSettings
-{
-    /// a unique identifier for this acquisition setting.
-    std::string id;
-
-    /// container for a list of source file references.
-    std::vector<SourceFilePtr> sourceFilePtrs;
-
-    /// target list (or 'inclusion list') configured prior to the run.
-    std::vector<Target> targets;
-
-    ScanSettings(const std::string& _id = "");
-
-
-    /// returns true iff the element contains no params and all members are empty or null
-    bool empty() const;
-};
-
-
-typedef boost::shared_ptr<ScanSettings> ScanSettingsPtr; 
+typedef boost::shared_ptr<DataProcessing> DataProcessingPtr;
 
 
 /// This element captures the isolation (or 'selection') window configured to isolate one or more precursors.
@@ -463,16 +466,12 @@ struct PWIZ_API_DECL Precursor : public ParamContainer
     /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     SourceFilePtr sourceFilePtr;
 
-    /// for precursor spectra that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-    std::string externalNativeID;
-
-    /// for precursor spectra that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// for precursor spectra that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
     /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
     std::string externalSpectrumID;
 
     /// reference to the id attribute of the spectrum from which the precursor was selected.
-    /// note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
+    /// note: this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both
     std::string spectrumID;
 
     /// this element captures the isolation (or 'selection') window configured to isolate one or more precursors.
@@ -504,9 +503,21 @@ struct PWIZ_API_DECL ScanWindow : public ParamContainer
 };
 
 
-/// The instrument's 'run time' parameters; common to the whole of this spectrum.
+/// Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
 struct PWIZ_API_DECL Scan : public ParamContainer
 {
+    /// if this attribute is set, it must reference the 'id' attribute of a sourceFile representing the external document containing the spectrum referred to by 'externalSpectrumID'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+    SourceFilePtr sourceFilePtr;
+
+    /// for scans that are external to this document, this string must correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+    std::string externalSpectrumID;
+
+    /// for scans that are local to this document, this attribute can be used to reference the 'id' attribute of the spectrum corresponding to the scan.
+    /// note: this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both
+    std::string spectrumID;
+
     /// this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
     InstrumentConfigurationPtr instrumentConfigurationPtr;
 

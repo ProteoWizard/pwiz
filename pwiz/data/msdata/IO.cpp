@@ -1188,16 +1188,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
 
     if (precursor.spectrumID.empty())
     {
-        if (!precursor.externalNativeID.empty() || !precursor.externalSpectrumID.empty())
+        if (!precursor.externalSpectrumID.empty())
         {
             if (!precursor.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
             attributes.push_back(make_pair("sourceFileRef", precursor.sourceFilePtr->id)); 
-            if (precursor.externalNativeID.empty())
-                attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
-            else
-                attributes.push_back(make_pair("externalNativeID", precursor.externalNativeID)); 
+            attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
         }
     }
     else
@@ -1260,7 +1257,6 @@ struct HandlerPrecursor : public HandlerParamContainer
         {
             getAttribute(attributes, "spectrumRef", precursor->spectrumID);
             getAttribute(attributes, "externalSpectrumID", precursor->externalSpectrumID);
-            getAttribute(attributes, "externalNativeID", precursor->externalNativeID);
 
             // note: placeholder
             string sourceFileRef;
@@ -1337,6 +1333,21 @@ PWIZ_API_DECL void read(std::istream& is, ScanWindow& scanWindow)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan)
 {
     XMLWriter::Attributes attributes;
+
+    if (scan.spectrumID.empty())
+    {
+        if (!scan.externalSpectrumID.empty())
+        {
+            if (!scan.sourceFilePtr.get())
+                throw runtime_error("[IO::write] External spectrum references must refer to a source file");
+
+            attributes.push_back(make_pair("sourceFileRef", scan.sourceFilePtr->id)); 
+            attributes.push_back(make_pair("externalSpectrumID", scan.externalSpectrumID)); 
+        }
+    }
+    else
+        attributes.push_back(make_pair("spectrumRef", scan.spectrumID));
+
     if (scan.instrumentConfigurationPtr.get())
         attributes.push_back(make_pair("instrumentConfigurationRef", lexical_cast<string>(scan.instrumentConfigurationPtr->id)));
     writer.startElement("scan", attributes);
@@ -1376,6 +1387,15 @@ struct HandlerScan : public HandlerParamContainer
 
         if (name == "scan")
         {
+            getAttribute(attributes, "spectrumRef", scan->spectrumID);
+            getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
+
+            // note: placeholder
+            string sourceFileRef;
+            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            if (!sourceFileRef.empty())
+                scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+
             // note: placeholder
             string instrumentConfigurationRef;
             getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
@@ -1753,8 +1773,16 @@ struct HandlerSpectrum : public HandlerParamContainer
             getAttribute(attributes, "nativeID", nativeID);
             if (!nativeID.empty())
             {
-                cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
-                spectrum->id = "scan=" + nativeID;
+                try
+                {
+                    lexical_cast<int>(nativeID);
+                    cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
+                    spectrum->id = "scan=" + nativeID;
+                }
+                catch(exception&)
+                {
+                    throw runtime_error("[IO::HandlerSpectrum] Error - mzML 1.0: <spectrum>::nativeID must be an integer");
+                }
             }
 
             // note: placeholder
