@@ -61,7 +61,7 @@ namespace seems
 		{
 			pwiz.CLI.msdata.Chromatogram c = chromatogram.Element;
 			int rowIndex = gridView.Rows.Add(
-				c.id, c.nativeID, c.index,
+				c.id, c.index,
 				c.cvParamChild( CVID.MS_chromatogram_type ).name
 			);
 			gridView.Rows[rowIndex].Tag = chromatogram;
