@@ -51,7 +51,6 @@ class PWIZ_API_DECL ChromatogramListWrapper : public msdata::ChromatogramList
     virtual bool empty() const {return inner_->empty();}
     virtual const msdata::ChromatogramIdentity& chromatogramIdentity(size_t index) const {return inner_->chromatogramIdentity(index);} 
     virtual size_t find(const std::string& id) const {return inner_->find(id);}
-    virtual size_t findNative(const std::string& nativeID) const {return inner_->findNative(nativeID);}
     virtual msdata::ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const {return inner_->chromatogram(index, getBinaryData);}
 
     protected:
