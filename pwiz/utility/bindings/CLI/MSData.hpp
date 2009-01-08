@@ -696,9 +696,9 @@ public ref class ComponentList : public ComponentBaseList
 /// <summary>
 /// A piece of software.
 /// </summary>
-public ref class Software
+public ref class Software : public ParamContainer
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, Software);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Software, ParamContainer);
 
     public:
 
@@ -712,18 +712,9 @@ public ref class Software
     }
 
     /// <summary>
-    /// a description of the software, based on CV information and a software version.
-    /// </summary>
-    property CVParam^ softwareParam
-    {
-        CVParam^ get();
-        void set(CVParam^ value);
-    }
-
-    /// <summary>
     /// the software version.
     /// </summary>
-    property System::String^ softwareParamVersion
+    property System::String^ version
     {
         System::String^ get();
         void set(System::String^ value);
@@ -732,7 +723,7 @@ public ref class Software
 
     Software();
     Software(System::String^ _id);
-    Software(System::String^ _id, CVParam^ _softwareParam, System::String^ _softwareParamVersion);
+    Software(System::String^ _id, CVParam^ _param, System::String^ _version);
 
     /// <summary>
     /// returns true iff all members are empty or null
@@ -742,7 +733,68 @@ public ref class Software
 
 
 /// <summary>
-/// Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, use a ReferenceableParamGroup element.
+/// TODO
+/// </summary>
+public ref class Target : public ParamContainer
+{
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Target, ParamContainer);
+    public: Target();
+};
+
+
+/// <summary>
+/// A list of Target references; implements the IList&lt;Target&gt; interface
+/// </summary>
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+
+/// <summary>
+/// Description of the acquisition settings of the instrument prior to the start of the run.
+/// </summary>
+public ref class ScanSettings
+{
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, ScanSettings);
+
+    public:
+
+    /// <summary>
+    /// a unique identifier for this acquisition setting.
+    /// </summary>
+    property System::String^ id
+    {
+        System::String^ get();
+        void set(System::String^ value);
+    }
+
+    /// <summary>
+    /// container for a list of source file references.
+    /// </summary>
+    property SourceFileList^ sourceFiles
+    {
+        SourceFileList^ get();
+    }
+
+    /// <summary>
+    /// target list (or 'inclusion list') configured prior to the run.
+    /// </summary>
+    property TargetList^ targets
+    {
+        TargetList^ get();
+    }
+
+
+    ScanSettings();
+    ScanSettings(System::String^ _id);
+
+    /// <summary>
+    /// returns true iff the element contains no params and all members are empty or null
+    /// </summary>
+    bool empty();
+};
+
+
+/// <summary>
+/// Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, reference the appropriate ScanSettings element.
 /// </summary>
 public ref class InstrumentConfiguration : public ParamContainer
 {
@@ -804,6 +856,13 @@ public ref class ProcessingMethod : public ParamContainer
         void set(int value);
     }
 
+    /// <summary>
+    /// this attribute MUST reference the 'id' of the appropriate SoftwareType.
+    /// </summary>
+    property Software^ software
+    {
+        Software^ get();
+    }
 
     ProcessingMethod();
 
@@ -838,13 +897,6 @@ public ref class DataProcessing
         void set(System::String^ value);
     }
 
-    /// <summary>
-    /// this attribute MUST reference the 'id' of the appropriate SoftwareType.
-    /// </summary>
-    property Software^ software
-    {
-        Software^ get();
-    }
 
     /// <summary>
     /// description of the default peak processing method(s). This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
@@ -868,93 +920,33 @@ public ref class DataProcessing
 /// <summary>
 /// TODO
 /// </summary>
-public ref class Target : public ParamContainer
+public ref class ScanWindow : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Target, ParamContainer);
-    public: Target();
-};
-
-
-/// <summary>
-/// A list of Target references; implements the IList&lt;Target&gt; interface
-/// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-
-
-/// <summary>
-/// Description of the acquisition settings of the instrument prior to the start of the run.
-/// </summary>
-public ref class AcquisitionSettings
-{
-    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, AcquisitionSettings);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ScanWindow, ParamContainer);
 
     public:
-
-    /// <summary>
-    /// a unique identifier for this acquisition setting.
-    /// </summary>
-    property System::String^ id
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
-    /// <summary>
-    /// this attribute MUST reference the 'id' of the appropriate instrument configuration.
-    /// </summary>
-    property InstrumentConfiguration^ instrumentConfiguration
-    {
-        InstrumentConfiguration^ get();
-        void set(InstrumentConfiguration^ value);
-    }
-
-    /// <summary>
-    /// container for a list of source file references.
-    /// </summary>
-    property SourceFileList^ sourceFiles
-    {
-        SourceFileList^ get();
-    }
-
-    /// <summary>
-    /// target list (or 'inclusion list') configured prior to the run.
-    /// </summary>
-    property TargetList^ targets
-    {
-        TargetList^ get();
-    }
-
-
-    AcquisitionSettings();
-    AcquisitionSettings(System::String^ _id);
-
-    /// <summary>
-    /// returns true iff the element contains no params and all members are empty or null
-    /// </summary>
-    bool empty();
+    ScanWindow();
+    ScanWindow(double mzLow, double mzHigh);
 };
+
+
+/// <summary>
+/// A list of ScanWindow references; implements the IList&lt;ScanWindow&gt; interface
+/// </summary>
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
 /// </summary>
-public ref class Acquisition : public ParamContainer
+public ref class Scan : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Acquisition, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Scan, ParamContainer);
 
     public:
 
     /// <summary>
-    /// a number for this acquisition.
-    /// </summary>
-    property int number
-    {
-        int get();
-        void set(int value);
-    }
-
-    /// <summary>
-    /// for acquisitions that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
+    /// for scans that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
     /// <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para>
     /// </summary>
     property SourceFile^ sourceFile
@@ -964,8 +956,8 @@ public ref class Acquisition : public ParamContainer
     }
 
     /// <summary>
-    /// for acquisitions that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
-    /// <para>this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both</para>
+    /// for scans that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
+    /// <para>this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both</para>
     /// </summary>
     property System::String^ spectrumID
     {
@@ -974,7 +966,7 @@ public ref class Acquisition : public ParamContainer
     }
 
     /// <summary>
-    /// for acquisitions that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// for scans that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
     /// <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para>
     /// </summary>
     property System::String^ externalSpectrumID
@@ -984,17 +976,25 @@ public ref class Acquisition : public ParamContainer
     }
 
     /// <summary>
-    /// for acquisitions that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-    /// <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para>
+    /// this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
     /// </summary>
-    property System::String^ externalNativeID
+    property InstrumentConfiguration^ instrumentConfiguration
     {
-        System::String^ get();
-        void set(System::String^ value);
+        InstrumentConfiguration^ get();
+        void set(InstrumentConfiguration^ value);
+    }
+
+    /// <summary>
+    /// container for a list of select windows.
+    /// </summary>
+    property ScanWindowList^ scanWindows
+    {
+        ScanWindowList^ get();
     }
 
 
-    Acquisition();
+
+    Scan();
 
     /// <summary>
     /// returns true iff the element contains no params and all members are empty or null
@@ -1004,26 +1004,26 @@ public ref class Acquisition : public ParamContainer
 
 
 /// <summary>
-/// A list of Acquisition references; implements the IList&lt;Acquisition&gt; interface
+/// A list of Scan references; implements the IList&lt;Scan&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Acquisitions, pwiz::msdata::Acquisition, Acquisition, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Scans, pwiz::msdata::Scan, Scan, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// List and descriptions of acquisitions .
 /// </summary>
-public ref class AcquisitionList : public ParamContainer
+public ref class ScanList : public ParamContainer
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, AcquisitionList, ParamContainer);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ScanList, ParamContainer);
 
     public:
-    property Acquisitions^ acquisitions
+    property Scans^ scans
     {
-        Acquisitions^ get();
+        Scans^ get();
     }
 
 
-    AcquisitionList();
+    ScanList();
 
     bool empty() new;
 };
@@ -1086,7 +1086,7 @@ public ref class Precursor : public ParamContainer
 
     /// <summary>
     /// reference to the id attribute of the spectrum from which the precursor was selected.
-    /// <para>this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both</para>
+    /// <para>this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both</para>
     /// </summary>
     property System::String^ spectrumID
     {
@@ -1095,20 +1095,10 @@ public ref class Precursor : public ParamContainer
     }
 
     /// <summary>
-    /// for precursor spectra that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+    /// for precursor spectra that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
     /// <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para>
     /// </summary>
     property System::String^ externalSpectrumID
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
-    /// <summary>
-    /// for precursor spectra that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-    /// <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para>
-    /// </summary>
-    property System::String^ externalNativeID
     {
         System::String^ get();
         void set(System::String^ value);
@@ -1151,108 +1141,9 @@ public ref class Precursor : public ParamContainer
 
 
 /// <summary>
-/// TODO
-/// </summary>
-public ref class ScanWindow : public ParamContainer
-{
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ScanWindow, ParamContainer);
-
-    public:
-    ScanWindow();
-    ScanWindow(double mzLow, double mzHigh);
-};
-
-
-/// <summary>
-/// A list of ScanWindow references; implements the IList&lt;ScanWindow&gt; interface
-/// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-
-
-/// <summary>
-/// The instrument's 'run time' parameters; common to the whole of this spectrum.
-/// </summary>
-public ref class Scan : public ParamContainer
-{
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, Scan, ParamContainer);
-
-    public:
-
-    /// <summary>
-    /// this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
-    /// </summary>
-    property InstrumentConfiguration^ instrumentConfiguration
-    {
-        InstrumentConfiguration^ get();
-        void set(InstrumentConfiguration^ value);
-    }
-
-    /// <summary>
-    /// container for a list of select windows.
-    /// </summary>
-    property ScanWindowList^ scanWindows
-    {
-        ScanWindowList^ get();
-    }
-
-
-    Scan();
-
-    /// <summary>
-    /// returns true iff the element contains no params and all members are empty or null
-    /// </summary>
-    bool empty() new;
-};
-
-
-/// <summary>
 /// A list of Precursor references; implements the IList&lt;Precursor&gt; interface
 /// </summary>
 DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-
-
-/// <summary>
-/// Description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
-/// </summary>
-public ref class SpectrumDescription : public ParamContainer
-{
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumDescription, ParamContainer);
-
-    public:
-
-    /// <summary>
-    /// list and descriptions of acquisitions.
-    /// </summary>
-    property AcquisitionList^ acquisitionList
-    {
-        AcquisitionList^ get();
-    }
-
-    /// <summary>
-    /// list and descriptions of precursors to the spectrum currently being described.
-    /// </summary>
-    property PrecursorList^ precursors
-    {
-        PrecursorList^ get();
-    }
-
-    /// <summary>
-    /// the instrument's 'run time' parameters; common to the whole of this spectrum.
-    /// </summary>
-    property Scan^ scan
-    {
-        Scan^ get();
-        void set(Scan^ value);
-    }
-
-
-    SpectrumDescription();
-
-    /// <summary>
-    /// returns true iff the element contains no params and all members are empty or null
-    /// </summary>
-    bool empty() new;
-};
 
 
 /// <summary>
@@ -1377,14 +1268,6 @@ public ref class SpectrumIdentity
         void set(System::String^ value);
     }
 
-    /// <summary>
-    /// the native identifier for the spectrum, used by the acquisition software.
-    /// </summary>
-    property System::String^ nativeID
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
 
     /// <summary>
     /// the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
@@ -1433,15 +1316,6 @@ public ref class ChromatogramIdentity
         void set(System::String^ value);
     }
 
-    /// <summary>
-    /// the native identifier for the chromatogram, used by the acquisition software.
-    /// </summary>
-    property System::String^ nativeID
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
 	/// <summary>
 	/// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 	/// </summary>
@@ -1475,7 +1349,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata
 
 
 /// <summary>
-/// The structure that captures the generation of a peak list (including the underlying acquisitions)
+/// The structure that captures the generation of a peak list (including the underlying scans)
 /// </summary>
 public ref class Spectrum : public ParamContainer
 {
@@ -1495,18 +1369,9 @@ public ref class Spectrum : public ParamContainer
     }
 
     /// <summary>
-    /// a unique identifier for this spectrum. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular spectrum.
-    /// </summary>
-    property System::String^ id
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
-    /// <summary>
     /// the native identifier for the spectrum, used by the acquisition software.
     /// </summary>
-    property System::String^ nativeID
+    property System::String^ id
     {
         System::String^ get();
         void set(System::String^ value);
@@ -1560,12 +1425,19 @@ public ref class Spectrum : public ParamContainer
     }
 
     /// <summary>
-    /// description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
+    /// list and descriptions of scans.
     /// </summary>
-    property SpectrumDescription^ spectrumDescription
+    property ScanList^ scanList
     {
-        SpectrumDescription^ get();
-        void set(SpectrumDescription^ value);
+        ScanList^ get();
+    }
+
+    /// <summary>
+    /// list and descriptions of precursors to the spectrum currently being described.
+    /// </summary>
+    property PrecursorList^ precursors
+    {
+        PrecursorList^ get();
     }
 
     /// <summary>
@@ -1645,18 +1517,9 @@ public ref class Chromatogram : public ParamContainer
     }
 
     /// <summary>
-    /// a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
-    /// </summary>
-    property System::String^ id
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
-    /// <summary>
     /// the native identifier for the chromatogram, used by the acquisition software.
     /// </summary>
-    property System::String^ nativeID
+    property System::String^ id
     {
         System::String^ get();
         void set(System::String^ value);
@@ -1721,6 +1584,12 @@ public ref class Chromatogram : public ParamContainer
 
 
 /// <summary>
+/// A list of spectrum or chromatogram indexes; implements the IList&lt;int&gt; interface
+/// </summary>
+DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+
+
+/// <summary>
 /// Interface for accessing spectra, which may be stored in memory
 /// or backed by a data file (RAW, mzXML, mzML).
 /// <para>- Implementations are expected to keep a spectrum index in the form of
@@ -1766,9 +1635,9 @@ public ref class SpectrumList
     virtual int find(System::String^ id);
 
     /// <summary>
-    /// find nativeID in the spectrum index (returns size() on failure)
+    /// find all spectrum indexes with specified name/value pair
     /// </summary>
-    virtual int findNative(System::String^ nativeID);
+    virtual IndexList^ findNameValue(System::String^ name, System::String^ value);
 
     /// <summary>
     /// retrieve a spectrum by index without binary data
@@ -1871,11 +1740,6 @@ public ref class ChromatogramList
     /// find id in the chromatogram index (returns size() on failure)
     /// </summary>
     virtual int find(System::String^ id);
-
-    /// <summary>
-    /// find nativeID in the chromatogram index (returns size() on failure)
-    /// </summary>
-    virtual int findNative(System::String^ nativeID);
 
     /// <summary>
     /// retrieve a chromatogram by index without binary data
@@ -2043,9 +1907,9 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataProcessingList, pwiz::msdata::D
 
 
 /// <summary>
-/// A list of AcquisitionSettings references; implements the IList&lt;AcquisitionSettings&gt; interface
+/// A list of ScanSettings references; implements the IList&lt;ScanSettings&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(AcquisitionSettingsList, pwiz::msdata::AcquisitionSettingsPtr, AcquisitionSettings, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanSettingsList, pwiz::msdata::ScanSettingsPtr, ScanSettings, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
@@ -2152,10 +2016,10 @@ public ref class MSData
     /// <summary>
     /// list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
     /// </summary>
-    property AcquisitionSettingsList^ acquisitionSettingList
+    property ScanSettingsList^ scanSettingList
     {
-        AcquisitionSettingsList^ get();
-        void set(AcquisitionSettingsList^ value);
+        ScanSettingsList^ get();
+        void set(ScanSettingsList^ value);
     }
 
     /// <summary>

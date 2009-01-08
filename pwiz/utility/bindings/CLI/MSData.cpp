@@ -316,11 +316,8 @@ Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^
 System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Software::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-CVParam^ Software::softwareParam::get() {return gcnew CVParam(&(*base_)->softwareParam, this);}
-void Software::softwareParam::set(CVParam^ value) {(*base_)->softwareParam = **value->base_;}
-
-System::String^ Software::softwareParamVersion::get() {return gcnew System::String((*base_)->softwareParamVersion.c_str());}
-void Software::softwareParamVersion::set(System::String^ value) {(*base_)->softwareParamVersion = ToStdString(value);}
+System::String^ Software::version::get() {return gcnew System::String((*base_)->version.c_str());}
+void Software::version::set(System::String^ value) {(*base_)->version = ToStdString(value);}
 
 bool Software::empty()
 {
@@ -354,6 +351,7 @@ ProcessingMethod::ProcessingMethod()
 
 int ProcessingMethod::order::get() {return base_->order;}
 void ProcessingMethod::order::set(int value) {base_->order = value;}
+Software^ ProcessingMethod::software::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, base_->softwarePtr);}
 
 bool ProcessingMethod::empty()
 {
@@ -372,7 +370,6 @@ DataProcessing::DataProcessing(System::String^ _id)
 System::String^ DataProcessing::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void DataProcessing::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-Software^ DataProcessing::software::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::SoftwarePtr, Software, (*base_)->softwarePtr);}
 ProcessingMethodList^ DataProcessing::processingMethods::get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods, this);}
 
 bool DataProcessing::empty()
@@ -386,62 +383,68 @@ Target::Target()
 {owner_ = nullptr; base_ = static_cast<b::Target*>(ParamContainer::base_);}
 
 
-AcquisitionSettings::AcquisitionSettings()
-: base_(new boost::shared_ptr<b::AcquisitionSettings>(new b::AcquisitionSettings()))
+ScanSettings::ScanSettings()
+: base_(new boost::shared_ptr<b::ScanSettings>(new b::ScanSettings()))
 {}
 
-AcquisitionSettings::AcquisitionSettings(System::String^ _id)
-: base_(new boost::shared_ptr<b::AcquisitionSettings>(new b::AcquisitionSettings(ToStdString(_id))))
+ScanSettings::ScanSettings(System::String^ _id)
+: base_(new boost::shared_ptr<b::ScanSettings>(new b::ScanSettings(ToStdString(_id))))
 {}
 
-System::String^ AcquisitionSettings::id::get() {return gcnew System::String((*base_)->id.c_str());}
-void AcquisitionSettings::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
+System::String^ ScanSettings::id::get() {return gcnew System::String((*base_)->id.c_str());}
+void ScanSettings::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-InstrumentConfiguration^ AcquisitionSettings::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(b::InstrumentConfigurationPtr, InstrumentConfiguration, (*base_)->instrumentConfigurationPtr);}
-void AcquisitionSettings::instrumentConfiguration::set(InstrumentConfiguration^ value) {(*base_)->instrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
+SourceFileList^ ScanSettings::sourceFiles::get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
 
-SourceFileList^ AcquisitionSettings::sourceFiles::get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
+TargetList^ ScanSettings::targets::get() {return gcnew TargetList(&(*base_)->targets, this);}
 
-TargetList^ AcquisitionSettings::targets::get() {return gcnew TargetList(&(*base_)->targets, this);}
-
-bool AcquisitionSettings::empty()
+bool ScanSettings::empty()
 {
     return (*base_)->empty();
 }
 
 
-Acquisition::Acquisition()
-: ParamContainer(new b::Acquisition())
-{owner_ = nullptr; base_ = static_cast<b::Acquisition*>(ParamContainer::base_);}
+ScanWindowList^ Scan::scanWindows::get() {return gcnew ScanWindowList(&base_->scanWindows, this);}
 
-int Acquisition::number::get() {return base_->number;}
-void Acquisition::number::set(int value) {base_->number = value;}
 
-SourceFile^ Acquisition::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
-void Acquisition::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
+ScanWindow::ScanWindow()
+: ParamContainer(new b::ScanWindow())
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
-System::String^ Acquisition::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
-void Acquisition::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
+ScanWindow::ScanWindow(double mzLow, double mzHigh)
+: ParamContainer(new b::ScanWindow(mzLow, mzHigh))
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
-System::String^ Acquisition::externalSpectrumID::get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
-void Acquisition::externalSpectrumID::set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
 
-System::String^ Acquisition::externalNativeID::get() {return gcnew System::String(base_->externalNativeID.c_str());}
-void Acquisition::externalNativeID::set(System::String^ value) {base_->externalNativeID = ToStdString(value);}
+Scan::Scan()
+: ParamContainer(new b::Scan())
+{owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_);}
 
-bool Acquisition::empty()
+SourceFile^ Scan::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
+void Scan::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
+
+System::String^ Scan::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
+void Scan::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
+
+System::String^ Scan::externalSpectrumID::get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
+void Scan::externalSpectrumID::set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
+
+InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
+void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
+
+bool Scan::empty()
 {
     return base_->empty();
 }
 
 
-AcquisitionList::AcquisitionList()
-: ParamContainer(new b::AcquisitionList())
-{owner_ = nullptr; base_ = static_cast<b::AcquisitionList*>(ParamContainer::base_);}
+ScanList::ScanList()
+: ParamContainer(new b::ScanList())
+{owner_ = nullptr; base_ = static_cast<b::ScanList*>(ParamContainer::base_);}
 	
-Acquisitions^ AcquisitionList::acquisitions::get() {return gcnew Acquisitions(&base_->acquisitions, this);}
+Scans^ ScanList::scans::get() {return gcnew Scans(&base_->scans, this);}
 
-bool AcquisitionList::empty()
+bool ScanList::empty()
 {
     return base_->empty();
 }
@@ -475,9 +478,6 @@ void Precursor::spectrumID::set(System::String^ value) {base_->spectrumID = ToSt
 System::String^ Precursor::externalSpectrumID::get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
 void Precursor::externalSpectrumID::set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
 
-System::String^ Precursor::externalNativeID::get() {return gcnew System::String(base_->externalNativeID.c_str());}
-void Precursor::externalNativeID::set(System::String^ value) {base_->externalNativeID = ToStdString(value);}
-
 IsolationWindow^ Precursor::isolationWindow::get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
 void Precursor::isolationWindow::set(IsolationWindow^ value) {base_->isolationWindow = *value->base_;}
 
@@ -487,46 +487,6 @@ Activation^ Precursor::activation::get() {return gcnew Activation(&base_->activa
 void Precursor::activation::set(Activation^ value) {base_->activation = *value->base_;}
 
 bool Precursor::empty()
-{
-    return base_->empty();
-}
-
-
-Scan::Scan()
-: ParamContainer(new b::Scan())
-{owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_);}
-
-InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
-void Scan::instrumentConfiguration::set(InstrumentConfiguration^ value) {base_->instrumentConfigurationPtr = CLI_TO_NATIVE_SHARED_PTR(b::InstrumentConfigurationPtr, value);}
-
-bool Scan::empty()
-{
-    return base_->empty();
-}
-
-ScanWindowList^ Scan::scanWindows::get() {return gcnew ScanWindowList(&base_->scanWindows, this);}
-
-
-ScanWindow::ScanWindow()
-: ParamContainer(new b::ScanWindow())
-{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
-
-ScanWindow::ScanWindow(double mzLow, double mzHigh)
-: ParamContainer(new b::ScanWindow(mzLow, mzHigh))
-{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
-
-
-SpectrumDescription::SpectrumDescription()
-: ParamContainer(new b::SpectrumDescription())
-{owner_ = nullptr; base_ = static_cast<b::SpectrumDescription*>(ParamContainer::base_);}
-
-AcquisitionList^ SpectrumDescription::acquisitionList::get() {return gcnew AcquisitionList(&base_->acquisitionList, this);}
-PrecursorList^ SpectrumDescription::precursors::get() {return gcnew PrecursorList(&base_->precursors, this);}
-
-Scan^ SpectrumDescription::scan::get() {return gcnew Scan(&base_->scan, this);}
-void SpectrumDescription::scan::set(Scan^ value) {base_->scan = *value->base_;}
-
-bool SpectrumDescription::empty()
 {
     return base_->empty();
 }
@@ -583,9 +543,6 @@ void SpectrumIdentity::index::set(int value) {base_->index = (size_t) value;}
 System::String^ SpectrumIdentity::id::get() {return gcnew System::String(base_->id.c_str());}
 void SpectrumIdentity::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
-System::String^ SpectrumIdentity::nativeID::get() {return gcnew System::String(base_->nativeID.c_str());}
-void SpectrumIdentity::nativeID::set(System::String^ value) {base_->nativeID = ToStdString(value);}
-
 System::String^ SpectrumIdentity::spotID::get() {return gcnew System::String(base_->spotID.c_str());}
 void SpectrumIdentity::spotID::set(System::String^ value) {base_->spotID = ToStdString(value);}
 
@@ -602,9 +559,6 @@ void ChromatogramIdentity::index::set(int value) {base_->index = (size_t) value;
 System::String^ ChromatogramIdentity::id::get() {return gcnew System::String(base_->id.c_str());}
 void ChromatogramIdentity::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
-System::String^ ChromatogramIdentity::nativeID::get() {return gcnew System::String(base_->nativeID.c_str());}
-void ChromatogramIdentity::nativeID::set(System::String^ value) {base_->nativeID = ToStdString(value);}
-
 System::UInt64 ChromatogramIdentity::sourceFilePosition::get() {return (System::UInt64) base_->sourceFilePosition;}
 void ChromatogramIdentity::sourceFilePosition::set(System::UInt64 value) {base_->sourceFilePosition = (size_t) value;}
 
@@ -618,9 +572,6 @@ void Spectrum::index::set(int value) {(*base_)->index = (size_t) value;}
 
 System::String^ Spectrum::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Spectrum::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
-
-System::String^ Spectrum::nativeID::get() {return gcnew System::String((*base_)->nativeID.c_str());}
-void Spectrum::nativeID::set(System::String^ value) {(*base_)->nativeID = ToStdString(value);}
 
 System::String^ Spectrum::spotID::get() {return gcnew System::String((*base_)->spotID.c_str());}
 void Spectrum::spotID::set(System::String^ value) {(*base_)->spotID = ToStdString(value);}
@@ -637,8 +588,8 @@ void Spectrum::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcess
 SourceFile^ Spectrum::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, (*base_)->sourceFilePtr);}
 void Spectrum::sourceFile::set(SourceFile^ value) {(*base_)->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
-SpectrumDescription^ Spectrum::spectrumDescription::get() {return gcnew SpectrumDescription(&(*base_)->spectrumDescription, this);}
-void Spectrum::spectrumDescription::set(SpectrumDescription^ value) {(*base_)->spectrumDescription = *value->base_;}
+ScanList^ Spectrum::scanList::get() {return gcnew ScanList(&(*base_)->scanList, this);}
+PrecursorList^ Spectrum::precursors::get() {return gcnew PrecursorList(&(*base_)->precursors, this);}
 
 BinaryDataArrayList^ Spectrum::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
 void Spectrum::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
@@ -717,9 +668,6 @@ void Chromatogram::index::set(int value) {(*base_)->index = (size_t) value;}
 System::String^ Chromatogram::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Chromatogram::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Chromatogram::nativeID::get() {return gcnew System::String((*base_)->nativeID.c_str());}
-void Chromatogram::nativeID::set(System::String^ value) {(*base_)->nativeID = ToStdString(value);}
-
 System::UInt64 Chromatogram::sourceFilePosition::get() {return (System::UInt64) (*base_)->sourceFilePosition;}
 void Chromatogram::sourceFilePosition::set(System::UInt64 value) {(*base_)->sourceFilePosition = (size_t) value;}
 
@@ -770,10 +718,14 @@ int SpectrumList::find(System::String^ id)
     return (int) (*base_)->find(ToStdString(id));
 }
 
-int SpectrumList::findNative(System::String^ nativeID)
+IndexList^ SpectrumList::findNameValue(System::String^ name, System::String^ value)
 {
-    return (int) (*base_)->findNative(ToStdString(nativeID));
+    b::IndexList indexList = (*base_)->findNameValue(ToStdString(name), ToStdString(value));
+    std::vector<size_t>* ownedIndexListPtr = new std::vector<size_t>();
+    ownedIndexListPtr->swap(indexList);
+    return gcnew IndexList(ownedIndexListPtr);
 }
+
 
 Spectrum^ SpectrumList::spectrum(int index)
 {
@@ -849,11 +801,6 @@ ChromatogramIdentity^ ChromatogramList::chromatogramIdentity(int index)
 int ChromatogramList::find(System::String^ id)
 {
     return (int) (*base_)->find(ToStdString(id));
-}
-
-int ChromatogramList::findNative(System::String^ nativeID)
-{
-    return (int) (*base_)->findNative(ToStdString(nativeID));
 }
 
 Chromatogram^ ChromatogramList::chromatogram(int index)
@@ -968,8 +915,8 @@ void MSData::softwareList::set(SoftwareList^ value) {base_->softwarePtrs = *valu
 DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&base_->dataProcessingPtrs, this);}
 void MSData::dataProcessingList::set(DataProcessingList^ value) {base_->dataProcessingPtrs = *value->base_;}
 
-AcquisitionSettingsList^ MSData::acquisitionSettingList::get() {return gcnew AcquisitionSettingsList(&base_->acquisitionSettingsPtrs, this);}
-void MSData::acquisitionSettingList::set(AcquisitionSettingsList^ value) {base_->acquisitionSettingsPtrs = *value->base_;}
+ScanSettingsList^ MSData::scanSettingList::get() {return gcnew ScanSettingsList(&base_->scanSettingsPtrs, this);}
+void MSData::scanSettingList::set(ScanSettingsList^ value) {base_->scanSettingsPtrs = *value->base_;}
 
 Run^ MSData::run::get()  {return gcnew Run(&base_->run, this);}
 //void set(Run^ value) {base_->run = *value->base_;}
