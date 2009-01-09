@@ -1,0 +1,11 @@
+<AnnotationParameter cid="cdb192e9-efb1-4914-b70b-266c15471b3a">
+	<BuildingBlockName>Amino Acids</BuildingBlockName>
+	<FontFaceName>Arial</FontFaceName>
+	<FontPointSize>80</FontPointSize>
+	<FontOrientation>0</FontOrientation>
+	<SearchTolerance>500</SearchTolerance>
+	<SearchToleranceUnit>ppm</SearchToleranceUnit>
+	<StringType>0</StringType>
+	<PreviewFlag>false</PreviewFlag>
+	<ShowMassDifferenceFlag>false</ShowMassDifferenceFlag>
+</AnnotationParameter>

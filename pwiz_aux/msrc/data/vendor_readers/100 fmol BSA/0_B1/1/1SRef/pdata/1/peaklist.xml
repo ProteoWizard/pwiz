@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<pklist version="1.0" creator="flexAnalysis 3.0.54.0" shots="200" date="2008-06-30T15:02:37.019-05:00" spectrumid="F3B20C60-1FA1-45FD-8823-67990C09EF50">
+<pk>
+<absi>188.1719983279696</absi>
+<area>30.51998079139216</area>
+<chisq>375.2193870130404</chisq>
+<goodn>558.1604288752587</goodn>
+<ind>19759.79774568809</ind>
+<lind>19748.00000000000</lind>
+<mass>876.9892125702403</mass>
+<meth>4</meth>
+<reso>10763.59058832501</reso>
+<rind>19926.00000000000</rind>
+<s2n>7.579397627251079</s2n>
+<type>0</type>
+</pk>
+</pklist>

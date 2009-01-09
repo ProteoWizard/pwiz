@@ -1,0 +1,529 @@
+<method type="MS" name="100 fmol BSA\0_B1\1" version="3.0" creator="flexAnalysis">
+	<MethodParameter>
+		<DisplayParameter>
+			<MassPrecision>3</MassPrecision>
+			<ReplaceOriginalSpectrum>true</ReplaceOriginalSpectrum>
+		</DisplayParameter>
+		<PrpMethod>
+			<PrpMethodName/>
+			<PrpMethodXML>&lt;!--Bruker Daltonics  (BDAL) may occasionally provide you with updates 
+of this file format in a manner that seems to be appropriate to BDAL. 
+All such updates shall be deemed to be part of the BDAL software 
+for all purposes hereunder. 
+ In case you use BDAL - file formats in any other manner, 
+BDAL shall not be liable for any loss or damage caused. Furthermore you are not entitled to claim compatibility of updated 
+formats with older versions. --&gt;&lt;FilterContainer name="b5f58de6-87eb-4dfb-b01c-32831539ec05" cid="" version="3.0.109.0"&gt;&lt;Content name="Baseline Subtraction"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;Median&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE Apex"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE Centroid"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE CorrEnh"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE Snap"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE Sum"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLE XMass"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF Apex"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF Centroid"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;ConvexHullV3&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF CorrEnh"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF Snap"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;Median&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF Sum"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Baseline Subtraction MLF XMass"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;TopHat&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ConvexHullV3 cid="f3b82837-d5a5-4fff-a8ef-03664ff74f00"&gt;
+			&lt;Parameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+			&lt;/Parameter&gt;
+		&lt;/ConvexHullV3&gt;
+		&lt;Median cid="bda96754-cb89-9622-3efa-2ccb77000000"&gt;
+			&lt;Parameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+				&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+			&lt;/Parameter&gt;
+		&lt;/Median&gt;
+		&lt;TopHat cid="1a775981-5562-48c9-9737-bb172208b986"&gt;
+			&lt;Parameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+		&lt;/TopHat&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="MLE Combo"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;MLF_Reference&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;MLE_Reference cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+			&lt;Active&gt;Centroid&lt;/Active&gt;
+			&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+				&lt;Centroid cid="d24ab3cc-87c8-87b3-e356-ff2391000000"&gt;
+					&lt;Parameter cid="397a3096-e32f-4731-99bb-4fc5c0fee270"&gt;
+						&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+						&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+						&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakFinderAlgorithm type="String"&gt;Centroid&lt;/PeakFinderAlgorithm&gt;
+						&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+					&lt;/Parameter&gt;
+				&lt;/Centroid&gt;
+				&lt;Snap cid="59943089-028d-8173-b87f-1043da000000"&gt;
+					&lt;Parameter cid="001056fe-1dc1-a063-97aa-ae498c000000"&gt;
+						&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+						&lt;BuildingBlockFile type="String"&gt;Averagine&lt;/BuildingBlockFile&gt;
+						&lt;BuildingBlockStrings cid="ce039962-a7a6-456b-8e0f-c36df3f1cc94"&gt;
+							&lt;Item&gt;C 4.9384 N 1.3577 O 1.4773 S 0.0417 H 7.7583&lt;/Item&gt;
+						&lt;/BuildingBlockStrings&gt;
+						&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+						&lt;GoodnessThreshold type="Double"&gt;0&lt;/GoodnessThreshold&gt;
+						&lt;ICATPartnerThreshSN type="Double"&gt;2.5&lt;/ICATPartnerThreshSN&gt;
+						&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakWidth type="Double"&gt;0.75&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+						&lt;UseICAT type="Bool"&gt;false&lt;/UseICAT&gt;
+						&lt;WidthFragments type="Double"&gt;0.75&lt;/WidthFragments&gt;
+					&lt;/Parameter&gt;
+				&lt;/Snap&gt;
+				&lt;Sum cid="5ebb93ee-c042-b744-df0e-327f36000000"&gt;
+					&lt;Parameter cid="dbd7dba7-3aad-978d-e411-f31d78000000"&gt;
+						&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+						&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+					&lt;/Parameter&gt;
+				&lt;/Sum&gt;
+			&lt;/Filter&gt;
+		&lt;/MLE_Reference&gt;
+		&lt;MLF_Reference cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+			&lt;Active&gt;Snap&lt;/Active&gt;
+			&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+				&lt;Centroid cid="d24ab3cc-87c8-87b3-e356-ff2391000000"&gt;
+					&lt;Parameter cid="397a3096-e32f-4731-99bb-4fc5c0fee270"&gt;
+						&lt;BaselineParameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+							&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+						&lt;/BaselineParameter&gt;
+						&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+						&lt;MaxPeakCount type="Int32"&gt;300&lt;/MaxPeakCount&gt;
+						&lt;MinIntensity type="Double"&gt;0&lt;/MinIntensity&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakFinderAlgorithm type="String"&gt;Centroid&lt;/PeakFinderAlgorithm&gt;
+						&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;6&lt;/SignalToNoiseThreshold&gt;
+						&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+					&lt;/Parameter&gt;
+				&lt;/Centroid&gt;
+				&lt;Snap cid="59943089-028d-8173-b87f-1043da000000"&gt;
+					&lt;Parameter cid="001056fe-1dc1-a063-97aa-ae498c000000"&gt;
+						&lt;BaselineParameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+							&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+							&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+						&lt;/BaselineParameter&gt;
+						&lt;BuildingBlockFile type="String"&gt;Averagine&lt;/BuildingBlockFile&gt;
+						&lt;BuildingBlockStrings cid="ce039962-a7a6-456b-8e0f-c36df3f1cc94"&gt;
+							&lt;Item&gt;C 4.9384 N 1.3577 O 1.4773 S 0.0417 H 7.7583&lt;/Item&gt;
+						&lt;/BuildingBlockStrings&gt;
+						&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+						&lt;GoodnessThreshold type="Double"&gt;80&lt;/GoodnessThreshold&gt;
+						&lt;ICATPartnerThreshSN type="Double"&gt;2.5&lt;/ICATPartnerThreshSN&gt;
+						&lt;MaxPeakCount type="Int32"&gt;200&lt;/MaxPeakCount&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakWidth type="Double"&gt;0.75&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;5&lt;/SignalToNoiseThreshold&gt;
+						&lt;UseICAT type="Bool"&gt;false&lt;/UseICAT&gt;
+						&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+						&lt;WidthFragments type="Double"&gt;0.75&lt;/WidthFragments&gt;
+					&lt;/Parameter&gt;
+				&lt;/Snap&gt;
+				&lt;Sum cid="5ebb93ee-c042-b744-df0e-327f36000000"&gt;
+					&lt;Parameter cid="dbd7dba7-3aad-978d-e411-f31d78000000"&gt;
+						&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f"&gt;
+							&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+						&lt;/BaselineParameter&gt;
+						&lt;MaxPeakCount type="Int32"&gt;300&lt;/MaxPeakCount&gt;
+						&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+						&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+						&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+						&lt;SignalToNoiseThreshold type="Double"&gt;6&lt;/SignalToNoiseThreshold&gt;
+						&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+					&lt;/Parameter&gt;
+				&lt;/Sum&gt;
+			&lt;/Filter&gt;
+		&lt;/MLF_Reference&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Mass List Edit"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;Centroid&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;Centroid cid="d24ab3cc-87c8-87b3-e356-ff2391000000"&gt;
+			&lt;Parameter cid="397a3096-e32f-4731-99bb-4fc5c0fee270"&gt;
+				&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+				&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+				&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakFinderAlgorithm type="String"&gt;Centroid&lt;/PeakFinderAlgorithm&gt;
+				&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+			&lt;/Parameter&gt;
+		&lt;/Centroid&gt;
+		&lt;Snap cid="59943089-028d-8173-b87f-1043da000000"&gt;
+			&lt;Parameter cid="001056fe-1dc1-a063-97aa-ae498c000000"&gt;
+				&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+				&lt;BuildingBlockFile type="String"&gt;Averagine&lt;/BuildingBlockFile&gt;
+				&lt;BuildingBlockStrings cid="ce039962-a7a6-456b-8e0f-c36df3f1cc94"&gt;
+					&lt;Item&gt;C 4.9384 N 1.3577 O 1.4773 S 0.0417 H 7.7583&lt;/Item&gt;
+				&lt;/BuildingBlockStrings&gt;
+				&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+				&lt;GoodnessThreshold type="Double"&gt;0&lt;/GoodnessThreshold&gt;
+				&lt;ICATPartnerThreshSN type="Double"&gt;2.5&lt;/ICATPartnerThreshSN&gt;
+				&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakWidth type="Double"&gt;0.75&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+				&lt;UseICAT type="Bool"&gt;false&lt;/UseICAT&gt;
+				&lt;WidthFragments type="Double"&gt;0.75&lt;/WidthFragments&gt;
+			&lt;/Parameter&gt;
+		&lt;/Snap&gt;
+		&lt;Sum cid="5ebb93ee-c042-b744-df0e-327f36000000"&gt;
+			&lt;Parameter cid="dbd7dba7-3aad-978d-e411-f31d78000000"&gt;
+				&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f" /&gt;
+				&lt;MaxPeakCount type="Int32"&gt;1&lt;/MaxPeakCount&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;0&lt;/SignalToNoiseThreshold&gt;
+			&lt;/Parameter&gt;
+		&lt;/Sum&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Mass List Find"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;Snap&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;Centroid cid="d24ab3cc-87c8-87b3-e356-ff2391000000"&gt;
+			&lt;Parameter cid="397a3096-e32f-4731-99bb-4fc5c0fee270"&gt;
+				&lt;BaselineParameter cid="13c3febb-a225-4352-a563-777159178858"&gt;
+					&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;/BaselineParameter&gt;
+				&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+				&lt;MaxPeakCount type="Int32"&gt;300&lt;/MaxPeakCount&gt;
+				&lt;MinIntensity type="Double"&gt;0&lt;/MinIntensity&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakFinderAlgorithm type="String"&gt;Centroid&lt;/PeakFinderAlgorithm&gt;
+				&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;6&lt;/SignalToNoiseThreshold&gt;
+				&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+			&lt;/Parameter&gt;
+		&lt;/Centroid&gt;
+		&lt;Snap cid="59943089-028d-8173-b87f-1043da000000"&gt;
+			&lt;Parameter cid="001056fe-1dc1-a063-97aa-ae498c000000"&gt;
+				&lt;BaselineParameter cid="f139916f-6195-bc94-7de0-494aa2000000"&gt;
+					&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+					&lt;MedianLevel type="Double"&gt;0.5&lt;/MedianLevel&gt;
+				&lt;/BaselineParameter&gt;
+				&lt;BuildingBlockFile type="String"&gt;Averagine&lt;/BuildingBlockFile&gt;
+				&lt;BuildingBlockStrings cid="ce039962-a7a6-456b-8e0f-c36df3f1cc94"&gt;
+					&lt;Item&gt;C 4.9384 N 1.3577 O 1.4773 S 0.0417 H 7.7583&lt;/Item&gt;
+				&lt;/BuildingBlockStrings&gt;
+				&lt;CentroidPercent type="Double"&gt;80&lt;/CentroidPercent&gt;
+				&lt;GoodnessThreshold type="Double"&gt;80&lt;/GoodnessThreshold&gt;
+				&lt;ICATPartnerThreshSN type="Double"&gt;2.5&lt;/ICATPartnerThreshSN&gt;
+				&lt;MaxPeakCount type="Int32"&gt;200&lt;/MaxPeakCount&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakWidth type="Double"&gt;0.75&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;5&lt;/SignalToNoiseThreshold&gt;
+				&lt;UseICAT type="Bool"&gt;false&lt;/UseICAT&gt;
+				&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+				&lt;WidthFragments type="Double"&gt;0.75&lt;/WidthFragments&gt;
+			&lt;/Parameter&gt;
+		&lt;/Snap&gt;
+		&lt;Sum cid="5ebb93ee-c042-b744-df0e-327f36000000"&gt;
+			&lt;Parameter cid="dbd7dba7-3aad-978d-e411-f31d78000000"&gt;
+				&lt;BaselineParameter cid="6a073a1c-ad71-431c-a588-79e7200b4d3f"&gt;
+					&lt;Flatness type="Double"&gt;0.8&lt;/Flatness&gt;
+				&lt;/BaselineParameter&gt;
+				&lt;MaxPeakCount type="Int32"&gt;300&lt;/MaxPeakCount&gt;
+				&lt;MinimumIntensity type="Double"&gt;0&lt;/MinimumIntensity&gt;
+				&lt;PeakWidth type="Double"&gt;0.2&lt;/PeakWidth&gt;
+				&lt;RelativeThresholdBasePeak type="Double"&gt;0&lt;/RelativeThresholdBasePeak&gt;
+				&lt;SignalToNoiseThreshold type="Double"&gt;6&lt;/SignalToNoiseThreshold&gt;
+				&lt;UseMaxSensivityForPeakPicking type="Bool"&gt;true&lt;/UseMaxSensivityForPeakPicking&gt;
+			&lt;/Parameter&gt;
+		&lt;/Sum&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="SmoothSelection A"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active /&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ChemicalNoiseV2 cid="0aa9c970-e0d3-be7f-672d-102105000000"&gt;
+			&lt;Parameter cid="6ac46b3d-c93b-b3eb-2856-e19f25000000" /&gt;
+		&lt;/ChemicalNoiseV2&gt;
+		&lt;ChemicalNoiseV3 cid="c2ee7e16-b73e-bd2f-1b51-fe1bd4000000"&gt;
+			&lt;Parameter cid="ed4cfcb5-9380-9fc8-ba7e-01a7d1000000" /&gt;
+		&lt;/ChemicalNoiseV3&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;Content name="Smoothing"&gt;&lt;ComboFilter cid="a72b0a1d-b2e1-4e8c-909b-0f280753fcf0"&gt;
+	&lt;Active&gt;SavitzkyGolay&lt;/Active&gt;
+	&lt;Filter cid="dd2457c9-2b2f-4b9e-a115-4ee0e1593c7d"&gt;
+		&lt;ChemicalNoise cid="0aa9c970-e0d3-be7f-672d-102105000000"&gt;
+			&lt;Parameter cid="6ac46b3d-c93b-b3eb-2856-e19f25000000"&gt;
+				&lt;Cycles type="UInt32"&gt;1&lt;/Cycles&gt;
+				&lt;Width type="Double"&gt;0.2&lt;/Width&gt;
+			&lt;/Parameter&gt;
+		&lt;/ChemicalNoise&gt;
+		&lt;Gauss cid="c8c23a9d-ea45-ac38-5d2c-5bf71d000000"&gt;
+			&lt;Parameter cid="692b76c2-254a-928f-9e40-7f9e1a000000"&gt;
+				&lt;Cycles type="UInt32"&gt;1&lt;/Cycles&gt;
+				&lt;Width type="Double"&gt;0.2&lt;/Width&gt;
+			&lt;/Parameter&gt;
+		&lt;/Gauss&gt;
+		&lt;SavitzkyGolay cid="1954921c-4193-87cb-1f9c-cd5219000000"&gt;
+			&lt;Parameter cid="4d95f395-2fae-8f3f-3c94-8b9171000000"&gt;
+				&lt;Cycles type="UInt32"&gt;1&lt;/Cycles&gt;
+				&lt;Width type="Double"&gt;0.2&lt;/Width&gt;
+			&lt;/Parameter&gt;
+		&lt;/SavitzkyGolay&gt;
+	&lt;/Filter&gt;
+&lt;/ComboFilter&gt;&lt;/Content&gt;&lt;/FilterContainer&gt;</PrpMethodXML>
+		</PrpMethod>
+		<MassListLayoutParameter>
+			<LayoutParameter>
+				<ColumnLayout ColumnID="1" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="mass" ColumnShortDesc="m/z" ColumnLongDesc="m/z" ColumnWidth="80"/>
+				<ColumnLayout ColumnID="4" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="s2n" ColumnShortDesc="SN" ColumnLongDesc="Signal to Noise" ColumnWidth="80"/>
+				<ColumnLayout ColumnID="7" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="goodn" ColumnShortDesc="Quality Fac." ColumnLongDesc="Quality Factor" ColumnWidth="80"/>
+				<ColumnLayout ColumnID="5" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="reso" ColumnShortDesc="Res." ColumnLongDesc="Resolution." ColumnWidth="80"/>
+				<ColumnLayout ColumnID="2" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="absi" ColumnShortDesc="Intens." ColumnLongDesc="Intensity" ColumnWidth="80"/>
+				<ColumnLayout ColumnID="6" ColumnWidth="80"/>
+				<ColumnLayout2 ColumnID="area" ColumnShortDesc="Area" ColumnLongDesc="Area" ColumnWidth="80"/>
+			</LayoutParameter>
+		</MassListLayoutParameter>
+		<MSRecalibrationParameter>
+			<CalibrationStrategy>1</CalibrationStrategy>
+			<PeakAssignmentToleranceSourceManual>2</PeakAssignmentToleranceSourceManual>
+			<PeakAssignmentToleranceSourceStatisticalPeptide>2</PeakAssignmentToleranceSourceStatisticalPeptide>
+			<SelectedMassControlListNameManual>PeptideCalibStandard mono</SelectedMassControlListNameManual>
+			<SelectedMassControlListNameSmart/>
+			<QuadraticCalibration>true</QuadraticCalibration>
+			<PeakAssignmentToleranceUserDefinedPPM>500</PeakAssignmentToleranceUserDefinedPPM>
+			<PeakAssignmentToleranceUserDefinedStatisticalPPM>500</PeakAssignmentToleranceUserDefinedStatisticalPPM>
+			<ZoomRange>0.0000000000000000</ZoomRange>
+			<ZoomRangeUnitPercent>true</ZoomRangeUnitPercent>
+		</MSRecalibrationParameter>
+	</MethodParameter>
+	<script language="SaxBasic">
+		<![CDATA[Option Explicit													' Make sure that all variables are declared before use
+
+Sub Main
+	UndoAllProcessing()											' Make sure that further processing starts from the raw data
+
+	Dim dRange(1) As Double										' Declare a variable for peak finding range
+	dRange(0) = 700.0
+	dRange(1) = 4000.0											' Range for peak finding: 700 - 4000 Da
+
+	Dim ResultSpec As Spectrum									' Declare a spectrum object
+	Set ResultSpec = Spectra(1).Process(faFindPeaks, dRange) 	' Find peaks between 800 and 4000 Da
+
+	ResultSpec.Enabled = True									' Display result spectrum
+
+	Save														' Save the result spectrum
+End Sub
+]]>
+	</script>
+</method>

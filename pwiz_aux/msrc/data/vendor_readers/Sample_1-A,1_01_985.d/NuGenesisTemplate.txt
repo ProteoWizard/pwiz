@@ -1,0 +1,11 @@
+[CONTEXT SENSITIVE]
+Project=
+Customer=
+Sample ID=Sample
+Operator=Bob
+Instrument Type=Eksigent LC System;HyStarAS2;BRUKER Install 125x4mm;HCT/esquire series;
+Instrument ID=BRUKER-HCT
+Lab=
+
+[GENERIC]
+USER=

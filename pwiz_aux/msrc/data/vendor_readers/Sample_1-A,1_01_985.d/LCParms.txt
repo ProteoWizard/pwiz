@@ -1,0 +1,127 @@
+
+
+
+
+[Method Information]
+LC Method
+
+General Information:
+Author: Bob
+LC Parameters (acquisition starting conditions)
+
+Acquisition Parameters:
+
+Runtime:        0.85 min
+Slice Width:    0.0  points/s
+
+[Pump]
+Additional Pump and Oven Parameters:
+
+pump settings
+ Nr. RunTime  Flow Rate     Min/Max           Solvents
+      (min)   (ml/min)      Press(bar)
+   1    1.00   0.01000         0/130534
+
+   2    0.00   0.01000         0/130534
+
+LC Column:     BRUKER Install 125x4mm
+
+
+
+[Pump]
+LC Timetable
+
+  Time  Function                 Value         A(%)  B(%)  C(%)  D(%)
+  0.00  Oven Temp.               25.0                     
+  0.00  Flow Rate                0.01000                  
+  0.00  Solvent Mix                            100.0 0.0   0.0   0.0  
+  0.00  Flow Rate(2)             0.01000                  
+  0.00  Solvent Mix(2)                         100.0 0.0   0.0   0.0  
+
+
+[Detector]
+Detector Settings
+
+Data Acquisition - Signals
+
+SIGNAL          Source          Parameters                          Autodetection Parameters
+   No.                                             
+
+
+Methods
+
+Method: D:\trigger test.m
+
+HyStar_LC: trigger test.m
+
+HyStar_Autosampler: avp_trigger_test
+
+EsquireControl: 080828-eksigent_trap_EM.m
+
+
+
+
+Hardware Setup
+
+Hardware Setup used: "eksigent ultra 2d 080829"
+
+General Information:
+Author: Bob
+
+[System Information]
+System included components:
+
+Pumps
+Pump 1 : Eksigent LC System
+conneced via System
+
+Pump 2 : Eksigent LC Pump 2
+Connected via RS-232
+
+AutoSamplers
+AutoSampler 1 : HyStarAS2
+connected via RS232
+
+Columns
+Column 1 : BRUKER Install 125x4mm
+
+Systems
+System 1 : Eksigent LC System
+Connected via RS-232
+
+MSs
+MS 1 : HCT/esquire series
+
+Ovens
+Oven 1 : Eksigent LC System
+conneced via System
+
+
+System times with 1 ml/min flow (in sec):
+
+Do Acquisition times:
+From Zero Point = LC 1 Detector to:
+Bruker Peak Sampling Unit    :  12.00
+NMR Spectrometer             :  15.00
+Fraction Collector (via NMR) :  100.00
+Fraction Collector (direct)  :  40.00
+
+Time offset to System Zero Point for:
+LC 2  Detector    :  0.00
+LC 3  Detector    :  10.00
+Mass Spectrometer :  0.00
+SPE Cartridge :  0.00
+
+Elution volume  between SPE Cartridge and NMR :  290.00
+
+Flow Injection times:
+Times from Bruker Peak Sampling Unit to:
+NMR Spectrometer             :  23.00
+Mass Spectrometer            :  23.00
+Fraction Collector (via NMR) :  110.00
+Divert Valve(via NMR) :  3.00
+
+Times from Autosampler to:
+NMR Spectrometer  :  30.00
+Mass Spectrometer :  30.00
+

@@ -1,0 +1,14 @@
+! HyStarNT V 3.2.44.0
+!
+! IndexFile
+
+! Pathes:
+HOST.1	 =	"\\BRUKER-HCT\"
+PATH.1	 =	"D:\Sample_1-A,1_01_985.d\"
+
+! file definitions:
+CHROMATOGRAM	 =	"HOST.1 PATH.1 Sample_1-A,1_01_985.unt"
+CHROMATOGRAM.STAMP	 =	"08/29/08 12:18:38"
+UV.START	 =	"0.0 min"
+
+! events:

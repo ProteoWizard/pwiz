@@ -1,0 +1,206 @@
+##TITLE=  XMASS Parameter file
+##JCAMPDX=  5.0
+##DATATYPE=  CONTINUOUS MASS SPECTRUM
+##ORIGIN=  XMASS, Bruker-Daltonics (USA) and Bruker-Daltonik (GER)
+##OWNER=  TOF User
+##SPECTROMETER/DATASYSTEM=  Bruker Flex Series
+##.SPECTROMETER TYPE=  TOF
+##.INLET=  DIRECT
+##.IONIZATION MODE=  LD+
+##$ABSF1= 10 
+##$ABSF2= 0 
+##$ABSG= 5 
+##$ABSL= 3 
+##$AQOP_m= 1 
+##$ATTEN= 55 
+##$AUTOLAB= 0 
+##$AZFE= 0.1 
+##$AZFW= 0.5 
+##$AccE_is= 0 
+##$Ame= 0 
+##$BASLSEG= 10 
+##$BASLSUB= no 
+##$BC_mod= 0 
+##$BYTORDP= 0 
+##$CLPTS= 0 
+##$CLSTAT= 0 
+##$CalPrnt= 0 
+##$DATMOD= 1 
+##$DC= 1 
+##$DELAY= 36272 
+##$DTATYPE= 0 
+##$Dy2max= 40 
+##$FILNO= 0 
+##$FT_mod= 0 
+##$FWidth= 0.75 
+##$GB= 0.1 
+##$GOODNLV= 0 
+##$HPCon= no 
+##$INTBC= 1 
+##$INTSCL= 1 
+##$ISEN= 128 
+##$LB= 1 
+##$LINDIS= 0 
+##$LftBHi= 0 
+##$LftBLo= 0 
+##$LftOrd= 0 
+##$Lms2osp= no 
+##$MAXI= 10000 
+##$MAXPKS= 200 
+##$MC2= 4 
+##$MEAN= 0 
+##$MI= 0 
+##$MPWCH= 1000 
+##$MPWM= 1000 
+##$MSDTAID= -1 
+##$NC_proc= -18 
+##$NOISE= 0 
+##$NSP= 1 
+##$NTH_PF= 0 
+##$NTH_PI= 0 
+##$NZP= 0 
+##$OCPOrd= 0 
+##$PC= 4 
+##$PHC0= 0 
+##$PHC1= 0 
+##$PH_mod= 0 
+##$POLARI= 1 
+##$PPERC= 80 
+##$PP_meth= 1 
+##$PSDOrd= 0 
+##$PULSREP= 10000 
+##$Parent= 0 
+##$PsdHi= 1.05 
+##$PsdLo= 0.85000002 
+##$Psdc0= 0 
+##$Psdc1= 0 
+##$Psdc2= 0 
+##$REPHZ= 100 
+##$REVERSE= no 
+##$RefFull= 0 
+##$ReflE= 0 
+##$RmFrag= yes 
+##$SAMPNO= 0 
+##$SCALINT= 1 
+##$SCALSPC= 1 
+##$SI= 123838 
+##$SIC_gco= 0 
+##$SIC_gct= 0 
+##$SIC_ion= 0 
+##$SIC_max= 0 
+##$SIC_min= 0 
+##$SMONUM= 0 
+##$SPCOrd= 0 
+##$SPOTID= -1 
+##$SSB= 0 
+##$STSI= 0 
+##$STSR= 0 
+##$SYMM= 0 
+##$S_DEV= 0 
+##$Sens1= 100 
+##$Sens2= 0 
+##$Subbasl= no 
+##$Subbpar= 0.80000001 
+##$SumShot= 0 
+##$T1D= 5 
+##$TDeff= 0 
+##$TIC_gco= 0 
+##$TIC_gct= 0 
+##$TIC_hig= 0 
+##$TIC_low= 0 
+##$TIC_max= 0 
+##$TIC_min= 0 
+##$TIC_rhi= 1 
+##$TIC_rlo= 1 
+##$TICcorr= 2 
+##$TM1= 0.1 
+##$TM2= 0.89999998 
+##$Udefl= 0 
+##$UdetL= 0 
+##$UdetR= 1.849 
+##$Uhimass= 0 
+##$Uis1= 25 
+##$Uis2= 21.780001 
+##$Ulens= 7.8000002 
+##$Uref_is= 0 
+##$WDW= 1 
+##$XDIM= 64 
+##$YMAX_p= 813170688 
+##$YMIN_p= 0 
+##$AUNMP= <> 
+##$Acalm= <> 
+##$Acquver= <BCC4_2_56_5> 
+##$Aoffs= (0..5) 
+50 50 50 50 50 50 
+##$BLDNM= <averagine.bld> 
+##$BTMeth= <> 
+##$CALME= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$CALMR= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$CALNAM1= <> 
+##$CALNAM2= <> 
+##$CALNAM3= <> 
+##$CALNAM4= <> 
+##$CALNAM5= <> 
+##$CALNAM6= <> 
+##$CALNAM7= <> 
+##$CLDATE= <2008-06-30T15:02:29.879-05:00> 
+##$CLREFNM= <> 
+##$CMT1= <LC MALDI, 100 fmol on 8 cm 3 um C18 column bomb loaded> 
+##$CMT2= <> 
+##$COMFILE= <TofComment> 
+##$DFILT= <> 
+##$Doffs= (0..5) 
+127 127 127 127 127 127 
+##$FAVer= <3.0.54.0> 
+##$FUZFILE= <> 
+##$GENMETH= <> 
+##$ID= <F3B20C60-1FA1-45FD-8823-67990C09EF50> 
+##$IDref= <> 
+##$II_path= <> 
+##$IR_path= <> 
+##$LftCal= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$Mctrlp= <> 
+##$OpId= <bruker> 
+##$PCRMETH= <> 
+##$PDELAY= (0..3) 
+10 10 10 10 
+##$PDURA= (0..3) 
+10 10 10 10 
+##$PEPURL= <> 
+##$PKFILE= <masslist> 
+##$PROCMAC= <> 
+##$PSDOCP= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$PSDSPC= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$PSmeth= <> 
+##$PostPr= <> 
+##$PsdList= <> 
+##$REFLIST= <> 
+##$RunGUID= <6529e28f-e3c5-4d95-a925-fdc9fbf52f8e> 
+##$SEQMETH= <> 
+##$SMOPTS= (0..15) 
+0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 
+##$SMPNAM= <100 fmol BSA\0_B1\1> 
+##$SNPMETH= <> 
+##$SREGLST= <RRRRRRRRRRRRRRR> 
+##$TI= <LC MALDI, 100 fmol on 8 cm 3 um C18 column bomb loaded> 
+##$WEND= (0..3) 
+30000 30000 30000 30000 
+##$WINY= (0..3) 
+3 3 3 3 
+##$WSTART= (0..3) 
+0 0 0 0 
+##$XMACRO= <> 
+##$Xml2= <> 
+##END=
+
