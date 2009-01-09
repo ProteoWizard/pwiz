@@ -24,6 +24,8 @@
 #include "Reader_Bruker.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -56,68 +58,43 @@ void testRead(const string& rawpath)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
-    // read RAW file into MSData object
-
+    // read file into MSData object
     Reader_Bruker reader;
     MSData msd;
     reader.read(rawpath, "dummy", msd);
+    if (os_) TextWriter(*os_,0)(msd);
 
-    // make assertions about msd
-
-    //if (os_) TextWriter(*os_,0)(msd); 
-
-    unit_assert(msd.run.spectrumListPtr.get());
-    SpectrumList& sl = *msd.run.spectrumListPtr;
-    if (os_) *os_ << "spectrum list size: " << sl.size() << endl;
-    //unit_assert(sl.size() == 48);
-
-    SpectrumPtr spectrum = sl.spectrum(0, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 0);
-    unit_assert(spectrum->id == "S1,1");
-    //unit_assert(spectrum->nativeID == "1,1");
-    unit_assert(sl.spectrumIdentity(0).index == 0);
-    unit_assert(sl.spectrumIdentity(0).id == "S1,1");
-    //unit_assert(sl.spectrumIdentity(0).nativeID == "1,1");
-    //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-
-    vector<MZIntensityPair> data;
-    spectrum->getMZIntensityPairs(data);
-    //unit_assert(data.size() == 19914);
-
-    spectrum = sl.spectrum(1, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 1);
-    unit_assert(spectrum->id == "S1,2"); // derived from scan number
-    //unit_assert(spectrum->nativeID == "1,2"); // scan number
-    unit_assert(sl.spectrumIdentity(1).index == 1);
-    unit_assert(sl.spectrumIdentity(1).id == "S1,2");
-    //unit_assert(sl.spectrumIdentity(1).nativeID == "1,2");
-    //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-
-    spectrum->getMZIntensityPairs(data);
-    //unit_assert(data.size() == 19800);
-
-    spectrum = sl.spectrum(2, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 2);
-    unit_assert(spectrum->id == "S1,3"); // scan number
-    unit_assert(sl.spectrumIdentity(2).index == 2);
-    unit_assert(sl.spectrumIdentity(2).id == "S1,3");
-    //unit_assert(sl.spectrumIdentity(2).nativeID == "1,3");
-    //unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 2); 
- 
-    spectrum->getMZIntensityPairs(data);
-    //unit_assert(data.size() == 485);
- 
-    spectrum = sl.spectrum(5, true);
-    unit_assert(sl.spectrumIdentity(5).index == 5);
-    unit_assert(sl.spectrumIdentity(5).id == "S1,6");
-    //unit_assert(sl.spectrumIdentity(5).nativeID == "1,6");
-    //unit_assert(spectrum->spectrumDescription.precursors.size() == 1);
-
-    // test file-level metadata 
+    // test file-level metadata
+    unit_assert(!msd.run.spectrumListPtr->empty());
     unit_assert(msd.fileDescription.fileContent.hasCVParam(MS_MSn_spectrum));
+    CVParam nativeIdFormat = msd.fileDescription.fileContent.cvParamChild(MS_nativeID_format);
+
+    // test that file type was identified correctly
+    bfs::path sourcePath(rawpath);
+    if (bfs::exists(sourcePath / "Analysis.baf"))
+        unit_assert(nativeIdFormat.cvid == MS_Bruker_BAF_nativeID_format);
+    else if (bfs::exists(sourcePath / "Analysis.yep"))
+        unit_assert(nativeIdFormat.cvid == MS_Bruker_Agilent_YEP_nativeID_format);
+    else
+        unit_assert(nativeIdFormat.cvid == MS_Bruker_FID_nativeID_format);
+
+    // make assertions about msd depending on file type
+    switch (nativeIdFormat.cvid)
+    {
+        default:
+            throw runtime_error("invalid or missing Bruker NativeID format in fileContent");
+
+        case MS_Bruker_BAF_nativeID_format:
+        case MS_Bruker_Agilent_YEP_nativeID_format:
+            for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
+                unit_assert(msd.run.spectrumListPtr->spectrum(i)->id == "scan=" + lexical_cast<string>(i+1));
+            break;
+
+        case MS_Bruker_FID_nativeID_format:
+            for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
+                unit_assert(msd.run.spectrumListPtr->spectrum(i)->id == "file=" + msd.fileDescription.sourceFilePtrs[i]->id);
+            break;
+    }
 }
 
 
@@ -135,8 +112,6 @@ void test(const string& rawpath)
 
 int main(int argc, char* argv[])
 {
-    return 0; // TODO: acquire some Bruker test data
-
     try
     {
         vector<string> rawpaths;
@@ -147,10 +122,13 @@ int main(int argc, char* argv[])
             else rawpaths.push_back(argv[i]);
         }
 
-        if (rawpaths.size()!=1)
-            throw runtime_error("Usage: Reader_Bruker_Test [-v] rawpath"); 
-            
-        test(rawpaths[0]);
+        vector<string> args(argv, argv+argc);
+        if (rawpaths.empty())
+            throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
+                                "\nUsage: Reader_Bruker_Test [-v] <source path 1> [source path 2] ..."); 
+
+        for (size_t i=0; i < rawpaths.size(); ++i)
+            test(rawpaths[i]);
         return 0;
     }
     catch (exception& e)

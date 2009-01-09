@@ -39,13 +39,16 @@ lib pwiz_aux_msrc_reader_bruker
 # unit tests (ordered by dependency)
 #
 
+path-constant TEST_PATH1 : "100 fmol BSA" ;
+path-constant TEST_PATH2 : "Sample_1-A,1_01_985.d" ;
+path-constant TEST_PATH3 : "CsI_Pos_0_G1_000003.d" ;
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run Reader_Bruker_Test.cpp pwiz_aux_msrc_reader_bruker
     : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
     : # input-files
-        #Reader_Waters_Test.RAW
     : # requirements
     : # target name
         Reader_Bruker_Test 

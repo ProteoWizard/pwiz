@@ -42,7 +42,7 @@ SpectrumList_Bruker_Format format(const string& path)
     {
         // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf
         std::string leaf = sourcePath.leaf();
-        if (leaf == "fid")
+        if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "Analysis.baf"))
             return SpectrumList_Bruker_Format_FID;
         else if(leaf == "Analysis.yep")
             return SpectrumList_Bruker_Format_YEP;
@@ -52,18 +52,26 @@ SpectrumList_Bruker_Format format(const string& path)
             return SpectrumList_Bruker_Format_Unknown;
     }
 
+    // TODO: 1SRef is not the only possible substring below, get more examples!
+
     // Check for fid-based data;
     // Every directory within the queried directory should have a "1/1SRef"
-    // subdirectory with a fid file in it, but we check only the first
+    // subdirectory with a fid file in it, but we check only the first non-dotted
     // directory for efficiency. This can fail, but those failures are acceptable.
     // Alternatively, a directory closer to the fid file can be identified.
+    // Caveat: BAF files may be accompanied by a fid, skip these cases! (?)
+    const static bfs::directory_iterator endItr;
     bfs::directory_iterator itr(sourcePath);
-    if (itr != bfs::directory_iterator())
-        if (bfs::exists(itr->path() / "1/1SRef/fid") ||
-            bfs::exists(itr->path() / "1SRef/fid") ||
-            bfs::exists(itr->path() / "fid") ||
-            bfs::exists(sourcePath / "fid"))
-            return SpectrumList_Bruker_Format_FID;
+    for (; itr != endItr; ++itr)
+        if (itr->path().leaf()[0] == '.')
+            continue;
+        else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
+                 bfs::exists(itr->path() / "1SRef/fid") ||
+                 (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf")) ||
+                 (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf")))
+                return SpectrumList_Bruker_Format_FID;
+        else
+            break;
 
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"

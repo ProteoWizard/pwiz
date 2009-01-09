@@ -98,7 +98,7 @@ string stringToIDREF(const string& s)
 }
 
 
-void fillInMetadata(const string& rootpath, MSData& msd)
+void fillInMetadata(const string& rootpath, MSData& msd, SpectrumList_Bruker_Format format)
 {
     msd.cvs.resize(1);
     CV& cv = msd.cvs.front();
@@ -108,17 +108,14 @@ void fillInMetadata(const string& rootpath, MSData& msd)
     cv.version = "1.0";
 
     bfs::path p(rootpath);
-    for (bfs::directory_iterator itr(p); itr != bfs::directory_iterator(); ++itr)
-    {
-        bfs::path sourcePath = itr->path();
-        SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = stringToIDREF(sourcePath.leaf());
-        sourceFile->name = sourcePath.leaf();
-        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
-        //sourceFile->cvParams.push_back(MS_Bruker_RAW_file);
-        msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
-    }
     msd.id = stringToIDREF(p.leaf());
+
+    switch (format)
+    {
+        case SpectrumList_Bruker_Format_FID: msd.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format); break;
+        case SpectrumList_Bruker_Format_YEP: msd.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format); break;
+        case SpectrumList_Bruker_Format_BAF: msd.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format); break;
+    }
 
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
@@ -138,6 +135,8 @@ void fillInMetadata(const string& rootpath, MSData& msd)
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
     msd.dataProcessingPtrs.push_back(dpPwiz);
+
+    // TODO: read instrument "family" from (first) source
 
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     //if (!msd.instrumentConfigurationPtrs.empty())
@@ -174,6 +173,7 @@ PWIZ_API_DECL Reader_Bruker::Reader_Bruker()
 
 PWIZ_API_DECL Reader_Bruker::~Reader_Bruker()
 {
+    impl_.release();
 }
 
 PWIZ_API_DECL
@@ -206,18 +206,16 @@ void Reader_Bruker::read(const string& filename,
         throw ReaderFail("[Reader_Bruker::read()] Error initializing CompassXtract: " + error);
     }
 
-    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, filename, format, impl_->pAnalysis);
+    // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
+    bfs::path rootpath = filename;
+    if (bfs::is_regular_file(rootpath))
+        rootpath = rootpath.branch_path();
+
+    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, impl_->pAnalysis);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     //result.run.chromatogramListPtr = sl->Chromatograms();
 
-    switch (format)
-    {
-        case SpectrumList_Bruker_Format_FID: result.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format);
-        case SpectrumList_Bruker_Format_YEP: result.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format);
-        case SpectrumList_Bruker_Format_BAF: result.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format);
-    }
-
-    fillInMetadata(filename, result);
+    fillInMetadata(filename, result, format);
 }
 
 
@@ -251,7 +249,7 @@ PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& hea
 #elif defined(WIN32) // wrong compiler
         "program was built without COM support and cannot access CompassXtract DLLs - try building with MSVC instead of GCC"
 #else // wrong platform
-        "requires CompassXtract which only work on Windows"
+        "requires CompassXtract which only works on Windows"
 #endif
 		);
 }

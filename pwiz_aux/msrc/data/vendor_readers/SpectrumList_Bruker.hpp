@@ -24,6 +24,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Bruker_Detail.hpp"
 #import "CompassXtractMS.dll"
 #include <map>
@@ -45,35 +46,36 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
 {
     public:
 
-    SpectrumList_Bruker(const MSData& msd,
+    SpectrumList_Bruker(MSData& msd,
                         const string& rootpath,
                         SpectrumList_Bruker_Format format,
                         EDAL::IMSAnalysisPtr& pAnalysis);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
-    //virtual size_t find(const string& id) const;
-    //virtual size_t findNative(const string& nativeID) const;
+    virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
 
     private:
 
-    const MSData& msd_;
-    string rootpath_;
+    MSData& msd_;
+    bfs::path rootpath_;
     SpectrumList_Bruker_Format format_;
     size_t size_;
+    vector<bfs::path> sourcePaths_;
     vector<SpectrumIdentity> index_;
 
-    // nativeIdToIndexMap_[<function #>][<scan #>] == index
-    //map<string, size_t> nativeIdToIndexMap_;
+    // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
+    map<string, size_t> idToIndexMap_;
 
+    void fillSourceList();
     void createIndex();
     //string findPrecursorID(int precursorMsLevel, size_t index) const;
 
     // EDAL MSAnalysisPtr shared with Reader
-    EDAL::IMSAnalysisPtr& pAnalysis_;
-    EDAL::IMSSpectrumCollectionPtr pSpectra_;
+    mutable EDAL::IMSAnalysisPtr& pAnalysis_;
+    mutable EDAL::IMSSpectrumCollectionPtr pSpectra_;
 };
 
 } // detail
