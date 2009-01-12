@@ -163,6 +163,8 @@ unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;
 unit-test SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
+unit-test SpectrumListBaseTest : SpectrumListBaseTest.cpp pwiz_data_msdata ;
+unit-test ChromatogramListBaseTest : ChromatogramListBaseTest.cpp pwiz_data_msdata ;
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_data_msdata ;
 unit-test SpectrumListCacheTest : SpectrumListCacheTest.cpp pwiz_data_msdata ;
 

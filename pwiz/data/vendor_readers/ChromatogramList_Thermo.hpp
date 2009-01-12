@@ -3,7 +3,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <map>
 #include <vector>
@@ -18,7 +18,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramList
+class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramListBase
 {
 public:
 

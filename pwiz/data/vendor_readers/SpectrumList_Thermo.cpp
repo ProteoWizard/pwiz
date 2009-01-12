@@ -1,3 +1,26 @@
+//
+// SpectrumList_Thermo.cpp
+//
+//
+// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
 #define PWIZ_SOURCE
 
 #ifndef PWIZ_NO_READER_THERMO
@@ -11,6 +34,7 @@
 #include "SpectrumList_Thermo.hpp"
 
 using boost::format;
+
 
 namespace pwiz {
 namespace msdata {
@@ -58,12 +82,6 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     catch (bad_lexical_cast&) {}
 
     return size();
-}
-
-
-PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList_Thermo::dataProcessingPtr() const
-{
-    return msd_.dataProcessingPtrs[0]; // created by Reader_Thermo::fillInMetadata()
 }
 
 
@@ -275,8 +293,11 @@ PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, 
     return "";
 }
 
+
 } // detail
 } // msdata
 } // pwiz
 
+
 #endif // PWIZ_NO_READER_THERMO
+

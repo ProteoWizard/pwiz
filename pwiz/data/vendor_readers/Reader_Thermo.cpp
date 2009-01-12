@@ -213,7 +213,12 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
-    msd.dataProcessingPtrs.push_back(dpPwiz);
+
+    // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
+    SpectrumList_Thermo* sl = dynamic_cast<SpectrumList_Thermo*>(msd.run.spectrumListPtr.get());
+    ChromatogramList_Thermo* cl = dynamic_cast<ChromatogramList_Thermo*>(msd.run.chromatogramListPtr.get());
+    if (sl) sl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     if (!msd.instrumentConfigurationPtrs.empty())
@@ -242,10 +247,10 @@ void Reader_Thermo::read(const string& filename,
     shared_ptr<RawFile> rawfile(RawFile::create(filename).release());
     rawfile->setCurrentController(Controller_MS, 1);
 
-    SpectrumList_Thermo* sl = new SpectrumList_Thermo(result, rawfile);
-    ChromatogramList_Thermo* cl = new ChromatogramList_Thermo(result, rawfile);
-    result.run.spectrumListPtr = SpectrumListPtr(sl);
-    result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+    shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile));
+    shared_ptr<ChromatogramList_Thermo> cl(new ChromatogramList_Thermo(result, rawfile));
+    result.run.spectrumListPtr = sl;
+    result.run.chromatogramListPtr = cl;
 
     fillInMetadata(filename, *rawfile, result);
 }
