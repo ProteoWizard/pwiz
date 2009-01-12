@@ -21,6 +21,10 @@
 // limitations under the License.
 //
 
+
+#ifndef _FILESYSTEM_HPP_
+#define _FILESYSTEM_HPP_
+
 #include "Export.hpp"
 #include "String.hpp"
 #include "Container.hpp"
@@ -66,3 +70,5 @@ std::string abbreviate_byte_size(boost::uintmax_t byteSize,
 
 } // util
 } // pwiz
+
+#endif // _FILESYSTEM_HPP_
