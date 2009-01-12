@@ -188,7 +188,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     bfs::path p(filename);
     sourceFile->id = "RAW1";
     sourceFile->name = p.leaf();
-    sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+    string location = bfs::complete(p.branch_path()).string();
+    if (location.empty()) location = ".";
+    sourceFile->location = string("file://") + location;
     sourceFile->set(MS_Xcalibur_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
