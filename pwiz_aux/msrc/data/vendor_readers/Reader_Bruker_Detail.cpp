@@ -42,11 +42,12 @@ SpectrumList_Bruker_Format format(const string& path)
     {
         // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf
         std::string leaf = sourcePath.leaf();
-        if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "Analysis.baf"))
+        bal::to_lower(leaf);
+        if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
             return SpectrumList_Bruker_Format_FID;
-        else if(leaf == "Analysis.yep")
+        else if(leaf == "analysis.yep")
             return SpectrumList_Bruker_Format_YEP;
-        else if(leaf == "Analysis.baf")
+        else if(leaf == "analysis.baf")
             return SpectrumList_Bruker_Format_BAF;
         else
             return SpectrumList_Bruker_Format_Unknown;
@@ -63,24 +64,24 @@ SpectrumList_Bruker_Format format(const string& path)
     const static bfs::directory_iterator endItr;
     bfs::directory_iterator itr(sourcePath);
     for (; itr != endItr; ++itr)
-        if (itr->path().leaf()[0] == '.')
+        if (itr->path().leaf()[0] == '.') // HACK: skip ".svn"
             continue;
         else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
                  bfs::exists(itr->path() / "1SRef/fid") ||
-                 (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf")) ||
-                 (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf")))
+                 (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
+                 (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
                 return SpectrumList_Bruker_Format_FID;
         else
             break;
 
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"
-    if (bfs::exists(sourcePath / "Analysis.yep"))
+    if (bfs::exists(sourcePath / "Analysis.yep") || bfs::exists(sourcePath / "analysis.yep"))
         return SpectrumList_Bruker_Format_YEP;
 
     // Check for baf-based data;
     // The directory should have a file named "Analysis.baf"
-    if (bfs::exists(sourcePath / "Analysis.baf"))
+    if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
         return SpectrumList_Bruker_Format_BAF;
 
     return SpectrumList_Bruker_Format_Unknown;

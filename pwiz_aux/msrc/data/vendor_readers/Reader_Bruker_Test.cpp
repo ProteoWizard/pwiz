@@ -46,11 +46,7 @@ void testAccept(const string& rawpath)
     bool accepted = reader.accept(rawpath, "");
     if (os_) *os_ << "accepted: " << boolalpha << accepted << endl;
 
-    #ifdef _MSC_VER
     unit_assert(accepted);
-    #else // _MSC_VER
-    unit_assert(!accepted);
-    #endif // _MSC_VER
 }
 
 
