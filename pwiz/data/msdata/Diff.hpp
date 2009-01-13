@@ -49,10 +49,13 @@ struct PWIZ_API_DECL DiffConfig
 
     bool ignoreChromatograms;
 
+    bool ignoreDataProcessing;
+
     DiffConfig()
     :   precision(1e-6), 
         ignoreMetadata(false),
-        ignoreChromatograms(false)
+        ignoreChromatograms(false),
+        ignoreDataProcessing(false)
     {}
 };
 

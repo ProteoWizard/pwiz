@@ -59,7 +59,7 @@ void test()
 
     // do a diff on the two objects
     Diff<MSData> diff(msd, msd2); 
-    //unit_assert(!diff);
+    unit_assert(!diff);
 
     // write out mzML 
     string filename = "tiny.pwiz.mzML";

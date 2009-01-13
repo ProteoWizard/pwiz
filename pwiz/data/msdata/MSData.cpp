@@ -1241,6 +1241,15 @@ PWIZ_API_DECL DataProcessingPtr MSData::currentDataProcessingPtr() const
 }
 
 
+PWIZ_API_DECL vector<DataProcessingPtr> MSData::allDataProcessingPtrs() const
+{
+    vector<DataProcessingPtr> result(dataProcessingPtrs);
+    DataProcessingPtr current = currentDataProcessingPtr();
+    if (current.get()) result.push_back(current); 
+    return result;
+}
+
+
 } // namespace msdata
 } // namespace pwiz
 

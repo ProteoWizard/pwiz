@@ -55,15 +55,6 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         MSData tiny;
         examples::initializeTiny(tiny);
 
-        // hack -- move SpectrumList::dataProcessingPtr to msd::dataProcessingPtrs // TODO
-        SpectrumListSimple& sl = dynamic_cast<SpectrumListSimple&>(*tiny.run.spectrumListPtr);
-        tiny.dataProcessingPtrs.push_back(sl.dp);
-        sl.dp = DataProcessingPtr();
-
-        // hack -- remove ChromatogramList::dataProcessingPtr // TODO
-        ChromatogramListSimple& cl = dynamic_cast<ChromatogramListSimple&>(*tiny.run.chromatogramListPtr);
-        cl.dp = DataProcessingPtr();
-
         // write to file #1 (static)
         MSDataFile::write(tiny, filename1, writeConfig);
 

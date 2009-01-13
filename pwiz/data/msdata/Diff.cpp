@@ -800,7 +800,7 @@ void diff(const SpectrumList& a,
                                 new DataProcessing(*b.dataProcessingPtr()) :
                                 0); 
 
-    if (!config.ignoreMetadata)
+    if (!config.ignoreMetadata && !config.ignoreDataProcessing)
         ptr_diff(temp_a_dp, temp_b_dp, a_b.dp, b_a.dp, config);
 
     if (a.size() != b.size())
@@ -855,7 +855,7 @@ void diff(const ChromatogramList& a,
                                 new DataProcessing(*b.dataProcessingPtr()) :
                                 0); 
 
-    if (!config.ignoreMetadata)
+    if (!config.ignoreMetadata && !config.ignoreDataProcessing)
         ptr_diff(temp_a_dp, temp_b_dp, a_b.dp, b_a.dp, config);
 
     if (a.size() != b.size())
@@ -956,6 +956,7 @@ void diff(const Run& a,
     }
 }
 
+
 PWIZ_API_DECL
 void diff(const MSData& a,
           const MSData& b,
@@ -975,11 +976,16 @@ void diff(const MSData& a,
         vector_diff_deep(a.softwarePtrs, b.softwarePtrs, a_b.softwarePtrs, b_a.softwarePtrs, config);
         vector_diff_deep(a.scanSettingsPtrs, b.scanSettingsPtrs, a_b.scanSettingsPtrs, b_a.scanSettingsPtrs, config);
         vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
-        vector_diff_deep(a.dataProcessingPtrs, b.dataProcessingPtrs, a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
+
+        // do diff on full DataProcessing list
+        vector_diff_deep(a.allDataProcessingPtrs(), b.allDataProcessingPtrs(), a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
     }
 
-    diff(a.run, b.run, a_b.run, b_a.run, config);
-    
+    // ignore DataProcessing in SpectrumList/ChromatogramList
+    DiffConfig config_ignoreDataProcessing(config);
+    config_ignoreDataProcessing.ignoreDataProcessing = true;
+    diff(a.run, b.run, a_b.run, b_a.run, config_ignoreDataProcessing);
+
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
     {

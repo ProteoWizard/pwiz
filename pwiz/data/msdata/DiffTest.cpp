@@ -802,6 +802,12 @@ void testSpectrumList()
     aSimple.dp = DataProcessingPtr(new DataProcessing("dp"));
     diff(a, b);
     unit_assert(diff);
+
+    DiffConfig config_ignore;
+    config_ignore.ignoreDataProcessing = true;
+    Diff<SpectrumList> diff_ignore(a, b, config_ignore);
+    unit_assert(!diff_ignore);
+
     aSimple.dp = DataProcessingPtr();
     diff(a, b);
     unit_assert(!diff);
@@ -889,6 +895,12 @@ void testChromatogramList()
     aSimple.dp = DataProcessingPtr(new DataProcessing("dp"));
     diff(a, b);
     unit_assert(diff);
+
+    DiffConfig config_ignore_dp;
+    config_ignore_dp.ignoreDataProcessing = true;
+    Diff<ChromatogramList> diff_ignore_dp(a, b, config_ignore_dp);
+    unit_assert(!diff_ignore_dp);
+
     aSimple.dp = DataProcessingPtr();
     diff(a, b);
     unit_assert(!diff);
@@ -1073,6 +1085,36 @@ void testMSData()
 
     unit_assert(diff.a_b.scanSettingsPtrs.empty());
     unit_assert(!diff.b_a.scanSettingsPtrs.empty());
+}
+
+
+void testMSData_allDataProcessingPtrs()
+{
+    if (os_) *os_ << "testMSData_allDataProcessingPtrs()\n";
+
+    MSData a, b;
+   
+    a.id = "goober";
+    b.id = "goober";
+
+    SpectrumListSimplePtr sl1(new SpectrumListSimple), sl2(new SpectrumListSimple);
+
+    sl1->dp = DataProcessingPtr(new DataProcessing("dp"));
+    b.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+
+    a.run.spectrumListPtr = sl1;
+    b.run.spectrumListPtr = sl2;
+
+    Diff<MSData> diff(a, b);
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    a.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+
+    diff(a, b);
+    unit_assert(diff);
+    unit_assert(diff.a_b.dataProcessingPtrs.size() == 1 &&
+                diff.a_b.dataProcessingPtrs[0]->id == "more_dp");
 }
 
 
@@ -1418,11 +1460,10 @@ void testMSDiffUpdate()
   unit_assert(diff_changed_changed);
 
   if(os_) *os_<<diff_changed_changed<<endl;
-    
 }
 
-void test()
 
+void test()
 {
     testString();
     testCV();
@@ -1452,10 +1493,10 @@ void test()
     testChromatogramList();
     testRun();
     testMSData();
+    testMSData_allDataProcessingPtrs();
     testBinaryDataOnly();
     testMaxPrecisionDiff();
     testMSDiffUpdate();
-
 }
 
 

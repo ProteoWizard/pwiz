@@ -288,9 +288,16 @@ void testCurrentDataProcessing()
     unit_assert(msd.currentDataProcessingPtr().get() &&
                 msd.currentDataProcessingPtr()->id == "dp");
 
+    // test unique name adjustment
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
     unit_assert(msd.currentDataProcessingPtr().get() &&
                 msd.currentDataProcessingPtr()->id == "more_dp");
+
+    // test allDataProcessingPtrs()
+    vector<DataProcessingPtr> all = msd.allDataProcessingPtrs();
+    unit_assert(all.size() == 2 &&
+                all[0].get() && all[0]->id == "dp" &&
+                all[1].get() && all[1]->id == "more_dp");
 }
 
 
