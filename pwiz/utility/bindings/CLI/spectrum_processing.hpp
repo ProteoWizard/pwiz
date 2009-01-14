@@ -10,7 +10,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_SavitzkyGolaySmoother.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
@@ -258,32 +258,59 @@ public ref class SpectrumList_NativeCentroider : public msdata::SpectrumList
 };
 
 
-/// <summary>
-/// SpectrumList implementation to smooth intensities with SG method
-/// </summary>
-public ref class SpectrumList_SavitzkyGolaySmoother : public msdata::SpectrumList
+public ref class Smoother abstract
 {
-    internal: virtual ~SpectrumList_SavitzkyGolaySmoother()
+    internal:
+    pwiz::analysis::SmootherPtr* base_;
+};
+
+public ref class SavitzkyGolaySmoother : public Smoother
+{
+    public:
+    SavitzkyGolaySmoother(int polynomialOrder, int windowSize)
+    {
+        base_ = new pwiz::analysis::SmootherPtr(
+            new pwiz::analysis::SavitzkyGolaySmoother(polynomialOrder, windowSize));
+    }
+};
+
+/*public ref class WhittakerSmoother : public Smoother
+{
+    public:
+    WhittakerSmoother(double lambdaFactor)
+    {
+        base_ = new pwiz::analysis::SmootherPtr(
+            new pwiz::analysis::WhittakerSmoother(lambdaFactor));
+    }
+};*/
+
+/// <summary>
+/// SpectrumList implementation to smooth intensities
+/// </summary>
+public ref class SpectrumList_Smoother : public msdata::SpectrumList
+{
+    internal: virtual ~SpectrumList_Smoother()
               {
                   // base class destructor will delete the shared pointer
               }
-              pwiz::analysis::SpectrumList_SavitzkyGolaySmoother* base_;
+              pwiz::analysis::SpectrumList_Smoother* base_;
 
     public:
 
-    SpectrumList_SavitzkyGolaySmoother(msdata::SpectrumList^ inner,
-                                       System::Collections::Generic::IEnumerable<int>^ msLevelsToSmooth)
+    SpectrumList_Smoother(msdata::SpectrumList^ inner,
+                          Smoother^ algorithm,
+                          System::Collections::Generic::IEnumerable<int>^ msLevelsToSmooth)
     : msdata::SpectrumList(0)
     {
         pwiz::util::IntegerSet msLevelSet;
         for each(int i in msLevelsToSmooth)
             msLevelSet.insert(i);
-        base_ = new pwiz::analysis::SpectrumList_SavitzkyGolaySmoother(*inner->base_, msLevelSet);
+        base_ = new pwiz::analysis::SpectrumList_Smoother(*inner->base_, *algorithm->base_, msLevelSet);
         msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
     }
 
     static bool accept(msdata::SpectrumList^ inner)
-    {return pwiz::analysis::SpectrumList_SavitzkyGolaySmoother::accept(*inner->base_);}
+    {return pwiz::analysis::SpectrumList_Smoother::accept(*inner->base_);}
 };
 
 
