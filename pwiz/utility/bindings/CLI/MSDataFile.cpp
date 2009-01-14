@@ -28,25 +28,17 @@
 //#include "boost/system/error_code.hpp"
 #include <WinError.h>
 
-#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
-#include "pwiz/data/vendor_readers/Reader_Thermo.hpp"
-#include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
+#include "pwiz_tools/common/FullReaderList.hpp"
 
 namespace b = pwiz::msdata;
 
 namespace {
 
-boost::shared_ptr<b::DefaultReaderList> readerList;
+boost::shared_ptr<b::FullReaderList> readerList;
 void initializeReaderList()
 {
     if (!readerList.get())
-    {
-        readerList.reset(new b::DefaultReaderList);
-        *readerList += b::ReaderPtr(new b::Reader_Thermo);
-        *readerList += b::ReaderPtr(new b::Reader_Waters);
-        *readerList += b::ReaderPtr(new b::Reader_Bruker);
-    }
+        readerList.reset(new b::FullReaderList);
 }
 
 } // namespace
