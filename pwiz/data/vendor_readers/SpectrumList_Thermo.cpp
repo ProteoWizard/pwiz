@@ -133,7 +133,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
     }
 
-    Scan scan;
+    result->scanList.scans.push_back(Scan());
+    Scan& scan = result->scanList.scans[0];
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -187,7 +188,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     }
 
     scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
-    result->scanList.scans.push_back(scan);
 
     for (long i=0, precursorCount=scanInfo->precursorCount(); i<precursorCount; i++)
     {
