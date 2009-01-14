@@ -61,12 +61,46 @@ inline std::string unit_assert_equal_message(const char* filename, int line, dou
     return oss.str();
 }
 
+inline std::string unit_assert_exception_message(const char* filename, int line, const char* expression, const std::string& exception)
+{
+    std::ostringstream oss;
+    oss << "[" << filename << ":" << line << "] Assertion failed to throw \"" << exception << "\": " << expression;
+    return oss.str();
+}
+
 #define unit_assert(x) \
     (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
 
 
 #define unit_assert_equal(x, y, epsilon) \
     (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+
+
+#define unit_assert_throws(x, exception) \
+    { \
+        bool threw = false; \
+        try { (x); } \
+        catch (exception& e) \
+        { \
+            threw = true; \
+        } \
+        if (!threw) \
+            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, #exception)); \
+    }
+
+
+#define unit_assert_throws_what(x, exception, whatStr) \
+    { \
+        bool threw = false; \
+        try { (x); } \
+        catch (exception& e) \
+        { \
+        if (e.what() == std::string(whatStr)) \
+                threw = true; \
+        } \
+        if (!threw) \
+            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+(whatStr))); \
+    }
 
 
 #define unit_assert_matrices_equal(A, B, epsilon) \
