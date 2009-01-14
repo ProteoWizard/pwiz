@@ -34,22 +34,24 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_Filter.cpp
         SpectrumList_NativeCentroider.cpp
         SpectrumList_PrecursorRecalculator.cpp
-        SpectrumList_SavitzkyGolaySmoother.cpp
+        SpectrumList_Smoother.cpp
         SpectrumList_Thresholder.cpp
         SpectrumList_ChargeStateCalculator.cpp
         PrecursorRecalculatorDefault.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
-        <library>../../analysis/passive//pwiz_analysis_passive_core
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+        <library>../common//pwiz_analysis_common
         <library>../../../pwiz_aux/msrc/data/vendor_readers//pwiz_aux_msrc_reader_bruker
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
-        <library>../../analysis/passive//pwiz_analysis_passive_core
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+        <library>../common//pwiz_analysis_common
         <library>../../../pwiz_aux/msrc/data/vendor_readers//pwiz_aux_msrc_reader_bruker
     ;
 
@@ -63,7 +65,6 @@ unit-test SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_sp
 unit-test SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_ThresholderTest : SpectrumList_ThresholderTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 
 

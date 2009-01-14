@@ -1,5 +1,5 @@
 //
-// SpectrumList_SavitzkyGolaySmoother.hpp
+// SpectrumList_Smoother.hpp
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -20,32 +20,49 @@
 //
 
 
-#ifndef _SPECTRUMLIST_SAVITZKYGOLAYSMOOTHER_HPP_ 
-#define _SPECTRUMLIST_SAVITZKYGOLAYSMOOTHER_HPP_ 
+#ifndef _SPECTRUMLIST_SMOOTHER_HPP_ 
+#define _SPECTRUMLIST_SMOOTHER_HPP_ 
 
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
+#include "pwiz/analysis/common/SavitzkyGolaySmoother.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-/// SpectrumList implementation to return spectral data smoothed with the Savitzky-Golay method
-class PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother : public msdata::SpectrumListWrapper
+/*struct PWIZ_API_DECL WhittakerSmoothingAlgorithm : public SmoothingAlgorithm
+{
+    WhittakerSmoothingAlgorithm(double lambdaFactor);
+
+    std::vector<double> smooth_copy(const std::vector<double>& data);
+    std::vector<double>& smooth(const std::vector<double>& data,
+                                std::vector<double>& smoothedData);
+
+    private:
+    double lambda;
+};*/
+
+
+/// SpectrumList implementation to return smoothed spectral data
+class PWIZ_API_DECL SpectrumList_Smoother : public msdata::SpectrumListWrapper
 {
     public:
 
-    SpectrumList_SavitzkyGolaySmoother(const msdata::SpectrumListPtr& inner,
-                                       const util::IntegerSet& msLevelsToSmooth);
+    SpectrumList_Smoother(const msdata::SpectrumListPtr& inner,
+                          SmootherPtr algorithm,
+                          const util::IntegerSet& msLevelsToSmooth);
+
 
     static bool accept(const msdata::SpectrumListPtr& inner);
 
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     private:
+    SmootherPtr algorithm_;
     const util::IntegerSet msLevelsToSmooth_;
 };
 
@@ -54,5 +71,5 @@ class PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother : public msdata::Spectrum
 } // namespace pwiz
 
 
-#endif // _SPECTRUMLIST_SAVITZKYGOLAYSMOOTHER_HPP_ 
+#endif // _SPECTRUMLIST_SMOOTHER_HPP_ 
 

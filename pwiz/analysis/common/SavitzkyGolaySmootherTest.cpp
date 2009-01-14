@@ -46,6 +46,26 @@ const double testArray[] =
 
 void test()
 {
+    // test that invalid value exceptions are thrown
+
+    // order too low
+    unit_assert_throws_what(SavitzkyGolaySmoother(1, 15), runtime_error, \
+        "[SavitzkyGolaySmoother::ctor()] Invalid value for polynomial order; valid range is [2, 20]");
+
+    // order too high
+    unit_assert_throws_what(SavitzkyGolaySmoother(21, 15), runtime_error, \
+        "[SavitzkyGolaySmoother::ctor()] Invalid value for polynomial order; valid range is [2, 20]");
+
+    // window size too small
+    unit_assert_throws_what(SavitzkyGolaySmoother(2, 3), runtime_error, \
+        "[SavitzkyGolaySmoother::ctor()] Invalid value for window size; value must be odd and in range [5, infinity)");
+
+    // window size isn't odd
+    unit_assert_throws_what(SavitzkyGolaySmoother(2, 6), runtime_error, \
+        "[SavitzkyGolaySmoother::ctor()] Invalid value for window size; value must be odd and in range [5, infinity)");
+
+    SavitzkyGolaySmoother(2, 100001); // window size is valid up to numeric limits
+
     vector<double> testData(testArray, testArray+(14*4));
     if (os_)
     {
@@ -54,7 +74,8 @@ void test()
         *os_ << endl;
     }
 
-    vector<double> smoothData = SavitzkyGolaySmoother<double>::smooth_copy(testData);
+    SavitzkyGolaySmoother smoother(4, 15);
+    vector<double> smoothData = smoother.smooth_copy(testData);
 
     if (os_)
     {
@@ -63,7 +84,10 @@ void test()
         *os_ << endl;
     }
 
+    // smoothed data should be same size as the unsmoothed data
     unit_assert(smoothData.size() == testData.size());
+
+    // TODO: add output testing
 }
 
 

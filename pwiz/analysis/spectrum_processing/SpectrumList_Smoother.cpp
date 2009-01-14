@@ -1,5 +1,5 @@
 //
-// SpectrumList_SavitzkyGolaySmoother.cpp
+// SpectrumList_Smoother.cpp
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -23,8 +23,9 @@
 #define PWIZ_SOURCE
 
 
-#include "SpectrumList_SavitzkyGolaySmoother.hpp"
-#include "SavitzkyGolaySmoother.hpp"
+#include "SpectrumList_Smoother.hpp"
+#include "pwiz/analysis/common/SavitzkyGolaySmoother.hpp"
+//#include "WhittakerSmoother.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
 
@@ -36,10 +37,13 @@ using namespace msdata;
 using namespace pwiz::util;
 
 
-PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother::SpectrumList_SavitzkyGolaySmoother(
-    const msdata::SpectrumListPtr& inner,
-    const IntegerSet& msLevelsToSmooth)
+PWIZ_API_DECL
+SpectrumList_Smoother::SpectrumList_Smoother(
+        const msdata::SpectrumListPtr& inner,
+        SmootherPtr algorithm,
+        const IntegerSet& msLevelsToSmooth)
 :   SpectrumListWrapper(inner),
+    algorithm_(algorithm),
     msLevelsToSmooth_(msLevelsToSmooth)
 {
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -51,13 +55,13 @@ PWIZ_API_DECL SpectrumList_SavitzkyGolaySmoother::SpectrumList_SavitzkyGolaySmoo
 }
 
 
-PWIZ_API_DECL bool SpectrumList_SavitzkyGolaySmoother::accept(const msdata::SpectrumListPtr& inner)
+PWIZ_API_DECL bool SpectrumList_Smoother::accept(const msdata::SpectrumListPtr& inner)
 {
     return true;
 }
 
 
-PWIZ_API_DECL SpectrumPtr SpectrumList_SavitzkyGolaySmoother::spectrum(size_t index, bool getBinaryData) const
+PWIZ_API_DECL SpectrumPtr SpectrumList_Smoother::spectrum(size_t index, bool getBinaryData) const
 {
     if (!getBinaryData)
         return inner_->spectrum(index, false);
@@ -68,12 +72,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_SavitzkyGolaySmoother::spectrum(size_t in
     {
         vector<double>& intensities = s->getIntensityArray()->data;
         vector<double> smoothedIntensities;
-        SavitzkyGolaySmoother<double>::smooth(intensities, smoothedIntensities);
+        algorithm_->smooth(intensities, smoothedIntensities);
         intensities.swap(smoothedIntensities);
     }
     catch(std::exception& e)
     {
-        throw std::runtime_error(std::string("[SpectrumList_SavitzskyGolaySmoother] Error smoothing intensity data: ") + e.what());
+        throw std::runtime_error(std::string("[SpectrumList_Smoother] Error smoothing intensity data: ") + e.what());
     }
 
     s->dataProcessingPtr = dp_;
