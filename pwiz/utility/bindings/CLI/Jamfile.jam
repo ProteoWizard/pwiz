@@ -23,9 +23,7 @@ local bound_libs =
         <library>../../../data/msdata//pwiz_data_msdata/<link>static
         <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static
         <library>../../../utility/proteome/<link>static
-        <library>../../../data/vendor_readers//pwiz_data_vendor_readers/<link>static
-        <library>../../../../pwiz_aux/isb/readers/waters/<link>static
-        <library>../../../../pwiz_aux/msrc/data/vendor_readers/<link>static
+        <library>../../../../pwiz_tools/common//pwiz_tools_common/<link>static
         <library>../../../analysis/spectrum_processing/<link>static
         <library>../../../analysis/chromatogram_processing/<link>static
         <library>/ext/boost//thread # link=shared required for thread specific storage
