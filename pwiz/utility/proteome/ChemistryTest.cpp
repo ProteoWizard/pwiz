@@ -92,7 +92,7 @@ void testFormula()
         //const Formula& constFormula = formula;
         //constFormula[Element::C] = 1; // this won't compile, by design 
 
-        // test copy constructor and operator!=
+        // test copy constructor
         Formula formula2 = formula;
         formula2[Element::C] -= 2;
         unit_assert_equal(formula.monoisotopicMass(), testFormula.monoMass+24, EPSILON);
@@ -100,11 +100,23 @@ void testFormula()
         if (os_) *os_ << "formula: " << formula << endl;
         if (os_) *os_ << "formula2: " << formula2 << endl;
 
-        // test operator= and operator==
-        formula2 = formula;
+        // test operator=
+        formula = formula2;
         unit_assert_equal(formula.monoisotopicMass(), formula2.monoisotopicMass(), EPSILON);
         if (os_) *os_ << "formula: " << formula << endl;
         if (os_) *os_ << "formula2: " << formula2 << endl;
+
+        // test operator==
+        unit_assert(formula == testFormula.formula); // implicit construction from string
+        unit_assert(formula == formula2);
+        formula2[Element::C] += 4; // test difference in CHONSP
+        unit_assert(formula != formula2);
+        formula2[Element::C] -= 4;
+        unit_assert(formula == formula2);
+        formula2[Element::U] += 2; // test difference outside CHONSP
+        unit_assert(formula != formula2);
+        formula2[Element::U] -= 2;
+        unit_assert(formula == formula2);
 
         // test data()
         Formula::Map data = formula.data();

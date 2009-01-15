@@ -188,13 +188,22 @@ class Formula::Impl
                 }
             }
 
-            for (Data::const_iterator it=data.begin(); it!=data.end(); ++it)
+            vector<Data::iterator> zeroElements;
+            for (Data::iterator it=data.begin(); it!=data.end(); ++it)
             {
-                const Element::Info::Record& r = Element::Info::record(it->first);
-                if (!r.isotopes.empty())
-                    monoMass += r.isotopes[0].mass * it->second;
-                avgMass += r.atomicWeight * it->second;
+                if (it->second == 0)
+                    zeroElements.push_back(it);
+                else
+                {
+                    const Element::Info::Record& r = Element::Info::record(it->first);
+                    if (!r.isotopes.empty())
+                        monoMass += r.isotopes[0].mass * it->second;
+                    avgMass += r.atomicWeight * it->second;
+                }
             }
+
+            for (size_t i=0; i < zeroElements.size(); ++i)
+                data.erase(zeroElements[i]);
         }
     }
 
@@ -405,6 +414,39 @@ PWIZ_API_DECL Formula& Formula::operator*=(int scalar)
         it->second *= scalar;
     impl_->dirty = true;
     return *this;
+}
+
+
+PWIZ_API_DECL bool Formula::operator==(const Formula& that) const
+{
+    if (impl_->CHONSP_data[0] != that.impl_->CHONSP_data[0] ||
+        impl_->CHONSP_data[1] != that.impl_->CHONSP_data[1] ||
+        impl_->CHONSP_data[2] != that.impl_->CHONSP_data[2] ||
+        impl_->CHONSP_data[3] != that.impl_->CHONSP_data[3] ||
+        impl_->CHONSP_data[4] != that.impl_->CHONSP_data[4] ||
+        impl_->CHONSP_data[5] != that.impl_->CHONSP_data[5])
+        return false;
+
+    impl_->calculateMasses(); // will remove zero-count elements from data map
+    that.impl_->calculateMasses();
+
+    if (impl_->data.size() != that.impl_->data.size())
+        return false;
+
+    Map::const_iterator itr, thatItr;
+    for (itr = impl_->data.begin(), thatItr = that.impl_->data.begin();
+         itr != impl_->data.end();
+         ++itr, ++thatItr)
+         // equal maps are pairwise equal for both elements of the pair
+         if (itr->first != thatItr->first || itr->second != thatItr->second)
+             return false;
+    return true;
+}
+
+
+PWIZ_API_DECL bool Formula::operator!=(const Formula& that) const
+{
+    return !(*this == that);
 }
 
 

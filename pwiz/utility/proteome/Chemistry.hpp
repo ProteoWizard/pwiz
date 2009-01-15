@@ -154,6 +154,10 @@ class PWIZ_API_DECL Formula
     Formula& operator+=(const Formula& that);    
     Formula& operator-=(const Formula& that);    
     Formula& operator*=(int scalar);
+
+    /// formulas are equal iff their elemental compositions are equal
+    bool operator==(const Formula& that) const;
+    bool operator!=(const Formula& that) const;
     
     private:
     class Impl;
