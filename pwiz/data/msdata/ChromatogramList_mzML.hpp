@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "MSData.hpp"
+#include "ChromatogramListBase.hpp"
 #include <iosfwd>
 
 
@@ -35,7 +35,7 @@ namespace msdata {
 
 
 /// implementation of ChromatogramList, backed by an mzML file
-class PWIZ_API_DECL ChromatogramList_mzML
+class PWIZ_API_DECL ChromatogramList_mzML : public ChromatogramListBase
 {
     public:
 

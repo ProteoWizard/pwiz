@@ -34,6 +34,7 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
 #include "References.hpp"
+#include "ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
@@ -88,8 +89,26 @@ void appendSourceFile(const string& filename, MSData& msd)
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
     sourceFile->id = sourceFile->name = p.leaf();
-    sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+    string location = bfs::complete(p.branch_path()).string();
+    if (location.empty()) location = ".";
+    sourceFile->location = string("file://") + location;
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+}
+
+SoftwarePtr getSoftwarePwiz(vector<SoftwarePtr>& softwarePtrs)
+{
+    string version = pwiz::msdata::Version::str();
+    
+    for (vector<SoftwarePtr>::const_iterator it=softwarePtrs.begin(); it!=softwarePtrs.end(); ++it)
+        if ((*it)->hasCVParam(MS_pwiz) && (*it)->version==version)
+            return *it;
+
+    SoftwarePtr sp(new Software);
+    sp->id = "pwiz_" + version;
+    sp->set(MS_pwiz);
+    sp->version = pwiz::msdata::Version::str();
+    softwarePtrs.push_back(sp);
+    return sp;
 }
 
 void fillInCommonMetadata(const string& filename, MSData& msd)
@@ -97,18 +116,19 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
     appendSourceFile(filename, msd);
     msd.cvs = defaultCVList();
 
-    SoftwarePtr softwarePwiz(new Software);
-    softwarePwiz->id = "pwiz";
-    softwarePwiz->set(MS_pwiz);
-    softwarePwiz->version = pwiz::msdata::Version::str();
-    msd.softwarePtrs.push_back(softwarePwiz);
+    SoftwarePtr softwarePwiz = getSoftwarePwiz(msd.softwarePtrs);
 
     DataProcessingPtr dpPwiz(new DataProcessing);
     dpPwiz->id = "pwiz_Reader_conversion";
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
-    msd.dataProcessingPtrs.push_back(dpPwiz);
+
+    // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
+    SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
+    ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
+    if (sl) sl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 }
 
 class Reader_mzML : public Reader
@@ -274,7 +294,9 @@ class Reader_BTDX : public Reader
         sourceFile->id = "BTDX1";
         bfs::path p(filename);
         sourceFile->name = p.leaf();
-        sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+        string location = bfs::complete(p.branch_path()).string();
+        if (location.empty()) location = ".";
+        sourceFile->location = string("file://") + location;
         result.fileDescription.sourceFilePtrs.push_back(sourceFile);
         result.run.id = "Run1";
         result.run.spectrumListPtr = SpectrumListPtr(SpectrumList_BTDX::create(is, result));

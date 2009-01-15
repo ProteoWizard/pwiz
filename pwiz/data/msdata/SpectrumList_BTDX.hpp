@@ -27,7 +27,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "MSData.hpp"
+#include "SpectrumListBase.hpp"
 #include <iosfwd>
 #include <stdexcept>
 
@@ -37,7 +37,7 @@ namespace msdata {
 
 
 /// SpectrumList backed by a Bruker BioTools DataExchange XML file
-class PWIZ_API_DECL SpectrumList_BTDX : public SpectrumList
+class PWIZ_API_DECL SpectrumList_BTDX : public SpectrumListBase
 {
     public:
 

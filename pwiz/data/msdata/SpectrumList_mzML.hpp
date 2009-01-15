@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "MSData.hpp"
+#include "SpectrumListBase.hpp"
 #include <iosfwd>
 
 
@@ -35,7 +35,7 @@ namespace msdata {
 
 
 /// implementation of SpectrumList, backed by an mzML file
-class PWIZ_API_DECL SpectrumList_mzML
+class PWIZ_API_DECL SpectrumList_mzML : public SpectrumListBase
 {
     public:
 

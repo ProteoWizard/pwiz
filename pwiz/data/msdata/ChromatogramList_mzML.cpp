@@ -48,7 +48,7 @@ using boost::iostreams::offset_to_position;
 namespace {
 
 
-class ChromatogramList_mzMLImpl : public ChromatogramList
+class ChromatogramList_mzMLImpl : public ChromatogramList_mzML
 {
     public:
 

@@ -43,7 +43,7 @@ using boost::iostreams::offset_to_position;
 
 namespace {
 
-class SpectrumList_mzMLImpl : public SpectrumList
+class SpectrumList_mzMLImpl : public SpectrumList_mzML
 {
     public:
 
