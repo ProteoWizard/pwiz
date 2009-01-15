@@ -1,0 +1,11 @@
+#!/bin/bash
+
+pushd $(dirname $0) > /dev/null
+
+read -p "user: " user
+
+files="small.pwiz.mzML small.pwiz.mzML-1.0 small_miape.pwiz.mzML small_miape.pwiz.mzML-1.0 small_zlib.pwiz.mzML small_zlib.pwiz.mzML-1.0 tiny.pwiz.mzML tiny.pwiz.mzML-1.0"
+
+rsync -avuz $files $user,proteowizard@web.sourceforge.net:htdocs/example_data
+
+
