@@ -22,7 +22,7 @@
 
 
 #include "LeastSquaresCalibrator.hpp"
-#include "util/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 
@@ -40,7 +40,7 @@ void test()
     trueMasses.push_back(200);
     trueMasses.push_back(300);
 
-    CalibrationParameters p = CalibrationParameters::thermo();
+    CalibrationParameters p = CalibrationParameters::thermo_FT();
 
     vector<double> observedFrequencies; 
     for (vector<double>::iterator it=trueMasses.begin(); it!=trueMasses.end(); ++it)

@@ -22,35 +22,39 @@
 
 
 lib pwiz_analysis_calibration
-    :   Calibrator.cpp
+    : # sources 
+        Calibrator.cpp
         CalibratorTrial.cpp
         ErrorEstimator.cpp
         LeastSquaresCalibrator.cpp
         MassDatabase.cpp
         MassSpread.cpp
+        PeptideDatabase.cpp
+    : # usage  
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
+    : # default-build
+    : # usage-requirements 
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
     ;
 
-exe simerr
-    :   simerr.cpp Path.cpp
-        pwiz_analysis_calibration
-        ../proteome 
-        ../math 
-        ../util 
-        ..//boost_iostreams
-    ;
 
-exe simcal
-    :   simcal.cpp
-        pwiz_analysis_calibration 
-        ../proteome 
-        ../math 
-        ../util 
-        ..//boost_iostreams
-    ;
+lib pwiz_analysis_calibration_deprecated
+    : Path.cpp Random.cpp mt19937ar.cpp ;
 
-unit-test CalibratorTrialTest : CalibratorTrialTest.cpp pwiz_analysis_calibration ../util ;
+
+unit-test CalibratorTrialTest : CalibratorTrialTest.cpp pwiz_analysis_calibration  ;
 unit-test LeastSquaresCalibratorTest : LeastSquaresCalibratorTest.cpp pwiz_analysis_calibration ;
-unit-test MassDatabaseTest : MassDatabaseTest.cpp pwiz_analysis_calibration ../proteome ;
-unit-test MassSpreadTest :   MassSpreadTest.cpp pwiz_analysis_calibration ../proteome ;
+unit-test MassDatabaseTest : MassDatabaseTest.cpp pwiz_analysis_calibration ;
+unit-test MassSpreadTest :   MassSpreadTest.cpp pwiz_analysis_calibration ;
+unit-test PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_analysis_calibration ;
 
+
+exe simerr : simerr.cpp pwiz_analysis_calibration pwiz_analysis_calibration_deprecated ;
+exe simcal : simcal.cpp pwiz_analysis_calibration pwiz_analysis_calibration_deprecated ;
+
+
+install bin : simerr simcal : <location>bin ;
+explicit bin ;
 

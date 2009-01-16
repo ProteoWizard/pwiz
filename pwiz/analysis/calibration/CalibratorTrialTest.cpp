@@ -22,7 +22,7 @@
 
 
 #include "CalibratorTrial.hpp"
-#include "util/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 
 
@@ -42,7 +42,7 @@ void testConfiguration()
     good.measurements.push_back(Calibrator::Measurement(12.3,1));
     good.measurements.push_back(Calibrator::Measurement(45.6,2));
     good.measurements.push_back(Calibrator::Measurement(78.9,3));
-    good.parametersTrue = CalibrationParameters::thermo();
+    good.parametersTrue = CalibrationParameters::thermo_FT();
     good.parametersInitialEstimate = CalibrationParameters(1,2);
     good.measurementError = 2.34567891e-6;
     good.initialErrorEstimate = 1.23456789e-6;

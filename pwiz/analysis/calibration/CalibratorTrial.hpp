@@ -25,8 +25,8 @@
 #define _CALIBRATORTRIAL_HPP_
 
 
-#include "data/CalibrationParameters.hpp"
 #include "Calibrator.hpp"
+#include "pwiz/data/misc/CalibrationParameters.hpp"
 #include <string>
 #include <vector>
 #include <memory>

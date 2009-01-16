@@ -22,7 +22,7 @@
 
 
 #include "MassDatabase.hpp"
-#include "proteome/PeptideDatabase.hpp"
+#include "PeptideDatabase.hpp"
 #include <fstream>
 #include <algorithm>
 #include <stdexcept>

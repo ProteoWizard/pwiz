@@ -23,7 +23,7 @@
 
 #include "CalibratorTrial.hpp"
 #include "MassSpread.hpp"
-#include "proteome/Ion.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <fstream>

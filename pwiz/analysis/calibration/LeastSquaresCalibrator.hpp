@@ -25,7 +25,7 @@
 #define _LEASTSQUARESCALIBRATOR_HPP_ 
 
 
-#include "data/CalibrationParameters.hpp"
+#include "pwiz/data/misc/CalibrationParameters.hpp"
 #include <memory>
 #include <vector>
 

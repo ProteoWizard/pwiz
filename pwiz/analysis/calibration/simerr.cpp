@@ -24,8 +24,8 @@
 #include "ErrorEstimator.hpp"
 #include "MassSpread.hpp"
 #include "MassDatabase.hpp"
-#include "proteome/PeptideDatabase.hpp"
-#include "math/Random.hpp"
+#include "PeptideDatabase.hpp"
+#include "Random.hpp"// TODO: remove this
 #include "Path.h" // TODO: remove this
 #include <iostream>
 #include <fstream>

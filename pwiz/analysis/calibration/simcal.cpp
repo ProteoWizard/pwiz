@@ -24,9 +24,9 @@
 #include "Calibrator.hpp"
 #include "CalibratorTrial.hpp"
 #include "MassDatabase.hpp"
-#include "proteome/Ion.hpp"
-#include "util_old/auto_vector.h"
-#include "math/Random.hpp"
+#include "auto_vector.h"
+#include "Random.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -113,10 +113,10 @@ void runTrialTest(const string& databaseName,
     config.massDatabase = mdb.get();
     config.calibratorIterationCount = 5;
     config.errorEstimatorIterationCount = 10;
-    config.parametersInitialEstimate = CalibrationParameters::thermo();
+    config.parametersInitialEstimate = CalibrationParameters::thermo_FT();
     config.initialErrorEstimate = 1e-6;
     config.outputDirectory = outputDirectory;
-    config.parametersTrue = CalibrationParameters::thermo();
+    config.parametersTrue = CalibrationParameters::thermo_FT();
     copy(true_masses, true_masses + 10, back_inserter(config.trueMasses)); 
 
     for (unsigned int i=0; i<config.trueMasses.size(); i++)
@@ -244,10 +244,10 @@ void createTrial(const MassDatabase& mdb, const string& filename)
 
     CalibratorTrial::Configuration config;
     
-    config.parametersTrue = CalibrationParameters::thermo();
+    config.parametersTrue = CalibrationParameters::thermo_FT();
     
-    double A = perturbUniform(thermoA_, maxErrorA_); 
-    double B = perturbGaussian(thermoB_, maxErrorB_); 
+    double A = perturbUniform(thermoA_FT_, maxErrorA_); 
+    double B = perturbGaussian(thermoB_FT_, maxErrorB_); 
     config.parametersInitialEstimate = CalibrationParameters(A, B); 
 
     config.measurementError = Random::real(0, maxErrorMeasurement_); 

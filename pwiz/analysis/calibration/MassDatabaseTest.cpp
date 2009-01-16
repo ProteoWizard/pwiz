@@ -22,8 +22,8 @@
 
 
 #include "MassDatabase.hpp"
-#include "proteome/PeptideDatabase.hpp"
-#include "util/unit.hpp"
+#include "PeptideDatabase.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 
 

@@ -24,7 +24,7 @@
 #include "ErrorEstimator.hpp"
 #include "MassSpread.hpp"
 #include "MassDatabase.hpp"
-#include "util_old/auto_vector.h"
+#include "auto_vector.h"
 #include <iostream>
 #include <fstream>
 #include <functional>

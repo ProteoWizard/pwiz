@@ -22,9 +22,9 @@
 
 
 #include "Calibrator.hpp"
-#include "proteome/Ion.hpp"
 #include "ErrorEstimator.hpp"
 #include "MassSpread.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 #include <cmath>
 #include <iterator>
 #include <stdexcept>
