@@ -28,16 +28,40 @@ project
 
 
 lib pwiz_aux_sfcap_transient
-    :   # sources
+    : # sources
         TransientData.cpp 
-    :   # requirements
+    : # requirements
         <library>../../../pwiz/data/misc//pwiz_data_misc
         <library>../../..//fftw3
-    :   # default-build
-    :   # usage-requirements
+    : # default-build
+    : # usage-requirements
         <library>../../../pwiz/data/misc//pwiz_data_misc
         <library>../../..//fftw3
     ;
 
+
+lib pwiz_aux_sfcap_transient_generator
+    : # sources 
+        TransientGenerator.cpp
+    : # requirements
+        <library>pwiz_aux_sfcap_transient
+        <library>../../../pwiz/utility/proteome
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_aux_sfcap_transient
+        <library>../../../pwiz/utility/proteome
+;
+
+
 unit-test TransientDataTest : TransientDataTest.cpp pwiz_aux_sfcap_transient /ext/boost//filesystem ;
+unit-test TransientGeneratorTest : TransientGeneratorTest.cpp pwiz_aux_sfcap_transient_generator ;
+
+
+#exe maketrans : maketrans.cpp ; # broken
+exe transgen : transgen.cpp pwiz_aux_sfcap_transient_generator /ext/boost//program_options ;
+
+
+install bin : transgen : <location>bin ;
+explicit bin ;
+
 
