@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for i in $(seq 1 20)
+do
+    noiseFactor=3 detectionRadius=1 process_transient FT_100000_$i.dat $i 
+done
+
