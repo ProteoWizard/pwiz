@@ -37,8 +37,13 @@ using namespace pwiz::util;
 using namespace std;
 
 
+ostream* os_ = 0;
+
+
 void test()
 {
+    if (os_) *os_ << "test()\n";
+
     double abundanceCutoff = .01;
     double massPrecision = .01;
     IsotopeCalculator calculator(abundanceCutoff, massPrecision);
@@ -70,10 +75,10 @@ void test()
     cf.instrumentConfiguration = ic;
     cf.species.push_back(Species(angiotensin.formula(), chargeDistribution));
 
-    cout << "creating transient data\n";
+    if (os_) *os_ << "creating transient data\n";
     auto_ptr<TransientData> td = tg.createTransientData(cf); 
 
-    cout << "computing fft\n";
+    if (os_) *os_ << "computing fft\n";
     FrequencyData fd;
     td->computeFFT(1, fd);
 
@@ -88,8 +93,11 @@ void test()
             abs(it->y) > abs((it+1)->y))
             peaks.push_back(*it);
 
-    cout << "found peaks: " << peaks.size() << endl;
-    copy(peaks.begin(), peaks.end(), ostream_iterator<FrequencyDatum>(cout, "\n"));
+    if (os_) 
+    {
+        *os_ << "found peaks: " << peaks.size() << endl;
+        copy(peaks.begin(), peaks.end(), ostream_iterator<FrequencyDatum>(*os_, "\n"));
+    }
 
     unit_assert(peaks.size() == 9);
     unit_assert_equal(peaks[0].x, 102552, 1);
@@ -104,11 +112,11 @@ void test()
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
-        cerr << "TransientGeneratorTest\n";
+        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         test();
         return 0;
     }
