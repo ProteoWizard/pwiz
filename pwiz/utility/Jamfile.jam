@@ -27,5 +27,4 @@ build-project minimxml ;
 build-project proteome ;
 build-project vendor_api ;
 build-project bindings ;
-build-project recycle_bin ;
 
