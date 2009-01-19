@@ -53,7 +53,7 @@ namespace MSGraph
             foreach( CurveItem curve in CurveList )
                 if( curve.Points is MSPointList )
                 {
-                    if( !IsZoomed ) //pane.XAxis.Scale.MinAuto && pane.XAxis.Scale.MaxAuto )
+                    if( XAxis.Scale.MinAuto && XAxis.Scale.MaxAuto )
                         ( curve.Points as MSPointList ).SetScale( bins );
                     else
                         ( curve.Points as MSPointList ).SetScale( XAxis.Scale, bins );
@@ -129,6 +129,11 @@ namespace MSGraph
 
             float xAxisPixel = yAxis.Scale.Transform( 0 );
 
+            double xMin = xAxis.Scale.Min;
+            double xMax = xAxis.Scale.Max;
+            double yMin = yAxis.Scale.Min;
+            double yMax = yAxis.Scale.Max;
+
             // add automatic labels for MSGraphItems
             foreach( CurveItem item in CurveList )
             {
@@ -148,9 +153,9 @@ namespace MSGraph
                         continue;
                     PointPair pt = fullList[maxIndexList[i]];
 
-                    if( pt.X < xAxis.Scale.Min || pt.Y > yAxis.Scale.Max || pt.Y < yAxis.Scale.Min )
+                    if( pt.X < xMin || pt.Y > yMax || pt.Y < yMin )
                         continue;
-                    if( pt.X > xAxis.Scale.Max )
+                    if( pt.X > xMax )
                         break;
 
                     float yPixel = yAxis.Scale.Transform( pt.Y );
@@ -302,19 +307,19 @@ namespace MSGraph
             string[] textBoundsPointStrings = coords.Split( ",".ToCharArray() );
             if( textBoundsPointStrings.Length != 9 ) throw new InvalidOperationException( "coords length must be 8" );
             Point[] textBoundsPoints = new Point[]
-						{
-							new Point( Convert.ToInt32(textBoundsPointStrings[0]), Convert.ToInt32(textBoundsPointStrings[1])),
-							new Point( Convert.ToInt32(textBoundsPointStrings[2]), Convert.ToInt32(textBoundsPointStrings[3])),
-							new Point( Convert.ToInt32(textBoundsPointStrings[4]), Convert.ToInt32(textBoundsPointStrings[5])),
-							new Point( Convert.ToInt32(textBoundsPointStrings[6]), Convert.ToInt32(textBoundsPointStrings[7]))
-						};
+                        {
+                            new Point( Convert.ToInt32(textBoundsPointStrings[0]), Convert.ToInt32(textBoundsPointStrings[1])),
+                            new Point( Convert.ToInt32(textBoundsPointStrings[2]), Convert.ToInt32(textBoundsPointStrings[3])),
+                            new Point( Convert.ToInt32(textBoundsPointStrings[4]), Convert.ToInt32(textBoundsPointStrings[5])),
+                            new Point( Convert.ToInt32(textBoundsPointStrings[6]), Convert.ToInt32(textBoundsPointStrings[7]))
+                        };
             byte[] textBoundsPointTypes = new byte[]
-						{
-							(byte) PathPointType.Start,
-							(byte) PathPointType.Line,
-							(byte) PathPointType.Line,
-							(byte) PathPointType.Line
-						};
+                        {
+                            (byte) PathPointType.Start,
+                            (byte) PathPointType.Line,
+                            (byte) PathPointType.Line,
+                            (byte) PathPointType.Line
+                        };
             GraphicsPath textBoundsPath = new GraphicsPath( textBoundsPoints, textBoundsPointTypes );
             textBoundsPath.CloseFigure();
             textBoundsRegion = new Region( textBoundsPath );
@@ -323,9 +328,28 @@ namespace MSGraph
 
             for( int j = 0; j < textBoundsRectangles.Length; ++j )
             {
-                RectangleF r = textBoundsRectangles[j];
+                if( IsVisibleToClip( g, textBoundsRectangles[j] ) )
+                    return true;
+            }
+            return false;
+        }
 
-                if( g.Clip.IsVisible( r ) )
+        /// <summary>
+        /// Fixes an issue with <see cref="Region.IsVisible(RectangleF)"/> where it
+        /// sometimes returns true with complex regions when it should return false.
+        /// <para>
+        /// A reference on this issue can be found at:
+        /// https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=160358
+        /// </para>
+        /// </summary>
+        /// <param name="g">Source of <see cref="Graphics.Clip"/> region to check against</param>
+        /// <param name="rect">The rectagle to check for intersection with the clip region</param>
+        /// <returns>Tree if the rectangle intersects with the region</returns>
+        private static bool IsVisibleToClip( Graphics g, RectangleF rect )
+        {
+            foreach( RectangleF rectClip in g.Clip.GetRegionScans( g.Transform ) )
+            {
+                if( rectClip.IntersectsWith( rect ) )
                     return true;
             }
             return false;

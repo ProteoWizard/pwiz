@@ -82,7 +82,7 @@ namespace MSGraph
                 if( point.X > max )
                     break;
 
-                int curBin = (int) Math.Round( scaleFactor * ( point.X - min ) );
+                int curBin = Math.Max( 1, (int) Math.Round( scaleFactor * ( point.X - min ) ) );
                 if( curBin > lastBin ) // new bin, insert points of last bin
                 {
                     if( lastBin > -1 )
@@ -99,7 +99,7 @@ namespace MSGraph
                             curBinMaxIndex != curBinExitIndex )
                             scaledPointList.Add( fullPointList[curBinExitIndex] );
                         if( fullPointList[curBinMaxIndex].Y != 0 )
-                            scaledMaxIndexList[curBin-1] = curBinMaxIndex;
+                            scaledMaxIndexList[lastBin - 1] = curBinMaxIndex;
                     }
                     lastBin = curBin;
                     curBinEntryIndex = i;
