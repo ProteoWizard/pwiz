@@ -24,7 +24,6 @@
 
 
 #include "SpectrumList_Thresholder.hpp"
-#include "SavitzkyGolaySmoother.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/math/round.hpp"
