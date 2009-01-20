@@ -64,15 +64,18 @@ SpectrumList_Bruker_Format format(const string& path)
     const static bfs::directory_iterator endItr;
     bfs::directory_iterator itr(sourcePath);
     for (; itr != endItr; ++itr)
-        if (itr->path().leaf()[0] == '.') // HACK: skip ".svn"
-            continue;
-        else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
-                 bfs::exists(itr->path() / "1SRef/fid") ||
-                 (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
-                 (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
-                return SpectrumList_Bruker_Format_FID;
-        else
-            break;
+        if (bfs::is_directory(itr->status()))
+        {
+            if (itr->path().leaf()[0] == '.') // HACK: skip ".svn"
+                continue;
+            else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
+                     bfs::exists(itr->path() / "1SRef/fid") ||
+                     (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
+                     (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
+                    return SpectrumList_Bruker_Format_FID;
+            else
+                break;
+        }
 
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"
