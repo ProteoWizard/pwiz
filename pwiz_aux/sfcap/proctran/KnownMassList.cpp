@@ -22,8 +22,8 @@
 
 
 #include "KnownMassList.hpp"
-#include "proteome/Peptide.hpp"
-#include "proteome/Ion.hpp"
+#include "pwiz/utility/proteome/Peptide.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/random.hpp>
 #include <iostream>

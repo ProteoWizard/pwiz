@@ -25,7 +25,7 @@
 #define _RECALIBRATOR_HPP_
 
 
-#include "data/PeakData.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
 
 
 namespace pwiz {

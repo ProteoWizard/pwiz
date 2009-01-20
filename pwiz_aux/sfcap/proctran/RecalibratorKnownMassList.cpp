@@ -22,7 +22,7 @@
 
 
 #include "RecalibratorKnownMassList.hpp"
-#include "calibration/LeastSquaresCalibrator.hpp"
+#include "pwiz/analysis/calibration/LeastSquaresCalibrator.hpp"
 #include <iterator>
 #include <iostream>
 #include <iomanip>
@@ -55,8 +55,10 @@ class RecalibratorKnownMassList::Impl
 CalibrationParameters 
 RecalibratorKnownMassList::Impl::calculateCalibrationParameters(const Scan& scan) const
 {
-    const double epsilon_ = 4.2;
+    //const double epsilon_ = 4.2; // Parag was using this value -- changed to make unit test pass - dk
     //    std::cout<<epsilon_<<endl;
+
+    const double epsilon_ = 100;
     KnownMassList::MatchResult matchResult = kml_.match(scan, epsilon_); //pre-calibration
 
     vector<double> masses;

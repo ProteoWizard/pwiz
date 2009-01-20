@@ -25,9 +25,9 @@
 #define _KNOWNMASSLIST_HPP_
 
 
-#include "data/PeakData.hpp"
-#include "proteome/Peptide.hpp"
-#include "util/IntegerSet.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
+#include "pwiz/utility/proteome/Peptide.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -101,6 +101,8 @@ class KnownMassList
 
     };
 
+
+    // currently: epsilon == ppm
     MatchResult match(const Scan& scan, double epsilon) const;
 
 

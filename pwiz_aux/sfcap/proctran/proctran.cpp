@@ -21,24 +21,24 @@
 //
 
 
-#include "peaks/PeakDetectorNaive.hpp"
-#include "peaks/PeakDetectorMatchedFilter.hpp"
-#include "peaks/FrequencyEstimatorSimple.hpp"
-#include "peaks/FrequencyEstimatorPhysicalModel.hpp"
-#include "calibration/Calibrator.hpp"
-#include "calibration/MassDatabase.hpp"
-#include "data/CalibrationParameters.hpp"
-#include "data/TransientData.hpp"
-#include "data/FrequencyData.hpp"
-#include "data/PeakData.hpp"
-#include "proteome/IsotopeEnvelopeEstimator.hpp"
-#include "pdanalysis/RecalibratorKnownMassList.hpp" 
-#include "pdanalysis/RecalibratorSimple.hpp" 
+#include "pwiz/analysis/frequency/PeakDetectorNaive.hpp"
+#include "pwiz/analysis/frequency/PeakDetectorMatchedFilter.hpp"
+#include "pwiz/analysis/frequency/FrequencyEstimatorSimple.hpp"
+#include "pwiz/analysis/frequency/FrequencyEstimatorPhysicalModel.hpp"
+#include "pwiz/analysis/calibration/Calibrator.hpp"
+#include "pwiz/analysis/calibration/MassDatabase.hpp"
+#include "pwiz/data/misc/CalibrationParameters.hpp"
+#include "pwiz_aux/sfcap/transient/TransientData.hpp"
+#include "pwiz/data/misc/FrequencyData.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
+#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "RecalibratorKnownMassList.hpp" 
+#include "RecalibratorSimple.hpp" 
 
-#include "peptideSieve/fasta.h" // interface to fasta file handling
+#include "pwiz_aux/sfcap/peptideSieve/fasta.h" // interface to fasta file handling
 using bioinfo::fasta;
 
-#include "peptideSieve/digest.hpp"// interface for doing trivial tryptic digests
+#include "pwiz_aux/sfcap/peptideSieve/digest.hpp"// interface for doing trivial tryptic digests
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/fstream.hpp"
@@ -54,9 +54,9 @@ using bioinfo::fasta;
 
 
 using namespace std;
-using namespace pwiz::peaks;
 using namespace pwiz::calibration;
 using namespace pwiz::data;
+using namespace pwiz::frequency;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::pdanalysis;
 using namespace pwiz::proteome;
@@ -314,7 +314,7 @@ int detect(const FrequencyData& fd, peakdata::Scan& scan, const Configuration& c
     cerr << "Peaks found: " << scan.peakFamilies.size() << endl;
 
     report.precision(12);
-    scan.printSimple(report);
+    report << scan << endl;
 
     return 0;
 }
@@ -414,7 +414,7 @@ int freqest(const FrequencyData& fd, const peakdata::Scan& scanIn, peakdata::Sca
     cerr << "done.\n";
 
     report.precision(12);
-    scanOut.printSimple(report);
+    report << scanOut << endl;
     
     return 0;
 }
@@ -439,7 +439,7 @@ peakdata::Scan readPeakInfoFile(const string& filename)
         peakdata::Peak peak;
         peak.frequency = frequency;
         peak.intensity = abs(value);
-        peak.phase = arg(value);
+        peak.phase = std::arg(value);
 
         peakdata::PeakFamily envelope;
         envelope.charge = charge;

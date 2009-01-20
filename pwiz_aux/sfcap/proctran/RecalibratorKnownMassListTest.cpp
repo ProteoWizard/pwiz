@@ -22,7 +22,7 @@
 
 
 #include "RecalibratorKnownMassList.hpp"
-#include "util/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -90,7 +90,7 @@ Scan createTestScan()
 
     // set frequencies based on the monoisotopic m/z values
 
-    scan.calibrationParameters = CalibrationParameters::thermo(); 
+    scan.calibrationParameters = CalibrationParameters::thermo_FT(); 
     for_each(scan.peakFamilies.begin(), scan.peakFamilies.end(), 
              SetFrequency(scan.calibrationParameters)); 
 
@@ -105,7 +105,7 @@ void test()
     KnownMassList kml;
     kml.insert_5pep();
 
-    KnownMassList::MatchResult matchResultBefore = kml.match(scan, 2e-2); 
+    KnownMassList::MatchResult matchResultBefore = kml.match(scan, 100); 
 
     if (os_) *os_ << setprecision(10) << "scan before:\n" << scan << endl; 
     if (os_) *os_ << "match result before:\n" << matchResultBefore << endl;
@@ -113,7 +113,7 @@ void test()
     RecalibratorKnownMassList rkml(kml); 
     rkml.recalibrate(scan);
 
-    KnownMassList::MatchResult matchResultAfter = kml.match(scan, 2e-2); 
+    KnownMassList::MatchResult matchResultAfter = kml.match(scan, 100); 
 
     if (os_) *os_ << "scan after:\n" << scan << endl; 
     if (os_) *os_ << "match result after:\n" << matchResultAfter << endl;

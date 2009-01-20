@@ -22,7 +22,7 @@
 
 
 #include "KnownMassList.hpp"
-#include "util/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>
@@ -96,7 +96,7 @@ void test_5pep()
 
     if (os_) *os_ << "scan: " << scan << endl;
 
-    KnownMassList::MatchResult matchResult = kml.match(scan, 2e-2);
+    KnownMassList::MatchResult matchResult = kml.match(scan, 100); // ppm
 
     if (os_)
         *os_ << matchResult << endl; 
@@ -122,7 +122,7 @@ void test_calmix()
 
     if (os_) *os_ << "scan: " << scan << endl;
 
-    KnownMassList::MatchResult matchResult = kml.match(scan, 2e-2);
+    KnownMassList::MatchResult matchResult = kml.match(scan, 100); // ppm
 
     if (os_)
         *os_ << matchResult << endl; 
