@@ -76,10 +76,19 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     try
     {
         size_t scanNumber = lexical_cast<size_t>(id);
-        if (scanNumber>=1 && scanNumber<=size()) 
+        if (scanNumber>=1 && scanNumber<=size())
             return scanNumber-1;
     }
-    catch (bad_lexical_cast&) {}
+    catch (bad_lexical_cast&)
+    {
+        try
+        {
+            size_t scanNumber = lexical_cast<size_t>(id::value(id, "scan"));
+            if (scanNumber>=1 && scanNumber<=size())
+                return scanNumber-1;
+        }
+        catch (bad_lexical_cast&) {}
+    }
 
     return size();
 }
