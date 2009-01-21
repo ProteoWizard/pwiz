@@ -43,7 +43,7 @@
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
 #include "pwiz/data/msdata/Reader.hpp" // for ReaderFail exception defn
-#include "boost/utility/thread_specific_singleton.hpp"
+#include <boost/utility/thread_specific_singleton.hpp>
 
 
 namespace pwiz {
