@@ -16,7 +16,6 @@
     </msInstrument>
     <dataProcessing>
       <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
-      <software type="unknown software type" name="ProteoWizard" version="1.0"/>
     </dataProcessing>
     <scan num="19"
           scanEvent="3"
@@ -26,9 +25,9 @@
           peaksCount="15"
           polarity="+"
           retentionTime="PT353.43S"
-          lowMz="400.39"
-          highMz="1795.56"
-          basePeakMz="445.347"
+          lowMz="400.38999999999999"
+          highMz="1795.5599999999999"
+          basePeakMz="445.34699999999998"
           basePeakIntensity="120053"
           totIonCurrent="16675500"
           msInstrumentID="LCQDeca">
@@ -45,13 +44,13 @@
           polarity="+"
           retentionTime="PT359.43S"
           collisionEnergy="35"
-          lowMz="320.39"
-          highMz="1003.56"
-          basePeakMz="456.347"
+          lowMz="320.38999999999999"
+          highMz="1003.5599999999999"
+          basePeakMz="456.34699999999998"
           basePeakIntensity="23433"
           totIonCurrent="16675500"
           msInstrumentID="LCQDeca">
-      <precursorMz precursorScanNum="19" precursorIntensity="120053" precursorCharge="2">445.34</precursorMz>
+      <precursorMz precursorScanNum="19" precursorIntensity="120053" precursorCharge="2">445.33999999999997</precursorMz>
       <peaks precision="64"
              byteOrder="network"
              pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAEAAAAAAAAAAQDIAAAAAAABAEAAAAAAAAEAwAAAAAAAAQBgAAAAAAABALAAAAAAAAEAgAAAAAAAAQCgAAAAAAABAJAAAAAAAAEAkAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAsAAAAAAAAQBgAAAAAAABAMAAAAAAAAEAQAAAAAAAAQDIAAAAAAABAAAAAAAAAAA==</peaks>
@@ -79,9 +78,9 @@
           peaksCount="15"
           polarity="+"
           retentionTime="PT42.05S"
-          lowMz="142.39"
-          highMz="942.5599999999999"
-          basePeakMz="422.42"
+          lowMz="142.38999999999999"
+          highMz="942.55999999999995"
+          basePeakMz="422.42000000000002"
           basePeakIntensity="42"
           totIonCurrent="4200"
           msInstrumentID="LCQDeca">
@@ -91,11 +90,11 @@
     </scan>
   </msRun>
   <index name="scan">
-    <offset id="19">1251</offset>
-    <offset id="20">2078</offset>
-    <offset id="21">2941</offset>
-    <offset id="22">3355</offset>
+    <offset id="scan=19">1170</offset>
+    <offset id="scan=20">2031</offset>
+    <offset id="scan=21">2940</offset>
+    <offset id="scan=22">3354</offset>
   </index>
-  <indexOffset>4167</indexOffset>
-  <sha1>63eefbfd109766b04a1b841ebda642428acf3caa</sha1>
+  <indexOffset>4191</indexOffset>
+  <sha1>f1edce36275436cdb962a0a22d6923655854d62f</sha1>
 </mzXML>

@@ -1,5 +1,5 @@
 //
-// write_examples.cpp 
+// write_example_files.cpp 
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -23,6 +23,7 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/examples.hpp"
+#include "pwiz_tools/common/FullReaderList.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -52,20 +53,49 @@ void writeTiny()
 }
 
 
-void writeMIAPE()
+void writeSmall()
 {
-    const string& inputFile = "small.pwiz.mzML";
-    const string& outputFile = "small_miape.pwiz.mzML";
+    const string& inputFile = "small.RAW";
 
     try
     {
-        MSDataFile msd(inputFile);
-        examples::addMIAPEExampleMetadata(msd);
+        FullReaderList readers;
+        MSDataFile msd(inputFile, &readers);
+
+        // msconvert defaults
+
+        MSDataFile::WriteConfig config;
+        config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_64;
+        config.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array] = BinaryDataEncoder::Precision_64;
+        config.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+
+        // basic mzML conversion
+
+        string outputFile = "small.pwiz.mzML";
         cout << "Writing file " << outputFile << endl;
-        msd.write(outputFile);
+        msd.write(outputFile, config);
+    
+        // with zlib compression, 32-bit encoding
+
+        config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+        config.binaryDataEncoderConfig.precision
+            = config.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array]
+            = config.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] 
+            = BinaryDataEncoder::Precision_32;
+        outputFile = "small_zlib.pwiz.mzML";
+        cout << "Writing file " << outputFile << endl;
+        msd.write(outputFile, config);
+
+        // with MIAPE metadata added 
+
+        examples::addMIAPEExampleMetadata(msd);
+        outputFile = "small_miape.pwiz.mzML";
+        cout << "Writing file " << outputFile << endl;
+        msd.write(outputFile, config);
     }
     catch (exception& e)
     {
+        cerr << e.what() << endl;
         cerr << "Error opening file " << inputFile << endl;
     }
 }
@@ -76,7 +106,7 @@ int main()
     try
     {
         writeTiny();
-        writeMIAPE();
+        writeSmall();
 
         cout << "\nhttp://proteowizard.sourceforge.net\n"
              << "support@proteowizard.org\n";

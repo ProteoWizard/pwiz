@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0.xsd" id="small_RAW" version="">
+<indexedmzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd">
+  <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="small_RAW" version="">
     <cvList count="2">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.3.1" URI="http://psidev.info/ms/mzML/psi-ms.obo"/>
       <cv id="UO" fullName="Unit Ontology" version="1.15" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
@@ -13,7 +13,6 @@
       <sourceFileList count="1">
         <sourceFile id="RAW1" name="small.RAW" location="file://.">
           <cvParam cvRef="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
-          <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b43e9286b40e8b5dbc0dfa2e428495769ca96a96"/>
         </sourceFile>
       </sourceFileList>
     </fileDescription>
@@ -2596,59 +2595,59 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="controller=0 scan=1">4284</offset>
-      <offset idRef="controller=0 scan=2">116420</offset>
-      <offset idRef="controller=0 scan=3">245201</offset>
-      <offset idRef="controller=0 scan=4">253792</offset>
-      <offset idRef="controller=0 scan=5">267328</offset>
-      <offset idRef="controller=0 scan=6">279270</offset>
-      <offset idRef="controller=0 scan=7">289433</offset>
-      <offset idRef="controller=0 scan=8">300682</offset>
-      <offset idRef="controller=0 scan=9">384006</offset>
-      <offset idRef="controller=0 scan=10">520505</offset>
-      <offset idRef="controller=0 scan=11">529717</offset>
-      <offset idRef="controller=0 scan=12">542628</offset>
-      <offset idRef="controller=0 scan=13">552669</offset>
-      <offset idRef="controller=0 scan=14">564180</offset>
-      <offset idRef="controller=0 scan=15">574539</offset>
-      <offset idRef="controller=0 scan=16">669132</offset>
-      <offset idRef="controller=0 scan=17">798469</offset>
-      <offset idRef="controller=0 scan=18">807958</offset>
-      <offset idRef="controller=0 scan=19">820639</offset>
-      <offset idRef="controller=0 scan=20">830995</offset>
-      <offset idRef="controller=0 scan=21">841419</offset>
-      <offset idRef="controller=0 scan=22">853887</offset>
-      <offset idRef="controller=0 scan=23">949296</offset>
-      <offset idRef="controller=0 scan=24">1059971</offset>
-      <offset idRef="controller=0 scan=25">1069470</offset>
-      <offset idRef="controller=0 scan=26">1082341</offset>
-      <offset idRef="controller=0 scan=27">1093830</offset>
-      <offset idRef="controller=0 scan=28">1104361</offset>
-      <offset idRef="controller=0 scan=29">1116578</offset>
-      <offset idRef="controller=0 scan=30">1227858</offset>
-      <offset idRef="controller=0 scan=31">1352951</offset>
-      <offset idRef="controller=0 scan=32">1365849</offset>
-      <offset idRef="controller=0 scan=33">1376056</offset>
-      <offset idRef="controller=0 scan=34">1386722</offset>
-      <offset idRef="controller=0 scan=35">1396303</offset>
-      <offset idRef="controller=0 scan=36">1487521</offset>
-      <offset idRef="controller=0 scan=37">1600761</offset>
-      <offset idRef="controller=0 scan=38">1610180</offset>
-      <offset idRef="controller=0 scan=39">1624310</offset>
-      <offset idRef="controller=0 scan=40">1634525</offset>
-      <offset idRef="controller=0 scan=41">1646838</offset>
-      <offset idRef="controller=0 scan=42">1658004</offset>
-      <offset idRef="controller=0 scan=43">1843755</offset>
-      <offset idRef="controller=0 scan=44">1974627</offset>
-      <offset idRef="controller=0 scan=45">1984413</offset>
-      <offset idRef="controller=0 scan=46">1997983</offset>
-      <offset idRef="controller=0 scan=47">2008748</offset>
-      <offset idRef="controller=0 scan=48">2019038</offset>
+      <offset idRef="controller=0 scan=1">4161</offset>
+      <offset idRef="controller=0 scan=2">116297</offset>
+      <offset idRef="controller=0 scan=3">245078</offset>
+      <offset idRef="controller=0 scan=4">253669</offset>
+      <offset idRef="controller=0 scan=5">267205</offset>
+      <offset idRef="controller=0 scan=6">279147</offset>
+      <offset idRef="controller=0 scan=7">289310</offset>
+      <offset idRef="controller=0 scan=8">300559</offset>
+      <offset idRef="controller=0 scan=9">383883</offset>
+      <offset idRef="controller=0 scan=10">520382</offset>
+      <offset idRef="controller=0 scan=11">529594</offset>
+      <offset idRef="controller=0 scan=12">542505</offset>
+      <offset idRef="controller=0 scan=13">552546</offset>
+      <offset idRef="controller=0 scan=14">564057</offset>
+      <offset idRef="controller=0 scan=15">574416</offset>
+      <offset idRef="controller=0 scan=16">669009</offset>
+      <offset idRef="controller=0 scan=17">798346</offset>
+      <offset idRef="controller=0 scan=18">807835</offset>
+      <offset idRef="controller=0 scan=19">820516</offset>
+      <offset idRef="controller=0 scan=20">830872</offset>
+      <offset idRef="controller=0 scan=21">841296</offset>
+      <offset idRef="controller=0 scan=22">853764</offset>
+      <offset idRef="controller=0 scan=23">949173</offset>
+      <offset idRef="controller=0 scan=24">1059848</offset>
+      <offset idRef="controller=0 scan=25">1069347</offset>
+      <offset idRef="controller=0 scan=26">1082218</offset>
+      <offset idRef="controller=0 scan=27">1093707</offset>
+      <offset idRef="controller=0 scan=28">1104238</offset>
+      <offset idRef="controller=0 scan=29">1116455</offset>
+      <offset idRef="controller=0 scan=30">1227735</offset>
+      <offset idRef="controller=0 scan=31">1352828</offset>
+      <offset idRef="controller=0 scan=32">1365726</offset>
+      <offset idRef="controller=0 scan=33">1375933</offset>
+      <offset idRef="controller=0 scan=34">1386599</offset>
+      <offset idRef="controller=0 scan=35">1396180</offset>
+      <offset idRef="controller=0 scan=36">1487398</offset>
+      <offset idRef="controller=0 scan=37">1600638</offset>
+      <offset idRef="controller=0 scan=38">1610057</offset>
+      <offset idRef="controller=0 scan=39">1624187</offset>
+      <offset idRef="controller=0 scan=40">1634402</offset>
+      <offset idRef="controller=0 scan=41">1646715</offset>
+      <offset idRef="controller=0 scan=42">1657881</offset>
+      <offset idRef="controller=0 scan=43">1843632</offset>
+      <offset idRef="controller=0 scan=44">1974504</offset>
+      <offset idRef="controller=0 scan=45">1984290</offset>
+      <offset idRef="controller=0 scan=46">1997860</offset>
+      <offset idRef="controller=0 scan=47">2008625</offset>
+      <offset idRef="controller=0 scan=48">2018915</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="TIC">2029191</offset>
+      <offset idRef="TIC">2029068</offset>
     </index>
   </indexList>
-  <indexListOffset>2030806</indexListOffset>
-  <fileChecksum>739a113c5ccb6905f917095e460c0e0ab16fc341</fileChecksum>
+  <indexListOffset>2030683</indexListOffset>
+  <fileChecksum>65fe74447e6679adce8fa39f09ed61910e25dcc5</fileChecksum>
 </indexedmzML>

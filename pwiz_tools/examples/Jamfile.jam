@@ -71,8 +71,20 @@ exe txt2mzml
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
 
+#
+# tool for creating example files
+#
 
+exe write_example_files
+    : write_example_files.cpp
+      ../../pwiz/data/msdata
+      ../common
+    : <include>../../..
+    ;
+
+#
 # local install for testing
+#
 
 install bin 
     : hello_msdata 
@@ -81,6 +93,7 @@ install bin
       hello_analyzer_2
       mscat
       txt2mzml
+      write_example_files
     : <location>bin ;
 
 explicit bin ;

@@ -2318,9 +2318,9 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/schema_revision/mzML_1.0.0"));
+    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0.xsd"));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd"));
     if (!msd.accession.empty())
         attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id));

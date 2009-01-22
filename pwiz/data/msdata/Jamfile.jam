@@ -182,22 +182,4 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
     ;
 
 
-#
-# tool for creating example files
-#
-
-exe write_examples 
-    : write_examples.cpp
-      pwiz_data_msdata
-      pwiz_data_msdata_examples
-    : <include>../../..
-    ;
-explicit write_examples ;
-
-install bin 
-    : write_examples
-    : <location>bin ;
-
-explicit bin ;
-
 

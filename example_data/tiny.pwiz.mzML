@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<indexedmzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0_idx.xsd">
-  <mzML xmlns="http://psi.hupo.org/schema_revision/mzML_1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/schema_revision/mzML_1.0.0 mzML1.0.0.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
+<indexedmzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd">
+  <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
     <cvList count="2">
       <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.3.1" URI="http://psidev.info/ms/mzML/psi-ms.obo"/>
       <cv id="UO" fullName="Unit Ontology" version="1.15" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
@@ -297,16 +297,16 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="scan=19">5852</offset>
-      <offset idRef="scan=20">8867</offset>
-      <offset idRef="scan=21">12675</offset>
-      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">14065</offset>
+      <offset idRef="scan=19">5846</offset>
+      <offset idRef="scan=20">8861</offset>
+      <offset idRef="scan=21">12669</offset>
+      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">14059</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic">17098</offset>
-      <offset idRef="sic">18553</offset>
+      <offset idRef="tic">17092</offset>
+      <offset idRef="sic">18547</offset>
     </index>
   </indexList>
-  <indexListOffset>19941</indexListOffset>
-  <fileChecksum>7634105139643b7ccfc458cc02fd4df8631ae7b9</fileChecksum>
+  <indexListOffset>19935</indexListOffset>
+  <fileChecksum>bac331baee3213572f4be78ebe6eaadda0aaf097</fileChecksum>
 </indexedmzML>
