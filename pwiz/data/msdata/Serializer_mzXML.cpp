@@ -473,7 +473,7 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
     for (vector<IndexEntry>::const_iterator it=index.begin(); it!=index.end(); ++it)
     {
         XMLWriter::Attributes entryAttributes;
-        entryAttributes.push_back(make_pair("id", "scan="+lexical_cast<string>(it->scanNumber)));
+        entryAttributes.push_back(make_pair("id", lexical_cast<string>(it->scanNumber)));
         xmlWriter.startElement("offset", entryAttributes);
         xmlWriter.characters(lexical_cast<string>(it->offset));
         xmlWriter.endElement(); // offset
@@ -775,6 +775,7 @@ class Handler_mzXML : public SAXParser::Handler
     {
         if (name == "mzXML" || name == "msRun")
         {
+            msd_.fileDescription.fileContent.set(MS_scan_number_only_nativeID_format);
             return Status::Ok;
         }
         else if (name == "parentFile")

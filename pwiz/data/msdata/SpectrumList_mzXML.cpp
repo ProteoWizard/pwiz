@@ -54,7 +54,6 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     virtual size_t size() const {return index_.size();}
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual size_t findNative(const string& nativeID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
 
     private:
@@ -96,12 +95,6 @@ size_t SpectrumList_mzXMLImpl::find(const string& id) const
 {
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
     return it!=idToIndex_.end() ? it->second : size();
-}
-
-
-size_t SpectrumList_mzXMLImpl::findNative(const string& nativeID) const
-{
-    return find(nativeID); 
 }
 
 
@@ -541,6 +534,7 @@ struct HandlerOffset : public SAXParser::Handler
             throw runtime_error(("[SpectrumList_mzXML::HandlerOffset] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "id", spectrumIdentity->id);
+        spectrumIdentity->id = "scan=" + spectrumIdentity->id;
 
         return Status::Ok;
     }

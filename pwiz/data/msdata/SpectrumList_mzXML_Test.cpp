@@ -141,8 +141,9 @@ void test(bool indexed)
     for (int i=0; i<15; i++)
         unit_assert(pairs[i].mz==i && pairs[i].intensity==15-i);
 
-    unit_assert(scan.instrumentConfigurationPtr.get());
-    InstrumentConfiguration& instrumentConfiguration = *scan.instrumentConfigurationPtr;
+    Scan& scan19 = s->scanList.scans[0];
+    unit_assert(scan19.instrumentConfigurationPtr.get());
+    InstrumentConfiguration& instrumentConfiguration = *scan19.instrumentConfigurationPtr;
     unit_assert(!instrumentConfiguration.cvParams.empty()); // references resolved
     unit_assert(instrumentConfiguration.userParams.size() == 1 &&
                 instrumentConfiguration.userParams[0].name == "doobie");
