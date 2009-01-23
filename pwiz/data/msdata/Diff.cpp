@@ -74,6 +74,24 @@ void diff_numeric(const T& a,
 }
 
 
+template <>
+void diff_numeric(const double& a,
+                  const double& b,
+                  double& a_b,
+                  double& b_a,
+                  const DiffConfig& config)
+{
+    a_b = 0;
+    b_a = 0;
+
+    if (fabs(a - b) > config.precision + std::numeric_limits<double>::epsilon())
+    {
+        a_b = fabs(a - b);
+        b_a = fabs(a - b);
+    }
+}
+
+
 PWIZ_API_DECL
 void diff(const CV& a, 
           const CV& b, 
@@ -112,7 +130,30 @@ void diff(const CVParam& a,
           const DiffConfig& config)
 {
     diff(a.cvid, b.cvid, a_b.cvid, b_a.cvid, config);
-    diff(a.value, b.value, a_b.value, b_a.value, config);
+
+    // use precision to compare floating point values
+    try
+    {
+        lexical_cast<int>(a.value);
+        lexical_cast<int>(b.value);
+    }
+    catch (boost::bad_lexical_cast&)
+    {
+        try
+        {
+            double aValue = lexical_cast<double>(a.value);
+            double bValue = lexical_cast<double>(b.value);
+            double a_bValue, b_aValue;
+            diff_numeric<double>(aValue, bValue, a_bValue, b_aValue, config);
+            a_b.value = lexical_cast<string>(a_bValue);
+            b_a.value = lexical_cast<string>(b_aValue);
+        }
+        catch (boost::bad_lexical_cast&)
+        {
+            diff(a.value, b.value, a_b.value, b_a.value, config);
+        }
+    }
+
     diff(a.units, b.units, a_b.units, b_a.units, config);
 
     // provide names for context
