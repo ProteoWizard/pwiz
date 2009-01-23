@@ -29,7 +29,10 @@
 
 
 #ifdef _MSC_VER // msvc hack
+namespace std
+{
 inline double round(double d) {return floor(d + 0.5);}
+} // namespace std
 #endif // _MSC_VER
 
 
