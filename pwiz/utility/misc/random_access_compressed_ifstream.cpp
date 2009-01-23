@@ -35,16 +35,28 @@ Version 1.0  29 May 2005  Mark Adler */
 #define PWIZ_SOURCE
 
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "zlib.h"
 
 #include "random_access_compressed_ifstream.hpp"
+
+#if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
+#include <winsock2.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <io.h>
+#else
+#include <stdint.h>
+#include <netinet/in.h>
+#endif
+
+#include <sys/stat.h>
 #include <vector>
-#include <assert.h>
-#include <errno.h>
+#include <cassert>
+#include <cerrno>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 
 namespace pwiz {
 namespace util {

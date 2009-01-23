@@ -34,19 +34,9 @@ Version 1.0  29 May 2005  Mark Adler */
 #define RANDOM_ACCESS_COMPRESSED_IFSTREAM_INCL
 
 
-#if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
-#include <winsock2.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <stdint.h>
-#include <netinet/in.h>
-#endif
-#include <sys/stat.h>
-#include <fstream>
-#include "boost/iostreams/positioning.hpp"
 #include "pwiz/utility/misc/Export.hpp"
+#include "boost/iostreams/positioning.hpp"
+#include <fstream>
 
 
 namespace pwiz {
