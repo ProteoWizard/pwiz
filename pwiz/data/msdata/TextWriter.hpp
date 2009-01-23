@@ -58,15 +58,18 @@ class PWIZ_API_DECL TextWriter
         os_ << indent_ << "cvParam: " << cvinfo(cvParam.cvid).name;
         if (!cvParam.value.empty())
             os_ << ", " << cvParam.value;
+        if (cvParam.units != CVID_Unknown)
+            os_ << ", " << cvParam.unitsName();
         os_ << std::endl; 
         return *this;    
-   }
+    }
 
     TextWriter& operator()(const UserParam& userParam)
     {
         os_ << indent_ << "userParam: " << userParam.name;
         if (!userParam.value.empty()) os_ << ", " << userParam.value; 
         if (!userParam.type.empty()) os_ << ", " << userParam.type; 
+        if (userParam.units != CVID_Unknown) os_ << ", " << cvinfo(userParam.units).name;
         os_ << std::endl; 
         return *this;    
     }
