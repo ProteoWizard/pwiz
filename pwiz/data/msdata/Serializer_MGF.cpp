@@ -62,33 +62,39 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
         SpectrumPtr s = sl.spectrum(i, true);
+        Scan& scan = s->scanList.scans[0];
 
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1)
         {
             os << "BEGIN IONS\n";
             os << "TITLE=" << s->id << '\n';
 
-            CVParam scanTimeParam = s->cvParam(MS_scan_time);
+            CVParam scanTimeParam = scan.cvParam(MS_scan_time);
             if (!scanTimeParam.empty())
-                os << "RTINSECONDS=" << scanTimeParam.value << '\n';
+                os << "RTINSECONDS=" << scanTimeParam.timeInSeconds() << '\n';
 
             if (!s->precursors.empty() &&
                 !s->precursors[0].selectedIons.empty())
             {
                 const SelectedIon& si = s->precursors[0].selectedIons[0];
-                os << "PEPMASS=" << si.cvParam(MS_m_z).value << '\n';
+                os << "PEPMASS=" << si.cvParam(MS_m_z).value;
+                
+                CVParam intensityParam = si.cvParam(MS_intensity);
+                if (!intensityParam.empty())
+                    os << " " << intensityParam.value;
+                os << '\n';
 
                 CVParam chargeParam = si.cvParam(MS_charge_state);
                 if (chargeParam.empty())
                 {
+                    vector<string> charges;
                     BOOST_FOREACH(const CVParam& param, si.cvParams)
                     {
-                        vector<string> charges;
                         if (param.cvid == MS_possible_charge_state)
                             charges.push_back(param.value);
-                        if (!charges.empty())
-                            os << "CHARGE=" << bal::join(charges, " and ") << '\n';
                     }
+                    if (!charges.empty())
+                        os << "CHARGE=" << bal::join(charges, " and ") << '\n';
                 } else
                     os << "CHARGE=" << chargeParam.value << '\n';
             }
@@ -123,6 +129,7 @@ void Serializer_MGF::Impl::read(shared_ptr<istream> is, MSData& msd) const
 
     // we treat all MGF data is MSn (PMF MGFs not currently supported)
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    msd.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
     msd.fileDescription.fileContent.set(MS_multiple_peak_list_nativeID_format);
     msd.run.spectrumListPtr = SpectrumList_MGF::create(is, msd);
     msd.run.chromatogramListPtr.reset(new ChromatogramListSimple);
@@ -135,7 +142,7 @@ void Serializer_MGF::Impl::read(shared_ptr<istream> is, MSData& msd) const
 
 
 PWIZ_API_DECL Serializer_MGF::Serializer_MGF()
-:   impl_()
+:   impl_(new Impl())
 {}
 
 

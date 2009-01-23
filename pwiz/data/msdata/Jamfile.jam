@@ -159,6 +159,7 @@ unit-test Serializer_mzML_Test : Serializer_mzML_Test.cpp pwiz_data_msdata pwiz_
 unit-test SpectrumList_mzXML_Test : SpectrumList_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzXML.cpp examples.cpp Serializer_mzXML.cpp References.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test Serializer_mzXML_Test : Serializer_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzXML.cpp examples.cpp SpectrumList_mzXML.cpp Serializer_mzML.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
 unit-test SpectrumList_MGF_Test : SpectrumList_MGF_Test.cpp pwiz_data_msdata ;
+unit-test Serializer_MGF_Test : Serializer_MGF_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_msdata ;

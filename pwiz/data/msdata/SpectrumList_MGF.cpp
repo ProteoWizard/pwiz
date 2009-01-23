@@ -133,11 +133,13 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         string lineStr;
 	    bool inBeginIons = false;
         bool inPeakList = false;
+        double lowMZ = std::numeric_limits<double>::max();
+        double highMZ = 0;
         double tic = 0;
         double basePeakMZ = 0;
         double basePeakIntensity = 0;
         spectrum.defaultArrayLength = 0;
-        spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), UO_electronvolt);
+        spectrum.setMZIntensityArrays(vector<double>(), vector<double>());
         vector<double>& mzArray = spectrum.getMZArray()->data;
         vector<double>& intensityArray = spectrum.getIntensityArray()->data;
 	    while (getline(*is_, lineStr))
@@ -186,8 +188,14 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                             else if (name == "PEPMASS")
 				            {
                                 bal::trim(value);
-                                double mz = lexical_cast<double>(value);
-                                selectedIon.set(MS_m_z, mz);
+                                size_t delim2 = value.find(' ');
+                                if (delim2 != string::npos)
+                                {
+                                    selectedIon.set(MS_m_z, lexical_cast<double>(value.substr(0, delim2)));
+                                    selectedIon.set(MS_intensity, lexical_cast<double>(value.substr(delim2+1)));
+                                }
+                                else
+                                    selectedIon.set(MS_m_z, lexical_cast<double>(value));
 				            }
                             else if (name == "CHARGE")
 				            {
@@ -238,6 +246,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                         basePeakIntensity = inten;
                     }
 
+                    lowMZ = std::min(lowMZ, mz);
+                    highMZ = std::max(highMZ, mz);
+
                     ++spectrum.defaultArrayLength;
                     if (getBinaryData)
                     {
@@ -248,6 +259,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             }
         }
 
+        spectrum.set(MS_lowest_m_z_value, lowMZ);
+        spectrum.set(MS_highest_m_z_value, highMZ);
         spectrum.set(MS_total_ion_current, tic);
         spectrum.set(MS_base_peak_m_z, basePeakMZ);
         spectrum.set(MS_base_peak_intensity, basePeakIntensity);
@@ -275,7 +288,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 index_.push_back(SpectrumIdentity());
 			    curIdentityItr = index_.begin() + (index_.size()-1);
                 curIdentityItr->index = index_.size()-1;
-                curIdentityItr->id = lexical_cast<string>(index_.size()-1);
+                curIdentityItr->id = "index=" + lexical_cast<string>(index_.size()-1);
 			    curIdentityItr->sourceFilePosition = size_t(is_->tellg())-lineStr.length()-1;
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
 			    inBeginIons = true;
