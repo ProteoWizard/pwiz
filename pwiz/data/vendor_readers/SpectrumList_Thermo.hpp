@@ -25,6 +25,7 @@
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include <boost/thread/once.hpp>
 
 
 using namespace std;
@@ -55,9 +56,11 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     const MSData& msd_;
     shared_ptr<RawFile> rawfile_;
     size_t size_;
-    vector<SpectrumIdentity> index_;
 
-    void createIndex();
+    mutable boost::once_flag indexInitialized_;
+    mutable vector<SpectrumIdentity> index_;
+
+    void createIndex() const;
     string findPrecursorID(int precursorMsLevel, size_t index) const;
 };
 

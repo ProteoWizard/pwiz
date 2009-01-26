@@ -33,6 +33,7 @@
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
 
+
 using boost::format;
 
 
@@ -50,9 +51,8 @@ string scanNumberToSpectrumID(long scanNumber)
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(rawfile->value(NumSpectra)),
-    index_(size_)
+    indexInitialized_(BOOST_ONCE_INIT)
 {
-    createIndex();
 }
 
 
@@ -64,6 +64,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::size() const
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
+    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -73,6 +74,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 {
+    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
     try
     {
         size_t scanNumber = lexical_cast<size_t>(id);
@@ -116,6 +118,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
+    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -275,8 +278,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 }
 
 
-PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
+PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
 {
+    index_.resize(size_);
     for (size_t i=0; i<size_; i++)
     {
         SpectrumIdentity& si = index_[i];

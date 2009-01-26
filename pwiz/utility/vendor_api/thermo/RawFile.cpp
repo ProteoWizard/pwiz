@@ -646,15 +646,15 @@ class ScanInfoImpl : public ScanInfo
     virtual bool isUniformTime() const {return isUniformTime_;}
     virtual double frequency() const {return frequency_;}
 
-    virtual long statusLogSize() const {return statusLogSize_;}
-    virtual double statusLogRT() const {return statusLogRT_;}
-    virtual std::string statusLogLabel(long index) const {return statusLogLabels_->item(index);}
-    virtual std::string statusLogValue(long index) const {return statusLogValues_->item(index);}
+    virtual long statusLogSize() const {initStatusLog(); return statusLogSize_;}
+    virtual double statusLogRT() const {initStatusLog(); return statusLogRT_;}
+    virtual std::string statusLogLabel(long index) const {initStatusLog(); return statusLogLabels_->item(index);}
+    virtual std::string statusLogValue(long index) const {initStatusLog(); return statusLogValues_->item(index);}
 
-    virtual long trailerExtraSize() const {return trailerExtraSize_;}
-    virtual std::string trailerExtraLabel(long index) const {return trailerExtraLabels_->item(index);}
-    virtual std::string trailerExtraValue(long index) const {return trailerExtraValues_->item(index);}
-    virtual std::string trailerExtraValue(const string& name) const {return trailerExtraMap_[name];}
+    virtual long trailerExtraSize() const {initTrailerExtra(); return trailerExtraSize_;}
+    virtual std::string trailerExtraLabel(long index) const {initTrailerExtra(); return trailerExtraLabels_->item(index);}
+    virtual std::string trailerExtraValue(long index) const {initTrailerExtra(); return trailerExtraValues_->item(index);}
+    virtual std::string trailerExtraValue(const string& name) const {initTrailerExtra(); return trailerExtraMap_[name];}
     virtual double trailerExtraValueDouble(const string& name) const;
     virtual long trailerExtraValueLong(const string& name) const;
 
@@ -684,17 +684,21 @@ class ScanInfoImpl : public ScanInfo
     bool isUniformTime_;
     double frequency_;
 
-    long statusLogSize_;
-    double statusLogRT_;
-    auto_ptr<VariantStringArray> statusLogLabels_;
-    auto_ptr<VariantStringArray> statusLogValues_;
+    mutable bool statusLogInitialized_;
+    mutable long statusLogSize_;
+    mutable double statusLogRT_;
+    mutable auto_ptr<VariantStringArray> statusLogLabels_;
+    mutable auto_ptr<VariantStringArray> statusLogValues_;
 
-    long trailerExtraSize_;
-    auto_ptr<VariantStringArray> trailerExtraLabels_;
-    auto_ptr<VariantStringArray> trailerExtraValues_;
+    mutable bool trailerExtraInitialized_;
+    mutable long trailerExtraSize_;
+    mutable auto_ptr<VariantStringArray> trailerExtraLabels_;
+    mutable auto_ptr<VariantStringArray> trailerExtraValues_;
     mutable map<string,string> trailerExtraMap_;
 
     void initialize();
+    void initStatusLog() const;
+    void initTrailerExtra() const;
     void parseFilterString();
 };
 
@@ -719,6 +723,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     channelCount_(0),
     isUniformTime_(false),
     frequency_(0),
+    statusLogInitialized_(false),
     statusLogSize_(0),
     statusLogRT_(0),
     statusLogLabels_(0),
@@ -761,43 +766,55 @@ void ScanInfoImpl::initialize()
                                                   &frequency_),
                                                   "[ScanInfoImpl::initialize(), GetScanHeaderInfoForScanNum()] ");
     isUniformTime_ = (isUniformTime!=0);
+}
 
-    VARIANT variantStatusLogLabels;
-    VariantInit(&variantStatusLogLabels);
-    VARIANT variantStatusLogValues;
-    VariantInit(&variantStatusLogValues);
-    long statusLogSize = 0;
+void ScanInfoImpl::initStatusLog() const
+{    
+    // TODO: make this thread safe
+    if (statusLogInitialized_)
+    {
+        statusLogInitialized_ = true;
+        VARIANT variantStatusLogLabels;
+        VariantInit(&variantStatusLogLabels);
+        VARIANT variantStatusLogValues;
+        VariantInit(&variantStatusLogValues);
 
-    checkResult(raw_->GetStatusLogForScanNum(scanNumber_,
-                                             &statusLogRT_,
-                                             &variantStatusLogLabels,
-                                             &variantStatusLogValues,
-                                             &statusLogSize),
-                                             "[ScanInfoImpl::initialize(), GetStatusLogForScanNum()] ");
-    statusLogSize_ = statusLogSize;
-    statusLogLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogLabels, statusLogSize));
-    statusLogValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogValues, statusLogSize));
+        checkResult(rawfile_->raw_->GetStatusLogForScanNum(scanNumber_,
+                                                 &statusLogRT_,
+                                                 &variantStatusLogLabels,
+                                                 &variantStatusLogValues,
+                                                 &statusLogSize_),
+                                                 "[ScanInfoImpl::initStatusLog(), GetStatusLogForScanNum()] ");
+        statusLogLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogLabels, statusLogSize_));
+        statusLogValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantStatusLogValues, statusLogSize_));
+    }
+}
 
-    VARIANT variantTrailerExtraLabels;
-    VariantInit(&variantTrailerExtraLabels);
-    VARIANT variantTrailerExtraValues;
-    VariantInit(&variantTrailerExtraValues);
-    long trailerExtraSize = 0;
+void ScanInfoImpl::initTrailerExtra() const
+{
+    // TODO: make this thread safe
+    if (trailerExtraInitialized_)
+    {
+        trailerExtraInitialized_ = true;
+        VARIANT variantTrailerExtraLabels;
+        VariantInit(&variantTrailerExtraLabels);
+        VARIANT variantTrailerExtraValues;
+        VariantInit(&variantTrailerExtraValues);
 
-    checkResult(raw_->GetTrailerExtraForScanNum(scanNumber_,
-                                                &variantTrailerExtraLabels,
-                                                &variantTrailerExtraValues,
-                                                &trailerExtraSize),
-                                                "[]");
-    trailerExtraSize_ = trailerExtraSize;
-    trailerExtraLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraLabels, trailerExtraSize));
-    trailerExtraValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize));
+        checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
+                                                    &variantTrailerExtraLabels,
+                                                    &variantTrailerExtraValues,
+                                                    &trailerExtraSize_),
+                                                    "[ScanInfoImpl::initTrailerExtra(), GetTrailerExtraForScanNum()] ");
+        trailerExtraLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraLabels, trailerExtraSize_));
+        trailerExtraValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize_));
 
-    if (trailerExtraLabels_->size() != trailerExtraValues_->size())
-        throw RawEgg("[ScanInfoImpl::initialize()]  Trailer Extra sizes do not match."); 
+        if (trailerExtraLabels_->size() != trailerExtraValues_->size())
+            throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match."); 
 
-    for (int i=0; i<trailerExtraLabels_->size(); i++)
-        trailerExtraMap_[trailerExtraLabels_->item(i)] = trailerExtraValues_->item(i);
+        for (int i=0; i<trailerExtraLabels_->size(); i++)
+            trailerExtraMap_[trailerExtraLabels_->item(i)] = trailerExtraValues_->item(i);
+    }
 }
 
 void ScanInfoImpl::parseFilterString()
@@ -832,17 +849,14 @@ double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
 {
     if (preferMonoisotope)
     {
-        double monoisotopicMZ;
         try
         {
-            monoisotopicMZ = trailerExtraValueDouble("Monoisotopic M/Z:");
+            return trailerExtraValueDouble("Monoisotopic M/Z:");
         }
-        catch (RawEgg& )
+        catch (RawEgg&)
         {
-            monoisotopicMZ = 0;
+            // almost certainly means that the label was not present
         }
-        if (monoisotopicMZ > 0)
-            return monoisotopicMZ;
     }
     return precursorMZs_[index];
 }

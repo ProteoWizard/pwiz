@@ -9,6 +9,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "ChromatogramList_Thermo.hpp"
+#include <boost/bind.hpp>
 
 
 namespace pwiz {
@@ -16,20 +17,21 @@ namespace msdata {
 namespace detail {
 
 ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
-:   msd_(msd), rawfile_(rawfile)
+:   msd_(msd), rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)
 {
-    createIndex();
 }
 
 
 PWIZ_API_DECL size_t ChromatogramList_Thermo::size() const
 {
+    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     return index_.size();
 }
 
 
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const
 {
+    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -39,6 +41,7 @@ PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramI
 
 PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 {
+    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     map<string, size_t>::const_iterator itr = idMap_.find(id);
     if (itr != idMap_.end())
         return itr->second;
@@ -48,7 +51,8 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
-{ 
+{
+    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -113,7 +117,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 }
 
 
-PWIZ_API_DECL void ChromatogramList_Thermo::createIndex()
+PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 {
     // support file-level TIC for all file types
     index_.push_back(make_pair(ChromatogramIdentity(), ""));

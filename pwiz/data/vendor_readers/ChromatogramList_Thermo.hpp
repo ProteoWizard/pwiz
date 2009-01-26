@@ -7,6 +7,7 @@
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <map>
 #include <vector>
+#include <boost/thread/once.hpp>
 
 using namespace std;
 using boost::shared_ptr;
@@ -33,10 +34,11 @@ public:
     const MSData& msd_;
     shared_ptr<RawFile> rawfile_;
 
-    map<string, size_t> idMap_;
-    vector< pair<ChromatogramIdentity, string> > index_;
+    mutable boost::once_flag indexInitialized_;
+    mutable map<string, size_t> idMap_;
+    mutable vector< pair<ChromatogramIdentity, string> > index_;
 
-    void createIndex();
+    void createIndex() const;
 };
 
 } // detail
