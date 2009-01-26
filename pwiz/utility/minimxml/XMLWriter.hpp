@@ -102,8 +102,10 @@ class PWIZ_API_DECL XMLWriter
     /// writes element end tag
     void endElement();
 
-    /// writes character data
-    void characters(const std::string& text);
+    /// writes character data;
+    /// autoEscape writes reserved XML characters in the input text in their escaped form
+    /// '&', '<', and '>' are '&amp;', '&lt;', '&gt;' respectively
+    void characters(const std::string& text, bool autoEscape = true);
 
     typedef boost::iostreams::stream_offset stream_offset;
 

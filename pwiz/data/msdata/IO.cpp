@@ -1544,7 +1544,7 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
 
     writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("binary");
-    writer.characters(encoded);
+    writer.characters(encoded, false); // base64 doesn't use any reserved characters
     writer.endElement();
     writer.popStyle();
 

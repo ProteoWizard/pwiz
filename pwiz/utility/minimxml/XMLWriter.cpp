@@ -51,7 +51,7 @@ class XMLWriter::Impl
                       const Attributes& attributes,
                       EmptyElementTag emptyElementTag);
     void endElement();
-    void characters(const string& text);
+    void characters(const string& text, bool autoEscape);
     bio::stream_offset position() const;
     bio::stream_offset positionNext() const;
 
@@ -205,7 +205,7 @@ void XMLWriter::Impl::endElement()
 }
 
 
-void XMLWriter::Impl::characters(const string& text)
+void XMLWriter::Impl::characters(const string& text, bool autoEscape)
 {
     ostream* os = &os_;
     if (config_.outputObserver) os = new ostringstream;
@@ -213,7 +213,10 @@ void XMLWriter::Impl::characters(const string& text)
     if (!style(StyleFlag_InlineInner))
         *os << indentation();
 
-    writeEscapedTextXML(*os, text);
+    if (autoEscape)
+        writeEscapedTextXML(*os, text);
+    else
+        *os << text;
 
     if (!style(StyleFlag_InlineInner))
         *os << "\n";
@@ -279,7 +282,7 @@ PWIZ_API_DECL void XMLWriter::startElement(const string& name,
 
 PWIZ_API_DECL void XMLWriter::endElement() {impl_->endElement();}
 
-PWIZ_API_DECL void XMLWriter::characters(const string& text) {impl_->characters(text);}
+PWIZ_API_DECL void XMLWriter::characters(const string& text, bool autoEscape) {impl_->characters(text, autoEscape);}
 
 PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::position() const {return impl_->position();}
 
