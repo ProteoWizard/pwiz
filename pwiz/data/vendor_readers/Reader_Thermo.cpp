@@ -49,11 +49,11 @@ bool _hasRAWHeader(const std::string& head)
 } // namespace
 
 // Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_THERMO))
-#define PWIZ_NO_READER_THERMO
+#if (!defined(_MSC_VER) && defined(PWIZ_READER_THERMO))
+#undef PWIZ_READER_THERMO
 #endif
 
-#ifndef PWIZ_NO_READER_THERMO
+#ifdef PWIZ_READER_THERMO
 #include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
@@ -260,7 +260,7 @@ void Reader_Thermo::read(const string& filename,
 } // namespace pwiz
 
 
-#else // PWIZ_NO_READER_THERMO /////////////////////////////////////////////////////////////////////////////
+#else // PWIZ_READER_THERMO /////////////////////////////////////////////////////////////////////////////
 
 //
 // non-MSVC implementation
@@ -301,5 +301,5 @@ PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 } // namespace msdata
 } // namespace pwiz
 
-#endif // PWIZ_NO_READER_THERMO /////////////////////////////////////////////////////////////////////////////
+#endif // PWIZ_READER_THERMO /////////////////////////////////////////////////////////////////////////////
 

@@ -39,7 +39,7 @@ using boost::shared_ptr;
 
 PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
-    #ifndef PWIZ_NO_READER_THERMO
+    #ifdef PWIZ_READER_THERMO
     push_back(ReaderPtr(new Reader_Thermo));
     #endif
 }

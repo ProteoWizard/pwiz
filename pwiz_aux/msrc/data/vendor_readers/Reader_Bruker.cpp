@@ -51,7 +51,7 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 }
 
 
-#ifndef PWIZ_NO_READER_BRUKER
+#ifdef PWIZ_READER_BRUKER
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
@@ -223,7 +223,7 @@ void Reader_Bruker::read(const string& filename,
 } // namespace pwiz
 
 
-#else // PWIZ_NO_READER_BRUKER
+#else // PWIZ_READER_BRUKER
 
 //
 // non-MSVC implementation
@@ -257,5 +257,5 @@ PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& hea
 } // namespace msdata
 } // namespace pwiz
 
-#endif // PWIZ_NO_READER_BRUKER
+#endif // PWIZ_READER_BRUKER
 

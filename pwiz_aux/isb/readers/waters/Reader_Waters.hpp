@@ -7,8 +7,8 @@
 
 
 // DAC usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_WATERS))
-#define PWIZ_NO_READER_WATERS
+#if (!defined(_MSC_VER) && defined(PWIZ_READER_WATERS))
+#undef PWIZ_READER_WATERS
 #endif
 
 

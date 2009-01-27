@@ -31,8 +31,8 @@
 
 
 // EDAL usage is msvc only - mingw doesn't provide COM support
-#if (!defined(_MSC_VER) && !defined(PWIZ_NO_READER_BRUKER))
-#define PWIZ_NO_READER_BRUKER
+#if (!defined(_MSC_VER) && !defined(PWIZ_READER_BRUKER))
+#undef PWIZ_READER_BRUKER
 #endif
 
 

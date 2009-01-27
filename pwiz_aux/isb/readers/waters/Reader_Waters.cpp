@@ -28,7 +28,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
 }
 
 
-#ifndef PWIZ_NO_READER_WATERS
+#ifdef PWIZ_READER_WATERS
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
@@ -158,7 +158,7 @@ void Reader_Waters::read(const string& filename,
 } // namespace pwiz
 
 
-#else // PWIZ_NO_READER_WATERS
+#else // PWIZ_READER_WATERS
 
 //
 // non-MSVC implementation
@@ -191,5 +191,5 @@ PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& hea
 } // namespace msdata
 } // namespace pwiz
 
-#endif // PWIZ_NO_READER_WATERS
+#endif // PWIZ_READER_WATERS
 

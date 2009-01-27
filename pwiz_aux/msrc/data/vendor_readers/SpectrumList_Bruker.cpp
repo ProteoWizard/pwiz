@@ -23,7 +23,7 @@
 
 #define PWIZ_SOURCE
 
-#ifndef PWIZ_NO_READER_BRUKER
+#ifdef PWIZ_READER_BRUKER
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
@@ -74,7 +74,7 @@ SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
     catch (_com_error& e) // not caught by either std::exception or '...'
     {
         throw runtime_error(string("[SpectrumList_Bruker::ctor()] COM error: ") +
-                            (const char*)e.Description());
+            (const char*)e.Description() + "(HRESULT:" + lexical_cast<string>(e.Error()));
     }
 
     fillSourceList();
@@ -486,4 +486,4 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 } // msdata
 } // pwiz
 
-#endif // PWIZ_NO_READER_BRUKER
+#endif // PWIZ_READER_BRUKER

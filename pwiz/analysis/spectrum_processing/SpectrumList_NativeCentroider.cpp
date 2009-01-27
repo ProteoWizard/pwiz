@@ -26,12 +26,12 @@
 
 #include "SpectrumList_NativeCentroider.hpp"
 
-#ifndef PWIZ_NO_READER_THERMO
+#ifdef PWIZ_READER_THERMO
 #include "pwiz/data/vendor_readers/SpectrumList_Thermo.hpp"
 #endif
 
 #include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
-#ifndef PWIZ_NO_READER_BRUKER
+#ifdef PWIZ_READER_BRUKER
 #include "pwiz_aux/msrc/data/vendor_readers/SpectrumList_Bruker.hpp"
 #endif
 
@@ -54,7 +54,7 @@ SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
 {
     // check to see if we're able to do native centroiding, based on the SpectrumList type
 
-    #ifndef PWIZ_NO_READER_THERMO
+    #ifdef PWIZ_READER_THERMO
     detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
     if (thermo)
     {
@@ -62,7 +62,7 @@ SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
     }
     #endif
 
-    #ifndef PWIZ_NO_READER_BRUKER
+    #ifdef PWIZ_READER_BRUKER
     detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
     if (bruker)
     {
@@ -84,13 +84,13 @@ SpectrumList_NativeCentroider::SpectrumList_NativeCentroider(
 
 PWIZ_API_DECL bool SpectrumList_NativeCentroider::accept(const msdata::SpectrumListPtr& inner)
 {
-    #ifndef PWIZ_NO_READER_THERMO
+    #ifdef PWIZ_READER_THERMO
     detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
     if (thermo)
         return true;
     #endif
 
-    #ifndef PWIZ_NO_READER_BRUKER
+    #ifdef PWIZ_READER_BRUKER
     detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
     if (bruker)
         return true;
@@ -106,13 +106,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_NativeCentroider::spectrum(size_t index, 
 
     switch (mode_)
     {
-        #ifndef PWIZ_NO_READER_THERMO
+        #ifdef PWIZ_READER_THERMO
         case 1:
             centroidSpectrum = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
             break;
         #endif
 
-        #ifndef PWIZ_NO_READER_BRUKER
+        #ifdef PWIZ_READER_BRUKER
         case 2:
             centroidSpectrum = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToCentroid_);
             break;
