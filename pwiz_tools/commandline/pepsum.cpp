@@ -1,5 +1,5 @@
 //
-// mspicture.cpp
+// pepsum.cpp
 //
 //
 // Original author: Robert Burke <robert.burke@cshs.org>
