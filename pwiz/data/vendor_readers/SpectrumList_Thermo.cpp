@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
+#include <boost/bind.hpp>
 
 
 using boost::format;
