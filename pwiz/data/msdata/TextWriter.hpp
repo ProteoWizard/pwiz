@@ -490,6 +490,19 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+    TextWriter& operator()(const Product& product)
+    {
+        (*this)("product:");
+
+        if (!product.isolationWindow.empty())
+        {
+            child()("isolationWindow:");
+            child().child()(product.isolationWindow);
+        }
+
+        return *this;
+    }
+
     TextWriter& operator()(const ScanList& scanList)
     {
         (*this)

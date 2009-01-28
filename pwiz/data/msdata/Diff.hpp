@@ -188,6 +188,13 @@ void diff(const Precursor& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Product& a,
+          const Product& b,
+          Product& a_b,
+          Product& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Scan& a,
           const Scan& b,
           Scan& a_b,

@@ -245,6 +245,25 @@ void testPrecursor()
 }
 
 
+void testProduct()
+{
+    if (os_) *os_ << "testProduct()\n"; 
+
+    Product product;
+    product.isolationWindow.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+
+    MSData msd;
+    msd.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    msd.paramGroupPtrs.back()->userParams.push_back(UserParam("user"));
+    
+    unit_assert(product.isolationWindow.paramGroupPtrs[0]->userParams.empty());
+
+    References::resolve(product, msd);
+
+    unit_assert(!product.isolationWindow.paramGroupPtrs[0]->userParams.empty());
+}
+
+
 void testScan()
 {
     if (os_) *os_ << "testScan()\n"; 
@@ -337,6 +356,8 @@ void testSpectrum()
     spectrum.scanList.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
     spectrum.precursors.push_back(Precursor());
     spectrum.precursors.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
+    spectrum.products.push_back(Product());
+    spectrum.products.back().isolationWindow.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
 
     spectrum.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
     spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -357,6 +378,7 @@ void testSpectrum()
     unit_assert(spectrum.paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.scanList.paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.precursors.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(spectrum.products.back().isolationWindow.paramGroupPtrs.back()->userParams.empty());
     unit_assert(spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 
     References::resolve(spectrum, msd);
@@ -368,6 +390,7 @@ void testSpectrum()
     unit_assert(!spectrum.paramGroupPtrs.back()->userParams.empty());
     unit_assert(!spectrum.scanList.paramGroupPtrs.back()->userParams.empty());
     unit_assert(!spectrum.precursors.back().paramGroupPtrs.back()->userParams.empty());
+    unit_assert(!spectrum.products.back().isolationWindow.paramGroupPtrs.back()->userParams.empty());
     unit_assert(!spectrum.binaryDataArrayPtrs.back()->paramGroupPtrs.back()->userParams.empty());
 }
 
@@ -490,6 +513,7 @@ void test()
     testDataProcessing();
     testScanSettings();
     testPrecursor();
+    testProduct();
     testScan();
     testScanList();
     testBinaryDataArray();

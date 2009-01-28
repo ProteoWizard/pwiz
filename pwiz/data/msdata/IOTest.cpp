@@ -336,6 +336,16 @@ void testPrecursor()
 }
 
 
+void testProduct()
+{
+    Product a;
+    
+    a.isolationWindow.set(MS_m_z, 123450);
+  
+    testObject(a);
+}
+
+
 void testScan()
 {
     Scan a;
@@ -444,6 +454,9 @@ void testSpectrum()
     a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
     a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
+
+    a.products.push_back(Product());
+    a.products.back().isolationWindow.set(MS_ionization_type, "420");
 
     a.scanList.scans.push_back(Scan());
     Scan& scan = a.scanList.scans.back();
@@ -1202,6 +1215,7 @@ void test()
     testNamedParamContainer<SelectedIon>();
     testNamedParamContainer<Activation>();
     testPrecursor();
+    testProduct();
     testNamedParamContainer<ScanWindow>();
     testScan();
     testScanList();

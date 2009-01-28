@@ -495,6 +495,17 @@ struct PWIZ_API_DECL Precursor : public ParamContainer
 };
 
 
+/// product ion information
+struct PWIZ_API_DECL Product
+{
+    /// this element captures the isolation (or 'selection') window configured to isolate one or more precursors.
+    IsolationWindow isolationWindow;
+
+    /// returns true iff the element contains no params and all members are empty or null
+    bool empty() const;
+};
+
+
 /// TODO
 struct PWIZ_API_DECL ScanWindow : public ParamContainer
 {
@@ -675,6 +686,9 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 
     /// list and descriptions of precursors to the spectrum currently being described.
     std::vector<Precursor> precursors;
+
+    /// list and descriptions of product ion information
+    std::vector<Product> products;
 
     /// list of binary data arrays.
     std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 

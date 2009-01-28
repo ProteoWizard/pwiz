@@ -45,6 +45,7 @@ PWIZ_API_DECL void resolve(ProcessingMethod& processingMethod, const MSData& msd
 PWIZ_API_DECL void resolve(DataProcessing& dataProcesssing, const MSData& msd);
 PWIZ_API_DECL void resolve(ScanSettings& dataProcesssing, const MSData& msd);
 PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd);
+PWIZ_API_DECL void resolve(Product& product, const MSData& msd);
 PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd);
 PWIZ_API_DECL void resolve(ScanList& List, const MSData& msd);
 PWIZ_API_DECL void resolve(BinaryDataArray& binaryDataArray, const MSData& msd);

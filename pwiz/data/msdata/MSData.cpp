@@ -579,6 +579,17 @@ PWIZ_API_DECL bool Precursor::empty() const
 
 
 //
+// Product
+//
+
+
+PWIZ_API_DECL bool Product::empty() const
+{
+    return (isolationWindow.empty());
+}
+
+
+//
 // ScanWindow
 //
 
@@ -717,6 +728,7 @@ PWIZ_API_DECL bool Spectrum::empty() const
            (!sourceFilePtr.get() || sourceFilePtr->empty()) && 
            scanList.empty() &&
            precursors.empty() && 
+           products.empty() && 
            binaryDataArrayPtrs.empty() &&
            ParamContainer::empty();
 }

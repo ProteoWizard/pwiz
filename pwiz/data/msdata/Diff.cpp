@@ -562,6 +562,23 @@ void diff(const Precursor& a,
 
 
 PWIZ_API_DECL
+void diff(const Product& a,
+          const Product& b,
+          Product& a_b,
+          Product& b_a,
+          const DiffConfig& config)
+{
+    a_b = Product();
+    b_a = Product();
+
+    if (!config.ignoreMetadata)
+    {
+        diff(static_cast<const ParamContainer&>(a.isolationWindow), b.isolationWindow, a_b.isolationWindow, b_a.isolationWindow, config);
+    }
+}
+
+
+PWIZ_API_DECL
 void diff(const Scan& a,
           const Scan& b,
           Scan& a_b,
@@ -714,6 +731,7 @@ void diff(const Spectrum& a,
     diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
     diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
     vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
+    vector_diff_diff(a.products, b.products, a_b.products, b_a.products, config);
 
     if (!config.ignoreMetadata)
     {

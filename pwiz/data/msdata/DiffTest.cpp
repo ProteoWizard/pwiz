@@ -573,6 +573,29 @@ void testPrecursor()
 }
 
 
+void testProduct()
+{
+    if (os_) *os_ << "testProduct()\n";
+
+    Product a, b;
+
+    a.isolationWindow.set(MS_ionization_type, 420);
+    b = a; 
+
+    Diff<Product> diff(a, b);
+    unit_assert(!diff);
+
+    b.isolationWindow.set(MS_m_z, 200);
+    
+    diff(a, b);
+        
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+    unit_assert(diff.a_b.isolationWindow.cvParams.empty());
+    unit_assert(diff.b_a.isolationWindow.cvParams.size() == 1);
+}
+
+
 void testScan()
 {
     if (os_) *os_ << "testScan()\n";
@@ -694,6 +717,8 @@ void testSpectrum()
     b.sourceFilePtr = SourceFilePtr(new SourceFile("test.raw"));
     a.precursors.push_back(Precursor());
     a.precursors.back().spectrumID = "666";
+    b.products.push_back(Product());
+    b.products.back().isolationWindow.set(MS_ionization_type, 420);
     a.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
     a.binaryDataArrayPtrs.back()->data.resize(6);
     b.binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray));
@@ -710,6 +735,7 @@ void testSpectrum()
     unit_assert(diff.a_b.defaultArrayLength == 0);
     unit_assert(diff.a_b.dataProcessingPtr->id == "msdata 2");
     unit_assert(diff.a_b.precursors.size() == 1);
+    unit_assert(diff.a_b.products.empty());
     unit_assert(diff.a_b.binaryDataArrayPtrs.empty());
 
     unit_assert(diff.b_a.index == 4);
@@ -717,6 +743,7 @@ void testSpectrum()
     unit_assert(diff.b_a.defaultArrayLength == 22);
     unit_assert(diff.b_a.dataProcessingPtr->id == "msdata");
     unit_assert(diff.b_a.precursors.empty());
+    unit_assert(diff.b_a.products.size() == 1);
     unit_assert(diff.b_a.binaryDataArrayPtrs.empty());
 
     b = a;
@@ -1484,6 +1511,7 @@ void test()
     testDataProcessing();
     testScanSettings();
     testPrecursor();
+    testProduct();
     testScan();
     testScanList();
     testBinaryDataArray();

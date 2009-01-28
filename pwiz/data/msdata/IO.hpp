@@ -124,6 +124,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
 PWIZ_API_DECL void read(std::istream& is, Precursor& precursor);
     
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Product& product);
+PWIZ_API_DECL void read(std::istream& is, Product& product);
+    
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanWindow& selectionWindow);
 PWIZ_API_DECL void read(std::istream& is, ScanWindow& selectionWindow);
     

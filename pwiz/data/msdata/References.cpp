@@ -161,6 +161,12 @@ PWIZ_API_DECL void resolve(Precursor& precursor, const MSData& msd)
 }
 
 
+PWIZ_API_DECL void resolve(Product& product, const MSData& msd)
+{
+    resolve(product.isolationWindow, msd);
+}
+
+
 PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(scan), msd);
@@ -190,6 +196,7 @@ PWIZ_API_DECL void resolve(Spectrum& spectrum, const MSData& msd)
     resolve(spectrum.sourceFilePtr, msd.fileDescription.sourceFilePtrs);
     resolve(spectrum.scanList, msd);
     resolve(spectrum.precursors, msd);
+    resolve(spectrum.products, msd);
     resolve(spectrum.binaryDataArrayPtrs, msd);
 }
 

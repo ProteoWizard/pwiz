@@ -1306,6 +1306,69 @@ PWIZ_API_DECL void read(std::istream& is, Precursor& precursor)
 
 
 //
+// Product
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Product& product)
+{
+    XMLWriter::Attributes attributes;
+
+    writer.startElement("product", attributes);
+
+    if (!product.isolationWindow.empty())
+    {
+        writer.startElement("isolationWindow");
+        writeParamContainer(writer, product.isolationWindow);
+        writer.endElement(); // isolationWindow
+    }
+
+    writer.endElement();
+}
+
+    
+struct HandlerProduct : public SAXParser::Handler
+{
+    Product* product;
+
+    HandlerProduct(Product* _product = 0)
+    :   product(_product), 
+        handlerIsolationWindow_("isolationWindow")
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!product)
+            throw runtime_error("[IO::HandlerProduct] Null product.");
+
+        if (name == "product")
+        {
+            return Status::Ok;
+        }
+        else if (name == "isolationWindow")
+        {
+            handlerIsolationWindow_.paramContainer = &product->isolationWindow;
+            return Status(Status::Delegate, &handlerIsolationWindow_);
+        }
+
+        throw runtime_error(("[IO::HandlerProduct] Unknown element " + name).c_str()); 
+    }
+
+    private:
+    HandlerNamedParamContainer handlerIsolationWindow_;
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Product& product)
+{
+    HandlerProduct handler(&product);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // ScanWindow
 //
 
@@ -1725,6 +1788,19 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
         writer.endElement();
     }
    
+    if (!spectrum.products.empty())
+    {
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.products.size())));
+        writer.startElement("productList", attributes);
+        
+        for (vector<Product>::const_iterator it=spectrum.products.begin(); 
+             it!=spectrum.products.end(); ++it)
+             write(writer, *it);
+     
+        writer.endElement();
+    }
+
     if (!spectrum.binaryDataArrayPtrs.empty())
     {
         attributes.clear();
@@ -1804,7 +1880,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             handlerScanList_.scanList = &spectrum->scanList;
             return Status(Status::Delegate, &handlerScanList_);
         }
-        else if (name == "precursorList")
+        else if (name == "precursorList" || name == "productList")
         {
             return Status::Ok;
         }
@@ -1813,6 +1889,12 @@ struct HandlerSpectrum : public HandlerParamContainer
             spectrum->precursors.push_back(Precursor());
             handlerPrecursor_.precursor = &spectrum->precursors.back();
             return Status(Status::Delegate, &handlerPrecursor_);
+        }
+        else if (name == "product")
+        {
+            spectrum->products.push_back(Product());
+            handlerProduct_.product = &spectrum->products.back();
+            return Status(Status::Delegate, &handlerProduct_);
         }
         else if (name == "binaryDataArray")
         {
@@ -1848,6 +1930,7 @@ struct HandlerSpectrum : public HandlerParamContainer
     private:
     HandlerScanList handlerScanList_;
     HandlerPrecursor handlerPrecursor_;
+    HandlerProduct handlerProduct_;
     HandlerBinaryDataArray handlerBinaryDataArray_;
     HandlerScan handlerScan_;
 };
