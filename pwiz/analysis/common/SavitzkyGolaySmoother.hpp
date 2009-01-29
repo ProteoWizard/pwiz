@@ -38,9 +38,16 @@ struct PWIZ_API_DECL SavitzkyGolaySmoother : public Smoother
     SavitzkyGolaySmoother(int polynomialOrder, int windowSize);
     ~SavitzkyGolaySmoother();
 
-    std::vector<double> smooth_copy(const std::vector<double>& data);
-    std::vector<double>& smooth(const std::vector<double>& data,
-                                std::vector<double>& smoothedData);
+    /// smooth y values to existing vectors using Savitzky-Golay algorithm;
+    /// preconditions:
+    /// - samples within the window must be (approximately) equally spaced
+    virtual void smooth(const std::vector<double>& x, const std::vector<double>& y,
+                        std::vector<double>& xSmoothed, std::vector<double>& ySmoothed);
+
+    /// smooth y values and copy back to the input vectors using Savitzky-Golay algorithm;
+    /// preconditions:
+    /// - samples within the window must be (approximately) equally spaced
+    virtual void smooth_copy(std::vector<double>& x, std::vector<double>& y);
 
     private:
     struct Impl;

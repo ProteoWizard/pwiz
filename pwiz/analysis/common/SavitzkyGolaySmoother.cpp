@@ -23,8 +23,12 @@
 
 
 #include "SavitzkyGolaySmoother.hpp"
-#include "pwiz/utility/misc/Export.hpp"
+#include "ZeroSampleFiller.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/math/round.hpp"
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
@@ -33,6 +37,10 @@
 
 namespace pwiz {
 namespace analysis {
+
+
+using std::min;
+using std::max;
 
 
 namespace {
@@ -45,7 +53,6 @@ void generateSavitzkyGolayCoefficients(vector<double>& coefficients,
                                        int polynomialOrder)
 {
     using namespace boost::numeric;
-    using std::min;
 
     int size = leftWindowSize + rightWindowSize + 1;
     int& order = polynomialOrder;
@@ -147,9 +154,11 @@ SavitzkyGolaySmoother::SavitzkyGolaySmoother(int polynomialOrder, int windowSize
 : impl_(new Impl(polynomialOrder, windowSize))
 {
     if (polynomialOrder < 2 || polynomialOrder > 20)
-        throw std::runtime_error("[SavitzkyGolaySmoother::ctor()] Invalid value for polynomial order; valid range is [2, 20]");
+        throw runtime_error("[SavitzkyGolaySmoother::ctor()] Invalid value for polynomial order: valid range is [2, 20]");
     if (windowSize < 5 || (windowSize % 2) == 0)
-        throw std::runtime_error("[SavitzkyGolaySmoother::ctor()] Invalid value for window size; value must be odd and in range [5, infinity)");
+        throw runtime_error("[SavitzkyGolaySmoother::ctor()] Invalid value for window size: value must be odd and in range [5, infinity)");
+    if (polynomialOrder > windowSize)
+        throw runtime_error("[SavitzkyGolaySmoother::ctor()] Invalid values for polynomial order and window size: window size must be greater than polynomial order.");
 }
 
 PWIZ_API_DECL
@@ -158,43 +167,58 @@ SavitzkyGolaySmoother::~SavitzkyGolaySmoother()
 }
 
 PWIZ_API_DECL
-vector<double> SavitzkyGolaySmoother::smooth_copy(const vector<double>& data)
+void SavitzkyGolaySmoother::smooth_copy(vector<double>& x, vector<double>& y)
 {
-    vector<double> smoothedData;
-    return smooth(data, smoothedData);
+    smooth(x, y, x, y);
 }
 
 PWIZ_API_DECL
-vector<double>& SavitzkyGolaySmoother::smooth(const vector<double>& data,
-                                              vector<double>& smoothedData)
+void SavitzkyGolaySmoother::smooth(const std::vector<double>& x, 
+                                   const std::vector<double>& y,
+                                   std::vector<double>& xSmoothed,
+                                   std::vector<double>& ySmoothed)
 {
-    if (data.size() < (size_t) impl_->window_) // not enough data to smooth
-    {
-        smoothedData.assign(data.begin(), data.end());
-    }
-    else
-    {
-        const vector<double>& c =
-            CoefficientCache::instance->coefficients(impl_->order_, impl_->window_);
+    if (x.size() != y.size())
+        throw runtime_error("[SavitzkyGolaySmoother::smooth()] x and y arrays must be the same size");
 
-        //std::copy(c.begin(), c.end(), std::ostream_iterator<double>(std::cout, " "));
-        //std::cout << std::endl;
+    vector<double>::const_iterator start;
 
-        int flank = (impl_->window_-1) / 2;
-        smoothedData.assign(data.begin(), data.begin()+flank);
-        vector<double>::const_iterator start;
-        for (start = data.begin()+flank;
-             start+flank != data.end();
-             ++start)
+    // the Gram polynomial coefficients to use in the SG algorithm;
+    // we only use half of them because our window is symmetric
+    const vector<double>& c =
+        CoefficientCache::instance->coefficients(impl_->order_, impl_->window_);
+
+    // the size of the window in either direction
+    size_t flank = size_t(impl_->window_-1) / 2;
+
+    // fill in missing samples based on window size
+    // note: we don't need all the missing samples because a window full of zeros
+    //       will always smooth to a 0, regardless of the X values involved
+    vector<double> yCopy;
+    ZeroSampleFiller::fill(x, y, xSmoothed, yCopy, flank+1);
+
+    // calculate the smoothed y values
+    ySmoothed.reserve(yCopy.size());
+    ySmoothed.insert(ySmoothed.end(), yCopy.begin(), yCopy.begin()+flank);
+    for (size_t i=flank, end=yCopy.size()-flank; i < end; ++i)
+    {
+        // start the smoothed y value with the current point
+        double smoothY = c[flank] * yCopy[i];
+
+        for (size_t offset=1; offset <= flank; ++offset)
         {
-            double sum = c[flank] * (*start);
-            for (int offset=0; offset < flank; ++offset)
-                sum += c[offset] * (*(start-(flank-offset)) + *(start+(flank-offset)));
-            smoothedData.push_back(sum);
+            smoothY += c[flank-offset] * yCopy[i-offset];
+            smoothY += c[flank-offset] * yCopy[i+offset];
         }
-        smoothedData.insert(smoothedData.end(), data.end()-flank, data.end());
+
+        ySmoothed.push_back(max(0.0, smoothY));
     }
-    return smoothedData;
+    ySmoothed.insert(ySmoothed.end(), yCopy.begin(), yCopy.begin()+flank);
+
+    /*ofstream foo("points.txt");
+    foo.precision(15);
+    for (size_t i=0; i < ySmoothed.size(); ++i)
+        foo << (format("%1% %|20t|%2%\n") % xSmoothed[i] % ySmoothed[i]).str();*/
 }
 
 

@@ -36,12 +36,16 @@ namespace analysis {
 /// interface for a one-dimensional smoothing algorithm
 struct PWIZ_API_DECL Smoother
 {
-    /// smooth to a new vector
-    virtual std::vector<double> smooth_copy(const std::vector<double>& data) = 0;
+    /// smooth y values to existing vectors;
+    /// note: in the case of sparse vectors, smoothing may fill in samples not present
+    ///       in the original data, so make sure to check the size of the output vectors
+    virtual void smooth(const std::vector<double>& x, const std::vector<double>& y,
+                        std::vector<double>& xSmoothed, std::vector<double>& ySmoothed) = 0;
 
-    /// smooth to an existing vector
-    virtual std::vector<double>& smooth(const std::vector<double>& data,
-                                        std::vector<double>& smoothedData) = 0;
+    /// smooth y values and copy back to the input vectors;
+    /// note: in the case of sparse vectors, smoothing may fill in samples not present
+    ///       in the original data, so make sure to check the size of the output vectors
+    virtual void smooth_copy(std::vector<double>& x, std::vector<double>& y) = 0;
 
     virtual ~Smoother() {};
 };
