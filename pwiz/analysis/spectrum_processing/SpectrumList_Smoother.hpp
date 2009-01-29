@@ -28,23 +28,11 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/common/SavitzkyGolaySmoother.hpp"
+#include "pwiz/analysis/common/WhittakerSmoother.hpp"
 
 
 namespace pwiz {
 namespace analysis {
-
-
-/*struct PWIZ_API_DECL WhittakerSmoothingAlgorithm : public SmoothingAlgorithm
-{
-    WhittakerSmoothingAlgorithm(double lambdaFactor);
-
-    std::vector<double> smooth_copy(const std::vector<double>& data);
-    std::vector<double>& smooth(const std::vector<double>& data,
-                                std::vector<double>& smoothedData);
-
-    private:
-    double lambda;
-};*/
 
 
 /// SpectrumList implementation to return smoothed spectral data

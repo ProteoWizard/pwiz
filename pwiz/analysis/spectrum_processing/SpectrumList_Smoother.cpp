@@ -63,17 +63,27 @@ PWIZ_API_DECL bool SpectrumList_Smoother::accept(const msdata::SpectrumListPtr& 
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Smoother::spectrum(size_t index, bool getBinaryData) const
 {
-    if (!getBinaryData)
-        return inner_->spectrum(index, false);
+    //if (!getBinaryData)
+    //    return inner_->spectrum(index, false);
 
     SpectrumPtr s = inner_->spectrum(index, true);
 
+    vector<CVParam>& cvParams = s->cvParams;
+    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_mass_spectrum);
+
+    // return non-profile spectra as-is
+    if (itr == cvParams.end())
+        return s;
+
     try
     {
+        vector<double>& mzs = s->getMZArray()->data;
         vector<double>& intensities = s->getIntensityArray()->data;
-        vector<double> smoothedIntensities;
-        algorithm_->smooth(intensities, smoothedIntensities);
+        vector<double> smoothedMZs, smoothedIntensities;
+        algorithm_->smooth(mzs, intensities, smoothedMZs, smoothedIntensities);
+        mzs.swap(smoothedMZs);
         intensities.swap(smoothedIntensities);
+        s->defaultArrayLength = mzs.size();
     }
     catch(std::exception& e)
     {

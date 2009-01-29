@@ -35,6 +35,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_NativeCentroider.cpp
         SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_Smoother.cpp
+        SpectrumList_PeakPicker.cpp
         SpectrumList_Thresholder.cpp
         SpectrumList_ChargeStateCalculator.cpp
         PrecursorRecalculatorDefault.cpp
