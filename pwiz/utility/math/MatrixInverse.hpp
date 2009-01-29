@@ -1,3 +1,6 @@
+#ifndef _MATRIXINVERSE_HPP_
+#define _MATRIXINVERSE_HPP_
+
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -170,3 +173,5 @@ gjinverse(const boost::numeric::ublas::matrix<T> &m,
     singular = false;
     return Aright;
 }
+
+#endif // _MATRIXINVERSE_HPP_
