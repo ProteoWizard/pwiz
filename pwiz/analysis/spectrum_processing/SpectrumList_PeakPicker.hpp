@@ -27,7 +27,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include "pwiz/analysis/common/SimplePeakDetector.hpp"
+#include "pwiz/analysis/common/LocalMaximumPeakDetector.hpp"
 
 
 namespace pwiz {
