@@ -234,7 +234,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.set(MS_centroid_mass_spectrum);
+    s20.set(MS_profile_mass_spectrum);
     s20.set(MS_lowest_m_z_value, 320.39);
     s20.set(MS_highest_m_z_value, 1003.56);
     s20.set(MS_base_peak_m_z, 456.347);
