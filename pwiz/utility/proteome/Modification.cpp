@@ -170,6 +170,15 @@ class ModificationMap::Impl
     {
     }
 
+    Impl(ModificationMap* mods, Peptide* peptide, const Impl& other)
+        :   dirty_(other.dirty_),
+            monoDeltaMass_(other.monoDeltaMass_),
+            avgDeltaMass_(other.avgDeltaMass_),
+            mods_(mods), peptide_(peptide)
+    {
+        mods_->virtual_map<int, ModificationList>::insert(other.mods_->begin(), other.mods_->end());
+    }
+
     inline double monoDeltaMass() const
     {
         calculateMasses();
@@ -213,6 +222,11 @@ PWIZ_API_DECL ModificationMap::~ModificationMap()
 
 PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide)
 :   impl_(new Impl(this, peptide))
+{
+}
+
+PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide, const ModificationMap& other)
+:   impl_(new Impl(this, peptide, *other.impl_))
 {
 }
 

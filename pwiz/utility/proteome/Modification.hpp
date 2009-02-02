@@ -168,6 +168,7 @@ class PWIZ_API_DECL ModificationMap
     private:
 
     ModificationMap(Peptide* peptide);
+    ModificationMap(Peptide* peptide, const ModificationMap& other);
     class Impl;
     std::auto_ptr<Impl> impl_;
     ModificationMap(const ModificationMap&);
