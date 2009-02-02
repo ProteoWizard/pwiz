@@ -95,8 +95,10 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
         try { (x); } \
         catch (exception& e) \
         { \
-        if (e.what() == std::string(whatStr)) \
+            if (e.what() == std::string(whatStr)) \
                 threw = true; \
+            else \
+                throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+(whatStr)+"\nBut a different exception was thrown: ")+(e.what())); \
         } \
         if (!threw) \
             throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+(whatStr))); \
