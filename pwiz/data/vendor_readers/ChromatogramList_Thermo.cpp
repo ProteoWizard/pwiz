@@ -62,20 +62,34 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     result->index = ci.index;
     result->id = ci.id;
 
+    int mode = 0;
+
     if (ci.id == "TIC") // generate TIC for entire run
     {
+        mode = 1;
         result->set(MS_TIC_chromatogram);
+    }
+    else if(ci.id.find("SIC") == 0) // generate SIC for <precursor>
+    {
+        mode = 2;
+        result->set(MS_SIC_chromatogram);
     }
     else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
     {
+        mode = 3;
     }
     else // generate SRM SIC for transition <precursor>,<product>
     {
+        mode = 4;
     }
 
-    if (getBinaryData)
+    switch (mode)
     {
-        if (ci.id == "TIC") // generate TIC for entire run
+        default:
+        case 0:
+            break;
+
+        case 1: // generate TIC for entire run
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
@@ -83,9 +97,25 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            else result->defaultArrayLength = cd->size();
         }
-        else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
+        break;
+
+        case 2: // generate SIC for <precursor>
+        {
+            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+                Type_BasePeak, Operator_None, Type_MassRange,
+                index_[index].second, "", "", 0,
+                0, rawfile_->rt(rawfile_->value(NumSpectra)),
+                Smoothing_None, 0);
+            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            else result->defaultArrayLength = cd->size();
+        }
+        break;
+
+        case 3: // generate SRM TIC for <precursor>
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
@@ -93,9 +123,12 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            else result->defaultArrayLength = cd->size();
         }
-        else // generate SRM SIC for transition <precursor>,<product>
+        break;
+
+        case 4: // generate SRM SIC for transition <precursor>,<product>
         {
             vector<string> tokens;
             bal::split(tokens, ci.id, bal::is_any_of(" "));
@@ -109,8 +142,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            else result->defaultArrayLength = cd->size();
         }
+        break;
     }
 
     return result;
@@ -131,31 +166,51 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
     ScanFilter filterParser;
     for (size_t i=0, ic=filterArray->size(); i < ic; ++i)
     {
-        if (filterArray->item(i).find("SRM") == string::npos)
+        string filterString = filterArray->item(i);
+        if (filterString.find("ms2") == string::npos)
             continue;
 
         filterParser.initialize();
-        filterParser.parse(filterArray->item(i));
+        filterParser.parse(filterString);
 
         if (!filterParser.cidParentMass_.empty())
         {
-            string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
-            index_.push_back(make_pair(ChromatogramIdentity(), filterArray->item(i)));
-            ChromatogramIdentity& ci = index_.back().first;
-            ci.index = index_.size()-1;
-            ci.id = "SRM TIC " + precursorMZ;
-            idMap_[ci.id] = ci.index;
-
-            for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+            switch (filterParser.scanType_)
             {
-                index_.push_back(make_pair(ChromatogramIdentity(), filterArray->item(i)));
-                ChromatogramIdentity& ci = index_.back().first;
-                ci.index = index_.size()-1;
-                ci.id = (boost::format("SRM SIC %f,%f")
-                         % precursorMZ
-                         % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
-                        ).str();
-                idMap_[ci.id] = ci.index;
+                case ScanType_SRM:
+                {
+                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
+                    ChromatogramIdentity& ci = index_.back().first;
+                    ci.index = index_.size()-1;
+                    ci.id = "SRM TIC " + precursorMZ;
+                    idMap_[ci.id] = ci.index;
+
+                    for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                    {
+                        index_.push_back(make_pair(ChromatogramIdentity(), filterString));
+                        ChromatogramIdentity& ci = index_.back().first;
+                        ci.index = index_.size()-1;
+                        ci.id = (boost::format("SRM SIC %f,%f")
+                                 % precursorMZ
+                                 % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
+                                ).str();
+                        idMap_[ci.id] = ci.index;
+                    }
+                }
+                break;
+
+                default:
+                case ScanType_Full:
+                {
+                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
+                    ChromatogramIdentity& ci = index_.back().first;
+                    ci.index = index_.size()-1;
+                    ci.id = "SIC " + precursorMZ;
+                    idMap_[ci.id] = ci.index;
+                }
+                break;
             }
         }
     }
