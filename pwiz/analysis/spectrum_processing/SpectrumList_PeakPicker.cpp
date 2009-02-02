@@ -26,6 +26,15 @@
 #include "SpectrumList_PeakPicker.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
+#ifdef PWIZ_READER_THERMO
+#include "pwiz/data/vendor_readers/SpectrumList_Thermo.hpp"
+#endif
+
+#ifdef PWIZ_READER_BRUKER
+#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/SpectrumList_Bruker.hpp"
+#endif
+
 
 namespace pwiz {
 namespace analysis {
@@ -39,16 +48,42 @@ PWIZ_API_DECL
 SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         const msdata::SpectrumListPtr& inner,
         PeakDetectorPtr algorithm,
-        const IntegerSet& msLevelsToSmooth)
+        bool preferVendorPeakPicking,
+        const IntegerSet& msLevelsToPeakPick)
 :   SpectrumListWrapper(inner),
     algorithm_(algorithm),
-    msLevelsToSmooth_(msLevelsToSmooth)
+    msLevelsToPeakPick_(msLevelsToPeakPick),
+    mode_(0)
 {
+    if (preferVendorPeakPicking)
+    {
+        #ifdef PWIZ_READER_THERMO
+        detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
+        if (thermo)
+        {
+            mode_ = 1;
+        }
+        #endif
+
+        #ifdef PWIZ_READER_BRUKER
+        detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
+        if (bruker)
+        {
+            mode_ = 2;
+        }
+        #endif
+    }
+
     // add processing methods to the copy of the inner SpectrumList's data processing
     ProcessingMethod method;
     method.order = dp_->processingMethods.size();
     method.set(MS_peak_picking);
-    //method.userParams.push_back(UserParam("Savitzky-Golay smoothing (9 point window)"));
+    if (mode_ == 1)
+        method.userParams.push_back(UserParam("Thermo/Xcalibur peak picking"));
+    else if (mode_ == 2)
+        method.userParams.push_back(UserParam("Bruker/Agilent/CompassXtract peak picking"));
+    //else
+    //    method.userParams.push_back(algorithm->name());
     dp_->processingMethods.push_back(method);
 }
 
@@ -61,15 +96,36 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::accept(const msdata::SpectrumListPtr
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool getBinaryData) const
 {
-    //if (!getBinaryData)
-    //    return inner_->spectrum(index, false);
+    SpectrumPtr s;
+    
+    switch (mode_)
+    {
+        #ifdef PWIZ_READER_THERMO
+        case 1:
+            s = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
+            break;
+        #endif
 
-    SpectrumPtr s = inner_->spectrum(index, true);
+        #ifdef PWIZ_READER_BRUKER
+        case 2:
+            s = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
+            break;
+        #endif
+
+        case 0:
+        default:
+            s = inner_->spectrum(index, true);
+            break;
+    }
+
+    if (!msLevelsToPeakPick_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
+        return s;
 
     vector<CVParam>& cvParams = s->cvParams;
     vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_mass_spectrum);
 
     // return non-profile spectra as-is
+    // (could have been acquired as centroid, or vendor may have done the centroiding)
     if (itr == cvParams.end())
         return s;
 
@@ -88,7 +144,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     }
     catch(std::exception& e)
     {
-        throw std::runtime_error(std::string("[SpectrumList_PeakPicker] Error picking peaks: ") + e.what());
+        throw std::runtime_error(std::string("[SpectrumList_PeakPicker::spectrum()] Error picking peaks: ") + e.what());
     }
 
     s->dataProcessingPtr = dp_;

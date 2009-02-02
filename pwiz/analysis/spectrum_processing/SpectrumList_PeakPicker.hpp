@@ -41,7 +41,8 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
 
     SpectrumList_PeakPicker(const msdata::SpectrumListPtr& inner,
                             PeakDetectorPtr algorithm,
-                            const util::IntegerSet& msLevelsToSmooth);
+                            bool preferVendorPeakPicking,
+                            const util::IntegerSet& msLevelsToPeakPick);
 
 
     static bool accept(const msdata::SpectrumListPtr& inner);
@@ -50,7 +51,8 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
 
     private:
     PeakDetectorPtr algorithm_;
-    const util::IntegerSet msLevelsToSmooth_;
+    const util::IntegerSet msLevelsToPeakPick_;
+    int mode_;
 };
 
 
