@@ -38,6 +38,7 @@ ostream* os_ = 0;
 
 struct TestData
 {
+    size_t windowSize;
     const char* xRaw;
     const char* yRaw;
     const char* xPeakValues;
@@ -47,10 +48,27 @@ struct TestData
 const TestData testData[] =
 {
     {
+     3,
      "1 2 3 4 5 6 7 8 9",
      "0 1 0 1 2 3 0 0 4",
      "2 6 9",
      "1 3 4"
+    },
+
+    {
+     5,
+     "1 2 3 4 5 6 7 8 9",
+     "0 1 0 1 2 3 0 0 4",
+     "2 6 9",
+     "1 3 4"
+    },
+
+    {
+     7,
+     "1 2 3 4 5 6 7 8 9",
+     "0 1 0 1 2 3 0 0 4",
+     "9",
+     "4"
     }
 };
 
@@ -84,7 +102,7 @@ void test()
         unit_assert(xRaw.size() == yRaw.size());
         unit_assert(target_xPeakValues.size() == target_yPeakValues.size());
 
-        LocalMaximumPeakDetector peakDetector;
+        LocalMaximumPeakDetector peakDetector(data.windowSize);
         vector<double> xPeakValues, yPeakValues;
         peakDetector.detect(xRaw, yRaw, xPeakValues, yPeakValues);
 

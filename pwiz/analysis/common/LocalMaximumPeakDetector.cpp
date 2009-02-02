@@ -25,10 +25,18 @@
 #include "LocalMaximumPeakDetector.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "ZeroSampleFiller.hpp"
 
 
 namespace pwiz {
 namespace analysis {
+
+
+PWIZ_API_DECL
+LocalMaximumPeakDetector::LocalMaximumPeakDetector(size_t windowSize)
+: window_(windowSize)
+{
+}
 
 
 PWIZ_API_DECL
@@ -39,33 +47,31 @@ void LocalMaximumPeakDetector::detect(const vector<double>& x, const vector<doub
     if (x.size() != y.size())
         throw runtime_error("[LocalMaximumPeakDetector::detect()] x and y arrays must be the same size");
 
-    if (x.size() < 2)
-    {
-        xPeakValues.assign(x.begin(), x.end());
-        yPeakValues.assign(y.begin(), y.end());
-    }
-    else
-    {
-        if (y[0] > y[1])
-        {
-            xPeakValues.push_back(x[0]);
-            yPeakValues.push_back(y[0]);
-        }
+    // the size of the window in either direction
+    size_t flank = size_t(window_-1) / 2;
 
-        for (size_t i=1, end=x.size()-1; i < end; ++i)
-        {
-            if (y[i] > y[i-1] &&
-                y[i] > y[i+1])
+    // fill in missing samples based on window size
+    // note: we don't need all the missing samples because a window full of zeros
+    //       will always smooth to a 0, regardless of the X values involved
+    vector<double> xCopy;
+    vector<double> yCopy;
+    ZeroSampleFiller::fill(x, y, xCopy, yCopy, flank+1);
+
+    for (size_t i=flank, end=yCopy.size()-flank; i < end; ++i)
+    {
+        bool isPeak = true;
+        for (size_t j=1; j <= flank; ++j)
+            if (yCopy[i] < yCopy[i-j] ||
+                yCopy[i] < yCopy[i+j])
             {
-                xPeakValues.push_back(x[i]);
-                yPeakValues.push_back(y[i]);
+                isPeak = false;
+                break;
             }
-        }
 
-        if (y.back() > y[y.size()-2])
+        if (isPeak)
         {
-            xPeakValues.push_back(x.back());
-            yPeakValues.push_back(y.back());
+            xPeakValues.push_back(xCopy[i]);
+            yPeakValues.push_back(yCopy[i]);
         }
     }
 

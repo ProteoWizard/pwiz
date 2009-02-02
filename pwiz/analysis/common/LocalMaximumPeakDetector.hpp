@@ -31,12 +31,17 @@ namespace analysis {
 
 struct PWIZ_API_DECL LocalMaximumPeakDetector : public PeakDetector
 {
+    LocalMaximumPeakDetector(size_t windowSize);
+
     /// finds all local maxima, i.e. any point that has a greater y value than both
     /// of its neighboring points;
     /// note: the peaks array, if non-NULL, only provides x and y values
     virtual void detect(const std::vector<double>& x, const std::vector<double>& y,
                         std::vector<double>& xPeakValues, std::vector<double>& yPeakValues,
                         std::vector<Peak>* peaks = NULL);
+
+    private:
+    size_t window_;
 };
 
 
