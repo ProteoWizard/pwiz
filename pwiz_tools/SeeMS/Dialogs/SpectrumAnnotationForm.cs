@@ -44,20 +44,28 @@ namespace seems
 
         public void UpdateAnnotations( MassSpectrum spectrum )
         {
-            currentSpectrum = spectrum;
-            Text = TabText = "Annotations for spectrum " + spectrum.Id;
-            runOverrideToolStripButton.Text = "Override " + spectrum.Source.Source.Name + " Processing";
-            if( annotationsListView.VirtualListSize != currentSpectrum.AnnotationList.Count )
+            if( annotationsListView.VirtualListSize != spectrum.AnnotationList.Count )
             {
-                annotationsListView.VirtualListSize = currentSpectrum.AnnotationList.Count;
-                selectIndex( currentSpectrum.AnnotationList.Count - 1 );
+                annotationsListView.VirtualListSize = spectrum.AnnotationList.Count;
+                selectIndex( spectrum.AnnotationList.Count - 1 );
             }
+
+            if( currentSpectrum != spectrum )
+            {
+                currentSpectrum = spectrum;
+                Text = TabText = "Annotations for spectrum " + spectrum.Id;
+                runOverrideToolStripButton.Text = "Override " + spectrum.Source.Source.Name + " Annotations";
+                annotationsListView_SelectedIndexChanged( this, EventArgs.Empty );
+            }
+
+            annotationsListView.Refresh();
         }
 
         private void peptideFragmentationToolStripMenuItem_Click( object sender, EventArgs e )
         {
             currentSpectrum.AnnotationList.Add( new PeptideFragmentationAnnotation() );
             selectIndex( annotationsListView.VirtualListSize++ );
+            OnAnnotationChanged( sender, e );
         }
 
         private void removeAnnotationButton_Click( object sender, EventArgs e )
@@ -72,24 +80,25 @@ namespace seems
 
         void annotationsListView_KeyDown( object sender, KeyEventArgs e )
         {
-            e.Handled = true;
-            if( e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back )
+            if( annotationsListView.SelectedIndices.Count > 0 )
             {
-                removeAnnotationButton_Click( sender, e );
-
-            } else if( e.KeyCode == Keys.Space )
-            {
-                if( annotationsListView.Items.Count > 0 )
+                if( e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back )
                 {
+                    e.Handled = true;
+                    removeAnnotationButton_Click( sender, e );
+
+                } else if( e.KeyCode == Keys.Space )
+                {
+                    e.Handled = true;
                     foreach( int index in annotationsListView.SelectedIndices )
                     {
                         IAnnotation annotation = currentSpectrum.AnnotationList[index];
                         annotation.Enabled = !annotation.Enabled;
                     }
                     OnAnnotationChanged( sender, e );
+                    annotationsListView.Refresh();
                 }
-            } else
-                e.Handled = false;
+            }
         }
 
         void ContextMenuStrip_Opening( object sender, CancelEventArgs e )
@@ -107,7 +116,8 @@ namespace seems
                 lastSelectedAnnotation.OptionsChanged -= new EventHandler( OnAnnotationChanged );
 
             splitContainer.Panel2.Controls.Clear();
-            if( annotationsListView.SelectedIndices.Count > 0 )
+            if( annotationsListView.SelectedIndices.Count > 0 &&
+                currentSpectrum.AnnotationList.Count > annotationsListView.SelectedIndices[0] )
             {
                 lastSelectedAnnotation = currentSpectrum.AnnotationList[annotationsListView.SelectedIndices[0]];
                 splitContainer.Panel2.Controls.Add( lastSelectedAnnotation.OptionsPanel );
@@ -115,13 +125,32 @@ namespace seems
 
                 removeAnnotationButton.Enabled = true;
             } else
+            {
+                lastSelectedAnnotation = null;
                 removeAnnotationButton.Enabled = false;
+            }
+            splitContainer.Panel2.Refresh();
+        }
+
+        private void annotationsListView_VirtualItemsSelectionRangeChanged( object sender, ListViewVirtualItemsSelectionRangeChangedEventArgs e )
+        {
+            annotationsListView_SelectedIndexChanged( sender, e );
         }
 
         private void annotationsListView_RetrieveVirtualItem( object sender, RetrieveVirtualItemEventArgs e )
         {
+            if( currentSpectrum.AnnotationList.Count <= e.ItemIndex )
+            {
+                e.Item = new ListViewItem( "error" );
+                return;
+            }
+
             IAnnotation annotation = currentSpectrum.AnnotationList[e.ItemIndex];
-            e.Item = new ListViewItem( annotation.ToString() );
+            e.Item = new ListViewItem( new string[] { "", annotation.ToString() } );
+
+            // weird workaround for unchecked checkboxes to display in virtual mode
+            e.Item.Checked = true;
+            e.Item.Checked = annotation.Enabled;
 
             if( annotation.Enabled )
                 e.Item.ForeColor = Control.DefaultForeColor;
@@ -129,9 +158,33 @@ namespace seems
                 e.Item.ForeColor = Color.Gray;
         }
 
+        void annotationsListView_MouseClick( object sender, MouseEventArgs e )
+        {
+            ListViewItem item = annotationsListView.GetItemAt( e.X, e.Y );
+            if( item != null && e.X < ( item.Bounds.Left + 16 ) )
+            {
+                IAnnotation annotation = currentSpectrum.AnnotationList[item.Index];
+                annotation.Enabled = !annotation.Enabled;
+                OnAnnotationChanged( sender, e );
+                annotationsListView.Invalidate( item.Bounds );
+            }
+        }
+
+        void annotationsListView_MouseDoubleClick( object sender, MouseEventArgs e )
+        {
+            ListViewItem item = annotationsListView.GetItemAt( e.X, e.Y );
+            if( item != null )
+            {
+                IAnnotation annotation = currentSpectrum.AnnotationList[item.Index];
+                annotation.Enabled = !annotation.Enabled;
+                OnAnnotationChanged( sender, e );
+                annotationsListView.Invalidate( item.Bounds );
+            }
+        }
+
         private void annotationsListView_Layout( object sender, LayoutEventArgs e )
         {
-            annotationsListView.Columns[0].Width = annotationsListView.Width - 10;
+            //annotationsListView.Columns[0].Width = annotationsListView.Width - 10;
         }
     }
 }

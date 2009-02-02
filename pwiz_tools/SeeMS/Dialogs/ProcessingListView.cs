@@ -13,7 +13,6 @@ namespace seems
     public class ProcessingListView<ProcessableListType> : UserControl
     {
         private System.Windows.Forms.ListView listView1;
-        private Label hintLabel;
         public ListView ListView { get { return listView1; } }
 
         public event EventHandler ItemsChanged;
@@ -48,7 +47,7 @@ namespace seems
             listView1.LabelWrap = true;
             listView1.AutoArrange = true;
             listView1.Alignment = ListViewAlignment.Top;
-            listView1.View = View.Tile;
+            listView1.View = View.Details;
 
             ResumeLayout( false );
 
@@ -71,13 +70,6 @@ namespace seems
                 listView1.DragDrop += new DragEventHandler( ListView_DragDrop );
                 listView1.InsertionMark.Color = Color.Black;
             }
-
-            hintLabel = new Label();
-            hintLabel.Text = "Right click to add data processing elements";
-            hintLabel.TextAlign = ContentAlignment.MiddleCenter;
-            hintLabel.Dock = DockStyle.Fill;
-            this.Controls.Add( hintLabel );
-            updateHintVisibility();
         }
 
         #region Drag and Drop capability
@@ -190,12 +182,6 @@ namespace seems
 
         void ListView_Changed( object sender, EventArgs e )
         {
-            updateHintVisibility();
-        }
-
-        void updateHintVisibility()
-        {
-            hintLabel.Visible = ( ListView.Items.Count == 0 );
         }
 
         private System.ComponentModel.IContainer components = null;
@@ -336,7 +322,7 @@ namespace seems
 
         public override SpectrumList ProcessList( SpectrumList list )
         {
-            return new SpectrumList_SavitzkyGolaySmoother( list, new int[] { 1, 2, 3, 4, 5, 6 } );
+            return new SpectrumList_Smoother( list, null, new int[] { 1, 2, 3, 4, 5, 6 } );
         }
     }
 
@@ -381,8 +367,7 @@ namespace seems
                 return s;
             }
 
-            SpectrumDescription sd = s.spectrumDescription;
-            PrecursorList pl = sd.precursors;
+            PrecursorList pl = s.precursors;
 
             BinaryData mzArray = s.getMZArray().data;
             BinaryData intensityArray = s.getIntensityArray().data;

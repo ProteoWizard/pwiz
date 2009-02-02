@@ -125,6 +125,7 @@ namespace seems
         {
             dataProcessing = new DataProcessing();
             annotationList = new List<IAnnotation>();
+            processingList = new List<IProcessing>();
         }
 
 		protected string id;
@@ -138,6 +139,9 @@ namespace seems
 
         protected DataProcessing dataProcessing;
         public DataProcessing DataProcessing { get { return dataProcessing; } set { dataProcessing = value; } }
+
+        protected List<IProcessing> processingList;
+        public List<IProcessing> ProcessingList { get { return processingList; } set { processingList = value; } }
 
         protected List<IAnnotation> annotationList;
         public List<IAnnotation> AnnotationList { get { return annotationList; } set { annotationList = value; } }
@@ -246,7 +250,7 @@ namespace seems
             this.chromatogramList = chromatogramList;
             this.index = index;
 			//element = chromatogram;
-			id = Element.nativeID;
+			id = Element.id;
             //index = element.index;
 		}
 
@@ -258,7 +262,7 @@ namespace seems
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
-            id = Element.nativeID;
+            id = Element.id;
         }
 
         private ChromatogramList chromatogramList;
@@ -327,7 +331,7 @@ namespace seems
             //element = spectrum;
             //using( Spectrum element = Element )
             {
-                id = Element.nativeID;
+                id = Element.id;
             }
         }
 
@@ -381,7 +385,7 @@ namespace seems
             base.AddAnnotations( pointList, annotations );
             //using( Spectrum element = Element )
             {
-                foreach( Precursor p in Element.spectrumDescription.precursors )
+                foreach( Precursor p in Element.precursors )
                     foreach( SelectedIon si in p.selectedIons )
                     {
                         double precursorMz = (double) si.cvParam( CVID.MS_m_z ).value;
@@ -393,12 +397,13 @@ namespace seems
                             precursorCharge = (int) precursorChargeParam.value;
 
 
-                        double stickLength = 0.1;// ( yAxis.MajorTic.Size * 5 ) / pane.Chart.Rect.Height;
-                        ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, 1 + stickLength );
+                        double stickLength = 0.1;
+                        ZedGraph.LineObj stickOverlay = new ZedGraph.LineObj( precursorMz, 1, precursorMz, stickLength );
                         stickOverlay.Location.CoordinateFrame = ZedGraph.CoordType.XScaleYChartFraction;
                         stickOverlay.Line.Width = 3;
                         stickOverlay.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
                         stickOverlay.Line.Color = Color.Green;
+
                         annotations.Add( stickOverlay );
 
                         // Create a text label from the X data value
@@ -407,8 +412,8 @@ namespace seems
                             precursorLabel = String.Format( "{0}\n(+{1} precursor)", precursorMz.ToString( "f3" ), precursorCharge );
                         else
                             precursorLabel = String.Format( "{0}\n(precursor of unknown charge)", precursorMz.ToString( "f3" ) );
-                        ZedGraph.TextObj text = new ZedGraph.TextObj( precursorLabel, precursorMz, 1 + stickLength,
-                            ZedGraph.CoordType.XScaleYChartFraction, ZedGraph.AlignH.Center, ZedGraph.AlignV.Top );
+                        ZedGraph.TextObj text = new ZedGraph.TextObj( precursorLabel, precursorMz, stickLength,
+                            ZedGraph.CoordType.XScaleYChartFraction, ZedGraph.AlignH.Center, ZedGraph.AlignV.Bottom );
                         text.ZOrder = ZedGraph.ZOrder.A_InFront;
                         text.FontSpec.FontColor = stickOverlay.Line.Color;
                         text.FontSpec.Border.IsVisible = false;
@@ -443,7 +448,7 @@ namespace seems
         {
             get
             {
-                CVParam representation = Element.spectrumDescription.cvParamChild(CVID.MS_spectrum_representation);
+                CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
                 if( !representation.empty() && representation.cvid == CVID.MS_profile_mass_spectrum )
                     return MSGraph.MSGraphItemDrawMethod.Line;
                 else

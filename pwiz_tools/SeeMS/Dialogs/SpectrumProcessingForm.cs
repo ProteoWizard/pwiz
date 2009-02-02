@@ -8,206 +8,262 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
+using ExtensionMethods;
 
 namespace seems
 {
     public partial class SpectrumProcessingForm : DockableForm
     {
-        private ProcessingListView<SpectrumList> processingListView;
-        public ProcessingListView<SpectrumList> ProcessingListView { get { return processingListView; } }
-
-        public ToolStripButton GlobalProcessingOverrideButton { get { return globalOverrideToolStripButton; } }
-        public ToolStripButton RunProcessingOverrideButton { get { return runOverrideToolStripButton; } }
-
-        public SpectrumList GetProcessingSpectrumList( SpectrumList spectrumList )
-        {
-            return processingListView.ProcessingWrapper( spectrumList );
-        }
-
-        private ContextMenuStrip processingListViewContextMenu;
-        private ToolStripMenuItem deleteContextItem;
+        private MassSpectrum currentSpectrum;
+        public MassSpectrum CurrentSpectrum { get { return currentSpectrum; } }
 
         public event EventHandler ProcessingChanged;
-        private void OnProcessingChanged( object sender )
+        private void OnProcessingChanged( object sender, EventArgs e )
         {
             if( ProcessingChanged != null )
             {
-                ProcessingChanged( this, EventArgs.Empty );
+                ProcessingChanged( this, e );
             }
+        }
+
+        public List<IProcessing> ProcessingList
+        {
+            get
+            {
+                return currentSpectrum.ProcessingList;
+            }
+        }
+
+        public SpectrumList GetProcessingSpectrumList( SpectrumList spectrumList )
+        {
+            foreach( IProcessing item in ProcessingList )
+            {
+                if( item.Enabled )
+                    spectrumList = item.ProcessList( spectrumList );
+            }
+            return spectrumList;
         }
 
         public SpectrumProcessingForm()
         {
             InitializeComponent();
 
-            ImageList processingListViewLargeImageList = new ImageList();
+            /*ImageList processingListViewLargeImageList = new ImageList();
             processingListViewLargeImageList.Images.Add( Properties.Resources.Centroider );
             processingListViewLargeImageList.Images.Add( Properties.Resources.Smoother );
             processingListViewLargeImageList.Images.Add( Properties.Resources.Thresholder );
             processingListViewLargeImageList.ImageSize = new Size( 32, 32 );
-            processingListViewLargeImageList.TransparentColor = Color.White;
-
-            processingListViewContextMenu = new ContextMenuStrip();
-
-            ToolStripMenuItem addContextItem = new ToolStripMenuItem( "Add Spectrum Processor",
-                                      Properties.Resources.DataProcessing,
-                                      new ToolStripMenuItem( "Native Centroider", processingListViewLargeImageList.Images[0], new EventHandler( addNativeCentroider_Click ) ),
-                                      new ToolStripMenuItem( "Thresholder", processingListViewLargeImageList.Images[1], new EventHandler( addThresholder_Click ) ),
-                                      new ToolStripMenuItem( "Savitzky-Golay Smoother", processingListViewLargeImageList.Images[2], new EventHandler( addSavitzkyGolaySmoother_Click ) ),
-                                      new ToolStripMenuItem( "ECD/ETD Precursor Filter", processingListViewLargeImageList.Images[2], new EventHandler( addECDETDPrecursorFilter_Click ) ),
-                                      new ToolStripMenuItem( "Charge State Calculator", processingListViewLargeImageList.Images[2], new EventHandler( addChargeStateCalculator_Click ) )
-                                     );
-            processingListViewContextMenu.Items.Add( addContextItem );
-            addContextItem.ImageTransparentColor = Color.White;
-
-            deleteContextItem = new ToolStripMenuItem( "Delete", null, new EventHandler( deleteProcessor_Click ) );
-            processingListViewContextMenu.Items.Add( deleteContextItem );
-
-            processingListViewContextMenu.Opening += new CancelEventHandler( ContextMenuStrip_Opening );
-
-
-            processingListView = new ProcessingListView<SpectrumList>();
-            processingListView.Name = "processingListView";
-            processingListView.Dock = DockStyle.Fill;
-            processingListView.ContextMenuStrip = processingListViewContextMenu;
-            processingListView.ListView.LargeImageList = processingListViewLargeImageList;
-            processingListView.ItemsChanged += new EventHandler( processingListView_ItemsChanged );
-            processingListView.ListView.SelectedIndexChanged += new EventHandler( processingListView_SelectedIndexChanged );
-            splitContainer.Panel1.Controls.Add( processingListView );
+            processingListViewLargeImageList.TransparentColor = Color.White;*/
         }
 
+        private void selectIndex( int index )
+        {
+            processingListView.SelectedIndices.Clear();
+            if( index >= 0 )
+                processingListView.SelectedIndices.Add( index );
+        }
+
+        public void UpdateProcessing( MassSpectrum spectrum )
+        {
+            if( processingListView.VirtualListSize != spectrum.ProcessingList.Count )
+            {
+                processingListView.VirtualListSize = spectrum.ProcessingList.Count;
+                selectIndex( spectrum.ProcessingList.Count - 1 );
+            }
+
+            if( currentSpectrum != spectrum )
+            {
+                currentSpectrum = spectrum;
+                Text = TabText = "Processing for spectrum " + spectrum.Id;
+                runOverrideToolStripButton.Text = "Override " + spectrum.Source.Source.Name + " Processing";
+                processingListView_SelectedIndexChanged( this, EventArgs.Empty );
+            }
+
+            processingListView.Refresh();
+        }
+
+        IProcessing lastSelectedProcessing = null;
         void processingListView_SelectedIndexChanged( object sender, EventArgs e )
         {
+            if( lastSelectedProcessing != null )
+                lastSelectedProcessing.OptionsChanged -= new EventHandler( OnProcessingChanged );
+
             splitContainer.Panel2.Controls.Clear();
-            if( processingListView.ListView.SelectedIndices.Count > 0 )
+            if( processingListView.SelectedIndices.Count > 0 &&
+                currentSpectrum.ProcessingList.Count > processingListView.SelectedIndices[0] )
             {
-                ProcessingListViewItem<SpectrumList> processingListViewItem = processingListView.ListView.SelectedItems[0] as ProcessingListViewItem<SpectrumList>;
-                splitContainer.Panel2.Controls.Add( processingListViewItem.OptionsPanel );
-                processingListViewItem.OptionsChanged += new EventHandler( processingListViewItem_OptionsChanged );
+                lastSelectedProcessing = currentSpectrum.ProcessingList[processingListView.SelectedIndices[0]];
+                splitContainer.Panel2.Controls.Add( lastSelectedProcessing.OptionsPanel );
+                lastSelectedProcessing.OptionsChanged += new EventHandler( OnProcessingChanged );
+
+                moveUpProcessingButton.Enabled = processingListView.SelectedIndices[0] > 0;
+                moveDownProcessingButton.Enabled = ( (int) processingListView.SelectedIndices.Back() ) < processingListView.Items.Count - 1;
+            } else
+            {
+                lastSelectedProcessing = null;
+                removeProcessingButton.Enabled = false;
+                moveUpProcessingButton.Enabled = false;
+                moveDownProcessingButton.Enabled = false;
             }
+            splitContainer.Panel2.Refresh();
         }
 
-        void processingListViewItem_OptionsChanged( object sender, EventArgs e )
+        
+
+        private void processingListView_VirtualItemsSelectionRangeChanged( object sender, ListViewVirtualItemsSelectionRangeChangedEventArgs e )
         {
-            OnProcessingChanged( sender );
+            processingListView_SelectedIndexChanged( sender, e );
         }
 
-        void processingListView_ItemsChanged( object sender, EventArgs e )
+        private void removeProcessingButton_Click( object sender, EventArgs e )
         {
-            OnProcessingChanged( sender );
+            int start = processingListView.SelectedIndices[0];
+            int count = processingListView.SelectedIndices.Count;
+            currentSpectrum.ProcessingList.RemoveRange( start, count );
+            processingListView.VirtualListSize -= count;
+            processingListView_SelectedIndexChanged( sender, e );
+            OnProcessingChanged( sender, e );
+        }
+
+        private void moveUpProcessingButton_Click( object sender, EventArgs e )
+        {
+            for( int i = 0; i < processingListView.SelectedIndices.Count; ++i )
+            {
+                int prevIndex = processingListView.SelectedIndices[i] - 1;
+                currentSpectrum.ProcessingList.Insert( prevIndex, currentSpectrum.ProcessingList[processingListView.SelectedIndices[i]] );
+                currentSpectrum.ProcessingList.RemoveAt( processingListView.SelectedIndices[i] + 1 );
+                processingListView.Items[prevIndex].Selected = true;
+                processingListView.Items[prevIndex + 1].Selected = false;
+            }
+            processingListView_SelectedIndexChanged( sender, e );
+            OnProcessingChanged( sender, e );
+        }
+
+        private void moveDownProcessingButton_Click( object sender, EventArgs e )
+        {
+            for( int i = processingListView.SelectedIndices.Count - 1; i >= 0; --i )
+            {
+                int index = processingListView.SelectedIndices[i];
+                IProcessing p = currentSpectrum.ProcessingList[index];
+                currentSpectrum.ProcessingList.RemoveAt( index );
+                currentSpectrum.ProcessingList.Insert( index + 1, p );
+                processingListView.Items[index + 1].Selected = true;
+                processingListView.Items[index].Selected = false;
+            }
+            processingListView_SelectedIndexChanged( sender, e );
+            OnProcessingChanged( sender, e );
+        }
+
+        void processingListView_KeyDown( object sender, KeyEventArgs e )
+        {
+            if( processingListView.SelectedIndices.Count > 0 )
+            {
+                if( e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back )
+                {
+                    e.Handled = true;
+                    removeProcessingButton_Click( sender, e );
+
+                } else if( e.KeyCode == Keys.Space )
+                {
+                    e.Handled = true;
+                    foreach( int index in processingListView.SelectedIndices )
+                    {
+                        IProcessing processing = currentSpectrum.ProcessingList[index];
+                        processing.Enabled = !processing.Enabled;
+                    }
+                    OnProcessingChanged( sender, e );
+                    processingListView.Refresh();
+                }
+            }
         }
 
         void ContextMenuStrip_Opening( object sender, CancelEventArgs e )
         {
-            if( processingListView.ListView.SelectedItems.Count > 0 )
-                deleteContextItem.Enabled = true;
+            if( processingListView.SelectedIndices.Count > 0 )
+                removeToolStripMenuItem.Enabled = true;
             else
-                deleteContextItem.Enabled = false;
+                removeToolStripMenuItem.Enabled = false;
         }
 
-        private void addNativeCentroider_Click( object sender, EventArgs e )
+        private void processingListView_RetrieveVirtualItem( object sender, RetrieveVirtualItemEventArgs e )
         {
-            ProcessingListViewItem<SpectrumList> item = new SpectrumList_NativeCentroider_ListViewItem();
-            processingListView.Add( item );
-            OnProcessingChanged( sender );
-        }
-
-        private void addSavitzkyGolaySmoother_Click( object sender, EventArgs e )
-        {
-            ProcessingListViewItem<SpectrumList> item = new SpectrumList_SavitzkyGolaySmoother_ListViewItem();
-            processingListView.Add( item );
-            OnProcessingChanged( sender );
-        }
-
-        private void addECDETDPrecursorFilter_Click( object sender, EventArgs e )
-        {
-            ProcessingListViewItem<SpectrumList> item = new SpectrumList_ECD_ETD_PrecursorFilter_ListViewItem();
-            processingListView.Add( item );
-            OnProcessingChanged( sender );
-        }
-        
-        private void addThresholder_Click( object sender, EventArgs e )
-        {
-            ProcessingListViewItem<SpectrumList> item = new SpectrumList_Thresholder_ListViewItem();
-            processingListView.Add( item );
-            OnProcessingChanged( sender );
-        }
-
-        private void addChargeStateCalculator_Click( object sender, EventArgs e )
-        {
-            ProcessingListViewItem<SpectrumList> item = new SpectrumList_ChargeStateCalculator_ListViewItem();
-            processingListView.Add( item );
-            OnProcessingChanged( sender );
-        }
-
-        private void deleteProcessor_Click( object sender, EventArgs e )
-        {
-            processingListView.Remove( processingListView.ListView.SelectedItems[0] );
-            processingListView_SelectedIndexChanged( sender, e );
-            OnProcessingChanged( sender );
-        }
-
-        private ProcessingListViewItem<SpectrumList> getListViewItem(ProcessingMethod method)
-        {
-            ProcessingListViewItem<SpectrumList> item;
-
-            CVParam action = method.cvParamChild( CVID.MS_data_processing_action );
-
-            switch( action.cvid )
+            if( currentSpectrum.ProcessingList.Count <= e.ItemIndex )
             {
-                case CVID.MS_smoothing:
-                    item = new SpectrumList_SavitzkyGolaySmoother_ListViewItem();
-                    break;
-
-                case CVID.MS_peak_picking:
-                    item = new SpectrumList_NativeCentroider_ListViewItem();
-                    break;
-
-                case CVID.MS_thresholding:
-                    item = new SpectrumList_Thresholder_ListViewItem( method );
-                    break;
-
-                case CVID.MS_charge_state_calculation:
-                    item = new SpectrumList_ChargeStateCalculator_ListViewItem();
-                    break;
-
-                case CVID.MS_charge_deconvolution:
-                    item = new SpectrumList_ECD_ETD_PrecursorFilter_ListViewItem();
-                    break;
-
-                default:
-                    string label = "unknown method";
-                    if( method.userParams.Count > 0 )
-                        label = method.userParams[0].name + ": " + method.userParams[0].value + " (" + method.userParams[0].type + ")";
-                    item = new ProcessingListViewItem<SpectrumList>(label);
-                    break;
+                e.Item = new ListViewItem( "error" );
+                return;
             }
-            return item;
+
+            IProcessing processing = currentSpectrum.ProcessingList[e.ItemIndex];
+            e.Item = new ListViewItem( new string[] { "", processing.ToString() } );
+
+            processingListView.Columns[1].Width = Math.Max( processingListView.Columns[1].Width,
+                                                            e.Item.SubItems[1].Bounds.Width );
+
+            // weird workaround for unchecked checkboxes to display in virtual mode
+            e.Item.Checked = true;
+            e.Item.Checked = processing.Enabled;
+
+            if( processing.Enabled )
+                e.Item.ForeColor = Control.DefaultForeColor;
+            else
+                e.Item.ForeColor = Color.Gray;
         }
 
-        private MassSpectrum currentSpectrum;
-        public MassSpectrum CurrentSpectrum { get { return currentSpectrum; } }
-
-        public void UpdateProcessing( MassSpectrum spectrum )
+        private void processingListView_Layout( object sender, LayoutEventArgs e )
         {
-            currentSpectrum = spectrum;
-            Text = TabText = "Data Processing for spectrum " + spectrum.Id;
-            runOverrideToolStripButton.Text = "Override " + spectrum.Source.Source.Name + " Processing";
-            processingListView.ListView.Clear();
+            //processingListView.Columns[1].Width = processingListView.Width - processingListView.Columns[0].Width - 1;
+        }
 
-            List<ProcessingListViewItem<SpectrumList>> items = new List<ProcessingListViewItem<SpectrumList>>();
+        private void chargeStateCalculatorToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            currentSpectrum.ProcessingList.Add( new ChargeStateCalculationProcessor() );
+            selectIndex( processingListView.VirtualListSize++ );
+            OnProcessingChanged( sender, e );
+        }
 
-            // populate pre-existing spectrum data processing
-            //if( spectrum.Element.dataProcessing != null )
-            //    foreach( ProcessingMethod method in spectrum.Element.dataProcessing.processingMethods )
-            //        items.Add( new SpectrumList_Preexisting_ListViewItem( method ) );
+        private void smootherToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            currentSpectrum.ProcessingList.Add( new SmoothingProcessor() );
+            selectIndex( processingListView.VirtualListSize++ );
+            OnProcessingChanged( sender, e );
+        }
 
-            // populate SeeMS-originated spectrum data processing
-            if( spectrum.DataProcessing != null )
-                foreach( ProcessingMethod method in spectrum.DataProcessing.processingMethods )
-                    items.Add( getListViewItem( method ) );
+        private void thresholderToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            currentSpectrum.ProcessingList.Add( new ThresholdingProcessor() );
+            selectIndex( processingListView.VirtualListSize++ );
+            OnProcessingChanged( sender, e );
+        }
 
-            processingListView.AddRange( items );
+        private void centroiderToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            currentSpectrum.ProcessingList.Add( new PeakPickingProcessor() );
+            selectIndex( processingListView.VirtualListSize++ );
+            OnProcessingChanged( sender, e );
+        }
+
+        void processingListView_MouseClick( object sender, MouseEventArgs e )
+        {
+            ListViewItem item = processingListView.GetItemAt( e.X, e.Y );
+            if( item != null && e.X < ( item.Bounds.Left + 16 ) )
+            {
+                IProcessing processing = currentSpectrum.ProcessingList[item.Index];
+                processing.Enabled = !processing.Enabled;
+                OnProcessingChanged( sender, e );
+                processingListView.Invalidate( item.Bounds );
+            }
+        }
+
+        void processingListView_MouseDoubleClick( object sender, MouseEventArgs e )
+        {
+            ListViewItem item = processingListView.GetItemAt( e.X, e.Y );
+            if( item != null )
+            {
+                IProcessing processing = currentSpectrum.ProcessingList[item.Index];
+                processing.Enabled = !processing.Enabled;
+                OnProcessingChanged( sender, e );
+                processingListView.Invalidate( item.Bounds );
+            }
         }
     }
 }

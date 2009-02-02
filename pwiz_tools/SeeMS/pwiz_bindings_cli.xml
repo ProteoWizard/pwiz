@@ -4,6 +4,161 @@
         examples
     </assembly>
     <members>
+        <member name="M:pwiz.msdata.Reader_Thermo.hasRAWHeader(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+checks header for "Finnigan" wide char string
+</member>
+        <member name="T:pwiz.msdata.ExtendedReaderList">
+default ReaderList, extended to include vendor readers
+</member>
+        <member name="T:pwiz.msdata.DefaultReaderList">
+default Reader list
+</member>
+        <member name="M:pwiz.util.abbreviate_byte_size(System.UInt64,pwiz.util.ByteSizeAbbreviation)">
+abbreviates a byte size (file or RAM) as a readable string, using the specified notation
+</member>
+        <member name="F:ByteSizeAbbreviation_SI">
+sizes are treated as multiples of 10;
+abbreviations are: GB (Gigabyte), MB (Megabyte), KB (Kilobyte), B (byte)
+</member>
+        <member name="F:ByteSizeAbbreviation_JEDEC">
+sizes are treated as multiples of 2;
+abbreviations are: GB (Gigabyte), MB (Megabyte), KB (Kilobyte), B (byte)
+</member>
+        <member name="F:ByteSizeAbbreviation_IEC">
+sizes are treated as multiples of 2;
+abbreviations are: GiB (Gibibyte), MiB (Mebibyte), KiB (Kibibyte), B (byte)
+</member>
+        <member name="M:pwiz.util.expand_pathmask(boost.filesystem.basic_path&lt;std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;,boost.filesystem.path_traits&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;boost.filesystem.basic_path&lt;std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;,boost.filesystem.path_traits&gt;&gt;*!System.Runtime.Compi">
+expands (aka globs) a pathmask to zero or more matching paths
+- matching paths can be either files or directories
+- matching paths will be absolute if input pathmask was absolute
+- matching paths will be relative if input pathmask was relative
+</member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.write(System.String,pwiz.CLI.msdata.MSDataFile.WriteConfig)">
+            <summary>
+member write function with the specified configuration
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.write(System.String)">
+            <summary>
+member write function with the default configuration (mzML, 64-bit, no compression)
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.identify(System.String)">
+            <summary>
+returns a string describing the type of MS source &lt;path&gt; represents
+<para>- returns an empty string if the format is unknown or unsupported</para></summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.write(pwiz.CLI.msdata.MSData,System.String,pwiz.CLI.msdata.MSDataFile.WriteConfig)">
+            <summary>
+static write function for any MSData object with the specified configuration
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.write(pwiz.CLI.msdata.MSData,System.String)">
+            <summary>
+static write function for any MSData object with the default configuration (mzML, 64-bit, no compression)
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.MSDataFile.WriteConfig">
+            <summary>
+configuration options for write()
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.MSDataFile.Format">
+            <summary>
+supported data formats for write()
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.MSDataFile.#ctor(System.String)">
+            <summary>
+constructs MSData object backed by file
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.MSDataFile">
+            <summary>
+MSData object plus file I/O
+</summary>
+        </member>
+        <member name="M:pwiz.msdata.MSDataFile.write(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSDataFile.WriteConfig!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.util.IterationListenerRegistry!System.Runtime.CompilerServices.IsConst*)">
+member write function 
+</member>
+        <member name="M:pwiz.msdata.MSDataFile.write(pwiz.msdata.MSData!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSDataFile.WriteConfig!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.util.IterationListenerRegistry!System.Runtime.CompilerServices.IsConst*)">
+static write function for any MSData object;
+iterationListenerRegistry may be used for progress updates
+</member>
+        <member name="T:pwiz.msdata.MSDataFile.WriteConfig">
+configuration for write()
+</member>
+        <member name="T:pwiz.msdata.MSDataFile.Format">
+data format for write()
+</member>
+        <member name="M:pwiz.msdata.MSDataFile.#ctor(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.Reader!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+constructs MSData object backed by file;
+reader==0 -&gt; use DefaultReaderList 
+</member>
+        <member name="T:pwiz.msdata.MSDataFile">
+MSData object plus file I/O
+</member>
+        <member name="T:pwiz.util.IterationListenerRegistry">
+handles registration of IterationListeners and broadcast of update messages
+</member>
+        <member name="T:pwiz.util.IterationListener">
+interface to be implemented by clients who want progress callbacks
+</member>
+        <member name="M:pwiz.msdata.BinaryDataEncoder.decode(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+decode text-encoded data as binary 
+</member>
+        <member name="M:pwiz.msdata.BinaryDataEncoder.encode(System.Double!System.Runtime.CompilerServices.IsConst*,System.UInt32,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+encode binary data as a text string
+</member>
+        <member name="M:pwiz.msdata.BinaryDataEncoder.encode(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+encode binary data as a text string
+</member>
+        <member name="T:pwiz.msdata.BinaryDataEncoder.Config">
+encoding/decoding configuration 
+</member>
+        <member name="T:pwiz.msdata.BinaryDataEncoder">
+binary-to-text encoding
+</member>
+        <member name="M:pwiz.msdata.op_Addition(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+returns a list containing the lhs and rhs as readers
+</member>
+        <member name="M:pwiz.msdata.ReaderList.op_Addition(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+returns a concatenated list of all the Readers from the lhs and rhs operands
+</member>
+        <member name="M:pwiz.msdata.ReaderList.op_Addition(pwiz.msdata.ReaderList!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+returns a concatenated list of all the Readers from the lhs and rhs operands
+</member>
+        <member name="M:pwiz.msdata.ReaderList.op_AdditionAssignment(boost.shared_ptr&lt;pwiz.msdata.Reader&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+appends the rhs Reader to the list
+</member>
+        <member name="M:pwiz.msdata.ReaderList.op_AdditionAssignment(pwiz.msdata.ReaderList!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+appends all of the rhs operand's Readers to the list
+</member>
+        <member name="M:pwiz.msdata.ReaderList.read(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSData*!System.Runtime.CompilerServic">
+delegates to first child that identifiess
+</member>
+        <member name="M:pwiz.msdata.ReaderList.identify(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+returns child name iff some child identifies, else empty string
+</member>
+        <member name="M:pwiz.msdata.Reader.read(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,pwiz.msdata.MSData*!System.Runtime.CompilerServices.I">
+fill in the MSData structure
+</member>
+        <member name="M:pwiz.msdata.Reader.identify(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+return file type iff Reader recognizes the file, else empty; 
+note: for formats requiring a 3rd party DLL identify() should
+return true if it recognized the format, even though reading
+may fail if the 3rd party DLL isn't actually present
+Reader may filter based on filename and/or head of the file
+</member>
+        <member name="M:pwiz.msdata.Reader.accept(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+return true iff Reader recognizes the file as one it should handle
+that's not to say one it CAN handle, necessarily, as in Thermo on linux,
+see comment for identify() below
+</member>
+        <member name="T:pwiz.msdata.Reader">
+interface for file readers
+</member>
         <member name="T:pwiz.CLI.proteome.Version">
             <summary>
 version information for the proteome namespace
@@ -124,6 +279,11 @@ Base predicate intended to be overriden with custom predicate for filtering spec
         <member name="T:pwiz.CLI.analysis.SpectrumList_FilterAcceptSpectrum">
             <summary>
 Delegate for filtering spectra in SpectrumList_Filter
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.SpectrumListWrapper">
+            <summary>
+Inheritable pass-through implementation for wrapping a SpectrumList 
 </summary>
         </member>
         <member name="M:pwiz.analysis.SpectrumList_ChargeStateCalculator.spectrum(System.UInt32,System.Boolean)">
@@ -386,7 +546,7 @@ a single closed interval of integers
 a virtual container of integers, accessible via an iterator interface,
 stored as union of intervals
 </member>
-        <member name="T:pwiz.analysis.SpectrumListWrapper">
+        <member name="T:pwiz.msdata.SpectrumListWrapper">
 Inheritable pass-through implementation for wrapping a SpectrumList 
 </member>
         <member name="P:pwiz.CLI.msdata.MSData.run">
@@ -394,7 +554,7 @@ Inheritable pass-through implementation for wrapping a SpectrumList
 a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.MSData.acquisitionSettingList">
+        <member name="P:pwiz.CLI.msdata.MSData.scanSettingList">
             <summary>
 list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
 </summary>
@@ -455,9 +615,9 @@ This is the root element of ProteoWizard; it represents the mzML element, define
 intended to capture the use of a mass spectrometer, the data generated, and the initial processing of that data (to the level of the peak list).
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.AcquisitionSettingsList">
+        <member name="T:pwiz.CLI.msdata.ScanSettingsList">
             <summary>
-A list of AcquisitionSettings references; implements the IList&lt;AcquisitionSettings&gt; interface
+A list of ScanSettings references; implements the IList&lt;ScanSettings&gt; interface
 </summary>
         </member>
         <member name="T:pwiz.CLI.msdata.DataProcessingList">
@@ -545,11 +705,6 @@ retrieve a chromatogram by index
 retrieve a chromatogram by index without binary data
 <para>- client may assume the underlying Chromatogram^ is valid</para></summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.ChromatogramList.findNative(System.String)">
-            <summary>
-find nativeID in the chromatogram index (returns size() on failure)
-</summary>
-        </member>
         <member name="M:pwiz.CLI.msdata.ChromatogramList.find(System.String)">
             <summary>
 find id in the chromatogram index (returns size() on failure)
@@ -594,6 +749,11 @@ Simple writeable in-memory implementation of SpectrumList.
 A list of Spectrum references; implements the IList&lt;Spectrum&gt; interface
 </summary>
         </member>
+        <member name="M:pwiz.CLI.msdata.SpectrumList.dataProcessing">
+            <summary>
+returns the data processing affecting spectra retrieved through this interface
+<para>- may return a null shared pointer</para></summary>
+        </member>
         <member name="M:pwiz.CLI.msdata.SpectrumList.spectrum(System.Int32,System.Boolean)">
             <summary>
 retrieve a spectrum by index
@@ -604,9 +764,9 @@ retrieve a spectrum by index
 retrieve a spectrum by index without binary data
 <para>- client may assume the underlying Spectrum^ is valid</para></summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.SpectrumList.findNative(System.String)">
+        <member name="M:pwiz.CLI.msdata.SpectrumList.findNameValue(System.String,System.String)">
             <summary>
-find nativeID in the spectrum index (returns size() on failure)
+find all spectrum indexes with specified name/value pair
 </summary>
         </member>
         <member name="M:pwiz.CLI.msdata.SpectrumList.find(System.String)">
@@ -643,6 +803,11 @@ or backed by a data file (RAW, mzXML, mzML).
   BinaryDataArrayPtrs on spectrum(index, false); implementations *must* provide 
   valid BinaryDataArrayPtrs on spectrum(index, true).</para></summary>
         </member>
+        <member name="T:pwiz.CLI.msdata.IndexList">
+            <summary>
+A list of spectrum or chromatogram indexes; implements the IList&lt;int&gt; interface
+</summary>
+        </member>
         <member name="M:pwiz.CLI.msdata.Chromatogram.setTimeIntensityPairs(pwiz.CLI.msdata.TimeIntensityPairList)">
             <summary>
 set binary data arrays 
@@ -678,14 +843,9 @@ default length of binary data arrays contained in this element.
 for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Chromatogram.nativeID">
-            <summary>
-the native identifier for the chromatogram, used by the acquisition software.
-</summary>
-        </member>
         <member name="P:pwiz.CLI.msdata.Chromatogram.id">
             <summary>
-a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
+the native identifier for the chromatogram, used by the acquisition software.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Chromatogram.index">
@@ -743,9 +903,14 @@ returns true iff the element contains no params and all members are empty or nul
 list of binary data arrays.
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Spectrum.spectrumDescription">
+        <member name="P:pwiz.CLI.msdata.Spectrum.precursors">
             <summary>
-description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
+list and descriptions of precursors to the spectrum currently being described.
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.Spectrum.scanList">
+            <summary>
+list and descriptions of scans.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Spectrum.sourceFile">
@@ -773,14 +938,9 @@ for file-based MSData implementations, this attribute may refer to the spectrum'
 the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Spectrum.nativeID">
-            <summary>
-the native identifier for the spectrum, used by the acquisition software.
-</summary>
-        </member>
         <member name="P:pwiz.CLI.msdata.Spectrum.id">
             <summary>
-a unique identifier for this spectrum. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular spectrum.
+the native identifier for the spectrum, used by the acquisition software.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Spectrum.index">
@@ -790,7 +950,7 @@ the zero-based, consecutive index of the spectrum in the SpectrumList.
         </member>
         <member name="T:pwiz.CLI.msdata.Spectrum">
             <summary>
-The structure that captures the generation of a peak list (including the underlying acquisitions)
+The structure that captures the generation of a peak list (including the underlying scans)
 </summary>
         </member>
         <member name="T:pwiz.CLI.msdata.TimeIntensityPairList">
@@ -813,11 +973,6 @@ A list of BinaryDataArray references; implements the IList&lt;BinaryDataArray&gt
 for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.ChromatogramIdentity.nativeID">
-            <summary>
-the native identifier for the chromatogram, used by the acquisition software.
-</summary>
-        </member>
         <member name="P:pwiz.CLI.msdata.ChromatogramIdentity.id">
             <summary>
 a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
@@ -836,11 +991,6 @@ for file-based MSData implementations, this attribute may refer to the spectrum'
         <member name="P:pwiz.CLI.msdata.SpectrumIdentity.spotID">
             <summary>
 the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.SpectrumIdentity.nativeID">
-            <summary>
-the native identifier for the spectrum, used by the acquisition software.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.SpectrumIdentity.id">
@@ -893,64 +1043,9 @@ The structure into which encoded binary data goes. Byte ordering is always littl
 A list of doubles; implements the IList&lt;double&gt; interface
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.SpectrumDescription.empty">
-            <summary>
-returns true iff the element contains no params and all members are empty or null
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.SpectrumDescription.scan">
-            <summary>
-the instrument's 'run time' parameters; common to the whole of this spectrum.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.SpectrumDescription.precursors">
-            <summary>
-list and descriptions of precursors to the spectrum currently being described.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.SpectrumDescription.acquisitionList">
-            <summary>
-list and descriptions of acquisitions.
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.SpectrumDescription">
-            <summary>
-Description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
-</summary>
-        </member>
         <member name="T:pwiz.CLI.msdata.PrecursorList">
             <summary>
 A list of Precursor references; implements the IList&lt;Precursor&gt; interface
-</summary>
-        </member>
-        <member name="M:pwiz.CLI.msdata.Scan.empty">
-            <summary>
-returns true iff the element contains no params and all members are empty or null
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Scan.scanWindows">
-            <summary>
-container for a list of select windows.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Scan.instrumentConfiguration">
-            <summary>
-this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.Scan">
-            <summary>
-The instrument's 'run time' parameters; common to the whole of this spectrum.
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.ScanWindowList">
-            <summary>
-A list of ScanWindow references; implements the IList&lt;ScanWindow&gt; interface
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.ScanWindow">
-            <summary>
-TODO
 </summary>
         </member>
         <member name="M:pwiz.CLI.msdata.Precursor.empty">
@@ -973,20 +1068,15 @@ this list of precursor ions that were selected.
 this element captures the isolation (or 'selection') window configured to isolate one or more precursors.
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Precursor.externalNativeID">
-            <summary>
-for precursor spectra that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
-        </member>
         <member name="P:pwiz.CLI.msdata.Precursor.externalSpectrumID">
             <summary>
-for precursor spectra that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+for precursor spectra that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
 <para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Precursor.spectrumID">
             <summary>
 reference to the id attribute of the spectrum from which the precursor was selected.
-<para>this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both</para></summary>
+<para>this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both</para></summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Precursor.sourceFile">
             <summary>
@@ -1018,87 +1108,57 @@ TODO
 This element captures the isolation (or 'selection') window configured to isolate one or more precursors.
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.AcquisitionList">
+        <member name="T:pwiz.CLI.msdata.ScanList">
             <summary>
 List and descriptions of acquisitions .
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.Acquisitions">
+        <member name="T:pwiz.CLI.msdata.Scans">
             <summary>
-A list of Acquisition references; implements the IList&lt;Acquisition&gt; interface
+A list of Scan references; implements the IList&lt;Scan&gt; interface
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.Acquisition.empty">
+        <member name="M:pwiz.CLI.msdata.Scan.empty">
             <summary>
 returns true iff the element contains no params and all members are empty or null
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Acquisition.externalNativeID">
+        <member name="P:pwiz.CLI.msdata.Scan.scanWindows">
             <summary>
-for acquisitions that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Acquisition.externalSpectrumID">
-            <summary>
-for acquisitions that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Acquisition.spectrumID">
-            <summary>
-for acquisitions that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
-<para>this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both</para></summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Acquisition.sourceFile">
-            <summary>
-for acquisitions that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
-<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Acquisition.number">
-            <summary>
-a number for this acquisition.
+container for a list of select windows.
 </summary>
         </member>
-        <member name="T:pwiz.CLI.msdata.Acquisition">
+        <member name="P:pwiz.CLI.msdata.Scan.instrumentConfiguration">
+            <summary>
+this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.Scan.externalSpectrumID">
+            <summary>
+for scans that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.Scan.spectrumID">
+            <summary>
+for scans that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
+<para>this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both</para></summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.Scan.sourceFile">
+            <summary>
+for scans that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
+<para>this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both</para></summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.Scan">
             <summary>
 Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
 </summary>
         </member>
-        <member name="M:pwiz.CLI.msdata.AcquisitionSettings.empty">
+        <member name="T:pwiz.CLI.msdata.ScanWindowList">
             <summary>
-returns true iff the element contains no params and all members are empty or null
+A list of ScanWindow references; implements the IList&lt;ScanWindow&gt; interface
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.AcquisitionSettings.targets">
-            <summary>
-target list (or 'inclusion list') configured prior to the run.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.AcquisitionSettings.sourceFiles">
-            <summary>
-container for a list of source file references.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.AcquisitionSettings.instrumentConfiguration">
-            <summary>
-this attribute MUST reference the 'id' of the appropriate instrument configuration.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.AcquisitionSettings.id">
-            <summary>
-a unique identifier for this acquisition setting.
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.AcquisitionSettings">
-            <summary>
-Description of the acquisition settings of the instrument prior to the start of the run.
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.TargetList">
-            <summary>
-A list of Target references; implements the IList&lt;Target&gt; interface
-</summary>
-        </member>
-        <member name="T:pwiz.CLI.msdata.Target">
+        <member name="T:pwiz.CLI.msdata.ScanWindow">
             <summary>
 TODO
 </summary>
@@ -1111,11 +1171,6 @@ returns true iff the element contains no params and all members are empty or nul
         <member name="P:pwiz.CLI.msdata.DataProcessing.processingMethods">
             <summary>
 description of the default peak processing method(s). This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.DataProcessing.software">
-            <summary>
-this attribute MUST reference the 'id' of the appropriate SoftwareType.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.DataProcessing.id">
@@ -1136,6 +1191,11 @@ A list of ProcessingMethod references; implements the IList&lt;ProcessingMethod&
         <member name="M:pwiz.CLI.msdata.ProcessingMethod.empty">
             <summary>
 returns true iff the element contains no params and all members are empty or null
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.ProcessingMethod.software">
+            <summary>
+this attribute MUST reference the 'id' of the appropriate SoftwareType.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.ProcessingMethod.order">
@@ -1170,7 +1230,42 @@ an identifier for this instrument configuration.
         </member>
         <member name="T:pwiz.CLI.msdata.InstrumentConfiguration">
             <summary>
-Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, use a ReferenceableParamGroup element.
+Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, reference the appropriate ScanSettings element.
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.ScanSettings.empty">
+            <summary>
+returns true iff the element contains no params and all members are empty or null
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.ScanSettings.targets">
+            <summary>
+target list (or 'inclusion list') configured prior to the run.
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.ScanSettings.sourceFiles">
+            <summary>
+container for a list of source file references.
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.ScanSettings.id">
+            <summary>
+a unique identifier for this acquisition setting.
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.ScanSettings">
+            <summary>
+Description of the acquisition settings of the instrument prior to the start of the run.
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.TargetList">
+            <summary>
+A list of Target references; implements the IList&lt;Target&gt; interface
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.Target">
+            <summary>
+TODO
 </summary>
         </member>
         <member name="M:pwiz.CLI.msdata.Software.empty">
@@ -1178,14 +1273,9 @@ Description of a particular hardware configuration of a mass spectrometer. Each 
 returns true iff all members are empty or null
 </summary>
         </member>
-        <member name="P:pwiz.CLI.msdata.Software.softwareParamVersion">
+        <member name="P:pwiz.CLI.msdata.Software.version">
             <summary>
 the software version.
-</summary>
-        </member>
-        <member name="P:pwiz.CLI.msdata.Software.softwareParam">
-            <summary>
-a description of the software, based on CV information and a software version.
 </summary>
         </member>
         <member name="P:pwiz.CLI.msdata.Software.id">
@@ -1571,17 +1661,20 @@ Information about an ontology or CV source and a short 'lookup' tag to refer to.
         <member name="F:pwiz.msdata.MSData.run">
 a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
 </member>
-        <member name="F:pwiz.msdata.MSData.acquisitionSettingsPtrs">
-list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
+        <member name="M:pwiz.msdata.MSData.currentDataProcessingPtr">
+current data processing, held in SpectrumList
 </member>
         <member name="F:pwiz.msdata.MSData.dataProcessingPtrs">
 list and descriptions of data processing applied to this data.
 </member>
-        <member name="F:pwiz.msdata.MSData.softwarePtrs">
-list and descriptions of software used to acquire and/or process the data in this mzML file.
-</member>
         <member name="F:pwiz.msdata.MSData.instrumentConfigurationPtrs">
 list and descriptions of instrument configurations.
+</member>
+        <member name="F:pwiz.msdata.MSData.scanSettingsPtrs">
+list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
+</member>
+        <member name="F:pwiz.msdata.MSData.softwarePtrs">
+list and descriptions of software used to acquire and/or process the data in this mzML file.
 </member>
         <member name="F:pwiz.msdata.MSData.samplePtrs">
 list and descriptions of samples.
@@ -1633,13 +1726,14 @@ A run in mzML should correspond to a single, consecutive and coherent set of sca
 Simple writeable in-memory implementation of ChromatogramList.
 Note:  This chromatogram() implementation returns internal ChromatogramPtrs.
 </member>
+        <member name="M:pwiz.msdata.ChromatogramList.dataProcessingPtr">
+returns the data processing affecting spectra retrieved through this interface
+- may return a null shared pointer
+</member>
         <member name="M:pwiz.msdata.ChromatogramList.chromatogram(System.UInt32,System.Boolean)">
 retrieve a chromatogram by index
 - binary data arrays will be provided if (getBinaryData == true);
 - client may assume the underlying Chromatogram* is valid 
-</member>
-        <member name="M:pwiz.msdata.ChromatogramList.findNative(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-find nativeID in the chromatogram index (returns size() on failure)
 </member>
         <member name="M:pwiz.msdata.ChromatogramList.find(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
 find id in the chromatogram index (returns size() on failure)
@@ -1669,8 +1763,8 @@ retrieve a spectrum by index
         <member name="M:pwiz.msdata.SpectrumList.findSpotID(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
 find all spectrum indexes with spotID (returns empty vector on failure)
 </member>
-        <member name="M:pwiz.msdata.SpectrumList.findNative(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-find nativeID in the spectrum index (returns size() on failure)
+        <member name="M:pwiz.msdata.SpectrumList.findNameValue(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+find all spectrum indexes with specified name/value pair 
 </member>
         <member name="M:pwiz.msdata.SpectrumList.find(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
 find id in the spectrum index (returns size() on failure)
@@ -1751,8 +1845,11 @@ returns true iff the element contains no params and all members are empty or nul
         <member name="F:pwiz.msdata.Spectrum.binaryDataArrayPtrs">
 list of binary data arrays.
 </member>
-        <member name="F:pwiz.msdata.Spectrum.spectrumDescription">
-description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
+        <member name="F:pwiz.msdata.Spectrum.precursors">
+list and descriptions of precursors to the spectrum currently being described.
+</member>
+        <member name="F:pwiz.msdata.Spectrum.scanList">
+list of scans
 </member>
         <member name="F:pwiz.msdata.Spectrum.sourceFilePtr">
 this attribute can optionally reference the 'id' of the appropriate sourceFile.
@@ -1766,11 +1863,11 @@ default length of binary data arrays contained in this element.
         <member name="T:pwiz.msdata.Spectrum">
 The structure that captures the generation of a peak list (including the underlying acquisitions)
 </member>
+        <member name="M:pwiz.msdata.id.value(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+convenience function to extract a named value from an id string
+</member>
         <member name="F:pwiz.msdata.ChromatogramIdentity.sourceFilePosition">
 for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
-</member>
-        <member name="F:pwiz.msdata.ChromatogramIdentity.nativeID">
-the native identifier for the chromatogram, used by the acquisition software.
 </member>
         <member name="F:pwiz.msdata.ChromatogramIdentity.id">
 a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
@@ -1786,9 +1883,6 @@ for file-based MSData implementations, this attribute may refer to the spectrum'
 </member>
         <member name="F:pwiz.msdata.SpectrumIdentity.spotID">
 the identifier for the spot from which this spectrum was derived, if a MALDI or similar run.
-</member>
-        <member name="F:pwiz.msdata.SpectrumIdentity.nativeID">
-the native identifier for the spectrum, used by the acquisition software.
 </member>
         <member name="F:pwiz.msdata.SpectrumIdentity.id">
 a unique identifier for this spectrum. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular spectrum.
@@ -1823,20 +1917,8 @@ this optional attribute may reference the 'id' attribute of the appropriate data
         <member name="T:pwiz.msdata.BinaryDataArray">
 The structure into which encoded binary data goes. Byte ordering is always little endian (Intel style). Computers using a different endian style MUST convert to/from little endian when writing/reading mzML
 </member>
-        <member name="M:pwiz.msdata.SpectrumDescription.empty">
-returns true iff the element contains no params and all members are empty or null
-</member>
-        <member name="F:pwiz.msdata.SpectrumDescription.scan">
-the instrument's 'run time' parameters; common to the whole of this spectrum.
-</member>
-        <member name="F:pwiz.msdata.SpectrumDescription.precursors">
-list and descriptions of precursors to the spectrum currently being described.
-</member>
-        <member name="F:pwiz.msdata.SpectrumDescription.acquisitionList">
-list and descriptions of acquisitions.
-</member>
-        <member name="T:pwiz.msdata.SpectrumDescription">
-Description of the parameters for the mass spectrometer for a given acquisition (or list of acquisitions).
+        <member name="T:pwiz.msdata.ScanList">
+List and descriptions of scans.
 </member>
         <member name="M:pwiz.msdata.Scan.empty">
 returns true iff the element contains no params and all members are empty or null
@@ -1847,8 +1929,20 @@ container for a list of select windows.
         <member name="F:pwiz.msdata.Scan.instrumentConfigurationPtr">
 this attribute MUST reference the 'id' attribute of the appropriate instrument configuration.
 </member>
+        <member name="F:pwiz.msdata.Scan.spectrumID">
+for scans that are local to this document, this attribute can be used to reference the 'id' attribute of the spectrum corresponding to the scan.
+note: this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both
+</member>
+        <member name="F:pwiz.msdata.Scan.externalSpectrumID">
+for scans that are external to this document, this string must correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+</member>
+        <member name="F:pwiz.msdata.Scan.sourceFilePtr">
+if this attribute is set, it must reference the 'id' attribute of a sourceFile representing the external document containing the spectrum referred to by 'externalSpectrumID'.
+note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
+</member>
         <member name="T:pwiz.msdata.Scan">
-The instrument's 'run time' parameters; common to the whole of this spectrum.
+Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
 </member>
         <member name="T:pwiz.msdata.ScanWindow">
 TODO
@@ -1867,14 +1961,10 @@ this element captures the isolation (or 'selection') window configured to isolat
 </member>
         <member name="F:pwiz.msdata.Precursor.spectrumID">
 reference to the id attribute of the spectrum from which the precursor was selected.
-note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
+note: this attribute is mutually exclusive with externalSpectrumID; i.e. use one or the other but not both
 </member>
         <member name="F:pwiz.msdata.Precursor.externalSpectrumID">
-for precursor spectra that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-</member>
-        <member name="F:pwiz.msdata.Precursor.externalNativeID">
-for precursor spectra that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
+for precursor spectra that are external to this document, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
 note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
 </member>
         <member name="F:pwiz.msdata.Precursor.sourceFilePtr">
@@ -1893,63 +1983,11 @@ TODO
         <member name="T:pwiz.msdata.IsolationWindow">
 This element captures the isolation (or 'selection') window configured to isolate one or more precursors.
 </member>
-        <member name="T:pwiz.msdata.AcquisitionList">
-List and descriptions of acquisitions .
-</member>
-        <member name="M:pwiz.msdata.Acquisition.empty">
-returns true iff the element contains no params and all members are empty or null
-</member>
-        <member name="F:pwiz.msdata.Acquisition.spectrumID">
-for acquisitions that are local to this document, this attribute MUST reference the 'id' attribute of the appropriate spectrum.
-note: this attribute is mutually exclusive with externalSpectrumID and externalNativeID; i.e. use one or the other but not both
-</member>
-        <member name="F:pwiz.msdata.Acquisition.externalSpectrumID">
-for acquisitions that are external to this document which cannot be referenced by nativeID, this string MUST correspond to the 'id' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-</member>
-        <member name="F:pwiz.msdata.Acquisition.externalNativeID">
-for acquisitions that are external to this document which can be referenced by nativeID, this string MUST correspond to the 'nativeID' attribute of a spectrum in the external document indicated by 'sourceFileRef'.
-note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-</member>
-        <member name="F:pwiz.msdata.Acquisition.sourceFilePtr">
-for acquisitions that are external to this document, this attribute MUST reference the 'id' attribute of a sourceFile representing that external document.
-note: this attribute is mutually exclusive with spectrumID; i.e. use one or the other but not both
-</member>
-        <member name="F:pwiz.msdata.Acquisition.number">
-a number for this acquisition.
-</member>
-        <member name="T:pwiz.msdata.Acquisition">
-Scan or acquisition from original raw file used to create this peak list, as specified in sourceFile.
-</member>
-        <member name="M:pwiz.msdata.AcquisitionSettings.empty">
-returns true iff the element contains no params and all members are empty or null
-</member>
-        <member name="F:pwiz.msdata.AcquisitionSettings.targets">
-target list (or 'inclusion list') configured prior to the run.
-</member>
-        <member name="F:pwiz.msdata.AcquisitionSettings.sourceFilePtrs">
-container for a list of source file references.
-</member>
-        <member name="F:pwiz.msdata.AcquisitionSettings.instrumentConfigurationPtr">
-this attribute MUST reference the 'id' of the appropriate instrument configuration.
-</member>
-        <member name="F:pwiz.msdata.AcquisitionSettings.id">
-a unique identifier for this acquisition setting.
-</member>
-        <member name="T:pwiz.msdata.AcquisitionSettings">
-Description of the acquisition settings of the instrument prior to the start of the run.
-</member>
-        <member name="T:pwiz.msdata.Target">
-TODO
-</member>
         <member name="M:pwiz.msdata.DataProcessing.empty">
 returns true iff the element contains no params and all members are empty or null
 </member>
         <member name="F:pwiz.msdata.DataProcessing.processingMethods">
 description of the default peak processing method(s). This element describes the base method used in the generation of a particular mzML file. Variable methods should be described in the appropriate acquisition section - if no acquisition-specific details are found, then this information serves as the default.
-</member>
-        <member name="F:pwiz.msdata.DataProcessing.softwarePtr">
-this attribute MUST reference the 'id' of the appropriate SoftwareType.
 </member>
         <member name="F:pwiz.msdata.DataProcessing.id">
 a unique identifier for this data processing that is unique across all DataProcessingTypes.
@@ -1960,6 +1998,9 @@ Description of the way in which a particular software was used.
         <member name="M:pwiz.msdata.ProcessingMethod.empty">
 returns true iff the element contains no params and all members are empty or null
 </member>
+        <member name="F:pwiz.msdata.ProcessingMethod.softwarePtr">
+this attribute MUST reference the 'id' of the appropriate SoftwareType.
+</member>
         <member name="F:pwiz.msdata.ProcessingMethod.order">
 this attributes allows a series of consecutive steps to be placed in the correct order.
 </member>
@@ -1968,6 +2009,9 @@ Description of the default peak processing method. This element describes the ba
 </member>
         <member name="M:pwiz.msdata.InstrumentConfiguration.empty">
 returns true iff the element contains no params and all members are empty or null
+</member>
+        <member name="F:pwiz.msdata.InstrumentConfiguration.scanSettingsPtr">
+reference to a scan settings element defining global scan settings used by this configuration
 </member>
         <member name="F:pwiz.msdata.InstrumentConfiguration.softwarePtr">
 reference to a previously defined software element.
@@ -1979,16 +2023,31 @@ list with the different components used in the mass spectrometer. At least one s
 an identifier for this instrument configuration.
 </member>
         <member name="T:pwiz.msdata.InstrumentConfiguration">
-Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, use a ReferenceableParamGroup element.
+Description of a particular hardware configuration of a mass spectrometer. Each configuration MUST have one (and only one) of the three different components used for an analysis. For hybrid instruments, such as an LTQ-FT, there MUST be one configuration for each permutation of the components that is used in the document. For software configuration, reference the appropriate ScanSettings element.
+</member>
+        <member name="M:pwiz.msdata.ScanSettings.empty">
+returns true iff the element contains no params and all members are empty or null
+</member>
+        <member name="F:pwiz.msdata.ScanSettings.targets">
+target list (or 'inclusion list') configured prior to the run.
+</member>
+        <member name="F:pwiz.msdata.ScanSettings.sourceFilePtrs">
+container for a list of source file references.
+</member>
+        <member name="F:pwiz.msdata.ScanSettings.id">
+a unique identifier for this acquisition setting.
+</member>
+        <member name="T:pwiz.msdata.ScanSettings">
+Description of the acquisition settings of the instrument prior to the start of the run.
+</member>
+        <member name="T:pwiz.msdata.Target">
+TODO
 </member>
         <member name="M:pwiz.msdata.Software.empty">
 returns true iff all members are empty or null
 </member>
-        <member name="F:pwiz.msdata.Software.softwareParamVersion">
+        <member name="F:pwiz.msdata.Software.version">
 the software version.
-</member>
-        <member name="F:pwiz.msdata.Software.softwareParam">
-a description of the software, based on CV information and a software version.
 </member>
         <member name="F:pwiz.msdata.Software.id">
 an identifier for this software that is unique across all SoftwareTypes.
@@ -2077,6 +2136,9 @@ returns !(this==that)
         <member name="M:pwiz.msdata.ParamContainer.op_Equality(pwiz.msdata.ParamContainer!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
 returns true iff this and that have the exact same cvParams and userParams
 - recursive: looks into paramGroupPtrs
+</member>
+        <member name="M:pwiz.msdata.ParamContainer.clear">
+clears the collections
 </member>
         <member name="M:pwiz.msdata.ParamContainer.empty">
 returns true iff the element contains no params or param groups
@@ -3107,6 +3169,126 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.UO_unit">
             <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_sliding_average_smoothing">
+            <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_boxcar_smoothing">
+            <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_box_smoothing">
+            <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_moving_average_smoothing">
+            <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_binomial_smoothing">
+            <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Weierstrass_transform">
+            <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Gaussian_smoothing">
+            <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_LOWESS_smoothing">
+            <summary>LOWESS smoothing: Reduces intensity spikes by applying a modeling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Savitzky_Golay_smoothing">
+            <summary>Savitzky-Golay smoothing: Reduces intensity spikes by applying local polynomial regression (of degree k) on a distribution (of at least k+1 equally spaced points) to determine the smoothed value for each point. It tends to preserve features of the distribution such as relative maxima, minima and width, which are usually 'flattened' by other adjacent averaging techniques.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_msPrefix_precursor_recalculation">
+            <summary>msPrefix precursor recalculation: Recalculates one or more precursor selected ions by peak detection in the isolation windows of high accuracy MS precursor scans.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_precursor_recalculation">
+            <summary>precursor recalculation: A process that recalculates existing precursor selected ions with one or more algorithmically determined precursor selected ions.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_below_precursor_intensity_dominance_charge_state_calculation">
+            <summary>below precursor intensity dominance charge state calculation: Infers charge state as single or amibiguously multiple by determining the fraction of intensity below the precursor m/z.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_charge_state_calculation">
+            <summary>charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_spectrum_identifier_nativeID_format">
+            <summary>spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_scan_number_only_nativeID_format">
+            <summary>scan number only nativeID format: scan=xsd:nonNegativeInteger</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_single_peak_list_nativeID_format">
+            <summary>single peak list nativeID format: file=xsd:IDREF</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_multiple_peak_list_nativeID_format">
+            <summary>multiple peak list nativeID format: index=xsd:nonNegativeInteger</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_FID_nativeID_format">
+            <summary>Bruker FID nativeID format: file=xsd:IDREF</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_BAF_nativeID_format">
+            <summary>Bruker BAF nativeID format: scan=xsd:nonNegativeInteger.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_Agilent_YEP_nativeID_format">
+            <summary>Bruker/Agilent YEP nativeID format: scan=xsd:nonNegativeInteger.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_WIFF_nativeID_format">
+            <summary>WIFF nativeID format: sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Waters_nativeID_format">
+            <summary>Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Thermo_nativeID_format">
+            <summary>Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_nativeID_format">
+            <summary>native spectrum identifier format: Describes how the native spectrum identifiers are formated.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_native_spectrum_identifier_format">
+            <summary>native spectrum identifier format: Describes how the native spectrum identifiers are formated.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TOFCalibration">
+            <summary>TOFCalibration: Applies time of flight calibration.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_SpectraFilter">
+            <summary>SpectraFilter: Applies a filter to peak spectra.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Resampler">
+            <summary>Resampler: Transforms an LC/MS map into a resampled map or a png image.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_PeakPicker">
+            <summary>PeakPicker: Finds mass spectrometric peaks in profile mass spectra.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_NoiseFilter">
+            <summary>NoiseFilter: Removes noise from profile spectra by using different smoothing techniques.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_MapNormalizer">
+            <summary>MapNormalizer: Normalizes peak intensities in an MS run.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_MapAligner">
+            <summary>MapAligner: Corrects retention time distortions between maps.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_InternalCalibration">
+            <summary>InternalCalibration: Applies an internal calibration.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_FileMerger">
+            <summary>FileMerger: Merges several MS files into one file.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_FileFilter">
+            <summary>FileFilter: Extracts or manipulates portions of data from peak, feature or consensus feature files.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_FileConverter">
+            <summary>FileConverter: Converts between different MS file formats.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_DBImporter">
+            <summary>DBImporter: Imports data to an OpenMS database.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_DBExporter">
+            <summary>DBExporter: Exports data from an OpenMS database to a file.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_BaselineFilter">
+            <summary>BaselineFilter: Removes the baseline from profile spectra using a top-hat filter.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_TOPP_software">
+            <summary>TOPP software: TOPP (The OpenMS proteomics pipeline) software.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ_Quantum_Ultra">
             <summary>TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.</summary>
         </member>
@@ -3603,7 +3785,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparision between intensities of m/z values.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_smoothing">
-            <summary>smoothing: Application of Lowess smoothing or filters to preserve high frequency components of a peak while reducing the noise.</summary>
+            <summary>smoothing: A process of reducing spikes of intensity in order to reduce noise while preserving real peak signal. Many algorithms can be applied for this process.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_MzWiff">
             <summary>MzWiff: A software program for converting Applied Biosystems wiff file format to the mzXML or mzML format. MzWiff is currently maintained at the Institute for Systems Biology. It replaces the slower mzStar program.</summary>
@@ -6434,6 +6616,126 @@ length unit: A base unit which is a standard measure of the distance between two
         <member name="F:UO_unit">
 unit: A unit of measurement is a standardized quantity of a physical quality.
 </member>
+        <member name="F:MS_sliding_average_smoothing">
+moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+</member>
+        <member name="F:MS_boxcar_smoothing">
+moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+</member>
+        <member name="F:MS_box_smoothing">
+moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+</member>
+        <member name="F:MS_moving_average_smoothing">
+moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+</member>
+        <member name="F:MS_binomial_smoothing">
+Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
+</member>
+        <member name="F:MS_Weierstrass_transform">
+Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
+</member>
+        <member name="F:MS_Gaussian_smoothing">
+Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
+</member>
+        <member name="F:MS_LOWESS_smoothing">
+LOWESS smoothing: Reduces intensity spikes by applying a modeling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible.
+</member>
+        <member name="F:MS_Savitzky_Golay_smoothing">
+Savitzky-Golay smoothing: Reduces intensity spikes by applying local polynomial regression (of degree k) on a distribution (of at least k+1 equally spaced points) to determine the smoothed value for each point. It tends to preserve features of the distribution such as relative maxima, minima and width, which are usually 'flattened' by other adjacent averaging techniques.
+</member>
+        <member name="F:MS_msPrefix_precursor_recalculation">
+msPrefix precursor recalculation: Recalculates one or more precursor selected ions by peak detection in the isolation windows of high accuracy MS precursor scans.
+</member>
+        <member name="F:MS_precursor_recalculation">
+precursor recalculation: A process that recalculates existing precursor selected ions with one or more algorithmically determined precursor selected ions.
+</member>
+        <member name="F:MS_below_precursor_intensity_dominance_charge_state_calculation">
+below precursor intensity dominance charge state calculation: Infers charge state as single or amibiguously multiple by determining the fraction of intensity below the precursor m/z.
+</member>
+        <member name="F:MS_charge_state_calculation">
+charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.
+</member>
+        <member name="F:MS_spectrum_identifier_nativeID_format">
+spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger
+</member>
+        <member name="F:MS_scan_number_only_nativeID_format">
+scan number only nativeID format: scan=xsd:nonNegativeInteger
+</member>
+        <member name="F:MS_single_peak_list_nativeID_format">
+single peak list nativeID format: file=xsd:IDREF
+</member>
+        <member name="F:MS_multiple_peak_list_nativeID_format">
+multiple peak list nativeID format: index=xsd:nonNegativeInteger
+</member>
+        <member name="F:MS_Bruker_FID_nativeID_format">
+Bruker FID nativeID format: file=xsd:IDREF
+</member>
+        <member name="F:MS_Bruker_BAF_nativeID_format">
+Bruker BAF nativeID format: scan=xsd:nonNegativeInteger.
+</member>
+        <member name="F:MS_Bruker_Agilent_YEP_nativeID_format">
+Bruker/Agilent YEP nativeID format: scan=xsd:nonNegativeInteger.
+</member>
+        <member name="F:MS_WIFF_nativeID_format">
+WIFF nativeID format: sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger.
+</member>
+        <member name="F:MS_Waters_nativeID_format">
+Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.
+</member>
+        <member name="F:MS_Thermo_nativeID_format">
+Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.
+</member>
+        <member name="F:MS_nativeID_format">
+native spectrum identifier format: Describes how the native spectrum identifiers are formated.
+</member>
+        <member name="F:MS_native_spectrum_identifier_format">
+native spectrum identifier format: Describes how the native spectrum identifiers are formated.
+</member>
+        <member name="F:MS_TOFCalibration">
+TOFCalibration: Applies time of flight calibration.
+</member>
+        <member name="F:MS_SpectraFilter">
+SpectraFilter: Applies a filter to peak spectra.
+</member>
+        <member name="F:MS_Resampler">
+Resampler: Transforms an LC/MS map into a resampled map or a png image.
+</member>
+        <member name="F:MS_PeakPicker">
+PeakPicker: Finds mass spectrometric peaks in profile mass spectra.
+</member>
+        <member name="F:MS_NoiseFilter">
+NoiseFilter: Removes noise from profile spectra by using different smoothing techniques.
+</member>
+        <member name="F:MS_MapNormalizer">
+MapNormalizer: Normalizes peak intensities in an MS run.
+</member>
+        <member name="F:MS_MapAligner">
+MapAligner: Corrects retention time distortions between maps.
+</member>
+        <member name="F:MS_InternalCalibration">
+InternalCalibration: Applies an internal calibration.
+</member>
+        <member name="F:MS_FileMerger">
+FileMerger: Merges several MS files into one file.
+</member>
+        <member name="F:MS_FileFilter">
+FileFilter: Extracts or manipulates portions of data from peak, feature or consensus feature files.
+</member>
+        <member name="F:MS_FileConverter">
+FileConverter: Converts between different MS file formats.
+</member>
+        <member name="F:MS_DBImporter">
+DBImporter: Imports data to an OpenMS database.
+</member>
+        <member name="F:MS_DBExporter">
+DBExporter: Exports data from an OpenMS database to a file.
+</member>
+        <member name="F:MS_BaselineFilter">
+BaselineFilter: Removes the baseline from profile spectra using a top-hat filter.
+</member>
+        <member name="F:MS_TOPP_software">
+TOPP software: TOPP (The OpenMS proteomics pipeline) software.
+</member>
         <member name="F:MS_TSQ_Quantum_Ultra">
 TSQ Quantum Ultra: Thermo Scientific TSQ Quantum Ultra.
 </member>
@@ -6930,7 +7232,7 @@ low intensity data point removal: The removal of very low intensity data points 
 baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparision between intensities of m/z values.
 </member>
         <member name="F:MS_smoothing">
-smoothing: Application of Lowess smoothing or filters to preserve high frequency components of a peak while reducing the noise.
+smoothing: A process of reducing spikes of intensity in order to reduce noise while preserving real peak signal. Many algorithms can be applied for this process.
 </member>
         <member name="F:MS_MzWiff">
 MzWiff: A software program for converting Applied Biosystems wiff file format to the mzXML or mzML format. MzWiff is currently maintained at the Institute for Systems Biology. It replaces the slower mzStar program.
@@ -8951,6 +9253,7 @@ Proteomics Standards Initiative Mass Spectrometry Ontology: Proteomics Standards
         <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.source(System.UInt32)'. -->
         <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.analyzer(System.UInt32)'. -->
         <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.detector(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.id.parse(std.basic_string<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte>>!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)'. -->
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.SpectrumList'. -->
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ChromatogramList'. -->
         <!-- Discarding badly formed XML document comment for member 'F:pwiz.msdata.MSData.cvs'. -->
@@ -8967,5 +9270,32 @@ Proteomics Standards Initiative Mass Spectrometry Ontology: Proteomics Standards
         <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfBasePeakIntensity'. -->
         <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfTotalIntensity'. -->
         <!-- Discarding badly formed XML document comment for member 'F:ThresholdingBy_FractionOfTotalIntensityCutoff'. -->
+        <!-- Discarding badly formed XML document comment for member 'P:pwiz.CLI.msdata.CVInfo.cvid'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIs'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIsChildOf'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.source(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.analyzer(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.detector(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.source(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.analyzer(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.detector(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.id.parse(std.basic_string<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte>>!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.SpectrumList'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ChromatogramList'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:pwiz.msdata.MSData.cvs'. -->
+        <!-- Discarding badly formed XML document comment for member 'P:pwiz.CLI.msdata.CVInfo.cvid'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIs'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIsChildOf'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.source(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.analyzer(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.detector(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.source(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.analyzer(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.ComponentList.detector(System.UInt32)'. -->
+        <!-- Discarding badly formed XML document comment for member 'M:pwiz.msdata.id.parse(std.basic_string<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator<System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte>>!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.SpectrumList'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ChromatogramList'. -->
+        <!-- Discarding badly formed XML document comment for member 'F:pwiz.msdata.MSData.cvs'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ReaderList'. -->
     </members>
 </doc>

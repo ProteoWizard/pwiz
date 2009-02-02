@@ -30,10 +30,6 @@ namespace seems
 		{
             this.components = new System.ComponentModel.Container();
             this.gridView = new System.Windows.Forms.DataGridView();
-            this.spectraSource = new System.Windows.Forms.BindingSource( this.components );
-            this.spectrumDataSet = new seems.Misc.SpectrumDataSet();
-            this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
-            this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.Id = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.SpotId = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.SpectrumType = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
@@ -47,6 +43,10 @@ namespace seems
             this.DpId = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.PrecursorInfo = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.ScanInfo = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
+            this.spectraSource = new System.Windows.Forms.BindingSource( this.components );
+            this.spectrumDataSet = new seems.Misc.SpectrumDataSet();
+            this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
+            this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ( (System.ComponentModel.ISupportInitialize) ( this.gridView ) ).BeginInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.spectraSource ) ).BeginInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.spectrumDataSet ) ).BeginInit();
@@ -91,30 +91,6 @@ namespace seems
             this.gridView.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseClick );
             this.gridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_ColumnHeaderMouseClick );
             this.gridView.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler( this.gridView_CellMouseDoubleClick );
-            // 
-            // spectraSource
-            // 
-            this.spectraSource.DataMember = "SpectrumTable";
-            this.spectraSource.DataSource = this.spectrumDataSet;
-            // 
-            // spectrumDataSet
-            // 
-            this.spectrumDataSet.DataSetName = "SpectrumDataSet";
-            this.spectrumDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
-            // 
-            // selectColumnsMenuStrip
-            // 
-            this.selectColumnsMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.selectColumnsToolStripMenuItem} );
-            this.selectColumnsMenuStrip.Name = "selectColumnsMenuStrip";
-            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 160, 26 );
-            // 
-            // selectColumnsToolStripMenuItem
-            // 
-            this.selectColumnsToolStripMenuItem.Name = "selectColumnsToolStripMenuItem";
-            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 159, 22 );
-            this.selectColumnsToolStripMenuItem.Text = "Select Columns...";
-            this.selectColumnsToolStripMenuItem.Click += new System.EventHandler( this.selectColumnsToolStripMenuItem_Click );
             // 
             // Id
             // 
@@ -219,6 +195,30 @@ namespace seems
             this.ScanInfo.ReadOnly = true;
             this.ScanInfo.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
+            // spectraSource
+            // 
+            this.spectraSource.DataMember = "SpectrumTable";
+            this.spectraSource.DataSource = this.spectrumDataSet;
+            // 
+            // spectrumDataSet
+            // 
+            this.spectrumDataSet.DataSetName = "SpectrumDataSet";
+            this.spectrumDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // selectColumnsMenuStrip
+            // 
+            this.selectColumnsMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
+            this.selectColumnsToolStripMenuItem} );
+            this.selectColumnsMenuStrip.Name = "selectColumnsMenuStrip";
+            this.selectColumnsMenuStrip.Size = new System.Drawing.Size( 160, 26 );
+            // 
+            // selectColumnsToolStripMenuItem
+            // 
+            this.selectColumnsToolStripMenuItem.Name = "selectColumnsToolStripMenuItem";
+            this.selectColumnsToolStripMenuItem.Size = new System.Drawing.Size( 159, 22 );
+            this.selectColumnsToolStripMenuItem.Text = "Select Columns...";
+            this.selectColumnsToolStripMenuItem.Click += new System.EventHandler( this.selectColumnsToolStripMenuItem_Click );
+            // 
             // SpectrumListForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
@@ -227,6 +227,7 @@ namespace seems
             this.Controls.Add( this.gridView );
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.HideOnClose = true;
             this.Name = "SpectrumListForm";
             this.TabText = "Spectrum List";
             this.Text = "Spectrum List";

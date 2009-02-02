@@ -10,6 +10,9 @@ using DigitalRune.Windows.Docking;
 using MSGraph;
 using ZedGraph;
 
+using System.Diagnostics;
+using SpyTools;
+
 namespace seems
 {
 	public partial class GraphForm : DockableForm, IDataView
@@ -52,6 +55,8 @@ namespace seems
 
         MSGraphPane focusedPane = null;
         CurveItem focusedItem = null;
+
+        private EventSpy spy;
 
         /// <summary>
         /// Occurs when the FocusedItem property changes;
@@ -115,6 +120,10 @@ namespace seems
 		{
 			InitializeComponent();
 
+            spy = new EventSpy( "GraphForm", this );
+            //spy.DumpEvents( this.GetType() );
+            spy.SpyEvent += new SpyEventHandler( spy_SpyEvent );
+
             paneList = new PaneList();
             paneLayout = PaneLayout.SingleColumn;
 
@@ -140,9 +149,17 @@ namespace seems
             msGraphControl.ContextMenuBuilder += new MSGraphControl.ContextMenuBuilderEventHandler( GraphForm_ContextMenuBuilder );
 		}
 
+        void spy_SpyEvent( object sender, SpyTools.SpyEventArgs e )
+        {
+            seemsForm.LogSpyEvent( sender, e );
+        }
+
         bool msGraphControl_MouseMoveEvent( ZedGraphControl sender, MouseEventArgs e )
         {
             MSGraphPane hoverPane = sender.MasterPane.FindPane( e.Location ) as MSGraphPane;
+            if( hoverPane == null )
+                return false;
+
             CurveItem nearestCurve;
             int nearestIndex;
 
@@ -162,6 +179,9 @@ namespace seems
             // keep track of MSGraphItem nearest the last left click
             Point pos = MousePosition;
             focusedPane = sender.MasterPane.FindPane( e.Location ) as MSGraphPane;
+            if( focusedPane == null )
+                return false;
+
             CurveItem nearestCurve; int nearestIndex;
             focusedPane.FindNearestPoint( e.Location, out nearestCurve, out nearestIndex );
             if( nearestCurve == null )
@@ -292,7 +312,7 @@ namespace seems
                 if( paneList.Count > 0 && paneList[0].Count > 0 )
                     this.Text = this.TabText = paneList[0][0].Id;
 
-                if( !pane.IsZoomed )
+                if( pane.XAxis.Scale.MaxAuto )
                     msGraphControl.RestoreScale( pane );
                 else
                     pane.AxisChange();
@@ -431,7 +451,7 @@ namespace seems
                     if( CurrentGraphItem.IsMassSpectrum )
                     {
                         MassSpectrum scanItem = (MassSpectrum) CurrentGraphItem;
-                        pwiz.CLI.msdata.PrecursorList precursorList = scanItem.Element.spectrumDescription.precursors;
+                        pwiz.CLI.msdata.PrecursorList precursorList = scanItem.Element.precursors;
                         for( int i = 0; i < precursorList.Count; ++i )
                         {
                             pwiz.CLI.msdata.Precursor precursor = precursorList[i];

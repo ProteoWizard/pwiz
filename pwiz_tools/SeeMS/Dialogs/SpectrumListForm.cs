@@ -45,16 +45,41 @@ namespace seems
                 FilterChanged( this, new SpectrumListFilterChangedEventArgs( this, spectrumDataSet ) );
         }
 
-		public SpectrumListForm()
+        public SpectrumListForm( CVID nativeIdFormat )
 		{
 			InitializeComponent();
 
-            initializeGridView();
+            initializeGridView( nativeIdFormat );
 		}
 
-		private void initializeGridView()
+        private CVID nativeIdFormat = CVID.CVID_Unknown;
+        public CVID NativeIdFormat { get { return nativeIdFormat; } }
+
+		private void initializeGridView( CVID nativeIdFormat )
 		{
             spectrumList = new Dictionary<int, MassSpectrum>();
+
+            this.nativeIdFormat = nativeIdFormat;
+            if( nativeIdFormat != CVID.CVID_Unknown )
+            {
+                string nativeIdDefinition = new CVInfo( nativeIdFormat ).def;
+                string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
+                for( int i = 0; i < nameValuePairs.Length; ++i )
+                {
+                    string[] nameValuePair = nameValuePairs[i].Split( "=".ToCharArray() );
+                    DataGridViewColumn nameColumn = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
+                    nameColumn.Name = nameValuePair[0];
+                    nameColumn.HeaderText = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase( nameValuePair[0] );
+                    nameColumn.DataPropertyName = nameValuePair[0];
+                    gridView.Columns.Insert( 1 + i, nameColumn );
+                    string type = null;
+                    if( nameValuePair[0] == "file" )
+                        type = "System.String";
+                    else
+                        type = "System.Int32";
+                    spectrumDataSet.SpectrumTable.Columns.Add( nameValuePair[0], Type.GetType( type ) );
+                }
+            }
 
             gridView.Columns["SpectrumType"].ToolTipText = new CVInfo(CVID.MS_spectrum_type).def;
             gridView.Columns["MsLevel"].ToolTipText = new CVInfo( CVID.MS_ms_level ).def;
@@ -78,8 +103,7 @@ namespace seems
 
             Spectrum s = spectrum.Element;
             DataProcessing dp = spectrum.DataProcessing;
-            SpectrumDescription sd = s.spectrumDescription;
-            Scan scan = sd.scan;
+            Scan scan = s.scanList.scans[0];
             InstrumentConfiguration ic = scan.instrumentConfiguration;
             if( dp == null )
                 dp = s.dataProcessing;
@@ -92,21 +116,21 @@ namespace seems
             param = scan.cvParam( CVID.MS_scan_time );
             row.ScanTime = !param.empty() ? (double) param.value : 0;
 
-            param = sd.cvParam( CVID.MS_base_peak_m_z );
+            param = s.cvParam( CVID.MS_base_peak_m_z );
             row.BasePeakMz = !param.empty() ? (double) param.value : 0;
 
-            param = sd.cvParam( CVID.MS_base_peak_intensity );
+            param = s.cvParam( CVID.MS_base_peak_intensity );
             row.BasePeakIntensity = !param.empty() ? (double) param.value : 0;
 
-            param = sd.cvParam( CVID.MS_total_ion_current );
+            param = s.cvParam( CVID.MS_total_ion_current );
             row.TotalIonCurrent = !param.empty() ? (double) param.value : 0;
 
             StringBuilder precursorInfo = new StringBuilder();
-            if( row.MsLevel == 1 || sd.precursors.Count == 0 )
+            if( row.MsLevel == 1 || s.precursors.Count == 0 )
                 precursorInfo.Append( "n/a" );
             else
             {
-                foreach( Precursor p in sd.precursors )
+                foreach( Precursor p in s.precursors )
                 {
                     foreach( SelectedIon si in p.selectedIons )
                     {
@@ -122,22 +146,18 @@ namespace seems
             row.PrecursorInfo = precursorInfo.ToString();
 
             StringBuilder scanInfo = new StringBuilder();
-            if( sd.acquisitionList.acquisitions.Count > 0 )
-                foreach( Acquisition a in sd.acquisitionList.acquisitions )
-                {
-                    if( scanInfo.Length > 0 )
-                        scanInfo.Append( "," );
-                    scanInfo.Append( a.number.ToString() );
-                }
-            if( scan.scanWindows.Count > 0 )
+            foreach( Scan scan2 in s.scanList.scans )
             {
-                foreach( ScanWindow sw in scan.scanWindows )
+                if( scan2.scanWindows.Count > 0 )
                 {
-                    if( scanInfo.Length > 0 )
-                        scanInfo.Append( "," );
-                    scanInfo.AppendFormat( "[{0}-{1}]",
-                                          (double) sw.cvParam( CVID.MS_scan_m_z_lower_limit ).value,
-                                          (double) sw.cvParam( CVID.MS_scan_m_z_upper_limit ).value );
+                    foreach( ScanWindow sw in scan2.scanWindows )
+                    {
+                        if( scanInfo.Length > 0 )
+                            scanInfo.Append( "," );
+                        scanInfo.AppendFormat( "[{0}-{1}]",
+                                              (double) sw.cvParam( CVID.MS_scan_m_z_lower_limit ).value,
+                                              (double) sw.cvParam( CVID.MS_scan_m_z_upper_limit ).value );
+                    }
                 }
             }
 
@@ -156,6 +176,19 @@ namespace seems
 		{
             SpectrumDataSet.SpectrumTableRow row = spectrumDataSet.SpectrumTable.NewSpectrumTableRow();
             row.Id = spectrum.Id;
+
+            if( nativeIdFormat != CVID.CVID_Unknown )
+            {
+                gridView.Columns["Id"].Visible = false;
+
+                string[] nameValuePairs = spectrum.Id.Split( " ".ToCharArray() );
+                foreach( string nvp in nameValuePairs )
+                {
+                    string[] nameValuePair = nvp.Split( "=".ToCharArray() );
+                    row[nameValuePair[0]] = nameValuePair[1];
+                }
+            }
+
             row.Index = spectrum.Index;
             updateRow( row, spectrum );
             spectrumDataSet.SpectrumTable.AddSpectrumTableRow( row );
@@ -300,7 +333,6 @@ namespace seems
         {
             MassSpectrum spectrum = cell.OwningRow.Tag as MassSpectrum;
             Spectrum s = spectrum.Element;
-            SpectrumDescription sd = s.spectrumDescription;
 
             TreeViewForm treeViewForm = new TreeViewForm( spectrum );
             TreeView tv = treeViewForm.TreeView;
@@ -308,21 +340,17 @@ namespace seems
             if( gridView.Columns[cell.ColumnIndex].Name == "PrecursorInfo" )
             {
                 treeViewForm.Text = "Precursor Details";
-                if( sd.precursors.Count == 0 )
+                if( s.precursors.Count == 0 )
                     tv.Nodes.Add( "No precursor information available." );
                 else
                 {
-                    foreach( Precursor p in sd.precursors )
+                    foreach( Precursor p in s.precursors )
                     {
-                        string pNodeText;
-                        if( p.sourceFile != null )
-                        {
-                            if( p.externalNativeID.Length > 0 )
-                                pNodeText = String.Format( "Precursor scan: {0}:{1}", p.sourceFile.name, p.externalNativeID );
-                            else
-                                pNodeText = String.Format( "Precursor scan: {0}:{1}", p.sourceFile.name, p.externalSpectrumID );
-                        } else
-                            pNodeText = String.Format( "Precursor scan: {0}", p.spectrumID );
+                        string pNodeText = "Precursor scan";
+                        if( p.sourceFile != null && p.externalSpectrumID.Length > 0 )
+                            pNodeText += String.Format( ": {0}:{1}", p.sourceFile.name, p.externalSpectrumID );
+                        else if( p.spectrumID.Length > 0 )
+                            pNodeText += String.Format( ": {0}", p.spectrumID );
 
                         TreeNode pNode = tv.Nodes.Add( pNodeText );
                         addParamsToTreeNode( p as ParamContainer, pNode );
@@ -359,36 +387,29 @@ namespace seems
             } else if( gridView.Columns[cell.ColumnIndex].Name == "ScanInfo" )
             {
                 treeViewForm.Text = "Scan Configuration Details";
-                if( sd.scan.empty() )
+                if( s.scanList.empty() )
                     tv.Nodes.Add( "No scan details available." );
                 else
                 {
-                    TreeNode scanNode = tv.Nodes.Add( "Scan" );
-                    addParamsToTreeNode( sd.scan as ParamContainer, scanNode );
-                    foreach( ScanWindow sw in sd.scan.scanWindows )
-                    {
-                        TreeNode swNode = scanNode.Nodes.Add( "Scan Window" );
-                        addParamsToTreeNode( sw as ParamContainer, swNode );
-                    }
-                }
+                    TreeNode slNode = tv.Nodes.Add( "Scan List" );
+                    addParamsToTreeNode( s.scanList as ParamContainer, slNode );
 
-                if( sd.acquisitionList.empty() )
-                    tv.Nodes.Add( "No acquisition list available." );
-                else
-                {
-                    TreeNode alNode = tv.Nodes.Add( "Acquisition List" );
-                    addParamsToTreeNode( sd.acquisitionList as ParamContainer, alNode );
-
-                    foreach( Acquisition a in sd.acquisitionList.acquisitions )
+                    foreach( Scan scan in s.scanList.scans )
                     {
-                        TreeNode acqNode = alNode.Nodes.Add( "Acquisition" );
-                        addParamsToTreeNode( a as ParamContainer, acqNode );
+                        TreeNode scanNode = slNode.Nodes.Add( "Acquisition" );
+                        addParamsToTreeNode( scan as ParamContainer, scanNode );
+
+                        foreach( ScanWindow sw in scan.scanWindows )
+                        {
+                            TreeNode swNode = scanNode.Nodes.Add( "Scan Window" );
+                            addParamsToTreeNode( sw as ParamContainer, swNode );
+                        }
                     }
                 }
             } else if( gridView.Columns[cell.ColumnIndex].Name == "InstrumentConfigurationID" )
             {
                 treeViewForm.Text = "Instrument Configuration Details";
-                InstrumentConfiguration ic = sd.scan.instrumentConfiguration;
+                InstrumentConfiguration ic = s.scanList.scans[0].instrumentConfiguration;
                 if( ic == null || ic.empty() )
                     tv.Nodes.Add( "No instrument configuration details available." );
                 else
@@ -428,9 +449,10 @@ namespace seems
                     else
                     {
                         TreeNode swNode = icNode.Nodes.Add( String.Format( "Software ({0})", sw.id ) );
-                        TreeNode swNameNode = swNode.Nodes.Add( "Name: " + sw.softwareParam.name );
-                        swNameNode.ToolTipText = new CVInfo( sw.softwareParam.cvid ).def;
-                        swNode.Nodes.Add( "Version: " + sw.softwareParamVersion );
+                        CVParam softwareParam = sw.cvParamChild( CVID.MS_software );
+                        TreeNode swNameNode = swNode.Nodes.Add( "Name: " + softwareParam.name );
+                        swNameNode.ToolTipText = new CVInfo( softwareParam.cvid ).def;
+                        swNode.Nodes.Add( "Version: " + sw.version );
                     }
                 }
             } else if( gridView.Columns[cell.ColumnIndex].Name == "DataProcessing" )

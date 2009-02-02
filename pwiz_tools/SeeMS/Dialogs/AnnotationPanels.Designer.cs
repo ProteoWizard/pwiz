@@ -41,10 +41,17 @@
             this.label1 = new System.Windows.Forms.Label();
             this.sequenceTextBox = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.minChargeUpDown = new System.Windows.Forms.NumericUpDown();
+            this.maxChargeUpDown = new System.Windows.Forms.NumericUpDown();
+            this.showMissesCheckBox = new System.Windows.Forms.CheckBox();
             this.annotationPanelsTabControl.SuspendLayout();
             this.peptideFragmentationTabPage.SuspendLayout();
             this.peptideFragmentationPanel.SuspendLayout();
             this.ionSeriesGroupBox.SuspendLayout();
+            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).BeginInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).BeginInit();
             this.SuspendLayout();
             // 
             // annotationPanelsTabControl
@@ -72,6 +79,11 @@
             // peptideFragmentationPanel
             // 
             this.peptideFragmentationPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.peptideFragmentationPanel.Controls.Add( this.showMissesCheckBox );
+            this.peptideFragmentationPanel.Controls.Add( this.maxChargeUpDown );
+            this.peptideFragmentationPanel.Controls.Add( this.minChargeUpDown );
+            this.peptideFragmentationPanel.Controls.Add( this.label3 );
+            this.peptideFragmentationPanel.Controls.Add( this.label2 );
             this.peptideFragmentationPanel.Controls.Add( this.ionSeriesGroupBox );
             this.peptideFragmentationPanel.Controls.Add( this.label1 );
             this.peptideFragmentationPanel.Controls.Add( this.sequenceTextBox );
@@ -89,12 +101,12 @@
             this.ionSeriesGroupBox.Controls.Add( this.cCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.bCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.aCheckBox );
-            this.ionSeriesGroupBox.Location = new System.Drawing.Point( 6, 37 );
+            this.ionSeriesGroupBox.Location = new System.Drawing.Point( 6, 89 );
             this.ionSeriesGroupBox.Name = "ionSeriesGroupBox";
             this.ionSeriesGroupBox.Size = new System.Drawing.Size( 127, 68 );
             this.ionSeriesGroupBox.TabIndex = 3;
             this.ionSeriesGroupBox.TabStop = false;
-            this.ionSeriesGroupBox.Text = "Ion Series";
+            this.ionSeriesGroupBox.Text = "Fragment Ion Series";
             // 
             // zCheckBox
             // 
@@ -186,6 +198,70 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point( 4, 39 );
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size( 110, 13 );
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Min. fragment charge:";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point( 4, 64 );
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size( 113, 13 );
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Max. fragment charge:";
+            // 
+            // minChargeUpDown
+            // 
+            this.minChargeUpDown.Location = new System.Drawing.Point( 120, 37 );
+            this.minChargeUpDown.Minimum = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.minChargeUpDown.Name = "minChargeUpDown";
+            this.minChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
+            this.minChargeUpDown.TabIndex = 7;
+            this.minChargeUpDown.Value = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.minChargeUpDown.ValueChanged += new System.EventHandler( this.minChargeUpDown_ValueChanged );
+            // 
+            // maxChargeUpDown
+            // 
+            this.maxChargeUpDown.Location = new System.Drawing.Point( 120, 63 );
+            this.maxChargeUpDown.Minimum = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.maxChargeUpDown.Name = "maxChargeUpDown";
+            this.maxChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
+            this.maxChargeUpDown.TabIndex = 8;
+            this.maxChargeUpDown.Value = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.maxChargeUpDown.ValueChanged += new System.EventHandler( this.maxChargeUpDown_ValueChanged );
+            // 
+            // showMissesCheckBox
+            // 
+            this.showMissesCheckBox.AutoSize = true;
+            this.showMissesCheckBox.Location = new System.Drawing.Point( 7, 163 );
+            this.showMissesCheckBox.Name = "showMissesCheckBox";
+            this.showMissesCheckBox.Size = new System.Drawing.Size( 139, 17 );
+            this.showMissesCheckBox.TabIndex = 6;
+            this.showMissesCheckBox.Text = "Show missing fragments";
+            this.showMissesCheckBox.UseVisualStyleBackColor = true;
+            // 
             // AnnotationPanels
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
@@ -199,6 +275,8 @@
             this.peptideFragmentationPanel.PerformLayout();
             this.ionSeriesGroupBox.ResumeLayout( false );
             this.ionSeriesGroupBox.PerformLayout();
+            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).EndInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).EndInit();
             this.ResumeLayout( false );
 
         }
@@ -218,5 +296,10 @@
         public System.Windows.Forms.CheckBox xCheckBox;
         public System.Windows.Forms.CheckBox cCheckBox;
         public System.Windows.Forms.CheckBox bCheckBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+        public System.Windows.Forms.NumericUpDown maxChargeUpDown;
+        public System.Windows.Forms.NumericUpDown minChargeUpDown;
+        public System.Windows.Forms.CheckBox showMissesCheckBox;
     }
 }

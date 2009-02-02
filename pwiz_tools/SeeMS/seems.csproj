@@ -5,7 +5,7 @@
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2399F68B-D886-4D94-AB4B-700FE3E46849}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>seems</RootNamespace>
     <AssemblyName>seems</AssemblyName>
@@ -19,7 +19,7 @@
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>2.0</OldToolsVersion>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <TargetFrameworkSubset>
@@ -65,7 +65,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DataGridViewAutoFilter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -85,7 +85,13 @@
       <HintPath>.\STL_Containers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -97,6 +103,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Annotation.cs" />
+    <Compile Include="Misc\ChromatogramDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\AnnotationPanels.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -134,6 +145,18 @@
     <Compile Include="Dialogs\ChromatogramAnnotationSettingsForm.Designer.cs">
       <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\DataPointTableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\DataPointTableForm.Designer.cs">
+      <DependentUpon>DataPointTableForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ProcessingPanels.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ProcessingPanels.Designer.cs">
+      <DependentUpon>ProcessingPanels.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\OpenDataSourceDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -151,6 +174,9 @@
     </Compile>
     <Compile Include="Manager.cs" />
     <Compile Include="Misc\Arguments.cs" />
+    <Compile Include="Misc\EventSpy.cs" />
+    <Compile Include="Misc\Extensions.cs">
+    </Compile>
     <Compile Include="Misc\FileSizeFormatProvider.cs" />
     <Compile Include="Misc\ListViewColumnSorter.cs" />
     <Compile Include="Misc\SpectrumDataSet.cs">
@@ -202,6 +228,7 @@
     <Compile Include="Dialogs\PeptideMassMapProteinDigestForm.Designer.cs">
       <DependentUpon>PeptideMassMapProteinDigestForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Processing.cs" />
     <Compile Include="seems.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -291,6 +318,12 @@
       <SubType>Designer</SubType>
       <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\DataPointTableForm.resx">
+      <DependentUpon>DataPointTableForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ProcessingPanels.resx">
+      <DependentUpon>ProcessingPanels.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\OpenDataSourceDialog.resx">
       <SubType>Designer</SubType>
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
@@ -327,6 +360,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Misc\Centroider.ico" />
+    <None Include="Misc\ChromatogramDataSet.xsc">
+      <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="Misc\ChromatogramDataSet.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>ChromatogramDataSet.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Misc\ChromatogramDataSet.xss">
+      <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
+    </None>
     <None Include="Misc\Images\Desktop.png" />
     <None Include="Misc\Images\MyComputer.png" />
     <None Include="Misc\Images\MyDocuments.png" />

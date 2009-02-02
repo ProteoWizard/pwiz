@@ -31,6 +31,7 @@ namespace seems
 		private string seemsRegistryLocation = "Software\\SeeMS";
 		private RegistryKey seemsRegistryKey;
 
+        public Manager Manager { get { return manager; } }
 		public DockPanel DockPanel { get { return dockPanel; } }
 		public ToolStrip ToolStrip1 { get { return toolStrip1; } }
 		public StatusStrip StatusStrip1 { get { return statusStrip1; } }
@@ -46,12 +47,32 @@ namespace seems
         public static Form EventLog { get { return eventLog; } }
         public static void LogEvent( object sender, EventArgs e )
         {
+            if( eventTextBox.IsDisposed )
+                return;
+
             eventTextBox.AppendText( String.Format( "sender: {0}  args: {1}\r\n", sender, e ) );
+            eventTextBox.SelectionStart = eventTextBox.Text.Length;
+        }
+
+        public static void LogSpyEvent( object sender, SpyTools.SpyEventArgs e )
+        {
+            if( eventTextBox.IsDisposed )
+                return;
+
+            DateTime now = DateTime.Now;
+            eventTextBox.AppendText(
+                String.Format( "({3}:{4}:{5}:{6}) {0}: On{1}: {2}\r\n",
+                sender.GetType(), e.EventName, e.EventArgs,
+                now.Hour, now.Minute, now.Second, now.Millisecond ) );
+            eventTextBox.SelectionStart = eventTextBox.Text.Length;
         }
 
 		public seemsForm( string[] args )
 		{
 			InitializeComponent();
+
+            ToolStripManager.RenderMode = ToolStripManagerRenderMode.Professional;
+            DockPanelManager.RenderMode = DockPanelRenderMode.VisualStyles;
 
             eventTextBox.Dock = DockStyle.Fill;
             eventTextBox.Multiline = true;
@@ -137,7 +158,10 @@ namespace seems
 				SetStatusLabelCallback d = new SetStatusLabelCallback( SetStatusLabel );
 				Invoke( d, new object[] { status } );
 			} else
-			{
+            {
+                if( toolStrip1.IsDisposed )
+                    return;
+
 				if( status.Length > 0 )
 				{
 					toolStripStatusLabel1.Text = status;
@@ -156,7 +180,10 @@ namespace seems
 				SetProgressPercentageCallback d = new SetProgressPercentageCallback( SetProgressPercentage );
 				Invoke( d, new object[] { percentage } );
 			} else
-			{
+            {
+                if( toolStrip1.IsDisposed )
+                    return;
+
 				switch( percentage )
 				{
 					case 0:

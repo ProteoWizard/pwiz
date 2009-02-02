@@ -14,5 +14,15 @@ namespace seems
         {
             InitializeComponent();
         }
+
+        private void maxChargeUpDown_ValueChanged( object sender, EventArgs e )
+        {
+            minChargeUpDown.Value = Math.Min( maxChargeUpDown.Value, minChargeUpDown.Value );
+        }
+
+        private void minChargeUpDown_ValueChanged( object sender, EventArgs e )
+        {
+            maxChargeUpDown.Value = Math.Max( maxChargeUpDown.Value, minChargeUpDown.Value );
+        }
     }
 }

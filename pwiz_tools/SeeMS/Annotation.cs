@@ -40,6 +40,41 @@ namespace seems
         event EventHandler OptionsChanged;
     }
 
+    public class AnnotationFactory
+    {
+        public static IAnnotation ParseArgument( string arg )
+        {
+            if( String.IsNullOrEmpty( arg ) )
+                return null;
+
+            string[] annotationArgs = arg.Split( " ".ToCharArray() );
+            if( annotationArgs.Length == 5 &&
+                annotationArgs[0] == "pfr" ) // peptide fragmentation
+            {
+                string sequence = annotationArgs[1];
+                int minCharge = Convert.ToInt32( annotationArgs[2] );
+                int maxCharge = Convert.ToInt32( annotationArgs[3] );
+                string seriesArgs = annotationArgs[4];
+                string[] seriesList = seriesArgs.Split( ",".ToCharArray() );
+                bool a, b, c, x, y, z;
+                a = b = c = x = y = z = false;
+                foreach( string series in seriesList )
+                    switch( series )
+                    {
+                        case "a": a = true; break;
+                        case "b": b = true; break;
+                        case "c": c = true; break;
+                        case "x": x = true; break;
+                        case "y": y = true; break;
+                        case "z": z = true; break;
+                    }
+                return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, false, true );
+            }
+
+            return null;
+        }
+    }
+
     public abstract class AnnotationBase : IAnnotation
     {
         bool enabled;
@@ -71,36 +106,56 @@ namespace seems
     {
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
+        int min, max;
         bool a, b, c, x, y, z;
+        bool showMisses;
+        bool showLabels;
 
         public PeptideFragmentationAnnotation()
         {
             sequence = "PEPTIDE";
+            min = 1;
+            max = 1;
+            showMisses = false;
+            showLabels = true;
 
             annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
+            annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
         }
 
         public PeptideFragmentationAnnotation( string sequence,
+                                               int minCharge, int maxCharge,
                                                bool a, bool b, bool c,
-                                               bool x, bool y, bool z )
+                                               bool x, bool y, bool z,
+                                               bool showMissedFragments,
+                                               bool showLabels )
         {
             this.sequence = sequence;
+            this.min = minCharge;
+            this.max = maxCharge;
             this.a = a; this.b = b; this.c = c;
             this.x = x; this.y = y; this.z = z;
+            this.showMisses = showMissedFragments;
+            this.showLabels = showLabels;
 
             annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
+            annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
         }
 
         void sequenceTextBox_TextChanged( object sender, EventArgs e )
@@ -116,12 +171,15 @@ namespace seems
         {
             if( panel.Tag == this )
             {
+                min = (int) annotationPanels.minChargeUpDown.Value;
+                max = (int) annotationPanels.maxChargeUpDown.Value;
                 a = annotationPanels.aCheckBox.Checked;
                 b = annotationPanels.bCheckBox.Checked;
                 c = annotationPanels.cCheckBox.Checked;
                 x = annotationPanels.xCheckBox.Checked;
                 y = annotationPanels.yCheckBox.Checked;
                 z = annotationPanels.zCheckBox.Checked;
+                showMisses = annotationPanels.showMissesCheckBox.Checked;
                 OnOptionsChanged( this, EventArgs.Empty );
             }
         }
@@ -136,15 +194,16 @@ namespace seems
             string label = String.Format("{0}{1}{2}", series, length, (charge > 1 ? "+" + charge.ToString() : ""));
 
             Color color;
+            double offset;
             switch( series )
             {
-                default: color = Color.Gray; break;
-                case 'a': color = Color.YellowGreen; break;
-                case 'x': color = Color.Green; break;
-                case 'b': color = Color.BlueViolet; break;
-                case 'y': color = Color.Blue; break;
-                case 'c': color = Color.Orange; break;
-                case 'z': color = Color.OrangeRed; break;
+                default: color = Color.Gray; offset = 0.1;  break;
+                case 'a': color = Color.YellowGreen; offset = 0.1; break;
+                case 'x': color = Color.Green; offset = 0.12; break;
+                case 'b': color = Color.BlueViolet; offset = 0.14; break;
+                case 'y': color = Color.Blue; offset = 0.16; break;
+                case 'c': color = Color.Orange; offset = 0.18; break;
+                case 'z': color = Color.OrangeRed; offset = 0.2; break;
             }
 
             int index = -1;
@@ -154,22 +213,27 @@ namespace seems
             if( index == -1 || points.ScaledList[index].X > ( mz + 0.5 ) )
             // no matching point: present a "missed" fragment annotation
             {
+                if( !showMisses )
+                    return;
+
                 color = Color.FromArgb( 115, color ); // transparent to emphasize miss
 
-                LineObj stick = new LineObj( color, mz, 0.1, mz, 1 );
+                LineObj stick = new LineObj( color, mz, offset, mz, 1 );
                 stick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
                 stick.Line.Width = 2;
-
-                TextObj text = new TextObj( label, mz, 0.1, CoordType.XScaleYChartFraction,
-                                            AlignH.Center, AlignV.Bottom );
-                text.ZOrder = ZOrder.A_InFront;
-                text.FontSpec = new FontSpec( "Arial", 12, color, false, false, false );
-                text.FontSpec.Border.IsVisible = false;
-                //text.IsClippedToChartRect = true;
-
+                stick.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
                 list.Add( stick );
-                list.Add( text );
 
+                if( showLabels )
+                {
+                    TextObj text = new TextObj( label, mz, offset, CoordType.XScaleYChartFraction,
+                                                AlignH.Center, AlignV.Bottom );
+                    text.ZOrder = ZOrder.A_InFront;
+                    text.FontSpec = new FontSpec( "Arial", 12, color, false, false, false );
+                    text.FontSpec.Border.IsVisible = false;
+                    //text.IsClippedToChartRect = true;
+                    list.Add( text );
+                }
             } else
             // matching point found: present the point as the fragment
             {
@@ -178,32 +242,35 @@ namespace seems
                 stick.Line.Width = 2;
                 list.Add( stick );
 
-                // use an existing text point annotation if possible
-                TextObj text = null;
-                foreach( GraphObj obj in list )
+                if( showLabels )
                 {
-                    if( obj is TextObj &&
-                        ( obj.Location.CoordinateFrame == CoordType.AxisXYScale ||
-                          obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction ) &&
-                        Math.Abs( obj.Location.X - mz ) < 0.5 )
+                    // use an existing text point annotation if possible
+                    TextObj text = null;
+                    foreach( GraphObj obj in list )
                     {
-                        text = obj as TextObj;
-                        text.Text = String.Format( "{0}\n{1}", label, text.Text );
-                        break;
+                        if( obj is TextObj &&
+                            ( obj.Location.CoordinateFrame == CoordType.AxisXYScale ||
+                              obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction ) &&
+                            Math.Abs( obj.Location.X - mz ) < 0.5 )
+                        {
+                            text = obj as TextObj;
+                            text.Text = String.Format( "{0}\n{1}", label, text.Text );
+                            break;
+                        }
                     }
-                }
 
-                if( text == null )
-                {
-                    text = new TextObj( label, mz, points.ScaledList[index].Y, CoordType.AxisXYScale,
-                                        AlignH.Center, AlignV.Bottom );
-                    list.Add( text );
-                }
+                    if( text == null )
+                    {
+                        text = new TextObj( label, mz, points.ScaledList[index].Y, CoordType.AxisXYScale,
+                                            AlignH.Center, AlignV.Bottom );
+                        list.Add( text );
+                    }
 
-                text.ZOrder = ZOrder.A_InFront;
-                text.FontSpec = new FontSpec( "Arial", 12, color, false, false, false );
-                text.FontSpec.Border.IsVisible = false;
-                //text.IsClippedToChartRect = true;
+                    text.ZOrder = ZOrder.A_InFront;
+                    text.FontSpec = new FontSpec( "Arial", 12, color, false, false, false );
+                    text.FontSpec.Border.IsVisible = false;
+                    //text.IsClippedToChartRect = true;
+                }
             }
         }
 
@@ -213,18 +280,27 @@ namespace seems
                 return;
 
             GraphObjList list = annotations;
-            Peptide peptide = new Peptide( sequence );
-            Fragmentation fragmentation = peptide.fragmentation( true, true );
-            for( int charge = 1; charge <= 1; ++charge )
+            Peptide peptide;
+            try
             {
-                for( int i = 1; i <= sequence.Length; ++i )
+                peptide = new Peptide( sequence,
+                    pwiz.CLI.proteome.ModificationParsing.ModificationParsing_ByMass,
+                    pwiz.CLI.proteome.ModificationDelimiter.ModificationDelimiter_Brackets );
+            } catch( Exception )
+            {
+                return;
+            }
+            Fragmentation fragmentation = peptide.fragmentation( true, true );
+            for( int charge = min; charge <= max; ++charge )
+            {
+                for( int i = 1; i <= peptide.sequence.Length; ++i )
                 {
                     if( a ) addFragment( list, points, 'a', i, charge, fragmentation.a( i, charge ) );
                     if( b ) addFragment( list, points, 'b', i, charge, fragmentation.b( i, charge ) );
                     if( y ) addFragment( list, points, 'y', i, charge, fragmentation.y( i, charge ) );
                     if( z ) addFragment( list, points, 'z', i, charge, fragmentation.z( i, charge ) );
 
-                    if( i < sequence.Length )
+                    if( i < peptide.sequence.Length )
                     {
                         if( c ) addFragment( list, points, 'c', i, charge, fragmentation.c( i, charge ) );
                         if( x ) addFragment( list, points, 'x', i, charge, fragmentation.x( i, charge ) );
@@ -239,12 +315,15 @@ namespace seems
             {
                 panel.Tag = null;
                 annotationPanels.sequenceTextBox.Text = sequence;
+                annotationPanels.minChargeUpDown.Value = min;
+                annotationPanels.maxChargeUpDown.Value = max;
                 annotationPanels.aCheckBox.Checked = a;
                 annotationPanels.bCheckBox.Checked = b;
                 annotationPanels.cCheckBox.Checked = c;
                 annotationPanels.xCheckBox.Checked = x;
                 annotationPanels.yCheckBox.Checked = y;
                 annotationPanels.zCheckBox.Checked = z;
+                annotationPanels.showMissesCheckBox.Checked = showMisses;
                 panel.Tag = this;
 
                 return panel;

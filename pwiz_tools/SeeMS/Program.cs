@@ -4,13 +4,18 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Threading;
 using System.IO;
+using System.IO.Pipes;
+using System.ComponentModel;
 using System.Security.Permissions;
+using EDAL;
 
 namespace seems
 {
 	static class Program
 	{
 		static seemsForm MainForm;
+        static System.Threading.Mutex ipcMutex;
+        static BackgroundWorker ipcWorker;
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -19,6 +24,39 @@ namespace seems
 		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static void Main( string[] args )
 		{
+            /*MSAnalysisClass a = new MSAnalysisClass();
+            a.Open( @"C:\test\100 fmol BSA\0_B4\1\1SRef" );
+            MSSpectrumCollection c = a.MSSpectrumCollection;
+            MSSpectrum s = c[1];
+            MSSpectrumParameterCollection sp = s.MSSpectrumParameterCollection;
+            MSSpectrumParameter p = sp[1];*/
+
+            // create machine-global mutex (to allow only one SeeMS instance)
+            bool success;
+            ipcMutex = new Mutex( true, "seems unique instance", out success );
+            if( !success )
+            {
+                // send args to the existing instance
+                using( NamedPipeClientStream pipeClient =
+                    new NamedPipeClientStream( ".", "seems pipe", PipeDirection.Out ) )
+                {
+                    pipeClient.Connect();
+                    using( StreamWriter sw = new StreamWriter( pipeClient ) )
+                    {
+                        sw.WriteLine( args.Length );
+                        foreach( string arg in args )
+                            sw.WriteLine( arg );
+                        sw.Flush();
+                    }
+                    //pipeClient.WaitForPipeDrain();
+                }
+                return;
+            }
+
+            ipcWorker = new BackgroundWorker();
+            ipcWorker.DoWork += new DoWorkEventHandler( bgWorker_DoWork );
+            ipcWorker.RunWorkerAsync();
+
 			// Add the event handler for handling UI thread exceptions to the event.
 			Application.ThreadException += new ThreadExceptionEventHandler( UIThread_UnhandledException );
 
@@ -31,10 +69,35 @@ namespace seems
 			// Add the event handler for handling non-UI thread exceptions to the event. 
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler( CurrentDomain_UnhandledException );
 
-			MainForm = new seemsForm( args );
+            MainForm = new seemsForm( new string[] { } );
+            MainForm.Manager.ParseArgs( args );
             if( !MainForm.IsDisposed )
 			    Application.Run( MainForm );
 		}
+
+        static void bgWorker_DoWork( object sender, DoWorkEventArgs e )
+        {
+            while( true )
+            {
+                using( NamedPipeServerStream pipeServer =
+                        new NamedPipeServerStream( "seems pipe", PipeDirection.In ) )
+                {
+                    pipeServer.WaitForConnection();
+
+                    // Read args from client instance.
+                    using( StreamReader sr = new StreamReader( pipeServer ) )
+                    {
+                        int length = Convert.ToInt32( sr.ReadLine() );
+                        string[] args = new string[length];
+                        for( int i = 0; i < length; ++i )
+                            args[i] = sr.ReadLine();
+                        MainForm.Manager.ParseArgs( args );
+                    }
+
+                    //pipeServer.Disconnect();
+                }
+            }
+        }
 
 		private static void UIThread_UnhandledException( object sender, ThreadExceptionEventArgs e )
 		{
