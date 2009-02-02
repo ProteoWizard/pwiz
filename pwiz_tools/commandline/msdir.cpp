@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
+#include <cstdio>
 
 
 using namespace std;
@@ -239,12 +240,16 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
     string head;
     if (bfs::is_regular_file(path))
     {
-        pwiz::util::random_access_compressed_ifstream is(path.string().c_str());
-        if (!is)
-            throw runtime_error(("[processPath()] Unable to open file \"" + path.string() + "\"").c_str());
+        //pwiz::util::random_access_compressed_ifstream is(path.string().c_str());
+        //if (!is)
+        //    throw runtime_error(("[processPath()] Unable to open file \"" + path.string() + "\"").c_str());
 
         head.resize(512, '\0');
-        is.read(&head[0], (std::streamsize)head.size());
+        FILE* file = fopen(path.string().c_str(), "r");
+        fread(&head[0], 512, 1, file);
+        fclose(file);
+
+        //is.read(&head[0], (std::streamsize)head.size());
     }
 
     string pathType = readers.identify(path.string(), head);
