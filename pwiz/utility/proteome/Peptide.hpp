@@ -34,15 +34,36 @@ namespace proteome {
 class ModificationMap;
 class Fragmentation;
 
+/// settings to enable parsing of inline modifications in peptide sequences
+enum PWIZ_API_DECL ModificationParsing
+{
+    ModificationParsing_Off, /// any non-AA characters will cause an exception
+    ModificationParsing_ByFormula, /// oxidized P in peptide: PEP(O)TIDE
+    ModificationParsing_ByMass, /// PEP(15.94)TIDE or PEP(15.94,15.99)TIDE
+    ModificationParsing_Auto /// either by formula or by mass
+};
+
+/// the delimiter expected to signify an inline modification
+enum PWIZ_API_DECL ModificationDelimiter
+{
+    ModificationDelimiter_Parentheses, /// '(' and ')'
+    ModificationDelimiter_Brackets, /// '[' and ']'
+    ModificationDelimiter_Braces /// '{' and '}'
+};
+
+#define MODIFICATION_PARSING_ARGUMENTS \
+    ModificationParsing mp = ModificationParsing_Off, \
+    ModificationDelimiter md = ModificationDelimiter_Parentheses
+
 /// represents a peptide or polypeptide (a sequence of amino acids)
 class PWIZ_API_DECL Peptide
 {
     public:
 
-    Peptide(const std::string& sequence);
-    Peptide(const char* sequence);
-    Peptide(std::string::const_iterator begin, std::string::const_iterator end);
-    Peptide(const char* begin, const char* end);
+    Peptide(const std::string& sequence = "", MODIFICATION_PARSING_ARGUMENTS);
+    Peptide(const char* sequence, MODIFICATION_PARSING_ARGUMENTS);
+    Peptide(std::string::const_iterator begin, std::string::const_iterator end, MODIFICATION_PARSING_ARGUMENTS);
+    Peptide(const char* begin, const char* end, MODIFICATION_PARSING_ARGUMENTS);
     Peptide(const Peptide&);
     Peptide& operator=(const Peptide&);
     virtual ~Peptide();

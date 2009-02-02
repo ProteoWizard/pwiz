@@ -156,8 +156,12 @@ struct TestModifiedPeptide
 {
     const char* sequence;
     const char* mods; // index pairs
+    bool modsHaveFormulas;
+    ModificationParsing mp;
+    ModificationDelimiter md;
     double monoMass;
     double avgMass;
+    const char* exception; // if non-NULL, test should cause this exception
 };
 
 TestModifiedPeptide testModifiedPeptides[] =
@@ -165,54 +169,241 @@ TestModifiedPeptide testModifiedPeptides[] =
     // M+16
     { "MEERKAT",
       "0 0",
-      879.41205, 879.97844
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      879.41205, 879.97844,
+      0
+    },
+
+    // M+16
+    { "M[O1]EERKAT",
+      "0 0",
+      true,
+      ModificationParsing_ByFormula,
+      ModificationDelimiter_Brackets,
+      879.41205, 879.97844,
+      0
+    },
+
+    // M+16
+    { "M[O1]EERKAT",
+      "0 0",
+      true,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Brackets,
+      879.41205, 879.97844,
+      0
+    },
+
+    // M+16
+    { "M(15.9949,15.9994)EERKAT",
+      "0 0",
+      false,
+      ModificationParsing_ByFormula,
+      ModificationDelimiter_Parentheses,
+      879.41205, 879.97844,
+      "[Peptide::Impl::parse()] Expected a chemical formula for all modifications in sequence "
+    },
+
+    // M+16
+    { "M[15.9949,15.9994]EERKAT",
+      "0 0",
+      false,
+      ModificationParsing_ByMass,
+      ModificationDelimiter_Brackets,
+      879.41205, 879.97844,
+      0
+    },
+
+    // M+16
+    { "M(15.9949,15.9994)EERKAT",
+      "0 0",
+      false,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Parentheses,
+      879.41205, 879.97844,
+      0
+    },
+
+    // M+16
+    { "M[O1)EERKAT",
+      "0 0",
+      true,
+      ModificationParsing_ByFormula,
+      ModificationDelimiter_Brackets,
+      879.41205, 879.97844,
+      "[Peptide::Impl::parse()] Modification started but not ended in sequence "
     },
 
     // C+57
     { "THEQICKRWNFMPSVERTHELAYDG",
       "1 5",
-      3103.43929, 3105.4218
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      3103.43929, 3105.4218,
+      0
     },
 
     // C+57, M+16
     { "THEQICKRWNFMPSVERTHELAYDG",
       "0 11 1 5",
-      3119.43419, 3121.4212
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      3119.43419, 3121.4212,
+      0
+    },
+
+    // C+57, M+16
+    { "THEQIC{C2H3N1O1}KRWNFM{O1}PSVERTHELAYDG",
+      "0 11 1 5",
+      true,
+      ModificationParsing_ByFormula,
+      ModificationDelimiter_Braces,
+      3119.43419, 3121.4212,
+      0
+    },
+
+    // C+57, M+16
+    { "THEQIC{C2H3N1O1}KRWNFM{15.9949,15.9994}PSVERTHELAYDG",
+      "0 11 1 5",
+      false,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Braces,
+      3119.43419, 3121.4212,
+      0
     },
 
     // C+57, Q-17
     { "QICKRWNFMPSVERTHELAYDG",
       "2 0 1 2",
-      2719.26356, 2721.0341
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      2719.26356, 2721.0341,
+      0
     },
 
     // no mods
-    { "ELVISLIVES", 0, 1100.63293, 1101.29052 },
+    { "ELVISLIVES",
+      0,
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      1100.63293, 1101.29052,
+      0
+    },
 
     // E-17
     { "ELVISLIVES",
       "3 0",
-      1083.60638, 1084.26
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      1083.60638, 1084.26,
+      0
+    },
+
+    // E-17
+    { "E(N-1H-3)LVISLIVES",
+      "3 0",
+      true,
+      ModificationParsing_ByFormula,
+      ModificationDelimiter_Parentheses,
+      1083.60638, 1084.26,
+      0
+    },
+
+    // E-17
+    { "E(N-1H-3)LVISLIVES",
+      "3 0",
+      true,
+      ModificationParsing_ByMass,
+      ModificationDelimiter_Parentheses,
+      1083.60638, 1084.26,
+      "[Peptide::Impl::parse()] Expected one or two comma-separated numbers in sequence "
+    },
+
+    // E-17
+    { "E(N-1H-3)LVISLIVES",
+      "3 0",
+      true,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Parentheses,
+      1083.60638, 1084.26,
+      0
+    },
+
+    // E-17
+    { "E(-17.02655,-17.0306)LVISLIVES",
+      "3 0",
+      false,
+      ModificationParsing_ByMass,
+      ModificationDelimiter_Parentheses,
+      1083.60638, 1084.26,
+      0
+    },
+
+    // E-17
+    { "E(-17.02655,-17.0306)LVISLIVES",
+      "3 0",
+      false,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Parentheses,
+      1083.60638, 1084.26,
+      0
     },
 
     // no mods
-    { "PINGPNG", 0, 667.32898, 667.7112 },
+    { "PINGPNG",
+      0,
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      667.32898, 667.7112,
+      0
+    },
 
     // N-17
     { "PINGPNG",
       "4 2",
-      650.30243, 650.6807
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      650.30243, 650.6807,
+      0
     },
 
-    //{ "(QINT)",,}, // Q-17
+    // no mods
+    { "MISSISSIPPI",
+      0,
+      false,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      1143.62099, 1144.3815,
+      0
+    },
 
     // no mods
-    { "MISSISSIPPI", 0, 1143.62099, 1144.3815 },
+    { "MISSISSIPPI",
+      0,
+      false,
+      ModificationParsing_Auto,
+      ModificationDelimiter_Brackets,
+      1143.62099, 1144.3815,
+      0
+    },
 
     // S+80, S+80
     { "MISSISSIPPI",
       "5 3 5 5",
-      1303.55365, 1304.3413
+      true,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      1303.55365, 1304.3413,
+      0
     }
 };
 
@@ -224,45 +415,86 @@ void modificationTest()
     for (size_t i=0; i < testModifiedPeptidesSize; ++i)
     {
         TestModifiedPeptide& p = testModifiedPeptides[i];
-        Peptide peptide(p.sequence); // mods by formula
-        Peptide peptide2(p.sequence); // mods by mass
-
-        double monoDeltaMass = 0;
-        double avgDeltaMass = 0;
-        if (p.mods != NULL)
+        try
         {
-            ModificationMap& modMap = peptide.modifications();
-            ModificationMap& modMap2 = peptide2.modifications();
-            vector<string> tokens;
-            boost::split(tokens, p.mods, boost::is_space());
-            for (size_t i=0; i < tokens.size(); i+=2)
+            Peptide peptide;
+            double monoDeltaMass = 0;
+            double avgDeltaMass = 0;
+            double BIG_EPSILON = 0.001;
+
+            if (p.exception != NULL)
             {
-                TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
-                modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.formula));
-                modMap2[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.deltaMonoMass, mod.deltaAvgMass));
-                monoDeltaMass += mod.deltaMonoMass;
-                avgDeltaMass += mod.deltaAvgMass;
+                unit_assert_throws_what(Peptide(p.sequence, p.mp, p.md), exception, string(p.exception)+p.sequence);
+                continue;
             }
+
+            if (p.mp == ModificationParsing_Off || p.mods == NULL)
+            {
+                peptide = Peptide(p.sequence);
+
+                if (p.mods != NULL)
+                {
+                    ModificationMap& modMap = peptide.modifications();
+                    vector<string> tokens;
+                    boost::split(tokens, p.mods, boost::is_space());
+                    for (size_t i=0; i < tokens.size(); i+=2)
+                    {
+                        TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
+                        if (p.modsHaveFormulas)
+                            modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.formula));
+                        else
+                            modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.deltaMonoMass, mod.deltaAvgMass));
+                        monoDeltaMass += mod.deltaMonoMass;
+                        avgDeltaMass += mod.deltaAvgMass;
+                    }
+                }
+            }
+            else
+            {
+                peptide = Peptide(p.sequence, p.mp, p.md);
+
+                ModificationMap& modMap = peptide.modifications();
+                vector<string> tokens;
+                boost::split(tokens, p.mods, boost::is_space());
+                for (size_t i=0; i < tokens.size(); i+=2)
+                {
+                    TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
+                    ModificationMap::const_iterator itr = modMap.find(lexical_cast<int>(tokens[i+1]));
+                    unit_assert(itr != modMap.end());
+                    const ModificationList& modList = itr->second;
+                    if (p.modsHaveFormulas)
+                    {
+                        unit_assert(modList[0].hasFormula());
+                        unit_assert(modList[0].formula() == mod.formula);
+                    }
+                    unit_assert_equal(modList[0].monoisotopicDeltaMass(), mod.deltaMonoMass, BIG_EPSILON);
+                    unit_assert_equal(modList[0].averageDeltaMass(), mod.deltaAvgMass, BIG_EPSILON);
+                    monoDeltaMass += mod.deltaMonoMass;
+                    avgDeltaMass += mod.deltaAvgMass;
+                }
+            }
+
+            if (os_) *os_ << peptide.sequence() << ": " << peptide.monoisotopicMass() << " " << peptide.molecularWeight() << endl;
+
+            if (p.modsHaveFormulas)
+            {
+                unit_assert_equal(peptide.formula(true).monoisotopicMass(), p.monoMass, BIG_EPSILON);
+                unit_assert_equal(peptide.formula(true).molecularWeight(), p.avgMass, BIG_EPSILON);
+            } else if (p.mods != NULL)
+                unit_assert_throws_what(peptide.formula(true), runtime_error,
+                    "[Peptide::formula()] peptide formula cannot be generated when any modifications have no formula info");
+
+            unit_assert_equal(peptide.formula(false).monoisotopicMass(), p.monoMass-monoDeltaMass, BIG_EPSILON);
+            unit_assert_equal(peptide.formula(false).molecularWeight(), p.avgMass-avgDeltaMass, BIG_EPSILON);
+            unit_assert_equal(peptide.monoisotopicMass(0, true), p.monoMass, BIG_EPSILON);
+            unit_assert_equal(peptide.molecularWeight(0, true), p.avgMass, BIG_EPSILON);
+            unit_assert_equal(peptide.monoisotopicMass(0, false), p.monoMass-monoDeltaMass, BIG_EPSILON);
+            unit_assert_equal(peptide.molecularWeight(0, false), p.avgMass-avgDeltaMass, BIG_EPSILON);
         }
-
-        if (os_) *os_ << peptide.sequence() << ": " << peptide.monoisotopicMass() << " " << peptide.molecularWeight() << endl;
-        if (os_) *os_ << peptide2.sequence() << ": " << peptide2.monoisotopicMass() << " " << peptide2.molecularWeight() << endl;
-
-        double BIG_EPSILON = 0.001;
-
-        unit_assert_equal(peptide.formula(true).monoisotopicMass(), p.monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.formula(true).molecularWeight(), p.avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide.formula(false).monoisotopicMass(), p.monoMass-monoDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide.formula(false).molecularWeight(), p.avgMass-avgDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(0, true), p.monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(0, true), p.avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide.monoisotopicMass(0, false), p.monoMass-monoDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide.molecularWeight(0, false), p.avgMass-avgDeltaMass, BIG_EPSILON);
-
-        unit_assert_equal(peptide2.monoisotopicMass(0, true), p.monoMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.molecularWeight(0, true), p.avgMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.monoisotopicMass(0, false), p.monoMass-monoDeltaMass, BIG_EPSILON);
-        unit_assert_equal(peptide2.molecularWeight(0, false), p.avgMass-avgDeltaMass, BIG_EPSILON);
+        catch (exception& e)
+        {
+            cout << "Unit test " << lexical_cast<string>(i+1) << " on peptide \"" << p.sequence << "\" failed:\n" << e.what() << endl;
+        }
     }
 }
 
