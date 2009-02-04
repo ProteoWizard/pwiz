@@ -39,10 +39,10 @@
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.9.0
-//   remark: release date: 2008-11-25
+//   remark: version: 1.12.1
+//   remark: release date: 2009-02-04
 //   remark: coverage: Mass spectrometer output files
-//   remark: creator: Matt Chambers <matt.chambers <@> vanderbilt.edu>
+//   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
@@ -97,7 +97,7 @@ enum PWIZ_API_DECL CVID
     /// analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.
     MS_analyzer_type = 1000010,
 
-    /// mass resolution: The maximum m/z value at which two peaks can be resolved, according to one of the standard measures.
+    /// mass resolution: Smallest mass difference between two equal magnitude peaks so that the valley between them is a specified fraction of the peak height.
     MS_mass_resolution = 1000011,
 
     /// resolution measurement method: Which of the available standard measures is used to define whether two peaks are separate.
@@ -847,9 +847,6 @@ enum PWIZ_API_DECL CVID
     /// proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
     MS_PA = MS_proton_affinity,
 
-    /// mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.
-    MS_mass_resolving_power = 1000234,
-
     /// total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
     MS_total_ion_current_chromatogram = 1000235,
 
@@ -1240,23 +1237,26 @@ enum PWIZ_API_DECL CVID
     /// charge inversion mass spectrum: The measurement of the relative abundance of ions that result from a charge inversion reaction as a function of m/z.
     MS_charge_inversion_mass_spectrum = 1000322,
 
-    /// constant neutral loss scan: A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different precursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or collision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan.
+    /// constant neutral loss scan: Spectrum of all precursor ions that undergo a selected m/z decrement.
     MS_constant_neutral_loss_scan = 1000323,
 
-    /// constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
+    /// constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
     MS_constant_neutral_gain_scan = 1000324,
 
-    /// constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
+    /// constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
     MS_Constant_Neutral_Mass_Gain_Scan = MS_constant_neutral_gain_scan,
 
-    /// constant neutral mass gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
-    MS_constant_neutral_mass_gain_spectrum = 1000325,
+    /// constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
+    MS_constant_neutral_gain_spectrum = 1000325,
 
-    /// constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
-    MS_constant_neutral_mass_loss_spectrum = 1000326,
+    /// constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
+    MS_constant_neutral_mass_gain_spectrum = MS_constant_neutral_gain_spectrum,
 
-    /// constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
-    MS_Constant_Neutral_Mass_Loss = MS_constant_neutral_mass_loss_spectrum,
+    /// constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
+    MS_constant_neutral_loss_spectrum = 1000326,
+
+    /// constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
+    MS_constant_neutral_mass_loss_spectrum = MS_constant_neutral_loss_spectrum,
 
     /// e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.
     MS_e_2_mass_spectrum = 1000328,
@@ -1291,20 +1291,14 @@ enum PWIZ_API_DECL CVID
     /// nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.
     MS_nth_generation_product_ion_scan = 1000338,
 
-    /// nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.
-    MS_nth_generation_product_ion_spectrum = 1000339,
-
     /// precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.
     MS_precursor_ion = 1000340,
 
-    /// precursor ion spectrum: The mass spectrum recorded from any spectrometer in which the appropriate m/z separation function can be set to record the precursor ion or ions of selected product ions.
+    /// precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z
     MS_precursor_ion_spectrum = 1000341,
 
     /// product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.
     MS_product_ion = 1000342,
-
-    /// product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.
-    MS_product_ion_spectrum = 1000343,
 
     /// progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
     MS_progeny_ion = 1000344,
@@ -1783,8 +1777,11 @@ enum PWIZ_API_DECL CVID
     /// instrument attribute: Instrument properties that are associated with a value.
     MS_instrument_attribute = 1000496,
 
-    /// zoom scan: Feature of the ion trap mass spectrometer where MSMS data is acquired over a certain mass range.
+    /// zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
     MS_zoom_scan = 1000497,
+
+    /// zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
+    MS_enhanced_resolution_scan = MS_zoom_scan,
 
     /// full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.
     MS_full_scan = 1000498,
@@ -2038,11 +2035,26 @@ enum PWIZ_API_DECL CVID
     /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
 
+    /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
+    MS_Q1_spectrum = MS_MS1_spectrum,
+
+    /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
+    MS_Q3_spectrum = MS_MS1_spectrum,
+
+    /// MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
+    MS_full_spectrum = MS_MS1_spectrum,
+
     /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_MSn_spectrum = 1000580,
 
     /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_multiple_stage_mass_spectrometry_spectrum = MS_MSn_spectrum,
+
+    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
+    MS_product_ion_spectrum = MS_MSn_spectrum,
+
+    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
+    MS_nth_generation_product_ion_spectrum = MS_MSn_spectrum,
 
     /// CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_CRM_spectrum = 1000581,
@@ -2050,8 +2062,26 @@ enum PWIZ_API_DECL CVID
     /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_SIM_spectrum = 1000582,
 
+    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    MS_MIM_spectrum = MS_SIM_spectrum,
+
+    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    MS_multiple_ion_monitoring_spectrum = MS_SIM_spectrum,
+
+    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    MS_selected_ion_monitoring_spectrum = MS_SIM_spectrum,
+
     /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_SRM_spectrum = 1000583,
+
+    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    MS_MRM_spectrum = MS_SRM_spectrum,
+
+    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    MS_multiple_reaction_monitoring_spectrum = MS_SRM_spectrum,
+
+    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    MS_selected_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
     /// mzML file: Proteomics Standards Inititative mzML file format.
     MS_mzML_file = 1000584,
@@ -2626,7 +2656,7 @@ enum PWIZ_API_DECL CVID
     /// native spectrum identifier format: Describes how the native spectrum identifiers are formated.
     MS_nativeID_format = MS_native_spectrum_identifier_format,
 
-    /// Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.
+    /// Thermo nativeID format: controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.
     MS_Thermo_nativeID_format = 1000768,
 
     /// Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.
@@ -2694,6 +2724,60 @@ enum PWIZ_API_DECL CVID
 
     /// moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
     MS_sliding_average_smoothing = MS_moving_average_smoothing,
+
+    /// non-standard data array: A data array that contains data not covered by any other term in this group. Please do not use this term, if the binary data array type might be commonly used - contact the PSI-MS working group in order to have another CV term added.
+    MS_non_standard_data_array = 1000786,
+
+    /// inclusive low intensity threshold: Threshold at or below which some action is taken.
+    MS_inclusive_low_intensity_threshold = 1000787,
+
+    /// inclusive high intensity threshold: Threshold at or above which some action is taken.
+    MS_inclusive_high_intensity_threshold = 1000788,
+
+    /// enhanced multiply charged spectrum: MS1 spectrum that is enriched in multiply-charged ions compared to singly-charged ions
+    MS_enhanced_multiply_charged_spectrum = 1000789,
+
+    /// time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation
+    MS_time_delayed_fragmentation_spectrum = 1000790,
+
+    /// isolation window attribute: Isolation window parameter.
+    MS_isolation_window_attribute = 1000792,
+
+    /// isolation m/z upper limit: The highest m/z being isolated in an isolation window.
+    MS_isolation_m_z_upper_limit = 1000793,
+
+    /// isolation m/z lower limit: The lowest m/z being isolated in an isolation window.
+    MS_isolation_m_z_lower_limit = 1000794,
+
+    /// no combination: Use this term if only one scan was recorded or there is no information about scans available.
+    MS_no_combination = 1000795,
+
+    /// spectrum title: A free-form text title describing a spectrum.
+    MS_spectrum_title = 1000796,
+
+    /// peak list scans: A list of scan numbers and or scan ranges associated with a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.
+    MS_peak_list_scans = 1000797,
+
+    /// peak list raw scans: A list of raw scans and or scan ranges used to generate a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.
+    MS_peak_list_raw_scans = 1000798,
+
+    /// custom unreleased software tool: A software tool that has not yet been released. The value should describe the software. Please do not use this term for publicly available software - contact the PSI-MS working group in order to have another CV term added.
+    MS_custom_unreleased_software_tool = 1000799,
+
+    /// mass resolving power: The observed mass divided by the difference between two masses that can be separated: m/dm. The procedure by which dm was obtained and the mass at which the measurement was made should be reported.
+    MS_mass_resolving_power = 1000800,
+
+    /// area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
+    MS_area_peak_picking = 1000801,
+
+    /// area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
+    MS_sum_peak_picking = MS_area_peak_picking,
+
+    /// height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
+    MS_height_peak_picking = 1000802,
+
+    /// height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
+    MS_max_peak_picking = MS_height_peak_picking,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
