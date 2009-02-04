@@ -348,37 +348,20 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
 
     CVParam spectrumTypeParam = spectrum.cvParamChild(MS_spectrum_type);
-    CVParam scanTypeParam = scan.cvParamChild(MS_scanning_method);
-    string scanType;
-    if (scanTypeParam.empty())
-    {
-        switch (spectrumTypeParam.cvid)
-        {
-            case MS_MSn_spectrum:
-            case MS_MS1_spectrum:
-                scanType = "FULL";
-                break;
 
-            case MS_CRM_spectrum: scanType = "CRM"; break;
-            case MS_SIM_spectrum: scanType = "SIM"; break;
-            case MS_SRM_spectrum: scanType = "SRM"; break;
-            case MS_precursor_ion_spectrum: scanType = "Q1"; break;
-            case MS_product_ion_spectrum: scanType = "Q3"; break;
-            default: break;
-        }
-    } else
+    string scanType;
+    switch (spectrumTypeParam.cvid)
     {
-        switch (scanTypeParam.cvid)
-        {
-            case MS_full_scan: scanType = "FULL"; break;
-            case MS_zoom_scan: scanType = "ZOOM"; break;
-            case MS_CRM: scanType = "CRM"; break;
-            case MS_SIM: scanType = "SIM"; break;
-            case MS_SRM: scanType = "SRM"; break;
-            case MS_precursor_ion_scan: scanType = "Q1"; break;
-            case MS_product_ion_scan: scanType = "Q3"; break;
-            default: break;
-        }
+        case MS_MSn_spectrum:
+        case MS_MS1_spectrum:
+            scanType = "FULL";
+            break;
+
+        case MS_CRM_spectrum: scanType = "CRM"; break;
+        case MS_SIM_spectrum: scanType = "SIM"; break;
+        case MS_SRM_spectrum: scanType = "SRM"; break;
+        case MS_precursor_ion_spectrum: scanType = "Q1"; break;
+        default: break;
     }
 
     string scanEvent = scan.cvParam(MS_preset_scan_configuration).value;
