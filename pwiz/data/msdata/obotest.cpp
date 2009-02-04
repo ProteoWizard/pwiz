@@ -75,6 +75,11 @@ const char* oboText_ =
     "def: \"Name of instrument vendor, replaced by MS:1000031 Model From Vendor.\" [PSI:MS]\n"
     "is_obsolete: true\n"
     "\n"
+    "[Term]\n"
+    "id: MS:1000035\n"
+    "name: obsolete by definition\n"
+    "def: \"OBSOLETE description\" [PSI:MS]\n"
+    "\n"
     // OBO format 1.2
     "[Term]\n"
     "id: MS:2000025\n"

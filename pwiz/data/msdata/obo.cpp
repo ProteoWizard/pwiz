@@ -86,13 +86,14 @@ void parse_name(const string& line, Term& term)
 
 void parse_def(const string& line, Term& term)
 {
-    static const boost::regex e("def: \"(.*)\"\\s*\\[.*\\].*");
+    static const boost::regex e("def: \"(OBSOLETE )?(.*)\"\\s*\\[.*\\].*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term def.");    
 
-    term.def = what[1];
+    term.def = what[2];
+    term.isObsolete = what[1].matched;
 }
 
 
