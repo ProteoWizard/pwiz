@@ -151,14 +151,9 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
-    if (cvidModel != CVID_Unknown) 
-        commonInstrumentParams->set(cvidModel);
-    else
-    {
-        // TODO: add cvParam for "instrument unknown"
+    if (cvidModel == MS_Thermo_Electron_instrument_model) 
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile.value(InstModel)));
-    }
-
+    commonInstrumentParams->set(cvidModel);
     commonInstrumentParams->set(MS_instrument_serial_number, rawfile.value(InstSerialNumber));
 
     // create instrument configuration templates based on the instrument model

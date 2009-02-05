@@ -69,9 +69,11 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Exactive:                  return MS_Exactive;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
+
         case InstrumentModelType_Unknown:
         default:
-            return CVID_Unknown;
+            // TODO: is it possible to distiguish between Finnigan MAT and Thermo Electron?
+            return MS_Thermo_Electron_instrument_model;
     }
 }
 
