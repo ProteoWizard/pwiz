@@ -45,7 +45,7 @@ namespace detail {
 
 string scanNumberToSpectrumID(long scanNumber)
 {
-    return "controller=0 scan=" + lexical_cast<string>(scanNumber); 
+    return "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(scanNumber); 
 }
 
 
@@ -161,6 +161,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         scan.set(MS_preset_scan_configuration, scanEvent);
 
     result->set(MS_ms_level, scanInfo->msLevel());
+    scanMsLevelCache_[index] = scanInfo->msLevel();
 
     ScanType scanType = scanInfo->scanType();
     if (scanType!=ScanType_Unknown)
@@ -218,13 +219,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         try
         {
             string isolationWidthTag = "MS" + lexical_cast<string>(scanInfo->msLevel()) + " Isolation Width:";
-            isolationWidth = scanInfo->trailerExtraValueDouble(isolationWidthTag);
+            isolationWidth = scanInfo->trailerExtraValueDouble(isolationWidthTag) / 2;
         }
         catch (RawEgg&)
         {}
 
-        precursor.isolationWindow.set(MS_m_z, scanInfo->precursorMZ(i, false));
-        precursor.isolationWindow.set(MS_isolation_width, isolationWidth);
+        double isolationMz = scanInfo->precursorMZ(i, false);
+        precursor.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
+        precursor.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
 
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
@@ -281,6 +283,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
 {
+    scanMsLevelCache_.resize(size_, 0);
     index_.resize(size_);
     for (size_t i=0; i<size_; i++)
     {
@@ -296,12 +299,18 @@ PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, 
 {
     // for MSn spectra (n > 1): return first scan with MSn-1
 
-    while (index>0)
+    while (index > 0)
     {
 	    --index;
-	    SpectrumPtr candidate = spectrum(index, false);
-	    if (candidate->cvParam(MS_ms_level).valueAs<int>() == precursorMsLevel)
-		    return candidate->id;
+        int& cachedMsLevel = scanMsLevelCache_[index];
+        if (cachedMsLevel == 0)
+        {
+            // populate the missing MS level
+            auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(index+1);
+	        cachedMsLevel = scanInfo->msLevel();
+        }
+        if (cachedMsLevel == precursorMsLevel)
+		        return scanNumberToSpectrumID(index+1);
     }
 
     return "";

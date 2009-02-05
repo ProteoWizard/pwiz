@@ -57,6 +57,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     shared_ptr<RawFile> rawfile_;
     size_t size_;
 
+    mutable vector<int> scanMsLevelCache_;
     mutable boost::once_flag indexInitialized_;
     mutable vector<SpectrumIdentity> index_;
 
