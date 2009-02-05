@@ -202,14 +202,14 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                 default:
                 case ScanType_Full:
-                {
+                /*{
                     string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
                     index_.push_back(make_pair(ChromatogramIdentity(), filterString));
                     ChromatogramIdentity& ci = index_.back().first;
                     ci.index = index_.size()-1;
                     ci.id = "SIC " + precursorMZ;
                     idMap_[ci.id] = ci.index;
-                }
+                }*/
                 break;
             }
         }
