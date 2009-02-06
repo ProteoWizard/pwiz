@@ -160,20 +160,27 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     if (!scanEvent.empty())
         scan.set(MS_preset_scan_configuration, scanEvent);
 
-    result->set(MS_ms_level, scanInfo->msLevel());
-    scanMsLevelCache_[index] = scanInfo->msLevel();
-
+    long msLevel = scanInfo->msLevel();
     ScanType scanType = scanInfo->scanType();
-    if (scanType!=ScanType_Unknown)
+
+    scanMsLevelCache_[index] = msLevel;
+    if (msLevel == -1) // precursor ion scan
+        result->set(MS_precursor_ion_spectrum);
+    else
     {
-        result->set(translateAsSpectrumType(scanType));
-        scan.set(translateAsScanningMethod(scanType));
+        result->set(MS_ms_level, msLevel);
+
+        if (scanType!=ScanType_Unknown)
+        {
+            result->set(translateAsSpectrumType(scanType));
+            scan.set(translateAsScanningMethod(scanType));
+        }
     }
 
     PolarityType polarityType = scanInfo->polarityType();
     if (polarityType!=PolarityType_Unknown) scan.set(translate(polarityType));
 
-    bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
+    bool doCentroid = msLevelsToCentroid.contains(msLevel);
 
     if (scanInfo->isProfileScan() && !doCentroid)
     {
@@ -210,6 +217,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         // info.  Precursor recalculation should be done outside the Reader.
 
         Precursor precursor;
+        Product product;
         SelectedIon selectedIon;
 
         // isolationWindow
@@ -218,21 +226,29 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         try
         {
-            string isolationWidthTag = "MS" + lexical_cast<string>(scanInfo->msLevel()) + " Isolation Width:";
+            string isolationWidthTag = "MS" + lexical_cast<string>(msLevel) + " Isolation Width:";
             isolationWidth = scanInfo->trailerExtraValueDouble(isolationWidthTag) / 2;
         }
         catch (RawEgg&)
         {}
 
         double isolationMz = scanInfo->precursorMZ(i, false);
-        precursor.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
-        precursor.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
+        if (msLevel == -1)
+        {
+            product.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
+            product.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
+        }
+        else
+        {
+            precursor.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
+            precursor.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
+        }
 
         // TODO: better test here for data dependent modes
-        if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && scanInfo->msLevel() > 1)
-            precursor.spectrumID = findPrecursorID(scanInfo->msLevel()-1, index);
+        if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && msLevel > 1)
+            precursor.spectrumID = findPrecursorID(msLevel-1, index);
 
-        selectedIon.set(MS_m_z, scanInfo->precursorMZ(i));
+        selectedIon.set(MS_selected_m_z, scanInfo->precursorMZ(i));
         long precursorCharge = scanInfo->precursorCharge();
         if (precursorCharge > 0)
             selectedIon.set(MS_charge_state, precursorCharge);
@@ -247,6 +263,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
+        if (msLevel == -1)
+            result->products.push_back(product);
     }
 
     MassListPtr massList;
@@ -310,7 +328,7 @@ PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, 
 	        cachedMsLevel = scanInfo->msLevel();
         }
         if (cachedMsLevel == precursorMsLevel)
-		        return scanNumberToSpectrumID(index+1);
+            return scanNumberToSpectrumID(index+1);
     }
 
     return "";

@@ -70,11 +70,15 @@ void testFilter(const ScanFilter& scanFilter,
     unit_assert(scanFilter.cidParentMass_.size() == scanFilter.cidEnergy_.size());
     unit_assert(cidParentMass.size() == cidParentEnergy.size());
     unit_assert(scanFilter.cidEnergy_.size() == cidParentMass.size());
-    unit_assert(cidParentMass.size() == (size_t) scanFilter.msLevel_-1);
-    for (int i=0; i < scanFilter.msLevel_-1; ++i)
+
+    if (msLevel > 1)
     {
-        unit_assert(scanFilter.cidParentMass_[i] == cidParentMass[i]);
-        unit_assert(scanFilter.cidEnergy_[i] == cidParentEnergy[i]);
+        unit_assert(cidParentMass.size() == (size_t) scanFilter.msLevel_-1);
+        for (int i=0; i < scanFilter.msLevel_-1; ++i)
+        {
+            unit_assert(scanFilter.cidParentMass_[i] == cidParentMass[i]);
+            unit_assert(scanFilter.cidEnergy_[i] == cidParentEnergy[i]);
+        }
     }
 
     unit_assert(scanFilter.scanRangeMin_.size() == scanFilter.scanRangeMax_.size() &&
@@ -183,6 +187,13 @@ const TestScanFilter testScanFilters[] =
      "448.711", "19", "375.175 537.265 652.291 749.344", "375.18 537.27 652.297 749.35", 2,
      ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
      IonizationType_NSI, AccurateMass_Unknown, ScanType_SRM, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"+ c Full pr 191.00@-35.00 [300.00-900.00]",
+     "191", "-35", "300", "900", -1,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_Unknown, AccurateMass_Unknown, ScanType_Full, ActivationType_CID,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown}
 };

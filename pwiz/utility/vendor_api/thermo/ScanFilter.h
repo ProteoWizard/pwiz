@@ -79,7 +79,7 @@ class RAWFILE_API ScanFilter
 	TriBool widebandOn_; // wideband activation
 	AccurateMassType accurateMassType_;
 	ScanType scanType_;
-	int msLevel_; // n, in MSn: >0
+	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans
 	ActivationType activationType_;
 
 	std::vector<double> cidParentMass_; // one entry per ms level for level >= 2

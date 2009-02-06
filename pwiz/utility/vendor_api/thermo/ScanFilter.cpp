@@ -139,6 +139,10 @@ BSCAN		b scan
 ESCAN		e scan
 
 
+Precursor Ion Scan
+pr          yes
+MS[#]       no
+
 MSorder
 MS2			MSn order
 MS3
@@ -628,27 +632,40 @@ ScanFilter::parse(string filterLine)
 		s >> w;
 	}
 
-	// MS order
-	if ( (w.substr(0,2) == "MS") && (w.length() >= 2) ) {
-		if (w.length() == 2) {
-			msLevel_ = 1; // just "MS"
-		} else {
-			// MSn: extract int n
-			//cout << "len: " << w.length() << endl;
-			msLevel_ = lexical_cast<int>(w.substr(2)); // take number after "ms"
+
+    // MS order or PR keyword
+    if (w == "PR")
+    {
+        msLevel_ = -1; // special value in lieu of an extra boolean + msLevel=0
+
+        if (s.eof())
+        {
+            return 1;
 		}
-		if (s.eof()) {
-			return 1;
-		}
-		s >> w;      
-	}
+        s >> w;
+    }
+    else if ( (w.substr(0,2) == "MS") && (w.length() >= 2) )
+    {
+        if (w.length() == 2) {
+            msLevel_ = 1; // just "MS"
+        } else {
+            // MSn: extract int n
+            //cout << "len: " << w.length() << endl;
+            msLevel_ = lexical_cast<int>(w.substr(2)); // take number after "ms"
+        }
+        if (s.eof()) {
+            return 1;
+        }
+        s >> w;
+    }
 
 
 	// CID info
 	// TODO: MSn for n > 2: comma-separated
 	// if msLevel >=2 there should be mass@energy pairs for each level >= 2
-	if (msLevel_ > 1) {
-		int expectedPairs = msLevel_ - 1;
+	if (msLevel_ == -1 || msLevel_ > 1)
+    {
+        int expectedPairs = msLevel_ == -1 ? 1 : msLevel_ - 1;
 		for (int i=0; i< expectedPairs; ++i) {
 			char c=w[0];
 			size_t markerPos = w.find('@',0);
@@ -657,8 +674,9 @@ ScanFilter::parse(string filterLine)
 				return false;
 			size_t energyPos = markerPos+1;
 			c = w[energyPos];
-			if ( ! ( (c >= '0') && (c <= '9') ) ) {
-				energyPos = w.find_first_of("1234567890-+", energyPos); // find first numeric character after the "@"
+			if ((c < '0' || c > '9') && c != '-' && c != '+')
+            {
+				energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
 				if (energyPos != string::npos) {
 					activationType_ = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
 					if (activationType_ == ActivationType_Unknown)
