@@ -34,9 +34,9 @@ using std::string;
 
 
 int Version::Major()                {return 1;}
-int Version::Minor()                {return 4;}
+int Version::Minor()                {return 5;}
 int Version::Revision()             {return 0;}
-string Version::LastModified()      {return "11/12/2008";}
+string Version::LastModified()      {return "2/5/2008";}
 string Version::str()               
 {
 	std::ostringstream v;
