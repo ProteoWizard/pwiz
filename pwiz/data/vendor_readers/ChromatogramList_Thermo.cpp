@@ -7,6 +7,7 @@
 #include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "ChromatogramList_Thermo.hpp"
 #include <boost/bind.hpp>
@@ -117,9 +118,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case 3: // generate SRM TIC for <precursor>
         {
+            vector<string> tokens;
+            bal::split(tokens, ci.id, bal::is_any_of(" "));
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
-                index_[index].second, "", "", 0,
+                "ms2 " + tokens[2], "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -138,7 +141,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             mzRange % (productMZ-0.05) % (productMZ+0.05);
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
-                index_[index].second, mzRange.str(), "", 0,
+                "ms2 " + tokens[0], mzRange.str(), "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -179,7 +182,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
             {
                 case ScanType_SRM:
                 {
-                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                    string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
                     index_.push_back(make_pair(ChromatogramIdentity(), filterString));
                     ChromatogramIdentity& ci = index_.back().first;
                     ci.index = index_.size()-1;
@@ -191,7 +194,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                         index_.push_back(make_pair(ChromatogramIdentity(), filterString));
                         ChromatogramIdentity& ci = index_.back().first;
                         ci.index = index_.size()-1;
-                        ci.id = (boost::format("SRM SIC %f,%f")
+                        ci.id = (format("SRM SIC %s,%.10g")
                                  % precursorMZ
                                  % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
                                 ).str();
