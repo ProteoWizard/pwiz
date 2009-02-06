@@ -588,6 +588,11 @@ PWIZ_API_DECL bool Product::empty() const
     return (isolationWindow.empty());
 }
 
+PWIZ_API_DECL bool Product::operator==(const Product& that) const
+{
+    return isolationWindow == that.isolationWindow;
+}
+
 
 //
 // ScanWindow

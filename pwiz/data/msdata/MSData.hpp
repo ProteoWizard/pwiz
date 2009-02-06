@@ -503,6 +503,9 @@ struct PWIZ_API_DECL Product
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
+
+    /// returns true iff this product's isolation window is equal to that product's
+    bool operator==(const Product& that) const;
 };
 
 
