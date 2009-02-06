@@ -33,7 +33,7 @@ CVParamValue::CVParamValue(boost::shared_ptr<pwiz::msdata::CVParam>* base)
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParamValue))}
 
 CVParamValue::~CVParamValue()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParamValue)) SAFEDELETE(base_);}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParamValue), true) SAFEDELETE(base_);}
 
 CVParamValue::!CVParamValue()
 {delete this;}
@@ -47,7 +47,7 @@ CVParam::CVParam(pwiz::msdata::CVParam* base)
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam))}
 
 CVParam::~CVParam()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam)) if (owner_ == nullptr) SAFEDELETE(base_);}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
 
 CVParam::!CVParam()
 {delete this;}

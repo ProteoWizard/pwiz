@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/preprocessor/stringize.hpp>
+
 
 inline std::string ToStdString(System::String^ source)
 {
@@ -32,28 +34,37 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 }
 
 
-#include <iostream>
-#include <fstream>
-#include "boost/preprocessor/stringize.hpp"
+//#define GC_DEBUG
 
-#define GC_DEBUG 0
+#ifdef GC_DEBUG
+#include <boost/utility/mutexed_singleton.hpp>
+struct NativeObjectStructorLog : public boost::mutexed_singleton<NativeObjectStructorLog>
+{
+    NativeObjectStructorLog(boost::restricted) {}
 
-#if (GC_DEBUG == 1)
-#define LOG_DESTRUCT(msg) \
-    std::cout << "In " << msg << " destructor." << std::endl;
+    std::string log;
+};
+
+#define LOG_DESTRUCT(msg, willDelete) \
+    NativeObjectStructorLog::instance->log += std::string("In ") + (msg) + \
+                                                    " destructor (will delete: " + \
+                                                    ((willDelete) ? "yes" : "no") + ").\n";
 #define LOG_CONSTRUCT(msg) \
-    std::cout << "In " << msg << " constructor." << std::endl;
-#elif (GC_DEBUG == 2)
-#define LOG_DESTRUCT(msg) \
-    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
-    log << "In " << msg << " destructor." << std::endl; \
-    log.close();
-#define LOG_CONSTRUCT(msg) \
-    std::ofstream log("pwiz.log", std::ios::binary | std::ios::app); \
-    log << "In " << msg << " constructor." << std::endl; \
-    log.close();
-#else
-#define LOG_DESTRUCT(msg)
+    NativeObjectStructorLog::instance->log += std::string("In ") + (msg) + " constructor.\n";
+
+namespace pwiz { namespace CLI { namespace util {
+public ref class ObjectStructorLog
+{
+    public:
+    static property System::String^ Log
+    {
+        System::String^ get() {return gcnew System::String(NativeObjectStructorLog::instance->log.c_str());}
+    }
+};
+} } }
+
+#else // !defined GC_DEBUG
+#define LOG_DESTRUCT(msg, willDelete)
 #define LOG_CONSTRUCT(msg)
 #endif
 
@@ -79,8 +90,8 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
 internal: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NativeType* base) : base_(base), owner_(nullptr) { LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
           !CLIType() {delete this;} \
           NativeType* base_; \
           System::Object^ owner_;
@@ -88,27 +99,27 @@ internal: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 internal: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
           !ClassType() {delete this;} \
           ns::ClassType* base_;
 
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
 internal: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_);} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_);} \
           !ClassType() {delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           System::Object^ owner_;
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((ns::BaseClassType*) &**base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
           boost::shared_ptr<ns::ClassType>* base_;
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
 internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((boost::shared_ptr<ns::BaseClassType>*) base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType)) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
           boost::shared_ptr<ns::ClassType>* base_;
 

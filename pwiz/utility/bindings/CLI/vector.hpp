@@ -5,7 +5,7 @@ public ref class WrapperName : public System::Collections::Generic::IList<CLIHan
 { \
     internal: WrapperName(std::vector<NativeType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
               WrapperName(std::vector<NativeType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName)) if (owner_ == nullptr) SAFEDELETE(base_);} \
+              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);} \
               !WrapperName() {delete this;} \
               std::vector<NativeType>* base_; \
               System::Object^ owner_; \

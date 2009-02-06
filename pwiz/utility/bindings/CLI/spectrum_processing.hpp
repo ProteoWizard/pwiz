@@ -11,6 +11,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
@@ -274,15 +275,15 @@ public ref class SavitzkyGolaySmoother : public Smoother
     }
 };
 
-/*public ref class WhittakerSmoother : public Smoother
+public ref class WhittakerSmoother : public Smoother
 {
     public:
-    WhittakerSmoother(double lambdaFactor)
+    WhittakerSmoother(double lambdaCoefficient)
     {
         base_ = new pwiz::analysis::SmootherPtr(
-            new pwiz::analysis::WhittakerSmoother(lambdaFactor));
+            new pwiz::analysis::WhittakerSmoother(lambdaCoefficient));
     }
-};*/
+};
 
 /// <summary>
 /// SpectrumList implementation to smooth intensities
@@ -311,6 +312,52 @@ public ref class SpectrumList_Smoother : public msdata::SpectrumList
 
     static bool accept(msdata::SpectrumList^ inner)
     {return pwiz::analysis::SpectrumList_Smoother::accept(*inner->base_);}
+};
+
+
+public ref class PeakDetector abstract
+{
+    internal:
+    pwiz::analysis::PeakDetectorPtr* base_;
+};
+
+public ref class LocalMaximumPeakDetector : public PeakDetector
+{
+    public:
+    LocalMaximumPeakDetector(unsigned int windowSize)
+    {
+        base_ = new pwiz::analysis::PeakDetectorPtr(new pwiz::analysis::LocalMaximumPeakDetector(windowSize));
+    }
+};
+
+/// <summary>
+/// SpectrumList implementation to replace peak profiles with picked peaks
+/// </summary>
+public ref class SpectrumList_PeakPicker : public msdata::SpectrumList
+{
+    internal: virtual ~SpectrumList_PeakPicker()
+              {
+                  // base class destructor will delete the shared pointer
+              }
+              pwiz::analysis::SpectrumList_PeakPicker* base_;
+
+    public:
+
+    SpectrumList_PeakPicker(msdata::SpectrumList^ inner,
+                            PeakDetector^ algorithm,
+                            bool preferVendorPeakPicking,
+                            System::Collections::Generic::IEnumerable<int>^ msLevelsToPeakPick)
+    : msdata::SpectrumList(0)
+    {
+        pwiz::util::IntegerSet msLevelSet;
+        for each(int i in msLevelsToPeakPick)
+            msLevelSet.insert(i);
+        base_ = new pwiz::analysis::SpectrumList_PeakPicker(*inner->base_, *algorithm->base_, preferVendorPeakPicking, msLevelSet);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    }
+
+    static bool accept(msdata::SpectrumList^ inner)
+    {return pwiz::analysis::SpectrumList_PeakPicker::accept(*inner->base_);}
 };
 
 

@@ -98,7 +98,7 @@ public ref class CV
 public ref class UserParamValue
 {
     internal: UserParamValue(boost::shared_ptr<pwiz::msdata::UserParam>* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(*base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue))}
-              virtual ~UserParamValue() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue)) SAFEDELETE(base_);}
+              virtual ~UserParamValue() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue), true) SAFEDELETE(base_);}
               !UserParamValue() {delete this;}
               boost::shared_ptr<pwiz::msdata::UserParam>* base_;
 
@@ -121,7 +121,7 @@ public ref class UserParam
 {
     internal: UserParam(pwiz::msdata::UserParam* base, System::Object^ owner) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(owner), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
               UserParam(pwiz::msdata::UserParam* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(nullptr), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
-              virtual ~UserParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam)) if (owner_ == nullptr) SAFEDELETE(base_);}
+              virtual ~UserParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
               !UserParam() {delete this;}
               boost::shared_ptr<pwiz::msdata::UserParam>* base_;
               System::Object^ owner_;
@@ -1146,6 +1146,36 @@ public ref class Precursor : public ParamContainer
 DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
+public ref class Product
+{
+    DEFINE_INTERNAL_BASE_CODE(Product, pwiz::msdata::Product);
+
+    public:
+
+    /// <summary>
+    /// this element captures the isolation (or 'selection') window configured to isolate one or more products.
+    /// </summary>
+    property IsolationWindow^ isolationWindow
+    {
+        IsolationWindow^ get();
+        void set(IsolationWindow^ value);
+    }
+
+    Product();
+
+    /// <summary>
+    /// returns true iff the element contains no params and all members are empty or null
+    /// </summary>
+    bool empty();
+};
+
+
+/// <summary>
+/// A list of Product references; implements the IList&lt;Product&gt; interface
+/// </summary>
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProductList, pwiz::msdata::Product, Product, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+
 /// <summary>
 /// A list of doubles; implements the IList&lt;double&gt; interface
 /// </summary>
@@ -1438,6 +1468,14 @@ public ref class Spectrum : public ParamContainer
     property PrecursorList^ precursors
     {
         PrecursorList^ get();
+    }
+
+    /// <summary>
+    /// list and descriptions of products of the spectrum currently being described.
+    /// </summary>
+    property ProductList^ products
+    {
+        ProductList^ get();
     }
 
     /// <summary>

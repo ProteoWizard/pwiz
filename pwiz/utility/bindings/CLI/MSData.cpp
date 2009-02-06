@@ -216,7 +216,7 @@ Contact::Contact()
 
 FileDescription::FileDescription()
 : base_(new b::FileDescription())
-{owner_ = nullptr; }
+{owner_ = nullptr;}
 
 FileContent^ FileDescription::fileContent::get() {return gcnew FileContent(&base_->fileContent, this);}
 SourceFileList^ FileDescription::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
@@ -492,6 +492,19 @@ bool Precursor::empty()
 }
 
 
+Product::Product()
+: base_(new b::Product())
+{owner_ = nullptr;}
+
+IsolationWindow^ Product::isolationWindow::get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
+void Product::isolationWindow::set(IsolationWindow^ value) {base_->isolationWindow = *value->base_;}
+
+bool Product::empty()
+{
+    return base_->empty();
+}
+
+
 BinaryDataArray::BinaryDataArray()
 : ParamContainer(new b::BinaryDataArray())
 {base_ = new boost::shared_ptr<b::BinaryDataArray>(static_cast<b::BinaryDataArray*>(ParamContainer::base_));}
@@ -590,6 +603,7 @@ void Spectrum::sourceFile::set(SourceFile^ value) {(*base_)->sourceFilePtr = CLI
 
 ScanList^ Spectrum::scanList::get() {return gcnew ScanList(&(*base_)->scanList, this);}
 PrecursorList^ Spectrum::precursors::get() {return gcnew PrecursorList(&(*base_)->precursors, this);}
+ProductList^ Spectrum::products::get() {return gcnew ProductList(&(*base_)->products, this);}
 
 BinaryDataArrayList^ Spectrum::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
 void Spectrum::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}

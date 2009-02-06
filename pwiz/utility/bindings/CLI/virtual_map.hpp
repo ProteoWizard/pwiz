@@ -5,7 +5,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
 { \
     internal: WrapperName(pwiz::util::virtual_map<NativeKeyType, NativeValueType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
               WrapperName(pwiz::util::virtual_map<NativeKeyType, NativeValueType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName)) if (owner_ == nullptr) SAFEDELETE(base_);} \
+              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);} \
               !WrapperName() {delete this;} \
               pwiz::util::virtual_map<NativeKeyType, NativeValueType>* base_; \
               System::Object^ owner_; \

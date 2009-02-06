@@ -13,8 +13,24 @@ double Chemistry::Proton::get() {return pwiz::proteome::Chemistry::Proton;}
 double Chemistry::Neutron::get() {return pwiz::proteome::Chemistry::Neutron;}
 double Chemistry::Electron::get() {return pwiz::proteome::Chemistry::Electron;}
 
+
+Peptide::Peptide()
+:   base_(new b::Peptide("")), owner_(nullptr)
+{
+}
+
 Peptide::Peptide(String^ sequence)
 :   base_(new b::Peptide(ToStdString(sequence))), owner_(nullptr)
+{
+}
+
+Peptide::Peptide(String^ sequence, ModificationParsing mp)
+:   base_(new b::Peptide(ToStdString(sequence), (b::ModificationParsing) mp)), owner_(nullptr)
+{
+}
+
+Peptide::Peptide(String^ sequence, ModificationParsing mp, ModificationDelimiter md)
+:   base_(new b::Peptide(ToStdString(sequence), (b::ModificationParsing) mp, (b::ModificationDelimiter) md)), owner_(nullptr)
 {
 }
 

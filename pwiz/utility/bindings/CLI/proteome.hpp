@@ -39,6 +39,27 @@ ref class Fragmentation;
 ref class ModificationMap;
 
 /// <summary>
+/// settings to enable parsing of inline modifications in peptide sequences
+/// </summary>
+public enum class ModificationParsing
+{
+    ModificationParsing_Off, /// any non-AA characters will cause an exception
+    ModificationParsing_ByFormula, /// oxidized P in peptide: PEP(O)TIDE
+    ModificationParsing_ByMass, /// PEP(15.94)TIDE or PEP(15.94,15.99)TIDE
+    ModificationParsing_Auto /// either by formula or by mass
+};
+
+/// <summary>
+/// the delimiter expected to signify an inline modification
+/// </summary>
+public enum class ModificationDelimiter
+{
+    ModificationDelimiter_Parentheses, /// '(' and ')'
+    ModificationDelimiter_Brackets, /// '[' and ']'
+    ModificationDelimiter_Braces /// '{' and '}'
+};
+
+/// <summary>
 /// represents a peptide (sequence of amino acids)
 /// </summary>
 public ref class Peptide
@@ -46,7 +67,10 @@ public ref class Peptide
     DEFINE_INTERNAL_BASE_CODE(Peptide, pwiz::proteome::Peptide);
 
     public:
+    Peptide();
     Peptide(System::String^ sequence);
+    Peptide(System::String^ sequence, ModificationParsing mp);
+    Peptide(System::String^ sequence, ModificationParsing mp, ModificationDelimiter md);
 
     /// <summary>
     /// returns the sequence of amino acids using standard single character symbols

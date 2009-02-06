@@ -87,9 +87,12 @@ notfile merge_xdc_files : @do_merge_xdc_files : pwiz_bindings_cli ;
 #
 
 exe cvgen_cli
-    : cvgen_cli.cpp
-      ../../../data/msdata//pwiz_data_msdata_obo
-    : <link>static
+    : # sources
+        cvgen_cli.cpp
+        ../../../data/msdata//pwiz_data_msdata_obo
+    : # requirements
+        <library>/ext/boost//filesystem
+        <link>static
     ;
 explicit cvgen_cli ;
 
