@@ -299,7 +299,7 @@ SpectrumPtr SpectrumList_BTDXImpl::spectrum(size_t index, bool getBinaryData) co
 
     result->index = index;
     result->set(MS_MSn_spectrum);
-    result->set(MS_centroid_mass_spectrum);
+    result->set(MS_centroid_spectrum);
 
     is_->seekg(offset_to_position(index_[index].sourceFilePosition));
     if (!*is_)

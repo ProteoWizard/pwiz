@@ -69,7 +69,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Smoother::spectrum(size_t index, bool get
     SpectrumPtr s = inner_->spectrum(index, true);
 
     vector<CVParam>& cvParams = s->cvParams;
-    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_mass_spectrum);
+    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
 
     // return non-profile spectra as-is
     if (itr == cvParams.end())

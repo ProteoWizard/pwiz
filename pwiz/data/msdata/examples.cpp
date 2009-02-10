@@ -48,7 +48,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
-    fc.set(MS_centroid_mass_spectrum);
+    fc.set(MS_centroid_spectrum);
     fc.set(MS_scan_number_only_nativeID_format);
 
     SourceFilePtr sfp(new SourceFile);
@@ -158,9 +158,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     as1->sourceFilePtrs.push_back(sfp_parameters);
 
     Target t1;
-    t1.set(MS_m_z, 1000);
+    t1.set(MS_selected_ion_m_z, 1000);
     Target t2;
-    t2.set(MS_m_z, 1200);
+    t2.set(MS_selected_ion_m_z, 1200);
     as1->targets.push_back(t1);
     as1->targets.push_back(t2);
     msd.scanSettingsPtrs.push_back(as1);
@@ -190,9 +190,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.set(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
 
-    s19.set(MS_centroid_mass_spectrum);
-    s19.set(MS_lowest_m_z_value, 400.39);
-    s19.set(MS_highest_m_z_value, 1795.56);
+    s19.set(MS_centroid_spectrum);
+    s19.set(MS_lowest_observed_m_z, 400.39);
+    s19.set(MS_highest_observed_m_z, 1795.56);
     s19.set(MS_base_peak_m_z, 445.347);
     s19.set(MS_base_peak_intensity, 120053);
     s19.set(MS_total_ion_current, 1.66755e+007);
@@ -206,8 +206,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19scan.set(MS_preset_scan_configuration, 3);
     s19scan.scanWindows.resize(1);
     ScanWindow& window = s19.scanList.scans.back().scanWindows.front();
-    window.set(MS_scan_m_z_lower_limit, 400.000000);
-    window.set(MS_scan_m_z_upper_limit, 1800.000000);
+    window.set(MS_scan_window_lower_limit, 400.000000);
+    window.set(MS_scan_window_upper_limit, 1800.000000);
 
     BinaryDataArrayPtr s19_mz(new BinaryDataArray);
     s19_mz->dataProcessingPtr = dpXcalibur;
@@ -234,9 +234,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.set(MS_profile_mass_spectrum);
-    s20.set(MS_lowest_m_z_value, 320.39);
-    s20.set(MS_highest_m_z_value, 1003.56);
+    s20.set(MS_profile_spectrum);
+    s20.set(MS_lowest_observed_m_z, 320.39);
+    s20.set(MS_highest_observed_m_z, 1003.56);
     s20.set(MS_base_peak_m_z, 456.347);
     s20.set(MS_base_peak_intensity, 23433);
     s20.set(MS_total_ion_current, 1.66755e+007);
@@ -245,7 +245,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     Precursor& precursor = s20.precursors.front();
     precursor.spectrumID= s19.id;
     precursor.selectedIons.resize(1);
-    precursor.selectedIons[0].set(MS_m_z, 445.34);
+    precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
     precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
@@ -260,8 +260,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20scan.set(MS_preset_scan_configuration, 4);
     s20scan.scanWindows.resize(1);
     ScanWindow& window2 = s20scan.scanWindows.front();
-    window2.set(MS_scan_m_z_lower_limit, 110.000000);
-    window2.set(MS_scan_m_z_upper_limit, 905.000000);
+    window2.set(MS_scan_window_lower_limit, 110.000000);
+    window2.set(MS_scan_window_upper_limit, 905.000000);
 
     BinaryDataArrayPtr s20_mz(new BinaryDataArray);
     s20_mz->dataProcessingPtr = dpXcalibur;
@@ -290,7 +290,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_MSn_spectrum);
     s21.set(MS_ms_level, 1);
 
-    s21.set(MS_centroid_mass_spectrum);
+    s21.set(MS_centroid_spectrum);
     s21.userParams.push_back(UserParam("example", "spectrum with no data"));
     s21.setMZIntensityArrays(vector<double>(), vector<double>());
 
@@ -305,9 +305,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22.set(MS_MSn_spectrum);
     s22.set(MS_ms_level, 1);
     
-    s22.set(MS_centroid_mass_spectrum);
-    s22.set(MS_lowest_m_z_value, 142.39);
-    s22.set(MS_highest_m_z_value, 942.56);
+    s22.set(MS_centroid_spectrum);
+    s22.set(MS_lowest_observed_m_z, 142.39);
+    s22.set(MS_highest_observed_m_z, 942.56);
     s22.set(MS_base_peak_m_z, 422.42);
     s22.set(MS_base_peak_intensity, 42);
     s22.set(MS_total_ion_current, 4200);
@@ -319,8 +319,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
     s22scan.scanWindows.resize(1);
     ScanWindow& window3 = s22scan.scanWindows.front();
-    window3.set(MS_scan_m_z_lower_limit, 100.000000);
-    window3.set(MS_scan_m_z_upper_limit, 1000.000000);
+    window3.set(MS_scan_window_lower_limit, 100.000000);
+    window3.set(MS_scan_window_upper_limit, 1000.000000);
 
     BinaryDataArrayPtr s22_mz(new BinaryDataArray);
     s22_mz->dataProcessingPtr = dpXcalibur;

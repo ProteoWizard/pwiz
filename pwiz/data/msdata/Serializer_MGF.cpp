@@ -26,6 +26,7 @@
 #include "SpectrumList_MGF.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/foreach.hpp"
 
 
@@ -57,6 +58,10 @@ class Serializer_MGF::Impl
 void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
+    bool titleIsThermoDTA = msd.fileDescription.fileContent.hasCVParam(MS_Thermo_nativeID_format);
+    const string& thermoFilename = msd.fileDescription.sourceFilePtrs[0]->name;
+    string thermoBasename = bfs::basename(thermoFilename);
+
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
     for (size_t i=0, end=sl.size(); i < end; ++i)
@@ -64,40 +69,46 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
         SpectrumPtr s = sl.spectrum(i, true);
         Scan& scan = s->scanList.scans[0];
 
-        if (s->cvParam(MS_ms_level).valueAs<int>() > 1)
+        if (s->cvParam(MS_ms_level).valueAs<int>() > 1 &&
+            !s->precursors.empty() &&
+            !s->precursors[0].selectedIons.empty())
         {
             os << "BEGIN IONS\n";
-            os << "TITLE=" << s->id << '\n';
 
+            const SelectedIon& si = s->precursors[0].selectedIons[0];
             CVParam scanTimeParam = scan.cvParam(MS_scan_time);
+            CVParam chargeParam = si.cvParam(MS_charge_state);
+
+            if (titleIsThermoDTA)
+            {
+                string scan = id::value(s->id, "scan");
+                os << "TITLE=" << thermoBasename << '.' << scan << '.' << scan << '.' << chargeParam.value << '\n';
+            }
+            else
+                os << "TITLE=" << s->id << '\n';
+
             if (!scanTimeParam.empty())
                 os << "RTINSECONDS=" << scanTimeParam.timeInSeconds() << '\n';
 
-            if (!s->precursors.empty() &&
-                !s->precursors[0].selectedIons.empty())
-            {
-                const SelectedIon& si = s->precursors[0].selectedIons[0];
-                os << "PEPMASS=" << si.cvParam(MS_m_z).value;
-                
-                CVParam intensityParam = si.cvParam(MS_intensity);
-                if (!intensityParam.empty())
-                    os << " " << intensityParam.value;
-                os << '\n';
+            os << "PEPMASS=" << si.cvParam(MS_selected_ion_m_z).value;
+            
+            CVParam intensityParam = si.cvParam(MS_intensity);
+            if (!intensityParam.empty())
+                os << " " << intensityParam.value;
+            os << '\n';
 
-                CVParam chargeParam = si.cvParam(MS_charge_state);
-                if (chargeParam.empty())
+            if (chargeParam.empty())
+            {
+                vector<string> charges;
+                BOOST_FOREACH(const CVParam& param, si.cvParams)
                 {
-                    vector<string> charges;
-                    BOOST_FOREACH(const CVParam& param, si.cvParams)
-                    {
-                        if (param.cvid == MS_possible_charge_state)
-                            charges.push_back(param.value);
-                    }
-                    if (!charges.empty())
-                        os << "CHARGE=" << bal::join(charges, " and ") << '\n';
-                } else
-                    os << "CHARGE=" << chargeParam.value << '\n';
-            }
+                    if (param.cvid == MS_possible_charge_state)
+                        charges.push_back(param.value);
+                }
+                if (!charges.empty())
+                    os << "CHARGE=" << bal::join(charges, " and ") << '\n';
+            } else
+                os << "CHARGE=" << chargeParam.value << '\n';
 
             const BinaryDataArray& mzArray = *s->getMZArray();
             const BinaryDataArray& intensityArray = *s->getIntensityArray();
@@ -129,7 +140,7 @@ void Serializer_MGF::Impl::read(shared_ptr<istream> is, MSData& msd) const
 
     // we treat all MGF data is MSn (PMF MGFs not currently supported)
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);
-    msd.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
+    msd.fileDescription.fileContent.set(MS_centroid_spectrum);
     msd.fileDescription.fileContent.set(MS_multiple_peak_list_nativeID_format);
     msd.run.spectrumListPtr = SpectrumList_MGF::create(is, msd);
     msd.run.chromatogramListPtr.reset(new ChromatogramListSimple);

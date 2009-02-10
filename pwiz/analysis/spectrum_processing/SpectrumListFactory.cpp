@@ -23,7 +23,10 @@
 
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <iostream>
@@ -85,11 +88,22 @@ SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg)
 
 SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg)
 {
+    istringstream parser(arg);
+    string preferVendorPeakPicking;
+    parser >> preferVendorPeakPicking;
+    bool preferVendor = preferVendorPeakPicking == "true" ? true : false;
+
+    string msLevelSets;
+    getline(parser, msLevelSets);
+
     IntegerSet msLevelsToCentroid;
-    msLevelsToCentroid.parse(arg);
+    msLevelsToCentroid.parse(msLevelSets);
 
     return SpectrumListPtr(new 
-        SpectrumList_NativeCentroider(msd.run.spectrumListPtr, msLevelsToCentroid));
+        SpectrumList_PeakPicker(msd.run.spectrumListPtr,
+                                PeakDetectorPtr(new LocalMaximumPeakDetector(3)),
+                                preferVendor,
+                                msLevelsToCentroid));
 }
 
 
@@ -134,7 +148,7 @@ JumpTableEntry jumpTable_[] =
     {"index", "[indexBegin,indexEnd] ...", filterCreator_index},
     {"scanNumber", "[scanNumberBegin,scanNumberEnd] ...", filterCreator_scanNumber},
     {"scanEvent", "[scanEventBegin,scanEventEnd] ...", filterCreator_scanEvent},
-    {"nativeCentroid", "[msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
+    {"peakPicking", "prefer vendor peak picking: <true|false>   [msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
 };

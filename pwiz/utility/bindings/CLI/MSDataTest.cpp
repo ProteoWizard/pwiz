@@ -52,7 +52,7 @@ void testParamContainer()
     unit_assert(pc->hasCVParamChild(CVID::MS_spectrum_type));
     unit_assert(pc->hasCVParamChild(CVID::MS_mass_unit));
 
-    unit_assert(pc->cvParam(CVID::MS_m_z) == CVID::CVID_Unknown);
+    unit_assert(pc->cvParam(CVID::MS_selected_ion_m_z) == CVID::CVID_Unknown);
     unit_assert(pc->cvParam(CVID::MS_reflectron_off) == CVID::MS_reflectron_off);
     unit_assert(pc->cvParam(CVID::MS_mass_unit) == CVID::CVID_Unknown);
     unit_assert(pc->cvParam(CVID::MS_Dalton)->cvid == CVID::MS_Dalton);
@@ -61,7 +61,7 @@ void testParamContainer()
     unit_assert(pc->cvParamChild(CVID::MS_mass_unit)->cvid == CVID::MS_Dalton);
 
     String^ result = gcnew String("goober");
-    result = pc->cvParam(CVID::MS_m_z)->value;
+    result = pc->cvParam(CVID::MS_selected_ion_m_z)->value;
     unit_assert(result == "");
     result = pc->cvParam(CVID::MS_ionization_type)->value;
     unit_assert(result == "420");

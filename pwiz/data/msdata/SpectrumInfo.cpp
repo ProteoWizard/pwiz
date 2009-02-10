@@ -74,8 +74,8 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
     retentionTime = scan.cvParam(MS_scan_time).timeInSeconds();
     filterString = scan.cvParam(MS_filter_string).value;
-    mzLow = spectrum.cvParam(MS_lowest_m_z_value).valueAs<double>();        
-    mzHigh = spectrum.cvParam(MS_highest_m_z_value).valueAs<double>();        
+    mzLow = spectrum.cvParam(MS_lowest_observed_m_z).valueAs<double>();        
+    mzHigh = spectrum.cvParam(MS_highest_observed_m_z).valueAs<double>();        
     basePeakMZ = spectrum.cvParam(MS_base_peak_m_z).valueAs<double>();    
     basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).valueAs<double>();    
     totalIonCurrent = spectrum.cvParam(MS_total_ion_current).valueAs<double>();
@@ -90,7 +90,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
         precursorInfo.index = 0; // TODO
         if (!it->selectedIons.empty())
         {
-            precursorInfo.mz = it->selectedIons[0].cvParam(MS_m_z).valueAs<double>();
+            precursorInfo.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();
             precursorInfo.charge = it->selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
             precursorInfo.intensity = it->selectedIons[0].cvParam(MS_intensity).valueAs<double>();
         }

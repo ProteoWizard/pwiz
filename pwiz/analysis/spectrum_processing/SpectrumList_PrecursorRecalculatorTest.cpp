@@ -51,10 +51,10 @@ void verifyPrecursorInfo(const Spectrum& spectrum, double precursorMZ, int precu
     {
         *os_ << "[verifyPrecursorInfo] " << spectrum.index << " " << spectrum.id << " "
              << precursorMZ << " " << precursorCharge << ": "
-             << selectedIon.cvParam(MS_m_z).value << " " << selectedIon.cvParam(MS_charge_state).value << endl;
+             << selectedIon.cvParam(MS_selected_ion_m_z).value << " " << selectedIon.cvParam(MS_charge_state).value << endl;
     }
 
-    unit_assert_equal(selectedIon.cvParam(MS_m_z).valueAs<double>(), precursorMZ, epsilon);
+    unit_assert_equal(selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>(), precursorMZ, epsilon);
 
     if (precursorCharge != 0)
         unit_assert(selectedIon.cvParam(MS_charge_state).valueAs<int>() == precursorCharge);

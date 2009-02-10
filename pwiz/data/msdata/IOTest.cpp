@@ -147,7 +147,7 @@ void testUserParam()
 
 void testCVParam()
 {
-    CVParam a(MS_m_z, "810.48", UO_mass_unit);
+    CVParam a(MS_selected_ion_m_z, "810.48", MS_m_z);
     testObject(a);
 
     CVParam b(UO_second, "123.45");
@@ -160,7 +160,7 @@ void testParamGroup()
     ParamGroup a("pg");
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
-    a.cvParams.push_back(CVParam(MS_m_z, "666"));
+    a.cvParams.push_back(CVParam(MS_selected_ion_m_z, "666", MS_m_z));
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pgp")));
     testObject(a);
 }
@@ -172,7 +172,7 @@ void testNamedParamContainer()
     object_type a;
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
-    a.cvParams.push_back(CVParam(MS_m_z, "666"));
+    a.cvParams.push_back(CVParam(MS_selected_ion_m_z, "666", MS_m_z));
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pgp")));
     testObject(a);
 }
@@ -183,7 +183,7 @@ void testSourceFile()
     SourceFile a("id123", "name456", "location789");
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
-    a.cvParams.push_back(CVParam(MS_m_z, "666"));
+    a.cvParams.push_back(CVParam(MS_selected_ion_m_z, "666", MS_m_z));
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pgp")));
     testObject(a);
 }
@@ -212,7 +212,7 @@ void testSample()
     Sample a("id123", "name456");
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
-    a.cvParams.push_back(CVParam(MS_m_z, "666"));
+    a.cvParams.push_back(CVParam(MS_selected_ion_m_z, "666", MS_m_z));
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pgp")));
     testObject(a);
 }
@@ -223,7 +223,7 @@ void testComponent()
     Component a(ComponentType_Source, 1);
     a.userParams.push_back(UserParam("goober", "goo", "peanuts"));
     a.cvParams.push_back(CVParam(MS_ionization_type, "420"));
-    a.cvParams.push_back(CVParam(MS_m_z, "666"));
+    a.cvParams.push_back(CVParam(MS_selected_ion_m_z, "666", MS_m_z));
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pgp")));
     testObject(a);
 }
@@ -307,7 +307,7 @@ void testScanSettings()
 
     Target t1, t2;
 
-    t1.set(MS_m_z, 200); 
+    t1.set(MS_selected_ion_m_z, 200); 
     t2.userParams.push_back(UserParam("testing"));
 
     a.targets.push_back(t1);
@@ -325,12 +325,13 @@ void testPrecursor()
     Precursor a;
     
     a.spectrumID = "19";
-    a.isolationWindow.cvParams.push_back(CVParam(MS_m_z, 123450));
+    a.isolationWindow.set(MS_isolation_window_lower_limit, 123456, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_upper_limit, 234567, MS_m_z);
     a.selectedIons.resize(2);
-    a.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
-    a.selectedIons[1].cvParams.push_back(CVParam(MS_charge_state, 2));
-    a.activation.cvParams.push_back(MS_collision_induced_dissociation);
-    a.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00));
+    a.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
+    a.selectedIons[1].set(MS_charge_state, 2);
+    a.activation.set(MS_collision_induced_dissociation);
+    a.activation.set(MS_collision_energy, 35.00);
   
     testObject(a);
 }
@@ -340,7 +341,8 @@ void testProduct()
 {
     Product a;
     
-    a.isolationWindow.set(MS_m_z, 123450);
+    a.isolationWindow.set(MS_isolation_window_lower_limit, 123456, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_upper_limit, 234567, MS_m_z);
   
     testObject(a);
 }
@@ -363,6 +365,7 @@ void testScan()
 void testScanList()
 {
     ScanList a;
+    a.cvParams.push_back(MS_sum_of_spectra);
 
     Scan a1;
     a1.cvParams.push_back(MS_reflectron_on);
@@ -372,7 +375,6 @@ void testScanList()
 
     a.scans.push_back(a1);
     a.scans.push_back(a2);
-    a.cvParams.push_back(MS_m_z);
    
     testObject(a);
 }
@@ -450,10 +452,10 @@ void testSpectrum()
     a.precursors.push_back(Precursor());
     a.precursors.back().spectrumID = "19";
     a.precursors.back().selectedIons.resize(1);
-    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
-    a.precursors.back().selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
-    a.precursors.back().activation.cvParams.push_back(MS_collision_induced_dissociation);
-    a.precursors.back().activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
+    a.precursors.back().selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
+    a.precursors.back().selectedIons[0].set(MS_charge_state, 2);
+    a.precursors.back().activation.set(MS_collision_induced_dissociation);
+    a.precursors.back().activation.set(MS_collision_energy, 35.00, UO_electronvolt); 
 
     a.products.push_back(Product());
     a.products.back().isolationWindow.set(MS_ionization_type, "420");
@@ -1024,9 +1026,9 @@ void initializeTestData(MSData& msd)
     s19.defaultArrayLength = 10;
     s19.cvParams.push_back(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
-    s19.cvParams.push_back(MS_centroid_mass_spectrum);
-    s19.cvParams.push_back(CVParam(MS_lowest_m_z_value, 400.39));
-    s19.cvParams.push_back(CVParam(MS_highest_m_z_value, 1795.56));
+    s19.cvParams.push_back(MS_centroid_spectrum);
+    s19.cvParams.push_back(CVParam(MS_lowest_observed_m_z, 400.39));
+    s19.cvParams.push_back(CVParam(MS_highest_observed_m_z, 1795.56));
     s19.cvParams.push_back(CVParam(MS_base_peak_m_z, 445.347));
     s19.cvParams.push_back(CVParam(MS_base_peak_intensity, 120053));
     s19.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
@@ -1038,8 +1040,8 @@ void initializeTestData(MSData& msd)
     s19scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     s19scan.scanWindows.resize(1);
     ScanWindow& window = s19scan.scanWindows.front();
-    window.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 400.000000));
-    window.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 1800.000000));
+    window.cvParams.push_back(CVParam(MS_scan_window_lower_limit, 400.000000));
+    window.cvParams.push_back(CVParam(MS_scan_window_upper_limit, 1800.000000));
 
     BinaryDataArrayPtr s19_mz(new BinaryDataArray);
     s19_mz->dataProcessingPtr = dpXcalibur;
@@ -1066,9 +1068,9 @@ void initializeTestData(MSData& msd)
     s20.cvParams.push_back(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.cvParams.push_back(MS_centroid_mass_spectrum);
-    s20.cvParams.push_back(CVParam(MS_lowest_m_z_value, 320.39));
-    s20.cvParams.push_back(CVParam(MS_highest_m_z_value, 1003.56));
+    s20.cvParams.push_back(MS_centroid_spectrum);
+    s20.cvParams.push_back(CVParam(MS_lowest_observed_m_z, 320.39));
+    s20.cvParams.push_back(CVParam(MS_highest_observed_m_z, 1003.56));
     s20.cvParams.push_back(CVParam(MS_base_peak_m_z, 456.347));
     s20.cvParams.push_back(CVParam(MS_base_peak_intensity, 23433));
     s20.cvParams.push_back(CVParam(MS_total_ion_current, 1.66755e+007));
@@ -1077,7 +1079,7 @@ void initializeTestData(MSData& msd)
     Precursor& precursor = s20.precursors.front();
     precursor.spectrumID= s19.id;
     precursor.selectedIons.resize(1);
-    precursor.selectedIons[0].cvParams.push_back(CVParam(MS_m_z, 445.34));
+    precursor.selectedIons[0].cvParams.push_back(CVParam(MS_selected_ion_m_z, 445.34));
     precursor.selectedIons[0].cvParams.push_back(CVParam(MS_charge_state, 2));
     precursor.activation.cvParams.push_back(MS_collision_induced_dissociation);
     precursor.activation.cvParams.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt));
@@ -1090,8 +1092,8 @@ void initializeTestData(MSData& msd)
     s20scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
     s20scan.scanWindows.resize(1);
     ScanWindow& window2 = s20scan.scanWindows.front();
-    window2.cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, 110.000000));
-    window2.cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, 905.000000));
+    window2.cvParams.push_back(CVParam(MS_scan_window_lower_limit, 110.000000));
+    window2.cvParams.push_back(CVParam(MS_scan_window_upper_limit, 905.000000));
 
     BinaryDataArrayPtr s20_mz(new BinaryDataArray);
     s20_mz->dataProcessingPtr = dpXcalibur;

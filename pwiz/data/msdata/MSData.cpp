@@ -508,14 +508,14 @@ PWIZ_API_DECL bool ScanSettings::empty() const
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz)
 {
-    set(MS_m_z, mz);
+    set(MS_selected_ion_m_z, mz);
 }
 
 
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, double intensity)
 {
-    set(MS_m_z, mz);
+    set(MS_selected_ion_m_z, mz);
     set(MS_intensity, intensity);
 }
 
@@ -523,7 +523,7 @@ SelectedIon::SelectedIon(double mz, double intensity)
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, int chargeState)
 {
-    set(MS_m_z, mz);
+    set(MS_selected_ion_m_z, mz);
     set(MS_charge_state, chargeState);
 }
 
@@ -531,7 +531,7 @@ SelectedIon::SelectedIon(double mz, int chargeState)
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, double intensity, int chargeState)
 {
-    set(MS_m_z, mz);
+    set(MS_selected_ion_m_z, mz);
     set(MS_intensity, intensity);
     set(MS_charge_state, chargeState);
 }
@@ -601,8 +601,8 @@ PWIZ_API_DECL bool Product::operator==(const Product& that) const
 
 PWIZ_API_DECL ScanWindow::ScanWindow(double mzLow, double mzHigh)
 {
-    cvParams.push_back(CVParam(MS_scan_m_z_lower_limit, mzLow));
-    cvParams.push_back(CVParam(MS_scan_m_z_upper_limit, mzHigh));
+    cvParams.push_back(CVParam(MS_scan_window_lower_limit, mzLow, MS_m_z));
+    cvParams.push_back(CVParam(MS_scan_window_upper_limit, mzHigh, MS_m_z));
 }
 
 

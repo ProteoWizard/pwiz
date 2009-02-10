@@ -155,7 +155,7 @@ struct HandlerPrecursor : public SAXParser::Handler
         if (!precursor)
             throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor."); 
 
-        precursor->selectedIons.back().cvParams.push_back(CVParam(MS_m_z, text));
+        precursor->selectedIons.back().cvParams.push_back(CVParam(MS_selected_ion_m_z, text, MS_m_z));
 
         return Status::Ok;
     }
@@ -310,6 +310,7 @@ class HandlerScan : public SAXParser::Handler
 
             spectrum_.scanList.scans.push_back(Scan());
             Scan& scan = spectrum_.scanList.scans.back();
+            scan.set(MS_no_combination);
 
             scan.set(MS_preset_scan_configuration, scanEvent);
 
@@ -351,11 +352,11 @@ class HandlerScan : public SAXParser::Handler
             }
 
             // assume centroid if not specified
-            if (!spectrum_.hasCVParam(MS_centroid_mass_spectrum) &&
+            if (!spectrum_.hasCVParam(MS_centroid_spectrum) &&
                 centroided == "1")
-                spectrum_.set(MS_centroid_mass_spectrum);
+                spectrum_.set(MS_centroid_spectrum);
             else
-                spectrum_.set(MS_profile_mass_spectrum);
+                spectrum_.set(MS_profile_spectrum);
 
             collisionEnergy_ = collisionEnergy;
 
@@ -381,9 +382,9 @@ class HandlerScan : public SAXParser::Handler
                     ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
             
             if (!lowMz.empty())
-                spectrum_.set(MS_lowest_m_z_value, lowMz);
+                spectrum_.set(MS_lowest_observed_m_z, lowMz);
             if (!highMz.empty())
-                spectrum_.set(MS_highest_m_z_value, highMz);
+                spectrum_.set(MS_highest_observed_m_z, highMz);
             if (!basePeakMz.empty())
                 spectrum_.set(MS_base_peak_m_z, basePeakMz);
             if (!basePeakIntensity.empty())
@@ -459,8 +460,8 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
 
     // if file-level dataProcessing says the file is centroid, ignore the centroided attribute
-    if (msd_.fileDescription.fileContent.hasCVParam(MS_centroid_mass_spectrum))
-        result->set(MS_centroid_mass_spectrum);
+    if (msd_.fileDescription.fileContent.hasCVParam(MS_centroid_spectrum))
+        result->set(MS_centroid_spectrum);
 
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);

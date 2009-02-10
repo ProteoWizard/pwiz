@@ -57,7 +57,7 @@ void testParamContainer()
     unit_assert(pc.hasCVParamChild(MS_spectrum_type));
     unit_assert(pc.hasCVParamChild(UO_mass_unit));
 
-    unit_assert(pc.cvParam(MS_m_z) == CVID_Unknown);
+    unit_assert(pc.cvParam(MS_selected_ion_m_z) == CVID_Unknown);
     unit_assert(pc.cvParam(MS_reflectron_off) == MS_reflectron_off);
     unit_assert(pc.cvParam(UO_mass_unit) == CVID_Unknown);
     unit_assert(pc.cvParam(UO_dalton).cvid == UO_dalton);
@@ -66,7 +66,7 @@ void testParamContainer()
     unit_assert(pc.cvParamChild(UO_mass_unit).cvid == UO_dalton);
 
     string result = "goober";
-    result = pc.cvParam(MS_m_z).value;
+    result = pc.cvParam(MS_selected_ion_m_z).value;
     unit_assert(result == "");
     result = pc.cvParam(MS_ionization_type).value;
     unit_assert(result == "420");

@@ -39,8 +39,8 @@
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.12.1
-//   remark: release date: 2009-02-04
+//   remark: version: 1.14.0
+//   remark: release date: 2009-02-10
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
@@ -479,20 +479,20 @@ public enum class CVID
     /// <summary>Waters instrument model: Waters Corporation instrument model.</summary>
     MS_Waters_instrument_model = 1000126,
 
-    /// <summary>centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
-    MS_centroid_mass_spectrum = 1000127,
+    /// <summary>centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
+    MS_centroid_spectrum = 1000127,
 
-    /// <summary>centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
-    MS_Discrete_Mass_Spectrum = MS_centroid_mass_spectrum,
+    /// <summary>centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
+    MS_Discrete_Mass_Spectrum = MS_centroid_spectrum,
 
-    /// <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
-    MS_profile_mass_spectrum = 1000128,
+    /// <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+    MS_profile_spectrum = 1000128,
 
-    /// <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
-    MS_continuous_mass_spectrum = MS_profile_mass_spectrum,
+    /// <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+    MS_continuous_mass_spectrum = MS_profile_spectrum,
 
-    /// <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
-    MS_Continuum_Mass_Spectrum = MS_profile_mass_spectrum,
+    /// <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+    MS_Continuum_Mass_Spectrum = MS_profile_spectrum,
 
     /// <summary>negative scan: Polarity of the scan is negative.</summary>
     MS_negative_scan = 1000129,
@@ -1790,11 +1790,11 @@ public enum class CVID
     /// <summary>spectrum attribute: Spectrum properties that are associated with a value.</summary>
     MS_spectrum_attribute = 1000499,
 
-    /// <summary>scan m/z upper limit: The limit of m/z over which a mass spectrometer can detect ions.</summary>
-    MS_scan_m_z_upper_limit = 1000500,
+    /// <summary>scan window upper limit: The lower m/z bound of a mass spectrometer scan window.</summary>
+    MS_scan_window_upper_limit = 1000500,
 
-    /// <summary>scan m/z lower limit: The limit of m/z over which a mass spectrometer can detect ions.</summary>
-    MS_scan_m_z_lower_limit = 1000501,
+    /// <summary>scan window lower limit: The upper m/z bound of a mass spectrometer scan window.</summary>
+    MS_scan_window_lower_limit = 1000501,
 
     /// <summary>dwell time: The time spent gathering data across a peak.</summary>
     MS_dwell_time = 1000502,
@@ -1802,7 +1802,7 @@ public enum class CVID
     /// <summary>scan attribute: Scan properties that are associated with a value.</summary>
     MS_scan_attribute = 1000503,
 
-    /// <summary>base peak m/z: M/z value of the greatest peak in the mass spectrum.</summary>
+    /// <summary>base peak m/z: M/z value of the signal of highest intensity in the mass spectrum.</summary>
     MS_base_peak_m_z = 1000504,
 
     /// <summary>base peak intensity: The intensity of the greatest peak in the mass spectrum.</summary>
@@ -1832,7 +1832,7 @@ public enum class CVID
     /// <summary>binary data array: A data array of values.</summary>
     MS_binary_data_array = 1000513,
 
-    /// <summary>m/z array: A data array of mass divided by charge values.</summary>
+    /// <summary>m/z array: A data array of m/z values.</summary>
     MS_m_z_array = 1000514,
 
     /// <summary>intensity array: A data array of intensity values.</summary>
@@ -1871,11 +1871,11 @@ public enum class CVID
     /// <summary>MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.</summary>
     MS_MassLynx_raw_format = 1000526,
 
-    /// <summary>highest m/z value: Highest m/z value observed in the mass spectum.</summary>
-    MS_highest_m_z_value = 1000527,
+    /// <summary>highest observed m/z: Highest m/z value observed in the mass spectrum.</summary>
+    MS_highest_observed_m_z = 1000527,
 
-    /// <summary>lowest m/z value: Lowest m/z value observed in the mass spectrum.</summary>
-    MS_lowest_m_z_value = 1000528,
+    /// <summary>lowest observed m/z: Lowest m/z value observed in the mass spectrum.</summary>
+    MS_lowest_observed_m_z = 1000528,
 
     /// <summary>instrument serial number: Serial Number of the instrument.</summary>
     MS_instrument_serial_number = 1000529,
@@ -2198,14 +2198,11 @@ public enum class CVID
     /// <summary>wavelength array: A data array of electromagnetic radiation wavelength values.</summary>
     MS_wavelength_array = 1000617,
 
-    /// <summary>highest wavelength value: Highest wavelength value observed in the uv/vis spectum.</summary>
+    /// <summary>highest wavelength value: Highest wavelength value observed in the uv/vis spectrum.</summary>
     MS_highest_wavelength_value = 1000618,
 
     /// <summary>lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.</summary>
     MS_lowest_wavelength_value = 1000619,
-
-    /// <summary>PDA spectrum: Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum).</summary>
-    MS_PDA_spectrum = 1000620,
 
     /// <summary>photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.</summary>
     MS_photodiode_array_detector = 1000621,
@@ -2582,8 +2579,8 @@ public enum class CVID
     /// <summary>TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.</summary>
     MS_TSQ_Quantum_Ultra_AM = 1000743,
 
-    /// <summary>selected m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
-    MS_selected_m_z = 1000744,
+    /// <summary>selected ion m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
+    MS_selected_ion_m_z = 1000744,
 
     /// <summary>retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.</summary>
     MS_retention_time_alignment = 1000745,
@@ -2744,11 +2741,11 @@ public enum class CVID
     /// <summary>isolation window attribute: Isolation window parameter.</summary>
     MS_isolation_window_attribute = 1000792,
 
-    /// <summary>isolation m/z upper limit: The highest m/z being isolated in an isolation window.</summary>
-    MS_isolation_m_z_upper_limit = 1000793,
+    /// <summary>isolation window upper limit: The highest m/z being isolated in an isolation window.</summary>
+    MS_isolation_window_upper_limit = 1000793,
 
-    /// <summary>isolation m/z lower limit: The lowest m/z being isolated in an isolation window.</summary>
-    MS_isolation_m_z_lower_limit = 1000794,
+    /// <summary>isolation window lower limit: The lowest m/z being isolated in an isolation window.</summary>
+    MS_isolation_window_lower_limit = 1000794,
 
     /// <summary>no combination: Use this term if only one scan was recorded or there is no information about scans available.</summary>
     MS_no_combination = 1000795,
@@ -2779,6 +2776,21 @@ public enum class CVID
 
     /// <summary>height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.</summary>
     MS_max_peak_picking = MS_height_peak_picking,
+
+    /// <summary>analyzer scan offset: Offset between two analyzers in a constant neutral loss or neutral gain scan. The value corresponds to the neutral loss or neutral gain value</summary>
+    MS_analyzer_scan_offset = 1000803,
+
+    /// <summary>electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.</summary>
+    MS_electromagnetic_radiation_spectrum = 1000804,
+
+    /// <summary>electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.</summary>
+    MS_EMR_spectrum = MS_electromagnetic_radiation_spectrum,
+
+    /// <summary>emission spectrum: A plot of the relative intensity of electromagnetic radiation emitted by atoms or molecules when excited.</summary>
+    MS_emission_spectrum = 1000805,
+
+    /// <summary>absorption spectrum: A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited.</summary>
+    MS_absorption_spectrum = 1000806,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,

@@ -267,7 +267,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             info.scanNum = id::value(it->spectrumID, "scan");
         if (!it->selectedIons.empty())
         { 
-            info.mz = it->selectedIons[0].cvParam(MS_m_z).value;
+            info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
             info.intensity = it->selectedIons[0].cvParam(MS_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
         }
@@ -368,12 +368,12 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     string msLevel = spectrum.cvParam(MS_ms_level).value;
     string polarity = getPolarity(scan);
     string retentionTime = getRetentionTime(scan);
-    string lowMz = spectrum.cvParam(MS_lowest_m_z_value).value;
-    string highMz = spectrum.cvParam(MS_highest_m_z_value).value;
+    string lowMz = spectrum.cvParam(MS_lowest_observed_m_z).value;
+    string highMz = spectrum.cvParam(MS_highest_observed_m_z).value;
     string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
-    bool isCentroided = spectrum.hasCVParam(MS_centroid_mass_spectrum);
+    bool isCentroided = spectrum.hasCVParam(MS_centroid_spectrum);
 
     vector<PrecursorInfo> precursorInfo = getPrecursorInfo(spectrum, spectrumListPtr);
 
@@ -711,9 +711,9 @@ struct Handler_dataProcessing : public SAXParser::Handler
             getAttribute(attributes, "centroided", centroided);
             getAttribute(attributes, "deisotoped", deisotoped);
             if (centroided == "1")
-                msd_.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
+                msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
             else // if 0 or absent, assume profile
-                msd_.fileDescription.fileContent.set(MS_profile_mass_spectrum);
+                msd_.fileDescription.fileContent.set(MS_profile_spectrum);
 
             // TODO: terms for deisotoped and charge-deconvoluted spectra?
 

@@ -109,8 +109,8 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
     result.basePeakIntensity = spectrum->cvParam(MS_base_peak_intensity).valueAs<double>();    
     result.collisionEnergy = 0;
     result.ionisationEnergy = spectrum->cvParam(MS_ionization_energy).valueAs<double>();
-    result.lowMZ = spectrum->cvParam(MS_lowest_m_z_value).valueAs<double>();        
-    result.highMZ = spectrum->cvParam(MS_highest_m_z_value).valueAs<double>();        
+    result.lowMZ = spectrum->cvParam(MS_lowest_observed_m_z).valueAs<double>();        
+    result.highMZ = spectrum->cvParam(MS_highest_observed_m_z).valueAs<double>();        
     result.precursorScanNum = 0;
     result.precursorMZ = 0;
     result.precursorCharge = 0;
@@ -127,7 +127,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 
         if (!precursor.selectedIons.empty())
         {
-            result.precursorMZ = precursor.selectedIons[0].cvParam(MS_m_z).valueAs<double>();
+            result.precursorMZ = precursor.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();
             result.precursorCharge = precursor.selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
             result.precursorIntensity = precursor.selectedIons[0].cvParam(MS_intensity).valueAs<double>();
         }

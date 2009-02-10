@@ -125,7 +125,7 @@ void testRead(const string& filename)
     const Precursor& precursor = spectrum->precursors[0];
     const SelectedIon& selectedIon = precursor.selectedIons[0];
     unit_assert(precursor.spectrumID == "controllerType=0 controllerNumber=1 scan=2"); // previous ms1 scan
-    unit_assert_equal(selectedIon.cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-15);
+    unit_assert_equal(selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>(), 810.79, 1e-15);
     unit_assert_equal(selectedIon.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
 
     spectrum = sl.spectrum(5, true);

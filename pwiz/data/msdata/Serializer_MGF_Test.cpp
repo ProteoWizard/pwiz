@@ -42,7 +42,7 @@ void initializeTinyMGF(MSData& msd)
 {
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
-    fc.set(MS_centroid_mass_spectrum);
+    fc.set(MS_centroid_spectrum);
     fc.set(MS_multiple_peak_list_nativeID_format);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
@@ -56,9 +56,9 @@ void initializeTinyMGF(MSData& msd)
     s20.set(MS_MSn_spectrum);
     s20.set(MS_ms_level, 2);
 
-    s20.set(MS_centroid_mass_spectrum);
-    s20.set(MS_lowest_m_z_value, 0);
-    s20.set(MS_highest_m_z_value, 18);
+    s20.set(MS_centroid_spectrum);
+    s20.set(MS_lowest_observed_m_z, 0);
+    s20.set(MS_highest_observed_m_z, 18);
     s20.set(MS_base_peak_m_z, 0);
     s20.set(MS_base_peak_intensity, 20);
     s20.set(MS_total_ion_current, 110);
@@ -66,7 +66,7 @@ void initializeTinyMGF(MSData& msd)
     s20.precursors.resize(1);
     Precursor& precursor = s20.precursors.front();
     precursor.selectedIons.resize(1);
-    precursor.selectedIons[0].set(MS_m_z, 445.34);
+    precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
     precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
 

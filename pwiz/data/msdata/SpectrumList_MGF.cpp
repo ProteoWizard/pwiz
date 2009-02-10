@@ -124,7 +124,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
         spectrum.set(MS_MSn_spectrum);
         spectrum.set(MS_ms_level, 2);
-        spectrum.set(MS_centroid_mass_spectrum);
+        spectrum.set(MS_centroid_spectrum);
         spectrum.precursors.push_back(Precursor());
         Precursor& precursor = spectrum.precursors.back();
         precursor.selectedIons.push_back(SelectedIon());
@@ -191,11 +191,11 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 size_t delim2 = value.find(' ');
                                 if (delim2 != string::npos)
                                 {
-                                    selectedIon.set(MS_m_z, lexical_cast<double>(value.substr(0, delim2)));
+                                    selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value.substr(0, delim2)), MS_m_z);
                                     selectedIon.set(MS_intensity, lexical_cast<double>(value.substr(delim2+1)));
                                 }
                                 else
-                                    selectedIon.set(MS_m_z, lexical_cast<double>(value));
+                                    selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value), MS_m_z);
 				            }
                             else if (name == "CHARGE")
 				            {
@@ -259,8 +259,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             }
         }
 
-        spectrum.set(MS_lowest_m_z_value, lowMZ);
-        spectrum.set(MS_highest_m_z_value, highMZ);
+        spectrum.set(MS_lowest_observed_m_z, lowMZ);
+        spectrum.set(MS_highest_observed_m_z, highMZ);
         spectrum.set(MS_total_ion_current, tic);
         spectrum.set(MS_base_peak_m_z, basePeakMZ);
         spectrum.set(MS_base_peak_intensity, basePeakIntensity);

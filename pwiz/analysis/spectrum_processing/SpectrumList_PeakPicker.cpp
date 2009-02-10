@@ -122,7 +122,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         return s;
 
     vector<CVParam>& cvParams = s->cvParams;
-    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_mass_spectrum);
+    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
 
     // return non-profile spectra as-is
     // (could have been acquired as centroid, or vendor may have done the centroiding)
@@ -130,7 +130,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         return s;
 
     // replace profile term with centroid term
-    *itr = MS_centroid_mass_spectrum;
+    *itr = MS_centroid_spectrum;
 
     try
     {

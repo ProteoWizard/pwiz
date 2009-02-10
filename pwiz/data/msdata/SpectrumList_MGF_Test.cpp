@@ -109,7 +109,7 @@ void test()
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor0 = s->precursors[0];
     unit_assert(precursor0.selectedIons.size() == 1);
-    unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_m_z).valueAs<double>(), 810.79, 1e-5);
+    unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 810.79, 1e-5);
 
     unit_assert(s->defaultArrayLength == 3);
     unit_assert(s->binaryDataArrayPtrs.size() == 2);
@@ -150,7 +150,7 @@ void test()
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];
     unit_assert(precursor1.selectedIons.size() == 1);
-    unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_m_z).valueAs<double>(), 837.34, 1e-5);
+    unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 837.34, 1e-5);
     unit_assert(precursor1.selectedIons[0].cvParam(MS_charge_state).value == "2");
 
     unit_assert(s->defaultArrayLength == 5);

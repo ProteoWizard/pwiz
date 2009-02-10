@@ -153,6 +153,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.set(MS_no_combination);
 
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
@@ -168,13 +169,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
     //bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
 
-    //if (scanInfo->isProfileScan() && !doCentroid) sd.cvParams.push_back(MS_profile_mass_spectrum);
-    //else sd.cvParams.push_back(MS_centroid_mass_spectrum); 
+    //if (scanInfo->isProfileScan() && !doCentroid) sd.cvParams.push_back(MS_profile_spectrum);
+    //else sd.cvParams.push_back(MS_centroid_spectrum); 
 
     if (pScanStats_->Continuum > 0)
-        result->set(MS_profile_mass_spectrum);
+        result->set(MS_profile_spectrum);
     else
-        result->set(MS_centroid_mass_spectrum);
+        result->set(MS_centroid_spectrum);
 
     result->set(MS_base_peak_m_z, pScanStats_->BPM);
     result->set(MS_base_peak_intensity, pScanStats_->BPI);
@@ -183,17 +184,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     // TODO: get correct values
     scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass));
 
-    //sd.set(MS_lowest_m_z_value, minObservedMz);
-    //sd.set(MS_highest_m_z_value, maxObservedMz);
+    //sd.set(MS_lowest_observed_m_z, minObservedMz);
+    //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
     float precursorMz = pExScanStats_->SetMass;
 
     if (precursorMz > 0)
     {
         Precursor precursor;
-        SelectedIon selectedIon;
-
-        selectedIon.set(MS_m_z, precursorMz);
+        SelectedIon selectedIon(precursorMz);
 
         /*long parentCharge = scanInfo->parentCharge();
         if (parentCharge > 0)

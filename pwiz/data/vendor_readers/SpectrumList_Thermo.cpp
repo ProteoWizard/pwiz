@@ -148,6 +148,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.set(MS_no_combination);
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -184,11 +185,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     if (scanInfo->isProfileScan() && !doCentroid)
     {
-        result->set(MS_profile_mass_spectrum);
+        result->set(MS_profile_spectrum);
     }
     else
     {
-        result->set(MS_centroid_mass_spectrum); 
+        result->set(MS_centroid_spectrum); 
         doCentroid = scanInfo->isProfileScan();
     }
 
@@ -235,20 +236,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         double isolationMz = scanInfo->precursorMZ(i, false);
         if (msLevel == -1)
         {
-            product.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
-            product.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
+            product.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth);
+            product.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth);
         }
         else
         {
-            precursor.isolationWindow.set(MS_isolation_m_z_lower_limit, isolationMz - isolationWidth);
-            precursor.isolationWindow.set(MS_isolation_m_z_upper_limit, isolationMz + isolationWidth);
+            precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth);
+            precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth);
         }
 
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && msLevel > 1)
             precursor.spectrumID = findPrecursorID(msLevel-1, index);
 
-        selectedIon.set(MS_selected_m_z, scanInfo->precursorMZ(i));
+        selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i));
         long precursorCharge = scanInfo->precursorCharge();
         if (precursorCharge > 0)
             selectedIon.set(MS_charge_state, precursorCharge);
@@ -285,8 +286,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     if (massList->size() > 0)
     {
-        result->set(MS_lowest_m_z_value, massList->data()[0].mass);
-        result->set(MS_highest_m_z_value, massList->data()[massList->size()-1].mass);
+        result->set(MS_lowest_observed_m_z, massList->data()[0].mass);
+        result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass);
     }
 
     if (getBinaryData)

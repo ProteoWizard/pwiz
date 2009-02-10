@@ -77,8 +77,8 @@ void test()
 {
     vector<CVParam> params;
 
-    params.push_back(CVParam(MS_lowest_m_z_value, 420));
-    params.push_back(CVParam(MS_highest_m_z_value, 2000.012345));
+    params.push_back(CVParam(MS_lowest_observed_m_z, 420));
+    params.push_back(CVParam(MS_highest_observed_m_z, 2000.012345));
     params.push_back(CVParam(MS_m_z, "goober"));
     params.push_back(CVParam(MS_scan_time, 5.890500, UO_minute)); 
     params.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
@@ -110,8 +110,8 @@ void test()
     unit_assert("goober" == params[2].value);
     unit_assert(5.890500 == params[3].valueAs<double>());
     unit_assert(35.00 == params[4].valueAs<double>());
-    unit_assert(params[0] == CVParam(MS_lowest_m_z_value, 420));
-    unit_assert(params[1] != CVParam(MS_lowest_m_z_value, 420));
+    unit_assert(params[0] == CVParam(MS_lowest_observed_m_z, 420));
+    unit_assert(params[1] != CVParam(MS_lowest_observed_m_z, 420));
     unit_assert(CVParam(MS_m_z) == MS_m_z);
     unit_assert(params[5].valueAs<bool>() == true);
     unit_assert(params[6].valueAs<bool>() == false);
@@ -140,11 +140,11 @@ void testIs()
 {
     vector<CVParam> params;
     params.push_back(CVParam(MS_plasma_desorption));
-    params.push_back(CVParam(MS_lowest_m_z_value, 420));
+    params.push_back(CVParam(MS_lowest_observed_m_z, 420));
     params.push_back(CVParam(MS_collision_induced_dissociation));
 
     vector<CVParam>::const_iterator it = 
-        find_if(params.begin(), params.end(), CVParamIs(MS_lowest_m_z_value));
+        find_if(params.begin(), params.end(), CVParamIs(MS_lowest_observed_m_z));
 
     unit_assert(it->value == "420");
 }
@@ -156,11 +156,11 @@ void testIsChildOf()
     // to find the first one whose cvid IsA specified CVID
 
     vector<CVParam> params;
-    params.push_back(CVParam(MS_lowest_m_z_value, 420));
+    params.push_back(CVParam(MS_lowest_observed_m_z, 420));
     params.push_back(CVParam(MS_plasma_desorption));
     params.push_back(CVParam(MS_collision_induced_dissociation));
     params.push_back(CVParam(UO_electronvolt));
-    params.push_back(CVParam(MS_highest_m_z_value, 2400.0));
+    params.push_back(CVParam(MS_highest_observed_m_z, 2400.0));
 
     vector<CVParam>::const_iterator itDiss = 
         find_if(params.begin(), params.end(), CVParamIsChildOf(MS_dissociation_method));

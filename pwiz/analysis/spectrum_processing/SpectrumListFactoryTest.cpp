@@ -46,15 +46,28 @@ void testWrap()
     MSData msd;
     examples::initializeTiny(msd);
 
-    unit_assert(msd.run.spectrumListPtr.get());
-    unit_assert(msd.run.spectrumListPtr->size() > 2);
+    SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+    unit_assert(sl.get());
+    unit_assert(sl->size() > 2);
 
     SpectrumListFactory::wrap(msd, "scanNumber [19,20]");
-    unit_assert(msd.run.spectrumListPtr->size() == 2);
+    unit_assert(sl->size() == 2);
 
     SpectrumListFactory::wrap(msd, "index [1,1]");
-    unit_assert(msd.run.spectrumListPtr->size() == 1);
-    unit_assert(msd.run.spectrumListPtr->spectrumIdentity(0).id == "scan=20");
+    unit_assert(sl->size() == 1);
+    unit_assert(sl->spectrumIdentity(0).id == "scan=20");
+
+    vector<double> profileData(sl->spectrum(0)->getMZArray()->data);
+    unit_assert(profileData.size() == 10);
+    unit_assert(profileData[0] == 0);
+    unit_assert(profileData[9] == 18);
+
+    SpectrumListFactory::wrap(msd, "peakPicking true [1,6]");
+
+    vector<double> peakData(sl->spectrum(0)->getMZArray()->data);
+    unit_assert(peakData.size() == 1);
+    unit_assert(peakData[0] == 0);
 }
 
 

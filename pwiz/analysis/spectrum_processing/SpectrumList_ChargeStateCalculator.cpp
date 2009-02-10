@@ -120,7 +120,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
             return s;
     }
 
-    double mz = selectedIon.cvParam(MS_m_z).valueAs<double>();
+    double mz = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();
 
     vector<MZIntensityPair> mzIntensityPairs;
     s->getMZIntensityPairs(mzIntensityPairs);

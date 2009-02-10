@@ -167,7 +167,7 @@ void test(bool indexed)
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor = s->precursors[0];
     unit_assert(precursor.selectedIons.size() == 1);
-    unit_assert(precursor.selectedIons[0].hasCVParam(MS_m_z));
+    unit_assert(precursor.selectedIons[0].hasCVParam(MS_selected_ion_m_z));
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_intensity));
     unit_assert(precursor.selectedIons[0].hasCVParam(MS_charge_state));
     unit_assert(precursor.activation.hasCVParam(MS_collision_energy));

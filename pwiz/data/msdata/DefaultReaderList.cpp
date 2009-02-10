@@ -289,7 +289,7 @@ class Reader_BTDX : public Reader
             throw runtime_error(("[Reader_BTDX::read] Unable to open file " + filename));
 
         result.fileDescription.fileContent.set(MS_MSn_spectrum);
-        result.fileDescription.fileContent.set(MS_centroid_mass_spectrum);
+        result.fileDescription.fileContent.set(MS_centroid_spectrum);
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "BTDX1";
         bfs::path p(filename);
