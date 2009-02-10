@@ -24,6 +24,8 @@
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/COMInitializer.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 namespace pwiz {
@@ -31,8 +33,9 @@ namespace msdata {
 namespace detail {
 
 using namespace std;
+using namespace pwiz::util;
 
-SpectrumList_Bruker_Format format(const string& path)
+Reader_Bruker_Format format(const string& path)
 {
     bfs::path sourcePath(path);
 
@@ -44,13 +47,15 @@ SpectrumList_Bruker_Format format(const string& path)
         std::string leaf = sourcePath.leaf();
         bal::to_lower(leaf);
         if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
-            return SpectrumList_Bruker_Format_FID;
+            return Reader_Bruker_Format_FID;
+        else if(sourcePath.extension() == ".u2")
+            return Reader_Bruker_Format_U2;
         else if(leaf == "analysis.yep")
-            return SpectrumList_Bruker_Format_YEP;
+            return Reader_Bruker_Format_YEP;
         else if(leaf == "analysis.baf")
-            return SpectrumList_Bruker_Format_BAF;
+            return Reader_Bruker_Format_BAF;
         else
-            return SpectrumList_Bruker_Format_Unknown;
+            return Reader_Bruker_Format_Unknown;
     }
 
     // TODO: 1SRef is not the only possible substring below, get more examples!
@@ -72,7 +77,7 @@ SpectrumList_Bruker_Format format(const string& path)
                      bfs::exists(itr->path() / "1SRef/fid") ||
                      (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
                      (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
-                    return SpectrumList_Bruker_Format_FID;
+                    return Reader_Bruker_Format_FID;
             else
                 break;
         }
@@ -80,14 +85,114 @@ SpectrumList_Bruker_Format format(const string& path)
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"
     if (bfs::exists(sourcePath / "Analysis.yep") || bfs::exists(sourcePath / "analysis.yep"))
-        return SpectrumList_Bruker_Format_YEP;
+        return Reader_Bruker_Format_YEP;
 
     // Check for baf-based data;
     // The directory should have a file named "Analysis.baf"
     if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
-        return SpectrumList_Bruker_Format_BAF;
+        return Reader_Bruker_Format_BAF;
 
-    return SpectrumList_Bruker_Format_Unknown;
+    // Check for u2-based data;
+    // The directory should have a file named "<directory-name - ".d">.u2"
+    string sourceDirectory = *(--sourcePath.end());
+    if (bfs::exists(sourcePath / (sourceDirectory.substr(0, sourceDirectory.length()-2) + ".u2")))
+        return Reader_Bruker_Format_U2;
+
+    return Reader_Bruker_Format_Unknown;
+}
+
+
+CompassXtractWrapper::CompassXtractWrapper(const bfs::path& sourcePath, Reader_Bruker_Format sourceFormat)
+: format_(sourceFormat)
+{
+    COMInitializer::initialize();
+
+    if (format_ != Reader_Bruker_Format_U2)
+    {
+        // use and check for a successful creation with HRESULT
+        HRESULT hr = msAnalysis_.CreateInstance("EDAL.MSAnalysis");
+        if (FAILED(hr))
+        {
+            // No success when creating the analysis pointer - we decrypt the error from hr.
+            LPVOID lpMsgBuf;
+
+            ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	                       FORMAT_MESSAGE_FROM_SYSTEM,
+	                       NULL,
+	                       hr,
+	                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                       (LPTSTR) &lpMsgBuf,
+	                       0,
+	                       NULL );
+
+            string error((const char*) lpMsgBuf);
+            LocalFree(lpMsgBuf);
+            throw ReaderFail("[CompassXtractWrapper::ctor()] Error initializing CompassXtract MS interface: " + error);
+        }
+
+        msAnalysis_->Open(sourcePath.string().c_str());
+        msSpectrumCollection_ = msAnalysis_->GetMSSpectrumCollection();
+    }
+    else
+    {
+        // use and check for a successful creation with HRESULT
+        BDal_CXt_Lc_Interfaces::IAnalysisFactoryPtr lcAnalysisFactory;
+        HRESULT hr = lcAnalysisFactory.CreateInstance("BDal.CxT.Lc.AnalysisFactory");
+        if (FAILED(hr))
+        {
+            // No success when creating the analysis pointer - we decrypt the error from hr.
+            LPVOID lpMsgBuf;
+
+            ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	                       FORMAT_MESSAGE_FROM_SYSTEM,
+	                       NULL,
+	                       hr,
+	                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                       (LPTSTR) &lpMsgBuf,
+	                       0,
+	                       NULL );
+
+            string error((const char*) lpMsgBuf);
+            LocalFree(lpMsgBuf);
+            throw ReaderFail("[CompassXtractWrapper::ctor()] Error initializing CompassXtract LC interface: " + error);
+        }
+
+        lcAnalysis_ = lcAnalysisFactory->Open(sourcePath.string().c_str());
+
+        SAFEARRAY* safeArray;
+
+        BDal_CXt_Lc_Interfaces::ISpectrumSourceDeclaration** ssdList;
+        safeArray = lcAnalysis_->GetSpectrumSourceDeclarations();
+        SafeArrayAccessData(safeArray, (void**)&ssdList);
+        spectrumSourceDeclarations_.assign(ssdList, ssdList + safeArray->rgsabound->cElements);
+        SafeArrayUnaccessData(safeArray);
+        SafeArrayDestroy(safeArray);
+
+        BDal_CXt_Lc_Interfaces::ITraceDeclaration** tdList;
+        safeArray = lcAnalysis_->GetTraceDeclarations();
+        SafeArrayAccessData(safeArray, (void**)&tdList);
+        traceDeclarations_.assign(tdList, tdList + safeArray->rgsabound->cElements);
+        SafeArrayUnaccessData(safeArray);
+        SafeArrayDestroy(safeArray);
+    }
+}
+
+CompassXtractWrapper::~CompassXtractWrapper()
+{
+    if (format_ != Reader_Bruker_Format_U2)
+    {
+        //msAnalysis_->Close();
+        msSpectrumCollection_->Release();
+        msSpectrumCollection_.Detach();
+        msAnalysis_->Release();
+        msAnalysis_.Detach();
+    }
+    else
+    {
+        lcAnalysis_->Close();
+    }
+
+    COMInitializer::uninitialize();
 }
 
 

@@ -1,5 +1,5 @@
 //
-// SpectrumList_Bruker.hpp
+// ChromatogramList_Bruker.hpp
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -26,8 +26,6 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Bruker_Detail.hpp"
-#import "CompassXtractMS.dll"
-
 #include <map>
 
 using namespace std;
@@ -43,20 +41,19 @@ namespace detail {
 //
 // SpectrumList_Bruker
 //
-class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
+class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
 {
     public:
 
-    SpectrumList_Bruker(MSData& msd,
-                        const string& rootpath,
-                        Reader_Bruker_Format format,
-                        CompassXtractWrapperPtr compassXtractWrapperPtr);
+    ChromatogramList_Bruker(MSData& msd,
+                            const string& rootpath,
+                            Reader_Bruker_Format format,
+                            CompassXtractWrapperPtr compassXtractWrapperPtr);
 
     virtual size_t size() const;
-    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
+    virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
-    SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
 
 
     private:
@@ -65,25 +62,12 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
     size_t size_;
-    vector<bfs::path> sourcePaths_;
-
-    //vector<SpectrumIdentity> index_;
-
-    struct IndexEntry : public SpectrumIdentity
-    {
-        size_t declaration;
-        long collection;
-        long scan;
-    };
-
-    vector<IndexEntry> index_;
+    vector<ChromatogramIdentity> index_;
 
     // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
     map<string, size_t> idToIndexMap_;
 
-    void fillSourceList();
     void createIndex();
-    //string findPrecursorID(int precursorMsLevel, size_t index) const;
 
     CompassXtractWrapperPtr compassXtractWrapperPtr_;
 };

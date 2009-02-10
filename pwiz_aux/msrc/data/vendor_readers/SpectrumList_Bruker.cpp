@@ -58,28 +58,36 @@ namespace detail {
 PWIZ_API_DECL
 SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
                                          const string& rootpath,
-                                         SpectrumList_Bruker_Format format,
-                                         EDAL::IMSAnalysisPtr& pAnalysis)
-:   msd_(msd), rootpath_(rootpath), format_(format), pAnalysis_(pAnalysis), size_(0)
+                                         Reader_Bruker_Format format,
+                                         CompassXtractWrapperPtr compassXtractWrapperPtr)
+:   msd_(msd), rootpath_(rootpath), format_(format),
+    compassXtractWrapperPtr_(compassXtractWrapperPtr),
+    size_(0)
 {
-    try
+    fillSourceList();
+
+    switch (format_)
     {
-        if (format != SpectrumList_Bruker_Format_FID)
-        {
-            pAnalysis->Open(rootpath.c_str());
-            pSpectra_ = pAnalysis->MSSpectrumCollection;
-            size_ = (size_t) pSpectra_->Count;
-        }
-    }
-    catch (_com_error& e) // not caught by either std::exception or '...'
-    {
-        throw runtime_error(string("[SpectrumList_Bruker::ctor()] COM error: ") +
-            (const char*)e.Description() + "(HRESULT:" + lexical_cast<string>(e.Error()));
+        case Reader_Bruker_Format_YEP:
+        case Reader_Bruker_Format_BAF:
+            size_ = (size_t) compassXtractWrapperPtr_->msSpectrumCollection_->Count;
+            break;
+
+        case Reader_Bruker_Format_FID:
+            size_ = sourcePaths_.size();
+            break;
+
+        case Reader_Bruker_Format_U2:
+            {
+                CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr->lcAnalysis_;
+                CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
+                for (size_t i=0; i < ssdList.size(); ++i)
+                    size_ += analysis->GetSpectrumCollection(ssdList[i]->GetSpectrumCollectionId())->GetNumberOfSpectra();
+            }
+            break;
     }
 
-    fillSourceList();
     createIndex();
-    size_ = index_.size();
 }
 
 
@@ -107,6 +115,21 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 }
 
 
+namespace {
+
+template<typename T>
+void convertSafeArrayToVector(SAFEARRAY* parray, vector<T>& result)
+{
+    T* data;
+    HRESULT hr = SafeArrayAccessData(parray, (void**) &data);
+    if (FAILED(hr) || !data)
+        throw runtime_error("convertSafeArrayToVector(): Data access error.");
+    result.assign(data, data + parray->rgsabound->cElements);
+}
+
+} // namespace
+
+
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const
 {
     return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
@@ -123,14 +146,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     if (!result.get())
         throw runtime_error("[SpectrumList_Bruker::spectrum()] Allocation error.");
 
-    const SpectrumIdentity& si = index_[index];
+    const IndexEntry& si = index_[index];
+    result->index = si.index;
+    result->id = si.id;
+
+    result->scanList.scans.push_back(Scan());
+    Scan& scan = result->scanList.scans[0];
+    scan.set(MS_no_combination);
 
     try
     {
         EDAL::IMSSpectrumPtr pSpectrum;
-        if (format_ == SpectrumList_Bruker_Format_FID)
+        if (format_ == Reader_Bruker_Format_FID)
         {
-            HRESULT hr = pAnalysis_.CreateInstance("EDAL.MSAnalysis");
+            HRESULT hr = compassXtractWrapperPtr_->msAnalysis_.CreateInstance("EDAL.MSAnalysis");
             if (FAILED(hr))
             {
                 // No success when creating the analysis pointer - we decrypt the error from hr.
@@ -147,19 +176,38 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
                 string error((const char*) lpMsgBuf);
                 LocalFree(lpMsgBuf);
-                throw runtime_error("[SpectrumList_Bruker::spectrum()] Error initializing CompassXtract: " + error);
+                throw runtime_error("[SpectrumList_Bruker::spectrum()] Error initializing CompassXtract MS interface: " + error);
             }
-            pAnalysis_->Open(sourcePaths_[index].string().c_str());
-            pSpectra_ = pAnalysis_->MSSpectrumCollection;
-            pSpectrum = pSpectra_->GetItem(1);
-        } else
-            pSpectrum = pSpectra_->GetItem((long) index+1);
+            compassXtractWrapperPtr_->msAnalysis_->Open(sourcePaths_[index].string().c_str());
+            compassXtractWrapperPtr_->msSpectrumCollection_ = compassXtractWrapperPtr_->msAnalysis_->MSSpectrumCollection;
+            pSpectrum = compassXtractWrapperPtr_->msSpectrumCollection_->GetItem(1);
+        }
+        else if (format_ == Reader_Bruker_Format_U2)
+        {
+            // fill the spectrum from the LC interface
+            CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
+            CompassXtractWrapper::LC_SpectrumSourceDeclarationPtr& ssd = compassXtractWrapperPtr_->spectrumSourceDeclarations_[si.declaration];
+            BDal_CXt_Lc_Interfaces::ISpectrumCollectionPtr spectra = analysis->GetSpectrumCollection(si.collection);
+            BDal_CXt_Lc_Interfaces::ISpectrumPtr spectrum = spectra->GetItem(si.scan);
 
-        result->index = si.index;
-        result->id = si.id;
+            if (ssd->GetXAxisUnit() == BDal_CXt_Lc_Interfaces::Unit_NanoMeter)
+                result->set(MS_EMR_spectrum);
+            else
+                throw runtime_error("[SpectrumList_Bruker::spectrum()] unexpected XAxisUnit");
 
-        result->scanList.scans.push_back(Scan());
-        Scan& scan = result->scanList.scans[0];
+            double scanTime = spectrum->GetTime();
+            if (scanTime > 0)
+                scan.set(MS_scan_time, scanTime, UO_minute);
+
+            vector<double> lcX, lcY;
+            convertSafeArrayToVector(ssd->GetXAxis(), lcX);
+            convertSafeArrayToVector(spectrum->GetIntensity(), lcY);
+            result->setMZIntensityArrays(lcX, lcY);
+            return result;
+        }
+        else
+            pSpectrum = compassXtractWrapperPtr_->msSpectrumCollection_->GetItem((long) index+1);
+
 
         //scan.instrumentConfigurationPtr = 
             //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
@@ -167,7 +215,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         long msLevel = pSpectrum->MSMSStage;
         result->set(MS_ms_level, msLevel);
         result->set(MS_MSn_spectrum);
-        scan.set(MS_full_scan);
+        //scan.set(MS_full_scan);
 
         double scanTime = pSpectrum->RetentionTime;
         if (scanTime > 0)
@@ -193,8 +241,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         // TODO: get correct values
         //scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass));
 
-        //sd.set(MS_lowest_m_z_value, minObservedMz);
-        //sd.set(MS_highest_m_z_value, maxObservedMz);
+        //sd.set(MS_lowest_observed_m_z, minObservedMz);
+        //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
         EDAL::IMSSpectrumParameterCollectionPtr pSpectrumParameters = pSpectrum->MSSpectrumParameterCollection;
         long numParameters = pSpectrumParameters->Count;
@@ -251,7 +299,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                     if (fragmentationMasses[i] > 0)
                     {
                         SelectedIon selectedIon;
-                        selectedIon.set(MS_m_z, fragmentationMasses[i]);
+                        selectedIon.set(MS_selected_ion_m_z, fragmentationMasses[i]);
 
                         //long parentCharge = scanInfo->parentCharge();
                         //if (parentCharge > 0)
@@ -291,7 +339,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                     }
 
                     if (isolationMasses[i] > 0)
-                        precursor.isolationWindow.set(MS_m_z, isolationMasses[i]);
+                    {
+                        precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMasses[i]);
+                        precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMasses[i]);
+                    }
                 }
                
 	            // clean up
@@ -318,11 +369,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
         if (getCentroid && numDataPoints > 0)
         {
-            result->set(MS_centroid_mass_spectrum);
+            result->set(MS_centroid_spectrum);
         }
         else
         {
-            result->set(MS_profile_mass_spectrum);
+            result->set(MS_profile_spectrum);
             HRESULT hr = SafeArrayDestroyData(pfIntensities.parray);
             hr = SafeArrayDestroyData(pfMasses.parray);
             numDataPoints = pSpectrum->GetMassIntensityValues(EDAL::SpectrumType_Profile, &pfMasses, &pfIntensities);
@@ -414,7 +465,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 {
     switch (format_)
     {
-        case SpectrumList_Bruker_Format_FID:
+        case Reader_Bruker_Format_FID:
             recursivelyEnumerateFIDs(sourcePaths_, rootpath_);
 
             // each fid's source path is a directory but the source file is the fid
@@ -423,13 +474,13 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             break;
 
         // a YEP's source path is the same as the source file
-        case SpectrumList_Bruker_Format_YEP:
+        case Reader_Bruker_Format_YEP:
             sourcePaths_.push_back(rootpath_ / "Analysis.yep");
             addSource(msd_, sourcePaths_.back());
             break;
 
         // a BAF's source path is the same as the source file
-        case SpectrumList_Bruker_Format_BAF:
+        case Reader_Bruker_Format_BAF:
             sourcePaths_.push_back(rootpath_ / "Analysis.baf");
             addSource(msd_, sourcePaths_.back());
             break;
@@ -438,34 +489,52 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
-    // fill file content metadata while creating index
-    set<CVID> spectrumTypes;
-    spectrumTypes.insert(MS_MSn_spectrum);
-
-    index_.resize(max(size_, sourcePaths_.size()));
-
-    for (size_t i=0; i < index_.size(); ++i)
+    if (format_ == Reader_Bruker_Format_U2)
     {
-        SpectrumIdentity& si = index_[i];
-        si.index = i;
-        switch (format_)
+        msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
+
+        CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
+        CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
+        for (size_t i=0; i < ssdList.size(); ++i)
         {
-            case SpectrumList_Bruker_Format_FID:
-                si.id = "file=" + msd_.fileDescription.sourceFilePtrs[i]->id;
-                break;
-            default:
-                si.id = "scan=" + lexical_cast<string>(i+1);
-                break;
-        }
-        idToIndexMap_[si.id] = si.index;
-    }
+            long scId = ssdList[i]->GetSpectrumCollectionId();
+            size_t numSpectra = (size_t) analysis->GetSpectrumCollection(scId)->GetNumberOfSpectra();
 
-    BOOST_FOREACH(CVID spectrumType, spectrumTypes)
+            for (size_t j=0; j < numSpectra; ++j)
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& si = index_.back();
+                si.declaration = i;
+                si.collection = scId;
+                si.scan = j;
+                si.index = index_.size()-1;
+                si.id = "scan=" + lexical_cast<string>(scId*1000000+j);
+                idToIndexMap_[si.id] = si.index;
+            }
+        }
+    }
+    else
     {
-        msd_.fileDescription.fileContent.set(spectrumType);
+        msd_.fileDescription.fileContent.set(MS_MSn_spectrum);
+
+        index_.resize(size_);
+        for (size_t i=0; i < index_.size(); ++i)
+        {
+            IndexEntry& si = index_[i];
+            si.index = i;
+            switch (format_)
+            {
+                case Reader_Bruker_Format_FID:
+                    si.id = "file=" + msd_.fileDescription.sourceFilePtrs[i]->id;
+                    break;
+                default:
+                    si.id = "scan=" + lexical_cast<string>(i+1);
+                    break;
+            }
+            idToIndexMap_[si.id] = si.index;
+        }
     }
 }
-
 
 /*PWIZ_API_DECL string SpectrumList_Bruker::findPrecursorID(int precursorMsLevel, size_t index) const
 {

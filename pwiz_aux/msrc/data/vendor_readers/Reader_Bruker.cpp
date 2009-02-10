@@ -25,7 +25,6 @@
 
 #include "Reader_Bruker.hpp"
 #include "Reader_Bruker_Detail.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 
@@ -40,11 +39,12 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 {
     switch (detail::format(filename))
     {
-        case pwiz::msdata::detail::SpectrumList_Bruker_Format_FID: return "Bruker FID";
-        case pwiz::msdata::detail::SpectrumList_Bruker_Format_YEP: return "Bruker YEP";
-        case pwiz::msdata::detail::SpectrumList_Bruker_Format_BAF: return "Bruker BAF";
+        case pwiz::msdata::detail::Reader_Bruker_Format_FID: return "Bruker FID";
+        case pwiz::msdata::detail::Reader_Bruker_Format_YEP: return "Bruker YEP";
+        case pwiz::msdata::detail::Reader_Bruker_Format_BAF: return "Bruker BAF";
+        case pwiz::msdata::detail::Reader_Bruker_Format_U2: return "Bruker U2";
 
-        case pwiz::msdata::detail::SpectrumList_Bruker_Format_Unknown:
+        case pwiz::msdata::detail::Reader_Bruker_Format_Unknown:
         default:
             return "";
     }
@@ -53,11 +53,11 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 
 #ifdef PWIZ_READER_BRUKER
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
 #include <boost/foreach.hpp>
 //#include "Reader_Bruker_Detail.hpp"
 #include "SpectrumList_Bruker.hpp"
+#include "ChromatogramList_Bruker.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -98,7 +98,7 @@ string stringToIDREF(const string& s)
 }
 
 
-void fillInMetadata(const string& rootpath, MSData& msd, SpectrumList_Bruker_Format format)
+void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format format)
 {
     msd.cvs.resize(1);
     CV& cv = msd.cvs.front();
@@ -112,9 +112,10 @@ void fillInMetadata(const string& rootpath, MSData& msd, SpectrumList_Bruker_For
 
     switch (format)
     {
-        case SpectrumList_Bruker_Format_FID: msd.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format); break;
-        case SpectrumList_Bruker_Format_YEP: msd.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format); break;
-        case SpectrumList_Bruker_Format_BAF: msd.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format); break;
+        case Reader_Bruker_Format_FID: msd.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format); break;
+        case Reader_Bruker_Format_YEP: msd.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format); break;
+        case Reader_Bruker_Format_BAF: msd.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format); break;
+        case Reader_Bruker_Format_U2:  msd.fileDescription.fileContent.set(MS_scan_number_only_nativeID_format); break;
     }
 
     SoftwarePtr software(new Software);
@@ -149,71 +150,27 @@ void fillInMetadata(const string& rootpath, MSData& msd, SpectrumList_Bruker_For
 } // namespace
 
 
-class Reader_Bruker::Impl
-{
-    public:
-    Impl()
-    {
-        COMInitializer::initialize();
-    }
-
-    ~Impl()
-    {
-        COMInitializer::uninitialize();
-    }
-
-    // EDAL is CompassXtract's namespace
-    EDAL::IMSAnalysisPtr pAnalysis;
-};
-
-PWIZ_API_DECL Reader_Bruker::Reader_Bruker()
-:   impl_(new Impl)
-{
-}
-
-PWIZ_API_DECL Reader_Bruker::~Reader_Bruker()
-{
-    impl_.release();
-}
-
 PWIZ_API_DECL
 void Reader_Bruker::read(const string& filename, 
                          const string& head,
                          MSData& result) const
 {
-    SpectrumList_Bruker_Format format = detail::format(filename);
-    if (format == SpectrumList_Bruker_Format_Unknown)
+    Reader_Bruker_Format format = detail::format(filename);
+    if (format == Reader_Bruker_Format_Unknown)
         throw ReaderFail("[Reader_Bruker::read()] Path given is not a recognized Bruker format");
 
-    // use and check for a successful creation with HRESULT
-    HRESULT hr = impl_->pAnalysis.CreateInstance("EDAL.MSAnalysis");
-    if (FAILED(hr))
-    {
-        // No success when creating the analysis pointer - we decrypt the error from hr.
-        LPVOID lpMsgBuf;
-
-        ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-	                   FORMAT_MESSAGE_FROM_SYSTEM,
-	                   NULL,
-	                   hr,
-	                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	                   (LPTSTR) &lpMsgBuf,
-	                   0,
-	                   NULL );
-
-        string error((const char*) lpMsgBuf);
-        LocalFree(lpMsgBuf);
-        throw ReaderFail("[Reader_Bruker::read()] Error initializing CompassXtract: " + error);
-    }
 
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
     bfs::path rootpath = filename;
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, impl_->pAnalysis);
+    CompassXtractWrapperPtr compassXtractWrapperPtr(new CompassXtractWrapper(rootpath, format));
+
+    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
+    //ChromatogramList_Bruker* sl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
-    //result.run.chromatogramListPtr = sl->Chromatograms();
+    //result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
     fillInMetadata(filename, result, format);
 }

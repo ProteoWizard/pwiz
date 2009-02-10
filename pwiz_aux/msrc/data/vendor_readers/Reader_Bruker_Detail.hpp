@@ -25,23 +25,65 @@
 #define _READER_BRUKER_DETAIL_HPP_ 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <string>
+#include <vector>
+#include <boost/shared_ptr.hpp>
+
+#import "CompassXtractMS.dll"
+#import "BDal.CXt.Lc.Interfaces.tlb"
+#import "BDal.CXt.Lc.tlb"
+
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
-enum SpectrumList_Bruker_Format
+
+enum Reader_Bruker_Format
 {
-    SpectrumList_Bruker_Format_Unknown,
-    SpectrumList_Bruker_Format_FID,
-    SpectrumList_Bruker_Format_YEP,
-    SpectrumList_Bruker_Format_BAF
+    Reader_Bruker_Format_Unknown,
+    Reader_Bruker_Format_FID,
+    Reader_Bruker_Format_YEP,
+    Reader_Bruker_Format_BAF,
+    Reader_Bruker_Format_U2
 };
 
 /// returns Bruker format of 'path' if it is a Bruker directory;
 /// otherwise returns empty string
-SpectrumList_Bruker_Format format(const std::string& path);
+Reader_Bruker_Format format(const std::string& path);
+
+
+/// a transparent wrapper for sharing the CompassXtract interface
+class CompassXtractWrapper
+{
+    public:
+        
+    CompassXtractWrapper(const bfs::path& sourcePath, Reader_Bruker_Format sourceFormat);
+    ~CompassXtractWrapper();
+
+    typedef EDAL::IMSAnalysisPtr MS_AnalysisPtr;
+    typedef EDAL::IMSSpectrumCollectionPtr MS_SpectrumCollectionPtr;
+
+    typedef BDal_CXt_Lc_Interfaces::IAnalysisPtr LC_AnalysisPtr;
+    typedef BDal_CXt_Lc_Interfaces::ISpectrumSourceDeclarationPtr LC_SpectrumSourceDeclarationPtr;
+    typedef BDal_CXt_Lc_Interfaces::ITraceDeclarationPtr LC_TraceDeclarationPtr;
+
+    typedef std::vector<LC_SpectrumSourceDeclarationPtr> LC_SpectrumSourceDeclarationList;
+    typedef std::vector<LC_TraceDeclarationPtr> LC_TraceDeclarationList;
+
+    Reader_Bruker_Format format_;
+
+    MS_AnalysisPtr msAnalysis_;
+    MS_SpectrumCollectionPtr msSpectrumCollection_;
+
+    LC_AnalysisPtr lcAnalysis_;
+    LC_SpectrumSourceDeclarationList spectrumSourceDeclarations_;
+    LC_TraceDeclarationList traceDeclarations_;
+};
+
+typedef boost::shared_ptr<CompassXtractWrapper> CompassXtractWrapperPtr;
+
 
 } // namespace detail
 } // namespace msdata

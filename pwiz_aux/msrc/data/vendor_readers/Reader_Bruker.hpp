@@ -43,21 +43,15 @@ namespace msdata {
 class PWIZ_API_DECL Reader_Bruker : public Reader
 {
     public:
-    Reader_Bruker();
-    ~Reader_Bruker();
 
 	virtual std::string identify(const std::string& filename, 
-                        const std::string& head) const; 
+                                 const std::string& head) const; 
 
     virtual void read(const std::string& filename, 
                       const std::string& head, 
                       MSData& result) const;
 
     virtual const char * getType() const {return "Bruker Analysis";}
-
-    private:
-    class Impl;
-    std::auto_ptr<Impl> impl_;
 };
 
 
