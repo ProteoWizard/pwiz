@@ -30,10 +30,11 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
+#ifdef PWIZ_READER_BRUKER
 #import "CompassXtractMS.dll"
 #import "BDal.CXt.Lc.Interfaces.tlb"
 #import "BDal.CXt.Lc.tlb"
-
+#endif
 
 namespace pwiz {
 namespace msdata {
@@ -53,6 +54,8 @@ enum Reader_Bruker_Format
 /// otherwise returns empty string
 Reader_Bruker_Format format(const std::string& path);
 
+
+#ifdef PWIZ_READER_BRUKER
 
 /// a transparent wrapper for sharing the CompassXtract interface
 class CompassXtractWrapper
@@ -83,6 +86,8 @@ class CompassXtractWrapper
 };
 
 typedef boost::shared_ptr<CompassXtractWrapper> CompassXtractWrapperPtr;
+
+#endif // PWIZ_READER_BRUKER
 
 
 } // namespace detail

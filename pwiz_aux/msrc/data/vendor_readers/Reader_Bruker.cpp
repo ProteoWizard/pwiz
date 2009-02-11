@@ -23,6 +23,12 @@
 
 #define PWIZ_SOURCE
 
+// CompassXtractMS DLL usage is msvc only - mingw doesn't provide com support
+#if (!defined(_MSC_VER) && defined(PWIZ_READER_BRUKER))
+#undef PWIZ_READER_BRUKER
+#endif
+
+
 #include "Reader_Bruker.hpp"
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
@@ -193,10 +199,6 @@ namespace pwiz {
 namespace msdata {
 
 using namespace std;
-
-class Reader_Bruker::Impl {};
-PWIZ_API_DECL Reader_Bruker::Reader_Bruker() {}
-PWIZ_API_DECL Reader_Bruker::~Reader_Bruker() {}
 
 PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result) const
 {

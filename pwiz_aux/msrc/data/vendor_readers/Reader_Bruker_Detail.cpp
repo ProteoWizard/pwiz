@@ -102,6 +102,8 @@ Reader_Bruker_Format format(const string& path)
 }
 
 
+#ifdef PWIZ_READER_BRUKER
+
 CompassXtractWrapper::CompassXtractWrapper(const bfs::path& sourcePath, Reader_Bruker_Format sourceFormat)
 : format_(sourceFormat)
 {
@@ -194,6 +196,8 @@ CompassXtractWrapper::~CompassXtractWrapper()
 
     COMInitializer::uninitialize();
 }
+
+#endif // PWIZ_READER_BRUKER
 
 
 } // namespace detail
