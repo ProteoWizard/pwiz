@@ -59,8 +59,8 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     bool titleIsThermoDTA = msd.fileDescription.fileContent.hasCVParam(MS_Thermo_nativeID_format);
-    const string& thermoFilename = msd.fileDescription.sourceFilePtrs[0]->name;
-    string thermoBasename = bfs::basename(thermoFilename);
+    const string& thermoFilename = titleIsThermoDTA ? msd.fileDescription.sourceFilePtrs[0]->name : "";
+    string thermoBasename = titleIsThermoDTA ? bfs::basename(thermoFilename) : "";
 
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
@@ -137,6 +137,20 @@ void Serializer_MGF::Impl::read(shared_ptr<istream> is, MSData& msd) const
         throw runtime_error("[Serializer_MGF::read()] Bad istream.");
 
     is->seekg(0);
+
+    // read mzML file-level metadata stored in comment tags by the MGF writer like:
+    // # fileContent CVParam MS:12345678 (term name)
+    // # sourceFile id=foo name=bar location=file:///foo/bar
+    /*string lineStr;
+    while (is->peek() != (int) 'B')
+    {
+        getline(*is_, lineStr);
+        if (lineStr[0] == '#')
+        {
+            vector<string> tokens;
+            bal::split(tokens, lineStr, bal::is_space());
+            if (tokens[1] == "fileContent")
+                addParamToContainer(msd.fileDescription.fileContent, */
 
     // we treat all MGF data is MSn (PMF MGFs not currently supported)
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);
