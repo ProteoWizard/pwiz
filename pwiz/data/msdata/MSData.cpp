@@ -956,7 +956,7 @@ PWIZ_API_DECL bool Chromatogram::empty() const
 namespace {
 
 pair<BinaryDataArrayPtr,BinaryDataArrayPtr> 
-getTimeIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSize)
+getTimeIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs)
 {
     BinaryDataArrayPtr timeArray;
     BinaryDataArrayPtr intensityArray;
@@ -967,18 +967,6 @@ getTimeIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs, size_t expectedSi
         if ((*it)->hasCVParam(MS_intensity_array) && !intensityArray.get()) intensityArray = *it;
     }
 
-    if (!timeArray.get()) 
-        throw runtime_error("[MSData::getTimeIntensityArrays()] Time array not found.");
-
-    if (!intensityArray.get()) 
-        throw runtime_error("[MSData::getTimeIntensityArrays()] Intensity array not found.");
-
-    if (timeArray->data.size() != expectedSize)
-        throw runtime_error("[MSData::getTimeIntensityArrays()] Time array invalid size.");
-         
-    if (intensityArray->data.size() != expectedSize)
-        throw runtime_error("[MSData::getTimeIntensityArrays()] Intensity array invalid size.");
-         
     return make_pair(timeArray, intensityArray);
 }
 
@@ -1001,7 +989,7 @@ PWIZ_API_DECL void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output
     if (expectedSize == 0) return;
 
     pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
-        getTimeIntensityArrays(binaryDataArrayPtrs, expectedSize); 
+        getTimeIntensityArrays(binaryDataArrayPtrs); 
 
     if (!output)
         throw runtime_error("[MSData::Chromatogram::getTimeIntensityPairs()] Null output buffer.");
@@ -1050,6 +1038,42 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* 
         *time++ = p->time;
         *intensity++ = p->intensity;
     }
+}
+
+
+PWIZ_API_DECL void Chromatogram::setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID intensityUnits)
+{
+    if (timeArray.size() != intensityArray.size())
+        throw runtime_error("[MSData::Chromatogram::setTimeIntensityArrays()] Sizes do not match.");
+
+    pair<BinaryDataArrayPtr,BinaryDataArrayPtr> arrays = 
+            getTimeIntensityArrays(binaryDataArrayPtrs);
+
+    BinaryDataArrayPtr& bd_time = arrays.first;
+    BinaryDataArrayPtr& bd_intensity = arrays.second;
+
+    if (!bd_time.get())
+    {
+        bd_time = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_time_array);
+        arrayType.units = UO_second;
+        bd_time->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_time);
+    }
+
+    if (!bd_intensity.get())
+    {
+        bd_intensity = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam arrayType(MS_intensity_array);
+        arrayType.units = intensityUnits;
+        bd_intensity->cvParams.push_back(arrayType);
+        binaryDataArrayPtrs.push_back(bd_intensity);
+    }
+
+    defaultArrayLength = timeArray.size();
+
+    bd_time->data.assign(timeArray.begin(), timeArray.end());
+    bd_intensity->data.assign(intensityArray.begin(), intensityArray.end());
 }
 
 
