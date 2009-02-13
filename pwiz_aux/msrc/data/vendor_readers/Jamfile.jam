@@ -12,13 +12,18 @@ lib pwiz_aux_msrc_reader_bruker
         Reader_Bruker_Detail.cpp
     : # requirements
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
+        <toolset>msvc:<source>ChromatogramList_Bruker.cpp
+		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<dependency>CompassXtractMS.dll
         <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
         <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
         <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
         <toolset>msvc:<dependency>libfftw3-3.dll
         <toolset>msvc:<dependency>libfftw3f-3.dll
-		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+        <toolset>msvc:<dependency>BDal.CXt.Lc.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.Factory.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.Interfaces.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.UntU2.dll
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
     : # default-build
     : # usage-requirements
@@ -29,6 +34,10 @@ lib pwiz_aux_msrc_reader_bruker
         <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
         <toolset>msvc:<dependency>libfftw3-3.dll
         <toolset>msvc:<dependency>libfftw3f-3.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.Factory.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.Interfaces.dll
+        <toolset>msvc:<dependency>BDal.CXt.Lc.UntU2.dll
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
     ;
 

@@ -174,9 +174,9 @@ void Reader_Bruker::read(const string& filename,
     CompassXtractWrapperPtr compassXtractWrapperPtr(new CompassXtractWrapper(rootpath, format));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
-    //ChromatogramList_Bruker* sl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
+    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
-    //result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+    result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
     fillInMetadata(filename, result, format);
 }

@@ -62,7 +62,14 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
     size_t size_;
-    vector<ChromatogramIdentity> index_;
+
+    struct IndexEntry : public ChromatogramIdentity
+    {
+        size_t declaration;
+        long trace;
+    };
+
+    vector<IndexEntry> index_;
 
     // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
     map<string, size_t> idToIndexMap_;

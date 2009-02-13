@@ -67,8 +67,6 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
     size_t size_;
     vector<bfs::path> sourcePaths_;
 
-    //vector<SpectrumIdentity> index_;
-
     struct IndexEntry : public SpectrumIdentity
     {
         size_t declaration;
