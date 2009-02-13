@@ -27,8 +27,15 @@ echo "Creating $package_linux."
 zip -j $packagedir/$package_linux $bindir/gcc-release/*
 echo "Creating $package_osx."
 zip -j $packagedir/$package_osx $bindir/darwin-release/*
+
 echo "Creating $package_src."
-tar czvf $packagedir/$package_src --exclude=*.svn* --exclude=*/bin* --exclude=build --exclude=libraries --exclude=example_data .
+tempdir=pwiz_$tag
+echo "staging source..."
+svn export . $packagedir/$tempdir
+pushd $packagedir
+tar czvf $package_src $tempdir
+rm -rf $tempdir
+popd
 
 echo
 echo $packagedir
