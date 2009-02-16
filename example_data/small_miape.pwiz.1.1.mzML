@@ -131,7 +131,7 @@
     </dataProcessingList>
     <run id="small_raw" defaultInstrumentConfigurationRef="IC1" sampleRef="sample1" startTimeStamp="2005-07-20T14:44:22">
       <spectrumList count="48" defaultDataProcessingRef="pwiz_Reader_Thermo_conversion">
-        <spectrum index="0" id="controller=0 scan=1" defaultArrayLength="19914">
+        <spectrum index="0" id="controllerType=0 controllerNumber=1 scan=1" defaultArrayLength="19914">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -171,7 +171,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="1" id="controller=0 scan=2" defaultArrayLength="19800">
+        <spectrum index="1" id="controllerType=0 controllerNumber=1 scan=2" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -211,7 +211,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="2" id="controller=0 scan=3" defaultArrayLength="485">
+        <spectrum index="2" id="controllerType=0 controllerNumber=1 scan=3" defaultArrayLength="485">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -237,10 +237,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=2">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="810.78999999999996"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="809.78999999999996"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="811.78999999999996"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -268,7 +268,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="3" id="controller=0 scan=4" defaultArrayLength="1006">
+        <spectrum index="3" id="controllerType=0 controllerNumber=1 scan=4" defaultArrayLength="1006">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -294,10 +294,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=2">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.34000000000003"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.34000000000003"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.34000000000003"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -325,7 +325,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="4" id="controller=0 scan=5" defaultArrayLength="837">
+        <spectrum index="4" id="controllerType=0 controllerNumber=1 scan=5" defaultArrayLength="837">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -351,10 +351,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=2">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="725.36000000000001"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="724.36000000000001"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="726.36000000000001"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -382,7 +382,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="5" id="controller=0 scan=6" defaultArrayLength="650">
+        <spectrum index="5" id="controllerType=0 controllerNumber=1 scan=6" defaultArrayLength="650">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -408,10 +408,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=2">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="558.87"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="557.87"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="559.87"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -439,7 +439,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="6" id="controller=0 scan=7" defaultArrayLength="762">
+        <spectrum index="6" id="controllerType=0 controllerNumber=1 scan=7" defaultArrayLength="762">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -465,10 +465,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=2">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="812.33000000000004"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="811.33000000000004"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="813.33000000000004"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -496,7 +496,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="7" id="controller=0 scan=8" defaultArrayLength="15238">
+        <spectrum index="7" id="controllerType=0 controllerNumber=1 scan=8" defaultArrayLength="15238">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -536,7 +536,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="8" id="controller=0 scan=9" defaultArrayLength="19800">
+        <spectrum index="8" id="controllerType=0 controllerNumber=1 scan=9" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -576,7 +576,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="9" id="controller=0 scan=10" defaultArrayLength="552">
+        <spectrum index="9" id="controllerType=0 controllerNumber=1 scan=10" defaultArrayLength="552">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -602,10 +602,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=9">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="810.75"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="809.75"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="811.75"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -633,7 +633,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="10" id="controller=0 scan=11" defaultArrayLength="941">
+        <spectrum index="10" id="controllerType=0 controllerNumber=1 scan=11" defaultArrayLength="941">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -659,10 +659,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=9">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.96000000000004"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.96000000000004"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.96000000000004"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -690,7 +690,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="11" id="controller=0 scan=12" defaultArrayLength="635">
+        <spectrum index="11" id="controllerType=0 controllerNumber=1 scan=12" defaultArrayLength="635">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -716,10 +716,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=9">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="644.05999999999995"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="643.05999999999995"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="645.05999999999995"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -747,7 +747,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="12" id="controller=0 scan=13" defaultArrayLength="792">
+        <spectrum index="12" id="controllerType=0 controllerNumber=1 scan=13" defaultArrayLength="792">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -773,10 +773,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=9">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="725.23000000000002"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="724.23000000000002"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="726.23000000000002"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -804,7 +804,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="13" id="controller=0 scan=14" defaultArrayLength="669">
+        <spectrum index="13" id="controllerType=0 controllerNumber=1 scan=14" defaultArrayLength="669">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -830,10 +830,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=9">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="559.19000000000005"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="558.19000000000005"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="560.19000000000005"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -861,7 +861,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="14" id="controller=0 scan=15" defaultArrayLength="17468">
+        <spectrum index="14" id="controllerType=0 controllerNumber=1 scan=15" defaultArrayLength="17468">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -901,7 +901,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="15" id="controller=0 scan=16" defaultArrayLength="19800">
+        <spectrum index="15" id="controllerType=0 controllerNumber=1 scan=16" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -941,7 +941,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="16" id="controller=0 scan=17" defaultArrayLength="579">
+        <spectrum index="16" id="controllerType=0 controllerNumber=1 scan=17" defaultArrayLength="579">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -967,10 +967,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=16">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="811.40999999999997"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="810.40999999999997"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="812.40999999999997"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -998,7 +998,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="17" id="controller=0 scan=18" defaultArrayLength="916">
+        <spectrum index="17" id="controllerType=0 controllerNumber=1 scan=18" defaultArrayLength="916">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1024,10 +1024,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=16">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.36000000000001"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.36000000000001"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.36000000000001"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1055,7 +1055,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="18" id="controller=0 scan=19" defaultArrayLength="670">
+        <spectrum index="18" id="controllerType=0 controllerNumber=1 scan=19" defaultArrayLength="670">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1081,10 +1081,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=16">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="643.79999999999995"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="642.79999999999995"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="644.79999999999995"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1112,7 +1112,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="19" id="controller=0 scan=20" defaultArrayLength="674">
+        <spectrum index="19" id="controllerType=0 controllerNumber=1 scan=20" defaultArrayLength="674">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1138,10 +1138,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=16">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="558.94000000000005"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="557.94000000000005"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="559.94000000000005"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1169,7 +1169,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="20" id="controller=0 scan=21" defaultArrayLength="891">
+        <spectrum index="20" id="controllerType=0 controllerNumber=1 scan=21" defaultArrayLength="891">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1195,10 +1195,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=16">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="725.13999999999999"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="724.13999999999999"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="726.13999999999999"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1226,7 +1226,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="21" id="controller=0 scan=22" defaultArrayLength="17758">
+        <spectrum index="21" id="controllerType=0 controllerNumber=1 scan=22" defaultArrayLength="17758">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1266,7 +1266,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="22" id="controller=0 scan=23" defaultArrayLength="19800">
+        <spectrum index="22" id="controllerType=0 controllerNumber=1 scan=23" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1306,7 +1306,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="23" id="controller=0 scan=24" defaultArrayLength="579">
+        <spectrum index="23" id="controllerType=0 controllerNumber=1 scan=24" defaultArrayLength="579">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1332,10 +1332,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=23">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="810.84000000000003"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="809.84000000000003"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="811.84000000000003"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1363,7 +1363,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="24" id="controller=0 scan=25" defaultArrayLength="938">
+        <spectrum index="24" id="controllerType=0 controllerNumber=1 scan=25" defaultArrayLength="938">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1389,10 +1389,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=23">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.41999999999996"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.41999999999996"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.41999999999996"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1420,7 +1420,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="25" id="controller=0 scan=26" defaultArrayLength="789">
+        <spectrum index="25" id="controllerType=0 controllerNumber=1 scan=26" defaultArrayLength="789">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1446,10 +1446,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=23">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="674.63999999999999"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="673.63999999999999"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="675.63999999999999"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1477,7 +1477,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="26" id="controller=0 scan=27" defaultArrayLength="687">
+        <spectrum index="26" id="controllerType=0 controllerNumber=1 scan=27" defaultArrayLength="687">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1503,10 +1503,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=23">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="643.74000000000001"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="642.74000000000001"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="644.74000000000001"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1534,7 +1534,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="27" id="controller=0 scan=28" defaultArrayLength="865">
+        <spectrum index="27" id="controllerType=0 controllerNumber=1 scan=28" defaultArrayLength="865">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1560,10 +1560,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=23">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="725.36000000000001"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="724.36000000000001"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="726.36000000000001"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1591,7 +1591,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="28" id="controller=0 scan=29" defaultArrayLength="20710">
+        <spectrum index="28" id="controllerType=0 controllerNumber=1 scan=29" defaultArrayLength="20710">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1631,7 +1631,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="29" id="controller=0 scan=30" defaultArrayLength="19800">
+        <spectrum index="29" id="controllerType=0 controllerNumber=1 scan=30" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1671,7 +1671,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="30" id="controller=0 scan=31" defaultArrayLength="938">
+        <spectrum index="30" id="controllerType=0 controllerNumber=1 scan=31" defaultArrayLength="938">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1697,10 +1697,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=30">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.38999999999999"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.38999999999999"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.38999999999999"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1728,7 +1728,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="31" id="controller=0 scan=32" defaultArrayLength="653">
+        <spectrum index="31" id="controllerType=0 controllerNumber=1 scan=32" defaultArrayLength="653">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1754,10 +1754,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=30">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="643.79999999999995"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="642.79999999999995"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="644.79999999999995"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1785,7 +1785,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="32" id="controller=0 scan=33" defaultArrayLength="702">
+        <spectrum index="32" id="controllerType=0 controllerNumber=1 scan=33" defaultArrayLength="702">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1811,10 +1811,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=30">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="558.75"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="557.75"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="559.75"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1842,7 +1842,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="33" id="controller=0 scan=34" defaultArrayLength="587">
+        <spectrum index="33" id="controllerType=0 controllerNumber=1 scan=34" defaultArrayLength="587">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -1868,10 +1868,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=30">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="882.45000000000005"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="881.45000000000005"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="883.45000000000005"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1899,7 +1899,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="34" id="controller=0 scan=35" defaultArrayLength="16847">
+        <spectrum index="34" id="controllerType=0 controllerNumber=1 scan=35" defaultArrayLength="16847">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1939,7 +1939,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="35" id="controller=0 scan=36" defaultArrayLength="19800">
+        <spectrum index="35" id="controllerType=0 controllerNumber=1 scan=36" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -1979,7 +1979,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="36" id="controller=0 scan=37" defaultArrayLength="572">
+        <spectrum index="36" id="controllerType=0 controllerNumber=1 scan=37" defaultArrayLength="572">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2005,10 +2005,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=36">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="810.73000000000002"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="809.73000000000002"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="811.73000000000002"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2036,7 +2036,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="37" id="controller=0 scan=38" defaultArrayLength="1064">
+        <spectrum index="37" id="controllerType=0 controllerNumber=1 scan=38" defaultArrayLength="1064">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2062,10 +2062,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=36">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.35000000000002"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.35000000000002"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.35000000000002"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2093,7 +2093,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="38" id="controller=0 scan=39" defaultArrayLength="653">
+        <spectrum index="38" id="controllerType=0 controllerNumber=1 scan=39" defaultArrayLength="653">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2119,10 +2119,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=36">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="643.73000000000002"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="642.73000000000002"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="644.73000000000002"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2150,7 +2150,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="39" id="controller=0 scan=40" defaultArrayLength="875">
+        <spectrum index="39" id="controllerType=0 controllerNumber=1 scan=40" defaultArrayLength="875">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2176,10 +2176,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=36">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="725.67999999999995"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="724.67999999999995"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="726.67999999999995"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2207,7 +2207,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="40" id="controller=0 scan=41" defaultArrayLength="754">
+        <spectrum index="40" id="controllerType=0 controllerNumber=1 scan=41" defaultArrayLength="754">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2233,10 +2233,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=36">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="674.70000000000005"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="673.70000000000005"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="675.70000000000005"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2264,7 +2264,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="41" id="controller=0 scan=42" defaultArrayLength="33335">
+        <spectrum index="41" id="controllerType=0 controllerNumber=1 scan=42" defaultArrayLength="33335">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -2304,7 +2304,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="42" id="controller=0 scan=43" defaultArrayLength="19800">
+        <spectrum index="42" id="controllerType=0 controllerNumber=1 scan=43" defaultArrayLength="19800">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000128" name="profile mass spectrum" value=""/>
@@ -2344,7 +2344,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="43" id="controller=0 scan=44" defaultArrayLength="611">
+        <spectrum index="43" id="controllerType=0 controllerNumber=1 scan=44" defaultArrayLength="611">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2370,10 +2370,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=43">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="810.82000000000005"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="809.82000000000005"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="811.82000000000005"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2401,7 +2401,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="44" id="controller=0 scan=45" defaultArrayLength="1010">
+        <spectrum index="44" id="controllerType=0 controllerNumber=1 scan=45" defaultArrayLength="1010">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2427,10 +2427,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=43">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="837.77999999999997"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="836.77999999999997"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="838.77999999999997"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2458,7 +2458,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="45" id="controller=0 scan=46" defaultArrayLength="713">
+        <spectrum index="45" id="controllerType=0 controllerNumber=1 scan=46" defaultArrayLength="713">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2484,10 +2484,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=43">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="674.84000000000003"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="673.84000000000003"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="675.84000000000003"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2515,7 +2515,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="46" id="controller=0 scan=47" defaultArrayLength="659">
+        <spectrum index="46" id="controllerType=0 controllerNumber=1 scan=47" defaultArrayLength="659">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2541,10 +2541,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=43">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="558.89999999999998"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="557.89999999999998"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="559.89999999999998"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2572,7 +2572,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </spectrum>
-        <spectrum index="47" id="controller=0 scan=48" defaultArrayLength="636">
+        <spectrum index="47" id="controllerType=0 controllerNumber=1 scan=48" defaultArrayLength="636">
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
           <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
           <cvParam cvRef="MS" accession="MS:1000127" name="centroid mass spectrum" value=""/>
@@ -2598,10 +2598,10 @@
             </scan>
           </scanList>
           <precursorList count="1">
-            <precursor spectrumRef="controller=0 scan=43">
+            <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000040" name="m/z" value="882.53999999999996"/>
-                <cvParam cvRef="MS" accession="MS:1000023" name="isolation width" value="2"/>
+                <cvParam cvRef="MS" accession="MS:1000794" name="isolation m/z lower limit" value="881.53999999999996"/>
+                <cvParam cvRef="MS" accession="MS:1000793" name="isolation m/z upper limit" value="883.53999999999996"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2653,59 +2653,59 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="controller=0 scan=1">7751</offset>
-      <offset idRef="controller=0 scan=2">119887</offset>
-      <offset idRef="controller=0 scan=3">248668</offset>
-      <offset idRef="controller=0 scan=4">257259</offset>
-      <offset idRef="controller=0 scan=5">270795</offset>
-      <offset idRef="controller=0 scan=6">282737</offset>
-      <offset idRef="controller=0 scan=7">292900</offset>
-      <offset idRef="controller=0 scan=8">304149</offset>
-      <offset idRef="controller=0 scan=9">387473</offset>
-      <offset idRef="controller=0 scan=10">523972</offset>
-      <offset idRef="controller=0 scan=11">533184</offset>
-      <offset idRef="controller=0 scan=12">546095</offset>
-      <offset idRef="controller=0 scan=13">556136</offset>
-      <offset idRef="controller=0 scan=14">567647</offset>
-      <offset idRef="controller=0 scan=15">578006</offset>
-      <offset idRef="controller=0 scan=16">672599</offset>
-      <offset idRef="controller=0 scan=17">801936</offset>
-      <offset idRef="controller=0 scan=18">811425</offset>
-      <offset idRef="controller=0 scan=19">824106</offset>
-      <offset idRef="controller=0 scan=20">834462</offset>
-      <offset idRef="controller=0 scan=21">844886</offset>
-      <offset idRef="controller=0 scan=22">857354</offset>
-      <offset idRef="controller=0 scan=23">952763</offset>
-      <offset idRef="controller=0 scan=24">1063438</offset>
-      <offset idRef="controller=0 scan=25">1072937</offset>
-      <offset idRef="controller=0 scan=26">1085808</offset>
-      <offset idRef="controller=0 scan=27">1097297</offset>
-      <offset idRef="controller=0 scan=28">1107828</offset>
-      <offset idRef="controller=0 scan=29">1120045</offset>
-      <offset idRef="controller=0 scan=30">1231325</offset>
-      <offset idRef="controller=0 scan=31">1356418</offset>
-      <offset idRef="controller=0 scan=32">1369316</offset>
-      <offset idRef="controller=0 scan=33">1379523</offset>
-      <offset idRef="controller=0 scan=34">1390189</offset>
-      <offset idRef="controller=0 scan=35">1399770</offset>
-      <offset idRef="controller=0 scan=36">1490988</offset>
-      <offset idRef="controller=0 scan=37">1604228</offset>
-      <offset idRef="controller=0 scan=38">1613647</offset>
-      <offset idRef="controller=0 scan=39">1627777</offset>
-      <offset idRef="controller=0 scan=40">1637992</offset>
-      <offset idRef="controller=0 scan=41">1650305</offset>
-      <offset idRef="controller=0 scan=42">1661471</offset>
-      <offset idRef="controller=0 scan=43">1847222</offset>
-      <offset idRef="controller=0 scan=44">1978094</offset>
-      <offset idRef="controller=0 scan=45">1987880</offset>
-      <offset idRef="controller=0 scan=46">2001450</offset>
-      <offset idRef="controller=0 scan=47">2012215</offset>
-      <offset idRef="controller=0 scan=48">2022505</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=1">7751</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=2">119910</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=3">248714</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=4">257400</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=5">271031</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=6">283068</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=7">293314</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=8">304658</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=9">388005</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=10">524527</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=11">533822</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=12">546828</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=13">556964</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=14">568570</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=15">579024</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=16">673640</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=17">803000</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=18">812584</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=19">825360</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=20">835811</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=21">846330</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=22">858893</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=23">954325</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=24">1065023</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=25">1074617</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=26">1087583</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=27">1099167</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=28">1109793</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=29">1122105</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=30">1233408</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=31">1358524</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=32">1371517</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=33">1381819</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=34">1392568</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=35">1402244</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=36">1493485</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=37">1606748</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=38">1616262</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=39">1630487</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=40">1640797</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=41">1653205</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=42">1664466</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=43">1850240</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=44">1981135</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=45">1991016</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=46">2004681</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=47">2015541</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=48">2025926</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="TIC">2032658</offset>
+      <offset idRef="TIC">2036174</offset>
     </index>
   </indexList>
-  <indexListOffset>2034273</indexListOffset>
-  <fileChecksum>cd71ac6f5b08cce21ef5433e4f2578d8e145dd6d</fileChecksum>
+  <indexListOffset>2037789</indexListOffset>
+  <fileChecksum>8156fc3dc01159389f5af3cab6cee467cb367ed9</fileChecksum>
 </indexedmzML>
