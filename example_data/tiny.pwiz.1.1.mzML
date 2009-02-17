@@ -12,7 +12,7 @@
         <cvParam cvRef="MS" accession="MS:1000776" name="scan number only nativeID format" value=""/>
       </fileContent>
       <sourceFileList count="2">
-        <sourceFile id="sf1" name="tiny1.mzXML" location="file:///F:/data/Exp01">
+        <sourceFile id="sf1" name="tiny1.RAW" location="file:///F:/data/Exp01">
           <cvParam cvRef="MS" accession="MS:1000563" name="Xcalibur RAW file" value=""/>
           <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
         </sourceFile>
@@ -298,16 +298,16 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="scan=19">5950</offset>
-      <offset idRef="scan=20">8965</offset>
-      <offset idRef="scan=21">12772</offset>
-      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">14162</offset>
+      <offset idRef="scan=19">5948</offset>
+      <offset idRef="scan=20">8963</offset>
+      <offset idRef="scan=21">12770</offset>
+      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">14160</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic">17195</offset>
-      <offset idRef="sic">18650</offset>
+      <offset idRef="tic">17193</offset>
+      <offset idRef="sic">18648</offset>
     </index>
   </indexList>
-  <indexListOffset>20038</indexListOffset>
-  <fileChecksum>8dfbfdb2a113f3fe3b61402af07980ed18151d74</fileChecksum>
+  <indexListOffset>20036</indexListOffset>
+  <fileChecksum>67e8303dcf54af284390a006cd138fe92d8ec0c5</fileChecksum>
 </indexedmzML>
