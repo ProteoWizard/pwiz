@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/foreach.hpp"
+#include "boost/algorithm/string/join.hpp"
 
 
 namespace pwiz {
