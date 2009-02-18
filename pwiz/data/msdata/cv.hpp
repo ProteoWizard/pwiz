@@ -32,22 +32,22 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [msdata/psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.14.0
-//   remark: release date: 2009-02-10
+//   remark: version: 1.16.0
+//   remark: release date: 2009-02-13
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [msdata/unit.obo]
 //   format-version: 1.0
 //   date: 20:12:2007 16:24
 //   saved-by: George Gkoutos
@@ -109,7 +109,7 @@ enum PWIZ_API_DECL CVID
     /// accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.
     MS_accuracy = 1000014,
 
-    /// scan rate: Rate in (m/z)/sec for scanning analyzers.
+    /// scan rate: Rate in Th/sec for scanning analyzers.
     MS_scan_rate = 1000015,
 
     /// scan time: The time that an analyzer started a scan, relative to the start of the run.
@@ -1870,10 +1870,10 @@ enum PWIZ_API_DECL CVID
     /// MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.
     MS_MassLynx_raw_format = 1000526,
 
-    /// highest observed m/z: Highest m/z value observed in the mass spectrum.
+    /// highest observed m/z: Highest m/z value observed in the m/z array.
     MS_highest_observed_m_z = 1000527,
 
-    /// lowest observed m/z: Lowest m/z value observed in the mass spectrum.
+    /// lowest observed m/z: Lowest m/z value observed in the m/z array.
     MS_lowest_observed_m_z = 1000528,
 
     /// instrument serial number: Serial Number of the instrument.
@@ -2790,6 +2790,33 @@ enum PWIZ_API_DECL CVID
 
     /// absorption spectrum: A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited.
     MS_absorption_spectrum = 1000806,
+
+    /// Th/s: Unit describing the scan rate of a spectrum in Thomson per second.
+    MS_Th_s = 1000807,
+
+    /// chromatogram attribute: Chromatogram properties that are associated with a value.
+    MS_chromatogram_attribute = 1000808,
+
+    /// chromatogram title: A free-form text title describing a chromatogram.
+    MS_chromatogram_title = 1000809,
+
+    /// mass chromatogram: A plot of the relative abundance of a beam or other collection of ions as a function of the retention time.
+    MS_mass_chromatogram = 1000810,
+
+    /// electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.
+    MS_electromagnetic_radiation_chromatogram_ = 1000811,
+
+    /// electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.
+    MS_EMR_radiation_chromatogram = MS_electromagnetic_radiation_chromatogram_,
+
+    /// absorption chromatogram : The measurement of light absorbed by the sample as a function of the retention time.
+    MS_absorption_chromatogram_ = 1000812,
+
+    /// emission chromatogram  : The measurement of light emitted by the sample as a function of the retention time.
+    MS_emission_chromatogram__ = 1000813,
+
+    /// counts per second: The number of counted events observed per second in one or a group of elements of a detector.
+    MS_counts_per_second = 1000814,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,

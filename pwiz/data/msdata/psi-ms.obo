@@ -4,8 +4,8 @@ saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 1.14.0
-remark: release date: 2009-02-10
+remark: version: 1.16.0
+remark: release date: 2009-02-13
 remark: coverage: Mass spectrometer output files
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
@@ -116,9 +116,10 @@ relationship: has_units MS:1000040 ! m/z
 [Term]
 id: MS:1000015
 name: scan rate
-def: "Rate in (m/z)/sec for scanning analyzers." [PSI:MS]
+def: "Rate in Th/sec for scanning analyzers." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
+relationship: has_units MS:1000807 ! Th/s
 
 [Term]
 id: MS:1000016
@@ -219,6 +220,7 @@ def: "The rate of signal sampling (measurement) with respect to time." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "ADC Sampling Frequency" NARROW []
 is_a: MS:1000481 ! detector attribute
+relationship: has_units UO:0000106 ! hertz
 
 [Term]
 id: MS:1000030
@@ -1560,7 +1562,7 @@ name: total ion current chromatogram
 def: "Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time." [PSI:MS]
 synonym: "TIC chromatogram" EXACT []
 is_a: MS:1000524 ! data file content
-is_a: MS:1000626 ! chromatogram type
+is_a: MS:1000810 ! mass chromatogram 
 
 [Term]
 id: MS:1000236
@@ -2705,6 +2707,7 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000412
 name: buffer gas
 def: "An inert gas used for collisional deactivation of internally excited ions." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000510 ! precursor activation attribute
 
 [Term]
@@ -2747,6 +2750,7 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000419
 name: collision gas
 def: "An inert gas used for collisional excitation. The term target gas is not recommended." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000510 ! precursor activation attribute
 
 [Term]
@@ -3297,6 +3301,9 @@ name: base peak intensity
 def: "The intensity of the greatest peak in the mass spectrum." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+relationship: has_units MS:1000131 ! number of counts
+relationship: has_units MS:1000132 ! percent of base peak
+relationship: has_units MS:1000814 ! counts per second
 
 [Term]
 id: MS:1000506
@@ -3434,17 +3441,19 @@ is_a: MS:1000560 ! source file type
 [Term]
 id: MS:1000527
 name: highest observed m/z
-def: "Highest m/z value observed in the mass spectrum." [PSI:MS]
+def: "Highest m/z value observed in the m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+is_a: MS:1000808 ! chromatogram attribute
 relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000528
 name: lowest observed m/z
-def: "Lowest m/z value observed in the mass spectrum." [PSI:MS]
+def: "Lowest m/z value observed in the m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000499 ! spectrum attribute
+is_a: MS:1000808 ! chromatogram attribute
 relationship: has_units MS:1000040 ! m/z
 
 [Term]
@@ -4024,20 +4033,25 @@ id: MS:1000617
 name: wavelength array
 def: "A data array of electromagnetic radiation wavelength values." [PSI:MS]
 is_a: MS:1000513 ! binary data array
+relationship: has_units UO:0000018 ! nanometer
 
 [Term]
 id: MS:1000618
 name: highest wavelength value
 def: "Highest wavelength value observed in the uv/vis spectrum." [PSI:MS]
 is_a: MS:1000499 ! spectrum attribute
+is_a: MS:1000808 ! chromatogram attribute
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
+relationship: has_units UO:0000018 ! nanometer
 
 [Term]
 id: MS:1000619
 name: lowest wavelength value
 def: "Lowest wavelength value observed in the uv/vis spectrum." [PSI:MS]
 is_a: MS:1000499 ! spectrum attribute
+is_a: MS:1000808 ! chromatogram attribute
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
+relationship: has_units UO:0000018 ! nanometer
 
 [Term]
 id: MS:1000620
@@ -4092,14 +4106,14 @@ name: selected ion current chromatogram
 def: "Chromatogram created by creating an array of the measurements of a specific single ion current at each time point." [PSI:MS]
 synonym: "SIC chromatogram" EXACT []
 is_a: MS:1000524 ! data file content
-is_a: MS:1000626 ! chromatogram type
+is_a: MS:1000810 ! mass chromatogram
 
 [Term]
 id: MS:1000628
 name: basepeak chromatogram
 def: "Chromatogram created by creating an array of the most intense peaks at each time point." [PSI:MS]
 is_a: MS:1000524 ! data file content
-is_a: MS:1000626 ! chromatogram type
+is_a: MS:1000810 ! mass chromatogram
 
 [Term]
 id: MS:1000629
@@ -4108,7 +4122,8 @@ def: "Threshold below which some action is taken." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 relationship: has_units MS:1000131 ! number of counts
-relationship: has_units MS:1000132 ! percent of base peak 
+relationship: has_units MS:1000132 ! percent of base peak
+relationship: has_units MS:1000814 ! counts per second
 
 [Term]
 id: MS:1000630
@@ -4123,7 +4138,8 @@ def: "Threshold above which some action is taken." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 relationship: has_units MS:1000131 ! number of counts
-relationship: has_units MS:1000132 ! percent of base peak 
+relationship: has_units MS:1000132 ! percent of base peak
+relationship: has_units MS:1000814 ! counts per second
 
 [Term]
 id: MS:1000632
@@ -5073,7 +5089,8 @@ def: "Threshold at or below which some action is taken." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 relationship: has_units MS:1000131 ! number of counts
-relationship: has_units MS:1000132 ! percent of base peak 
+relationship: has_units MS:1000132 ! percent of base peak
+relationship: has_units MS:1000814 ! counts per second
 
 [Term]
 id: MS:1000788
@@ -5082,7 +5099,8 @@ def: "Threshold at or above which some action is taken." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000630 ! data processing parameter
 relationship: has_units MS:1000131 ! number of counts
-relationship: has_units MS:1000132 ! percent of base peak 
+relationship: has_units MS:1000132 ! percent of base peak
+relationship: has_units MS:1000814 ! counts per second
 
 [Term]
 id: MS:1000789
@@ -5216,6 +5234,63 @@ name: absorption spectrum
 def: "A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited." [PSI:MS]
 is_a: MS:1000524 ! data file content
 is_a: MS:1000559 ! spectrum type
+
+[Term]
+id: MS:1000807
+name: Th/s
+def: "Unit describing the scan rate of a spectrum in Thomson per second." [PSI:MS]
+is_a: MS:1000460 ! unit
+
+[Term]
+id: MS:1000808
+name: chromatogram attribute
+def: "Chromatogram properties that are associated with a value." [PSI:MS]
+is_a: MS:1000547 ! object attribute
+relationship: part_of MS:1000625 ! chromatogram
+
+[Term]
+id: MS:1000809
+name: chromatogram title
+def: "A free-form text title describing a chromatogram." [PSI:MS]
+comment: This is the preferred storage place for the spectrum title.
+is_a: MS:1000808 ! chromatogram attribute
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+
+[Term]
+id: MS:1000810
+name: mass chromatogram
+def: "A plot of the relative abundance of a beam or other collection of ions as a function of the retention time." [PSI:MS]
+is_a: MS:1000524 ! data file content
+is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1000811
+name: electromagnetic radiation chromatogram 
+def: "The measurement of electromagnetic properties as a function of the retention time." [PSI:MS]
+synonym: "EMR radiation chromatogram" EXACT []
+is_a: MS:1000524 ! data file content
+is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1000812
+name: absorption chromatogram 
+def: "The measurement of light absorbed by the sample as a function of the retention time." [PSI:MS]
+is_a: MS:1000524 ! data file content
+is_a: MS:1000811 ! electromagnetic radiation chromatogram 
+
+[Term]
+id: MS:1000813
+name: emission chromatogram  
+def: "The measurement of light emitted by the sample as a function of the retention time." [PSI:MS]
+is_a: MS:1000524 ! data file content
+is_a: MS:1000811 ! electromagnetic radiation chromatogram 
+
+[Term]
+id: MS:1000814
+name: counts per second
+def: "The number of counted events observed per second in one or a group of elements of a detector." [PSI:MS]
+is_a: MS:1000043 ! intensity unit
+
 
 [Typedef]
 id: has_units
