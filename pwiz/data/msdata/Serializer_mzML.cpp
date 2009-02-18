@@ -154,7 +154,7 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
         XMLWriter::Attributes attributes; 
         attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
         attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-        attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd"));
+        attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0_idx.xsd"));
         
         xmlWriter.startElement("indexedmzML", attributes);
         attributes.clear();
