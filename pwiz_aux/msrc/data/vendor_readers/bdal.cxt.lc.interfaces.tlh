@@ -1,0 +1,429 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (a84567c9).
+//
+// bdal.cxt.lc.interfaces.tlh
+//
+// C++ source equivalent of Win32 type library BDal.CXt.Lc.Interfaces.tlb
+// compiler-generated file created 02/10/09 at 09:49:58 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace BDal_CXt_Lc_Interfaces {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("4bac7df4-7d6c-4f7f-925c-918fc39d8f0f"))
+/* LIBID */ __BDal_CXt_Lc_Interfaces;
+enum TraceType;
+struct __declspec(uuid("82502ef7-300d-49e8-b259-295dd1c69a32"))
+/* dual interface */ ITraceDeclaration;
+struct __declspec(uuid("623961fd-42c7-4686-adcc-c5a72869f91a"))
+/* dual interface */ ISpectrumSourceDeclaration;
+struct __declspec(uuid("0b8da041-8592-456e-a7bf-40016d3b23e1"))
+/* dual interface */ IAnalysisFactory;
+struct __declspec(uuid("1a98daf0-faff-4e30-9c52-07f40ab6ba7c"))
+/* dual interface */ ISpectrum;
+struct __declspec(uuid("52a029c4-eb34-47c1-90f0-1f7ceaadbb2f"))
+/* dual interface */ ISpectrumCollection;
+struct __declspec(uuid("2b8b5e7f-9db0-4ec3-bbb0-3e5082f90bc9"))
+/* dual interface */ ITraceDeclarationPump;
+struct __declspec(uuid("bc62bd0a-e04e-453c-82ca-7820dacf83db"))
+/* dual interface */ ITraceDataCollection;
+enum Unit;
+struct __declspec(uuid("e4d328e6-106c-4425-b9d6-37c550366869"))
+/* dual interface */ IAnalysis;
+struct __declspec(uuid("108cfee5-1a99-42e6-a0cf-f8b99fa0140a"))
+/* dual interface */ ITraceDeclarationColumn;
+struct __declspec(uuid("1e40195a-652e-456f-a667-349652ecc943"))
+/* dual interface */ ITraceDeclarationPumpSolvent;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(ISpectrum, __uuidof(ISpectrum));
+_COM_SMARTPTR_TYPEDEF(ISpectrumCollection, __uuidof(ISpectrumCollection));
+_COM_SMARTPTR_TYPEDEF(ITraceDeclarationPump, __uuidof(ITraceDeclarationPump));
+_COM_SMARTPTR_TYPEDEF(ITraceDataCollection, __uuidof(ITraceDataCollection));
+_COM_SMARTPTR_TYPEDEF(ITraceDeclaration, __uuidof(ITraceDeclaration));
+_COM_SMARTPTR_TYPEDEF(ISpectrumSourceDeclaration, __uuidof(ISpectrumSourceDeclaration));
+_COM_SMARTPTR_TYPEDEF(IAnalysis, __uuidof(IAnalysis));
+_COM_SMARTPTR_TYPEDEF(IAnalysisFactory, __uuidof(IAnalysisFactory));
+_COM_SMARTPTR_TYPEDEF(ITraceDeclarationColumn, __uuidof(ITraceDeclarationColumn));
+_COM_SMARTPTR_TYPEDEF(ITraceDeclarationPumpSolvent, __uuidof(ITraceDeclarationPumpSolvent));
+
+//
+// Type library items
+//
+
+enum __declspec(uuid("ce8bafc4-018e-447b-b907-05abe0579c58"))
+TraceType
+{
+    TraceType_ChromMs = 1,
+    TraceType_ChromDad = 2,
+    TraceType_ChromMultiUv = 3,
+    TraceType_ChromPressure = 4,
+    TraceType_ChromSolventMix = 5,
+    TraceType_ChromFlow = 6,
+    TraceType_ChromTemperature = 7,
+    TraceType_ChromUserDefined = 9999,
+    TraceType_Unknown = 65535
+};
+
+struct __declspec(uuid("1a98daf0-faff-4e30-9c52-07f40ab6ba7c"))
+ISpectrum : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetTime))
+    double Time;
+    __declspec(property(get=GetIntensity))
+    SAFEARRAY * Intensity;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetTime ( );
+    SAFEARRAY * GetIntensity ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Time (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Intensity (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("52a029c4-eb34-47c1-90f0-1f7ceaadbb2f"))
+ISpectrumCollection : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetNumberOfSpectra))
+    long NumberOfSpectra;
+    __declspec(property(get=GetItem))
+    ISpectrumPtr Item[];
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetNumberOfSpectra ( );
+    ISpectrumPtr GetItem (
+        long i );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_NumberOfSpectra (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Item (
+        /*[in]*/ long i,
+        /*[out,retval]*/ struct ISpectrum * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("2b8b5e7f-9db0-4ec3-bbb0-3e5082f90bc9"))
+ITraceDeclarationPump : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetPump))
+    long Pump;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetPump ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Pump (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("bc62bd0a-e04e-453c-82ca-7820dacf83db"))
+ITraceDataCollection : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetTimes))
+    SAFEARRAY * Times;
+    __declspec(property(get=GetValues))
+    SAFEARRAY * Values;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    SAFEARRAY * GetTimes ( );
+    SAFEARRAY * GetValues ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Times (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Values (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+};
+
+enum __declspec(uuid("33fcc798-b4d0-4ace-9c1c-af3172568f9b"))
+Unit
+{
+    Unit_NanoMeter = 1,
+    Unit_MicroLiterPerMinute = 2,
+    Unit_Bar = 3,
+    Unit_Percent = 4,
+    Unit_Kelvin = 5,
+    Unit_Intensity = 6,
+    Unit_Unknown = 7
+};
+
+struct __declspec(uuid("82502ef7-300d-49e8-b259-295dd1c69a32"))
+ITraceDeclaration : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetTraceId))
+    long TraceId;
+    __declspec(property(get=GetDescription))
+    _bstr_t Description;
+    __declspec(property(get=GetInstrument))
+    _bstr_t Instrument;
+    __declspec(property(get=GetInstrumentId))
+    _bstr_t InstrumentId;
+    __declspec(property(get=GetType))
+    enum TraceType Type;
+    __declspec(property(get=GetTraceUnit))
+    enum Unit TraceUnit;
+    __declspec(property(get=GetTimeOffset))
+    double TimeOffset;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetTraceId ( );
+    _bstr_t GetDescription ( );
+    _bstr_t GetInstrument ( );
+    _bstr_t GetInstrumentId ( );
+    enum TraceType GetType ( );
+    enum Unit GetTraceUnit ( );
+    double GetTimeOffset ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_TraceId (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Description (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Instrument (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_InstrumentId (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Type (
+        /*[out,retval]*/ enum TraceType * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_TraceUnit (
+        /*[out,retval]*/ enum Unit * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_TimeOffset (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("623961fd-42c7-4686-adcc-c5a72869f91a"))
+ISpectrumSourceDeclaration : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetSpectrumCollectionId))
+    long SpectrumCollectionId;
+    __declspec(property(get=GetXAxis))
+    SAFEARRAY * XAxis;
+    __declspec(property(get=GetDescription))
+    _bstr_t Description;
+    __declspec(property(get=GetInstrument))
+    _bstr_t Instrument;
+    __declspec(property(get=GetInstrumentId))
+    _bstr_t InstrumentId;
+    __declspec(property(get=GetTimeOffset))
+    double TimeOffset;
+    __declspec(property(get=GetXAxisUnit))
+    enum Unit XAxisUnit;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetSpectrumCollectionId ( );
+    SAFEARRAY * GetXAxis ( );
+    _bstr_t GetDescription ( );
+    _bstr_t GetInstrument ( );
+    _bstr_t GetInstrumentId ( );
+    double GetTimeOffset ( );
+    enum Unit GetXAxisUnit ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_SpectrumCollectionId (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_XAxis (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Description (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Instrument (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_InstrumentId (
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_TimeOffset (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_XAxisUnit (
+        /*[out,retval]*/ enum Unit * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("e4d328e6-106c-4425-b9d6-37c550366869"))
+IAnalysis : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetSampleInfo))
+    SAFEARRAY * SampleInfo;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT Refresh ( );
+    SAFEARRAY * GetTraceDeclarations ( );
+    ITraceDataCollectionPtr GetTraceDataCollection (
+        long TraceId );
+    SAFEARRAY * GetSpectrumSourceDeclarations ( );
+    ISpectrumCollectionPtr GetSpectrumCollection (
+        long SpectrumCollectionId );
+    SAFEARRAY * GetSampleInfo ( );
+    HRESULT Close ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_Refresh ( ) = 0;
+      virtual HRESULT __stdcall raw_GetTraceDeclarations (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+      virtual HRESULT __stdcall raw_GetTraceDataCollection (
+        /*[in]*/ long TraceId,
+        /*[out,retval]*/ struct ITraceDataCollection * * pRetVal ) = 0;
+      virtual HRESULT __stdcall raw_GetSpectrumSourceDeclarations (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+      virtual HRESULT __stdcall raw_GetSpectrumCollection (
+        /*[in]*/ long SpectrumCollectionId,
+        /*[out,retval]*/ struct ISpectrumCollection * * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_SampleInfo (
+        /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
+      virtual HRESULT __stdcall raw_Close ( ) = 0;
+};
+
+struct __declspec(uuid("0b8da041-8592-456e-a7bf-40016d3b23e1"))
+IAnalysisFactory : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    IAnalysisPtr Open (
+        _bstr_t path );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_Open (
+        /*[in]*/ BSTR path,
+        /*[out,retval]*/ struct IAnalysis * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("108cfee5-1a99-42e6-a0cf-f8b99fa0140a"))
+ITraceDeclarationColumn : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetColumn))
+    long Column;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetColumn ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Column (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("1e40195a-652e-456f-a667-349652ecc943"))
+ITraceDeclarationPumpSolvent : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetSolvent))
+    long Solvent;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetSolvent ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Solvent (
+        /*[out,retval]*/ long * pRetVal ) = 0;
+};
+
+//
+// Wrapper method implementations
+//
+
+#include "bdal.cxt.lc.interfaces.tli"
+
+} // namespace BDal_CXt_Lc_Interfaces
+
+#pragma pack(pop)

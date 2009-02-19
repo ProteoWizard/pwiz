@@ -26,8 +26,6 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Bruker_Detail.hpp"
-#import "CompassXtractMS.dll"
-
 #include <map>
 
 using namespace std;

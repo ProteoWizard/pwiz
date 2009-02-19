@@ -31,9 +31,9 @@
 #include <boost/shared_ptr.hpp>
 
 #ifdef PWIZ_READER_BRUKER
-#import "CompassXtractMS.dll"
-#import "BDal.CXt.Lc.Interfaces.tlb"
-#import "BDal.CXt.Lc.tlb"
+#include "compassxtractms.tlh"
+#include "bdal.cxt.lc.interfaces.tlh"
+#include "bdal.cxt.lc.tlh"
 #endif
 
 namespace pwiz {
