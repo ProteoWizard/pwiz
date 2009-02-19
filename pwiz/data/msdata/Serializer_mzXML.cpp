@@ -228,10 +228,10 @@ struct IndexEntry
 };
 
 
-string getPolarity(const Scan& scan)
+string getPolarity(const Spectrum& spectrum)
 {
     string result = "Unknown";
-    CVParam paramPolarity = scan.cvParamChild(MS_polarity);
+    CVParam paramPolarity = spectrum.cvParamChild(MS_polarity);
     if (paramPolarity.cvid == MS_positive_scan) result = "+";
     if (paramPolarity.cvid == MS_negative_scan) result = "-";
     return result;
@@ -366,7 +366,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
 
     string scanEvent = scan.cvParam(MS_preset_scan_configuration).value;
     string msLevel = spectrum.cvParam(MS_ms_level).value;
-    string polarity = getPolarity(scan);
+    string polarity = getPolarity(spectrum);
     string retentionTime = getRetentionTime(scan);
     string lowMz = spectrum.cvParam(MS_lowest_observed_m_z).value;
     string highMz = spectrum.cvParam(MS_highest_observed_m_z).value;

@@ -135,9 +135,9 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 
     BOOST_STATIC_ASSERT(SCANTYPE_LENGTH > 4);
     memset(result.scanType, 0, SCANTYPE_LENGTH);
-    CVParam paramScanType = scan.cvParamChild(MS_scanning_method);
-    if (paramScanType.cvid == MS_full_scan) strcpy(result.scanType, "Full");
-    if (paramScanType.cvid == MS_zoom_scan) strcpy(result.scanType, "Zoom");
+    strcpy(result.scanType, "Full"); // default
+    if (spectrum->hasCVParam(MS_zoom_scan))
+        strcpy(result.scanType, "Zoom");
 
     result.mergedScan = 0; // TODO 
     result.mergedResultScanNum = 0; // TODO 

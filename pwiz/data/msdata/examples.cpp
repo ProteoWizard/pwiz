@@ -76,14 +76,14 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     ParamGroupPtr pg1(new ParamGroup);
     pg1->id = "CommonMS1SpectrumParams";
+    pg1->set(MS_MS1_spectrum);
     pg1->set(MS_positive_scan);
-    pg1->set(MS_full_scan);
     msd.paramGroupPtrs.push_back(pg1);
 
     ParamGroupPtr pg2(new ParamGroup);
     pg2->id = "CommonMS2SpectrumParams";
+    pg2->set(MS_MSn_spectrum);
     pg2->set(MS_positive_scan);
-    pg2->set(MS_full_scan);
     msd.paramGroupPtrs.push_back(pg2);
 
     // sampleList
@@ -187,21 +187,20 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.id = "scan=19";
     s19.index = 0;
 
-    s19.set(MS_MSn_spectrum);
     s19.set(MS_ms_level, 1);
 
     s19.set(MS_centroid_spectrum);
     s19.set(MS_lowest_observed_m_z, 400.39, MS_m_z);
     s19.set(MS_highest_observed_m_z, 1795.56, MS_m_z);
     s19.set(MS_base_peak_m_z, 445.347, MS_m_z);
-    s19.set(MS_base_peak_intensity, 120053, MS_intensity_unit);
+    s19.set(MS_base_peak_intensity, 120053, MS_number_of_counts);
     s19.set(MS_total_ion_current, 1.66755e+007);
 
+    s19.paramGroupPtrs.push_back(pg1);
     s19.scanList.scans.push_back(Scan());
     s19.scanList.set(MS_no_combination);
     Scan& s19scan = s19.scanList.scans.back();
     s19scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s19scan.paramGroupPtrs.push_back(pg1);
     s19scan.set(MS_scan_time, 5.890500, UO_minute);
     s19scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
     s19scan.set(MS_preset_scan_configuration, 3);
@@ -232,14 +231,14 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.id = "scan=20";
     s20.index = 1;
 
-    s20.set(MS_MSn_spectrum);
+    s20.paramGroupPtrs.push_back(pg2);
     s20.set(MS_ms_level, 2);
 
     s20.set(MS_profile_spectrum);
     s20.set(MS_lowest_observed_m_z, 320.39, MS_m_z);
     s20.set(MS_highest_observed_m_z, 1003.56, MS_m_z);
     s20.set(MS_base_peak_m_z, 456.347, MS_m_z);
-    s20.set(MS_base_peak_intensity, 23433);
+    s20.set(MS_base_peak_intensity, 23433, MS_number_of_counts);
     s20.set(MS_total_ion_current, 1.66755e+007);
 
     s20.precursors.resize(1);
@@ -256,7 +255,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.scanList.set(MS_no_combination);
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s20scan.paramGroupPtrs.push_back(pg2);
     s20scan.set(MS_scan_time, 5.990500, UO_minute);
     s20scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
     s20scan.set(MS_preset_scan_configuration, 4);
@@ -289,9 +287,8 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.id = "scan=21";
     s21.index = 2;
 
-    s21.set(MS_MSn_spectrum);
+    s21.paramGroupPtrs.push_back(pg1);
     s21.set(MS_ms_level, 1);
-
     s21.set(MS_centroid_spectrum);
     s21.userParams.push_back(UserParam("example", "spectrum with no data"));
     s21.setMZIntensityArrays(vector<double>(), vector<double>());
@@ -305,20 +302,19 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22.index = 3;
     s22.spotID = "A1,42x42,4242x4242";
 
-    s22.set(MS_MSn_spectrum);
     s22.set(MS_ms_level, 1);
     
     s22.set(MS_centroid_spectrum);
     s22.set(MS_lowest_observed_m_z, 142.39, MS_m_z);
     s22.set(MS_highest_observed_m_z, 942.56, MS_m_z);
     s22.set(MS_base_peak_m_z, 422.42, MS_m_z);
-    s22.set(MS_base_peak_intensity, 42, MS_intensity_unit);
+    s22.set(MS_base_peak_intensity, 42, MS_number_of_counts);
     s22.set(MS_total_ion_current, 4200);
+    s22.paramGroupPtrs.push_back(pg1);
     s22.scanList.scans.push_back(Scan());
     s22.scanList.set(MS_no_combination);
     Scan& s22scan = s22.scanList.scans.back();
     s22scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s22scan.paramGroupPtrs.push_back(pg1);
     s22scan.set(MS_scan_time, 42.0500, UO_second);
     s22scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
     s22scan.scanWindows.resize(1);

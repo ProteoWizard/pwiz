@@ -315,9 +315,9 @@ class HandlerScan : public SAXParser::Handler
             scan.set(MS_preset_scan_configuration, scanEvent);
 
             if (polarity == "+")
-                scan.set(MS_positive_scan);
+                spectrum_.set(MS_positive_scan);
             else if (polarity == "-")
-                scan.set(MS_negative_scan);
+                spectrum_.set(MS_negative_scan);
 
             // set spectrum and scan type by scanType attribute (assume MSn/Full if absent)
             boost::to_lower(scanType);

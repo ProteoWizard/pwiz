@@ -110,9 +110,9 @@ void test(bool indexed)
     unit_assert(s->index == 0);
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
+    unit_assert(s->hasCVParam(MS_positive_scan));
     unit_assert(s->scanList.scans.size() == 1);
     Scan& scan = s->scanList.scans[0];
-    unit_assert(scan.hasCVParam(MS_positive_scan));
     unit_assert(scan.hasCVParam(MS_scan_time));
     unit_assert(scan.cvParam(MS_preset_scan_configuration).valueAs<int>() == 3);
     unit_assert(s->cvParam(MS_base_peak_intensity).value == "120053");

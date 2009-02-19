@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd">
   <msRun scanCount="4" startTime="PT353.43S" endTime="PT42.05S">
-    <parentFile fileName="file:///F:/data/Exp01/tiny1.mzXML"
+    <parentFile fileName="file:///F:/data/Exp01/tiny1.RAW"
                 fileType="RAWData"
                 fileSha1="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
     <msInstrument id="LCQDeca">
@@ -59,7 +59,7 @@
           centroided="1"
           msLevel="1"
           peaksCount="0"
-          polarity="Unknown"
+          polarity="+"
           retentionTime="PT0S"
           lowMz=""
           highMz=""
@@ -89,11 +89,11 @@
     </scan>
   </msRun>
   <index name="scan">
-    <offset id="19">1172</offset>
-    <offset id="20">2033</offset>
-    <offset id="21">2917</offset>
-    <offset id="22">3331</offset>
+    <offset id="19">1170</offset>
+    <offset id="20">2031</offset>
+    <offset id="21">2915</offset>
+    <offset id="22">3323</offset>
   </index>
-  <indexOffset>4168</indexOffset>
-  <sha1>b484c1e928e8544ad57365b04276c46112b1b544</sha1>
+  <indexOffset>4160</indexOffset>
+  <sha1>f08c3b65a9b8b415f0e9c1b735ead7f3f8a0f0fa</sha1>
 </mzXML>
