@@ -28,6 +28,8 @@ namespace MSGraph
             pointAnnotations_ = new GraphObjList();
         }
 
+        public bool AllowCurveOverlap { get; set; }
+
         protected MSGraphItemType currentItemType_;
         public MSGraphItemType CurrentItemType
         {
@@ -94,15 +96,16 @@ namespace MSGraph
             clipRegion.MakeEmpty();
             g.SetClip( this.Rect, CombineMode.Replace );
             g.SetClip( chartRegion, CombineMode.Exclude );
-            /*Bitmap clipBmp = new Bitmap( Convert.ToInt32( pane.Rect.Width ), Convert.ToInt32( pane.Rect.Height ) );
-            Graphics clipG = Graphics.FromImage( clipBmp );
-            clipG.Clear( Color.White );
-            clipG.FillRegion( new SolidBrush( Color.Black ), g.Clip );
-            clipBmp.Save( "C:\\clip.bmp" );*/
+
+            /*Bitmap clipBmp = new Bitmap(Convert.ToInt32(Chart.Rect.Width), Convert.ToInt32(Chart.Rect.Height));
+            Graphics clipG = Graphics.FromImage(clipBmp);
+            clipG.Clear(Color.White);
+            clipG.FillRegion(new SolidBrush(Color.Black), g.Clip);
+            clipBmp.Save("C:\\clip.bmp");*/
 
 
             // some dummy labels for very fast clipping
-            string baseLabel = "";
+            string baseLabel = "0";
             foreach( CurveItem item in this.CurveList )
             {
                 IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
@@ -179,29 +182,33 @@ namespace MSGraph
 
                     float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Length;
 
-                    // do fast check for overlap against all MSGraphItems
-                    double labelY = yAxis.Scale.ReverseTransform( yPixel - 5 );
-                    bool overlap = false;
-                    foreach( CurveItem item2 in CurveList )
-                    {
-                        MSPointList points2 = item.Points as MSPointList;
-                        if( points2 != null )
-                        {
-                            int nearestMaxIndex = points.GetNearestMaxIndexToBin( i );
-                            if( nearestMaxIndex < 0 )
-                                continue;
-                            RectangleF r = new RectangleF( (float) pt.X - pointLabelWidth / 2,
-                                                           (float) labelY - baseLabelHeight,
-                                                           pointLabelWidth,
-                                                           baseLabelHeight );
-                            overlap = detectLabelCurveOverlap( this, points.FullList, nearestMaxIndex, item2 is StickItem, r );
-                            if( overlap )
-                                break;
-                        }
-                    }
+                    double labelY = yAxis.Scale.ReverseTransform(yPixel - 5);
 
-                    if( overlap )
-                        continue;
+                    if (!AllowCurveOverlap)
+                    {
+                        // do fast check for overlap against all MSGraphItems
+                        bool overlap = false;
+                        foreach (CurveItem item2 in CurveList)
+                        {
+                            MSPointList points2 = item2.Points as MSPointList;
+                            if (points2 != null)
+                            {
+                                int nearestMaxIndex = points2.GetNearestMaxIndexToBin(i);
+                                if (nearestMaxIndex < 0)
+                                    continue;
+                                RectangleF r = new RectangleF((float)pt.X - pointLabelWidth / 2,
+                                                               (float)labelY - baseLabelHeight,
+                                                               pointLabelWidth,
+                                                               baseLabelHeight);
+                                overlap = detectLabelCurveOverlap(this, points2.FullList, nearestMaxIndex, item2 is StickItem, r);
+                                if (overlap)
+                                    break;
+                            }
+                        }
+
+                        if (overlap)
+                            continue;
+                    }
 
                     TextObj text = new TextObj( annotation.Label, pt.X, labelY,
                                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom );
@@ -230,9 +237,23 @@ namespace MSGraph
                     continue;
 
                 info.AddAnnotations( points, pointAnnotations_ );
-                foreach( GraphObj obj in pointAnnotations_ )
-                    if( !GraphObjList.Contains( obj ) )
-                        GraphObjList.Add( obj );
+                foreach (GraphObj obj in pointAnnotations_)
+                {
+                    if (!GraphObjList.Contains(obj))
+                    {
+                        TextObj text = obj as TextObj;
+                        if (text != null)
+                        {
+                            if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
+                                continue;
+
+                            clipRegion.Union(textBoundsRegion);
+                            g.SetClip(clipRegion, CombineMode.Replace);
+                        }
+
+                        GraphObjList.Add(obj);
+                    }
+                }
                 /*GraphObjList objsToRemove = new GraphObjList();
                 foreach( GraphObj obj in GraphObjList )
                     if( !pointAnnotations_.Contains( obj ) )
@@ -274,13 +295,12 @@ namespace MSGraph
                 // also add the points immediately to the left and right
                 // of these points, find the local maximum
                 // an overlap happens if maximum > rB
-                for( int k = pointIndex - 1; k > 0; --k )
+                for( int k = pointIndex; k > 0; --k )
                 {
                     PointPair p = points[k];
 
                     if( points[k + 1].X < rL )
                         break;
-
                     if( p.Y > rB )
                         return true;
                 }
