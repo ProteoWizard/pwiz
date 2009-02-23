@@ -299,6 +299,11 @@ namespace MSGraph
 
         public CurveItem AddGraphItem( MSGraphPane pane, IMSGraphItemInfo item )
         {
+            return AddGraphItem(pane, item, true);
+        }
+
+        public CurveItem AddGraphItem( MSGraphPane pane, IMSGraphItemInfo item, bool setScale )
+        {
             if( item.GraphItemType != pane.CurrentItemType )
             {
                 pane.CurveList.Clear();
@@ -308,10 +313,12 @@ namespace MSGraph
                 item.CustomizeYAxis( pane.YAxis );
             }
 
-            Graphics g = CreateGraphics();
             CurveItem newItem = makeMSGraphItem( item );
             pane.CurveList.Add( newItem );
-            pane.SetScale( g );
+            // If you are adding multiple graph items, it is quickest to set the scale
+            // once at the end.
+            if (setScale)
+                pane.SetScale( CreateGraphics() );
             return newItem;
         }
         #endregion
