@@ -305,7 +305,8 @@ namespace MSGraph
                         return true;
                 }
 
-                for( int k = pointIndex + 1; k < points.Count; ++k )
+                // accessing points.Count in the loop condition showed up in a profiler
+                for( int k = pointIndex + 1, len = points.Count; k < len; ++k )
                 {
                     PointPair p = points[k];
 
