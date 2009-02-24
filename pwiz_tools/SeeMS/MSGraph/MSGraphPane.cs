@@ -236,7 +236,7 @@ namespace MSGraph
                 if( info == null || points == null )
                     continue;
 
-                info.AddAnnotations( points, pointAnnotations_ );
+                info.AddAnnotations( this, g,  points, pointAnnotations_ );
                 foreach (GraphObj obj in pointAnnotations_)
                 {
                     if (!GraphObjList.Contains(obj))

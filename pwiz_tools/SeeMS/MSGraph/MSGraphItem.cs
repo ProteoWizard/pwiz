@@ -112,7 +112,7 @@ namespace MSGraph
         /// the list may change depending on the state of the pointList
         /// and the annotations that have already been added
         /// </summary>
-        void AddAnnotations( MSPointList pointList, GraphObjList annotations );
+        void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations);
 
         /// <summary>
         /// gets the entire point list of the graph

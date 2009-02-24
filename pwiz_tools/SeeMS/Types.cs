@@ -232,7 +232,7 @@ namespace seems
             return null;
         }
 
-        public virtual void AddAnnotations( MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        public virtual void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
             PointMap points = new PointMap( Points );
             foreach( IAnnotation annotation in annotationList )
@@ -380,9 +380,9 @@ namespace seems
         /// <summary>
         /// add precursor and non-matched annotations
         /// </summary>
-        public override void AddAnnotations( MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        public override void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
-            base.AddAnnotations( pointList, annotations );
+            base.AddAnnotations( graphPane, g, pointList, annotations );
             //using( Spectrum element = Element )
             {
                 foreach( Precursor p in Element.precursors )
