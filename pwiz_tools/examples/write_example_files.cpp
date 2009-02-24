@@ -60,7 +60,7 @@ void writeSmall()
     try
     {
         FullReaderList readers;
-        MSDataFile msd(inputFile, &readers);
+        MSDataFile msd(inputFile, &readers, true);
 
         // msconvert defaults
 

@@ -146,9 +146,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
     }
 
+    result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
-    scan.set(MS_no_combination);
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -174,12 +174,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         if (scanType!=ScanType_Unknown)
         {
             result->set(translateAsSpectrumType(scanType));
-            scan.set(translateAsScanningMethod(scanType));
+            if (scanType!=ScanType_Full)
+                result->set(translateAsScanningMethod(scanType));
         }
     }
 
     PolarityType polarityType = scanInfo->polarityType();
-    if (polarityType!=PolarityType_Unknown) scan.set(translate(polarityType));
+    if (polarityType!=PolarityType_Unknown) result->set(translate(polarityType));
 
     bool doCentroid = msLevelsToCentroid.contains(msLevel);
 
@@ -194,8 +195,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     }
 
     scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
-    result->set(MS_base_peak_m_z, scanInfo->basePeakMass());
-    result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+    result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), MS_m_z);
+    result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity(), MS_number_of_counts);
     result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
     try
@@ -236,20 +237,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         double isolationMz = scanInfo->precursorMZ(i, false);
         if (msLevel == -1)
         {
-            product.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth);
-            product.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth);
+            product.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth, MS_m_z);
+            product.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth, MS_m_z);
         }
         else
         {
-            precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth);
-            precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth);
+            precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth, MS_m_z);
         }
 
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && msLevel > 1)
             precursor.spectrumID = findPrecursorID(msLevel-1, index);
 
-        selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i));
+        selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
         long precursorCharge = scanInfo->precursorCharge();
         if (precursorCharge > 0)
             selectedIon.set(MS_charge_state, precursorCharge);
@@ -260,7 +261,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             activationType = ActivationType_CID; // assume CID
         precursor.activation.set(translate(activationType));
         if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
-            precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i));
+            precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
@@ -286,8 +287,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
     if (massList->size() > 0)
     {
-        result->set(MS_lowest_observed_m_z, massList->data()[0].mass);
-        result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass);
+        result->set(MS_lowest_observed_m_z, massList->data()[0].mass, MS_m_z);
+        result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass, MS_m_z);
     }
 
     if (getBinaryData)

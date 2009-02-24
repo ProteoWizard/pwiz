@@ -1022,8 +1022,8 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* 
     binaryDataArrayPtrs.push_back(bd_time);
     binaryDataArrayPtrs.push_back(bd_intensity);
 
-    bd_time->cvParams.push_back(MS_time_array);
-    bd_intensity->cvParams.push_back(MS_intensity_array);
+    bd_time->cvParams.push_back(CVParam(MS_time_array, "", UO_second));
+    bd_intensity->cvParams.push_back(CVParam(MS_intensity_array));
 
     bd_time->data.resize(size);
     bd_intensity->data.resize(size);

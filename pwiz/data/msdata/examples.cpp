@@ -414,11 +414,14 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     // fileDescription
 
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/example/"));
+    sfp_parameters->set(MS_parameter_file);
+    sfp_parameters->set(MS_SHA_1, "unknown");
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
     Contact contact;
     contact.set(MS_contact_name, "William Pennington");
-    contact.set(MS_contact_address, "Higglesworth University, 12 Higglesworth Avenue, 12045, HI, USA");
+    contact.set(MS_contact_organization, "Higglesworth University");
+    contact.set(MS_contact_address, "12 Higglesworth Avenue, 12045, HI, USA");
 	contact.set(MS_contact_URL, "http://www.higglesworth.edu/");
 	contact.set(MS_contact_email, "wpennington@higglesworth.edu");
     msd.fileDescription.contacts.push_back(contact);
@@ -458,7 +461,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
         {
             Component& c = (*it)->componentList[i];
             if (c.type == ComponentType_Source)
-                c.set(MS_source_potential, "4.20", UO_kilovolt);
+                c.set(MS_source_potential, "4.20", UO_volt);
         }
     }
  
@@ -467,11 +470,11 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     ProcessingMethod procMIAPE;
     procMIAPE.order = 1;
     procMIAPE.softwarePtr = msd.softwarePtrs.back();
-    procMIAPE.set(MS_deisotoping, false);
-    procMIAPE.set(MS_charge_deconvolution, false);
-    procMIAPE.set(MS_peak_picking, true);
-    procMIAPE.set(MS_smoothing, false);
-    procMIAPE.set(MS_baseline_reduction, false);
+    procMIAPE.set(MS_deisotoping);
+    procMIAPE.set(MS_charge_deconvolution);
+    procMIAPE.set(MS_peak_picking);
+    procMIAPE.set(MS_smoothing);
+    procMIAPE.set(MS_baseline_reduction);
     procMIAPE.userParams.push_back(UserParam("signal-to-noise estimation", "none"));
     procMIAPE.userParams.push_back(UserParam("centroiding algorithm", "none"));
     procMIAPE.userParams.push_back(UserParam("charge states calculated", "none"));
