@@ -41,7 +41,7 @@ ostream* os_;
 const char* sampleXML = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<RootElement param=\"value\">\n"
-    "    <FirstElement escaped_attribute=\"&quot;&lt;&amp;&gt;&quot;\">\n"
+    "    <FirstElement escaped_attribute=\"&quot;&lt;&amp;lt;&gt;&quot;\">\n"
     "        Some Text with Entity References: &lt;&amp;&gt;\n"
     "    </FirstElement>\n"
     "    <SecondElement param2=\"something\" param3=\"something.else 1234-56\">\n"
@@ -198,14 +198,14 @@ class FirstHandler : public Handler
 
     virtual Status characters(const string& text, stream_offset position)
     {
-        unit_assert(position == 0x8c);
+        unit_assert(position == 0x8f);
         object_.text = text;          
         return Status::Ok;
     }
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert(position == 0xc0);
+        unit_assert(position == 0xc3);
         return Status::Ok;
     }
 
@@ -308,7 +308,7 @@ void test()
     }
 
     unit_assert(root.param == "value");
-    unit_assert(root.first.escaped_attribute == "\"<&>\"");
+    unit_assert(root.first.escaped_attribute == "\"<&lt;>\"");
     unit_assert(root.first.text == "Some Text with Entity References: <&>");
     unit_assert(root.second.param2 == "something");
     unit_assert(root.second.param3 == "something.else 1234-56");
@@ -329,7 +329,7 @@ class AnotherRootHandler : public Handler
     {
         if (name == "AnotherRoot")
         {
-            unit_assert(position == 0x1fa);
+            unit_assert(position == 0x1fd);
             return Status::Done; 
         }
 

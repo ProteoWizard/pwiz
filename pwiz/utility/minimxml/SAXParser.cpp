@@ -143,11 +143,11 @@ struct ProcessingInstruction
 
 string& unescapeXML(string& str)
 {
-    bal::replace_all(str, "&amp;", "&");
     bal::replace_all(str, "&lt;", "<");
     bal::replace_all(str, "&gt;", ">");
     bal::replace_all(str, "&quot;", "\"");
     bal::replace_all(str, "&apos;", "'");
+    bal::replace_all(str, "&amp;", "&");
     return str;
 }
 
