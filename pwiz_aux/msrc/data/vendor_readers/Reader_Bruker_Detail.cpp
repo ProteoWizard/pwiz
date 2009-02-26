@@ -24,6 +24,7 @@
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/filesystem/convenience.hpp"
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 
@@ -48,7 +49,7 @@ Reader_Bruker_Format format(const string& path)
         bal::to_lower(leaf);
         if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
             return Reader_Bruker_Format_FID;
-        else if(sourcePath.extension() == ".u2")
+        else if(extension(sourcePath) == ".u2")
             return Reader_Bruker_Format_U2;
         else if(leaf == "analysis.yep")
             return Reader_Bruker_Format_YEP;

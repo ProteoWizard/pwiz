@@ -35,6 +35,12 @@ Version 1.0  29 May 2005  Mark Adler */
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#ifdef WIN32
+#ifdef max //trouble with windef.h max(a,b) colliding with <limits> datatype.max()
+#undef max
+#undef min
+#endif
+#endif
 #include "boost/iostreams/positioning.hpp"
 #include <fstream>
 
