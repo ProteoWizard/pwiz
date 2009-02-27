@@ -427,6 +427,11 @@ class HandlerScan : public SAXParser::Handler
 
             return Status::Ok;
         }
+        else if (name == "nativeScanRef" || name == "coordinate") // mzXML 3.0 beta tags
+        {
+            // just ignore
+            return Status::Ok;
+        }
 
         throw runtime_error(("[SpectrumList_mzXML::HandlerScan] Unexpected element name: " + name).c_str());
     }
