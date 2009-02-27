@@ -14,7 +14,7 @@ echo "toolset: $toolset"
 echo "bindir: $bindir"
 ls -ltr $bindir
 
-datafile=example_data/small.pwiz.mzML
+datafile=example_data/small.pwiz.1.1.mzML
 if [ "$toolset" = "msvc" ] ; then datafile=example_data/small.RAW ; fi
 
 outdir=build/test
