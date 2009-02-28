@@ -40,7 +40,7 @@ using namespace pwiz::peptideid;
 
 ostream& operator<<(ostream& os, const PeptideID::Record& rec)
 {
-    os << "\tnativeID: " << rec.nativeID << endl;
+    os << "\tscan: " << rec.nativeID << endl;
     os << "\tsequence: " << rec.sequence << endl;
     os << "\tprotein_descr: " << rec.protein_descr << endl;
     return os;

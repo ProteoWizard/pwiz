@@ -291,9 +291,11 @@ int main(int argc, const char* argv[])
         
         size_t tick2 = clock();
 
+        /*
         cout << " *** run time:" << 1.*tick2/CLOCKS_PER_SEC
              << " - " << 1.*tick1/CLOCKS_PER_SEC << " = "
              << 1.*(tick2 - tick1)/CLOCKS_PER_SEC << endl;
+        */
         
         return 0;
     }

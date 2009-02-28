@@ -391,7 +391,6 @@ void Pseudo2DGel::Impl::close(const DataInfo& dataInfo)
 
 double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
 {
-    cout << "getScore: " << cachedIndex << "\n\t";
     if (cachedIndex >= cache_.size())
         throw out_of_range("ms2 index out of bounds");
     
@@ -406,14 +405,13 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
     }
 
     // TODO: commented out until nativeID usage can be fixed -- dk
-    /*
-    const string* nativeID = &cache_[cachedIndex].nativeID;
+    const string nativeID = id::value(cache_[cachedIndex].id, "scan");
     double mz1, mz;
     mz1 = mz = cache_[cachedIndex].basePeakMZ;
     double retentionTime1, retentionTime;
     retentionTime1 = retentionTime = cache_[cachedIndex].retentionTime;
 
-    PeptideID::Location locMs2(*nativeID, mz,retentionTime);
+    PeptideID::Location locMs2(nativeID, mz,retentionTime);
 
     try
     {
@@ -424,22 +422,16 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
     {
         size_t idx = cache_[cachedIndex].precursors[0].index;
 
-        nativeID = &cache_[idx].nativeID;
+        string id_ms1 = id::value(cache_[idx].id, "scan");
         mz = cache_[idx].basePeakMZ;
         retentionTime = cache_[idx].retentionTime;
         
-        PeptideID::Location locMs1(*nativeID, mz, retentionTime);
+        PeptideID::Location locMs1(id_ms1, mz, retentionTime);
 
         PeptideID::Record rMs1 = config_.peptide_id->record(locMs1);
         score = rMs1.normalizedScore;
     }
-    */
 
-    if (score > 0)
-        cout << "score greater than 0" << endl;
-    else
-        cout << "zero score" << endl;
-    
     return score;
 }
 
