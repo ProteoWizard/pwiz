@@ -423,7 +423,7 @@ ScanFilter::parse(string filterLine)
 	string w;
 
 	if (s.eof()) {
-		return 1; // ok, empty line
+		return true; // ok, empty line
 	}
 	s >> w;
 
@@ -431,7 +431,7 @@ ScanFilter::parse(string filterLine)
 	if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
 		// "analyzer" field was present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -440,7 +440,7 @@ ScanFilter::parse(string filterLine)
 	if (polarityType_ > PolarityType_Unknown) {
 		// "polarity" field was present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -449,7 +449,7 @@ ScanFilter::parse(string filterLine)
 	if (dataPointType_ > DataPointType_Unknown) {
 		// "scan data type" field present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -458,7 +458,7 @@ ScanFilter::parse(string filterLine)
 	if (ionizationType_ > IonizationType_Unknown) {
 		// "ionization mode" field present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -476,7 +476,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -493,7 +493,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -510,7 +510,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -528,7 +528,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -546,7 +546,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -564,7 +564,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -578,7 +578,7 @@ ScanFilter::parse(string filterLine)
     }
     if (advance) {
         if (s.eof()) {
-            return 1;
+            return true;
         }
         s >> w;
         advance = false;
@@ -596,7 +596,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 		advance = false;
@@ -607,7 +607,7 @@ ScanFilter::parse(string filterLine)
 	if (accurateMassType_ > AccurateMass_Unknown) {
 		// "accurate mass" field present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -627,7 +627,7 @@ ScanFilter::parse(string filterLine)
 
 		// "scan type" field present
 		if (s.eof()) {
-			return 1;
+			return true;
 		}
 		s >> w;
 	}
@@ -640,7 +640,7 @@ ScanFilter::parse(string filterLine)
 
         if (s.eof())
         {
-            return 1;
+            return true;
 		}
         s >> w;
     }
@@ -654,7 +654,7 @@ ScanFilter::parse(string filterLine)
             msLevel_ = lexical_cast<int>(w.substr(2)); // take number after "ms"
         }
         if (s.eof()) {
-            return 1;
+            return true;
         }
         s >> w;
     }
@@ -670,33 +670,40 @@ ScanFilter::parse(string filterLine)
 			char c=w[0];
 			size_t markerPos = w.find('@',0);
 			// make sure this word starts with a numeric char, and the word contains "@"
-			if( markerPos == string::npos || ! ( (c >= '0') && (c <= '9') ) )
-				return false;
-			size_t energyPos = markerPos+1;
-			c = w[energyPos];
-			if ((c < '0' || c > '9') && c != '-' && c != '+')
+			if( ! ( (c >= '0') && (c <= '9') ) )
+				throw runtime_error("missing precursor m/z");
+            if (markerPos != string::npos)
             {
-				energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
-				if (energyPos != string::npos) {
-					activationType_ = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
-					if (activationType_ == ActivationType_Unknown)
-						return false;
-				} else
-					return false;
-			}
+			    size_t energyPos = markerPos+1;
+			    c = w[energyPos];
+			    if ((c < '0' || c > '9') && c != '-' && c != '+')
+                {
+				    energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
+				    if (energyPos != string::npos) {
+					    activationType_ = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
+					    if (activationType_ == ActivationType_Unknown)
+						    throw runtime_error("failed to parse activation type");
+				    } else
+					    throw runtime_error("failed to find activation energy");
+			    }
 
-			string mass = w.substr(0, markerPos);
-			string energy = w.substr(energyPos);
-			// cout << "got mass " << mass << " at " << energy << " energy using activation " << (int) activationMethod_ << " (from " << w << ")" << endl;
-			cidParentMass_.push_back(lexical_cast<double>(mass));
-			cidEnergy_.push_back(lexical_cast<double>(energy));			
+			    string mass = w.substr(0, markerPos);
+			    string energy = w.substr(energyPos);
+			    // cout << "got mass " << mass << " at " << energy << " energy using activation " << (int) activationMethod_ << " (from " << w << ")" << endl;
+			    cidParentMass_.push_back(lexical_cast<double>(mass));
+			    cidEnergy_.push_back(lexical_cast<double>(energy));
+            }
+            else
+            {
+                cidParentMass_.push_back(lexical_cast<double>(w));
+			    cidEnergy_.push_back(0.0);
+            }
 
 			// prematurely done?
 			if (s.eof()) {
-				return false;
+				throw runtime_error("missing expected activation m/z@energy pair");
 			}
 			s >> w;
-
 		}
 	}
 
@@ -706,7 +713,7 @@ ScanFilter::parse(string filterLine)
 		if (activationType_ > ActivationType_Unknown) {
 			// "activation type" field present
 			if (s.eof()) {
-				return 1;
+				return true;
 			}
 			s >> w;
 		}
@@ -738,14 +745,10 @@ ScanFilter::parse(string filterLine)
 		return true;
 	}
 	else {
+        ostringstream oss("unparsed scan filter elements: ");
 		do {
-			cout << "unparsed scan filter element: " << w << endl;
+			oss << w << endl;
 		} while (s >> w);
-		return false;
+        throw runtime_error(oss.str());
 	}
-	//     while (!s.eof()) {
-	//       string w;
-	//       s >> w;
-	//       cout << "word: " << w << endl;
-	//     }
 }

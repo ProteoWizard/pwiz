@@ -190,6 +190,13 @@ const TestScanFilter testScanFilters[] =
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
 
+    {"- c SRM ms2 448.711 [375.175-375.180, 537.265-537.270, 652.291-652.297, 749.344-749.350]",
+     "448.711", "0", "375.175 537.265 652.291 749.344", "375.18 537.27 652.297 749.35", 2,
+     ScanFilterMassAnalyzerType_Unknown, PolarityType_Negative, DataPointType_Centroid,
+     IonizationType_Unknown, AccurateMass_Unknown, ScanType_SRM, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
     {"+ c Full pr 191.00@-35.00 [300.00-900.00]",
      "191", "-35", "300", "900", -1,
      ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,

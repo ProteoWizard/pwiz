@@ -40,7 +40,7 @@
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include <boost/thread/once.hpp>
 #include <boost/bind.hpp>
-
+#include <windows.h>
 
 using namespace pwiz::raw;
 using namespace pwiz::util;
@@ -198,6 +198,35 @@ RawFileImpl::~RawFileImpl()
     raw_->Close();
     raw_ = NULL;
     COMInitializer::uninitialize();
+
+    /*size_t lpMem = 0;
+    size_t totalVirtualCommit = 0;
+    size_t totalVirtualReserve = 0;
+    size_t totalVirtualFree = 0;
+    MEMORY_BASIC_INFORMATION memInfo;
+    while( VirtualQuery((LPCVOID)lpMem, &memInfo, sizeof(memInfo)) > 0 && memInfo.State != 0x2000)
+        lpMem += memInfo.RegionSize;
+    if(memInfo.State == 0x2000)
+        lpMem += memInfo.RegionSize;
+    while( VirtualQuery((LPCVOID)lpMem, &memInfo, sizeof(memInfo)) > 0 )
+    {
+        lpMem += memInfo.RegionSize;
+        if(memInfo.State == 0x1000)
+            totalVirtualCommit += memInfo.RegionSize;
+        if(memInfo.State == 0x2000)
+        {
+            cout << std::hex << memInfo.BaseAddress << endl;
+            string input;
+            //std::getline(cin, input);
+                //VirtualFree(memInfo.BaseAddress, 0, 0x8000);
+            totalVirtualReserve += memInfo.RegionSize;
+        }
+        if(memInfo.State == 0x10000)
+            totalVirtualFree += memInfo.RegionSize;
+    }
+    cout << "Commit: " << std::dec << totalVirtualCommit <<
+            "\nReserve: " << totalVirtualReserve <<
+            "\nFree: " << totalVirtualFree << endl;*/
 }
 
 
@@ -827,7 +856,14 @@ void ScanInfoImpl::initTrailerExtraHelper() const
 void ScanInfoImpl::parseFilterString()
 {
     ScanFilter filterParser;
-    filterParser.parse(filter_);
+    try
+    {
+        filterParser.parse(filter_);
+    }
+    catch (runtime_error& e)
+    {
+        throw RawEgg("[ScanInfoImpl::parseFilterString()] error parsing filter \"" + filter_ + "\": " + e.what());
+    }
 
     msLevel_ = filterParser.msLevel_;
     massAnalyzerType_ = convertScanFilterMassAnalyzer(filterParser.massAnalyzerType_, rawfile_->getInstrumentModel());
