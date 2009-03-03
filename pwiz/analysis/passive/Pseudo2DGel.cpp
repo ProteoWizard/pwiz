@@ -1347,7 +1347,18 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
                          : (int)(*lower_bound(scansInfo.rts.begin(), scansInfo.rts.end(), ms2Scans_.rts[j])));
         
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)yPixel);
+        
+        double sc = -1;
+        try {
+            sc = getScore(ms2Scans_.scans[j]);
+        }
+        catch(...)
+        {
+        }
 
+        if (config_.positiveMs2Only && sc <= 0)
+            continue;
+        
         Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
         
         Image::Color color = chooseCircleColor(ms2Scans_.scans[j]);

@@ -214,23 +214,37 @@ Config parseCommandArgs(int argc, const char* argv[])
 
     // Add the pepxml file if available.
     
+    bool ids = false;
+    
     if (vm.count("pepxml"))
+    {
+        ids = true;
         config.pseudo2dConfig.peptide_id =
             shared_ptr<PeptideID>(
                 new PeptideID_pepXml(config.peptideFilename)
                 );
+        config.pseudo2dConfig.ms2 = true;
+    }
     else if (vm.count("flat"))
+    {
+        ids = true;
         config.pseudo2dConfig.peptide_id =
             shared_ptr<PeptideID>(
                 new PeptideID_flat(
                     config.peptideFilename, shared_ptr<FlatRecordBuilder>(
                         new FlatRecordBuilder())));
+        config.pseudo2dConfig.ms2 = true;
+    }
     else if (vm.count("msi"))
+    {
+        ids = true;
         config.pseudo2dConfig.peptide_id =
             shared_ptr<PeptideID>(
                 new PeptideID_flat(
                     config.peptideFilename, shared_ptr<FlatRecordBuilder>(
                         new MSInspectRecordBuilder())));
+        config.pseudo2dConfig.ms2 = true;
+    }
     
     if (vm.count("scan"))
         config.pseudo2dConfig.binScan = true;
@@ -238,6 +252,8 @@ Config parseCommandArgs(int argc, const char* argv[])
     if (vm.count("time"))
         config.pseudo2dConfig.binScan = false;
         
+    config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
+    
     config.usageOptions = usageOptions;
 
     return config;
