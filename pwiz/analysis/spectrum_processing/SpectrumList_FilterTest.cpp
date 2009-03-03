@@ -49,7 +49,7 @@ SpectrumListPtr createSpectrumList()
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(100+i);
         vector<MZIntensityPair> pairs(i);
-        spectrum->setMZIntensityPairs(pairs);
+        spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
         spectrum->set(MS_ms_level, i%3==0?1:2);
         spectrum->scanList.scans.push_back(Scan());
         spectrum->scanList.scans[0].set(MS_preset_scan_configuration, i%4);

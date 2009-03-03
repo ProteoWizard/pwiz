@@ -49,7 +49,7 @@ void flush(SpectrumListSimple& sl, const string& nativeID, const string& msLevel
     spectrum->index = sl.size();
     spectrum->id = "scan=" + nativeID;
     spectrum->set(MS_ms_level, msLevel);
-    spectrum->setMZIntensityPairs(pairs);
+    spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
     sl.spectra.push_back(spectrum);
 }
 

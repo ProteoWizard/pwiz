@@ -207,10 +207,11 @@ void testSpectrumListSimple()
     vector<MZIntensityPair> mziPairs2;
     for (unsigned int i=0; i<10; i++)
         mziPairs2.push_back(MZIntensityPair(2*i, 3*i)); 
-    spectrum->setMZIntensityPairs(mziPairs2);
+    spectrum->setMZIntensityPairs(mziPairs2, MS_number_of_counts);
     unit_assert(spectrum->binaryDataArrayPtrs.size() == 2);
     unit_assert(spectrum->binaryDataArrayPtrs[0]->hasCVParam(MS_m_z_array) == true);
     unit_assert(spectrum->binaryDataArrayPtrs[1]->hasCVParam(MS_intensity_array) == true);
+    unit_assert(spectrum->binaryDataArrayPtrs[1]->cvParam(MS_intensity_array).units == MS_number_of_counts);
     unit_assert(spectrum->binaryDataArrayPtrs[0]->data.size() == 10);
     unit_assert(spectrum->binaryDataArrayPtrs[1]->data.size() == 10);
     for (unsigned int i=0; i<10; i++)
@@ -238,7 +239,7 @@ void testChromatograms()
         vector<TimeIntensityPair> pairs;
         for (int j=0; j<10; j++) pairs.push_back(TimeIntensityPair(j, 10*i+j));
         cls.chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-        cls.chromatograms.back()->setTimeIntensityPairs(pairs);
+        cls.chromatograms.back()->setTimeIntensityPairs(pairs, UO_second, MS_number_of_counts);
     }
 
     DataProcessingPtr dp(new DataProcessing("dp"));

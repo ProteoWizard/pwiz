@@ -147,7 +147,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         double basePeakMZ = 0;
         double basePeakIntensity = 0;
         spectrum.defaultArrayLength = 0;
-        spectrum.setMZIntensityArrays(vector<double>(), vector<double>());
+        spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
         vector<double>& mzArray = spectrum.getMZArray()->data;
         vector<double>& intensityArray = spectrum.getIntensityArray()->data;
 	    while (getline(*is_, lineStr))

@@ -2261,21 +2261,12 @@ void write(minimxml::XMLWriter& writer, const Run& run,
         attributes.push_back(make_pair("sampleRef", run.samplePtr->id));
     if (!run.startTimeStamp.empty())
         attributes.push_back(make_pair("startTimeStamp", run.startTimeStamp));
-
+    if (run.defaultSourceFilePtr.get())
+        attributes.push_back(make_pair("defaultSourceFileRef", run.defaultSourceFilePtr->id));
+ 
     writer.startElement("run", attributes);
 
     writeParamContainer(writer, run);
-
-    if (!run.sourceFilePtrs.empty()) 
-    {
-        attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(run.sourceFilePtrs.size())));
-        writer.startElement("sourceFileRefList", attributes);
-        for (vector<SourceFilePtr>::const_iterator it=run.sourceFilePtrs.begin(); 
-             it!=run.sourceFilePtrs.end(); ++it)
-             writeSourceFileRef(writer, **it);
-        writer.endElement();
-    }
 
     if (run.spectrumListPtr.get())
         write(writer, *run.spectrumListPtr, config, spectrumPositions, iterationListenerRegistry);
@@ -2320,19 +2311,12 @@ struct HandlerRun : public HandlerParamContainer
             if (!sampleRef.empty())
                 run->samplePtr = SamplePtr(new Sample(sampleRef));
 
-            return Status::Ok;
-        }
-        else if (name == "sourceFileRefList")
-        {
-            return Status::Ok;
-        }
-        else if (name == "sourceFileRef")
-        {
             // note: placeholder
-            string sourceFileRef;
-            getAttribute(attributes, "ref", sourceFileRef);
-            if (!sourceFileRef.empty())
-                run->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
+            string defaultSourceFileRef;
+            getAttribute(attributes, "defaultSourceFileRef", defaultSourceFileRef);
+            if (!defaultSourceFileRef.empty())
+                run->defaultSourceFilePtr = SourceFilePtr(new SourceFile(defaultSourceFileRef));
+
             return Status::Ok;
         }
         else if (name == "spectrumList")

@@ -214,7 +214,7 @@ PWIZ_API_DECL void resolve(Run& run, const MSData& msd)
     resolve(static_cast<ParamContainer&>(run), msd);
     resolve(run.defaultInstrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
     resolve(run.samplePtr, msd.samplePtrs);
-    resolve(run.sourceFilePtrs, msd.fileDescription.sourceFilePtrs);
+    resolve(run.defaultSourceFilePtr, msd.fileDescription.sourceFilePtrs);
 }
 
 

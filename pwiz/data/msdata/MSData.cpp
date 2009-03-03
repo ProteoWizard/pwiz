@@ -845,11 +845,11 @@ PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getIntensityArray() const
 }
 
 
-PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input, CVID intensityUnit)
+PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input, CVID intensityUnits)
 {
     // TODO: setting the arrays with an empty vector is a valid use case!
     if (!input.empty())    
-        setMZIntensityPairs(&input[0], input.size());
+        setMZIntensityPairs(&input[0], input.size(), intensityUnits);
 }
 
 
@@ -1006,14 +1006,14 @@ PWIZ_API_DECL void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output
 }
 
 
-PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input)
+PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input, CVID timeUnits, CVID intensityUnits)
 {
     if (!input.empty())    
-        setTimeIntensityPairs(&input[0], input.size());
+        setTimeIntensityPairs(&input[0], input.size(), timeUnits, intensityUnits);
 }
 
 
-PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t size)
+PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* input, size_t size, CVID timeUnits, CVID intensityUnits)
 {
     BinaryDataArrayPtr bd_time(new BinaryDataArray);
     BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
@@ -1022,8 +1022,8 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* 
     binaryDataArrayPtrs.push_back(bd_time);
     binaryDataArrayPtrs.push_back(bd_intensity);
 
-    bd_time->cvParams.push_back(CVParam(MS_time_array, "", UO_second));
-    bd_intensity->cvParams.push_back(CVParam(MS_intensity_array));
+    bd_time->cvParams.push_back(CVParam(MS_time_array, "", timeUnits));
+    bd_intensity->cvParams.push_back(CVParam(MS_intensity_array, "", intensityUnits));
 
     bd_time->data.resize(size);
     bd_intensity->data.resize(size);
@@ -1041,7 +1041,7 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const TimeIntensityPair* 
 }
 
 
-PWIZ_API_DECL void Chromatogram::setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID intensityUnits)
+PWIZ_API_DECL void Chromatogram::setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID timeUnits, CVID intensityUnits)
 {
     if (timeArray.size() != intensityArray.size())
         throw runtime_error("[MSData::Chromatogram::setTimeIntensityArrays()] Sizes do not match.");
@@ -1056,7 +1056,7 @@ PWIZ_API_DECL void Chromatogram::setTimeIntensityArrays(const std::vector<double
     {
         bd_time = BinaryDataArrayPtr(new BinaryDataArray);
         CVParam arrayType(MS_time_array);
-        arrayType.units = UO_second;
+        arrayType.units = timeUnits;
         bd_time->cvParams.push_back(arrayType);
         binaryDataArrayPtrs.push_back(bd_time);
     }
@@ -1222,7 +1222,7 @@ PWIZ_API_DECL bool Run::empty() const
            (!defaultInstrumentConfigurationPtr.get() || defaultInstrumentConfigurationPtr->empty()) &&
            (!samplePtr.get() || samplePtr->empty()) &&
            startTimeStamp.empty() &&
-           sourceFilePtrs.empty() &&
+           (!defaultSourceFilePtr.get() || defaultSourceFilePtr->empty()) &&
            (!spectrumListPtr.get() || spectrumListPtr->empty()) &&
            (!chromatogramListPtr.get() || chromatogramListPtr->empty()) &&
            ParamContainer::empty();

@@ -233,7 +233,7 @@ class HandlerPeaks : public SAXParser::Handler
             throw runtime_error("[SpectrumList_mzXML::HandlerPeaks] Invalid peak count."); 
 
         spectrum_.setMZIntensityPairs(reinterpret_cast<const MZIntensityPair*>(&decoded[0]),
-                                      peaksCount);
+                                      peaksCount, MS_number_of_counts);
         return Status::Ok;
     }
 
@@ -583,6 +583,12 @@ class HandlerIndex : public SAXParser::Handler
         }
         else
             throw runtime_error(("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
+    }
+
+    virtual Status characters(const std::string& text,
+                              stream_offset position)
+    {
+        throw runtime_error("[SpectrumList_mzXML::HandlerIndex] <index> not found.");
     }
 
     private:

@@ -98,7 +98,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -111,7 +111,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -126,7 +126,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -145,7 +145,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;

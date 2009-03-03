@@ -172,7 +172,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     msd.run.defaultInstrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
-    msd.run.sourceFilePtrs.push_back(sfp);
+    msd.run.defaultSourceFilePtr = sfp;
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
     msd.run.spectrumListPtr = spectrumList;
@@ -218,7 +218,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     BinaryDataArrayPtr s19_intensity(new BinaryDataArray);
     s19_intensity->dataProcessingPtr = dpXcalibur;
-    s19_intensity->set(MS_intensity_array);
+    s19_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     s19_intensity->data.resize(15);
     for (int i=0; i<15; i++)
         s19_intensity->data[i] = 15-i;
@@ -272,7 +272,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     BinaryDataArrayPtr s20_intensity(new BinaryDataArray);
     s20_intensity->dataProcessingPtr = dpXcalibur;
-    s20_intensity->set(MS_intensity_array);
+    s20_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     s20_intensity->data.resize(10);
     for (int i=0; i<10; i++)
         s20_intensity->data[i] = (10-i)*2;
@@ -291,7 +291,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.set(MS_ms_level, 1);
     s21.set(MS_centroid_spectrum);
     s21.userParams.push_back(UserParam("example", "spectrum with no data"));
-    s21.setMZIntensityArrays(vector<double>(), vector<double>());
+    s21.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
 
     s21.scanList.scans.push_back(Scan());
     s21.scanList.set(MS_no_combination);
@@ -331,7 +331,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     BinaryDataArrayPtr s22_intensity(new BinaryDataArray);
     s22_intensity->dataProcessingPtr = dpXcalibur;
-    s22_intensity->set(MS_intensity_array);
+    s22_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     s22_intensity->data.resize(15);
     for (int i=0; i<15; i++)
         s22_intensity->data[i] = 15-i;
@@ -365,7 +365,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     BinaryDataArrayPtr tic_intensity(new BinaryDataArray);
     tic_intensity->dataProcessingPtr = dppwiz;
-    tic_intensity->set(MS_intensity_array);
+    tic_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     tic_intensity->data.resize(15);
     for (int i=0; i<15; i++)
         tic_intensity->data[i] = 15-i;
@@ -389,7 +389,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     BinaryDataArrayPtr sic_intensity(new BinaryDataArray);
     sic_intensity->dataProcessingPtr = dppwiz;
-    sic_intensity->set(MS_intensity_array);
+    sic_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     sic_intensity->data.resize(10);
     for (int i=0; i<10; i++)
         sic_intensity->data[i] = 10-i;

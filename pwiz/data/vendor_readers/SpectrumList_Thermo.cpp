@@ -294,7 +294,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     if (getBinaryData)
     {
         result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
-                                    massList->size());
+                                    massList->size(), MS_number_of_counts);
     }
 
     return result;

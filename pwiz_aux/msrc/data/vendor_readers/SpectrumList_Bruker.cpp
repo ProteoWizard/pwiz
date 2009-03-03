@@ -202,7 +202,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             vector<double> lcX, lcY;
             convertSafeArrayToVector(ssd->GetXAxis(), lcX);
             convertSafeArrayToVector(spectrum->GetIntensity(), lcY);
-            result->setMZIntensityArrays(lcX, lcY);
+            result->setMZIntensityArrays(lcX, lcY, MS_number_of_counts);
             return result;
         }
         else

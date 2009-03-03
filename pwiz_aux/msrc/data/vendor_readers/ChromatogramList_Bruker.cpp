@@ -145,7 +145,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
         vector<double> lcX, lcY;
         convertSafeArrayToVector(trace->GetTimes(), lcX);
         convertSafeArrayToVector(trace->GetValues(), lcY);
-        result->setTimeIntensityArrays(lcX, lcY);
+        result->setTimeIntensityArrays(lcX, lcY, UO_second, MS_number_of_counts);
         return result;
     }
     catch (_com_error& e) // not caught by either std::exception or '...'

@@ -263,7 +263,7 @@ class HandlerCompound : public SAXParser::Handler
         }
         else if (name == "ms_peaks")
         {
-            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>());
+            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
 
             handlerPeaks_ = shared_ptr<HandlerPeaks>(
                                new HandlerPeaks(spectrum_, getBinaryData_,

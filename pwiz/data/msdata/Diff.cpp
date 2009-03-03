@@ -962,7 +962,7 @@ void diff(const Run& a,
         ptr_diff(a.defaultInstrumentConfigurationPtr, b.defaultInstrumentConfigurationPtr, a_b.defaultInstrumentConfigurationPtr, b_a.defaultInstrumentConfigurationPtr, config);
         ptr_diff(a.samplePtr, b.samplePtr, a_b.samplePtr, b_a.samplePtr, config);
         diff(a.startTimeStamp, b.startTimeStamp, a_b.startTimeStamp, b_a.startTimeStamp, config);
-        vector_diff_deep(a.sourceFilePtrs, b.sourceFilePtrs, a_b.sourceFilePtrs, b_a.sourceFilePtrs, config);
+        ptr_diff(a.defaultSourceFilePtr, b.defaultSourceFilePtr, a_b.defaultSourceFilePtr, b_a.defaultSourceFilePtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     }
   

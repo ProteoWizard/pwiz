@@ -717,13 +717,13 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     BinaryDataArrayPtr getIntensityArray() const;
 
     /// set binary data arrays 
-    void setMZIntensityPairs(const std::vector<MZIntensityPair>& input, CVID intensityUnits = CVID_Unknown);
+    void setMZIntensityPairs(const std::vector<MZIntensityPair>& input, CVID intensityUnits);
 
     /// set binary data arrays 
-    void setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits = CVID_Unknown);
+    void setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits);
 
     /// set m/z and intensity arrays separately (they must be the same size)
-    void setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits = CVID_Unknown);
+    void setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits);
 };
 
 
@@ -762,13 +762,13 @@ struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamCon
     BinaryDataArrayPtr getIntensityArray() const;
 
     /// set binary data arrays
-    void setTimeIntensityPairs(const std::vector<TimeIntensityPair>& input);
+    void setTimeIntensityPairs(const std::vector<TimeIntensityPair>& input, CVID timeUnits, CVID intensityUnits);
 
     /// set binary data arrays
-    void setTimeIntensityPairs(const TimeIntensityPair* input, size_t size);
+    void setTimeIntensityPairs(const TimeIntensityPair* input, size_t size, CVID timeUnits, CVID intensityUnits);
 
     /// set time and intensity arrays separately (they must be the same size)
-    void setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID intensityUnits = CVID_Unknown);
+    void setTimeIntensityArrays(const std::vector<double>& timeArray, const std::vector<double>& intensityArray, CVID timeUnits, CVID intensityUnits);
 };
 
 
@@ -948,8 +948,8 @@ struct PWIZ_API_DECL Run : public ParamContainer
     /// the optional start timestamp of the run, in UT.
     std::string startTimeStamp;
 
-    /// container for a list of source file references.
-    std::vector<SourceFilePtr> sourceFilePtrs;
+    /// default source file reference 
+    SourceFilePtr defaultSourceFilePtr;
 
     /// all mass spectra and the acquisitions underlying them are described and attached here. Subsidiary data arrays are also both described and attached here.
     SpectrumListPtr spectrumListPtr;

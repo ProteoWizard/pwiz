@@ -788,8 +788,7 @@ void testRun()
     a.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     a.samplePtr = SamplePtr(new Sample("sample"));
     a.startTimeStamp = "20 April 2004 4:20pm";  
-    a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
-    a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
+    a.defaultSourceFilePtr = SourceFilePtr(new SourceFile("sf1"));
 
     // spectrumList
 
@@ -1012,7 +1011,7 @@ void initializeTestData(MSData& msd)
     msd.run.defaultInstrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
-    msd.run.sourceFilePtrs.push_back(sfp);
+    msd.run.defaultSourceFilePtr = sfp;
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
     msd.run.spectrumListPtr = spectrumList;

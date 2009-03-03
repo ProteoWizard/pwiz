@@ -167,7 +167,7 @@ void test()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
 
         SpectrumListPtr thresholder(
             new SpectrumList_Thresholder(originalList, t.byType, t.threshold, t.orientation));

@@ -1025,7 +1025,7 @@ void testRun()
     b.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
 
     b.samplePtr = SamplePtr(new Sample("sample"));
-    a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
+    a.defaultSourceFilePtr = SourceFilePtr(new SourceFile("source file"));
     
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -1044,8 +1044,8 @@ void testRun()
     unit_assert(!diff.a_b.samplePtr.get());
     unit_assert(!diff.b_a.samplePtr->empty());
 
-    unit_assert(!diff.a_b.sourceFilePtrs.empty());
-    unit_assert(diff.b_a.sourceFilePtrs.empty());
+    unit_assert(diff.a_b.defaultSourceFilePtr.get());
+    unit_assert(!diff.b_a.defaultSourceFilePtr.get());
 
     unit_assert(diff.a_b.startTimeStamp.empty());
     unit_assert(diff.b_a.startTimeStamp.empty());

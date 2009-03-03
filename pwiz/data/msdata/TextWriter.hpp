@@ -325,14 +325,8 @@ class PWIZ_API_DECL TextWriter
         if (!run.startTimeStamp.empty())
             child()("startTimeStamp: " + run.startTimeStamp);
         child()(static_cast<const ParamContainer&>(run));
-        if (!run.sourceFilePtrs.empty())
-        {
-            child()("sourceFileRefList: ");
-            for (std::vector<SourceFilePtr>::const_iterator it=run.sourceFilePtrs.begin();
-                 it!=run.sourceFilePtrs.end(); ++it)
-                 child().child()("sourceFileRef: " + (*it)->id);
-        }
-
+        if (run.defaultSourceFilePtr.get())
+            child()("defaultSourceFileRef: " + run.defaultSourceFilePtr->id);
         if (run.spectrumListPtr.get())
             child()(run.spectrumListPtr, metadata_only);
         if (run.chromatogramListPtr.get())
