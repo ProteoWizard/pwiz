@@ -36,6 +36,7 @@
 
 
 using boost::format;
+using namespace pwiz::raw;
 
 
 namespace pwiz {
@@ -43,17 +44,23 @@ namespace msdata {
 namespace detail {
 
 
-string scanNumberToSpectrumID(long scanNumber)
-{
-    return "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(scanNumber); 
-}
-
-
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
 :   msd_(msd), rawfile_(rawfile),
-    size_(rawfile->value(NumSpectra)),
+    size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
 {
+    // calculate total spectra count from all controllers
+    for (int controllerType = Controller_MS;
+         controllerType <= Controller_UV;
+         ++controllerType)
+    {
+        long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
+        for (long n=1; n <= numControllers; ++n)
+        {
+            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            size_ += rawfile_->value(NumSpectra);
+        }
+    }
 }
 
 
@@ -124,9 +131,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
+    IndexEntry& ie = index_[index];
+    rawfile_->setCurrentController(ie.controllerType, ie.controllerNumber);
+
     // get rawfile::ScanInfo and translate
-    long scanNumber = static_cast<int>(index) + 1;
-    auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(scanNumber);
+    auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(ie.scan);
     if (!scanInfo.get())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
 
@@ -136,8 +145,49 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
 
     result->index = index;
-    result->id = scanNumberToSpectrumID(scanNumber);
+    result->id = ie.id;
 
+    result->scanList.set(MS_no_combination);
+    result->scanList.scans.push_back(Scan());
+    Scan& scan = result->scanList.scans[0];
+    scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
+
+    // special handling for non-MS scans
+    if (ie.controllerType != Controller_MS)
+    {
+        result->set(MS_EMR_spectrum);
+        
+        result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
+        result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+        result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
+
+        scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), UO_nanometer));
+
+        MassListPtr xyList = rawfile_->getMassList(ie.scan, "", raw::Cutoff_None, 0, 0, false);
+        result->defaultArrayLength = xyList->size();
+
+        if (xyList->size() > 0)
+        {
+            result->set(MS_lowest_observed_wavelength, xyList->data()[0].mass, UO_nanometer);
+            result->set(MS_highest_observed_wavelength, xyList->data()[xyList->size()-1].mass, UO_nanometer);
+        }
+
+        if (getBinaryData)
+        {
+            result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(xyList->data()), 
+                                        xyList->size(), MS_number_of_counts);
+
+            // replace "m/z array" term with "wavelength array"
+            BinaryDataArray& xArray = *result->getMZArray();
+            vector<CVParam>::iterator itr = std::find_if(xArray.cvParams.begin(),
+                                                         xArray.cvParams.end(),
+                                                         CVParamIs(MS_m_z_array));
+            *itr = CVParam(MS_wavelength_array, "", UO_nanometer);
+        }
+        return result;
+    }
+
+    // MS scan metadata beyond this point
     if (scanInfo->ionizationType() == IonizationType_MALDI)
     {
         result->spotID += scanInfo->trailerExtraValue("Sample Position:");
@@ -145,10 +195,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->spotID += "," + scanInfo->trailerExtraValue("Absolute X Position:");
         result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
     }
-
-    result->scanList.set(MS_no_combination);
-    result->scanList.scans.push_back(Scan());
-    Scan& scan = result->scanList.scans[0];
 
     MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
     scan.instrumentConfigurationPtr = 
@@ -194,10 +240,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         doCentroid = scanInfo->isProfileScan();
     }
 
-    scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
     result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), MS_m_z);
     result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity(), MS_number_of_counts);
     result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
+
+    scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), MS_m_z));
 
     try
     {
@@ -209,8 +256,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     catch (RawEgg&)
     {
     }
-
-    scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass()));
 
     for (long i=0, precursorCount=scanInfo->precursorCount(); i<precursorCount; i++)
     {
@@ -235,7 +280,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         {}
 
         double isolationMz = scanInfo->precursorMZ(i, false);
-        if (msLevel == -1)
+        if (msLevel == -1) // precursor ion scan
         {
             product.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth, MS_m_z);
             product.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth, MS_m_z);
@@ -248,7 +293,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         // TODO: better test here for data dependent modes
         if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && msLevel > 1)
-            precursor.spectrumID = findPrecursorID(msLevel-1, index);
+            precursor.spectrumID = index_[findPrecursorSpectrumIndex(msLevel-1, index)].id;
 
         selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
         long precursorCharge = scanInfo->precursorCharge();
@@ -276,11 +321,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
          analyzerType == MassAnalyzerType_FTICR))
     {
         // use label data for accurate centroids on FT profile data
-        massList = rawfile_->getMassListFromLabelData(scanNumber);
+        massList = rawfile_->getMassListFromLabelData(ie.scan);
     }
     else
     {
-        massList = rawfile_->getMassList(scanNumber, "", raw::Cutoff_None, 0, 0, doCentroid);
+        massList = rawfile_->getMassList(ie.scan, "", raw::Cutoff_None, 0, 0, doCentroid);
     }
 
     result->defaultArrayLength = massList->size();
@@ -304,18 +349,38 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
 {
     scanMsLevelCache_.resize(size_, 0);
-    index_.resize(size_);
-    for (size_t i=0; i<size_; i++)
+    index_.reserve(size_);
+
+    for (int controllerType = Controller_MS;
+         controllerType <= Controller_UV;
+         ++controllerType)
     {
-        SpectrumIdentity& si = index_[i];
-        si.index = i;
-        long scanNumber = (long)i+1;
-        si.id = scanNumberToSpectrumID(scanNumber); 
+        long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
+        for (long n=1; n <= numControllers; ++n)
+        {
+            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            long numSpectra = rawfile_->value(NumSpectra);
+            for (long scan=1; scan <= numSpectra; ++scan)
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& ie = index_.back();
+                ie.controllerType = (ControllerType) controllerType;
+                ie.controllerNumber = n;
+                ie.scan = scan;
+                ie.index = index_.size()-1;
+
+                ostringstream oss;
+                oss << "controllerType=" << ie.controllerType <<
+                       " controllerNumber=" << ie.controllerNumber <<
+                       " scan=" << ie.scan;
+                ie.id = oss.str();
+            }
+        }
     }
 }
 
 
-PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, size_t index) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const
 {
     // for MSn spectra (n > 1): return first scan with MSn-1
 
@@ -326,14 +391,14 @@ PWIZ_API_DECL string SpectrumList_Thermo::findPrecursorID(int precursorMsLevel, 
         if (cachedMsLevel == 0)
         {
             // populate the missing MS level
-            auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(index+1);
+            auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(index_[index].scan);
 	        cachedMsLevel = scanInfo->msLevel();
         }
         if (cachedMsLevel == precursorMsLevel)
-            return scanNumberToSpectrumID(index+1);
+            return index;
     }
 
-    return "";
+    return size_;
 }
 
 

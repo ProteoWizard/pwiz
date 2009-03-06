@@ -58,30 +58,41 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         throw runtime_error(("[ChromatogramList_Thermo::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    const ChromatogramIdentity& ci = index_[index].first;
+    const IndexEntry& ci = index_[index];
     ChromatogramPtr result(new Chromatogram);
     result->index = ci.index;
     result->id = ci.id;
 
     int mode = 0;
 
-    if (ci.id == "TIC") // generate TIC for entire run
+    switch (ci.controllerType)
     {
-        mode = 1;
-        result->set(MS_TIC_chromatogram);
-    }
-    else if(ci.id.find("SIC") == 0) // generate SIC for <precursor>
-    {
-        mode = 2;
-        result->set(MS_SIC_chromatogram);
-    }
-    else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
-    {
-        mode = 3;
-    }
-    else // generate SRM SIC for transition <precursor>,<product>
-    {
-        mode = 4;
+        case Controller_MS:
+            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
+            if (ci.id == "TIC") // generate TIC for entire run
+            {
+                mode = 1;
+                result->set(MS_TIC_chromatogram);
+            }
+            else if(ci.id.find("SIC") == 0) // generate SIC for <precursor>
+            {
+                mode = 2;
+                result->set(MS_SIC_chromatogram);
+            }
+            else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
+            {
+                mode = 3;
+            }
+            else // generate SRM SIC for transition <precursor>,<product>
+            {
+                mode = 4;
+            }
+            break;
+
+        case Controller_PDA:
+            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
+            mode = 5; // generate "Total Scan" chromatogram for entire run
+            break;
     }
 
     switch (mode)
@@ -98,7 +109,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -107,11 +118,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
-                index_[index].second, "", "", 0,
+                index_[index].filter, "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -126,7 +137,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -145,7 +156,21 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_second, MS_number_of_counts);
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
+            else result->defaultArrayLength = cd->size();
+        }
+        break;
+
+        case 5: // generate "Total Scan" chromatogram for entire run
+        {
+            // note: Type_TIC maps to "Total Scan" on the PDA controller
+            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+                Type_TIC, Operator_None, Type_MassRange,
+                "", "", "", 0,
+                0, rawfile_->rt(rawfile_->value(NumSpectra)),
+                Smoothing_None, 0);
+            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
         break;
@@ -157,63 +182,107 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
 PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 {
-    // support file-level TIC for all file types
-    index_.push_back(make_pair(ChromatogramIdentity(), ""));
-    ChromatogramIdentity& ci = index_.back().first;
-    ci.index = index_.size()-1;
-    ci.id = "TIC";
-    idMap_[ci.id] = ci.index;
-
-    // for certain filter types, support additional chromatograms
-    auto_ptr<StringArray> filterArray = rawfile_->getFilters();
-    ScanFilter filterParser;
-    for (size_t i=0, ic=filterArray->size(); i < ic; ++i)
+    for (int controllerType = Controller_MS;
+         controllerType <= Controller_UV;
+         ++controllerType)
     {
-        string filterString = filterArray->item(i);
-        if (filterString.find("ms2") == string::npos)
-            continue;
-
-        filterParser.initialize();
-        filterParser.parse(filterString);
-
-        if (!filterParser.cidParentMass_.empty())
+        long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
+        for (long n=1; n <= numControllers; ++n)
         {
-            switch (filterParser.scanType_)
+            rawfile_->setCurrentController((ControllerType) controllerType, n);
+
+            switch ((ControllerType) controllerType)
             {
-                case ScanType_SRM:
+                case Controller_MS:
                 {
-                    string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
-                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
-                    ChromatogramIdentity& ci = index_.back().first;
+                    // support file-level TIC for all file types
+                    index_.push_back(IndexEntry());
+                    IndexEntry& ci = index_.back();
+                    ci.controllerType = (ControllerType) controllerType;
+                    ci.controllerNumber = n;
+                    ci.filter = "";
                     ci.index = index_.size()-1;
-                    ci.id = "SRM TIC " + precursorMZ;
+                    ci.id = "TIC";
                     idMap_[ci.id] = ci.index;
 
-                    for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                    // for certain filter types, support additional chromatograms
+                    auto_ptr<StringArray> filterArray = rawfile_->getFilters();
+                    ScanFilter filterParser;
+                    for (size_t i=0, ic=filterArray->size(); i < ic; ++i)
                     {
-                        index_.push_back(make_pair(ChromatogramIdentity(), filterString));
-                        ChromatogramIdentity& ci = index_.back().first;
-                        ci.index = index_.size()-1;
-                        ci.id = (format("SRM SIC %s,%.10g")
-                                 % precursorMZ
-                                 % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
-                                ).str();
-                        idMap_[ci.id] = ci.index;
+                        string filterString = filterArray->item(i);
+                        if (filterString.find("ms2") == string::npos)
+                            continue;
+
+                        filterParser.initialize();
+                        filterParser.parse(filterString);
+
+                        if (!filterParser.cidParentMass_.empty())
+                        {
+                            switch (filterParser.scanType_)
+                            {
+                                case ScanType_SRM:
+                                {
+                                    string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
+                                    index_.push_back(IndexEntry());
+                                    IndexEntry& ci = index_.back();
+                                    ci.controllerType = (ControllerType) controllerType;
+                                    ci.controllerNumber = n;
+                                    ci.filter = filterString;
+                                    ci.index = index_.size()-1;
+                                    ci.id = "SRM TIC " + precursorMZ;
+                                    idMap_[ci.id] = ci.index;
+
+                                    for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                                    {
+                                        index_.push_back(IndexEntry());
+                                        IndexEntry& ci = index_.back();
+                                        ci.controllerType = (ControllerType) controllerType;
+                                        ci.controllerNumber = n;
+                                        ci.filter = filterString;
+                                        ci.index = index_.size()-1;
+                                        ci.id = (format("SRM SIC %s,%.10g")
+                                                 % precursorMZ
+                                                 % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
+                                                ).str();
+                                        idMap_[ci.id] = ci.index;
+                                    }
+                                }
+                                break; // case ScanType_SRM
+
+                                default:
+                                case ScanType_Full:
+                                /*{
+                                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
+                                    ChromatogramIdentity& ci = index_.back().first;
+                                    ci.index = index_.size()-1;
+                                    ci.id = "SIC " + precursorMZ;
+                                    idMap_[ci.id] = ci.index;
+                                }*/
+                                break;
+                            }
+                        }
                     }
                 }
-                break;
+                break; // case Controller_MS
+
+                case Controller_PDA:
+                {
+                    // "Total Scan" appears to be the equivalent of the TIC
+                    index_.push_back(IndexEntry());
+                    IndexEntry& ci = index_.back();
+                    ci.controllerType = (ControllerType) controllerType;
+                    ci.controllerNumber = n;
+                    ci.index = index_.size()-1;
+                    ci.id = "Total Scan";
+                    idMap_[ci.id] = ci.index;
+                }
+                break; // case Controller_PDA
 
                 default:
-                case ScanType_Full:
-                /*{
-                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
-                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
-                    ChromatogramIdentity& ci = index_.back().first;
-                    ci.index = index_.size()-1;
-                    ci.id = "SIC " + precursorMZ;
-                    idMap_[ci.id] = ci.index;
-                }*/
-                break;
+                    // TODO: are there sensible default chromatograms for other controller types?
+                    break;
             }
         }
     }

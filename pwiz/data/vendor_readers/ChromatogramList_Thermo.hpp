@@ -35,8 +35,16 @@ public:
     shared_ptr<RawFile> rawfile_;
 
     mutable boost::once_flag indexInitialized_;
+
+    struct IndexEntry : public ChromatogramIdentity
+    {
+        ControllerType controllerType;
+        long controllerNumber;
+        string filter;
+    };
+
+    mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idMap_;
-    mutable vector< pair<ChromatogramIdentity, string> > index_;
 
     void createIndex() const;
 };

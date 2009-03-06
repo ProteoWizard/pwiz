@@ -59,10 +59,19 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 
     mutable vector<int> scanMsLevelCache_;
     mutable boost::once_flag indexInitialized_;
-    mutable vector<SpectrumIdentity> index_;
+
+    struct IndexEntry : public SpectrumIdentity
+    {
+        ControllerType controllerType;
+        long controllerNumber;
+        long scan;
+    };
+
+    mutable vector<IndexEntry> index_;
+    mutable map<string, size_t> idToIndexMap_;
 
     void createIndex() const;
-    string findPrecursorID(int precursorMsLevel, size_t index) const;
+    size_t findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const;
 };
 
 
