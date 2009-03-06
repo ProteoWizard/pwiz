@@ -147,6 +147,7 @@ class RawFileImpl : public RawFile
     IXRawfilePtr raw_;
     int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
     string filename_;
+    ControllerType currentControllerType_;
 
     InstrumentModelType instrumentModel_;
     vector<IonizationType> ionSources_;
@@ -354,6 +355,7 @@ ControllerInfo RawFileImpl::getCurrentController()
 void RawFileImpl::setCurrentController(ControllerType type, long controllerNumber)
 {
     checkResult(raw_->SetCurrentController(type, controllerNumber), "[RawFileImpl::setCurrentController()] ");
+    currentControllerType_ = type;
 }
 
 
@@ -767,24 +769,20 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     trailerExtraValues_(0)
 {
     initialize();
-    parseFilterString();
 }
 
 void ScanInfoImpl::initialize()
 {
     IXRawfilePtr& raw_ = (*rawfile_).raw_;
 
-    _bstr_t bstrFilter;
-    checkResult(raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()), "[ScanInfoImpl::initialize(), GetFilterForScanNum()] ");
-    filter_ = (const char*)(bstrFilter);
-
-    long isProfileScan = 0;
-    checkResult(raw_->IsProfileScanForScanNum(scanNumber_, &isProfileScan), "[ScanInfoImpl::initialize(), IsProfileScanForScanNum()] ");
-    isProfileScan_ = (isProfileScan!=0);
-
-    long isCentroidScan = 0;
-    checkResult(raw_->IsCentroidScanForScanNum(scanNumber_, &isCentroidScan), "[ScanInfoImpl::initialize(), IsCentroidScanForScanNum()] ");
-    isCentroidScan_ = (isCentroidScan!=0);
+    // TODO: figure out which controllers have filters, PDA/UV does not!
+    if (rawfile_->currentControllerType_ == Controller_MS)
+    {
+        _bstr_t bstrFilter;
+        checkResult(raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()), "[ScanInfoImpl::initialize(), GetFilterForScanNum()] ");
+        filter_ = (const char*)(bstrFilter);
+        parseFilterString();
+    }
 
     long isUniformTime = 0;
     checkResult(raw_->GetScanHeaderInfoForScanNum(scanNumber_,
@@ -873,6 +871,8 @@ void ScanInfoImpl::parseFilterString()
     activationType_ = filterParser.activationType_;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
+    isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
+    isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 }
 
 long ScanInfoImpl::precursorCharge() const
