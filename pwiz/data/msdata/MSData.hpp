@@ -513,7 +513,7 @@ struct PWIZ_API_DECL Product
 struct PWIZ_API_DECL ScanWindow : public ParamContainer
 {
     ScanWindow(){}
-    ScanWindow(double mzLow, double mzHigh);
+    ScanWindow(double low, double high, CVID unit);
 };
 
 

@@ -613,7 +613,7 @@ void testScan()
     Diff<Scan> diff(a, b);
     unit_assert(!diff);
 
-    b.scanWindows.push_back(ScanWindow(250.0, 2000.0));
+    b.scanWindows.push_back(ScanWindow(250.0, 2000.0, MS_m_z));
     diff(a, b);
         
     if (os_) *os_ << diff << endl;
@@ -701,7 +701,7 @@ void testSpectrum()
     a.scanList.scans.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.scanList.scans.back().cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     a.scanList.scans.back().cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.scanList.scans.back().scanWindows.push_back(ScanWindow(400.0, 1800.0));
+    a.scanList.scans.back().scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 
     b = a; 
 

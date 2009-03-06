@@ -379,7 +379,7 @@ class HandlerScan : public SAXParser::Handler
 
             if (!startMz.empty() && !endMz.empty())
                 scan.scanWindows.push_back(
-                    ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz)));
+                    ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz), MS_m_z));
             
             if (!lowMz.empty())
                 spectrum_.set(MS_lowest_observed_m_z, lowMz);

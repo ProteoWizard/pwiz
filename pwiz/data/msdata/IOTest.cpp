@@ -356,7 +356,7 @@ void testScan()
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
-    a.scanWindows.push_back(ScanWindow(400.0, 1800.0));
+    a.scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 
     testObject(a);
 }
