@@ -411,8 +411,8 @@ ScanWindow::ScanWindow()
 : ParamContainer(new b::ScanWindow())
 {owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
-ScanWindow::ScanWindow(double mzLow, double mzHigh)
-: ParamContainer(new b::ScanWindow(mzLow, mzHigh))
+ScanWindow::ScanWindow(double low, double high, CVID unit)
+: ParamContainer(new b::ScanWindow(low, high, (b::CVID) unit))
 {owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 
@@ -701,9 +701,9 @@ void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
     output = gcnew TimeIntensityPairList(p);
 }
 
-void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input)
+void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits)
 {
-    (*base_)->setTimeIntensityPairs(*input->base_);
+    (*base_)->setTimeIntensityPairs(*input->base_, (b::CVID) timeUnits, (b::CVID) intensityUnits);
 }
 
 bool Chromatogram::empty()
@@ -880,8 +880,8 @@ void Run::sample::set(Sample^ value) {base_->samplePtr = CLI_TO_NATIVE_SHARED_PT
 System::String^ Run::startTimeStamp::get() {return gcnew System::String(base_->startTimeStamp.c_str());}
 void Run::startTimeStamp::set(System::String^ value) {base_->startTimeStamp = ToStdString(value);}
 
-SourceFileList^ Run::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
-void Run::sourceFiles::set(SourceFileList^ value) {base_->sourceFilePtrs = *value->base_;}
+SourceFile^ Run::defaultSourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->defaultSourceFilePtr);}
+void Run::defaultSourceFile::set(SourceFile^ value) {base_->defaultSourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
 SpectrumList^ Run::spectrumList::get() {return NATIVE_OWNED_SHARED_PTR_TO_CLI(b::SpectrumListPtr, SpectrumList, base_->spectrumListPtr, this);}
 void Run::spectrumList::set(SpectrumList^ value) {base_->spectrumListPtr = *value->base_;}

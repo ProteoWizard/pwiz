@@ -926,7 +926,7 @@ public ref class ScanWindow : public ParamContainer
 
     public:
     ScanWindow();
-    ScanWindow(double mzLow, double mzHigh);
+    ScanWindow(double low, double high, CVID unit);
 };
 
 
@@ -1617,7 +1617,7 @@ public ref class Chromatogram : public ParamContainer
     /// <summary>
     /// set binary data arrays 
     /// </summary>
-    void setTimeIntensityPairs(TimeIntensityPairList^ input);
+    void setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits);
 };
 
 
@@ -1875,12 +1875,12 @@ public ref class Run : public ParamContainer
     }
 
     /// <summary>
-    /// container for a list of source file references.
+    /// default source file reference.
     /// </summary>
-    property SourceFileList^ sourceFiles
+    property SourceFile^ defaultSourceFile
     {
-        SourceFileList^ get();
-        void set(SourceFileList^ value);
+        SourceFile^ get();
+        void set(SourceFile^ value);
     }
 
     /// <summary>
