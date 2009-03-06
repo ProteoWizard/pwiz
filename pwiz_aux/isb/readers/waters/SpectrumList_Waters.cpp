@@ -182,7 +182,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     result->set(MS_total_ion_current, pScanStats_->TIC);
 
     // TODO: get correct values
-    scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass));
+    scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass, MS_m_z));
 
     //sd.set(MS_lowest_observed_m_z, minObservedMz);
     //sd.set(MS_highest_observed_m_z, maxObservedMz);
