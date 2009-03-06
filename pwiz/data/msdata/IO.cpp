@@ -1466,6 +1466,38 @@ struct HandlerScan : public HandlerParamContainer
                 scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
             return Status::Ok;
         }
+        else if (name == "acquisition")
+        {
+            // note: spectrumRef, externalNativeID, and externalSpectrumID are mutually exclusive
+            getAttribute(attributes, "spectrumRef", scan->spectrumID);
+            if (scan->spectrumID.empty())
+            {
+                string externalNativeID;
+                getAttribute(attributes, "externalNativeID", externalNativeID);
+                if (externalNativeID.empty())
+                    getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
+                else
+                    try
+                    {
+                        lexical_cast<int>(externalNativeID);
+                        cerr << "[IO::HandlerScan] Warning - mzML 1.0: <acquisition>::externalNativeID\n";
+                        scan->externalSpectrumID = "scan=" + externalNativeID;
+                    }
+                    catch(exception&)
+                    {
+                        cerr << "[IO::HandlerScan] Warning - mzML 1.0: non-integral <acquisition>::externalNativeID; externalSpectrumID format unknown\n";
+                        scan->externalSpectrumID = externalNativeID;
+                    }
+            }
+
+            // note: placeholder
+            string sourceFileRef;
+            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            if (!sourceFileRef.empty())
+                scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+
+            return Status::Ok;
+        }
         else if (name == "scanWindowList")
         {
             return Status::Ok;
@@ -1528,11 +1560,11 @@ struct HandlerScanList : public HandlerParamContainer
         if (!scanList)
             throw runtime_error("[IO::HandlerScanList] Null scanList.");
 
-        if (name == "scanList")
+        if (name == "scanList" || name == "acquisitionList")
         {
             return Status::Ok;
         }
-        else if (name == "scan")
+        else if (name == "scan" || name == "acquisition")
         {
             scanList->scans.push_back(Scan());
             handlerScan_.scan = &scanList->scans.back(); 
@@ -1684,24 +1716,35 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     size_t arrayLength_;
     size_t encodedLength_;
 
-    CVID extractCVParam(CVID cvid)
+    CVID extractCVParam(ParamContainer& container, CVID cvid)
     {
-        if (!binaryDataArray)
-            throw runtime_error("[IO::HandlerBinaryDataArray] Null binaryDataArray."); 
-
-        vector<CVParam>& params = binaryDataArray->cvParams;
+        vector<CVParam>& params = container.cvParams;
         vector<CVParam>::iterator it = find_if(params.begin(), params.end(), 
                                                CVParamIsChildOf(cvid));
+
+        CVID result;
         if (it == params.end())
-            throw runtime_error("[IO::HandlerBinaryDataArray] Missing " + cvinfo(cvid).name);
-        
-        CVID result = it->cvid;
-        params.erase(it);
+        {
+            result = CVID_Unknown;
+            for (vector<ParamGroupPtr>::iterator pgItr = container.paramGroupPtrs.begin();
+                 pgItr != container.paramGroupPtrs.end() && result == CVID_Unknown;
+                 ++pgItr)
+                 result = extractCVParam(**pgItr, cvid);
+        }
+        else
+        {
+            result = it->cvid;
+            params.erase(it);
+        }
+
         return result;
     }
 
     BinaryDataEncoder::Config getConfig()
     {
+        if (!binaryDataArray)
+            throw runtime_error("[IO::HandlerBinaryDataArray] Null binaryDataArray."); 
+
         BinaryDataEncoder::Config config;
 
         //
@@ -1710,8 +1753,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         // and remove them from the BinaryDataArray struct.
         //
 
-        CVID cvidBinaryDataType = extractCVParam(MS_binary_data_type);
-        CVID cvidCompressionType = extractCVParam(MS_binary_data_compression_type);
+        CVID cvidBinaryDataType = extractCVParam(*binaryDataArray, MS_binary_data_type);
+        CVID cvidCompressionType = extractCVParam(*binaryDataArray, MS_binary_data_compression_type);
 
         switch (cvidBinaryDataType)
         {
@@ -1721,6 +1764,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             case MS_64_bit_float:
                 config.precision = BinaryDataEncoder::Precision_64;
                 break;
+            case CVID_Unknown:
+                throw runtime_error("[IO::HandlerBinaryDataArray] Missing binary data type.");
             default:
                 throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
         }
@@ -1733,6 +1778,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             case MS_zlib_compression:
                 config.compression = BinaryDataEncoder::Compression_Zlib;
                 break;
+            case CVID_Unknown:
+                throw runtime_error("[IO::HandlerBinaryDataArray] Missing compression type.");
             default:
                 throw runtime_error("[IO::HandlerBinaryDataArray] Unknown compression.");
         }
@@ -1840,14 +1887,16 @@ struct HandlerSpectrum : public HandlerParamContainer
         {
             spectrum->sourceFilePosition = position;
 
-            getAttribute(attributes, "id", spectrum->id);
             getAttribute(attributes, "index", spectrum->index);
             getAttribute(attributes, "spotID", spectrum->spotID);
             getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
 
+            // note: in the mzML 1.1 data model, id and nativeID are mutually exclusive
             string nativeID;
             getAttribute(attributes, "nativeID", nativeID);
-            if (!nativeID.empty())
+            if (nativeID.empty())
+                getAttribute(attributes, "id", spectrum->id);
+            else
             {
                 try
                 {
@@ -1857,7 +1906,8 @@ struct HandlerSpectrum : public HandlerParamContainer
                 }
                 catch(exception&)
                 {
-                    throw runtime_error("[IO::HandlerSpectrum] Error - mzML 1.0: <spectrum>::nativeID must be an integer");
+                    cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: non-integral <spectrum>::nativeID; id format unknown\n";
+                    spectrum->id = nativeID;
                 }
             }
 
@@ -1875,7 +1925,7 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             return Status::Ok;
         }
-        else if (name == "scanList")
+        else if (name == "scanList" || name == "acquisitionList")
         {
             handlerScanList_.scanList = &spectrum->scanList;
             return Status(Status::Delegate, &handlerScanList_);
