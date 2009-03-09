@@ -55,7 +55,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sfp->id = "sf1";
     sfp->name = "tiny1.RAW";
     sfp->location = "file:///F:/data/Exp01";
-    sfp->set(MS_Xcalibur_RAW_file);
+    sfp->set(MS_Thermo_RAW_file);
     sfp->set(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1");
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 

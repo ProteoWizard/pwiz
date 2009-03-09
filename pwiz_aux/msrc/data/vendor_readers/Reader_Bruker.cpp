@@ -116,14 +116,6 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
     bfs::path p(rootpath);
     msd.id = stringToIDREF(p.leaf());
 
-    switch (format)
-    {
-        case Reader_Bruker_Format_FID: msd.fileDescription.fileContent.set(MS_Bruker_FID_nativeID_format); break;
-        case Reader_Bruker_Format_YEP: msd.fileDescription.fileContent.set(MS_Bruker_Agilent_YEP_nativeID_format); break;
-        case Reader_Bruker_Format_BAF: msd.fileDescription.fileContent.set(MS_Bruker_BAF_nativeID_format); break;
-        case Reader_Bruker_Format_U2:  msd.fileDescription.fileContent.set(MS_scan_number_only_nativeID_format); break;
-    }
-
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
     software->set(MS_CompassXtract);

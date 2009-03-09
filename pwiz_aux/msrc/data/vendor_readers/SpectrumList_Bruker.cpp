@@ -85,6 +85,16 @@ SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
                     size_ += analysis->GetSpectrumCollection(ssdList[i]->GetSpectrumCollectionId())->GetNumberOfSpectra();
             }
             break;
+
+        case Reader_Bruker_Format_BAF_and_U2:
+            size_ = (size_t) compassXtractWrapperPtr_->msSpectrumCollection_->Count;
+            {
+                CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr->lcAnalysis_;
+                CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
+                for (size_t i=0; i < ssdList.size(); ++i)
+                    size_ += analysis->GetSpectrumCollection(ssdList[i]->GetSpectrumCollectionId())->GetNumberOfSpectra();
+            }
+            break;
     }
 
     createIndex();
@@ -182,7 +192,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             compassXtractWrapperPtr_->msSpectrumCollection_ = compassXtractWrapperPtr_->msAnalysis_->MSSpectrumCollection;
             pSpectrum = compassXtractWrapperPtr_->msSpectrumCollection_->GetItem(1);
         }
-        else if (format_ == Reader_Bruker_Format_U2)
+        else if (si.collection > -1)
         {
             // fill the spectrum from the LC interface
             CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
@@ -454,7 +464,6 @@ void addSource(MSData& msd, const bfs::path& sourcePath)
     sourceFile->id = stringToIDREF(sourcePath.string());
     sourceFile->name = sourcePath.leaf();
     sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
-    sourceFile->cvParams.push_back(MS_yep_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
 
@@ -470,26 +479,48 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
             // each fid's source path is a directory but the source file is the fid
             for (size_t i=0; i < sourcePaths_.size(); ++i)
+            {
                 addSource(msd_, sourcePaths_[i] / "fid");
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_file);
+            }
             break;
 
         // a YEP's source path is the same as the source file
         case Reader_Bruker_Format_YEP:
             sourcePaths_.push_back(rootpath_ / "Analysis.yep");
             addSource(msd_, sourcePaths_.back());
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
             break;
 
         // a BAF's source path is the same as the source file
         case Reader_Bruker_Format_BAF:
             sourcePaths_.push_back(rootpath_ / "Analysis.baf");
             addSource(msd_, sourcePaths_.back());
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+            break;
+
+        // a BAF/U2 combo has two sources, with different nativeID formats
+        case Reader_Bruker_Format_BAF_and_U2:
+            sourcePaths_.push_back(rootpath_ / "Analysis.baf");
+            addSource(msd_, sourcePaths_.back());
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+
+            sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
+            addSource(msd_, sourcePaths_.back());
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
+            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
             break;
     }
 }
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
-    if (format_ == Reader_Bruker_Format_U2)
+    if (format_ == Reader_Bruker_Format_U2 ||
+        format_ == Reader_Bruker_Format_BAF_and_U2)
     {
         msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
 
@@ -508,20 +539,24 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
                 si.collection = scId;
                 si.scan = j;
                 si.index = index_.size()-1;
-                si.id = "scan=" + lexical_cast<string>(scId*1000000+j);
+                si.id = "declaration=" + lexical_cast<string>(si.declaration) +
+                        " collection=" + lexical_cast<string>(si.collection) +
+                        " scan=" + lexical_cast<string>(si.scan);
                 idToIndexMap_[si.id] = si.index;
             }
         }
     }
-    else
+
+    if (format_ != Reader_Bruker_Format_U2)
     {
         msd_.fileDescription.fileContent.set(MS_MSn_spectrum);
 
-        index_.resize(size_);
-        for (size_t i=0; i < index_.size(); ++i)
+        size_t remainder = size_ - index_.size();
+        for (size_t i=0; i < remainder; ++i)
         {
-            IndexEntry& si = index_[i];
-            si.index = i;
+            index_.push_back(IndexEntry());
+            IndexEntry& si = index_.back();
+            si.index = index_.size()-1;
             switch (format_)
             {
                 case Reader_Bruker_Format_FID:

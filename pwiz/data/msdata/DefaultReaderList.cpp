@@ -237,6 +237,8 @@ class Reader_mzXML : public Reader
         Serializer_mzXML serializer(config);
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
+        result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
+        result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_file);
         return;
     }
 	virtual const char *getType() const {return "mzXML";}
@@ -259,6 +261,8 @@ class Reader_MGF : public Reader
         Serializer_MGF serializer;
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
+        result.fileDescription.sourceFilePtrs.back()->set(MS_multiple_peak_list_nativeID_format);
+        // TODO: result.fileDescription.sourceFilePtrs.back()->set(MS_Matrix_Science_MGF_file);
         return;
     }
 	virtual const char *getType() const {return "Mascot Generic";}

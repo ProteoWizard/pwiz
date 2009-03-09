@@ -134,7 +134,7 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
     {
         const SourceFile& sf = *msd.fileDescription.sourceFilePtrs[0];
         fileName = sf.location + "/" + sf.name;
-        if (sf.hasCVParam(MS_Xcalibur_RAW_file)) fileType = "RAWData";
+        if (sf.hasCVParam(MS_Thermo_RAW_file)) fileType = "RAWData";
         fileSha1 = sf.cvParam(MS_SHA_1).value;
     }
 
@@ -758,7 +758,6 @@ class Handler_mzXML : public SAXParser::Handler
     {
         if (name == "mzXML" || name == "msRun")
         {
-            msd_.fileDescription.fileContent.set(MS_scan_number_only_nativeID_format);
             return Status::Ok;
         }
         else if (name == "parentFile")

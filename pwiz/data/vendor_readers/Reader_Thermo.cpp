@@ -176,7 +176,6 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    msd.fileDescription.fileContent.set(MS_Thermo_nativeID_format);
     msd.fileDescription.fileContent.set(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
 
     SourceFilePtr sourceFile(new SourceFile);
@@ -186,7 +185,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     string location = bfs::complete(p.branch_path()).string();
     if (location.empty()) location = ".";
     sourceFile->location = string("file://") + location;
-    sourceFile->set(MS_Xcalibur_RAW_file);
+    sourceFile->set(MS_Thermo_nativeID_format);
+    sourceFile->set(MS_Thermo_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = stringToIDREF(p.leaf());

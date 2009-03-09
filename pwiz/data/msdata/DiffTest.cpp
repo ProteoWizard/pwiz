@@ -274,7 +274,7 @@ void testFileDescription()
     SourceFilePtr source1(new SourceFile("id1"));
     SourceFilePtr source2a(new SourceFile("id2"));
     SourceFilePtr source2b(new SourceFile("id2"));
-    source2a->cvParams.push_back(MS_Xcalibur_RAW_file);
+    source2a->cvParams.push_back(MS_Thermo_RAW_file);
 
     a.sourceFilePtrs.push_back(source1);
     b.sourceFilePtrs.push_back(source1);
@@ -298,9 +298,9 @@ void testFileDescription()
     unit_assert(diff.b_a.contacts[0].cvParam(MS_contact_name).value == "Isabelle Lynn");
 
     unit_assert(diff.a_b.sourceFilePtrs.size() == 1);
-    unit_assert(diff.a_b.sourceFilePtrs[0]->hasCVParam(MS_Xcalibur_RAW_file));
+    unit_assert(diff.a_b.sourceFilePtrs[0]->hasCVParam(MS_Thermo_RAW_file));
     unit_assert(diff.b_a.sourceFilePtrs.size() == 1);
-    unit_assert(!diff.b_a.sourceFilePtrs[0]->hasCVParam(MS_Xcalibur_RAW_file));
+    unit_assert(!diff.b_a.sourceFilePtrs[0]->hasCVParam(MS_Thermo_RAW_file));
 }
 
 

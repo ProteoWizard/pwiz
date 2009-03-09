@@ -32,26 +32,32 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [msdata/psi-ms.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.16.0
-//   remark: release date: 2009-02-13
+//   remark: version: 1.18.0
+//   remark: release date: 2009-03-09
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 //
-// [msdata/unit.obo]
-//   format-version: 1.0
-//   date: 20:12:2007 16:24
-//   saved-by: George Gkoutos
-//   auto-generated-by: OBO-Edit 1.100-beta22
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+//   format-version: 1.2
+//   date: 04:03:2009 17:16
+//   saved-by: george gkoutos
+//   auto-generated-by: OBO-Edit 2.000-beta55
+//   subsetdef: abnormal_slim "Abnormal/normal slim"
+//   subsetdef: absent_slim "Absent/present slim"
+//   subsetdef: attribute_slim "Attribute slim"
+//   subsetdef: cell_quality "cell_quality"
+//   subsetdef: relational_slim "Relational slim: types of quality that require an additional entity in order to exist"
+//   subsetdef: value_slim "Value slim"
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
@@ -1867,8 +1873,8 @@ enum PWIZ_API_DECL CVID
     /// spectrum representation: Way in which the spectrum is represented, either with regularly spaced data points or with a list of centroided peaks.
     MS_spectrum_representation = 1000525,
 
-    /// MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.
-    MS_MassLynx_raw_format = 1000526,
+    /// Waters DAT file: Waters DAT file format, storing a single function recorded by the instrument in a Waters RAW directory.
+    MS_Waters_DAT_file = 1000526,
 
     /// highest observed m/z: Highest m/z value observed in the m/z array.
     MS_highest_observed_m_z = 1000527,
@@ -1975,23 +1981,23 @@ enum PWIZ_API_DECL CVID
     /// data file checksum type: Checksum is a form of redundancy check, a simple way to protect the integrity of data by detecting errors in data.
     MS_data_file_checksum_type = 1000561,
 
-    /// wiff file: Applied Biosystems wiff file format.
-    MS_wiff_file = 1000562,
+    /// ABI WIFF file: Applied Biosystems WIFF file format.
+    MS_ABI_WIFF_file = 1000562,
 
-    /// Xcalibur RAW file: Thermo Finnigan RAW file format.
-    MS_Xcalibur_RAW_file = 1000563,
+    /// Thermo RAW file: Thermo Scientific RAW file format.
+    MS_Thermo_RAW_file = 1000563,
 
-    /// mzData file: Proteomics Standards Inititative mzData file format.
-    MS_mzData_file = 1000564,
+    /// PSI mzData file: Proteomics Standards Inititative mzData file format.
+    MS_PSI_mzData_file = 1000564,
 
-    /// pkl file: Micromass pkl file format.
-    MS_pkl_file = 1000565,
+    /// Micromass PKL file: Micromass PKL file format.
+    MS_Micromass_PKL_file = 1000565,
 
-    /// mzXML file: Institute of Systems Biology mzXML file format.
-    MS_mzXML_file = 1000566,
+    /// ISB mzXML file: Institute of Systems Biology mzXML file format.
+    MS_ISB_mzXML_file = 1000566,
 
-    /// yep file: Bruker yep file format.
-    MS_yep_file = 1000567,
+    /// Bruker/Agilent YEP file: Bruker/Agilent YEP file format.
+    MS_Bruker_Agilent_YEP_file = 1000567,
 
     /// MD5: MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files.
     MS_MD5 = 1000568,
@@ -2179,8 +2185,8 @@ enum PWIZ_API_DECL CVID
     /// AXIMA Assurance Linear MALDI-TOF: Shimadzu Biotech AXIMA Assurance Linear MALDI-TOF MS.
     MS_AXIMA_Assurance_Linear_MALDI_TOF = 1000612,
 
-    /// dta file: Peak list file format that should be better defined FIXME.
-    MS_dta_file = 1000613,
+    /// DTA file: Sequest DTA file format.
+    MS_DTA_file = 1000613,
 
     /// ProteinLynx Global Server mass spectrum XML file: Peak list file format used by ProteinLynx Global Server.
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
@@ -2197,11 +2203,11 @@ enum PWIZ_API_DECL CVID
     /// wavelength array: A data array of electromagnetic radiation wavelength values.
     MS_wavelength_array = 1000617,
 
-    /// highest wavelength value: Highest wavelength value observed in the uv/vis spectrum.
-    MS_highest_wavelength_value = 1000618,
+    /// highest observed wavelength: Highest wavelength observed in an EMR spectrum.
+    MS_highest_observed_wavelength = 1000618,
 
-    /// lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.
-    MS_lowest_wavelength_value = 1000619,
+    /// lowest observed wavelength: Lowest wavelength observed in an EMR spectrum.
+    MS_lowest_observed_wavelength = 1000619,
 
     /// photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
     MS_photodiode_array_detector = 1000621,
@@ -2817,6 +2823,39 @@ enum PWIZ_API_DECL CVID
 
     /// counts per second: The number of counted events observed per second in one or a group of elements of a detector.
     MS_counts_per_second = 1000814,
+
+    /// Bruker BAF file: Bruker BAF raw file format.
+    MS_Bruker_BAF_file = 1000815,
+
+    /// Bruker U2 file: Bruker HyStar U2 file format.
+    MS_Bruker_U2_file = 1000816,
+
+    /// HyStar: Bruker software for hyphenated experiments.
+    MS_HyStar = 1000817,
+
+    /// Acquity UPLC PDA: Acquity UPLC Photodiode Array Detector.
+    MS_Acquity_UPLC_PDA = 1000818,
+
+    /// Acquity UPLC FLR: Acquity UPLC Fluorescence Detector.
+    MS_Acquity_UPLC_FLR = 1000819,
+
+    /// flow rate array: A data array of flow rate measurements.
+    MS_flow_rate_array = 1000820,
+
+    /// pressure array: A data array of pressure measurements.
+    MS_pressure_array = 1000821,
+
+    /// temperature array: A data array of temperature measurements.
+    MS_temperature_array = 1000822,
+
+    /// Bruker U2 nativeID format: declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.
+    MS_Bruker_U2_nativeID_format = 1000823,
+
+    /// no nativeID format: No nativeID format indicates that the file tagged with this term does not contain spectra that can have a nativeID format.
+    MS_no_nativeID_format = 1000824,
+
+    /// Bruker FID file: Bruker FID file format.
+    MS_Bruker_FID_file = 1000825,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
@@ -3617,7 +3656,13 @@ enum PWIZ_API_DECL CVID
     UO_watt_per_meter_kelvin = 100000265,
 
     /// electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.
-    UO_electronvolt = 100000266
+    UO_electronvolt = 100000266,
+
+    /// electric field strength unit: The electric field strength is a derived unit which is a measure of the potential difference between two points some distance apart.
+    UO_electric_field_strength_unit = 100000267,
+
+    /// volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.
+    UO_volt_per_meter = 100000268
 }; // enum CVID
 
 

@@ -86,7 +86,6 @@ void fillInMetadata(const string& rawpath, MSData& msd)
     cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
     cv.version = "1.0";
 
-    msd.fileDescription.fileContent.set(MS_Waters_nativeID_format);
 
     bfs::path p(rawpath);
     for (bfs::directory_iterator itr(p); itr != bfs::directory_iterator(); ++itr)
@@ -96,7 +95,13 @@ void fillInMetadata(const string& rawpath, MSData& msd)
         sourceFile->id = stringToIDREF(sourcePath.leaf());
         sourceFile->name = sourcePath.leaf();
         sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
-        //sourceFile->cvParams.push_back(MS_Waters_RAW_file);
+        if (bal::to_lower_copy(bfs::extension(sourcePath)) == ".dat")
+        {
+            sourceFile->set(MS_Waters_nativeID_format);
+            sourceFile->set(MS_Waters_DAT_file);
+        }
+        else
+            sourceFile->set(MS_no_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
     msd.id = stringToIDREF(p.leaf());

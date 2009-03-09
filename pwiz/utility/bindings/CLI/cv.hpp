@@ -39,8 +39,8 @@
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.14.0
-//   remark: release date: 2009-02-10
+//   remark: version: 1.18.0
+//   remark: release date: 2009-03-09
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
@@ -48,10 +48,16 @@
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 //
 // [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
-//   format-version: 1.0
-//   date: 20:12:2007 16:24
-//   saved-by: George Gkoutos
-//   auto-generated-by: OBO-Edit 1.100-beta22
+//   format-version: 1.2
+//   date: 04:03:2009 17:16
+//   saved-by: george gkoutos
+//   auto-generated-by: OBO-Edit 2.000-beta55
+//   subsetdef: abnormal_slim "Abnormal/normal slim"
+//   subsetdef: absent_slim "Absent/present slim"
+//   subsetdef: attribute_slim "Attribute slim"
+//   subsetdef: cell_quality "cell_quality"
+//   subsetdef: relational_slim "Relational slim: types of quality that require an additional entity in order to exist"
+//   subsetdef: value_slim "Value slim"
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
@@ -110,7 +116,7 @@ public enum class CVID
     /// <summary>accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.</summary>
     MS_accuracy = 1000014,
 
-    /// <summary>scan rate: Rate in (m/z)/sec for scanning analyzers.</summary>
+    /// <summary>scan rate: Rate in Th/sec for scanning analyzers.</summary>
     MS_scan_rate = 1000015,
 
     /// <summary>scan time: The time that an analyzer started a scan, relative to the start of the run.</summary>
@@ -1868,13 +1874,13 @@ public enum class CVID
     /// <summary>spectrum representation: Way in which the spectrum is represented, either with regularly spaced data points or with a list of centroided peaks.</summary>
     MS_spectrum_representation = 1000525,
 
-    /// <summary>MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.</summary>
-    MS_MassLynx_raw_format = 1000526,
+    /// <summary>Waters DAT file: Waters DAT file format, storing a single function recorded by the instrument in a Waters RAW directory.</summary>
+    MS_Waters_DAT_file = 1000526,
 
-    /// <summary>highest observed m/z: Highest m/z value observed in the mass spectrum.</summary>
+    /// <summary>highest observed m/z: Highest m/z value observed in the m/z array.</summary>
     MS_highest_observed_m_z = 1000527,
 
-    /// <summary>lowest observed m/z: Lowest m/z value observed in the mass spectrum.</summary>
+    /// <summary>lowest observed m/z: Lowest m/z value observed in the m/z array.</summary>
     MS_lowest_observed_m_z = 1000528,
 
     /// <summary>instrument serial number: Serial Number of the instrument.</summary>
@@ -1976,23 +1982,23 @@ public enum class CVID
     /// <summary>data file checksum type: Checksum is a form of redundancy check, a simple way to protect the integrity of data by detecting errors in data.</summary>
     MS_data_file_checksum_type = 1000561,
 
-    /// <summary>wiff file: Applied Biosystems wiff file format.</summary>
-    MS_wiff_file = 1000562,
+    /// <summary>ABI WIFF file: Applied Biosystems WIFF file format.</summary>
+    MS_ABI_WIFF_file = 1000562,
 
-    /// <summary>Xcalibur RAW file: Thermo Finnigan RAW file format.</summary>
-    MS_Xcalibur_RAW_file = 1000563,
+    /// <summary>Thermo RAW file: Thermo Scientific RAW file format.</summary>
+    MS_Thermo_RAW_file = 1000563,
 
-    /// <summary>mzData file: Proteomics Standards Inititative mzData file format.</summary>
-    MS_mzData_file = 1000564,
+    /// <summary>PSI mzData file: Proteomics Standards Inititative mzData file format.</summary>
+    MS_PSI_mzData_file = 1000564,
 
-    /// <summary>pkl file: Micromass pkl file format.</summary>
-    MS_pkl_file = 1000565,
+    /// <summary>Micromass PKL file: Micromass PKL file format.</summary>
+    MS_Micromass_PKL_file = 1000565,
 
-    /// <summary>mzXML file: Institute of Systems Biology mzXML file format.</summary>
-    MS_mzXML_file = 1000566,
+    /// <summary>ISB mzXML file: Institute of Systems Biology mzXML file format.</summary>
+    MS_ISB_mzXML_file = 1000566,
 
-    /// <summary>yep file: Bruker yep file format.</summary>
-    MS_yep_file = 1000567,
+    /// <summary>Bruker/Agilent YEP file: Bruker/Agilent YEP file format.</summary>
+    MS_Bruker_Agilent_YEP_file = 1000567,
 
     /// <summary>MD5: MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files.</summary>
     MS_MD5 = 1000568,
@@ -2180,8 +2186,8 @@ public enum class CVID
     /// <summary>AXIMA Assurance Linear MALDI-TOF: Shimadzu Biotech AXIMA Assurance Linear MALDI-TOF MS.</summary>
     MS_AXIMA_Assurance_Linear_MALDI_TOF = 1000612,
 
-    /// <summary>dta file: Peak list file format that should be better defined FIXME.</summary>
-    MS_dta_file = 1000613,
+    /// <summary>DTA file: Sequest DTA file format.</summary>
+    MS_DTA_file = 1000613,
 
     /// <summary>ProteinLynx Global Server mass spectrum XML file: Peak list file format used by ProteinLynx Global Server.</summary>
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
@@ -2198,11 +2204,11 @@ public enum class CVID
     /// <summary>wavelength array: A data array of electromagnetic radiation wavelength values.</summary>
     MS_wavelength_array = 1000617,
 
-    /// <summary>highest wavelength value: Highest wavelength value observed in the uv/vis spectrum.</summary>
-    MS_highest_wavelength_value = 1000618,
+    /// <summary>highest observed wavelength: Highest wavelength observed in an EMR spectrum.</summary>
+    MS_highest_observed_wavelength = 1000618,
 
-    /// <summary>lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.</summary>
-    MS_lowest_wavelength_value = 1000619,
+    /// <summary>lowest observed wavelength: Lowest wavelength observed in an EMR spectrum.</summary>
+    MS_lowest_observed_wavelength = 1000619,
 
     /// <summary>photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.</summary>
     MS_photodiode_array_detector = 1000621,
@@ -2791,6 +2797,66 @@ public enum class CVID
 
     /// <summary>absorption spectrum: A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited.</summary>
     MS_absorption_spectrum = 1000806,
+
+    /// <summary>Th/s: Unit describing the scan rate of a spectrum in Thomson per second.</summary>
+    MS_Th_s = 1000807,
+
+    /// <summary>chromatogram attribute: Chromatogram properties that are associated with a value.</summary>
+    MS_chromatogram_attribute = 1000808,
+
+    /// <summary>chromatogram title: A free-form text title describing a chromatogram.</summary>
+    MS_chromatogram_title = 1000809,
+
+    /// <summary>mass chromatogram: A plot of the relative abundance of a beam or other collection of ions as a function of the retention time.</summary>
+    MS_mass_chromatogram = 1000810,
+
+    /// <summary>electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.</summary>
+    MS_electromagnetic_radiation_chromatogram_ = 1000811,
+
+    /// <summary>electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.</summary>
+    MS_EMR_radiation_chromatogram = MS_electromagnetic_radiation_chromatogram_,
+
+    /// <summary>absorption chromatogram : The measurement of light absorbed by the sample as a function of the retention time.</summary>
+    MS_absorption_chromatogram_ = 1000812,
+
+    /// <summary>emission chromatogram  : The measurement of light emitted by the sample as a function of the retention time.</summary>
+    MS_emission_chromatogram__ = 1000813,
+
+    /// <summary>counts per second: The number of counted events observed per second in one or a group of elements of a detector.</summary>
+    MS_counts_per_second = 1000814,
+
+    /// <summary>Bruker BAF file: Bruker BAF raw file format.</summary>
+    MS_Bruker_BAF_file = 1000815,
+
+    /// <summary>Bruker U2 file: Bruker HyStar U2 file format.</summary>
+    MS_Bruker_U2_file = 1000816,
+
+    /// <summary>HyStar: Bruker software for hyphenated experiments.</summary>
+    MS_HyStar = 1000817,
+
+    /// <summary>Acquity UPLC PDA: Acquity UPLC Photodiode Array Detector.</summary>
+    MS_Acquity_UPLC_PDA = 1000818,
+
+    /// <summary>Acquity UPLC FLR: Acquity UPLC Fluorescence Detector.</summary>
+    MS_Acquity_UPLC_FLR = 1000819,
+
+    /// <summary>flow rate array: A data array of flow rate measurements.</summary>
+    MS_flow_rate_array = 1000820,
+
+    /// <summary>pressure array: A data array of pressure measurements.</summary>
+    MS_pressure_array = 1000821,
+
+    /// <summary>temperature array: A data array of temperature measurements.</summary>
+    MS_temperature_array = 1000822,
+
+    /// <summary>Bruker U2 nativeID format: declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_U2_nativeID_format = 1000823,
+
+    /// <summary>no nativeID format: No nativeID format indicates that the file tagged with this term does not contain spectra that can have a nativeID format.</summary>
+    MS_no_nativeID_format = 1000824,
+
+    /// <summary>Bruker FID file: Bruker FID file format.</summary>
+    MS_Bruker_FID_file = 1000825,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,
@@ -3591,7 +3657,13 @@ public enum class CVID
     UO_watt_per_meter_kelvin = 100000265,
 
     /// <summary>electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.</summary>
-    UO_electronvolt = 100000266
+    UO_electronvolt = 100000266,
+
+    /// <summary>electric field strength unit: The electric field strength is a derived unit which is a measure of the potential difference between two points some distance apart.</summary>
+    UO_electric_field_strength_unit = 100000267,
+
+    /// <summary>volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.</summary>
+    UO_volt_per_meter = 100000268
 }; // enum CVID
 
 

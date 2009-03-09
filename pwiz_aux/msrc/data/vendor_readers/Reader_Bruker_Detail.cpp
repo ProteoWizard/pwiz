@@ -44,7 +44,8 @@ Reader_Bruker_Format format(const string& path)
     // all Bruker formats are directory-based
     if (!bfs::is_directory(sourcePath))
     {
-        // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf
+        // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf/.U2
+        // Note that direct paths to baf or u2 will fail to find a baf/u2 hybrid source
         std::string leaf = sourcePath.leaf();
         bal::to_lower(leaf);
         if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
@@ -91,7 +92,14 @@ Reader_Bruker_Format format(const string& path)
     // Check for baf-based data;
     // The directory should have a file named "Analysis.baf"
     if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
-        return Reader_Bruker_Format_BAF;
+    {
+        // Check for baf/u2 hybrid data
+        string sourceDirectory = *(--sourcePath.end());
+        if (bfs::exists(sourcePath / (sourceDirectory.substr(0, sourceDirectory.length()-2) + ".u2")))
+            return Reader_Bruker_Format_BAF_and_U2;
+        else
+            return Reader_Bruker_Format_BAF;
+    }
 
     // Check for u2-based data;
     // The directory should have a file named "<directory-name - ".d">.u2"
@@ -136,7 +144,9 @@ CompassXtractWrapper::CompassXtractWrapper(const bfs::path& sourcePath, Reader_B
         msAnalysis_->Open(sourcePath.string().c_str());
         msSpectrumCollection_ = msAnalysis_->GetMSSpectrumCollection();
     }
-    else
+
+    if (format_ == Reader_Bruker_Format_U2 ||
+        format_ == Reader_Bruker_Format_BAF_and_U2)
     {
         // use and check for a successful creation with HRESULT
         BDal_CXt_Lc_Interfaces::IAnalysisFactoryPtr lcAnalysisFactory;
@@ -190,7 +200,9 @@ CompassXtractWrapper::~CompassXtractWrapper()
         msAnalysis_->Release();
         msAnalysis_.Detach();
     }
-    else
+    
+    if (format_ == Reader_Bruker_Format_U2 ||
+        format_ == Reader_Bruker_Format_BAF_and_U2)
     {
         lcAnalysis_->Close();
     }

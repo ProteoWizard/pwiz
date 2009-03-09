@@ -195,7 +195,7 @@ void testFileDescription()
     a.fileContent.cvParams.push_back(MS_MSn_spectrum);
     
     SourceFilePtr sf(new SourceFile("1", "tiny1.RAW", "file://F:/data/Exp01"));
-    sf->cvParams.push_back(MS_Xcalibur_RAW_file);
+    sf->cvParams.push_back(MS_Thermo_RAW_file);
     sf->cvParams.push_back(MS_SHA_1);
     a.sourceFilePtrs.push_back(sf);
 
@@ -898,7 +898,7 @@ void initializeTestData(MSData& msd)
     sfp->id = "1";
     sfp->name = "tiny1.RAW";
     sfp->location = "file://F:/data/Exp01";
-    sfp->cvParams.push_back(MS_Xcalibur_RAW_file);
+    sfp->cvParams.push_back(MS_Thermo_RAW_file);
     sfp->cvParams.push_back(CVParam(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1"));
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
