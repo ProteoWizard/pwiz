@@ -4,6 +4,7 @@ psimsDestination = "..\..\pwiz\data\msdata\psi-ms.obo"
 Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")
 
 objXMLHTTP.open "GET", psimsURL, false
+objXMLHTTP.setRequestHeader "If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT"
 objXMLHTTP.send()
 
 If objXMLHTTP.Status = 200 Then
