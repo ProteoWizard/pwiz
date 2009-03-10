@@ -301,6 +301,10 @@ SpectrumPtr SpectrumList_BTDXImpl::spectrum(size_t index, bool getBinaryData) co
     result->set(MS_MSn_spectrum);
     result->set(MS_centroid_spectrum);
 
+    result->scanList.set(MS_no_combination);
+    result->scanList.scans.push_back(Scan());
+    //Scan& scan = result->scanList.scans[0];
+
     is_->seekg(offset_to_position(index_[index].sourceFilePosition));
     if (!*is_)
         throw runtime_error("[SpectrumList_BTDX::spectrum()] Error seeking to <cmpd>.");

@@ -308,9 +308,10 @@ class HandlerScan : public SAXParser::Handler
             peaksCount_ = lexical_cast<unsigned int>(peaksCount);
             spectrum_.defaultArrayLength = peaksCount_;
 
+
+            spectrum_.scanList.set(MS_no_combination);
             spectrum_.scanList.scans.push_back(Scan());
             Scan& scan = spectrum_.scanList.scans.back();
-            scan.set(MS_no_combination);
 
             scan.set(MS_preset_scan_configuration, scanEvent);
 

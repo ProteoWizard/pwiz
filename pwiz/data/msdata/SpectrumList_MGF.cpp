@@ -133,6 +133,11 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         spectrum.set(MS_MSn_spectrum);
         spectrum.set(MS_ms_level, 2);
         spectrum.set(MS_centroid_spectrum);
+
+        spectrum.scanList.set(MS_no_combination);
+        spectrum.scanList.scans.push_back(Scan());
+        Scan& scan = spectrum.scanList.scans[0];
+
         spectrum.precursors.push_back(Precursor());
         Precursor& precursor = spectrum.precursors.back();
         precursor.selectedIons.push_back(SelectedIon());
@@ -216,8 +221,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 bal::trim(value);
                                 // TODO: handle (multiple) time ranges?
                                 double scanTime = lexical_cast<double>(value);
-                                spectrum.scanList.scans.push_back(Scan());
-                                spectrum.scanList.scans.back().set(MS_scan_time, scanTime, UO_second);
+                                scan.set(MS_scan_time, scanTime, UO_second);
                             }
                             else
 				            {

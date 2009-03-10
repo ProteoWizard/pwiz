@@ -151,9 +151,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
         result->spotID = (format("%dx%d") % laserAimX % laserAimY).str();
     }
 
+    result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
-    scan.set(MS_no_combination);
 
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));

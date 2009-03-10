@@ -160,9 +160,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     result->index = si.index;
     result->id = si.id;
 
+    result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
-    scan.set(MS_no_combination);
 
     try
     {
