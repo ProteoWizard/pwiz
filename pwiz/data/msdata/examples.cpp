@@ -49,7 +49,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
     fc.set(MS_centroid_spectrum);
-    fc.set(MS_scan_number_only_nativeID_format);
 
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "sf1";
@@ -57,11 +56,13 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sfp->location = "file:///F:/data/Exp01";
     sfp->set(MS_Thermo_RAW_file);
     sfp->set(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1");
+    sfp->set(MS_scan_number_only_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/settings/"));
     sfp_parameters->set(MS_parameter_file);
     sfp_parameters->set(MS_SHA_1, "unknown");
+    sfp_parameters->set(MS_no_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
     msd.fileDescription.contacts.resize(1);
@@ -416,6 +417,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/example/"));
     sfp_parameters->set(MS_parameter_file);
     sfp_parameters->set(MS_SHA_1, "unknown");
+    sfp_parameters->set(MS_no_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
     Contact contact;
