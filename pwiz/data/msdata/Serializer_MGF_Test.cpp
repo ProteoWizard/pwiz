@@ -24,9 +24,7 @@
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 
 using namespace std;
@@ -43,7 +41,11 @@ void initializeTinyMGF(MSData& msd)
     FileContent& fc = msd.fileDescription.fileContent;
     fc.set(MS_MSn_spectrum);
     fc.set(MS_centroid_spectrum);
-    fc.set(MS_multiple_peak_list_nativeID_format);
+
+    SourceFilePtr sourceFile(new SourceFile);
+    sourceFile->set(MS_multiple_peak_list_nativeID_format);
+    // TODO: sourceFile->set(MS_Matrix_Science_MGF_file);
+    msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
     msd.run.spectrumListPtr = spectrumList;
@@ -70,6 +72,7 @@ void initializeTinyMGF(MSData& msd)
     precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
 
+    s20.scanList.set(MS_no_combination);
     s20.scanList.scans.push_back(Scan());
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.set(MS_scan_time, 4, UO_second);
@@ -102,7 +105,11 @@ void testWriteRead(const MSData& msd)
     MSData msd2;
     serializer.read(iss, msd2);
 
-    Diff<MSData> diff(msd, msd2);
+    DiffConfig diffConfig;
+    diffConfig.ignoreMetadata = true;
+    diffConfig.ignoreChromatograms = true;
+
+    Diff<MSData> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 

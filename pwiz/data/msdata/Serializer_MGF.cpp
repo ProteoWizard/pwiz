@@ -156,7 +156,6 @@ void Serializer_MGF::Impl::read(shared_ptr<istream> is, MSData& msd) const
     // we treat all MGF data is MSn (PMF MGFs not currently supported)
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);
     msd.fileDescription.fileContent.set(MS_centroid_spectrum);
-    msd.fileDescription.fileContent.set(MS_multiple_peak_list_nativeID_format);
     msd.run.spectrumListPtr = SpectrumList_MGF::create(is, msd);
     msd.run.chromatogramListPtr.reset(new ChromatogramListSimple);
 }
