@@ -122,7 +122,7 @@ namespace seems
 
             spy = new EventSpy( "GraphForm", this );
             //spy.DumpEvents( this.GetType() );
-            spy.SpyEvent += new SpyEventHandler( spy_SpyEvent );
+            spy.SpyEvent += new SpyEventHandler( seemsForm.LogSpyEvent );
 
             paneList = new PaneList();
             paneLayout = PaneLayout.SingleColumn;
@@ -147,11 +147,16 @@ namespace seems
             msGraphControl.PanButtons2 = MouseButtons.None;
 
             msGraphControl.ContextMenuBuilder += new MSGraphControl.ContextMenuBuilderEventHandler( GraphForm_ContextMenuBuilder );
+
+            ContextMenuStrip dummyMenu = new ContextMenuStrip();
+            dummyMenu.Opening += new CancelEventHandler( foo_Opening );
+            TabPageContextMenuStrip = dummyMenu;
 		}
 
-        void spy_SpyEvent( object sender, SpyTools.SpyEventArgs e )
+        void foo_Opening( object sender, CancelEventArgs e )
         {
-            seemsForm.LogSpyEvent( sender, e );
+            // close the active form when the tab page strip is right-clicked
+            Close();
         }
 
         bool msGraphControl_MouseMoveEvent( ZedGraphControl sender, MouseEventArgs e )

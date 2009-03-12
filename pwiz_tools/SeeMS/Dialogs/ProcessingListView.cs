@@ -381,7 +381,7 @@ namespace seems
             {
                 foreach( SelectedIon si in p.selectedIons )
                 {
-                    double mz = (double) si.cvParam( CVID.MS_m_z ).value;
+                    double mz = (double) si.cvParam( CVID.MS_selected_ion_m_z ).value;
                     PointDataMap<double>.Enumerator itr = mziMap.LowerBound( mz - 4.0 );
                     if( itr != null && itr.IsValid )
                     {

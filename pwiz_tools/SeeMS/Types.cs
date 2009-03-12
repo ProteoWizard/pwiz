@@ -388,7 +388,7 @@ namespace seems
                 foreach( Precursor p in Element.precursors )
                     foreach( SelectedIon si in p.selectedIons )
                     {
-                        double precursorMz = (double) si.cvParam( CVID.MS_m_z ).value;
+                        double precursorMz = (double) si.cvParam( CVID.MS_selected_ion_m_z ).value;
                         int precursorCharge = 0;
                         CVParam precursorChargeParam = si.cvParam( CVID.MS_charge_state );
                         if( precursorChargeParam.empty() )
@@ -432,8 +432,8 @@ namespace seems
                 using( Spectrum element = spectrumList.spectrum( index, true ) )
                 {
                     Map<double, double> sortedFullPointList = new Map<double, double>();
-                    IList<double> mzList = element.getMZArray().data;
-                    IList<double> intensityList = element.getIntensityArray().data;
+                    IList<double> mzList = element.binaryDataArrays[0].data;
+                    IList<double> intensityList = element.binaryDataArrays[1].data;
                     int arrayLength = mzList.Count;
                     for( int i = 0; i < arrayLength; ++i )
                         sortedFullPointList[mzList[i]] = intensityList[i];
@@ -449,7 +449,7 @@ namespace seems
             get
             {
                 CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
-                if( !representation.empty() && representation.cvid == CVID.MS_profile_mass_spectrum )
+                if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
                     return MSGraph.MSGraphItemDrawMethod.Line;
                 else
                     return MSGraph.MSGraphItemDrawMethod.Stick;

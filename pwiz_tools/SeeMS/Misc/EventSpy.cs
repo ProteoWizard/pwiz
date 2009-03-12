@@ -145,6 +145,9 @@ namespace SpyTools
 
 			// loop over all events to create each handler
 			foreach (EventInfo ev in allEvents) {
+                if( ev.Name.Contains( "MouseMove" ) )
+                    continue;
+
 				// get event handler (delegate) Type
 				Type delgType = ev.EventHandlerType; 
 
@@ -167,7 +170,7 @@ namespace SpyTools
 				MethodBuilder mthd = helperClass.DefineMethod(
 					mthname,
 					MethodAttributes.Public,
-					typeof(void),
+                    invoke.ReturnType,
 					mthparams);
 
 				// Now generate the MSIL as described in comment above.
@@ -189,6 +192,9 @@ namespace SpyTools
 
 			// Now hook up each event handler to its event in the target object.
 			foreach (EventInfo ev in allEvents) {
+                if( ev.Name.Contains( "MouseMove" ) )
+                    continue;
+
 				ev.AddEventHandler(o,
 					Delegate.CreateDelegate(ev.EventHandlerType,
 					spyimpl, "On" + ev.Name));

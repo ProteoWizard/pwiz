@@ -55,7 +55,7 @@ namespace seems
 		{
             chromatogramList = new Dictionary<int, Chromatogram>();
 
-            typeDataGridViewTextBoxColumn.ToolTipText = new CVInfo( CVID.MS_chromatogram_type ).def;
+            typeDataGridViewTextBoxColumn.ToolTipText = new CVTermInfo( CVID.MS_chromatogram_type ).def;
 		}
 
         private void gridView_DataBindingComplete( object sender, DataGridViewBindingCompleteEventArgs e )

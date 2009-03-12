@@ -4,8 +4,8 @@
         examples
     </assembly>
     <members>
-        <member name="M:pwiz.msdata.Reader_Thermo.hasRAWHeader(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
-checks header for "Finnigan" wide char string
+        <member name="T:pwiz.msdata.FullReaderList">
+extension of ExtendedReaderList to include pwiz_aux Readers  
 </member>
         <member name="T:pwiz.msdata.ExtendedReaderList">
 default ReaderList, extended to include vendor readers
@@ -241,9 +241,14 @@ keep the {threshold} [most|least] intense data points
 - if the {threshold} falls within equally intense data points, all data points with that intensity are removed
 </summary>
         </member>
-        <member name="T:pwiz.CLI.analysis.SpectrumList_SavitzkyGolaySmoother">
+        <member name="T:pwiz.CLI.analysis.SpectrumList_PeakPicker">
             <summary>
-SpectrumList implementation to smooth intensities with SG method
+SpectrumList implementation to replace peak profiles with picked peaks
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.analysis.SpectrumList_Smoother">
+            <summary>
+SpectrumList implementation to smooth intensities
 </summary>
         </member>
         <member name="T:pwiz.CLI.analysis.SpectrumList_NativeCentroider">
@@ -307,8 +312,55 @@ determines the orientation of the thresholding
         <member name="T:pwiz.analysis.ThresholdingBy_Type">
 determines the method of thresholding and the meaning of the threshold value
 </member>
-        <member name="T:pwiz.analysis.SpectrumList_SavitzkyGolaySmoother">
-SpectrumList implementation to return spectral data smoothed with the Savitzky-Golay method
+        <member name="T:pwiz.analysis.SpectrumList_PeakPicker">
+SpectrumList implementation to replace peak profiles with picked peaks
+</member>
+        <member name="M:pwiz.analysis.LocalMaximumPeakDetector.detect(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;pwiz.analysis.Peak&gt;*)">
+finds all local maxima, i.e. any point that has a greater y value than both
+of its neighboring points;
+note: the peaks array, if non-NULL, only provides x and y values
+</member>
+        <member name="M:pwiz.analysis.PeakDetector.detect(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;pwiz.analysis.Peak&gt;*)">
+find peaks in the signal profile described by the x and y vectors
+</member>
+        <member name="T:pwiz.analysis.Peak">
+represents some generic metadata about a peak detected in a signal
+</member>
+        <member name="T:pwiz.analysis.SpectrumList_Smoother">
+SpectrumList implementation to return smoothed spectral data
+</member>
+        <member name="M:pwiz.analysis.WhittakerSmoother.smooth_copy(std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values and copy back to the input vectors using Whittaker algorithm;
+note: in the case of sparse vectors, smoothing may fill in samples not present
+      in the original data, so make sure to check the size of the output vectors
+</member>
+        <member name="M:pwiz.analysis.WhittakerSmoother.smooth(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values to existing vectors using Whittaker algorithm;
+note: in the case of sparse vectors, smoothing may fill in samples not present
+      in the original data, so make sure to check the size of the output vectors
+</member>
+        <member name="M:pwiz.analysis.SavitzkyGolaySmoother.smooth_copy(std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values and copy back to the input vectors using Savitzky-Golay algorithm;
+preconditions:
+- samples within the window must be (approximately) equally spaced
+</member>
+        <member name="M:pwiz.analysis.SavitzkyGolaySmoother.smooth(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values to existing vectors using Savitzky-Golay algorithm;
+preconditions:
+- samples within the window must be (approximately) equally spaced
+</member>
+        <member name="M:pwiz.analysis.Smoother.smooth_copy(std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values and copy back to the input vectors;
+note: in the case of sparse vectors, smoothing may fill in samples not present
+      in the original data, so make sure to check the size of the output vectors
+</member>
+        <member name="M:pwiz.analysis.Smoother.smooth(std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,std.vector&lt;System.Double&gt;*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+smooth y values to existing vectors;
+note: in the case of sparse vectors, smoothing may fill in samples not present
+      in the original data, so make sure to check the size of the output vectors
+</member>
+        <member name="T:pwiz.analysis.Smoother">
+interface for a one-dimensional smoothing algorithm
 </member>
         <member name="T:pwiz.analysis.SpectrumList_NativeCentroider">
 SpectrumList implementation to return native centroided spectrum data
@@ -903,6 +955,11 @@ returns true iff the element contains no params and all members are empty or nul
 list of binary data arrays.
 </summary>
         </member>
+        <member name="P:pwiz.CLI.msdata.Spectrum.products">
+            <summary>
+list and descriptions of products of the spectrum currently being described.
+</summary>
+        </member>
         <member name="P:pwiz.CLI.msdata.Spectrum.precursors">
             <summary>
 list and descriptions of precursors to the spectrum currently being described.
@@ -1041,6 +1098,21 @@ The structure into which encoded binary data goes. Byte ordering is always littl
         <member name="T:pwiz.CLI.msdata.BinaryData">
             <summary>
 A list of doubles; implements the IList&lt;double&gt; interface
+</summary>
+        </member>
+        <member name="T:pwiz.CLI.msdata.ProductList">
+            <summary>
+A list of Product references; implements the IList&lt;Product&gt; interface
+</summary>
+        </member>
+        <member name="M:pwiz.CLI.msdata.Product.empty">
+            <summary>
+returns true iff the element contains no params and all members are empty or null
+</summary>
+        </member>
+        <member name="P:pwiz.CLI.msdata.Product.isolationWindow">
+            <summary>
+this element captures the isolation (or 'selection') window configured to isolate one or more products.
 </summary>
         </member>
         <member name="T:pwiz.CLI.msdata.PrecursorList">
@@ -1661,6 +1733,9 @@ Information about an ontology or CV source and a short 'lookup' tag to refer to.
         <member name="F:pwiz.msdata.MSData.run">
 a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.
 </member>
+        <member name="M:pwiz.msdata.MSData.allDataProcessingPtrs">
+return dataProcessingPtrs + currentDataProcessingPtr()
+</member>
         <member name="M:pwiz.msdata.MSData.currentDataProcessingPtr">
 current data processing, held in SpectrumList
 </member>
@@ -1845,6 +1920,9 @@ returns true iff the element contains no params and all members are empty or nul
         <member name="F:pwiz.msdata.Spectrum.binaryDataArrayPtrs">
 list of binary data arrays.
 </member>
+        <member name="F:pwiz.msdata.Spectrum.products">
+list and descriptions of product ion information
+</member>
         <member name="F:pwiz.msdata.Spectrum.precursors">
 list and descriptions of precursors to the spectrum currently being described.
 </member>
@@ -1946,6 +2024,18 @@ Scan or acquisition from original raw file used to create this peak list, as spe
 </member>
         <member name="T:pwiz.msdata.ScanWindow">
 TODO
+</member>
+        <member name="M:pwiz.msdata.Product.op_Equality(pwiz.msdata.Product!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+returns true iff this product's isolation window is equal to that product's
+</member>
+        <member name="M:pwiz.msdata.Product.empty">
+returns true iff the element contains no params and all members are empty or null
+</member>
+        <member name="F:pwiz.msdata.Product.isolationWindow">
+this element captures the isolation (or 'selection') window configured to isolate one or more precursors.
+</member>
+        <member name="T:pwiz.msdata.Product">
+product ion information
 </member>
         <member name="M:pwiz.msdata.Precursor.empty">
 returns true iff the element contains no params and all members are empty or null
@@ -2367,6 +2457,12 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         </member>
         <member name="T:pwiz.CLI.msdata.CVID">
             <summary>enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.UO_volt_per_meter">
+            <summary>volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.UO_electric_field_strength_unit">
+            <summary>electric field strength unit: The electric field strength is a derived unit which is a measure of the potential difference between two points some distance apart.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.UO_electronvolt">
             <summary>electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.</summary>
@@ -3169,6 +3265,129 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.UO_unit">
             <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_U2_nativeID_format">
+            <summary>Bruker U2 nativeID format: declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_temperature_array">
+            <summary>temperature array: A data array of temperature measurements.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_pressure_array">
+            <summary>pressure array: A data array of pressure measurements.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_flow_rate_array">
+            <summary>flow rate array: A data array of flow rate measurements.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Acquity_UPLC_FLR">
+            <summary>Acquity UPLC FLR: Acquity UPLC Fluorescence Detector.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Acquity_UPLC_PDA">
+            <summary>Acquity UPLC PDA: Acquity UPLC Photodiode Array Detector.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_HyStar">
+            <summary>HyStar: Bruker software for hyphenated experiments.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_U2_file">
+            <summary>Bruker U2 file: Bruker HyStar U2 file format.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Bruker_BAF_file">
+            <summary>Bruker BAF file: Bruker BAF raw file format.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_counts_per_second">
+            <summary>counts per second: The number of counted events observed per second in one or a group of elements of a detector.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_emission_chromatogram__">
+            <summary>emission chromatogram  : The measurement of light emitted by the sample as a function of the retention time.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_absorption_chromatogram_">
+            <summary>absorption chromatogram : The measurement of light absorbed by the sample as a function of the retention time.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_EMR_radiation_chromatogram">
+            <summary>electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_electromagnetic_radiation_chromatogram_">
+            <summary>electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_mass_chromatogram">
+            <summary>mass chromatogram: A plot of the relative abundance of a beam or other collection of ions as a function of the retention time.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_chromatogram_title">
+            <summary>chromatogram title: A free-form text title describing a chromatogram.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_chromatogram_attribute">
+            <summary>chromatogram attribute: Chromatogram properties that are associated with a value.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Th_s">
+            <summary>Th/s: Unit describing the scan rate of a spectrum in Thomson per second.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_absorption_spectrum">
+            <summary>absorption spectrum: A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_emission_spectrum">
+            <summary>emission spectrum: A plot of the relative intensity of electromagnetic radiation emitted by atoms or molecules when excited.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_EMR_spectrum">
+            <summary>electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_electromagnetic_radiation_spectrum">
+            <summary>electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_analyzer_scan_offset">
+            <summary>analyzer scan offset: Offset between two analyzers in a constant neutral loss or neutral gain scan. The value corresponds to the neutral loss or neutral gain value</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_max_peak_picking">
+            <summary>height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_height_peak_picking">
+            <summary>height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_sum_peak_picking">
+            <summary>area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_area_peak_picking">
+            <summary>area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_mass_resolving_power">
+            <summary>mass resolving power: The observed mass divided by the difference between two masses that can be separated: m/dm. The procedure by which dm was obtained and the mass at which the measurement was made should be reported.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_custom_unreleased_software_tool">
+            <summary>custom unreleased software tool: A software tool that has not yet been released. The value should describe the software. Please do not use this term for publicly available software - contact the PSI-MS working group in order to have another CV term added.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_peak_list_raw_scans">
+            <summary>peak list raw scans: A list of raw scans and or scan ranges used to generate a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_peak_list_scans">
+            <summary>peak list scans: A list of scan numbers and or scan ranges associated with a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_spectrum_title">
+            <summary>spectrum title: A free-form text title describing a spectrum.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_no_combination">
+            <summary>no combination: Use this term if only one scan was recorded or there is no information about scans available.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_isolation_window_lower_limit">
+            <summary>isolation window lower limit: The lowest m/z being isolated in an isolation window.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_isolation_window_upper_limit">
+            <summary>isolation window upper limit: The highest m/z being isolated in an isolation window.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_isolation_window_attribute">
+            <summary>isolation window attribute: Isolation window parameter.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_time_delayed_fragmentation_spectrum">
+            <summary>time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_enhanced_multiply_charged_spectrum">
+            <summary>enhanced multiply charged spectrum: MS1 spectrum that is enriched in multiply-charged ions compared to singly-charged ions</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_inclusive_high_intensity_threshold">
+            <summary>inclusive high intensity threshold: Threshold at or above which some action is taken.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_inclusive_low_intensity_threshold">
+            <summary>inclusive low intensity threshold: Threshold at or below which some action is taken.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_non_standard_data_array">
+            <summary>non-standard data array: A data array that contains data not covered by any other term in this group. Please do not use this term, if the binary data array type might be commonly used - contact the PSI-MS working group in order to have another CV term added.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_sliding_average_smoothing">
             <summary>moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.</summary>
         </member>
@@ -3236,7 +3455,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Thermo_nativeID_format">
-            <summary>Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.</summary>
+            <summary>Thermo nativeID format: controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_nativeID_format">
             <summary>native spectrum identifier format: Describes how the native spectrum identifiers are formated.</summary>
@@ -3310,8 +3529,8 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_retention_time_alignment">
             <summary>retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_selected_m_z">
-            <summary>selected m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_selected_ion_m_z">
+            <summary>selected ion m/z: Mass-to-charge ratio of the ion selected for fragmentation</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_TSQ_Quantum_Ultra_AM">
             <summary>TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.</summary>
@@ -3688,14 +3907,11 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_photodiode_array_detector">
             <summary>photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_PDA_spectrum">
-            <summary>PDA spectrum: Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum).</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_lowest_observed_wavelength">
+            <summary>lowest observed wavelength: Lowest wavelength observed in an EMR spectrum.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_lowest_wavelength_value">
-            <summary>lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.</summary>
-        </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_highest_wavelength_value">
-            <summary>highest wavelength value: Highest wavelength value observed in the uv/vis spectum.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_highest_observed_wavelength">
+            <summary>highest observed wavelength: Highest wavelength observed in an EMR spectrum.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_wavelength_array">
             <summary>wavelength array: A data array of electromagnetic radiation wavelength values.</summary>
@@ -3811,8 +4027,26 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_mzML_file">
             <summary>mzML file: Proteomics Standards Inititative mzML file format.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_selected_reaction_monitoring_spectrum">
+            <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_multiple_reaction_monitoring_spectrum">
+            <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_MRM_spectrum">
+            <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_SRM_spectrum">
             <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_selected_ion_monitoring_spectrum">
+            <summary>SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_multiple_ion_monitoring_spectrum">
+            <summary>SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_MIM_spectrum">
+            <summary>SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_SIM_spectrum">
             <summary>SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).</summary>
@@ -3820,11 +4054,26 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_CRM_spectrum">
             <summary>CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_nth_generation_product_ion_spectrum">
+            <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_product_ion_spectrum">
+            <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_multiple_stage_mass_spectrometry_spectrum">
             <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_MSn_spectrum">
             <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_full_spectrum">
+            <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Q3_spectrum">
+            <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_Q1_spectrum">
+            <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Single_Stage_Mass_Spectrometry">
             <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
@@ -3985,11 +4234,11 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_instrument_serial_number">
             <summary>instrument serial number: Serial Number of the instrument.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_lowest_m_z_value">
-            <summary>lowest m/z value: Lowest m/z value observed in the mass spectrum.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_lowest_observed_m_z">
+            <summary>lowest observed m/z: Lowest m/z value observed in the m/z array.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_highest_m_z_value">
-            <summary>highest m/z value: Highest m/z value observed in the mass spectum.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_highest_observed_m_z">
+            <summary>highest observed m/z: Highest m/z value observed in the m/z array.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_MassLynx_raw_format">
             <summary>MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.</summary>
@@ -4028,7 +4277,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>intensity array: A data array of intensity values.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_m_z_array">
-            <summary>m/z array: A data array of mass divided by charge values.</summary>
+            <summary>m/z array: A data array of m/z values.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_binary_data_array">
             <summary>binary data array: A data array of values.</summary>
@@ -4058,7 +4307,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>base peak intensity: The intensity of the greatest peak in the mass spectrum.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_base_peak_m_z">
-            <summary>base peak m/z: M/z value of the greatest peak in the mass spectrum.</summary>
+            <summary>base peak m/z: M/z value of the signal of highest intensity in the mass spectrum.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_scan_attribute">
             <summary>scan attribute: Scan properties that are associated with a value.</summary>
@@ -4066,11 +4315,11 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_dwell_time">
             <summary>dwell time: The time spent gathering data across a peak.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_scan_m_z_lower_limit">
-            <summary>scan m/z lower limit: The limit of m/z over which a mass spectrometer can detect ions.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_scan_window_lower_limit">
+            <summary>scan window lower limit: The upper m/z bound of a mass spectrometer scan window.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_scan_m_z_upper_limit">
-            <summary>scan m/z upper limit: The limit of m/z over which a mass spectrometer can detect ions.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_scan_window_upper_limit">
+            <summary>scan window upper limit: The lower m/z bound of a mass spectrometer scan window.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_spectrum_attribute">
             <summary>spectrum attribute: Spectrum properties that are associated with a value.</summary>
@@ -4078,8 +4327,11 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_full_scan">
             <summary>full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.</summary>
         </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_enhanced_resolution_scan">
+            <summary>zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
+        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_zoom_scan">
-            <summary>zoom scan: Feature of the ion trap mass spectrometer where MSMS data is acquired over a certain mass range.</summary>
+            <summary>zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_instrument_attribute">
             <summary>instrument attribute: Instrument properties that are associated with a value.</summary>
@@ -4558,20 +4810,14 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_progeny_ion">
             <summary>progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -&gt; M2+ -&gt; M3+ -&gt; M4+ -&gt; M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_product_ion_spectrum">
-            <summary>product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.</summary>
-        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_product_ion">
             <summary>product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_precursor_ion_spectrum">
-            <summary>precursor ion spectrum: The mass spectrum recorded from any spectrometer in which the appropriate m/z separation function can be set to record the precursor ion or ions of selected product ions.</summary>
+            <summary>precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_precursor_ion">
             <summary>precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.</summary>
-        </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_nth_generation_product_ion_spectrum">
-            <summary>nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_nth_generation_product_ion_scan">
             <summary>nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.</summary>
@@ -4606,23 +4852,26 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_e_2_mass_spectrum">
             <summary>e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_Constant_Neutral_Mass_Loss">
-            <summary>constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
-        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_mass_loss_spectrum">
-            <summary>constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
+            <summary>constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_loss_spectrum">
+            <summary>constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_mass_gain_spectrum">
-            <summary>constant neutral mass gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.</summary>
+            <summary>constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.</summary>
+        </member>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_gain_spectrum">
+            <summary>constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Constant_Neutral_Mass_Gain_Scan">
-            <summary>constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.</summary>
+            <summary>constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_gain_scan">
-            <summary>constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.</summary>
+            <summary>constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_constant_neutral_loss_scan">
-            <summary>constant neutral loss scan: A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different precursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or collision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan.</summary>
+            <summary>constant neutral loss scan: Spectrum of all precursor ions that undergo a selected m/z decrement.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_charge_inversion_mass_spectrum">
             <summary>charge inversion mass spectrum: The measurement of the relative abundance of ions that result from a charge inversion reaction as a function of m/z.</summary>
@@ -5014,9 +5263,6 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
         <member name="F:pwiz.CLI.msdata.CVID.MS_total_ion_current_chromatogram">
             <summary>total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_mass_resolving_power">
-            <summary>mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.</summary>
-        </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_PA">
             <summary>proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ -&gt;[M+H]+, where all species are in their ground rotational, vibrational and electronic states.</summary>
         </member>
@@ -5372,19 +5618,19 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>negative scan: Polarity of the scan is negative.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Continuum_Mass_Spectrum">
-            <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+            <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_continuous_mass_spectrum">
-            <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+            <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_profile_mass_spectrum">
-            <summary>profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_profile_spectrum">
+            <summary>profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Discrete_Mass_Spectrum">
-            <summary>centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
+            <summary>centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
         </member>
-        <member name="F:pwiz.CLI.msdata.CVID.MS_centroid_mass_spectrum">
-            <summary>centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
+        <member name="F:pwiz.CLI.msdata.CVID.MS_centroid_spectrum">
+            <summary>centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_Waters_instrument_model">
             <summary>Waters instrument model: Waters Corporation instrument model.</summary>
@@ -5753,7 +5999,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>scan time: The time that an analyzer started a scan, relative to the start of the run.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_scan_rate">
-            <summary>scan rate: Rate in (m/z)/sec for scanning analyzers.</summary>
+            <summary>scan rate: Rate in Th/sec for scanning analyzers.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_accuracy">
             <summary>accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.</summary>
@@ -5765,7 +6011,7 @@ A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
             <summary>resolution measurement method: Which of the available standard measures is used to define whether two peaks are separate.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_mass_resolution">
-            <summary>mass resolution: The maximum m/z value at which two peaks can be resolved, according to one of the standard measures.</summary>
+            <summary>mass resolution: Smallest mass difference between two equal magnitude peaks so that the valley between them is a specified fraction of the peak height.</summary>
         </member>
         <member name="F:pwiz.CLI.msdata.CVID.MS_analyzer_type">
             <summary>analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.</summary>
@@ -5814,6 +6060,12 @@ structure for holding CV term info
 </member>
         <member name="T:pwiz.msdata.CVID">
 enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)
+</member>
+        <member name="F:UO_volt_per_meter">
+volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.
+</member>
+        <member name="F:UO_electric_field_strength_unit">
+electric field strength unit: The electric field strength is a derived unit which is a measure of the potential difference between two points some distance apart.
 </member>
         <member name="F:UO_electronvolt">
 electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.
@@ -6616,6 +6868,129 @@ length unit: A base unit which is a standard measure of the distance between two
         <member name="F:UO_unit">
 unit: A unit of measurement is a standardized quantity of a physical quality.
 </member>
+        <member name="F:MS_Bruker_U2_nativeID_format">
+Bruker U2 nativeID format: declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger
+</member>
+        <member name="F:MS_temperature_array">
+temperature array: A data array of temperature measurements.
+</member>
+        <member name="F:MS_pressure_array">
+pressure array: A data array of pressure measurements.
+</member>
+        <member name="F:MS_flow_rate_array">
+flow rate array: A data array of flow rate measurements.
+</member>
+        <member name="F:MS_Acquity_UPLC_FLR">
+Acquity UPLC FLR: Acquity UPLC Fluorescence Detector.
+</member>
+        <member name="F:MS_Acquity_UPLC_PDA">
+Acquity UPLC PDA: Acquity UPLC Photodiode Array Detector.
+</member>
+        <member name="F:MS_HyStar">
+HyStar: Bruker software for hyphenated experiments.
+</member>
+        <member name="F:MS_Bruker_U2_file">
+Bruker U2 file: Bruker HyStar U2 file format.
+</member>
+        <member name="F:MS_Bruker_BAF_file">
+Bruker BAF file: Bruker BAF raw file format.
+</member>
+        <member name="F:MS_counts_per_second">
+counts per second: The number of counted events observed per second in one or a group of elements of a detector.
+</member>
+        <member name="F:MS_emission_chromatogram__">
+emission chromatogram  : The measurement of light emitted by the sample as a function of the retention time.
+</member>
+        <member name="F:MS_absorption_chromatogram_">
+absorption chromatogram : The measurement of light absorbed by the sample as a function of the retention time.
+</member>
+        <member name="F:MS_EMR_radiation_chromatogram">
+electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.
+</member>
+        <member name="F:MS_electromagnetic_radiation_chromatogram_">
+electromagnetic radiation chromatogram : The measurement of electromagnetic properties as a function of the retention time.
+</member>
+        <member name="F:MS_mass_chromatogram">
+mass chromatogram: A plot of the relative abundance of a beam or other collection of ions as a function of the retention time.
+</member>
+        <member name="F:MS_chromatogram_title">
+chromatogram title: A free-form text title describing a chromatogram.
+</member>
+        <member name="F:MS_chromatogram_attribute">
+chromatogram attribute: Chromatogram properties that are associated with a value.
+</member>
+        <member name="F:MS_Th_s">
+Th/s: Unit describing the scan rate of a spectrum in Thomson per second.
+</member>
+        <member name="F:MS_absorption_spectrum">
+absorption spectrum: A plot of the relative intensity of electromagnetic radiation absorbed by atoms or molecules when excited.
+</member>
+        <member name="F:MS_emission_spectrum">
+emission spectrum: A plot of the relative intensity of electromagnetic radiation emitted by atoms or molecules when excited.
+</member>
+        <member name="F:MS_EMR_spectrum">
+electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.
+</member>
+        <member name="F:MS_electromagnetic_radiation_spectrum">
+electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.
+</member>
+        <member name="F:MS_analyzer_scan_offset">
+analyzer scan offset: Offset between two analyzers in a constant neutral loss or neutral gain scan. The value corresponds to the neutral loss or neutral gain value
+</member>
+        <member name="F:MS_max_peak_picking">
+height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
+</member>
+        <member name="F:MS_height_peak_picking">
+height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
+</member>
+        <member name="F:MS_sum_peak_picking">
+area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
+</member>
+        <member name="F:MS_area_peak_picking">
+area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
+</member>
+        <member name="F:MS_mass_resolving_power">
+mass resolving power: The observed mass divided by the difference between two masses that can be separated: m/dm. The procedure by which dm was obtained and the mass at which the measurement was made should be reported.
+</member>
+        <member name="F:MS_custom_unreleased_software_tool">
+custom unreleased software tool: A software tool that has not yet been released. The value should describe the software. Please do not use this term for publicly available software - contact the PSI-MS working group in order to have another CV term added.
+</member>
+        <member name="F:MS_peak_list_raw_scans">
+peak list raw scans: A list of raw scans and or scan ranges used to generate a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.
+</member>
+        <member name="F:MS_peak_list_scans">
+peak list scans: A list of scan numbers and or scan ranges associated with a peak list. If possible the list of scans should be converted to native spectrum identifiers instead of using this term.
+</member>
+        <member name="F:MS_spectrum_title">
+spectrum title: A free-form text title describing a spectrum.
+</member>
+        <member name="F:MS_no_combination">
+no combination: Use this term if only one scan was recorded or there is no information about scans available.
+</member>
+        <member name="F:MS_isolation_window_lower_limit">
+isolation window lower limit: The lowest m/z being isolated in an isolation window.
+</member>
+        <member name="F:MS_isolation_window_upper_limit">
+isolation window upper limit: The highest m/z being isolated in an isolation window.
+</member>
+        <member name="F:MS_isolation_window_attribute">
+isolation window attribute: Isolation window parameter.
+</member>
+        <member name="F:MS_time_delayed_fragmentation_spectrum">
+time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation
+</member>
+        <member name="F:MS_enhanced_multiply_charged_spectrum">
+enhanced multiply charged spectrum: MS1 spectrum that is enriched in multiply-charged ions compared to singly-charged ions
+</member>
+        <member name="F:MS_inclusive_high_intensity_threshold">
+inclusive high intensity threshold: Threshold at or above which some action is taken.
+</member>
+        <member name="F:MS_inclusive_low_intensity_threshold">
+inclusive low intensity threshold: Threshold at or below which some action is taken.
+</member>
+        <member name="F:MS_non_standard_data_array">
+non-standard data array: A data array that contains data not covered by any other term in this group. Please do not use this term, if the binary data array type might be commonly used - contact the PSI-MS working group in order to have another CV term added.
+</member>
         <member name="F:MS_sliding_average_smoothing">
 moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
 </member>
@@ -6683,7 +7058,7 @@ WIFF nativeID format: sample=xsd:nonNegativeInteger period=xsd:nonNegativeIntege
 Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.
 </member>
         <member name="F:MS_Thermo_nativeID_format">
-Thermo nativeID format: controller=xsd:nonNegativeInteger scan=xsd:positiveInteger.
+Thermo nativeID format: controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.
 </member>
         <member name="F:MS_nativeID_format">
 native spectrum identifier format: Describes how the native spectrum identifiers are formated.
@@ -6757,8 +7132,8 @@ high intensity data point removal: The removal of very high intensity data point
         <member name="F:MS_retention_time_alignment">
 retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.
 </member>
-        <member name="F:MS_selected_m_z">
-selected m/z: Mass-to-charge ratio of the ion selected for fragmentation
+        <member name="F:MS_selected_ion_m_z">
+selected ion m/z: Mass-to-charge ratio of the ion selected for fragmentation
 </member>
         <member name="F:MS_TSQ_Quantum_Ultra_AM">
 TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.
@@ -7135,14 +7510,11 @@ photodiode array detector: An array detector used to record spectra in the ultra
         <member name="F:MS_photodiode_array_detector">
 photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
 </member>
-        <member name="F:MS_PDA_spectrum">
-PDA spectrum: Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum).
+        <member name="F:MS_lowest_observed_wavelength">
+lowest observed wavelength: Lowest wavelength observed in an EMR spectrum.
 </member>
-        <member name="F:MS_lowest_wavelength_value">
-lowest wavelength value: Lowest wavelength value observed in the uv/vis spectrum.
-</member>
-        <member name="F:MS_highest_wavelength_value">
-highest wavelength value: Highest wavelength value observed in the uv/vis spectum.
+        <member name="F:MS_highest_observed_wavelength">
+highest observed wavelength: Highest wavelength observed in an EMR spectrum.
 </member>
         <member name="F:MS_wavelength_array">
 wavelength array: A data array of electromagnetic radiation wavelength values.
@@ -7258,8 +7630,26 @@ contact person attribute: Details about a person to contact in case of concern o
         <member name="F:MS_mzML_file">
 mzML file: Proteomics Standards Inititative mzML file format.
 </member>
+        <member name="F:MS_selected_reaction_monitoring_spectrum">
+SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+</member>
+        <member name="F:MS_multiple_reaction_monitoring_spectrum">
+SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+</member>
+        <member name="F:MS_MRM_spectrum">
+SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+</member>
         <member name="F:MS_SRM_spectrum">
 SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+</member>
+        <member name="F:MS_selected_ion_monitoring_spectrum">
+SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+</member>
+        <member name="F:MS_multiple_ion_monitoring_spectrum">
+SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+</member>
+        <member name="F:MS_MIM_spectrum">
+SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
 </member>
         <member name="F:MS_SIM_spectrum">
 SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
@@ -7267,11 +7657,26 @@ SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in whi
         <member name="F:MS_CRM_spectrum">
 CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
 </member>
+        <member name="F:MS_nth_generation_product_ion_spectrum">
+MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.
+</member>
+        <member name="F:MS_product_ion_spectrum">
+MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.
+</member>
         <member name="F:MS_multiple_stage_mass_spectrometry_spectrum">
 MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.
 </member>
         <member name="F:MS_MSn_spectrum">
 MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n &gt; 2 whereas for a simple triple quadrupole system n= 2.
+</member>
+        <member name="F:MS_full_spectrum">
+MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
+</member>
+        <member name="F:MS_Q3_spectrum">
+MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
+</member>
+        <member name="F:MS_Q1_spectrum">
+MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
 </member>
         <member name="F:MS_Single_Stage_Mass_Spectrometry">
 MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.
@@ -7432,11 +7837,11 @@ file format conversion: Conversion of one file format to another.
         <member name="F:MS_instrument_serial_number">
 instrument serial number: Serial Number of the instrument.
 </member>
-        <member name="F:MS_lowest_m_z_value">
-lowest m/z value: Lowest m/z value observed in the mass spectrum.
+        <member name="F:MS_lowest_observed_m_z">
+lowest observed m/z: Lowest m/z value observed in the m/z array.
 </member>
-        <member name="F:MS_highest_m_z_value">
-highest m/z value: Highest m/z value observed in the mass spectum.
+        <member name="F:MS_highest_observed_m_z">
+highest observed m/z: Highest m/z value observed in the m/z array.
 </member>
         <member name="F:MS_MassLynx_raw_format">
 MassLynx raw format: MassLynx raw file format, which is actually a directory/folder containing several files for each ms run.
@@ -7475,7 +7880,7 @@ charge array: A data array of charge values.
 intensity array: A data array of intensity values.
 </member>
         <member name="F:MS_m_z_array">
-m/z array: A data array of mass divided by charge values.
+m/z array: A data array of m/z values.
 </member>
         <member name="F:MS_binary_data_array">
 binary data array: A data array of values.
@@ -7505,7 +7910,7 @@ ion role: Ion Role.
 base peak intensity: The intensity of the greatest peak in the mass spectrum.
 </member>
         <member name="F:MS_base_peak_m_z">
-base peak m/z: M/z value of the greatest peak in the mass spectrum.
+base peak m/z: M/z value of the signal of highest intensity in the mass spectrum.
 </member>
         <member name="F:MS_scan_attribute">
 scan attribute: Scan properties that are associated with a value.
@@ -7513,11 +7918,11 @@ scan attribute: Scan properties that are associated with a value.
         <member name="F:MS_dwell_time">
 dwell time: The time spent gathering data across a peak.
 </member>
-        <member name="F:MS_scan_m_z_lower_limit">
-scan m/z lower limit: The limit of m/z over which a mass spectrometer can detect ions.
+        <member name="F:MS_scan_window_lower_limit">
+scan window lower limit: The upper m/z bound of a mass spectrometer scan window.
 </member>
-        <member name="F:MS_scan_m_z_upper_limit">
-scan m/z upper limit: The limit of m/z over which a mass spectrometer can detect ions.
+        <member name="F:MS_scan_window_upper_limit">
+scan window upper limit: The lower m/z bound of a mass spectrometer scan window.
 </member>
         <member name="F:MS_spectrum_attribute">
 spectrum attribute: Spectrum properties that are associated with a value.
@@ -7525,8 +7930,11 @@ spectrum attribute: Spectrum properties that are associated with a value.
         <member name="F:MS_full_scan">
 full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.
 </member>
+        <member name="F:MS_enhanced_resolution_scan">
+zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
+</member>
         <member name="F:MS_zoom_scan">
-zoom scan: Feature of the ion trap mass spectrometer where MSMS data is acquired over a certain mass range.
+zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
 </member>
         <member name="F:MS_instrument_attribute">
 instrument attribute: Instrument properties that are associated with a value.
@@ -8005,20 +8413,14 @@ progeny ion: A charged product of a series of consecutive reactions that include
         <member name="F:MS_progeny_ion">
 progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -&gt; M2+ -&gt; M3+ -&gt; M4+ -&gt; M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
 </member>
-        <member name="F:MS_product_ion_spectrum">
-product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.
-</member>
         <member name="F:MS_product_ion">
 product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.
 </member>
         <member name="F:MS_precursor_ion_spectrum">
-precursor ion spectrum: The mass spectrum recorded from any spectrometer in which the appropriate m/z separation function can be set to record the precursor ion or ions of selected product ions.
+precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z
 </member>
         <member name="F:MS_precursor_ion">
 precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.
-</member>
-        <member name="F:MS_nth_generation_product_ion_spectrum">
-nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.
 </member>
         <member name="F:MS_nth_generation_product_ion_scan">
 nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.
@@ -8053,23 +8455,26 @@ linked scan: A scan in an instrument with two or more m/z analysers or in a sect
         <member name="F:MS_e_2_mass_spectrum">
 e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.
 </member>
-        <member name="F:MS_Constant_Neutral_Mass_Loss">
-constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
-</member>
         <member name="F:MS_constant_neutral_mass_loss_spectrum">
-constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
+constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
+</member>
+        <member name="F:MS_constant_neutral_loss_spectrum">
+constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
 </member>
         <member name="F:MS_constant_neutral_mass_gain_spectrum">
-constant neutral mass gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
+constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
+</member>
+        <member name="F:MS_constant_neutral_gain_spectrum">
+constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
 </member>
         <member name="F:MS_Constant_Neutral_Mass_Gain_Scan">
-constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
+constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
 </member>
         <member name="F:MS_constant_neutral_gain_scan">
-constant neutral gain scan: Scan procedure for a tandem mass spectrometer designed to produce a constant neutral mass gain spectrum of different precursor ions by detection of the corresponding product ions of ion/molecule reactions with a gas in acollision cell.
+constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
 </member>
         <member name="F:MS_constant_neutral_loss_scan">
-constant neutral loss scan: A scan procedure for a tandem mass spectrometer designed to produce a constant neutral loss spectrum of different precursor ions by detection of the corresponding product ions produced by metastable ion fragmentation or collision-induced dissociation. Synonymous terms are constant neutral mass loss scan and fixed neutral fragment scan.
+constant neutral loss scan: Spectrum of all precursor ions that undergo a selected m/z decrement.
 </member>
         <member name="F:MS_charge_inversion_mass_spectrum">
 charge inversion mass spectrum: The measurement of the relative abundance of ions that result from a charge inversion reaction as a function of m/z.
@@ -8461,9 +8866,6 @@ total ion current chromatogram: Chromatogram obtained by plotting the total ion 
         <member name="F:MS_total_ion_current_chromatogram">
 total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
 </member>
-        <member name="F:MS_mass_resolving_power">
-mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.
-</member>
         <member name="F:MS_PA">
 proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ -&gt;[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
 </member>
@@ -8819,19 +9221,19 @@ positive scan: Polarity of the scan is positive.
 negative scan: Polarity of the scan is negative.
 </member>
         <member name="F:MS_Continuum_Mass_Spectrum">
-profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
 </member>
         <member name="F:MS_continuous_mass_spectrum">
-profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
 </member>
-        <member name="F:MS_profile_mass_spectrum">
-profile mass spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+        <member name="F:MS_profile_spectrum">
+profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
 </member>
         <member name="F:MS_Discrete_Mass_Spectrum">
-centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
+centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
 </member>
-        <member name="F:MS_centroid_mass_spectrum">
-centroid mass spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
+        <member name="F:MS_centroid_spectrum">
+centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
 </member>
         <member name="F:MS_Waters_instrument_model">
 Waters instrument model: Waters Corporation instrument model.
@@ -9200,7 +9602,7 @@ Scan Function: Describes the type of mass analysis being performed. Two primary 
 scan time: The time that an analyzer started a scan, relative to the start of the run.
 </member>
         <member name="F:MS_scan_rate">
-scan rate: Rate in (m/z)/sec for scanning analyzers.
+scan rate: Rate in Th/sec for scanning analyzers.
 </member>
         <member name="F:MS_accuracy">
 accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.
@@ -9212,7 +9614,7 @@ resolution type: Specify the nature of resolution for the mass analyzer. Resolut
 resolution measurement method: Which of the available standard measures is used to define whether two peaks are separate.
 </member>
         <member name="F:MS_mass_resolution">
-mass resolution: The maximum m/z value at which two peaks can be resolved, according to one of the standard measures.
+mass resolution: Smallest mass difference between two equal magnitude peaks so that the valley between them is a specified fraction of the peak height.
 </member>
         <member name="F:MS_analyzer_type">
 analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.
@@ -9297,5 +9699,8 @@ Proteomics Standards Initiative Mass Spectrometry Ontology: Proteomics Standards
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ChromatogramList'. -->
         <!-- Discarding badly formed XML document comment for member 'F:pwiz.msdata.MSData.cvs'. -->
         <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.ReaderList'. -->
+        <!-- Discarding badly formed XML document comment for member 'P:pwiz.CLI.msdata.CVInfo.cvid'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIs'. -->
+        <!-- Discarding badly formed XML document comment for member 'T:pwiz.msdata.CVParamIsChildOf'. -->
     </members>
 </doc>

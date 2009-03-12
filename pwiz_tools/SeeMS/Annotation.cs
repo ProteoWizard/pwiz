@@ -47,31 +47,40 @@ namespace seems
             if( String.IsNullOrEmpty( arg ) )
                 return null;
 
-            string[] annotationArgs = arg.Split( " ".ToCharArray() );
-            if( annotationArgs.Length == 5 &&
-                annotationArgs[0] == "pfr" ) // peptide fragmentation
+            try
             {
-                string sequence = annotationArgs[1];
-                int minCharge = Convert.ToInt32( annotationArgs[2] );
-                int maxCharge = Convert.ToInt32( annotationArgs[3] );
-                string seriesArgs = annotationArgs[4];
-                string[] seriesList = seriesArgs.Split( ",".ToCharArray() );
-                bool a, b, c, x, y, z;
-                a = b = c = x = y = z = false;
-                foreach( string series in seriesList )
-                    switch( series )
-                    {
-                        case "a": a = true; break;
-                        case "b": b = true; break;
-                        case "c": c = true; break;
-                        case "x": x = true; break;
-                        case "y": y = true; break;
-                        case "z": z = true; break;
-                    }
-                return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, false, true );
-            }
+                string[] annotationArgs = arg.Split( " ".ToCharArray() );
+                if( annotationArgs.Length > 0 &&
+                    annotationArgs[0] == "pfr" ) // peptide fragmentation
+                {
+                    if( annotationArgs.Length != 5 )
+                        throw new ArgumentException( "peptide fragmentation annotation requires 5 arguments" );
 
-            return null;
+                    string sequence = annotationArgs[1];
+                    int minCharge = Math.Min( 1, Convert.ToInt32( annotationArgs[2] ) );
+                    int maxCharge = Math.Max( minCharge, Convert.ToInt32( annotationArgs[3] ) );
+                    string seriesArgs = annotationArgs[4];
+                    string[] seriesList = seriesArgs.Split( ",".ToCharArray() );
+                    bool a, b, c, x, y, z;
+                    a = b = c = x = y = z = false;
+                    foreach( string series in seriesList )
+                        switch( series )
+                        {
+                            case "a": a = true; break;
+                            case "b": b = true; break;
+                            case "c": c = true; break;
+                            case "x": x = true; break;
+                            case "y": y = true; break;
+                            case "z": z = true; break;
+                        }
+                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, false, true );
+                }
+
+                return null;
+            } catch( Exception e )
+            {
+                throw new ArgumentException( "Caught exception parsing command-line arguments: " + e.Message );
+            }
         }
     }
 

@@ -15,13 +15,14 @@ using pwiz.CLI.msdata;
 using JWC;
 using Microsoft.Win32;
 using DigitalRune.Windows.Docking;
+using SpyTools;
 
 namespace seems
 {
 	public partial class seemsForm : Form
 	{
         public static string Version = "0.5";
-        public static string LastModified = "8/11/2008";
+        public static string LastModified = "2/10/2009";
 
 		private bool isLoaded = false;
 		private OpenDataSourceDialog browseToFileDialog;
@@ -67,6 +68,7 @@ namespace seems
             eventTextBox.SelectionStart = eventTextBox.Text.Length;
         }
 
+        SpyTools.EventSpy spy;
 		public seemsForm( string[] args )
 		{
 			InitializeComponent();
@@ -74,6 +76,7 @@ namespace seems
             ToolStripManager.RenderMode = ToolStripManagerRenderMode.Professional;
             DockPanelManager.RenderMode = DockPanelRenderMode.VisualStyles;
 
+            eventLog.Size = new Size( 1024, 768 );
             eventTextBox.Dock = DockStyle.Fill;
             eventTextBox.Multiline = true;
             eventTextBox.ScrollBars = ScrollBars.Vertical;
@@ -92,9 +95,11 @@ namespace seems
 
 			dockPanel.DocumentStyle = DigitalRune.Windows.Docking.DocumentStyle.DockingMdi;
 
+            //spy = new SpyTools.EventSpy( "DockPanel", dockPanel );
+            //spy.SpyEvent += new SpyTools.SpyEventHandler( LogSpyEvent );
+
             browseToFileDialog = new OpenDataSourceDialog();
 			browseToFileDialog.InitialDirectory = "C:\\";
-            
 
 			manager = new Manager(this);
 

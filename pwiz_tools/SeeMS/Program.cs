@@ -7,7 +7,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.ComponentModel;
 using System.Security.Permissions;
-using EDAL;
+//using EDAL;
+//using BDal.CxT.Lc;
 
 namespace seems
 {
@@ -30,6 +31,16 @@ namespace seems
             MSSpectrum s = c[1];
             MSSpectrumParameterCollection sp = s.MSSpectrumParameterCollection;
             MSSpectrumParameter p = sp[1];*/
+            /*IAnalysisFactory factory = new AnalysisFactory();
+            IAnalysis a = factory.Open( @"C:\test\MM48pos_20uM_1-A,8_01_9111.d" );
+            ITraceDeclaration[] tdList = a.GetTraceDeclarations();
+            List<ITraceDataCollection> tdcList = new List<ITraceDataCollection>();
+            foreach( ITraceDeclaration td in tdList )
+                tdcList.Add( a.GetTraceDataCollection( td.TraceId ) );
+            ISpectrumSourceDeclaration[] ssdList = a.GetSpectrumSourceDeclarations();
+            List<ISpectrumCollection> scList = new List<ISpectrumCollection>();
+            foreach( ISpectrumSourceDeclaration ssd in ssdList )
+                scList.Add( a.GetSpectrumCollection( ssd.SpectrumCollectionId ) );*/
 
             // create machine-global mutex (to allow only one SeeMS instance)
             bool success;

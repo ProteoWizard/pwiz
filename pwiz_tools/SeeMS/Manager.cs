@@ -558,7 +558,7 @@ namespace seems
             foreach( DataGridViewCell cell in chromatogramListForm.GridView.SelectedCells )
             {
                 if( selectedRows.Insert( cell.RowIndex ).WasInserted )
-                    selectedGraphItems.Add( cell.OwningRow.Tag as GraphItem );
+                    selectedGraphItems.Add( chromatogramListForm.GetChromatogram( cell.RowIndex ) as GraphItem );
             }
 
             if( selectedRows.Count == 0 )

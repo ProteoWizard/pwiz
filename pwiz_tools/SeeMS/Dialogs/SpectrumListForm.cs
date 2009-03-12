@@ -62,7 +62,7 @@ namespace seems
             this.nativeIdFormat = nativeIdFormat;
             if( nativeIdFormat != CVID.CVID_Unknown )
             {
-                string nativeIdDefinition = new CVInfo( nativeIdFormat ).def;
+                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).def;
                 string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
                 for( int i = 0; i < nameValuePairs.Length; ++i )
                 {
@@ -81,12 +81,12 @@ namespace seems
                 }
             }
 
-            gridView.Columns["SpectrumType"].ToolTipText = new CVInfo(CVID.MS_spectrum_type).def;
-            gridView.Columns["MsLevel"].ToolTipText = new CVInfo( CVID.MS_ms_level ).def;
-            gridView.Columns["ScanTime"].ToolTipText = new CVInfo( CVID.MS_scan_time ).def;
-            gridView.Columns["BasePeakMz"].ToolTipText = new CVInfo( CVID.MS_base_peak_m_z ).def;
-            gridView.Columns["BasePeakIntensity"].ToolTipText = new CVInfo( CVID.MS_base_peak_intensity ).def;
-            gridView.Columns["TotalIonCurrent"].ToolTipText = new CVInfo( CVID.MS_total_ion_current ).def;
+            gridView.Columns["SpectrumType"].ToolTipText = new CVTermInfo(CVID.MS_spectrum_type).def;
+            gridView.Columns["MsLevel"].ToolTipText = new CVTermInfo( CVID.MS_ms_level ).def;
+            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_time ).def;
+            gridView.Columns["BasePeakMz"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_m_z ).def;
+            gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).def;
+            gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).def;
 
             gridView.DataBindingComplete += new DataGridViewBindingCompleteEventHandler( gridView_DataBindingComplete );
         }
@@ -136,7 +136,7 @@ namespace seems
                     {
                         if( precursorInfo.Length > 0 )
                             precursorInfo.Append( "," );
-                        precursorInfo.Append( (double) si.cvParam( CVID.MS_m_z ).value );
+                        precursorInfo.Append( (double) si.cvParam( CVID.MS_selected_ion_m_z ).value );
                     }
                 }
             }
@@ -155,8 +155,8 @@ namespace seems
                         if( scanInfo.Length > 0 )
                             scanInfo.Append( "," );
                         scanInfo.AppendFormat( "[{0}-{1}]",
-                                              (double) sw.cvParam( CVID.MS_scan_m_z_lower_limit ).value,
-                                              (double) sw.cvParam( CVID.MS_scan_m_z_upper_limit ).value );
+                                              (double) sw.cvParam( CVID.MS_scan_window_lower_limit ).value,
+                                              (double) sw.cvParam( CVID.MS_scan_window_upper_limit ).value );
                     }
                 }
             }
@@ -298,10 +298,10 @@ namespace seems
                 } else
                 {
                     // has controlled value, look up category in the CV
-                    nodeText = String.Format( "{0}: {1}", new CVInfo(new CVInfo(param.cvid).parentsIsA[0]).name, param.name);
+                    nodeText = String.Format( "{0}: {1}", new CVTermInfo(new CVTermInfo(param.cvid).parentsIsA[0]).name, param.name);
                 }
                 TreeNode childNode = node.Nodes.Add(nodeText);
-                childNode.ToolTipText = new CVInfo( param.cvid ).def;
+                childNode.ToolTipText = new CVTermInfo( param.cvid ).def;
             }
 
             foreach( UserParam param in pc.userParams )
@@ -313,7 +313,7 @@ namespace seems
                     if( param.units != CVID.CVID_Unknown )
                     {
                         // has value and units
-                        nodeText = String.Format( "{0}: {1} {2}", param.name, param.value, new CVInfo(param.units).name);
+                        nodeText = String.Format( "{0}: {1} {2}", param.name, param.value, new CVTermInfo(param.units).name);
                     } else
                     {
                         // has value but no units
@@ -362,7 +362,7 @@ namespace seems
                             foreach( SelectedIon si in p.selectedIons )
                             {
                                 TreeNode siNode = pNode.Nodes.Add( "Selected ion" );
-                                //siNode.ToolTipText = new CVInfo(CVID.MS_selected_ion); // not yet in CV
+                                //siNode.ToolTipText = new CVTermInfo(CVID.MS_selected_ion); // not yet in CV
                                 addParamsToTreeNode( si as ParamContainer, siNode );
                             }
                         }
@@ -451,7 +451,7 @@ namespace seems
                         TreeNode swNode = icNode.Nodes.Add( String.Format( "Software ({0})", sw.id ) );
                         CVParam softwareParam = sw.cvParamChild( CVID.MS_software );
                         TreeNode swNameNode = swNode.Nodes.Add( "Name: " + softwareParam.name );
-                        swNameNode.ToolTipText = new CVInfo( softwareParam.cvid ).def;
+                        swNameNode.ToolTipText = new CVTermInfo( softwareParam.cvid ).def;
                         swNode.Nodes.Add( "Version: " + sw.version );
                     }
                 }
