@@ -37,8 +37,8 @@ ostream* os_ = 0;
 void test(const CVTranslator& translator, const string& text, CVID correct)
 {
     CVID result = translator.translate(text);
-    if (os_) *os_ << text << " -> (" << cvinfo(result).id << ", \"" 
-                  << cvinfo(result).name << "\")\n"; 
+    if (os_) *os_ << text << " -> (" << cvTermInfo(result).id << ", \"" 
+                  << cvTermInfo(result).name << "\")\n"; 
     unit_assert(result == correct);
 }
 

@@ -140,6 +140,38 @@ void convertSafeArrayToVector(SAFEARRAY* parray, vector<T>& result)
 } // namespace
 
 
+EDAL::IMSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const
+{
+    if (format_ == Reader_Bruker_Format_FID)
+    {
+        HRESULT hr = compassXtractWrapperPtr_->msAnalysis_.CreateInstance("EDAL.MSAnalysis");
+        if (FAILED(hr))
+        {
+            // No success when creating the analysis pointer - we decrypt the error from hr.
+            LPVOID lpMsgBuf;
+
+            ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                           FORMAT_MESSAGE_FROM_SYSTEM,
+                           NULL,
+                           hr,
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           (LPTSTR) &lpMsgBuf,
+                           0,
+                           NULL );
+
+            string error((const char*) lpMsgBuf);
+            LocalFree(lpMsgBuf);
+            throw runtime_error("[SpectrumList_Bruker::getMSSpectrumPtr()] Error initializing CompassXtract MS interface: " + error);
+        }
+        compassXtractWrapperPtr_->msAnalysis_->Open(sourcePaths_[index].string().c_str());
+        compassXtractWrapperPtr_->msSpectrumCollection_ = compassXtractWrapperPtr_->msAnalysis_->MSSpectrumCollection;
+        return compassXtractWrapperPtr_->msSpectrumCollection_->GetItem(1);
+    }
+
+    return compassXtractWrapperPtr_->msSpectrumCollection_->GetItem((long) index+1);
+}
+
+
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const
 {
     return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
@@ -166,33 +198,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
     try
     {
-        EDAL::IMSSpectrumPtr pSpectrum;
-        if (format_ == Reader_Bruker_Format_FID)
-        {
-            HRESULT hr = compassXtractWrapperPtr_->msAnalysis_.CreateInstance("EDAL.MSAnalysis");
-            if (FAILED(hr))
-            {
-                // No success when creating the analysis pointer - we decrypt the error from hr.
-                LPVOID lpMsgBuf;
-
-                ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-	                           FORMAT_MESSAGE_FROM_SYSTEM,
-	                           NULL,
-	                           hr,
-	                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	                           (LPTSTR) &lpMsgBuf,
-	                           0,
-	                           NULL );
-
-                string error((const char*) lpMsgBuf);
-                LocalFree(lpMsgBuf);
-                throw runtime_error("[SpectrumList_Bruker::spectrum()] Error initializing CompassXtract MS interface: " + error);
-            }
-            compassXtractWrapperPtr_->msAnalysis_->Open(sourcePaths_[index].string().c_str());
-            compassXtractWrapperPtr_->msSpectrumCollection_ = compassXtractWrapperPtr_->msAnalysis_->MSSpectrumCollection;
-            pSpectrum = compassXtractWrapperPtr_->msSpectrumCollection_->GetItem(1);
-        }
-        else if (si.collection > -1)
+        // is this spectrum from the LC interface?
+        if (si.collection > -1)
         {
             // fill the spectrum from the LC interface
             CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
@@ -215,17 +222,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             result->setMZIntensityArrays(lcX, lcY, MS_number_of_counts);
             return result;
         }
-        else
-            pSpectrum = compassXtractWrapperPtr_->msSpectrumCollection_->GetItem((long) index+1);
 
+        // get the spectrum from MS interface
+        EDAL::IMSSpectrumPtr pSpectrum = getMSSpectrumPtr(index);
 
         //scan.instrumentConfigurationPtr = 
             //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
         long msLevel = pSpectrum->MSMSStage;
         result->set(MS_ms_level, msLevel);
-        result->set(MS_MSn_spectrum);
-        //scan.set(MS_full_scan);
+
+        if (msLevel == 1)
+            result->set(MS_MS1_spectrum);
+        else
+            result->set(MS_MSn_spectrum);
 
         double scanTime = pSpectrum->RetentionTime;
         if (scanTime > 0)
@@ -458,12 +468,14 @@ string stringToIDREF(const string& s)
     return result;
 }
 
-void addSource(MSData& msd, const bfs::path& sourcePath)
+void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPath)
 {
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = stringToIDREF(sourcePath.string());
     sourceFile->name = sourcePath.leaf();
-    sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
+    // sourcePath: <source>\Analysis.yep|<source>\Analysis.baf|<source>\fid
+    // rootPath: c:\path\to\<source>[\Analysis.yep|Analysis.baf|fid]
+    sourceFile->location = string("file://") + bfs::complete(sourcePath, rootPath.branch_path()).branch_path().string();
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
 
@@ -480,7 +492,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             // each fid's source path is a directory but the source file is the fid
             for (size_t i=0; i < sourcePaths_.size(); ++i)
             {
-                addSource(msd_, sourcePaths_[i] / "fid");
+                bfs::path relativePath = bal::replace_first_copy((sourcePaths_[i] / "fid").string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_file);
             }
@@ -489,7 +502,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
         // a YEP's source path is the same as the source file
         case Reader_Bruker_Format_YEP:
             sourcePaths_.push_back(rootpath_ / "Analysis.yep");
-            addSource(msd_, sourcePaths_.back());
+            addSource(msd_, sourcePaths_.back(), rootpath_);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
             break;
@@ -497,7 +510,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
         // a BAF's source path is the same as the source file
         case Reader_Bruker_Format_BAF:
             sourcePaths_.push_back(rootpath_ / "Analysis.baf");
-            addSource(msd_, sourcePaths_.back());
+            addSource(msd_, sourcePaths_.back(), rootpath_);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
             break;
@@ -505,12 +518,12 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
         // a BAF/U2 combo has two sources, with different nativeID formats
         case Reader_Bruker_Format_BAF_and_U2:
             sourcePaths_.push_back(rootpath_ / "Analysis.baf");
-            addSource(msd_, sourcePaths_.back());
+            addSource(msd_, sourcePaths_.back(), rootpath_);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
 
             sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
-            addSource(msd_, sourcePaths_.back());
+            addSource(msd_, sourcePaths_.back(), rootpath_);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
             msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
             break;
@@ -549,13 +562,28 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 
     if (format_ != Reader_Bruker_Format_U2)
     {
-        msd_.fileDescription.fileContent.set(MS_MSn_spectrum);
-
+        bool hasMS1 = false;
+        bool hasMSn = false;
         size_t remainder = size_ - index_.size();
         for (size_t i=0; i < remainder; ++i)
         {
+            EDAL::IMSSpectrumPtr pSpectrum = getMSSpectrumPtr(i);
+            if (!hasMS1 && pSpectrum->MSMSStage == 1)
+            {
+                hasMS1 = true;
+                msd_.fileDescription.fileContent.set(MS_MS1_spectrum);
+            }
+            else if (!hasMSn)
+            {
+                hasMSn = true;
+                msd_.fileDescription.fileContent.set(MS_MSn_spectrum);
+            }
+
             index_.push_back(IndexEntry());
             IndexEntry& si = index_.back();
+            si.declaration = 0;
+            si.collection = -1;
+            si.scan = 0;
             si.index = index_.size()-1;
             switch (format_)
             {

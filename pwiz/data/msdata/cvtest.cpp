@@ -38,23 +38,23 @@ void test()
 {
     if (os_)
     {
-        *os_ << "name: " << cvinfo(MS_sample_number).name << endl
-             << "def: " << cvinfo(MS_sample_number).def << "\n\n";
+        *os_ << "name: " << cvTermInfo(MS_sample_number).name << endl
+             << "def: " << cvTermInfo(MS_sample_number).def << "\n\n";
 
-        *os_ << "name: " << cvinfo(MS_polarity).name << endl
-             << "def: " << cvinfo(MS_polarity).def << endl; 
+        *os_ << "name: " << cvTermInfo(MS_polarity).name << endl
+             << "def: " << cvTermInfo(MS_polarity).def << endl; 
     }
 
     // some simple tests
-    unit_assert(cvinfo(MS_sample_number).name == "sample number");
-    unit_assert(cvinfo(MS_contact_email).name == "contact email");
-    unit_assert(cvinfo(MS_contact_email).def == "Email adress of the contact person.");
+    unit_assert(cvTermInfo(MS_sample_number).name == "sample number");
+    unit_assert(cvTermInfo(MS_contact_email).name == "contact email");
+    unit_assert(cvTermInfo(MS_contact_email).def == "Email adress of the contact person.");
 
-    unit_assert(cvinfo(MS_zlib_compression).parentsIsA.size() == 1 &&
-                cvinfo(MS_zlib_compression).parentsIsA[0] == MS_binary_data_compression_type);
+    unit_assert(cvTermInfo(MS_zlib_compression).parentsIsA.size() == 1 &&
+                cvTermInfo(MS_zlib_compression).parentsIsA[0] == MS_binary_data_compression_type);
 
-    unit_assert(cvinfo(MS_instrument_model).parentsPartOf.size() == 1 &&
-                cvinfo(MS_instrument_model).parentsPartOf[0] == MS_instrument);
+    unit_assert(cvTermInfo(MS_instrument_model).parentsPartOf.size() == 1 &&
+                cvTermInfo(MS_instrument_model).parentsPartOf[0] == MS_instrument);
 }
 
 
@@ -71,25 +71,25 @@ void testIsA()
 
 void testSynonyms()
 {
-    const CVInfo& info = cvinfo(MS_B);
+    const CVTermInfo& info = cvTermInfo(MS_B);
     unit_assert(info.name == "magnetic field strength");
     unit_assert(info.exactSynonyms.size() == 1);
     unit_assert(info.exactSynonyms[0] == "B");
-    unit_assert(cvinfo(MS_QIT).exactSynonyms.size() == 3);
+    unit_assert(cvTermInfo(MS_QIT).exactSynonyms.size() == 3);
 
-    unit_assert(cvinfo(MS_chemical_ionization).shortName() == "CI");
-    unit_assert(cvinfo(MS_FT_ICR).shortName() == "FT_ICR");
-    unit_assert(cvinfo(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer).shortName() == "FT_ICR");
-    unit_assert(cvinfo(CVID_Unknown).shortName() == "Unknown");
+    unit_assert(cvTermInfo(MS_chemical_ionization).shortName() == "CI");
+    unit_assert(cvTermInfo(MS_FT_ICR).shortName() == "FT_ICR");
+    unit_assert(cvTermInfo(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer).shortName() == "FT_ICR");
+    unit_assert(cvTermInfo(CVID_Unknown).shortName() == "Unknown");
 }
 
 
 void testIDTranslation()
 {
-    unit_assert(cvinfo("MS:1000025").cvid == MS_B);
-    unit_assert(cvinfo("MS:1000042").cvid == MS_intensity);
-    unit_assert(cvinfo("UO:0000231").cvid == UO_information_unit);
-    unit_assert(cvinfo("XX:0000231").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo("MS:1000025").cvid == MS_B);
+    unit_assert(cvTermInfo("MS:1000042").cvid == MS_intensity);
+    unit_assert(cvTermInfo("UO:0000231").cvid == UO_information_unit);
+    unit_assert(cvTermInfo("XX:0000231").cvid == CVID_Unknown);
 }
 
 

@@ -138,7 +138,7 @@ void SpectrumBinaryData::update(const DataInfo& dataInfo,
     os << "# index: " << info.index << endl;
     os << "# id: " << info.id << endl;
     os << "# scanNumber: " << info.scanNumber << endl;
-    os << "# massAnalyzerType: " << cvinfo(info.massAnalyzerType).name << endl;
+    os << "# massAnalyzerType: " << cvTermInfo(info.massAnalyzerType).name << endl;
     os << "# scanEvent: " << info.scanEvent << endl;
     os << "# msLevel: " << info.msLevel << endl;
     os << "# retentionTime: " << info.retentionTime << endl;

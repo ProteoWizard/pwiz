@@ -2601,7 +2601,8 @@ const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(
 
 
 bool initialized_ = false;
-map<CVID,CVInfo> infoMap_;
+map<CVID,CVTermInfo> infoMap_;
+map<string,CV> cvMap_;
 vector<CVID> cvids_;
 
 
@@ -2609,7 +2610,7 @@ void initialize()
 {
     for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)
     {
-        CVInfo temp;
+        CVTermInfo temp;
         temp.cvid = it->cvid;
         temp.id = it->id;
         temp.name = it->name;
@@ -2626,6 +2627,18 @@ void initialize()
 
     for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)
         infoMap_[it->first].exactSynonyms.push_back(it->second);
+
+    cvMap_["MS"].fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
+    cvMap_["MS"].URI = "http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo";
+
+    cvMap_["UO"].fullName = "Unit Ontology";
+    cvMap_["UO"].URI = "http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo";
+
+    cvMap_["MS"].id = "MS";
+    cvMap_["MS"].version = "1.18.0";
+
+    cvMap_["UO"].id = "UO";
+    cvMap_["UO"].version = "04:03:2009";
 
     initialized_ = true;
 }
@@ -2655,7 +2668,26 @@ struct StringEquals
 } // namespace
 
 
-PWIZ_API_DECL const string& CVInfo::shortName() const
+PWIZ_API_DECL bool CV::operator==(const CV& that) const
+{
+    return id == that.id && fullName == that.fullName && URI == that.URI && version == that.version;
+}
+
+
+PWIZ_API_DECL bool CV::empty() const
+{
+    return id.empty() && fullName.empty() && URI.empty() && version.empty();
+}
+
+
+PWIZ_API_DECL const CV& cv(const string& prefix)
+{
+    if (!initialized_) initialize();
+    return cvMap_[prefix];
+}
+
+
+PWIZ_API_DECL const string& CVTermInfo::shortName() const
 {
     const string* result = &name;
     for (vector<string>::const_iterator it=exactSynonyms.begin(); it!=exactSynonyms.end(); ++it)
@@ -2665,13 +2697,13 @@ PWIZ_API_DECL const string& CVInfo::shortName() const
 }
 
 
-PWIZ_API_DECL string CVInfo::prefix() const
+PWIZ_API_DECL string CVTermInfo::prefix() const
 {
     return id.substr(0, id.find_first_of(":"));
 }
 
 
-PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid)
 {
    if (!initialized_) initialize();
    return infoMap_[cvid];
@@ -2691,7 +2723,7 @@ inline unsigned int stringToCVID(const std::string& str)
 }
 
 
-PWIZ_API_DECL const CVInfo& cvinfo(const string& id)
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)
 {
     if (!initialized_) initialize();
     CVID cvid = CVID_Unknown;
@@ -2717,8 +2749,8 @@ PWIZ_API_DECL const CVInfo& cvinfo(const string& id)
 PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)
 {
     if (child == parent) return true;
-    const CVInfo& info = cvinfo(child);
-    for (CVInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)
+    const CVTermInfo& info = cvTermInfo(child);
+    for (CVTermInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)
         if (cvIsA(*it,parent)) return true;
     return false;
 }

@@ -103,8 +103,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam
         attributes.push_back(make_pair("type", userParam.type));
     if (userParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitAccession", cvinfo(userParam.units).id));
-        attributes.push_back(make_pair("unitName", cvinfo(userParam.units).name));
+        attributes.push_back(make_pair("unitAccession", cvTermInfo(userParam.units).id));
+        attributes.push_back(make_pair("unitName", cvTermInfo(userParam.units).name));
     }
 
     writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
@@ -133,7 +133,7 @@ struct HandlerUserParam : public SAXParser::Handler
         string unitAccession;
         getAttribute(attributes, "unitAccession", unitAccession);
         if (!unitAccession.empty())
-            userParam->units = cvinfo(unitAccession).cvid;
+            userParam->units = cvTermInfo(unitAccession).cvid;
 
         return Status::Ok;
     }
@@ -155,15 +155,15 @@ PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvRef", cvinfo(cvParam.cvid).prefix()));
-    attributes.push_back(make_pair("accession", cvinfo(cvParam.cvid).id));
-    attributes.push_back(make_pair("name", cvinfo(cvParam.cvid).name));
+    attributes.push_back(make_pair("cvRef", cvTermInfo(cvParam.cvid).prefix()));
+    attributes.push_back(make_pair("accession", cvTermInfo(cvParam.cvid).id));
+    attributes.push_back(make_pair("name", cvTermInfo(cvParam.cvid).name));
     attributes.push_back(make_pair("value", cvParam.value));
     if (cvParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitCvRef", cvinfo(cvParam.units).prefix()));
-        attributes.push_back(make_pair("unitAccession", cvinfo(cvParam.units).id));
-        attributes.push_back(make_pair("unitName", cvinfo(cvParam.units).name));
+        attributes.push_back(make_pair("unitCvRef", cvTermInfo(cvParam.units).prefix()));
+        attributes.push_back(make_pair("unitAccession", cvTermInfo(cvParam.units).id));
+        attributes.push_back(make_pair("unitName", cvTermInfo(cvParam.units).name));
     }
     writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
 }
@@ -188,14 +188,14 @@ struct HandlerCVParam : public SAXParser::Handler
         string accession;
         getAttribute(attributes, "accession", accession);
         if (!accession.empty())
-            cvParam->cvid = cvinfo(accession).cvid;
+            cvParam->cvid = cvTermInfo(accession).cvid;
 
         getAttribute(attributes, "value", cvParam->value);
 
         string unitAccession;
         getAttribute(attributes, "unitAccession", unitAccession);
         if (!unitAccession.empty())
-            cvParam->units = cvinfo(unitAccession).cvid;
+            cvParam->units = cvTermInfo(unitAccession).cvid;
 
         return Status::Ok;
     }
@@ -773,7 +773,7 @@ struct HandlerSoftware : public HandlerParamContainer
             string accession;
             getAttribute(attributes, "accession", accession);
             if (!accession.empty())
-                software->set(cvinfo(accession).cvid);
+                software->set(cvTermInfo(accession).cvid);
 
             getAttribute(attributes, "version", software->version);
             return Status::Ok;

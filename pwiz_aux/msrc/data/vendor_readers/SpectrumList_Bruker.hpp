@@ -79,6 +79,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
 
     void fillSourceList();
     void createIndex();
+    EDAL::IMSSpectrumPtr getMSSpectrumPtr(size_t index) const;
     //string findPrecursorID(int precursorMsLevel, size_t index) const;
 
     CompassXtractWrapperPtr compassXtractWrapperPtr_;

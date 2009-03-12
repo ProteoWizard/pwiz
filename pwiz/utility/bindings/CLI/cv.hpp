@@ -3680,13 +3680,13 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::St
 /// <summary>
 /// A utility class for getting detailed information about a particular CVID (CV term)
 /// </summary>
-public ref class CVInfo
+public ref class CVTermInfo
 {
-    DEFINE_INTERNAL_BASE_CODE(CVInfo, pwiz::msdata::CVInfo);
+    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::msdata::CVTermInfo);
     public:
 
     /// <summary>
-    /// returns the CVID corresponding this CVInfo instance describes
+    /// returns the CVID corresponding this CVTermInfo instance describes
     /// <para>- note: for PSI-MS terms, the CVID always corresponds with the accession number
     /// </summary>
     property CVID cvid { CVID get() {return (CVID) base_->cvid;} }
@@ -3721,17 +3721,17 @@ public ref class CVInfo
     /// </summary>
     property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
 
-    CVInfo() : base_(new pwiz::msdata::CVInfo()) {}
+    CVTermInfo() : base_(new pwiz::msdata::CVTermInfo()) {}
 
     /// <summary>
     /// returns CV term info for the specified CVID
     /// </summary>
-    CVInfo(CVID cvid) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo((pwiz::msdata::CVID) cvid))) {}
+    CVTermInfo(CVID cvid) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo((pwiz::msdata::CVID) cvid))) {}
 
     /// <summary>
     /// returns CV term info for the specified id in the form: "prefix:number"
     /// </summary>
-    CVInfo(System::String^ id) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo(ToStdString(id)))) {}
+    CVTermInfo(System::String^ id) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo(ToStdString(id)))) {}
 
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()

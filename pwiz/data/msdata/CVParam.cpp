@@ -43,13 +43,13 @@ PWIZ_API_DECL CVParam::~CVParam() {}
 
 PWIZ_API_DECL string CVParam::name() const
 {
-    return cvinfo(cvid).name;
+    return cvTermInfo(cvid).name;
 }
 
 
 PWIZ_API_DECL string CVParam::unitsName() const
 {
-    return cvinfo(units).name;
+    return cvTermInfo(units).name;
 }
 
 
@@ -67,10 +67,10 @@ PWIZ_API_DECL double CVParam::timeInSeconds() const
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const CVParam& param)
 {
-    os << cvinfo(param.cvid).name << ": " << param.value;
+    os << cvTermInfo(param.cvid).name << ": " << param.value;
 
     if (param.units != CVID_Unknown)
-        os << " " << cvinfo(param.units).name << "(s)";
+        os << " " << cvTermInfo(param.units).name << "(s)";
 
     return os;
 }

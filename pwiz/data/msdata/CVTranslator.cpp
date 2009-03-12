@@ -182,7 +182,7 @@ void CVTranslator::Impl::insertCVTerms()
     {
         if (cvIsA(*cvid, MS_purgatory)) continue;
 
-        const CVInfo& info = cvinfo(*cvid);
+        const CVTermInfo& info = cvTermInfo(*cvid);
 
         // insert name
         insert(info.name, *cvid);

@@ -175,8 +175,34 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     }
     os << "\n}; // enum CVID\n\n\n"; 
 
+    os << "/// Information about an ontology or CV source and a short 'lookup' tag to refer to.\n"
+          "struct PWIZ_API_DECL CV\n"
+          "{\n"
+          "    /// the short label to be used as a reference tag with which to refer to this particular Controlled Vocabulary source description (e.g., from the cvLabel attribute, in CVParamType elements).\n"
+          "    std::string id;\n"
+          "\n"
+          "    /// the URI for the resource.\n"
+          "    std::string URI;\n"
+          "\n"
+          "    /// the usual name for the resource (e.g. The PSI-MS Controlled Vocabulary).\n"
+          "    std::string fullName;\n"
+          "\n"
+          "    /// the version of the CV from which the referred-to terms are drawn.\n"
+          "    std::string version;\n"
+          "\n"
+          "    /// returns true iff id, URI, fullName, and version are all pairwise equal\n"
+          "    bool operator==(const CV& that) const;\n"
+          "\n"
+          "    /// returns ture iff id, URI, fullName, and version are all empty\n"
+          "    bool empty() const;\n"
+          "};\n\n\n";
+
+    os << "/// returns a CV object for the specified namespace (prefix);\n"
+          "/// currently supported namespaces are: MS UO\n"
+          "PWIZ_API_DECL const CV& cv(const std::string& prefix);\n\n\n";
+
     os << "/// structure for holding CV term info\n" 
-          "struct PWIZ_API_DECL CVInfo\n"
+          "struct PWIZ_API_DECL CVTermInfo\n"
           "{\n"
           "    CVID cvid;\n"
           "    std::string id;\n"      
@@ -188,16 +214,16 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    id_list parentsPartOf;\n"
           "    std::vector<std::string> exactSynonyms;\n"
           "\n"
-          "    CVInfo() : cvid((CVID)-1) {}\n"
+          "    CVTermInfo() : cvid((CVID)-1) {}\n"
           "    const std::string& shortName() const;\n"
           "    std::string prefix() const;\n"
           "};\n\n\n";
 
     os << "/// returns CV term info for the specified CVID\n" 
-          "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid);\n\n\n";
+          "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);\n\n\n";
 
     os << "/// returns CV term info for the specified id (accession number)\n" 
-          "PWIZ_API_DECL const CVInfo& cvinfo(const std::string& id);\n\n\n";
+          "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);\n\n\n";
 
     os << "/// returns true iff child IsA parent in the CV\n" 
           "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);\n\n\n";
@@ -303,7 +329,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
     os << "bool initialized_ = false;\n"
-          "map<CVID,CVInfo> infoMap_;\n"
+          "map<CVID,CVTermInfo> infoMap_;\n"
+          "map<string,CV> cvMap_;\n"
           "vector<CVID> cvids_;\n"
           "\n\n";
 
@@ -311,7 +338,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "{\n"
           "    for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n" 
           "    {\n"
-          "        CVInfo temp;\n"
+          "        CVTermInfo temp;\n"
           "        temp.cvid = it->cvid;\n"
           "        temp.id = it->id;\n"
           "        temp.name = it->name;\n"
@@ -328,8 +355,48 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "    for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
           "        infoMap_[it->first].exactSynonyms.push_back(it->second);\n"
+          "\n";
+
+    // TODO: is there a way to get these from the OBOs?
+    os << "    cvMap_[\"MS\"].fullName = \"Proteomics Standards Initiative Mass Spectrometry Ontology\";\n"
+          "    cvMap_[\"MS\"].URI = \"http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo\";\n"
           "\n"
-          "    initialized_ = true;\n"
+          "    cvMap_[\"UO\"].fullName = \"Unit Ontology\";\n"
+          "    cvMap_[\"UO\"].URI = \"http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo\";\n"
+          "\n";
+
+    // populate CV ids and versions from OBO headers
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+    {
+        os << "    cvMap_[\"" << obo->prefix << "\"].id = \"" << obo->prefix << "\";\n";
+
+        string version;
+        for (size_t i=0; i < obo->header.size(); ++i)
+        {
+            boost::regex e(".*?[^-]version: (\\S+)");
+            boost::smatch what;
+            if (regex_match(obo->header[i], what, e))
+            {
+                version = what[1];
+                break;
+            }
+
+            if (version.empty())
+            {
+                boost::regex e("\\s*date: (\\S+).*");
+                boost::smatch what;
+                if (regex_match(obo->header[i], what, e))
+                    version = what[1];
+            }
+        }
+
+        if (version.empty())
+            version = "unknown";
+
+        os << "    cvMap_[\"" << obo->prefix << "\"].version = \"" << version << "\";\n\n";
+    }
+
+    os << "    initialized_ = true;\n"
           "}\n\n\n";
 
     os << "const char* oboPrefixes_[] =\n"
@@ -351,7 +418,23 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "} // namespace\n\n\n";
 
-    os << "PWIZ_API_DECL const string& CVInfo::shortName() const\n"
+    os << "PWIZ_API_DECL bool CV::operator==(const CV& that) const\n"
+          "{\n"
+          "    return id == that.id && fullName == that.fullName && URI == that.URI && version == that.version;\n"
+          "}\n\n\n";
+
+    os << "PWIZ_API_DECL bool CV::empty() const\n"
+          "{\n"
+          "    return id.empty() && fullName.empty() && URI.empty() && version.empty();\n"
+          "}\n\n\n";
+
+    os << "PWIZ_API_DECL const CV& cv(const string& prefix)\n"
+          "{\n"
+          "    if (!initialized_) initialize();\n"
+          "    return cvMap_[prefix];\n"
+          "}\n\n\n";
+
+    os << "PWIZ_API_DECL const string& CVTermInfo::shortName() const\n"
           "{\n"
           "    const string* result = &name;\n"
           "    for (vector<string>::const_iterator it=exactSynonyms.begin(); it!=exactSynonyms.end(); ++it)\n"
@@ -360,12 +443,12 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return *result;\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL string CVInfo::prefix() const\n"
+    os << "PWIZ_API_DECL string CVTermInfo::prefix() const\n"
           "{\n"
           "    return id.substr(0, id.find_first_of(\":\"));\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   return infoMap_[cvid];\n"
@@ -383,7 +466,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return value;\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVInfo& cvinfo(const string& id)\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)\n"
           "{\n"
           "    if (!initialized_) initialize();\n"
           "    CVID cvid = CVID_Unknown;\n"
@@ -408,8 +491,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"
           "{\n"
           "    if (child == parent) return true;\n"
-          "    const CVInfo& info = cvinfo(child);\n"
-          "    for (CVInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)\n"
+          "    const CVTermInfo& info = cvTermInfo(child);\n"
+          "    for (CVTermInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)\n"
           "        if (cvIsA(*it,parent)) return true;\n"
           "    return false;\n"
           "}\n\n\n";

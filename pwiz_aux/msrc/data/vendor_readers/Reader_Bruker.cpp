@@ -106,12 +106,7 @@ string stringToIDREF(const string& s)
 
 void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format format)
 {
-    msd.cvs.resize(1);
-    CV& cv = msd.cvs.front();
-    cv.URI = "psi-ms.obo"; 
-    cv.id = "MS";
-    cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
-    cv.version = "1.0";
+    msd.cvs = defaultCVList();
 
     bfs::path p(rootpath);
     msd.id = stringToIDREF(p.leaf());
@@ -141,7 +136,7 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
     //if (!msd.instrumentConfigurationPtrs.empty())
     //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(stringToIDREF(rootpath));
+    msd.run.id = boost::to_lower_copy(stringToIDREF(p.leaf()));
     //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
 }
 

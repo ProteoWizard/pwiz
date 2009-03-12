@@ -191,13 +191,13 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "/// <summary>\n"
        << "/// A utility class for getting detailed information about a particular CVID (CV term)\n"
        << "/// </summary>\n"
-       << "public ref class CVInfo\n"
+       << "public ref class CVTermInfo\n"
        << "{\n"
-       << "    DEFINE_INTERNAL_BASE_CODE(CVInfo, pwiz::msdata::CVInfo);\n"
+       << "    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::msdata::CVTermInfo);\n"
        << "    public:\n"
        << "\n"
        << "    /// <summary>\n"
-       << "    /// returns the CVID corresponding this CVInfo instance describes\n"
+       << "    /// returns the CVID corresponding this CVTermInfo instance describes\n"
        << "    /// <para>- note: for PSI-MS terms, the CVID always corresponds with the accession number\n"
        << "    /// </summary>\n"
        << "    property CVID cvid { CVID get() {return (CVID) base_->cvid;} }\n"
@@ -232,17 +232,17 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "    /// </summary>\n"
        << "    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }\n"
        << "\n"
-       << "    CVInfo() : base_(new pwiz::msdata::CVInfo()) {}\n"
+       << "    CVTermInfo() : base_(new pwiz::msdata::CVTermInfo()) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified CVID\n"
        << "    /// </summary>\n"
-       << "    CVInfo(CVID cvid) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo((pwiz::msdata::CVID) cvid))) {}\n"
+       << "    CVTermInfo(CVID cvid) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo((pwiz::msdata::CVID) cvid))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified id in the form: \"prefix:number\"\n"
        << "    /// </summary>\n"
-       << "    CVInfo(System::String^ id) : base_(new pwiz::msdata::CVInfo(pwiz::msdata::cvinfo(ToStdString(id)))) {}\n"
+       << "    CVTermInfo(System::String^ id) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo(ToStdString(id)))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns the shortest synonym from exactSynonyms()\n"
@@ -353,7 +353,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
     os << "bool initialized_ = false;\n"
-          "map<CVID,CVInfo> infoMap_;\n"
+          "map<CVID,CVTermInfo> infoMap_;\n"
           "vector<CVID> cvids_;\n"
           "\n\n";
 
@@ -361,7 +361,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "{\n"
           "    for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n" 
           "    {\n"
-          "        CVInfo temp;\n"
+          "        CVTermInfo temp;\n"
           "        temp.cvid = it->cvid;\n"
           "        temp.id = it->id;\n"
           "        temp.name = it->name;\n"
@@ -401,7 +401,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "} // namespace\n\n\n";
 
-    os << "PWIZ_API_DECL const string& CVInfo::shortName() const\n"
+    os << "PWIZ_API_DECL const string& CVTermInfo::shortName() const\n"
           "{\n"
           "    const string* result = &name;\n"
           "    for (vector<string>::const_iterator it=exactSynonyms.begin(); it!=exactSynonyms.end(); ++it)\n"
@@ -410,12 +410,12 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return *result;\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL string CVInfo::prefix() const\n"
+    os << "PWIZ_API_DECL string CVTermInfo::prefix() const\n"
           "{\n"
           "    return id.substr(0, id.find_first_of(\":\"));\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid)\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid)\n"
           "{\n"
           "   if (!initialized_) initialize();\n"
           "   return infoMap_[cvid];\n"
@@ -433,7 +433,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return value;\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVInfo& cvinfo(const string& id)\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)\n"
           "{\n"
           "    if (!initialized_) initialize();\n"
           "    CVID cvid = CVID_Unknown;\n"
@@ -458,8 +458,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"
           "{\n"
           "    if (child == parent) return true;\n"
-          "    const CVInfo& info = cvinfo(child);\n"
-          "    for (CVInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)\n"
+          "    const CVTermInfo& info = cvTermInfo(child);\n"
+          "    for (CVTermInfo::id_list::const_iterator it=info.parentsIsA.begin(); it!=info.parentsIsA.end(); ++it)\n"
           "        if (cvIsA(*it,parent)) return true;\n"
           "    return false;\n"
           "}\n\n\n";

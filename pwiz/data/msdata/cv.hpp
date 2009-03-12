@@ -32,7 +32,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
@@ -47,7 +47,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 04:03:2009 17:16
 //   saved-by: george gkoutos
@@ -3666,8 +3666,36 @@ enum PWIZ_API_DECL CVID
 }; // enum CVID
 
 
+/// Information about an ontology or CV source and a short 'lookup' tag to refer to.
+struct PWIZ_API_DECL CV
+{
+    /// the short label to be used as a reference tag with which to refer to this particular Controlled Vocabulary source description (e.g., from the cvLabel attribute, in CVParamType elements).
+    std::string id;
+
+    /// the URI for the resource.
+    std::string URI;
+
+    /// the usual name for the resource (e.g. The PSI-MS Controlled Vocabulary).
+    std::string fullName;
+
+    /// the version of the CV from which the referred-to terms are drawn.
+    std::string version;
+
+    /// returns true iff id, URI, fullName, and version are all pairwise equal
+    bool operator==(const CV& that) const;
+
+    /// returns ture iff id, URI, fullName, and version are all empty
+    bool empty() const;
+};
+
+
+/// returns a CV object for the specified namespace (prefix);
+/// currently supported namespaces are: MS UO
+PWIZ_API_DECL const CV& cv(const std::string& prefix);
+
+
 /// structure for holding CV term info
-struct PWIZ_API_DECL CVInfo
+struct PWIZ_API_DECL CVTermInfo
 {
     CVID cvid;
     std::string id;
@@ -3679,18 +3707,18 @@ struct PWIZ_API_DECL CVInfo
     id_list parentsPartOf;
     std::vector<std::string> exactSynonyms;
 
-    CVInfo() : cvid((CVID)-1) {}
+    CVTermInfo() : cvid((CVID)-1) {}
     const std::string& shortName() const;
     std::string prefix() const;
 };
 
 
 /// returns CV term info for the specified CVID
-PWIZ_API_DECL const CVInfo& cvinfo(CVID cvid);
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);
 
 
 /// returns CV term info for the specified id (accession number)
-PWIZ_API_DECL const CVInfo& cvinfo(const std::string& id);
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);
 
 
 /// returns true iff child IsA parent in the CV

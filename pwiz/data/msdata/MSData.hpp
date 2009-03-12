@@ -38,29 +38,6 @@ namespace pwiz {
 namespace msdata {
 
 
-/// Information about an ontology or CV source and a short 'lookup' tag to refer to.
-struct PWIZ_API_DECL CV
-{
-    /// the short label to be used as a reference tag with which to refer to this particular Controlled Vocabulary source description (e.g., from the cvLabel attribute, in CVParamType elements).
-    std::string id;
-
-    /// the URI for the resource.
-    std::string URI;
-
-    /// the usual name for the resource (e.g. The PSI-MS Controlled Vocabulary).
-    std::string fullName;
-
-    /// the version of the CV from which the referred-to terms are drawn.
-    std::string version;
-
-    /// returns true iff id, URI, fullName, and version are all empty
-    bool empty() const;
-
-    /// returns true iff id, URI, fullName, and version are all pairwise equal
-    bool operator==(const CV& that) const;
-};
-
-
 PWIZ_API_DECL std::vector<CV> defaultCVList();
 
 

@@ -144,12 +144,12 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::manufacturer() const
     if (model.cvid != CVID_Unknown)
     {
         // get the parent term
-        const CVInfo& modelInfo = cvinfo(model.cvid);
+        const CVTermInfo& modelInfo = cvTermInfo(model.cvid);
         if (modelInfo.parentsIsA.empty())
             throw runtime_error("[LegacyAdapter_Instrument::manufacturer()] Model has no parents.");
 
         // s/ instrument model//
-        string result = cvinfo(modelInfo.parentsIsA[0]).name;
+        string result = cvTermInfo(modelInfo.parentsIsA[0]).name;
         string::size_type index_suffix = result.find(" instrument model");
         if (index_suffix != string::npos) result.erase(index_suffix);
         return result;

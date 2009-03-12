@@ -45,15 +45,15 @@ class WriteCVParam
     void operator()(const CVParam& param)
     {
         os_ << "<cvParam " 
-            << "cvLabel=\"" << cvinfo(param.cvid).id.substr(0,2) << "\" "
-            << "accession=\"" << cvinfo(param.cvid).id << "\" "
-            << "name=\"" << cvinfo(param.cvid).name << "\" "
+            << "cvLabel=\"" << cvTermInfo(param.cvid).id.substr(0,2) << "\" "
+            << "accession=\"" << cvTermInfo(param.cvid).id << "\" "
+            << "name=\"" << cvTermInfo(param.cvid).name << "\" "
             << "value=\"" << param.value << "\"";
 
         if (param.units != CVID_Unknown)
         {
-            os_ << " unitAccession=\"" << cvinfo(param.units).id << "\" "
-                << "unitName=\"" << cvinfo(param.units).name << "\""; 
+            os_ << " unitAccession=\"" << cvTermInfo(param.units).id << "\" "
+                << "unitName=\"" << cvTermInfo(param.units).name << "\""; 
         }
 
         os_ << "/>\n";
@@ -171,11 +171,11 @@ void testIsChildOf()
     if (os_)
     {
         *os_ << "find dissociation method: " 
-             << (itDiss!=params.end() ? cvinfo(itDiss->cvid).name : "not found")
+             << (itDiss!=params.end() ? cvTermInfo(itDiss->cvid).name : "not found")
              << endl;
 
         *os_ << "find unit: " 
-             << (itUnit!=params.end() ? cvinfo(itUnit->cvid).name : "not found")
+             << (itUnit!=params.end() ? cvTermInfo(itUnit->cvid).name : "not found")
              << endl;
 
     }

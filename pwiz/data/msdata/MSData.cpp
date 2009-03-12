@@ -43,39 +43,13 @@ using boost::lexical_cast;
 using boost::shared_ptr;
 
 
-//
-// CV
-//
-
-
-PWIZ_API_DECL bool CV::empty() const 
-{
-    return id.empty() && URI.empty() && fullName.empty() && version.empty();
-}
-
-
-PWIZ_API_DECL bool CV::operator==(const CV& that) const
-{
-    return id == that.id && fullName == that.fullName && URI == that.URI && version == that.version;
-}
-
-
 PWIZ_API_DECL vector<CV> defaultCVList()
 {
     vector<CV> result; 
     result.resize(2);
 
-    CV& cv_MS = result[0];
-    cv_MS.URI = "http://psidev.info/ms/mzML/psi-ms.obo"; 
-    cv_MS.id = "MS";
-    cv_MS.fullName = cvinfo(MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Ontology).name;
-    cv_MS.version = "1.3.1"; // TODO: generate from cv.hpp
-
-    CV& cv_UO = result[1];
-    cv_UO.URI = "http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"; 
-    cv_UO.id = "UO";
-    cv_UO.fullName = "Unit Ontology";
-    cv_UO.version = "1.15"; // TODO: generate from cv.hpp
+    result[0] = cv("MS");
+    result[1] = cv("UO");
 
     return result;
 }
@@ -319,7 +293,7 @@ PWIZ_API_DECL void Component::define(CVID cvid, int order)
     else if (cvIsA(cvid, MS_detector_type))
         type = ComponentType_Detector;
     else
-        throw runtime_error(("[Component::define] Error determining component type for term \"" + cvinfo(cvid).name + "\""));
+        throw runtime_error(("[Component::define] Error determining component type for term \"" + cvTermInfo(cvid).name + "\""));
 }
 
 

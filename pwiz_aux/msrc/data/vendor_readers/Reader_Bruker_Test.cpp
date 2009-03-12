@@ -23,6 +23,8 @@
 
 #include "Reader_Bruker.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -49,10 +51,11 @@ void testAccept(const string& rawpath)
     unit_assert(accepted);
 }
 
-
 void testRead(const string& rawpath)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
+
+    MSDataFile targetResult(rawpath + ".mzML");
 
     // read file into MSData object
     Reader_Bruker reader;
@@ -60,50 +63,10 @@ void testRead(const string& rawpath)
     reader.read(rawpath, "dummy", msd);
     if (os_) TextWriter(*os_,0)(msd);
 
-    // test file-level metadata
-    unit_assert(!msd.run.spectrumListPtr->empty());
-    CVParam nativeIdFormat = msd.fileDescription.fileContent.cvParamChild(MS_nativeID_format);
-
-    // test that file type was identified correctly
-    bfs::path sourcePath(rawpath);
-    if (bfs::exists(sourcePath / "Analysis.baf"))
-        unit_assert(nativeIdFormat.cvid == MS_Bruker_BAF_nativeID_format);
-    else if (bfs::exists(sourcePath / "Analysis.yep"))
-        unit_assert(nativeIdFormat.cvid == MS_Bruker_Agilent_YEP_nativeID_format);
-    else
-    {
-        string sourceDirectory = *(--sourcePath.end());
-        if (bfs::exists(sourcePath / (sourceDirectory.substr(0, sourceDirectory.length()-2) + ".u2")))
-        {
-            unit_assert(nativeIdFormat.cvid == MS_scan_number_only_nativeID_format);
-            unit_assert(msd.fileDescription.fileContent.hasCVParam(MS_EMR_spectrum));
-        }
-        else
-            unit_assert(nativeIdFormat.cvid == MS_Bruker_FID_nativeID_format);
-    }
-
-    // make assertions about msd depending on file type
-    switch (nativeIdFormat.cvid)
-    {
-        default:
-            throw runtime_error("invalid or missing Bruker NativeID format in fileContent");
-
-        case MS_Bruker_BAF_nativeID_format:
-        case MS_Bruker_Agilent_YEP_nativeID_format:
-            for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
-                unit_assert(msd.run.spectrumListPtr->spectrum(i)->id == "scan=" + lexical_cast<string>(i+1));
-            break;
-
-        case MS_Bruker_FID_nativeID_format:
-            for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
-                unit_assert(msd.run.spectrumListPtr->spectrum(i)->id == "file=" + msd.fileDescription.sourceFilePtrs[i]->id);
-            break;
-
-        case MS_scan_number_only_nativeID_format:
-            //for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
-            //    unit_assert(msd.run.spectrumListPtr->spectrum(i)->id == "scan=" + lexical_cast<string>(i+1000000));
-            break;
-    }
+    // test for 1:1 equality
+    Diff<MSData> diff(msd, targetResult);
+    if (os_ && diff) *os_ << diff << endl; 
+    unit_assert(!diff);
 }
 
 

@@ -104,7 +104,7 @@ SpectrumList_PrecursorRecalculator::Impl::Impl(const MSData& msd)
 
     if (targetMassAnalyzerType!=MS_FT_ICR && targetMassAnalyzerType!=MS_orbitrap)
         throw runtime_error(("[SpectrumList_PrecursorRecalculator] Mass analyzer not supported: " +
-                            cvinfo(targetMassAnalyzerType).name).c_str());
+                            cvTermInfo(targetMassAnalyzerType).name).c_str());
 
 
     precursorRecalculator = createPrecursorRecalculator_msprefix(targetMassAnalyzerType);

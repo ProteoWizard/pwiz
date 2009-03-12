@@ -125,7 +125,7 @@ shared_ptr<PeakFamilyDetector> createPeakFamilyDetector(const MSData& msd)
         default:
         {
             throw runtime_error(("[peakaboo] Mass analyzer not supported: " + 
-                                cvinfo(massAnalyzerType).name).c_str());
+                                cvTermInfo(massAnalyzerType).name).c_str());
         }
     }
 }
