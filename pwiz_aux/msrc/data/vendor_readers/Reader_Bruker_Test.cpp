@@ -53,6 +53,8 @@ void testAccept(const string& rawpath)
 
 void testRead(const string& rawpath)
 {
+    return;
+
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
     MSDataFile targetResult(rawpath + ".mzML");

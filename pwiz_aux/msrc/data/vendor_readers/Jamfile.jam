@@ -54,7 +54,7 @@ path-constant TEST_PATH3 : "CsI_Pos_0_G1_000003.d" ;
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run Reader_Bruker_Test.cpp pwiz_aux_msrc_reader_bruker
     : # args
-        #\"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
     : # input-files
     : # requirements
     : # target name
