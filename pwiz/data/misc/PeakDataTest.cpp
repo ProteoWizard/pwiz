@@ -139,6 +139,7 @@ void testPeak()
 
     peak.mz = 1;
     peak.retentionTime = 1.5;
+    peak.scanNumber = 2009;
     peak.intensity = 2;
     peak.area = 3;
     peak.error = 4;

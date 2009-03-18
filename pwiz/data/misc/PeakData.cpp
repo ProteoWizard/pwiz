@@ -25,11 +25,10 @@
 
 
 #include "PeakData.hpp"
-#include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
 #include <complex>
 #include <iterator>
-
+#include <iostream>
 
 namespace pwiz {
 namespace data {
@@ -57,6 +56,7 @@ bool Peak::operator==(const Peak& that) const
 {
     return mz == that.mz &&
            retentionTime == that.retentionTime &&
+           scanNumber == that.scanNumber &&
            intensity == that.intensity &&
            area == that.area &&
            error == that.error &&
@@ -77,6 +77,7 @@ void Peak::write(minimxml::XMLWriter& writer) const
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
     attributes.push_back(make_pair("retentionTime", lexical_cast<string>(retentionTime)));
+    attributes.push_back(make_pair("scanNumber", lexical_cast<string>(scanNumber)));
     attributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
     attributes.push_back(make_pair("area", lexical_cast<string>(area)));
     attributes.push_back(make_pair("error", lexical_cast<string>(error)));
@@ -87,21 +88,16 @@ void Peak::write(minimxml::XMLWriter& writer) const
 }
 
 
-struct HandlerPeak : public SAXParser::Handler
-{
-    Peak* peak;
-    HandlerPeak(){}
-    HandlerPeak(Peak* _peak) : peak(_peak) {}
-
-    virtual Status startElement(const string& name, 
+SAXParser::Handler::Status HandlerPeak::startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
-    {
+{
         if (name != "peak")
             throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
 
         getAttribute(attributes, "mz", peak->mz);
         getAttribute(attributes, "retentionTime", peak->retentionTime);
+        getAttribute(attributes, "scanNumber", peak->scanNumber);
         getAttribute(attributes, "intensity", peak->intensity);
         getAttribute(attributes, "area", peak->area);
         getAttribute(attributes, "error", peak->error);
@@ -109,10 +105,10 @@ struct HandlerPeak : public SAXParser::Handler
         getAttribute(attributes, "phase", peak->phase);
         getAttribute(attributes, "decay", peak->decay);
 
-
         return Status::Ok;
-    }
-};
+
+}
+
 
 
 void Peak::read(istream& is)
@@ -170,8 +166,7 @@ void PeakFamily::write(XMLWriter& writer) const
 struct HandlerPeakFamily : public SAXParser::Handler
 {
     PeakFamily* peakFamily;
-    HandlerPeakFamily(){}
-    HandlerPeakFamily(PeakFamily* _peakFamily) : peakFamily(_peakFamily){}
+    HandlerPeakFamily(PeakFamily* _peakFamily = 0) : peakFamily(_peakFamily){}
 
     virtual Status startElement(const string& name,
                   const Attributes& attributes,
@@ -305,8 +300,7 @@ void Scan::write(XMLWriter& writer) const
 struct HandlerScan : public SAXParser::Handler
 {
     Scan* scan;
-    HandlerScan(){}
-    HandlerScan(Scan* _scan) : scan(_scan){}
+    HandlerScan(Scan* _scan = 0) : scan(_scan){}
 
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
     {
@@ -457,8 +451,7 @@ void Software::write(XMLWriter& writer) const
 struct HandlerParameter : public SAXParser::Handler
 {
     Software::Parameter* parameter;
-    HandlerParameter(){}
-    HandlerParameter(Software::Parameter* _parameter) : parameter(_parameter){}
+    HandlerParameter(Software::Parameter* _parameter = 0) : parameter(_parameter){}
 
     virtual Status startElement(const string& current, const Attributes& attributes, stream_offset position)
     {
@@ -481,8 +474,7 @@ struct HandlerParameter : public SAXParser::Handler
 struct HandlerSoftware : public SAXParser::Handler
 {
     Software* software;
-    HandlerSoftware(){}
-    HandlerSoftware(Software* _software) : software(_software) {}
+    HandlerSoftware(Software* _software = 0) : software(_software) {}
 
     virtual Status startElement(const string& current, const Attributes& attributes, stream_offset position)
     {
@@ -705,31 +697,37 @@ void Peakel::calculateMetadata()
     maxIntensity = 0;
     totalIntensity = 0;
 
-    // calculate mz and retentionTime mean
-    vector<Peak>::iterator calc_mean_it = peaks.begin();
-    for(; calc_mean_it != peaks.end(); ++calc_mean_it)
-        {
-            mz += calc_mean_it->mz;
-            retentionTime += calc_mean_it->retentionTime;
-        }
-    mz = mz / peaks.size();
-    retentionTime = retentionTime / peaks.size();
-
-    // calculate mz and retentionTime variance
-    vector<Peak>::iterator calc_var_it = peaks.begin();
-    for(; calc_var_it != peaks.end(); ++calc_var_it)
-        {
-            mzVariance += (calc_var_it->mz - mz)*(calc_var_it->mz - mz);
-        }
-    mzVariance = mzVariance / peaks.size();
-
-    // calculate intensity metadata.  Could go inside one of the above loops, left it out for clarity
+    // calculate intensity metadata
     vector<Peak>::iterator calc_intensity_it = peaks.begin();
     for(; calc_intensity_it != peaks.end(); ++calc_intensity_it)
         {
             if (calc_intensity_it->intensity > maxIntensity) maxIntensity = calc_intensity_it->intensity;
             totalIntensity += calc_intensity_it->intensity;
         }
+
+    //ignore peakels of total intensity zero in rt calculations to avoid div by zero
+    // peakels will still be reported in feature
+    
+    
+    // calculate mz and retentionTime mean
+    vector<Peak>::iterator calc_mean_it = peaks.begin();
+    for(; calc_mean_it != peaks.end(); ++calc_mean_it)
+        {
+            mz += calc_mean_it->mz;
+            if (totalIntensity != 0) retentionTime += (calc_mean_it->retentionTime)*(calc_mean_it->intensity)/totalIntensity; //weighted average
+         
+        }
+
+    mz = mz / peaks.size();
+
+    // calculate mz variance
+    vector<Peak>::iterator calc_var_it = peaks.begin();
+    for(; calc_var_it != peaks.end(); ++calc_var_it)
+        {
+            mzVariance += (calc_var_it->mz - mz)*(calc_var_it->mz - mz);
+        }
+
+    mzVariance = mzVariance / peaks.size();
 
     return;
 }
@@ -760,14 +758,7 @@ void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     xmlWriter.endElement();
 }
 
-struct HandlerPeakel : public SAXParser::Handler
-{
-    HandlerPeakel(){}
-    HandlerPeakel(Peakel* _peakel) : peakel(_peakel){}
-
-    Peakel* peakel;
-
-    virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
+SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const Attributes& attributes, stream_offset position)
     {
       if (name == "peakel")
         {
@@ -812,14 +803,7 @@ struct HandlerPeakel : public SAXParser::Handler
 
         }
 
-    }
-
-private:
-
-    HandlerPeak _handlerPeak;
-    size_t _peakCount;
-
-};
+}
 
 void Peakel::read(istream& is)
 {
@@ -874,26 +858,36 @@ void Feature::calculateMetadata()
     totalIntensity = 0;
 
     // calculate metadata of each peakel
+    
     vector<Peakel>::iterator calc_pkl_it = peakels.begin();
     for(; calc_pkl_it != peakels.end(); ++calc_pkl_it)
-        {          
+        {   
             calc_pkl_it->calculateMetadata();
+           
         }
 
     // write mzMonoisotopic (mz of first peakel)
     mzMonoisotopic = peakels.begin()->mz;
 
-    // calculate retentionTime (mean of peakel retentionTimes)
+    // calculate totalIntensity and maxIntensity to get scanNumber
+    vector<Peakel>::iterator calc_intensity_it = peakels.begin();
+    for(; calc_intensity_it != peakels.end(); ++calc_intensity_it)
+        {
+            totalIntensity += calc_intensity_it->totalIntensity;
+           
+        }
+
+    // calculate retentionTime (weighted mean of peakel retentionTimes)
     vector<Peakel>::iterator calc_mean_it = peakels.begin();
     for(; calc_mean_it != peakels.end(); ++calc_mean_it)
         {
-            retentionTime += calc_mean_it->retentionTime;
+            retentionTime += (calc_mean_it->retentionTime) * (calc_mean_it->totalIntensity)/totalIntensity; //weighted average
 
         }
 
-    retentionTime = retentionTime / peakels.size();
 
     // calculate rtVariance ( variance of peakel retentionTimes)
+    
     vector<Peakel>::iterator calc_var_it = peakels.begin();
     for(; calc_var_it != peakels.end(); ++calc_var_it)
         {
@@ -902,16 +896,8 @@ void Feature::calculateMetadata()
         }
 
     rtVariance = rtVariance / peakels.size();
+    return;
 
-
-    // calculate totalIntensity ( could go in one of the above loops, left out for clarity)
-
-    vector<Peakel>::iterator calc_intensity_it = peakels.begin();
-    for(; calc_intensity_it != peakels.end(); ++calc_intensity_it)
-        {
-            totalIntensity += calc_intensity_it->totalIntensity;
-        }
-    
 }
 
 
@@ -925,7 +911,7 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
     attributes.push_back(make_pair("totalIntensity", boost::lexical_cast<string>(totalIntensity)));
     attributes.push_back(make_pair("rtVariance", boost::lexical_cast<string>(rtVariance)));
-  
+
     xmlWriter.startElement("feature",attributes);
 
     XMLWriter::Attributes attributes_pkl;
@@ -939,17 +925,12 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 
     xmlWriter.endElement();
     xmlWriter.endElement();
+
 }
 
-struct HandlerFeature : public SAXParser::Handler
+SAXParser::Handler::Status HandlerFeature::startElement(const string& name, const Attributes& attributes, stream_offset position)
+
 {
-    HandlerFeature(){}
-    HandlerFeature(Feature* _feature) : feature(_feature){}
-
-    Feature* feature;
-
-    virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
-    {
       if (name == "feature")
         {
             getAttribute(attributes,"id", feature->id);
@@ -958,7 +939,9 @@ struct HandlerFeature : public SAXParser::Handler
             getAttribute(attributes,"charge", feature->charge);
             getAttribute(attributes,"totalIntensity", feature->totalIntensity);
             getAttribute(attributes,"rtVariance", feature->rtVariance);
+
             return Handler::Status::Ok;
+
         }
 
       else if (name=="peakels")
@@ -992,20 +975,16 @@ struct HandlerFeature : public SAXParser::Handler
             return Status::Done;
         }
 
-  }
-
-private:
-
-    HandlerPeakel _handlerPeakel;
-    size_t _peakelCount;
-
-};
+}
 
 
 void Feature::read(istream& is)
 {
+
     HandlerFeature handlerFeature(this);
     parse(is, handlerFeature);
+
+
 
 }
 
@@ -1041,7 +1020,6 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature)
     feature.read(is);
     return is;
 }
-
 
 } // namespace peakdata 
 } // namespace data 

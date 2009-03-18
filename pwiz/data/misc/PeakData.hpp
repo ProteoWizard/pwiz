@@ -20,6 +20,9 @@
 // limitations under the License.
 //
 
+//
+// Moved HandlerPeakel, HandlerPeak, and HandlerFeature to hpp so could access HandlerFeature for MatchData
+//
 
 #ifndef _PEAKDATA_HPP_
 #define _PEAKDATA_HPP_
@@ -27,15 +30,17 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "CalibrationParameters.hpp"
 #include <vector>
 #include <string>
-
 
 namespace pwiz {
 namespace data {
 namespace peakdata {
 
+using namespace pwiz::minimxml;
+using namespace minimxml::SAXParser;
 
 const int PeakDataFormatVersion_Major = 1;
 const int PeakDataFormatVersion_Minor = 1;
@@ -46,6 +51,7 @@ struct PWIZ_API_DECL Peak
     // general peak info
     double mz;
     double retentionTime;
+    double scanNumber;
     double intensity;
     double area;
     double error; 
@@ -62,6 +68,17 @@ struct PWIZ_API_DECL Peak
 
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
+};
+
+struct HandlerPeak : public SAXParser::Handler
+{
+        Peak* peak;
+        HandlerPeak(Peak* _peak = 0) : peak(_peak) {}
+
+        virtual Status startElement(const std::string& name,
+                                    const Attributes& attributes,
+                                    stream_offset position);
+
 };
 
 
@@ -187,6 +204,20 @@ struct PWIZ_API_DECL Peakel
 
 };
 
+struct HandlerPeakel : public SAXParser::Handler
+{
+    Peakel* peakel;
+    HandlerPeakel(Peakel* _peakel = 0) : peakel(_peakel){}
+    virtual Status startElement(const std::string& name, const Attributes& attributes, stream_offset position);
+
+private:
+
+    HandlerPeak _handlerPeak;
+    size_t _peakCount;
+
+};
+
+
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peakel& peakel);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel);
 
@@ -195,7 +226,7 @@ struct PWIZ_API_DECL Feature
 {
 
     Feature(){}
-    
+
     std::string id; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;
     double retentionTime;
@@ -214,13 +245,28 @@ struct PWIZ_API_DECL Feature
 
 };
  
+struct HandlerFeature : public SAXParser::Handler // included in header file for accession by MatchData
+{
+    Feature* feature;
+    HandlerFeature(Feature* _feature = 0) : feature(_feature){}
+
+    virtual Status startElement(const std::string& name, const Attributes& attributes, stream_offset position);
+
+private:
+
+    HandlerPeakel _handlerPeakel;
+    size_t _peakelCount;
+
+};
+
+
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Feature& feature);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature);
+
 
 } // namespace peakdata 
 } // namespace data 
 } // namespace pwiz
-
 
 #endif // _PEAKDATA_HPP_
 
