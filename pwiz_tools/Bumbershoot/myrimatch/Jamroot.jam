@@ -1,0 +1,119 @@
+# Usage:
+#
+#   bjam [options] [install]
+#
+#   Builds and installs all Bumbershoot applications.
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+#
+#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
+#                           Default: "ext/src/expat*"
+#
+#
+#   parallelism=<none|mpi>  For MPI-enabled applications, enable or disable
+#                           support for running the application in parallel
+#                           across multiple nodes. This support depends on
+#                           a working MPI implementation being available
+#                           at compile-time (and if using shared linkage,
+#                           at run-time as well).
+#                           Default: none
+#
+#
+#   install                 Install executable files to certain locations
+#   =======
+#
+#   --prefix=<PREFIX>       Install architecture independent files here.
+#                           Default: "C:\Program Files\Bumbershoot" for Windows
+#                           Default: "/usr/local/bumbershoot" for Linux
+#
+#   --exec-prefix=<EPREFIX> Install architecture dependent files here.
+#                           Default: <PREFIX>
+#
+
+import os ;
+import modules ;
+import common ;
+import package ;
+import errors : error ;
+import feature ;
+
+path-constant BUMBERSHOOT_ROOT_PATH : . ;
+local tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+tmp += $(BUMBERSHOOT_ROOT_PATH) ;
+modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+import mpi ;
+
+project bumbershoot
+	: requirements
+	    <include>pwiz-src
+	    <include>pwiz-src/pwiz
+	    <include>pwiz-src/libraries/boost_aux
+
+        <toolset>gcc,<link>shared:<runtime-link>shared
+
+        # special msvc hacks
+        <toolset>msvc:<define>WIN32                     # windows
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+        <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+        <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+        <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
+        <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+        <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+        <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+        <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
+        <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+
+        # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
+        # warning: '__cur' might be used uninitialized in this function 
+        <toolset>gcc:<cxxflags>-Wno-uninitialized   
+
+        # special Cygwin gcc-3.4.4 hack
+        # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
+        <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
+        <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
+
+        # allow "long long" even with -pedantic
+        <toolset>gcc:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wno-long-long
+
+        # don't call 'strip' -- causes 'Bus error' in some cases
+        #  e.g. find_if with inline predicate
+        <toolset>darwin:<debug-symbols>on
+
+        <threading>multi
+	;
+
+local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
+expat_src ?= [ glob "ext/src/expat*" : "ext/src/*.tar.gz" ] ;
+expat_src = $(expat_src[0]) ;
+
+if ! $(expat_src)
+{
+     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
+}
+
+# enable MPI support
+feature.feature parallelism : none mpi : composite link-incompatible ;
+feature.compose <parallelism>mpi : <library>/mpi//mpi/<parallelism>none <define>USE_MPI ;
+
+use-project ext : ./pwiz-src/pwiz ;
+
+path-constant EXPAT_SOURCE : $(expat_src) ;
+path-constant BOOST_SOURCE : pwiz-src/libraries/boost_1_34_1 ;
+
+local .boost-build-file = [ modules.peek : .boost-build-file ] ;
+tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+tmp += $(BUMBERSHOOT_ROOT_PATH)/ext pwiz-src/libraries ;
+modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+using expat : 2.0 : $(EXPAT_SOURCE) ;
+
+use-project freicore : ./freicore ;
