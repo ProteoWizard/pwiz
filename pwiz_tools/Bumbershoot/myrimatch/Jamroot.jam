@@ -49,6 +49,7 @@ import mpi ;
 
 local pwiz_src = [ MATCH --pwiz_src=(.*) : [ modules.peek : ARGV ] ] ;
 pwiz_src ?= "freicore/pwiz_src" ;
+path-constant PWIZ_SOURCE : $(pwiz_src) ;
 
 project bumbershoot
 	: requirements
@@ -119,4 +120,4 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 using expat : 2.0 : $(EXPAT_SOURCE) ;
 
-use-project freicore : ./freicore ;
+#use-project freicore : ./freicore ;
