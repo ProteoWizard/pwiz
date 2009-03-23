@@ -41,7 +41,7 @@ tag ?= "" ;
 name = $(name)$(tag) ;
 
 exe $(name)
- : [ glob *.cpp ] [ glob *.h ] ..//freicore
+ : [ glob *.cpp ] [ glob *.h ] freicore
  : <parallelism>mpi:<library>/mpi//mpi
  : <variant>release <link>static
  ;

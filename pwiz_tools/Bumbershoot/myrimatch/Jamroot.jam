@@ -47,11 +47,14 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 import mpi ;
 
+local pwiz_src = [ MATCH --pwiz_src=(.*) : [ modules.peek : ARGV ] ] ;
+pwiz_src ?= "freicore/pwiz_src" ;
+
 project bumbershoot
 	: requirements
-	    <include>pwiz-src
-	    <include>pwiz-src/pwiz
-	    <include>pwiz-src/libraries/boost_aux
+	    <include>$(pwiz_src)
+	    <include>$(pwiz_src)/pwiz
+	    <include>$(pwiz_src)/libraries/boost_aux
 
         <toolset>gcc,<link>shared:<runtime-link>shared
 
@@ -92,7 +95,7 @@ project bumbershoot
 	;
 
 local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "ext/src/expat*" : "ext/src/*.tar.gz" ] ;
+expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
 expat_src = $(expat_src[0]) ;
 
 if ! $(expat_src)
@@ -104,14 +107,14 @@ if ! $(expat_src)
 feature.feature parallelism : none mpi : composite link-incompatible ;
 feature.compose <parallelism>mpi : <library>/mpi//mpi/<parallelism>none <define>USE_MPI ;
 
-use-project ext : ./pwiz-src/pwiz ;
+use-project ext : $(pwiz_src)/pwiz ;
 
 path-constant EXPAT_SOURCE : $(expat_src) ;
-path-constant BOOST_SOURCE : pwiz-src/libraries/boost_1_34_1 ;
+path-constant BOOST_SOURCE : $(pwiz_src)/libraries/boost_1_36_0 ;
 
 local .boost-build-file = [ modules.peek : .boost-build-file ] ;
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += $(BUMBERSHOOT_ROOT_PATH)/ext pwiz-src/libraries ;
+tmp += freicore/ext $(pwiz_src)/libraries ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 using expat : 2.0 : $(EXPAT_SOURCE) ;
