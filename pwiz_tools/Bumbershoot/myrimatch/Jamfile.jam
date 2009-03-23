@@ -43,7 +43,7 @@ name = $(name)$(tag) ;
 exe $(name)
  : [ glob *.cpp ] [ glob *.h ] freicore
  : <parallelism>mpi:<library>/mpi//mpi
- : <variant>release <link>static
+ : <variant>release <link>static <runtime-link>static
  ;
 
 import package ;
@@ -55,7 +55,7 @@ if [ modules.peek : NT ] {
 }
 
 package.install install
-    : $(install-requirements) release <link>static
+    : $(install-requirements) release <link>static <runtime-link>static
     : $(name)
     : # no libraries
     : # no headers
