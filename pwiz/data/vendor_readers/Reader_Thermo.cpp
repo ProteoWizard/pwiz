@@ -176,6 +176,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
+    rawfile.setCurrentController(Controller_MS, 1);
     msd.fileDescription.fileContent.set(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
 
     SourceFilePtr sourceFile(new SourceFile);

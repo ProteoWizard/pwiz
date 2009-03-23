@@ -191,6 +191,11 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
         {
             rawfile_->setCurrentController((ControllerType) controllerType, n);
 
+            // skip this controller if it has no spectra
+            if (rawfile_->value(NumSpectra) == 0)
+                continue;
+
+
             switch ((ControllerType) controllerType)
             {
                 case Controller_MS:
