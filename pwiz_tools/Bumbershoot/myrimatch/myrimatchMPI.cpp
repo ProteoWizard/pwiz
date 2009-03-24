@@ -686,6 +686,12 @@ namespace myrimatch
 					rootSpectrum->processingTime += childSpectrum->processingTime;
 					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr )
 						rootSpectrum->resultSet.add( *itr );
+					//#ifdef DELTA_SCORES
+					//for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
+					//	rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;
+					//for(map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
+					//	rootSpectrum->mzFidelityDistribution[(*itr).first] += (*itr).second;
+					//#endif
 					rootSpectrum->scoreHistogram += childSpectrum->scoreHistogram;
 					delete childSpectrum;
 				}
