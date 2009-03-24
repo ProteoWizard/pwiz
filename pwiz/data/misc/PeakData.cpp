@@ -47,7 +47,7 @@ using boost::lexical_cast;
 
 
 Peak::Peak()
-:   mz(0), retentionTime(0),intensity(0), area(0), error(0),
+:   mz(0), retentionTime(0), scanNumber(0), intensity(0), area(0), error(0),
     frequency(0), phase(0), decay(0) 
 {}
 
