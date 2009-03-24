@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 #include "myrimatch.h"
-#include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/proteome/Version.hpp"
+#include "../pwiz-src/pwiz/data/msdata/Version.hpp"
+#include "../pwiz-src/pwiz/utility/proteome/Version.hpp"
 
 namespace freicore
 {
@@ -333,6 +333,9 @@ namespace myrimatch
 
 			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
 
+		//#ifdef DELTA_SCORES
+			//s->computeSecondaryScores();
+		//#endif
 			s->resultSet.calculateRanks();
 			s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
 
@@ -416,6 +419,7 @@ namespace myrimatch
 
 		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + ".pepXML";
 		cout << g_hostString << " is writing search results to file \"" << outputFilename << "\"." << endl;
+
 		spectra.writePepXml( dataFilename, g_rtConfig->OutputSuffix, "MyriMatch", g_dbPath + g_dbFilename, &proteins, fileParams );
 
 		if( g_rtConfig->DeisotopingMode == 3 /*&& g_rtConfig->DeisotopingTestMode != 0*/ )
@@ -726,7 +730,6 @@ namespace myrimatch
                                                0 );
                     }
 					STOP_PROFILER(2);
-                    //cout << sequence << ": " << sequenceIons << endl;
 					START_PROFILER(3);
 					spectrum->ScoreSequenceVsSpectrum( result, sequence, sequenceIons );
 					STOP_PROFILER(3);
@@ -765,6 +768,11 @@ namespace myrimatch
 						++ spectrum->scores[ result.mvh ];
 						spectrum->scoreHistogram.add( result.mvh );
 					}
+					//#ifdef DELTA_SCORES
+					// Accumulate score distributions for the spectrum
+					//++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+					//++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
+					//#endif
 					spectrum->resultSet.add( result );
 				}
 				if( g_rtConfig->UseMultipleProcessors )
@@ -853,10 +861,11 @@ namespace myrimatch
                     STOP_PROFILER(10);
                     for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                     {
-                        double mass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight()
+                        
+						double mass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight()
                                                                         : itr->monoisotopicMass();
-                        if( mass + smallestDynamicModMass < g_rtConfig->curMinSequenceMass ||
-                            mass + largestDynamicModMass > g_rtConfig->curMaxSequenceMass ) {
+                        if( mass /* + smallestDynamicModMass*/ > g_rtConfig->curMaxSequenceMass ||
+                            mass /*+ largestDynamicModMass*/ < g_rtConfig->curMinSequenceMass ) {
                             START_PROFILER(11);
                             ++itr;
                             STOP_PROFILER(11);
@@ -864,6 +873,7 @@ namespace myrimatch
                         }
                         digestedPeptides.clear();
                         START_PROFILER(12);
+						
                         //MakePtmVariantsOld( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods);
                         if(MakePtmVariants( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants )) {
                             ++ threadInfo->stats.numCandidatesSkipped;
