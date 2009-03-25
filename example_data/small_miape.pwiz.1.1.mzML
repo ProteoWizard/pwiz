@@ -2,8 +2,8 @@
 <indexedmzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0_idx.xsd">
   <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="small_miape_pwiz" version="1.0">
     <cvList count="2">
-      <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.3.1" URI="http://psidev.info/ms/mzML/psi-ms.obo"/>
-      <cv id="UO" fullName="Unit Ontology" version="1.15" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
+      <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.18.2" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+      <cv id="UO" fullName="Unit Ontology" version="04:03:2009" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
     </cvList>
     <fileDescription>
       <fileContent>
@@ -149,7 +149,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.0049350000000000002" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0049350000000000002" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41522216796875" type="xsd:float"/>
@@ -189,7 +189,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.0078966666666666664" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0078966666666666664" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -229,7 +229,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.011218333333333334" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.011218333333333334" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 810.79@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -244,8 +244,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="809.78999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="811.78999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="810.78999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -286,7 +287,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.022838333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.022838333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.34@cid35.00 [220.00-1685.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -301,8 +302,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.34000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.34000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.34000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -343,7 +345,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.034924999999999998" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.034924999999999998" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 725.36@cid35.00 [185.00-1465.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -358,8 +360,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="724.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="726.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="725.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -400,7 +403,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.048619999999999997" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.048619999999999997" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 558.87@cid35.00 [140.00-1130.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -415,8 +418,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="557.87" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="559.87" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="558.87" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -457,7 +461,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.061923333333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.061923333333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 812.33@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -472,8 +476,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="811.33000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="813.33000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="812.33000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -514,7 +519,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.075014999999999998" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.075014999999999998" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41473388671875" type="xsd:float"/>
@@ -554,7 +559,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.077788333333333334" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.077788333333333334" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -594,7 +599,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.081203333333333336" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.081203333333333336" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 810.75@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -609,8 +614,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="809.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="811.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="810.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -651,7 +657,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.092903333333333324" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.092903333333333324" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.96@cid35.00 [220.00-1690.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -666,8 +672,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.96000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.96000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.96000000000004" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -708,7 +715,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.10480333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.10480333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 644.06@cid35.00 [165.00-1300.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -723,8 +730,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="643.05999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="645.05999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="644.05999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -765,7 +773,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.11721500000000001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.11721500000000001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 725.23@cid35.00 [185.00-1465.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -780,8 +788,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="724.23000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="726.23000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="725.23000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -822,7 +831,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.13002166666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.13002166666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 559.19@cid35.00 [140.00-1130.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -837,8 +846,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="558.19000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="560.19000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="559.19000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -879,7 +889,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.14345166666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.14345166666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41571044921875" type="xsd:float"/>
@@ -919,7 +929,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.14640833333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.14640833333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -959,7 +969,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.149755" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.149755" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 811.41@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -974,8 +984,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="810.40999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="812.40999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="811.40999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1016,7 +1027,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.16144166666666668" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.16144166666666668" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.36@cid35.00 [220.00-1685.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1031,8 +1042,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1073,7 +1085,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.17337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.17337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 643.80@cid35.00 [165.00-1300.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1088,8 +1100,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="642.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="644.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="643.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1130,7 +1143,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.18665833333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.18665833333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 558.94@cid35.00 [140.00-1130.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1145,8 +1158,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="557.94000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="559.94000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="558.94000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1187,7 +1201,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.20069500000000001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.20069500000000001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 725.14@cid35.00 [185.00-1465.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1202,8 +1216,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="724.13999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="726.13999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="725.13999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1244,7 +1259,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.2136733333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.2136733333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41595458984375" type="xsd:float"/>
@@ -1284,7 +1299,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.21674666666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.21674666666666667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1324,7 +1339,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.22007333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.22007333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 810.84@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1339,8 +1354,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="809.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="811.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="810.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1381,7 +1397,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.23292333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.23292333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.42@cid35.00 [220.00-1685.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1396,8 +1412,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.41999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.41999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.41999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1438,7 +1455,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.24474499999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.24474499999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 674.64@cid35.00 [175.00-1360.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1453,8 +1470,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="673.63999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="675.63999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="674.63999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1495,7 +1513,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.25917166666666669" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.25917166666666669" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 643.74@cid35.00 [165.00-1300.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1510,8 +1528,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="642.74000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="644.74000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="643.74000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1552,7 +1571,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.27266333333333331" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.27266333333333331" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 725.36@cid35.00 [185.00-1465.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1567,8 +1586,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="724.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="726.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="725.36000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1609,7 +1629,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.28548333333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.28548333333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41754150390625" type="xsd:float"/>
@@ -1649,7 +1669,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.28889833333333331" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.28889833333333331" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1689,7 +1709,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.30370333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.30370333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.39@cid35.00 [220.00-1685.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1704,8 +1724,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.38999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.38999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.38999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1746,7 +1767,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.31564999999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.31564999999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 643.80@cid35.00 [165.00-1300.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1761,8 +1782,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="642.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="644.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="643.79999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1803,7 +1825,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.32852666666666663" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.32852666666666663" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 558.75@cid35.00 [140.00-1130.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1818,8 +1840,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="557.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="559.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="558.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1860,7 +1883,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.34291500000000003" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.34291500000000003" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 882.45@cid35.00 [230.00-1775.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1875,8 +1898,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="881.45000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="883.45000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="882.45000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -1917,7 +1941,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.35855833333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.35855833333333337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41510009765625" type="xsd:float"/>
@@ -1957,7 +1981,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.36142833333333335" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.36142833333333335" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -1997,7 +2021,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.364755" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.364755" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 810.73@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2012,8 +2036,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="809.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="811.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="810.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2054,7 +2079,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.37657833333333335" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.37657833333333335" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.35@cid35.00 [220.00-1685.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2069,8 +2094,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.35000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.35000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.35000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2111,7 +2137,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.38867333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.38867333333333332" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 643.73@cid35.00 [165.00-1300.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2126,8 +2152,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="642.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="644.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="643.73000000000002" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2168,7 +2195,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.40196166666666666" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.40196166666666666" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 725.68@cid35.00 [185.00-1465.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2183,8 +2210,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="724.67999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="726.67999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="725.67999999999995" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2225,7 +2253,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.41513166666666668" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.41513166666666668" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 674.70@cid35.00 [175.00-1360.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2240,8 +2268,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=36">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="673.70000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="675.70000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="674.70000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2282,7 +2311,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC1">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.42848333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.42848333333333333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="810.41839599609375" type="xsd:float"/>
@@ -2322,7 +2351,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.43322166666666662" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.43322166666666662" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + p ESI Full ms [200.00-2000.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2362,7 +2391,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.43656666666666671" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.43656666666666671" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 810.82@cid35.00 [210.00-1635.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2377,8 +2406,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="809.82000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="811.82000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="810.82000000000005" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2419,7 +2449,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.44832" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.44832" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 837.78@cid35.00 [220.00-1690.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2434,8 +2464,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="836.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="838.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="837.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2476,7 +2507,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.46056499999999995" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.46056499999999995" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 674.84@cid35.00 [175.00-1360.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2491,8 +2522,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="673.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="675.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="674.84000000000003" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2533,7 +2565,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.47310333333333326" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.47310333333333326" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 558.90@cid35.00 [140.00-1130.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2548,8 +2580,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="557.89999999999998" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="559.89999999999998" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="558.89999999999998" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2590,7 +2623,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="IC2">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="0.48723666666666665" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.48723666666666665" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="ITMS + c ESI d Full ms2 882.54@cid35.00 [230.00-1780.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
               <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="0" type="xsd:float"/>
@@ -2605,8 +2638,9 @@
           <precursorList count="1">
             <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=43">
               <isolationWindow>
-                <cvParam cvRef="MS" accession="MS:1000794" name="isolation window lower limit" value="881.53999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000793" name="isolation window upper limit" value="883.53999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="882.53999999999996" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
@@ -2658,59 +2692,59 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="controllerType=0 controllerNumber=1 scan=1">8188</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=2">120778</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=3">250013</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=4">259386</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=5">273704</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=6">286428</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=7">297361</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=8">309392</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=9">393170</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=10">530123</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=11">540105</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=12">553798</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=13">564621</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=14">576914</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=15">588055</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=16">683102</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=17">812893</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=18">823164</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=19">836627</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=20">847765</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=21">858971</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=22">872221</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=23">968084</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=24">1079213</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=25">1089494</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=26">1103147</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=27">1115418</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=28">1126731</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=29">1139730</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=30">1251464</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=31">1377011</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=32">1390691</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=33">1401680</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=34">1413116</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=35">1423479</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=36">1515151</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=37">1628845</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=38">1639046</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=39">1653958</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=40">1664955</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=41">1678050</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=42">1689998</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=43">1876203</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=44">2007529</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=45">2018097</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=46">2032449</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=47">2043996</offset>
-      <offset idRef="controllerType=0 controllerNumber=1 scan=48">2055068</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=1">8268</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=2">120864</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=3">250105</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=4">259636</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=5">274112</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=6">286994</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=7">298097</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=8">310286</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=9">394070</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=10">531029</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=11">541181</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=12">555032</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=13">566013</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=14">578464</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=15">589763</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=16">684816</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=17">814613</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=18">825042</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=19">838663</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=20">849959</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=21">861323</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=22">874731</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=23">970600</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=24">1081735</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=25">1092174</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=26">1105985</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=27">1118414</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=28">1129885</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=29">1143042</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=30">1254782</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=31">1380335</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=32">1394173</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=33">1405320</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=34">1416926</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=35">1427447</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=36">1519125</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=37">1632825</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=38">1643184</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=39">1658254</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=40">1669409</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=41">1682662</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=42">1694768</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=43">1880979</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=44">2012311</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=45">2023037</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=46">2037547</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=47">2049252</offset>
+      <offset idRef="controllerType=0 controllerNumber=1 scan=48">2060482</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="TIC">2066003</offset>
+      <offset idRef="TIC">2071575</offset>
     </index>
   </indexList>
-  <indexListOffset>2067748</indexListOffset>
-  <fileChecksum>78bc725cdd997a0f4da0858822977d31e3bf1249</fileChecksum>
+  <indexListOffset>2073320</indexListOffset>
+  <fileChecksum>81614fd82e7073de03f106daaef88030034bc7d7</fileChecksum>
 </indexedmzML>

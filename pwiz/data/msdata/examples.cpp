@@ -245,6 +245,9 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.precursors.resize(1);
     Precursor& precursor = s20.precursors.front();
     precursor.spectrumID= s19.id;
+    precursor.isolationWindow.set(MS_isolation_window_target_m_z, 445.3, MS_m_z);
+    precursor.isolationWindow.set(MS_isolation_window_lower_offset, .5, MS_m_z);
+    precursor.isolationWindow.set(MS_isolation_window_upper_offset, .5, MS_m_z);
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
     precursor.selectedIons[0].set(MS_intensity, 120053);

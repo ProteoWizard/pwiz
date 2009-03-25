@@ -2,8 +2,8 @@
 <indexedmzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0_idx.xsd">
   <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz" version="1.0">
     <cvList count="2">
-      <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.3.1" URI="http://psidev.info/ms/mzML/psi-ms.obo"/>
-      <cv id="UO" fullName="Unit Ontology" version="1.15" URI="http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo"/>
+      <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="1.18.2" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+      <cv id="UO" fullName="Unit Ontology" version="04:03:2009" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
     </cvList>
     <fileDescription>
       <fileContent>
@@ -116,7 +116,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="LCQDeca">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.8905000000000003" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="5.8905000000000003" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="+ c NSI Full ms [ 400.00-1800.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
               <scanWindowList count="1">
@@ -154,7 +154,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="LCQDeca">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="5.9904999999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="5.9904999999999999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"/>
               <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
               <scanWindowList count="1">
@@ -167,6 +167,11 @@
           </scanList>
           <precursorList count="1">
             <precursor spectrumRef="scan=19">
+              <isolationWindow>
+                <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="445.30000000000001" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </isolationWindow>
               <selectedIonList count="1">
                 <selectedIon>
                   <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="445.33999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -232,7 +237,7 @@
           <scanList count="1">
             <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
             <scan instrumentConfigurationRef="LCQDeca">
-              <cvParam cvRef="MS" accession="MS:1000016" name="scan time" value="42.049999999999997" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+              <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="42.049999999999997" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
               <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="+ c MALDI Full ms [100.00-1000.00]"/>
               <scanWindowList count="1">
                 <scanWindow>
@@ -298,16 +303,16 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="scan=19">6186</offset>
-      <offset idRef="scan=20">9690</offset>
-      <offset idRef="scan=21">14056</offset>
-      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">15585</offset>
+      <offset idRef="scan=19">6266</offset>
+      <offset idRef="scan=20">9776</offset>
+      <offset idRef="scan=21">14727</offset>
+      <offset idRef="scan=22" spotID="A1,42x42,4242x4242">16256</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic">19107</offset>
-      <offset idRef="sic">20692</offset>
+      <offset idRef="tic">19784</offset>
+      <offset idRef="sic">21369</offset>
     </index>
   </indexList>
-  <indexListOffset>22210</indexListOffset>
-  <fileChecksum>7417edf38ec04a664a2c6e1cf679e73cafc6f856</fileChecksum>
+  <indexListOffset>22887</indexListOffset>
+  <fileChecksum>0dbebfb99075881afa2002177d37e4d6215fdced</fileChecksum>
 </indexedmzML>
