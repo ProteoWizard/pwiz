@@ -92,7 +92,7 @@ void fillInMetadata(const string& rawpath, MSData& msd)
         if (bal::to_lower_copy(bfs::extension(sourcePath)) == ".dat")
         {
             sourceFile->set(MS_Waters_nativeID_format);
-            sourceFile->set(MS_Waters_DAT_file);
+            sourceFile->set(MS_Waters_raw_file);
         }
         else
             sourceFile->set(MS_no_nativeID_format);

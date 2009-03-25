@@ -92,7 +92,7 @@ void start_mzXML(XMLWriter& xmlWriter)
 string getRetentionTime(const Scan& scan)
 {
     ostringstream oss;
-    oss << "PT" << scan.cvParam(MS_scan_time).timeInSeconds() << "S";
+    oss << "PT" << scan.cvParam(MS_scan_start_time).timeInSeconds() << "S";
     return oss.str();
 }
 

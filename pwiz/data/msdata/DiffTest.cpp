@@ -630,11 +630,11 @@ void testScanList()
 
     Scan a1;
     a1.set(MS_filter_string, "booger");
-    a1.set(MS_scan_time, "4.20", UO_minute);
+    a1.set(MS_scan_start_time, "4.20", UO_minute);
 
     Scan a2;
     a1.set(MS_filter_string, "goober");
-    a1.set(MS_scan_time, "6.66", UO_minute);
+    a1.set(MS_scan_start_time, "6.66", UO_minute);
 
     a.scans.push_back(a1);
     a.scans.push_back(a2);
@@ -699,7 +699,7 @@ void testSpectrum()
     a.scanList.scans.push_back(Scan());
     a.scanList.scans.back().instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.scanList.scans.back().paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.scanList.scans.back().cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
+    a.scanList.scans.back().cvParams.push_back(CVParam(MS_scan_start_time, 5.890500, UO_minute));
     a.scanList.scans.back().cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scanList.scans.back().scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 

@@ -4,13 +4,13 @@ saved-by: David Sparkman
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 1.18.0
-remark: release date: 2009-03-09
+remark: version: 1.18.2
+remark: release date: 2009-03-25
 remark: coverage: Mass spectrometer output files
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
+import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
 
 [Term]
 id: MS:0000000
@@ -123,8 +123,8 @@ relationship: has_units MS:1000807 ! Th/s
 
 [Term]
 id: MS:1000016
-name: scan time
-def: "The time that an analyzer started a scan, relative to the start of the run." [PSI:MS]
+name: scan start time
+def: "The time that an analyzer started a scan, relative to the start of the MS run." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000503 ! scan attribute
 relationship: has_units UO:0000010 ! second
@@ -2068,6 +2068,7 @@ name: electric field strength
 def: "The magnitude of the force per unit charge at a given point in space." [PSI:MS]
 is_a: MS:1000487 ! ion optics attribute
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
+relationship: has_units UO:0000268 ! volt per meter
 
 [Term]
 id: MS:1000309
@@ -3276,7 +3277,7 @@ name: dwell time
 def: "The time spent gathering data across a peak." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 synonym: "Scan Duration" RELATED []
-is_a: MS:1000549 ! selection window attribute
+is_a: MS:1000503 ! scan attribute
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
 
@@ -3386,21 +3387,23 @@ is_a: MS:1000513 ! binary data array
 [Term]
 id: MS:1000518
 name: binary data type
-def: "Binary Data type. 16-bit integer, 32-bit integer, 32-bit float 64-bit integer 64-bit float." [PSI:MS]
+def: "Encoding type of binary data, e.g. 64-bit float." [PSI:MS]
 relationship: part_of MS:1000442 ! spectrum
 relationship: part_of MS:1000625 ! chromatogram
 
 [Term]
 id: MS:1000519
 name: 32-bit integer
-def: "Signed 32-bit integer." [PSI:MS]
+def: "OBSOLETE Signed 32-bit integer." [PSI:MS]
 is_a: MS:1000518 ! binary data type
+is_obsolete: true
 
 [Term]
 id: MS:1000520
 name: 16-bit float
-def: "Signed 16-bit float." [PSI:MS]
+def: "OBSOLETE Signed 16-bit float." [PSI:MS]
 is_a: MS:1000518 ! binary data type
+is_obsolete: true
 
 [Term]
 id: MS:1000521
@@ -3411,8 +3414,9 @@ is_a: MS:1000518 ! binary data type
 [Term]
 id: MS:1000522
 name: 64-bit integer
-def: "Signed 64-bit integer." [PSI:MS]
+def: "OBSOLETE Signed 64-bit integer." [PSI:MS]
 is_a: MS:1000518 ! binary data type
+is_obsolete: true
 
 [Term]
 id: MS:1000523
@@ -3434,8 +3438,8 @@ relationship: part_of MS:1000442 ! spectrum
 
 [Term]
 id: MS:1000526
-name: Waters DAT file
-def: "Waters DAT file format, storing a single function recorded by the instrument in a Waters RAW directory." [PSI:MS]
+name: Waters raw file
+def: "Waters data file found in a Waters RAW directory, generated from an MS acquisition." [PSI:MS]
 is_a: MS:1000560 ! source file type
 
 [Term]
@@ -4129,7 +4133,6 @@ relationship: has_units MS:1000814 ! counts per second
 id: MS:1000630
 name: data processing parameter
 def: "Data processing parameter used in the data processing performed on the data file." [PSI:MS]
-is_a: MS:1000452 ! data transformation
 
 [Term]
 id: MS:1000631
@@ -5134,18 +5137,22 @@ relationship: part_of MS:1000441 ! scan
 [Term]
 id: MS:1000793
 name: isolation window upper limit
-def: "The highest m/z being isolated in an isolation window." [PSI:MS]
+def: "OBSOLETE The highest m/z being isolated in an isolation window." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000792 ! isolation window attribute
 relationship: has_units MS:1000040 ! m/z
+is_obsolete: true
+comment: This term was obsoleted in favor of using a target, lower, upper offset scheme. See terms 1000827-1000829
 
 [Term]
 id: MS:1000794
 name: isolation window lower limit
-def: "The lowest m/z being isolated in an isolation window." [PSI:MS]
+def: "OBSOLETE The lowest m/z being isolated in an isolation window." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000792 ! isolation window attribute
 relationship: has_units MS:1000040 ! m/z
+is_obsolete: true
+comment: This term was obsoleted in favor of using a target, lower, upper offset scheme. See terms 1000827-1000829
 
 [Term]
 id: MS:1000795
@@ -5358,6 +5365,39 @@ id: MS:1000825
 name: Bruker FID file
 def: "Bruker FID file format." [PSI:MS]
 is_a: MS:1000560 ! source file type
+
+[Term]
+id: MS:1000826
+name: elution time
+def: "The time of elution from a chromatographic column, relative to the start of the chromatography." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000503 ! scan attribute
+relationship: has_units UO:0000010 ! second
+relationship: has_units UO:0000031 ! minute
+
+[Term]
+id: MS:1000827
+name: isolation window target m/z
+def: "The primary or reference m/z about which the isolation window is defined." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000792 ! isolation window attribute
+relationship: has_units MS:1000040 ! m/z
+
+[Term]
+id: MS:1000828
+name: isolation window lower offset
+def: "The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000792 ! isolation window attribute
+relationship: has_units MS:1000040 ! m/z
+
+[Term]
+id: MS:1000829
+name: isolation window upper offset
+def: "The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000792 ! isolation window attribute
+relationship: has_units MS:1000040 ! m/z
 
 [Typedef]
 id: has_units

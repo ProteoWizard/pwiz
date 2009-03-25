@@ -65,7 +65,7 @@ class WriteCVParam
 
 
 const char* mzmlScanTime = 
-    "<cvParam cvLabel=\"MS\" accession=\"MS:1000016\" name=\"scan time\" value=\"5.890500\" "
+    "<cvParam cvLabel=\"MS\" accession=\"MS:1000016\" name=\"scan start time\" value=\"5.890500\" "
     "unitAccession=\"UO:0000031\" unitName=\"minute\"/>\n";
 
 const char* mzmlCollisionEnergy = 
@@ -80,7 +80,7 @@ void test()
     params.push_back(CVParam(MS_lowest_observed_m_z, 420));
     params.push_back(CVParam(MS_highest_observed_m_z, 2000.012345));
     params.push_back(CVParam(MS_m_z, "goober"));
-    params.push_back(CVParam(MS_scan_time, 5.890500, UO_minute)); 
+    params.push_back(CVParam(MS_scan_start_time, 5.890500, UO_minute)); 
     params.push_back(CVParam(MS_collision_energy, 35.00, UO_electronvolt)); 
     params.push_back(CVParam(MS_deisotoping, true)); 
     params.push_back(CVParam(MS_peak_picking, false)); 
@@ -120,7 +120,7 @@ void test()
     // info to write <cvParam> elements as required by mzML
 
     ostringstream ossScanTime;
-    CVParam scanTime(MS_scan_time, "5.890500", UO_minute); 
+    CVParam scanTime(MS_scan_start_time, "5.890500", UO_minute); 
     (WriteCVParam(ossScanTime))(scanTime);
     if (os_) *os_ << "mzmlScanTime: " << mzmlScanTime << endl
                   << "ossScanTime: " << ossScanTime.str() << endl;

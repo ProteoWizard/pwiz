@@ -221,7 +221,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 bal::trim(value);
                                 // TODO: handle (multiple) time ranges?
                                 double scanTime = lexical_cast<double>(value);
-                                scan.set(MS_scan_time, scanTime, UO_second);
+                                scan.set(MS_scan_start_time, scanTime, UO_second);
                             }
                             else
 				            {

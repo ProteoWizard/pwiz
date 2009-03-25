@@ -75,7 +75,7 @@ void initializeTinyMGF(MSData& msd)
     s20.scanList.set(MS_no_combination);
     s20.scanList.scans.push_back(Scan());
     Scan& s20scan = s20.scanList.scans.back();
-    s20scan.set(MS_scan_time, 4, UO_second);
+    s20scan.set(MS_scan_start_time, 4, UO_second);
 
     s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
     vector<double>& s20_mz = s20.getMZArray()->data;

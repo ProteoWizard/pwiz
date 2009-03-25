@@ -24,6 +24,7 @@
 #include "obo.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
+#include "boost/regex.hpp"
 #include <iostream>
 #include <iomanip>
 #include <fstream>

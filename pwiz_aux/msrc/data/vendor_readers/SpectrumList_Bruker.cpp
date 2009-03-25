@@ -214,7 +214,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
             double scanTime = spectrum->GetTime();
             if (scanTime > 0)
-                scan.set(MS_scan_time, scanTime, UO_minute);
+                scan.set(MS_scan_start_time, scanTime, UO_minute);
 
             vector<double> lcX, lcY;
             convertSafeArrayToVector(ssd->GetXAxis(), lcX);
@@ -239,7 +239,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
         double scanTime = pSpectrum->RetentionTime;
         if (scanTime > 0)
-            scan.set(MS_scan_time, pSpectrum->RetentionTime, UO_minute);
+            scan.set(MS_scan_start_time, pSpectrum->RetentionTime, UO_minute);
 
         EDAL::SpectrumPolarity polarity = pSpectrum->Polarity;
         switch (polarity)
@@ -360,8 +360,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
                     if (isolationMasses[i] > 0)
                     {
-                        precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMasses[i]);
-                        precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMasses[i]);
+                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMasses[i]);
                     }
                 }
                

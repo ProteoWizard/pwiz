@@ -72,7 +72,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
 
     scanEvent = scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
-    retentionTime = scan.cvParam(MS_scan_time).timeInSeconds();
+    retentionTime = scan.cvParam(MS_scan_start_time).timeInSeconds();
     filterString = scan.cvParam(MS_filter_string).value;
     mzLow = spectrum.cvParam(MS_lowest_observed_m_z).valueAs<double>();        
     mzHigh = spectrum.cvParam(MS_highest_observed_m_z).valueAs<double>();        

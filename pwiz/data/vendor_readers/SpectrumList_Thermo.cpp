@@ -150,7 +150,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
-    scan.set(MS_scan_time, scanInfo->startTime(), UO_minute);
+    scan.set(MS_scan_start_time, scanInfo->startTime(), UO_minute);
 
     // special handling for non-MS scans
     if (ie.controllerType != Controller_MS)
@@ -282,13 +282,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         double isolationMz = scanInfo->precursorMZ(i, false);
         if (msLevel == -1) // precursor ion scan
         {
-            product.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth, MS_m_z);
-            product.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth, MS_m_z);
+            product.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
+            product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
+            product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
         }
         else
         {
-            precursor.isolationWindow.set(MS_isolation_window_lower_limit, isolationMz - isolationWidth, MS_m_z);
-            precursor.isolationWindow.set(MS_isolation_window_upper_limit, isolationMz + isolationWidth, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
         }
 
         // TODO: better test here for data dependent modes

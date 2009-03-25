@@ -32,22 +32,22 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [pwiz\data\msdata\psi-ms.obo]
+// [msdata/psi-ms.obo]
 //   format-version: 1.2
 //   date: 07:07:2008 14:30
 //   saved-by: David Sparkman
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 1.18.0
-//   remark: release date: 2009-03-09
+//   remark: version: 1.18.2
+//   remark: release date: 2009-03-25
 //   remark: coverage: Mass spectrometer output files
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.15
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
 //
-// [pwiz\data\msdata\unit.obo]
+// [msdata/unit.obo]
 //   format-version: 1.2
 //   date: 04:03:2009 17:16
 //   saved-by: george gkoutos
@@ -118,8 +118,8 @@ enum PWIZ_API_DECL CVID
     /// scan rate: Rate in Th/sec for scanning analyzers.
     MS_scan_rate = 1000015,
 
-    /// scan time: The time that an analyzer started a scan, relative to the start of the run.
-    MS_scan_time = 1000016,
+    /// scan start time: The time that an analyzer started a scan, relative to the start of the MS run.
+    MS_scan_start_time = 1000016,
 
     /// Scan Function: Describes the type of mass analysis being performed. Two primary modes are: typical acquisition over a range of masses (Mass Scan), and Selected Ion Detection. The primary difference is that Selected Ion Detection produces a single value for the signal at the selected mass rather than producing a mass spectrum.
     MS_Scan_Function = 1000017,
@@ -1849,20 +1849,11 @@ enum PWIZ_API_DECL CVID
     /// signal to noise array: A data array of signal-to-noise values.
     MS_signal_to_noise_array = 1000517,
 
-    /// binary data type: Binary Data type. 16-bit integer, 32-bit integer, 32-bit float 64-bit integer 64-bit float.
+    /// binary data type: Encoding type of binary data, e.g. 64-bit float.
     MS_binary_data_type = 1000518,
-
-    /// 32-bit integer: Signed 32-bit integer.
-    MS_32_bit_integer = 1000519,
-
-    /// 16-bit float: Signed 16-bit float.
-    MS_16_bit_float = 1000520,
 
     /// 32-bit float: Signed 32-bit float. IEEE-754.
     MS_32_bit_float = 1000521,
-
-    /// 64-bit integer: Signed 64-bit integer.
-    MS_64_bit_integer = 1000522,
 
     /// 64-bit float: Signed 64-bit float. IEEE-754.
     MS_64_bit_float = 1000523,
@@ -1873,8 +1864,8 @@ enum PWIZ_API_DECL CVID
     /// spectrum representation: Way in which the spectrum is represented, either with regularly spaced data points or with a list of centroided peaks.
     MS_spectrum_representation = 1000525,
 
-    /// Waters DAT file: Waters DAT file format, storing a single function recorded by the instrument in a Waters RAW directory.
-    MS_Waters_DAT_file = 1000526,
+    /// Waters raw file: Waters data file found in a Waters RAW directory, generated from an MS acquisition.
+    MS_Waters_raw_file = 1000526,
 
     /// highest observed m/z: Highest m/z value observed in the m/z array.
     MS_highest_observed_m_z = 1000527,
@@ -2746,12 +2737,6 @@ enum PWIZ_API_DECL CVID
     /// isolation window attribute: Isolation window parameter.
     MS_isolation_window_attribute = 1000792,
 
-    /// isolation window upper limit: The highest m/z being isolated in an isolation window.
-    MS_isolation_window_upper_limit = 1000793,
-
-    /// isolation window lower limit: The lowest m/z being isolated in an isolation window.
-    MS_isolation_window_lower_limit = 1000794,
-
     /// no combination: Use this term if only one scan was recorded or there is no information about scans available.
     MS_no_combination = 1000795,
 
@@ -2856,6 +2841,18 @@ enum PWIZ_API_DECL CVID
 
     /// Bruker FID file: Bruker FID file format.
     MS_Bruker_FID_file = 1000825,
+
+    /// elution time: The time of elution from a chromatographic column, relative to the start of the chromatography.
+    MS_elution_time = 1000826,
+
+    /// isolation window target m/z: The primary or reference m/z about which the isolation window is defined.
+    MS_isolation_window_target_m_z = 1000827,
+
+    /// isolation window lower offset: The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z.
+    MS_isolation_window_lower_offset = 1000828,
+
+    /// isolation window upper offset: The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z.
+    MS_isolation_window_upper_offset = 1000829,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,

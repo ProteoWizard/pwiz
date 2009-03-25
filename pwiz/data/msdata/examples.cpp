@@ -202,7 +202,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s19.scanList.set(MS_no_combination);
     Scan& s19scan = s19.scanList.scans.back();
     s19scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s19scan.set(MS_scan_time, 5.890500, UO_minute);
+    s19scan.set(MS_scan_start_time, 5.890500, UO_minute);
     s19scan.set(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]");
     s19scan.set(MS_preset_scan_configuration, 3);
     s19scan.scanWindows.resize(1);
@@ -256,7 +256,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s20.scanList.set(MS_no_combination);
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s20scan.set(MS_scan_time, 5.990500, UO_minute);
+    s20scan.set(MS_scan_start_time, 5.990500, UO_minute);
     s20scan.set(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]");
     s20scan.set(MS_preset_scan_configuration, 4);
     s20scan.scanWindows.resize(1);
@@ -316,7 +316,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s22.scanList.set(MS_no_combination);
     Scan& s22scan = s22.scanList.scans.back();
     s22scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s22scan.set(MS_scan_time, 42.0500, UO_second);
+    s22scan.set(MS_scan_start_time, 42.0500, UO_second);
     s22scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
     s22scan.scanWindows.resize(1);
     ScanWindow& window3 = s22scan.scanWindows.front();

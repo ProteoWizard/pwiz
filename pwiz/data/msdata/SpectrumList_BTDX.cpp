@@ -217,7 +217,7 @@ class HandlerCompound : public SAXParser::Handler
                 else if (rt_unit == "h")
                     rtUnits = UO_hour;
                 spectrum_.scanList.scans.push_back(Scan());
-                spectrum_.scanList.scans.back().set(MS_scan_time, rt, rtUnits);
+                spectrum_.scanList.scans.back().set(MS_scan_start_time, rt, rtUnits);
             }
 
             return Status::Ok;

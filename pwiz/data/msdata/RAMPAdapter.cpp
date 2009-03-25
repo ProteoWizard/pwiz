@@ -80,7 +80,7 @@ namespace {
 
 double retentionTime(const Scan& scan)
 {
-    CVParam param = scan.cvParam(MS_scan_time);
+    CVParam param = scan.cvParam(MS_scan_start_time);
     if (param.units == UO_second) 
         return param.valueAs<double>();
     else if (param.units == UO_minute) 
@@ -104,7 +104,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
-    result.retentionTime = scan.cvParam(MS_scan_time).timeInSeconds();
+    result.retentionTime = scan.cvParam(MS_scan_start_time).timeInSeconds();
     result.basePeakMZ = spectrum->cvParam(MS_base_peak_m_z).valueAs<double>();    
     result.basePeakIntensity = spectrum->cvParam(MS_base_peak_intensity).valueAs<double>();    
     result.collisionEnergy = 0;

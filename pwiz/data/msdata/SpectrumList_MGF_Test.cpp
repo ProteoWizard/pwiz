@@ -145,7 +145,7 @@ void test()
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
     unit_assert(s->scanList.scans.size() == 1);
-    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_time).timeInSeconds(), 123.456, 1e-5);
+    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds(), 123.456, 1e-5);
 
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];

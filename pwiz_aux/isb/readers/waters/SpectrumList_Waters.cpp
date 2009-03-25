@@ -162,7 +162,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     result->set(MS_ms_level, fmd.msLevel);
     scan.set(fmd.scanningMethod);
     scan.set(MS_preset_scan_configuration, functionNumber);
-    scan.set(MS_scan_time, pScanStats_->RetnTime, UO_minute);
+    scan.set(MS_scan_start_time, pScanStats_->RetnTime, UO_minute);
 
     //PolarityType polarityType = scanInfo->polarityType();
     //if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));

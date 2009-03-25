@@ -325,8 +325,9 @@ void testPrecursor()
     Precursor a;
     
     a.spectrumID = "19";
-    a.isolationWindow.set(MS_isolation_window_lower_limit, 123456, MS_m_z);
-    a.isolationWindow.set(MS_isolation_window_upper_limit, 234567, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_target_m_z, 123456, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_lower_offset, 2, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_upper_offset, 3, MS_m_z);
     a.selectedIons.resize(2);
     a.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
     a.selectedIons[1].set(MS_charge_state, 2);
@@ -341,8 +342,9 @@ void testProduct()
 {
     Product a;
     
-    a.isolationWindow.set(MS_isolation_window_lower_limit, 123456, MS_m_z);
-    a.isolationWindow.set(MS_isolation_window_upper_limit, 234567, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_target_m_z, 123456, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_lower_offset, 2, MS_m_z);
+    a.isolationWindow.set(MS_isolation_window_upper_offset, 3, MS_m_z);
   
     testObject(a);
 }
@@ -354,7 +356,7 @@ void testScan()
 
     a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
-    a.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
+    a.cvParams.push_back(CVParam(MS_scan_start_time, 5.890500, UO_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 
@@ -462,12 +464,12 @@ void testSpectrum()
 
     a.scanList.scans.push_back(Scan());
     Scan& scan = a.scanList.scans.back();
-    scan.set(MS_scan_time, 4.20);
+    scan.set(MS_scan_start_time, 4.20);
     scan.set(MS_filter_string, "doobie");
 
     a.scanList.scans.push_back(Scan());
     Scan& scan2 = a.scanList.scans.back();
-    scan2.set(MS_scan_time, 4.21);
+    scan2.set(MS_scan_start_time, 4.21);
     scan2.set(MS_filter_string, "doo");
  
     // write 'a' out to a stream
@@ -1035,7 +1037,7 @@ void initializeTestData(MSData& msd)
     Scan& s19scan = s19.scanList.scans.back();
     s19scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s19scan.paramGroupPtrs.push_back(pg1);
-    s19scan.cvParams.push_back(CVParam(MS_scan_time, 5.890500, UO_minute));
+    s19scan.cvParams.push_back(CVParam(MS_scan_start_time, 5.890500, UO_minute));
     s19scan.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     s19scan.scanWindows.resize(1);
     ScanWindow& window = s19scan.scanWindows.front();
@@ -1087,7 +1089,7 @@ void initializeTestData(MSData& msd)
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
     s20scan.paramGroupPtrs.push_back(pg2);
-    s20scan.cvParams.push_back(CVParam(MS_scan_time, 5.990500, UO_minute));
+    s20scan.cvParams.push_back(CVParam(MS_scan_start_time, 5.990500, UO_minute));
     s20scan.cvParams.push_back(CVParam(MS_filter_string, "+ c d Full ms2  445.35@cid35.00 [ 110.00-905.00]"));
     s20scan.scanWindows.resize(1);
     ScanWindow& window2 = s20scan.scanWindows.front();

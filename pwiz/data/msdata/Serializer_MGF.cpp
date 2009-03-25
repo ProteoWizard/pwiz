@@ -77,7 +77,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             os << "BEGIN IONS\n";
 
             const SelectedIon& si = s->precursors[0].selectedIons[0];
-            CVParam scanTimeParam = scan.cvParam(MS_scan_time);
+            CVParam scanTimeParam = scan.cvParam(MS_scan_start_time);
             CVParam chargeParam = si.cvParam(MS_charge_state);
 
             if (titleIsThermoDTA)
