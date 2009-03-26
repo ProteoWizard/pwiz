@@ -50,9 +50,18 @@ class DefaultTabHandler::Impl
         got_headers = c.got_headers;
         need_headers = c.need_headers;
         comment_char = comment_char;
-        columns = c.columns;
         headers = c.headers;
         records = c.records;
+    }
+
+    size_t columns() const
+    {
+        if (got_headers)
+            return headers.size();
+        else if (records.size() > 0)
+            return records.at(0).size();
+
+        return 0;
     }
     
 	bool got_headers;
@@ -60,7 +69,6 @@ class DefaultTabHandler::Impl
 
     char comment_char;
 
-	size_t columns;
 	vector<string> headers;
 
     vector< vector<string> > records;
@@ -83,7 +91,7 @@ bool DefaultTabHandler::getHeaders()
     return pimpl->need_headers;
 }
 
-char DefaultTabHandler::useComment()
+char DefaultTabHandler::useComment() const
 {
     return pimpl->comment_char;
 }
@@ -101,7 +109,13 @@ bool DefaultTabHandler::updateLine(const std::string& line)
 bool DefaultTabHandler::updateRecord(const std::vector<std::string>& fields)
 {
     pimpl->records.push_back(fields);
+    
     return true;
+}
+
+size_t DefaultTabHandler::columns() const
+{
+    return pimpl->columns();
 }
 
 size_t DefaultTabHandler::getHeader(const std::string& name) const
@@ -120,7 +134,7 @@ size_t DefaultTabHandler::getHeader(const std::string& name) const
     }
 
     if (!found)
-        throw runtime_error("blah");
+        throw runtime_error("header not found");
     
     return idx;
 }
@@ -132,7 +146,7 @@ std::string DefaultTabHandler::getHeader(size_t index) const
     if (pimpl->headers.size() < index)
         name = pimpl->headers.at(index);
     else
-        throw runtime_error("blah");
+        throw runtime_error("header not found");
     
     return name;
 }
@@ -142,6 +156,7 @@ bool DefaultTabHandler::close()
     return true;
 }
 
+/*
 void DefaultTabHandler::dump(ostream* os)
 {
     (*os) << "DefaultTabHandler::dump(ostream* os)" << endl;
@@ -158,15 +173,35 @@ void DefaultTabHandler::dump(ostream* os)
         cout << endl;
     }
 }
+*/
+
+VectorTabHandler::VectorTabHandler()
+{
+}
+
+VectorTabHandler::VectorTabHandler(const DefaultTabHandler& c)
+    : DefaultTabHandler(c)
+{
+}
+
+VectorTabHandler::const_iterator VectorTabHandler::begin() const
+{
+    return pimpl->records.begin();
+}
+
+VectorTabHandler::const_iterator VectorTabHandler::end() const
+{
+    return pimpl->records.end();
+}
+
 
 class TabReader::Impl
 {
     public:
     
     Impl()
-        : filename_(NULL), comment_char('#'), delim('\t')
+        : th_(NULL), filename_(NULL), comment_char('#'), delim('\t')
     {
-        th_.reset(new DefaultTabHandler());
     }
 
     Impl(const Impl& c)
@@ -189,13 +224,13 @@ class TabReader::Impl
         return filename_;
     }
         
-    void setHandler(shared_ptr<TabHandler> th)
+    void setHandler(TabHandler* th)
     {
 		th_ = th;
         comment_char = th->useComment();
     }
 
-	shared_ptr<TabHandler> setHandler() const
+	const TabHandler* getHandler() const
     {
         return th_;
     }
@@ -206,7 +241,8 @@ class TabReader::Impl
 
     bool isComment(string& line);
     
-    shared_ptr<TabHandler> th_;
+    shared_ptr<TabHandler> default_th_;
+    TabHandler* th_;
 	const char* filename_;
     char comment_char;
     char delim;
@@ -220,8 +256,12 @@ bool TabReader::Impl::process(const char* filename)
 
     if (filename == NULL)
         throw runtime_error("NULL pointer in filename");
-    else if (th_ == NULL)
-        throw runtime_error("No handler assigned");
+    
+    if (th_ == NULL)
+    {
+        default_th_ = shared_ptr<TabHandler>(new DefaultTabHandler());
+        th_ = default_th_.get();
+    }
 
     char path[MAXPATHLEN];
     getcwd(path, MAXPATHLEN);
@@ -294,14 +334,17 @@ TabReader::TabReader()
 {
 }
 
-void TabReader::setHandler(boost::shared_ptr<TabHandler> handler)
+void TabReader::setHandler(TabHandler* handler)
 {
-    pimpl->th_ = handler;
+    if (handler == NULL)
+        throw runtime_error("NULL pointer passed to handler");
+    
+    pimpl->setHandler(handler);
 }
 
-boost::shared_ptr<TabHandler> TabReader::getHandler()
+const TabHandler* TabReader::getHandler()
 {
-    return pimpl->th_;
+    return pimpl->getHandler();
 }
 
 bool TabReader::process(const char* filename)

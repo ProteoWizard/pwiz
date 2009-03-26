@@ -84,7 +84,7 @@ unit-test mru_list_test : mru_list_test.cpp ;
 
 run TabReaderTest.cpp pwiz_utility_misc
     : # args
-    : TabReaderTest.data/test.tab # input-files
+    : TabReaderTest.data/TabTest.tab # input-files
     : # requirements
     : TabReaderTest # target name
     : # default-build

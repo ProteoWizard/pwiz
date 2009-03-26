@@ -41,7 +41,7 @@ struct PWIZ_API_DECL TabHandler
 
     virtual bool getHeaders() = 0;
 
-    virtual char useComment() = 0;
+    virtual char useComment() const = 0;
     
     virtual bool open() = 0;
     
@@ -65,7 +65,7 @@ class PWIZ_API_DECL DefaultTabHandler : public TabHandler
 
     virtual bool getHeaders();
     
-    virtual char useComment();
+    virtual char useComment() const;
     
     virtual bool open();
     
@@ -73,18 +73,34 @@ class PWIZ_API_DECL DefaultTabHandler : public TabHandler
 
     virtual bool updateRecord(const std::vector<std::string>& fields);
 
+    virtual size_t columns() const;
+    
     virtual size_t getHeader(const std::string& name) const;
 
     virtual std::string getHeader(size_t index) const;
 
     virtual bool close();
 
-    void dump(std::ostream* os);
-    
-    private:
+    protected:
 
     class Impl;
     boost::shared_ptr<Impl> pimpl;
+};
+
+class PWIZ_API_DECL VectorTabHandler : public DefaultTabHandler
+{
+    public:
+
+    typedef std::vector< std::vector<std::string> >::const_iterator const_iterator;
+    typedef std::vector< std::vector<std::string> >::iterator iterator;    
+
+    VectorTabHandler();
+    VectorTabHandler(const DefaultTabHandler& c);
+    
+    virtual ~VectorTabHandler() {}
+
+    virtual const_iterator begin() const;
+    virtual const_iterator end() const;
 };
 
 class PWIZ_API_DECL TabReader 
@@ -93,8 +109,8 @@ class PWIZ_API_DECL TabReader
     TabReader();
     virtual ~TabReader() {}
 
-    virtual void setHandler(boost::shared_ptr<TabHandler> handler);
-    virtual boost::shared_ptr<TabHandler> getHandler();
+    virtual void setHandler(TabHandler* handler);
+    virtual const TabHandler* getHandler();
 
     virtual bool process(const char* filename);
 
