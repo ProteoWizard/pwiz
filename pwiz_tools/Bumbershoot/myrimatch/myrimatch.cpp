@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 #include "myrimatch.h"
-#include "../pwiz-src/pwiz/data/msdata/Version.hpp"
-#include "../pwiz-src/pwiz/utility/proteome/Version.hpp"
+#include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/utility/proteome/Version.hpp"
 
 namespace freicore
 {
