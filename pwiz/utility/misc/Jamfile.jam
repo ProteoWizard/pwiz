@@ -41,8 +41,8 @@ lib pwiz_utility_misc
         random_access_compressed_ifstream.cpp
         SHA1Calculator.cpp
         SHA1.cpp
-        TabReader.cpp
-        MSIHandler.cpp
+        #TabReader.cpp
+        #MSIHandler.cpp
     : # requirements
         <warnings>all
         <toolset>msvc:<source>COMInitializer.cpp
