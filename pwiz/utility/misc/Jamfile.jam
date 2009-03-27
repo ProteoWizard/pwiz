@@ -82,13 +82,13 @@ unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ;
 unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
 unit-test mru_list_test : mru_list_test.cpp ;
 
-run TabReaderTest.cpp pwiz_utility_misc
-    : # args
-    : TabReaderTest.data/TabTest.tab # input-files
-    : # requirements
-    : TabReaderTest # target name
-    : # default-build
-    ;
+#run TabReaderTest.cpp pwiz_utility_misc
+#    : # args
+#    : TabReaderTest.data/TabTest.tab # input-files
+#    : # requirements
+#    : TabReaderTest # target name
+#    : # default-build
+#    ;
 
 
 import modules ;
