@@ -869,7 +869,7 @@ void Feature::calculateMetadata()
     // write mzMonoisotopic (mz of first peakel)
     mzMonoisotopic = peakels.begin()->mz;
 
-    // calculate totalIntensity and maxIntensity to get scanNumber
+    // calculate totalIntensity and maxIntensity 
     vector<Peakel>::iterator calc_intensity_it = peakels.begin();
     for(; calc_intensity_it != peakels.end(); ++calc_intensity_it)
         {
@@ -884,10 +884,8 @@ void Feature::calculateMetadata()
             retentionTime += (calc_mean_it->retentionTime) * (calc_mean_it->totalIntensity)/totalIntensity; //weighted average
 
         }
-
-
-    // calculate rtVariance ( variance of peakel retentionTimes)
     
+    // calculate rtVariance ( variance of peakel retentionTimes)
     vector<Peakel>::iterator calc_var_it = peakels.begin();
     for(; calc_var_it != peakels.end(); ++calc_var_it)
         {
@@ -896,6 +894,7 @@ void Feature::calculateMetadata()
         }
 
     rtVariance = rtVariance / peakels.size();
+
     return;
 
 }
@@ -908,6 +907,8 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     attributes.push_back(make_pair("id", boost::lexical_cast<string>(id)));
     attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
     attributes.push_back(make_pair("retentionTime", boost::lexical_cast<string>(retentionTime)));
+    attributes.push_back(make_pair("ms1_5", ms1_5));
+    attributes.push_back(make_pair("ms2", ms2));
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
     attributes.push_back(make_pair("totalIntensity", boost::lexical_cast<string>(totalIntensity)));
     attributes.push_back(make_pair("rtVariance", boost::lexical_cast<string>(rtVariance)));
@@ -936,6 +937,8 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
             getAttribute(attributes,"id", feature->id);
             getAttribute(attributes,"mzMonoisotopic", feature->mzMonoisotopic);
             getAttribute(attributes,"retentionTime", feature->retentionTime);
+            getAttribute(attributes,"ms1_5", feature->ms1_5);
+            getAttribute(attributes, "ms2", feature->ms2);
             getAttribute(attributes,"charge", feature->charge);
             getAttribute(attributes,"totalIntensity", feature->totalIntensity);
             getAttribute(attributes,"rtVariance", feature->rtVariance);
@@ -994,6 +997,8 @@ bool Feature::operator==(const Feature& that) const
     return id == that.id &&
       mzMonoisotopic == that.mzMonoisotopic &&
       retentionTime == that.retentionTime &&
+      ms1_5 == that.ms1_5 &&
+      ms2 == that.ms2 &&  
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&
       rtVariance == that.rtVariance &&
@@ -1019,6 +1024,70 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature)
 {
     feature.read(is);
     return is;
+}
+
+void FeatureFile::write(pwiz::minimxml::XMLWriter& xmlWriter) const
+
+{
+    XMLWriter::Attributes attributes;
+    xmlWriter.startElement("features",attributes);
+    vector<Feature>::const_iterator feat_it = features.begin();
+    for(; feat_it != features.end(); ++feat_it)
+        feat_it->write(xmlWriter);
+    xmlWriter.endElement();
+    return;
+}
+
+
+struct HandlerFeatureFile : public SAXParser::Handler
+{
+    HandlerFeatureFile(FeatureFile* _featureFile = 0) : featureFile(_featureFile){}
+    FeatureFile* featureFile;
+
+    
+    virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
+    {
+        
+      if (name == "features")
+        {
+            return Handler::Status::Ok;
+        }
+
+      else if (name=="feature")
+        {
+            // TODO implement getAttribute(attributes,"count", _peakelCount);
+            Feature feature;
+        
+            featureFile->features.push_back(feature);
+            _handlerFeature.feature = (&(featureFile->features.back()));
+            return Status(Status::Delegate, &_handlerFeature);
+
+        }
+      
+      else
+          {
+              throw runtime_error(("Unexpected element in FeatureFile: " + name).c_str());
+              return Handler::Status::Done;
+          }
+
+    }
+
+
+
+private:
+
+    HandlerFeature _handlerFeature;
+
+
+};
+
+void FeatureFile::read(istream& is)
+{
+    
+  HandlerFeatureFile handlerFeatureFile(this);   
+  parse(is,handlerFeatureFile);
+   
+  return;
 }
 
 } // namespace peakdata 

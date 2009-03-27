@@ -1,24 +1,6 @@
-//
-// MinimumPepXMLTest.cpp
-//
-//
-// Original author: Kate Hoff <katherine.hoff@proteowizard.org>
-//
-// Copyright 2009 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Cnter, Los Angeles, California  90048
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+///
+/// MinimumPepXMLTest.cpp
+///
 
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/misc/unit.hpp"
@@ -252,6 +234,15 @@ Feature makeFeature()
     feature.retentionTime = 5.678;
 
     return feature;
+}
+
+Match makeMatch()
+{
+    Match match;
+    match.spectrumQuery = makeSpectrumQuery();
+    match.feature = makeFeature();
+    
+    return match;
 }
 
 void testSpecificity()
@@ -582,6 +573,67 @@ void testMSMSPipelineAnalysis()
 
 }
 
+void testMatch()
+{
+    if(os_) *os_ << "\ntestMatch() ... \n";
+
+    Match match = makeMatch();
+    
+    ostringstream oss;
+    XMLWriter writer(oss);
+    match.write(writer);
+
+    Match readMatch;
+    istringstream iss(oss.str());
+    readMatch.read(iss);
+
+    unit_assert(match == readMatch);
+
+    if(os_) *os_ << oss.str() << endl;
+
+}
+
+void testMatchData()
+{
+    if(os_) *os_ << "\ntestMatchData() ... \n";
+
+    MatchData matchData;
+    matchData.warpFunctionCalculator = "Spock";
+    matchData.searchNbhdCalculator = "Mr. Rogers";
+    matchData.matches.push_back(makeMatch());
+    matchData.matches.push_back(makeMatch());
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+    matchData.write(writer);
+
+    MatchData readMatchData;
+    istringstream iss(oss.str());
+    readMatchData.read(iss);
+
+    unit_assert(matchData == readMatchData);
+
+    if(os_) *os_ << oss.str() << endl;
+
+}
+
+void testInvarianceUnderProteinProphet()
+{
+    ifstream ifs("20080619-A-6mixtestRG_Data10_msprefix.pep.xml");
+    if (!(ifs.good()) )
+        {
+            throw runtime_error("bad ifs");
+            return;
+        }
+
+    MSMSPipelineAnalysis msmsPipelineAnalysis;
+    msmsPipelineAnalysis.read(ifs);
+
+    ofstream ofs("test.pep.xml", ios::app);
+    XMLWriter writer(ofs);
+    msmsPipelineAnalysis.write(writer);
+
+}
 
 int main(int argc, char* argv[])
 {
@@ -607,6 +659,9 @@ int main(int argc, char* argv[])
             testSpectrumQuery();
             testMSMSRunSummary();
             testMSMSPipelineAnalysis();
+            testMatch();
+            testMatchData();
+            //    testInvarianceUnderProteinProphet();
 
             return 0;
 

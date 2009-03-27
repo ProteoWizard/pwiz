@@ -5,7 +5,7 @@
 // Original author: Kate Hoff <katherine.hoff@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Cnter, Los Angeles, California  90048
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
@@ -1346,3 +1345,193 @@ bool MSMSPipelineAnalysis::operator!=(const MSMSPipelineAnalysis& that) const
     return !(*this == that);
 
 }
+
+void Match::write(minimxml::XMLWriter& writer) const
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("score", boost::lexical_cast<string>(score)));
+
+    writer.startElement("match", attributes);
+
+    spectrumQuery.write(writer);
+    feature.write(writer);
+
+    writer.endElement();
+
+}
+
+struct HandlerMatch : public SAXParser::Handler
+{
+    Match* match;
+    HandlerMatch(Match* _match = 0) : match(_match){}
+
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if(name == "match")
+            {
+                getAttribute(attributes, "score", match->score);
+                return Handler::Status::Ok;
+
+            }
+
+        else if (name == "spectrum_query")
+            {
+
+                _handlerSpectrumQuery.spectrumQuery = &(match->spectrumQuery);
+                return Handler::Status(Status::Delegate, &_handlerSpectrumQuery);
+
+            }
+
+        else if (name == "feature")
+            {
+                /*
+                Feature feature = match->feature;
+                if (!(&feature)) throw runtime_error("not feature");*/
+                _handlerFeature.feature = &(match->feature);
+                return Handler::Status(Status::Delegate, &_handlerFeature);
+
+            }
+
+        else
+            {
+                throw runtime_error(("[HandlerMatch] Unexpected element name: " + name).c_str());
+                return Handler::Status::Done;
+
+            }
+
+    }
+
+private:
+
+    HandlerFeature _handlerFeature;
+    HandlerSpectrumQuery _handlerSpectrumQuery;
+
+};
+
+void Match::read(istream& is)
+{
+
+    if (!this) throw runtime_error("not this");
+    HandlerMatch handlerMatch(this);
+    SAXParser::parse(is, handlerMatch);
+
+
+}
+
+bool Match::operator==(const Match& that) const
+{
+    return score == that.score &&
+        spectrumQuery == (that.spectrumQuery) &&
+        feature == (that.feature);
+
+}
+
+bool Match::operator!=(const Match& that) const
+{
+    return !(*this == that);
+
+}
+
+void MatchData::write(minimxml::XMLWriter& writer) const
+{
+
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("warpFunctionCalculator", warpFunctionCalculator));
+    attributes.push_back(make_pair("searchNbhdCalculator", searchNbhdCalculator));
+
+    writer.startElement("matchData", attributes);
+
+    XMLWriter::Attributes attributes_m;
+    attributes_m.push_back(make_pair("count", boost::lexical_cast<string>(matches.size())));
+    writer.startElement("matches", attributes_m);
+
+    vector<Match>::const_iterator match_it = matches.begin();
+    for(; match_it != matches.end(); ++match_it)
+        {
+            match_it->write(writer);
+
+        }
+
+    writer.endElement();
+    writer.endElement();
+
+}
+
+struct HandlerMatchData : public SAXParser::Handler
+{
+    MatchData* matchData;
+    HandlerMatchData(){}
+    HandlerMatchData(MatchData* _matchData) : matchData(_matchData){}
+
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if(name == "matchData")
+            {
+                getAttribute(attributes, "warpFunctionCalculator", matchData->warpFunctionCalculator);
+                getAttribute(attributes, "searchNbhdCalculator", matchData->searchNbhdCalculator);
+                return Handler::Status::Ok;
+
+            }
+
+        else if (name == "matches")
+            {
+                getAttribute(attributes, "count", _count);
+                return Handler::Status::Ok;
+
+            }
+
+        else
+            {
+                if (name != "match")
+                    {
+                        throw runtime_error(("[HandlerMatchData] Unexpected element name : " + name).c_str());
+                        return Handler::Status::Done;
+                    }
+
+                matchData->matches.push_back(Match());
+                _handlerMatch.match = &matchData->matches.back();
+                return Handler::Status(Status::Delegate, &_handlerMatch);
+
+            }
+
+        if (_count != matchData->matches.size())
+            {
+                throw runtime_error("[HandlerMatchData] <matches count> != matchData._matches.size()");
+                return Handler::Status::Done;
+
+            }
+
+    }
+
+private:
+
+    HandlerMatch _handlerMatch;
+    size_t _count;
+
+};
+
+void MatchData::read(istream& is)
+{
+    HandlerMatchData handlerMatchData(this);
+    parse(is, handlerMatchData);
+
+}
+
+bool MatchData::operator==(const MatchData& that) const
+{
+    return warpFunctionCalculator == that.warpFunctionCalculator &&
+        searchNbhdCalculator == that.searchNbhdCalculator &&
+        matches == that.matches;
+
+}
+
+bool MatchData::operator!=(const MatchData& that) const
+{
+    return !(*this == that);
+
+}
+

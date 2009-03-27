@@ -230,6 +230,8 @@ struct PWIZ_API_DECL Feature
     std::string id; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;
     double retentionTime;
+    std::string ms2;
+    std::string ms1_5;
     int charge;
     double totalIntensity;
     double rtVariance; // calculated from child Peakels?
@@ -262,6 +264,19 @@ private:
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Feature& feature);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature);
+
+
+struct PWIZ_API_DECL FeatureFile
+{
+    FeatureFile(){}
+    std::vector<Feature> features;
+
+    void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
+    void read(std::istream& is);
+
+
+};
+
 
 
 } // namespace peakdata 

@@ -5,7 +5,7 @@
 // Original author: Kate Hoff <katherine.hoff@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Cnter, Los Angeles, California  90048
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@
 // limitations under the License.
 //
 
+
 #ifndef _MINIMUMPEPXML_HPP_
 #define _MINIMUMPEPXML_HPP_
 
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -314,6 +316,42 @@ struct PWIZ_API_DECL MSMSPipelineAnalysis
 
     bool operator==(const MSMSPipelineAnalysis& that) const;
     bool operator!=(const MSMSPipelineAnalysis& that) const;
+
+};
+
+struct PWIZ_API_DECL Match
+{
+    Match() : score(0) {}
+    Match(const SpectrumQuery& _spectrumQuery, const Feature& _feature, double _score = 0) : score(_score), spectrumQuery(_spectrumQuery), feature(_feature) {}
+   
+    double score;
+
+    SpectrumQuery spectrumQuery;
+    Feature feature;
+
+    void write(minimxml::XMLWriter& writer) const;
+    void read(std::istream& is);
+
+    bool operator==(const Match& that) const;
+    bool operator!=(const Match& that) const;
+
+};
+
+struct PWIZ_API_DECL MatchData
+{
+    MatchData(){}
+    MatchData(std::string wfc, std::string snc) : warpFunctionCalculator(wfc), searchNbhdCalculator(snc) {}
+    MatchData(std::vector<Match> _matches) : matches(_matches){}
+
+    std::string warpFunctionCalculator;
+    std::string searchNbhdCalculator;
+    std::vector<Match> matches;
+
+    void write(minimxml::XMLWriter& writer) const;
+    void read(std::istream& is);
+
+    bool operator==(const MatchData& that) const;
+    bool operator!=(const MatchData& that) const;
 
 };
 
