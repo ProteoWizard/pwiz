@@ -598,6 +598,7 @@ namespace directag
 
 			newTag.tag = properTag;
 			newTag.totalScore = (double) tagCount;
+			newTag.chargeState = peakChargeState;
 
 			if( resultSet.empty() || g_rtConfig->InlineValidationFile.empty() )
 			{
