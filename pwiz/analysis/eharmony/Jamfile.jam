@@ -14,7 +14,7 @@ lib pwiz_analysis_eharmony
     ;
 
 
-### STOP COMMENTING OUT YOUR UNIT TESTS YOU SIMPLETON ###
+### UNIT TESTS ###
 
 unit-test Bin : BinTest.cpp pwiz_analysis_eharmony ;
 
@@ -30,7 +30,7 @@ unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pw
 
 unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_eharmony ;
 
-unit-test MatcherTest : MatcherTest.cpp pwiz_analysis_eharmony ;
+# unit-test MatcherTest : MatcherTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp
