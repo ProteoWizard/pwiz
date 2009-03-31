@@ -565,7 +565,7 @@ namespace directag
 				for( itr = bgComplements.rbegin(); itr != bgComplements.rend() && i >= (int) complementPairMasses.size(); ++itr, --i )
 					complementClassScore += (double) exp(itr->second);
 				--itr;
-				if( i > 1 )
+				if( i >= 1 )
 					complementClassScore -= (double) exp(itr->second) * ( 1.0 - binItr->second );
 				else
 					complementClassScore -= (double) exp(itr->second) / 2.0;
