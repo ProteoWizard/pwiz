@@ -31,6 +31,11 @@
             this.annotationPanelsTabControl = new System.Windows.Forms.TabControl();
             this.peptideFragmentationTabPage = new System.Windows.Forms.TabPage();
             this.peptideFragmentationPanel = new System.Windows.Forms.Panel();
+            this.showMissesCheckBox = new System.Windows.Forms.CheckBox();
+            this.maxChargeUpDown = new System.Windows.Forms.NumericUpDown();
+            this.minChargeUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.ionSeriesGroupBox = new System.Windows.Forms.GroupBox();
             this.zCheckBox = new System.Windows.Forms.CheckBox();
             this.yCheckBox = new System.Windows.Forms.CheckBox();
@@ -41,17 +46,14 @@
             this.label1 = new System.Windows.Forms.Label();
             this.sequenceTextBox = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.minChargeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.maxChargeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.showMissesCheckBox = new System.Windows.Forms.CheckBox();
+            this.zRadicalCheckBox = new System.Windows.Forms.CheckBox();
+            this.c2CheckBox = new System.Windows.Forms.CheckBox();
             this.annotationPanelsTabControl.SuspendLayout();
             this.peptideFragmentationTabPage.SuspendLayout();
             this.peptideFragmentationPanel.SuspendLayout();
-            this.ionSeriesGroupBox.SuspendLayout();
-            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).BeginInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).BeginInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).BeginInit();
+            this.ionSeriesGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // annotationPanelsTabControl
@@ -93,8 +95,74 @@
             this.peptideFragmentationPanel.Size = new System.Drawing.Size( 702, 720 );
             this.peptideFragmentationPanel.TabIndex = 0;
             // 
+            // showMissesCheckBox
+            // 
+            this.showMissesCheckBox.AutoSize = true;
+            this.showMissesCheckBox.Location = new System.Drawing.Point( 7, 163 );
+            this.showMissesCheckBox.Name = "showMissesCheckBox";
+            this.showMissesCheckBox.Size = new System.Drawing.Size( 139, 17 );
+            this.showMissesCheckBox.TabIndex = 6;
+            this.showMissesCheckBox.Text = "Show missing fragments";
+            this.showMissesCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // maxChargeUpDown
+            // 
+            this.maxChargeUpDown.Location = new System.Drawing.Point( 120, 63 );
+            this.maxChargeUpDown.Minimum = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.maxChargeUpDown.Name = "maxChargeUpDown";
+            this.maxChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
+            this.maxChargeUpDown.TabIndex = 8;
+            this.maxChargeUpDown.Value = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.maxChargeUpDown.ValueChanged += new System.EventHandler( this.maxChargeUpDown_ValueChanged );
+            // 
+            // minChargeUpDown
+            // 
+            this.minChargeUpDown.Location = new System.Drawing.Point( 120, 37 );
+            this.minChargeUpDown.Minimum = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.minChargeUpDown.Name = "minChargeUpDown";
+            this.minChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
+            this.minChargeUpDown.TabIndex = 7;
+            this.minChargeUpDown.Value = new decimal( new int[] {
+            1,
+            0,
+            0,
+            0} );
+            this.minChargeUpDown.ValueChanged += new System.EventHandler( this.minChargeUpDown_ValueChanged );
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point( 4, 64 );
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size( 113, 13 );
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Max. fragment charge:";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point( 4, 39 );
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size( 110, 13 );
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Min. fragment charge:";
+            // 
             // ionSeriesGroupBox
             // 
+            this.ionSeriesGroupBox.Controls.Add( this.zRadicalCheckBox );
+            this.ionSeriesGroupBox.Controls.Add( this.c2CheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.zCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.yCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.xCheckBox );
@@ -103,7 +171,7 @@
             this.ionSeriesGroupBox.Controls.Add( this.aCheckBox );
             this.ionSeriesGroupBox.Location = new System.Drawing.Point( 6, 89 );
             this.ionSeriesGroupBox.Name = "ionSeriesGroupBox";
-            this.ionSeriesGroupBox.Size = new System.Drawing.Size( 127, 68 );
+            this.ionSeriesGroupBox.Size = new System.Drawing.Size( 164, 68 );
             this.ionSeriesGroupBox.TabIndex = 3;
             this.ionSeriesGroupBox.TabStop = false;
             this.ionSeriesGroupBox.Text = "Fragment Ion Series";
@@ -198,69 +266,26 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // label2
+            // zRadicalCheckBox
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point( 4, 39 );
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size( 110, 13 );
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Min. fragment charge:";
+            this.zRadicalCheckBox.AutoSize = true;
+            this.zRadicalCheckBox.Location = new System.Drawing.Point( 124, 42 );
+            this.zRadicalCheckBox.Name = "zRadicalCheckBox";
+            this.zRadicalCheckBox.Size = new System.Drawing.Size( 35, 17 );
+            this.zRadicalCheckBox.TabIndex = 7;
+            this.zRadicalCheckBox.Text = "z*";
+            this.zRadicalCheckBox.UseVisualStyleBackColor = true;
             // 
-            // label3
+            // c2CheckBox
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point( 4, 64 );
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size( 113, 13 );
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Max. fragment charge:";
-            // 
-            // minChargeUpDown
-            // 
-            this.minChargeUpDown.Location = new System.Drawing.Point( 120, 37 );
-            this.minChargeUpDown.Minimum = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
-            this.minChargeUpDown.Name = "minChargeUpDown";
-            this.minChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
-            this.minChargeUpDown.TabIndex = 7;
-            this.minChargeUpDown.Value = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
-            this.minChargeUpDown.ValueChanged += new System.EventHandler( this.minChargeUpDown_ValueChanged );
-            // 
-            // maxChargeUpDown
-            // 
-            this.maxChargeUpDown.Location = new System.Drawing.Point( 120, 63 );
-            this.maxChargeUpDown.Minimum = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
-            this.maxChargeUpDown.Name = "maxChargeUpDown";
-            this.maxChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
-            this.maxChargeUpDown.TabIndex = 8;
-            this.maxChargeUpDown.Value = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
-            this.maxChargeUpDown.ValueChanged += new System.EventHandler( this.maxChargeUpDown_ValueChanged );
-            // 
-            // showMissesCheckBox
-            // 
-            this.showMissesCheckBox.AutoSize = true;
-            this.showMissesCheckBox.Location = new System.Drawing.Point( 7, 163 );
-            this.showMissesCheckBox.Name = "showMissesCheckBox";
-            this.showMissesCheckBox.Size = new System.Drawing.Size( 139, 17 );
-            this.showMissesCheckBox.TabIndex = 6;
-            this.showMissesCheckBox.Text = "Show missing fragments";
-            this.showMissesCheckBox.UseVisualStyleBackColor = true;
+            this.c2CheckBox.AutoSize = true;
+            this.c2CheckBox.Location = new System.Drawing.Point( 125, 19 );
+            this.c2CheckBox.Name = "c2CheckBox";
+            this.c2CheckBox.Size = new System.Drawing.Size( 32, 17 );
+            this.c2CheckBox.TabIndex = 6;
+            this.c2CheckBox.Text = "c";
+            this.c2CheckBox.UseVisualStyleBackColor = true;
+            this.c2CheckBox.Visible = false;
             // 
             // AnnotationPanels
             // 
@@ -273,10 +298,10 @@
             this.peptideFragmentationTabPage.ResumeLayout( false );
             this.peptideFragmentationPanel.ResumeLayout( false );
             this.peptideFragmentationPanel.PerformLayout();
+            ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).EndInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).EndInit();
             this.ionSeriesGroupBox.ResumeLayout( false );
             this.ionSeriesGroupBox.PerformLayout();
-            ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).EndInit();
-            ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).EndInit();
             this.ResumeLayout( false );
 
         }
@@ -301,5 +326,7 @@
         public System.Windows.Forms.NumericUpDown maxChargeUpDown;
         public System.Windows.Forms.NumericUpDown minChargeUpDown;
         public System.Windows.Forms.CheckBox showMissesCheckBox;
+        public System.Windows.Forms.CheckBox zRadicalCheckBox;
+        public System.Windows.Forms.CheckBox c2CheckBox;
     }
 }

@@ -61,8 +61,8 @@ namespace seems
                     int maxCharge = Math.Max( minCharge, Convert.ToInt32( annotationArgs[3] ) );
                     string seriesArgs = annotationArgs[4];
                     string[] seriesList = seriesArgs.Split( ",".ToCharArray() );
-                    bool a, b, c, x, y, z;
-                    a = b = c = x = y = z = false;
+                    bool a, b, c, x, y, z, zRadical;
+                    a = b = c = x = y = z = zRadical = false;
                     foreach( string series in seriesList )
                         switch( series )
                         {
@@ -72,8 +72,9 @@ namespace seems
                             case "x": x = true; break;
                             case "y": y = true; break;
                             case "z": z = true; break;
+                            case "z*": zRadical = true; break;
                         }
-                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, false, true );
+                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, zRadical, false, true );
                 }
 
                 return null;
@@ -116,7 +117,7 @@ namespace seems
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
         int min, max;
-        bool a, b, c, x, y, z;
+        bool a, b, c, x, y, z, zRadical;
         bool showMisses;
         bool showLabels;
 
@@ -137,13 +138,14 @@ namespace seems
             annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
         }
 
         public PeptideFragmentationAnnotation( string sequence,
                                                int minCharge, int maxCharge,
                                                bool a, bool b, bool c,
-                                               bool x, bool y, bool z,
+                                               bool x, bool y, bool z, bool zRadical,
                                                bool showMissedFragments,
                                                bool showLabels )
         {
@@ -151,7 +153,7 @@ namespace seems
             this.min = minCharge;
             this.max = maxCharge;
             this.a = a; this.b = b; this.c = c;
-            this.x = x; this.y = y; this.z = z;
+            this.x = x; this.y = y; this.z = z; this.zRadical = zRadical;
             this.showMisses = showMissedFragments;
             this.showLabels = showLabels;
 
@@ -164,6 +166,7 @@ namespace seems
             annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
         }
 
@@ -188,6 +191,7 @@ namespace seems
                 x = annotationPanels.xCheckBox.Checked;
                 y = annotationPanels.yCheckBox.Checked;
                 z = annotationPanels.zCheckBox.Checked;
+                zRadical = annotationPanels.zRadicalCheckBox.Checked;
                 showMisses = annotationPanels.showMissesCheckBox.Checked;
                 OnOptionsChanged( this, EventArgs.Empty );
             }
@@ -198,7 +202,7 @@ namespace seems
             return "Peptide Fragmentation (" + sequence + ")";
         }
 
-        private void addFragment( GraphObjList list, MSGraph.MSPointList points, char series, int length, int charge, double mz )
+        private void addFragment( GraphObjList list, MSGraph.MSPointList points, string series, int length, int charge, double mz )
         {
             string label = String.Format("{0}{1}{2}", series, length, (charge > 1 ? "+" + charge.ToString() : ""));
 
@@ -207,12 +211,13 @@ namespace seems
             switch( series )
             {
                 default: color = Color.Gray; offset = 0.1;  break;
-                case 'a': color = Color.YellowGreen; offset = 0.1; break;
-                case 'x': color = Color.Green; offset = 0.12; break;
-                case 'b': color = Color.BlueViolet; offset = 0.14; break;
-                case 'y': color = Color.Blue; offset = 0.16; break;
-                case 'c': color = Color.Orange; offset = 0.18; break;
-                case 'z': color = Color.OrangeRed; offset = 0.2; break;
+                case "a": color = Color.YellowGreen; offset = 0.1; break;
+                case "x": color = Color.Green; offset = 0.12; break;
+                case "b": color = Color.BlueViolet; offset = 0.14; break;
+                case "y": color = Color.Blue; offset = 0.16; break;
+                case "c": color = Color.Orange; offset = 0.18; break;
+                case "z": color = Color.OrangeRed; offset = 0.2; break;
+                case "z*": color = Color.Crimson; offset = 0.4; break;
             }
 
             int index = -1;
@@ -304,15 +309,16 @@ namespace seems
             {
                 for( int i = 1; i <= peptide.sequence.Length; ++i )
                 {
-                    if( a ) addFragment( list, points, 'a', i, charge, fragmentation.a( i, charge ) );
-                    if( b ) addFragment( list, points, 'b', i, charge, fragmentation.b( i, charge ) );
-                    if( y ) addFragment( list, points, 'y', i, charge, fragmentation.y( i, charge ) );
-                    if( z ) addFragment( list, points, 'z', i, charge, fragmentation.z( i, charge ) );
+                    if( a ) addFragment( list, points, "a", i, charge, fragmentation.a( i, charge ) );
+                    if( b ) addFragment( list, points, "b", i, charge, fragmentation.b( i, charge ) );
+                    if( y ) addFragment( list, points, "y", i, charge, fragmentation.y( i, charge ) );
+                    if( z ) addFragment( list, points, "z", i, charge, fragmentation.z( i, charge ) );
+                    if( zRadical ) addFragment( list, points, "z*", i, charge, fragmentation.zRadical( i, charge ) );
 
                     if( i < peptide.sequence.Length )
                     {
-                        if( c ) addFragment( list, points, 'c', i, charge, fragmentation.c( i, charge ) );
-                        if( x ) addFragment( list, points, 'x', i, charge, fragmentation.x( i, charge ) );
+                        if( c ) addFragment( list, points, "c", i, charge, fragmentation.c( i, charge ) );
+                        if( x ) addFragment( list, points, "x", i, charge, fragmentation.x( i, charge ) );
                     }
                 }
             }
@@ -332,6 +338,7 @@ namespace seems
                 annotationPanels.xCheckBox.Checked = x;
                 annotationPanels.yCheckBox.Checked = y;
                 annotationPanels.zCheckBox.Checked = z;
+                annotationPanels.zRadicalCheckBox.Checked = zRadical;
                 annotationPanels.showMissesCheckBox.Checked = showMisses;
                 panel.Tag = this;
 

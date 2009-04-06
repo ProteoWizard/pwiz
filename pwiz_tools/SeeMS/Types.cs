@@ -296,6 +296,11 @@ namespace seems
 
         public ChromatogramListForm OwningListForm { get { return source.ChromatogramListForm; } }
 
+        public override void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        {
+            base.AddAnnotations( graphPane, g, pointList, annotations );
+        }
+
 		public override ZedGraph.IPointList Points
 		{
             get

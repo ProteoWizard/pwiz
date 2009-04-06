@@ -40,7 +40,7 @@ namespace seems
             chromatogramListForm.TabText = source.Name + " chromatograms";
             chromatogramListForm.ShowIcon = false;
 
-            CVID nativeIdFormat = source.MSDataFile.fileDescription.fileContent.cvParamChild( CVID.MS_native_spectrum_identifier_format ).cvid;
+            CVID nativeIdFormat = source.MSDataFile.fileDescription.sourceFiles[0].cvParamChild( CVID.MS_native_spectrum_identifier_format ).cvid;
             spectrumListForm = new SpectrumListForm( nativeIdFormat );
             spectrumListForm.Text = source.Name + " spectra";
             spectrumListForm.TabText = source.Name + " spectra";
