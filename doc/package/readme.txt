@@ -16,8 +16,7 @@ sldout: text output of sld files
 txt2mzml: text spectra to mzML conversion
 
 
-Copyright 2005-2008 Spielberg Family Center for Applied Proteomics
-Cedars Sinai Medical Center, Los Angeles, California  90048
-http://sfcap.cshs.org
+Copyright 2009 Center for Applied Molecular Medicine
+University of Southern California, Los Angeles, California
 
 
