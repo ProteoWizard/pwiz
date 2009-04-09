@@ -2,22 +2,15 @@
 /// eharmony.cpp
 ///
 
-//my stuff
 #include "Matcher.hpp"
-#include "pwiz/utility/math/WarpFunction.hpp"
-//boost stuff
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
-// mechanical
 #include <vector>
-// file i/o
 #include <iostream>
 #include <fstream>
-// QC
 #include <stdexcept>
 
-using namespace pwiz::math;
 using namespace pwiz::eharmony;
 using namespace std;
 

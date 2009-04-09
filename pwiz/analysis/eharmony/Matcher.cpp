@@ -9,12 +9,10 @@
 
 #include "boost/tuple/tuple_comparison.hpp"
 #include "boost/filesystem.hpp"
-#include "pwiz/utility/math/WarpFunction.hpp"
 #include <algorithm>
 #include <string>
 
 using namespace std;
-using namespace pwiz::math;
 using namespace pwiz::minimxml;
 using namespace pwiz;
 using namespace pwiz::eharmony;
