@@ -27,6 +27,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <cstring>
 
 
 using namespace std;

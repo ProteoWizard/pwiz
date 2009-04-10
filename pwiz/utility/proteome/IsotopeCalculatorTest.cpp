@@ -27,6 +27,8 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
+#include <cstring>
+#include<iterator>
 
 
 using namespace std;

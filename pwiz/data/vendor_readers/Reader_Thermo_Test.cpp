@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 
 using namespace std;

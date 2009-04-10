@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <limits>
 #include <algorithm>
+#include <cstring>
 
 
 using namespace std;

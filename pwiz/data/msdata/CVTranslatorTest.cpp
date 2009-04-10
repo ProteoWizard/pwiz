@@ -24,6 +24,7 @@
 #include "CVTranslator.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
+#include <cstring>
 
 
 using namespace std;

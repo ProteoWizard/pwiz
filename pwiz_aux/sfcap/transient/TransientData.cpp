@@ -36,6 +36,7 @@
 #include <sstream>
 #include <iterator>
 #include <cmath>
+#include <cstring>
 #include <algorithm>
 
 

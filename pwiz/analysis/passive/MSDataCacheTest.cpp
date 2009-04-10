@@ -26,6 +26,7 @@
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
+#include <cstring>
 #include "boost/lexical_cast.hpp"
 
 

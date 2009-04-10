@@ -26,6 +26,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 
 using namespace std;

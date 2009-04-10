@@ -26,6 +26,7 @@
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
+#include <cstring>
 #include <iterator>
 
 

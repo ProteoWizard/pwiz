@@ -33,6 +33,7 @@ namespace ublas = boost::numeric::ublas;
 
 #include <iostream>
 #include <iomanip>
+#include <cstring>
 
 
 using namespace std;

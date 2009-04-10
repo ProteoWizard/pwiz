@@ -27,6 +27,7 @@
 #include <vector>
 #include <iterator>
 #include <complex>
+#include <cstring>
 
 
 using namespace pwiz::util;

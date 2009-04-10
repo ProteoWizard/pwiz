@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
 #include <iostream>
+#include <cstring>
 
 
 using namespace pwiz::msdata;

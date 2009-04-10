@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <iterator>
 #include <fstream>
+#include <cstring>
 
 
 using namespace std;

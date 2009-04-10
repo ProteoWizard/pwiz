@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <exception>
 #include <boost/shared_ptr.hpp>
 

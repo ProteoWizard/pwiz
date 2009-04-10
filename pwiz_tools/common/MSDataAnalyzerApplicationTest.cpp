@@ -27,6 +27,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 #include <iterator>
+#include <cstring>
 
 
 using namespace std;

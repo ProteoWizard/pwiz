@@ -25,9 +25,6 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <unistd.h>
-#include <sys/param.h>
-
 #include "TabReader.hpp"
 
 namespace pwiz {
@@ -262,9 +259,6 @@ bool TabReader::Impl::process(const char* filename)
         default_th_ = shared_ptr<TabHandler>(new DefaultTabHandler());
         th_ = default_th_.get();
     }
-
-    char path[MAXPATHLEN];
-    getcwd(path, MAXPATHLEN);
 
     ifstream in(filename);
 

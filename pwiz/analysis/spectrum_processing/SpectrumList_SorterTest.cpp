@@ -26,6 +26,7 @@
 #include <vector>
 #include <iostream>
 #include <iterator>
+#include <cstring>
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "boost/logic/tribool.hpp"

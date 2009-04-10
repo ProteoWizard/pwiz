@@ -25,6 +25,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <ctime>
 
 

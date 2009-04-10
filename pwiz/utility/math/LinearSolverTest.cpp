@@ -26,6 +26,7 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/banded.hpp>
 #include <iostream>
+#include <cstring>
 
 
 using namespace std;

@@ -25,6 +25,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
+#include <cstring>
 
 
 using namespace std;

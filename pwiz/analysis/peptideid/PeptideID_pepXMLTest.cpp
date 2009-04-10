@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
 
 #include "PeptideID_pepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"

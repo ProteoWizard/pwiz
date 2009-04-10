@@ -25,7 +25,8 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <complex>
-
+#include <cstring>
+#include <typeinfo>
 
 using namespace pwiz::math;
 using namespace pwiz::util;

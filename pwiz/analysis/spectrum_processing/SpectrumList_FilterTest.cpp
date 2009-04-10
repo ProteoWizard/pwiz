@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
+#include <cstring>
 
 
 using namespace pwiz::msdata;

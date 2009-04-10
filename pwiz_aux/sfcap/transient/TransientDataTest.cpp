@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <iterator>

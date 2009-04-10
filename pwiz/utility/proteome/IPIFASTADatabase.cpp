@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <fstream>
 #include <stdexcept>
+#include <cstdlib>
 
 
 using namespace std;

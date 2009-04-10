@@ -16,6 +16,7 @@
 #include <boost/numeric/ublas/io.hpp>
 
 #include <iostream>
+#include <cstring>
 #include <iomanip>
 //#include <execinfo.h>
 

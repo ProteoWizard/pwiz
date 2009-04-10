@@ -26,6 +26,7 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <cstring>
 
 
 using namespace std;
