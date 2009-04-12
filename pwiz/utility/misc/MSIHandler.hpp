@@ -36,6 +36,7 @@ public:
 
     struct Record
     {
+        Record() : scan(0), time(0), mz(0), intensity(0), charge(0), chargeStates(0), kl(0), background(0), median(0), peaks(0), scanFirst(0), scanLast(0), scanCount(0) {}
         Record(const std::vector<std::string>& fields);
         
         size_t scan;
