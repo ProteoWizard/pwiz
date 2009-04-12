@@ -29,6 +29,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/MSIHandler.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "CalibrationParameters.hpp"
@@ -39,6 +40,7 @@ namespace pwiz {
 namespace data {
 namespace peakdata {
 
+using namespace pwiz::utility;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
 
@@ -224,8 +226,8 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel);
 
 struct PWIZ_API_DECL Feature
 {
-
-    Feature(){}
+    Feature() : mzMonoisotopic(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0) {}
+    Feature(const MSIHandler::Record& record);
 
     std::string id; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;

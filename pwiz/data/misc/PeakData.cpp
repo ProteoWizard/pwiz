@@ -23,7 +23,6 @@
 
 #define PWIZ_SOURCE
 
-
 #include "PeakData.hpp"
 #include "boost/lexical_cast.hpp"
 #include <complex>
@@ -980,6 +979,16 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
 
 }
 
+Feature::Feature(const MSIHandler::Record& record) 
+{
+  
+    mzMonoisotopic = record.mz;
+	retentionTime = record.time;
+	charge = record.charge;
+	totalIntensity = record.intensity;	
+	rtVariance = 0;
+   
+}
 
 void Feature::read(istream& is)
 {
