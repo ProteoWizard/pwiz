@@ -673,7 +673,15 @@ struct Handler_msInstrument : public SAXParser::Handler
             instrumentConfiguration->componentList.push_back(Component(ComponentType_Detector, 1));
 
             LegacyAdapter_Instrument adapter(*instrumentConfiguration, cvTranslator_);
-            adapter.manufacturerAndModel(manufacturer_, model_);
+            adapter.manufacturerAndModel(manufacturer_, model_); 
+            
+	    
+            if(adapter.model() == "LTQ Orbitrap XL" && analyzer_ == "FTMS") 
+                {
+  		    analyzer_ = "orbitrap"; // hack to set analyzer_ correctly for LTQ ORBI
+                 
+                }
+            
             adapter.ionisation(ionisation_);
             adapter.analyzer(analyzer_);
             adapter.detector(detector_);
