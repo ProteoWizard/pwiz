@@ -20,12 +20,14 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+#include "TabReader.hpp"
+
 #include <fstream>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
 
-#include "TabReader.hpp"
 
 namespace pwiz {
 namespace utility {

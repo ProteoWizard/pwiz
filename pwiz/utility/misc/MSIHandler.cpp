@@ -1,5 +1,5 @@
 //
-// MSIHandler.hpp
+// MSIHandler.cpp
 //
 //
 // Original author: Robert Burke <robert.burke@proteowizard.org>
@@ -20,6 +20,7 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 #include "MSIHandler.hpp"
 #include <vector>
 

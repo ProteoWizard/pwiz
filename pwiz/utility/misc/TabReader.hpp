@@ -24,13 +24,13 @@
 #ifndef _TABREADER_HPP_
 #define _TABREADER_HPP_
 
+
+#include "Export.hpp"
+#include "boost/shared_ptr.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
 
-#include "boost/shared_ptr.hpp"
-
-#include "Export.hpp"
 
 namespace pwiz {
 namespace utility {

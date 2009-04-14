@@ -24,8 +24,9 @@
 #ifndef _MSIREADER_HPP_
 #define _MSIREADER_HPP_
 
-#include "boost/shared_ptr.hpp"
+#include "pwiz/utility/misc/Export.hpp"
 #include "TabReader.hpp"
+#include "boost/shared_ptr.hpp"
 
 namespace pwiz {
 namespace utility {
