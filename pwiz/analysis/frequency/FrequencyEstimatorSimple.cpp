@@ -149,11 +149,11 @@ Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd,
                                             const Peak& initialEstimate) const
 {
     Peak result;
-    FrequencyData::const_iterator localMax = closestLocalMaximum(fd, initialEstimate.frequency);
+    FrequencyData::const_iterator localMax = closestLocalMaximum(fd, initialEstimate.getAttribute(Peak::Attribute_Frequency));
 
     if (type_ == LocalMax)
     {
-        result.frequency = localMax->x;
+        result.attributes[Peak::Attribute_Frequency] = localMax->x;
         result.intensity = abs(localMax->y);
         return result;
     }
@@ -171,7 +171,7 @@ Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd,
     if (type_ == Parabola)
     {
         math::Parabola p(samples);
-        result.frequency = p.center();
+        result.attributes[Peak::Attribute_Frequency] = p.center();
         result.intensity = p(p.center());
         return result;
     }
@@ -180,7 +180,7 @@ Peak FrequencyEstimatorSimpleImpl::estimate(const FrequencyData& fd,
         MagnitudeLorentzian ml(samples);
         double intensity = ml(ml.center());
         if (isnan(intensity)) intensity = 0;
-        result.frequency = ml.center();
+        result.attributes[Peak::Attribute_Frequency] = ml.center();
         result.intensity = intensity;
         return result;
     }

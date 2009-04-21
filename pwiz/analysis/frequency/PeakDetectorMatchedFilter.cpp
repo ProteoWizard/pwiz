@@ -552,9 +552,9 @@ void PeakDetectorMatchedFilterImpl::calculateScore(Score& score,
         peak.intensity = abs(intensity);
         peak.area = correlation; // TODO: do a real calculation 
         peak.error = 0; // TODO: calculate this
-        peak.frequency = filterFrequency;
-        peak.phase = arg(intensity);
-        peak.decay = 0; // TODO: calculate this
+        peak.attributes[Peak::Attribute_Frequency] = filterFrequency;
+        peak.attributes[Peak::Attribute_Phase] = arg(intensity);
+        peak.attributes[Peak::Attribute_Decay] = 0; // TODO: calculate this
         score.peaks.push_back(peak);        
 
         // save monoisotopic info

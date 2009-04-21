@@ -117,9 +117,9 @@ void PeakDetectorNaiveImpl::findPeaks(const FrequencyData& fd, peakdata::Scan& r
         peakFamily.peaks.push_back(Peak());
         Peak& peak = peakFamily.peaks.back();
 
-        peak.frequency = it->x;
+        peak.attributes[Peak::Attribute_Frequency] = it->x;
         peak.intensity = it->y.real();
-        peak.phase = it->y.imag();
+        peak.attributes[Peak::Attribute_Phase] = it->y.imag();
     }
 }
 

@@ -89,7 +89,7 @@ void test()
     // "peak detection"
 
     Peak detected;
-    detected.frequency = fd.max()->x;
+    detected.attributes[Peak::Attribute_Frequency] = fd.max()->x;
     if (os_) *os_ << "detected: " << detected << endl;
 
     // create estimator
@@ -102,7 +102,7 @@ void test()
     Peak estimate = fe->estimate(fd, detected);
     if (os_) *os_ << "estimate: " << estimate << endl;
 
-    unit_assert_equal(estimate.frequency, 159454.98465, 1e-4);
+    unit_assert_equal(estimate.attributes[Peak::Attribute_Frequency], 159454.98465, 1e-4);
 }
 
 

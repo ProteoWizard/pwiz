@@ -50,20 +50,28 @@ const int PeakDataFormatVersion_Minor = 1;
 
 struct PWIZ_API_DECL Peak
 {
-    // general peak info
     double mz;
     double retentionTime;
-    double scanNumber;
-    double intensity;
-    double area;
-    double error; 
 
-    // FT-specific info // TODO: move this
-    double frequency;
-    double phase;
-    double decay;
+    double intensity;   // peak height
+    double area;        // sum/total intensity
+    double error;       // error in model fit
+
+    // optional attributes
+
+    enum Attribute 
+    {
+        Attribute_Frequency, 
+        Attribute_Phase,
+        Attribute_Decay
+    };
+
+    typedef std::map<Attribute, double> Attributes; 
+    Attributes attributes;
 
     Peak();
+
+    double getAttribute(Attribute attribute) const;
 
     bool operator==(const Peak& that) const;
     bool operator!=(const Peak& that) const;
@@ -72,14 +80,15 @@ struct PWIZ_API_DECL Peak
     void read(std::istream& is);
 };
 
+
 struct HandlerPeak : public SAXParser::Handler
 {
-        Peak* peak;
-        HandlerPeak(Peak* _peak = 0) : peak(_peak) {}
+    Peak* peak;
+    HandlerPeak(Peak* _peak = 0) : peak(_peak) {}
 
-        virtual Status startElement(const std::string& name,
-                                    const Attributes& attributes,
-                                    stream_offset position);
+    virtual Status startElement(const std::string& name,
+                                const Attributes& attributes,
+                                stream_offset position);
 
 };
 

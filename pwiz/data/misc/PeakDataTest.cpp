@@ -130,11 +130,11 @@ Peakel initializePeakel()
     return pkl;
 }
 
-void testPeak()
-{
-  // instantiate a Peak
 
-    if (os_) *os_ << "testPeak() ... " <<endl;
+void testPeakEquality()
+{
+    if (os_) *os_ << "testPeakEquality()" <<endl;
+
     Peak peak;
 
     peak.mz = 1;
@@ -142,9 +142,37 @@ void testPeak()
     peak.intensity = 2;
     peak.area = 3;
     peak.error = 4;
-    peak.frequency = 5;
-    peak.phase = 6;
-    peak.decay = 7;
+
+    Peak peak2 = peak;
+
+    unit_assert(peak == peak2);
+    peak.attributes[Peak::Attribute_Phase] = 4.20;
+    unit_assert(peak != peak2);
+    peak2.attributes[Peak::Attribute_Phase] = 4.20;
+    peak2.attributes[Peak::Attribute_Decay] = 6.66;
+    unit_assert(peak != peak2);
+    peak.attributes[Peak::Attribute_Decay] = 6.66;
+    unit_assert(peak == peak2);
+}
+
+
+void testPeak()
+{
+    if (os_) *os_ << "testPeak()" <<endl;
+
+    // instantiate a Peak
+
+    Peak peak;
+
+    peak.mz = 1;
+    peak.retentionTime = 1.5;
+    peak.intensity = 2;
+    peak.area = 3;
+    peak.error = 4;
+
+    peak.attributes[Peak::Attribute_Frequency] = 5;
+    peak.attributes[Peak::Attribute_Phase] = 6;
+    peak.attributes[Peak::Attribute_Decay] = 7;
 
     if (os_) *os_ << peak << endl;
 
@@ -152,33 +180,27 @@ void testPeak()
 
     ostringstream oss;
     XMLWriter writer(oss);
-
     peak.write(writer);
-    if (os_) *os_ << oss.str() << endl;
 
     // allocate a new Peak
 
     Peak peakIn;
-
-    if (os_) *os_ << peakIn << endl;
     unit_assert(peak != peakIn);
 
     // read from stream into new Peak
 
     istringstream iss(oss.str());
     peakIn.read(iss);
+    if (os_) *os_ << peakIn << endl;
 
     // verify that new Peak is the same as old Peak
 
     unit_assert(peak == peakIn);
-    // write out the xml if -v and if test is passed
-    if (os_) *os_ << "Testing Peak ... " << endl << oss.str() << endl;
-
 }
+
 
 void testPeakFamily()
 {
-
     // initialize a PeakFamily
     
     PeakFamily jetsons = initializePeakFamily();
@@ -350,15 +372,15 @@ void testFeature()
 
 void test()
 {
- 
+    testPeakEquality();
     testPeak();
+
     testPeakFamily();
     testScan();
     testSoftware();
     testPeakData();
     testPeakel();
     testFeature();
-
 }
 
 

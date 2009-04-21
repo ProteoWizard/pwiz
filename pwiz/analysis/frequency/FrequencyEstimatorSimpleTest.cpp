@@ -53,8 +53,8 @@ void test()
 
     // create initial peak list
     vector<Peak> peaks(2);
-    peaks[0].frequency = .1;
-    peaks[1].frequency = 7.4; 
+    peaks[0].attributes[Peak::Attribute_Frequency] = .1;
+    peaks[1].attributes[Peak::Attribute_Frequency] = 7.4; 
 
     // storage for results
 
@@ -86,11 +86,11 @@ void test()
     unit_assert(estimatedPeaks.size() == 2);
 
     const Peak& pi0 = estimatedPeaks[0];
-    unit_assert(pi0.frequency == 0);
+    unit_assert(pi0.getAttribute(Peak::Attribute_Frequency) == 0);
     unit_assert(pi0.intensity == 3.);
 
     const Peak& pi1 = estimatedPeaks[1];
-    unit_assert_equal(pi1.frequency, 7.5, 1e-10);
+    unit_assert_equal(pi1.getAttribute(Peak::Attribute_Frequency), 7.5, 1e-10);
     unit_assert_equal(abs(pi1.intensity-10.), 0., 1e-10);
 
 
@@ -114,11 +114,11 @@ void test()
     unit_assert(estimatedPeaks.size() == 2);
 
     const Peak& pil0 = estimatedPeaks[0];
-    unit_assert_equal(pil0.frequency, 0, 1e-10);
+    unit_assert_equal(pil0.getAttribute(Peak::Attribute_Frequency), 0, 1e-10);
     unit_assert_equal(abs(pil0.intensity-3.), 0, 1e-10);
 
     const Peak& pil1 = estimatedPeaks[1];
-    unit_assert_equal(pil1.frequency, 7.5, 1e-10);
+    unit_assert_equal(pil1.getAttribute(Peak::Attribute_Frequency), 7.5, 1e-10);
     unit_assert(pil1.intensity == 0.); // intensity is nan
 }
 
@@ -135,7 +135,7 @@ void testData()
     fd.data().push_back(FrequencyDatum(28563.802083333, complex<double>(-32263.08735743, -2769.7946573836)));
 
     vector<Peak> peaks(1);
-    peaks[0].frequency = 28561.2;
+    peaks[0].attributes[Peak::Attribute_Frequency] = 28561.2;
 
     if (os_)
     {
@@ -162,7 +162,7 @@ void testData()
     }
 
     unit_assert(estimatedPeaks.size() == 1);
-    unit_assert_equal(estimatedPeaks[0].frequency, 28561.25049, 1e-5);
+    unit_assert_equal(estimatedPeaks[0].getAttribute(Peak::Attribute_Frequency), 28561.25049, 1e-5);
 }
 
 
@@ -211,7 +211,7 @@ void testData2_LocalMax()
         fd.data().push_back(FrequencyDatum(p->frequency, p->intensity));
 
     vector<Peak> peaks(1);
-    peaks[0].frequency = 10983.74;
+    peaks[0].attributes[Peak::Attribute_Frequency] = 10983.74;
 
     if (os_)
     {
@@ -238,7 +238,7 @@ void testData2_LocalMax()
     }
 
     unit_assert(estimatedPeaks.size() == 1);
-    unit_assert_equal(estimatedPeaks[0].frequency, 10985.02604, 1e-5);
+    unit_assert_equal(estimatedPeaks[0].getAttribute(Peak::Attribute_Frequency), 10985.02604, 1e-5);
 }
 
 
@@ -252,7 +252,7 @@ void testData2_Parabola()
         fd.data().push_back(FrequencyDatum(p->frequency, p->intensity));
 
     vector<Peak> peaks(1);
-    peaks[0].frequency = 10987.6;
+    peaks[0].attributes[Peak::Attribute_Frequency] = 10987.6;
 
     if (os_)
     {
@@ -279,7 +279,7 @@ void testData2_Parabola()
     }
 
     unit_assert(estimatedPeaks.size() == 1);
-    unit_assert_equal(estimatedPeaks[0].frequency, 10988.07103, 1e-5);
+    unit_assert_equal(estimatedPeaks[0].getAttribute(Peak::Attribute_Frequency), 10988.07103, 1e-5);
 }
 
 

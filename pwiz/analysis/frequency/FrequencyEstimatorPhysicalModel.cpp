@@ -98,7 +98,7 @@ Peak FrequencyEstimatorPhysicalModelImpl::estimate(const FrequencyData& fd,
     const string& outputDirectory = config_.outputDirectory;
 
     // create a window around the peak
-    FrequencyData::const_iterator center = fd.findNearest(initialEstimate.frequency);
+    FrequencyData::const_iterator center = fd.findNearest(initialEstimate.getAttribute(Peak::Attribute_Frequency));
     FrequencyData window(fd, center, config_.windowRadius);
     window.noiseFloor(sqrt(fd.variance()));
 
@@ -147,10 +147,10 @@ Peak FrequencyEstimatorPhysicalModelImpl::estimate(const FrequencyData& fd,
 
     // return info
     Peak result;
-    result.frequency = tlpFinal.f0;
+    result.attributes[Peak::Attribute_Frequency] = tlpFinal.f0;
     result.intensity = abs(tlpFinal.alpha);
-    result.phase = arg(tlpFinal.alpha);
-    result.decay = tlpFinal.tau;
+    result.attributes[Peak::Attribute_Phase] = arg(tlpFinal.alpha);
+    result.attributes[Peak::Attribute_Decay] = tlpFinal.tau;
     //TODO: fill in rest of result
     //result.error = ?
     //result.area = ?

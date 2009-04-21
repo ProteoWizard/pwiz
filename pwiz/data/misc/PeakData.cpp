@@ -46,22 +46,44 @@ using boost::lexical_cast;
 
 
 Peak::Peak()
-:   mz(0), retentionTime(0), scanNumber(0), intensity(0), area(0), error(0),
-    frequency(0), phase(0), decay(0) 
+:   mz(0), retentionTime(0), intensity(0), area(0), error(0)
 {}
+
+
+double Peak::getAttribute(Attribute attribute) const
+{
+    Attributes::const_iterator it = attributes.find(attribute);
+    if (it == attributes.end()) 
+        throw runtime_error("[Peak::getAttribute] Attribute not found.");
+    return it->second;
+}
 
 
 bool Peak::operator==(const Peak& that) const
 {
-    return mz == that.mz &&
-           retentionTime == that.retentionTime &&
-           scanNumber == that.scanNumber &&
-           intensity == that.intensity &&
-           area == that.area &&
-           error == that.error &&
-           frequency == that.frequency &&
-           phase == that.phase &&
-           decay == that.decay;
+    bool result = (mz == that.mz &&
+                   retentionTime == that.retentionTime &&
+                   intensity == that.intensity &&
+                   area == that.area &&
+                   error == that.error);
+
+    if (!result) return false;
+
+    // check attributes
+
+    for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
+    {
+        Attributes::const_iterator jt=that.attributes.find(it->first);
+        if (jt==that.attributes.end() || jt->second!=it->second) return false;
+    }
+
+    for (Attributes::const_iterator it=that.attributes.begin(); it!=that.attributes.end(); ++it)
+    {
+        Attributes::const_iterator jt=attributes.find(it->first);
+        if (jt==attributes.end() || jt->second!=it->second) return false;
+    }
+
+    return true;
 }
 
 
@@ -71,19 +93,85 @@ bool Peak::operator!=(const Peak& that) const
 }
 
 
+namespace {
+
+struct AttributeNameEntry
+{
+    Peak::Attribute attribute;
+    const char* name;
+};
+
+
+AttributeNameEntry attributeNameTable_[] = 
+{
+    {Peak::Attribute_Frequency, "frequency"},
+    {Peak::Attribute_Phase, "phase"},
+    {Peak::Attribute_Decay, "decay"}
+};
+
+
+const size_t attributeNameTableSize_ = sizeof(attributeNameTable_)/sizeof(AttributeNameEntry);
+
+
+map<Peak::Attribute,string> attributeNameMap_;
+map<string,Peak::Attribute> nameAttributeMap_;
+
+
+void initializeAttributeNameMaps()
+{
+    attributeNameMap_.clear();
+    nameAttributeMap_.clear();
+
+    for (const AttributeNameEntry* p=attributeNameTable_;
+         p!=attributeNameTable_+attributeNameTableSize_; ++p)
+    {
+        attributeNameMap_[p->attribute] = p->name;
+        nameAttributeMap_[p->name] = p->attribute;
+    }
+}
+
+
+string attributeToString(Peak::Attribute attribute)
+{
+    if (attributeNameMap_.empty()) initializeAttributeNameMaps(); 
+    
+    map<Peak::Attribute,string>::const_iterator it=attributeNameMap_.find(attribute);
+    if (it == attributeNameMap_.end())
+        throw runtime_error("[PeakData::attributeToString()] Attribute not found.");
+
+    return it->second;
+}
+
+
+Peak::Attribute stringToAttribute(string name)
+{
+    if (nameAttributeMap_.empty()) initializeAttributeNameMaps(); 
+    
+    map<string,Peak::Attribute>::const_iterator it=nameAttributeMap_.find(name);
+    if (it == nameAttributeMap_.end())
+        throw runtime_error(("[PeakData::stringToAttribute()] Unknown attribute: " + name).c_str());
+
+    return it->second;
+}
+
+
+} // namespace
+
+
 void Peak::write(minimxml::XMLWriter& writer) const
 {
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
-    attributes.push_back(make_pair("retentionTime", lexical_cast<string>(retentionTime)));
-    attributes.push_back(make_pair("scanNumber", lexical_cast<string>(scanNumber)));
-    attributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
-    attributes.push_back(make_pair("area", lexical_cast<string>(area)));
-    attributes.push_back(make_pair("error", lexical_cast<string>(error)));
-    attributes.push_back(make_pair("frequency", lexical_cast<string>(frequency)));
-    attributes.push_back(make_pair("phase", lexical_cast<string>(phase)));
-    attributes.push_back(make_pair("decay", lexical_cast<string>(decay)));
-    writer.startElement("peak", attributes, XMLWriter::EmptyElement);
+    XMLWriter::Attributes xmlAttributes;
+    xmlAttributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
+    xmlAttributes.push_back(make_pair("retentionTime", lexical_cast<string>(retentionTime)));
+    xmlAttributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
+    xmlAttributes.push_back(make_pair("area", lexical_cast<string>(area)));
+    xmlAttributes.push_back(make_pair("error", lexical_cast<string>(error)));
+
+    for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
+        xmlAttributes.push_back(make_pair(attributeToString(it->first), 
+                                          lexical_cast<string>(it->second)));
+
+    writer.startElement("peak", xmlAttributes, XMLWriter::EmptyElement);
 }
 
 
@@ -91,23 +179,25 @@ SAXParser::Handler::Status HandlerPeak::startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
 {
-        if (name != "peak")
-            throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
+    if (name != "peak")
+        throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
 
-        getAttribute(attributes, "mz", peak->mz);
-        getAttribute(attributes, "retentionTime", peak->retentionTime);
-        getAttribute(attributes, "scanNumber", peak->scanNumber);
-        getAttribute(attributes, "intensity", peak->intensity);
-        getAttribute(attributes, "area", peak->area);
-        getAttribute(attributes, "error", peak->error);
-        getAttribute(attributes, "frequency", peak->frequency);
-        getAttribute(attributes, "phase", peak->phase);
-        getAttribute(attributes, "decay", peak->decay);
+    for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
+    {
+        if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
+        else if (it->first == "retentionTime") peak->retentionTime = lexical_cast<double>(it->second);
+        else if (it->first == "intensity") peak->intensity = lexical_cast<double>(it->second);
+        else if (it->first == "area") peak->area = lexical_cast<double>(it->second);
+        else if (it->first == "error") peak->error = lexical_cast<double>(it->second);
+        else
+        {
+            Peak::Attribute a = stringToAttribute(it->first);
+            peak->attributes[a] = lexical_cast<double>(it->second);            
+        }
+    }
 
-        return Status::Ok;
-
+    return Status::Ok;
 }
-
 
 
 void Peak::read(istream& is)

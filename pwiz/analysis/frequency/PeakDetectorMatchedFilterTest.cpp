@@ -129,14 +129,15 @@ void testFind(FrequencyData& fd, const IsotopeEnvelopeEstimator& isotopeEnvelope
     if (os_) *os_ << "peakFamily: " << peakFamily << endl;
     unit_assert(peakFamily.peaks.size() > 1);
     const Peak& peak = peakFamily.peaks[0];
-    unit_assert_equal(peak.frequency, 159455, 1);
+    unit_assert_equal(peak.getAttribute(Peak::Attribute_Frequency), 159455, 1);
     unit_assert(peakFamily.charge == 2);
     
     unit_assert(scores.size() == 1);
     const PeakDetectorMatchedFilter::Score& score = scores.back();
     unit_assert(score.charge == peakFamily.charge);
-    unit_assert(score.monoisotopicFrequency == peak.frequency);
-    unit_assert_equal(norm(score.monoisotopicIntensity - polar(peak.intensity, peak.phase)),
+    unit_assert(score.monoisotopicFrequency == peak.getAttribute(Peak::Attribute_Frequency));
+    unit_assert_equal(norm(score.monoisotopicIntensity - 
+                           polar(peak.intensity, peak.getAttribute(Peak::Attribute_Phase))),
                       0, 1e-14);
 }
 
