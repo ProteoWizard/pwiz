@@ -30,7 +30,6 @@ project
 
 lib pwiz_analysis_peakdetect
     :   # sources 
-        PeakDetector.cpp
         PeakFamilyDetector.cpp
         PeakFamilyDetectorFT.cpp
         FeatureDetectorSimple.cpp
