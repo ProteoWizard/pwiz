@@ -2,6 +2,7 @@
 /// BinTest.cpp
 ///
 
+#include <cstring>
 #include "Bin.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
@@ -30,7 +31,8 @@ void test()
     Bin<int> bin(stuf, 4, 4);
 
     vector<int> v;
-    bin.getBinContents(pair<double,double>(1.6,2),v);
+    pair<double,double> p(1.6,2);
+    bin.getBinContents(p, v);
 
     vector<int>::iterator it = v.begin();
     

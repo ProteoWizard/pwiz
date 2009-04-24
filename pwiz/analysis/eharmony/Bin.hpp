@@ -33,7 +33,8 @@ public:
     void erase(const T& t, pair<double,double> coordinates);
     void rebin(const double& binSizeX, const double& binSizeY);
 
-    void getBinContents(pair<double,double> coordinates, vector<T>& result) ; // TODO make const, and all other thangs
+    void getBinContents(const pair<int, int>& coordinates, vector<T>& result) const;
+    void getBinContents(const pair<double,double>& coordinates, vector<T>& result) const;
     void getAdjacentBinContents(pair<double,double> coordinates, vector<T>& result) ; // gets bin and all adjacent bin coordinates
 
     // accessors
@@ -59,7 +60,7 @@ private:
 ///
 
 template <typename T>
-Bin<T>::Bin<T>(const vector<pair<pair<double,double>, T> >& objects, double binSizeX, double binSizeY) : _binSizeX(binSizeX), _binSizeY(binSizeY)
+Bin<T>::Bin(const vector<pair<pair<double,double>, T> >& objects, double binSizeX, double binSizeY) : _binSizeX(binSizeX), _binSizeY(binSizeY)
 {
     typename vector<pair<pair<double,double>, T> >::const_iterator it = objects.begin();
     for(; it!= objects.end(); ++it)
@@ -78,7 +79,7 @@ Bin<T>::Bin<T>(const vector<pair<pair<double,double>, T> >& objects, double binS
 }
 
 template <typename T>
-Bin<T>::Bin<T>(const vector<pair<pair<double,double>, boost::shared_ptr<T> > >& objects, double binSizeX, double binSizeY) : _binSizeX(binSizeX), _binSizeY(binSizeY)
+Bin<T>::Bin(const vector<pair<pair<double,double>, boost::shared_ptr<T> > >& objects, double binSizeX, double binSizeY) : _binSizeX(binSizeX), _binSizeY(binSizeY)
 {
     typename vector<pair<pair<double,double>, boost::shared_ptr<T> > >::const_iterator it = objects.begin();
     for(; it!= objects.end(); ++it)
@@ -169,15 +170,33 @@ void Bin<T>::rebin(const double& binSizeX, const double& binSizeY)
 }
 
 template <typename T>
-void Bin<T>::getBinContents(pair<double,double> coordinates, vector<T>& result) 
+void Bin<T>::getBinContents(const pair<int, int>& coordinates,
+                            vector<T>& result)  const
+{
+    pair<typename multimap<const pair<int,int>,boost::shared_ptr<T> >::const_iterator, typename multimap<const pair<int,int>,boost::shared_ptr<T> >::const_iterator> its = _data.equal_range(coordinates);
+   
+    typename multimap<const pair<int, int>, boost::shared_ptr<T> >::const_iterator it = its.first;
+    for(; it != its.second; ++it)
+        {            
+            result.push_back(*(it->second));
+
+        }
+    
+    return;
+
+} 
+
+template <typename T>
+void Bin<T>::getBinContents(const pair<double,double>& coordinates,
+                            vector<T>& result) const
 { 
     int binXCoord = int(floor(coordinates.first/_binSizeX));
     int binYCoord = int(floor(coordinates.second/_binSizeY));
     pair<int,int> intCoordinates = make_pair(binXCoord, binYCoord);
    
-    pair<typename multimap<const pair<int,int>,boost::shared_ptr<T> >::iterator, typename multimap<const pair<int,int>,boost::shared_ptr<T> >::iterator> its = _data.equal_range(intCoordinates);
+    pair<typename multimap<const pair<int,int>,boost::shared_ptr<T> >::const_iterator, typename multimap<const pair<int,int>,boost::shared_ptr<T> >::const_iterator> its = _data.equal_range(intCoordinates);
    
-    typename multimap<const pair<int, int>, boost::shared_ptr<T> >::iterator it = its.first;
+    typename multimap<const pair<int, int>, boost::shared_ptr<T> >::const_iterator it = its.first;
     for(; it != its.second; ++it)
         {            
             result.push_back(*(it->second));
