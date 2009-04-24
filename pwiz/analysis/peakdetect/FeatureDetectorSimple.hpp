@@ -42,7 +42,6 @@ public:
 
 private:
 
-    PeakFamilyDetector& _pfd;
     class Impl;
     boost::shared_ptr<Impl> _pimpl;
     

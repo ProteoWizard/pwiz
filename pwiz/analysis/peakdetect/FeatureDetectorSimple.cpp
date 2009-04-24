@@ -102,7 +102,7 @@ private:
 };
 
 
-FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pfd(pfd), _pimpl(new Impl(pfd)){}
+FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pimpl(new Impl(pfd)){}
 void FeatureDetectorSimple::detect(const MSData& msd, std::vector<Feature>& result) const 
 {
     _pimpl->detect(msd,result);
