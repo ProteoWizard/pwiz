@@ -91,6 +91,11 @@ void test()
     ab.id = "99";
     ab.charge = 3;
 
+    FeatureSequenced fs_ab;
+    fs_ab.feature = ab;
+    fs_ab.ms1_5="";
+    fs_ab.ms2="six";
+
     vector<Feature> f;
     f.push_back(ab);
 
@@ -98,23 +103,27 @@ void test()
 
     DataFetcherContainer dfc(pidf, pidf, fdf, fdf);
     dfc.adjustRT();
-
-    // did the feature change as expected?
-    ab.ms2 = "six";
     
-    vector<boost::shared_ptr<Feature> > f_prime = dfc._fdf_a.getBin().getAllContents();
+    vector<boost::shared_ptr<FeatureSequenced> > f_prime = dfc._fdf_a.getBin().getAllContents();
     
     if (os_)
         {
             ostringstream oss;
             XMLWriter writer(oss);
-            vector<boost::shared_ptr<Feature> >::iterator it = f_prime.begin();
-            for(; it != f_prime.end(); ++it) (*it)->write(writer);
+            vector<boost::shared_ptr<FeatureSequenced> >::iterator it = f_prime.begin();
+            for(; it != f_prime.end(); ++it) 
+	      {
+		  (*it)->feature.write(writer);
+		  cout << (*it)->ms1_5 << endl;
+		  cout << (*it)->ms2 << endl;
+
+	      }
+
             *os_ << oss.str() << endl;
 
         }
 
-    unit_assert(find_if(f_prime.begin(), f_prime.end(), IsObject<Feature>(ab)) != f_prime.end());
+    unit_assert(find_if(f_prime.begin(), f_prime.end(), IsObject<FeatureSequenced>(fs_ab)) != f_prime.end());
 
     // did the spectrum query change as expected?
     b.retentionTimeSec = 3.5;    

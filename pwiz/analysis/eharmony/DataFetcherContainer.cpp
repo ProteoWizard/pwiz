@@ -19,28 +19,28 @@ DataFetcherContainer::DataFetcherContainer(const PeptideID_dataFetcher& pidf_a, 
 
 namespace{
     
-    void getBestMatch(const SpectrumQuery& sq, const Feature_dataFetcher& fdf, Feature& result)
+    void getBestMatch(const SpectrumQuery& sq, const Feature_dataFetcher& fdf, FeatureSequenced& result)
     {
-        Bin<Feature> featureBin = fdf.getBin();
+        Bin<FeatureSequenced> featureBin = fdf.getBin();
         pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass, sq.assumedCharge), sq.retentionTimeSec);
         double bestScore = 10000000000;       
-        Feature* feat = (Feature*) NULL;
+        FeatureSequenced* feat = (FeatureSequenced*) NULL;
 
-        vector<Feature> adjacentContenders;
+        vector<FeatureSequenced> adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
-        vector<Feature>::iterator ac_it = adjacentContenders.begin();
+        vector<FeatureSequenced>::iterator ac_it = adjacentContenders.begin();
 
         for(; ac_it != adjacentContenders.end(); ++ac_it)
             {
-                if ( ac_it->charge == sq.assumedCharge )
+                if ( ac_it->feature.charge == sq.assumedCharge )
                     {
-                        double mzDiff = (ac_it->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
-                        double rtDiff = (ac_it->retentionTime - sq.retentionTimeSec);
+                        double mzDiff = (ac_it->feature.mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
+                        double rtDiff = (ac_it->feature.retentionTime - sq.retentionTimeSec);
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
                         if ( score < bestScore )
                             {
                                 feat = &(*ac_it);
-
+				
                             }
 
                     }
@@ -63,17 +63,17 @@ namespace{
             {
                 if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
 
-                Feature f;
-                getBestMatch(*sq_it, fdf, f);
+                FeatureSequenced fs;
+                getBestMatch(*sq_it, fdf, fs);
 
-                if (f.id.size() > 0) // f exists
+                if (fs.feature.id.size() > 0) // f exists
                     {        
-                        fdf.erase(f);
-                        f.ms2 = sq_it->searchResult.searchHit.peptide;                      
-                        fdf.update(f);
+                        fdf.erase(fs);
+                        fs.ms2 = sq_it->searchResult.searchHit.peptide;                      
+                        fdf.update(fs);
 
                         pidf.erase(*sq_it);
-                        sq_it->retentionTimeSec = f.retentionTime;
+                        sq_it->retentionTimeSec = fs.feature.retentionTime;
                         pidf.update(*sq_it);
                         
                     }

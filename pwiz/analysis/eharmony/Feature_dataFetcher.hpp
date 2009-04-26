@@ -6,6 +6,7 @@
 #define _FEATURE_DATAFETCHER_HPP_
 
 #include "Bin.hpp"
+#include "FeatureSequenced.cpp"
 #include "pwiz/data/misc/PeakData.hpp"
 
 #include<iostream>
@@ -26,11 +27,11 @@ public:
     Feature_dataFetcher(std::vector<Feature>& features);
     Feature_dataFetcher(const Feature_dataFetcher& fdf) : _bin(fdf.getBin()) {}
     
-    void update(const Feature& f);
-    void erase(const Feature& f);
+    void update(const FeatureSequenced& fs);
+    void erase(const FeatureSequenced& fs);
 
-    std::vector<Feature> getFeatures(double mz, double rt) ;
-    Bin<Feature> getBin() const { return _bin; } 
+    std::vector<FeatureSequenced> getFeatures(double mz, double rt) ;
+    Bin<FeatureSequenced> getBin() const { return _bin; } 
     
     void setMS2LabeledFlag(const bool& flag) { _ms2Labeled = flag; }
     const bool& getMS2LabeledFlag() const { return _ms2Labeled; }
@@ -38,7 +39,7 @@ public:
 private:
 
     bool _ms2Labeled;
-    Bin<Feature> _bin;
+    Bin<FeatureSequenced> _bin;
     
 };
 

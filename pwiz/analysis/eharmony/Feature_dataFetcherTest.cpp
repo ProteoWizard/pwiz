@@ -23,6 +23,17 @@ Feature makeFeature(double mz, double retentionTime)
     feature.retentionTime = retentionTime;
 
     return feature;
+
+}
+
+FeatureSequenced makeFeatureSequenced(const Feature& feature, string _ms1_5="", string _ms2="")
+{
+    FeatureSequenced fs;
+    fs.ms1_5 = _ms1_5;
+    fs.ms2 = _ms2;
+
+    return fs;
+
 }
 
 void test()
@@ -35,6 +46,11 @@ void test()
     Feature b = makeFeature(3,4);
     Feature c = makeFeature(5,6);
 
+    // make FeatureSequenced objects
+    FeatureSequenced fs_a(a);
+    FeatureSequenced fs_b(b);
+    FeatureSequenced fs_c(c);
+
     vector<Feature> features;
     features.push_back(a);
     features.push_back(b);
@@ -46,10 +62,10 @@ void test()
     if (os_) *os_ << "constructed. " << endl;
 
     if (os_) *os_ << "testing getFeatures ... " << endl;
-    vector<Feature> test_a = fdf.getFeatures(1,2);
-    vector<Feature> test_b = fdf.getFeatures(3,4);
-    vector<Feature> test_c = fdf.getFeatures(5,6);
-    if (os_) *os_ << "getFeatures fine." << endl;
+    vector<FeatureSequenced> test_a = fdf.getFeatures(1,2);
+    vector<FeatureSequenced> test_b = fdf.getFeatures(3,4);
+    vector<FeatureSequenced> test_c = fdf.getFeatures(5,6);
+
 
 //     unit_assert(find(test_a.begin(), test_a.end(), a) != test_a.end());
 //     unit_assert(find(test_b.begin(), test_b.end(), b) != test_b.end());
@@ -60,9 +76,10 @@ void test()
             *os_ << "testing vector<Feature> constructor ... \n";
             ostringstream oss;
             XMLWriter writer(oss);
-            vector<Feature>::iterator a_it = test_a.begin();
-            for(; a_it != test_a.end(); ++a_it) a_it->write(writer);
+            vector<FeatureSequenced>::iterator a_it = test_a.begin();
+            for(; a_it != test_a.end(); ++a_it) a_it->feature.write(writer);
             *os_ << oss.str() << endl;
+
         }
 
 
@@ -79,13 +96,13 @@ void test()
     // test istream constructor
     Feature_dataFetcher fdf_is(iss);
 
-    vector<Feature> test_is_a = fdf_is.getFeatures(1,2);
-    vector<Feature> test_is_b = fdf_is.getFeatures(3,4);
-    vector<Feature> test_is_c = fdf_is.getFeatures(5,6);
+    vector<FeatureSequenced> test_is_a = fdf_is.getFeatures(1,2);
+    vector<FeatureSequenced> test_is_b = fdf_is.getFeatures(3,4);
+    vector<FeatureSequenced> test_is_c = fdf_is.getFeatures(5,6);
 
-    unit_assert(find(test_is_a.begin(), test_is_a.end(), a) != test_is_a.end());
-    unit_assert(find(test_is_b.begin(), test_is_b.end(), b) != test_is_b.end());
-    unit_assert(find(test_is_c.begin(), test_is_c.end(), c) != test_is_c.end());
+    unit_assert(find(test_is_a.begin(), test_is_a.end(), fs_a) != test_is_a.end());
+    unit_assert(find(test_is_b.begin(), test_is_b.end(), fs_b) != test_is_b.end());
+    unit_assert(find(test_is_c.begin(), test_is_c.end(), fs_c) != test_is_c.end());
 
 
     if (os_)

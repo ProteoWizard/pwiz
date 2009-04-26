@@ -1,6 +1,7 @@
 lib pwiz_analysis_eharmony
     :
       Bin.hpp 
+      FeatureSequenced.cpp
       Feature_dataFetcher.cpp
       PeptideID_dataFetcher.cpp
       DataFetcherContainer.cpp
@@ -29,8 +30,6 @@ unit-test PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
 
 unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_eharmony ;
-
-# unit-test MatcherTest : MatcherTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp

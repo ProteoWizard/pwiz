@@ -123,7 +123,6 @@ Feature makeFeature(double mz, double retentionTime, string ms1_5, int charge = 
     feature.mzMonoisotopic = mz;
     feature.retentionTime = retentionTime;
     feature.charge = charge;
-    feature.ms1_5 = ms1_5;
 
     return feature;
 
