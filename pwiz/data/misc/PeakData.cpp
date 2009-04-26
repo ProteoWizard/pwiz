@@ -996,8 +996,6 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     attributes.push_back(make_pair("id", boost::lexical_cast<string>(id)));
     attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
     attributes.push_back(make_pair("retentionTime", boost::lexical_cast<string>(retentionTime)));
-    attributes.push_back(make_pair("ms1_5", ms1_5));
-    attributes.push_back(make_pair("ms2", ms2));
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
     attributes.push_back(make_pair("totalIntensity", boost::lexical_cast<string>(totalIntensity)));
     attributes.push_back(make_pair("rtVariance", boost::lexical_cast<string>(rtVariance)));
@@ -1026,8 +1024,6 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
             getAttribute(attributes,"id", feature->id);
             getAttribute(attributes,"mzMonoisotopic", feature->mzMonoisotopic);
             getAttribute(attributes,"retentionTime", feature->retentionTime);
-            getAttribute(attributes,"ms1_5", feature->ms1_5);
-            getAttribute(attributes, "ms2", feature->ms2);
             getAttribute(attributes,"charge", feature->charge);
             getAttribute(attributes,"totalIntensity", feature->totalIntensity);
             getAttribute(attributes,"rtVariance", feature->rtVariance);
@@ -1096,12 +1092,11 @@ bool Feature::operator==(const Feature& that) const
     return id == that.id &&
       mzMonoisotopic == that.mzMonoisotopic &&
       retentionTime == that.retentionTime &&
-      ms1_5 == that.ms1_5 &&
-      ms2 == that.ms2 &&  
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&
       rtVariance == that.rtVariance &&
       peakels == that.peakels;
+
 }
 
 bool Feature::operator!=(const Feature& that) const

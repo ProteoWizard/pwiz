@@ -241,8 +241,6 @@ struct PWIZ_API_DECL Feature
     std::string id; // assigned by feature detection, for easier lookup 
     double mzMonoisotopic;
     double retentionTime;
-    std::string ms2;
-    std::string ms1_5;
     int charge;
     double totalIntensity;
     double rtVariance; // calculated from child Peakels?
