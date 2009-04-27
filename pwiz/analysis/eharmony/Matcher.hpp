@@ -26,6 +26,7 @@ struct Config
     std::vector<std::string> searchNbhdCalculators;
 
     std::vector<SearchNeighborhoodCalculator> parsedSNCs;
+    std::vector<WarpFunctionEnum> parsedWarpFunctionCalculators;
 
     Config() : inputPath("."), outputPath(".") {}
 

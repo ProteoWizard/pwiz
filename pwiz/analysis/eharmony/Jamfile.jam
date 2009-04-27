@@ -9,6 +9,7 @@ lib pwiz_analysis_eharmony
       PeptideMatcher.cpp
       SearchNeighborhoodCalculator.cpp
       Peptide2FeatureMatcher.cpp
+      WarpFunction.cpp
 #      Exporter.hpp
       ../../data/misc//pwiz_data_misc
 #      eharmony.cpp
@@ -30,6 +31,8 @@ unit-test PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
 
 unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_eharmony ;
+
+unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp

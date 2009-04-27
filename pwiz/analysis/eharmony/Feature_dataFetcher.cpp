@@ -23,6 +23,18 @@ void getCoordinates(const vector<Feature>& f, vector<FeatBinPair>& result)
 
 }
 
+
+void getCoordinates(const vector<boost::shared_ptr<FeatureSequenced> >& f, vector<FeatBinPair>& result)
+{
+  vector<boost::shared_ptr<FeatureSequenced> >::const_iterator f_it = f.begin();
+  for(; f_it != f.end(); ++f_it)
+    {;
+      result.push_back(make_pair(make_pair((*f_it)->feature.mzMonoisotopic, (*f_it)->feature.retentionTime),**f_it));
+
+    }
+
+}
+
 Feature_dataFetcher::Feature_dataFetcher(istream& is)
 {
     FeatureFile ff;
@@ -40,6 +52,14 @@ Feature_dataFetcher::Feature_dataFetcher(vector<Feature>& f)
     vector<FeatBinPair> features;
     getCoordinates(f, features);
     _bin = Bin<FeatureSequenced>(features, .005, 1000); 
+
+}
+
+Feature_dataFetcher::Feature_dataFetcher(vector<boost::shared_ptr<FeatureSequenced> >& f)
+{
+    vector<FeatBinPair> features;
+    getCoordinates(f, features);
+    _bin = Bin<FeatureSequenced>(features, .005, 1000);
 
 }
 

@@ -89,6 +89,35 @@ namespace{
 
     }
 
+    vector<WarpFunctionEnum> translateWarpFunctionCalculatorStrings(const vector<string>& wfcs)
+    {
+  
+        vector<WarpFunctionEnum> result;
+        vector<string>::const_iterator it = wfcs.begin();
+        
+        for(; it != wfcs.end(); ++it)
+          {
+              const char* linear = "linear";
+              const char* piecewiseLinear = "piecewiseLinear";
+              const char* curr = it->c_str();
+              if (!strncmp(linear, curr, 6))
+                  {
+                    result.push_back(Linear);
+                    
+                  }
+
+              if (!strncmp(piecewiseLinear, curr, 15))
+                  {
+                    result.push_back(PiecewiseLinear);
+
+                  }
+
+          }
+
+         return result;
+
+    }
+
 } // anonymous namespace
 
 void Matcher::checkSourceFiles()
@@ -173,7 +202,7 @@ void Matcher::processFiles()
                     // make DataFetcherContainer (dfc) out of run names and maps
                     DataFetcherContainer dfc(pidf_a, pidf_b, fdf_a, fdf_b);
                     dfc.adjustRT();                   
-                    
+                    /*
                     if ( dfc._pidf_a.getRtAdjustedFlag() ) // TODO fix to only erase and insert the one that was changed (both may not be)
                         {
                             _peptideData.erase(_peptideData.find(run_A));
@@ -193,11 +222,13 @@ void Matcher::processFiles()
                             _featureData.insert(make_pair(run_B, dfc._fdf_a));
 
                         }
-
+		    */
                     //msmatchmake it for each SNC.
+
                     SearchNeighborhoodCalculator snc;
 
-                    // construct the original pep.xml object. todo: do this when reading in the file normally
+                    // construct the original pep.xml object. TODO: do this when reading in the file normally
+
                     ifstream ifs_original((_config.inputPath + "/" + run_B + ".pep.xml").c_str());
                     MSMSPipelineAnalysis mspa;
                     mspa.read(ifs_original);
@@ -233,6 +264,14 @@ void Matcher::processFiles()
 
 void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculator& snc, MSMSPipelineAnalysis& mspa, string& outputDir) // pass in original mspa for writing
 {   
+
+  // for each warp function calculator, do the below. first test for just one.
+    
+    if (_config.parsedWarpFunctionCalculators.size() == 0 ) _config.parsedWarpFunctionCalculators.push_back(Default);
+    WarpFunctionEnum wfe = *_config.parsedWarpFunctionCalculators.begin();
+    
+    dfc.warpRT(wfe);
+
     snc.calculateTolerances(dfc);
 
     PeptideMatcher pm(dfc);
@@ -256,6 +295,9 @@ void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculato
 
     ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
     exporter.writePepXML(mspa, ofs_pepxml);
+
+    ofstream ofs_r((outputDir + "/r_input.txt").c_str());
+    exporter.writeRInputFile(ofs_r);
 
 }
 
@@ -282,6 +324,10 @@ Matcher::Matcher(Config& config) : _config(config)
     cout << "[eharmony] Parsing search neighborhood calculators ... " << endl;
     _config.parsedSNCs = translateSearchNbhdCalculatorStrings(_config.searchNbhdCalculators);
     
+    // same with WFCs
+    cout << "[eharmony] Parsing warp function calculators ... " << endl;
+    _config.parsedWarpFunctionCalculators = translateWarpFunctionCalculatorStrings(_config.warpFunctionCalculators);
+
     // process each pair of run IDs
     cout << "[eharmony] Processing files ... " << endl;
     processFiles();

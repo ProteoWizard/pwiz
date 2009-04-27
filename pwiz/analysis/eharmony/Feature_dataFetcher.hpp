@@ -8,6 +8,7 @@
 #include "Bin.hpp"
 #include "FeatureSequenced.cpp"
 #include "pwiz/data/misc/PeakData.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -25,6 +26,7 @@ public:
     Feature_dataFetcher(){}
     Feature_dataFetcher(std::istream& is);
     Feature_dataFetcher(std::vector<Feature>& features);
+    Feature_dataFetcher(std::vector<boost::shared_ptr<FeatureSequenced> >& features);
     Feature_dataFetcher(const Feature_dataFetcher& fdf) : _bin(fdf.getBin()) {}
     
     void update(const FeatureSequenced& fs);

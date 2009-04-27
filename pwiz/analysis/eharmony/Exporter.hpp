@@ -7,6 +7,7 @@
 
 #include "PeptideMatcher.hpp"
 #include "Peptide2FeatureMatcher.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 
 namespace pwiz{
 namespace eharmony{
@@ -19,6 +20,7 @@ struct Exporter
     void writeP2FM(ostream& os);
     void writeROCStats(ostream& os);
     void writePepXML(MSMSPipelineAnalysis& mspa, ostream& os);
+    void writeRInputFile(ostream& os);
 
     PeptideMatcher _pm;
     Peptide2FeatureMatcher _p2fm;
@@ -31,6 +33,7 @@ struct Exporter
 #endif
 
 using namespace pwiz::eharmony;
+using namespace pwiz::proteome;
 
 void Exporter::writePM(ostream& os)
 {
@@ -89,5 +92,19 @@ void Exporter::writePepXML(MSMSPipelineAnalysis& mspa, ostream& os) // mspa is t
     
     XMLWriter writer(os);
     mspa.write(writer);
+
+}
+
+void Exporter::writeRInputFile(ostream& os)
+{
+    vector<Match> matches = _p2fm.getMatches();
+    vector<Match>::iterator it = matches.begin();
+    for(; it != matches.end(); ++it) 
+      {
+	double mzDiff = fabs(it->feature.mzMonoisotopic - Ion::mz(it->spectrumQuery.precursorNeutralMass, it->spectrumQuery.assumedCharge));
+	double rtDiff = fabs(it->feature.retentionTime - it->spectrumQuery.retentionTimeSec);
+	os << mzDiff << "\t" << rtDiff << "\n";
+
+      }
 
 }

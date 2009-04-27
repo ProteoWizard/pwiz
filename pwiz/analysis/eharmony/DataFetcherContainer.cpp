@@ -3,6 +3,7 @@
 ///
 
 #include "DataFetcherContainer.hpp"
+#include "PeptideMatcher.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
 
 using namespace pwiz::eharmony;
@@ -23,7 +24,7 @@ namespace{
     {
         Bin<FeatureSequenced> featureBin = fdf.getBin();
         pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass, sq.assumedCharge), sq.retentionTimeSec);
-        double bestScore = 10000000000;       
+        double bestScore = 1000000;       
         FeatureSequenced* feat = (FeatureSequenced*) NULL;
 
         vector<FeatureSequenced> adjacentContenders;
@@ -40,7 +41,7 @@ namespace{
                         if ( score < bestScore )
                             {
                                 feat = &(*ac_it);
-				
+                                
                             }
 
                     }
@@ -88,12 +89,10 @@ namespace{
 
 void DataFetcherContainer::adjustRT()
 {
-    //    bool changed = false;
     bool flag = _pidf_a.getRtAdjustedFlag();
 
     if (!flag)
         {
-            //            changed = true;
             cout << "Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_a, _fdf_a);
             _pidf_a.setRtAdjustedFlag(true);
@@ -104,7 +103,7 @@ void DataFetcherContainer::adjustRT()
     bool b_flag = _pidf_b.getRtAdjustedFlag();
     if (!b_flag)
         {
-            //changed = true;
+
             cout << "Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_b, _fdf_b);
             _pidf_b.setRtAdjustedFlag(true);
@@ -112,6 +111,78 @@ void DataFetcherContainer::adjustRT()
 
         }
 
-    //    _rtAdjusted = changed;
+}
+
+void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe) 
+{
+    // get anchors
+ 
+     vector<pair<double,double> > anchors;
+    PeptideMatcher pm(*this);
+    PeptideMatchContainer matches = pm.getMatches();
+    PeptideMatchContainer::iterator it = matches.begin();
+    for(; it != matches.end(); ++it) anchors.push_back(make_pair(it->first.retentionTimeSec, it->second.retentionTimeSec));
+
+  // get rt vals to be warped
+  
+ 
+    vector<double> rtUnadulterated;
+    Bin<FeatureSequenced> bin = _fdf_b.getBin();
+    vector<boost::shared_ptr<FeatureSequenced> > features = bin.getAllContents();
+    
+    vector<boost::shared_ptr<FeatureSequenced> >::iterator fs_it = features.begin();
+    for(; fs_it != features.end(); ++fs_it)
+      {
+        rtUnadulterated.push_back((*fs_it)->feature.retentionTime);
+        
+      }
+
+
+  // warp rt vals
+ 
+    vector<double> rtAdulterated;
+    switch (wfe)
+      {
+        case(Default) :
+            {
+              WarpFunction warpFunction(anchors);
+              warpFunction(rtUnadulterated, rtAdulterated);
+
+            } 
+
+          break;
+
+        case(Linear) :
+            {
+              LinearWarpFunction lfw(anchors);
+              lfw(rtUnadulterated, rtAdulterated);
+
+            }
+
+        break;
+
+        case(PiecewiseLinear) :
+            {
+               PiecewiseLinearWarpFunction plwf(anchors);
+               plwf(rtUnadulterated, rtAdulterated);
+
+            }
+
+        break;
+
+      }
+
+  // put them back
+
+    vector<double>::iterator rt_it = rtAdulterated.begin();
+    fs_it = features.begin();
+    for(; fs_it != features.end(); ++fs_it, ++rt_it)
+      {
+        (*fs_it)->feature.retentionTime = *rt_it;
+
+      }
+
+    Feature_dataFetcher _fdf_new(features);
+    _fdf_b = _fdf_new;
 
 }
