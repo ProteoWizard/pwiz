@@ -47,6 +47,24 @@ MSIHandler::Record::Record(const std::vector<std::string>& fields)
     scanCount = atol(fields.at(13).c_str());
 }
 
+MSIHandler::Record::Record(const Record& r)
+{
+    scan = r.scan;
+    time = r.time;
+    mz = r.mz;
+    mass = r.mass;
+    intensity = r.intensity;
+    charge = r.charge;
+    chargeStates = r.chargeStates;
+    kl = r.kl;
+    background = r.background;
+    median = r.median;
+    peaks = r.peaks;
+    scanFirst = r.scanFirst;
+    scanLast = r.scanLast;
+    scanCount = r.scanCount;
+}
+
 class MSIHandler::Impl
 {
     public:
@@ -67,6 +85,7 @@ bool MSIHandler::updateRecord(const std::vector<std::string>& fields)
     
     Record record(fields);
 
+    pimpl->records.push_back(record);
 
     return result;
 }
@@ -79,6 +98,11 @@ size_t MSIHandler::size() const
 MSIHandler::Record MSIHandler::record(size_t index) const
 {
     return pimpl->records.at(index);
+}
+
+MSIHandler::Record MSIHandler::lastRecord() const
+{
+    return pimpl->records.at(pimpl->records.size()-1);
 }
 
 } // namespace pwiz

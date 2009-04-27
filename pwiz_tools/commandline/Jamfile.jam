@@ -84,6 +84,13 @@ exe peakaboo
     ;
 
 
+exe msistats
+    : msistats.cpp
+      ../../pwiz/utility/misc//pwiz_utility_misc
+    : <include>../../..
+    ;
+
+
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo ;
 
 

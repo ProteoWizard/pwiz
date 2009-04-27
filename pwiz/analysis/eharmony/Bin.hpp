@@ -29,10 +29,25 @@ public:
     Bin(const vector<pair<pair<double,double>, boost::shared_ptr<T> > >& objects, double binSizeX, double binSizeY);
     Bin(const Bin<T>& b) : _allContents(b.getAllContents()), _objects(b.getObjects()),  _data(b.getData()), _binSizeX(b.getBinSizes().first), _binSizeY(b.getBinSizes().second) {}
 
+    double getBinSizeX()
+    {
+        return _binSizeX;
+    }
+
+    double getBinSizeY()
+    {
+        return _binSizeY;
+    }
+
     void update(const T& t, pair<double,double> coordinates);
     void erase(const T& t, pair<double,double> coordinates);
     void rebin(const double& binSizeX, const double& binSizeY);
 
+    size_t count(pair<int, int> coordinates) const
+    {
+        return _data.count(coordinates);
+    }
+    
     void getBinContents(const pair<int, int>& coordinates, vector<T>& result) const;
     void getBinContents(const pair<double,double>& coordinates, vector<T>& result) const;
     void getAdjacentBinContents(pair<double,double> coordinates, vector<T>& result) ; // gets bin and all adjacent bin coordinates
@@ -51,8 +66,6 @@ private:
     multimap<const pair<int,int>, boost::shared_ptr<T> > _data;
     double _binSizeX;
     double _binSizeY;
-
-    
 };
 
 ///
@@ -60,13 +73,15 @@ private:
 ///
 
 template <typename T>
-Bin<T>::Bin(const vector<pair<pair<double,double>, T> >& objects, double binSizeX, double binSizeY) : _binSizeX(binSizeX), _binSizeY(binSizeY)
+Bin<T>::Bin(const vector<pair<pair<double,double>, T> >& objects, double binSizeX, double binSizeY)
+    : _binSizeX(binSizeX), _binSizeY(binSizeY)
 {
     typename vector<pair<pair<double,double>, T> >::const_iterator it = objects.begin();
     for(; it!= objects.end(); ++it)
         {
             int binXCoord = int(floor(it->first.first/_binSizeX));
             int binYCoord = int(floor(it->first.second/_binSizeY));
+            
             boost::shared_ptr<T>  t(new T(it->second));
             boost::shared_ptr<T> sp_t(new T(it->second));
 
