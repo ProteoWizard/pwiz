@@ -111,7 +111,7 @@ Config parseCommandArgs(int argc, const char* argv[])
     namespace po = boost::program_options;
 
     Config config;
-    
+
     string usageOptions;
 
     po::options_description od_config("");
@@ -164,6 +164,8 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("flat,f",
             po::value<string>(&config.peptideFilename),
             ": peptide file location (nativeID rt mz score seq)")
+        ("help,h",
+            ": print this helpful message.")
         ;
 
     // save options description
@@ -255,6 +257,10 @@ Config parseCommandArgs(int argc, const char* argv[])
     config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
     
     config.usageOptions = usageOptions;
+
+    if (vm.count("help"))
+        throw runtime_error(usage(config).c_str());
+
 
     return config;
 }
