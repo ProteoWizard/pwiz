@@ -5,6 +5,7 @@
 #include "WarpFunction.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
+#include <cstring>
 
 using namespace std;
 using namespace pwiz;
