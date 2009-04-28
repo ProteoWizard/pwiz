@@ -90,14 +90,6 @@ run TabReaderTest.cpp pwiz_utility_misc
     : # default-build
     ;
 
-run BoostAccTest.cpp pwiz_utility_misc
-    : # args
-    : TabReaderTest.data/MSITest.tab # input-files
-    : # requirements
-    : BoostAccTest # target name
-    : # default-build
-    ;
-
 import modules ;
 if [ modules.peek : NT ]
 {
