@@ -46,5 +46,6 @@ unit-test ParabolaTest : Parabola.cpp ParabolaTest.cpp ;
 unit-test StatsTest : Stats.cpp StatsTest.cpp ;
 unit-test erfTest : erf.cpp erfTest.cpp ;
 unit-test qrTest : qrTest.cpp ;
+unit-test OrderedPairTest : OrderedPairTest.cpp ;
 
 
