@@ -179,9 +179,11 @@ void FeatureDetectorSimple::Impl::getMetadata(vector<Feature>& detected) const
 
 void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& detected) const 
 {   
-    // initialize buffer map    
+    // initialize buffer maps    
    
-    map<FeatureKey, FeatureID> bufferMap;
+    map<FeatureKey, FeatureID> grandparentBuffer;
+    map<FeatureKey, FeatureID> parentBuffer;
+
     map<FeatureID, Feature> featureMap;
     size_t featureCount = 0;
 
@@ -191,7 +193,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
     for(size_t spectrum_index = 0; spectrum_index < cache.size(); spectrum_index ++) 
     {
         
-        map<FeatureKey, FeatureID> updatedBufferMap;
+        map<FeatureKey, FeatureID> buffer;
         const SpectrumInfo info = cache.spectrumInfo(spectrum_index, true); //getBinaryData ? 
        
         // call peak family detector on each scan
@@ -199,6 +201,14 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         vector<MZIntensityPair> mzIntensityPairs = info.data;       
 
         vector<PeakFamily> result;
+		
+		if (info.massAnalyzerType != MS_FT_ICR && info.massAnalyzerType != MS_orbitrap)
+		  {
+			cerr << "Skipping non-FT scan number " << info.scanNumber << endl;
+			continue;
+
+		  }
+
         _pfd.detect(mzIntensityPairs,result);
   
         // iterate thru peak families
@@ -213,10 +223,11 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
               
                 // make keys for search
                 FeatureKey featureKey(floor(result_it->mzMonoisotopic*100)/100, result_it->charge, result_it->peaks.size()); // no digits past 10e-3
-                map<FeatureKey,FeatureID>::iterator location = bufferMap.find(featureKey);
+                map<FeatureKey,FeatureID>::iterator grandparentLocation = grandparentBuffer.find(featureKey);
+		map<FeatureKey,FeatureID>::iterator parentLocation = parentBuffer.find(featureKey);
                 
 
-                if (location == bufferMap.end())
+                if ( parentLocation == parentBuffer.end() && grandparentLocation == grandparentBuffer.end())
                     {   
 
                         // feature doesn't exist, make new feature
@@ -225,24 +236,33 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
                         Feature feature = makeFeature(*result_it,featureID);
 
                         featureMap.insert(pair<FeatureID, Feature>(featureID, feature));
-                        updatedBufferMap.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
+                        buffer.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
                                         
 
                     }
 
                 else
                     {
-                        // update existing feature
-                        FeatureID foundID = location->second;
+   		      // if parent location update from parent
+		        FeatureID foundID;
+
+		        if ( parentLocation != parentBuffer.end() ) foundID = parentLocation->second;
+		        else foundID = grandparentLocation->second;
+			
+			// update existing feature
                         updateFeature(*result_it, featureMap[foundID]);
-                        updatedBufferMap.insert(pair<FeatureKey, FeatureID>(featureKey,foundID));
-                        
+                        buffer.insert(pair<FeatureKey, FeatureID>(featureKey,foundID));
+
                     }
                    
             }
 
         // old buffer map := new buffer map
-        bufferMap.swap(updatedBufferMap);
+	//  bufferMap.swap(updatedBufferMap);
+
+	grandparentBuffer.swap(parentBuffer);
+	parentBuffer.swap(buffer);
+
     }
  
     
