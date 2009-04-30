@@ -70,6 +70,15 @@ void PeptideID_dataFetcher::update(const SpectrumQuery& sq)
 
 }
 
+void PeptideID_dataFetcher::merge(const PeptideID_dataFetcher& that)
+{
+    Bin<SpectrumQuery> bin = that.getBin();
+    vector<boost::shared_ptr<SpectrumQuery> > contents = bin.getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = contents.begin();
+    for(; it!= contents.end(); ++it) update(**it);
+
+}
+
 vector<SpectrumQuery> PeptideID_dataFetcher::getAllContents() const
 {
     vector<boost::shared_ptr<SpectrumQuery> > hack = _bin.getAllContents();

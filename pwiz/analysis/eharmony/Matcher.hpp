@@ -8,6 +8,7 @@
 #include "DataFetcherContainer.hpp"
 #include "SearchNeighborhoodCalculator.hpp"
 
+#include "boost/shared_ptr.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 
@@ -21,12 +22,14 @@ struct Config
     std::string outputPath;
     std::string batchFileName;
     bool rtCalibrate;
-    
-    std::vector<std::string> warpFunctionCalculators;
-    std::vector<std::string> searchNbhdCalculators;
 
-    std::vector<SearchNeighborhoodCalculator> parsedSNCs;
-    std::vector<WarpFunctionEnum> parsedWarpFunctionCalculators;
+    std::string warpFunctionCalculator;
+    std::string searchNeighborhoodCalculator;
+    std::string normalDistributionSearch;
+ 
+    SearchNeighborhoodCalculator parsedSNC;
+    NormalDistributionSearch parsedNDS;
+    WarpFunctionEnum warpFunction;
 
     Config() : inputPath("."), outputPath(".") {}
 
@@ -43,6 +46,7 @@ public:
     void readSourceFiles();
     void processFiles();
     void msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculator& snc, MSMSPipelineAnalysis& mspa, string& outputDir);
+    void msmatchmake(DataFetcherContainer& dfc, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa, string& outputDir);
 
 private:
 

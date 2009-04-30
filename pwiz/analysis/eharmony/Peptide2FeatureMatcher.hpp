@@ -24,6 +24,7 @@ public:
 
     Peptide2FeatureMatcher(){}
     Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature_dataFetcher& b, const SearchNeighborhoodCalculator& snc); 
+    Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature_dataFetcher& b, const NormalDistributionSearch& snc);
 
     // what do we need to know to match?
     // we need to know the search neighborhoods as well as the data.

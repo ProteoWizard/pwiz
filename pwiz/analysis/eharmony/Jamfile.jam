@@ -10,6 +10,7 @@ lib pwiz_analysis_eharmony
       SearchNeighborhoodCalculator.cpp
       Peptide2FeatureMatcher.cpp
       WarpFunction.cpp
+      EharmonyAgglomerator.cpp
 #      Exporter.hpp
       ../../data/misc//pwiz_data_misc
 #      eharmony.cpp

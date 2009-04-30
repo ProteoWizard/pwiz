@@ -19,8 +19,8 @@ using namespace pwiz::eharmony;
 
 namespace{
 
-    SearchNeighborhoodCalculator translateNaiveSearchNbhdCalculator(const string& curr_str)
-    {
+    boost::shared_ptr<SearchNeighborhoodCalculator> translateSearchNeighborhoodCalculator(const string& curr_str)
+    {      
         const char* open = "[";
         const char* split = ",";
         const char* close = "]";
@@ -34,14 +34,15 @@ namespace{
         split_index += 1;
         string rtTolerance(curr_str.substr(split_index, close_index));
 
-        SearchNeighborhoodCalculator result(boost::lexical_cast<double>(mzTolerance), boost::lexical_cast<double>(rtTolerance));
+
+        return boost::shared_ptr<SearchNeighborhoodCalculator>(new SearchNeighborhoodCalculator(boost::lexical_cast<double>(mzTolerance), boost::lexical_cast<double>(rtTolerance)));
        
-        return result;
 
     }
 
-    NormalDistributionSearch translateNormalDistributionSearch(const string& curr_str)
+    boost::shared_ptr<NormalDistributionSearch> translateNormalDistributionSearch(const string& curr_str)
     {
+       
         const char* open = "[";
         const char* close = "]";
 
@@ -49,72 +50,35 @@ namespace{
         size_t close_index = curr_str.find(close);
 
         string numberOfStdDevs(curr_str.substr(open_index, close_index));
+       
 
         NormalDistributionSearch result(boost::lexical_cast<double>(numberOfStdDevs));
 
-        return result;
+        return boost::shared_ptr<NormalDistributionSearch>(new NormalDistributionSearch(boost::lexical_cast<double>(numberOfStdDevs)));
 
     }
 
-    vector<SearchNeighborhoodCalculator> translateSearchNbhdCalculatorStrings(const vector<string>& sncs)
-    {
-        vector<SearchNeighborhoodCalculator> result;
-        vector<string>::const_iterator snc_it = sncs.begin();
-        for(; snc_it != sncs.end(); ++snc_it)
-            {
-                const char* naive = "naive";
-                const char* normalDistribution = "normalDistribution";
-                string curr_str = *snc_it;
-                const char* curr = snc_it->c_str();
-
-                cout << "SearchNeighborhoodCalculator: " << curr << endl;
-
-                if (!strncmp(naive, curr,5))
-                    {
-                        result.push_back(translateNaiveSearchNbhdCalculator(curr_str));
-                        result.back()._id = curr_str;
-
-                    }
-
-                if (!strncmp(normalDistribution, curr, 18))
-                    {
-                        result.push_back(translateNormalDistributionSearch(curr_str));
-                        result.back()._id = curr_str;
-
-                    }
-
-            }
-
-        return result;
-
-    }
-
-    vector<WarpFunctionEnum> translateWarpFunctionCalculatorStrings(const vector<string>& wfcs)
+    WarpFunctionEnum translateWarpFunctionCalculator(const string& wfe_string)
     {
   
-        vector<WarpFunctionEnum> result;
-        vector<string>::const_iterator it = wfcs.begin();
-        
-        for(; it != wfcs.end(); ++it)
-          {
               const char* linear = "linear";
               const char* piecewiseLinear = "piecewiseLinear";
-              const char* curr = it->c_str();
+              const char* curr = wfe_string.c_str();
               if (!strncmp(linear, curr, 6))
                   {
-                    result.push_back(Linear);
+                    return Linear;
                     
                   }
 
               if (!strncmp(piecewiseLinear, curr, 15))
                   {
-                    result.push_back(PiecewiseLinear);
+                    return PiecewiseLinear;
 
                   }
 
-          }
+  
 
-         return result;
+              return Default;
 
     }
 
@@ -222,7 +186,7 @@ void Matcher::processFiles()
                             _featureData.insert(make_pair(run_B, dfc._fdf_a));
 
                         }
-		    */
+                    */
                     //msmatchmake it for each SNC.
 
                     SearchNeighborhoodCalculator snc;
@@ -233,21 +197,24 @@ void Matcher::processFiles()
                     MSMSPipelineAnalysis mspa;
                     mspa.read(ifs_original);
 
-                    if (_config.parsedSNCs.size() > 0 )
+                    if (_config.searchNeighborhoodCalculator.size() != 0)
                         {
-                            vector<SearchNeighborhoodCalculator>::iterator it = _config.parsedSNCs.begin();
+                            string dirName = (run_A + "_" + run_B + "_"  + _config.parsedSNC._id);
+                            cout << "eharmonizing: " << _config.parsedSNC._id << endl;
+                            msmatchmake(dfc,_config.parsedSNC, mspa, dirName);                         
 
-                            for(; it != _config.parsedSNCs.end(); ++it)
-                                {
-                                    string dirName = (run_A + "_" + run_B + "_"  + it->_id);
-                                    cout << "eharmonizing: " << it->_id << endl;
-                                    msmatchmake(dfc,*it, mspa, dirName);
-
-                                }
+                        }
+                   
+                    if (_config.normalDistributionSearch.size() != 0)
+                        {
+                            string dirName = (run_A + "_" + run_B + "_" + _config.parsedNDS._id);  
+                            cout << "eharmonizing: " << _config.parsedNDS._id << endl;          
+                            msmatchmake(dfc,_config.parsedNDS,mspa,dirName);
 
                         }
 
-                    else 
+
+                    if (_config.searchNeighborhoodCalculator.size() == 0 && _config.normalDistributionSearch.size() == 0 ) // no calculator specified, use default
                         {
                             string dirName = (run_A + "_" + run_B + "_default");
                             cout << "eharmonizing: " << snc._id << endl;
@@ -267,11 +234,11 @@ void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculato
 
   // for each warp function calculator, do the below. first test for just one.
     
-    if (_config.parsedWarpFunctionCalculators.size() == 0 ) _config.parsedWarpFunctionCalculators.push_back(Default);
-    WarpFunctionEnum wfe = *_config.parsedWarpFunctionCalculators.begin();
-    
-    dfc.warpRT(wfe);
+    if (_config.warpFunctionCalculator.size() == 0 ) _config.warpFunction = Default;
 
+    WarpFunctionEnum wfe = _config.warpFunction;
+
+    dfc.warpRT(wfe);
     snc.calculateTolerances(dfc);
 
     PeptideMatcher pm(dfc);
@@ -296,8 +263,55 @@ void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculato
     ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
     exporter.writePepXML(mspa, ofs_pepxml);
 
+    ofstream ofs_combxml((outputDir + "/ms2_ms1_5.pep.xml").c_str());
+    exporter.writeCombinedPepXML(mspa, ofs_combxml);
+
     ofstream ofs_r((outputDir + "/r_input.txt").c_str());
     exporter.writeRInputFile(ofs_r);
+
+}
+
+// TODO: Hack. Fix.
+
+void Matcher::msmatchmake(DataFetcherContainer& dfc, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa, string& outputDir)// pass in original mspa for writing
+{
+
+  // for each warp function calculator, do the below. first test for just one.
+
+  if (_config.warpFunctionCalculator.size() == 0 ) _config.warpFunction = Default;
+
+  WarpFunctionEnum wfe = _config.warpFunction;
+
+  dfc.warpRT(wfe);
+  nds.calculateTolerances(dfc);
+
+  PeptideMatcher pm(dfc);
+  Peptide2FeatureMatcher p2fm(dfc._pidf_a, dfc._fdf_b, nds);
+
+  // TODO add a --export option and flag in config
+  if (!boost::filesystem::exists(_config.outputPath)) boost::filesystem::create_directory(_config.outputPath);
+  outputDir = _config.outputPath + "/" + outputDir;
+  boost::filesystem::create_directory(outputDir);
+
+  Exporter exporter(pm, p2fm);
+
+  ofstream ofs_pm((outputDir + "/pm.xml").c_str());
+  exporter.writePM(ofs_pm);
+
+  ofstream ofs_p2fm((outputDir + "/p2fm.xml").c_str());
+  exporter.writeP2FM(ofs_p2fm);
+
+  ofstream ofs_roc((outputDir + "/roc.txt").c_str());
+  exporter.writeROCStats(ofs_roc);
+
+  ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
+  exporter.writePepXML(mspa, ofs_pepxml);
+
+  ofstream ofs_combxml((outputDir + "/ms2_ms1_5.pep.xml").c_str());
+  exporter.writeCombinedPepXML(mspa, ofs_combxml);
+
+  ofstream ofs_r((outputDir + "/r_input.txt").c_str());
+  exporter.writeRInputFile(ofs_r);
 
 }
 
@@ -320,13 +334,15 @@ Matcher::Matcher(Config& config) : _config(config)
     cout << "[eharmony] Reading data files ...  " << endl;
     readSourceFiles();
 
-    // turn vector<string> of SNCs into actual SNCS
-    cout << "[eharmony] Parsing search neighborhood calculators ... " << endl;
-    _config.parsedSNCs = translateSearchNbhdCalculatorStrings(_config.searchNbhdCalculators);
+    // parse SNC and NDS
+    cout << "[eharmony] Parsing search neighborhood calculator ... " << endl;
+    if (_config.searchNeighborhoodCalculator.size() != 0 ) _config.parsedSNC = *(translateSearchNeighborhoodCalculator(_config.searchNeighborhoodCalculator));
+    cout << "[eharmony] Parsing normal distribution search ... " << endl;
+    if (_config.normalDistributionSearch.size() != 0 ) _config.parsedNDS = *(translateNormalDistributionSearch(_config.normalDistributionSearch));
     
-    // same with WFCs
-    cout << "[eharmony] Parsing warp function calculators ... " << endl;
-    _config.parsedWarpFunctionCalculators = translateWarpFunctionCalculatorStrings(_config.warpFunctionCalculators);
+    // same with WFC
+    cout << "[eharmony] Parsing warp function calculator ... " << endl;
+    _config.warpFunction = translateWarpFunctionCalculator(_config.warpFunctionCalculator);
 
     // process each pair of run IDs
     cout << "[eharmony] Processing files ... " << endl;

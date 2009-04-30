@@ -79,6 +79,15 @@ void Feature_dataFetcher::erase(const FeatureSequenced& fs)
 
 }
 
+void Feature_dataFetcher::merge(const Feature_dataFetcher& that)
+{
+    Bin<FeatureSequenced> bin = that.getBin();
+    vector<boost::shared_ptr<FeatureSequenced> > entries = bin.getAllContents();
+    vector<boost::shared_ptr<FeatureSequenced> >::iterator it = entries.begin();
+    for(; it != entries.end(); ++it) update(**it);
+    
+}
+
 vector<FeatureSequenced> Feature_dataFetcher::getFeatures(double mz, double rt) 
 {
     pair<double,double> coords = make_pair(mz,rt);

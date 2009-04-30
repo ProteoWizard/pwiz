@@ -31,6 +31,7 @@ public:
     
     void update(const FeatureSequenced& fs);
     void erase(const FeatureSequenced& fs);
+    void merge(const Feature_dataFetcher& that);
 
     std::vector<FeatureSequenced> getFeatures(double mz, double rt) ;
     Bin<FeatureSequenced> getBin() const { return _bin; } 

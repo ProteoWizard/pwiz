@@ -97,7 +97,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
                     size_t i = 2;
                     bool done = false;
 
-                    while ( !done && i < 5)
+                    while ( !done && i < 10)
                         {            
                             FeatureSequenced gs;
                             bin.rebin(i*snc._mzTol, i*snc._rtTol);
@@ -119,7 +119,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 
                         }
                  
-                    // if ( !done ) cerr << "[Peptide2FeatureMatcher] No feature within 4*search radius." << endl;
+                    // if ( !done ) cerr << "[Peptide2FeatureMatcher] Bailing out, no feature within 4*search radius." << endl;
 
                 }            
 
@@ -131,6 +131,79 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 }
 
 
+//TODO: Hack . Fix.
+
+Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature_dataFetcher& b, const NormalDistributionSearch& snc)
+{
+  Bin<FeatureSequenced> bin = b.getBin();
+  bin.rebin(snc._mzTol, snc._rtTol);
+
+  vector<SpectrumQuery> spectrumQueries = a.getAllContents();
+  vector<SpectrumQuery>::iterator sq_it = spectrumQueries.begin();
+  int counter = 0;
+  for(; sq_it != spectrumQueries.end(); ++ sq_it)
+    {
+      if (counter % 100 == 0) cout << "Spectrum: " << counter << endl;
+
+      FeatureSequenced fs;
+      getBestMatch(*sq_it, bin, fs);
+
+      if (fs.ms1_5.size() > 0 && snc.close(*sq_it, fs.feature))
+	{
+	  Match match(*sq_it,fs.feature);
+	  match.score = snc.score(*sq_it,fs.feature);
+
+	  _matches.push_back(match);
+	  if (fs.ms1_5 != fs.ms2 && fs.ms2.size() > 0)
+	    {
+	      _falsePositives.push_back(match);
+
+	    }
+
+	  if (fs.ms1_5 == fs.ms2 && fs.ms2.size() > 0)
+	    {
+
+	      _truePositives.push_back(match);
+
+	    }
+
+	}
+
+      else
+	{
+	  size_t i = 2;
+	  bool done = false;
+
+	  while ( !done && i < 5)
+	    {
+
+	      FeatureSequenced gs;
+	      bin.rebin(i*snc._mzTol, i*snc._rtTol);
+	      getBestMatch(*sq_it, bin, gs);
+	      if (gs.ms1_5.size() != 0)
+	          {
+	               done = true;
+		       Match match(*sq_it, gs.feature);
+		       match.score = snc.score(*sq_it,gs.feature);
+
+		       _mismatches.push_back(match);
+
+		       if (gs.ms1_5 == gs.ms2 && gs.ms2.size() > 0) _falseNegatives.push_back(match);
+		       if (gs.ms1_5 != gs.ms2 && gs.ms2.size() > 0) _trueNegatives.push_back(match);
+
+		  }
+
+	      ++i;
+
+	    }
+
+      // if ( !done ) cerr << "[Peptide2FeatureMatcher] No feature within 4*search radius." << endl;
+
+    }
+
+  counter += 1;
+
+}
 
 
-
+}

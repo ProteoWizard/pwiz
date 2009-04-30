@@ -39,8 +39,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("inputPath,i", po::value<string>(&config.inputPath)," : specify location of input files")
         ("outputPath,o", po::value<string>(&config.outputPath), " : specify output path")
         ("filename,f", po::value<string>(&config.batchFileName)," : specify file listing input runIDs (e.g., 20090109-B-Run)")
-        ("searchNbhdCalculator,n", po::value<vector<string> >(&config.searchNbhdCalculators), " : specify method of defining the neighborhood of a peptide in first run that will be searched for features in second run. \nOptions:\"naive[mzTolerance,rtTolerance]\", \"normalDistribution[stdDevs]\"") // and list options
-        ("warpFunctionCalculator,w", po::value<vector<string> >(&config.warpFunctionCalculators), " : specify method of calculating the rt-calibrating warp function.\nOptions: linear, piecewiseLinear");
+        ("naiveSearchNeighborhood,n", po::value<string>(&config.searchNeighborhoodCalculator), " : specify definition of a naive search neighborhood as naive[mzTolerance, rtTolerance]")
+        ("normalDistributionSearchNeighborhood,d", po::value<string>(&config.normalDistributionSearch), " : specify definition of a search neighborhood based on the distribution of retention time differences between shared MS2s in the runs as normalDistribution[numberOfStDevs]")
+        ("warpFunctionCalculator,w", po::value<string >(&config.warpFunctionCalculator), " : specify method of calculating the rt-calibrating warp function.\nOptions: linear, piecewiseLinear");
     
     // append options to usage string
     usage << od_config;

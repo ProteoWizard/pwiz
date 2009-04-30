@@ -34,6 +34,8 @@ public:
 
     void update(const SpectrumQuery& sq);
     void erase(const SpectrumQuery& sq);
+    void merge(const PeptideID_dataFetcher& that);
+
     std::vector<SpectrumQuery> getAllContents() const;
 
     std::vector<SpectrumQuery> getSpectrumQueries(double mz, double rt);

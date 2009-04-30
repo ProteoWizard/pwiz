@@ -20,6 +20,7 @@ struct Exporter
     void writeP2FM(ostream& os);
     void writeROCStats(ostream& os);
     void writePepXML(MSMSPipelineAnalysis& mspa, ostream& os);
+    void writeCombinedPepXML(MSMSPipelineAnalysis& mspa, ostream& os);
     void writeRInputFile(ostream& os);
 
     PeptideMatcher _pm;
@@ -90,6 +91,23 @@ void Exporter::writePepXML(MSMSPipelineAnalysis& mspa, ostream& os) // mspa is t
 
     mspa.msmsRunSummary.spectrumQueries = hacked_sqs;
     
+    XMLWriter writer(os);
+    mspa.write(writer);
+
+}
+
+void Exporter::writeCombinedPepXML(MSMSPipelineAnalysis& mspa, ostream& os) // original ms2s and new ms1.5s 
+{
+    vector<Match> matches = _p2fm.getMatches();
+    vector<Match>::iterator it = matches.begin();
+    for( ; it!=matches.end(); ++it)
+        {
+            SpectrumQuery sq = it->spectrumQuery;
+	    sq.searchResult.searchHit.analysisResult.xResult.probability = it->score;
+	    mspa.msmsRunSummary.spectrumQueries.push_back(sq);
+
+        }
+
     XMLWriter writer(os);
     mspa.write(writer);
 

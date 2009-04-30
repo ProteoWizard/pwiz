@@ -169,12 +169,38 @@ void testPeptideID_dataFetcherConstructor()
 
 }
 
+void testMerge()
+{
+    if (os_) *os_ << "\ntestMerge() ... \n" << endl;
+
+    SpectrumQuery b = makeSpectrumQuery(1,2,1, "BUCKLEMYSHOE", 0.900, 1,2);
+    vector<SpectrumQuery> v_b;
+    v_b.push_back(b);
+
+    MSMSPipelineAnalysis mspa;
+    mspa.msmsRunSummary.spectrumQueries = v_b;
+
+    PeptideID_dataFetcher pidf_a;
+    PeptideID_dataFetcher pidf_b(mspa);
+    
+    pidf_a.merge(pidf_b);
+ 
+    vector<SpectrumQuery> contents = pidf_a.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
+
+    unit_assert(contents.size() > 0);
+    unit_assert(*contents.begin() == b);
+    
+
+}
+
 int main(int argc, char* argv[])
 {
     try
         {
             if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+
             testPeptideID_dataFetcherConstructor();
+	    testMerge();
 
         }
 
