@@ -30,6 +30,7 @@ project
 
 lib pwiz_analysis_peakdetect
     :   # sources 
+        Noise.cpp
         PeakFamilyDetector.cpp
         PeakFamilyDetectorFT.cpp
         FeatureDetectorSimple.cpp
@@ -58,6 +59,8 @@ unit-test PeakFamilyDetectorFTTest :
     PeakFamilyDetectorFTTestData.cpp
     pwiz_analysis_peakdetect
     ;
+
+unit-test NoiseTest : NoiseTest.cpp pwiz_analysis_peakdetect ;
 
 
 # for run rule syntax see pwiz/analysis/spectrum_processing/Jamfile.jam
