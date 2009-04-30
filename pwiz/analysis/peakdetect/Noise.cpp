@@ -47,15 +47,19 @@ Noise::Noise()
 namespace {
 double normalCDF(double x, double mean, double sd)
 {
-    double inner = (x-mean)/(sd*sqrt(2));
+/*
+    double inner = (x-mean)/(sd*sqrt(2.));
     return .5 * (1 + erf(inner));
+*/
+    return 0;
 }
 } // namespace
 
 
 double Noise::pvalue(double value) 
 {
-    return 1-normalCDF(value, mean, standardDeviation);
+    //return 1-normalCDF(value, mean, standardDeviation);
+    return 0;
 }
 
 

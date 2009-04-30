@@ -52,7 +52,7 @@ class PWIZ_API_DECL NoiseCalculator
 };
 
 
-class PWIZ_API_DECL NoiseCalculator_2Pass
+class PWIZ_API_DECL NoiseCalculator_2Pass : public NoiseCalculator
 {
     public:
 
