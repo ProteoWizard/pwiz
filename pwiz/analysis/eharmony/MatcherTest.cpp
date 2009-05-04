@@ -10,9 +10,11 @@ void test()
 {
     Config config;
 
-    config.inputPath = "/stf/scratch/atrium/kate/ISB18/";
-    config.filenames.push_back("20080410-A-18Mix_Data06_msprefix");
-    config.filenames.push_back("20080410-A-18Mix_Data08_msprefix");
+    config.inputPath = "/Volumes/AZKABAN/azkaban/6mix/";
+    config.batchFileName = "6mix_runs.txt";
+    config.normalDistributionSearch = "normalDistribution[3]";
+    config.warpFunctionCalculator = "linear";
+    config.generateAMTDatabase = true;
 
 //     config.inputPath = "/stf/scratch/atrium/kate/20090112/";
 //     config.filenames.push_back("20090112-B-JW-BOB2IgY14depleted_Data06_msprefix");

@@ -97,7 +97,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
                     size_t i = 2;
                     bool done = false;
 
-                    while ( !done && i < 10)
+                    while ( !done && i < 4)
                         {            
                             FeatureSequenced gs;
                             bin.rebin(i*snc._mzTol, i*snc._rtTol);

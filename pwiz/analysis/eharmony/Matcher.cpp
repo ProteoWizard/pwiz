@@ -6,7 +6,8 @@
 #include "PeptideMatcher.hpp"
 #include "Peptide2FeatureMatcher.hpp"
 #include "Exporter.hpp"
-
+#include "AMTContainer.hpp"
+#include "EharmonyAgglomerator.cpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include "boost/filesystem.hpp"
 #include <algorithm>
@@ -144,6 +145,65 @@ void Matcher::readSourceFiles()
 
 void Matcher::processFiles()
 {
+ 
+    if ( _config.generateAMTDatabase )
+        {
+	    vector<AMTContainer> amtv;   
+	    vector<string>::iterator run_it = _config.filenames.begin();
+	    for(; run_it != _config.filenames.end(); ++run_it)
+	        {
+		    AMTContainer result;
+
+		    if (_peptideData.find(*run_it) == _peptideData.end()) throw runtime_error("[eharmony] peptideData not storing data correctly ... " );
+		    PeptideID_dataFetcher pidf = _peptideData.find(*run_it)->second;
+		    Feature_dataFetcher fdf = _featureData.find(*run_it)->second;
+
+		    result._pidf = pidf;
+		    result._fdf = fdf;
+		    result._config = _config;
+		    
+		    amtv.push_back(result);
+
+	        }
+
+	    
+
+	    AMTContainer amtDatabase = generateAMTDatabase(amtv);
+
+	    ///
+	    /// Exporting
+	    ///
+
+	    Exporter exporter_amt(amtDatabase._pm, amtDatabase._p2fm);
+	    
+	    string outputDir = "amt";
+	    if (!boost::filesystem::exists(_config.outputPath)) boost::filesystem::create_directory(_config.outputPath);
+	    outputDir = _config.outputPath + "/" + outputDir;
+	    boost::filesystem::create_directory(outputDir);
+
+	    ofstream ofs_pm((outputDir + "/pm.xml").c_str());
+	    exporter_amt.writePM(ofs_pm);
+
+	    ofstream ofs_p2fm((outputDir + "/p2fm.xml").c_str());
+	    exporter_amt.writeP2FM(ofs_p2fm);
+
+	    ofstream ofs_roc((outputDir + "/roc.txt").c_str());
+	    exporter_amt.writeROCStats(ofs_roc);
+	    /* TODO: Decide what a pepXML output for the AMT database generation schema should be and if the concept even makes sense
+	    ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
+	    exporter_amt.writePepXML(mspa, ofs_pepxml);
+
+	    ofstream ofs_combxml((outputDir + "/ms2_ms1_5.pep.xml").c_str());
+	    exporter_amt.writeCombinedPepXML(mspa, ofs_combxml);
+	    */
+	    ofstream ofs_r((outputDir + "/r_input.txt").c_str());
+	    exporter_amt.writeRInputFile(ofs_r);
+
+	    return;
+
+        }
+
+
     vector<string>::iterator running_it = _config.filenames.begin();
     for(; running_it != _config.filenames.end(); ++running_it)
         {
@@ -188,7 +248,6 @@ void Matcher::processFiles()
                         }
                     */
                     //msmatchmake it for each SNC.
-
                     SearchNeighborhoodCalculator snc;
 
                     // construct the original pep.xml object. TODO: do this when reading in the file normally

@@ -4,12 +4,14 @@ lib pwiz_analysis_eharmony
       FeatureSequenced.cpp
       Feature_dataFetcher.cpp
       PeptideID_dataFetcher.cpp
+      Match_dataFetcher.cpp
       DataFetcherContainer.cpp
       Matcher.cpp
       PeptideMatcher.cpp
       SearchNeighborhoodCalculator.cpp
       Peptide2FeatureMatcher.cpp
       WarpFunction.cpp
+      AMTContainer.cpp
       EharmonyAgglomerator.cpp
 #      Exporter.hpp
       ../../data/misc//pwiz_data_misc
@@ -35,10 +37,12 @@ unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_
 
 unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
 
+
 exe eharmony
     : eharmony.cpp
       /ext/boost//program_options
-      /ext/boost//filesystem
+      /ext/boost//filesystem	
+      ../../data/misc//pwiz_data_misc
       pwiz_analysis_eharmony
     ;
 

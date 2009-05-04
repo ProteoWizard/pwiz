@@ -6,6 +6,7 @@
 #define _MATCHER_HPP_
 
 #include "DataFetcherContainer.hpp"
+#include "Match_dataFetcher.hpp"
 #include "SearchNeighborhoodCalculator.hpp"
 
 #include "boost/shared_ptr.hpp"
@@ -21,6 +22,9 @@ struct Config
     std::string inputPath;
     std::string outputPath;
     std::string batchFileName;
+
+    bool generateAMTDatabase;
+
     bool rtCalibrate;
 
     std::string warpFunctionCalculator;

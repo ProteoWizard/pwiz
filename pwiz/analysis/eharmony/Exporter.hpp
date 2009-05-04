@@ -13,9 +13,9 @@ namespace pwiz{
 namespace eharmony{
 
 struct Exporter
-{
+{    
     Exporter(const PeptideMatcher& pm, const Peptide2FeatureMatcher& p2fm) : _pm(pm), _p2fm(p2fm) {}
-
+    
     void writePM(ostream& os);
     void writeP2FM(ostream& os);
     void writeROCStats(ostream& os);
