@@ -980,6 +980,30 @@ PWIZ_API_DECL void Chromatogram::getTimeIntensityPairs(TimeIntensityPair* output
 }
 
 
+PWIZ_API_DECL BinaryDataArrayPtr Chromatogram::getTimeArray() const
+{
+    for (vector<BinaryDataArrayPtr>::const_iterator it = binaryDataArrayPtrs.begin();
+         it != binaryDataArrayPtrs.end();
+         ++it)
+    {
+        if ((*it)->hasCVParam(MS_time_array)) return *it;
+    }
+    return BinaryDataArrayPtr();
+}
+
+
+PWIZ_API_DECL BinaryDataArrayPtr Chromatogram::getIntensityArray() const
+{
+    for (vector<BinaryDataArrayPtr>::const_iterator it = binaryDataArrayPtrs.begin();
+         it != binaryDataArrayPtrs.end();
+         ++it)
+    {
+        if ((*it)->hasCVParam(MS_intensity_array)) return *it;
+    }
+    return BinaryDataArrayPtr();
+}
+
+
 PWIZ_API_DECL void Chromatogram::setTimeIntensityPairs(const vector<TimeIntensityPair>& input, CVID timeUnits, CVID intensityUnits)
 {
     if (!input.empty())    

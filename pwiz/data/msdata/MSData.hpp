@@ -639,7 +639,7 @@ PWIZ_API_DECL std::string value(const std::string& id, const std::string& name);
 
 /// templated convenience function to extract a named value from an id string 
 template<typename value_type>
-PWIZ_API_DECL value_type valueAs(const std::string& id, const std::string& name)
+value_type valueAs(const std::string& id, const std::string& name)
 {
     std::string result = value(id, name);
     return !result.empty() ? boost::lexical_cast<value_type>(result) 
