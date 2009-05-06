@@ -91,7 +91,7 @@ void appendSourceFile(const string& filename, MSData& msd)
     sourceFile->id = sourceFile->name = p.leaf();
     string location = bfs::complete(p.branch_path()).string();
     if (location.empty()) location = ".";
-    sourceFile->location = string("file://") + location;
+    sourceFile->location = string("file:///") + location;
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
 
@@ -300,7 +300,7 @@ class Reader_BTDX : public Reader
         sourceFile->name = p.leaf();
         string location = bfs::complete(p.branch_path()).string();
         if (location.empty()) location = ".";
-        sourceFile->location = string("file://") + location;
+        sourceFile->location = string("file:///") + location;
         result.fileDescription.sourceFilePtrs.push_back(sourceFile);
         result.run.id = "Run1";
         result.run.spectrumListPtr = SpectrumListPtr(SpectrumList_BTDX::create(is, result));

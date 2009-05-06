@@ -73,7 +73,7 @@ void calculateSHA1ForLastSourceFile(MSData& msd)
     SourceFile& sf = *msd.fileDescription.sourceFilePtrs.back();
     if (sf.hasCVParam(MS_SHA_1)) return;
 
-    const string uriPrefix = "file://";
+    const string uriPrefix = "file:///";
     if (sf.location.substr(0,uriPrefix.size()) != uriPrefix) return;
     bfs::path p(sf.location.substr(uriPrefix.size()));
     p /= sf.name;
