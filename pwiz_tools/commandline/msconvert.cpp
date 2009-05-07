@@ -31,6 +31,7 @@
 #include "boost/program_options.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -427,31 +428,52 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     cout << "processing file: " << filename << endl;
 
-    const bool calculateSHA1 = true;
-    MSDataFile msd(filename, &readers, calculateSHA1);
+    string head;
+    if (!bfs::is_directory(filename))
+    {
+        pwiz::util::random_access_compressed_ifstream is(filename.c_str());
+        if (!is)
+            throw runtime_error(("[processFile()] Unable to open file " + filename).c_str());
 
-    // process the data 
+        head.resize(512, '\0');
+        is.read(&head[0], (std::streamsize)head.size());
+    }
 
-    if (!config.contactFilename.empty())
-        addContactInfo(msd, config.contactFilename);
+    vector<MSDataPtr> msdList;
+    readers.read(filename, head, msdList);
 
-    SpectrumListFactory::wrap(msd, config.filters);
+    for (size_t i=0; i < msdList.size(); ++i)
+    {
+        MSData& msd = *msdList[i];
 
-    // handle progress updates if requested
+        // calculate SHA1 checksum
+        if (!msd.fileDescription.sourceFilePtrs.empty())
+            calculateSourceFileSHA1(*msd.fileDescription.sourceFilePtrs.back());
 
-    IterationListenerRegistry iterationListenerRegistry;
-    UserFeedbackIterationListener feedback;
-    // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-    const size_t iterationPeriod = 100;
-    iterationListenerRegistry.addListener(feedback, iterationPeriod);
-    IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
- 
-    // write out the new data file
+        // process the data 
 
-    string outputFilename = config.outputFilename(filename);
-    cout << "writing output file: " << outputFilename << endl;
-    msd.write(outputFilename, config.writeConfig, pILR);
+        if (!config.contactFilename.empty())
+            addContactInfo(msd, config.contactFilename);
 
+        SpectrumListFactory::wrap(msd, config.filters);
+
+        // handle progress updates if requested
+
+        IterationListenerRegistry iterationListenerRegistry;
+        UserFeedbackIterationListener feedback;
+        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+        const size_t iterationPeriod = 100;
+        iterationListenerRegistry.addListener(feedback, iterationPeriod);
+        IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
+     
+        // write out the new data file
+
+        string outputFilename = config.outputFilename(filename);
+        if (msdList.size() > 1)
+            outputFilename = bfs::change_extension(outputFilename, "-" + msd.run.id + config.extension).string();
+        cout << "writing output file: " << outputFilename << endl;
+        MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+    }
     cout << endl;
 }
 
@@ -461,7 +483,7 @@ int go(const Config& config)
     cout << config;
 
     boost::filesystem::create_directories(config.outputPath);
-
+//cin.get();
     FullReaderList readers;
 
     int failedFileCount = 0;
@@ -480,7 +502,7 @@ int go(const Config& config)
             cout << "Error processing file " << *it << "\n\n"; 
         }
     }
-
+//cin.get();
     return failedFileCount;
 }
 
