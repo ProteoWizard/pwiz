@@ -27,20 +27,20 @@ namespace{
         double bestScore = 1000000;       
         FeatureSequenced* feat = (FeatureSequenced*) NULL;
 
-        vector<FeatureSequenced> adjacentContenders;
+        vector<boost::shared_ptr<FeatureSequenced> > adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
-        vector<FeatureSequenced>::iterator ac_it = adjacentContenders.begin();
+        vector<boost::shared_ptr<FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
 
         for(; ac_it != adjacentContenders.end(); ++ac_it)
             {
-                if ( ac_it->feature.charge == sq.assumedCharge )
+                if ( (*ac_it)->feature->charge == sq.assumedCharge )
                     {
-                        double mzDiff = (ac_it->feature.mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
-                        double rtDiff = (ac_it->feature.retentionTime - sq.retentionTimeSec);
+                        double mzDiff = ((*ac_it)->feature->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
+                        double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec);
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
                         if ( score < bestScore )
                             {
-                                feat = &(*ac_it);
+                                feat = &(*(*ac_it));
                                 
                             }
 
@@ -67,14 +67,14 @@ namespace{
                 FeatureSequenced fs;
                 getBestMatch(*sq_it, fdf, fs);
 
-                if (fs.feature.id.size() > 0) // f exists
+                if (fs.feature->id.size() > 0) // f exists
                     {        
                         fdf.erase(fs);
                         fs.ms2 = sq_it->searchResult.searchHit.peptide;                      
                         fdf.update(fs);
 
                         pidf.erase(*sq_it);
-                        sq_it->retentionTimeSec = fs.feature.retentionTime;
+                        sq_it->retentionTimeSec = fs.feature->retentionTime;
                         pidf.update(*sq_it);
                         
                     }
@@ -133,7 +133,7 @@ void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe)
     vector<boost::shared_ptr<FeatureSequenced> >::iterator fs_it = features.begin();
     for(; fs_it != features.end(); ++fs_it)
       {
-        rtUnadulterated.push_back((*fs_it)->feature.retentionTime);
+        rtUnadulterated.push_back((*fs_it)->feature->retentionTime);
         
       }
 
@@ -178,7 +178,7 @@ void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe)
     fs_it = features.begin();
     for(; fs_it != features.end(); ++fs_it, ++rt_it)
       {
-        (*fs_it)->feature.retentionTime = *rt_it;
+        (*fs_it)->feature->retentionTime = *rt_it;
 
       }
 

@@ -128,6 +128,14 @@ Feature makeFeature(double mz, double retentionTime)
     return feature;
 }
 
+struct IsSQ
+{
+    IsSQ(const SpectrumQuery& sq) : _p(sq){}
+    SpectrumQuery _p;
+    bool operator()(boost::shared_ptr<SpectrumQuery> sq){ return *sq == _p;}
+
+};
+
 void testPeptideID_dataFetcherConstructor()
 {   
     if (os_)
@@ -145,15 +153,15 @@ void testPeptideID_dataFetcherConstructor()
     SpectrumQuery c = makeSpectrumQuery(5,6,1,"PICKUPSTICKS",0.900,5,6);
     SpectrumQuery d = makeSpectrumQuery(7,8,1,"LAYTHEMSTRAIGHT",0.900,7,8);
 
-    vector<SpectrumQuery> sq_a = pidf.getSpectrumQueries(Ion::mz(1,1),2);
-    vector<SpectrumQuery> sq_b = pidf.getSpectrumQueries(Ion::mz(3,1),4);
-    vector<SpectrumQuery> sq_c = pidf.getSpectrumQueries(Ion::mz(5,1),6);
-    vector<SpectrumQuery> sq_d = pidf.getSpectrumQueries(Ion::mz(7,1),8);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf.getSpectrumQueries(Ion::mz(1,1),2);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf.getSpectrumQueries(Ion::mz(3,1),4);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf.getSpectrumQueries(Ion::mz(5,1),6);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf.getSpectrumQueries(Ion::mz(7,1),8);
 
-    unit_assert(find(sq_a.begin(), sq_a.end(),a) != sq_a.end());
-    unit_assert(find(sq_b.begin(), sq_b.end(),b) != sq_b.end());
-    unit_assert(find(sq_a.begin(), sq_a.end(),a) != sq_a.end());
-    unit_assert(find(sq_a.begin(), sq_a.end(),a) != sq_a.end()); 
+    unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
+    unit_assert(find_if(sq_b.begin(), sq_b.end(),IsSQ(b)) != sq_b.end());
+    unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
+    unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end()); 
 
     if (os_)
         {
@@ -185,10 +193,10 @@ void testMerge()
     
     pidf_a.merge(pidf_b);
  
-    vector<SpectrumQuery> contents = pidf_a.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
+    vector<boost::shared_ptr<SpectrumQuery> > contents = pidf_a.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
 
     unit_assert(contents.size() > 0);
-    unit_assert(*contents.begin() == b);
+    unit_assert(**contents.begin() == b);
     
 
 }

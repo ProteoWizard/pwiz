@@ -46,6 +46,13 @@ PeptideID_dataFetcher::PeptideID_dataFetcher(istream& is) : _rtAdjusted(false)
    
 }
 
+PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<SpectrumQuery>& sqs) : _rtAdjusted(false)
+{
+    vector<SQBinPair> spectrumQueries = getCoordinates(sqs);
+    _bin = Bin<SpectrumQuery>(spectrumQueries,.005,60);
+
+}
+
 PeptideID_dataFetcher::PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa) : _rtAdjusted(false)
 {
     vector<SpectrumQuery> sq = mspa.msmsRunSummary.spectrumQueries;
@@ -90,11 +97,11 @@ vector<SpectrumQuery> PeptideID_dataFetcher::getAllContents() const
 
 }
 
-vector<SpectrumQuery> PeptideID_dataFetcher::getSpectrumQueries(double mz, double rt)
+vector<boost::shared_ptr<SpectrumQuery> > PeptideID_dataFetcher::getSpectrumQueries(double mz, double rt)
 {
     pair<double,double> coords = make_pair(mz,rt);
-    vector<SpectrumQuery> result;
-    _bin.getBinContents(coords,result);
+    vector<boost::shared_ptr<SpectrumQuery> > result;
+    _bin.getAdjacentBinContents(coords,result);
 
     return result;
 

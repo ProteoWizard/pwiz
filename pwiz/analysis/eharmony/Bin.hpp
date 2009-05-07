@@ -49,8 +49,8 @@ public:
     }
     
     void getBinContents(const pair<int, int>& coordinates, vector<T>& result) const;
-    void getBinContents(const pair<double,double>& coordinates, vector<T>& result) const;
-    void getAdjacentBinContents(pair<double,double> coordinates, vector<T>& result) ; // gets bin and all adjacent bin coordinates
+    void getBinContents(const pair<double,double>& coordinates, vector<boost::shared_ptr<T> >& result) const;
+    void getAdjacentBinContents(pair<double,double> coordinates, vector<boost::shared_ptr<T> >& result) ; // gets bin and all adjacent bin coordinates
 
     // accessors
     const vector<boost::shared_ptr<T> >& getAllContents() const { return _allContents;}
@@ -203,7 +203,7 @@ void Bin<T>::getBinContents(const pair<int, int>& coordinates,
 
 template <typename T>
 void Bin<T>::getBinContents(const pair<double,double>& coordinates,
-                            vector<T>& result) const
+                            vector<boost::shared_ptr<T> >& result) const
 { 
     int binXCoord = int(floor(coordinates.first/_binSizeX));
     int binYCoord = int(floor(coordinates.second/_binSizeY));
@@ -214,7 +214,7 @@ void Bin<T>::getBinContents(const pair<double,double>& coordinates,
     typename multimap<const pair<int, int>, boost::shared_ptr<T> >::const_iterator it = its.first;
     for(; it != its.second; ++it)
         {            
-            result.push_back(*(it->second));
+            result.push_back((it->second));
 
         }
     
@@ -223,7 +223,7 @@ void Bin<T>::getBinContents(const pair<double,double>& coordinates,
 } 
 
 template <typename T>
-void Bin<T>::getAdjacentBinContents(pair<double,double> coordinates, vector<T>& result) 
+void Bin<T>::getAdjacentBinContents(pair<double,double> coordinates, vector<boost::shared_ptr<T> >& result) 
 {
 
     // 8 adjacent bins:
@@ -250,14 +250,14 @@ void Bin<T>::getAdjacentBinContents(pair<double,double> coordinates, vector<T>& 
     sleigh.push_back(donner);
     sleigh.push_back(blitzen);
 
-    vector<T> santa;
+    vector<boost::shared_ptr<T> > santa;
     getBinContents(coordinates, santa);
     copy(santa.begin(), santa.end(),  back_inserter(result));
 
     vector<pair<double,double> >::iterator it = sleigh.begin();
     for(; it!= sleigh.end(); ++it)
         {            
-            vector<T> rudolph;
+  	    vector<boost::shared_ptr<T> > rudolph;
             getBinContents(*it, rudolph);
             copy(rudolph.begin(), rudolph.end(), back_inserter(result));
          

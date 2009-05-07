@@ -12,11 +12,10 @@ vector<AMTContainer> pairwiseMatchmake(vector<AMTContainer> runs)
 {
     vector<AMTContainer> result;
     vector<AMTContainer>::iterator it = runs.begin();
-    size_t tracker = 0;
 
-    for(; it < runs.end()-1; ++it, ++tracker)
+    for(; it < runs.end()-1; ++it)
         { 
-	    cout << "tracker: " << tracker << endl;
+	   
 	    AMTContainer& one = *it;
 	    it++;
 	    AMTContainer& two = *it;
@@ -57,8 +56,8 @@ vector<AMTContainer> pairwiseMatchmake(vector<AMTContainer> runs)
 
 		}
 
-            one._mdf.merge(mdf); // add the new MS1.5s to the merged set. ie we have all the MS1.5s from last time, and now a new set from these two together.
 	    
+            one._mdf.merge(mdf); // add the new MS1.5s to the merged set. ie we have all the MS1.5s from last time, and now a new set from these two together.	    
 	    result.push_back(one);
 
         }
@@ -73,7 +72,13 @@ AMTContainer generateAMTDatabase(vector<AMTContainer>& runs)
   // repeat log runs.size() times
  
     vector<AMTContainer> result = runs;
-    while (result.size() > 1) result = pairwiseMatchmake(result);
+    cout << "result.size()" << result.size() << endl;
+    while (result.size() > 1) 
+      {
+	  result = pairwiseMatchmake(result);
+	
+
+      }
 
     return *result.begin();
 

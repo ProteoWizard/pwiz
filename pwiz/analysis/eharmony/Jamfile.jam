@@ -13,7 +13,8 @@ lib pwiz_analysis_eharmony
       WarpFunction.cpp
       AMTContainer.cpp
       EharmonyAgglomerator.cpp
-#      Exporter.hpp
+      AMTDatabase.cpp
+      Exporter.hpp
       ../../data/misc//pwiz_data_misc
 #      eharmony.cpp
     ;
@@ -46,7 +47,13 @@ exe eharmony
       pwiz_analysis_eharmony
     ;
 
+#exe amtdb
+#    : AMTDatabase.cpp
+#      pwiz_analysis_eharmony
+#    ;
+
 install bin
     : eharmony
+ #     amtdb
     : <location>.
     ;

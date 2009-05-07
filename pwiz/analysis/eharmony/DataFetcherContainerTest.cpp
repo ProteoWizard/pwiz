@@ -92,7 +92,7 @@ void test()
     ab.charge = 3;
 
     FeatureSequenced fs_ab;
-    fs_ab.feature = ab;
+    fs_ab.feature = boost::shared_ptr<Feature>(new Feature(ab));
     fs_ab.ms1_5="";
     fs_ab.ms2="six";
 
@@ -113,7 +113,7 @@ void test()
             vector<boost::shared_ptr<FeatureSequenced> >::iterator it = f_prime.begin();
             for(; it != f_prime.end(); ++it) 
 	      {
-		  (*it)->feature.write(writer);
+		  (*it)->feature->write(writer);
 		  cout << (*it)->ms1_5 << endl;
 		  cout << (*it)->ms2 << endl;
 

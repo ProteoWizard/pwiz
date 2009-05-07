@@ -64,3 +64,24 @@ void Match_dataFetcher::merge(const Match_dataFetcher& that)
     for(; it != matches.end(); ++it) update(**it);
     
 }
+
+vector<Match> Match_dataFetcher::getAllContents() const
+{
+  vector<boost::shared_ptr<Match> > hack = _bin.getAllContents();
+  vector<boost::shared_ptr<Match> >::iterator it = hack.begin();
+  vector<Match> result;
+  for(; it != hack.end(); ++it) result.push_back(**it);
+
+  return result;
+
+}
+
+vector<Match> Match_dataFetcher::getMatches(double mz, double rt)
+{
+  pair<double,double> coords = make_pair(mz,rt);
+  vector<Match> result;
+  _bin.getBinContents(coords,result);
+
+  return result;
+
+}

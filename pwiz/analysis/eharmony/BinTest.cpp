@@ -12,6 +12,14 @@ using namespace pwiz::util;
 
 ostream* os_ = 0;
 
+struct IsInt
+{
+    IsInt(int n) : _n(n){}
+    bool operator()( boost::shared_ptr<int> m) { return *m == _n;}
+    int _n;
+
+};
+
 void test()
 {
     if (os_) *os_ << "\n[BinTest.cpp] test() ... \n";
@@ -30,17 +38,17 @@ void test()
 
     Bin<int> bin(stuf, 4, 4);
 
-    vector<int> v;
+    vector<boost::shared_ptr<int> > v;
     pair<double,double> p(1.6,2);
     bin.getBinContents(p, v);
 
-    vector<int>::iterator it = v.begin();
+    vector<boost::shared_ptr<int> >::iterator it = v.begin();
     
     if (os_)
         {
             *os_ << "\ntesting Bin::getBinContents ... found: \n";
             for(; it != v.end(); ++it)
-                *os_ << *it << endl;
+                *os_ << **it << endl;
 
         }
 
@@ -49,22 +57,25 @@ void test()
     truth.push_back(2);
     truth.push_back(3);
 
-    unit_assert(v == truth);
+    vector<boost::shared_ptr<int> >::iterator v_it = v.begin();
+    vector<int>::iterator truth_it = truth.begin();
+    for(; v_it != v.end(); ++v_it, ++truth_it) unit_assert(**v_it == *truth_it);
+
 
     // test getAdjacentBinContents
     Bin<int> smallBins(stuf,0.5,0.5);
-    vector<int> v2;
+    vector<boost::shared_ptr<int> > v2;
     smallBins.getAdjacentBinContents(pair<double,double>(1,2),v2);
     
-    vector<int>::iterator it2 = v2.begin();
+    vector<boost::shared_ptr<int> >::iterator it2 = v2.begin();
     
-    unit_assert(find(v2.begin(),v2.end(),1) != v2.end());
+    unit_assert(find_if(v2.begin(),v2.end(),IsInt(1)) != v2.end());
 
     if (os_)
         {
             *os_ << "\ntesting Bin::getAdjacentBinContents ... found: \n";
             for(; it2 != v2.end(); ++it2)
-                *os_ << *it2 << endl;
+                *os_ << **it2 << endl;
 
         }
 
@@ -73,28 +84,28 @@ void test()
     int n = 4;
     smallBins.update(n, pair<double,double>(1.5,2));
 
-    vector<int> v3;
+    vector<boost::shared_ptr<int> > v3;
     smallBins.getAdjacentBinContents(pair<double,double>(1,2), v3);
-    vector<int>::iterator it3 = v3.begin();
+    vector<boost::shared_ptr<int> >::iterator it3 = v3.begin();
 
-    unit_assert(find(v3.begin(),v3.end(),4) != v3.end());
+    unit_assert(find_if(v3.begin(),v3.end(),IsInt(4)) != v3.end());
 
     if (os_)
         {
             *os_ << "\ntesting Bin::update ... found: \n";
             for(; it3 != v3.end(); ++it3)
-                *os_ << *it3 << endl;
+                *os_ << **it3 << endl;
 
         }
 
 
     // test erase
     smallBins.erase(n, pair<double,double>(1.5,2));
-    vector<int> v4;
+    vector<boost::shared_ptr<int> > v4;
     smallBins.getAdjacentBinContents(pair<double,double>(1,2), v4);
-    vector<int>::iterator it4 = v4.begin();
+    vector<boost::shared_ptr<int> >::iterator it4 = v4.begin();
 
-    unit_assert(find(v4.begin(), v4.end(), 4) == v4.end());
+    unit_assert(find_if(v4.begin(), v4.end(), IsInt(4)) == v4.end());
 
 }
 

@@ -7,6 +7,7 @@
 
 #include "Feature_dataFetcher.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -27,6 +28,8 @@ public:
     PeptideID_dataFetcher() : _rtAdjusted(false) {}
     // istream constructor
     PeptideID_dataFetcher(std::istream& is);
+    // from vector of spectrum queries
+    PeptideID_dataFetcher(const std::vector<SpectrumQuery>& sqs);
     // from MSMSPipelineAnalysis object 
     PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa);
     // copy constructor
@@ -38,7 +41,7 @@ public:
 
     std::vector<SpectrumQuery> getAllContents() const;
 
-    std::vector<SpectrumQuery> getSpectrumQueries(double mz, double rt);
+    std::vector<boost::shared_ptr<SpectrumQuery> > getSpectrumQueries(double mz, double rt) ;
     Bin<SpectrumQuery> getBin() const { return _bin;}
 
     void setRtAdjustedFlag(const bool& flag) { _rtAdjusted = flag; }

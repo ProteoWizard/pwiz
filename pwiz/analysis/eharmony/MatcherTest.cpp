@@ -3,16 +3,15 @@
 ///
 
 #include "Matcher.hpp"
-
 using namespace pwiz::eharmony;
 
 void test()
 {
     Config config;
 
-    config.inputPath = "/Volumes/AZKABAN/azkaban/6mix/";
+    config.inputPath = "./tempData/";
     config.batchFileName = "6mix_runs.txt";
-    config.normalDistributionSearch = "normalDistribution[3]";
+    config.searchNeighborhoodCalculator = "naive[.01,500]";
     config.warpFunctionCalculator = "linear";
     config.generateAMTDatabase = true;
 

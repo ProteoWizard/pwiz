@@ -29,13 +29,21 @@ Feature makeFeature(double mz, double retentionTime)
 FeatureSequenced makeFeatureSequenced(const Feature& feature, string _ms1_5="", string _ms2="")
 {
     FeatureSequenced fs;
-    fs.feature = feature;
+    fs.feature = boost::shared_ptr<Feature>(new Feature(feature) );
     fs.ms1_5 = _ms1_5;
     fs.ms2 = _ms2;
 
     return fs;
 
 }
+
+struct IsFS
+{
+  IsFS(const FeatureSequenced& fs): _fs(fs){}
+  FeatureSequenced _fs;
+  bool operator()(boost::shared_ptr<FeatureSequenced> fs_ptr){ return *fs_ptr == _fs;}
+
+};
 
 void test()
 {
@@ -63,21 +71,21 @@ void test()
     if (os_) *os_ << "constructed. " << endl;
 
     if (os_) *os_ << "testing getFeatures ... " << endl;
-    vector<FeatureSequenced> test_a = fdf.getFeatures(1,2);
-    vector<FeatureSequenced> test_b = fdf.getFeatures(3,4);
-    vector<FeatureSequenced> test_c = fdf.getFeatures(5,6);
+    vector<boost::shared_ptr<FeatureSequenced> > test_a = fdf.getFeatures(1,2);
+    vector<boost::shared_ptr<FeatureSequenced> > test_b = fdf.getFeatures(3,4);
+    vector<boost::shared_ptr<FeatureSequenced> > test_c = fdf.getFeatures(5,6);
 
-    unit_assert(find(test_a.begin(), test_a.end(), fs_a) != test_a.end());
-    unit_assert(find(test_b.begin(), test_b.end(), fs_b) != test_b.end());
-    unit_assert(find(test_c.begin(), test_c.end(), fs_c) != test_c.end());
+    unit_assert(find_if(test_a.begin(), test_a.end(), IsFS(fs_a)) != test_a.end());
+    unit_assert(find_if(test_b.begin(), test_b.end(), IsFS(fs_b)) != test_b.end());
+    unit_assert(find_if(test_c.begin(), test_c.end(), IsFS(fs_c)) != test_c.end());
 
     if (os_) 
         {
             *os_ << "testing vector<Feature> constructor ... \n";
             ostringstream oss;
             XMLWriter writer(oss);
-            vector<FeatureSequenced>::iterator a_it = test_a.begin();
-            for(; a_it != test_a.end(); ++a_it) a_it->feature.write(writer);
+            vector<boost::shared_ptr<FeatureSequenced> >::iterator a_it = test_a.begin();
+            for(; a_it != test_a.end(); ++a_it) (*a_it)->feature->write(writer);
             *os_ << oss.str() << endl;
 
         }
@@ -96,13 +104,13 @@ void test()
     // test istream constructor
     Feature_dataFetcher fdf_is(iss);
 
-    vector<FeatureSequenced> test_is_a = fdf_is.getFeatures(1,2);
-    vector<FeatureSequenced> test_is_b = fdf_is.getFeatures(3,4);
-    vector<FeatureSequenced> test_is_c = fdf_is.getFeatures(5,6);
+    vector<boost::shared_ptr<FeatureSequenced> > test_is_a = fdf_is.getFeatures(1,2);
+    vector<boost::shared_ptr<FeatureSequenced> > test_is_b = fdf_is.getFeatures(3,4);
+    vector<boost::shared_ptr<FeatureSequenced> > test_is_c = fdf_is.getFeatures(5,6);
 
-    unit_assert(find(test_is_a.begin(), test_is_a.end(), fs_a) != test_is_a.end());
-    unit_assert(find(test_is_b.begin(), test_is_b.end(), fs_b) != test_is_b.end());
-    unit_assert(find(test_is_c.begin(), test_is_c.end(), fs_c) != test_is_c.end());
+    unit_assert(find_if(test_is_a.begin(), test_is_a.end(), IsFS(fs_a)) != test_is_a.end());
+    unit_assert(find_if(test_is_b.begin(), test_is_b.end(), IsFS(fs_b)) != test_is_b.end());
+    unit_assert(find_if(test_is_c.begin(), test_is_c.end(), IsFS(fs_c)) != test_is_c.end());
 
 
     if (os_)
@@ -135,7 +143,7 @@ void testMerge()
     Feature_dataFetcher fdf_b(v_b);
     
     fdf_a.merge(fdf_b);
-    vector<FeatureSequenced> binContents = fdf_a.getFeatures(b.mzMonoisotopic, b.retentionTime);
+    vector<boost::shared_ptr<FeatureSequenced> > binContents = fdf_a.getFeatures(b.mzMonoisotopic, b.retentionTime);
     
     unit_assert(binContents.size() > 0);
 
@@ -144,19 +152,19 @@ void testMerge()
    	    *os_ << "Merged FeatureSequenced:\n " << endl;
 
 	    XMLWriter writer(*os_);
-	    binContents.begin()->feature.write(writer);
-	    *os_ << "ms1_5: " <<  binContents.begin()->ms1_5 << endl;
-	    *os_ << "ms2: " << binContents.begin()->ms2 << endl;
+	    (*binContents.begin())->feature->write(writer);
+	    *os_ << "ms1_5: " <<  (*binContents.begin())->ms1_5 << endl;
+	    *os_ << "ms2: " << (*binContents.begin())->ms2 << endl;
 
      	    *os_ << "\nOriginal FeatureSequenced:\n " << endl;   
 	     
-	    fs_b.feature.write(writer);
+	    fs_b.feature->write(writer);
 	    *os_ << "ms1_5: " << fs_b.ms1_5 << endl;
 	    *os_ << "ms2: " << fs_b.ms2 << endl;
 
         }  
 
-    unit_assert(binContents.back() == fs_b);
+    unit_assert((*binContents.back()) == fs_b);
 
 }
 

@@ -8,6 +8,7 @@
 #include "Exporter.hpp"
 #include "AMTContainer.hpp"
 #include "EharmonyAgglomerator.cpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include "boost/filesystem.hpp"
 #include <algorithm>
@@ -198,6 +199,14 @@ void Matcher::processFiles()
 	    */
 	    ofstream ofs_r((outputDir + "/r_input.txt").c_str());
 	    exporter_amt.writeRInputFile(ofs_r);
+
+	    ///
+	    /// write AMT database
+	    ///
+	    
+	    ofstream ofs_amt((outputDir + "/database.xml").c_str());
+	    XMLWriter writer(ofs_amt);
+	    amtDatabase.write(writer);
 
 	    return;
 
@@ -411,4 +420,3 @@ Matcher::Matcher(Config& config) : _config(config)
 
 }
 
-//  LocalWords:  getRtAdjustedFlag

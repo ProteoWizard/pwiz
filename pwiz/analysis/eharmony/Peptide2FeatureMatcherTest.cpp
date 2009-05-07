@@ -157,9 +157,9 @@ void testNaive()
     Feature_dataFetcher fdf_b2(feats_b2);
 
     // make peptide records that we want to find / not find
-    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA",0.900,1,2);
-    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA", 0.900,1,2);
-    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA", 0.900, 1, 2);  
+    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA_ms1_5",0.900,1,2);
+    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA_ms1_5", 0.900,1,2);
+    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA_ms1_5", 0.900, 1, 2);  
 
     SearchNeighborhoodCalculator snc;
 

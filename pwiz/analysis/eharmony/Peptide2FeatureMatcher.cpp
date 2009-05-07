@@ -8,6 +8,9 @@
 #include "pwiz/utility/proteome/Ion.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include <math.h>
+#include <string>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 using namespace pwiz::eharmony;
@@ -26,21 +29,21 @@ void getBestMatch(const SpectrumQuery& sq, Bin<FeatureSequenced>& featureBin, Fe
     double bestScore = 100000000;
     FeatureSequenced* best_it = (FeatureSequenced*) NULL;
 
-    vector<FeatureSequenced> adjacentContenders;
+    vector<boost::shared_ptr<FeatureSequenced> > adjacentContenders;
     featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
-    vector<FeatureSequenced>::iterator ac_it = adjacentContenders.begin();
+    vector<boost::shared_ptr<FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
            
     for(; ac_it != adjacentContenders.end(); ++ac_it)
         {
-            if ( ac_it->feature.charge == sq.assumedCharge )
+            if ( (*ac_it)->feature->charge == sq.assumedCharge )
                 {
-                    double mzDiff = (ac_it->feature.mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
-                    double rtDiff = (ac_it->feature.retentionTime - sq.retentionTimeSec);
+                    double mzDiff = ((*ac_it)->feature->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
+                    double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec);
                     double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
 
                     if ( score < bestScore )
                         {
-	   		     best_it = &(*ac_it);
+	   		     best_it = &(*(*ac_it));
                              best_it->ms1_5 = sq.searchResult.searchHit.peptide;
                             
                         }                  
@@ -71,10 +74,11 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
             FeatureSequenced fs;
             getBestMatch(*sq_it, bin, fs);          
 
-            if (fs.ms1_5.size() > 0 && snc.close(*sq_it, fs.feature)) 
+            if (fs.ms1_5.size() > 0 && snc.close(*sq_it, *fs.feature)) 
                 {
-                    Match match(*sq_it,fs.feature);
-                    match.score = snc.score(*sq_it,fs.feature);
+                    Match match(*sq_it,*fs.feature);
+                    match.score = snc.score(*sq_it,*fs.feature);
+		    match.spectrumQuery.searchResult.searchHit.peptide += "_ms1_5";
 
                     _matches.push_back(match); 
                     if (fs.ms1_5 != fs.ms2 && fs.ms2.size() > 0)
@@ -97,7 +101,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
                     size_t i = 2;
                     bool done = false;
 
-                    while ( !done && i < 4)
+                    while ( !done && i < 3)
                         {            
                             FeatureSequenced gs;
                             bin.rebin(i*snc._mzTol, i*snc._rtTol);
@@ -105,8 +109,8 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
                             if (gs.ms1_5.size() != 0) 
                                 {
                                     done = true;
-                                    Match match(*sq_it, gs.feature);
-                                    match.score = snc.score(*sq_it,gs.feature);
+                                    Match match(*sq_it, *gs.feature);
+                                    match.score = snc.score(*sq_it,*gs.feature);
 
                                     _mismatches.push_back(match);
 
@@ -143,15 +147,15 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
   int counter = 0;
   for(; sq_it != spectrumQueries.end(); ++ sq_it)
     {
-      if (counter % 100 == 0) cout << "Spectrum: " << counter << endl;
+      if (counter % 10 == 0) cout << "Spectrum: " << counter << endl;
 
       FeatureSequenced fs;
       getBestMatch(*sq_it, bin, fs);
 
-      if (fs.ms1_5.size() > 0 && snc.close(*sq_it, fs.feature))
+      if (fs.ms1_5.size() > 0 && snc.close(*sq_it, *fs.feature))
 	{
-	  Match match(*sq_it,fs.feature);
-	  match.score = snc.score(*sq_it,fs.feature);
+	  Match match(*sq_it,*fs.feature);
+	  match.score = snc.score(*sq_it,*fs.feature);
 
 	  _matches.push_back(match);
 	  if (fs.ms1_5 != fs.ms2 && fs.ms2.size() > 0)
@@ -183,8 +187,8 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 	      if (gs.ms1_5.size() != 0)
 	          {
 	               done = true;
-		       Match match(*sq_it, gs.feature);
-		       match.score = snc.score(*sq_it,gs.feature);
+		       Match match(*sq_it, *gs.feature);
+		       match.score = snc.score(*sq_it,*gs.feature);
 
 		       _mismatches.push_back(match);
 

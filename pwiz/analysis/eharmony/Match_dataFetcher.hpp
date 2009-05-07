@@ -33,7 +33,8 @@ public:
     void erase(const Match& m);
     void merge(const Match_dataFetcher& that);
 
-    std::vector<Match> getMatches(double mz, double rt) ;
+    std::vector<Match> getAllContents() const; 
+    std::vector<Match> getMatches(double mz, double rt);
     Bin<Match> getBin() const { return _bin; } 
     
     

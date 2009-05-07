@@ -33,7 +33,7 @@ public:
     void erase(const FeatureSequenced& fs);
     void merge(const Feature_dataFetcher& that);
 
-    std::vector<FeatureSequenced> getFeatures(double mz, double rt) ;
+    std::vector<boost::shared_ptr<FeatureSequenced> > getFeatures(double mz, double rt) ;
     Bin<FeatureSequenced> getBin() const { return _bin; } 
     
     void setMS2LabeledFlag(const bool& flag) { _ms2Labeled = flag; }
