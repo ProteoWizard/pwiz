@@ -32,7 +32,6 @@ lib pwiz_analysis_spectrum_processing
         SpectrumListFactory.cpp
         SpectrumList_Sorter.cpp
         SpectrumList_Filter.cpp
-        SpectrumList_NativeCentroider.cpp
         SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_Smoother.cpp
         SpectrumList_PeakPicker.cpp
