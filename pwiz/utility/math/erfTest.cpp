@@ -27,6 +27,7 @@
 #include <iomanip>
 #include <limits>
 #include <cstring>
+#include <cmath>
 
 
 using namespace std;
@@ -113,7 +114,7 @@ void test_real()
     for (double x=-a; x<=a; x+=a/100)
     {
         complex<double> resultComplex = erf(complex<double>(x));
-        double resultReal = ((double(*)(double))erf)(x);
+        double resultReal = ((double(*)(double))::erf)(x);
         if (os_) *os_ << x << " -> " << resultComplex << " " << resultReal << endl;
         unit_assert_equal(resultComplex.real(), resultReal, 1e-12);
     }
@@ -143,6 +144,23 @@ void test_series()
 }
 
 
+void test_real_wrapper()
+{
+    if (os_) *os_ << "test_real_wrapper()\n";
+
+    double a = 10;
+    for (double x=-a; x<=a; x+=a/100)
+    {
+        double result_pwiz = pwiz::math::erf(x);
+        double result_std = ::erf(x);
+        if (os_) *os_ << x << " -> " << result_pwiz << " " << result_std << endl;
+        unit_assert_equal(result_pwiz, result_std, 1e-12);
+    }
+
+    if (os_) *os_ << endl;
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -151,6 +169,7 @@ int main(int argc, char* argv[])
         if (os_) *os_ << "erfTest\n" << setprecision(20);
         test_real();
         test_series();
+        test_real_wrapper();
         return 0;
     }
     catch (exception &e)

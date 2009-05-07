@@ -33,32 +33,14 @@ namespace pwiz {
 namespace math {
 
 
-// pulled from IT++ Library
-/*!
-   * \brief Error function for complex argument
-	 * \ingroup errorfunc
-	 * \author Adam Piatyszek
-   *
-   * This function calculates a well known error function \c erf(z)
-   * for complex \c z. The implementation is based on unofficial
-   * implementation for Octave. Here is a part of the author's note
-   * from original sources:
-	 *
-	 * Put together by John Smith john at arrows dot demon dot co dot uk, 
-	 * using ideas by others.
-	 *
-	 * Calculate \c erf(z) for complex \c z.
-	 * Three methods are implemented; which one is used depends on z.
-	 *
-	 * The code includes some hard coded constants that are intended to
-	 * give about 14 decimal places of accuracy. This is appropriate for
-	 * 64-bit floating point numbers. 
-	 */
+/// real error function; calls gcc-provided erf, complex version (below) on msvc
+PWIZ_API_DECL double erf(double x);
 
-
+/// complex error function 
 PWIZ_API_DECL std::complex<double> erf(const std::complex<double>& z);
 
-// Darren's testing
+
+/// series implementation for testing
 std::complex<double> erf_series2(const std::complex<double>& z);
 
 

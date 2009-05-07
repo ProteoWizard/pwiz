@@ -108,10 +108,21 @@ void test_2Pass()
 }
 
 
+void test_pvalue()
+{
+    Noise noise(0,1);
+    const double epsilon = .0005;
+    unit_assert_equal(noise.pvalue(1), .159, epsilon);
+    unit_assert_equal(noise.pvalue(2), .023, epsilon);
+    unit_assert_equal(noise.pvalue(3), .001, epsilon);
+}
+
+
 void test()
 {
     test_2Pass_NoSignal();
     test_2Pass();
+    test_pvalue();
 }
 
 

@@ -23,6 +23,7 @@
 
 #define PWIZ_SOURCE
 #include "Noise.hpp"
+#include "pwiz/utility/math/erf.hpp"
 #include <cmath>
 
 
@@ -39,27 +40,23 @@ using namespace pwiz::math;
 //
 
 
-Noise::Noise()
-:   mean(0), variance(0), standardDeviation(0)
+Noise::Noise(double m, double sd)
+:   mean(m), variance(sd*sd), standardDeviation(sd)
 {}
 
 
 namespace {
 double normalCDF(double x, double mean, double sd)
 {
-/*
     double inner = (x-mean)/(sd*sqrt(2.));
     return .5 * (1 + erf(inner));
-*/
-    return 0;
 }
 } // namespace
 
 
 double Noise::pvalue(double value) 
 {
-    //return 1-normalCDF(value, mean, standardDeviation);
-    return 0;
+    return 1-normalCDF(value, mean, standardDeviation);
 }
 
 

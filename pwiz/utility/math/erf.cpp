@@ -36,7 +36,27 @@ namespace math {
 using namespace std;
 
 
-// pulled from IT++ Library - dk
+// pulled from IT++ Library
+/*!
+   * \brief Error function for complex argument
+	 * \ingroup errorfunc
+	 * \author Adam Piatyszek
+   *
+   * This function calculates a well known error function \c erf(z)
+   * for complex \c z. The implementation is based on unofficial
+   * implementation for Octave. Here is a part of the author's note
+   * from original sources:
+	 *
+	 * Put together by John Smith john at arrows dot demon dot co dot uk, 
+	 * using ideas by others.
+	 *
+	 * Calculate \c erf(z) for complex \c z.
+	 * Three methods are implemented; which one is used depends on z.
+	 *
+	 * The code includes some hard coded constants that are intended to
+	 * give about 14 decimal places of accuracy. This is appropriate for
+	 * 64-bit floating point numbers. 
+	 */
 
 
 PWIZ_API_DECL const double pi = 3.14159265358979323846;
@@ -173,6 +193,21 @@ PWIZ_API_DECL const double eps = std::numeric_limits<double>::epsilon();
   }
 
 // end pulled from IT++ Library
+
+
+#if defined(_MSC_VER)
+PWIZ_API_DECL double erf(double x)
+{
+    // call complex implementation
+    return erf(complex<double>(x)).real();
+}
+#else
+PWIZ_API_DECL double erf(double x)
+{
+    // call gcc-provided real implementation
+    return ::erf(x);
+}
+#endif // defined(_MSC_VER)
 
 
 // Darren's series experimentation

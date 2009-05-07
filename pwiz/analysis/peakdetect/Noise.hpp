@@ -38,7 +38,7 @@ struct PWIZ_API_DECL Noise
     double variance;
     double standardDeviation;
 
-    Noise();
+    Noise(double m=0, double sd=0);
     double pvalue(double value); // pvalue for a value, given this noise distribution
 };
 
