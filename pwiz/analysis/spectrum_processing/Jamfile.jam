@@ -45,8 +45,8 @@ lib pwiz_analysis_spectrum_processing
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker/pwiz_aux_msrc_reader_bruker
-        #<library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
+        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
+        <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
@@ -54,8 +54,8 @@ lib pwiz_analysis_spectrum_processing
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker/pwiz_aux_msrc_reader_bruker
-        #<library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
+        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
+        <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
     ;
 
 
