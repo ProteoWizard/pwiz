@@ -1004,6 +1004,9 @@ struct PWIZ_API_DECL MSData
 };
 
 
+typedef boost::shared_ptr<MSData> MSDataPtr;
+
+
 } // namespace msdata
 } // namespace pwiz
 

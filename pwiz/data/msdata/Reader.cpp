@@ -33,6 +33,13 @@ namespace msdata {
 
 using namespace std;
 
+// default implementation; most Readers don't need to worry about multi-run input files
+PWIZ_API_DECL void Reader::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+{
+    results.push_back(MSDataPtr(new MSData));
+    read(filename, head, *results.back());
+}
+
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const string& head) const
 {
 	std::string result;
@@ -54,6 +61,18 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
     if ((*it)->accept(filename, head))
     {
         (*it)->read(filename, head, result);
+        return;
+    }
+    throw ReaderFail((" don't know how to read " +
+                        filename).c_str());
+}
+
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+{
+    for (const_iterator it=begin(); it!=end(); ++it)
+    if ((*it)->accept(filename, head))
+    {
+        (*it)->read(filename, head, results);
         return;
     }
     throw ReaderFail((" don't know how to read " +

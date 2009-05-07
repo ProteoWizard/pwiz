@@ -66,22 +66,6 @@ void readFile(const string& filename, MSData& msd, const Reader& reader, const s
 shared_ptr<DefaultReaderList> defaultReaderList_;
 
 
-void calculateSHA1ForLastSourceFile(MSData& msd)
-{
-    if (msd.fileDescription.sourceFilePtrs.empty()) return;
-
-    SourceFile& sf = *msd.fileDescription.sourceFilePtrs.back();
-    if (sf.hasCVParam(MS_SHA_1)) return;
-
-    const string uriPrefix = "file:///";
-    if (sf.location.substr(0,uriPrefix.size()) != uriPrefix) return;
-    bfs::path p(sf.location.substr(uriPrefix.size()));
-    p /= sf.name;
-
-    string sha1 = SHA1Calculator::hashFile(p.string());
-    sf.set(MS_SHA_1, sha1); 
-}
-
 } // namespace
 
 
@@ -112,8 +96,8 @@ PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reade
         readFile(filename, *this, *defaultReaderList_, head);
     }
 
-    if (calculateSourceFileChecksum)
-        calculateSHA1ForLastSourceFile(*this);
+    if (calculateSourceFileChecksum && !fileDescription.sourceFilePtrs.empty())
+        calculateSourceFileSHA1(*fileDescription.sourceFilePtrs.back());
 }
 
 
@@ -209,6 +193,20 @@ void MSDataFile::write(const MSData& msd,
 {
     shared_ptr<ostream> os = openFile(filename,config.gzipped);
     writeStream(*os, msd, config, iterationListenerRegistry);
+}
+
+
+PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
+{
+    if (sourceFile.hasCVParam(MS_SHA_1)) return;
+
+    const string uriPrefix = "file:///";
+    if (sourceFile.location.substr(0, uriPrefix.size()) != uriPrefix) return;
+    bfs::path p(sourceFile.location.substr(uriPrefix.size()));
+    p /= sourceFile.name;
+
+    string sha1 = SHA1Calculator::hashFile(p.string());
+    sourceFile.set(MS_SHA_1, sha1); 
 }
 
 
