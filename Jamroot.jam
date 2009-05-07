@@ -58,6 +58,9 @@ project pwiz
 
         <toolset>gcc,<link>shared:<runtime-link>shared
 
+        # using pwiz_wifffile (compiled with /clr) requires the shared runtime
+        <toolset>msvc:<runtime-link>shared
+
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
