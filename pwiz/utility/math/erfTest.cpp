@@ -97,24 +97,35 @@ void test_convergence2()
 */
 
 
-void test_it()
+#if defined(_MSC_VER)
+void test_real()
 {
-    if (os_) *os_ << "test_it()\n";
+    cerr << "[erfTest] Warning: test_real() not implemented for MSVC.\n"; 
+}
+#else
+void test_real()
+{
+    // tests our complex erf against the not-so-standard gcc-provided double erf(double)
+
+    if (os_) *os_ << "test_real()\n";
 
     double a = 10;
     for (double x=-a; x<=a; x+=a/100)
     {
-        if (os_) *os_ << "a: " << a << endl;
         complex<double> resultComplex = erf(complex<double>(x));
         double resultReal = ((double(*)(double))erf)(x);
-        if (os_) *os_ << resultComplex << " " << resultReal << endl;
+        if (os_) *os_ << x << " -> " << resultComplex << " " << resultReal << endl;
         unit_assert_equal(resultComplex.real(), resultReal, 1e-12);
     }
-}
 
-void test_itvs2()
+    if (os_) *os_ << endl;
+}
+#endif // defined(_MSC_VER)
+
+
+void test_series()
 {
-    if (os_) *os_ << "test_itvs2()\n";
+    if (os_) *os_ << "test_series()\n";
 
     // erf_series2 matches erf in region [-2,2]x[-2,2] within 1e-10
     double a = 2;
@@ -124,9 +135,11 @@ void test_itvs2()
         complex<double> z(x,y);
         complex<double> result1 = erf(z);
         complex<double> result2 = erf_series2(z);
-        //if (os_) *os_ << z << ": " << abs(result1-result2) << endl;
+        if (os_) *os_ << z << ": " << abs(result1-result2) << endl;
         unit_assert_equal(abs(result1-result2), 0, 1e-10);
     }
+
+    if (os_) *os_ << endl;
 }
 
 
@@ -136,8 +149,8 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "erfTest\n" << setprecision(20);
-        //test_it(); // msvc chokes on this for some reason -- fix if you're going to use this implementation
-        test_itvs2();
+        test_real();
+        test_series();
         return 0;
     }
     catch (exception &e)
