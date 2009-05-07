@@ -1,0 +1,67 @@
+#
+# Jamfile (pwiz_aux_msrc_reader_abi)
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+lib pwiz_aux_msrc_reader_abi
+    : # sources
+        Reader_ABI.cpp
+        Reader_ABI_Detail.cpp
+    : # requirements
+        <toolset>msvc:<source>SpectrumList_ABI.cpp
+        <toolset>msvc:<source>ChromatogramList_ABI.cpp
+        <toolset>msvc:<define>PWIZ_READER_ABI
+        <toolset>msvc:<library>../../../utility/vendor_api/ABI//pwiz_wifffile
+        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
+        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+		<toolset>msvc:<library>../../../utility/vendor_api/ABI//pwiz_wifffile
+        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
+        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+		<toolset>msvc:<define>PWIZ_READER_ABI
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+path-constant TEST_PATH1 : "c:/test/20061108_CPTAC_1B468.wiff" ;
+path-constant TEST_PATH2 : "C:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscript_Addona et al/Study II/Site 52_done/52_Raw Data/Site52_7.2.wiff" ;
+
+# special run target for Reader_ABI_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_ABI_Test.cpp pwiz_aux_msrc_reader_abi
+    : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\"
+    : # input-files
+    : # requirements
+    : # target name
+        Reader_ABI_Test 
+    : # default-build
+    ;
+explicit Reader_ABI_Test ;
