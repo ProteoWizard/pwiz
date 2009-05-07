@@ -21,15 +21,17 @@
 //
 
 
-#define PWIZ_SOURCE
-
 #ifdef PWIZ_READER_BRUKER
-#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
+
+#define PWIZ_SOURCE
+
 //#include "Reader_Bruker_Detail.hpp"
 #include "SpectrumList_Bruker.hpp"
 #include <iostream>

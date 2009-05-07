@@ -1,5 +1,5 @@
 //
-// ChromatogramList_Bruker.hpp
+// SpectrumList_Bruker.hpp
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -21,6 +21,9 @@
 //
 
 
+#ifndef _SPECTRUMLIST_BRUKER_HPP_ 
+#define _SPECTRUMLIST_BRUKER_HPP_ 
+
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
@@ -41,19 +44,20 @@ namespace detail {
 //
 // SpectrumList_Bruker
 //
-class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
+class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
 {
     public:
 
-    ChromatogramList_Bruker(MSData& msd,
-                            const string& rootpath,
-                            Reader_Bruker_Format format,
-                            CompassXtractWrapperPtr compassXtractWrapperPtr);
+    SpectrumList_Bruker(MSData& msd,
+                        const string& rootpath,
+                        Reader_Bruker_Format format,
+                        CompassXtractWrapperPtr compassXtractWrapperPtr);
 
     virtual size_t size() const;
-    virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
+    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
 
     private:
@@ -62,11 +66,13 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
     size_t size_;
+    vector<bfs::path> sourcePaths_;
 
-    struct IndexEntry : public ChromatogramIdentity
+    struct IndexEntry : public SpectrumIdentity
     {
         size_t declaration;
-        long trace;
+        long collection; // -1 for an MS spectrum
+        long scan;
     };
 
     vector<IndexEntry> index_;
@@ -74,7 +80,10 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
     // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
     map<string, size_t> idToIndexMap_;
 
+    void fillSourceList();
     void createIndex();
+    EDAL::IMSSpectrumPtr getMSSpectrumPtr(size_t index) const;
+    //string findPrecursorID(int precursorMsLevel, size_t index) const;
 
     CompassXtractWrapperPtr compassXtractWrapperPtr_;
 };
@@ -82,3 +91,5 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
 } // detail
 } // msdata
 } // pwiz
+
+#endif // _SPECTRUMLIST_BRUKER_HPP_

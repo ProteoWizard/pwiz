@@ -13,7 +13,7 @@ lib pwiz_aux_msrc_reader_bruker
     : # requirements
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
         <toolset>msvc:<source>ChromatogramList_Bruker.cpp
-		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<dependency>CompassXtractMS.dll
         <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
         <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
@@ -27,7 +27,7 @@ lib pwiz_aux_msrc_reader_bruker
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
     : # default-build
     : # usage-requirements
-		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
 		<toolset>msvc:<dependency>CompassXtractMS.dll
         <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
         <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll

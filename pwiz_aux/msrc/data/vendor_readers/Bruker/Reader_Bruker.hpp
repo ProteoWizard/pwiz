@@ -27,7 +27,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
-#include <memory>
 
 
 namespace pwiz {

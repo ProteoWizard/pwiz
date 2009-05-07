@@ -25,7 +25,8 @@
 
 #include "FullReaderList.hpp"
 #include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -43,6 +44,7 @@ PWIZ_API_DECL FullReaderList::FullReaderList()
     #ifdef _MSC_VER // vendor DLL usage is msvc only - mingw doesn't provide com support
     push_back(ReaderPtr(new Reader_Waters)); 
     push_back(ReaderPtr(new Reader_Bruker));
+    push_back(ReaderPtr(new Reader_ABI));
     #endif
 }
 

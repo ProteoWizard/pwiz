@@ -31,8 +31,13 @@
 #endif
 
 #ifdef PWIZ_READER_BRUKER
-#include "pwiz_aux/msrc/data/vendor_readers/Reader_Bruker.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/SpectrumList_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#endif
+
+#ifdef PWIZ_READER_ABI
+#include "pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
 #endif
 
 
@@ -72,6 +77,14 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
             mode_ = 2;
         }
         #endif
+
+        #ifdef PWIZ_READER_ABI
+        detail::SpectrumList_ABI* abi = dynamic_cast<detail::SpectrumList_ABI*>(&*inner);
+        if (abi)
+        {
+            mode_ = 3;
+        }
+        #endif
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -82,6 +95,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("Thermo/Xcalibur peak picking"));
     else if (mode_ == 2)
         method.userParams.push_back(UserParam("Bruker/Agilent/CompassXtract peak picking"));
+    else if (mode_ == 3)
+        method.userParams.push_back(UserParam("ABI/Analyst peak picking"));
     //else
     //    method.userParams.push_back(algorithm->name());
     dp_->processingMethods.push_back(method);
@@ -109,6 +124,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         #ifdef PWIZ_READER_BRUKER
         case 2:
             s = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
+            break;
+        #endif
+
+        #ifdef PWIZ_READER_ABI
+        case 3:
+            s = dynamic_cast<detail::SpectrumList_ABI*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
         #endif
 

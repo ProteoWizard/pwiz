@@ -20,7 +20,6 @@
 // limitations under the License.
 //
 
-
 #define PWIZ_SOURCE
 
 // CompassXtractMS DLL usage is msvc only - mingw doesn't provide com support
@@ -33,6 +32,7 @@
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#include <stdexcept>
 
 
 // A Bruker Analysis source (representing a "run") is actually a directory
@@ -66,7 +66,6 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 #include "ChromatogramList_Bruker.hpp"
 #include <iostream>
 #include <iomanip>
-#include <stdexcept>
 
 
 namespace pwiz {
@@ -178,9 +177,6 @@ void Reader_Bruker::read(const string& filename,
 //
 // non-MSVC implementation
 //
-
-#include "Reader_Bruker.hpp"
-#include <stdexcept>
 
 namespace pwiz {
 namespace msdata {
