@@ -1,5 +1,5 @@
 //
-// Noise.hpp
+// PeakFinder.hpp
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -20,52 +20,56 @@
 // limitations under the License.
 //
                                                                                                      
-#ifndef _NOISECALCULATOR_HPP_
-#define _NOISECALCULATOR_HPP_
+#ifndef _PEAKFINDER_HPP_
+#define _PEAKFINDER_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/math/OrderedPair.hpp"
+#include "pwiz/analysis/peakdetect/Noise.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-struct PWIZ_API_DECL Noise
-{
-    double mean;
-    double variance;
-    double standardDeviation;
-
-    Noise(double m=0, double sd=0);
-    double pvalue(double value); // pvalue for a value, given this noise distribution
-};
-
-
-class PWIZ_API_DECL NoiseCalculator
+///
+/// interface for finding peaks in an array of ordered pairs
+///
+class PWIZ_API_DECL PeakFinder
 {
     public:
     
-    virtual Noise calculateNoise(const math::OrderedPairContainerRef& pairs) const = 0; 
-    virtual ~NoiseCalculator(){}
+    virtual void findPeaks(const math::OrderedPairContainerRef& pairs,
+                           std::vector<size_t>& resultIndices) const = 0; 
+    virtual ~PeakFinder(){}
 };
 
 
-class PWIZ_API_DECL NoiseCalculator_2Pass : public NoiseCalculator
+///
+/// PeakFinder implementation based on signal-to-noise ratio
+///
+class PWIZ_API_DECL PeakFinder_SNR : public PeakFinder
 {
     public:
-
+    
     struct Config
     {
-        double zValueCutoff;
-        Config() : zValueCutoff(1) {}
+        size_t windowRadius;
+        double zValueThreshold;
+        
+        Config(size_t _windowRadius = 1, double _zValueThreshold = 3)
+        :   windowRadius(_windowRadius), zValueThreshold(_zValueThreshold)
+        {}
     };
-    
-    NoiseCalculator_2Pass(const Config& config = Config());
-    virtual Noise calculateNoise(const math::OrderedPairContainerRef& pairs) const; 
+
+    PeakFinder_SNR(const NoiseCalculator& noiseCalculator,
+                   const Config& config = Config());
+
+    virtual void findPeaks(const math::OrderedPairContainerRef& pairs,
+                           std::vector<size_t>& resultIndices) const; 
 
     private:
+    const NoiseCalculator& noiseCalculator_;
     Config config_;
 };
 
@@ -74,5 +78,5 @@ class PWIZ_API_DECL NoiseCalculator_2Pass : public NoiseCalculator
 } // namespace pwiz
 
 
-#endif // _NOISECALCULATOR_HPP_ 
+#endif // _PEAKFINDER_HPP_
 

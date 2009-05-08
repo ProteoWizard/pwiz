@@ -65,7 +65,7 @@ double Noise::pvalue(double value)
 //
 
 
-NoiseCalculator_2Pass::NoiseCalculator_2Pass(Config config)
+NoiseCalculator_2Pass::NoiseCalculator_2Pass(const Config& config)
 :   config_(config)
 {}
 
