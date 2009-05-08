@@ -62,7 +62,7 @@ vector<double> calculateRollingProducts(const vector<double>& in, size_t radius)
         double product = *it;
         for (size_t i=1; i<=radius; i++)
         {
-            if (it-i >= begin) product *= *(it-i);
+            if (it >= begin+i) product *= *(it-i);
             if (it+i < end) product *= *(it+i);
         }
 
@@ -89,7 +89,7 @@ void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
 
     double thresholdValue = noise.mean + config_.zValueThreshold * noise.standardDeviation;
     double thresholdPValue = noise.pvalue(thresholdValue);
-    double threshold = pow(thresholdPValue, 1+2*config_.windowRadius);
+    double threshold = ((double(*)(double,int))pow)(thresholdPValue, 1+2*config_.windowRadius);
 
     // report local minima above the threshold
     for (size_t i=0; i<rollingProducts.size(); i++)
