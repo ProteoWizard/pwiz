@@ -47,8 +47,8 @@ namespace {
 struct CalculatePValue
 {
     double operator()(const OrderedPair& p) {return noise_.pvalue(p.y);}
-    CalculatePValue(Noise noise) : noise_(noise) {}
-    Noise& noise_; 
+    CalculatePValue(const Noise& noise) : noise_(noise) {}
+    const Noise& noise_; 
 };
 
 vector<double> calculateRollingProducts(const vector<double>& in, size_t radius)
@@ -60,10 +60,14 @@ vector<double> calculateRollingProducts(const vector<double>& in, size_t radius)
     for (vector<double>::const_iterator it=begin; it!=end; ++it)
     {
         double product = *it;
-        for (size_t i=1; i<=radius; i++)
+        for (int i=1; i<=(int)radius; i++)
         {
-            if (it >= begin+i) product *= *(it-i);
-            if (it+i < end) product *= *(it+i);
+            // Note that the non-intuitive iterator arithmetic (with result signed int)
+            // is used to appease MSVC's checked iterators.
+            //   (it-begin >= i) <-> (it-i >= begin) 
+
+            if (it-begin >= i) product *= *(it-i);
+            if (i < end-it) product *= *(it+i);
         }
 
         out.push_back(product); 
@@ -79,7 +83,7 @@ void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
                                vector<size_t>& resultIndices) const
 {
     Noise noise = noiseCalculator_.calculateNoise(pairs);
-    
+
     vector<double> pvalues;
     transform(pairs.begin(), pairs.end(), back_inserter(pvalues), CalculatePValue(noise));
     

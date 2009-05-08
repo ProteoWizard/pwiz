@@ -54,7 +54,7 @@ double normalCDF(double x, double mean, double sd)
 } // namespace
 
 
-double Noise::pvalue(double value) 
+double Noise::pvalue(double value) const
 {
     return 1-normalCDF(value, mean, standardDeviation);
 }
