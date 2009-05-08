@@ -1,11 +1,11 @@
 #
-# Jamfile (pwiz_aux) 
+# Jamfile (pwiz_aux/msrc/data/vendor_readers)
 #
 #
-# Original author: Darren Kessner <Darren.Kessner@cshs.org>
+# Original author: Darren Kessner <darren@proteowizard.org>
 #
-# Copyright 2008 Spielberg Family Center for Applied Proteomics
-#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+# Copyright 2009 Center for Applied Molecular Medicine
+#   University of Southern California, Los Angeles, CA
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); 
 # you may not use this file except in compliance with the License. 
@@ -21,7 +21,6 @@
 #
 
 
-build-project isb ; 
-build-project sfcap ;
-build-project msrc ;
+build-project ABI ; 
+build-project Bruker ;
 
