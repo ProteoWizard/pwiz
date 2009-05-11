@@ -34,6 +34,7 @@ lib pwiz_analysis_peakdetect
         PeakFamilyDetector.cpp
         PeakFamilyDetectorFT.cpp
         PeakFinder.cpp
+        PeakFitter.cpp
         FeatureDetectorSimple.cpp
 
     :   # requirements	
@@ -63,6 +64,7 @@ unit-test PeakFamilyDetectorFTTest :
 
 unit-test NoiseTest : NoiseTest.cpp pwiz_analysis_peakdetect ;
 unit-test PeakFinderTest : PeakFinderTest.cpp pwiz_analysis_peakdetect ;
+unit-test PeakFitterTest : PeakFitterTest.cpp pwiz_analysis_peakdetect ;
 
 
 # for run rule syntax see pwiz/analysis/spectrum_processing/Jamfile.jam
