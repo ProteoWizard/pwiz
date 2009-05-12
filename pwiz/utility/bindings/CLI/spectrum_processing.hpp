@@ -9,7 +9,6 @@
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_NativeCentroider.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
@@ -227,35 +226,6 @@ public ref class SpectrumList_Sorter : public msdata::SpectrumList
         base_ = new pwiz::analysis::SpectrumList_Sorter(*inner->base_, SpectrumList_SorterPredicate(predicatePtr.ToPointer()));
         msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
     }
-};
-
-
-/// <summary>
-/// SpectrumList implementation to return native centroided spectrum data
-/// </summary>
-public ref class SpectrumList_NativeCentroider : public msdata::SpectrumList
-{
-    internal: virtual ~SpectrumList_NativeCentroider()
-              {
-                  // base class destructor will delete the shared pointer
-              }
-              pwiz::analysis::SpectrumList_NativeCentroider* base_;
-
-    public:
-
-    SpectrumList_NativeCentroider(msdata::SpectrumList^ inner,
-                                  System::Collections::Generic::IEnumerable<int>^ msLevelsToCentroid)
-    : msdata::SpectrumList(0)
-    {
-        pwiz::util::IntegerSet msLevelSet;
-        for each(int i in msLevelsToCentroid)
-            msLevelSet.insert(i);
-        base_ = new pwiz::analysis::SpectrumList_NativeCentroider(*inner->base_, msLevelSet);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    }
-
-    static bool accept(msdata::SpectrumList^ inner)
-    {return pwiz::analysis::SpectrumList_NativeCentroider::accept(*inner->base_);}
 };
 
 
