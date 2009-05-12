@@ -1,13 +1,26 @@
 
-if [ modules.peek : NT ] {
+import modules ;
+import path ;
 
 path-constant CLI_ROOT : . ;
+
+if [ modules.peek : NT ] &&
+   [ path.exists $(CLI_ROOT)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
 
 lib pwiz_wifffile
     : # sources
         WiffFile.cpp
     : # requirements
-        <link>shared # workaround TLS initialization crashes
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        <link>shared
+        
         <toolset>msvc,<link>shared:<define>WIFFFILE_DYN_LINK
         <runtime-link>shared
         <cxxflags>"/clr /AI $(CLI_ROOT)"
@@ -54,7 +67,7 @@ path-constant TEST_PATH2 : "c:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscr
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run WiffFileTest.cpp
     : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
+        \"$(TEST_PATH1)\" # \"$(TEST_PATH2)\" -v
     : # input-files
     : # requirements
         <library>pwiz_wifffile
