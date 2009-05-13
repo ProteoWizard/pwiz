@@ -73,17 +73,7 @@ PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reade
                                      bool calculateSourceFileChecksum)
 {
     // peek at head of file 
-
-    string head;
-    if (!bfs::is_directory(filename))
-    {
-        pwiz::util::random_access_compressed_ifstream is(filename.c_str());
-        if (!is)
-            throw runtime_error(("[MSDataFile::MSDataFile()] Unable to open file " + filename).c_str());
-
-        head.resize(512, '\0');
-        is.read(&head[0], (std::streamsize)head.size());
-    }
+    string head = read_file_header(filename, 512);
 
     if (reader)
     {
