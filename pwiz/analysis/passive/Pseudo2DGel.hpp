@@ -38,25 +38,67 @@ namespace pwiz {
 namespace analysis {
 
 
-/// creates pseudo-2D-gel images from survey scan data 
+/// Creates pseudo-2D-gel images from survey scan data.
+///
+/// The Pseudo2DGel class is a data analyzer that constructs an image
+/// from data in to the update method by a MSDataAnalyzerDriver
+/// object. FT and IT scans are separated and, if present, used to
+/// construct two separate images. Output is controlled by the
+/// Pseudo2DGel::Config object passed to the constructor.
 class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
 {
     public:
 
+    /// Holds the configuration for an instance of Pseudo2DGel.
+    ///
+    /// Controls both the image generation as well as markups on the
+    /// image from ms2 scans or peptide locations.
     struct PWIZ_API_DECL Config
     {
+        /// The filename label.
         std::string label;
+
+        /// lower m/z cutoff. 
         float mzLow;
+
+        /// upper m/z cutoff.
         float mzHigh;
+
+        /// scale of the time axis.
         float timeScale;
+
+        /// histogram bin count.
         int binCount;
+
+        /// intensity z-score function radius.
         float zRadius;
+
+        /// flag for blue-red-yellow coloration.
         bool bry;
+
+        /// flag for grey scale coloration.
         bool grey;
+
+        /// flag to sum intensity in bins. This flag causes bins to be
+        /// the sum of the underlying values. If it's false, then the
+        /// maximum value for the region will be used.
         bool binSum;
+
+        /// flag to set marks for ms2 locations.
         bool ms2;
+
+        /// flag to only draw ms2 locations that exist in the
+        /// peptide_id object and have a score >= 0.
         bool positiveMs2Only;
+
+        /// flag to render linearly with scan. This flag will switch
+        /// between having a y-axis that's linear with scan or linear
+        /// with time.
         bool binScan;
+
+        /// PeptideID object to retrieve peptide id's from. If the
+        /// object exists, it will be queried for peptide
+        /// locations. 
         boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
         Config();
@@ -64,6 +106,7 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         Config(const std::string& args,
                boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id);
 
+        /// parses a keyword/value string to set instance variables.
         void process(const std::string& args);
     };
 
