@@ -20,6 +20,9 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
+
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "boost/lexical_cast.hpp"
@@ -98,7 +101,7 @@ vector<double> vectorCastString(const string& s)
 } // anonymous namespace
 
 
-void Specificity::write(XMLWriter& writer) const
+PWIZ_API_DECL void Specificity::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -138,14 +141,14 @@ struct HandlerSpecificity : public SAXParser::Handler
 
 };
 
-void Specificity::read(istream& is)
+PWIZ_API_DECL void Specificity::read(istream& is)
 {
     HandlerSpecificity handler(this);
     parse(is, handler);
 
 }
 
-bool Specificity::operator==(const Specificity& that) const
+PWIZ_API_DECL bool Specificity::operator==(const Specificity& that) const
 {
     return cut == that.cut &&
         noCut == that.noCut &&
@@ -153,13 +156,13 @@ bool Specificity::operator==(const Specificity& that) const
 
 }
 
-bool Specificity::operator!=(const Specificity& that) const
+PWIZ_API_DECL bool Specificity::operator!=(const Specificity& that) const
 {
     return !(*this == that);
 
 }
 
-void SampleEnzyme::write(XMLWriter& writer) const
+PWIZ_API_DECL void SampleEnzyme::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -212,27 +215,27 @@ private:
 
 };
 
-void SampleEnzyme::read(istream& is)
+PWIZ_API_DECL void SampleEnzyme::read(istream& is)
 {
     HandlerSampleEnzyme handler(this);
     parse(is, handler);
 
 }
 
-bool SampleEnzyme::operator==(const SampleEnzyme& that) const
+PWIZ_API_DECL bool SampleEnzyme::operator==(const SampleEnzyme& that) const
 {
     return name == that.name &&
         specificity == that.specificity;
 
 }
 
-bool SampleEnzyme::operator!=(const SampleEnzyme& that) const
+PWIZ_API_DECL bool SampleEnzyme::operator!=(const SampleEnzyme& that) const
 {
     return !(*this == that);
 
 }
 
-void SearchDatabase::write(XMLWriter& writer) const
+PWIZ_API_DECL void SearchDatabase::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("local_path", localPath));
@@ -271,28 +274,28 @@ struct HandlerSearchDatabase : public SAXParser::Handler
 
 };
 
-void SearchDatabase::read(istream& is)
+PWIZ_API_DECL void SearchDatabase::read(istream& is)
 {
     HandlerSearchDatabase handlerSearchDatabase(this);
     parse(is, handlerSearchDatabase);
 
 }
 
-bool SearchDatabase::operator==(const SearchDatabase& that) const
+PWIZ_API_DECL bool SearchDatabase::operator==(const SearchDatabase& that) const
 {
     return localPath == that.localPath &&
         type == that.type;
 
 }
 
-bool SearchDatabase::operator!=(const SearchDatabase& that) const
+PWIZ_API_DECL bool SearchDatabase::operator!=(const SearchDatabase& that) const
 {
     return !(*this == that);
 
 }
 
 
-void XResult::write(XMLWriter& writer) const
+PWIZ_API_DECL void XResult::write(XMLWriter& writer) const
 {
     const string allNttProbStr  = stringCastVector(allNttProb);
   
@@ -343,27 +346,27 @@ private:
 
 };
 
-void XResult::read(istream& is) 
+PWIZ_API_DECL void XResult::read(istream& is) 
 {
     HandlerXResult handlerXResult(this);
     parse(is, handlerXResult);
 
 }
 
-bool XResult::operator==(const XResult& that) const
+PWIZ_API_DECL bool XResult::operator==(const XResult& that) const
 {
     return probability == that.probability &&
         allNttProb == that.allNttProb;
 
 }
 
-bool XResult::operator!=(const XResult& that) const
+PWIZ_API_DECL bool XResult::operator!=(const XResult& that) const
 {
     return !(*this == that);
 
 }
 
-void AnalysisResult::write(XMLWriter& writer) const
+PWIZ_API_DECL void AnalysisResult::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("analysis", analysis));
@@ -413,26 +416,26 @@ private:
 
 };
 
-void AnalysisResult::read(istream& is)
+PWIZ_API_DECL void AnalysisResult::read(istream& is)
 {
     HandlerAnalysisResult handlerAnalysisResult(this);
     parse(is, handlerAnalysisResult);
 
 }
 
-bool AnalysisResult::operator==(const AnalysisResult& that) const
+PWIZ_API_DECL bool AnalysisResult::operator==(const AnalysisResult& that) const
 {
     return analysis == that.analysis &&
         xResult == that.xResult;
 }
 
-bool AnalysisResult::operator!=(const AnalysisResult& that) const
+PWIZ_API_DECL bool AnalysisResult::operator!=(const AnalysisResult& that) const
 {
     return !(*this == that);
 
 }
 
-void AlternativeProtein::write(XMLWriter& writer) const
+PWIZ_API_DECL void AlternativeProtein::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("protein", protein));    
@@ -474,14 +477,14 @@ struct HandlerAlternativeProtein : public SAXParser::Handler
 
 };
 
-void AlternativeProtein::read(istream& is)
+PWIZ_API_DECL void AlternativeProtein::read(istream& is)
 {
     HandlerAlternativeProtein handlerAlternativeProtein(this);
     parse(is, handlerAlternativeProtein);
 
 }
 
-bool AlternativeProtein::operator==(const AlternativeProtein& that) const
+PWIZ_API_DECL bool AlternativeProtein::operator==(const AlternativeProtein& that) const
 {
     return protein == that.protein &&
         proteinDescr == that.proteinDescr &&
@@ -489,13 +492,13 @@ bool AlternativeProtein::operator==(const AlternativeProtein& that) const
 
 }
 
-bool AlternativeProtein::operator!=(const AlternativeProtein& that) const
+PWIZ_API_DECL bool AlternativeProtein::operator!=(const AlternativeProtein& that) const
 {
     return !(*this == that);
 
 }
 
-void ModAminoAcidMass::write(XMLWriter& writer) const
+PWIZ_API_DECL void ModAminoAcidMass::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -533,27 +536,27 @@ struct HandlerModAminoAcidMass : public SAXParser::Handler
 
 };
 
-void ModAminoAcidMass::read(istream& is)
+PWIZ_API_DECL void ModAminoAcidMass::read(istream& is)
 {
     HandlerModAminoAcidMass handler(this);
     parse(is, handler);
 
 }
 
-bool ModAminoAcidMass::operator==(const ModAminoAcidMass& that) const
+PWIZ_API_DECL bool ModAminoAcidMass::operator==(const ModAminoAcidMass& that) const
 {
     return position == that.position &&
         mass == that.mass;
 
 }
 
-bool ModAminoAcidMass::operator!=(const ModAminoAcidMass& that) const
+PWIZ_API_DECL bool ModAminoAcidMass::operator!=(const ModAminoAcidMass& that) const
 {
     return !(*this == that);
 
 }
 
-void ModificationInfo::write(XMLWriter& writer) const
+PWIZ_API_DECL void ModificationInfo::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -607,27 +610,27 @@ private:
 
 };
 
-void ModificationInfo::read(istream& is)
+PWIZ_API_DECL void ModificationInfo::read(istream& is)
 {
     HandlerModificationInfo handler(this);
     parse(is, handler);
 
 }
 
-bool ModificationInfo::operator==(const ModificationInfo& that) const
+PWIZ_API_DECL bool ModificationInfo::operator==(const ModificationInfo& that) const
 {
     return modifiedPeptide == that.modifiedPeptide &&
         modAminoAcidMass == that.modAminoAcidMass;
 
 }
 
-bool ModificationInfo::operator!=(const ModificationInfo& that) const
+PWIZ_API_DECL bool ModificationInfo::operator!=(const ModificationInfo& that) const
 {
     return !(*this == that);
 
 }
 
-void SearchHit::write(XMLWriter& writer) const
+PWIZ_API_DECL void SearchHit::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -728,14 +731,14 @@ private:
 
 };
 
-void SearchHit::read(istream& is)
+PWIZ_API_DECL void SearchHit::read(istream& is)
 {
     HandlerSearchHit handler(this);
     parse(is, handler);
 
 }
 
-bool SearchHit::operator==(const SearchHit& that) const
+PWIZ_API_DECL bool SearchHit::operator==(const SearchHit& that) const
 {
     return hitRank == that.hitRank&&
         peptide == that.peptide &&
@@ -757,13 +760,13 @@ bool SearchHit::operator==(const SearchHit& that) const
       
 }
 
-bool SearchHit::operator!=(const SearchHit& that) const
+PWIZ_API_DECL bool SearchHit::operator!=(const SearchHit& that) const
 {
     return !(*this == that);
 
 }
 
-void SearchResult::write(XMLWriter& writer) const
+PWIZ_API_DECL void SearchResult::write(XMLWriter& writer) const
 {
     writer.startElement("search_result");
     searchHit.write(writer);
@@ -810,26 +813,26 @@ private:
 
 };
 
-void SearchResult::read(istream& is)
+PWIZ_API_DECL void SearchResult::read(istream& is)
 {
     HandlerSearchResult handler(this);
     parse(is, handler);
 
 }
 
-bool SearchResult::operator==(const SearchResult& that) const
+PWIZ_API_DECL bool SearchResult::operator==(const SearchResult& that) const
 {
     return searchHit == that.searchHit;
 
 }
 
-bool SearchResult::operator!=(const SearchResult& that) const
+PWIZ_API_DECL bool SearchResult::operator!=(const SearchResult& that) const
 {
     return !(*this == that);
 
 }
 
-void EnzymaticSearchConstraint::write(XMLWriter& writer) const
+PWIZ_API_DECL void EnzymaticSearchConstraint::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -873,14 +876,14 @@ struct HandlerEnzymaticSearchConstraint : public SAXParser::Handler
 
 };
 
-void EnzymaticSearchConstraint::read(istream& is)
+PWIZ_API_DECL void EnzymaticSearchConstraint::read(istream& is)
 {
     HandlerEnzymaticSearchConstraint handler(this);
     parse(is, handler);
 
 }
 
-bool EnzymaticSearchConstraint::operator==(const EnzymaticSearchConstraint& that) const
+PWIZ_API_DECL bool EnzymaticSearchConstraint::operator==(const EnzymaticSearchConstraint& that) const
 {
     return enzyme == that.enzyme &&
         maxNumInternalCleavages == that.maxNumInternalCleavages &&
@@ -888,13 +891,13 @@ bool EnzymaticSearchConstraint::operator==(const EnzymaticSearchConstraint& that
 
 }
 
-bool EnzymaticSearchConstraint::operator!=(const EnzymaticSearchConstraint& that) const
+PWIZ_API_DECL bool EnzymaticSearchConstraint::operator!=(const EnzymaticSearchConstraint& that) const
 {
     return !(*this == that);
 
 }
 
-void AminoAcidModification::write(XMLWriter& writer) const
+PWIZ_API_DECL void AminoAcidModification::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -940,14 +943,14 @@ struct HandlerAminoAcidModification : public SAXParser::Handler
 
 };
 
-void AminoAcidModification::read(istream& is)
+PWIZ_API_DECL void AminoAcidModification::read(istream& is)
 {
     HandlerAminoAcidModification handler(this);
     parse(is, handler);
 
 }
 
-bool AminoAcidModification::operator==(const AminoAcidModification& that) const
+PWIZ_API_DECL bool AminoAcidModification::operator==(const AminoAcidModification& that) const
 {
     return aminoAcid == that.aminoAcid &&
         massDiff == that.massDiff &&
@@ -957,13 +960,13 @@ bool AminoAcidModification::operator==(const AminoAcidModification& that) const
 
 }
 
-bool AminoAcidModification::operator!=(const AminoAcidModification& that) const
+PWIZ_API_DECL bool AminoAcidModification::operator!=(const AminoAcidModification& that) const
 {
     return !(*this == that);
 
 }
 
-void SearchSummary::write(XMLWriter& writer) const
+PWIZ_API_DECL void SearchSummary::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -1050,14 +1053,14 @@ private:
 
 };
 
-void SearchSummary::read(istream& is)
+PWIZ_API_DECL void SearchSummary::read(istream& is)
 {
     HandlerSearchSummary handler(this);
     parse(is, handler);
 
 }
 
-bool SearchSummary::operator==(const SearchSummary& that) const
+PWIZ_API_DECL bool SearchSummary::operator==(const SearchSummary& that) const
 {
     return baseName == that.baseName &&
         searchEngine == that.searchEngine &&
@@ -1070,13 +1073,13 @@ bool SearchSummary::operator==(const SearchSummary& that) const
     
 }
 
-bool SearchSummary::operator!=(const SearchSummary& that) const
+PWIZ_API_DECL bool SearchSummary::operator!=(const SearchSummary& that) const
 {
     return !(*this == that);
 
 }
 
-void SpectrumQuery::write(XMLWriter& writer) const
+PWIZ_API_DECL void SpectrumQuery::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
    
@@ -1141,14 +1144,14 @@ private:
 
 };
 
-void SpectrumQuery::read(istream& is)
+PWIZ_API_DECL void SpectrumQuery::read(istream& is)
 {
     HandlerSpectrumQuery handler(this);
     parse(is, handler);
 
 }
 
-bool SpectrumQuery::operator==(const SpectrumQuery& that) const
+PWIZ_API_DECL bool SpectrumQuery::operator==(const SpectrumQuery& that) const
 {
     return spectrum == that.spectrum &&
         startScan == that.startScan &&
@@ -1161,13 +1164,13 @@ bool SpectrumQuery::operator==(const SpectrumQuery& that) const
 
 }
 
-bool SpectrumQuery::operator!=(const SpectrumQuery& that) const
+PWIZ_API_DECL bool SpectrumQuery::operator!=(const SpectrumQuery& that) const
 {
     return !(*this == that);
 
 }
 
-void MSMSRunSummary::write(XMLWriter& writer) const
+PWIZ_API_DECL void MSMSRunSummary::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -1238,14 +1241,14 @@ private:
 
 };
 
-void MSMSRunSummary::read(istream& is)
+PWIZ_API_DECL void MSMSRunSummary::read(istream& is)
 {
     HandlerMSMSRunSummary handler(this);
     parse(is, handler);
 
 }
 
-bool MSMSRunSummary::operator==(const MSMSRunSummary& that) const
+PWIZ_API_DECL bool MSMSRunSummary::operator==(const MSMSRunSummary& that) const
 {
     return searchSummary == that.searchSummary &&
         sampleEnzyme == that.sampleEnzyme &&
@@ -1253,13 +1256,13 @@ bool MSMSRunSummary::operator==(const MSMSRunSummary& that) const
 
 }
 
-bool MSMSRunSummary::operator!=(const MSMSRunSummary& that) const
+PWIZ_API_DECL bool MSMSRunSummary::operator!=(const MSMSRunSummary& that) const
 {
     return !(*this == that);
 
 }
 
-void MSMSPipelineAnalysis::write(XMLWriter& writer) const
+PWIZ_API_DECL void MSMSPipelineAnalysis::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -1323,14 +1326,14 @@ private:
 
 };
 
-void MSMSPipelineAnalysis::read(istream& is)
+PWIZ_API_DECL void MSMSPipelineAnalysis::read(istream& is)
 {
     HandlerMSMSPipelineAnalysis handler(this);
     parse(is, handler);
 
 }
 
-bool MSMSPipelineAnalysis::operator==(const MSMSPipelineAnalysis& that) const
+PWIZ_API_DECL bool MSMSPipelineAnalysis::operator==(const MSMSPipelineAnalysis& that) const
 {
     return date == that.date &&
         summaryXML == that.summaryXML &&
@@ -1340,13 +1343,13 @@ bool MSMSPipelineAnalysis::operator==(const MSMSPipelineAnalysis& that) const
 
 }
 
-bool MSMSPipelineAnalysis::operator!=(const MSMSPipelineAnalysis& that) const
+PWIZ_API_DECL bool MSMSPipelineAnalysis::operator!=(const MSMSPipelineAnalysis& that) const
 {
     return !(*this == that);
 
 }
 
-void Match::write(minimxml::XMLWriter& writer) const
+PWIZ_API_DECL void Match::write(minimxml::XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("score", boost::lexical_cast<string>(score)));
@@ -1410,7 +1413,7 @@ private:
 
 };
 
-void Match::read(istream& is)
+PWIZ_API_DECL void Match::read(istream& is)
 {
 
     if (!this) throw runtime_error("not this");
@@ -1420,7 +1423,7 @@ void Match::read(istream& is)
 
 }
 
-bool Match::operator==(const Match& that) const
+PWIZ_API_DECL bool Match::operator==(const Match& that) const
 {
     return score == that.score &&
         spectrumQuery == (that.spectrumQuery) &&
@@ -1428,13 +1431,13 @@ bool Match::operator==(const Match& that) const
 
 }
 
-bool Match::operator!=(const Match& that) const
+PWIZ_API_DECL bool Match::operator!=(const Match& that) const
 {
     return !(*this == that);
 
 }
 
-void MatchData::write(minimxml::XMLWriter& writer) const
+PWIZ_API_DECL void MatchData::write(minimxml::XMLWriter& writer) const
 {
 
     XMLWriter::Attributes attributes;
@@ -1514,14 +1517,14 @@ private:
 
 };
 
-void MatchData::read(istream& is)
+PWIZ_API_DECL void MatchData::read(istream& is)
 {
     HandlerMatchData handlerMatchData(this);
     parse(is, handlerMatchData);
 
 }
 
-bool MatchData::operator==(const MatchData& that) const
+PWIZ_API_DECL bool MatchData::operator==(const MatchData& that) const
 {
     return warpFunctionCalculator == that.warpFunctionCalculator &&
         searchNbhdCalculator == that.searchNbhdCalculator &&
@@ -1529,7 +1532,7 @@ bool MatchData::operator==(const MatchData& that) const
 
 }
 
-bool MatchData::operator!=(const MatchData& that) const
+PWIZ_API_DECL bool MatchData::operator!=(const MatchData& that) const
 {
     return !(*this == that);
 
