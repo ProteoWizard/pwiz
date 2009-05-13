@@ -173,9 +173,24 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
         case 4: // SRM SIC
         {
+            ExperimentPtr experiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
+            pwiz::wiff::Target target;
+            experiment->getSRM(ie.transition, target);
+
+            result->set(MS_dwell_time, target.dwellTime);
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
+            result->precursor.activation.set(MS_CID);
+            result->precursor.activation.set(MS_collision_energy, target.collisionEnergy);
+            result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
+
+            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ie.q3, MS_m_z);
+            //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ie.q3, MS_m_z);
+            //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ie.q3, MS_m_z);
+
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_counts);
 
-            ExperimentPtr experiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
             vector<double> times, intensities;
             experiment->getSIC(ie.transition, times, intensities);
             result->defaultArrayLength = times.size();
@@ -202,6 +217,8 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     ie.index = index_.size()-1;
     ie.id = "TIC";
 
+    pwiz::wiff::Target target;
+
     int periodCount = wifffile_->getPeriodCount(sample);
     for (int ii=1; ii <= periodCount; ++ii)
     {
@@ -214,21 +231,21 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
 
             for (int iiii = 0; iiii < (int) msExperiment->getSRMSize(); ++iiii)
             {
-                double Q1, Q3, dwellTime;
-                msExperiment->getSRM(iiii, Q1, Q3, dwellTime);
+                msExperiment->getSRM(iiii, target);
 
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
+                ie.q1 = target.Q1;
+                ie.q3 = target.Q3;
                 ie.sample = sample;
                 ie.period = ii;
-                // cycle is n/a
                 ie.experiment = iii;
                 ie.transition = iiii;
                 ie.index = index_.size()-1;
 
                 std::ostringstream oss;
-                oss << "SRM SIC Q1=" << Q1 <<
-                       " Q3=" << Q3 <<
+                oss << "SRM SIC Q1=" << ie.q1 <<
+                       " Q3=" << ie.q3 <<
                        " sample=" << ie.sample <<
                        " period=" << ie.period <<
                        " experiment=" << ie.experiment <<

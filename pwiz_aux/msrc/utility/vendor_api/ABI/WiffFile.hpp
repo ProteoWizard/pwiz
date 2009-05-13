@@ -157,14 +157,35 @@ struct WIFFFILE_API Spectrum
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
 
 
+enum WIFFFILE_API TargetType
+{
+    TargetType_SRM,    // selected reaction monitoring (q1 and q3)
+    TargetType_SIM,    // selected ion monitoring (q1 but no q3)
+    TargetType_CNL     // constant neutral loss (or gain)
+};
+
+
+struct WIFFFILE_API Target
+{
+    TargetType type;
+    double Q1, Q3;
+    double dwellTime;
+    double collisionEnergy;
+    double declusteringPotential;
+    std::string compoundID;
+};
+
+
 struct WIFFFILE_API Experiment
 {
     virtual int getSampleNumber() const = 0;
     virtual int getPeriodNumber() const = 0;
     virtual int getExperimentNumber() const = 0;
 
+    virtual double getCycleStartTime(int cycle) const = 0;
+
     virtual size_t getSRMSize() const = 0;
-    virtual void getSRM(size_t index, double& Q1, double& Q3, double& dwellTime, std::string* compoundID = NULL) const = 0;
+    virtual void getSRM(size_t index, Target& target) const = 0;
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const = 0;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
@@ -191,8 +212,6 @@ class WIFFFILE_API WiffFile
     virtual int getCycleCount(int sample, int period, int experiment) const = 0;
 
     virtual std::vector<std::string> getSampleNames() const = 0;
-
-    virtual double getCycleStartTime(int sample, int period, int experiment, int cycle) const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
     virtual InstrumentType getInstrumentType() const = 0;

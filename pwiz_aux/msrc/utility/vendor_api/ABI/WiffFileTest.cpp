@@ -63,19 +63,22 @@ void test(const string& rawpath)
                 msExperiment->getTIC(times, intensities);
                 cout << times.size() << endl;
                 int endCycle = wiffFile->getCycleCount(sample, period, experiment);
-                double startTime = wiffFile->getCycleStartTime(sample,period, experiment, 1);
-                double stopTime = wiffFile->getCycleStartTime(sample,period, experiment, endCycle);
+                double startTime = msExperiment->getCycleStartTime(1);
+                double stopTime = msExperiment->getCycleStartTime(endCycle);
                 cout << startTime << " - " << stopTime << endl;
 
                 cout << msExperiment->getSRMSize() << endl;
                 if(msExperiment->getSRMSize() > 0)
                 {
-                    double q1, q3, dwellTime;
+                    Target target;
                     ostringstream oss;
                     for(size_t i=0; i < msExperiment->getSRMSize(); ++i)
                     {
-                        msExperiment->getSRM(i, q1, q3, dwellTime);
-                        oss << q1 << "->" << q3 << "; ";
+                        msExperiment->getSRM(i, target);
+                        oss << target.Q1 << "->" << target.Q3 <<
+                               " CE=" << target.collisionEnergy <<
+                               " DP=" << target.declusteringPotential <<
+                               " DT=" << target.dwellTime << "; ";
 
                         msExperiment->getSIC(i, times, intensities);
                         if(!intensities.empty())

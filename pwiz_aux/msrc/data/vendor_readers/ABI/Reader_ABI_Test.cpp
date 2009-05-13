@@ -58,12 +58,15 @@ void testRead(const string& rawpath)
 
     // read file into MSData object
     Reader_ABI reader;
-    MSData msd;
-    reader.read(rawpath, "dummy", msd);
-    cout << msd.run.spectrumListPtr->size() << endl;
-    cout << msd.run.chromatogramListPtr->size() << endl;
+    vector<MSDataPtr> msds;
+    reader.read(rawpath, "dummy", msds);
+    for (size_t i=0; i < msds.size(); ++i)
+    {
+        cout << msds[i]->run.spectrumListPtr->size() << endl;
+        cout << msds[i]->run.chromatogramListPtr->size() << endl;
+        if (os_) TextWriter(*os_,0)(*msds[i]);
+    }
 
-    if (os_) TextWriter(*os_,0)(msd);
 
     // test for 1:1 equality
     //Diff<MSData> diff(msd, targetResult);

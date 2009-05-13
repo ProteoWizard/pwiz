@@ -57,9 +57,9 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     {
         int sample;
         int period;
-        int cycle;
         int experiment;
         int transition;
+        double q1, q3;
     };
 
     mutable std::vector<IndexEntry> index_;
