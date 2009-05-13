@@ -41,6 +41,8 @@ public:
         ControllerType controllerType;
         long controllerNumber;
         string filter;
+        double q1, q3;
+        double q3Offset;
     };
 
     mutable vector<IndexEntry> index_;

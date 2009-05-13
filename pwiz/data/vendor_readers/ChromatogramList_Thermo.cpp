@@ -82,17 +82,25 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
             {
                 mode = 3;
+                result->set(MS_mass_chromatogram);
             }
             else // generate SRM SIC for transition <precursor>,<product>
             {
                 mode = 4;
+                result->set(MS_SIC_chromatogram);
             }
             break;
 
         case Controller_PDA:
             rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
+            result->set(MS_absorption_chromatogram);
             mode = 5; // generate "Total Scan" chromatogram for entire run
             break;
+
+        case Controller_Analog:
+            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
+            result->set(MS_mass_chromatogram); // TODO: is this right?
+            mode = 6; // generate "ECD" chromatogram for entire run
     }
 
     switch (mode)
@@ -144,15 +152,27 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case 4: // generate SRM SIC for transition <precursor>,<product>
         {
-            vector<string> tokens;
-            bal::split(tokens, ci.id, bal::is_any_of(" "));
-            bal::split(tokens, tokens[2], bal::is_any_of(","));
-            double productMZ = lexical_cast<double>(tokens[1]);
-            boost::format mzRange("%f-%f");
-            mzRange % (productMZ-0.05) % (productMZ+0.05);
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+
+            ScanFilter filterParser;
+            filterParser.parse(ci.filter);
+            result->precursor.activation.set(translate(filterParser.activationType_));
+            if (filterParser.activationType_ == ActivationType_CID)
+                result->precursor.activation.set(MS_collision_energy, filterParser.cidEnergy_[0]);
+
+            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
+            result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
+            result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+            string q1 = (format("%.10g") % ci.q1).str();
+            string q3Range = (format("%.10g-%.10g")
+                              % (ci.q3 - ci.q3Offset)
+                              % (ci.q3 + ci.q3Offset)
+                             ).str();
+
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
-                "ms2 " + tokens[0], mzRange.str(), "", 0,
+                "ms2 " + q1, q3Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -163,11 +183,23 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case 5: // generate "Total Scan" chromatogram for entire run
         {
-            // note: Type_TIC maps to "Total Scan" on the PDA controller
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
-                Type_TIC, Operator_None, Type_MassRange,
+                Type_TotalScan, Operator_None, Type_MassRange,
                 "", "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
+                Smoothing_None, 0);
+            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
+            else result->defaultArrayLength = cd->size();
+        }
+        break;
+
+        case 6: // generate "ECD" chromatogram for entire run
+        {
+            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+                Type_ECD, Operator_None, Type_MassRange,
+                "", "", "", 0,
+                0, std::numeric_limits<double>::max(),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
             if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
@@ -236,6 +268,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
                                     ci.id = "SRM TIC " + precursorMZ;
+                                    ci.q1 = filterParser.cidParentMass_[0];
                                     idMap_[ci.id] = ci.index;
 
                                     for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
@@ -246,10 +279,13 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                         ci.controllerNumber = n;
                                         ci.filter = filterString;
                                         ci.index = index_.size()-1;
+                                        ci.q1 = filterParser.cidParentMass_[0];
+                                        ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
                                         ci.id = (format("SRM SIC %s,%.10g")
                                                  % precursorMZ
-                                                 % ((filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0)
+                                                 % ci.q3
                                                 ).str();
+                                        ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
                                         idMap_[ci.id] = ci.index;
                                     }
                                 }
@@ -284,6 +320,18 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     idMap_[ci.id] = ci.index;
                 }
                 break; // case Controller_PDA
+
+                case Controller_Analog:
+                {
+                    // "ECD" appears to be the equivalent of the TIC
+                    index_.push_back(IndexEntry());
+                    IndexEntry& ci = index_.back();
+                    ci.controllerType = (ControllerType) controllerType;
+                    ci.controllerNumber = n;
+                    ci.index = index_.size()-1;
+                    ci.id = "ECD";
+                    idMap_[ci.id] = ci.index;
+                }
 
                 default:
                     // TODO: are there sensible default chromatograms for other controller types?
