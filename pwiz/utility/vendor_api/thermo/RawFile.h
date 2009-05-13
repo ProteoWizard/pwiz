@@ -43,7 +43,6 @@
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
 #include "pwiz/data/msdata/Reader.hpp" // for ReaderFail exception defn
-#include <boost/utility/thread_specific_singleton.hpp>
 
 
 namespace pwiz {
@@ -355,7 +354,9 @@ struct RAWFILE_API ErrorLogItem
 enum RAWFILE_API ChromatogramType
 {
     Type_MassRange,
+    Type_ECD = Type_MassRange,
     Type_TIC,
+    Type_TotalScan = Type_TIC,
     Type_BasePeak,
     Type_NeutralFragment
 };

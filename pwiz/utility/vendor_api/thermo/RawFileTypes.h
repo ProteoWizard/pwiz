@@ -596,11 +596,11 @@ enum RAWFILE_API ScanType
     ScanType_Unknown = -1,
     ScanType_Full = 0,
     ScanType_SIM,
+    ScanType_Zoom,
     ScanType_SRM,
     ScanType_CRM,
     ScanType_Q1MS,
     ScanType_Q3MS,
-    ScanType_Zoom,
     ScanType_Count
 };
 
