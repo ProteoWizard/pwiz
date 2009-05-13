@@ -102,7 +102,7 @@ void fillInMetadata(const string& rawpath, MSData& msd)
 
     SoftwarePtr softwareMassLynx(new Software);
     softwareMassLynx->id = "MassLynx";
-    softwareMassLynx->set(MS_Masslynx);
+    softwareMassLynx->set(MS_MassLynx);
     softwareMassLynx->version = "4.1";
     msd.softwarePtrs.push_back(softwareMassLynx);
 
