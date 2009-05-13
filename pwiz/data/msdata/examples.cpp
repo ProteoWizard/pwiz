@@ -382,7 +382,11 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sic.index = 1;
     sic.defaultArrayLength = 10;
     sic.dataProcessingPtr = dppwiz;
-    sic.set(MS_total_ion_current_chromatogram);
+    sic.set(MS_selected_ion_current_chromatogram);
+
+    sic.precursor.isolationWindow.set(MS_isolation_window_target_m_z, 456.7, MS_m_z);
+    sic.precursor.activation.set(MS_CID);
+    sic.product.isolationWindow.set(MS_isolation_window_target_m_z, 678.9, MS_m_z);
 
     BinaryDataArrayPtr sic_time(new BinaryDataArray);
     sic_time->dataProcessingPtr = dppwiz;

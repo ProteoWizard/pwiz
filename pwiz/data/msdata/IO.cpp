@@ -2014,6 +2014,12 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 
     writeParamContainer(writer, chromatogram);
     
+    if (!chromatogram.precursor.empty())
+        write(writer, chromatogram.precursor);
+   
+    if (!chromatogram.product.empty())
+        write(writer, chromatogram.product);
+
     if (!chromatogram.binaryDataArrayPtrs.empty())
     {
         attributes.clear();
@@ -2065,6 +2071,16 @@ struct HandlerChromatogram : public HandlerParamContainer
 
             return Status::Ok;
         }
+        else if (name == "precursor")
+        {
+            handlerPrecursor_.precursor = &chromatogram->precursor;
+            return Status(Status::Delegate, &handlerPrecursor_);
+        }
+        else if (name == "product")
+        {
+            handlerProduct_.product = &chromatogram->product;
+            return Status(Status::Delegate, &handlerProduct_);
+        }
         else if (name == "binaryDataArray")
         {
             if (binaryDataFlag == IgnoreBinaryData)
@@ -2085,12 +2101,15 @@ struct HandlerChromatogram : public HandlerParamContainer
     }
 
     private:
+        
+    HandlerPrecursor handlerPrecursor_;
+    HandlerProduct handlerProduct_;
     HandlerBinaryDataArray handlerBinaryDataArray_;
 };
 
 
 PWIZ_API_DECL void read(std::istream& is, Chromatogram& chromatogram,
-          BinaryDataFlag binaryDataFlag)
+                        BinaryDataFlag binaryDataFlag)
 {
     HandlerChromatogram handler(binaryDataFlag, &chromatogram);
     SAXParser::parse(is, handler);

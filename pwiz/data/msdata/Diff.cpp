@@ -799,6 +799,8 @@ void diff(const Chromatogram& a,
         diff(a.id, b.id, a_b.id, b_a.id, config);
         ptr_diff(a.dataProcessingPtr, b.dataProcessingPtr, a_b.dataProcessingPtr, b_a.dataProcessingPtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+        diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
+        diff(a.product, b.product, a_b.product, b_a.product, config);
     }
 
     // special handling for binary data arrays

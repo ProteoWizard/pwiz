@@ -716,6 +716,12 @@ struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamCon
     /// this attribute can optionally reference the 'id' of the appropriate dataProcessing.
     DataProcessingPtr dataProcessingPtr;
 
+    /// description of precursor ion information (i.e. Q1 settings)
+    Precursor precursor;
+
+    /// description of product ion information (i.e. Q3 settings)
+    Product product;
+
     /// list of binary data arrays.
     std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
 

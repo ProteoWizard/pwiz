@@ -921,7 +921,9 @@ PWIZ_API_DECL bool Chromatogram::empty() const
     return index==0 &&
            id.empty() &&
            defaultArrayLength==0 &&
-           (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
+           (!dataProcessingPtr.get() || dataProcessingPtr->empty()) &&
+           precursor.empty() &&
+           product.empty() &&
            binaryDataArrayPtrs.empty() &&
            ParamContainer::empty();
 }
