@@ -41,11 +41,9 @@ rule init ( version ? : location : options * )
 		using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
     version ?= default ;
-    local requirements = [ extension.define boost $(version) : $(location) : $(options) ] ;
-    requirements =
-        [ extension.refine boost $(version) : <tag>@boost-tag ]
-        <boost-version>$(version)
-        <boost-location>$(location)
+    local requirements =
+        [ extension.refine boost $(version) : <tag>@boost-tag $(options) ]
+        $(options)
         <toolset>msvc:<define>WIN32
         <toolset>msvc:<define>BOOST_WINDOWS_API
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
@@ -53,7 +51,7 @@ rule init ( version ? : location : options * )
         <link>shared:<define>BOOST_ALL_DYN_LINK=1
         <link>static:<define>BOOST_ALL_STATIC_LINK=1
         <define>BOOST_ALL_NO_LIB=1
-        #~ <warnings>off
+        <warnings>off
         ;
 
     lib pthread : : <name>pthread <link>shared : 
@@ -67,7 +65,7 @@ rule init ( version ? : location : options * )
         regex_pthread_requirement = <toolset>gcc:<library>pthread/<link>shared ;
     }
 
-    requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
+    #requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
     local common-requirements =
         <include>$(location)
         ;
@@ -208,7 +206,7 @@ rule init ( version ? : location : options * )
             win32/thread
             win32/exceptions
             win32/tss_dll
-            win32/tss_pe
+            ../../../../boost_aux/libs/thread/src/win32/tss_pe
           ;
     } else
     {
