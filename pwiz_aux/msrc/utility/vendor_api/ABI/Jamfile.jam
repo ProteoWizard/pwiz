@@ -19,12 +19,12 @@ lib pwiz_wifffile
         #   to initialize the CLR
         # - these two tweaks are incompatible: either boost::thread must be link=shared,
         #   or the CLR object must be
-        <link>shared
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
         
         <toolset>msvc,<link>shared:<define>WIFFFILE_DYN_LINK
-        <runtime-link>shared
-        <cxxflags>"/clr /AI $(CLI_ROOT)"
-        <asynch-exceptions>on
+        <using-clr>true # requires hacked msvc.jam
+        <cxxflags>"/AI $(CLI_ROOT)"
         <toolset>msvc:<dependency>ABSciex.DataAccess.WiffFileDataReader.dll
         <toolset>msvc:<dependency>Clearcore.dll
         <toolset>msvc:<dependency>ClearCore.Storage.dll
@@ -67,7 +67,7 @@ path-constant TEST_PATH2 : "c:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscr
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run WiffFileTest.cpp
     : # args
-        \"$(TEST_PATH1)\" # \"$(TEST_PATH2)\" -v
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
     : # input-files
     : # requirements
         <library>pwiz_wifffile
