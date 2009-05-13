@@ -58,7 +58,8 @@ project pwiz
 
         <toolset>gcc,<link>shared:<runtime-link>shared
 
-        # using pwiz_wifffile (compiled with /clr) requires the shared runtime
+        # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
+        # regardless of how pwiz_wifffile is linked
         <toolset>msvc:<runtime-link>shared
 
         # special msvc hacks

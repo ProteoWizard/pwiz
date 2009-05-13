@@ -13,6 +13,7 @@ REM # Extract Boost.Build (for VC9 support)
 pushd %PWIZ_ROOT%\libraries
 IF EXIST boost-build\jam_src\build.bat GOTO SKIP_BB
 bsdtar.exe -xkjvf boost-build.tar.bz2
+copy /Y msvc.jam boost-build\tools
 :SKIP_BB
 popd
 
@@ -23,7 +24,7 @@ REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam...
 pushd %PWIZ_ROOT%\libraries\boost-build\jam_src
-call build.bat
+call build.bat %*
 popd
 :SKIP_BJAM
 
