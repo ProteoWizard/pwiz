@@ -55,8 +55,8 @@ MSDataFile::MSDataFile(System::String^ path)
     try
     {
         initializeReaderList();
-        base_ = new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get());
-        MSData::base_ = base_;
+        base_ = new boost::shared_ptr<b::MSDataFile>(new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get()));
+        MSData::base_ = reinterpret_cast<boost::shared_ptr<b::MSData>*>(base_);
     }
     catch(exception& e)
     {
@@ -68,41 +68,6 @@ MSDataFile::MSDataFile(System::String^ path)
     }
 }
 
-System::String^ MSDataFile::identify(System::String^ path)
-{
-    string path2(ToStdString(path));
-    try
-    {
-        initializeReaderList();
-        string head;
-        if (!bfs::is_directory(path2))
-        {
-            pwiz::util::random_access_compressed_ifstream is(path2.c_str());
-            if (!is)
-                throw runtime_error(("[MSDataFile::identify()] Unable to open file \"" + path2 + "\"").c_str());
-
-            head.resize(512, '\0');
-            is.read(&head[0], (std::streamsize)head.size());
-        }
-        return gcnew System::String(readerList->identify(path2, head).c_str());
-    }
-    catch(bfs::filesystem_error& e)
-    {
-        if (e.code() == boost::system::errc::permission_denied)
-            return gcnew System::String("");
-
-        string error = "[MSDataFile::identify()] Unable to identify path \"" + path2 + "\": " + e.what();
-        throw gcnew System::Exception(gcnew System::String(error.c_str()));
-    }
-    catch(exception& e)
-    {
-        throw gcnew System::Exception(gcnew System::String(e.what()));
-    }
-    catch(...)
-    {
-        throw gcnew System::Exception(gcnew System::String("[MSDataFile::identify()] Unhandled exception"));
-    }
-}
 
 void MSDataFile::write(MSData^ msd, System::String^ filename)
 {
@@ -122,7 +87,7 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        b::MSDataFile::write(*msd->base_, ToStdString(filename), config2);
+        b::MSDataFile::write(**msd->base_, ToStdString(filename), config2);
     }
     catch(exception& e)
     {
@@ -153,7 +118,7 @@ void MSDataFile::write(System::String^ filename, WriteConfig^ config)
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        base_->write(ToStdString(filename), config2);
+        (*base_)->write(ToStdString(filename), config2);
     }
     catch(exception& e)
     {

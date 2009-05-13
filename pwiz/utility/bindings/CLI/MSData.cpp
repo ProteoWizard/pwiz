@@ -691,6 +691,12 @@ void Chromatogram::defaultArrayLength::set(System::UInt64 value) {(*base_)->defa
 DataProcessing^ Chromatogram::dataProcessing::get()  {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
 
+Precursor^ Chromatogram::precursor::get() {return gcnew Precursor(&(*base_)->precursor);}
+void Chromatogram::precursor::set(Precursor^ value) {(*base_)->precursor = *value->base_;}
+
+Product^ Chromatogram::product::get() {return gcnew Product(&(*base_)->product);}
+void Chromatogram::product::set(Product^ value) {(*base_)->product = *value->base_;}
+
 BinaryDataArrayList^ Chromatogram::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
 void Chromatogram::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
 
@@ -724,7 +730,7 @@ bool SpectrumList::empty()
 
 SpectrumIdentity^ SpectrumList::spectrumIdentity(int index)
 {
-    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)));
+    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);
 }
 
 int SpectrumList::find(System::String^ id)
@@ -783,7 +789,7 @@ bool SpectrumListSimple::empty()
 
 SpectrumIdentity^ SpectrumListSimple::spectrumIdentity(int index)
 {
-    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)));
+    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);
 }
 
 Spectrum^ SpectrumListSimple::spectrum(int index)
@@ -809,7 +815,7 @@ bool ChromatogramList::empty()
 
 ChromatogramIdentity^ ChromatogramList::chromatogramIdentity(int index)
 {
-    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)));
+    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);
 }
 
 int ChromatogramList::find(System::String^ id)
@@ -850,7 +856,7 @@ bool ChromatogramListSimple::empty()
 
 ChromatogramIdentity^ ChromatogramListSimple::chromatogramIdentity(int index)
 {
-    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)));
+    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);
 }
 
 Chromatogram^ ChromatogramListSimple::chromatogram(int index)
@@ -896,46 +902,47 @@ bool Run::empty()
 
 
 MSData::MSData()
-: base_(new b::MSData())
-{owner_ = nullptr; }
+: base_(new boost::shared_ptr<b::MSData>(new b::MSData())), owner_(nullptr)
+{
+}
 
-System::String^ MSData::accession::get() {return gcnew System::String(base_->accession.c_str());}
-void MSData::accession::set(System::String^ value) {base_->accession = ToStdString(value);}
+System::String^ MSData::accession::get() {return gcnew System::String((*base_)->accession.c_str());}
+void MSData::accession::set(System::String^ value) {(*base_)->accession = ToStdString(value);}
 
-System::String^ MSData::id::get() {return gcnew System::String(base_->id.c_str());}
-void MSData::id::set(System::String^ value) {base_->id = ToStdString(value);}
+System::String^ MSData::id::get() {return gcnew System::String((*base_)->id.c_str());}
+void MSData::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ MSData::version::get() {return gcnew System::String(base_->version.c_str());}
-void MSData::version::set(System::String^ value) {base_->version = ToStdString(value);}
+System::String^ MSData::version::get() {return gcnew System::String((*base_)->version.c_str());}
+void MSData::version::set(System::String^ value) {(*base_)->version = ToStdString(value);}
 
-CVList^ MSData::cvs::get() {return gcnew CVList(&base_->cvs, this);}
-void MSData::cvs::set(CVList^ value) {base_->cvs = *value->base_;}
+CVList^ MSData::cvs::get() {return gcnew CVList(&(*base_)->cvs, this);}
+void MSData::cvs::set(CVList^ value) {(*base_)->cvs = *value->base_;}
 
-FileDescription^ MSData::fileDescription::get() {return gcnew FileDescription(&base_->fileDescription, this);}
-void MSData::fileDescription::set(FileDescription^ value) {base_->fileDescription = *value->base_;}
+FileDescription^ MSData::fileDescription::get() {return gcnew FileDescription(&(*base_)->fileDescription, this);}
+void MSData::fileDescription::set(FileDescription^ value) {(*base_)->fileDescription = *value->base_;}
 
-ParamGroupList^ MSData::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
-void MSData::paramGroups::set(ParamGroupList^ value) {base_->paramGroupPtrs = *value->base_;}
+ParamGroupList^ MSData::paramGroups::get() {return gcnew ParamGroupList(&(*base_)->paramGroupPtrs, this);}
+void MSData::paramGroups::set(ParamGroupList^ value) {(*base_)->paramGroupPtrs = *value->base_;}
 
-SampleList^ MSData::samples::get() {return gcnew SampleList(&base_->samplePtrs, this);}
-void MSData::samples::set(SampleList^ value) {base_->samplePtrs = *value->base_;}
+SampleList^ MSData::samples::get() {return gcnew SampleList(&(*base_)->samplePtrs, this);}
+void MSData::samples::set(SampleList^ value) {(*base_)->samplePtrs = *value->base_;}
 
-InstrumentConfigurationList^ MSData::instrumentConfigurationList::get() {return gcnew InstrumentConfigurationList(&base_->instrumentConfigurationPtrs, this);}
-void MSData::instrumentConfigurationList::set(InstrumentConfigurationList^ value) {base_->instrumentConfigurationPtrs = *value->base_;}
+InstrumentConfigurationList^ MSData::instrumentConfigurationList::get() {return gcnew InstrumentConfigurationList(&(*base_)->instrumentConfigurationPtrs, this);}
+void MSData::instrumentConfigurationList::set(InstrumentConfigurationList^ value) {(*base_)->instrumentConfigurationPtrs = *value->base_;}
 
-SoftwareList^ MSData::softwareList::get() {return gcnew SoftwareList(&base_->softwarePtrs, this);}
-void MSData::softwareList::set(SoftwareList^ value) {base_->softwarePtrs = *value->base_;}
+SoftwareList^ MSData::softwareList::get() {return gcnew SoftwareList(&(*base_)->softwarePtrs, this);}
+void MSData::softwareList::set(SoftwareList^ value) {(*base_)->softwarePtrs = *value->base_;}
 
-DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&base_->dataProcessingPtrs, this);}
-void MSData::dataProcessingList::set(DataProcessingList^ value) {base_->dataProcessingPtrs = *value->base_;}
+DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&(*base_)->dataProcessingPtrs, this);}
+void MSData::dataProcessingList::set(DataProcessingList^ value) {(*base_)->dataProcessingPtrs = *value->base_;}
 
-ScanSettingsList^ MSData::scanSettingList::get() {return gcnew ScanSettingsList(&base_->scanSettingsPtrs, this);}
-void MSData::scanSettingList::set(ScanSettingsList^ value) {base_->scanSettingsPtrs = *value->base_;}
+ScanSettingsList^ MSData::scanSettingList::get() {return gcnew ScanSettingsList(&(*base_)->scanSettingsPtrs, this);}
+void MSData::scanSettingList::set(ScanSettingsList^ value) {(*base_)->scanSettingsPtrs = *value->base_;}
 
-Run^ MSData::run::get()  {return gcnew Run(&base_->run, this);}
-//void set(Run^ value) {base_->run = *value->base_;}
+Run^ MSData::run::get()  {return gcnew Run(&(*base_)->run, this);}
+//void set(Run^ value) {(*base_)->run = *value->base_;}
 
-bool MSData::empty() {return base_->empty();}
+bool MSData::empty() {return (*base_)->empty();}
 
 
 } // namespace msdata

@@ -24,13 +24,13 @@
 //#include "MSDataFile.hpp"
 //#include "../../../data/msdata/Diff.hpp"
 //#include "examples.hpp"
-#include "pwiz/tility/misc/unit.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 
 #using <mscorlib.dll>
 
 using namespace System;
 using namespace pwiz::CLI::msdata;
-using namespace pwiz::util;
+using namespace pwiz::CLI::util;
 
 
 public ref class test
@@ -63,36 +63,48 @@ void validateWriteRead()
         // read back into an MSDataFile object
         MSDataFile^ msd1 = gcnew MSDataFile(filename1);
 
+        MSData^ foob = gcnew MSData();
+        ReaderList^ readers = ReaderList::FullReaderList;
+        readers->read("c:/test/WIFFsForMatt/1_031105STlatterich_AQv1.4.1.wiff", foob);
+        //delete readers;
+
+        Console::WriteLine(foob->run->spectrumList->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
+        Console::WriteLine(foob->run->spectrumList->spectrum(123)->cvParam(CVID::MS_ms_level)->value);
         // compare
         //Diff<MSData> diff(tiny, msd1, diffConfig);
         //if (diff && os_) *os_ << diff << endl;
         //unit_assert(!diff);
 
-        Console::WriteLine(msd1->run->spectrumList->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
+        Spectrum^ s = msd1->run->spectrumList->spectrum(0);
+        Console::WriteLine(s->cvParam(CVID::MS_ms_level)->value);
+        //delete s;
 
         test^ foo = gcnew test();
         pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum^ bar = gcnew pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum(foo, &test::accept);
         SpectrumList^ sl = gcnew pwiz::CLI::analysis::SpectrumList_Filter(msd1->run->spectrumList, bar);
         Console::WriteLine(sl->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
-        delete sl;
+        //delete sl;
 
         // write to file #2 (member)
         msd1->write(filename2);
-        delete msd1;
+        //delete msd1;
 
         // read back into another MSDataFile object
-        MSDataFile^ msd2 = gcnew MSDataFile(filename2);
-        delete msd2;
+        MSDataFile msd2(filename2);
+        //delete msd2;
 
         // compare
         //diff(tiny, msd2);
         //if (diff && os_) *os_ << diff << endl;
         //unit_assert(!diff);
     }
+    System::GC::Collect();
+    //System::IO::File::WriteAllText("structor.log", ObjectStructorLog::Log->ToString());
 
+    //Console::ReadLine();
     // remove temp files
-    System::IO::File::Delete(filename1);
-    System::IO::File::Delete(filename2);
+    //System::IO::File::Delete(filename1);
+    //System::IO::File::Delete(filename2);
 }
 
 /*void test()
@@ -162,11 +174,11 @@ int main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        Console::Error->WriteLine(gcnew String(e.what()));
+        Console::Error->WriteLine("std::exception: " + gcnew String(e.what()));
     }
     catch (Exception^ e)
     {
-        Console::Error->WriteLine(e->Message);
+        Console::Error->WriteLine("System.Exception: " + e->Message);
     }
     catch (...)
     {

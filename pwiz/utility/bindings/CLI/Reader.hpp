@@ -26,7 +26,11 @@
 #define _READER_HPP_CLI_
 
 
+#pragma warning( push )
+#pragma warning( disable : 4635 )
 #include "MSData.hpp"
+#include "../../../data/msdata/Reader.hpp"
+#pragma warning( pop )
 
 
 namespace pwiz {
@@ -34,11 +38,13 @@ namespace CLI {
 namespace msdata {
 
 
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+
+
 /// interface for file readers
-class Reader
+public ref class Reader
 {
-    internal: Reader(pwiz::msdata::Reader* base) : base_(base) {}
-              pwiz::msdata::Reader* base_;
+    DEFINE_INTERNAL_BASE_CODE(Reader, pwiz::msdata::Reader);
 
     public:
 
@@ -50,7 +56,12 @@ class Reader
     /// fill in the MSData structure
     virtual void read(System::String^ filename, 
                       System::String^ head,
-                      MSData^& result);
+                      MSData^ result);
+
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename, 
+                      System::String^ head,
+                      MSDataList^ results);
 };
 
 
@@ -60,41 +71,38 @@ class Reader
 /// The template get<reader_type>() gives access to child Readers by type, to facilitate 
 /// Reader-specific configuration at runtime. 
 ///
-class ReaderList
+public ref class ReaderList : public Reader
 {
-    internal: ReaderList(pwiz::msdata::ReaderList* base) : base_(base) {}
-              pwiz::msdata::ReaderList* base_;
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ReaderList, Reader);
 
     public:
 
-    /// returns true iff some child accepts
-    virtual bool accept(System::String^ filename, 
-                        System::String^ head); 
+    /// returns child name iff some child identifies, else empty string
+	virtual System::String^ identify(System::String^ filename); 
+
+    /// returns child name iff some child identifies, else empty string
+    virtual System::String^ identify(System::String^ filename, 
+                                     System::String^ head);
+
+    /// delegates to first child that accepts
+    virtual void read(System::String^ filename,
+                      MSData^ result);
 
     /// delegates to first child that accepts
     virtual void read(System::String^ filename, 
                       System::String^ head,
-                      MSData^& result);
+                      MSData^ result) override;
 
-    /// returns pointer to Reader of the specified type
-   /* template <typename reader_type>
-    reader_type* get()
-    {
-        for (iterator it=begin(); it!=end(); ++it)
-        {
-            reader_type* p = dynamic_cast<reader_type*>(it->get());
-            if (p) return p;
-        }
-        
-        return 0;
-    }
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename,
+                      MSDataList^ results);
 
-    /// returns const pointer to Reader of the specified type
-    template <typename reader_type>
-    const reader_type* get() const
-    {
-        return const_cast<ReaderList*>(this)->get<reader_type>();
-    }*/
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename, 
+                      System::String^ head,
+                      MSDataList^ results) override;
+
+    static property ReaderList^ FullReaderList { ReaderList^ get(); }
 };
 
 

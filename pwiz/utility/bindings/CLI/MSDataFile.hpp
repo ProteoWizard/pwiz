@@ -45,7 +45,7 @@ namespace msdata {
 /// </summary>
 public ref class MSDataFile : public MSData
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
+    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
 
     public:
 
@@ -89,12 +89,6 @@ public ref class MSDataFile : public MSData
     /// static write function for any MSData object with the specified configuration
     /// </summary>
     static void write(MSData^ msd, System::String^ filename, WriteConfig^ config);
-
-    /// <summary>
-    /// returns a string describing the type of MS source &lt;path&gt; represents
-    /// <para>- returns an empty string if the format is unknown or unsupported</para>
-    /// </summary>
-    static System::String^ identify(System::String^ path);
 
     /// <summary>
     /// member write function with the default configuration (mzML, 64-bit, no compression)

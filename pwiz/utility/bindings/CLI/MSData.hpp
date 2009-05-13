@@ -1593,6 +1593,24 @@ public ref class Chromatogram : public ParamContainer
     }
 
     /// <summary>
+    /// TODO: Precursor
+    /// </summary>
+    property Precursor^ precursor
+    {
+        Precursor^ get();
+        void set(Precursor^ value);
+    }
+
+    /// <summary>
+    /// TODO: Product
+    /// </summary>
+    property Product^ product
+    {
+        Product^ get();
+        void set(Product^ value);
+    }
+
+    /// <summary>
     /// list of binary data arrays.
     /// </summary>
     property BinaryDataArrayList^ binaryDataArrays
@@ -1956,7 +1974,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanSettingsList, pwiz::msdata::Sca
 /// </summary>
 public ref class MSData
 {
-    DEFINE_INTERNAL_BASE_CODE(MSData, pwiz::msdata::MSData);
+    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, MSData);
 
     public:
 

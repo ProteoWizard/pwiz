@@ -37,28 +37,32 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 //#define GC_DEBUG
 
 #ifdef GC_DEBUG
-#include <boost/utility/mutexed_singleton.hpp>
-struct NativeObjectStructorLog : public boost::mutexed_singleton<NativeObjectStructorLog>
-{
-    NativeObjectStructorLog(boost::restricted) {}
-
-    std::string log;
-};
-
 #define LOG_DESTRUCT(msg, willDelete) \
-    NativeObjectStructorLog::instance->log += std::string("In ") + (msg) + \
-                                                    " destructor (will delete: " + \
-                                                    ((willDelete) ? "yes" : "no") + ").\n";
+    pwiz::CLI::util::ObjectStructorLog::Log->Append("In " + msg + \
+                                                " destructor (will delete: " + \
+                                                ((willDelete) ? "yes" : "no") + ").\n");
 #define LOG_CONSTRUCT(msg) \
-    NativeObjectStructorLog::instance->log += std::string("In ") + (msg) + " constructor.\n";
+    pwiz::CLI::util::ObjectStructorLog::Log->Append("In " + msg + " constructor.\n");
 
 namespace pwiz { namespace CLI { namespace util {
 public ref class ObjectStructorLog
 {
-    public:
-    static property System::String^ Log
+    static System::Text::StringBuilder^ log = gcnew System::Text::StringBuilder();
+
+    // Explicit static constructor to tell C# compiler
+    // not to mark type as beforefieldinit
+    static ObjectStructorLog()
     {
-        System::String^ get() {return gcnew System::String(NativeObjectStructorLog::instance->log.c_str());}
+    }
+
+    ObjectStructorLog()
+    {
+    }
+
+    public:
+    static property System::Text::StringBuilder^ Log
+    {
+        System::Text::StringBuilder^ get() {return log;}
     }
 };
 } } }

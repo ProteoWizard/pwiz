@@ -35,13 +35,13 @@ namespace msdata {
 
 void examples::initializeTiny(MSData^ msd)
 {
-    pwiz::msdata::examples::initializeTiny(*msd->base_);
+    pwiz::msdata::examples::initializeTiny(**msd->base_);
 }
 
 
 void examples::addMIAPEExampleMetadata(MSData^ msd)
 {
-    pwiz::msdata::examples::addMIAPEExampleMetadata(*msd->base_);
+    pwiz::msdata::examples::addMIAPEExampleMetadata(**msd->base_);
 }
 
 
