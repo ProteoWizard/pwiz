@@ -428,19 +428,8 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     cout << "processing file: " << filename << endl;
 
-    string head;
-    if (!bfs::is_directory(filename))
-    {
-        pwiz::util::random_access_compressed_ifstream is(filename.c_str());
-        if (!is)
-            throw runtime_error(("[processFile()] Unable to open file " + filename).c_str());
-
-        head.resize(512, '\0');
-        is.read(&head[0], (std::streamsize)head.size());
-    }
-
     vector<MSDataPtr> msdList;
-    readers.read(filename, head, msdList);
+    readers.read(filename, msdList);
 
     for (size_t i=0; i < msdList.size(); ++i)
     {
