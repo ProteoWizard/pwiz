@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <stdexcept>
 
 
@@ -32,6 +33,8 @@ namespace msdata {
 
 
 using namespace std;
+using namespace pwiz::util;
+
 
 // default implementation; most Readers don't need to worry about multi-run input files
 PWIZ_API_DECL void Reader::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
@@ -39,6 +42,13 @@ PWIZ_API_DECL void Reader::read(const string& filename, const string& head, vect
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
 }
+
+
+PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
+{
+    return identify(filename, read_file_header(filename, 512));
+}
+
 
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const string& head) const
 {
@@ -55,26 +65,39 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
 }
 
 
+PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result) const
+{
+    read(filename, read_file_header(filename, 512), result);
+}
+
+
 PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
-    if ((*it)->accept(filename, head))
-    {
-        (*it)->read(filename, head, result);
-        return;
-    }
+        if ((*it)->accept(filename, head))
+        {
+            (*it)->read(filename, head, result);
+            return;
+        }
     throw ReaderFail((" don't know how to read " +
                         filename).c_str());
 }
 
+
+PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& results) const
+{
+    read(filename, read_file_header(filename, 512), results);
+}
+
+
 PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
-    if ((*it)->accept(filename, head))
-    {
-        (*it)->read(filename, head, results);
-        return;
-    }
+        if ((*it)->accept(filename, head))
+        {
+            (*it)->read(filename, head, results);
+            return;
+        }
     throw ReaderFail((" don't know how to read " +
                         filename).c_str());
 }

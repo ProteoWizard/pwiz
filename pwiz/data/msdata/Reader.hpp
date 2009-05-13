@@ -103,13 +103,25 @@ class PWIZ_API_DECL ReaderList : public Reader,
     public:
 
     /// returns child name iff some child identifies, else empty string
+	virtual std::string identify(const std::string& filename) const; 
+
+    /// returns child name iff some child identifies, else empty string
 	virtual std::string identify(const std::string& filename, 
-                        const std::string& head) const; 
+                                 const std::string& head) const; 
+
+    /// delegates to first child that identifies
+    virtual void read(const std::string& filename,
+                      MSData& result) const;
 
     /// delegates to first child that identifies
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       MSData& result) const;
+
+    /// delegates to first child that identifies;
+    /// provides support for multi-run input files
+    virtual void read(const std::string& filename,
+                      std::vector<MSDataPtr>& results) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
