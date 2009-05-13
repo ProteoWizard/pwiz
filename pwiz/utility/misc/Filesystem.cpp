@@ -24,9 +24,13 @@
 #define PWIZ_SOURCE
 
 #include "Filesystem.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+
+
 using std::string;
 using std::vector;
 using std::runtime_error;
+
 
 #ifdef WIN32
     #define _WIN32_WINNT 0x0400
@@ -143,6 +147,22 @@ string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviatio
     }
 
     return lexical_cast<string>(byteSize) + suffix;
+}
+
+
+PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
+{
+    string head;
+    if (!bfs::is_directory(filepath))
+    {
+        random_access_compressed_ifstream is(filepath.c_str());
+        if (!is)
+            throw runtime_error(("[processFile()] Unable to open file " + filepath).c_str());
+
+        head.resize(length, '\0');
+        is.read(&head[0], (std::streamsize)head.size());
+    }
+    return head;
 }
 
 
