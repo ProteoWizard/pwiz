@@ -32,7 +32,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 30:04:2009 11:14
 //   saved-by: edeutsch
@@ -47,7 +47,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 04:03:2009 17:16
 //   saved-by: george gkoutos

@@ -25,6 +25,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "boost/regex.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -238,6 +239,25 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 }
 
 
+// OBO format has some escape characters that C++ doesn't,
+// so we double-escape them:
+// http://www.geneontology.org/GO.format.obo-1_2.shtml#S.1.5
+string escape_copy(const string& str)
+{
+    string copy(str);
+    bal::replace_all(copy, "\\!", "\\\\!");
+    bal::replace_all(copy, "\\:", "\\\\:");
+    bal::replace_all(copy, "\\,", "\\\\,");
+    bal::replace_all(copy, "\\(", "\\\\(");
+    bal::replace_all(copy, "\\)", "\\\\)");
+    bal::replace_all(copy, "\\[", "\\\\[");
+    bal::replace_all(copy, "\\]", "\\\\]");
+    bal::replace_all(copy, "\\{", "\\\\{");
+    bal::replace_all(copy, "\\}", "\\\\}");
+    return copy;
+}
+
+
 void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir)
 {
     string filename = basename + ".cpp";
@@ -271,8 +291,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         os << "    {" << enumName(*it) << ", "
            << "\"" << it->prefix << ":" << setw(7) << setfill('0') << it->id << "\", "
-           << "\"" << it->name << "\", " 
-           << "\"" << it->def << "\""
+           << "\"" << escape_copy(it->name) << "\", " 
+           << "\"" << escape_copy(it->def) << "\""
            << "},\n";
     os << "}; // termInfos_\n\n\n";
 
