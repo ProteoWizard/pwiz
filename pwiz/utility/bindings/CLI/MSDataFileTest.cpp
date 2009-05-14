@@ -26,85 +26,65 @@
 //#include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
-#using <mscorlib.dll>
 
-using namespace System;
+using namespace pwiz::util;
 using namespace pwiz::CLI::msdata;
-using namespace pwiz::CLI::util;
+using System::Console;
+typedef System::String^ string;
 
 
-public ref class test
+public ref class Log
 {
-public:
-    bool accept(Spectrum^ s)
-    {
-        return (int) s->cvParam(CVID::MS_ms_level)->value == 2;
-    }
+    public: static System::IO::TextWriter^ writer = nullptr;
 };
+
 
 //void validateWriteRead(const MSDataFile::WriteConfig& writeConfig, const DiffConfig diffConfig)
 void validateWriteRead()
 {
-    String^ filenameBase_ = "temp.MSDataFileTest";
+    MSDataFile::WriteConfig writeConfig(MSDataFile::Format::Format_mzML);
+    DiffConfig diffConfig;
+
+    string filenameBase_ = "temp.MSDataFileTest";
 
     //if (os_) *os_ << "validateWriteRead()\n  " << writeConfig << endl; 
 
-    String^ filename1 = filenameBase_ + ".1";
-    String^ filename2 = filenameBase_ + ".2";
+    string filename1 = filenameBase_ + ".1";
+    string filename2 = filenameBase_ + ".2";
 
     {
         // create MSData object in memory
-        pwiz::CLI::msdata::MSData^ tiny = gcnew MSData();
-        examples::initializeTiny(tiny);
+        MSData tiny;
+        examples::initializeTiny(%tiny);
 
         // write to file #1 (static)
-        MSDataFile::write(tiny, filename1);
+        MSDataFile::write(%tiny, filename1, %writeConfig);
 
         // read back into an MSDataFile object
-        MSDataFile^ msd1 = gcnew MSDataFile(filename1);
+        MSDataFile msd1(filename1);
+        //hackInMemoryMSData(msd1);
 
-        MSData^ foob = gcnew MSData();
-        ReaderList^ readers = ReaderList::FullReaderList;
-        readers->read("c:/test/WIFFsForMatt/1_031105STlatterich_AQv1.4.1.wiff", foob);
-        //delete readers;
-
-        Console::WriteLine(foob->run->spectrumList->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
-        Console::WriteLine(foob->run->spectrumList->spectrum(123)->cvParam(CVID::MS_ms_level)->value);
         // compare
-        //Diff<MSData> diff(tiny, msd1, diffConfig);
-        //if (diff && os_) *os_ << diff << endl;
-        //unit_assert(!diff);
-
-        Spectrum^ s = msd1->run->spectrumList->spectrum(0);
-        Console::WriteLine(s->cvParam(CVID::MS_ms_level)->value);
-        //delete s;
-
-        test^ foo = gcnew test();
-        pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum^ bar = gcnew pwiz::CLI::analysis::SpectrumList_FilterAcceptSpectrum(foo, &test::accept);
-        SpectrumList^ sl = gcnew pwiz::CLI::analysis::SpectrumList_Filter(msd1->run->spectrumList, bar);
-        Console::WriteLine(sl->spectrum(0)->cvParam(CVID::MS_ms_level)->value);
-        //delete sl;
+        Diff diff(tiny, msd1, %diffConfig);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        unit_assert(!(bool)diff);
 
         // write to file #2 (member)
-        msd1->write(filename2);
-        //delete msd1;
+        msd1.write(filename2, %writeConfig);
 
         // read back into another MSDataFile object
         MSDataFile msd2(filename2);
-        //delete msd2;
+        //hackInMemoryMSData(msd2);
 
         // compare
-        //diff(tiny, msd2);
-        //if (diff && os_) *os_ << diff << endl;
-        //unit_assert(!diff);
+        diff.apply(tiny, msd2);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        unit_assert(!(bool)diff);
     }
-    System::GC::Collect();
-    //System::IO::File::WriteAllText("structor.log", ObjectStructorLog::Log->ToString());
 
-    //Console::ReadLine();
     // remove temp files
-    //System::IO::File::Delete(filename1);
-    //System::IO::File::Delete(filename2);
+    System::IO::File::Delete(filename1);
+    System::IO::File::Delete(filename2);
 }
 
 /*void test()
@@ -165,7 +145,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        //if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        if (argc>1 && !strcmp(argv[1],"-v")) Log::writer = Console::Out;
         validateWriteRead();
         //test();
         //demo();
@@ -174,9 +154,9 @@ int main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        Console::Error->WriteLine("std::exception: " + gcnew String(e.what()));
+        Console::Error->WriteLine("std::exception: " + gcnew System::String(e.what()));
     }
-    catch (Exception^ e)
+    catch (System::Exception^ e)
     {
         Console::Error->WriteLine("System.Exception: " + e->Message);
     }

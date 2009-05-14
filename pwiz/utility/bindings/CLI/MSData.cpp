@@ -936,8 +936,8 @@ void MSData::softwareList::set(SoftwareList^ value) {(*base_)->softwarePtrs = *v
 DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&(*base_)->dataProcessingPtrs, this);}
 void MSData::dataProcessingList::set(DataProcessingList^ value) {(*base_)->dataProcessingPtrs = *value->base_;}
 
-ScanSettingsList^ MSData::scanSettingList::get() {return gcnew ScanSettingsList(&(*base_)->scanSettingsPtrs, this);}
-void MSData::scanSettingList::set(ScanSettingsList^ value) {(*base_)->scanSettingsPtrs = *value->base_;}
+ScanSettingsList^ MSData::scanSettingsList::get() {return gcnew ScanSettingsList(&(*base_)->scanSettingsPtrs, this);}
+void MSData::scanSettingsList::set(ScanSettingsList^ value) {(*base_)->scanSettingsPtrs = *value->base_;}
 
 Run^ MSData::run::get()  {return gcnew Run(&(*base_)->run, this);}
 //void set(Run^ value) {(*base_)->run = *value->base_;}

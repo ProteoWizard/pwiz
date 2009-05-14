@@ -30,15 +30,17 @@ path-constant CLI_ROOT : . ;
 
 # build XDC documentation from source files
 obj CVParam    : CVParam.cpp    : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/CVParam.xdc" ;
+obj Diff       : Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/Diff.xdc" ;
 obj MSData     : MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/MSData.xdc" ;
 obj MSDataFile : MSDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/MSDataFile.xdc" ;
-obj Reader     : Reader.cpp     : $(bound_libs) ;
+obj Reader     : Reader.cpp     : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/Reader.xdc" ;
 obj proteome   : proteome.cpp   : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/proteome.xdc" ;
 obj examples   : examples.cpp   : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/examples.xdc" ;
 
 lib pwiz_bindings_cli
     : # sources
         CVParam
+        Diff
         MSData
         MSDataFile
         Reader
@@ -124,8 +126,17 @@ package.install install
     ;
 explicit install ;
 
+alias unit-test-requirements
+    : # sources
+    : # requirements
+        <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli
+    : # default-build
+    : # usage-requirements
+        <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli
+    ;
 
-#unit-test MSDataTest : MSDataTest.cpp : <dependency>pwiz_bindings_cli/<location>$(CLI_ROOT)/test <location>$(CLI_ROOT)/test <cxxflags>"/AI $(CLI_ROOT)/test" ;
-unit-test MSDataFileTest : MSDataFileTest.cpp : <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli ;
+unit-test MSDataTest : MSDataTest.cpp : <use>unit-test-requirements ;
+unit-test DiffTest : DiffTest.cpp : <use>unit-test-requirements ;
+unit-test MSDataFileTest : MSDataFileTest.cpp : <use>unit-test-requirements ;
 
 }
