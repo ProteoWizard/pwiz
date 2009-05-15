@@ -62,6 +62,10 @@ public ref class Reader
     virtual void read(System::String^ filename, 
                       System::String^ head,
                       MSDataList^ results);
+
+    /// fill in the MSData structure
+    virtual array<System::String^>^ readIds(System::String^ filename, 
+                      System::String^ head);
 };
 
 
@@ -101,6 +105,13 @@ public ref class ReaderList : public Reader
     virtual void read(System::String^ filename, 
                       System::String^ head,
                       MSDataList^ results) override;
+
+    /// get MSData.Ids
+    virtual array<System::String^>^ readIds(System::String^ filename);
+
+    /// get MSData.Ids
+    virtual array<System::String^>^ readIds(System::String^ filename, 
+                      System::String^ head) override;
 
     static property ReaderList^ FullReaderList { ReaderList^ get(); }
 };

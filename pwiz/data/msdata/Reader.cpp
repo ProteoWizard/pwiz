@@ -43,6 +43,13 @@ PWIZ_API_DECL void Reader::read(const string& filename, const string& head, vect
     read(filename, head, *results.back());
 }
 
+// default implementation; most Readers don't need to worry about multi-run input files
+PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results) const
+{
+    MSData data;
+    read(filename, head, data);
+    results.push_back(data.id);
+}
 
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
 {
@@ -96,6 +103,24 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
         if ((*it)->accept(filename, head))
         {
             (*it)->read(filename, head, results);
+            return;
+        }
+    throw ReaderFail((" don't know how to read " +
+                        filename).c_str());
+}
+
+PWIZ_API_DECL void ReaderList::readIds(const string& filename, vector<string>& results) const
+{
+    readIds(filename, read_file_header(filename, 512), results);
+}
+
+
+PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& head, vector<string>& results) const
+{
+    for (const_iterator it=begin(); it!=end(); ++it)
+        if ((*it)->accept(filename, head))
+        {
+            (*it)->readIds(filename, head, results);
             return;
         }
     throw ReaderFail((" don't know how to read " +

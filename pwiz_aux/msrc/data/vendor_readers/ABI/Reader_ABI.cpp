@@ -211,6 +211,27 @@ void Reader_ABI::read(const string& filename,
     }
 }
 
+PWIZ_API_DECL
+void Reader_ABI::readIds(const string& filename,
+                      const string& head,
+                      vector<string>& results) const
+{
+    try
+    {
+        WiffFilePtr wifffile = WiffFile::create(filename);
+        vector<string>& sampleNames = wifffile->getSampleNames();
+        for (vector<string>::iterator it = sampleNames.begin(); it != sampleNames.end(); it++)
+            results.push_back(stringToIDREF(*it));
+    }
+    catch (std::exception& e)
+    {
+        throw std::runtime_error(e.what());
+    }
+    catch (...)
+    {
+        throw runtime_error("[Reader_ABI::read()] unhandled exception");
+    }
+}
 
 } // namespace msdata
 } // namespace pwiz

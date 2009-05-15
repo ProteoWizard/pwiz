@@ -66,6 +66,10 @@ class PWIZ_API_DECL Reader
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       std::vector<MSDataPtr>& results) const;
+    /// fill in a vector of MSData.Id values; provides support for multi-run input files
+    virtual void readIds(const std::string& filename, 
+                      const std::string& head,
+                      std::vector<std::string>& dataIds) const;
 
 	virtual const char *getType() const = 0; // what kind of reader are you?
 
@@ -128,6 +132,17 @@ class PWIZ_API_DECL ReaderList : public Reader,
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       std::vector<MSDataPtr>& results) const;
+
+    /// delegates to first child that identifies;
+    /// provides support for multi-run input files
+    virtual void readIds(const std::string& filename,
+                      std::vector<std::string>& results) const;
+
+    /// delegates to first child that identifies;
+    /// provides support for multi-run input files
+    virtual void readIds(const std::string& filename, 
+                      const std::string& head,
+                      std::vector<std::string>& results) const;
 
     /// appends all of the rhs operand's Readers to the list
     ReaderList& operator +=(const ReaderList& rhs);

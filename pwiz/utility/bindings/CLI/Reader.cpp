@@ -35,6 +35,13 @@ namespace pwiz {
 namespace CLI {
 namespace msdata {
 
+static array<System::String^>^ vectorToStringArray(const std::vector<std::string>& v)
+{
+    array<System::String^>^ idStrings = gcnew array<System::String^>(v.size());
+    for (size_t i = 0; i < v.size(); i++)
+        idStrings[i] = gcnew System::String(v[i].c_str());
+    return idStrings;
+}
 
 bool Reader::accept(System::String^ filename, System::String^ head)
 {
@@ -51,6 +58,12 @@ void Reader::read(System::String^ filename, System::String^ head, MSDataList^ re
     base_->read(ToStdString(filename), ToStdString(head), *results->base_);
 }
 
+array<System::String^>^ Reader::readIds(System::String^ filename, System::String^ head)
+{
+    std::vector<std::string> ids;
+    base_->readIds(ToStdString(filename), ToStdString(head), ids);
+    return vectorToStringArray(ids);
+}
 
 System::String^ ReaderList::identify(System::String^ filename)
 {
@@ -72,6 +85,13 @@ void ReaderList::read(System::String^ filename, System::String^ head, MSDataList
     base_->read(ToStdString(filename), ToStdString(head), *results->base_);
 }
 
+array<System::String^>^ ReaderList::readIds(System::String^ filename, System::String^ head)
+{
+    std::vector<std::string> ids;
+    base_->readIds(ToStdString(filename), ToStdString(head), ids);
+    return vectorToStringArray(ids);
+}
+
 void ReaderList::read(System::String^ filename, MSData^ result)
 {
     base_->read(ToStdString(filename), **result->base_);
@@ -82,6 +102,12 @@ void ReaderList::read(System::String^ filename, MSDataList^ results)
     base_->read(ToStdString(filename), *results->base_);
 }
 
+array<System::String^>^ ReaderList::readIds(System::String^ filename)
+{
+    std::vector<std::string> ids;
+    base_->readIds(ToStdString(filename), ids);
+    return vectorToStringArray(ids);
+}
 
 namespace {
 
