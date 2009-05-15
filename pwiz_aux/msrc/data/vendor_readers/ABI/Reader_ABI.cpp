@@ -89,7 +89,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
 
     string sampleName = wifffile->getSampleNames()[sample-1];
 
-    int periodCount = wifffile->getPeriodCount(sample);
+    /*int periodCount = wifffile->getPeriodCount(sample);
     for (int ii=1; ii <= periodCount; ++ii)
     {
         int experimentCount = wifffile->getExperimentCount(sample, ii);
@@ -98,7 +98,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
             ExperimentPtr msExperiment = wifffile->getExperiment(sample, ii, iii);
             msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getScanType()));
         }
-    }
+    }*/
 
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(wiffpath);
