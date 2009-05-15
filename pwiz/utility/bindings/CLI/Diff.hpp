@@ -65,7 +65,6 @@ public ref class DiffConfig
 };
 
 
-///     
 /// Calculate diffs of objects in the MSData structure hierarchy.
 ///
 /// A diff between two objects a and b calculates the set differences

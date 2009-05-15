@@ -2072,7 +2072,7 @@ public ref class MSData
     /// <summary>
     /// list with the descriptions of the acquisition settings applied prior to the start of data acquisition.
     /// </summary>
-    property ScanSettingsList^ scanSettingList
+    property ScanSettingsList^ scanSettingsList
     {
         ScanSettingsList^ get();
         void set(ScanSettingsList^ value);

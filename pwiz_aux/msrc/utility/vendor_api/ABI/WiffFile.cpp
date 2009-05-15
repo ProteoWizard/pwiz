@@ -119,7 +119,7 @@ class WiffFileImpl : public WiffFile
     virtual int getExperimentCount(int sample, int period) const;
     virtual int getCycleCount(int sample, int period, int experiment) const;
 
-    virtual std::vector<std::string> getSampleNames() const;
+    virtual std::vector<std::string> getSampleNames(); // const; - cache names
 
     virtual InstrumentModel getInstrumentModel() const;
     virtual InstrumentType getInstrumentType() const;
@@ -136,6 +136,10 @@ class WiffFileImpl : public WiffFile
     void setCycle(int sample, int period, int experiment, int cycle) const;
 
     mutable int currentSample, currentPeriod, currentExperiment, currentCycle;
+
+    private:
+    // sample names
+    std::vector<std::string> sampleNames;
 };
 
 typedef boost::shared_ptr<WiffFileImpl> WiffFileImplPtr;
@@ -231,7 +235,7 @@ WiffFileImpl::~WiffFileImpl()
 
 int WiffFileImpl::getSampleCount() const
 {
-    CATCH_AND_FORWARD(return reader->SampleCount;)
+    CATCH_AND_FORWARD(return (sampleNames.size() == 0 ? reader->SampleCount : sampleNames.size());)
 }
 
 int WiffFileImpl::getPeriodCount(int sample) const
@@ -261,13 +265,17 @@ int WiffFileImpl::getCycleCount(int sample, int period, int experiment) const
     )
 }
 
-vector<string> WiffFileImpl::getSampleNames() const
+vector<string> WiffFileImpl::getSampleNames() // const - cache names
 {
     CATCH_AND_FORWARD
     (
-        vector<string> sampleNames(reader->SampleNames->Length);
-        for (int i=0; i < reader->SampleNames->Length; ++i)
-            sampleNames[i] = ToStdString(reader->SampleNames[i]);
+        if (sampleNames.size() == 0)
+        {
+            array<System::String^>^ sampleNamesManaged = reader->SampleNames;
+            sampleNames.resize(sampleNamesManaged->Length);
+            for (int i=0; i < sampleNamesManaged->Length; ++i)
+                sampleNames[i] = ToStdString(sampleNamesManaged[i]);
+        }
         return sampleNames;
     )
 }

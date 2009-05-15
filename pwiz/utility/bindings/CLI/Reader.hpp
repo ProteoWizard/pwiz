@@ -69,10 +69,9 @@ public ref class Reader
 };
 
 
-///
 /// Reader container (composite pattern).  
 /// 
-/// The template get<reader_type>() gives access to child Readers by type, to facilitate 
+/// The template get&lt;reader_type>() gives access to child Readers by type, to facilitate 
 /// Reader-specific configuration at runtime. 
 ///
 public ref class ReaderList : public Reader
