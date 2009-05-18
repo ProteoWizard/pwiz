@@ -25,6 +25,7 @@
 
 #include "ExtendedReaderList.hpp"
 #include "pwiz/data/vendor_readers/Reader_Thermo.hpp"
+#include "Agilent/Reader_Agilent.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -39,9 +40,8 @@ using boost::shared_ptr;
 
 PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
-    #ifdef PWIZ_READER_THERMO
     push_back(ReaderPtr(new Reader_Thermo));
-    #endif
+    push_back(ReaderPtr(new Reader_Agilent));
 }
 
 

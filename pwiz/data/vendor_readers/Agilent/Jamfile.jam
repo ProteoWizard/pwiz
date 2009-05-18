@@ -1,0 +1,66 @@
+#
+# Jamfile (data/vendor_readers/Agilent) 
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+lib pwiz_reader_agilent
+    : # sources
+        Reader_Agilent.cpp
+        Reader_Agilent_Detail.cpp
+        SpectrumList_Agilent.cpp
+        #ChromatogramList_Agilent.cpp
+    : # requirements
+		<library>../../msdata//pwiz_data_msdata
+		<toolset>msvc:<define>PWIZ_READER_AGILENT
+    : # default-build
+    : # usage-requirements
+		<library>../../msdata//pwiz_data_msdata
+		<toolset>msvc:<define>PWIZ_READER_AGILENT
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+
+path-constant TEST_PATH1 : "AgilentExampleData/QQQ/MRM Neg C5.d" ;
+path-constant TEST_PATH2 : "AgilentExampleData/QTOF/BSA050-r001.d" ;
+path-constant TEST_PATH3 : "AgilentExampleData/TOF/TOFsulfasMS4GHzDualMode+DADSpectra+UVSignal272.d" ;
+
+# special run target for Reader_Agilent_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Agilent_Test.cpp pwiz_reader_agilent 
+    : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
+    : # input-files
+    : # requirements
+    : # target name
+        Reader_Agilent_Test 
+    : # default-build
+    ;
+explicit Reader_Agilent_Test ;

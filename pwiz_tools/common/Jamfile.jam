@@ -35,6 +35,7 @@ lib pwiz_tools_common
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
         <library>../../pwiz/data/vendor_readers
+        <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi
@@ -45,6 +46,7 @@ lib pwiz_tools_common
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
         <library>../../pwiz/data/vendor_readers
+        <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../pwiz_aux/isb/readers/waters
         <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi

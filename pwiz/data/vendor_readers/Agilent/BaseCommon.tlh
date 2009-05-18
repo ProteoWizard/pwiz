@@ -1,0 +1,697 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9ab817dc).
+//
+// c:\bumbershoot\src\pwiz-src\build\pwiz\data\vendor_readers\agilent\msvc-9.0\release\link-static\threading-multi\basecommon.tlh
+//
+// C++ source equivalent of Win32 type library BaseCommon.tlb
+// compiler-generated file created 05/18/09 at 12:46:11 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace BC {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("02b74101-3dcc-411c-b991-acec8a17ddf1"))
+/* LIBID */ __BaseCommon;
+struct __declspec(uuid("869d8d23-687c-4dc6-83ca-eb05f24d193d"))
+/* dual interface */ IRange;
+struct /* coclass */ RangeBase;
+struct __declspec(uuid("6b533712-c2ef-4ea9-89b9-0585d994fa4c"))
+/* dual interface */ IMinMaxRange;
+struct /* coclass */ MinMaxRange;
+struct __declspec(uuid("20aa2c9e-8e8d-4e02-b80f-7325633e93c2"))
+/* dual interface */ ICenterWidthRange;
+struct /* coclass */ CenterWidthRange;
+struct __declspec(uuid("626fa49e-39d6-4b36-898c-a7ca4e6d1354"))
+/* dual interface */ ICenterWidthPctRange;
+struct /* coclass */ CenterWidthPctRange;
+struct __declspec(uuid("6c798847-22f4-4464-b01f-9b01cc22f508"))
+/* dual interface */ ICenterWidthPpmRange;
+struct /* coclass */ CenterWidthPpmRange;
+struct __declspec(uuid("694adb42-5c01-44f6-8ca4-9a8d8e6e46c2"))
+/* dual interface */ IAsymmetricRange;
+struct /* coclass */ AsymmetricRange;
+enum DesiredMSStorageType;
+enum SpecType;
+enum DataValueType;
+enum DataUnit;
+enum DeviceType;
+enum IonizationMode;
+enum IonPolarity;
+enum IonDetectorMode;
+enum MSScanType;
+enum MSStorageMode;
+enum TofCalibrationFormula;
+enum TofCalibrationTechnique;
+enum XSamplingType;
+enum PointValueStorageScheme;
+enum CompressionScheme;
+enum FileType;
+enum AcqStatus;
+enum MSLevel;
+enum DisplayPrecisionType;
+enum DataFileValueDataType;
+enum SampleCategory;
+enum ActualType;
+enum DisplayEffectType;
+enum StoredDataType;
+enum ChromType;
+enum FragmentationMode;
+enum MeasurementType;
+enum SeparationTechnique;
+enum IRMStatus;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IRange, __uuidof(IRange));
+_COM_SMARTPTR_TYPEDEF(IMinMaxRange, __uuidof(IMinMaxRange));
+_COM_SMARTPTR_TYPEDEF(ICenterWidthRange, __uuidof(ICenterWidthRange));
+_COM_SMARTPTR_TYPEDEF(ICenterWidthPctRange, __uuidof(ICenterWidthPctRange));
+_COM_SMARTPTR_TYPEDEF(ICenterWidthPpmRange, __uuidof(ICenterWidthPpmRange));
+_COM_SMARTPTR_TYPEDEF(IAsymmetricRange, __uuidof(IAsymmetricRange));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("869d8d23-687c-4dc6-83ca-eb05f24d193d"))
+IRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Start (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall get_End (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall IsEmpty (
+        /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
+      virtual HRESULT __stdcall SetEmpty ( ) = 0;
+      virtual HRESULT __stdcall ValueString (
+        /*[in]*/ VARIANT_BOOL withUnits,
+        /*[out]*/ long * nValues,
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall ExtendedValueString (
+        /*[in]*/ VARIANT_BOOL withUnits,
+        /*[out]*/ long * nValues,
+        /*[out,retval]*/ BSTR * pRetVal ) = 0;
+      virtual HRESULT __stdcall Equals (
+        /*[in]*/ struct IRange * other,
+        /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct IRange * * pRetVal ) = 0;
+      virtual HRESULT __stdcall WriteXml (
+        /*[in]*/ IUnknown * writer ) = 0;
+      virtual HRESULT __stdcall IsValueWithinRange (
+        /*[in]*/ double valToCheck,
+        /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("8960d85b-267e-429d-9e83-85d444c210b5"))
+RangeBase;
+    // interface _Object
+    // [ default ] interface IRange
+    // interface ICloneable
+
+struct __declspec(uuid("6b533712-c2ef-4ea9-89b9-0585d994fa4c"))
+IMinMaxRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Min (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Min (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Max (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Max (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct IMinMaxRange * * pRetVal ) = 0;
+      virtual HRESULT __stdcall Merge (
+        /*[in]*/ struct IMinMaxRange * range,
+        /*[out,retval]*/ struct IMinMaxRange * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("ad987f55-e253-408e-b388-db3e0bd96f53"))
+MinMaxRange;
+    // interface _Object
+    // interface IRange
+    // interface ICloneable
+    // [ default ] interface IMinMaxRange
+
+struct __declspec(uuid("20aa2c9e-8e8d-4e02-b80f-7325633e93c2"))
+ICenterWidthRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Center (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Center (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_Width (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Width (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct ICenterWidthRange * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("0300bc30-d990-4560-814a-332eafb672fc"))
+CenterWidthRange;
+    // interface _Object
+    // interface IRange
+    // interface ICloneable
+    // [ default ] interface ICenterWidthRange
+
+struct __declspec(uuid("626fa49e-39d6-4b36-898c-a7ca4e6d1354"))
+ICenterWidthPctRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Center (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Center (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_WidthPct (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_WidthPct (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct ICenterWidthPctRange * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("6029c835-550a-4a4c-a031-b6bf073bfe92"))
+CenterWidthPctRange;
+    // interface _Object
+    // interface IRange
+    // interface ICloneable
+    // [ default ] interface ICenterWidthPctRange
+
+struct __declspec(uuid("6c798847-22f4-4464-b01f-9b01cc22f508"))
+ICenterWidthPpmRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Center (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Center (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_WidthPpm (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_WidthPpm (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct ICenterWidthPpmRange * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("7f22274a-f62a-469f-b3c8-4c9d578df155"))
+CenterWidthPpmRange;
+    // interface _Object
+    // interface IRange
+    // interface ICloneable
+    // [ default ] interface ICenterWidthPpmRange
+
+struct __declspec(uuid("694adb42-5c01-44f6-8ca4-9a8d8e6e46c2"))
+IAsymmetricRange : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_Center (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_Center (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_LowSpan (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_LowSpan (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall get_HighSpan (
+        /*[out,retval]*/ double * pRetVal ) = 0;
+      virtual HRESULT __stdcall put_HighSpan (
+        /*[in]*/ double pRetVal ) = 0;
+      virtual HRESULT __stdcall Clone (
+        /*[out,retval]*/ struct IAsymmetricRange * * pRetVal ) = 0;
+};
+
+struct __declspec(uuid("0c269346-c2c9-4ea3-9533-e7a8e47ed4c7"))
+AsymmetricRange;
+    // interface _Object
+    // interface IRange
+    // interface ICloneable
+    // [ default ] interface IAsymmetricRange
+
+enum __declspec(uuid("1f6ee00d-948a-453f-aff9-a993a4dd62f5"))
+DesiredMSStorageType
+{
+    DesiredMSStorageType_Profile = 0,
+    DesiredMSStorageType_Peak = 1,
+    DesiredMSStorageType_ProfileElsePeak = 2,
+    DesiredMSStorageType_PeakElseProfile = 3,
+    DesiredMSStorageType_All = 4,
+    DesiredMSStorageType_Unspecified = 255
+};
+
+enum __declspec(uuid("a50a05ea-5bf9-4a38-b29d-ab0fd25b1b85"))
+SpecType
+{
+    SpecType_Unspecified = 0,
+    SpecType_UVSpectrum = 1,
+    SpecType_MassSpectrum = 2,
+    SpecType_TofMassSpectrum = 3,
+    SpecType_MassAndUVSpectra = 4,
+    SpecType_DeconvolutedMassSpectrum = 5,
+    SpecType_MFEMassSpectrum = 6,
+    SpecType_AMDISDeconvSpectrum = 7
+};
+
+enum __declspec(uuid("4a2df339-18a9-40fa-a594-452348917687"))
+DataValueType
+{
+    DataValueType_Unspecified = 0,
+    DataValueType_Mixed = 1,
+    DataValueType_AcqTime = 2,
+    DataValueType_ScanNumber = 3,
+    DataValueType_Wavelength = 4,
+    DataValueType_MassToCharge = 5,
+    DataValueType_Mass = 6,
+    DataValueType_FlightTime = 7,
+    DataValueType_Response = 8,
+    DataValueType_OpticalEmission = 9,
+    DataValueType_OpticalAbsorption = 10,
+    DataValueType_RefractiveIndex = 11,
+    DataValueType_Conductivity = 12,
+    DataValueType_Current = 13,
+    DataValueType_Voltage = 14,
+    DataValueType_IonAbundance = 15,
+    DataValueType_AccumulationTime = 19,
+    DataValueType_AcqTimeDifference = 20,
+    DataValueType_AcqTimeResolution = 21,
+    DataValueType_CorrelationCoefficient = 23,
+    DataValueType_DeconvolutedMass = 24,
+    DataValueType_DoubleBondEquivalent = 22,
+    DataValueType_MassDifference = 25,
+    DataValueType_MatchScore = 26,
+    DataValueType_MaxMergeHeight = 27,
+    DataValueType_MzDifference = 28,
+    DataValueType_MzResolution = 29,
+    DataValueType_PeakArea = 30,
+    DataValueType_PeakAreaRatio = 31,
+    DataValueType_Ordinate = 32,
+    DataValueType_PeakHeightRatio = 33,
+    DataValueType_PeakSymmetry = 34,
+    DataValueType_PeakVolume = 35,
+    DataValueType_PeakVolumeRatio = 36,
+    DataValueType_RelativeDifference = 38,
+    DataValueType_SignalToNoise = 39
+};
+
+enum __declspec(uuid("c5b5bfa2-cbf9-4944-b6ab-e7ba72eeacac"))
+DataUnit
+{
+    DataUnit_Unspecified = 0,
+    DataUnit_Mixed = 1,
+    DataUnit_AbsorbanceUnits = 11,
+    DataUnit_Abundance = 12,
+    DataUnit_Counts = 16,
+    DataUnit_Daltons = 9,
+    DataUnit_Microseconds = 6,
+    DataUnit_Microvolts = 15,
+    DataUnit_MilliDaltons = 17,
+    DataUnit_Milliseconds = 5,
+    DataUnit_Millivolts = 14,
+    DataUnit_Minutes = 3,
+    DataUnit_Nanometers = 8,
+    DataUnit_Nanoseconds = 7,
+    DataUnit_PartsPerMillion = 18,
+    DataUnit_ScanNumber = 2,
+    DataUnit_Seconds = 4,
+    DataUnit_Thompsons = 10,
+    DataUnit_Volts = 13,
+    DataUnit_AbsorptionUnits = 20,
+    DataUnit_AbundanceUnits = 21,
+    DataUnit_CountsPerSecond = 22,
+    DataUnit_MilliAbsorbanceUnits = 26,
+    DataUnit_MilliThompsons = 28,
+    DataUnit_NoUnits = 30,
+    DataUnit_Percent = 31,
+    DataUnit_ResponseUnits = 32,
+    DataUnit_Unit = 33,
+    DataUnit_UnitCharge = 34,
+    DataUnit_VoltageUnits = 35,
+    DataUnit_Centimeters = 36,
+    DataUnit_Meters = 37
+};
+
+enum __declspec(uuid("5acf3e09-c322-469b-8657-35bde5908a89"))
+DeviceType
+{
+    DeviceType_Unknown = 0,
+    DeviceType_Mixed = 1,
+    DeviceType_Quadrupole = 2,
+    DeviceType_IonTrap = 3,
+    DeviceType_TimeOfFlight = 4,
+    DeviceType_TandemQuadrupole = 5,
+    DeviceType_QuadrupoleTimeOfFlight = 6,
+    DeviceType_FlameIonizationDetector = 10,
+    DeviceType_ThermalConductivityDetector = 11,
+    DeviceType_RefractiveIndexDetector = 12,
+    DeviceType_MultiWavelengthDetector = 13,
+    DeviceType_DiodeArrayDetector = 14,
+    DeviceType_VariableWavelengthDetector = 15,
+    DeviceType_AnalogDigitalConverter = 16,
+    DeviceType_ElectronCaptureDetector = 17,
+    DeviceType_FluorescenceDetector = 18,
+    DeviceType_EvaporativeLightScatteringDetector = 19,
+    DeviceType_ALS = 20,
+    DeviceType_WellPlateSampler = 21,
+    DeviceType_MicroWellPlateSampler = 22,
+    DeviceType_CTC = 23,
+    DeviceType_IsocraticPump = 30,
+    DeviceType_BinaryPump = 31,
+    DeviceType_QuaternaryPump = 32,
+    DeviceType_CapillaryPump = 33,
+    DeviceType_NanoPump = 34,
+    DeviceType_ThermostattedColumnCompartment = 40,
+    DeviceType_ChipCube = 41,
+    DeviceType_CANValves = 42
+};
+
+enum __declspec(uuid("0e90566e-bebb-4528-9fdb-22cca9b7d85e"))
+IonizationMode
+{
+    IonizationMode_Unspecified = 0,
+    IonizationMode_Mixed = 1,
+    IonizationMode_EI = 2,
+    IonizationMode_CI = 4,
+    IonizationMode_Maldi = 8,
+    IonizationMode_Appi = 16,
+    IonizationMode_Apci = 32,
+    IonizationMode_Esi = 64,
+    IonizationMode_NanoEsi = 128,
+    IonizationMode_MsChip = 512,
+    IonizationMode_ICP = 1024,
+    IonizationMode_JetStream = 2048
+};
+
+enum __declspec(uuid("7a3de1ea-e589-4212-b7e6-c146ebec9d02"))
+IonPolarity
+{
+    IonPolarity_Positive = 0,
+    IonPolarity_Negative = 1,
+    IonPolarity_Unassigned = 2,
+    IonPolarity_Mixed = 3
+};
+
+enum __declspec(uuid("3fe12e62-6f6d-43fb-9edb-6f690412cef3"))
+IonDetectorMode
+{
+    IonDetectorMode_Unspecified = 0,
+    IonDetectorMode_PulseCounting = 1,
+    IonDetectorMode_Analog = 2,
+    IonDetectorMode_Mixed = 3,
+    IonDetectorMode_Error = 240
+};
+
+enum __declspec(uuid("ed1540e7-e273-4cbc-b51d-f4f16e8d2111"))
+MSScanType
+{
+    MSScanType_Unspecified = 0,
+    MSScanType_All = 7951,
+    MSScanType_AllMS = 15,
+    MSScanType_AllMSN = 7936,
+    MSScanType_Scan = 1,
+    MSScanType_SelectedIon = 2,
+    MSScanType_HighResolutionScan = 4,
+    MSScanType_TotalIon = 8,
+    MSScanType_MultipleReaction = 256,
+    MSScanType_ProductIon = 512,
+    MSScanType_PrecursorIon = 1024,
+    MSScanType_NeutralLoss = 2048,
+    MSScanType_NeutralGain = 4096
+};
+
+enum __declspec(uuid("d2f49edc-f354-42a0-968b-1fe08cf805ec"))
+MSStorageMode
+{
+    MSStorageMode_Unspecified = 0,
+    MSStorageMode_Mixed = 1,
+    MSStorageMode_ProfileSpectrum = 2,
+    MSStorageMode_PeakDetectedSpectrum = 3
+};
+
+enum __declspec(uuid("d3e9632a-7dcb-4aac-bd7b-7d4576e5a525"))
+TofCalibrationFormula
+{
+    TofCalibrationFormula_Unspecified = 0,
+    TofCalibrationFormula_Mixed = 1,
+    TofCalibrationFormula_Traditional = 2,
+    TofCalibrationFormula_FourTerm = 3,
+    TofCalibrationFormula_Polynomial = 4
+};
+
+enum __declspec(uuid("6de55acf-56e2-439c-bcdd-0fd421d296f6"))
+TofCalibrationTechnique
+{
+    TofCalibrationTechnique_Unspecified = 0,
+    TofCalibrationTechnique_Mixed = 1,
+    TofCalibrationTechnique_ExternalReference = 2,
+    TofCalibrationTechnique_InternalReference = 3
+};
+
+enum __declspec(uuid("4289ed5f-38ac-4296-91b0-52c23769964f"))
+XSamplingType
+{
+    XSamplingType_Unspecified = 0,
+    XSamplingType_Stepped = 1,
+    XSamplingType_SparseStepped = 2,
+    XSamplingType_Discontinuous = 4,
+    XSamplingType_Irregular = 8,
+    XSamplingType_Continuous = 16,
+    XSamplingType_BoundedRegions = 32
+};
+
+enum __declspec(uuid("015a5525-1875-42d0-aee8-c235402c0d87"))
+PointValueStorageScheme
+{
+    PointValueStorageScheme_Unspecified = 0,
+    PointValueStorageScheme_Mixed = 1,
+    PointValueStorageScheme_Series = 2,
+    PointValueStorageScheme_StartAndDelta = 3
+};
+
+enum __declspec(uuid("0837b4b2-37d5-4dd9-ad81-e167759114c9"))
+CompressionScheme
+{
+    CompressionScheme_None = 0,
+    CompressionScheme_DataRange = 1,
+    CompressionScheme_Threshold = 2,
+    CompressionScheme_Wiff = 4,
+    CompressionScheme_PackedFloat = 8,
+    CompressionScheme_LPC = 16,
+    CompressionScheme_TOF_NONE = 32,
+    CompressionScheme_OneDataRange = 64,
+    CompressionScheme_DeflateStream = 128,
+    CompressionScheme_GZipStream = 256
+};
+
+enum __declspec(uuid("b04b1fd9-6cf3-42a9-9cbe-8f3e3e408b5e"))
+FileType
+{
+    FileType_MSScanSchema = 256,
+    FileType_MSScanBinary = 257,
+    FileType_MSProfileBinary = 258,
+    FileType_MSPeakBinary = 259,
+    FileType_MSMassCalBinary = 260,
+    FileType_MSDefaultMassCal = 261,
+    FileType_MSTimeSegment = 262,
+    FileType_Contents = 263,
+    FileType_ScanActuals = 264,
+    FileType_PeriodicActuals = 265,
+    FileType_MethodParamChange = 272,
+    FileType_ChromDirectoryBinary = 512,
+    FileType_ChromatogramBinary = 513,
+    FileType_SpecDirectoryBinary = 514,
+    FileType_SpectrumBinary = 515,
+    FileType_MSUserCalBinary = 274,
+    FileType_MSUserCalIndexBinary = 273,
+    FileType_MSScan_XSpecific = 275
+};
+
+enum __declspec(uuid("2120c8f4-ee7a-4ab2-8a3a-141db8154a0f"))
+AcqStatus
+{
+    AcqStatus_Init = 0,
+    AcqStatus_Start = 1,
+    AcqStatus_End = 2,
+    AcqStatus_Stop = 3
+};
+
+enum __declspec(uuid("99d46c43-5fa6-4cae-be8d-cd37e4323d65"))
+MSLevel
+{
+    MSLevel_All = 0,
+    MSLevel_MS = 1,
+    MSLevel_MSMS = 2
+};
+
+enum __declspec(uuid("78e62b31-ecee-4dcf-bc32-1a0f17069b22"))
+DisplayPrecisionType
+{
+    DisplayPrecisionType_DigitsAfterDecimal = 0,
+    DisplayPrecisionType_Exponential = 1
+};
+
+enum __declspec(uuid("dd9afaa0-6ae4-40ec-8544-7087f1fc6158"))
+DataFileValueDataType
+{
+    DataFileValueDataType_Unspecified = 0,
+    DataFileValueDataType_Int16 = 2,
+    DataFileValueDataType_Int32 = 3,
+    DataFileValueDataType_Int64 = 4,
+    DataFileValueDataType_Float32 = 5,
+    DataFileValueDataType_Float64 = 6
+};
+
+enum __declspec(uuid("9027b38c-124e-45b4-beb8-79443430275e"))
+SampleCategory
+{
+    SampleCategory_Unspecified = 0,
+    SampleCategory_All = 1799,
+    SampleCategory_General = 1,
+    SampleCategory_OptimizationParams = 2,
+    SampleCategory_CompoundParams = 4,
+    SampleCategory_MassParams = 256,
+    SampleCategory_CustomParams = 512,
+    SampleCategory_UserParams = 1024
+};
+
+enum __declspec(uuid("f6b8055d-baec-4cbd-ab0a-0d53b869ad19"))
+ActualType
+{
+    ActualType_Periodic = 0,
+    ActualType_Scan = 1
+};
+
+enum __declspec(uuid("0e50f91a-8f98-43c5-b086-5424723a6cdd"))
+DisplayEffectType
+{
+    DisplayEffectType_Normal = 0,
+    DisplayEffectType_Hidden = 1,
+    DisplayEffectType_Bold = 2
+};
+
+enum __declspec(uuid("f3ad6455-a0c8-4912-bf37-7679baf3bafc"))
+StoredDataType
+{
+    StoredDataType_Unspecified = 0,
+    StoredDataType_Chromatograms = 1,
+    StoredDataType_InstrumentCurves = 2,
+    StoredDataType_Spectra = 4,
+    StoredDataType_MassSpectra = 8,
+    StoredDataType_All = 15
+};
+
+enum __declspec(uuid("a6d4a21d-b8ce-4527-804d-d2baadd051ee"))
+ChromType
+{
+    ChromType_Unspecified = 0,
+    ChromType_Signal = 1,
+    ChromType_InstrumentParameter = 2,
+    ChromType_TotalWavelength = 3,
+    ChromType_ExtractedWavelength = 4,
+    ChromType_TotalIon = 5,
+    ChromType_BasePeak = 6,
+    ChromType_ExtractedIon = 7,
+    ChromType_ExtractedCompound = 8,
+    ChromType_TotalCompound = 12,
+    ChromType_NeutralLoss = 9,
+    ChromType_MultipleReactionMode = 10,
+    ChromType_SelectedIonMonitoring = 11
+};
+
+enum __declspec(uuid("0045043c-f849-4814-9ed2-961937802bcc"))
+FragmentationMode
+{
+    FragmentationMode_Unspecified = 0,
+    FragmentationMode_CID = 1,
+    FragmentationMode_ETD = 2
+};
+
+enum __declspec(uuid("ae81d678-36c6-46e1-a3ce-d3774ccb261e"))
+MeasurementType
+{
+    MeasurementType_Unknown = 0,
+    MeasurementType_Infusion = 1,
+    MeasurementType_Chromatographic = 2
+};
+
+enum __declspec(uuid("fa49a30c-6ad5-4b54-aa02-9f86e64f8eb0"))
+SeparationTechnique
+{
+    SeparationTechnique_Unspecified = 0,
+    SeparationTechnique_None = 1,
+    SeparationTechnique_GC = 2,
+    SeparationTechnique_LC = 3,
+    SeparationTechnique_CE = 4
+};
+
+enum __declspec(uuid("0b38ed98-b17c-44d8-800b-c351537d1a11"))
+IRMStatus
+{
+    IRMStatus_Success = 0,
+    IRMStatus_SomeIonsMissed = 1,
+    IRMStatus_AllIonsMissed = 2
+};
+
+//
+// Named GUID constants initializations
+//
+
+extern "C" const GUID __declspec(selectany) LIBID_BC =
+    {0x02b74101,0x3dcc,0x411c,{0xb9,0x91,0xac,0xec,0x8a,0x17,0xdd,0xf1}};
+extern "C" const GUID __declspec(selectany) IID_IRange =
+    {0x869d8d23,0x687c,0x4dc6,{0x83,0xca,0xeb,0x05,0xf2,0x4d,0x19,0x3d}};
+extern "C" const GUID __declspec(selectany) CLSID_RangeBase =
+    {0x8960d85b,0x267e,0x429d,{0x9e,0x83,0x85,0xd4,0x44,0xc2,0x10,0xb5}};
+extern "C" const GUID __declspec(selectany) IID_IMinMaxRange =
+    {0x6b533712,0xc2ef,0x4ea9,{0x89,0xb9,0x05,0x85,0xd9,0x94,0xfa,0x4c}};
+extern "C" const GUID __declspec(selectany) CLSID_MinMaxRange =
+    {0xad987f55,0xe253,0x408e,{0xb3,0x88,0xdb,0x3e,0x0b,0xd9,0x6f,0x53}};
+extern "C" const GUID __declspec(selectany) IID_ICenterWidthRange =
+    {0x20aa2c9e,0x8e8d,0x4e02,{0xb8,0x0f,0x73,0x25,0x63,0x3e,0x93,0xc2}};
+extern "C" const GUID __declspec(selectany) CLSID_CenterWidthRange =
+    {0x0300bc30,0xd990,0x4560,{0x81,0x4a,0x33,0x2e,0xaf,0xb6,0x72,0xfc}};
+extern "C" const GUID __declspec(selectany) IID_ICenterWidthPctRange =
+    {0x626fa49e,0x39d6,0x4b36,{0x89,0x8c,0xa7,0xca,0x4e,0x6d,0x13,0x54}};
+extern "C" const GUID __declspec(selectany) CLSID_CenterWidthPctRange =
+    {0x6029c835,0x550a,0x4a4c,{0xa0,0x31,0xb6,0xbf,0x07,0x3b,0xfe,0x92}};
+extern "C" const GUID __declspec(selectany) IID_ICenterWidthPpmRange =
+    {0x6c798847,0x22f4,0x4464,{0xb0,0x1f,0x9b,0x01,0xcc,0x22,0xf5,0x08}};
+extern "C" const GUID __declspec(selectany) CLSID_CenterWidthPpmRange =
+    {0x7f22274a,0xf62a,0x469f,{0xb3,0xc8,0x4c,0x9d,0x57,0x8d,0xf1,0x55}};
+extern "C" const GUID __declspec(selectany) IID_IAsymmetricRange =
+    {0x694adb42,0x5c01,0x44f6,{0x8c,0xa4,0x9a,0x8d,0x8e,0x6e,0x46,0xc2}};
+extern "C" const GUID __declspec(selectany) CLSID_AsymmetricRange =
+    {0x0c269346,0xc2c9,0x4ea3,{0x95,0x33,0xe7,0xa8,0xe4,0x7e,0xd4,0xc7}};
+
+} // namespace BC
+
+#pragma pack(pop)
