@@ -250,7 +250,7 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
 {
     throw ReaderFail("[Reader_ABI::read()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -263,9 +263,22 @@ PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, 
 		);
 }
 
-PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void Reader_ABI::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
 {
-    throw ReaderFail("[Reader_ABI::read()] ABSciex WIFF reader not implemented: "
+    throw ReaderFail("[Reader_ABI::readAll()] ABSciex WIFF reader not implemented: "
+#ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
+        "support was explicitly disabled when program was built"
+#elif defined(WIN32) // wrong compiler
+        "program was built without COM support and cannot access ABSciex DLLs - try building with MSVC instead of GCC"
+#else // wrong platform
+        "requires ABSciex DLLs which only work on Windows"
+#endif
+		);
+}
+
+PWIZ_API_DECL void Reader_ABI::readIds(const std::string& filename, const std::string& head, std::vector<std::string>& results) const
+{
+    throw ReaderFail("[Reader_ABI::readIds()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
         "support was explicitly disabled when program was built"
 #elif defined(WIN32) // wrong compiler

@@ -187,7 +187,7 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
 {
     throw ReaderFail("[Reader_Bruker::read()] Bruker Analysis reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
