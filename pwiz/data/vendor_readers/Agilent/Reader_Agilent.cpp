@@ -193,8 +193,12 @@ Reader_Agilent::~Reader_Agilent() {COMInitializer::uninitialize();}
 PWIZ_API_DECL
 void Reader_Agilent::read(const string& filename, 
                          const string& head,
+                         int sampleIndex,
                          MSData& result) const
 {
+    if (sampleIndex != 0)
+        throw ReaderFail("[Reader_Agilent::read] multiple samples not supported");
+
     // instantiate RawFile, share ownership with SpectrumList_Agilent
 
     AgilentDataReaderPtr dataReader(new AgilentDataReader(filename));

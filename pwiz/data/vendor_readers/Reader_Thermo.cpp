@@ -236,8 +236,12 @@ PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const 
 PWIZ_API_DECL
 void Reader_Thermo::read(const string& filename, 
                          const string& head,
+                         int sampleIndex,
                          MSData& result) const
 {
+    if (sampleIndex != 0)
+        throw ReaderFail("[Reader_Thermo::read] multiple samples not supported");
+
     // instantiate RawFile, share ownership with SpectrumList_Thermo
 
     shared_ptr<RawFile> rawfile(RawFile::create(filename).release());

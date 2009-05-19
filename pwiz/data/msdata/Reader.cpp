@@ -36,8 +36,13 @@ using namespace std;
 using namespace pwiz::util;
 
 
+PWIZ_API_DECL void Reader::read(const std::string& filename, const std::string& head, MSData& result) const
+{
+    read(filename, head, 0, result);
+}
+
 // default implementation; most Readers don't need to worry about multi-run input files
-PWIZ_API_DECL void Reader::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void Reader::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
 {
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
@@ -71,19 +76,22 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
     return result;
 }
 
-
 PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result) const
 {
-    read(filename, read_file_header(filename, 512), result);
+    read(filename, 0, result);
 }
 
+PWIZ_API_DECL void ReaderList::read(const string& filename, int sampleIndex, MSData& result) const
+{
+    read(filename, read_file_header(filename, 512), sampleIndex, result);
+}
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, result);
+            (*it)->read(filename, head, sampleIndex, result);
             return;
         }
     throw ReaderFail((" don't know how to read " +
@@ -91,18 +99,18 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::readAll(const string& filename, vector<MSDataPtr>& results) const
 {
-    read(filename, read_file_header(filename, 512), results);
+    readAll(filename, read_file_header(filename, 512), results);
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, results);
+            (*it)->readAll(filename, head, results);
             return;
         }
     throw ReaderFail((" don't know how to read " +

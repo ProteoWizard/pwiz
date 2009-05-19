@@ -26,7 +26,8 @@ class PWIZ_API_DECL Reader_Waters : public Reader
                         const std::string& head) const; 
 
     virtual void read(const std::string& filename, 
-                      const std::string& head, 
+                      const std::string& head,
+                      int sampleIndex, 
                       MSData& result) const;
 
     virtual const char * getType() const {return "Waters RAW";}

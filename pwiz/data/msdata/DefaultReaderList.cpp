@@ -141,11 +141,14 @@ class Reader_mzML : public Reader
 		 return std::string((type(iss) != Type_Unknown)?getType():""); 
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, int sampleIndex, MSData& result) const
     {
+        if (sampleIndex != 0)
+            throw ReaderFail("[Reader_mzML::read] multiple samples not supported");
+
 		shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
-            throw runtime_error(("[MSDataFile::Reader_mzML] Unable to open file " + filename).c_str());
+            throw runtime_error(("[Reader_mzML::read] Unable to open file " + filename).c_str());
 
         switch (type(*is))
         {
@@ -213,11 +216,14 @@ class Reader_mzXML : public Reader
         return result;
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, int sampleIndex, MSData& result) const
     {
+        if (sampleIndex != 0)
+            throw ReaderFail("[Reader_mzXML::read] multiple samples not supported");
+
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
-            throw runtime_error(("[MSDataFile::Reader_mzXML] Unable to open file " + filename).c_str());
+            throw runtime_error(("[Reader_mzXML::read] Unable to open file " + filename).c_str());
 
         try
         {
@@ -252,8 +258,11 @@ class Reader_MGF : public Reader
 		return std::string(((bal::to_lower_copy(bfs::extension(filename)) == ".mgf"))?getType():"");
     }
 
-    virtual void read(const string& filename, const string& head, MSData& result) const
+    virtual void read(const string& filename, const string& head, int sampleIndex, MSData& result) const
     {
+        if (sampleIndex != 0)
+            throw ReaderFail("[Reader_MGF::read] multiple samples not supported");
+
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_MGF::read] Unable to open file " + filename));
@@ -286,8 +295,11 @@ class Reader_BTDX : public Reader
         return result;
     }
 
-    virtual void read(const string& filename, const string& head, MSData& result) const
+    virtual void read(const string& filename, const string& head, int sampleIndex, MSData& result) const
     {
+        if (sampleIndex != 0)
+            throw ReaderFail("[Reader_BTDX::read] multiple samples not supported");
+
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_BTDX::read] Unable to open file " + filename));

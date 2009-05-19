@@ -153,20 +153,19 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
 PWIZ_API_DECL
 void Reader_ABI::read(const string& filename, 
                       const string& head,
+                      int sampleIndex,
                       MSData& result) const
 {
     try
     {
+        sampleIndex++; // one-based index
         WiffFilePtr wifffile = WiffFile::create(filename);
-        if (wifffile->getSampleCount() > 1)
-            throw ReaderFail("[Reader_ABI::read()] invalid call for a single run on a multi-run WIFF file");
-
-        SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, 1);
-        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, 1);
+        SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, sampleIndex);
+        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, sampleIndex);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-        fillInMetadata(filename, result, wifffile, 1);
+        fillInMetadata(filename, result, wifffile, sampleIndex);
     }
     catch (std::exception& e)
     {
@@ -179,7 +178,7 @@ void Reader_ABI::read(const string& filename,
 }
 
 PWIZ_API_DECL
-void Reader_ABI::read(const string& filename,
+void Reader_ABI::readAll(const string& filename,
                       const string& head,
                       vector<MSDataPtr>& results) const
 {

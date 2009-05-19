@@ -143,13 +143,17 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
 
 
 PWIZ_API_DECL
-void Reader_Bruker::read(const string& filename, 
+void Reader_Bruker::read(const string& filename,
                          const string& head,
+                         int sampleIndex, 
                          MSData& result) const
 {
+    if (sampleIndex != 0)
+        throw ReaderFail("[Reader_Bruker::read] multiple samples not supported");
+
     Reader_Bruker_Format format = detail::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
-        throw ReaderFail("[Reader_Bruker::read()] Path given is not a recognized Bruker format");
+        throw ReaderFail("[Reader_Bruker::read] Path given is not a recognized Bruker format");
 
 
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)

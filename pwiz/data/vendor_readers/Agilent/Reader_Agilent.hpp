@@ -43,6 +43,7 @@ class PWIZ_API_DECL Reader_Agilent : public Reader
 
     virtual void read(const std::string& filename, 
                       const std::string& head, 
+                      int sampleIndex,
                       MSData& result) const;
 
 	virtual const char *getType() const {return "Agilent MassHunter";}

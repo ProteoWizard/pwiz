@@ -48,9 +48,10 @@ class PWIZ_API_DECL Reader_ABI : public Reader
 
     virtual void read(const std::string& filename, 
                       const std::string& head, 
+                      int sampleIndex,
                       MSData& result) const;
 
-    virtual void read(const std::string& filename,
+    virtual void readAll(const std::string& filename,
                       const std::string& head,
                       std::vector<MSDataPtr>& results) const;
 

@@ -60,12 +60,19 @@ class PWIZ_API_DECL Reader
     /// note: using this on a multi-run input file will throw an exception
     virtual void read(const std::string& filename, 
                       const std::string& head,
+                      int sampleIndex,
                       MSData& result) const = 0;
 
-    /// fill in a vector of MSData structures; provides support for multi-run input files
+    // fill in the MSData structure for a first first or only sample
     virtual void read(const std::string& filename, 
                       const std::string& head,
+                      MSData& result) const;
+
+    /// fill in a vector of MSData structures; provides support for multi-run input files
+    virtual void readAll(const std::string& filename, 
+                      const std::string& head,
                       std::vector<MSDataPtr>& results) const;
+
     /// fill in a vector of MSData.Id values; provides support for multi-run input files
     virtual void readIds(const std::string& filename, 
                       const std::string& head,
@@ -118,18 +125,24 @@ class PWIZ_API_DECL ReaderList : public Reader,
                       MSData& result) const;
 
     /// delegates to first child that identifies
+    virtual void read(const std::string& filename,
+                      int sampleIndex,
+                      MSData& result) const;
+
+    /// delegates to first child that identifies
     virtual void read(const std::string& filename, 
                       const std::string& head,
+                      int sampleIndex,
                       MSData& result) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
-    virtual void read(const std::string& filename,
+    virtual void readAll(const std::string& filename,
                       std::vector<MSDataPtr>& results) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
-    virtual void read(const std::string& filename, 
+    virtual void readAll(const std::string& filename, 
                       const std::string& head,
                       std::vector<MSDataPtr>& results) const;
 

@@ -141,10 +141,14 @@ PWIZ_API_DECL Reader_Waters::~Reader_Waters()
 }
 
 PWIZ_API_DECL
-void Reader_Waters::read(const string& filename, 
+void Reader_Waters::read(const string& filename,
                          const string& head,
+                         int sampleIndex, 
                          MSData& result) const
 {
+    if (sampleIndex != 0)
+        throw ReaderFail("[Reader_Waters::read] multiple samples not supported");
+
     SpectrumList_Waters* sl = new SpectrumList_Waters(result, filename);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     //result.run.chromatogramListPtr = sl->Chromatograms();
@@ -174,7 +178,7 @@ using namespace std;
 PWIZ_API_DECL Reader_Waters::Reader_Waters() {}
 PWIZ_API_DECL Reader_Waters::~Reader_Waters() {}
 
-PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int sampleIndex) const
 {
     throw ReaderFail("[Reader_Waters::read()] Waters RAW reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

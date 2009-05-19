@@ -61,6 +61,12 @@ public ref class Reader
     /// fill in the MSData structure
     virtual void read(System::String^ filename, 
                       System::String^ head,
+                      int sampleIndex,
+                      MSData^ result);
+
+    /// fill in the MSData structure
+    virtual void readAll(System::String^ filename, 
+                      System::String^ head,
                       MSDataList^ results);
 
     /// fill in the MSData structure
@@ -92,16 +98,27 @@ public ref class ReaderList : public Reader
                       MSData^ result);
 
     /// delegates to first child that accepts
+    virtual void read(System::String^ filename,
+                      int sampleIndex,
+                      MSData^ result);
+
+    /// delegates to first child that accepts
     virtual void read(System::String^ filename, 
                       System::String^ head,
                       MSData^ result) override;
 
-    /// fill in the MSData structure
-    virtual void read(System::String^ filename,
+    /// delegates to first child that accepts
+    virtual void read(System::String^ filename, 
+                      System::String^ head,
+                      int sampleIndex,
+                      MSData^ result) override;
+
+    /// fill in the MSDataList with MSData for all samples
+    virtual void readAll(System::String^ filename,
                       MSDataList^ results);
 
-    /// fill in the MSData structure
-    virtual void read(System::String^ filename, 
+    /// fill in the MSDataList with MSData for all samples
+    virtual void readAll(System::String^ filename, 
                       System::String^ head,
                       MSDataList^ results) override;
 

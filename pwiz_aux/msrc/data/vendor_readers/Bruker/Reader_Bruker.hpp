@@ -40,8 +40,9 @@ class PWIZ_API_DECL Reader_Bruker : public Reader
 	virtual std::string identify(const std::string& filename, 
                                  const std::string& head) const; 
 
-    virtual void read(const std::string& filename, 
+    virtual void read(const std::string& filename,
                       const std::string& head, 
+                      int sampleIndex, 
                       MSData& result) const;
 
     virtual const char * getType() const {return "Bruker Analysis";}
