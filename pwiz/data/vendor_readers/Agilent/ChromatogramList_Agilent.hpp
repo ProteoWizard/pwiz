@@ -1,5 +1,5 @@
 //
-// SpectrumList_Agilent.hpp
+// ChromatogramList_Agilent.hpp
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -20,55 +20,56 @@
 //
 
 
-#include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "Reader_Agilent_Detail.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
-#include <boost/thread/once.hpp>
+#ifndef _CHROMATOGRAMLIST_AGILENT_
+#define _CHROMATOGRAMLIST_AGILENT_
 
+
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "Reader_Agilent_Detail.hpp"
+#include <map>
+#include <vector>
+#include <boost/thread/once.hpp>
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
 
-
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
-
-class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
+class PWIZ_API_DECL ChromatogramList_Agilent : public ChromatogramListBase
 {
-    public:
+public:
 
-    SpectrumList_Agilent(AgilentDataReaderPtr rawfile);
+    ChromatogramList_Agilent(AgilentDataReaderPtr reader);
     virtual size_t size() const;
-    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
+    virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
     private:
 
     AgilentDataReaderPtr rawfile_;
-    mutable size_t size_;
 
     mutable boost::once_flag indexInitialized_;
 
-    struct IndexEntry : public SpectrumIdentity
+    struct IndexEntry : public ChromatogramIdentity
     {
-        long scan; // unique but not contiguous
+        CVID chromatogramType;
+        double q1, q3;
     };
 
     mutable vector<IndexEntry> index_;
-    mutable map<string, size_t> idToIndexMap_;
+    mutable map<string, size_t> idMap_;
 
     void createIndex() const;
 };
-
 
 } // detail
 } // msdata
 } // pwiz
 
+#endif // _CHROMATOGRAMLIST_AGILENT_

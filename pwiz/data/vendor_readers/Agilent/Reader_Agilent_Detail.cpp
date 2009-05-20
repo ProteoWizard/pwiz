@@ -8,47 +8,77 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace BC;
 
-PWIZ_API_DECL CVID translateAsSpectrumType(IScanInformationPtr scanInfoPtr)
+AgilentDataReader::AgilentDataReader(const std::string& path)
+:   dataReaderPtr(MSDR::CLSID_MassSpecDataReader),
+    scanFileInfoPtr(BDA::CLSID_BDAMSScanFileInformation)
 {
-    MSScanType scanTypes;
-    scanInfoPtr->get_ScanTypes((BDA::MSScanType*)&scanTypes);
-    if (scanTypes == MSScanType_Scan)               return MS_MS1_spectrum;
-    if (scanTypes == MSScanType_ProductIon)         return MS_MSn_spectrum;
-    if (scanTypes == MSScanType_PrecursorIon)       return MS_precursor_ion_spectrum;
-    if (scanTypes == MSScanType_SelectedIon)        return MS_SIM_spectrum;
-    if (scanTypes == MSScanType_TotalIon)           return MS_SIM_spectrum;
-    if (scanTypes == MSScanType_MultipleReaction)   return MS_SRM_spectrum;
-    if (scanTypes == MSScanType_NeutralLoss)        return MS_constant_neutral_loss_scan;
-    if (scanTypes == MSScanType_NeutralGain)        return MS_constant_neutral_gain_scan;
+    bstr_t bpath(path.c_str());
+    if (!dataReaderPtr->OpenDataFile(bpath))
+        throw std::runtime_error("[AgilentDataReader::ctor()] Error opening source path.");
+
+    scanFileInfoPtr = dataReaderPtr->GetMSScanFileInformation();
+
+    vector<IChromatogramPtr> chromatogramArray;
+
+    // cycle summing can make the full file chromatograms have the wrong number of points
+    IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
+    filterPtr->DoCycleSum = false;
+
+    // set filter for TIC
+    filterPtr->ChromatogramType = ChromType_TotalIon;
+    convertSafeArrayToVector(dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
+    IChromatogramPtr& ticPtr = chromatogramArray[0];
+    convertSafeArrayToVector(ticPtr->xArray, ticTimes);
+    convertSafeArrayToVector(ticPtr->yArray, ticIntensities);
+
+    // set filter for BPC
+    filterPtr->ChromatogramType = ChromType_BasePeak;
+    convertSafeArrayToVector(dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
+    IChromatogramPtr& bpcPtr = chromatogramArray[0];
+    convertSafeArrayToVector(bpcPtr->xArray, bpcTimes);
+    convertSafeArrayToVector(bpcPtr->yArray, bpcIntensities);
+}
+
+AgilentDataReader::~AgilentDataReader()
+{
+    dataReaderPtr->CloseDataFile();
+}
+
+
+PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType)
+{
+    if (scanType == MSScanType_Scan)                return MS_MS1_spectrum;
+    if (scanType == MSScanType_ProductIon)          return MS_MSn_spectrum;
+    if (scanType == MSScanType_PrecursorIon)        return MS_precursor_ion_spectrum;
+    if (scanType == MSScanType_SelectedIon)         return MS_SIM_spectrum;
+    if (scanType == MSScanType_TotalIon)            return MS_SIM_spectrum;
+    if (scanType == MSScanType_MultipleReaction)    return MS_SRM_spectrum;
+    if (scanType == MSScanType_NeutralLoss)         return MS_constant_neutral_loss_scan;
+    if (scanType == MSScanType_NeutralGain)         return MS_constant_neutral_gain_scan;
     throw runtime_error("[translateAsSpectrumType()] Error parsing spectrum type.");
 }
 
-PWIZ_API_DECL int translateAsMSLevel(IScanInformationPtr scanInfoPtr)
+PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType)
 {
-    MSScanType scanTypes;
-    scanInfoPtr->get_ScanTypes((BDA::MSScanType*)&scanTypes);
-    if (scanTypes == MSScanType_Scan)               return 1;
-    if (scanTypes == MSScanType_ProductIon)         return 2;
-    if (scanTypes == MSScanType_PrecursorIon)       return -1;
-    if (scanTypes == MSScanType_SelectedIon)        return 1;
-    if (scanTypes == MSScanType_TotalIon)           return 1;
-    if (scanTypes == MSScanType_MultipleReaction)   return 2;
-    if (scanTypes == MSScanType_NeutralLoss)        return 2;
-    if (scanTypes == MSScanType_NeutralGain)        return 2;
+    if (scanType == MSScanType_Scan)                return 1;
+    if (scanType == MSScanType_ProductIon)          return 2;
+    if (scanType == MSScanType_PrecursorIon)        return -1;
+    if (scanType == MSScanType_SelectedIon)         return 1;
+    if (scanType == MSScanType_TotalIon)            return 1;
+    if (scanType == MSScanType_MultipleReaction)    return 2;
+    if (scanType == MSScanType_NeutralLoss)         return 2;
+    if (scanType == MSScanType_NeutralGain)         return 2;
     throw runtime_error("[translateAsSpectrumType()] Error parsing MS level.");
 }
 
-PWIZ_API_DECL CVID translateAsActivationType(IScanInformationPtr scanInfoPtr)
+PWIZ_API_DECL CVID translateAsActivationType(ISpectrumPtr spectrumPtr)
 {
     return MS_CID;
 }
 
-PWIZ_API_DECL CVID translateAsPolarityType(IScanInformationPtr scanInfoPtr)
+PWIZ_API_DECL CVID translateAsPolarityType(IonPolarity polarity)
 {
-    IonPolarity polarity;
-    scanInfoPtr->get_IonPolarity((BDA::IonPolarity*)&polarity);
     if (polarity == IonPolarity_Positive)          return MS_positive_scan;
     if (polarity == IonPolarity_Negative)          return MS_negative_scan;
     throw runtime_error("[translateAsSpectrumType()] Error parsing polarity type.");

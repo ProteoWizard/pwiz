@@ -49,7 +49,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 #include "boost/algorithm/string.hpp"
 #include "Reader_Agilent_Detail.hpp"
 #include "SpectrumList_Agilent.hpp"
-//#include "ChromatogramList_Agilent.hpp"
+#include "ChromatogramList_Agilent.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -121,15 +121,43 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
 {
     msd.cvs = defaultCVList();
 
-    //rawfile.setCurrentController(Controller_MS, 1);
-    //msd.fileDescription.fileContent.set(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
+    MSScanType scanTypes = rawfile->scanFileInfoPtr->ScanTypes;
+    if (scanTypes & MSScanType_Scan)         msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    if (scanTypes & MSScanType_ProductIon)   msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    if (scanTypes & MSScanType_PrecursorIon) msd.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
+    // other scan types are not enumerated
+
+    if (!msd.fileDescription.fileContent.empty())
+    {
+        // determine which spectrum representations are available
+        // TODO: adjust this list according to PeakPicker settings?
+        switch (rawfile->scanFileInfoPtr->SpectraFormat)
+        {
+            case MSStorageMode_Mixed:
+                msd.fileDescription.fileContent.set(MS_centroid_spectrum);
+                msd.fileDescription.fileContent.set(MS_profile_spectrum);
+                break;
+
+            case MSStorageMode_ProfileSpectrum:
+                msd.fileDescription.fileContent.set(MS_profile_spectrum);
+                break;
+
+            case MSStorageMode_PeakDetectedSpectrum:
+                msd.fileDescription.fileContent.set(MS_centroid_spectrum);
+                break;
+        }
+    }
+
+    msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
+    if (scanTypes & MSScanType_SelectedIon ||
+        scanTypes & MSScanType_MultipleReaction)
+        msd.fileDescription.fileContent.set(MS_SIC_chromatogram);
 
     SourceFilePtr sourceFile(new SourceFile);
-    bfs::path p(filename);
-    p /= "AcqData/mspeak.bin";
+    bfs::path p = bfs::path(filename) / "AcqData/mspeak.bin";
     if (bfs::exists(p))
     {
-        sourceFile->id = "RAW1";
+        sourceFile->id = "PeakData";
         sourceFile->name = p.leaf();
         string location = bfs::complete(p.parent_path()).string();
         if (location.empty()) location = ".";
@@ -140,21 +168,24 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     }
 
     p = bfs::path(filename) / "AcqData/msprofile.bin";
-    sourceFile->id = "RAW1";
-    sourceFile->name = p.leaf();
-    string location = bfs::complete(p.parent_path()).string();
-    if (location.empty()) location = ".";
-    sourceFile->location = string("file:///") + location;
-    //sourceFile->set(MS_Agilent_nativeID_format);
-    //sourceFile->set(MS_Agilent_MassHunter_file);
-    msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+    if (bfs::exists(p))
+    {
+        sourceFile->id = "ProfileData";
+        sourceFile->name = p.leaf();
+        string location = bfs::complete(p.parent_path()).string();
+        if (location.empty()) location = ".";
+        sourceFile->location = string("file:///") + location;
+        //sourceFile->set(MS_Agilent_nativeID_format);
+        //sourceFile->set(MS_Agilent_MassHunter_file);
+        msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+    }
 
-    msd.id = stringToIDREF(p.leaf());
+    msd.id = stringToIDREF(filename);
 
     SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";
     softwareMassHunter->set(MS_MassHunter_Data_Acquisition);
-    //softwareMassHunter->version = rawfile->dataReaderPtr->;
+    softwareMassHunter->version = (const char*) rawfile->dataReaderPtr->Version;
     msd.softwarePtrs.push_back(softwareMassHunter);
 
     SoftwarePtr softwarePwiz(new Software);
@@ -170,10 +201,10 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
-    /*SpectrumList_Agilent* sl = dynamic_cast<SpectrumList_Agilent*>(msd.run.spectrumListPtr.get());
+    SpectrumList_Agilent* sl = dynamic_cast<SpectrumList_Agilent*>(msd.run.spectrumListPtr.get());
     ChromatogramList_Agilent* cl = dynamic_cast<ChromatogramList_Agilent*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
-    if (cl) cl->setDataProcessingPtr(dpPwiz);*/
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     //if (!msd.instrumentConfigurationPtrs.empty())
@@ -204,9 +235,9 @@ void Reader_Agilent::read(const string& filename,
     AgilentDataReaderPtr dataReader(new AgilentDataReader(filename));
 
     shared_ptr<SpectrumList_Agilent> sl(new SpectrumList_Agilent(dataReader));
-    //shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(result, dataReader));
+    shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(dataReader));
     result.run.spectrumListPtr = sl;
-    //result.run.chromatogramListPtr = cl;
+    result.run.chromatogramListPtr = cl;
 
     fillInMetadata(filename, dataReader, result);
 }
@@ -222,7 +253,6 @@ void Reader_Agilent::read(const string& filename,
 // non-MSVC implementation
 //
 
-#include "Reader_Agilent.hpp"
 #include <stdexcept>
 
 namespace pwiz {
@@ -230,8 +260,8 @@ namespace msdata {
 
 using namespace std;
 
-Reader_Agilent() {}
-virtual ~Reader_Agilent() {}
+Reader_Agilent::Reader_Agilent() {}
+Reader_Agilent::~Reader_Agilent() {}
 
 PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& head, MSData& result,	int sampleIndex /* = 0 */) const
 {
@@ -246,10 +276,6 @@ PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& he
 		);
 }
 
-PWIZ_API_DECL bool Reader_Agilent::hasRAWHeader(const string& head)
-{
-    return _hasRAWHeader(head);
-}
 
 } // namespace msdata
 } // namespace pwiz

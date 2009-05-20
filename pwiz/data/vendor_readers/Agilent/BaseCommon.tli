@@ -1,0 +1,274 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (715f52eb).
+//
+// c:\bumbershoot\src\pwiz-src\build\pwiz\data\vendor_readers\agilent\msvc-9.0\release\link-static\threading-multi\basecommon.tli
+//
+// Wrapper implementations for Win32 type library BaseCommon.tlb
+// compiler-generated file created 05/19/09 at 10:00:45 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface IRange wrapper method implementations
+//
+
+inline double IRange::GetStart ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Start(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double IRange::GetEnd ( ) {
+    double _result = 0;
+    HRESULT _hr = get_End(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IRange::IsEmpty ( ) {
+    VARIANT_BOOL _result = 0;
+    HRESULT _hr = raw_IsEmpty(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline HRESULT IRange::SetEmpty ( ) {
+    HRESULT _hr = raw_SetEmpty();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t IRange::ValueString ( VARIANT_BOOL withUnits, long * nValues ) {
+    BSTR _result = 0;
+    HRESULT _hr = raw_ValueString(withUnits, nValues, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IRange::ExtendedValueString ( VARIANT_BOOL withUnits, long * nValues ) {
+    BSTR _result = 0;
+    HRESULT _hr = raw_ExtendedValueString(withUnits, nValues, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline VARIANT_BOOL IRange::Equals ( struct IRange * other ) {
+    VARIANT_BOOL _result = 0;
+    HRESULT _hr = raw_Equals(other, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline IRangePtr IRange::Clone ( ) {
+    struct IRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IRangePtr(_result, false);
+}
+
+inline HRESULT IRange::WriteXml ( IUnknown * writer ) {
+    HRESULT _hr = raw_WriteXml(writer);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline VARIANT_BOOL IRange::IsValueWithinRange ( double valToCheck ) {
+    VARIANT_BOOL _result = 0;
+    HRESULT _hr = raw_IsValueWithinRange(valToCheck, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+//
+// interface IMinMaxRange wrapper method implementations
+//
+
+inline double IMinMaxRange::GetMin ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Min(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMinMaxRange::PutMin ( double pRetVal ) {
+    HRESULT _hr = put_Min(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IMinMaxRange::GetMax ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Max(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMinMaxRange::PutMax ( double pRetVal ) {
+    HRESULT _hr = put_Max(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline IMinMaxRangePtr IMinMaxRange::Clone ( ) {
+    struct IMinMaxRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IMinMaxRangePtr(_result, false);
+}
+
+inline IMinMaxRangePtr IMinMaxRange::Merge ( struct IMinMaxRange * range ) {
+    struct IMinMaxRange * _result = 0;
+    HRESULT _hr = raw_Merge(range, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IMinMaxRangePtr(_result, false);
+}
+
+//
+// interface ICenterWidthRange wrapper method implementations
+//
+
+inline double ICenterWidthRange::GetCenter ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Center(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthRange::PutCenter ( double pRetVal ) {
+    HRESULT _hr = put_Center(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ICenterWidthRange::GetWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Width(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthRange::PutWidth ( double pRetVal ) {
+    HRESULT _hr = put_Width(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline ICenterWidthRangePtr ICenterWidthRange::Clone ( ) {
+    struct ICenterWidthRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return ICenterWidthRangePtr(_result, false);
+}
+
+//
+// interface ICenterWidthPctRange wrapper method implementations
+//
+
+inline double ICenterWidthPctRange::GetCenter ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Center(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthPctRange::PutCenter ( double pRetVal ) {
+    HRESULT _hr = put_Center(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ICenterWidthPctRange::GetWidthPct ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WidthPct(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthPctRange::PutWidthPct ( double pRetVal ) {
+    HRESULT _hr = put_WidthPct(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline ICenterWidthPctRangePtr ICenterWidthPctRange::Clone ( ) {
+    struct ICenterWidthPctRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return ICenterWidthPctRangePtr(_result, false);
+}
+
+//
+// interface ICenterWidthPpmRange wrapper method implementations
+//
+
+inline double ICenterWidthPpmRange::GetCenter ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Center(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthPpmRange::PutCenter ( double pRetVal ) {
+    HRESULT _hr = put_Center(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ICenterWidthPpmRange::GetWidthPpm ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WidthPpm(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ICenterWidthPpmRange::PutWidthPpm ( double pRetVal ) {
+    HRESULT _hr = put_WidthPpm(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline ICenterWidthPpmRangePtr ICenterWidthPpmRange::Clone ( ) {
+    struct ICenterWidthPpmRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return ICenterWidthPpmRangePtr(_result, false);
+}
+
+//
+// interface IAsymmetricRange wrapper method implementations
+//
+
+inline double IAsymmetricRange::GetCenter ( ) {
+    double _result = 0;
+    HRESULT _hr = get_Center(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IAsymmetricRange::PutCenter ( double pRetVal ) {
+    HRESULT _hr = put_Center(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IAsymmetricRange::GetLowSpan ( ) {
+    double _result = 0;
+    HRESULT _hr = get_LowSpan(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IAsymmetricRange::PutLowSpan ( double pRetVal ) {
+    HRESULT _hr = put_LowSpan(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IAsymmetricRange::GetHighSpan ( ) {
+    double _result = 0;
+    HRESULT _hr = get_HighSpan(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IAsymmetricRange::PutHighSpan ( double pRetVal ) {
+    HRESULT _hr = put_HighSpan(pRetVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline IAsymmetricRangePtr IAsymmetricRange::Clone ( ) {
+    struct IAsymmetricRange * _result = 0;
+    HRESULT _hr = raw_Clone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IAsymmetricRangePtr(_result, false);
+}

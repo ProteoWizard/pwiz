@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (6d0486bd).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (23f7057d).
 //
 // c:\bumbershoot\src\pwiz-src\build\pwiz\data\vendor_readers\agilent\msvc-9.0\release\link-static\threading-multi\basedataaccess.tlh
 //
 // C++ source equivalent of Win32 type library BaseDataAccess.tlb
-// compiler-generated file created 05/18/09 at 12:38:58 - DO NOT EDIT!
+// compiler-generated file created 05/19/09 at 09:56:34 - DO NOT EDIT!
 
 //
 // Cross-referenced type libraries:
@@ -108,6 +108,25 @@ struct __declspec(uuid("266d6d89-c740-448c-abae-5082a63f4a72"))
 IBDAAcquisitionData : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetBPMassArray))
+    SAFEARRAY * BPMassArray;
+    __declspec(property(get=GetPointCount))
+    long PointCount;
+    __declspec(property(get=GetRetentionTimeArray))
+    SAFEARRAY * RetentionTimeArray;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    SAFEARRAY * GetBPMassArray ( );
+    long GetPointCount ( );
+    SAFEARRAY * GetRetentionTimeArray ( );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -127,6 +146,51 @@ BDAAcquisitionData;
 struct __declspec(uuid("d82436b0-4914-40e5-b4b5-351678f0f871"))
 IBDAActualData : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetCategory,put=PutCategory))
+    _bstr_t Category;
+    __declspec(property(get=GetDataValue,put=PutRefDataValue))
+    _variant_t DataValue;
+    __declspec(property(get=GetDisplayEffectType,put=PutDisplayEffectType))
+    enum DisplayEffectType _DisplayEffectType;
+    __declspec(property(get=GetDisplayName,put=PutDisplayName))
+    _bstr_t DisplayName;
+    __declspec(property(get=GetDisplayValue,put=PutDisplayValue))
+    _bstr_t DisplayValue;
+    __declspec(property(get=GetInternalName,put=PutInternalName))
+    _bstr_t InternalName;
+    __declspec(property(get=GetUnit,put=PutUnit))
+    _bstr_t Unit;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    _bstr_t GetCategory ( );
+    void PutCategory (
+        _bstr_t pRetVal );
+    _variant_t GetDataValue ( );
+    void PutRefDataValue (
+        const _variant_t & pRetVal );
+    enum DisplayEffectType GetDisplayEffectType ( );
+    void PutDisplayEffectType (
+        enum DisplayEffectType pRetVal );
+    _bstr_t GetDisplayName ( );
+    void PutDisplayName (
+        _bstr_t pRetVal );
+    _bstr_t GetDisplayValue ( );
+    void PutDisplayValue (
+        _bstr_t pRetVal );
+    _bstr_t GetInternalName ( );
+    void PutInternalName (
+        _bstr_t pRetVal );
+    _bstr_t GetUnit ( );
+    void PutUnit (
+        _bstr_t pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -189,6 +253,28 @@ struct __declspec(uuid("09c0515b-9465-4340-a2e9-b74b769a98e3"))
 IBDAMSScanTypeInformation : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetMSScanType))
+    enum MSScanType _MSScanType;
+    __declspec(property(get=GetIonPolarities))
+    enum IonPolarity IonPolarities;
+    __declspec(property(get=GetMzOfInterest))
+    SAFEARRAY * MzOfInterest;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum MSScanType GetMSScanType ( );
+    enum IonPolarity GetIonPolarities ( );
+    SAFEARRAY * GetMzOfInterest ( );
+    VARIANT_BOOL Contains (
+        double MzOfInterest );
+    IBDAMSScanTypeInformationPtr Clone ( );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -198,16 +284,85 @@ IBDAMSScanTypeInformation : IDispatch
         /*[out,retval]*/ enum IonPolarity * pRetVal ) = 0;
       virtual HRESULT __stdcall get_MzOfInterest (
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Contains (
+      virtual HRESULT __stdcall raw_Contains (
         /*[in]*/ double MzOfInterest,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDAMSScanTypeInformation * * pRetVal ) = 0;
 };
 
 struct __declspec(uuid("68e1a1e8-5ba9-4a79-961a-fecccfae6a1d"))
 IBDAMSScanFileInformation : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetFileHasMassSpectralData))
+    VARIANT_BOOL FileHasMassSpectralData;
+    __declspec(property(get=GetMzScanRangeMinimum))
+    double MzScanRangeMinimum;
+    __declspec(property(get=GetMzScanRangeMaximum))
+    double MzScanRangeMaximum;
+    __declspec(property(get=GetScanTypes))
+    enum MSScanType ScanTypes;
+    __declspec(property(get=GetSpectraFormat))
+    enum MSStorageMode SpectraFormat;
+    __declspec(property(get=GetIonModes))
+    enum IonizationMode IonModes;
+    __declspec(property(get=GetDeviceType))
+    enum DeviceType _DeviceType;
+    __declspec(property(get=GetMassRange))
+    IRangePtr MassRange;
+    __declspec(property(get=GetMSLevel))
+    enum MSLevel _MSLevel;
+    __declspec(property(get=GetFragmentorVoltage))
+    SAFEARRAY * FragmentorVoltage;
+    __declspec(property(get=GetCollisionEnergy))
+    SAFEARRAY * CollisionEnergy;
+    __declspec(property(get=GetIonPolarity))
+    enum IonPolarity _IonPolarity;
+    __declspec(property(get=GetScanTypesInformationCount))
+    long ScanTypesInformationCount;
+    __declspec(property(get=GetMRMTransitions))
+    SAFEARRAY * MRMTransitions;
+    __declspec(property(get=GetSIMIons))
+    SAFEARRAY * SIMIons;
+    __declspec(property(get=GetScanMethodNumbers))
+    SAFEARRAY * ScanMethodNumbers;
+    __declspec(property(get=GetTotalScansPresent))
+    __int64 TotalScansPresent;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL GetFileHasMassSpectralData ( );
+    double GetMzScanRangeMinimum ( );
+    double GetMzScanRangeMaximum ( );
+    enum MSScanType GetScanTypes ( );
+    enum MSStorageMode GetSpectraFormat ( );
+    enum IonizationMode GetIonModes ( );
+    enum DeviceType GetDeviceType ( );
+    IRangePtr GetMassRange ( );
+    enum MSLevel GetMSLevel ( );
+    SAFEARRAY * GetFragmentorVoltage ( );
+    SAFEARRAY * GetCollisionEnergy ( );
+    enum IonPolarity GetIonPolarity ( );
+    long GetScanTypesInformationCount ( );
+    SAFEARRAY * GetMRMTransitions ( );
+    SAFEARRAY * GetSIMIons ( );
+    SAFEARRAY * GetScanMethodNumbers ( );
+    __int64 GetTotalScansPresent ( );
+    VARIANT_BOOL IsFixedCycleLengthDataPresent ( );
+    VARIANT_BOOL IsMultipleSpectraPerScanPresent ( );
+    IBDAMSScanTypeInformationPtr GetMSScanTypeInformation (
+        enum MSScanType scanType );
+    SAFEARRAY * GetMSScanTypeInformation_2 ( );
+    VARIANT_BOOL Contains (
+        enum MSScanType key );
+    IBDAMSScanFileInformationPtr Clone ( );
+
     //
     // Raw methods provided by interface
     //
@@ -248,25 +403,67 @@ IBDAMSScanFileInformation : IDispatch
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_TotalScansPresent (
         /*[out,retval]*/ __int64 * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsFixedCycleLengthDataPresent (
+      virtual HRESULT __stdcall raw_IsFixedCycleLengthDataPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsMultipleSpectraPerScanPresent (
+      virtual HRESULT __stdcall raw_IsMultipleSpectraPerScanPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetMSScanTypeInformation (
+      virtual HRESULT __stdcall raw_GetMSScanTypeInformation (
         /*[in]*/ enum MSScanType scanType,
         /*[out,retval]*/ struct IBDAMSScanTypeInformation * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetMSScanTypeInformation_2 (
+      virtual HRESULT __stdcall raw_GetMSScanTypeInformation_2 (
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Contains (
+      virtual HRESULT __stdcall raw_Contains (
         /*[in]*/ enum MSScanType key,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDAMSScanFileInformation * * pRetVal ) = 0;
 };
 
 struct __declspec(uuid("22857f71-9522-4475-a222-65842e4e50e7"))
 IBDAFileInformation : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetDataFileName))
+    _bstr_t DataFileName;
+    __declspec(property(get=GetAcquisitionTime))
+    DATE AcquisitionTime;
+    __declspec(property(get=GetSeparationTechnique))
+    enum SeparationTechnique _SeparationTechnique;
+    __declspec(property(get=GetMSScanFileInformation))
+    IBDAMSScanFileInformationPtr MSScanFileInformation;
+    __declspec(property(get=GetMeasurementType))
+    enum MeasurementType _MeasurementType;
+    __declspec(property(get=GetIRMStatus))
+    enum IRMStatus _IRMStatus;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    _bstr_t GetDataFileName ( );
+    DATE GetAcquisitionTime ( );
+    VARIANT_BOOL IsStoredDataTypePresent (
+        _bstr_t deviceNameOrdinalNumber,
+        enum StoredDataType desiredType );
+    _bstr_t GetDeviceName (
+        enum DeviceType devType );
+    VARIANT_BOOL IsNonMSDataPresent ( );
+    VARIANT_BOOL IsUVSpectralDataPresent ( );
+    enum SeparationTechnique GetSeparationTechnique ( );
+    VARIANT_BOOL IsUVSignalPresent (
+        enum DeviceType devType,
+        _bstr_t signalName,
+        BSTR * devName );
+    VARIANT_BOOL IsMSDataPresent ( );
+    IBDAMSScanFileInformationPtr GetMSScanFileInformation ( );
+    enum MeasurementType GetMeasurementType ( );
+    enum IRMStatus GetIRMStatus ( );
+    IBDAFileInformationPtr Clone ( );
+    HRESULT Clear ( );
+
     //
     // Raw methods provided by interface
     //
@@ -276,27 +473,27 @@ IBDAFileInformation : IDispatch
       virtual HRESULT __stdcall get_AcquisitionTime (
         /*[out,retval]*/ DATE * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder1( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall IsStoredDataTypePresent (
+      virtual HRESULT __stdcall raw_IsStoredDataTypePresent (
         /*[in]*/ BSTR deviceNameOrdinalNumber,
         /*[in]*/ enum StoredDataType desiredType,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetDeviceName (
+      virtual HRESULT __stdcall raw_GetDeviceName (
         /*[in]*/ enum DeviceType devType,
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsNonMSDataPresent (
+      virtual HRESULT __stdcall raw_IsNonMSDataPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder2( ) { return E_NOTIMPL; }
     virtual HRESULT _VtblGapPlaceholder3( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall IsUVSpectralDataPresent (
+      virtual HRESULT __stdcall raw_IsUVSpectralDataPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
       virtual HRESULT __stdcall get_SeparationTechnique (
         /*[out,retval]*/ enum SeparationTechnique * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsUVSignalPresent (
+      virtual HRESULT __stdcall raw_IsUVSignalPresent (
         /*[in]*/ enum DeviceType devType,
         /*[in]*/ BSTR signalName,
         /*[in,out]*/ BSTR * devName,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsMSDataPresent (
+      virtual HRESULT __stdcall raw_IsMSDataPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
       virtual HRESULT __stdcall get_MSScanFileInformation (
         /*[out,retval]*/ struct IBDAMSScanFileInformation * * pRetVal ) = 0;
@@ -304,9 +501,9 @@ IBDAFileInformation : IDispatch
         /*[out,retval]*/ enum MeasurementType * pRetVal ) = 0;
       virtual HRESULT __stdcall get_IRMStatus (
         /*[out,retval]*/ enum IRMStatus * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDAFileInformation * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clear ( ) = 0;
+      virtual HRESULT __stdcall raw_Clear ( ) = 0;
 };
 
 struct __declspec(uuid("d733de2b-949e-4358-add9-3a69d191bd7c"))
@@ -318,6 +515,41 @@ BDAMSScanTypeInformation;
 struct __declspec(uuid("4e95dcfd-7da1-4558-8081-043304654ccc"))
 IBDASampleData : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetCategory,put=PutCategory))
+    enum SampleCategory Category;
+    __declspec(property(get=GetDataValue,put=PutRefDataValue))
+    _variant_t DataValue;
+    __declspec(property(get=GetDisplayName,put=PutDisplayName))
+    _bstr_t DisplayName;
+    __declspec(property(get=GetDisplayValue,put=PutDisplayValue))
+    _bstr_t DisplayValue;
+    __declspec(property(get=GetInternalName,put=PutInternalName))
+    _bstr_t InternalName;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum SampleCategory GetCategory ( );
+    void PutCategory (
+        enum SampleCategory pRetVal );
+    _variant_t GetDataValue ( );
+    void PutRefDataValue (
+        const _variant_t & pRetVal );
+    _bstr_t GetDisplayName ( );
+    void PutDisplayName (
+        _bstr_t pRetVal );
+    _bstr_t GetDisplayValue ( );
+    void PutDisplayValue (
+        _bstr_t pRetVal );
+    _bstr_t GetInternalName ( );
+    void PutInternalName (
+        _bstr_t pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -354,6 +586,25 @@ struct __declspec(uuid("26e46410-e7d3-4306-a123-82b49de347d8"))
 IBDAEvents : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetCancelIndicator,put=PutRefCancelIndicator))
+    IUnknownPtr CancelIndicator;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    IUnknownPtr GetCancelIndicator ( );
+    void PutRefCancelIndicator (
+        IUnknown * pRetVal );
+    HRESULT add_ProgressEvent (
+        IUnknown * value );
+    HRESULT remove_ProgressEvent (
+        IUnknown * value );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -361,9 +612,9 @@ IBDAEvents : IDispatch
         /*[out,retval]*/ IUnknown * * pRetVal ) = 0;
       virtual HRESULT __stdcall putref_CancelIndicator (
         /*[in]*/ IUnknown * pRetVal ) = 0;
-      virtual HRESULT __stdcall add_ProgressEvent (
+      virtual HRESULT __stdcall raw_add_ProgressEvent (
         /*[in]*/ IUnknown * value ) = 0;
-      virtual HRESULT __stdcall remove_ProgressEvent (
+      virtual HRESULT __stdcall raw_remove_ProgressEvent (
         /*[in]*/ IUnknown * value ) = 0;
 };
 
@@ -371,18 +622,29 @@ struct __declspec(uuid("b5a3f889-9fec-417e-a945-4590494ac6a6"))
 IBDASample : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    _bstr_t GetSampleValue (
+        _bstr_t InternalName );
+    SAFEARRAY * GetSampleCollection (
+        enum SampleCategory Category );
+    SAFEARRAY * GetSampleInfo (
+        _bstr_t internalNamePrefix );
+
+    //
     // Raw methods provided by interface
     //
 
     virtual HRESULT _VtblGapPlaceholder1( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall GetSampleValue (
+      virtual HRESULT __stdcall raw_GetSampleValue (
         /*[in]*/ BSTR InternalName,
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder2( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall GetSampleCollection (
+      virtual HRESULT __stdcall raw_GetSampleCollection (
         /*[in]*/ enum SampleCategory Category,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSampleInfo (
+      virtual HRESULT __stdcall raw_GetSampleInfo (
         /*[in]*/ BSTR internalNamePrefix,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
 };
@@ -391,19 +653,32 @@ struct __declspec(uuid("00a84f11-0427-4fdf-a4a7-809709250e1f"))
 IBDAActuals : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL IsActualsPresent ( );
+    SAFEARRAY * GetActualNames ( );
+    HRESULT GetActualValue (
+        _bstr_t actualDisplayName,
+        SAFEARRAY * * xArray,
+        SAFEARRAY * * yArray );
+    SAFEARRAY * GetActualCollection (
+        double timeInMins );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall IsActualsPresent (
+      virtual HRESULT __stdcall raw_IsActualsPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder1( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall GetActualNames (
+      virtual HRESULT __stdcall raw_GetActualNames (
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetActualValue (
+      virtual HRESULT __stdcall raw_GetActualValue (
         /*[in]*/ BSTR actualDisplayName,
         /*[out]*/ SAFEARRAY * * xArray,
         /*[out]*/ SAFEARRAY * * yArray ) = 0;
-      virtual HRESULT __stdcall GetActualCollection (
+      virtual HRESULT __stdcall raw_GetActualCollection (
         /*[in]*/ double timeInMins,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
 };
@@ -412,47 +687,116 @@ struct __declspec(uuid("7b2bf740-2f30-4731-8572-a7fd6376b893"))
 IBDAUserCalibration : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL IsUserCalibrationPresent ( );
+    HRESULT SaveUserCalibration (
+        IUnknown * psetTofCalib,
+        enum IonPolarity IonPolarity );
+    HRESULT SaveUserCalibration_2 (
+        IUnknown * psetTofCalib,
+        SAFEARRAY * specfilterArray );
+    HRESULT ClearUserCalibration ( );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall IsUserCalibrationPresent (
+      virtual HRESULT __stdcall raw_IsUserCalibrationPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall SaveUserCalibration (
+      virtual HRESULT __stdcall raw_SaveUserCalibration (
         /*[in]*/ IUnknown * psetTofCalib,
         /*[in]*/ enum IonPolarity IonPolarity ) = 0;
-      virtual HRESULT __stdcall SaveUserCalibration_2 (
+      virtual HRESULT __stdcall raw_SaveUserCalibration_2 (
         /*[in]*/ IUnknown * psetTofCalib,
         /*[in]*/ SAFEARRAY * specfilterArray ) = 0;
-      virtual HRESULT __stdcall ClearUserCalibration ( ) = 0;
+      virtual HRESULT __stdcall raw_ClearUserCalibration ( ) = 0;
 };
 
 struct __declspec(uuid("0b423064-67fc-4906-bd0a-64c52d97e04c"))
 IBDADataAccess : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetMassRangesOverallLimit))
+    IRangePtr MassRangesOverallLimit;
+    __declspec(property(get=GetFileInformation))
+    IBDAFileInformationPtr FileInformation;
+    __declspec(property(get=GetDataFileName))
+    _bstr_t DataFileName;
+    __declspec(property(get=GetAcquisitionMetaData))
+    IBDAAcquisitionDataPtr AcquisitionMetaData;
+    __declspec(property(get=GetScanRejectionFlagValueTable,put=PutRefScanRejectionFlagValueTable))
+    IUnknownPtr ScanRejectionFlagValueTable;
+    __declspec(property(get=GetSchemaDefaultDirectory,put=PutSchemaDefaultDirectory))
+    _bstr_t SchemaDefaultDirectory;
+    __declspec(property(get=GetDesiredMSStorageTypeToUse,put=PutDesiredMSStorageTypeToUse))
+    enum DesiredMSStorageType DesiredMSStorageTypeToUse;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL OpenDataFile (
+        _bstr_t filename );
+    VARIANT_BOOL OpenDataFile_2 (
+        _bstr_t filename,
+        VARIANT_BOOL bOptimizeFileHandling );
+    HRESULT CloseDataFile ( );
+    VARIANT_BOOL RefreshDataFile (
+        VARIANT_BOOL * isNewDataPresent );
+    VARIANT_BOOL IsAcquisitionStatusComplete ( );
+    SAFEARRAY * GetTimeSegmentRanges ( );
+    IRangePtr GetMassRangesOverallLimit ( );
+    IBDAFileInformationPtr GetFileInformation ( );
+    IBDAMSScanFileInformationPtr GetMSScanInformation (
+        double retentionTime );
+    _bstr_t GetDataFileName ( );
+    IBDAAcquisitionDataPtr GetAcquisitionMetaData ( );
+    VARIANT_BOOL IsDataDependentScanInfoPresent ( );
+    VARIANT_BOOL IsDataFileOpen ( );
+    IUnknownPtr GetScanRejectionFlagValueTable ( );
+    void PutRefScanRejectionFlagValueTable (
+        IUnknown * pRetVal );
+    HRESULT ClearScanRejectionFlagValueTable ( );
+    HRESULT PersistScanRejectionFlagValueTable ( );
+    IRangePtr GetTimeSegmentDetails (
+        long timesegmentID,
+        long * numOfScans );
+    _bstr_t GetSchemaDefaultDirectory ( );
+    void PutSchemaDefaultDirectory (
+        _bstr_t pRetVal );
+    enum DesiredMSStorageType GetDesiredMSStorageTypeToUse ( );
+    void PutDesiredMSStorageTypeToUse (
+        enum DesiredMSStorageType pRetVal );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall OpenDataFile (
+      virtual HRESULT __stdcall raw_OpenDataFile (
         /*[in]*/ BSTR filename,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall OpenDataFile_2 (
+      virtual HRESULT __stdcall raw_OpenDataFile_2 (
         /*[in]*/ BSTR filename,
         /*[in]*/ VARIANT_BOOL bOptimizeFileHandling,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall CloseDataFile ( ) = 0;
-      virtual HRESULT __stdcall RefreshDataFile (
+      virtual HRESULT __stdcall raw_CloseDataFile ( ) = 0;
+      virtual HRESULT __stdcall raw_RefreshDataFile (
         /*[out]*/ VARIANT_BOOL * isNewDataPresent,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsAcquisitionStatusComplete (
+      virtual HRESULT __stdcall raw_IsAcquisitionStatusComplete (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetTimeSegmentRanges (
+      virtual HRESULT __stdcall raw_GetTimeSegmentRanges (
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_MassRangesOverallLimit (
         /*[out,retval]*/ struct IRange * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_FileInformation (
         /*[out,retval]*/ struct IBDAFileInformation * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetMSScanInformation (
+      virtual HRESULT __stdcall raw_GetMSScanInformation (
         /*[in]*/ double retentionTime,
         /*[out,retval]*/ struct IBDAMSScanFileInformation * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_DataFileName (
@@ -460,19 +804,19 @@ IBDADataAccess : IDispatch
       virtual HRESULT __stdcall get_AcquisitionMetaData (
         /*[out,retval]*/ struct IBDAAcquisitionData * * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder1( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall IsDataDependentScanInfoPresent (
+      virtual HRESULT __stdcall raw_IsDataDependentScanInfoPresent (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsDataFileOpen (
+      virtual HRESULT __stdcall raw_IsDataFileOpen (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
     virtual HRESULT _VtblGapPlaceholder2( ) { return E_NOTIMPL; }
       virtual HRESULT __stdcall get_ScanRejectionFlagValueTable (
         /*[out,retval]*/ IUnknown * * pRetVal ) = 0;
       virtual HRESULT __stdcall putref_ScanRejectionFlagValueTable (
         /*[in]*/ IUnknown * pRetVal ) = 0;
-      virtual HRESULT __stdcall ClearScanRejectionFlagValueTable ( ) = 0;
-      virtual HRESULT __stdcall PersistScanRejectionFlagValueTable ( ) = 0;
+      virtual HRESULT __stdcall raw_ClearScanRejectionFlagValueTable ( ) = 0;
+      virtual HRESULT __stdcall raw_PersistScanRejectionFlagValueTable ( ) = 0;
     virtual HRESULT _VtblGapPlaceholder3( ) { return E_NOTIMPL; }
-      virtual HRESULT __stdcall GetTimeSegmentDetails (
+      virtual HRESULT __stdcall raw_GetTimeSegmentDetails (
         /*[in]*/ long timesegmentID,
         /*[out]*/ long * numOfScans,
         /*[out,retval]*/ struct IRange * * pRetVal ) = 0;
@@ -501,6 +845,89 @@ BDADataAccess;
 struct __declspec(uuid("23dea6d7-abe5-47c2-8d9c-170ebb5796cc"))
 IBDAChromData : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetChromatogramType))
+    enum ChromType ChromatogramType;
+    __declspec(property(get=GetTotalDataPoints))
+    long TotalDataPoints;
+    __declspec(property(get=GetxArray))
+    SAFEARRAY * xArray;
+    __declspec(property(get=GetyArray))
+    SAFEARRAY * yArray;
+    __declspec(property(get=GetAcquiredTimeRange))
+    SAFEARRAY * AcquiredTimeRange;
+    __declspec(property(get=GetMeasuredMassRange))
+    SAFEARRAY * MeasuredMassRange;
+    __declspec(property(get=GetMzRegionsWereExcluded))
+    VARIANT_BOOL MzRegionsWereExcluded;
+    __declspec(property(get=GetAbundanceLimit))
+    double AbundanceLimit;
+    __declspec(property(get=GetCollisionEnergy))
+    double CollisionEnergy;
+    __declspec(property(get=GetFragmentorVoltage))
+    double FragmentorVoltage;
+    __declspec(property(get=GetIonizationMode))
+    enum IonizationMode _IonizationMode;
+    __declspec(property(get=GetIonPolarity))
+    enum IonPolarity _IonPolarity;
+    __declspec(property(get=GetMSScanType))
+    enum MSScanType _MSScanType;
+    __declspec(property(get=GetMSLevelInfo))
+    enum MSLevel MSLevelInfo;
+    __declspec(property(get=GetMSStorageMode))
+    enum MSStorageMode _MSStorageMode;
+    __declspec(property(get=GetMzOfInterest))
+    SAFEARRAY * MzOfInterest;
+    __declspec(property(get=GetThreshold))
+    double Threshold;
+    __declspec(property(get=GetSamplingPeriod))
+    double SamplingPeriod;
+    __declspec(property(get=GetDeviceName))
+    _bstr_t DeviceName;
+    __declspec(property(get=GetDeviceType))
+    enum DeviceType _DeviceType;
+    __declspec(property(get=GetOrdinalNumber))
+    long OrdinalNumber;
+    __declspec(property(get=GetIsCycleSummed))
+    VARIANT_BOOL IsCycleSummed;
+    __declspec(property(get=GetsignalName))
+    _bstr_t signalName;
+    __declspec(property(get=GetSignalDescription))
+    _bstr_t SignalDescription;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum ChromType GetChromatogramType ( );
+    long GetTotalDataPoints ( );
+    SAFEARRAY * GetxArray ( );
+    SAFEARRAY * GetyArray ( );
+    SAFEARRAY * GetAcquiredTimeRange ( );
+    SAFEARRAY * GetMeasuredMassRange ( );
+    VARIANT_BOOL GetMzRegionsWereExcluded ( );
+    double GetAbundanceLimit ( );
+    double GetCollisionEnergy ( );
+    double GetFragmentorVoltage ( );
+    enum IonizationMode GetIonizationMode ( );
+    enum IonPolarity GetIonPolarity ( );
+    enum MSScanType GetMSScanType ( );
+    enum MSLevel GetMSLevelInfo ( );
+    enum MSStorageMode GetMSStorageMode ( );
+    SAFEARRAY * GetMzOfInterest ( );
+    double GetThreshold ( );
+    double GetSamplingPeriod ( );
+    _bstr_t GetDeviceName ( );
+    enum DeviceType GetDeviceType ( );
+    long GetOrdinalNumber ( );
+    VARIANT_BOOL GetIsCycleSummed ( );
+    _bstr_t GetsignalName ( );
+    _bstr_t GetSignalDescription ( );
+    IBDAChromDataPtr Clone ( );
+
     //
     // Raw methods provided by interface
     //
@@ -553,7 +980,7 @@ IBDAChromData : IDispatch
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
       virtual HRESULT __stdcall get_SignalDescription (
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDAChromData * * pRetVal ) = 0;
 };
 
@@ -567,6 +994,96 @@ BDAChromData;
 struct __declspec(uuid("066f2ea6-8239-41b0-9a57-573a5c66418f"))
 IBDASpecData : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetSpectrumType))
+    enum SpecType SpectrumType;
+    __declspec(property(get=GetTotalDataPoints))
+    long TotalDataPoints;
+    __declspec(property(get=GetxArray))
+    SAFEARRAY * xArray;
+    __declspec(property(get=GetyArray))
+    SAFEARRAY * yArray;
+    __declspec(property(get=GetAcquiredTimeRange))
+    SAFEARRAY * AcquiredTimeRange;
+    __declspec(property(get=GetMeasuredMassRange))
+    IRangePtr MeasuredMassRange;
+    __declspec(property(get=GetTotalScanCount))
+    long TotalScanCount;
+    __declspec(property(get=GetAbundanceLimit))
+    double AbundanceLimit;
+    __declspec(property(get=GetCollisionEnergy))
+    double CollisionEnergy;
+    __declspec(property(get=GetFragmentorVoltage))
+    double FragmentorVoltage;
+    __declspec(property(get=GetIonizationMode))
+    enum IonizationMode _IonizationMode;
+    __declspec(property(get=GetIonPolarity))
+    enum IonPolarity _IonPolarity;
+    __declspec(property(get=GetMSScanType))
+    enum MSScanType _MSScanType;
+    __declspec(property(get=GetMSLevelInfo))
+    enum MSLevel MSLevelInfo;
+    __declspec(property(get=GetMSStorageMode))
+    enum MSStorageMode _MSStorageMode;
+    __declspec(property(get=GetMzOfInterest))
+    SAFEARRAY * MzOfInterest;
+    __declspec(property(get=GetThreshold))
+    double Threshold;
+    __declspec(property(get=GetSamplingPeriod))
+    double SamplingPeriod;
+    __declspec(property(get=GetDeviceName))
+    _bstr_t DeviceName;
+    __declspec(property(get=GetDeviceType))
+    enum DeviceType _DeviceType;
+    __declspec(property(get=GetOrdinalNumber))
+    long OrdinalNumber;
+    __declspec(property(get=GetIsDataInMassUnit))
+    VARIANT_BOOL IsDataInMassUnit;
+    __declspec(property(get=GetScanId))
+    long ScanId;
+    __declspec(property(get=GetParentScanId))
+    long ParentScanId;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum SpecType GetSpectrumType ( );
+    long GetTotalDataPoints ( );
+    SAFEARRAY * GetxArray ( );
+    SAFEARRAY * GetyArray ( );
+    SAFEARRAY * GetAcquiredTimeRange ( );
+    IRangePtr GetMeasuredMassRange ( );
+    long GetTotalScanCount ( );
+    double GetAbundanceLimit ( );
+    double GetCollisionEnergy ( );
+    double GetFragmentorVoltage ( );
+    enum IonizationMode GetIonizationMode ( );
+    enum IonPolarity GetIonPolarity ( );
+    enum MSScanType GetMSScanType ( );
+    enum MSLevel GetMSLevelInfo ( );
+    enum MSStorageMode GetMSStorageMode ( );
+    SAFEARRAY * GetMzOfInterest ( );
+    double GetThreshold ( );
+    double GetSamplingPeriod ( );
+    _bstr_t GetDeviceName ( );
+    enum DeviceType GetDeviceType ( );
+    long GetOrdinalNumber ( );
+    VARIANT_BOOL GetIsDataInMassUnit ( );
+    SAFEARRAY * GetPrecursorIon (
+        long * precursorCount );
+    IBDASpecDataPtr Clone ( );
+    HRESULT ConvertDataToMassUnits ( );
+    VARIANT_BOOL GetPrecursorCharge (
+        long * charge );
+    VARIANT_BOOL GetPrecursorIntensity (
+        double * precursorIntensity );
+    long GetScanId ( );
+    long GetParentScanId ( );
+
     //
     // Raw methods provided by interface
     //
@@ -615,16 +1132,16 @@ IBDASpecData : IDispatch
         /*[out,retval]*/ long * pRetVal ) = 0;
       virtual HRESULT __stdcall get_IsDataInMassUnit (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetPrecursorIon (
+      virtual HRESULT __stdcall raw_GetPrecursorIon (
         /*[out]*/ long * precursorCount,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall ConvertDataToMassUnits ( ) = 0;
-      virtual HRESULT __stdcall GetPrecursorCharge (
+      virtual HRESULT __stdcall raw_ConvertDataToMassUnits ( ) = 0;
+      virtual HRESULT __stdcall raw_GetPrecursorCharge (
         /*[out]*/ long * charge,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetPrecursorIntensity (
+      virtual HRESULT __stdcall raw_GetPrecursorIntensity (
         /*[out]*/ double * precursorIntensity,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
       virtual HRESULT __stdcall get_ScanId (
@@ -643,6 +1160,137 @@ BDASpecData;
 struct __declspec(uuid("fefe93f3-e3c4-49eb-92d7-585629995e12"))
 IBDAChromFilter : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetChromatogramType,put=PutChromatogramType))
+    enum ChromType ChromatogramType;
+    __declspec(property(get=GetReferenceWavelength,put=PutRefReferenceWavelength))
+    IRangePtr ReferenceWavelength;
+    __declspec(property(get=GetMSLevelFilter,put=PutMSLevelFilter))
+    enum MSLevel MSLevelFilter;
+    __declspec(property(get=GetSignalDescription,put=PutSignalDescription))
+    _bstr_t SignalDescription;
+    __declspec(property(get=GetMSScanTypeFilter,put=PutMSScanTypeFilter))
+    enum MSScanType MSScanTypeFilter;
+    __declspec(property(get=GetIonPolarityFilter,put=PutIonPolarityFilter))
+    enum IonPolarity IonPolarityFilter;
+    __declspec(property(get=GetMzOfInterestFilter,put=PutMzOfInterestFilter))
+    SAFEARRAY * MzOfInterestFilter;
+    __declspec(property(get=GetIncludeMassRanges,put=PutIncludeMassRanges))
+    SAFEARRAY * IncludeMassRanges;
+    __declspec(property(get=GetScanRange,put=PutRefScanRange))
+    IRangePtr ScanRange;
+    __declspec(property(get=GetFragmentorVoltage,put=PutRefFragmentorVoltage))
+    IRangePtr FragmentorVoltage;
+    __declspec(property(get=GetCollisionEnergy,put=PutRefCollisionEnergy))
+    IRangePtr CollisionEnergy;
+    __declspec(property(get=GetIonizationMode,put=PutIonizationMode))
+    enum IonizationMode _IonizationMode;
+    __declspec(property(get=GetSingleChromatogramForAllMasses,put=PutSingleChromatogramForAllMasses))
+    VARIANT_BOOL SingleChromatogramForAllMasses;
+    __declspec(property(get=GetDoCycleSum,put=PutDoCycleSum))
+    VARIANT_BOOL DoCycleSum;
+    __declspec(property(get=GetExtractOneChromatogramPerScanSegment,put=PutExtractOneChromatogramPerScanSegment))
+    VARIANT_BOOL ExtractOneChromatogramPerScanSegment;
+    __declspec(property(get=GetScanSegmentNumber,put=PutRefScanSegmentNumber))
+    IRangePtr ScanSegmentNumber;
+    __declspec(property(get=GetYValueInCounts,put=PutYValueInCounts))
+    VARIANT_BOOL YValueInCounts;
+    __declspec(property(get=GetDesiredMSStorageType,put=PutDesiredMSStorageType))
+    enum DesiredMSStorageType _DesiredMSStorageType;
+    __declspec(property(get=GetChargeStateLimits,put=PutRefChargeStateLimits))
+    IRangePtr ChargeStateLimits;
+    __declspec(property(get=GetDeviceName,put=PutDeviceName))
+    _bstr_t DeviceName;
+    __declspec(property(get=GetOrdinalNumber,put=PutOrdinalNumber))
+    __int64 OrdinalNumber;
+    __declspec(property(get=GetsignalName,put=PutsignalName))
+    _bstr_t signalName;
+    __declspec(property(get=GetSignalWavelength,put=PutRefSignalWavelength))
+    IRangePtr SignalWavelength;
+    __declspec(property(get=GetUseReference,put=PutUseReference))
+    VARIANT_BOOL UseReference;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum ChromType GetChromatogramType ( );
+    void PutChromatogramType (
+        enum ChromType pRetVal );
+    enum MSLevel GetMSLevelFilter ( );
+    void PutMSLevelFilter (
+        enum MSLevel pRetVal );
+    enum MSScanType GetMSScanTypeFilter ( );
+    void PutMSScanTypeFilter (
+        enum MSScanType pRetVal );
+    enum IonPolarity GetIonPolarityFilter ( );
+    void PutIonPolarityFilter (
+        enum IonPolarity pRetVal );
+    SAFEARRAY * GetMzOfInterestFilter ( );
+    void PutMzOfInterestFilter (
+        SAFEARRAY * pRetVal );
+    SAFEARRAY * GetIncludeMassRanges ( );
+    void PutIncludeMassRanges (
+        SAFEARRAY * pRetVal );
+    IRangePtr GetScanRange ( );
+    void PutRefScanRange (
+        struct IRange * pRetVal );
+    IRangePtr GetFragmentorVoltage ( );
+    void PutRefFragmentorVoltage (
+        struct IRange * pRetVal );
+    IRangePtr GetCollisionEnergy ( );
+    void PutRefCollisionEnergy (
+        struct IRange * pRetVal );
+    enum IonizationMode GetIonizationMode ( );
+    void PutIonizationMode (
+        enum IonizationMode pRetVal );
+    VARIANT_BOOL GetSingleChromatogramForAllMasses ( );
+    void PutSingleChromatogramForAllMasses (
+        VARIANT_BOOL pRetVal );
+    VARIANT_BOOL GetDoCycleSum ( );
+    void PutDoCycleSum (
+        VARIANT_BOOL pRetVal );
+    VARIANT_BOOL GetExtractOneChromatogramPerScanSegment ( );
+    void PutExtractOneChromatogramPerScanSegment (
+        VARIANT_BOOL pRetVal );
+    IRangePtr GetScanSegmentNumber ( );
+    void PutRefScanSegmentNumber (
+        struct IRange * pRetVal );
+    VARIANT_BOOL GetYValueInCounts ( );
+    void PutYValueInCounts (
+        VARIANT_BOOL pRetVal );
+    enum DesiredMSStorageType GetDesiredMSStorageType ( );
+    void PutDesiredMSStorageType (
+        enum DesiredMSStorageType pRetVal );
+    IRangePtr GetChargeStateLimits ( );
+    void PutRefChargeStateLimits (
+        struct IRange * pRetVal );
+    _bstr_t GetDeviceName ( );
+    void PutDeviceName (
+        _bstr_t pRetVal );
+    __int64 GetOrdinalNumber ( );
+    void PutOrdinalNumber (
+        __int64 pRetVal );
+    _bstr_t GetsignalName ( );
+    void PutsignalName (
+        _bstr_t pRetVal );
+    IRangePtr GetSignalWavelength ( );
+    void PutRefSignalWavelength (
+        struct IRange * pRetVal );
+    VARIANT_BOOL GetUseReference ( );
+    void PutUseReference (
+        VARIANT_BOOL pRetVal );
+    IRangePtr GetReferenceWavelength ( );
+    void PutRefReferenceWavelength (
+        struct IRange * pRetVal );
+    _bstr_t GetSignalDescription ( );
+    void PutSignalDescription (
+        _bstr_t pRetVal );
+    IBDAChromFilterPtr Clone ( );
+
     //
     // Raw methods provided by interface
     //
@@ -743,7 +1391,7 @@ IBDAChromFilter : IDispatch
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
       virtual HRESULT __stdcall put_SignalDescription (
         /*[in]*/ BSTR pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDAChromFilter * * pRetVal ) = 0;
 };
 
@@ -751,13 +1399,23 @@ struct __declspec(uuid("8b8558de-bbb0-40b0-a9d6-c3314456f274"))
 IBDAReadChromatogram : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    SAFEARRAY * GetChromatogram (
+        struct IBDAChromFilter * extractParamSet );
+    SAFEARRAY * GetChromatogram_2 (
+        struct IBDAChromFilter * extractParamSet,
+        SAFEARRAY * excludeMassArray );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall GetChromatogram (
+      virtual HRESULT __stdcall raw_GetChromatogram (
         /*[in]*/ struct IBDAChromFilter * extractParamSet,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetChromatogram_2 (
+      virtual HRESULT __stdcall raw_GetChromatogram_2 (
         /*[in]*/ struct IBDAChromFilter * extractParamSet,
         /*[in]*/ SAFEARRAY * excludeMassArray,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
@@ -766,6 +1424,51 @@ IBDAReadChromatogram : IDispatch
 struct __declspec(uuid("3ff555d8-92a1-4287-b365-02897899c178"))
 IBDAPeak : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetHeight,put=PutHeight))
+    double Height;
+    __declspec(property(get=GetStartBaselineY,put=PutStartBaselineY))
+    double StartBaselineY;
+    __declspec(property(get=GetEndBaselineY,put=PutEndBaselineY))
+    double EndBaselineY;
+    __declspec(property(get=GetCenterX,put=PutCenterX))
+    double CenterX;
+    __declspec(property(get=GetCenterY,put=PutCenterY))
+    double CenterY;
+    __declspec(property(get=GetBasePeakMass,put=PutBasePeakMass))
+    double BasePeakMass;
+    __declspec(property(get=GetChargeState,put=PutChargeState))
+    long ChargeState;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetHeight ( );
+    void PutHeight (
+        double pRetVal );
+    double GetStartBaselineY ( );
+    void PutStartBaselineY (
+        double pRetVal );
+    double GetEndBaselineY ( );
+    void PutEndBaselineY (
+        double pRetVal );
+    double GetCenterX ( );
+    void PutCenterX (
+        double pRetVal );
+    double GetCenterY ( );
+    void PutCenterY (
+        double pRetVal );
+    double GetBasePeakMass ( );
+    void PutBasePeakMass (
+        double pRetVal );
+    long GetChargeState ( );
+    void PutChargeState (
+        long pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -804,6 +1507,46 @@ struct __declspec(uuid("c05a2780-0393-46c9-bf90-d2d679bf1a79"))
 IBDAPeakSpecFilter : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetUseApexScan,put=PutUseApexScan))
+    VARIANT_BOOL UseApexScan;
+    __declspec(property(get=GetPeakHeightThreshold,put=PutPeakHeightThreshold))
+    double PeakHeightThreshold;
+    __declspec(property(get=GetUseTofSaturationFilter,put=PutUseTofSaturationFilter))
+    VARIANT_BOOL UseTofSaturationFilter;
+    __declspec(property(get=GetUseTofSaturationMzRange,put=PutUseTofSaturationMzRange))
+    VARIANT_BOOL UseTofSaturationMzRange;
+    __declspec(property(get=GetTofSaturationThreshold,put=PutTofSaturationThreshold))
+    double TofSaturationThreshold;
+    __declspec(property(get=GetTofSaturationMzRanges,put=PutTofSaturationMzRanges))
+    SAFEARRAY * TofSaturationMzRanges;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL GetUseApexScan ( );
+    void PutUseApexScan (
+        VARIANT_BOOL pRetVal );
+    double GetPeakHeightThreshold ( );
+    void PutPeakHeightThreshold (
+        double pRetVal );
+    VARIANT_BOOL GetUseTofSaturationFilter ( );
+    void PutUseTofSaturationFilter (
+        VARIANT_BOOL pRetVal );
+    VARIANT_BOOL GetUseTofSaturationMzRange ( );
+    void PutUseTofSaturationMzRange (
+        VARIANT_BOOL pRetVal );
+    double GetTofSaturationThreshold ( );
+    void PutTofSaturationThreshold (
+        double pRetVal );
+    SAFEARRAY * GetTofSaturationMzRanges ( );
+    void PutTofSaturationMzRanges (
+        SAFEARRAY * pRetVal );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -836,6 +1579,102 @@ IBDAPeakSpecFilter : IDispatch
 struct __declspec(uuid("2bc66a59-6c80-44f5-b9b7-a5265b5f8238"))
 IBDASpecFilter : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetSpectrumType,put=PutSpectrumType))
+    enum SpecType SpectrumType;
+    __declspec(property(get=GetOrdinalNumber,put=PutOrdinalNumber))
+    __int64 OrdinalNumber;
+    __declspec(property(get=GetScanRange,put=PutScanRange))
+    SAFEARRAY * ScanRange;
+    __declspec(property(get=GetMassRange,put=PutRefMassRange))
+    IRangePtr MassRange;
+    __declspec(property(get=GetMSLevelFilter,put=PutMSLevelFilter))
+    enum MSLevel MSLevelFilter;
+    __declspec(property(get=GetMSScanTypeFilter,put=PutMSScanTypeFilter))
+    enum MSScanType MSScanTypeFilter;
+    __declspec(property(get=GetMzOfInterestFilter,put=PutMzOfInterestFilter))
+    SAFEARRAY * MzOfInterestFilter;
+    __declspec(property(get=GetIonPolarityFilter,put=PutIonPolarityFilter))
+    enum IonPolarity IonPolarityFilter;
+    __declspec(property(get=GetFragmentorVoltage,put=PutRefFragmentorVoltage))
+    IRangePtr FragmentorVoltage;
+    __declspec(property(get=GetCollisionEnergy,put=PutRefCollisionEnergy))
+    IRangePtr CollisionEnergy;
+    __declspec(property(get=GetIonizationMode,put=PutIonizationMode))
+    enum IonizationMode _IonizationMode;
+    __declspec(property(get=GetDesiredMSStorageType,put=PutDesiredMSStorageType))
+    enum DesiredMSStorageType _DesiredMSStorageType;
+    __declspec(property(get=GetMassUnits,put=PutMassUnits))
+    VARIANT_BOOL MassUnits;
+    __declspec(property(get=GetExtractByCycle,put=PutExtractByCycle))
+    VARIANT_BOOL ExtractByCycle;
+    __declspec(property(get=GetScanIds,put=PutScanIds))
+    SAFEARRAY * ScanIds;
+    __declspec(property(get=GetAverageSpectrum,put=PutAverageSpectrum))
+    VARIANT_BOOL AverageSpectrum;
+    __declspec(property(get=GetDeviceName,put=PutDeviceName))
+    _bstr_t DeviceName;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    enum SpecType GetSpectrumType ( );
+    void PutSpectrumType (
+        enum SpecType pRetVal );
+    SAFEARRAY * GetScanRange ( );
+    void PutScanRange (
+        SAFEARRAY * pRetVal );
+    IRangePtr GetMassRange ( );
+    void PutRefMassRange (
+        struct IRange * pRetVal );
+    enum MSLevel GetMSLevelFilter ( );
+    void PutMSLevelFilter (
+        enum MSLevel pRetVal );
+    enum MSScanType GetMSScanTypeFilter ( );
+    void PutMSScanTypeFilter (
+        enum MSScanType pRetVal );
+    SAFEARRAY * GetMzOfInterestFilter ( );
+    void PutMzOfInterestFilter (
+        SAFEARRAY * pRetVal );
+    enum IonPolarity GetIonPolarityFilter ( );
+    void PutIonPolarityFilter (
+        enum IonPolarity pRetVal );
+    IRangePtr GetFragmentorVoltage ( );
+    void PutRefFragmentorVoltage (
+        struct IRange * pRetVal );
+    IRangePtr GetCollisionEnergy ( );
+    void PutRefCollisionEnergy (
+        struct IRange * pRetVal );
+    enum IonizationMode GetIonizationMode ( );
+    void PutIonizationMode (
+        enum IonizationMode pRetVal );
+    enum DesiredMSStorageType GetDesiredMSStorageType ( );
+    void PutDesiredMSStorageType (
+        enum DesiredMSStorageType pRetVal );
+    VARIANT_BOOL GetMassUnits ( );
+    void PutMassUnits (
+        VARIANT_BOOL pRetVal );
+    VARIANT_BOOL GetExtractByCycle ( );
+    void PutExtractByCycle (
+        VARIANT_BOOL pRetVal );
+    SAFEARRAY * GetScanIds ( );
+    void PutScanIds (
+        SAFEARRAY * pRetVal );
+    VARIANT_BOOL GetAverageSpectrum ( );
+    void PutAverageSpectrum (
+        VARIANT_BOOL pRetVal );
+    IBDASpecFilterPtr Clone ( );
+    _bstr_t GetDeviceName ( );
+    void PutDeviceName (
+        _bstr_t pRetVal );
+    __int64 GetOrdinalNumber ( );
+    void PutOrdinalNumber (
+        __int64 pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -900,7 +1739,7 @@ IBDASpecFilter : IDispatch
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
       virtual HRESULT __stdcall put_AverageSpectrum (
         /*[in]*/ VARIANT_BOOL pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IBDASpecFilter * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_DeviceName (
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
@@ -916,26 +1755,47 @@ struct __declspec(uuid("3a365594-a7b2-47bd-891b-a3edb23c0097"))
 IBDAReadSpectra : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    SAFEARRAY * ReadSpectrum (
+        struct IBDASpecFilter * specRequest,
+        struct IBDAPeakSpecFilter * apseParameters );
+    SAFEARRAY * ReadSpectrum_2 (
+        struct IBDASpecFilter * spectrumRequest );
+    SAFEARRAY * ReadSpectrum_3 (
+        struct IBDASpecFilter * spectrumRequest,
+        struct IRange * startRange,
+        struct IRange * endRange );
+    IBDASpecDataPtr ReadSpectrum_4 (
+        long rowIndex,
+        VARIANT_BOOL bMassUnits );
+    IBDASpecDataPtr ReadSpectrum_5 (
+        long rowIndex,
+        VARIANT_BOOL bMassUnits,
+        enum DesiredMSStorageType desiredStorageMode );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall ReadSpectrum (
+      virtual HRESULT __stdcall raw_ReadSpectrum (
         /*[in]*/ struct IBDASpecFilter * specRequest,
         /*[in]*/ struct IBDAPeakSpecFilter * apseParameters,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall ReadSpectrum_2 (
+      virtual HRESULT __stdcall raw_ReadSpectrum_2 (
         /*[in]*/ struct IBDASpecFilter * spectrumRequest,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall ReadSpectrum_3 (
+      virtual HRESULT __stdcall raw_ReadSpectrum_3 (
         /*[in]*/ struct IBDASpecFilter * spectrumRequest,
         /*[in]*/ struct IRange * startRange,
         /*[in]*/ struct IRange * endRange,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall ReadSpectrum_4 (
+      virtual HRESULT __stdcall raw_ReadSpectrum_4 (
         /*[in]*/ long rowIndex,
         /*[in]*/ VARIANT_BOOL bMassUnits,
         /*[out,retval]*/ struct IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall ReadSpectrum_5 (
+      virtual HRESULT __stdcall raw_ReadSpectrum_5 (
         /*[in]*/ long rowIndex,
         /*[in]*/ VARIANT_BOOL bMassUnits,
         /*[in]*/ enum DesiredMSStorageType desiredStorageMode,
@@ -1036,6 +1896,12 @@ extern "C" const GUID __declspec(selectany) CLSID_BDAPeakSpecFilter =
     {0x979eaa6d,0x2183,0x4fab,{0xbf,0x47,0x8d,0xe4,0x18,0xe4,0x75,0x7f}};
 extern "C" const GUID __declspec(selectany) CLSID_BDASpecFilter =
     {0x6089c0d7,0xd281,0x4461,{0xa8,0x6c,0xc3,0x56,0x6a,0x7f,0x35,0xee}};
+
+//
+// Wrapper method implementations
+//
+
+#include "basedataaccess.tli"
 
 } // namespace BDA
 

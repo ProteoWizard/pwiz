@@ -30,10 +30,10 @@ project
 lib pwiz_reader_agilent
     : # sources
         Reader_Agilent.cpp
-        Reader_Agilent_Detail.cpp
-        SpectrumList_Agilent.cpp
-        #ChromatogramList_Agilent.cpp
     : # requirements
+        <toolset>msvc:<source>Reader_Agilent_Detail.cpp
+        <toolset>msvc:<source>SpectrumList_Agilent.cpp
+        <toolset>msvc:<source>ChromatogramList_Agilent.cpp
 		<library>../../msdata//pwiz_data_msdata
 		<toolset>msvc:<define>PWIZ_READER_AGILENT
     : # default-build

@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (be46d297).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (d898beac).
 //
 // c:\bumbershoot\src\pwiz-src\build\pwiz\data\vendor_readers\agilent\msvc-9.0\release\link-static\threading-multi\massspecdatareader.tlh
 //
 // C++ source equivalent of Win32 type library MassSpecDataReader.tlb
-// compiler-generated file created 05/18/09 at 12:46:11 - DO NOT EDIT!
+// compiler-generated file created 05/19/09 at 10:02:20 - DO NOT EDIT!
 
 //
 // Cross-referenced type libraries:
@@ -66,6 +66,31 @@ struct __declspec(uuid("0cce0b75-9cf9-4d6f-9d67-b35ccd7986ac"))
 IDeviceInfo : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetDeviceName,put=PutDeviceName))
+    _bstr_t DeviceName;
+    __declspec(property(get=GetOrdinalNumber,put=PutOrdinalNumber))
+    long OrdinalNumber;
+    __declspec(property(get=GetDeviceType,put=PutDeviceType))
+    enum DeviceType _DeviceType;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    _bstr_t GetDeviceName ( );
+    void PutDeviceName (
+        _bstr_t pRetVal );
+    long GetOrdinalNumber ( );
+    void PutOrdinalNumber (
+        long pRetVal );
+    enum DeviceType GetDeviceType ( );
+    void PutDeviceType (
+        enum DeviceType pRetVal );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -78,9 +103,9 @@ IDeviceInfo : IDispatch
       virtual HRESULT __stdcall put_OrdinalNumber (
         /*[in]*/ long pRetVal ) = 0;
       virtual HRESULT __stdcall get_DeviceType (
-        /*[out,retval]*/ enum BC::DeviceType * pRetVal ) = 0;
+        /*[out,retval]*/ enum DeviceType * pRetVal ) = 0;
       virtual HRESULT __stdcall put_DeviceType (
-        /*[in]*/ enum BC::DeviceType pRetVal ) = 0;
+        /*[in]*/ enum DeviceType pRetVal ) = 0;
 };
 
 struct __declspec(uuid("9cbff297-41e1-4db2-900c-2225c1579213"))
@@ -91,6 +116,26 @@ DeviceInfo;
 struct __declspec(uuid("6c227a08-da76-4818-8711-0205abb14875"))
 ISignalInfo : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetDeviceInformation,put=PutRefDeviceInformation))
+    IDeviceInfoPtr DeviceInformation;
+    __declspec(property(get=GetSignalName,put=PutSignalName))
+    _bstr_t SignalName;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    IDeviceInfoPtr GetDeviceInformation ( );
+    void PutRefDeviceInformation (
+        struct IDeviceInfo * pRetVal );
+    _bstr_t GetSignalName ( );
+    void PutSignalName (
+        _bstr_t pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -109,29 +154,49 @@ struct __declspec(uuid("a4d3c36a-d665-4a86-ab33-1f3228cdcfbd"))
 INonmsDataReader : IDispatch
 {
     //
+    // Wrapper methods for error-handling
+    //
+
+    SAFEARRAY * GetNonmsDevices ( );
+    SAFEARRAY * GetSignalInfo (
+        struct IDeviceInfo * dev,
+        enum StoredDataType type );
+    BDA::IBDAChromDataPtr GetSignal (
+        struct ISignalInfo * sig );
+    BDA::IBDAChromDataPtr GetTWC (
+        struct IDeviceInfo * dev );
+    BDA::IBDAChromDataPtr GetEWC (
+        struct IDeviceInfo * dev,
+        struct IRange * signal,
+        struct IRange * reference );
+    SAFEARRAY * GetUVSpectrum (
+        struct IDeviceInfo * dev,
+        struct IRange * scanRange );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall GetNonmsDevices (
+      virtual HRESULT __stdcall raw_GetNonmsDevices (
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSignalInfo (
+      virtual HRESULT __stdcall raw_GetSignalInfo (
         /*[in]*/ struct IDeviceInfo * dev,
-        /*[in]*/ enum BC::StoredDataType type,
+        /*[in]*/ enum StoredDataType type,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSignal (
+      virtual HRESULT __stdcall raw_GetSignal (
         /*[in]*/ struct ISignalInfo * sig,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetTWC (
+      virtual HRESULT __stdcall raw_GetTWC (
         /*[in]*/ struct IDeviceInfo * dev,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetEWC (
+      virtual HRESULT __stdcall raw_GetEWC (
         /*[in]*/ struct IDeviceInfo * dev,
-        /*[in]*/ struct BC::IRange * signal,
-        /*[in]*/ struct BC::IRange * reference,
+        /*[in]*/ struct IRange * signal,
+        /*[in]*/ struct IRange * reference,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetUVSpectrum (
+      virtual HRESULT __stdcall raw_GetUVSpectrum (
         /*[in]*/ struct IDeviceInfo * dev,
-        /*[in]*/ struct BC::IRange * scanRange,
+        /*[in]*/ struct IRange * scanRange,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
 };
 
@@ -143,6 +208,41 @@ SignalInfo;
 struct __declspec(uuid("b6b8eab8-0917-4eeb-bd3f-a4f147e6dd88"))
 IMsdrChargeStateAssignmentFilter : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetAbsoluteTolerance,put=PutAbsoluteTolerance))
+    double AbsoluteTolerance;
+    __declspec(property(get=GetLimitMaxChargeState,put=PutLimitMaxChargeState))
+    VARIANT_BOOL LimitMaxChargeState;
+    __declspec(property(get=GetMaximumChargeState,put=PutMaximumChargeState))
+    long MaximumChargeState;
+    __declspec(property(get=GetRelativeTolerance,put=PutRelativeTolerance))
+    double RelativeTolerance;
+    __declspec(property(get=GetRequirePeptideLikeAbundanceProfile,put=PutRequirePeptideLikeAbundanceProfile))
+    VARIANT_BOOL RequirePeptideLikeAbundanceProfile;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetAbsoluteTolerance ( );
+    void PutAbsoluteTolerance (
+        double pRetVal );
+    VARIANT_BOOL GetLimitMaxChargeState ( );
+    void PutLimitMaxChargeState (
+        VARIANT_BOOL pRetVal );
+    long GetMaximumChargeState ( );
+    void PutMaximumChargeState (
+        long pRetVal );
+    double GetRelativeTolerance ( );
+    void PutRelativeTolerance (
+        double pRetVal );
+    VARIANT_BOOL GetRequirePeptideLikeAbundanceProfile ( );
+    void PutRequirePeptideLikeAbundanceProfile (
+        VARIANT_BOOL pRetVal );
+
     //
     // Raw methods provided by interface
     //
@@ -173,6 +273,31 @@ struct __declspec(uuid("03825ec8-d953-4213-afe7-ddeb92bc86c6"))
 IMsdrPeakFilter : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetRelativeThreshold,put=PutRelativeThreshold))
+    double RelativeThreshold;
+    __declspec(property(get=GetAbsoluteThreshold,put=PutAbsoluteThreshold))
+    double AbsoluteThreshold;
+    __declspec(property(get=GetMaxNumPeaks,put=PutMaxNumPeaks))
+    long MaxNumPeaks;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetRelativeThreshold ( );
+    void PutRelativeThreshold (
+        double pRetVal );
+    double GetAbsoluteThreshold ( );
+    void PutAbsoluteThreshold (
+        double pRetVal );
+    long GetMaxNumPeaks ( );
+    void PutMaxNumPeaks (
+        long pRetVal );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -194,92 +319,183 @@ struct __declspec(uuid("da2b5d36-f15c-4484-9496-b0415cfe0c59"))
 IMsdrDataReader : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetFileInformation))
+    BDA::IBDAFileInformationPtr FileInformation;
+    __declspec(property(get=GetMSScanFileInformation))
+    BDA::IBDAMSScanFileInformationPtr MSScanFileInformation;
+    __declspec(property(get=GetSchemaDefaultDirectory,put=PutSchemaDefaultDirectory))
+    _bstr_t SchemaDefaultDirectory;
+    __declspec(property(get=GetActualsInformation))
+    BDA::IBDAActualsPtr ActualsInformation;
+    __declspec(property(get=GetVersion))
+    _bstr_t Version;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    VARIANT_BOOL OpenDataFile (
+        _bstr_t fileName );
+    HRESULT CloseDataFile ( );
+    VARIANT_BOOL RefreshDataFile (
+        VARIANT_BOOL * isNewDataPresent );
+    BDA::IBDAFileInformationPtr GetFileInformation ( );
+    BDA::IBDAMSScanFileInformationPtr GetMSScanFileInformation ( );
+    BDA::IBDAMSScanFileInformationPtr GetMSScanInformation (
+        double retentionTime );
+    BDA::IBDAChromDataPtr GetTIC ( );
+    BDA::IBDAChromDataPtr GetTIC_2 (
+        double startTime,
+        double endTime,
+        enum MSScanType scanType,
+        enum IonPolarity ionPloarity,
+        enum IonizationMode ionMode );
+    BDA::IBDAChromDataPtr GetBPC ( );
+    BDA::IBDAChromDataPtr GetBPC_2 (
+        double startTime,
+        double endTime,
+        enum MSScanType scanType,
+        enum IonPolarity ionPolarity,
+        enum IonizationMode ionMode );
+    BDA::IBDAChromDataPtr GetEIC (
+        SAFEARRAY * massOfInterest,
+        enum MSScanType scanType,
+        enum IonPolarity ionPolarity,
+        enum IonizationMode ionMode );
+    SAFEARRAY * GetEICForEachMass (
+        SAFEARRAY * massOfInterest,
+        enum MSScanType scanType,
+        enum IonPolarity ionPolarity,
+        enum IonizationMode ionMode );
+    SAFEARRAY * GetChromatogram (
+        struct BDA::IBDAChromFilter * chromFilter );
+    BDA::IBDASpecDataPtr GetSpectrum (
+        double retentionTime,
+        enum MSScanType scanType,
+        enum IonPolarity ionPloarity,
+        enum IonizationMode ionMode,
+        struct IMsdrPeakFilter * peakFilter );
+    BDA::IBDASpecDataPtr GetSpectrum_2 (
+        struct IRange * rtRange,
+        struct IMsdrPeakFilter * peakFilter );
+    BDA::IBDASpecDataPtr GetSpectrum_3 (
+        SAFEARRAY * rtRanges,
+        struct IMsdrPeakFilter * peakFilter );
+    SAFEARRAY * GetSpectrum_4 (
+        struct BDA::IBDASpecFilter * specFilter,
+        struct IMsdrPeakFilter * peakFilter );
+    SAFEARRAY * GetSpectrum_5 (
+        struct BDA::IBDASpecFilter * specFilter );
+    BDA::IBDASpecDataPtr GetSpectrum_6 (
+        long rowNumber,
+        struct IMsdrPeakFilter * peakMSFilter,
+        struct IMsdrPeakFilter * peakMSMSFilter );
+    BDA::IBDASpecDataPtr GetSpectrum_7 (
+        double retentionTime,
+        enum MSScanType scanType,
+        enum IonPolarity ionPolarity,
+        enum IonizationMode ionMode,
+        struct IMsdrPeakFilter * peakFilter,
+        VARIANT_BOOL peakFilterOnCentroid );
+    HRESULT Deisotope (
+        struct BDA::IBDASpecData * spectrum,
+        struct IMsdrChargeStateAssignmentFilter * csaFilter );
+    _bstr_t GetSchemaDefaultDirectory ( );
+    void PutSchemaDefaultDirectory (
+        _bstr_t pRetVal );
+    BDA::IBDAActualsPtr GetActualsInformation ( );
+    _bstr_t GetVersion ( );
+
+    //
     // Raw methods provided by interface
     //
 
-      virtual HRESULT __stdcall OpenDataFile (
+      virtual HRESULT __stdcall raw_OpenDataFile (
         /*[in]*/ BSTR fileName,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall CloseDataFile ( ) = 0;
-      virtual HRESULT __stdcall RefreshDataFile (
+      virtual HRESULT __stdcall raw_CloseDataFile ( ) = 0;
+      virtual HRESULT __stdcall raw_RefreshDataFile (
         /*[out]*/ VARIANT_BOOL * isNewDataPresent,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
       virtual HRESULT __stdcall get_FileInformation (
         /*[out,retval]*/ struct BDA::IBDAFileInformation * * pRetVal ) = 0;
       virtual HRESULT __stdcall get_MSScanFileInformation (
         /*[out,retval]*/ struct BDA::IBDAMSScanFileInformation * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetMSScanInformation (
+      virtual HRESULT __stdcall raw_GetMSScanInformation (
         /*[in]*/ double retentionTime,
         /*[out,retval]*/ struct BDA::IBDAMSScanFileInformation * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetTIC (
+      virtual HRESULT __stdcall raw_GetTIC (
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetTIC_2 (
+      virtual HRESULT __stdcall raw_GetTIC_2 (
         /*[in]*/ double startTime,
         /*[in]*/ double endTime,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPloarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPloarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetBPC (
+      virtual HRESULT __stdcall raw_GetBPC (
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetBPC_2 (
+      virtual HRESULT __stdcall raw_GetBPC_2 (
         /*[in]*/ double startTime,
         /*[in]*/ double endTime,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPolarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPolarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetEIC (
+      virtual HRESULT __stdcall raw_GetEIC (
         /*[in]*/ SAFEARRAY * massOfInterest,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPolarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPolarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[out,retval]*/ struct BDA::IBDAChromData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetEICForEachMass (
+      virtual HRESULT __stdcall raw_GetEICForEachMass (
         /*[in]*/ SAFEARRAY * massOfInterest,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPolarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPolarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetChromatogram (
+      virtual HRESULT __stdcall raw_GetChromatogram (
         /*[in]*/ struct BDA::IBDAChromFilter * chromFilter,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum (
+      virtual HRESULT __stdcall raw_GetSpectrum (
         /*[in]*/ double retentionTime,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPloarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPloarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[in]*/ struct IMsdrPeakFilter * peakFilter,
         /*[out,retval]*/ struct BDA::IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_2 (
-        /*[in]*/ struct BC::IRange * rtRange,
+      virtual HRESULT __stdcall raw_GetSpectrum_2 (
+        /*[in]*/ struct IRange * rtRange,
         /*[in]*/ struct IMsdrPeakFilter * peakFilter,
         /*[out,retval]*/ struct BDA::IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_3 (
+      virtual HRESULT __stdcall raw_GetSpectrum_3 (
         /*[in]*/ SAFEARRAY * rtRanges,
         /*[in]*/ struct IMsdrPeakFilter * peakFilter,
         /*[out,retval]*/ struct BDA::IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_4 (
+      virtual HRESULT __stdcall raw_GetSpectrum_4 (
         /*[in]*/ struct BDA::IBDASpecFilter * specFilter,
         /*[in]*/ struct IMsdrPeakFilter * peakFilter,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_5 (
+      virtual HRESULT __stdcall raw_GetSpectrum_5 (
         /*[in]*/ struct BDA::IBDASpecFilter * specFilter,
         /*[out,retval]*/ SAFEARRAY * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_6 (
+      virtual HRESULT __stdcall raw_GetSpectrum_6 (
         /*[in]*/ long rowNumber,
         /*[in]*/ struct IMsdrPeakFilter * peakMSFilter,
         /*[in]*/ struct IMsdrPeakFilter * peakMSMSFilter,
         /*[out,retval]*/ struct BDA::IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall GetSpectrum_7 (
+      virtual HRESULT __stdcall raw_GetSpectrum_7 (
         /*[in]*/ double retentionTime,
-        /*[in]*/ enum BC::MSScanType scanType,
-        /*[in]*/ enum BC::IonPolarity ionPolarity,
-        /*[in]*/ enum BC::IonizationMode ionMode,
+        /*[in]*/ enum MSScanType scanType,
+        /*[in]*/ enum IonPolarity ionPolarity,
+        /*[in]*/ enum IonizationMode ionMode,
         /*[in]*/ struct IMsdrPeakFilter * peakFilter,
         /*[in]*/ VARIANT_BOOL peakFilterOnCentroid,
         /*[out,retval]*/ struct BDA::IBDASpecData * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Deisotope (
+      virtual HRESULT __stdcall raw_Deisotope (
         /*[in]*/ struct BDA::IBDASpecData * spectrum,
         /*[in]*/ struct IMsdrChargeStateAssignmentFilter * csaFilter ) = 0;
       virtual HRESULT __stdcall get_SchemaDefaultDirectory (
@@ -330,6 +546,12 @@ extern "C" const GUID __declspec(selectany) CLSID_MsdrChargeStateAssignmentFilte
     {0x704937a0,0x0509,0x4df6,{0xa3,0x6a,0x3d,0xd0,0xbf,0xbe,0x1a,0x4b}};
 extern "C" const GUID __declspec(selectany) CLSID_MsdrPeakFilter =
     {0xf0f5c3f5,0x33ba,0x4a38,{0xba,0xda,0xc1,0xad,0x79,0x94,0x92,0x68}};
+
+//
+// Wrapper method implementations
+//
+
+#include "massspecdatareader.tli"
 
 } // namespace MSDR
 

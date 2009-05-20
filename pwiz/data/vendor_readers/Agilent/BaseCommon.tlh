@@ -1,16 +1,14 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9ab817dc).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (715f52eb).
 //
 // c:\bumbershoot\src\pwiz-src\build\pwiz\data\vendor_readers\agilent\msvc-9.0\release\link-static\threading-multi\basecommon.tlh
 //
 // C++ source equivalent of Win32 type library BaseCommon.tlb
-// compiler-generated file created 05/18/09 at 12:46:11 - DO NOT EDIT!
+// compiler-generated file created 05/19/09 at 10:00:45 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
 
 #include <comdef.h>
-
-namespace BC {
 
 //
 // Forward references and typedefs
@@ -85,6 +83,37 @@ struct __declspec(uuid("869d8d23-687c-4dc6-83ca-eb05f24d193d"))
 IRange : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetStart))
+    double Start;
+    __declspec(property(get=GetEnd))
+    double End;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetStart ( );
+    double GetEnd ( );
+    VARIANT_BOOL IsEmpty ( );
+    HRESULT SetEmpty ( );
+    _bstr_t ValueString (
+        VARIANT_BOOL withUnits,
+        long * nValues );
+    _bstr_t ExtendedValueString (
+        VARIANT_BOOL withUnits,
+        long * nValues );
+    VARIANT_BOOL Equals (
+        struct IRange * other );
+    IRangePtr Clone ( );
+    HRESULT WriteXml (
+        IUnknown * writer );
+    VARIANT_BOOL IsValueWithinRange (
+        double valToCheck );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -92,25 +121,25 @@ IRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall get_End (
         /*[out,retval]*/ double * pRetVal ) = 0;
-      virtual HRESULT __stdcall IsEmpty (
+      virtual HRESULT __stdcall raw_IsEmpty (
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall SetEmpty ( ) = 0;
-      virtual HRESULT __stdcall ValueString (
+      virtual HRESULT __stdcall raw_SetEmpty ( ) = 0;
+      virtual HRESULT __stdcall raw_ValueString (
         /*[in]*/ VARIANT_BOOL withUnits,
         /*[out]*/ long * nValues,
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
-      virtual HRESULT __stdcall ExtendedValueString (
+      virtual HRESULT __stdcall raw_ExtendedValueString (
         /*[in]*/ VARIANT_BOOL withUnits,
         /*[out]*/ long * nValues,
         /*[out,retval]*/ BSTR * pRetVal ) = 0;
-      virtual HRESULT __stdcall Equals (
+      virtual HRESULT __stdcall raw_Equals (
         /*[in]*/ struct IRange * other,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IRange * * pRetVal ) = 0;
-      virtual HRESULT __stdcall WriteXml (
+      virtual HRESULT __stdcall raw_WriteXml (
         /*[in]*/ IUnknown * writer ) = 0;
-      virtual HRESULT __stdcall IsValueWithinRange (
+      virtual HRESULT __stdcall raw_IsValueWithinRange (
         /*[in]*/ double valToCheck,
         /*[out,retval]*/ VARIANT_BOOL * pRetVal ) = 0;
 };
@@ -125,6 +154,29 @@ struct __declspec(uuid("6b533712-c2ef-4ea9-89b9-0585d994fa4c"))
 IMinMaxRange : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetMin,put=PutMin))
+    double Min;
+    __declspec(property(get=GetMax,put=PutMax))
+    double Max;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetMin ( );
+    void PutMin (
+        double pRetVal );
+    double GetMax ( );
+    void PutMax (
+        double pRetVal );
+    IMinMaxRangePtr Clone ( );
+    IMinMaxRangePtr Merge (
+        struct IMinMaxRange * range );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -136,9 +188,9 @@ IMinMaxRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall put_Max (
         /*[in]*/ double pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IMinMaxRange * * pRetVal ) = 0;
-      virtual HRESULT __stdcall Merge (
+      virtual HRESULT __stdcall raw_Merge (
         /*[in]*/ struct IMinMaxRange * range,
         /*[out,retval]*/ struct IMinMaxRange * * pRetVal ) = 0;
 };
@@ -154,6 +206,27 @@ struct __declspec(uuid("20aa2c9e-8e8d-4e02-b80f-7325633e93c2"))
 ICenterWidthRange : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetCenter,put=PutCenter))
+    double Center;
+    __declspec(property(get=GetWidth,put=PutWidth))
+    double Width;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetCenter ( );
+    void PutCenter (
+        double pRetVal );
+    double GetWidth ( );
+    void PutWidth (
+        double pRetVal );
+    ICenterWidthRangePtr Clone ( );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -165,7 +238,7 @@ ICenterWidthRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall put_Width (
         /*[in]*/ double pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct ICenterWidthRange * * pRetVal ) = 0;
 };
 
@@ -180,6 +253,27 @@ struct __declspec(uuid("626fa49e-39d6-4b36-898c-a7ca4e6d1354"))
 ICenterWidthPctRange : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetCenter,put=PutCenter))
+    double Center;
+    __declspec(property(get=GetWidthPct,put=PutWidthPct))
+    double WidthPct;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetCenter ( );
+    void PutCenter (
+        double pRetVal );
+    double GetWidthPct ( );
+    void PutWidthPct (
+        double pRetVal );
+    ICenterWidthPctRangePtr Clone ( );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -191,7 +285,7 @@ ICenterWidthPctRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall put_WidthPct (
         /*[in]*/ double pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct ICenterWidthPctRange * * pRetVal ) = 0;
 };
 
@@ -206,6 +300,27 @@ struct __declspec(uuid("6c798847-22f4-4464-b01f-9b01cc22f508"))
 ICenterWidthPpmRange : IDispatch
 {
     //
+    // Property data
+    //
+
+    __declspec(property(get=GetCenter,put=PutCenter))
+    double Center;
+    __declspec(property(get=GetWidthPpm,put=PutWidthPpm))
+    double WidthPpm;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetCenter ( );
+    void PutCenter (
+        double pRetVal );
+    double GetWidthPpm ( );
+    void PutWidthPpm (
+        double pRetVal );
+    ICenterWidthPpmRangePtr Clone ( );
+
+    //
     // Raw methods provided by interface
     //
 
@@ -217,7 +332,7 @@ ICenterWidthPpmRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall put_WidthPpm (
         /*[in]*/ double pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct ICenterWidthPpmRange * * pRetVal ) = 0;
 };
 
@@ -231,6 +346,32 @@ CenterWidthPpmRange;
 struct __declspec(uuid("694adb42-5c01-44f6-8ca4-9a8d8e6e46c2"))
 IAsymmetricRange : IDispatch
 {
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetCenter,put=PutCenter))
+    double Center;
+    __declspec(property(get=GetLowSpan,put=PutLowSpan))
+    double LowSpan;
+    __declspec(property(get=GetHighSpan,put=PutHighSpan))
+    double HighSpan;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetCenter ( );
+    void PutCenter (
+        double pRetVal );
+    double GetLowSpan ( );
+    void PutLowSpan (
+        double pRetVal );
+    double GetHighSpan ( );
+    void PutHighSpan (
+        double pRetVal );
+    IAsymmetricRangePtr Clone ( );
+
     //
     // Raw methods provided by interface
     //
@@ -247,7 +388,7 @@ IAsymmetricRange : IDispatch
         /*[out,retval]*/ double * pRetVal ) = 0;
       virtual HRESULT __stdcall put_HighSpan (
         /*[in]*/ double pRetVal ) = 0;
-      virtual HRESULT __stdcall Clone (
+      virtual HRESULT __stdcall raw_Clone (
         /*[out,retval]*/ struct IAsymmetricRange * * pRetVal ) = 0;
 };
 
@@ -665,7 +806,7 @@ IRMStatus
 // Named GUID constants initializations
 //
 
-extern "C" const GUID __declspec(selectany) LIBID_BC =
+extern "C" const GUID __declspec(selectany) LIBID_BaseCommon =
     {0x02b74101,0x3dcc,0x411c,{0xb9,0x91,0xac,0xec,0x8a,0x17,0xdd,0xf1}};
 extern "C" const GUID __declspec(selectany) IID_IRange =
     {0x869d8d23,0x687c,0x4dc6,{0x83,0xca,0xeb,0x05,0xf2,0x4d,0x19,0x3d}};
@@ -692,6 +833,10 @@ extern "C" const GUID __declspec(selectany) IID_IAsymmetricRange =
 extern "C" const GUID __declspec(selectany) CLSID_AsymmetricRange =
     {0x0c269346,0xc2c9,0x4ea3,{0x95,0x33,0xe7,0xa8,0xe4,0x7e,0xd4,0xc7}};
 
-} // namespace BC
+//
+// Wrapper method implementations
+//
+
+#include "basecommon.tli"
 
 #pragma pack(pop)

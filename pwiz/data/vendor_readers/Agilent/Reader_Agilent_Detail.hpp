@@ -27,9 +27,9 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "boost/shared_ptr.hpp"
 
-//#import "BaseCommon.tlb" raw_interfaces_only, rename_namespace("BC"), named_guids
-//#import "BaseDataAccess.tlb" raw_interfaces_only, rename_namespace("BDA"), named_guids
-//#import "MassSpecDataReader.tlb" raw_interfaces_only, rename_namespace("MSDR"), named_guids
+//#import "BaseCommon.tlb" no_namespace, named_guids
+//#import "BaseDataAccess.tlb" rename_namespace("BDA"), named_guids
+//#import "MassSpecDataReader.tlb" rename_namespace("MSDR"), named_guids
 #include "BaseCommon.tlh"
 #include "BaseDataAccess.tlh"
 #include "MassSpecDataReader.tlh"
@@ -77,59 +77,38 @@ void convertSafeArrayToVector(SAFEARRAY* parray, std::vector<T>& result)
         throw runtime_error("[convertSafeArrayToVector()] Data access error.");
     result.assign(data, data + parray->rgsabound->cElements);
     SafeArrayUnaccessData(parray);
+    SafeArrayDestroy(parray);
 }
 
 
 typedef MSDR::IMsdrDataReaderPtr IDataReaderPtr;
 typedef BDA::IBDAMSScanFileInformationPtr IScanInformationPtr;
 typedef BDA::IBDASpecDataPtr ISpectrumPtr;
+typedef BDA::IBDASpecFilterPtr ISpectrumFilterPtr;
+typedef MSDR::IMsdrPeakFilterPtr IPeakFilterPtr;
 typedef BDA::IBDAChromDataPtr IChromatogramPtr;
+typedef BDA::IBDAChromFilterPtr IChromatogramFilterPtr;
 
 
 struct AgilentDataReader
 {
-    AgilentDataReader(const std::string& path)
-        :   dataReaderPtr(MSDR::CLSID_MassSpecDataReader),
-            scanFileInfoPtr(BDA::CLSID_BDAMSScanFileInformation)
-    {
-        HRESULT hr = S_OK;
-        VARIANT_BOOL pRetVal = VARIANT_TRUE;
-
-        bstr_t bpath(path.c_str());
-        hr = dataReaderPtr->OpenDataFile(bpath, &pRetVal);
-        if (FAILED(hr))
-            throw std::runtime_error("[AgilentDataReader::ctor()] Error opening source path.");
-
-        dataReaderPtr->get_MSScanFileInformation(&scanFileInfoPtr);
-
-        BDA::IBDAChromDataPtr ticPtr;
-        dataReaderPtr->GetTIC(&ticPtr);
-        LPSAFEARRAY xArrayPtr, yArrayPtr;
-        ticPtr->get_xArray(&xArrayPtr);
-        ticPtr->get_yArray(&yArrayPtr);
-        convertSafeArrayToVector(xArrayPtr, ticTimes);
-        convertSafeArrayToVector(yArrayPtr, ticIntensities);
-    }
-
-    ~AgilentDataReader()
-    {
-        dataReaderPtr->CloseDataFile();
-    }
+    AgilentDataReader(const std::string& path);
+    ~AgilentDataReader();
 
     IDataReaderPtr dataReaderPtr;
     IScanInformationPtr scanFileInfoPtr;
 
-    std::vector<double> ticTimes;
-    std::vector<float> ticIntensities;
+    std::vector<double> ticTimes, bpcTimes;
+    std::vector<float> ticIntensities, bpcIntensities;
 };
 
 typedef boost::shared_ptr<AgilentDataReader> AgilentDataReaderPtr;
 
 
-PWIZ_API_DECL CVID translateAsSpectrumType(IScanInformationPtr scanInfoPtr);
-PWIZ_API_DECL int translateAsMSLevel(IScanInformationPtr scanInfoPtr);
-PWIZ_API_DECL CVID translateAsActivationType(IScanInformationPtr scanInfoPtr);
-PWIZ_API_DECL CVID translateAsPolarityType(IScanInformationPtr scanInfoPtr);
+PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType);
+PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType);
+PWIZ_API_DECL CVID translateAsActivationType(MSScanType scanType);
+PWIZ_API_DECL CVID translateAsPolarityType(IonPolarity polarity);
 
 /*PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile);
