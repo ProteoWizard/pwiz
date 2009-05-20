@@ -32,21 +32,27 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+    if <toolset>msvc in $(properties)
     {
-        result += <source>SpectrumList_ABI.cpp ;
-        result += <source>ChromatogramList_ABI.cpp ;
-        result += <define>PWIZ_READER_ABI ;
-        result += <library>$(api-location)//pwiz_wifffile ;
+        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        {
+            result += <source>SpectrumList_ABI.cpp ;
+            result += <source>ChromatogramList_ABI.cpp ;
+            result += <define>PWIZ_READER_ABI ;
+            result += <library>$(api-location)//pwiz_wifffile ;
+        }
     }
     return $(result) ;
 }
 
 rule vendor-api-usage-requirements ( properties * )
 {
-    if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+    if <toolset>msvc in $(properties)
     {
-        return <define>PWIZ_READER_ABI <library>$(api-location)//pwiz_wifffile ;
+        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        {
+            return <define>PWIZ_READER_ABI <library>$(api-location)//pwiz_wifffile ;
+        }
     }
 }
 
