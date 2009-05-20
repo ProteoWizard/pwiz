@@ -1809,6 +1809,12 @@ public ref class ChromatogramList
     /// <para>- client may assume the underlying Chromatogram^ is valid</para>
     /// </summary>
     virtual Chromatogram^ chromatogram(int index, bool getBinaryData);
+
+    /// <summary>
+    /// returns the data processing affecting chromatograms retrieved through this interface
+    /// <para>- may return a null shared pointer</para>
+    /// </summary>
+    virtual DataProcessing^ dataProcessing();
 };
 
 

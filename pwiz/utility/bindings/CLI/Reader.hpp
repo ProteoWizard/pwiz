@@ -62,16 +62,16 @@ public ref class Reader
     virtual void read(System::String^ filename,
                       System::String^ head,
                       MSData^ result,
-                      int sampleIndex);
+                      int runIndex);
 
     /// fill in the MSData structure
-    virtual void readAll(System::String^ filename,
+    virtual void read(System::String^ filename,
                       System::String^ head,
                       MSDataList^ results);
 
     /// fill in the MSData structure
     virtual array<System::String^>^ readIds(System::String^ filename,
-                      System::String^ head);
+                                            System::String^ head);
 };
 
 
@@ -100,7 +100,7 @@ public ref class ReaderList : public Reader
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
                       MSData^ result,
-                      int sampleIndex);
+                      int runIndex);
 
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
@@ -111,14 +111,14 @@ public ref class ReaderList : public Reader
     virtual void read(System::String^ filename,
                       System::String^ head,
                       MSData^ result,
-                      int sampleIndex) override;
+                      int runIndex) override;
 
     /// fill in the MSDataList with MSData for all samples
-    virtual void readAll(System::String^ filename,
+    virtual void read(System::String^ filename,
                       MSDataList^ results);
 
     /// fill in the MSDataList with MSData for all samples
-    virtual void readAll(System::String^ filename,
+    virtual void read(System::String^ filename,
                       System::String^ head,
                       MSDataList^ results) override;
 
@@ -127,7 +127,7 @@ public ref class ReaderList : public Reader
 
     /// get MSData.Ids
     virtual array<System::String^>^ readIds(System::String^ filename,
-                      System::String^ head) override;
+                                            System::String^ head) override;
 
     static property ReaderList^ FullReaderList { ReaderList^ get(); }
 };

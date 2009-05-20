@@ -57,11 +57,21 @@ class Reader1 : public Reader
 
     virtual void read(const std::string& filename, 
                       const std::string& head,
-                      MSData& result) const 
+                      MSData& result,
+                      int runIndex = 0) const 
     {
         if (os_) *os_ << "Reader1::read()\n";
         config.done = true;
     }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
     virtual const char *getType() const {return "Reader1";} // satisfy inheritance
 };
 
@@ -88,11 +98,21 @@ class Reader2 : public Reader
 
     virtual void read(const std::string& filename, 
                       const std::string& head,
-                      MSData& result) const
+                      MSData& result,
+                      int runIndex = 0) const
     {
         if (os_) *os_ << "Reader2::read()\n";
         config.done = true;
     }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
     const char *getType() const {return "Reader2";} // satisfy inheritance
 };
 

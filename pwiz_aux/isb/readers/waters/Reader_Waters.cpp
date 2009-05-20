@@ -144,9 +144,9 @@ PWIZ_API_DECL
 void Reader_Waters::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int sampleIndex /* = 0 */) const
+                         int runIndex) const
 {
-    if (sampleIndex != 0)
+    if (runIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple samples not supported");
 
     SpectrumList_Waters* sl = new SpectrumList_Waters(result, filename);
@@ -178,7 +178,7 @@ using namespace std;
 PWIZ_API_DECL Reader_Waters::Reader_Waters() {}
 PWIZ_API_DECL Reader_Waters::~Reader_Waters() {}
 
-PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int runIndex) const
 {
     throw ReaderFail("[Reader_Waters::read()] Waters RAW reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -188,7 +188,7 @@ PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& hea
 #else // wrong platform
         "requires MassLynx which only work on Windows"
 #endif
-		);
+    );
 }
 
 } // namespace msdata

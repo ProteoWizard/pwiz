@@ -836,6 +836,15 @@ Chromatogram^ ChromatogramList::chromatogram(int index, bool getBinaryData)
     catch (...) { throw gcnew Exception("[ChromatogramList::chromatogram()] Unhandled exception"); }
 }
 
+DataProcessing^ ChromatogramList::dataProcessing()
+{
+    const shared_ptr<const b::DataProcessing> cdp = (*base_)->dataProcessingPtr();
+    if (!cdp.get())
+        return nullptr;
+    b::DataProcessingPtr dp = boost::const_pointer_cast<b::DataProcessing>(cdp);
+    return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, dp);
+}
+
 
 ChromatogramListSimple::ChromatogramListSimple()
 : ChromatogramList(new boost::shared_ptr<b::ChromatogramList>(new b::ChromatogramListSimple()))

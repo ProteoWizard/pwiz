@@ -176,6 +176,14 @@ class Reader_mzML : public Reader
         fillInCommonMetadata(filename, result);
     }
 
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
 	virtual const char *getType() const {return "mzML";}
 
     private:
@@ -247,6 +255,15 @@ class Reader_mzXML : public Reader
         result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_file);
         return;
     }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
 	virtual const char *getType() const {return "mzXML";}
 };
 
@@ -274,6 +291,15 @@ class Reader_MGF : public Reader
         // TODO: result.fileDescription.sourceFilePtrs.back()->set(MS_Matrix_Science_MGF_file);
         return;
     }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
 	virtual const char *getType() const {return "Mascot Generic";}
 };
 
@@ -319,6 +345,15 @@ class Reader_BTDX : public Reader
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;
     }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
+
 	virtual const char *getType() const {return "Bruker Data Exchange";}
 };
 

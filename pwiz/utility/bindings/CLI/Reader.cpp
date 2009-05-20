@@ -26,9 +26,9 @@
 #include "pwiz_tools/common/FullReaderList.hpp"
 
 
-#pragma unmanaged
-#include <boost/utility/mutexed_singleton.hpp>
-#pragma managed
+//#pragma unmanaged
+//#include <boost/utility/mutexed_singleton.hpp>
+//#pragma managed
 
 
 namespace pwiz {
@@ -58,9 +58,9 @@ void Reader::read(System::String^ filename, System::String^ head, MSData^ result
     base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);
 }
 
-void Reader::readAll(System::String^ filename, System::String^ head, MSDataList^ results)
+void Reader::read(System::String^ filename, System::String^ head, MSDataList^ results)
 {
-    base_->readAll(ToStdString(filename), ToStdString(head), *results->base_);
+    base_->read(ToStdString(filename), ToStdString(head), *results->base_);
 }
 
 array<System::String^>^ Reader::readIds(System::String^ filename, System::String^ head)
@@ -90,9 +90,9 @@ void ReaderList::read(System::String^ filename, System::String^ head, MSData^ re
     base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);
 }
 
-void ReaderList::readAll(System::String^ filename, System::String^ head, MSDataList^ results)
+void ReaderList::read(System::String^ filename, System::String^ head, MSDataList^ results)
 {
-    base_->readAll(ToStdString(filename), ToStdString(head), *results->base_);
+    base_->read(ToStdString(filename), ToStdString(head), *results->base_);
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename, System::String^ head)
@@ -112,9 +112,9 @@ void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
     base_->read(ToStdString(filename), **result->base_, sampleIndex);
 }
 
-void ReaderList::readAll(System::String^ filename, MSDataList^ results)
+void ReaderList::read(System::String^ filename, MSDataList^ results)
 {
-    base_->readAll(ToStdString(filename), *results->base_);
+    base_->read(ToStdString(filename), *results->base_);
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename)

@@ -54,23 +54,23 @@ class PWIZ_API_DECL Reader
 	/// may fail if the 3rd party DLL isn't actually present
     /// Reader may filter based on filename and/or head of the file
     virtual std::string identify(const std::string& filename,
-                        const std::string& head) const = 0;
+                                 const std::string& head) const = 0;
 
-    /// fill in the MSData structure
-    /// note: using this on a multi-run input file will throw an exception
+    /// fill in the MSData structure from the first (or only) sample
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      MSData& result, int sampleIndex = 0) const = 0;
+                      MSData& result,
+                      int runIndex = 0) const = 0;
 
     /// fill in a vector of MSData structures; provides support for multi-run input files
-    virtual void readAll(const std::string& filename,
+    virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const;
+                      std::vector<MSDataPtr>& results) const = 0;
 
     /// fill in a vector of MSData.Id values; provides support for multi-run input files
     virtual void readIds(const std::string& filename,
-                      const std::string& head,
-                      std::vector<std::string>& dataIds) const;
+                         const std::string& head,
+                         std::vector<std::string>& dataIds) const;
 
 	virtual const char *getType() const = 0; // what kind of reader are you?
 
@@ -117,35 +117,35 @@ class PWIZ_API_DECL ReaderList : public Reader,
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
                       MSData& result,
-                      int sampleIndex = 0) const;
+                      int runIndex = 0) const;
 
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
                       const std::string& head,
                       MSData& result,
-                      int sampleIndex = 0) const;
+                      int runIndex = 0) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
-    virtual void readAll(const std::string& filename,
+    virtual void read(const std::string& filename,
                       std::vector<MSDataPtr>& results) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
-    virtual void readAll(const std::string& filename,
+    virtual void read(const std::string& filename,
                       const std::string& head,
                       std::vector<MSDataPtr>& results) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void readIds(const std::string& filename,
-                      std::vector<std::string>& results) const;
+                         std::vector<std::string>& results) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void readIds(const std::string& filename,
-                      const std::string& head,
-                      std::vector<std::string>& results) const;
+                         const std::string& head,
+                         std::vector<std::string>& results) const;
 
     /// appends all of the rhs operand's Readers to the list
     ReaderList& operator +=(const ReaderList& rhs);

@@ -196,9 +196,17 @@ class TestReader : public Reader
         return filename;
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const
     {
         count++;
+    }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
     }
 
     const char *getType() const {return "testReader";} // satisfy inheritance

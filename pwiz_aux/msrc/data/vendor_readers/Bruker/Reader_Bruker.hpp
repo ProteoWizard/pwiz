@@ -43,7 +43,15 @@ class PWIZ_API_DECL Reader_Bruker : public Reader
     virtual void read(const std::string& filename,
                       const std::string& head,
                       MSData& result,
-                      int sampleIndex = 0) const;
+                      int runIndex = 0) const;
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MSDataPtr>& results) const
+    {
+        results.push_back(MSDataPtr(new MSData));
+        read(filename, head, *results.back());
+    }
 
     virtual const char * getType() const {return "Bruker Analysis";}
 };

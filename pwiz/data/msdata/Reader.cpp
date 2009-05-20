@@ -37,19 +37,13 @@ using namespace pwiz::util;
 
 
 // default implementation; most Readers don't need to worry about multi-run input files
-PWIZ_API_DECL void Reader::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
-{
-    results.push_back(MSDataPtr(new MSData));
-    read(filename, head, *results.back());
-}
-
-// default implementation; most Readers don't need to worry about multi-run input files
 PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results) const
 {
     MSData data;
     read(filename, head, data);
     results.push_back(data.id);
 }
+
 
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
 {
@@ -71,10 +65,12 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
     return result;
 }
 
+
 PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result, int sampleIndex /* = 0 */) const
 {
     read(filename, read_file_header(filename, 512), result, sampleIndex);
 }
+
 
 PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
@@ -89,23 +85,24 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
 }
 
 
-PWIZ_API_DECL void ReaderList::readAll(const string& filename, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& results) const
 {
-    readAll(filename, read_file_header(filename, 512), results);
+    read(filename, read_file_header(filename, 512), results);
 }
 
 
-PWIZ_API_DECL void ReaderList::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->readAll(filename, head, results);
+            (*it)->read(filename, head, results);
             return;
         }
     throw ReaderFail((" don't know how to read " +
                         filename).c_str());
 }
+
 
 PWIZ_API_DECL void ReaderList::readIds(const string& filename, vector<string>& results) const
 {
@@ -124,6 +121,7 @@ PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& hea
     throw ReaderFail((" don't know how to read " +
                         filename).c_str());
 }
+
 
 PWIZ_API_DECL ReaderList& ReaderList::operator +=(const ReaderList& rhs)
 {

@@ -146,9 +146,9 @@ PWIZ_API_DECL
 void Reader_Bruker::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int sampleIndex) const
+                         int runIndex) const
 {
-    if (sampleIndex != 0)
+    if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple samples not supported");
 
     Reader_Bruker_Format format = detail::format(filename);
