@@ -219,12 +219,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     // if a centroided spectrum is desired, we make a new call
     if (doCentroid)
     {
-        ISpectrumFilterPtr filterPtr(BDA::CLSID_BDASpecFilter);
-        filterPtr->_DesiredMSStorageType = DesiredMSStorageType_Peak;
-        filterPtr->OrdinalNumber = spectrumPtr->OrdinalNumber;
-        vector<ISpectrumPtr> spectrumArray;
-        convertSafeArrayToVector(rawfile_->dataReaderPtr->GetSpectrum_5(filterPtr), spectrumArray);
-        spectrumPtr = spectrumArray[0];
+        IPeakFilterPtr filterPtr(MSDR::CLSID_MsdrPeakFilter);
+        filterPtr->AbsoluteThreshold = 1.0;
+        spectrumPtr = rawfile_->dataReaderPtr->GetSpectrum_6(index, filterPtr, filterPtr);
     }
 
     if (getBinaryData)
