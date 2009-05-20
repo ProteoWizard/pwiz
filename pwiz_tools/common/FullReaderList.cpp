@@ -41,11 +41,9 @@ using boost::shared_ptr;
 
 PWIZ_API_DECL FullReaderList::FullReaderList()
 {
-    #ifdef _MSC_VER // vendor DLL usage is msvc only - mingw doesn't provide com support
     push_back(ReaderPtr(new Reader_Waters)); 
     push_back(ReaderPtr(new Reader_Bruker));
     push_back(ReaderPtr(new Reader_ABI));
-    #endif
 }
 
 
