@@ -138,5 +138,6 @@ alias unit-test-requirements
 unit-test MSDataTest : MSDataTest.cpp : <use>unit-test-requirements ;
 unit-test DiffTest : DiffTest.cpp : <use>unit-test-requirements ;
 unit-test MSDataFileTest : MSDataFileTest.cpp : <use>unit-test-requirements ;
+explicit MSDataFileTest ;
 
 }
