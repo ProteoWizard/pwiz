@@ -63,8 +63,8 @@ namespace {
 
 inline char idref_allowed(char c)
 {
-    return isalnum(c) || c=='-' ? 
-           c : 
+    return isalnum(c) || c=='-' ?
+           c :
            '_';
 }
 
@@ -143,8 +143,8 @@ PWIZ_API_DECL Reader_Waters::~Reader_Waters()
 PWIZ_API_DECL
 void Reader_Waters::read(const string& filename,
                          const string& head,
-                         int sampleIndex, 
-                         MSData& result) const
+                         MSData& result,
+                         int sampleIndex /* = 0 */) const
 {
     if (sampleIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple samples not supported");
@@ -178,7 +178,7 @@ using namespace std;
 PWIZ_API_DECL Reader_Waters::Reader_Waters() {}
 PWIZ_API_DECL Reader_Waters::~Reader_Waters() {}
 
-PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int sampleIndex) const
+PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
     throw ReaderFail("[Reader_Waters::read()] Waters RAW reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

@@ -7,16 +7,16 @@
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -98,7 +98,7 @@ void appendSourceFile(const string& filename, MSData& msd)
 SoftwarePtr getSoftwarePwiz(vector<SoftwarePtr>& softwarePtrs)
 {
     string version = pwiz::msdata::Version::str();
-    
+
     for (vector<SoftwarePtr>::const_iterator it=softwarePtrs.begin(); it!=softwarePtrs.end(); ++it)
         if ((*it)->hasCVParam(MS_pwiz) && (*it)->version==version)
             return *it;
@@ -137,11 +137,11 @@ class Reader_mzML : public Reader
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-         istringstream iss(head); 
-		 return std::string((type(iss) != Type_Unknown)?getType():""); 
+         istringstream iss(head);
+		 return std::string((type(iss) != Type_Unknown)?getType():"");
     }
 
-    virtual void read(const std::string& filename, const std::string& head, int sampleIndex, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int sampleIndex = 0) const
     {
         if (sampleIndex != 0)
             throw ReaderFail("[Reader_mzML::read] multiple samples not supported");
@@ -169,7 +169,7 @@ class Reader_mzML : public Reader
             case Type_Unknown:
             default:
             {
-                throw runtime_error("[MSDataFile::Reader_mzML] This isn't happening."); 
+                throw runtime_error("[MSDataFile::Reader_mzML] This isn't happening.");
             }
         }
 
@@ -180,7 +180,7 @@ class Reader_mzML : public Reader
 
     private:
 
-    enum Type { Type_mzML, Type_mzML_Indexed, Type_Unknown }; 
+    enum Type { Type_mzML, Type_mzML_Indexed, Type_Unknown };
 
     Type type(istream& is) const
     {
@@ -216,7 +216,7 @@ class Reader_mzXML : public Reader
         return result;
     }
 
-    virtual void read(const std::string& filename, const std::string& head, int sampleIndex, MSData& result) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int sampleIndex = 0) const
     {
         if (sampleIndex != 0)
             throw ReaderFail("[Reader_mzXML::read] multiple samples not supported");
@@ -236,7 +236,7 @@ class Reader_mzXML : public Reader
         catch (SpectrumList_mzXML::index_not_found&)
         {}
 
-        // error looking for index -- try again, but generate index 
+        // error looking for index -- try again, but generate index
         is->seekg(0);
         Serializer_mzXML::Config config;
         config.indexed = false;
@@ -258,7 +258,7 @@ class Reader_MGF : public Reader
 		return std::string(((bal::to_lower_copy(bfs::extension(filename)) == ".mgf"))?getType():"");
     }
 
-    virtual void read(const string& filename, const string& head, int sampleIndex, MSData& result) const
+    virtual void read(const string& filename, const string& head, MSData& result, int sampleIndex = 0) const
     {
         if (sampleIndex != 0)
             throw ReaderFail("[Reader_MGF::read] multiple samples not supported");
@@ -295,7 +295,7 @@ class Reader_BTDX : public Reader
         return result;
     }
 
-    virtual void read(const string& filename, const string& head, int sampleIndex, MSData& result) const
+    virtual void read(const string& filename, const string& head, MSData& result, int sampleIndex = 0) const
     {
         if (sampleIndex != 0)
             throw ReaderFail("[Reader_BTDX::read] multiple samples not supported");

@@ -1,7 +1,7 @@
 //
 // Reader_Bruker.hpp
 //
-// 
+//
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
@@ -13,16 +13,16 @@
 //
 // http://creativecommons.org/licenses/by-nc-nd/3.0/us/
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
 
-#ifndef _READER_BRUKER_HPP_ 
-#define _READER_BRUKER_HPP_ 
+#ifndef _READER_BRUKER_HPP_
+#define _READER_BRUKER_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -37,13 +37,13 @@ class PWIZ_API_DECL Reader_Bruker : public Reader
 {
     public:
 
-	virtual std::string identify(const std::string& filename, 
-                                 const std::string& head) const; 
+	virtual std::string identify(const std::string& filename,
+                                 const std::string& head) const;
 
     virtual void read(const std::string& filename,
-                      const std::string& head, 
-                      int sampleIndex, 
-                      MSData& result) const;
+                      const std::string& head,
+                      MSData& result,
+                      int sampleIndex = 0) const;
 
     virtual const char * getType() const {return "Bruker Analysis";}
 };

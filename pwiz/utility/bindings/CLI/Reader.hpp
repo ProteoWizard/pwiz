@@ -8,16 +8,16 @@
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -48,37 +48,37 @@ public ref class Reader
 
     public:
 
-    /// return true iff Reader can handle the file; 
+    /// return true iff Reader can handle the file;
     /// Reader may filter based on filename and/or head of the file
-    virtual bool accept(System::String^ filename, 
+    virtual bool accept(System::String^ filename,
                         System::String^ head);
 
     /// fill in the MSData structure
-    virtual void read(System::String^ filename, 
+    virtual void read(System::String^ filename,
                       System::String^ head,
                       MSData^ result);
 
     /// fill in the MSData structure
-    virtual void read(System::String^ filename, 
+    virtual void read(System::String^ filename,
                       System::String^ head,
-                      int sampleIndex,
-                      MSData^ result);
+                      MSData^ result,
+                      int sampleIndex);
 
     /// fill in the MSData structure
-    virtual void readAll(System::String^ filename, 
+    virtual void readAll(System::String^ filename,
                       System::String^ head,
                       MSDataList^ results);
 
     /// fill in the MSData structure
-    virtual array<System::String^>^ readIds(System::String^ filename, 
+    virtual array<System::String^>^ readIds(System::String^ filename,
                       System::String^ head);
 };
 
 
-/// Reader container (composite pattern).  
-/// 
-/// The template get&lt;reader_type>() gives access to child Readers by type, to facilitate 
-/// Reader-specific configuration at runtime. 
+/// Reader container (composite pattern).
+///
+/// The template get&lt;reader_type>() gives access to child Readers by type, to facilitate
+/// Reader-specific configuration at runtime.
 ///
 public ref class ReaderList : public Reader
 {
@@ -87,10 +87,10 @@ public ref class ReaderList : public Reader
     public:
 
     /// returns child name iff some child identifies, else empty string
-	virtual System::String^ identify(System::String^ filename); 
+	virtual System::String^ identify(System::String^ filename);
 
     /// returns child name iff some child identifies, else empty string
-    virtual System::String^ identify(System::String^ filename, 
+    virtual System::String^ identify(System::String^ filename,
                                      System::String^ head);
 
     /// delegates to first child that accepts
@@ -99,26 +99,26 @@ public ref class ReaderList : public Reader
 
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
-                      int sampleIndex,
-                      MSData^ result);
+                      MSData^ result,
+                      int sampleIndex);
 
     /// delegates to first child that accepts
-    virtual void read(System::String^ filename, 
+    virtual void read(System::String^ filename,
                       System::String^ head,
                       MSData^ result) override;
 
     /// delegates to first child that accepts
-    virtual void read(System::String^ filename, 
+    virtual void read(System::String^ filename,
                       System::String^ head,
-                      int sampleIndex,
-                      MSData^ result) override;
+                      MSData^ result,
+                      int sampleIndex) override;
 
     /// fill in the MSDataList with MSData for all samples
     virtual void readAll(System::String^ filename,
                       MSDataList^ results);
 
     /// fill in the MSDataList with MSData for all samples
-    virtual void readAll(System::String^ filename, 
+    virtual void readAll(System::String^ filename,
                       System::String^ head,
                       MSDataList^ results) override;
 
@@ -126,7 +126,7 @@ public ref class ReaderList : public Reader
     virtual array<System::String^>^ readIds(System::String^ filename);
 
     /// get MSData.Ids
-    virtual array<System::String^>^ readIds(System::String^ filename, 
+    virtual array<System::String^>^ readIds(System::String^ filename,
                       System::String^ head) override;
 
     static property ReaderList^ FullReaderList { ReaderList^ get(); }

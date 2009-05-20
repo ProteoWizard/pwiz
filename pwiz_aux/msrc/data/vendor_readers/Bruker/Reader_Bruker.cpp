@@ -1,7 +1,7 @@
 //
 // Reader_Bruker.cpp
 //
-// 
+//
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
@@ -13,10 +13,10 @@
 //
 // http://creativecommons.org/licenses/by-nc-nd/3.0/us/
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -89,8 +89,8 @@ namespace {
 
 inline char idref_allowed(char c)
 {
-    return isalnum(c) || c=='-' ? 
-           c : 
+    return isalnum(c) || c=='-' ?
+           c :
            '_';
 }
 
@@ -145,8 +145,8 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
 PWIZ_API_DECL
 void Reader_Bruker::read(const string& filename,
                          const string& head,
-                         int sampleIndex, 
-                         MSData& result) const
+                         MSData& result,
+                         int sampleIndex) const
 {
     if (sampleIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple samples not supported");
@@ -187,7 +187,7 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
+PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
     throw ReaderFail("[Reader_Bruker::read()] Bruker Analysis reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

@@ -6,16 +6,16 @@
 //
 // Copyright 2009 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -71,8 +71,8 @@ namespace {
 
 inline char idref_allowed(char c)
 {
-    return isalnum(c) || c=='-' ? 
-           c : 
+    return isalnum(c) || c=='-' ?
+           c :
            '_';
 }
 
@@ -151,10 +151,10 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
 
 
 PWIZ_API_DECL
-void Reader_ABI::read(const string& filename, 
+void Reader_ABI::read(const string& filename,
                       const string& head,
-                      int sampleIndex,
-                      MSData& result) const
+                      MSData& result,
+                      int sampleIndex /* = 0 */) const
 {
     try
     {
@@ -250,7 +250,7 @@ namespace msdata {
 
 using namespace std;
 
-PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
+PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
     throw ReaderFail("[Reader_ABI::read()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

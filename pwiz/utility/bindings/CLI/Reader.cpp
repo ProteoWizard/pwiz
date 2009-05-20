@@ -8,16 +8,16 @@
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -50,12 +50,12 @@ bool Reader::accept(System::String^ filename, System::String^ head)
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result)
 {
-    read(filename, head, 0, result);
+    read(filename, head, result, 0);
 }
 
-void Reader::read(System::String^ filename, System::String^ head, int sampleIndex, MSData^ result)
+void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex)
 {
-    base_->read(ToStdString(filename), ToStdString(head), sampleIndex, **result->base_);
+    base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);
 }
 
 void Reader::readAll(System::String^ filename, System::String^ head, MSDataList^ results)
@@ -82,12 +82,12 @@ System::String^ ReaderList::identify(System::String^ filename, System::String^ h
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result)
 {
-    read(filename, head, 0, result);
+    read(filename, head, result, 0);
 }
 
-void ReaderList::read(System::String^ filename, System::String^ head, int sampleIndex, MSData^ result)
+void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex)
 {
-    base_->read(ToStdString(filename), ToStdString(head), sampleIndex, **result->base_);
+    base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);
 }
 
 void ReaderList::readAll(System::String^ filename, System::String^ head, MSDataList^ results)
@@ -107,9 +107,9 @@ void ReaderList::read(System::String^ filename, MSData^ result)
     base_->read(ToStdString(filename), **result->base_);
 }
 
-void ReaderList::read(System::String^ filename, int sampleIndex, MSData^ result)
+void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
 {
-    base_->read(ToStdString(filename), sampleIndex, **result->base_);
+    base_->read(ToStdString(filename), **result->base_, sampleIndex);
 }
 
 void ReaderList::readAll(System::String^ filename, MSDataList^ results)

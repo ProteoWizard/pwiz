@@ -7,16 +7,16 @@
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -35,11 +35,6 @@ namespace msdata {
 using namespace std;
 using namespace pwiz::util;
 
-
-PWIZ_API_DECL void Reader::read(const std::string& filename, const std::string& head, MSData& result) const
-{
-    read(filename, head, 0, result);
-}
 
 // default implementation; most Readers don't need to worry about multi-run input files
 PWIZ_API_DECL void Reader::readAll(const string& filename, const string& head, vector<MSDataPtr>& results) const
@@ -68,7 +63,7 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
     for (const_iterator it=begin(); it!=end(); ++it)
 	{
 		result = (*it)->identify(filename, head);
-        if (result.length()) 
+        if (result.length())
 		{
 			break;
 		}
@@ -76,22 +71,17 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
     return result;
 }
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result, int sampleIndex /* = 0 */) const
 {
-    read(filename, 0, result);
+    read(filename, read_file_header(filename, 512), result, sampleIndex);
 }
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, int sampleIndex, MSData& result) const
-{
-    read(filename, read_file_header(filename, 512), sampleIndex, result);
-}
-
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, int sampleIndex, MSData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, sampleIndex, result);
+            (*it)->read(filename, head, result, sampleIndex);
             return;
         }
     throw ReaderFail((" don't know how to read " +

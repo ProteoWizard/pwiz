@@ -1,5 +1,5 @@
-#ifndef _READER_WATERS_HPP_ 
-#define _READER_WATERS_HPP_ 
+#ifndef _READER_WATERS_HPP_
+#define _READER_WATERS_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -22,13 +22,13 @@ class PWIZ_API_DECL Reader_Waters : public Reader
     Reader_Waters();
     ~Reader_Waters();
 
-	virtual std::string identify(const std::string& filename, 
-                        const std::string& head) const; 
+	virtual std::string identify(const std::string& filename,
+                        const std::string& head) const;
 
-    virtual void read(const std::string& filename, 
+    virtual void read(const std::string& filename,
                       const std::string& head,
-                      int sampleIndex, 
-                      MSData& result) const;
+                      MSData& result,
+                      int sampleIndex) const;
 
     virtual const char * getType() const {return "Waters RAW";}
 };

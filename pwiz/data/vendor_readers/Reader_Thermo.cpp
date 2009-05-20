@@ -7,16 +7,16 @@
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -35,13 +35,13 @@ bool _hasRAWHeader(const std::string& head)
 {
     const char rawHeader[] =
     {
-        '\x01', '\xA1', 
-        'F', '\0', 'i', '\0', 'n', '\0', 'n', '\0', 
+        '\x01', '\xA1',
+        'F', '\0', 'i', '\0', 'n', '\0', 'n', '\0',
         'i', '\0', 'g', '\0', 'a', '\0', 'n', '\0'
     };
 
     for (size_t i=0; i<sizeof(rawHeader); i++)
-        if (head[i] != rawHeader[i]) 
+        if (head[i] != rawHeader[i])
             return false;
 
     return true;
@@ -126,8 +126,8 @@ string creationDateToStartTimeStamp(string creationDate)
 
 inline char idref_allowed(char c)
 {
-    return isalnum(c) || c=='-' ? 
-           c : 
+    return isalnum(c) || c=='-' ?
+           c :
            '_';
 }
 
@@ -140,8 +140,8 @@ string stringToIDREF(const string& s)
 }
 
 
-void initializeInstrumentConfigurationPtrs(MSData& msd, 
-                                           RawFile& rawfile, 
+void initializeInstrumentConfigurationPtrs(MSData& msd,
+                                           RawFile& rawfile,
                                            const SoftwarePtr& instrumentSoftware)
 {
     CVID cvidModel = translateAsInstrumentModel(rawfile.getInstrumentModel());
@@ -151,7 +151,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
-    if (cvidModel == MS_Thermo_Electron_instrument_model) 
+    if (cvidModel == MS_Thermo_Electron_instrument_model)
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile.value(InstModel)));
     commonInstrumentParams->set(cvidModel);
     commonInstrumentParams->set(MS_instrument_serial_number, rawfile.value(InstSerialNumber));
@@ -234,10 +234,10 @@ PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const 
 
 
 PWIZ_API_DECL
-void Reader_Thermo::read(const string& filename, 
+void Reader_Thermo::read(const string& filename,
                          const string& head,
-                         int sampleIndex,
-                         MSData& result) const
+                         MSData& result,
+                         int sampleIndex /* = 0 */) const
 {
     if (sampleIndex != 0)
         throw ReaderFail("[Reader_Thermo::read] multiple samples not supported");
@@ -280,7 +280,7 @@ PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const 
 	return std::string(hasRAWHeader(head)?getType():"");
 }
 
-PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result) const
+PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {
 	throw ReaderFail("[Reader_Thermo::read()] Thermo RAW reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -290,11 +290,11 @@ PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& hea
 #else // wrong platform
 		"Thermo DLLs only work on Windows"
 #endif
-		); 
+		);
 }
 
 PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
-{   
+{
     return _hasRAWHeader(head);
 }
 
