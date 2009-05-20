@@ -41,6 +41,7 @@ lib pwiz_analysis_spectrum_processing
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
+        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
@@ -50,6 +51,7 @@ lib pwiz_analysis_spectrum_processing
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
+        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
