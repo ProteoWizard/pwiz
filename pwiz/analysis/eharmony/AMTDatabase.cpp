@@ -41,7 +41,8 @@ vector<boost::shared_ptr<SpectrumQuery> > AMTDatabase::query(const double& mz, c
 
 vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const SearchNeighborhoodCalculator& snc)
 {
-    dfc.adjustRT();
+    cout << "querying" << endl;
+    dfc.adjustRT(false);
     dfc.warpRT(wfe);
 
     Peptide2FeatureMatcher p2fm(dfc._pidf_a, dfc._fdf_b, snc);
@@ -55,14 +56,16 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
 
 }
 
-vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in)
+vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in)
 {
     cout << "querying ... " << endl;
     string outputDir = "./amtdb_query";
+    outputDir += boost::lexical_cast<string>(nds._Z);
     boost::filesystem::create_directory(outputDir);
 
-    dfc.adjustRT();
+    dfc.adjustRT(false); // only do the second runs , not the whole database again
     dfc.warpRT(wfe);
+    nds.calculateTolerances(dfc);
 
     cout << "constructing pm ... " << endl;
     PeptideMatcher pm(dfc);
@@ -83,6 +86,18 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
     ofstream ofs_r((outputDir + "/r_input.txt").c_str());
     exporter.writeRInputFile(ofs_r);
 
+    ofstream ofs_tp((outputDir + "/tp.txt").c_str());
+    exporter.writeTruePositives(ofs_tp);
+
+    ofstream ofs_fp((outputDir + "/fp.txt").c_str());
+    exporter.writeFalsePositives(ofs_fp);
+
+    ofstream ofs_tn((outputDir + "/tn.txt").c_str());
+    exporter.writeTrueNegatives(ofs_tn);
+
+    ofstream ofs_fn((outputDir + "/fn.txt").c_str());
+    exporter.writeFalseNegatives(ofs_fn);
+
     vector<SpectrumQuery> result;
     vector<Match> matches = p2fm.getMatches();
     vector<Match>::iterator it = matches.begin();
@@ -93,12 +108,19 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
     ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
     exporter.writePepXML(mspa_in, ofs_pepxml);
 
+    ofstream ofs_missed((outputDir + "/mismatches.xml").c_str());
+    XMLWriter writer(ofs_missed);
+    vector<Match> mismatches = p2fm.getMismatches();
+    vector<Match>::iterator it2 = mismatches.begin();
+    for(; it2 != mismatches.end(); ++it2) it2->write(writer);
+
+
     return result;
 }
 
 int main(int argc, char* argv[])
 {
-    ifstream dbFile("./amt_6mix/amt/database.xml");
+    ifstream dbFile("./amt/database.xml");
     AMTContainer amt;
     cout << "[amtdb] reading database file ... " << endl;
     amt.read(dbFile);
@@ -106,19 +128,22 @@ int main(int argc, char* argv[])
     AMTDatabase db(amt);
 
     cout << "[amtdb] reading peptide file ... " << endl;
-    ifstream queryPeptideFile("./tempData/6mix/20080619-A-6mixtestRG_Data08_msprefix.pep.xml");
+    //ifstream queryPeptideFile("./2007/20080410-A-18Mix_Data10_msprefix.pep.xml");
+    ifstream queryPeptideFile("2007/20080618-A-6mixtestRG_Data08_msprefix.pep.xml");
     PeptideID_dataFetcher pidf_query(queryPeptideFile);
     MSMSPipelineAnalysis mspa_query;
     mspa_query.read(queryPeptideFile);
 
     cout << "[amtdb] reading feature file ... " << endl;
-    ifstream queryFeatureFile("./tempData/6mix/20080619-A-6mixtestRG_Data08_msprefix.features");
+    //    ifstream queryFeatureFile("./2007/20080410-A-18Mix_Data10_msprefix.features");
+    ifstream queryFeatureFile("./2007/20080618-A-6mixtestRG_Data08_msprefix.features");
     Feature_dataFetcher fdf_query(queryFeatureFile);
 
     DataFetcherContainer dfc(db._peptides, pidf_query, amt._fdf, fdf_query);
-    WarpFunctionEnum wfe = Linear;
-    //  SearchNeighborhoodCalculator snc(.001,60);
-    NormalDistributionSearch nds(3);   
+    WarpFunctionEnum wfe = Default;
+    //SearchNeighborhoodCalculator snc(.001,60);
+    NormalDistributionSearch nds(boost::lexical_cast<double>(argv[1]));   
+
     cout << "[amtdb] querying amt database ... " << endl;
     db.query(dfc,wfe,nds,mspa_query);
     

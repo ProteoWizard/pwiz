@@ -1,5 +1,5 @@
 ///
-/// Profile.cpp
+/// MatcherTest.cpp
 ///
 
 #include "Matcher.hpp"
@@ -9,8 +9,8 @@ void test()
 {
     Config config;
 
-    config.inputPath = "./tempData/";
-    config.batchFileName = "6mix_runs.txt";
+    config.inputPath = "./2007/";
+    config.batchFileName = "18mix_runs.txt";
     config.searchNeighborhoodCalculator = "naive[.01,500]";
     config.warpFunctionCalculator = "linear";
     config.generateAMTDatabase = true;

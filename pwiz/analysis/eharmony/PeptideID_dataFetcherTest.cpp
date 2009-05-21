@@ -145,23 +145,27 @@ void testPeptideID_dataFetcherConstructor()
             *os_ << samplePepXML << endl;
 
         }
-                 
+    
+    // make the PeptideID_dataFetcher from input pep.xml
     PeptideID_dataFetcher pidf = makePeptideID_dataFetcher(samplePepXML);
 
+    // make the SpectrumQuery objects that we expect to be read into the PeptideID_dataFetcher 
     SpectrumQuery a = makeSpectrumQuery(1,2,1, "BUCKLEMYSHOE", 0.900, 1,2);  // mz, rt, charge, sequence, score, start scan, end scan
     SpectrumQuery b = makeSpectrumQuery(3,4,1,"SHUTTHEDOOR",0.900,3,4);
     SpectrumQuery c = makeSpectrumQuery(5,6,1,"PICKUPSTICKS",0.900,5,6);
     SpectrumQuery d = makeSpectrumQuery(7,8,1,"LAYTHEMSTRAIGHT",0.900,7,8);
-
+    
+    // Access SpectrumQuery objects that are in the PeptideID_dataFetcher at the coordinates we expect
     vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf.getSpectrumQueries(Ion::mz(1,1),2);
     vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf.getSpectrumQueries(Ion::mz(3,1),4);
     vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf.getSpectrumQueries(Ion::mz(5,1),6);
     vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf.getSpectrumQueries(Ion::mz(7,1),8);
 
+    // Assert that all SpectrumQuery objects were found at expected coordinates
     unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
     unit_assert(find_if(sq_b.begin(), sq_b.end(),IsSQ(b)) != sq_b.end());
-    unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
-    unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end()); 
+    unit_assert(find_if(sq_c.begin(), sq_c.end(),IsSQ(c)) != sq_c.end());
+    unit_assert(find_if(sq_d.begin(), sq_d.end(),IsSQ(d)) != sq_d.end()); 
 
     if (os_)
         {
@@ -188,12 +192,13 @@ void testMerge()
     MSMSPipelineAnalysis mspa;
     mspa.msmsRunSummary.spectrumQueries = v_b;
 
-    PeptideID_dataFetcher pidf_a;
-    PeptideID_dataFetcher pidf_b(mspa);
+    PeptideID_dataFetcher fiat;
+    PeptideID_dataFetcher chrysler(mspa);
     
-    pidf_a.merge(pidf_b);
+    fiat.merge(chrysler);
  
-    vector<boost::shared_ptr<SpectrumQuery> > contents = pidf_a.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
+    // test that the merger correctly concatenated all SpectrumQuery objects
+    vector<boost::shared_ptr<SpectrumQuery> > contents = fiat.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
 
     unit_assert(contents.size() > 0);
     unit_assert(**contents.begin() == b);

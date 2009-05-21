@@ -34,10 +34,15 @@ public:
     void merge(const Feature_dataFetcher& that);
 
     std::vector<boost::shared_ptr<FeatureSequenced> > getFeatures(double mz, double rt) ;
+    std::vector<FeatureSequenced> getAllContents() const;
+
     Bin<FeatureSequenced> getBin() const { return _bin; } 
     
     void setMS2LabeledFlag(const bool& flag) { _ms2Labeled = flag; }
     const bool& getMS2LabeledFlag() const { return _ms2Labeled; }
+  
+    bool operator==(const Feature_dataFetcher& that);
+    bool operator!=(const Feature_dataFetcher& that);
 
 private:
 

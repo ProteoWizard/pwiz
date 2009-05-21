@@ -22,11 +22,14 @@ namespace{
     
     void getBestMatch(const SpectrumQuery& sq, const Feature_dataFetcher& fdf, FeatureSequenced& result)
     {
+     
         Bin<FeatureSequenced> featureBin = fdf.getBin();
+	
         pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass, sq.assumedCharge), sq.retentionTimeSec);
         double bestScore = 1000000;       
         FeatureSequenced* feat = (FeatureSequenced*) NULL;
 
+	
         vector<boost::shared_ptr<FeatureSequenced> > adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
         vector<boost::shared_ptr<FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
@@ -41,7 +44,7 @@ namespace{
                         if ( score < bestScore )
                             {
                                 feat = &(*(*ac_it));
-                                
+				bestScore = score;
                             }
 
                     }
@@ -57,16 +60,17 @@ namespace{
     {
         int counter = 0;
         vector<SpectrumQuery> spectrumQueries = pidf.getAllContents();
-        cout << "Number of spectrum queries: " << spectrumQueries.size() << endl;
         vector<SpectrumQuery>::iterator sq_it = spectrumQueries.begin();
 
         for(; sq_it != spectrumQueries.end(); ++sq_it)
             {
-                if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
+	  
+	       if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
 
+		
                 FeatureSequenced fs;
                 getBestMatch(*sq_it, fdf, fs);
-
+			     
                 if (fs.feature->id.size() > 0) // f exists
                     {        
                         fdf.erase(fs);
@@ -87,24 +91,21 @@ namespace{
 
 } // anonymous namespace
 
-void DataFetcherContainer::adjustRT()
+void DataFetcherContainer::adjustRT(bool runA, bool runB)
 {
-    bool flag = _pidf_a.getRtAdjustedFlag();
-
-    if (!flag)
+    if (runA)
         {
-            cout << "Matching MS2 peptides to their precursor features ... " << endl;
+            cout << "[eharmony] Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_a, _fdf_a);
             _pidf_a.setRtAdjustedFlag(true);
             _fdf_a.setMS2LabeledFlag(true);
             
         }
     
-    bool b_flag = _pidf_b.getRtAdjustedFlag();
-    if (!b_flag)
+    if (runB)
         {
 
-            cout << "Matching MS2 peptides to their precursor features ... " << endl;
+            cout << "[eharmony] Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_b, _fdf_b);
             _pidf_b.setRtAdjustedFlag(true);
             _fdf_b.setMS2LabeledFlag(true);

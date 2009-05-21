@@ -37,6 +37,9 @@ public:
     std::vector<Match> getTrueNegatives() const { return _trueNegatives;}
     std::vector<Match> getFalseNegatives() const { return _falseNegatives;}
 
+    bool operator==(const Peptide2FeatureMatcher& that);
+    bool operator!=(const Peptide2FeatureMatcher& that);
+
 private:
 
     std::vector<Match> _matches;

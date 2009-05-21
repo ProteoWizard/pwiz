@@ -24,19 +24,16 @@ class PeptideID_dataFetcher
 
 public:
 
-    // default constructor
+
     PeptideID_dataFetcher() : _rtAdjusted(false) {}
-    // istream constructor
     PeptideID_dataFetcher(std::istream& is);
-    // from vector of spectrum queries
     PeptideID_dataFetcher(const std::vector<SpectrumQuery>& sqs);
-    // from MSMSPipelineAnalysis object 
     PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa);
-    // copy constructor
     PeptideID_dataFetcher(const PeptideID_dataFetcher& pidf) : _rtAdjusted(pidf.getRtAdjustedFlag()), _bin(pidf.getBin()) {}
 
     void update(const SpectrumQuery& sq);
     void erase(const SpectrumQuery& sq);
+
     void merge(const PeptideID_dataFetcher& that);
 
     std::vector<SpectrumQuery> getAllContents() const;
@@ -46,6 +43,9 @@ public:
 
     void setRtAdjustedFlag(const bool& flag) { _rtAdjusted = flag; }
     const bool& getRtAdjustedFlag() const { return _rtAdjusted; }
+
+    bool operator==(const PeptideID_dataFetcher& that);
+    bool operator!=(const PeptideID_dataFetcher& that);
 
 private:
     

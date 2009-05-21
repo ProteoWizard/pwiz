@@ -13,12 +13,12 @@ lib pwiz_analysis_eharmony
       WarpFunction.cpp
       AMTContainer.cpp
       EharmonyAgglomerator.cpp
-      AMTDatabase.cpp
-      Exporter.hpp
+      Exporter.cpp
+      Matrix.cpp
+      NeighborJoiner.cpp
+#      AMTDatabase.cpp
       ../../data/misc//pwiz_data_misc
-#      eharmony.cpp
-    ;
-
+      ;
 
 ### UNIT TESTS ###
 
@@ -38,6 +38,10 @@ unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_
 
 unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
 
+unit-test Matrix : MatrixTest.cpp pwiz_analysis_eharmony ;
+
+unit-test NeighborJoiner : NeighborJoinerTest.cpp pwiz_analysis_eharmony ;
+
 
 exe eharmony
     : eharmony.cpp
@@ -47,13 +51,13 @@ exe eharmony
       pwiz_analysis_eharmony
     ;
 
-#exe amtdb
-#    : AMTDatabase.cpp
-#      pwiz_analysis_eharmony
-#    ;
+exe amtdb
+    : AMTDatabase.cpp
+      pwiz_analysis_eharmony
+    ;
 
 install bin
     : eharmony
- #     amtdb
+      amtdb
     : <location>.
     ;

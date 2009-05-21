@@ -5,8 +5,9 @@
 #include "Matcher.hpp"
 #include "PeptideMatcher.hpp"
 #include "Peptide2FeatureMatcher.hpp"
-#include "Exporter.hpp"
 #include "AMTContainer.hpp"
+#include "NeighborJoiner.hpp"
+#include "Exporter.hpp"
 #include "EharmonyAgglomerator.cpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
@@ -20,6 +21,21 @@ using namespace pwiz;
 using namespace pwiz::eharmony;
 
 namespace{
+
+  struct NumberOfMS2IDs : public DistanceAttribute
+  {
+    NumberOfMS2IDs(){}
+    virtual double score(const AMTContainer& a, const AMTContainer& b);
+
+  };
+
+  double NumberOfMS2IDs::score(const AMTContainer& a, const AMTContainer& b)
+  {
+    int a_count = a._pidf.getAllContents().size();
+    int b_count = b._pidf.getAllContents().size();
+    return sqrt((a_count-b_count)*(a_count-b_count)); 
+                                                                                                                                        
+  }
 
     boost::shared_ptr<SearchNeighborhoodCalculator> translateSearchNeighborhoodCalculator(const string& curr_str)
     {      
@@ -86,6 +102,29 @@ namespace{
 
 } // anonymous namespace
 
+bool Config::operator==(const Config& that)
+{
+    return filenames == that.filenames &&
+      inputPath == that.inputPath &&
+      outputPath == that.outputPath &&
+      batchFileName == that.batchFileName &&
+      generateAMTDatabase == that.generateAMTDatabase &&
+      rtCalibrate == that.rtCalibrate &&
+      warpFunctionCalculator == that.warpFunctionCalculator &&
+      searchNeighborhoodCalculator == that.searchNeighborhoodCalculator &&
+      normalDistributionSearch == that.normalDistributionSearch &&
+      parsedSNC == that.parsedSNC &&
+      parsedNDS == that.parsedNDS &&
+      warpFunction == that.warpFunction;
+
+}
+
+bool Config::operator!=(const Config& that)
+{
+    return !(*this == that);
+
+}
+
 void Matcher::checkSourceFiles()
 {
     const string& inputPath = _config.inputPath;
@@ -149,33 +188,44 @@ void Matcher::processFiles()
  
     if ( _config.generateAMTDatabase )
         {
-	    vector<AMTContainer> amtv;   
+	    vector<AMTContainer> amtv(_config.filenames.size());   
+	    vector<AMTContainer>::iterator ac_it = amtv.begin();
+	    vector<boost::shared_ptr<AMTContainer> > sp;
+
 	    vector<string>::iterator run_it = _config.filenames.begin();
-	    for(; run_it != _config.filenames.end(); ++run_it)
-	        {
-		    AMTContainer result;
-
-		    if (_peptideData.find(*run_it) == _peptideData.end()) throw runtime_error("[eharmony] peptideData not storing data correctly ... " );
-		    PeptideID_dataFetcher pidf = _peptideData.find(*run_it)->second;
-		    Feature_dataFetcher fdf = _featureData.find(*run_it)->second;
-
-		    result._pidf = pidf;
-		    result._fdf = fdf;
-		    result._config = _config;
-		    
-		    amtv.push_back(result);
+	    for(; run_it != _config.filenames.end(); ++run_it, ++ac_it)
+	        {		    
+		    (ac_it)->_pidf = _peptideData.find(*run_it)->second;
+		    (ac_it)->_fdf = _featureData.find(*run_it)->second;
+		    (ac_it)->_config = _config;
+		    (ac_it)->_id = *run_it;
+		    sp.push_back(boost::shared_ptr<AMTContainer>(new AMTContainer(*ac_it)));
 
 	        }
 
 	    
+	    ///
+	    /// if preprocessing flag, preprocess here.  generateAMTDatabase should take a tree arg
+	    ///
 
-	    AMTContainer amtDatabase = generateAMTDatabase(amtv);
+	    NeighborJoiner nj(sp);
+	    boost::shared_ptr<NumberOfMS2IDs> num(new NumberOfMS2IDs());
+	    nj._attributes.push_back(num);
+	    nj.calculateDistanceMatrix();
+	    nj.joinAll();
 
+	    vector<pair<int, int> >::iterator njit = nj._tree.begin();
+	    cout << "Tree: " << endl;
+	    for(; njit!= nj._tree.end(); ++njit) cout << njit->first << "  "  << njit->second << endl;
+
+	    boost::shared_ptr<AMTContainer> amtDatabase = generateAMTDatabase(sp, nj._tree);
+
+	    
 	    ///
 	    /// Exporting
 	    ///
 
-	    Exporter exporter_amt(amtDatabase._pm, amtDatabase._p2fm);
+	    Exporter exporter_amt(amtDatabase->_pm, amtDatabase->_p2fm);
 	    
 	    string outputDir = "amt";
 	    if (!boost::filesystem::exists(_config.outputPath)) boost::filesystem::create_directory(_config.outputPath);
@@ -190,6 +240,7 @@ void Matcher::processFiles()
 
 	    ofstream ofs_roc((outputDir + "/roc.txt").c_str());
 	    exporter_amt.writeROCStats(ofs_roc);
+
 	    /* TODO: Decide what a pepXML output for the AMT database generation schema should be and if the concept even makes sense
 	    ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
 	    exporter_amt.writePepXML(mspa, ofs_pepxml);
@@ -206,12 +257,11 @@ void Matcher::processFiles()
 	    
 	    ofstream ofs_amt((outputDir + "/database.xml").c_str());
 	    XMLWriter writer(ofs_amt);
-	    amtDatabase.write(writer);
+	    amtDatabase->write(writer);
 
 	    return;
 
         }
-
 
     vector<string>::iterator running_it = _config.filenames.begin();
     for(; running_it != _config.filenames.end(); ++running_it)
@@ -267,6 +317,7 @@ void Matcher::processFiles()
 
                     if (_config.searchNeighborhoodCalculator.size() != 0)
                         {
+			  cout << "snc" << endl;
                             string dirName = (run_A + "_" + run_B + "_"  + _config.parsedSNC._id);
                             cout << "eharmonizing: " << _config.parsedSNC._id << endl;
                             msmatchmake(dfc,_config.parsedSNC, mspa, dirName);                         
@@ -275,6 +326,7 @@ void Matcher::processFiles()
                    
                     if (_config.normalDistributionSearch.size() != 0)
                         {
+			  cout << "nds" << endl;
                             string dirName = (run_A + "_" + run_B + "_" + _config.parsedNDS._id);  
                             cout << "eharmonizing: " << _config.parsedNDS._id << endl;          
                             msmatchmake(dfc,_config.parsedNDS,mspa,dirName);
@@ -284,6 +336,7 @@ void Matcher::processFiles()
 
                     if (_config.searchNeighborhoodCalculator.size() == 0 && _config.normalDistributionSearch.size() == 0 ) // no calculator specified, use default
                         {
+			  cout << "default" << endl;
                             string dirName = (run_A + "_" + run_B + "_default");
                             cout << "eharmonizing: " << snc._id << endl;
                             msmatchmake(dfc,snc, mspa, dirName);
@@ -300,6 +353,7 @@ void Matcher::processFiles()
 void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculator& snc, MSMSPipelineAnalysis& mspa, string& outputDir) // pass in original mspa for writing
 {   
 
+    cout << "msmatchmake: snc._id: " << snc._id << endl;
   // for each warp function calculator, do the below. first test for just one.
     
     if (_config.warpFunctionCalculator.size() == 0 ) _config.warpFunction = Default;
@@ -308,6 +362,7 @@ void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculato
 
     dfc.warpRT(wfe);
     snc.calculateTolerances(dfc);
+    // cout << "msmatchmake: snc._id: " << snc._id << endl;
 
     PeptideMatcher pm(dfc);
     Peptide2FeatureMatcher p2fm(dfc._pidf_a, dfc._fdf_b, snc);
@@ -339,50 +394,6 @@ void Matcher::msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculato
 
 }
 
-// TODO: Hack. Fix.
-
-void Matcher::msmatchmake(DataFetcherContainer& dfc, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa, string& outputDir)// pass in original mspa for writing
-{
-
-  // for each warp function calculator, do the below. first test for just one.
-
-  if (_config.warpFunctionCalculator.size() == 0 ) _config.warpFunction = Default;
-
-  WarpFunctionEnum wfe = _config.warpFunction;
-
-  dfc.warpRT(wfe);
-  nds.calculateTolerances(dfc);
-
-  PeptideMatcher pm(dfc);
-  Peptide2FeatureMatcher p2fm(dfc._pidf_a, dfc._fdf_b, nds);
-
-  // TODO add a --export option and flag in config
-  if (!boost::filesystem::exists(_config.outputPath)) boost::filesystem::create_directory(_config.outputPath);
-  outputDir = _config.outputPath + "/" + outputDir;
-  boost::filesystem::create_directory(outputDir);
-
-  Exporter exporter(pm, p2fm);
-
-  ofstream ofs_pm((outputDir + "/pm.xml").c_str());
-  exporter.writePM(ofs_pm);
-
-  ofstream ofs_p2fm((outputDir + "/p2fm.xml").c_str());
-  exporter.writeP2FM(ofs_p2fm);
-
-  ofstream ofs_roc((outputDir + "/roc.txt").c_str());
-  exporter.writeROCStats(ofs_roc);
-
-  ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
-  exporter.writePepXML(mspa, ofs_pepxml);
-
-  ofstream ofs_combxml((outputDir + "/ms2_ms1_5.pep.xml").c_str());
-  exporter.writeCombinedPepXML(mspa, ofs_combxml);
-
-  ofstream ofs_r((outputDir + "/r_input.txt").c_str());
-  exporter.writeRInputFile(ofs_r);
-
-}
-
 Matcher::Matcher(Config& config) : _config(config)
 {
     if (_config.batchFileName != "")
@@ -397,7 +408,7 @@ Matcher::Matcher(Config& config) : _config(config)
     // check source files to make sure all are there
     cout << "[eharmony] Checking for necessary data files ... " << endl;
     checkSourceFiles();
-
+    
     // read in source files
     cout << "[eharmony] Reading data files ...  " << endl;
     readSourceFiles();

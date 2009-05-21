@@ -16,6 +16,8 @@ void AMTContainer::merge(const AMTContainer& that)
     _pidf.merge(that._pidf);
     _mdf.merge(that._mdf);
 
+    _id += that._id;
+
 }
 
 void AMTContainer::write(XMLWriter& writer) const
@@ -76,4 +78,38 @@ void AMTContainer::read(istream& is)
     HandlerAMTContainer handlerAMTContainer(this);
     parse(is, handlerAMTContainer);
     
+}
+
+void AMTContainer::writeRTDiff(ostream& os)
+{
+    PeptideMatchContainer pmc = _pm.getMatches();
+    PeptideMatchContainer::iterator it = pmc.begin();
+    for(; it != pmc.end(); ++it)
+        {
+	    double rt1 = it->first.retentionTimeSec;
+	    double rt2 = it->second.retentionTimeSec;
+	    double rtDiff = rt1 - rt2;
+	    os << rtDiff << "\n";
+	    
+
+        }
+
+}
+
+bool AMTContainer::operator==(const AMTContainer& that)
+{
+    return _pidf == that._pidf
+      && _fdf == that._fdf 
+      && _mdf == that._mdf 
+      && _pm == that._pm
+      && _p2fm == that._p2fm
+      && _sqs == that._sqs
+      && _config == that._config;
+
+}
+
+bool AMTContainer::operator!=(const AMTContainer& that)
+{
+    return !(*this == that);
+
 }

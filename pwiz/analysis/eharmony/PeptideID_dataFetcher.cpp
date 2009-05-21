@@ -21,7 +21,7 @@ vector<SQBinPair> getCoordinates(const vector<SpectrumQuery>& sq)
         {
             for(; sq_it != sq.end(); ++sq_it) 
                 {
-                    if (sq_it->searchResult.searchHit.analysisResult.xResult.probability >= .9) 
+                    if (sq_it->searchResult.searchHit.analysisResult.xResult.probability >= .7) 
                         {
                             result.push_back(make_pair(make_pair(Ion::mz(sq_it->precursorNeutralMass,sq_it->assumedCharge), sq_it->retentionTimeSec),*sq_it));
 
@@ -107,3 +107,14 @@ vector<boost::shared_ptr<SpectrumQuery> > PeptideID_dataFetcher::getSpectrumQuer
 
 }
 
+bool PeptideID_dataFetcher::operator==(const PeptideID_dataFetcher& that)
+{
+  return getAllContents() == that.getAllContents();
+
+}
+
+bool PeptideID_dataFetcher::operator!=(const PeptideID_dataFetcher& that)
+{
+    return !(*this == that);
+
+}

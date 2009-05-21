@@ -37,6 +37,9 @@ struct Config
 
     Config() : inputPath("."), outputPath(".") {}
 
+    bool operator==(const Config& that);
+    bool operator!=(const Config& that);
+
 };
 
 class Matcher
@@ -50,7 +53,7 @@ public:
     void readSourceFiles();
     void processFiles();
     void msmatchmake(DataFetcherContainer& dfc, SearchNeighborhoodCalculator& snc, MSMSPipelineAnalysis& mspa, string& outputDir);
-    void msmatchmake(DataFetcherContainer& dfc, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa, string& outputDir);
+
 
 private:
 

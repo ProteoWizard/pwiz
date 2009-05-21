@@ -36,7 +36,9 @@ public:
     std::vector<Match> getAllContents() const; 
     std::vector<Match> getMatches(double mz, double rt);
     Bin<Match> getBin() const { return _bin; } 
-    
+
+    bool operator==(const Match_dataFetcher& that);
+    bool operator!=(const Match_dataFetcher& that);
     
 private:
 

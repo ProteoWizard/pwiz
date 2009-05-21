@@ -1,4 +1,3 @@
-
 ///
 /// Peptide2FeatureMatcher.cpp
 ///
@@ -22,7 +21,7 @@ using namespace pwiz::proteome;
 
 namespace{
 
-void getBestMatch(const SpectrumQuery& sq, Bin<FeatureSequenced>& featureBin, FeatureSequenced& fs)
+  void getBestMatch(const SpectrumQuery& sq, Bin<FeatureSequenced>& featureBin, FeatureSequenced& fs, const SearchNeighborhoodCalculator& snc)
 {
     pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass,sq.assumedCharge), sq.retentionTimeSec);
 
@@ -37,15 +36,17 @@ void getBestMatch(const SpectrumQuery& sq, Bin<FeatureSequenced>& featureBin, Fe
         {
             if ( (*ac_it)->feature->charge == sq.assumedCharge )
                 {
-                    double mzDiff = ((*ac_it)->feature->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
+		  /* double mzDiff = ((*ac_it)->feature->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
                     double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec);
                     double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
-
-                    if ( score < bestScore )
+		  */
+		  double score = snc.score(sq, *((*ac_it)->feature));
+		  if ( (1-score) < bestScore )
                         {
 	   		     best_it = &(*(*ac_it));
                              best_it->ms1_5 = sq.searchResult.searchHit.peptide;
-                            
+                             bestScore = score;
+			     
                         }                  
 
                 }
@@ -61,33 +62,37 @@ void getBestMatch(const SpectrumQuery& sq, Bin<FeatureSequenced>& featureBin, Fe
 
 Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature_dataFetcher& b, const SearchNeighborhoodCalculator& snc)
 {
+  
     Bin<FeatureSequenced> bin = b.getBin();
     bin.rebin(snc._mzTol, snc._rtTol);
 
     vector<SpectrumQuery> spectrumQueries = a.getAllContents();
     vector<SpectrumQuery>::iterator sq_it = spectrumQueries.begin();
     int counter = 0;
+    cout << "[eharmony] Matching peptides to features across run pair ... " << endl;
+
     for(; sq_it != spectrumQueries.end(); ++ sq_it)
         {
             if (counter % 100 == 0) cout << "Spectrum: " << counter << endl;
             
             FeatureSequenced fs;
-            getBestMatch(*sq_it, bin, fs);          
+            getBestMatch(*sq_it, bin, fs,snc);          
 
             if (fs.ms1_5.size() > 0 && snc.close(*sq_it, *fs.feature)) 
                 {
+  		    sq_it->searchResult.searchHit.analysisResult.xResult.probability = snc.score(*sq_it, *fs.feature);
                     Match match(*sq_it,*fs.feature);
                     match.score = snc.score(*sq_it,*fs.feature);
 		    match.spectrumQuery.searchResult.searchHit.peptide += "_ms1_5";
 
                     _matches.push_back(match); 
-                    if (fs.ms1_5 != fs.ms2 && fs.ms2.size() > 0)
+                    if ((fs.ms1_5 != fs.ms2) && (fs.ms2.size() > 0))
                         {
                             _falsePositives.push_back(match);
                             
                         }
                     
-                    if (fs.ms1_5 == fs.ms2 && fs.ms2.size() > 0)
+                    if ((fs.ms1_5 == fs.ms2) && (fs.ms2.size() > 0))
                         {
                          
                             _truePositives.push_back(match);
@@ -101,11 +106,11 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
                     size_t i = 2;
                     bool done = false;
 
-                    while ( !done && i < 3)
+                    while ( !done && i < 10)
                         {            
                             FeatureSequenced gs;
                             bin.rebin(i*snc._mzTol, i*snc._rtTol);
-                            getBestMatch(*sq_it, bin, gs);
+                            getBestMatch(*sq_it, bin, gs,snc);
                             if (gs.ms1_5.size() != 0) 
                                 {
                                     done = true;
@@ -123,7 +128,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 
                         }
                  
-                    // if ( !done ) cerr << "[Peptide2FeatureMatcher] Bailing out, no feature within 4*search radius." << endl;
+                     if ( !done ) cerr << "[Peptide2FeatureMatcher] Bailing out, no feature within 10*search radius." << endl;
 
                 }            
 
@@ -141,6 +146,9 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 {
   Bin<FeatureSequenced> bin = b.getBin();
   bin.rebin(snc._mzTol, snc._rtTol);
+  
+  cout << "_mzTol" << snc._mzTol << endl;
+  cout << "_rtTol" << snc._rtTol << endl;
 
   vector<SpectrumQuery> spectrumQueries = a.getAllContents();
   vector<SpectrumQuery>::iterator sq_it = spectrumQueries.begin();
@@ -150,7 +158,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
       if (counter % 10 == 0) cout << "Spectrum: " << counter << endl;
 
       FeatureSequenced fs;
-      getBestMatch(*sq_it, bin, fs);
+      getBestMatch(*sq_it, bin, fs,snc);
 
       if (fs.ms1_5.size() > 0 && snc.close(*sq_it, *fs.feature))
 	{
@@ -183,7 +191,7 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 
 	      FeatureSequenced gs;
 	      bin.rebin(i*snc._mzTol, i*snc._rtTol);
-	      getBestMatch(*sq_it, bin, gs);
+	      getBestMatch(*sq_it, bin, gs,snc);
 	      if (gs.ms1_5.size() != 0)
 	          {
 	               done = true;
@@ -209,5 +217,21 @@ Peptide2FeatureMatcher::Peptide2FeatureMatcher(PeptideID_dataFetcher& a, Feature
 
 }
 
+}
+
+bool Peptide2FeatureMatcher::operator==(const Peptide2FeatureMatcher& that)
+{
+    return _matches == that.getMatches() &&
+    _mismatches == that.getMismatches() &&
+    _truePositives == that.getTruePositives() &&
+    _falsePositives == that.getFalsePositives() &&
+    _trueNegatives == that.getTrueNegatives() &&
+    _falseNegatives == that.getFalseNegatives();
+}
+
+bool Peptide2FeatureMatcher::operator!=(const Peptide2FeatureMatcher& that)
+{
+    return !(*this == that);
 
 }
+

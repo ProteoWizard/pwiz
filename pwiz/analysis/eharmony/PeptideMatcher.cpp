@@ -3,12 +3,14 @@
 ///
 
 #include "PeptideMatcher.hpp"
+#include "pwiz/utility/proteome/Ion.hpp"
 #include <map>
 #include <iostream>
 
 using namespace std;
 using namespace pwiz;
 using namespace pwiz::eharmony;
+using namespace pwiz::proteome;
 
 struct Compare
 {
@@ -82,6 +84,53 @@ void PeptideMatcher::calculateDeltaRTDistribution()
 
 }
 
+void PeptideMatcher::calculateDeltaMZDistribution()
+{
+
+  if (_matches.size() == 0)
+    {
+      cerr << "[PeptideMatcher::calculateDeltaRTDistribution] No matching MS/MS IDS found. DeltaMZ params are both set to 0." << endl;
+      return;
+    }
+
+  double meanSum = 0;
+  vector<pair<SpectrumQuery, SpectrumQuery> >::iterator match_it = _matches.begin();
+  for(; match_it != _matches.end(); ++match_it)
+    {
+      meanSum += fabs(Ion::mz(match_it->first.precursorNeutralMass, match_it->first.assumedCharge) - Ion::mz(match_it->second.precursorNeutralMass, match_it->second.assumedCharge));
+
+    }
+
+  _meanDeltaMZ = meanSum / _matches.size();
+
+  double stdevSum = 0;
+  vector<pair<SpectrumQuery, SpectrumQuery> >::iterator stdev_it = _matches.begin();
+  for(; stdev_it != _matches.end(); ++stdev_it)
+    {
+      const double& mz_a = Ion::mz(stdev_it->first.precursorNeutralMass, stdev_it->first.assumedCharge);
+      const double& mz_b = Ion::mz(stdev_it->second.precursorNeutralMass, stdev_it->second.assumedCharge);
+
+      stdevSum += (fabs(mz_a - mz_b) - _meanDeltaMZ)*(fabs(mz_a - mz_b) - _meanDeltaMZ);
+
+    }
+
+  _stdevDeltaMZ = sqrt(stdevSum / _matches.size());
+  return;
+
+}
+
+bool PeptideMatcher::operator==(const PeptideMatcher& that)
+{
+    return _matches == that.getMatches() &&
+      make_pair(_meanDeltaRT, _stdevDeltaRT) == that.getDeltaRTParams();
+    
+}
+
+bool PeptideMatcher::operator!=(const PeptideMatcher& that)
+{
+    return !(*this == that);
+
+}
 
 // PeptideMatchContainer PeptideMatcher::getMatches() const
 // {

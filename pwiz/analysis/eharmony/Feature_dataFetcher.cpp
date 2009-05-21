@@ -97,3 +97,26 @@ vector<boost::shared_ptr<FeatureSequenced> > Feature_dataFetcher::getFeatures(do
     return features;
 
 }
+
+vector<FeatureSequenced> Feature_dataFetcher::getAllContents() const
+{
+    vector<boost::shared_ptr<FeatureSequenced> > hack = _bin.getAllContents();
+    vector<boost::shared_ptr<FeatureSequenced> >::iterator it = hack.begin();
+    vector<FeatureSequenced> result;
+    for(; it != hack.end(); ++it) result.push_back(**it);
+
+    return result;
+
+}
+
+bool Feature_dataFetcher::operator==(const Feature_dataFetcher& that)
+{
+    return getAllContents() == that.getAllContents(); // TODO: add mz tol and rt tol
+
+}
+
+bool Feature_dataFetcher::operator!=(const Feature_dataFetcher& that) 
+{
+    return !(*this == that);
+
+}

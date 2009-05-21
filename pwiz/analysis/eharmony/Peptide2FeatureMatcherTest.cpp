@@ -22,7 +22,7 @@ const char* firstTestPepXML =
     "<search_result>\n"
     "<search_hit peptide=\"MARINA\">\n"
     "<analysis_result analysis=\"peptideprophet\">\n"
-    "<peptideprophet_result probability=\"0.900\" all_ntt_prob=\"(0,0,0.900)\">\n"
+    "<peptideprophet_result probability=\"0.99998663029333357\" all_ntt_prob=\"(0,0,0.99998663029333357)\">\n"
     "<search_score_summary>\n"
     "</search_score_summary>\n"
     "</peptideprophet_result>\n"
@@ -51,7 +51,7 @@ const char* secondTestPepXML =
     "<search_result>\n"
     "<search_hit peptide=\"MARINA\">\n"
     "<analysis_result analysis=\"peptideprophet\">\n"
-    "<peptideprophet_result probability=\"0.900\" all_ntt_prob=\"(0,0,0.900)\">\n"
+    "<peptideprophet_result probability=\"0.99998663029333357\" all_ntt_prob=\"(0,0,0.99998663029333357)\">\n"
     "<search_score_summary>\n"
     "</search_score_summary>\n"
     "</peptideprophet_result>\n"
@@ -70,7 +70,7 @@ const char* thirdTestPepXML =
     "<search_result>\n"
     "<search_hit peptide=\"MARINA\">\n"
     "<analysis_result analysis=\"peptideprophet\">\n"
-    "<peptideprophet_result probability=\"0.900\" all_ntt_prob=\"(0,0,0.900)\">\n"
+    "<peptideprophet_result probability=\"0.99998663029333357\" all_ntt_prob=\"(0,0,0.99998663029333357)\">\n"
     "<search_score_summary>\n"
     "</search_score_summary>\n"
     "</peptideprophet_result>\n"
@@ -157,9 +157,9 @@ void testNaive()
     Feature_dataFetcher fdf_b2(feats_b2);
 
     // make peptide records that we want to find / not find
-    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA_ms1_5",0.900,1,2);
-    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA_ms1_5", 0.900,1,2);
-    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA_ms1_5", 0.900, 1, 2);  
+    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA_ms1_5",0.99998663029333357,1,2);
+    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA_ms1_5", 0.99998663029333357,1,2);
+    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA_ms1_5", 0.99998663029333357, 1, 2);  
 
     SearchNeighborhoodCalculator snc;
 

@@ -28,6 +28,9 @@ struct SearchNeighborhoodCalculator
 
     virtual ~SearchNeighborhoodCalculator(){}
 
+    virtual bool operator==(const SearchNeighborhoodCalculator& that){ return _id == that._id && _mzTol == that._mzTol && _rtTol == that._rtTol;}
+    virtual bool operator!=(const SearchNeighborhoodCalculator& that){ return !(*this == that); }
+
 };
 
 
@@ -35,16 +38,14 @@ struct NormalDistributionSearch : public SearchNeighborhoodCalculator
 {
     NormalDistributionSearch(double Z = 3) :  _Z(Z) { _id = ("normalDistribution[" + boost::lexical_cast<string>(_Z) + "]").c_str(); }
    
-    void calculateTolerances(const DataFetcherContainer& dfc);
+    virtual void calculateTolerances(const DataFetcherContainer& dfc);
     virtual double score(const SpectrumQuery& a, const Feature& b) const;
-    // bool close(const SpectrumQuery& a, const Feature& b) const;
 
-    string _id;
-    double _mzTol;
-    double _rtTol;
-
-    double _mu;
-    double _sigma;
+    double _mu_mz;
+    double _sigma_mz;
+  
+    double _mu_rt;
+    double _sigma_rt;
 
     double _Z;
         

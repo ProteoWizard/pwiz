@@ -16,6 +16,9 @@ namespace eharmony{
 
 struct AMTContainer
 {
+    string _id;
+    bool rtAdjusted;
+
     Peptide2FeatureMatcher _p2fm;
     PeptideMatcher _pm;
 
@@ -31,8 +34,12 @@ struct AMTContainer
 
     void write(XMLWriter& writer) const;
     void read(istream& is);
+  
+    void writeRTDiff(ostream& os);
+    bool operator==(const AMTContainer& that);
+    bool operator!=(const AMTContainer& that);
 
-    AMTContainer(){}
+    AMTContainer() : _id(""), rtAdjusted(false){}
 
 };
 

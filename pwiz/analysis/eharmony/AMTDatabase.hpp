@@ -20,7 +20,7 @@ struct AMTDatabase
     std::vector<boost::shared_ptr<SpectrumQuery> > query(const Feature& f) ;
     std::vector<boost::shared_ptr<SpectrumQuery> > query(const double& mz, const double& rt) ;
     std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const SearchNeighborhoodCalculator& snc);
-    std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in);
+    std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in);
     
     PeptideID_dataFetcher _peptides;
     

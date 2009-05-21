@@ -58,6 +58,9 @@ public:
     const multimap<const pair<int, int>,boost::shared_ptr<T> >& getData() const { return _data;}
     pair<double,double> getBinSizes() const { return make_pair(_binSizeX, _binSizeY);}
 
+    bool operator==(const Bin& that);
+    bool operator!=(const Bin& that);
+
 private:
 
     vector<boost::shared_ptr<T> > _allContents;
@@ -264,6 +267,23 @@ void Bin<T>::getAdjacentBinContents(pair<double,double> coordinates, vector<boos
         }
 
     return;
+
+}
+template <typename T>
+bool Bin<T>::operator==(const Bin& that)
+{
+    return _allContents == that._allContents &&
+      _objects == that._objects &&
+      _data == that._data &&
+      _binSizeX == that._binSizeX &&
+      _binSizeY == that._binSizeY;
+
+}
+
+template <typename T>
+bool Bin<T>::operator!=(const Bin& that)
+{
+    return !(*this == that);
 
 }
 

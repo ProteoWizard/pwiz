@@ -78,10 +78,22 @@ vector<Match> Match_dataFetcher::getAllContents() const
 
 vector<Match> Match_dataFetcher::getMatches(double mz, double rt)
 {
-  pair<double,double> coords = make_pair(mz,rt);
-  vector<Match> result;
-  _bin.getBinContents(coords,result);
+    pair<double,double> coords = make_pair(mz,rt);
+    vector<Match> result;
+    _bin.getBinContents(coords,result);
 
-  return result;
+    return result;
+
+}
+
+bool Match_dataFetcher::operator==(const Match_dataFetcher& that)
+{
+    return getAllContents() == that.getAllContents();;
+
+}
+
+bool Match_dataFetcher::operator!=(const Match_dataFetcher& that)
+{
+    return !(*this == that);
 
 }
