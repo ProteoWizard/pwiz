@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/analysis/peakdetect/Noise.hpp"
+#include "boost/shared_ptr.hpp"
 
 
 namespace pwiz {
@@ -62,14 +63,14 @@ class PWIZ_API_DECL PeakFinder_SNR : public PeakFinder
         {}
     };
 
-    PeakFinder_SNR(const NoiseCalculator& noiseCalculator,
+    PeakFinder_SNR(boost::shared_ptr<NoiseCalculator> noiseCalculator,
                    const Config& config = Config());
 
     virtual void findPeaks(const math::OrderedPairContainerRef& pairs,
                            std::vector<size_t>& resultIndices) const; 
 
     private:
-    const NoiseCalculator& noiseCalculator_;
+    boost::shared_ptr<NoiseCalculator> noiseCalculator_;
     Config config_;
 };
 

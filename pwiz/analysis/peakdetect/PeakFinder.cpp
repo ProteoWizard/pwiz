@@ -35,9 +35,10 @@ namespace analysis {
 
 using namespace pwiz::math;
 using namespace std;
+using boost::shared_ptr;
 
 
-PeakFinder_SNR::PeakFinder_SNR(const NoiseCalculator& noiseCalculator, const Config& config)
+PeakFinder_SNR::PeakFinder_SNR(shared_ptr<NoiseCalculator> noiseCalculator, const Config& config)
 :   noiseCalculator_(noiseCalculator), config_(config)
 {}
 
@@ -82,7 +83,7 @@ vector<double> calculateRollingProducts(const vector<double>& in, size_t radius)
 void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
                                vector<size_t>& resultIndices) const
 {
-    Noise noise = noiseCalculator_.calculateNoise(pairs);
+    Noise noise = noiseCalculator_->calculateNoise(pairs);
 
     vector<double> pvalues;
     transform(pairs.begin(), pairs.end(), back_inserter(pvalues), CalculatePValue(noise));

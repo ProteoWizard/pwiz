@@ -29,6 +29,7 @@
 
 
 using namespace std;
+using boost::shared_ptr;
 using namespace pwiz::math;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
@@ -79,7 +80,7 @@ void test_SNR()
 {
     if (os_) *os_ << "test_SNR()\n";
 
-    NoiseCalculator_2Pass noiseCalculator;
+    shared_ptr<NoiseCalculator> noiseCalculator(new NoiseCalculator_2Pass);
 
     PeakFinder_SNR::Config config;
     config.windowRadius = 2;
