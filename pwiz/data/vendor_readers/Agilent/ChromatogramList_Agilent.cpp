@@ -103,7 +103,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
         case MS_SIC_chromatogram: // generate SRM SIC for transition <precursor>,<product>
         {
             IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
-            filterPtr->ChromatogramType = ChromType_MultipleReactionMode;
+            filterPtr->ChromatogramType = ci.q3 > 0 ? ChromType_MultipleReactionMode : ChromType_SelectedIonMonitoring;
             filterPtr->SingleChromatogramForAllMasses = VARIANT_FALSE;
             filterPtr->ExtractOneChromatogramPerScanSegment = VARIANT_TRUE;
 
@@ -113,12 +113,15 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
 
-            result->precursor.activation.set(MS_CID);
-            result->precursor.activation.set(MS_collision_energy, chromatogramPtr->CollisionEnergy);
+            if (ci.q3 > 0)
+            {
+                result->precursor.activation.set(MS_CID);
+                result->precursor.activation.set(MS_collision_energy, chromatogramPtr->CollisionEnergy);
 
-            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
-            //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
-            //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+                result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
+                //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
+                //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+            }
 
             vector<double> times, intensities;
             convertSafeArrayToVector(chromatogramPtr->xArray, times);
@@ -144,6 +147,7 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
     IndexEntry& ci = index_.back();
     ci.index = index_.size()-1;
     ci.chromatogramType = MS_TIC_chromatogram;
+    ci.q1 = ci.q3 = 0;
     ci.id = "TIC";
     idMap_[ci.id] = ci.index;
 
@@ -161,6 +165,23 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         ci.id = (format("SRM SIC %.10g,%.10g")
                  % ci.q1
                  % ci.q3
+                ).str();
+        idMap_[ci.id] = ci.index;
+    }
+
+    vector<double> monitoredIons;
+    convertSafeArrayToVector(rawfile_->scanFileInfoPtr->SIMIons, monitoredIons);
+
+    for (size_t i=0, end=monitoredIons.size(); i < end; ++i)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ci = index_.back();
+        ci.index = index_.size()-1;
+        ci.chromatogramType = MS_SIC_chromatogram;
+        ci.q1 = monitoredIons[i];
+        ci.q3 = 0;
+        ci.id = (format("SIM SIC %.10g")
+                 % ci.q1
                 ).str();
         idMap_[ci.id] = ci.index;
     }

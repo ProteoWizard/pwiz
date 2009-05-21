@@ -82,6 +82,7 @@ void convertSafeArrayToVector(SAFEARRAY* parray, std::vector<T>& result)
 
 
 typedef MSDR::IMsdrDataReaderPtr IDataReaderPtr;
+typedef BDA::IBDAFileInformationPtr IFileInformationPtr;
 typedef BDA::IBDAMSScanFileInformationPtr IScanInformationPtr;
 typedef BDA::IBDASpecDataPtr ISpectrumPtr;
 typedef BDA::IBDASpecFilterPtr ISpectrumFilterPtr;
@@ -105,21 +106,16 @@ struct AgilentDataReader
 typedef boost::shared_ptr<AgilentDataReader> AgilentDataReaderPtr;
 
 
+PWIZ_API_DECL
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(AgilentDataReaderPtr rawfile);
+
+PWIZ_API_DECL CVID translateAsInstrumentModel(DeviceType deviceType);
 PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType);
 PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType);
 PWIZ_API_DECL CVID translateAsActivationType(MSScanType scanType);
 PWIZ_API_DECL CVID translateAsPolarityType(IonPolarity polarity);
-
-/*PWIZ_API_DECL
-std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile);
-
-PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentModelType);
-PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType);
-PWIZ_API_DECL CVID translate(MassAnalyzerType type);
-PWIZ_API_DECL CVID translateAsIonizationType(IonizationType ionizationType);
-PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
-PWIZ_API_DECL CVID translate(PolarityType polarityType);
-*/
+PWIZ_API_DECL CVID translateAsIonizationType(IonizationMode ionizationMode);
+PWIZ_API_DECL CVID translateAsInletType(IonizationMode ionizationMode);
 
 
 } // detail

@@ -26,6 +26,8 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
+#include <boost/math/special_functions/modf.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::string& filename, const std::string& head) const
@@ -114,6 +116,39 @@ string stringToIDREF(const string& s)
     string result = s;
     transform(result.begin(), result.end(), result.begin(), idref_allowed);
     return result;
+}
+
+
+void initializeInstrumentConfigurationPtrs(MSData& msd,
+                                           AgilentDataReaderPtr rawfile,
+                                           const SoftwarePtr& instrumentSoftware)
+{
+    IFileInformationPtr fileInformationPtr = rawfile->dataReaderPtr->FileInformation;
+    DeviceType deviceType = rawfile->scanFileInfoPtr->_DeviceType;
+    CVID cvidModel = translateAsInstrumentModel(deviceType);
+
+    // set common instrument parameters
+    ParamGroupPtr commonInstrumentParams(new ParamGroup);
+    commonInstrumentParams->id = "CommonInstrumentParams";
+    msd.paramGroupPtrs.push_back(commonInstrumentParams);
+
+    if (cvidModel == MS_Agilent_instrument_model)
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", (const char*) fileInformationPtr->GetDeviceName(deviceType)));
+    commonInstrumentParams->set(cvidModel);
+
+    // create instrument configuration templates based on the instrument model
+    vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
+
+    for (size_t i=0; i < configurations.size(); ++i)
+    {
+        InstrumentConfigurationPtr ic = InstrumentConfigurationPtr(new InstrumentConfiguration(configurations[i]));
+
+        ic->id = (format("IC%d") % (i+1)).str();
+        ic->paramGroupPtrs.push_back(commonInstrumentParams);
+        ic->softwarePtr = instrumentSoftware;
+
+        msd.instrumentConfigurationPtrs.push_back(ic);
+    }
 }
 
 
@@ -206,12 +241,31 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
-    //if (!msd.instrumentConfigurationPtrs.empty())
-    //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareMassHunter);
+    if (!msd.instrumentConfigurationPtrs.empty())
+        msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = boost::to_lower_copy(stringToIDREF(filename));
-    //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
+
+    using namespace boost::posix_time;
+    using namespace boost::gregorian;
+    using namespace boost::local_time;
+    double acquisitionDATE = (double) rawfile->dataReaderPtr->FileInformation->AcquisitionTime;
+    int dayOffset, hourOffset, minuteOffset, secondOffset;
+    double fraction = boost::math::modf(acquisitionDATE, &dayOffset) * 24; // fraction = hours
+    fraction = boost::math::modf(fraction, &hourOffset) * 60; // fraction = minutes
+    fraction = boost::math::modf(fraction, &minuteOffset) * 60; // fraction = seconds
+    boost::math::modf(fraction, &secondOffset);
+    ptime pt(date(1899, bdt::Dec, 30),
+             time_duration(hourOffset, minuteOffset, secondOffset));
+    local_date_time ldt(pt, time_zone_ptr());
+    ldt += days(dayOffset);
+    local_time_facet* output_facet = new local_time_facet;
+    output_facet->format("%Y-%m-%dT%H:%M:%S"); // 2007-06-27T15:23:45
+    stringstream ss;
+    ss.imbue(locale(locale::classic(), output_facet));
+    ss << ldt;
+    msd.run.startTimeStamp = ss.str();
 }
 
 } // namespace
