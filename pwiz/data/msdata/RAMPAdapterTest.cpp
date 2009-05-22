@@ -31,6 +31,7 @@
 
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 
@@ -41,7 +42,8 @@ ostream* os_ = 0;
 RAMP will need to instantiate an msdata::RAMPAdapter object, and call it to fill
 in the appropriate RAMP structures: 
 
-    using namespace pwiz::msdata;
+    using namespace pwiz;
+using namespace pwiz::msdata;
 
     RAMPAdapter adapter("something.mzML");
 

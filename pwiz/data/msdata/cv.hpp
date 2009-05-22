@@ -65,7 +65,6 @@
 
 
 namespace pwiz {
-namespace msdata {
 
 
 /// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)
@@ -5055,7 +5054,6 @@ PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);
 PWIZ_API_DECL const std::vector<CVID>& cvids();
 
 
-} // namespace msdata
 } // namespace pwiz
 
 

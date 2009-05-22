@@ -31,6 +31,7 @@
 
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::msdata;
 
 

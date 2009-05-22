@@ -33,6 +33,7 @@ namespace analysis {
 
 
 using namespace pwiz::util;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace std;
 using boost::logic::tribool;

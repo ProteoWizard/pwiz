@@ -30,6 +30,7 @@
 
 using namespace std;
 using namespace pwiz::util;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 using boost::lexical_cast;

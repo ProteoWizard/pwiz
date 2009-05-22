@@ -35,6 +35,7 @@
 
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::msdata;
 namespace bfs = boost::filesystem;
 
@@ -83,15 +84,13 @@ string includeGuardString(const string& basename)
 
 void namespaceBegin(ostream& os, const string& name)
 {
-    os << "namespace pwiz {\n"
-       << "namespace msdata {\n\n\n";
+    os << "namespace pwiz {\n\n\n";
 }
 
 
 void namespaceEnd(ostream& os, const string& name)
 {
-    os << "} // namespace msdata\n"
-       << "} // namespace pwiz\n\n\n";
+    os << "} // namespace pwiz\n\n\n";
 }
 
 

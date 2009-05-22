@@ -32,7 +32,6 @@
 
 
 namespace pwiz {
-namespace msdata {
 
 
 namespace {
@@ -3794,7 +3793,6 @@ PWIZ_API_DECL const vector<CVID>& cvids()
 }
 
 
-} // namespace msdata
 } // namespace pwiz
 
 

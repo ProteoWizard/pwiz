@@ -27,7 +27,7 @@
 #include <cstring>
 
 
-using namespace pwiz::msdata;
+using namespace pwiz;
 using namespace pwiz::util;
 using namespace std;
 

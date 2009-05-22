@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace pwiz::util;
+using namespace pwiz;
 using namespace pwiz::msdata;
 
 

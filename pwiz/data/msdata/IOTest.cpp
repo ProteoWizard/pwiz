@@ -32,6 +32,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 using boost::iostreams::stream_offset;

@@ -35,6 +35,7 @@ namespace pwiz {
 namespace analysis {
 
 
+using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::data;
 using namespace std;

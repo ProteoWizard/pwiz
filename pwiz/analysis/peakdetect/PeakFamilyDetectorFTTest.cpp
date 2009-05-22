@@ -33,6 +33,7 @@ using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
+using namespace pwiz;
 using namespace pwiz::msdata;
 
 

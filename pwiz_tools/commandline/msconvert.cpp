@@ -38,6 +38,7 @@
 
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
