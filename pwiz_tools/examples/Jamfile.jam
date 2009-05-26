@@ -82,6 +82,13 @@ exe write_example_files
     : <include>../../..
     ;
 
+
+exe write_traml_example_files
+    : write_traml_example_files.cpp
+      ../../pwiz/data/tradata
+    : <include>../../..
+    ;
+
 #
 # local install for testing
 #
@@ -94,6 +101,7 @@ install bin
       mscat
       txt2mzml
       write_example_files
+      write_traml_example_files
     : <location>bin ;
 
 explicit bin ;
