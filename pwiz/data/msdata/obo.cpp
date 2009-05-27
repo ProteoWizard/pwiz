@@ -65,7 +65,7 @@ void parse_id(const string& line, Term& term)
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
-        throw runtime_error("Error matching term id.");    
+        throw runtime_error("Error matching term id on line: " + line);
 
     term.prefix = what[1];
     term.id = lexical_cast<Term::id_type>(what[2]);

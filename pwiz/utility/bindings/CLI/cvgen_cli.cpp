@@ -85,15 +85,13 @@ string includeGuardString(const string& basename)
 void namespaceBegin(ostream& os, const string& name)
 {
     os << "namespace pwiz {\n"
-       << "namespace CLI {\n"
-       << "namespace msdata {\n\n\n";
+       << "namespace CLI {\n\n\n";
 }
 
 
 void namespaceEnd(ostream& os, const string& name)
 {
-    os << "} // namespace msdata\n"
-       << "} // namespace CLI\n"
+    os << "} // namespace CLI\n"
        << "} // namespace pwiz\n\n\n";
 }
 
@@ -182,7 +180,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "/// <summary>\n"
        << "/// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;\n"
        << "/// </summary>\n"
-       << "DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::msdata::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);\n"
+       << "DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);\n"
        << "\n"
        << "/// <summary>\n"
        << "/// A list of enumerated System.Strings; implements IList&lt;System.String&gt;\n"
@@ -194,7 +192,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "/// </summary>\n"
        << "public ref class CVTermInfo\n"
        << "{\n"
-       << "    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::msdata::CVTermInfo);\n"
+       << "    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::CVTermInfo);\n"
        << "    public:\n"
        << "\n"
        << "    /// <summary>\n"
@@ -233,17 +231,17 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "    /// </summary>\n"
        << "    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }\n"
        << "\n"
-       << "    CVTermInfo() : base_(new pwiz::msdata::CVTermInfo()) {}\n"
+       << "    CVTermInfo() : base_(new pwiz::CVTermInfo()) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified CVID\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(CVID cvid) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo((pwiz::msdata::CVID) cvid))) {}\n"
+       << "    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo((pwiz::CVID) cvid))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified id in the form: \"prefix:number\"\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(System::String^ id) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo(ToStdString(id)))) {}\n"
+       << "    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo(ToStdString(id)))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns the shortest synonym from exactSynonyms()\n"

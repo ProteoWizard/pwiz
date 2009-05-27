@@ -32,22 +32,22 @@
 #include "SharedCLI.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\utility\bindings\CLI\psi-ms.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 30:04:2009 11:14
 //   saved-by: edeutsch
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.1.0
-//   remark: release date: 2009-05-05
+//   remark: version: 2.7.0
+//   remark: release date: 2009-05-27
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
-//   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>, Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de> 
+//   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\utility\bindings\CLI\unit.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 04:03:2009 17:16
 //   saved-by: george gkoutos
@@ -2026,19 +2026,19 @@ public enum class CVID
     /// <summary>LCQ Fleet: LCQ Fleet.</summary>
     MS_LCQ_Fleet = 1000578,
 
-    /// <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+    /// <summary>MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_MS1_spectrum = 1000579,
 
-    /// <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+    /// <summary>MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_full_spectrum = MS_MS1_spectrum,
 
-    /// <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+    /// <summary>MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_Q1_spectrum = MS_MS1_spectrum,
 
-    /// <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+    /// <summary>MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_Q3_spectrum = MS_MS1_spectrum,
 
-    /// <summary>MS1 spectrum: MS1 refers to single-stage MS/MS experiments designed to record the first stage of the product ion spectra.</summary>
+    /// <summary>MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
 
     /// <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.</summary>
@@ -2938,6 +2938,81 @@ public enum class CVID
     /// <summary>fraction identifier: Identier string that describes the sample fraction. This identifer should contain the fraction number(s) or similar information.</summary>
     MS_fraction_identifier = 1000858,
 
+    /// <summary>molecule: A molecules is a fundamental component of a chemical compound that is the smallest part of the compound that can participate in a chemical reaction.</summary>
+    MS_molecule = 1000859,
+
+    /// <summary>peptide: A compound of low molecular weight that is composed of two or more amino acids.</summary>
+    MS_peptide = 1000860,
+
+    /// <summary>chemical compound attribute: A describable property of a chemical compound.</summary>
+    MS_chemical_compound_attribute = 1000861,
+
+    /// <summary>isoelectric point: The pH of a solution at which a charged molecule does not migrate in an electric field.</summary>
+    MS_isoelectric_point = 1000862,
+
+    /// <summary>isoelectric point: The pH of a solution at which a charged molecule does not migrate in an electric field.</summary>
+    MS_pI = MS_isoelectric_point,
+
+    /// <summary>predicted isoelectric point: The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm.</summary>
+    MS_predicted_isoelectric_point = 1000863,
+
+    /// <summary>predicted isoelectric point: The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm.</summary>
+    MS_predicted_pI = MS_predicted_isoelectric_point,
+
+    /// <summary>chemical compound formula: A combination of symbols used to express the chemical composition of a compound.</summary>
+    MS_chemical_compound_formula = 1000864,
+
+    /// <summary>empirical formula: A chemical formula which expresses the proportions of the elements present in a substance.</summary>
+    MS_empirical_formula = 1000865,
+
+    /// <summary>molecular formula: A chemical compound formula expressing the number of atoms of each element present in a compound, without indicating how they are linked.</summary>
+    MS_molecular_formula = 1000866,
+
+    /// <summary>structural formula: A chemical formula showing the number of atoms of each element in a molecule, their spatial arrangement, and their linkage to each other.</summary>
+    MS_structural_formula = 1000867,
+
+    /// <summary>SMILES string: The simplified molecular input line entry specification or SMILES is a specification for unambiguously describing the structure of a chemical compound using a short ASCII string.</summary>
+    MS_SMILES_string = 1000868,
+
+    /// <summary>collision gas pressure: The gas pressure of the collision gas used for collisional excitation.</summary>
+    MS_collision_gas_pressure = 1000869,
+
+    /// <summary>4000 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 4000.</summary>
+    MS_4000_QTRAP = 1000870,
+
+    /// <summary>SRM software: Software used to predict, select, or optimize transitions or analyze the results of selected reaction monitoring runs.</summary>
+    MS_SRM_software = 1000871,
+
+    /// <summary>MaRiMba: SRM software used to select candidate SRM transitions from a spectral library.</summary>
+    MS_MaRiMba = 1000872,
+
+    /// <summary>peptide attribute calculation software: Software used to predict or calculate numberical attributes of peptides.</summary>
+    MS_peptide_attribute_calculation_software = 1000873,
+
+    /// <summary>SSRCalc: Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence. It is available at http://hs2.proteome.ca/SSRCalc/SSRCalc.html.</summary>
+    MS_SSRCalc = 1000874,
+
+    /// <summary>declustering potential: Potential difference between the orifice and the skimmer in volts.</summary>
+    MS_declustering_potential = 1000875,
+
+    /// <summary>cone voltage: Potential difference between the sampling cone/orifice and the what? in volts.</summary>
+    MS_cone_voltage = 1000876,
+
+    /// <summary>tube lens: No ideas.</summary>
+    MS_tube_lens = 1000877,
+
+    /// <summary>external reference identifier: An identifier/accession number to an external reference database.</summary>
+    MS_external_reference_identifier = 1000878,
+
+    /// <summary>PubMed identifier: A unique identifier for a publication in the PubMed database (MIR:00000015).</summary>
+    MS_PubMed_identifier = 1000879,
+
+    /// <summary>interchannel delay: The duration of intervals between scanning, during which the instrument configuration is switched.</summary>
+    MS_interchannel_delay = 1000880,
+
+    /// <summary>chemical compound: A substance formed by chemical union of two or more elements or ingredients in definite proportion by weight.</summary>
+    MS_chemical_compound = 1000881,
+
     /// <summary>spectrum interpretation: Collection of terms from the PSI Proteome Informatics standards describing the interpretation of spectra.</summary>
     MS_spectrum_interpretation = 1001000,
 
@@ -3034,7 +3109,7 @@ public enum class CVID
     /// <summary>sequest:Consensus: Specify depth as value of the CVParam!</summary>
     MS_sequest_Consensus = 1001038,
 
-    /// <summary>intermediate analysis format: Type of the source file, the  AnalysisXML was created from.</summary>
+    /// <summary>intermediate analysis format: Type of the source file, the  mzIdentML was created from.</summary>
     MS_intermediate_analysis_format = 1001040,
 
     /// <summary>sequest:sortCV: Branch containing the CV terms for Sequest View / Sort Input Parameters.</summary>
@@ -3148,11 +3223,8 @@ public enum class CVID
     /// <summary>protein description: The protein description line from the sequence entry in the source database FASTA file.</summary>
     MS_protein_description = 1001088,
 
-    /// <summary>protein taxonomy: The taxonomy of the resultant protein from the search.</summary>
-    MS_protein_taxonomy = 1001089,
-
-    /// <summary>taxonomy nomenclature: The system used to indicate taxonomy. There should be an enumerated list of options: latin name, NCBI TaxID, common name, Swiss-Prot species ID (ex. RABIT from the full protein ID ALBU_RABIT).</summary>
-    MS_taxonomy_nomenclature = 1001090,
+    /// <summary>molecule taxonomy: The taxonomy of the resultant molecule from the search.</summary>
+    MS_molecule_taxonomy = 1001089,
 
     /// <summary>NoEnzyme: </summary>
     MS_NoEnzyme = 1001091,
@@ -3202,7 +3274,7 @@ public enum class CVID
     /// <summary>sequest:TopNumber: Specify \"number\" as value of the CVParam!</summary>
     MS_sequest_TopNumber = 1001106,
 
-    /// <summary>data stored in database: Source file for this AnalysisXML was a data set in a database.</summary>
+    /// <summary>data stored in database: Source file for this mzIdentML was a data set in a database.</summary>
     MS_data_stored_in_database = 1001107,
 
     /// <summary>param: a ion: </summary>
@@ -3418,8 +3490,8 @@ public enum class CVID
     /// <summary>database EST: </summary>
     MS_database_EST = 1001178,
 
-    /// <summary>regular expression: Branch containing regular expressions for cleavage enzymes.</summary>
-    MS_regular_expression = 1001180,
+    /// <summary>Cleavage agent regular expression: Branch containing regular expressions for cleavage enzymes.</summary>
+    MS_Cleavage_agent_regular_expression = 1001180,
 
     /// <summary>search statistics: The details of the actual run of the search.</summary>
     MS_search_statistics = 1001184,
@@ -3454,10 +3526,10 @@ public enum class CVID
     /// <summary>protein quality estimation measure: Quality estimation score for a protein (p-value, Expect value, confidence, local FDR).</summary>
     MS_protein_quality_estimation_measure = 1001198,
 
-    /// <summary>Mascot DAT file: Source file for this AnalysisXML was a Mascot DAT file.</summary>
+    /// <summary>Mascot DAT file: Source file for this mzIdentML was a Mascot DAT file.</summary>
     MS_Mascot_DAT_file = 1001199,
 
-    /// <summary>Sequest out file: Source file for this AnalysisXML was ONE Sequest out file.</summary>
+    /// <summary>Sequest out file: Source file for this mzIdentML was ONE Sequest out file.</summary>
     MS_Sequest_out_file = 1001200,
 
     /// <summary>DB MW filter maximum: </summary>
@@ -3489,9 +3561,6 @@ public enum class CVID
 
     /// <summary>parent mass type average: Mass type setting for parent mass was average isotopic.</summary>
     MS_parent_mass_type_average = 1001212,
-
-    /// <summary>search result details: Scores and global result characteristics.</summary>
-    MS_search_result_details = 1001213,
 
     /// <summary>prot:global FDR: Estimation of global false discovery rate of the proteins.</summary>
     MS_prot_global_FDR = 1001214,
@@ -3574,10 +3643,10 @@ public enum class CVID
     /// <summary>co-eluting ion: Co-eluting ion (ADD more documentation here).</summary>
     MS_co_eluting_ion = 1001241,
 
-    /// <summary>Sequest out folder: Source file for this AnalysisXML was a Sequest folder with its out files.</summary>
+    /// <summary>Sequest out folder: Source file for this mzIdentML was a Sequest folder with its out files.</summary>
     MS_Sequest_out_folder = 1001242,
 
-    /// <summary>Sequest summary: Source file for this AnalysisXML was a Sequest summary page (proteins).</summary>
+    /// <summary>Sequest summary: Source file for this mzIdentML was a Sequest summary page (proteins).</summary>
     MS_Sequest_summary = 1001243,
 
     /// <summary>PerSeptive PKS file: </summary>
@@ -3661,10 +3730,10 @@ public enum class CVID
     /// <summary>(?=[DE]): </summary>
     MS_____DE__ = 1001274,
 
-    /// <summary>ProteinScape SearchEvent: Source data for this AnalysisXML was a ProteinScape SearchEvent.</summary>
+    /// <summary>ProteinScape SearchEvent: Source data for this mzIdentML was a ProteinScape SearchEvent.</summary>
     MS_ProteinScape_SearchEvent = 1001275,
 
-    /// <summary>ProteinScape Gel: Source data for this AnalysisXML was a ProteinScape Gel.</summary>
+    /// <summary>ProteinScape Gel: Source data for this mzIdentML was a ProteinScape Gel.</summary>
     MS_ProteinScape_Gel = 1001276,
 
     /// <summary>decoy DB accession regexp: Specify the regular expression for decoy accession numbers.</summary>
@@ -3805,10 +3874,10 @@ public enum class CVID
     /// <summary>OMSSA:pvalue: OMSSA p-value.</summary>
     MS_OMSSA_pvalue = 1001329,
 
-    /// <summary>xtandem:expect: The Xtandem expectation value.</summary>
+    /// <summary>xtandem:expect: The X!Tandem expectation value.</summary>
     MS_xtandem_expect = 1001330,
 
-    /// <summary>xtandem:hyperscore: The tandem hyperscore.</summary>
+    /// <summary>xtandem:hyperscore: The X!Tandem hyperscore.</summary>
     MS_xtandem_hyperscore = 1001331,
 
     /// <summary>(?<=[FYWL])(?\!P): </summary>
@@ -4012,14 +4081,14 @@ public enum class CVID
     /// <summary>Phenyx:Modif: </summary>
     MS_Phenyx_Modif = 1001398,
 
-    /// <summary>OMSSA csv file: Source file for this AnalysisXML was an OMSSA csv file.</summary>
+    /// <summary>OMSSA csv file: Source file for this mzIdentML was an OMSSA csv file.</summary>
     MS_OMSSA_csv_file = 1001399,
 
-    /// <summary>OMSSA xml file: Source file for this AnalysisXML was an OMSSA xml file.</summary>
+    /// <summary>OMSSA xml file: Source file for this mzIdentML was an OMSSA xml file.</summary>
     MS_OMSSA_xml_file = 1001400,
 
-    /// <summary>tandem xml file: Source file for this AnalysisXML was an tandem xml file.</summary>
-    MS_tandem_xml_file = 1001401,
+    /// <summary>xtandem xml file: Source file for this mzIdentML was an X!Tandem xml file.</summary>
+    MS_xtandem_xml_file = 1001401,
 
     /// <summary>spectrum identification result details: This subsection describes terms which can describe details of spectrum identification results.</summary>
     MS_spectrum_identification_result_details = 1001405,
@@ -4048,12 +4117,6 @@ public enum class CVID
     /// <summary>search tolerance minus value: </summary>
     MS_search_tolerance_minus_value = 1001413,
 
-    /// <summary>MGF scans: This term can hold the scans attribute from an MGF input file.</summary>
-    MS_MGF_scans = 1001414,
-
-    /// <summary>MGF raw scans: This term can hold the raw scans attribute from an MGF input file.</summary>
-    MS_MGF_raw_scans = 1001415,
-
     /// <summary>SpectraST:dot: SpectraST dot product of two spectra, measuring spectral similarity.</summary>
     MS_SpectraST_dot = 1001417,
 
@@ -4066,10 +4129,10 @@ public enum class CVID
     /// <summary>SpectraST:delta: SpectraST normalised difference between dot product of top hit and runner-up.</summary>
     MS_SpectraST_delta = 1001420,
 
-    /// <summary>pepXML file: Source file for this AnalysisXML was a pepXML file.</summary>
+    /// <summary>pepXML file: Source file for this mzIdentML was a pepXML file.</summary>
     MS_pepXML_file = 1001421,
 
-    /// <summary>protXML file: Source file for this AnalysisXML was a protXML file.</summary>
+    /// <summary>protXML file: Source file for this mzIdentML was a protXML file.</summary>
     MS_protXML_file = 1001422,
 
     /// <summary>translation table description: A URL that describes the translation table used to translate the nucleotides to amino acids.</summary>
@@ -4182,6 +4245,51 @@ public enum class CVID
 
     /// <summary>file format: Format of data files.</summary>
     MS_file_format = 1001459,
+
+    /// <summary>unknown modification: This term should be given if the modification was unknown.</summary>
+    MS_unknown_modification = 1001460,
+
+    /// <summary>greylag: greylag identification software, wee greylag.org.</summary>
+    MS_greylag = 1001461,
+
+    /// <summary>PEFF format: The sequence database was stored in the PEFF (PSI enhanced FastA file) format.</summary>
+    MS_PEFF_format = 1001462,
+
+    /// <summary>Phenyx XML format: </summary>
+    MS_Phenyx_XML_format = 1001463,
+
+    /// <summary>DTASelect file: </summary>
+    MS_DTASelect_file = 1001464,
+
+    /// <summary>MS2 file: MS2 file.</summary>
+    MS_MS2_file = 1001466,
+
+    /// <summary>taxonomy: NCBI TaxID: This term is used if a NCBI TaxID is specified, e.g. 9606 for Homo sapiens.</summary>
+    MS_taxonomy__NCBI_TaxID = 1001467,
+
+    /// <summary>taxonomy: common name: This term is used if a common name is specified, e.g. human.</summary>
+    MS_taxonomy__common_name = 1001468,
+
+    /// <summary>taxonomy: scientific name: This term is used if a scientific name is specified, e.g. Homo sapiens.</summary>
+    MS_taxonomy__scientific_name = 1001469,
+
+    /// <summary>taxonomy: Swiss-Prot ID: This term is used if a swiss prot taxonomy id is specified, e.g. Human.</summary>
+    MS_taxonomy__Swiss_Prot_ID = 1001470,
+
+    /// <summary>peptide modification details: The children of this term can be used to describe modifications.</summary>
+    MS_peptide_modification_details = 1001471,
+
+    /// <summary>selected ion monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored ion at each time point.</summary>
+    MS_selected_ion_monitoring_chromatogram = 1001472,
+
+    /// <summary>selected ion monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored ion at each time point.</summary>
+    MS_SIM_chromatogram = MS_selected_ion_monitoring_chromatogram,
+
+    /// <summary>selected reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.</summary>
+    MS_selected_reaction_monitoring_chromatogram = 1001473,
+
+    /// <summary>selected reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.</summary>
+    MS_SRM_chromatogram = MS_selected_reaction_monitoring_chromatogram,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,
@@ -5051,12 +5159,12 @@ public ref class CVTermInfo
     /// <summary>
     /// returns CV term info for the specified CVID
     /// </summary>
-    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}
+    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo((pwiz::CVID) cvid))) {}
 
     /// <summary>
     /// returns CV term info for the specified id in the form: "prefix:number"
     /// </summary>
-    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}
+    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo(ToStdString(id)))) {}
 
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()
