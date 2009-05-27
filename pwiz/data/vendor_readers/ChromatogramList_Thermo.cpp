@@ -62,54 +62,16 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     ChromatogramPtr result(new Chromatogram);
     result->index = ci.index;
     result->id = ci.id;
+    result->set(ci.chromatogramType);
 
-    int mode = 0;
+    rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
 
-    switch (ci.controllerType)
-    {
-        case Controller_MS:
-            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
-            if (ci.id == "TIC") // generate TIC for entire run
-            {
-                mode = 1;
-                result->set(MS_TIC_chromatogram);
-            }
-            else if(ci.id.find("SIC") == 0) // generate SIC for <precursor>
-            {
-                mode = 2;
-                result->set(MS_SIC_chromatogram);
-            }
-            else if(ci.id.find(',') == string::npos) // generate SRM TIC for <precursor>
-            {
-                mode = 3;
-                result->set(MS_mass_chromatogram);
-            }
-            else // generate SRM SIC for transition <precursor>,<product>
-            {
-                mode = 4;
-                result->set(MS_SIC_chromatogram);
-            }
-            break;
-
-        case Controller_PDA:
-            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
-            result->set(MS_absorption_chromatogram);
-            mode = 5; // generate "Total Scan" chromatogram for entire run
-            break;
-
-        case Controller_Analog:
-            rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
-            result->set(MS_mass_chromatogram); // TODO: is this right?
-            mode = 6; // generate "ECD" chromatogram for entire run
-    }
-
-    switch (mode)
+    switch (ci.chromatogramType)
     {
         default:
-        case 0:
             break;
 
-        case 1: // generate TIC for entire run
+        case MS_TIC_chromatogram:
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
@@ -122,7 +84,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         }
         break;
 
-        case 2: // generate SIC for <precursor>
+        case MS_SIC_chromatogram: // generate SIC for <precursor>
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
@@ -135,7 +97,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         }
         break;
 
-        case 3: // generate SRM TIC for <precursor>
+        /*case 3: // generate SRM TIC for <precursor>
         {
             vector<string> tokens;
             bal::split(tokens, ci.id, bal::is_any_of(" "));
@@ -148,9 +110,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
             else result->defaultArrayLength = cd->size();
         }
-        break;
+        break;*/
 
-        case 4: // generate SRM SIC for transition <precursor>,<product>
+        case MS_SRM_chromatogram:
         {
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
 
@@ -181,7 +143,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         }
         break;
 
-        case 5: // generate "Total Scan" chromatogram for entire run
+        case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_TotalScan, Operator_None, Type_MassRange,
@@ -194,7 +156,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         }
         break;
 
-        case 6: // generate "ECD" chromatogram for entire run
+        case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
         {
             auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
                 Type_ECD, Operator_None, Type_MassRange,
@@ -227,7 +189,6 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
             if (rawfile_->value(NumSpectra) == 0)
                 continue;
 
-
             switch ((ControllerType) controllerType)
             {
                 case Controller_MS:
@@ -240,6 +201,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.filter = "";
                     ci.index = index_.size()-1;
                     ci.id = "TIC";
+                    ci.chromatogramType = MS_TIC_chromatogram;
                     idMap_[ci.id] = ci.index;
 
                     // for certain filter types, support additional chromatograms
@@ -261,7 +223,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 case ScanType_SRM:
                                 {
                                     string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
-                                    index_.push_back(IndexEntry());
+                                    /*index_.push_back(IndexEntry());
                                     IndexEntry& ci = index_.back();
                                     ci.controllerType = (ControllerType) controllerType;
                                     ci.controllerNumber = n;
@@ -269,12 +231,13 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.index = index_.size()-1;
                                     ci.id = "SRM TIC " + precursorMZ;
                                     ci.q1 = filterParser.cidParentMass_[0];
-                                    idMap_[ci.id] = ci.index;
+                                    idMap_[ci.id] = ci.index;*/
 
                                     for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
                                     {
                                         index_.push_back(IndexEntry());
                                         IndexEntry& ci = index_.back();
+                                        ci.chromatogramType = MS_SRM_chromatogram;
                                         ci.controllerType = (ControllerType) controllerType;
                                         ci.controllerNumber = n;
                                         ci.filter = filterString;
@@ -317,6 +280,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.controllerNumber = n;
                     ci.index = index_.size()-1;
                     ci.id = "Total Scan";
+                    ci.chromatogramType = MS_absorption_chromatogram;
                     idMap_[ci.id] = ci.index;
                 }
                 break; // case Controller_PDA
@@ -330,6 +294,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.controllerNumber = n;
                     ci.index = index_.size()-1;
                     ci.id = "ECD";
+                    ci.chromatogramType = MS_emission_chromatogram;
                     idMap_[ci.id] = ci.index;
                 }
 

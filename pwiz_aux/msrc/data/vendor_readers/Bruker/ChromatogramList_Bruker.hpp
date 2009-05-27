@@ -64,6 +64,7 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
 
     struct IndexEntry : public ChromatogramIdentity
     {
+        CVID chromatogramType;
         size_t declaration;
         long trace;
     };

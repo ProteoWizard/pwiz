@@ -38,6 +38,7 @@ public:
 
     struct IndexEntry : public ChromatogramIdentity
     {
+        CVID chromatogramType;
         ControllerType controllerType;
         long controllerNumber;
         string filter;

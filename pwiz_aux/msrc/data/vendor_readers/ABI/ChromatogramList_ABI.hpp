@@ -55,6 +55,7 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
 
     struct IndexEntry : public ChromatogramIdentity
     {
+        CVID chromatogramType;
         int sample;
         int period;
         int experiment;

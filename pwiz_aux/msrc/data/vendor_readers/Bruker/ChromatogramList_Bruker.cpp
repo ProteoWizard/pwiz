@@ -130,7 +130,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     const IndexEntry& ci = index_[index];
     result->index = ci.index;
     result->id = ci.id;
-
+    result->set(ci.chromatogramType);
 
     try
     {
@@ -138,11 +138,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
         CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
         CompassXtractWrapper::LC_TraceDeclarationPtr& td = compassXtractWrapperPtr_->traceDeclarations_[ci.declaration];
         BDal_CXt_Lc_Interfaces::ITraceDataCollectionPtr trace = analysis->GetTraceDataCollection(ci.trace);
-
-        if (td->GetTraceUnit() == BDal_CXt_Lc_Interfaces::Unit_Intensity)
-            result->set(MS_total_ion_current_chromatogram);
-        //else
-        //    throw runtime_error("[ChromatogramList_Bruker::chromatogram()] unexpected TraceUnit");
 
         vector<double> lcX, lcY;
         convertSafeArrayToVector(trace->GetTimes(), lcX);
@@ -167,17 +162,25 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
         //msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
 
         CompassXtractWrapper::LC_TraceDeclarationList& tdList = compassXtractWrapperPtr_->traceDeclarations_;
+        CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
         for (size_t i=0; i < tdList.size(); ++i)
         {
             long tId = tdList[i]->GetTraceId();
+            CompassXtractWrapper::LC_TraceDeclarationPtr& td = compassXtractWrapperPtr_->traceDeclarations_[i];
 
-            index_.push_back(IndexEntry());
-            IndexEntry& ci = index_.back();
-            ci.declaration = i;
-            ci.trace = tId;
-            ci.index = index_.size()-1;
-            ci.id = "scan=" + lexical_cast<string>(i*1000000+tId);
-            idToIndexMap_[ci.id] = ci.index;
+            if (td->GetTraceUnit() == BDal_CXt_Lc_Interfaces::Unit_Intensity)
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& ci = index_.back();
+                ci.declaration = i;
+                ci.trace = tId;
+                ci.index = index_.size()-1;
+                ci.id = "declaration=" + lexical_cast<string>(i) + " trace=" + lexical_cast<string>(tId);
+                ci.chromatogramType = MS_TIC_chromatogram;
+                idToIndexMap_[ci.id] = ci.index;
+            }
+            //else
+            //    throw runtime_error("[ChromatogramList_Bruker::chromatogram()] unexpected TraceUnit");
         }
     }
 }

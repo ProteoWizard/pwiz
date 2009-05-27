@@ -103,26 +103,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
     result->index = index;
     result->id = ie.id;
+    result->set(ie.chromatogramType);
 
-    int mode = 0;
-
-    if (ie.id == "TIC") // generate TIC for entire run
+    switch (ie.chromatogramType)
     {
-        mode = 1;
-        result->set(MS_TIC_chromatogram);
-    }
-    /*else if(ie.id.find(',') == string::npos) // generate SRM TIC for <precursor>
-    {
-        mode = 3;
-    }*/
-    else // generate SRM SIC for transition <precursor>,<product>
-    {
-        mode = 4;
-    }
-
-    switch (mode)
-    {
-        case 1: // TIC
+        case MS_TIC_chromatogram:
         {
             map<double, double> fullFileTIC;
 
@@ -171,7 +156,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         }
         break;
 
-        case 4: // SRM SIC
+        case MS_SRM_chromatogram:
         {
             ExperimentPtr experiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
             pwiz::wiff::Target target;
@@ -216,6 +201,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     IndexEntry& ie = index_.back();
     ie.index = index_.size()-1;
     ie.id = "TIC";
+    ie.chromatogramType = MS_TIC_chromatogram;
 
     pwiz::wiff::Target target;
 
@@ -235,6 +221,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
 
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
+                ie.chromatogramType = MS_SRM_chromatogram;
                 ie.q1 = target.Q1;
                 ie.q3 = target.Q3;
                 ie.sample = sample;
