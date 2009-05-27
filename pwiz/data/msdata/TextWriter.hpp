@@ -164,12 +164,6 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const SourceFilePtr& p)
-    {
-        if (!p.get()) return *this;
-        return (*this)(*p);
-    }
-
     TextWriter& operator()(const Contact& contact)
     {
         (*this)("contact:");
@@ -186,20 +180,13 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const ParamGroupPtr& p)
+    TextWriter& operator()(const Sample& sample)
     {
-        if (!p.get()) return *this;
-        return (*this)(*p);
-    }
-
-    TextWriter& operator()(const SamplePtr& p)
-    {
-        if (!p.get()) return *this;
         (*this)("sample:");
         child()
-            ("id: " + p->id)
-            ("name: " + p->name)
-            (static_cast<const ParamContainer&>(*p));
+            ("id: " + sample.id)
+            ("name: " + sample.name)
+            (static_cast<const ParamContainer&>(sample));
         return *this;
     }
 
@@ -214,11 +201,6 @@ class PWIZ_API_DECL TextWriter
         if (instrumentConfiguration.softwarePtr.get() && !instrumentConfiguration.softwarePtr->empty())
             child()("softwareRef: " + instrumentConfiguration.softwarePtr->id);
         return *this;    
-    }
-
-    TextWriter& operator()(const InstrumentConfigurationPtr& p)
-    {
-        return p.get() ? (*this)(*p) : *this;
     }
 
     TextWriter& operator()(const ComponentList& componentList)
@@ -261,11 +243,6 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const SoftwarePtr& p)
-    {
-        return p.get() ? (*this)(*p) : *this;
-    }
-
     TextWriter& operator()(const ProcessingMethod& processingMethod)
     {
         (*this)("processingMethod:");
@@ -286,11 +263,6 @@ class PWIZ_API_DECL TextWriter
         for_each(dp.processingMethods.begin(), dp.processingMethods.end(), child());
         return *this;
     }
-
-    TextWriter& operator()(const DataProcessingPtr& p)
-    {
-        return p.get() ? (*this)(*p) : *this;
-    }
     
     TextWriter& operator()(const Target& target)
     {
@@ -307,11 +279,6 @@ class PWIZ_API_DECL TextWriter
         for_each(as.targets.begin(), as.targets.end(), child());
         child()("sourceFileList: ", as.sourceFilePtrs);
         return *this;
-    }
-
-    TextWriter& operator()(const ScanSettingsPtr& p)
-    {
-        return p.get() ? (*this)(*p) : *this;
     }
  
     TextWriter& operator()(const Run& run, bool metadata_only=false)
@@ -504,6 +471,14 @@ class PWIZ_API_DECL TextWriter
             ("scanList:", scanList.scans);
         return *this;
     }
+
+    // if no other overload matches, assume the object is a shared_ptr of a valid overloaded type
+    template<typename object_type>
+    TextWriter& operator()(const boost::shared_ptr<object_type>& p)
+    {
+        return p.get() ? (*this)(*p) : *this;
+    }
+
 
     private:
     std::ostream& os_;
