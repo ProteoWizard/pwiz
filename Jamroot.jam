@@ -24,18 +24,10 @@ path-constant PWIZ_ROOT_PATH : . ;
 local default_boost_src = "./libraries/boost_1_36_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
-if $(boost_src) != $(boost_src:R=/) # if the path is not rooted (relative), prepend the current path
-{
-  boost_src = $(PWIZ_ROOT_PATH)/$(boost_src) ;
-}
 
 local default_zlib_src = "./libraries/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
-if $(zlib_src) != $(zlib_src:R=/) # if the path is not rooted (relative), prepend the current path
-{
-   zlib_src = $(PWIZ_ROOT_PATH)/$(zlib_src) ;
-}
 
 import testing ; # needed to enable unit-test rule
 
@@ -138,30 +130,30 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 if [ modules.peek : NT ]
 {
-  if $(boost_src) = $(default_boost_src)
-  {
-	  SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.bat $(PWIZ_ROOT_PATH)" : no-output ;
-	}
+    if $(boost_src) = $(default_boost_src)
+    {
+        SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.bat $(PWIZ_ROOT_PATH)" : no-output ;
+    }
 
-  if $(zlib_src) = $(default_zlib_src)
-  {
-	  SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.bat $(PWIZ_ROOT_PATH)" : no-output ;
-	}
+    if $(zlib_src) = $(default_zlib_src)
+    {
+        SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.bat $(PWIZ_ROOT_PATH)" : no-output ;
+    }
 
-	SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_gd.bat $(PWIZ_ROOT_PATH)" : no-output ;
+    SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_gd.bat $(PWIZ_ROOT_PATH)" : no-output ;
 # TODO: warn about GPL? ... SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_fftw.bat $(PWIZ_ROOT_PATH)" : no-output ;
 }
 else if [ modules.peek : UNIX ]
 {
-  if $(boost_src) = $(default_boost_src)
-  {
-	  SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.sh $(PWIZ_ROOT_PATH)" : no-output ;
-	}
+    if $(boost_src) = $(default_boost_src)
+    {
+        SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_boost.sh $(PWIZ_ROOT_PATH)" : no-output ;
+    }
 
-  if $(zlib_src) = $(default_zlib_src)
-  {
-	  SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.sh $(PWIZ_ROOT_PATH)" : no-output ;
-	}
+    if $(zlib_src) = $(default_zlib_src)
+    {
+        SHELL "$(PWIZ_ROOT_PATH)/libraries/untar_zlib.sh $(PWIZ_ROOT_PATH)" : no-output ;
+    }
 }
 
 path-constant BOOST_SOURCE : $(boost_src) ;
