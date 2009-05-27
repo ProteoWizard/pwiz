@@ -150,6 +150,12 @@ typedef boost::shared_ptr<Software> SoftwarePtr;
 
 struct PWIZ_API_DECL RetentionTime : public ParamContainer
 {
+    RetentionTime()
+        :   normalizedRetentionTime(0),
+            localRetentionTime(0),
+            predictedRetentionTime(0)
+    {}
+
     /// Normalization standard used to generate the normalized retention time (e.g. H-PINS)
     std::string normalizationStandard;
 
@@ -164,12 +170,21 @@ struct PWIZ_API_DECL RetentionTime : public ParamContainer
 
     /// Retention time predicted by a software algorithm
     double predictedRetentionTime;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
 };
 
 
 /// Information about a prediction for a suitable transition using some software
 struct PWIZ_API_DECL Prediction : public ParamContainer
 {
+    Prediction()
+        :   recommendedTransitionRank(0),
+            relativeIntensity(0),
+            intensityRank(0)
+    {}
+
     /// Ordinal rank of recommendation of transitions for this peptide
     unsigned int recommendedTransitionRank;
 
@@ -187,6 +202,9 @@ struct PWIZ_API_DECL Prediction : public ParamContainer
 
     /// Reference to a contact person that generated this prediction
     ContactPtr contactPtr;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
 };
 
 
@@ -201,6 +219,12 @@ struct PWIZ_API_DECL Evidence : public ParamContainer
 /// Information about the state of validation of a transition on a given instrument model
 struct PWIZ_API_DECL Validation : public ParamContainer
 {
+    Validation()
+        :   recommendedTransitionRank(0),
+            relativeIntensity(0),
+            intensityRank(0)
+    {}
+
     /// Recommended rank for this transition based on validation information
     unsigned int recommendedTransitionRank;
 
@@ -212,6 +236,9 @@ struct PWIZ_API_DECL Validation : public ParamContainer
 
     /// Rank of the intensity of the peaks among sibling transitions for this peptide
     unsigned int intensityRank;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
 };
 
 
@@ -249,6 +276,12 @@ struct PWIZ_API_DECL Configuration : public ParamContainer
 /// A possible interpration of the product ion for a transition
 struct PWIZ_API_DECL Interpretation : public ParamContainer
 {
+    Interpretation()
+        :   productOrdinal(0),
+            mzDelta(0),
+            primary(false)
+    {}
+
     /// Fragment ion series of the product ion (e.g. b, y, c, z, etc.)
     std::string productSeries;
 
@@ -263,6 +296,9 @@ struct PWIZ_API_DECL Interpretation : public ParamContainer
 
     /// True if this interpretation is considered the most likely of all possible listed interpretation of the product ion
     bool primary;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
 };
 
 
@@ -349,6 +385,8 @@ typedef boost::shared_ptr<Compound> CompoundPtr;
 /// Precursor (Q1) of the transition
 struct PWIZ_API_DECL Precursor
 {
+    Precursor() : charge(0), mz(0) {}
+
     /// Charge of the precursor for this transition
     unsigned int charge;
 
@@ -360,6 +398,8 @@ struct PWIZ_API_DECL Precursor
 /// Product (Q3) of the transition
 struct PWIZ_API_DECL Product
 {
+    Product() : charge(0), mz(0) {}
+
     /// Charge of the product for this transition
     unsigned int charge;
 

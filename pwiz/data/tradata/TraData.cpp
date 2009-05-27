@@ -180,6 +180,45 @@ PWIZ_API_DECL bool Evidence::empty() const
 }
 
 
+PWIZ_API_DECL bool Prediction::empty() const
+{
+    return transitionSource.empty() && ParamContainer::empty() &&
+           intensityRank == unsigned int() &&
+           recommendedTransitionRank == unsigned int() &&
+           relativeIntensity == double() &&
+           (!contactPtr.get() || contactPtr->empty()) && 
+           (!softwarePtr.get() || softwarePtr->empty());
+}
+
+
+PWIZ_API_DECL bool Validation::empty() const
+{
+    return transitionSource.empty() && ParamContainer::empty() &&
+           intensityRank == unsigned int() &&
+           recommendedTransitionRank == unsigned int() &&
+           relativeIntensity == double();
+}
+
+
+PWIZ_API_DECL bool RetentionTime::empty() const
+{
+    return ParamContainer::empty() &&
+           normalizationStandard.empty() &&
+           localRetentionTime == double() &&
+           normalizedRetentionTime == double() &&
+           predictedRetentionTime == double();
+}
+
+
+PWIZ_API_DECL bool Interpretation::empty() const
+{
+    return productSeries.empty() &&
+           productAdjustment.empty() &&
+           ParamContainer::empty() &&
+           productOrdinal == unsigned int() &&
+           /* TODO: how do we test a bool? * primary == unsigned int() && */
+           mzDelta == double();
+}
 
 
 PWIZ_API_DECL Instrument::Instrument(const string& id) : id(id) {}
@@ -196,9 +235,9 @@ PWIZ_API_DECL bool Instrument::empty() const
 PWIZ_API_DECL bool Configuration::empty() const
 {
     return validations.empty() &&
-        (!contactPtr.get() || contactPtr->empty()) && 
-        (!instrumentPtr.get() || instrumentPtr->empty()) && 
-        ParamContainer::empty();
+           (!contactPtr.get() || contactPtr->empty()) && 
+           (!instrumentPtr.get() || instrumentPtr->empty()) && 
+           ParamContainer::empty();
 }
 
 
@@ -226,6 +265,7 @@ PWIZ_API_DECL bool Peptide::empty() const
            unmodifiedSequence.empty() &&
            modifiedSequence.empty() &&
            labelingCategory.empty() &&
+           retentionTime.empty() &&
            (!proteinPtr.get() || proteinPtr->empty()) &&
            ParamContainer::empty();
 }
@@ -238,7 +278,7 @@ PWIZ_API_DECL Compound::Compound(const string& id) : id(id) {}
 
 PWIZ_API_DECL bool Compound::empty() const
 {
-    return id.empty() && ParamContainer::empty();
+    return id.empty() && retentionTime.empty() && ParamContainer::empty();
 }
 
 

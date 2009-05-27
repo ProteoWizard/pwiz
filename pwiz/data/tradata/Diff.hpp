@@ -89,6 +89,13 @@ void diff(const ParamContainer& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Contact& a,
+          const Contact& b,
+          Contact& a_b,
+          Contact& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Publication& a,
           const Publication& b,
           Publication& a_b,
