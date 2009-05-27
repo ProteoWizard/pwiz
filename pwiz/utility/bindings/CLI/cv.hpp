@@ -5159,12 +5159,12 @@ public ref class CVTermInfo
     /// <summary>
     /// returns CV term info for the specified CVID
     /// </summary>
-    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo((pwiz::CVID) cvid))) {}
+    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}
 
     /// <summary>
     /// returns CV term info for the specified id in the form: "prefix:number"
     /// </summary>
-    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo(ToStdString(id)))) {}
+    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}
 
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()
