@@ -63,28 +63,7 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
         for (long n=1; n <= numControllers; ++n)
         {
             rawfile_->setCurrentController((ControllerType) controllerType, n);
-            switch (controllerType)
-            {
-                case Controller_MS:
-                {
-                    for (long scan=1, last=rawfile_->value(NumSpectra); scan <= last; ++scan)
-                        switch (rawfile_->getScanType(scan))
-                        {
-                            // only these scan types are enumerated as spectra
-                            case ScanType_Full:
-                            case ScanType_Zoom:
-                            case ScanType_Q1MS:
-                            case ScanType_Q3MS:
-                                ++size_;
-                                break;
-                        }
-                }
-                break;
-
-                case Controller_PDA:
-                    size_ += rawfile_->value(NumSpectra);
-                    break;
-            }
+            size_ += rawfile_->value(NumSpectra);
         }
     }
 }
@@ -414,29 +393,20 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
                 case Controller_MS:
                 {
                     for (long scan=1, last=rawfile_->value(NumSpectra); scan <= last; ++scan)
-                        switch (rawfile_->getScanType(scan))
-                        {
-                            // only these scan types are enumerated as spectra
-                            case ScanType_Full:
-                            case ScanType_Zoom:
-                            case ScanType_Q1MS:
-                            case ScanType_Q3MS:
-                            {
-                                index_.push_back(IndexEntry());
-                                IndexEntry& ie = index_.back();
-                                ie.controllerType = (ControllerType) controllerType;
-                                ie.controllerNumber = n;
-                                ie.scan = scan;
-                                ie.index = index_.size()-1;
+                    {
+                        index_.push_back(IndexEntry());
+                        IndexEntry& ie = index_.back();
+                        ie.controllerType = (ControllerType) controllerType;
+                        ie.controllerNumber = n;
+                        ie.scan = scan;
+                        ie.index = index_.size()-1;
 
-                                ostringstream oss;
-                                oss << "controllerType=" << ie.controllerType <<
-                                       " controllerNumber=" << ie.controllerNumber <<
-                                       " scan=" << ie.scan;
-                                ie.id = oss.str();
-                            }
-                            break;
-                        }
+                        ostringstream oss;
+                        oss << "controllerType=" << ie.controllerType <<
+                               " controllerNumber=" << ie.controllerNumber <<
+                               " scan=" << ie.scan;
+                        ie.id = oss.str();
+                    }
                 }
                 break;
 
