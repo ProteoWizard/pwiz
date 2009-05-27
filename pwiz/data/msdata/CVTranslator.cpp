@@ -137,6 +137,7 @@ bool shouldIgnore(const string& key, CVID value, CVID cvid)
 {
     return (key=="unit_" && value==MS_unit && cvid==UO_unit ||
             key=="pi_" && value==MS_PI && cvid==UO_pi || // MS_PI==photoionization, UO_pi==3.14
+            key=="pi_" && value==MS_PI && cvid==MS_pI || // MS_pI==isoelectric point
             key=="de_" && value==MS_DE && cvid==1001274); // conflict between 1000246 and 1001274
 }
 
