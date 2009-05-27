@@ -66,7 +66,6 @@
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
 
 
 /// <summary>enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)</summary>
@@ -4996,7 +4995,7 @@ public enum class CVID
 /// <summary>
 /// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::msdata::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 /// <summary>
 /// A list of enumerated System.Strings; implements IList&lt;System.String&gt;
@@ -5008,7 +5007,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::St
 /// </summary>
 public ref class CVTermInfo
 {
-    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::msdata::CVTermInfo);
+    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::CVTermInfo);
     public:
 
     /// <summary>
@@ -5047,17 +5046,17 @@ public ref class CVTermInfo
     /// </summary>
     property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
 
-    CVTermInfo() : base_(new pwiz::msdata::CVTermInfo()) {}
+    CVTermInfo() : base_(new pwiz::CVTermInfo()) {}
 
     /// <summary>
     /// returns CV term info for the specified CVID
     /// </summary>
-    CVTermInfo(CVID cvid) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo((pwiz::msdata::CVID) cvid))) {}
+    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}
 
     /// <summary>
     /// returns CV term info for the specified id in the form: "prefix:number"
     /// </summary>
-    CVTermInfo(System::String^ id) : base_(new pwiz::msdata::CVTermInfo(pwiz::msdata::cvTermInfo(ToStdString(id)))) {}
+    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}
 
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()
@@ -5071,7 +5070,6 @@ public ref class CVTermInfo
 };
 
 
-} // namespace msdata
 } // namespace CLI
 } // namespace pwiz
 

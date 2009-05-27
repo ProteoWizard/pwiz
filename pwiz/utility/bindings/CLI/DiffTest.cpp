@@ -26,6 +26,7 @@
 
 
 using namespace pwiz::util;
+using namespace pwiz::CLI;
 using namespace pwiz::CLI::msdata;
 using System::Console;
 typedef System::String string;

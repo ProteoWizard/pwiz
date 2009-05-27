@@ -34,7 +34,6 @@
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
 
 
 /// <summary>
@@ -42,7 +41,7 @@ namespace msdata {
 /// </summary>
 public ref class CV
 {
-    DEFINE_INTERNAL_BASE_CODE(CV, pwiz::msdata::CV);
+    DEFINE_INTERNAL_BASE_CODE(CV, pwiz::CV);
              
     public:
 
@@ -90,6 +89,9 @@ public ref class CV
     /// </summary>
     bool empty();
 };
+
+
+namespace msdata {
 
 
 /// <summary>
@@ -1941,7 +1943,7 @@ public ref class Run : public ParamContainer
 /// <summary>
 /// A list of CV references; implements the IList&lt;CV&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::msdata::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>

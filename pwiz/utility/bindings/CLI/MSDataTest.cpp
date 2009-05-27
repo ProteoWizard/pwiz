@@ -26,6 +26,7 @@
 
 
 using namespace System;
+using namespace pwiz::CLI;
 using namespace pwiz::CLI::msdata;
 using namespace pwiz::util;
 

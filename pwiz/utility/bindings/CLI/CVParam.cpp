@@ -53,59 +53,59 @@ CVParam::!CVParam()
 {delete this;}
 
 CVParam::CVParam(CVID _cvid, float _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, double _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, System::Int32 _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::Int64 _value)
-//{base_ = new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value);}
+//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value);}
 
 CVParam::CVParam(CVID _cvid, System::UInt32 _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::UInt64 _value)
-//{base_ = new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value);}
+//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value);}
 
 CVParam::CVParam(CVID _cvid, System::String^ _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, ToStdString(_value))))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, ToStdString(_value))))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, float _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, double _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, System::Int32 _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::Int64 _value, CVID _units)
-//{base_ = new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units);}
+//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units);}
 
 CVParam::CVParam(CVID _cvid, System::UInt32 _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::UInt64 _value, CVID _units)
-//{base_ = new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, _value, (pwiz::msdata::CVID) _units);}
+//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units);}
 
 CVParam::CVParam(CVID _cvid, System::String^ _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid, ToStdString(_value), (pwiz::msdata::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, ToStdString(_value), (pwiz::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::msdata::CVID) _cvid)))
+: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam()

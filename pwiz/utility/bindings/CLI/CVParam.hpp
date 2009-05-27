@@ -79,7 +79,7 @@ public ref class CVParam
     property CVID cvid
     {
         CVID get() {return (CVID) (*base_)->cvid;}
-        void set(CVID value) {(*base_)->cvid = (pwiz::msdata::CVID) value;}
+        void set(CVID value) {(*base_)->cvid = (pwiz::CVID) value;}
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public ref class CVParam
     property CVID units
     {
         CVID get() {return (CVID) (*base_)->units;}
-        void set(CVID value) {(*base_)->units = (pwiz::msdata::CVID) value;}
+        void set(CVID value) {(*base_)->units = (pwiz::CVID) value;}
     }
 
     CVParam(CVID _cvid, float _value);

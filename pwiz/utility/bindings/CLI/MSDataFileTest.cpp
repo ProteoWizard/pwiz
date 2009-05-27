@@ -28,6 +28,7 @@
 
 
 using namespace pwiz::util;
+using namespace pwiz::CLI;
 using namespace pwiz::CLI::msdata;
 using System::Console;
 typedef System::String^ string;
@@ -37,6 +38,47 @@ public ref class Log
 {
     public: static System::IO::TextWriter^ writer = nullptr;
 };
+
+
+void hackInMemoryMSData(MSData^ writtenData, MSData^ readData)
+{
+    // remove metadata ptrs appended on read
+    SourceFileList^ sfs = readData->fileDescription->sourceFiles;
+    if (sfs->Count > 0) sfs->RemoveAt(sfs->Count-1);
+    SoftwareList^ sws = readData->softwareList;
+    if (sws->Count > 0) sws->RemoveAt(sws->Count-1);
+
+    // make written and read DataProcessing match
+    SpectrumList^ sl = writtenData->run->spectrumList;
+    if (sl != nullptr)
+    {
+        SpectrumList^ rsl = readData->run->spectrumList;
+        DataProcessing^ dp = sl->dataProcessing();
+        DataProcessing^ rdp = sl->dataProcessing();
+        if (dp != nullptr)
+        {
+            dp->id = "";
+            rdp->id = "";
+            dp->processingMethods->Clear();
+            rdp->processingMethods->Clear();
+        }
+    }
+
+    ChromatogramList^ cl = writtenData->run->chromatogramList;
+    if (cl != nullptr)
+    {
+        ChromatogramList^ rcl = readData->run->chromatogramList;
+        DataProcessing^ dp = cl->dataProcessing();
+        DataProcessing^ rdp = rcl->dataProcessing();
+        if (dp != nullptr)
+        {
+            dp->id = "";
+            rdp->id = "";
+            dp->processingMethods->Clear();
+            rdp->processingMethods->Clear();
+        }
+    }
+}
 
 
 //void validateWriteRead(const MSDataFile::WriteConfig& writeConfig, const DiffConfig diffConfig)
@@ -62,7 +104,7 @@ void validateWriteRead()
 
         // read back into an MSDataFile object
         MSDataFile msd1(filename1);
-        //hackInMemoryMSData(msd1);
+        hackInMemoryMSData(%tiny, %msd1);
 
         // compare
         Diff diff(tiny, msd1, %diffConfig);
@@ -74,7 +116,7 @@ void validateWriteRead()
 
         // read back into another MSDataFile object
         MSDataFile msd2(filename2);
-        //hackInMemoryMSData(msd2);
+        hackInMemoryMSData(%tiny, %msd2);
 
         // compare
         diff.apply(tiny, msd2);
