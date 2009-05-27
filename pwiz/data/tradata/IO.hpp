@@ -52,6 +52,26 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software);
 PWIZ_API_DECL void read(std::istream& is, Software& software);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const RetentionTime& x);
+PWIZ_API_DECL void read(std::istream& is, RetentionTime& x);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Instrument& instrument);
+PWIZ_API_DECL void read(std::istream& is, Instrument& instrument);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinPtr& proteinPtr);
+PWIZ_API_DECL void read(std::istream& is, Protein& protein);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr& peptidePtr);
+PWIZ_API_DECL void read(std::istream& is, Peptide& peptide);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CompoundPtr& compoundPtr);
+PWIZ_API_DECL void read(std::istream& is, Compound& compound);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor);
 PWIZ_API_DECL void read(std::istream& is, Precursor& precursor);
 
@@ -60,8 +80,18 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Product& product);
 PWIZ_API_DECL void read(std::istream& is, Product& product);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Transition& transition);
+PWIZ_API_DECL void read(std::istream& is, Transition& transition);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TraData& td);
 PWIZ_API_DECL void read(std::istream& is, TraData& td);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Contact& c);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Publication& p);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Interpretation& x);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Configuration& x);
 
 
 } // namespace IO

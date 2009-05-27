@@ -183,8 +183,8 @@ PWIZ_API_DECL bool Evidence::empty() const
 PWIZ_API_DECL bool Prediction::empty() const
 {
     return transitionSource.empty() && ParamContainer::empty() &&
-           intensityRank == unsigned int() &&
-           recommendedTransitionRank == unsigned int() &&
+           intensityRank == unsigned() &&
+           recommendedTransitionRank == unsigned() &&
            relativeIntensity == double() &&
            (!contactPtr.get() || contactPtr->empty()) && 
            (!softwarePtr.get() || softwarePtr->empty());
@@ -194,8 +194,8 @@ PWIZ_API_DECL bool Prediction::empty() const
 PWIZ_API_DECL bool Validation::empty() const
 {
     return transitionSource.empty() && ParamContainer::empty() &&
-           intensityRank == unsigned int() &&
-           recommendedTransitionRank == unsigned int() &&
+           intensityRank == unsigned() &&
+           recommendedTransitionRank == unsigned() &&
            relativeIntensity == double();
 }
 
@@ -215,7 +215,7 @@ PWIZ_API_DECL bool Interpretation::empty() const
     return productSeries.empty() &&
            productAdjustment.empty() &&
            ParamContainer::empty() &&
-           productOrdinal == unsigned int() &&
+           productOrdinal == unsigned() &&
            /* TODO: how do we test a bool? * primary == unsigned int() && */
            mzDelta == double();
 }
