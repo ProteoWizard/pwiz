@@ -80,7 +80,7 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
     { \
         bool threw = false; \
         try { (x); } \
-        catch (exception& e) \
+        catch (exception&) \
         { \
             threw = true; \
         } \
