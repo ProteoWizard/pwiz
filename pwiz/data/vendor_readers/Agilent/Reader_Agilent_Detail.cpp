@@ -42,7 +42,7 @@ AgilentDataReader::AgilentDataReader(const std::string& path)
 
     scanFileInfoPtr = dataReaderPtr->GetMSScanFileInformation();
 
-    vector<IChromatogramPtr> chromatogramArray;
+    automation_vector<IUnknown*> chromatogramArray;
 
     // cycle summing can make the full file chromatograms have the wrong number of points
     IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
@@ -50,17 +50,17 @@ AgilentDataReader::AgilentDataReader(const std::string& path)
 
     // set filter for TIC
     filterPtr->ChromatogramType = ChromType_TotalIon;
-    convertSafeArrayToVector(dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
-    IChromatogramPtr& ticPtr = chromatogramArray[0];
-    convertSafeArrayToVector(ticPtr->xArray, ticTimes);
-    convertSafeArrayToVector(ticPtr->yArray, ticIntensities);
+    chromatogramArray.attach(*dataReaderPtr->GetChromatogram(filterPtr));
+    IChromatogramPtr ticPtr = IChromatogramPtr(chromatogramArray[0]);
+    ticTimes.attach(*ticPtr->xArray);
+    ticIntensities.attach(*ticPtr->yArray);
 
     // set filter for BPC
     filterPtr->ChromatogramType = ChromType_BasePeak;
-    convertSafeArrayToVector(dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
-    IChromatogramPtr& bpcPtr = chromatogramArray[0];
-    convertSafeArrayToVector(bpcPtr->xArray, bpcTimes);
-    convertSafeArrayToVector(bpcPtr->yArray, bpcIntensities);
+    chromatogramArray.attach(*dataReaderPtr->GetChromatogram(filterPtr));
+    IChromatogramPtr bpcPtr = IChromatogramPtr(chromatogramArray[0]);
+    bpcTimes.attach(*bpcPtr->xArray);
+    bpcIntensities.attach(*bpcPtr->yArray);
 }
 
 AgilentDataReader::~AgilentDataReader()

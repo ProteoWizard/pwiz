@@ -24,12 +24,12 @@
 
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Agilent_Detail.hpp"
 #include "SpectrumList_Agilent.hpp"
+#include "boost/shared_ptr.hpp"
 #include <boost/bind.hpp>
 
 
@@ -165,8 +165,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     SAFEARRAY* precursorMzSafeArray = spectrumPtr->GetPrecursorIon(&precursorCount);
     if (precursorCount > 0)
     {
-        vector<double> precursorMZs;
-        convertSafeArrayToVector(precursorMzSafeArray, precursorMZs);
+        automation_vector<double> precursorMZs(*precursorMzSafeArray, automation_vector<double>::MOVE);
 
         Precursor precursor;
         Product product;
@@ -228,13 +227,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     {
         result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
  
-        vector<double>& mzArray = result->getMZArray()->data;
-        convertSafeArrayToVector(spectrumPtr->xArray, mzArray);
+        automation_vector<double> xArray(*spectrumPtr->xArray, automation_vector<double>::MOVE);
+        result->getMZArray()->data.assign(xArray.begin(), xArray.end());
 
-        vector<float> intensityArray;
-        convertSafeArrayToVector(spectrumPtr->yArray, intensityArray);
-        result->getIntensityArray()->data.assign(intensityArray.begin(), intensityArray.end());
-
+        automation_vector<float> yArray(*spectrumPtr->yArray, automation_vector<float>::MOVE);
+        result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
     }
 
     result->defaultArrayLength = (size_t) spectrumPtr->TotalDataPoints;

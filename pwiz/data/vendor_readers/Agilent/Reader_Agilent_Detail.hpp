@@ -24,6 +24,7 @@
 #define _READER_AGILENT_DETAIL_HPP_ 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -39,46 +40,6 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
-
-
-template<typename T>
-void convertSafeArrayToVector(SAFEARRAY* parray, std::vector<T>& result)
-{
-    if (parray->fFeatures & FADF_HAVEVARTYPE)
-    {
-        VARTYPE varType;
-        SafeArrayGetVartype(parray, &varType);
-        switch (varType)
-        {
-            case VT_I2:
-            case VT_UI2:
-                if (sizeof(T) != 2)
-                    throw runtime_error("[convertSafeArrayToVector()] Mismatched data types.");
-                break;
-
-            case VT_I4:
-            case VT_UI4:
-            case VT_R4:
-                if (sizeof(T) != 4)
-                    throw runtime_error("[convertSafeArrayToVector()] Mismatched data types.");
-                break;
-
-            case VT_I8:
-            case VT_UI8:
-            case VT_R8:
-                if (sizeof(T) != 8)
-                    throw runtime_error("[convertSafeArrayToVector()] Mismatched data types.");
-                break;
-        }
-    }
-    T* data;
-    HRESULT hr = SafeArrayAccessData(parray, (void**) &data);
-    if (FAILED(hr) || !data)
-        throw runtime_error("[convertSafeArrayToVector()] Data access error.");
-    result.assign(data, data + parray->rgsabound->cElements);
-    SafeArrayUnaccessData(parray);
-    SafeArrayDestroy(parray);
-}
 
 
 typedef MSDR::IMsdrDataReaderPtr IDataReaderPtr;
@@ -99,8 +60,8 @@ struct AgilentDataReader
     IDataReaderPtr dataReaderPtr;
     IScanInformationPtr scanFileInfoPtr;
 
-    std::vector<double> ticTimes, bpcTimes;
-    std::vector<float> ticIntensities, bpcIntensities;
+    automation_vector<double> ticTimes, bpcTimes;
+    automation_vector<float> ticIntensities, bpcIntensities;
 };
 
 typedef boost::shared_ptr<AgilentDataReader> AgilentDataReaderPtr;

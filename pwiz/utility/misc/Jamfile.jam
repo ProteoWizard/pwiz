@@ -45,6 +45,7 @@ lib pwiz_utility_misc
         MSIHandler.cpp
     : # requirements
         <warnings>all
+        <toolset>msvc:<source>automation_vector.cpp
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>/ext/boost//thread
@@ -93,6 +94,7 @@ run TabReaderTest.cpp pwiz_utility_misc
 import modules ;
 if [ modules.peek : NT ]
 {
+    unit-test automation_vector_test : automation_vector_test.cpp pwiz_utility_misc ;
     unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc ;
 }
 

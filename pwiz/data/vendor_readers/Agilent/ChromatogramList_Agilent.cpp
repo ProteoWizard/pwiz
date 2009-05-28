@@ -94,9 +94,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_TIC_chromatogram:
         {
-            vector<double> intensities(rawfile_->ticIntensities.begin(), rawfile_->ticIntensities.end());
-            if (getBinaryData) result->setTimeIntensityArrays(rawfile_->ticTimes, intensities, UO_minute, MS_number_of_counts);
-            else result->defaultArrayLength = rawfile_->ticTimes.size();
+            if (getBinaryData)
+            {
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->getTimeArray()->data.assign(rawfile_->ticTimes.begin(), rawfile_->ticTimes.end());
+                result->getIntensityArray()->data.assign(rawfile_->ticIntensities.begin(), rawfile_->ticIntensities.end());
+            }
+            else
+                result->defaultArrayLength = rawfile_->ticTimes.size();
         }
         break;
 
@@ -107,9 +112,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             filterPtr->SingleChromatogramForAllMasses = VARIANT_FALSE;
             filterPtr->ExtractOneChromatogramPerScanSegment = VARIANT_TRUE;
 
-            vector<IChromatogramPtr> chromatogramArray;
-            convertSafeArrayToVector(rawfile_->dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
-            IChromatogramPtr& chromatogramPtr = chromatogramArray[ci.index-1];
+            automation_vector<IUnknown*> chromatogramArray(*rawfile_->dataReaderPtr->GetChromatogram(filterPtr), automation_vector<IChromatogramPtr>::MOVE);
+            IChromatogramPtr chromatogramPtr(chromatogramArray[ci.index-1]);
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
@@ -119,15 +123,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
-            vector<double> times, intensities;
-            convertSafeArrayToVector(chromatogramPtr->xArray, times);
+            automation_vector<double> xArray(*chromatogramPtr->xArray, automation_vector<double>::MOVE);
 
-            vector<float> yArray;
-            convertSafeArrayToVector(chromatogramPtr->yArray, yArray);
-            intensities.assign(yArray.begin(), yArray.end());
+            if (getBinaryData)
+            {
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-            if (getBinaryData) result->setTimeIntensityArrays(times, intensities, UO_minute, MS_number_of_counts);
-            else result->defaultArrayLength = times.size();
+                automation_vector<float> yArray(*chromatogramPtr->yArray, automation_vector<float>::MOVE);
+                result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+            }
+            else
+                result->defaultArrayLength = xArray.size();
         }
         break;
 
@@ -138,21 +145,24 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             filterPtr->SingleChromatogramForAllMasses = VARIANT_FALSE;
             filterPtr->ExtractOneChromatogramPerScanSegment = VARIANT_TRUE;
 
-            vector<IChromatogramPtr> chromatogramArray;
-            convertSafeArrayToVector(rawfile_->dataReaderPtr->GetChromatogram(filterPtr), chromatogramArray);
-            IChromatogramPtr& chromatogramPtr = chromatogramArray[ci.index-1];
+            automation_vector<IUnknown*> chromatogramArray(*rawfile_->dataReaderPtr->GetChromatogram(filterPtr), automation_vector<IChromatogramPtr>::MOVE);
+            IChromatogramPtr chromatogramPtr(chromatogramArray[ci.index-1]);
+            chromatogramArray.clear();
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
 
-            vector<double> times, intensities;
-            convertSafeArrayToVector(chromatogramPtr->xArray, times);
+            automation_vector<double> xArray(*chromatogramPtr->xArray, automation_vector<double>::MOVE);
 
-            vector<float> yArray;
-            convertSafeArrayToVector(chromatogramPtr->yArray, yArray);
-            intensities.assign(yArray.begin(), yArray.end());
+            if (getBinaryData)
+            {
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-            if (getBinaryData) result->setTimeIntensityArrays(times, intensities, UO_minute, MS_number_of_counts);
-            else result->defaultArrayLength = times.size();
+                automation_vector<float> yArray(*chromatogramPtr->yArray, automation_vector<float>::MOVE);
+                result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+            }
+            else
+                result->defaultArrayLength = xArray.size();
         }
         break;
     }
@@ -172,17 +182,17 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
     ci.id = "TIC";
     idMap_[ci.id] = ci.index;
 
-    vector<IRangePtr> transitions;
-    convertSafeArrayToVector(rawfile_->scanFileInfoPtr->MRMTransitions, transitions);
- 
+    automation_vector<IUnknown*> transitions(*rawfile_->scanFileInfoPtr->MRMTransitions, automation_vector<IRangePtr>::MOVE);
+
     for (size_t i=0, end=transitions.size(); i < end; ++i)
     {
+        IRangePtr transition(transitions[i]);
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.chromatogramType = MS_SRM_chromatogram;
-        ci.q1 = transitions[i]->Start;
-        ci.q3 = transitions[i]->End;
+        ci.q1 = transition->Start;
+        ci.q3 = transition->End;
         ci.id = (format("SRM SIC %.10g,%.10g")
                  % ci.q1
                  % ci.q3
@@ -190,8 +200,7 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         idMap_[ci.id] = ci.index;
     }
 
-    vector<double> monitoredIons;
-    convertSafeArrayToVector(rawfile_->scanFileInfoPtr->SIMIons, monitoredIons);
+    automation_vector<double> monitoredIons(*rawfile_->scanFileInfoPtr->SIMIons, automation_vector<double>::MOVE);
 
     for (size_t i=0, end=monitoredIons.size(); i < end; ++i)
     {

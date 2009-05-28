@@ -25,6 +25,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
@@ -127,21 +128,6 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 }
 
 
-namespace {
-
-template<typename T>
-void convertSafeArrayToVector(SAFEARRAY* parray, vector<T>& result)
-{
-    T* data;
-    HRESULT hr = SafeArrayAccessData(parray, (void**) &data);
-    if (FAILED(hr) || !data)
-        throw runtime_error("convertSafeArrayToVector(): Data access error.");
-    result.assign(data, data + parray->rgsabound->cElements);
-}
-
-} // namespace
-
-
 EDAL::IMSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const
 {
     if (format_ == Reader_Bruker_Format_FID)
@@ -218,10 +204,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             if (scanTime > 0)
                 scan.set(MS_scan_start_time, scanTime, UO_minute);
 
-            vector<double> lcX, lcY;
-            convertSafeArrayToVector(ssd->GetXAxis(), lcX);
-            convertSafeArrayToVector(spectrum->GetIntensity(), lcY);
-            result->setMZIntensityArrays(lcX, lcY, MS_number_of_counts);
+            result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+
+            automation_vector<double> lcX(*ssd->GetXAxis(), automation_vector<double>::MOVE);
+            result->getMZArray()->data.assign(lcX.begin(), lcX.end());
+
+            automation_vector<double> lcY(*spectrum->GetIntensity(), automation_vector<double>::MOVE);
+            result->getIntensityArray()->data.assign(lcY.begin(), lcY.end());
+
             return result;
         }
 
@@ -271,9 +261,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         for (long i=1; i < numParameters; ++i)
         {
             EDAL::IMSSpectrumParameterPtr pParameter = pSpectrumParameters->GetItem(i);
-            string group = convertBstrToString(pParameter->GroupName.GetBSTR());
-            string name = convertBstrToString(pParameter->ParameterName.GetBSTR());
-            string value = convertBstrToString(pParameter->ParameterValue.bstrVal);
+            string group = (const char*) pParameter->GroupName;
+            string name = (const char*) pParameter->ParameterName;
+            string value = (const char*) pParameter->ParameterValue.bstrVal;
             scan.userParams.push_back(UserParam(name, value, group));
         }
 

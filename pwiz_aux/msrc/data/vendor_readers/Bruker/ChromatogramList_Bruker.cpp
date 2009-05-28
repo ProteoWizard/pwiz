@@ -29,6 +29,8 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/automation_vector.h"
+
 
 #define PWIZ_SOURCE
 
@@ -39,17 +41,6 @@
 
 using boost::format;
 using namespace pwiz::util;
-
-namespace
-{
-
-string convertBstrToString(const BSTR& bstring)
-{
-	_bstr_t bTmp(bstring);
-	return string((const char *)bTmp);
-}
-
-}
 
 
 namespace pwiz {
@@ -101,21 +92,6 @@ PWIZ_API_DECL size_t ChromatogramList_Bruker::find(const string& id) const
 }
 
 
-namespace {
-
-template<typename T>
-void convertSafeArrayToVector(SAFEARRAY* parray, vector<T>& result)
-{
-    T* data;
-    HRESULT hr = SafeArrayAccessData(parray, (void**) &data);
-    if (FAILED(hr) || !data)
-        throw runtime_error("convertSafeArrayToVector(): Data access error.");
-    result.assign(data, data + parray->rgsabound->cElements);
-}
-
-} // namespace
-
-
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, bool getBinaryData) const
 {
     if (index > size_)
@@ -139,11 +115,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
         CompassXtractWrapper::LC_TraceDeclarationPtr& td = compassXtractWrapperPtr_->traceDeclarations_[ci.declaration];
         BDal_CXt_Lc_Interfaces::ITraceDataCollectionPtr trace = analysis->GetTraceDataCollection(ci.trace);
 
-        vector<double> lcX, lcY;
-        convertSafeArrayToVector(trace->GetTimes(), lcX);
-        convertSafeArrayToVector(trace->GetValues(), lcY);
-        result->setTimeIntensityArrays(lcX, lcY, UO_second, MS_number_of_counts);
-        return result;
+        automation_vector<double> xArray(*trace->GetTimes(), automation_vector<double>::MOVE);
+
+        if (getBinaryData)
+        {
+            result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+            result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
+
+            automation_vector<double> yArray(*trace->GetValues(), automation_vector<double>::MOVE);
+            result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+        }
+        else
+            result->defaultArrayLength = xArray.size();
     }
     catch (_com_error& e) // not caught by either std::exception or '...'
     {
