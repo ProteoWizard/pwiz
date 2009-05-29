@@ -246,8 +246,8 @@ void parseStanza(istream& is, OBO& obo)
                                     term.prefix + ":" + lexical_cast<string>(term.id));
         }
 
-        if (!term.isObsolete)
-            obo.terms.push_back(term);
+        // add all terms, even obsolete ones
+        obo.terms.push_back(term);
     }
     else
     {

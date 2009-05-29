@@ -186,6 +186,8 @@ void CVTranslator::Impl::insertCVTerms()
 
         const CVTermInfo& info = cvTermInfo(*cvid);
 
+        if (info.isObsolete) continue;
+
         // insert name
         insert(info.name, *cvid);
 

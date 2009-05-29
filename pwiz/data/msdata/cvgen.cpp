@@ -100,18 +100,18 @@ inline char toAllowableChar(char a)
 }
 
 
-string enumName(const string& prefix, const string& name)
+string enumName(const string& prefix, const string& name, bool isObsolete)
 {
     string result = name;
     transform(result.begin(), result.end(), result.begin(), toAllowableChar);
-    result = prefix + "_" + result;
+    result = prefix + "_" + result + (isObsolete ? "_OBSOLETE" : "");
     return result;
 }
 
 
 string enumName(const Term& term)
 {
-    return enumName(term.prefix, term.name);
+    return enumName(term.prefix, term.name, term.isObsolete);
 }
 
 
@@ -170,7 +170,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             {
                 os << ",\n\n"
                    << "    /// " << it->name << ": " << it->def << "\n"
-                   << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
+                   << "    " << enumName(it->prefix, *syn, it->isObsolete) << " = " << enumName(*it);
             }
         }
     }
@@ -209,6 +209,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    std::string id;\n"      
           "    std::string name;\n"
           "    std::string def;\n"
+          "    bool isObsolete;\n"
           "\n"
           "    typedef std::vector<CVID> id_list;\n"
           "    id_list parentsIsA;\n"
@@ -282,16 +283,18 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    const char* id;\n"
           "    const char* name;\n"
           "    const char* def;\n"
+          "    bool isObsolete;\n"
           "};\n\n\n";
 
     os << "const TermInfo termInfos_[] =\n{\n";
-    os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\"},\n";
+    os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\", false},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         os << "    {" << enumName(*it) << ", "
            << "\"" << it->prefix << ":" << setw(7) << setfill('0') << it->id << "\", "
            << "\"" << escape_copy(it->name) << "\", " 
-           << "\"" << escape_copy(it->def) << "\""
+           << "\"" << escape_copy(it->def) << "\", "
+           << (it->isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
     os << "}; // termInfos_\n\n\n";
 
@@ -363,6 +366,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "        temp.id = it->id;\n"
           "        temp.name = it->name;\n"
           "        temp.def = it->def;\n"
+          "        temp.isObsolete = it->isObsolete;\n"
           "        infoMap_[temp.cvid] = temp;\n"
           "        cvids_.push_back(it->cvid);\n"
           "    }\n"

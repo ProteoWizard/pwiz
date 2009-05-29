@@ -32,7 +32,7 @@
 #include "SharedCLI.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [..\..\pwiz\utility\bindings\CLI\..\..\..\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 30:04:2009 11:14
 //   saved-by: edeutsch
@@ -47,7 +47,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [..\..\pwiz\utility\bindings\CLI\..\..\..\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 04:03:2009 17:16
 //   saved-by: george gkoutos
@@ -99,6 +99,9 @@ public enum class CVID
 
     /// <summary>ionization type: The method by which gas phase ions are generated from the sample.</summary>
     MS_ionization_type = 1000008,
+
+    /// <summary>ionization mode: Whether positive or negative ions are selected for analysis by the spectrometer.</summary>
+    MS_ionization_mode_OBSOLETE = 1000009,
 
     /// <summary>analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.</summary>
     MS_analyzer_type = 1000010,
@@ -163,6 +166,9 @@ public enum class CVID
     /// <summary>sampling frequency: The rate of signal sampling (measurement) with respect to time.</summary>
     MS_sampling_frequency = 1000029,
 
+    /// <summary>vendor: Name of instrument vendor</summary>
+    MS_vendor_OBSOLETE = 1000030,
+
     /// <summary>instrument model: Instrument model name not including the vendor's name.</summary>
     MS_instrument_model = 1000031,
 
@@ -178,8 +184,17 @@ public enum class CVID
     /// <summary>peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data.</summary>
     MS_peak_picking = 1000035,
 
+    /// <summary>scan mode: OBSOLETE</summary>
+    MS_scan_mode_OBSOLETE = 1000036,
+
     /// <summary>polarity: Terms to describe the polarity setting of the instrument.</summary>
     MS_polarity = 1000037,
+
+    /// <summary>minute: Acquisition time in minutes.</summary>
+    MS_minute_OBSOLETE = 1000038,
+
+    /// <summary>second: Acquisition time in seconds.</summary>
+    MS_second_OBSOLETE = 1000039,
 
     /// <summary>m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.</summary>
     MS_m_z = 1000040,
@@ -207,6 +222,9 @@ public enum class CVID
 
     /// <summary>collision energy: Energy for an ion experiencing collision with a stationary gas particle resulting in dissociation of the ion.</summary>
     MS_collision_energy = 1000045,
+
+    /// <summary>energy unit: Energy units are represented in either eV or Joules.</summary>
+    MS_energy_unit_OBSOLETE = 1000046,
 
     /// <summary>emulsion: State if the sample is in emulsion form.</summary>
     MS_emulsion = 1000047,
@@ -292,6 +310,12 @@ public enum class CVID
     /// <summary>chemical ionization: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.</summary>
     MS_CI = MS_chemical_ionization,
 
+    /// <summary>Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. </summary>
+    MS_Electronic_Ionization_OBSOLETE = 1000072,
+
+    /// <summary>Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. </summary>
+    MS_EI_OBSOLETE = MS_Electronic_Ionization_OBSOLETE,
+
     /// <summary>electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.</summary>
     MS_electrospray_ionization = 1000073,
 
@@ -309,6 +333,12 @@ public enum class CVID
 
     /// <summary>matrix-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.</summary>
     MS_MALDI = MS_matrix_assisted_laser_desorption_ionization,
+
+    /// <summary>negative ion mode: OBSOLETE</summary>
+    MS_negative_ion_mode_OBSOLETE = 1000076,
+
+    /// <summary>positive ion mode: OBSOLETE</summary>
+    MS_positive_ion_mode_OBSOLETE = 1000077,
 
     /// <summary>axial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the axis of the analyzer.</summary>
     MS_axial_ejection_linear_ion_trap = 1000078,
@@ -391,11 +421,26 @@ public enum class CVID
     /// <summary>multiple ion monitoring: Data acquired when monitoring the ion current of a few specific m/z values. Remap to MS:1000205 -Selected Ion Monitoring.</summary>
     MS_multiple_ion_monitoring = 1000098,
 
+    /// <summary>multiple reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.</summary>
+    MS_multiple_reaction_monitoring_OBSOLETE = 1000099,
+
+    /// <summary>multiple reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.</summary>
+    MS_MRM_OBSOLETE = MS_multiple_reaction_monitoring_OBSOLETE,
+
     /// <summary>precursor ion scan: The specific scan function or process that will record a precursor ion spectrum.</summary>
     MS_precursor_ion_scan = 1000100,
 
     /// <summary>product ion scan: The specific scan function or process that records product ion spectrum.</summary>
     MS_product_ion_scan = 1000101,
+
+    /// <summary>single ion monitoring: The operation of a mass spectrometer to monitor a single ion rather than scanning entire mass spectrum.</summary>
+    MS_single_ion_monitoring_OBSOLETE = 1000102,
+
+    /// <summary>single reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.</summary>
+    MS_single_reaction_monitoring_OBSOLETE = 1000103,
+
+    /// <summary>None  ??: None.</summary>
+    MS_None_____OBSOLETE = 1000104,
 
     /// <summary>reflectron off: Reflectron is off.</summary>
     MS_reflectron_off = 1000105,
@@ -534,6 +579,12 @@ public enum class CVID
 
     /// <summary>surface-induced dissociation: Fragmentation that results from the collision of an ion with a surface.</summary>
     MS_SID = MS_surface_induced_dissociation,
+
+    /// <summary>electron volt: A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J.</summary>
+    MS_electron_volt_OBSOLETE = 1000137,
+
+    /// <summary>electron volt: A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J.</summary>
+    MS_eV_OBSOLETE = MS_electron_volt_OBSOLETE,
 
     /// <summary>percent collision energy: Collision energy required to fragment an ion represented as a percent value.</summary>
     MS_percent_collision_energy = 1000138,
@@ -775,6 +826,12 @@ public enum class CVID
     /// <summary>charge number: The total charge on an ion divided by the electron charge e.</summary>
     MS_z = MS_charge_number,
 
+    /// <summary>dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.</summary>
+    MS_dalton_OBSOLETE = 1000212,
+
+    /// <summary>dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.</summary>
+    MS_Da_OBSOLETE = MS_dalton_OBSOLETE,
+
     /// <summary>electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.</summary>
     MS_electron_affinity = 1000213,
 
@@ -795,6 +852,9 @@ public enum class CVID
 
     /// <summary>ionization cross section: A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule.</summary>
     MS_ionization_cross_section = 1000217,
+
+    /// <summary>ioniazation efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.</summary>
+    MS_ioniazation_efficiency_OBSOLETE = 1000218,
 
     /// <summary>ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.</summary>
     MS_ionization_energy = 1000219,
@@ -847,11 +907,17 @@ public enum class CVID
     /// <summary>peak: A localized region of relatively large ion signal in a mass spectrum. Although peaks are often associated with particular ions, the terms peak and ion should not be used interchangeably.</summary>
     MS_peak = 1000231,
 
+    /// <summary>peak intensity: The height or area of a peak in a mass spectrum.</summary>
+    MS_peak_intensity_OBSOLETE = 1000232,
+
     /// <summary>proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.</summary>
     MS_proton_affinity = 1000233,
 
     /// <summary>proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.</summary>
     MS_PA = MS_proton_affinity,
+
+    /// <summary>mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.</summary>
+    MS_mass_resolving_power_OBSOLETE = 1000234,
 
     /// <summary>total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.</summary>
     MS_total_ion_current_chromatogram = 1000235,
@@ -861,6 +927,12 @@ public enum class CVID
 
     /// <summary>transmission: The ratio of the number of ions leaving a region of a mass spectrometer to the number entering that region.</summary>
     MS_transmission = 1000236,
+
+    /// <summary>unified atomic mass unit: A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg.</summary>
+    MS_unified_atomic_mass_unit_OBSOLETE = 1000237,
+
+    /// <summary>unified atomic mass unit: A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg.</summary>
+    MS_u_OBSOLETE = MS_unified_atomic_mass_unit_OBSOLETE,
 
     /// <summary>accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.</summary>
     MS_accelerator_mass_spectrometry = 1000238,
@@ -879,6 +951,12 @@ public enum class CVID
 
     /// <summary>atmospheric pressure ionization: Any ionization process in which ions are formed in the gas phase at atmospheric pressure.</summary>
     MS_API = MS_atmospheric_pressure_ionization,
+
+    /// <summary>Atmostpheric Pressure Photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.</summary>
+    MS_Atmostpheric_Pressure_Photoionization_OBSOLETE = 1000241,
+
+    /// <summary>Atmostpheric Pressure Photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.</summary>
+    MS_APPI_OBSOLETE = MS_Atmostpheric_Pressure_Photoionization_OBSOLETE,
 
     /// <summary>blackbody infrared radiative dissociation: A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.</summary>
     MS_blackbody_infrared_radiative_dissociation = 1000242,
@@ -1024,6 +1102,15 @@ public enum class CVID
     /// <summary>kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.</summary>
     MS_KERD = MS_kinetic_energy_release_distribution,
 
+    /// <summary>Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.</summary>
+    MS_Laser_Desorption_OBSOLETE = 1000266,
+
+    /// <summary>Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.</summary>
+    MS_Laser_Ionization_MERGE_OBSOLETE = MS_Laser_Desorption_OBSOLETE,
+
+    /// <summary>Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.</summary>
+    MS_LD_OBSOLETE = MS_Laser_Desorption_OBSOLETE,
+
     /// <summary>mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.</summary>
     MS_mass_analyzed_ion_kinetic_energy_spectrometry = 1000267,
 
@@ -1102,6 +1189,12 @@ public enum class CVID
     /// <summary>surface enhanced neat desorption: Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.</summary>
     MS_SEND = MS_surface_enhanced_neat_desorption,
 
+    /// <summary>suface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.</summary>
+    MS_suface_ionization_OBSOLETE = 1000280,
+
+    /// <summary>suface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.</summary>
+    MS_SI_OBSOLETE = MS_suface_ionization_OBSOLETE,
+
     /// <summary>selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.</summary>
     MS_selected_ion_flow_tube = 1000281,
 
@@ -1113,6 +1206,12 @@ public enum class CVID
 
     /// <summary>sustained off-resonance irradiation: A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.</summary>
     MS_SORI = MS_sustained_off_resonance_irradiation,
+
+    /// <summary>Spark Source Mass Spectrometry: Mass spectrometry using spark ionization.</summary>
+    MS_Spark_Source_Mass_Spectrometry_OBSOLETE = 1000283,
+
+    /// <summary>Spark Source Mass Spectrometry: Mass spectrometry using spark ionization.</summary>
+    MS_SSMS_OBSOLETE = MS_Spark_Source_Mass_Spectrometry_OBSOLETE,
 
     /// <summary>stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.</summary>
     MS_stored_waveform_inverse_fourier_transform = 1000284,
@@ -1264,6 +1363,9 @@ public enum class CVID
     /// <summary>constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
     MS_constant_neutral_mass_loss_spectrum = MS_constant_neutral_loss_spectrum,
 
+    /// <summary>consecutive reaction monitoring: A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
+    MS_consecutive_reaction_monitoring_OBSOLETE = 1000327,
+
     /// <summary>e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.</summary>
     MS_e_2_mass_spectrum = 1000328,
 
@@ -1297,6 +1399,9 @@ public enum class CVID
     /// <summary>nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.</summary>
     MS_nth_generation_product_ion_scan = 1000338,
 
+    /// <summary>nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.</summary>
+    MS_nth_generation_product_ion_spectrum_OBSOLETE = 1000339,
+
     /// <summary>precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.</summary>
     MS_precursor_ion = 1000340,
 
@@ -1305,6 +1410,9 @@ public enum class CVID
 
     /// <summary>product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.</summary>
     MS_product_ion = 1000342,
+
+    /// <summary>product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.</summary>
+    MS_product_ion_spectrum_OBSOLETE = 1000343,
 
     /// <summary>progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.</summary>
     MS_progeny_ion = 1000344,
@@ -1368,6 +1476,9 @@ public enum class CVID
 
     /// <summary>enium ion: A positively charged lower-valency ion of the nonmetallic elements. The methenium ion is CH3+. Other examples are the oxenium, sulfenium, nitrenium, phosphenium, and halenium ions.</summary>
     MS_enium_ion = 1000363,
+
+    /// <summary>fragment ion: A product ion that results from the dissociation of a precursor ion.</summary>
+    MS_fragment_ion_OBSOLETE = 1000364,
 
     /// <summary>ion?: An atomic or molecular species having a net positive or negative electric charge.</summary>
     MS_ion_ = 1000365,
@@ -1684,8 +1795,14 @@ public enum class CVID
     /// <summary>instrument: Description of the instrument or the mass spectrometer.</summary>
     MS_instrument_configuration = MS_instrument,
 
+    /// <summary>mass unit: A unit of measurement for mass.</summary>
+    MS_mass_unit_OBSOLETE = 1000464,
+
     /// <summary>scan polarity: An acquisition mode to which specifies weather polarity is negative, positive or alternating.</summary>
     MS_scan_polarity = 1000465,
+
+    /// <summary>alternating: Alternating.</summary>
+    MS_alternating_OBSOLETE = 1000466,
 
     /// <summary>1200 series LC/MSD SL: The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS.</summary>
     MS_1200_series_LC_MSD_SL = 1000467,
@@ -1852,8 +1969,17 @@ public enum class CVID
     /// <summary>binary data type: Encoding type of binary data, e.g. 64-bit float.</summary>
     MS_binary_data_type = 1000518,
 
+    /// <summary>32-bit integer: Signed 32-bit integer.</summary>
+    MS_32_bit_integer_OBSOLETE = 1000519,
+
+    /// <summary>16-bit float: Signed 16-bit float.</summary>
+    MS_16_bit_float_OBSOLETE = 1000520,
+
     /// <summary>32-bit float: Signed 32-bit float. IEEE-754.</summary>
     MS_32_bit_float = 1000521,
+
+    /// <summary>64-bit integer: Signed 64-bit integer.</summary>
+    MS_64_bit_integer_OBSOLETE = 1000522,
 
     /// <summary>64-bit float: Signed 64-bit float. IEEE-754.</summary>
     MS_64_bit_float = 1000523,
@@ -1938,6 +2064,9 @@ public enum class CVID
 
     /// <summary>selection window attribute: Selection window properties that are associated with a value.</summary>
     MS_selection_window_attribute = 1000549,
+
+    /// <summary>time unit: Time Unit.</summary>
+    MS_time_unit_OBSOLETE = 1000550,
 
     /// <summary>Analyst: AB SCIEX or Applied Biosystems|MDS SCIEX software for data acquisition.</summary>
     MS_Analyst = 1000551,
@@ -2199,6 +2328,9 @@ public enum class CVID
 
     /// <summary>lowest observed wavelength: Lowest wavelength observed in an EMR spectrum.</summary>
     MS_lowest_observed_wavelength = 1000619,
+
+    /// <summary>PDA spectrum: Spectrum generated from a photodiode array detector (ultraviolet/visible spectrum).</summary>
+    MS_PDA_spectrum_OBSOLETE = 1000620,
 
     /// <summary>photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.</summary>
     MS_photodiode_array_detector = 1000621,
@@ -2734,8 +2866,17 @@ public enum class CVID
     /// <summary>time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation</summary>
     MS_time_delayed_fragmentation_spectrum = 1000790,
 
+    /// <summary>enhanced resolution scan: Scan with enhanced resolution.</summary>
+    MS_enhanced_resolution_scan_OBSOLETE = 1000791,
+
     /// <summary>isolation window attribute: Isolation window parameter.</summary>
     MS_isolation_window_attribute = 1000792,
+
+    /// <summary>isolation window upper limit: The highest m/z being isolated in an isolation window.</summary>
+    MS_isolation_window_upper_limit_OBSOLETE = 1000793,
+
+    /// <summary>isolation window lower limit: The lowest m/z being isolated in an isolation window.</summary>
+    MS_isolation_window_lower_limit_OBSOLETE = 1000794,
 
     /// <summary>no combination: Use this term if only one scan was recorded or there is no information about scans available.</summary>
     MS_no_combination = 1000795,
@@ -3166,6 +3307,9 @@ public enum class CVID
     /// <summary>quality estimation details: Method for quality estimation (manually or wih decoy database).</summary>
     MS_quality_estimation_details = 1001060,
 
+    /// <summary>neutral loss: OBSOLETE: replaced by MS:1000336 (neutral loss): Leave this to PSI-MOD?</summary>
+    MS_neutral_loss_OBSOLETE = 1001061,
+
     /// <summary>Mascot MGF file: </summary>
     MS_Mascot_MGF_file = 1001062,
 
@@ -3225,6 +3369,9 @@ public enum class CVID
 
     /// <summary>molecule taxonomy: The taxonomy of the resultant molecule from the search.</summary>
     MS_molecule_taxonomy = 1001089,
+
+    /// <summary>taxonomy nomenclature: OBSOLETE: The system used to indicate taxonomy. There should be an enumerated list of options: latin name, NCBI TaxID, common name, Swiss-Prot species ID (ex. RABIT from the full protein ID ALBU_RABIT).</summary>
+    MS_taxonomy_nomenclature_OBSOLETE = 1001090,
 
     /// <summary>NoEnzyme: </summary>
     MS_NoEnzyme = 1001091,
@@ -3561,6 +3708,9 @@ public enum class CVID
 
     /// <summary>parent mass type average: Mass type setting for parent mass was average isotopic.</summary>
     MS_parent_mass_type_average = 1001212,
+
+    /// <summary>search result details 	 : OBSOLETE: Scores and global result characteristics.</summary>
+    MS_search_result_details____OBSOLETE = 1001213,
 
     /// <summary>prot:global FDR: Estimation of global false discovery rate of the proteins.</summary>
     MS_prot_global_FDR = 1001214,
@@ -4117,6 +4267,15 @@ public enum class CVID
     /// <summary>search tolerance minus value: </summary>
     MS_search_tolerance_minus_value = 1001413,
 
+    /// <summary>MGF scans: OBSOLETE: replaced by MS:1000797 (peak list scans): This term can hold the scans attribute from an MGF input file.</summary>
+    MS_MGF_scans_OBSOLETE = 1001414,
+
+    /// <summary>MGF raw scans: OBSOLETE: replaced by MS:1000798 (peak list raw scans): This term can hold the raw scans attribute from an MGF input file.</summary>
+    MS_MGF_raw_scans_OBSOLETE = 1001415,
+
+    /// <summary>spectrum title: OBSOLETE: replaced by MS:1000796 (spectrum title): Holds the spectrum title from different input file formats, e.g. MGF TITLE.</summary>
+    MS_spectrum_title_OBSOLETE = 1001416,
+
     /// <summary>SpectraST:dot: SpectraST dot product of two spectra, measuring spectral similarity.</summary>
     MS_SpectraST_dot = 1001417,
 
@@ -4290,6 +4449,12 @@ public enum class CVID
 
     /// <summary>selected reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.</summary>
     MS_SRM_chromatogram = MS_selected_reaction_monitoring_chromatogram,
+
+    /// <summary>consecutive reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.</summary>
+    MS_consecutive_reaction_monitoring_chromatogram_OBSOLETE = 1001474,
+
+    /// <summary>consecutive reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.</summary>
+    MS_CRM_chromatogram_OBSOLETE = MS_consecutive_reaction_monitoring_chromatogram_OBSOLETE,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 100000000,
@@ -5138,6 +5303,11 @@ public ref class CVTermInfo
     /// returns the full text definition of the term
     /// </summary>
     property System::String^ def { System::String^ get() {return gcnew System::String(base_->def.c_str());} }
+
+    /// <summary>
+    /// returns true if the term is obsolete
+    /// </summary>
+    property bool isObsolete { bool get() {return base_->isObsolete;} }
 
     /// <summary>
     /// returns a list of terms which this term has an IS_A relationship with

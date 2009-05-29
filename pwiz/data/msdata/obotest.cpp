@@ -114,7 +114,7 @@ void test()
     unit_assert(obo.filename == filename);    
     unit_assert(obo.header.size() == 5); 
     unit_assert(obo.prefix == "MS");
-    unit_assert(obo.terms.size() == 6); // no obsolete terms
+    unit_assert(obo.terms.size() == 8); // including obsolete terms
 
     const Term* term = &obo.terms[0];
     unit_assert(term->prefix == "MS");
@@ -141,14 +141,22 @@ void test()
     unit_assert(term->exactSynonyms.size() == 1);
     unit_assert(term->exactSynonyms[0] == "B");
 
-    // test term with OBO 1.2 synonym format
     term = &obo.terms[4];
+    unit_assert(term->id == 1000030);
+    unit_assert(term->isObsolete);
+
+    term = &obo.terms[5];
+    unit_assert(term->id == 1000035);
+    unit_assert(term->isObsolete);
+
+    // test term with OBO 1.2 synonym format
+    term = &obo.terms[6];
     unit_assert(term->id == 2000025);
     unit_assert(term->exactSynonyms.size() == 1);
     unit_assert(term->exactSynonyms[0] == "B");
 
     // test term with [stuff to ignore]
-    term = &obo.terms[5];
+    term = &obo.terms[7];
     unit_assert(term->id == 0);
     unit_assert(term->def == "description");
  

@@ -102,18 +102,18 @@ inline char toAllowableChar(char a)
 }
 
 
-string enumName(const string& prefix, const string& name)
+string enumName(const string& prefix, const string& name, bool isObsolete)
 {
     string result = name;
     transform(result.begin(), result.end(), result.begin(), toAllowableChar);
-    result = prefix + "_" + result;
+    result = prefix + "_" + result + (isObsolete ? "_OBSOLETE" : "");
     return result;
 }
 
 
 string enumName(const Term& term)
 {
-    return enumName(term.prefix, term.name);
+    return enumName(term.prefix, term.name, term.isObsolete);
 }
 
 
@@ -171,7 +171,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             {
                 os << ",\n\n"
                    << "    /// <summary>" << it->name << ": " << it->def << "</summary>\n"
-                   << "    " << enumName(it->prefix, *syn) << " = " << enumName(*it);
+                   << "    " << enumName(it->prefix, *syn, it->isObsolete) << " = " << enumName(*it);
             }
         }
     }
@@ -217,6 +217,11 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "    property System::String^ def { System::String^ get() {return gcnew System::String(base_->def.c_str());} }\n"
        << "\n"
        << "    /// <summary>\n"
+       << "    /// returns true if the term is obsolete\n"
+       << "    /// </summary>\n"
+       << "    property bool isObsolete { bool get() {return base_->isObsolete;} }\n"
+       << "\n"
+       << "    /// <summary>\n"
        << "    /// returns a list of terms which this term has an IS_A relationship with\n"
        << "    /// </summary>\n"
        << "    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA);} }\n"
@@ -236,12 +241,12 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified CVID\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo((pwiz::CVID) cvid))) {}\n"
+       << "    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified id in the form: \"prefix:number\"\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::CVTermInfo(ToStdString(id)))) {}\n"
+       << "    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns the shortest synonym from exactSynonyms()\n"

@@ -56,6 +56,8 @@ void test()
 
     unit_assert(cvTermInfo(MS_instrument_model).parentsPartOf.size() == 1 &&
                 cvTermInfo(MS_instrument_model).parentsPartOf[0] == MS_instrument);
+
+    unit_assert(cvTermInfo(MS_None_____OBSOLETE).isObsolete);
 }
 
 
