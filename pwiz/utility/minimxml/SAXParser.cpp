@@ -412,8 +412,47 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 }
 
 
-} // namespace SAXParser 
-} // namespace minimxml 
+} // namespace SAXParser
+
+
+namespace { bool isalnum(char& c) {return std::isalnum(c, std::locale::classic());} }
+
+
+PWIZ_API_DECL string& decode_xml_id(string& str)
+{
+    std::istringstream parser;
+    for (size_t i=0; i < str.length(); ++i)
+    {
+        size_t found = str.find("_x00");
+        if (found != string::npos &&
+            found+6 < str.length() &&
+            isalnum(str[found+4]) &&
+            isalnum(str[found+5]) &&
+            str[found+6] == '_')
+        {
+            parser.clear(); // reset state
+            parser.str(str.substr(found+4, 2));
+            int value;
+            parser >> std::hex >> value;
+            char decoded = (char) value;
+            str.replace(found, 7, &decoded, 1);
+        }
+        else
+            break;
+    }
+
+    return str;
+}
+
+
+PWIZ_API_DECL string decode_xml_id_copy(const string& str)
+{
+    string copy(str);
+    return decode_xml_id(copy);
+}
+
+
+} // namespace minimxml
 } // namespace pwiz
 
 

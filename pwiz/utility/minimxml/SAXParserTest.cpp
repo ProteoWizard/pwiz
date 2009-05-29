@@ -404,6 +404,22 @@ void testNested()
 }
 
 
+void testDecoding()
+{
+    string id1("_x0031_invalid_x0020_ID");
+    unit_assert(decode_xml_id_copy(id1) == "1invalid ID");
+    unit_assert(&decode_xml_id(id1) == &id1);
+    unit_assert(id1 == "1invalid ID");
+
+    string id2("_invalid-ID__x0023_2__x003c_3_x003e_");
+    unit_assert(decode_xml_id_copy(id2) == "_invalid-ID_#2_<3>");
+    unit_assert(decode_xml_id(id2) == "_invalid-ID_#2_<3>");
+
+    string crazyId("_x0021__x0021__x0021_");
+    unit_assert(decode_xml_id(crazyId) == "!!!");
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -414,6 +430,7 @@ int main(int argc, char* argv[])
         testDone();
         testBadXML();
         testNested();
+        testDecoding();
         return 0;
     }
     catch (exception& e)

@@ -172,6 +172,21 @@ void test()
 
     if (os_) *os_ << "outputObserver cache:\n" << outputObserver.cache << endl;
     unit_assert(targetXML == outputObserver.cache);
+
+
+    // test id encoding
+
+    string id1("1invalid ID");
+    unit_assert(encode_xml_id_copy(id1) == "_x0031_invalid_x0020_ID");
+    unit_assert(&encode_xml_id(id1) == &id1);
+    unit_assert(id1 == "_x0031_invalid_x0020_ID");
+
+    string id2("_invalid-ID_#2_<3>");
+    unit_assert(encode_xml_id_copy(id2) == "_invalid-ID__x0023_2__x003c_3_x003e_");
+    unit_assert(encode_xml_id(id2) == "_invalid-ID__x0023_2__x003c_3_x003e_");
+
+    string crazyId("!!!");
+    unit_assert(encode_xml_id(crazyId) == "_x0021__x0021__x0021_");
 }
 
 

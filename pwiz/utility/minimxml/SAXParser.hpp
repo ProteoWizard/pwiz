@@ -93,13 +93,14 @@ class Handler
     protected:
 
     template <typename T>
-    void getAttribute(const Attributes& attributes,
-                      const std::string& name,
-                      T& result)
+    T& getAttribute(const Attributes& attributes,
+                    const std::string& name,
+                    T& result)
     {
         Attributes::const_iterator it = attributes.find(name);
         if (it != attributes.end()) 
             result = boost::lexical_cast<T>(it->second);
+        return result;
     }
 };
 
@@ -126,8 +127,22 @@ class Handler
 PWIZ_API_DECL void parse(std::istream& is, Handler& handler);
 
 
-} // namespace SAXParser 
-} // namespace minimxml 
+} // namespace SAXParser
+
+
+/// Decodes any characters encoded with their hexadecimal value,
+/// e.g. "_x0020_" decodes as " "
+/// This override modifies the input string in place and returns its reference.
+PWIZ_API_DECL std::string& decode_xml_id(std::string& str);
+
+
+/// Decodes any characters encoded with their hexadecimal value,
+/// e.g. "_x0020_" decodes as " "
+/// This override modifies and returns a copy of the input string.
+PWIZ_API_DECL std::string decode_xml_id_copy(const std::string& str);
+
+
+} // namespace minimxml
 } // namespace pwiz
 
 

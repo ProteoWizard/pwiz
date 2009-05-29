@@ -122,7 +122,19 @@ class PWIZ_API_DECL XMLWriter
     XMLWriter(const XMLWriter&);
     XMLWriter& operator=(const XMLWriter&);
 };
-    
+
+
+/// Encodes any characters not suitable in an xml:ID or xml:IDREF
+/// with their hexadecimal value, e.g. " " encodes as "_x0020_"
+/// This override modifies the input string in place and returns its reference.
+PWIZ_API_DECL std::string& encode_xml_id(std::string& str);
+
+
+/// Encodes any characters not suitable in an xml:ID or xml:IDREF
+/// with their hexadecimal value, e.g. " " encodes as "_x0020_"
+/// This override modifies and returns a copy of the input string.
+PWIZ_API_DECL std::string encode_xml_id_copy(const std::string& str);
+
 
 //
 // Template name: basic_charcounter.

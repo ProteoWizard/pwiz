@@ -289,6 +289,67 @@ PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::position() const {return impl_
 PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
 
 
+namespace {
+
+// NCName          ::= NCNameStartChar (NCNameChar)*
+// NCNameStartChar ::= [A-Z] | '_' | [a-z]
+// NCNameChar      ::= NCNameStartChar | [0-9] | '.' | '-'
+//
+// Note: If we were working in Unicode, there's a lot of other valid characters,
+//       but here we'll just encode any non-ASCII value.
+bool isNCNameStartChar(char& c)
+{
+    return std::isalpha(c, std::locale::classic()) || c == '_';
+}
+
+bool isNCNameChar(char& c)
+{
+    return isNCNameStartChar(c) ||
+           std::isdigit(c, std::locale::classic()) ||
+           c == '.' ||
+           c == '-';
+}
+
+const char hex[] = "0123456789abcdef";
+void insertEncodedChar(string& str, string::iterator& itr)
+{
+    char c = *itr;
+    str.insert(size_t(itr-str.begin()), "_x0000_");
+    itr += 4;
+    *itr = hex[(c & 0xF0) >> 4];
+    *(++itr) = hex[c & 0x0F];
+    ++itr;
+    str.erase(itr+1); // erase unencoded character
+}
+
+} // namespace
+
+
+PWIZ_API_DECL string& encode_xml_id(string& str)
+{
+    // reserve size for the worst case scenario (all characters need replacing),
+    // this should be a reasonable guarantee that the iterator won't be invalidated
+    str.reserve(str.length()*7);
+    string::iterator itr = str.begin();
+
+    if (!isNCNameStartChar(*itr))
+        insertEncodedChar(str, itr);
+
+    for (; itr != str.end(); ++itr)
+        if (!isNCNameChar(*itr))
+            insertEncodedChar(str, itr);
+
+    return str;
+}
+
+
+PWIZ_API_DECL string encode_xml_id_copy(const string& str)
+{
+    string copy(str);
+    return encode_xml_id(copy);
+}
+
+
 } // namespace minimxml
 } // namespace pwiz
 
