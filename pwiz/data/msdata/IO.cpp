@@ -53,7 +53,7 @@ using boost::shared_ptr;
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", cv.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(cv.id)));
     attributes.push_back(make_pair("fullName", cv.fullName));
     attributes.push_back(make_pair("version", cv.version));
     attributes.push_back(make_pair("URI", cv.URI));
@@ -72,7 +72,7 @@ struct HandlerCV : public SAXParser::Handler
     {
         if (name != "cv")
             throw runtime_error(("[IO::HandlerCV] Unexpected element name: " + name).c_str());
-        getAttribute(attributes, "id", cv->id);
+        decode_xml_id(getAttribute(attributes, "id", cv->id));
         getAttribute(attributes, "fullName", cv->fullName);
         getAttribute(attributes, "version", cv->version);
         getAttribute(attributes, "URI", cv->URI);
@@ -272,7 +272,7 @@ struct HandlerParamContainer : public SAXParser::Handler
         {
             // note: placeholder
             string id;
-            getAttribute(attributes, "ref", id);
+            decode_xml_id(getAttribute(attributes, "ref", id));
             if (!id.empty())
                 paramContainer->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup(id))); 
             return Status::Ok;
@@ -316,7 +316,7 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", paramGroup.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(paramGroup.id)));
     writer.startElement("referenceableParamGroup", attributes);
     writeParamContainer(writer, paramGroup);
     writer.endElement();
@@ -340,7 +340,7 @@ struct HandlerParamGroup : public HandlerParamContainer
 
         if (name == "referenceableParamGroup")
         {
-            getAttribute(attributes, "id", paramGroup->id);
+            decode_xml_id(getAttribute(attributes, "id", paramGroup->id));
             return Status::Ok;
         }
 
@@ -385,7 +385,7 @@ PWIZ_API_DECL void read(std::istream& is, FileContent& fc)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", sf.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(sf.id)));
     attributes.push_back(make_pair("name", sf.name));
     attributes.push_back(make_pair("location", sf.location));
     writer.startElement("sourceFile", attributes);
@@ -397,7 +397,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 void writeSourceFileRef(minimxml::XMLWriter& writer, const SourceFile& sourceFile)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("ref", sourceFile.id));
+    attributes.push_back(make_pair("ref", encode_xml_id_copy(sourceFile.id)));
     writer.startElement("sourceFileRef", attributes, XMLWriter::EmptyElement);
 }
 
@@ -419,7 +419,7 @@ struct HandlerSourceFile : public HandlerParamContainer
 
         if (name == "sourceFile")
         {
-            getAttribute(attributes, "id", sourceFile->id);
+            decode_xml_id(getAttribute(attributes, "id", sourceFile->id));
             getAttribute(attributes, "name", sourceFile->name);
             getAttribute(attributes, "location", sourceFile->location);
             return Status::Ok;
@@ -554,7 +554,7 @@ PWIZ_API_DECL void read(std::istream& is, FileDescription& fd)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", sample.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(sample.id)));
     attributes.push_back(make_pair("name", sample.name));
     writer.startElement("sample", attributes);
     writeParamContainer(writer, sample);
@@ -579,7 +579,7 @@ struct HandlerSample : public HandlerParamContainer
 
         if (name == "sample")
         {
-            getAttribute(attributes, "id", sample->id);
+            decode_xml_id(getAttribute(attributes, "id", sample->id));
             getAttribute(attributes, "name", sample->name);
             return Status::Ok;
         }
@@ -738,7 +738,7 @@ PWIZ_API_DECL void read(std::istream& is, ComponentList& componentList)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", software.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(software.id)));
     attributes.push_back(make_pair("version", software.version));
     writer.startElement("software", attributes);
     writeParamContainer(writer, software);
@@ -761,7 +761,7 @@ struct HandlerSoftware : public HandlerParamContainer
 
         if (name == "software")
         {
-            getAttribute(attributes, "id", software->id);
+            decode_xml_id(getAttribute(attributes, "id", software->id));
             getAttribute(attributes, "version", software->version);
             return Status::Ok;
         }
@@ -800,7 +800,7 @@ PWIZ_API_DECL void read(std::istream& is, Software& software)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", instrumentConfiguration.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(instrumentConfiguration.id)));
     writer.startElement("instrumentConfiguration", attributes);
 
     writeParamContainer(writer, instrumentConfiguration);
@@ -809,7 +809,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfigurat
     if (instrumentConfiguration.softwarePtr.get())
     {
         attributes.clear();
-        attributes.push_back(make_pair("ref", instrumentConfiguration.softwarePtr->id));
+        attributes.push_back(make_pair("ref", encode_xml_id_copy(instrumentConfiguration.softwarePtr->id)));
         writer.startElement("softwareRef", attributes, XMLWriter::EmptyElement);
     }
 
@@ -833,7 +833,7 @@ struct HandlerInstrumentConfiguration : public HandlerParamContainer
 
         if (name == "instrumentConfiguration")
         {
-            getAttribute(attributes, "id", instrumentConfiguration->id);
+            decode_xml_id(getAttribute(attributes, "id", instrumentConfiguration->id));
             return Status::Ok;
         }
         else if (name == "componentList")
@@ -845,7 +845,7 @@ struct HandlerInstrumentConfiguration : public HandlerParamContainer
         {
             // note: placeholder
             string ref;
-            getAttribute(attributes, "ref", ref);
+            decode_xml_id(getAttribute(attributes, "ref", ref));
             if (!ref.empty())
                 instrumentConfiguration->softwarePtr = SoftwarePtr(new Software(ref));
             return Status::Ok;
@@ -877,7 +877,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& pr
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("order", lexical_cast<string>(processingMethod.order)));
     if (processingMethod.softwarePtr.get())
-        attributes.push_back(make_pair("softwareRef", processingMethod.softwarePtr->id)); 
+        attributes.push_back(make_pair("softwareRef", encode_xml_id_copy(processingMethod.softwarePtr->id))); 
 
     writer.startElement("processingMethod", attributes);
     writeParamContainer(writer, processingMethod);
@@ -907,7 +907,7 @@ struct HandlerProcessingMethod : public HandlerParamContainer
 
             // note: placeholder
             string softwareRef;
-            getAttribute(attributes, "softwareRef", softwareRef);
+            decode_xml_id(getAttribute(attributes, "softwareRef", softwareRef));
             if (!softwareRef.empty())
                 processingMethod->softwarePtr = SoftwarePtr(new Software(softwareRef));
             else if (!defaultSoftwareRef.empty())
@@ -937,7 +937,7 @@ PWIZ_API_DECL void read(std::istream& is, ProcessingMethod& processingMethod)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataProcessing& dataProcessing)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", lexical_cast<string>(dataProcessing.id)));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(dataProcessing.id)));
 
     writer.startElement("dataProcessing", attributes);
 
@@ -966,7 +966,7 @@ struct HandlerDataProcessing : public HandlerParamContainer
 
         if (name == "dataProcessing")
         {
-            getAttribute(attributes, "id", dataProcessing->id);
+            decode_xml_id(getAttribute(attributes, "id", dataProcessing->id));
 
             // mzML 1.0
             string softwareRef;
@@ -1029,7 +1029,7 @@ PWIZ_API_DECL void read(std::istream& is, Target& t)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSettings)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", lexical_cast<string>(scanSettings.id)));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(scanSettings.id)));
 
     writer.startElement("scanSettings", attributes);
 
@@ -1079,7 +1079,7 @@ struct HandlerScanSettings : public HandlerParamContainer
 
         if (name == "scanSettings")
         {
-            getAttribute(attributes, "id", scanSettings->id);
+            decode_xml_id(getAttribute(attributes, "id", scanSettings->id));
             return Status::Ok;
         }
         else if (name=="sourceFileRefList" || name=="targetList")
@@ -1090,7 +1090,7 @@ struct HandlerScanSettings : public HandlerParamContainer
         {
             // note: placeholder
             string sourceFileRef;
-            getAttribute(attributes, "ref", sourceFileRef);
+            decode_xml_id(getAttribute(attributes, "ref", sourceFileRef));
             if (!sourceFileRef.empty())
                 scanSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
             return Status::Ok;
@@ -1193,12 +1193,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
             if (!precursor.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.push_back(make_pair("sourceFileRef", precursor.sourceFilePtr->id)); 
+            attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(precursor.sourceFilePtr->id))); 
             attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
         }
     }
     else
-        attributes.push_back(make_pair("spectrumRef", precursor.spectrumID));
+        attributes.push_back(make_pair("spectrumRef", precursor.spectrumID)); // not an XML:IDREF
 
     writer.startElement("precursor", attributes);
     writeParamContainer(writer, precursor);
@@ -1255,12 +1255,12 @@ struct HandlerPrecursor : public HandlerParamContainer
 
         if (name == "precursor")
         {
-            getAttribute(attributes, "spectrumRef", precursor->spectrumID);
+            getAttribute(attributes, "spectrumRef", precursor->spectrumID); // not an XML:IDREF
             getAttribute(attributes, "externalSpectrumID", precursor->externalSpectrumID);
 
             // note: placeholder
             string sourceFileRef;
-            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
             if (!sourceFileRef.empty())
                 precursor->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
 
@@ -1404,15 +1404,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan)
             if (!scan.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.push_back(make_pair("sourceFileRef", scan.sourceFilePtr->id)); 
+            attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(scan.sourceFilePtr->id))); 
             attributes.push_back(make_pair("externalSpectrumID", scan.externalSpectrumID)); 
         }
     }
     else
-        attributes.push_back(make_pair("spectrumRef", scan.spectrumID));
+        attributes.push_back(make_pair("spectrumRef", scan.spectrumID)); // not an XML:IDREF
 
     if (scan.instrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("instrumentConfigurationRef", lexical_cast<string>(scan.instrumentConfigurationPtr->id)));
+        attributes.push_back(make_pair("instrumentConfigurationRef", encode_xml_id_copy(scan.instrumentConfigurationPtr->id)));
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
     
@@ -1450,18 +1450,18 @@ struct HandlerScan : public HandlerParamContainer
 
         if (name == "scan")
         {
-            getAttribute(attributes, "spectrumRef", scan->spectrumID);
+            getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
             getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
 
             // note: placeholder
             string sourceFileRef;
-            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
             if (!sourceFileRef.empty())
                 scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
 
             // note: placeholder
             string instrumentConfigurationRef;
-            getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef);
+            decode_xml_id(getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef));
             if (!instrumentConfigurationRef.empty())
                 scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
             return Status::Ok;
@@ -1469,7 +1469,7 @@ struct HandlerScan : public HandlerParamContainer
         else if (name == "acquisition")
         {
             // note: spectrumRef, externalNativeID, and externalSpectrumID are mutually exclusive
-            getAttribute(attributes, "spectrumRef", scan->spectrumID);
+            getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
             if (scan->spectrumID.empty())
             {
                 string externalNativeID;
@@ -1492,7 +1492,7 @@ struct HandlerScan : public HandlerParamContainer
 
             // note: placeholder
             string sourceFileRef;
-            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
             if (!sourceFileRef.empty())
                 scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
 
@@ -1616,7 +1616,7 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
 
     attributes.push_back(make_pair("encodedLength", lexical_cast<string>(encoded.size())));
     if (binaryDataArray.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", binaryDataArray.dataProcessingPtr->id));
+        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id)));
 
     writer.startElement("binaryDataArray", attributes);
 
@@ -1671,7 +1671,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         {
             // note: placeholder
             string dataProcessingRef;
-            getAttribute(attributes, "dataProcessingRef", dataProcessingRef);
+            decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
             if (!dataProcessingRef.empty())
                 binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
@@ -1807,14 +1807,14 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("index", lexical_cast<string>(spectrum.index)));
-    attributes.push_back(make_pair("id", spectrum.id));
+    attributes.push_back(make_pair("id", spectrum.id)); // not an XML:ID
     if (!spectrum.spotID.empty())
         attributes.push_back(make_pair("spotID", spectrum.spotID));
     attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(spectrum.defaultArrayLength)));
     if (spectrum.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", spectrum.dataProcessingPtr->id));
+        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id)));
     if (spectrum.sourceFilePtr.get())
-        attributes.push_back(make_pair("sourceFileRef", spectrum.sourceFilePtr->id));
+        attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(spectrum.sourceFilePtr->id)));
 
     writer.startElement("spectrum", attributes);
 
@@ -1895,7 +1895,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             string nativeID;
             getAttribute(attributes, "nativeID", nativeID);
             if (nativeID.empty())
-                getAttribute(attributes, "id", spectrum->id);
+                getAttribute(attributes, "id", spectrum->id); // not an XML:ID
             else
             {
                 try
@@ -1913,13 +1913,13 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             // note: placeholder
             string dataProcessingRef;
-            getAttribute(attributes, "dataProcessingRef", dataProcessingRef);
+            decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
             if (!dataProcessingRef.empty())
                 spectrum->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
             // note: placeholder
             string sourceFileRef;
-            getAttribute(attributes, "sourceFileRef", sourceFileRef);
+            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
             if (!sourceFileRef.empty())
                 spectrum->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
 
@@ -2005,10 +2005,10 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("index", lexical_cast<string>(chromatogram.index)));
-    attributes.push_back(make_pair("id", chromatogram.id));
+    attributes.push_back(make_pair("id", chromatogram.id)); // not an XML:ID
     attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(chromatogram.defaultArrayLength)));
     if (chromatogram.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", chromatogram.dataProcessingPtr->id));
+        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(chromatogram.dataProcessingPtr->id)));
 
     writer.startElement("chromatogram", attributes);
 
@@ -2059,13 +2059,13 @@ struct HandlerChromatogram : public HandlerParamContainer
         {
             chromatogram->sourceFilePosition = position;
 
-            getAttribute(attributes, "id", chromatogram->id);
+            getAttribute(attributes, "id", chromatogram->id); // not an XML:ID
             getAttribute(attributes, "index", chromatogram->index);
             getAttribute(attributes, "defaultArrayLength", chromatogram->defaultArrayLength);
 
             // note: placeholder
             string dataProcessingRef;
-            getAttribute(attributes, "dataProcessingRef", dataProcessingRef);
+            decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
             if (!dataProcessingRef.empty())
                 chromatogram->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
@@ -2185,7 +2185,7 @@ struct HandlerSpectrumListSimple : public HandlerParamContainer
         {
             // note: placeholder
             string defaultDataProcessingRef;
-            getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef);
+            decode_xml_id(getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef));
             if (!defaultDataProcessingRef.empty())
                 spectrumListSimple->dp = DataProcessingPtr(new DataProcessing(defaultDataProcessingRef));
 
@@ -2282,7 +2282,7 @@ struct HandlerChromatogramListSimple : public HandlerParamContainer
         {
             // note: placeholder
             string defaultDataProcessingRef;
-            getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef);
+            decode_xml_id(getAttribute(attributes, "defaultDataProcessingRef", defaultDataProcessingRef));
             if (!defaultDataProcessingRef.empty())
                 chromatogramListSimple->dp = DataProcessingPtr(new DataProcessing(defaultDataProcessingRef));
 
@@ -2323,15 +2323,15 @@ void write(minimxml::XMLWriter& writer, const Run& run,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", run.id));
+    attributes.push_back(make_pair("id", encode_xml_id_copy(run.id)));
     if (run.defaultInstrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", run.defaultInstrumentConfigurationPtr->id));
+        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", encode_xml_id_copy(run.defaultInstrumentConfigurationPtr->id)));
     if (run.samplePtr.get())
-        attributes.push_back(make_pair("sampleRef", run.samplePtr->id));
+        attributes.push_back(make_pair("sampleRef", encode_xml_id_copy(run.samplePtr->id)));
     if (!run.startTimeStamp.empty())
         attributes.push_back(make_pair("startTimeStamp", run.startTimeStamp));
     if (run.defaultSourceFilePtr.get())
-        attributes.push_back(make_pair("defaultSourceFileRef", run.defaultSourceFilePtr->id));
+        attributes.push_back(make_pair("defaultSourceFileRef", encode_xml_id_copy(run.defaultSourceFilePtr->id)));
  
     writer.startElement("run", attributes);
 
@@ -2365,24 +2365,24 @@ struct HandlerRun : public HandlerParamContainer
 
         if (name == "run")
         {
-            getAttribute(attributes, "id", run->id);
+            decode_xml_id(getAttribute(attributes, "id", run->id));
             getAttribute(attributes, "startTimeStamp", run->startTimeStamp);
 
             // note: placeholder
             string defaultInstrumentConfigurationRef;
-            getAttribute(attributes, "defaultInstrumentConfigurationRef", defaultInstrumentConfigurationRef);
+            decode_xml_id(getAttribute(attributes, "defaultInstrumentConfigurationRef", defaultInstrumentConfigurationRef));
             if (!defaultInstrumentConfigurationRef.empty())
                 run->defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(defaultInstrumentConfigurationRef));
 
             // note: placeholder
             string sampleRef;
-            getAttribute(attributes, "sampleRef", sampleRef);
+            decode_xml_id(getAttribute(attributes, "sampleRef", sampleRef));
             if (!sampleRef.empty())
                 run->samplePtr = SamplePtr(new Sample(sampleRef));
 
             // note: placeholder
             string defaultSourceFileRef;
-            getAttribute(attributes, "defaultSourceFileRef", defaultSourceFileRef);
+            decode_xml_id(getAttribute(attributes, "defaultSourceFileRef", defaultSourceFileRef));
             if (!defaultSourceFileRef.empty())
                 run->defaultSourceFilePtr = SourceFilePtr(new SourceFile(defaultSourceFileRef));
 
@@ -2459,7 +2459,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd"));
     if (!msd.accession.empty())
         attributes.push_back(make_pair("accession", msd.accession));
-    attributes.push_back(make_pair("id", msd.id));
+    attributes.push_back(make_pair("id", msd.id)); // not an XML:ID
     attributes.push_back(make_pair("version", msd.version));
 
     writer.startElement("mzML", attributes);
@@ -2511,7 +2511,7 @@ struct HandlerMSData : public SAXParser::Handler
         if (name == "mzML")
         {
             getAttribute(attributes, "accession", msd->accession);
-            getAttribute(attributes, "id", msd->id);
+            getAttribute(attributes, "id", msd->id); // not an XML:ID
             getAttribute(attributes, "version", msd->version);
             return Status::Ok;
         }
