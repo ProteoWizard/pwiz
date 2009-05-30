@@ -51,7 +51,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     fc.set(MS_centroid_spectrum);
 
     SourceFilePtr sfp(new SourceFile);
-    sfp->id = "sf1";
+    sfp->id = "tiny1.RAW";
     sfp->name = "tiny1.RAW";
     sfp->location = "file:///F:/data/Exp01";
     sfp->set(MS_Thermo_RAW_file);
@@ -90,14 +90,13 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     // sampleList
 
     SamplePtr samplePtr(new Sample);
-    samplePtr->id = "sample1";
-    samplePtr->name = "Sample1";
+    samplePtr->id = "20090101 - Sample 1";
+    samplePtr->name = "Sample 1";
     msd.samplePtrs.push_back(samplePtr);
 
     // instrumentConfigurationList
 
-    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration);
-    instrumentConfigurationPtr->id = "LCQDeca";
+    InstrumentConfigurationPtr instrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca"));
     instrumentConfigurationPtr->set(MS_LCQ_Deca);
     instrumentConfigurationPtr->set(MS_instrument_serial_number,"23433");
     instrumentConfigurationPtr->componentList.push_back(Component(MS_nanoelectrospray, 1));
@@ -131,7 +130,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     // dataProcessingList
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "XcaliburProcessing";
+    dpXcalibur->id = "Xcalibur processing";
     
     ProcessingMethod procXcal;
     procXcal.order = 1;
@@ -142,8 +141,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     dpXcalibur->processingMethods.push_back(procXcal);
 
-    DataProcessingPtr dppwiz(new DataProcessing);
-    dppwiz->id = "pwizconversion";
+    DataProcessingPtr dppwiz(new DataProcessing("pwiz processing"));
 
     ProcessingMethod procpwiz;
     procpwiz.order = 2;
@@ -155,7 +153,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     //msd.dataProcessingPtrs.push_back(dppwiz);
 
-    ScanSettingsPtr as1(new ScanSettings("as1"));
+    ScanSettingsPtr as1(new ScanSettings("tiny scan settings"));
     as1->sourceFilePtrs.push_back(sfp_parameters);
 
     Target t1;
@@ -169,7 +167,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     // run
 
-    msd.run.id = "Exp01";
+    msd.run.id = "Experiment 1";
     msd.run.defaultInstrumentConfigurationPtr = instrumentConfigurationPtr;
     msd.run.samplePtr = samplePtr;
     msd.run.startTimeStamp = "2007-06-27T15:23:45.00035";
@@ -410,8 +408,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
 PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
 {
-    //msd.id = "urn:lsid:psidev.info:mzML.instanceDocuments.small_miape.pwiz"; //TODO: schema xs:ID -> LSID
-    msd.id = "small_miape_pwiz";
+    msd.id = "urn:lsid:psidev.info:mzML.instanceDocuments.small_miape.pwiz";
     msd.version = "1.0";
 
     msd.cvs = defaultCVList(); // TODO: move this to Reader_Thermo
@@ -490,12 +487,12 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
 
     DataProcessingPtr dpMIAPE(new DataProcessing);
     msd.dataProcessingPtrs.push_back(dpMIAPE);
-    dpMIAPE->id = "MIAPE_example";
+    dpMIAPE->id = "MIAPE example";
     dpMIAPE->processingMethods.push_back(procMIAPE);
 
     // acquisition settings
     
-    ScanSettingsPtr as1(new ScanSettings("acquisition_settings_MIAPE_example"));
+    ScanSettingsPtr as1(new ScanSettings("acquisition settings MIAPE example"));
     as1->sourceFilePtrs.push_back(sfp_parameters);
 
     Target t1;

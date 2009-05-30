@@ -63,7 +63,7 @@ void test(bool indexed)
     // dummy would normally be read in from file
   
     MSData dummy;
-    dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQDeca")));
+    dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
     dummy.instrumentConfigurationPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
     dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));
 
