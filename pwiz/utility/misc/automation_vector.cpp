@@ -14,11 +14,16 @@
 
 
 #include "automation_vector.h"
-#include <strstream>
+#include <sstream>
+
+using std::runtime_error;
+using std::string;
+using std::ostringstream;
 
 automation_vector_base::automation_vector_base(unsigned Elements, VARENUM VarType) 
-	/*throw(std::invalid_argument, std::runtime_error)*/
+	/*throw(std::invalid_argument, runtime_error)*/
 {
+	::VariantInit(&m_Value);
 	_ASSERT(V_VT(&m_Value) == VT_EMPTY);
 	if (Elements == 0)
 		// Empty vectors are VT_EMPTY
@@ -36,6 +41,7 @@ automation_vector_base::automation_vector_base(unsigned Elements, VARENUM VarTyp
 
 automation_vector_base::~automation_vector_base() /*throw()*/
 {
+	::VariantClear(&m_Value);
 	_ASSERT(valid());
 	_ASSERT(empty() || array().cLocks == 0);
 }
@@ -45,28 +51,28 @@ bool automation_vector_base::valid() const /*throw()*/
 {
 	if (!this || !_CrtIsValidPointer(this, sizeof(*this), false))
 	{
-		ATLTRACE(_T("The SafeVector's 'this' value (0x%x) points to invalid memory.\n"), this);
-		return false;
+		throw runtime_error("The SafeVector's 'this' value points to invalid memory.");
 	}
 	if (m_Value.vt == VT_EMPTY)
 		return true;
-	std::basic_string<TCHAR> ErrorMessage;
+	string ErrorMessage;
 	if (V_ISBYREF(&m_Value))
-		ErrorMessage += _T("It is by reference.\n");
+		ErrorMessage += "It is by reference.\n";
 	if (!(m_Value.vt & VT_ARRAY))
-		ErrorMessage += _T("It is not a safearray.\n");
+		ErrorMessage += "It is not a safearray.\n";
 	else
 	{
 		if (array().cDims != 1)
-			ErrorMessage += _T("It isn't 1-dimensional.\n");
+			ErrorMessage += "It isn't 1-dimensional.\n";
 		if (array().cLocks > 1)
-			ErrorMessage += _T("There are multiple locks on it.\n");
+			ErrorMessage += "There are multiple locks on it.\n";
 	}
 	if (ErrorMessage.empty())
 		return true;
 
-	ATLTRACE(_T("The SafeVector is invalid due to the following problem(s):\n%s"), ErrorMessage.c_str());
-	return false;
+	ostringstream s;
+	s << "The SafeVector is invalid due to the following problem(s):\n" << ErrorMessage;
+	throw runtime_error(s.str());
 }
 #endif
 
@@ -74,7 +80,7 @@ void automation_vector_base::com_enforce(HRESULT hr)
 {
 	if (SUCCEEDED(hr))
 		return;
-	std::ostrstream s;
+	ostringstream s;
 	LPTSTR Message;
 	if (::FormatMessage(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -91,11 +97,11 @@ void automation_vector_base::com_enforce(HRESULT hr)
 	else
 		s << "COM operation failed. HRESULT is " << hr << std::ends;
 	_ASSERT(false);
-	throw std::runtime_error(s.str());
+	throw runtime_error(s.str());
 }
 
 void automation_vector_base::get_element(const VARIANT &Array, long Index, 
-	VARIANT &v) /*throw(std::runtime_error)*/
+	VARIANT &v) /*throw(runtime_error)*/
 {
 	_ASSERT(V_ISARRAY(&Array));
 	SAFEARRAY &a = array(Array);
@@ -121,7 +127,7 @@ void automation_vector_base::get_element(const VARIANT &Array, long Index,
 }
 
 void automation_vector_base::put_element(VARIANT &Array, long Index, const VARIANT &v) 
-	/*throw(std::runtime_error)*/
+	/*throw(runtime_error)*/
 {
 	_ASSERT(V_ISARRAY(&Array));
 	SAFEARRAY &a = array(Array);
@@ -182,7 +188,7 @@ void automation_vector_base::resize(size_type NewSize, VARENUM Type)
 		new(this) self(NewSize, Type);
 		return;
 	}
-	unsigned OldSize = size();
+	//unsigned OldSize = size();
 	if (size() == NewSize)
 		return;
 	SAFEARRAYBOUND bounds = array().rgsabound[0];

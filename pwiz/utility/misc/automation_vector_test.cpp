@@ -40,7 +40,7 @@ template<typename T> bool equals(const T& lhs, const T& rhs) {return lhs == rhs;
 template<> bool equals(const BSTR& lhs, const BSTR& rhs) {return !strcmp((const char*)lhs, (const char*)rhs);}
 
 template<typename T> T& assign(T& lhs, const T& rhs) {return lhs = rhs;}
-template<> BSTR& assign(BSTR& lhs, const BSTR& rhs) {::SysAllocStringHelper(lhs, rhs); return lhs;}
+template<> BSTR& assign(BSTR& lhs, const BSTR& rhs) {lhs = ::SysAllocString((const OLECHAR*)rhs); return lhs;}
 
 
 template<typename T>

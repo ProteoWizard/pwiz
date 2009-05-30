@@ -30,7 +30,7 @@ back and forth without adapting/copying
 #pragma warning(disable : 4786)	
 
 #define NOMINMAX
-#include <atlbase.h>
+#include <oaidl.h>
 #include <algorithm>
 #include <stdexcept>
 
@@ -41,31 +41,31 @@ class automation_vector_base;
 
 template <VARENUM varenum>
 struct static_variant_info
-{	
+{
     enum { vt = varenum };
     enum { size = 
         vt == VT_I1 ? 1
         : vt == VT_I2 ? 2
-        : vt == VT_I4 ? 4			
-        : vt == VT_R4 ? 4			
+        : vt == VT_I4 ? 4
+        : vt == VT_R4 ? 4
         : vt == VT_R8 ? 8
         : vt == VT_CY ? 8
         : vt == VT_BSTR ? 4
         : vt == VT_DISPATCH ? 4
-        : vt == VT_UNKNOWN ? 4		
+        : vt == VT_UNKNOWN ? 4
         : vt == VT_VARIANT ? 16
         : 0
     };
     static char size_checker[
         vt == VT_I1 ? 1
             : vt == VT_I2 ? 2
-            : vt == VT_I4 ? 4			
-            : vt == VT_R4 ? 4			
+            : vt == VT_I4 ? 4
+            : vt == VT_R4 ? 4
             : vt == VT_R8 ? 8
             : vt == VT_CY ? 8
             : vt == VT_BSTR ? 4
             : vt == VT_DISPATCH ? 4
-            : vt == VT_UNKNOWN ? 4		
+            : vt == VT_UNKNOWN ? 4
             : vt == VT_VARIANT ? 16
             : 0];
 };
@@ -95,7 +95,7 @@ template <class> class automation_vector;
 
 class automation_vector_base
 {
-    friend void trace(CComVariant &v);
+    friend void trace(VARIANT &v);
     typedef automation_vector_base self;
 protected:
     // Swap contents efficiently with another vector.
@@ -103,8 +103,8 @@ protected:
     {
         _ASSERT(valid());
         _ASSERT(that.valid());
-        std::swap(static_cast<VARIANT &>(m_Value), 
-            static_cast<VARIANT &>(that.m_Value));
+        std::swap(static_cast<VARIANT &>(m_Value),
+                  static_cast<VARIANT &>(that.m_Value));
     }
     // Attach to a VARIANT.
     // No checking made!
@@ -202,7 +202,7 @@ protected:
     {
         _ASSERT(!V_ISBYREF(&m_Value));
         _ASSERT(empty() || array().cLocks == 0);
-        com_enforce(m_Value.Clear());
+         com_enforce(::VariantClear(&m_Value));
     }
     static void get_element(const VARIANT &Array, long Index, VARIANT &v) 
         /*throw(std::runtime_error)*/;
@@ -216,7 +216,7 @@ private:
         return *v.parray;
     }
     // The actual holder of the array
-    CComVariant m_Value;
+    VARIANT m_Value;
 };
 
 // Dummy implementations for deduceVARENUM functions
@@ -313,7 +313,9 @@ public:
         if (Mode == COPY)
         {
             // Make a copy and attach to it
-            CComVariant v(vSource);
+            VARIANT v;
+            ::VariantInit(&v);
+            ::VariantCopy(&v, &vSource);
             attach(v);
         }
         else
@@ -333,8 +335,19 @@ public:
         if (Mode == COPY)
         {
             // Make a copy and attach to it
-            CComVariant v(&Array);
-            attach(v);
+            VARIANT vSource, vCopy;
+            ::VariantInit(&vSource);
+            if (Array.rgsabound->cElements == 0)
+                vSource.vt = VT_EMPTY;
+            else
+            {
+                ::SafeArrayGetVartype(&Array, &vSource.vt);
+                vSource.vt |= VT_ARRAY;
+                vSource.parray = &Array;
+                ::VariantInit(&vCopy);
+                ::VariantCopy(&vCopy, &vSource);
+                attach(vCopy);
+            }
         }
         else
             // Attach directly to the source
@@ -383,8 +396,10 @@ public:
     // inefficient. You may want to use attach() instead
     automation_vector &operator=(const VARIANT &that)
     {
-        CComVariant Temp(that);
-        attach(Temp);
+        VARIANT v;
+        ::VariantInit(&v);
+        ::VariantCopy(&v, &that);
+        attach(v);
         return *this;
     }
     // *** Takes the contents of the source and empty it.
@@ -410,10 +425,10 @@ public:
         unlock();
         base::detach(Var);
     }
-    CComVariant detach()
+    VARIANT* detach()
     {
-        CComVariant v;
-        detach(v);
+        VARIANT* v = new VARIANT;
+        detach(*v);
         return v;
     }
     // *** vector compatibility methods
@@ -617,8 +632,7 @@ public:
             ErrorMessage += "Element type is incorrect.\n";
         if (ErrorMessage.empty())
             return true;
-        ATLTRACE(_T("The automation_vector is invalid due to the following problem(s):\n%s"), ErrorMessage.c_str());
-        return false;
+        throw std::runtime_error("The automation_vector is invalid due to the following problem(s):\n" + ErrorMessage);
     }
 #endif
 protected:
@@ -692,7 +706,7 @@ void automation_vector<T>::unlock()
     com_enforce(::SafeArrayUnlock(&array()));
 }
 
-template <class T>
+/*template <class T>
 void from_automation(SAFEARRAY &Array, automation_vector<T> *)
 {
     _ASSERT(Array.cbElements == sizeof(automation_vector<T>));
@@ -715,11 +729,12 @@ void to_automation(SAFEARRAY &Array, automation_vector<T> *)
     VARIANT *iOut = static_cast<VARIANT *>(Array.pvData);
     for (; f != t; ++f, ++iOut)
     {
-        CComVariant Copy;
+        VARIANT Copy;
+        ::VariantInit(&Copy);
         f->detach(Copy);
         automation_vector<T>::com_enforce(Copy.Detach(iOut));
     }
-}
+}*/
 
 template <class T> 
 void automation_vector<T>::attach(VARIANT &vSource) 
@@ -748,19 +763,21 @@ void automation_vector<T>::attach(VARIANT &vSource)
     {
         // Types don't match, we'll have to do a conversion
         Temp.resize(Array.rgsabound[0].cElements);
-        CComVariant Converted = Temp.detach();
+        VARIANT* Converted = Temp.detach();
         long f = Array.rgsabound[0].lLbound, 
             t = f + Array.rgsabound[0].cElements;
-        CComVariant Buffer;
+        VARIANT Buffer;
+        ::VariantInit(&Buffer);
         for (; f != t; ++f)
         {
             get_element(vSource, f, Buffer);
             if (myVARENUM() != VT_VARIANT)
-                com_enforce(Buffer.ChangeType(myVARENUM()));
-            put_element(Converted, f, Buffer);
+               com_enforce(::VariantChangeType(&Buffer, &Buffer, 0, myVARENUM()));
+            put_element(*Converted, f, Buffer);
         }
-        _ASSERT(Converted.vt == (myVARENUM() | VT_ARRAY));
-        Temp.attach(Converted);
+        _ASSERT(Converted->vt == (myVARENUM() | VT_ARRAY));
+        Temp.attach(*Converted);
+        delete Converted;
     }
     swap(Temp);
     _ASSERT(valid());
