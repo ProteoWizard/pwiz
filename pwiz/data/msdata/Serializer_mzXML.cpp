@@ -553,6 +553,10 @@ void process_parentFile(const string& fileName, const string& fileType,
     // TODO: make a vendor-independent distinction between RAWFile and processedFile?
 
     sf.cvParams.push_back(CVParam(MS_SHA_1, fileSha1));
+
+    // the file level IDs can't be left empty so we set them to be the filename
+    msd.id = sf.name;
+    msd.run.id = sf.name;
 }
 
 
