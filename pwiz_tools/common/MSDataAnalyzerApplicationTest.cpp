@@ -23,6 +23,7 @@
 
 #include "MSDataAnalyzerApplication.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
@@ -98,6 +99,7 @@ void test()
     unit_assert(app.filters.size() == 2);
 
     MSData temp;
+    examples::initializeTiny(temp);
     MSDataFile::write(temp, tempFilename_);
 
     if (os_) *os_ << "Running app with dummy analyzer:\n";

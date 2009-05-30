@@ -314,12 +314,12 @@ const char hex[] = "0123456789abcdef";
 void insertEncodedChar(string& str, string::iterator& itr)
 {
     char c = *itr;
-    str.insert(size_t(itr-str.begin()), "_x0000_");
+    *itr = '_';
+    str.insert(size_t(itr-str.begin()), "_x0000");
     itr += 4;
     *itr = hex[(c & 0xF0) >> 4];
     *(++itr) = hex[c & 0x0F];
     ++itr;
-    str.erase(itr+1); // erase unencoded character
 }
 
 } // namespace
@@ -327,6 +327,9 @@ void insertEncodedChar(string& str, string::iterator& itr)
 
 PWIZ_API_DECL string& encode_xml_id(string& str)
 {
+    if (str.empty())
+        throw std::invalid_argument("[encode_xml_id] xml:IDs and xml:IDREFs cannot be empty strings");
+
     // reserve size for the worst case scenario (all characters need replacing),
     // this should be a reasonable guarantee that the iterator won't be invalidated
     str.reserve(str.length()*7);

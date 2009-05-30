@@ -34,6 +34,7 @@ lib pwiz_tools_common
     : # requirements
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
+        <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../pwiz_aux/isb/readers/waters
@@ -45,6 +46,7 @@ lib pwiz_tools_common
     : # usage-requirements
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
+        <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../pwiz_aux/isb/readers/waters
