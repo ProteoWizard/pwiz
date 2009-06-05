@@ -30,6 +30,7 @@ project
 
 
 lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
+lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
 
 
 lib pwiz_utility_misc
@@ -48,6 +49,7 @@ lib pwiz_utility_misc
         <toolset>msvc:<source>automation_vector.cpp
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
+        <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>/ext/boost//thread
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
