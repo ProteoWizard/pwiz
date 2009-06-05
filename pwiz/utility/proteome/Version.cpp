@@ -22,7 +22,7 @@
 
 
 #define PWIZ_SOURCE
-#include "pwiz/Version.hpp"
+#include "Version.hpp"
 #include <sstream>
 
 #ifdef PWIZ_USER_VERSION_INFO_H // in case you need to add any info version of your own
@@ -30,6 +30,7 @@
 #endif
 
 namespace pwiz {
+namespace proteome {
 
 
 using std::string;
@@ -37,8 +38,8 @@ using std::string;
 
 int Version::Major()                {return 1;}
 int Version::Minor()                {return 5;}
-int Version::Revision()             {return 1;}
-string Version::LastModified()      {return "2/9/2009";}
+int Version::Revision()             {return 648;}
+string Version::LastModified()      {return "2/2/2009";}
 string Version::str()               
 {
 	std::ostringstream v;
@@ -49,5 +50,6 @@ string Version::str()
 	return v.str();
 }
 
-} // namespace pwiz
 
+} // namespace proteome
+} // namespace pwiz

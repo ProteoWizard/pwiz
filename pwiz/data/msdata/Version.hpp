@@ -32,11 +32,11 @@ namespace msdata {
 
 struct Version
 {
-    static int Major()                {return 1;}
-    static int Minor()                {return 4;}
-    static int Revision()             {return 0;}
-    static std::string str()          {return "1.4.0";}
-    static std::string LastModified() {return "8/11/2008";}
+    static int Major();
+    static int Minor();
+    static int Revision();
+    static std::string str();
+    static std::string LastModified();
 };
 
 } // namespace msdata

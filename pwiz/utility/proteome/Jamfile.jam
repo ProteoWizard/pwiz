@@ -33,6 +33,7 @@ lib pwiz_utility_proteome
       Peptide.cpp
       Modification.cpp
       Digestion.cpp
+      Version.cpp
     : # requirements
       <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
       <library>/ext/boost//iostreams/<boost-iostreams-zlib>on

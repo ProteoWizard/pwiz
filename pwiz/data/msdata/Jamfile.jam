@@ -78,6 +78,7 @@ lib pwiz_data_msdata
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
+        Version.cpp
     : # requirements
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
