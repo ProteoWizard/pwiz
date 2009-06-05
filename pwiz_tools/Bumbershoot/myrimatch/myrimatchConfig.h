@@ -139,6 +139,12 @@ namespace myrimatch
             } else
                 throw runtime_error("invalid fragmentation mode \"" + mode + "\"");
 
+            if( ProteinSamplingTime == 0 )
+            {
+                EstimateSearchTimeOnly = 0;
+                if( g_pid == 0 )
+                    cerr << g_hostString << ": ProteinSamplingTime = 0 disables EstimateSearchTimeOnly" << endl;
+            }
 
 			ProteinIndexOffset = 0;
 

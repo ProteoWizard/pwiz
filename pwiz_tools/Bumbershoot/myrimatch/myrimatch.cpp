@@ -885,7 +885,7 @@ namespace myrimatch
                         {
                             //++ threadInfo->stats.numCandidatesGenerated;
                             START_PROFILER(1);
-                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i );
+                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, g_rtConfig->EstimateSearchTimeOnly );
                             STOP_PROFILER(1);
                             if( queryComparisonCount > 0 )
                             {
@@ -898,11 +898,16 @@ namespace myrimatch
                         ++itr;
                         STOP_PROFILER(11);
 
+                        if( g_rtConfig->EstimateSearchTimeOnly )
+                        {
+                            totalSearchTime = searchTime.TimeElapsed();
+                            if( totalSearchTime > g_rtConfig->ProteinSamplingTime )
+                                return 0;
+                        }
                     }
 				    STOP_PROFILER(0);
 
-				   
-				    if( g_numChildren == 0 )
+                    if( g_numChildren == 0 )
 					    totalSearchTime = searchTime.TimeElapsed();
 				    //if( g_pid == 1 && !(i%50) )
 				    //	cout << i << ": " << (int) sequenceToSpectraMap.size() << " " << (int) sequenceProteinLoci.size() << endl;
@@ -1104,7 +1109,7 @@ namespace myrimatch
 				}
 
 				#ifdef USE_MPI
-					if( g_numChildren > 0 )
+					if( g_numChildren > 0 && !g_rtConfig->EstimateSearchTimeOnly )
 					{
 						g_rtConfig->SpectraBatchSize = (int) ceil( (float) numSpectra / (float) g_numChildren / (float) g_rtConfig->NumBatches );
 						cout << g_hostString << " calculates dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
@@ -1123,7 +1128,7 @@ namespace myrimatch
 
 				if( !skip )
 				{
-					if( g_numProcesses > 1 )
+					if( g_numProcesses > 1 && !g_rtConfig->EstimateSearchTimeOnly )
 					{
 						#ifdef USE_MPI
 							cout << g_hostString << " is sending spectra to worker nodes to prepare them for search." << endl;
@@ -1166,66 +1171,55 @@ namespace myrimatch
 
 								InitWorkerGlobals();
 
-								/*if( g_rtConfig->ProteinSamplingTime > 0 || g_rtConfig->EstimateSearchTimeOnly )
+								SpectraList finishedSpectra;
+								//do
 								{
-							        cout << g_hostString << " is estimating the count of sequence comparisons to be done." << endl;
-									int estimatedComparisonCount = ExecuteCount();
-									cout << g_hostString << " will make an estimated " << estimatedComparisonCount << " sequence comparisons." << endl;
-								}*/
+									cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra." << endl;
+                                    try
+                                    {
+									    Timer sendTime(true);
+									    numSpectra = TransmitSpectraToChildProcesses();
+									    cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
+											    sendTime.End() << " seconds elapsed." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error transmitting prepared spectra: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
 
-								if( !g_rtConfig->EstimateSearchTimeOnly )
-								{
-									SpectraList finishedSpectra;
-									//do
-									{
-										cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra." << endl;
-                                        try
-                                        {
-										    Timer sendTime(true);
-										    numSpectra = TransmitSpectraToChildProcesses();
-										    cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
-												    sendTime.End() << " seconds elapsed." << endl;
-                                        } catch( std::exception& e )
-                                        {
-                                            cout << g_hostString << " had an error transmitting prepared spectra: " << e.what() << endl;
-                                            MPI_Abort( MPI_COMM_WORLD, 1 );
-                                        }
+									cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
+                                    try
+                                    {
+									    startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
+									    TransmitProteinsToChildProcesses();
+									    cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
 
-										cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
-                                        try
-                                        {
-										    startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-										    TransmitProteinsToChildProcesses();
-										    cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
-                                        } catch( std::exception& e )
-                                        {
-                                            cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
-                                            MPI_Abort( MPI_COMM_WORLD, 1 );
-                                        }
+									cout << g_hostString << " is receiving search results for " << numSpectra << " spectra." << endl;
+                                    try
+                                    {
+									    Timer receiveTime(true);
+									    ReceiveResultsFromChildProcesses(sumSearchStats);
+									    cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error receiving results: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
+									
+									cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
 
-										cout << g_hostString << " is receiving search results for " << numSpectra << " spectra." << endl;
-                                        try
-                                        {
-										    Timer receiveTime(true);
-										    ReceiveResultsFromChildProcesses(sumSearchStats);
-										    cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
-                                        } catch( std::exception& e )
-                                        {
-                                            cout << g_hostString << " had an error receiving results: " << e.what() << endl;
-                                            MPI_Abort( MPI_COMM_WORLD, 1 );
-                                        }
-										
-										cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
+									//SpectraList::iterator lastSpectrumItr = spectra.begin();
+									//advance_to_bound( lastSpectrumItr, spectra.end(), numSpectra );
+									//finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
+									//spectra.erase( spectra.begin(), spectra.end(), false );
+								}// while( spectra.size() > 0 );
 
-										//SpectraList::iterator lastSpectrumItr = spectra.begin();
-										//advance_to_bound( lastSpectrumItr, spectra.end(), numSpectra );
-										//finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
-										//spectra.erase( spectra.begin(), spectra.end(), false );
-									}// while( spectra.size() > 0 );
-
-									//finishedSpectra.clear();
-								} else
-									skip = 1;
+								//finishedSpectra.clear();
 
 								DestroyWorkerGlobals();
 							}
@@ -1266,13 +1260,6 @@ namespace myrimatch
 
 							InitWorkerGlobals();
 
-							/*if( g_rtConfig->ProteinSamplingTime > 0 || g_rtConfig->EstimateSearchTimeOnly )
-							{
-								cout << g_hostString << " is estimating the count of sequence comparisons to be done." << endl;
-								boost::int64_t estimatedComparisonCount = ExecuteCount();
-								cout << g_hostString << " will make an estimated " << estimatedComparisonCount << " sequence comparisons." << endl;
-							}*/
-
 							if( !g_rtConfig->EstimateSearchTimeOnly )
 							{
 								cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
@@ -1282,7 +1269,12 @@ namespace myrimatch
 				
 								cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
 							} else
+                            {
+                                cout << g_hostString << " is estimating the count of sequence comparisons to be done." << endl;
+                                sumSearchStats = ExecuteSearch();
+                                cout << g_hostString << " will make an estimated " << sumSearchStats.numComparisonsDone << " sequence comparisons." << endl;
 								skip = 1;
+                            }
 
 							DestroyWorkerGlobals();
 						}
@@ -1306,6 +1298,9 @@ namespace myrimatch
 		#ifdef USE_MPI
 			else
 			{
+                if( g_rtConfig->EstimateSearchTimeOnly )
+                    return 0; // nothing to do
+
 				int allDone = 0;
 
 				while( !allDone )
