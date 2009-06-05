@@ -183,11 +183,11 @@ namespace myrimatch
         {
             switch( dissociationType )
             {
-                case pwiz::msdata::MS_CID:
+                case pwiz::MS_CID:
                     fragmentTypes[FragmentType_B] = true;
                     fragmentTypes[FragmentType_Y] = true;
                     break;
-                case pwiz::msdata::MS_ETD:
+                case pwiz::MS_ETD:
                     fragmentTypes[FragmentType_C] = true;
                     fragmentTypes[FragmentType_Z_Radical] = true;
                     break;
