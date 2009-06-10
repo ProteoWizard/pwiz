@@ -275,6 +275,32 @@ void testIDParsing()
     unit_assert(id::valueAs<int>(id, "favorite") == 420);
     unit_assert_equal(id::valueAs<double>(id, "age"), 36.175, 1e-6);
     unit_assert(id::valueAs<bool>(id, "upsideDown") == true);
+
+    id = "controllerType=0 controllerNumber=1 scan=123";
+    unit_assert(id::translateNativeIDToScanNumber(MS_Thermo_nativeID_format, id) == "123");
+    unit_assert(id::translateNativeIDToScanNumber(MS_no_nativeID_format, id) == "");
+    unit_assert(id::translateNativeIDToScanNumber(MS_scan_number_only_nativeID_format, id) == "123");
+    unit_assert(id::translateScanNumberToNativeID(MS_Thermo_nativeID_format, "123") == id);
+
+    unit_assert(id::translateScanNumberToNativeID(MS_multiple_peak_list_nativeID_format, "123") == "index=123");
+
+    id = "spectrum=123";
+    unit_assert(id::translateNativeIDToScanNumber(MS_spectrum_identifier_nativeID_format, id) == "123");
+    unit_assert(id::translateScanNumberToNativeID(MS_spectrum_identifier_nativeID_format, "123") == id);
+    unit_assert(id::translateNativeIDToScanNumber(MS_Thermo_nativeID_format, id) == "");
+
+    id = "scan=123";
+    unit_assert(id::translateNativeIDToScanNumber(MS_scan_number_only_nativeID_format, id) == "123");
+    unit_assert(id::translateScanNumberToNativeID(MS_scan_number_only_nativeID_format, "123") == id);
+    unit_assert(id::translateScanNumberToNativeID(MS_Bruker_Agilent_YEP_nativeID_format, "123") == id);
+    unit_assert(id::translateScanNumberToNativeID(MS_Bruker_BAF_nativeID_format, "123") == id);
+    unit_assert(id::translateNativeIDToScanNumber(MS_Thermo_nativeID_format, id) == "");
+    unit_assert(id::translateNativeIDToScanNumber(MS_spectrum_identifier_nativeID_format, id) == "");
+    unit_assert(id::translateNativeIDToScanNumber(MS_multiple_peak_list_nativeID_format, id) == "");
+
+    id = "sample=1 period=2 cycle=123 experiment=3";
+    unit_assert(id::translateNativeIDToScanNumber(MS_WIFF_nativeID_format, id) == "");
+    unit_assert(id::translateScanNumberToNativeID(MS_WIFF_nativeID_format, "123") == "");
 }
 
 
