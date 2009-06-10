@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
+#include "boost/shared_ptr.hpp"
 #include <set>
 
 
@@ -40,13 +41,16 @@ struct PWIZ_API_DECL LessThan_MZRT
 {
     typedef pwiz::data::peakdata::Peakel Peakel;
 
-    bool operator()(const Peakel& a, const Peakel& b)
+    bool operator()(const Peakel& a, const Peakel& b) const
     {
-        const double epsilon = std::numeric_limits<double>::epsilon();
-        if (a.mz < b.mz - epsilon) return true;
-        if (b.mz < a.mz - epsilon) return false;
-        if (a.retentionTime < b.retentionTime - epsilon) return true;
-        return false;
+        if (a.mz < b.mz) return true;
+        if (b.mz < a.mz) return false;
+        return (a.retentionTime < b.retentionTime); // rare
+    }
+
+    bool operator()(const boost::shared_ptr<Peakel>& a, const boost::shared_ptr<Peakel>& b) const
+    {
+        return (*this)(*a, *b);
     }
 };
 
@@ -54,7 +58,7 @@ struct PWIZ_API_DECL LessThan_MZRT
 ///
 /// PeakelField is a set of Peakels, stored as a binary tree ordered by LessThan_MZRT
 ///
-typedef std::set<pwiz::data::peakdata::Peakel, LessThan_MZRT> PeakelField;
+typedef std::set<boost::shared_ptr<pwiz::data::peakdata::Peakel>, LessThan_MZRT> PeakelField;
 
 
 ///

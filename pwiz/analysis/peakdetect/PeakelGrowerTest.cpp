@@ -32,6 +32,7 @@ using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
+using boost::shared_ptr;
 
 
 ostream* os_ = 0;
@@ -68,21 +69,52 @@ void testPredicate()
 }
 
 
+void testPredicatePtr()
+{
+    if (os_) *os_ << "testPredicatePtr()\n";
+
+    shared_ptr<Peakel> a(new Peakel);
+    a->mz = 1.0;
+    a->retentionTime = 1.0;
+
+    shared_ptr<Peakel> b(new Peakel);
+    b->mz = 2.0;
+    b->retentionTime = 1.0;
+
+    shared_ptr<Peakel> c(new Peakel);
+    c->mz = 1.0;
+    c->retentionTime = 2.0;
+
+    LessThan_MZRT lt;
+
+    // a < c < b
+
+    unit_assert(lt(a,b));
+    unit_assert(!lt(b,a));
+    unit_assert(lt(a,c));
+    unit_assert(!lt(c,a));
+    unit_assert(lt(c,b));
+    unit_assert(!lt(b,c));
+
+    unit_assert(!lt(a,a));
+}
+
+
 void testPeakelField()
 {
     if (os_) *os_ << "testPeakelField()\n";
 
-    Peakel a; //TODO: implement default constructor properly (does nothing now)
-    a.mz = 1.0;
-    a.retentionTime = 1.0;
+    shared_ptr<Peakel> a(new Peakel); // TODO: typedef PeakelPtr
+    a->mz = 1.0;
+    a->retentionTime = 1.0;
 
-    Peakel b;
-    b.mz = 2.0;
-    b.retentionTime = 1.0;
+    shared_ptr<Peakel> b(new Peakel);
+    b->mz = 2.0;
+    b->retentionTime = 1.0;
 
-    Peakel c;
-    c.mz = 1.0;
-    c.retentionTime = 2.0;
+    shared_ptr<Peakel> c(new Peakel);
+    c->mz = 1.0;
+    c->retentionTime = 2.0;
 
     PeakelField pf;
 
@@ -91,35 +123,25 @@ void testPeakelField()
     pf.insert(c);
 
     unit_assert(pf.size() == 3);
+
     PeakelField::const_iterator it = pf.begin();
-    if (os_) *os_ << *it << endl;
-
-    vector<Peak>& v = const_cast<vector<Peak>&>(it->peaks); // access via const_cast
-    // maybe make PeakelField an actual class
-    //  probably not -- handle the cast internally during sow()
-
-
-    const double epsilon = numeric_limits<double>::epsilon();
-
-    // TODO: fuzzy == for Peak/Peakel? 
-    unit_assert_equal(it->mz, a.mz, epsilon);
-    unit_assert_equal(it->retentionTime, a.retentionTime, epsilon);
+    (*it)->peaks.push_back(Peak()); // we can modify **it, even though *it is const
+    if (os_) *os_ << **it << endl;
+    unit_assert(*it == a);
 
     ++it;
-    if (os_) *os_ << *it << endl;
-    unit_assert_equal(it->mz, c.mz, epsilon);
-    unit_assert_equal(it->retentionTime, c.retentionTime, epsilon);
+    if (os_) *os_ << **it << endl;
+    unit_assert(*it == c);
 
     ++it;
-    if (os_) *os_ << *it << endl;
-    unit_assert_equal(it->mz, b.mz, epsilon);
-    unit_assert_equal(it->retentionTime, b.retentionTime, epsilon);
+    if (os_) *os_ << **it << endl;
+    unit_assert(*it == b);
 }
-
 
 void test()
 {
     testPredicate();
+    testPredicatePtr();
     testPeakelField();
 }
 

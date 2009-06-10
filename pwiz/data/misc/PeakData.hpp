@@ -196,7 +196,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 
 struct PWIZ_API_DECL Peakel
 {
-    Peakel(){}
+    Peakel();
 
     double mz;
     double retentionTime;

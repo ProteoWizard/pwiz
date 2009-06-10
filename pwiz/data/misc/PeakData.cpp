@@ -777,6 +777,16 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 /// Peakel
 ///
 
+
+Peakel::Peakel()
+:   mz(0),
+    retentionTime(0),
+    maxIntensity(0),
+    totalIntensity(0),
+    mzVariance(0)
+{}
+
+
 void Peakel::calculateMetadata()
 {
     // wipe out any metadata that may have been set
