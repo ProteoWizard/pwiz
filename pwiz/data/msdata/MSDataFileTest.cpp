@@ -74,6 +74,12 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         MSData tiny;
         examples::initializeTiny(tiny);
 
+        if (writeConfig.format == MSDataFile::Format_mzXML)
+        {
+            // remove s22 since it is not written to mzXML
+            static_cast<SpectrumListSimple&>(*tiny.run.spectrumListPtr).spectra.pop_back();
+        }
+
         // write to file #1 (static)
         MSDataFile::write(tiny, filename1, writeConfig);
 

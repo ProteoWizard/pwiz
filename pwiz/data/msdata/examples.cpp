@@ -51,17 +51,26 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     fc.set(MS_centroid_spectrum);
 
     SourceFilePtr sfp(new SourceFile);
-    sfp->id = "tiny1.RAW";
-    sfp->name = "tiny1.RAW";
+    sfp->id = "tiny1.yep";
+    sfp->name = "tiny1.yep";
     sfp->location = "file:///F:/data/Exp01";
-    sfp->set(MS_Thermo_RAW_file);
-    sfp->set(MS_SHA_1,"71be39fb2700ab2f3c8b2234b91274968b6899b1");
-    sfp->set(MS_scan_number_only_nativeID_format);
+    sfp->set(MS_Bruker_Agilent_YEP_file);
+    sfp->set(MS_SHA_1,"1234567890123456789012345678901234567890");
+    sfp->set(MS_Bruker_Agilent_YEP_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
+
+    SourceFilePtr sfp2(new SourceFile);
+    sfp2->id = "tiny.wiff";
+    sfp2->name = "tiny.wiff";
+    sfp2->location = "file:///F:/data/Exp01";
+    sfp2->set(MS_ABI_WIFF_file);
+    sfp2->set(MS_SHA_1,"2345678901234567890123456789012345678901");
+    sfp2->set(MS_WIFF_nativeID_format);
+    msd.fileDescription.sourceFilePtrs.push_back(sfp2);
 
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/settings/"));
     sfp_parameters->set(MS_parameter_file);
-    sfp_parameters->set(MS_SHA_1, "unknown");
+    sfp_parameters->set(MS_SHA_1, "3456789012345678901234567890123456789012");
     sfp_parameters->set(MS_no_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
@@ -103,11 +112,11 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     instrumentConfigurationPtr->componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
     instrumentConfigurationPtr->componentList.push_back(Component(MS_electron_multiplier, 3));
 
-    SoftwarePtr softwareXcalibur(new Software);
-    softwareXcalibur->id = "Xcalibur";
-    softwareXcalibur->set(MS_Xcalibur);
-    softwareXcalibur->version = "2.0.5";
-    instrumentConfigurationPtr->softwarePtr = softwareXcalibur;
+    SoftwarePtr softwareCompassXtract(new Software);
+    softwareCompassXtract->id = "CompassXtract";
+    softwareCompassXtract->set(MS_CompassXtract);
+    softwareCompassXtract->version = "2.0.5";
+    instrumentConfigurationPtr->softwarePtr = softwareCompassXtract;
 
     msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
 
@@ -125,21 +134,21 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     msd.softwarePtrs.push_back(softwareBioworks);
     msd.softwarePtrs.push_back(softwarepwiz);
-    msd.softwarePtrs.push_back(softwareXcalibur);
+    msd.softwarePtrs.push_back(softwareCompassXtract);
 
     // dataProcessingList
 
-    DataProcessingPtr dpXcalibur(new DataProcessing);
-    dpXcalibur->id = "Xcalibur processing";
+    DataProcessingPtr dpCompassXtract(new DataProcessing);
+    dpCompassXtract->id = "CompassXtract processing";
     
-    ProcessingMethod procXcal;
-    procXcal.order = 1;
-    procXcal.softwarePtr = softwareXcalibur;
-    procXcal.set(MS_deisotoping);
-    procXcal.set(MS_charge_deconvolution);
-    procXcal.set(MS_peak_picking);
+    ProcessingMethod procCXT;
+    procCXT.order = 1;
+    procCXT.softwarePtr = softwareCompassXtract;
+    procCXT.set(MS_deisotoping);
+    procCXT.set(MS_charge_deconvolution);
+    procCXT.set(MS_peak_picking);
 
-    dpXcalibur->processingMethods.push_back(procXcal);
+    dpCompassXtract->processingMethods.push_back(procCXT);
 
     DataProcessingPtr dppwiz(new DataProcessing("pwiz processing"));
 
@@ -150,7 +159,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     dppwiz->processingMethods.push_back(procpwiz);
  
-    msd.dataProcessingPtrs.push_back(dpXcalibur);
+    msd.dataProcessingPtrs.push_back(dpCompassXtract);
     //msd.dataProcessingPtrs.push_back(dppwiz);
 
     ScanSettingsPtr as1(new ScanSettings("tiny scan settings"));
@@ -209,14 +218,14 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     window.set(MS_scan_window_upper_limit, 1800.000000, MS_m_z);
 
     BinaryDataArrayPtr s19_mz(new BinaryDataArray);
-    s19_mz->dataProcessingPtr = dpXcalibur;
+    s19_mz->dataProcessingPtr = dpCompassXtract;
     s19_mz->set(MS_m_z_array, "", MS_m_z);
     s19_mz->data.resize(15);
     for (int i=0; i<15; i++)
         s19_mz->data[i] = i;
 
     BinaryDataArrayPtr s19_intensity(new BinaryDataArray);
-    s19_intensity->dataProcessingPtr = dpXcalibur;
+    s19_intensity->dataProcessingPtr = dpCompassXtract;
     s19_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     s19_intensity->data.resize(15);
     for (int i=0; i<15; i++)
@@ -266,14 +275,14 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     window2.set(MS_scan_window_upper_limit, 905.000000, MS_m_z);
 
     BinaryDataArrayPtr s20_mz(new BinaryDataArray);
-    s20_mz->dataProcessingPtr = dpXcalibur;
+    s20_mz->dataProcessingPtr = dpCompassXtract;
     s20_mz->set(MS_m_z_array, "", MS_m_z);
     s20_mz->data.resize(10);
     for (int i=0; i<10; i++)
         s20_mz->data[i] = i*2;
 
     BinaryDataArrayPtr s20_intensity(new BinaryDataArray);
-    s20_intensity->dataProcessingPtr = dpXcalibur;
+    s20_intensity->dataProcessingPtr = dpCompassXtract;
     s20_intensity->set(MS_intensity_array, "", MS_number_of_counts);
     s20_intensity->data.resize(10);
     for (int i=0; i<10; i++)
@@ -285,7 +294,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     // spectrum with no data
 
-    Spectrum& s21 = *spectrumList->spectra[2]; 
+    Spectrum& s21 = *spectrumList->spectra[2];
     s21.id = "scan=21";
     s21.index = 2;
 
@@ -300,18 +309,19 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     // spectrum with MALDI spot information
     Spectrum& s22 = *spectrumList->spectra[3];
-    s22.id = "scan=22";
+    s22.id = "sample=1 period=1 cycle=22 experiment=1";
     s22.index = 3;
     s22.spotID = "A1,42x42,4242x4242";
+    s22.sourceFilePtr = sfp2;
 
     s22.set(MS_ms_level, 1);
-    
     s22.set(MS_centroid_spectrum);
     s22.set(MS_lowest_observed_m_z, 142.39, MS_m_z);
     s22.set(MS_highest_observed_m_z, 942.56, MS_m_z);
     s22.set(MS_base_peak_m_z, 422.42, MS_m_z);
     s22.set(MS_base_peak_intensity, 42, MS_number_of_counts);
     s22.set(MS_total_ion_current, 4200);
+    s22.userParams.push_back(UserParam("alternate source file", "to test a different nativeID format"));
     s22.paramGroupPtrs.push_back(pg1);
     s22.scanList.scans.push_back(Scan());
     s22.scanList.set(MS_no_combination);
@@ -324,23 +334,10 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     window3.set(MS_scan_window_lower_limit, 100.000000, MS_m_z);
     window3.set(MS_scan_window_upper_limit, 1000.000000, MS_m_z);
 
-    BinaryDataArrayPtr s22_mz(new BinaryDataArray);
-    s22_mz->dataProcessingPtr = dpXcalibur;
-    s22_mz->set(MS_m_z_array, "", MS_m_z);
-    s22_mz->data.resize(15);
-    for (int i=0; i<15; i++)
-        s22_mz->data[i] = i;
+    s22.binaryDataArrayPtrs.push_back(s19_mz);
+    s22.binaryDataArrayPtrs.push_back(s19_intensity);
+    s22.defaultArrayLength = s19_mz->data.size();
 
-    BinaryDataArrayPtr s22_intensity(new BinaryDataArray);
-    s22_intensity->dataProcessingPtr = dpXcalibur;
-    s22_intensity->set(MS_intensity_array, "", MS_number_of_counts);
-    s22_intensity->data.resize(15);
-    for (int i=0; i<15; i++)
-        s22_intensity->data[i] = 15-i;
-
-    s22.binaryDataArrayPtrs.push_back(s22_mz);
-    s22.binaryDataArrayPtrs.push_back(s22_intensity);
-    s22.defaultArrayLength = s22_mz->data.size();
 
     // chromatograms
 
@@ -355,7 +352,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     tic.id = "tic";
     tic.index = 0;
     tic.defaultArrayLength = 15;
-    tic.dataProcessingPtr = dpXcalibur;
+    tic.dataProcessingPtr = dpCompassXtract;
     tic.set(MS_total_ion_current_chromatogram);
 
     BinaryDataArrayPtr tic_time(new BinaryDataArray);

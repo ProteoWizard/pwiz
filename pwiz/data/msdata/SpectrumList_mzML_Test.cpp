@@ -62,6 +62,9 @@ void test(bool indexed)
   
     MSData dummy;
 
+    dummy.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("tiny1.yep")));
+    dummy.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("tiny.wiff")));
+
     ParamGroupPtr pg1(new ParamGroup);
     pg1->id = "CommonMS1SpectrumParams";
     pg1->cvParams.push_back(MS_positive_scan);
@@ -76,7 +79,7 @@ void test(bool indexed)
 
     // so we don't have any dangling references
     dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
-    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("Xcalibur processing")));
+    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("CompassXtract processing")));
 
     SpectrumListPtr sl = SpectrumList_mzML::create(is, dummy, indexed);
 
@@ -93,8 +96,14 @@ void test(bool indexed)
     unit_assert(sl->find("scan=21") == 2);
     indexList = sl->findNameValue("scan", "21");
     unit_assert(indexList.size()==1 && indexList[0]==2);
-    unit_assert(sl->find("scan=22") == 3);
-    indexList = sl->findNameValue("scan", "22");
+    unit_assert(sl->find("sample=1 period=1 cycle=22 experiment=1") == 3);
+    indexList = sl->findNameValue("sample", "1");
+    unit_assert(indexList.size()==1 && indexList[0]==3);
+    indexList = sl->findNameValue("period", "1");
+    unit_assert(indexList.size()==1 && indexList[0]==3);
+    indexList = sl->findNameValue("cycle", "22");
+    unit_assert(indexList.size()==1 && indexList[0]==3);
+    indexList = sl->findNameValue("experiment", "1");
     unit_assert(indexList.size()==1 && indexList[0]==3);
 
     unit_assert(sl->findSpotID("A1").empty());
@@ -155,12 +164,12 @@ void test(bool indexed)
     // check scan 22 (MALDI)
     s = sl->spectrum(3, true);
     unit_assert(s.get());
-    unit_assert(s->id == "scan=22");
+    unit_assert(s->id == "sample=1 period=1 cycle=22 experiment=1");
     unit_assert(s->spotID == "A1,42x42,4242x4242");
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
 
     unit_assert(sl->spectrumIdentity(3).index == 3);
-    unit_assert(sl->spectrumIdentity(3).id == "scan=22");
+    unit_assert(sl->spectrumIdentity(3).id == "sample=1 period=1 cycle=22 experiment=1");
     unit_assert(sl->spectrumIdentity(3).spotID == "A1,42x42,4242x4242");
 }
 

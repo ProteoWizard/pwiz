@@ -86,6 +86,9 @@ void testWriteRead()
     MSData msd;
     examples::initializeTiny(msd);
 
+    // remove s22 since it is not written to mzXML
+    static_cast<SpectrumListSimple&>(*msd.run.spectrumListPtr).spectra.pop_back();
+
     Serializer_mzXML::Config config;
     unit_assert(config.binaryDataEncoderConfig.precision == BinaryDataEncoder::Precision_64);
     testWriteRead(msd, config);

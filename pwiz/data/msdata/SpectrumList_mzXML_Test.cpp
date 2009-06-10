@@ -83,7 +83,7 @@ void test(bool indexed)
     // check easy functions
 
     unit_assert(sl.get());
-    unit_assert(sl->size() == 4);
+    unit_assert(sl->size() == 3);
 
     unit_assert(sl->find("scan=19") == 0);
     IndexList indexList = sl->findNameValue("scan", "19");
@@ -94,9 +94,6 @@ void test(bool indexed)
     unit_assert(sl->find("scan=21") == 2);
     indexList = sl->findNameValue("scan", "21");
     unit_assert(indexList.size()==1 && indexList[0]==2);
-    unit_assert(sl->find("scan=22") == 3);
-    indexList = sl->findNameValue("scan", "22");
-    unit_assert(indexList.size()==1 && indexList[0]==3);
 
     // check scan 19
 

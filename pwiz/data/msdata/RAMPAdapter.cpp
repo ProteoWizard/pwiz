@@ -48,21 +48,49 @@ class RAMPAdapter::Impl
     public:
 
     Impl(const string& filename) 
-    :   msd_(filename) 
+    :   msd_(filename), firstIndex_(-1), lastIndex_(0)
     {
         if (!msd_.run.spectrumListPtr.get())
             throw runtime_error("[RAMPAdapter] Null spectrumListPtr.");
+
+        // flag spectra not from the default source file
+        size_ = msd_.run.spectrumListPtr->size();
+        nonDefaultSpectra_.resize(size_, false);
+        for (size_t i=0, end=size_; i < end; ++i)
+        {
+            SpectrumPtr s = msd_.run.spectrumListPtr->spectrum(i, false);
+            if (s->sourceFilePtr.get() && s->sourceFilePtr != msd_.run.defaultSourceFilePtr)
+            {
+                nonDefaultSpectra_[i] = true;
+                --size_;
+            }
+            else
+            {
+                if (firstIndex_ > lastIndex_)
+                    firstIndex_ = i;
+                lastIndex_ = i;
+            }
+        }
     }
 
     size_t scanCount() const
     {
-        return msd_.run.spectrumListPtr->size();
+        return size_;
     }
 
     size_t index(int scanNumber) const 
     {
-        IndexList result = msd_.run.spectrumListPtr->findNameValue("scan", lexical_cast<string>(scanNumber));
-        return result.empty() ? 0 : result[0];
+        CVID nativeIdFormat = id::getDefaultNativeIDFormat(msd_);
+        string scanNumberStr = lexical_cast<string>(scanNumber);
+        string id = id::translateScanNumberToNativeID(nativeIdFormat, scanNumberStr);
+        if (id.empty()) // unsupported nativeID type
+        {
+            size_t index = scanNumber-1; // assume scanNumber is a 1-based index
+            if (index >= size_)
+                throw out_of_range("[RAMPAdapter] scanNumber " + scanNumberStr + " (treated as 1-based index) is out of range");
+            return index;
+        }
+        return msd_.run.spectrumListPtr->find(id);
     }
 
     void getScanHeader(size_t index, ScanHeaderStruct& result) const;
@@ -73,6 +101,9 @@ class RAMPAdapter::Impl
     private:
     MSDataFile msd_;
     CVTranslator cvTranslator_;
+    vector<bool> nonDefaultSpectra_;
+    size_t firstIndex_, lastIndex_;
+    size_t size_;
 };
 
 
@@ -99,8 +130,13 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
     Scan dummy;
     Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
 
+    CVID nativeIdFormat = id::getDefaultNativeIDFormat(msd_);
+    string scanNumber = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum->id);
+    if (scanNumber.empty())
+        throw runtime_error("[RAMPAdapter::getScanHeader] Undetermined or unsupported nativeID format");
+
     result.seqNum = static_cast<int>(index + 1);
-    result.acquisitionNum = id::valueAs<int>(spectrum->id, "scan");
+    result.acquisitionNum = lexical_cast<int>(scanNumber);
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
@@ -163,22 +199,22 @@ void RAMPAdapter::Impl::getScanPeaks(size_t index, std::vector<double>& result) 
 void RAMPAdapter::Impl::getRunHeader(RunHeaderStruct& result) const
 {
     const SpectrumList& spectrumList = *msd_.run.spectrumListPtr;
-    result.scanCount = static_cast<int>(spectrumList.size());
+    result.scanCount = static_cast<int>(size_);
 
     result.lowMZ = 0; // TODO
     result.highMZ = 0; // TODO
     result.startMZ = 0; // TODO
     result.endMZ = 0; // TODO
 
-    if (spectrumList.size() == 0) return;
+    if (size_ == 0) return;
 
     Scan dummy;
 
-    SpectrumPtr firstSpectrum = spectrumList.spectrum(0, false);
+    SpectrumPtr firstSpectrum = spectrumList.spectrum(firstIndex_, false);
     Scan& firstScan = firstSpectrum->scanList.scans.empty() ? dummy : firstSpectrum->scanList.scans[0];
     result.dStartTime = retentionTime(firstScan);
 
-    SpectrumPtr lastSpectrum = spectrumList.spectrum(spectrumList.size()-1, false);
+    SpectrumPtr lastSpectrum = spectrumList.spectrum(lastIndex_, false);
     Scan& lastScan = lastSpectrum->scanList.scans.empty() ? dummy : lastSpectrum->scanList.scans[0];
     result.dEndTime = retentionTime(lastScan);
 }

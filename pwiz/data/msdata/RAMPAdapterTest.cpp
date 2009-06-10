@@ -135,12 +135,11 @@ void test(const string& filename)
 
     size_t scanCount = adapter.scanCount();
     if (os_) *os_ << "scanCount: " << scanCount << "\n\n";
-    unit_assert(scanCount == 4);
+    unit_assert(scanCount == 3);
 
     unit_assert(adapter.index(19) == 0);
     unit_assert(adapter.index(20) == 1);
     unit_assert(adapter.index(21) == 2);
-    unit_assert(adapter.index(22) == 3);
 
     // first scan (scan number == 19)
 
@@ -205,21 +204,21 @@ void test(const string& filename)
     
     // last scan
 
-    ScanHeaderStruct header4;
-    adapter.getScanHeader(3, header4);
-    if (os_) *os_ << header4;
+    ScanHeaderStruct header3;
+    adapter.getScanHeader(2, header3);
+    if (os_) *os_ << header3;
 
     // RunHeader
 
     RunHeaderStruct runHeader;
     adapter.getRunHeader(runHeader);
-    unit_assert(runHeader.scanCount == 4);
+    unit_assert(runHeader.scanCount == 3);
     unit_assert(runHeader.lowMZ == 0);
     unit_assert(runHeader.highMZ == 0);
     unit_assert(runHeader.startMZ == 0);
     unit_assert(runHeader.endMZ == 0);
     unit_assert_equal(runHeader.dStartTime, header1.retentionTime, 1e-6);
-    unit_assert_equal(runHeader.dEndTime, header4.retentionTime, 1e-6);
+    unit_assert_equal(runHeader.dEndTime, header3.retentionTime, 1e-6);
 
     if (os_)
         *os_ << "RunHeader:\n" << runHeader << endl;

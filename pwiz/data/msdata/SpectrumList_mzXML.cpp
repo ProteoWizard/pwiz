@@ -236,21 +236,12 @@ class HandlerPeaks : public SAXParser::Handler
                                       peaksCount, MS_number_of_counts);
         return Status::Ok;
     }
-
-    virtual Status endElement(const string& name,
-                              stream_offset position)
-    {
-        // hack: avoid reading nested <scan> elements
-        // TODO: use nested scans to indicate precursor relationships
-        if (name == "peaks") return Status::Done;
-        return Status::Ok;
-    }
  
     private:
     Spectrum& spectrum_;
     BinaryDataEncoder::Config config_;
 };
- 
+
 
 class HandlerScan : public SAXParser::Handler
 {
@@ -261,7 +252,8 @@ class HandlerScan : public SAXParser::Handler
         spectrum_(spectrum), 
         getBinaryData_(getBinaryData), 
         peaksCount_(0),
-        handlerPeaks_(spectrum)
+        handlerPeaks_(spectrum),
+        nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
     {}
 
     virtual Status startElement(const string& name, 
@@ -270,17 +262,17 @@ class HandlerScan : public SAXParser::Handler
     {
         if (name == "scan")
         {
-            string num, scanEvent, msLevel, peaksCount, polarity, collisionEnergy, 
+            string scanEvent, msLevel, peaksCount, polarity,
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
                 msInstrumentID, centroided, deisotoped, chargeDeconvoluted, scanType,
                 ionisationEnergy, cidGasPressure, startMz, endMz;
 
-            getAttribute(attributes, "num", num);
+            getAttribute(attributes, "num", scanNumber_);
             getAttribute(attributes, "scanEvent", scanEvent);
             getAttribute(attributes, "msLevel", msLevel);
             getAttribute(attributes, "peaksCount", peaksCount);
             getAttribute(attributes, "polarity", polarity);
-            getAttribute(attributes, "collisionEnergy", collisionEnergy);
+            getAttribute(attributes, "collisionEnergy", collisionEnergy_);
             getAttribute(attributes, "retentionTime", retentionTime);
             getAttribute(attributes, "lowMz", lowMz);
             getAttribute(attributes, "highMz", highMz);
@@ -297,7 +289,10 @@ class HandlerScan : public SAXParser::Handler
             getAttribute(attributes, "startMz", startMz);
             getAttribute(attributes, "endMz", endMz);
 
-            spectrum_.id = "scan=" + num;
+            spectrum_.id = id::translateScanNumberToNativeID(nativeIdFormat_, scanNumber_);
+            if (spectrum_.id.empty())
+                spectrum_.id = "scan=" + lexical_cast<string>(spectrum_.index+1);
+
             spectrum_.sourceFilePosition = position;
 
             if (msLevel.empty())
@@ -359,8 +354,6 @@ class HandlerScan : public SAXParser::Handler
             else
                 spectrum_.set(MS_profile_spectrum);
 
-            collisionEnergy_ = collisionEnergy;
-
             if (msInstrumentID.empty() && !msd_.instrumentConfigurationPtrs.empty())
                 msInstrumentID = msd_.instrumentConfigurationPtrs[0]->id;
             if (!msInstrumentID.empty())
@@ -374,7 +367,7 @@ class HandlerScan : public SAXParser::Handler
                     retentionTime[retentionTime.size()-1]=='S')
                     retentionTime = retentionTime.substr(2,retentionTime.size()-3);
                 else
-                    throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time.");
+                    throw runtime_error("[SpectrumList_mzXML::HandlerScan] Invalid retention time in scan " + scanNumber_);
                 scan.set(MS_scan_start_time, retentionTime, UO_second);
             }
 
@@ -409,7 +402,7 @@ class HandlerScan : public SAXParser::Handler
             if (!getBinaryData_ || peaksCount_ == 0)
             {
                 addEmptyMzIntensityArrays(spectrum_);
-                return Status::Done;
+                return Status::Ok;
             }
 
             handlerPeaks_.peaksCount = peaksCount_;
@@ -417,15 +410,7 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "scanOrigin")
         {
-            string num, parentFileID;
-            getAttribute(attributes, "num", num);
-            getAttribute(attributes, "parentFileID", parentFileID);
-
-            Scan s;
-            s.userParams.push_back(UserParam("num", num));
-            s.userParams.push_back(UserParam("parentFileID", parentFileID));
-            spectrum_.scanList.scans.push_back(s);
-
+            // just ignore
             return Status::Ok;
         }
         else if (name == "nativeScanRef" || name == "coordinate") // mzXML 3.0 beta tags
@@ -434,17 +419,31 @@ class HandlerScan : public SAXParser::Handler
             return Status::Ok;
         }
 
-        throw runtime_error(("[SpectrumList_mzXML::HandlerScan] Unexpected element name: " + name).c_str());
+        throw runtime_error("[SpectrumList_mzXML::HandlerScan] Unexpected element name \"" + name + "\" in scan " + scanNumber_);
+    }
+
+    virtual Status endElement(const std::string& name, stream_offset position)
+    {
+        if (name == "peaks")
+        {
+            // hack: avoid reading nested <scan> elements
+            // TODO: use nested scans to indicate precursor relationships
+            return Status::Done;
+        }
+
+        return Status::Ok;
     }
 
     private:
     const MSData& msd_;
     Spectrum& spectrum_;
     bool getBinaryData_;
+    string scanNumber_;
     string collisionEnergy_;
     unsigned int peaksCount_;
     HandlerPeaks handlerPeaks_;
     HandlerPrecursor handlerPrecursor_;
+    CVID nativeIdFormat_;
 };
 
 
@@ -526,9 +525,12 @@ class HandlerIndexOffset : public SAXParser::Handler
 
 struct HandlerOffset : public SAXParser::Handler
 {
-    SpectrumIdentity* spectrumIdentity; 
+    SpectrumIdentity* spectrumIdentity;
+    CVID nativeIdFormat;
 
-    HandlerOffset() : spectrumIdentity(0) {}
+    HandlerOffset(const MSData& msd)
+        :   spectrumIdentity(0),
+            nativeIdFormat(id::getDefaultNativeIDFormat(msd)) {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -540,8 +542,11 @@ struct HandlerOffset : public SAXParser::Handler
         if (name != "offset")
             throw runtime_error(("[SpectrumList_mzXML::HandlerOffset] Unexpected element name: " + name).c_str());
 
-        getAttribute(attributes, "id", spectrumIdentity->id);
-        spectrumIdentity->id = "scan=" + spectrumIdentity->id;
+        string scanNumber;
+        getAttribute(attributes, "id", scanNumber);
+        spectrumIdentity->id = id::translateScanNumberToNativeID(nativeIdFormat, spectrumIdentity->id);
+        if (!spectrumIdentity->id.empty())
+            spectrumIdentity->id = "scan=" + scanNumber;
 
         return Status::Ok;
     }
@@ -563,8 +568,8 @@ class HandlerIndex : public SAXParser::Handler
 {
     public:
 
-    HandlerIndex(vector<SpectrumIdentity>& index)
-    :   index_(index)
+    HandlerIndex(vector<SpectrumIdentity>& index, const MSData& msd)
+    :   index_(index), handlerOffset_(msd)
     {}
 
     virtual Status startElement(const string& name, 
@@ -635,7 +640,7 @@ bool SpectrumList_mzXMLImpl::readIndex()
     if (!*is_)
         throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <index>."); 
 
-    HandlerIndex handlerIndex(index_);
+    HandlerIndex handlerIndex(index_, msd_);
     SAXParser::parse(*is_, handlerIndex);
     if (index_.empty())
         throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty."); 
@@ -647,8 +652,8 @@ class HandlerIndexCreator : public SAXParser::Handler
 {
     public:
 
-    HandlerIndexCreator(vector<SpectrumIdentity>& index)
-    :   index_(index)
+    HandlerIndexCreator(vector<SpectrumIdentity>& index, const MSData& msd)
+    :   index_(index), nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
     {}
 
     virtual Status startElement(const string& name, 
@@ -662,7 +667,9 @@ class HandlerIndexCreator : public SAXParser::Handler
 
             SpectrumIdentity si;
             si.index = index_.size();
-            si.id = "scan=" + scanNumber;
+            si.id = id::translateScanNumberToNativeID(nativeIdFormat_, scanNumber);
+            if (si.id.empty())
+                si.id = "scan=" + lexical_cast<string>(si.index+1);
             si.sourceFilePosition = position;
 
             index_.push_back(si);
@@ -682,13 +689,14 @@ class HandlerIndexCreator : public SAXParser::Handler
 
     private:
     vector<SpectrumIdentity>& index_;
+    CVID nativeIdFormat_;
 };
 
 
 void SpectrumList_mzXMLImpl::createIndex()
 {
     is_->seekg(0);
-    HandlerIndexCreator handler(index_);
+    HandlerIndexCreator handler(index_, msd_);
     SAXParser::parse(*is_, handler);
 }
 

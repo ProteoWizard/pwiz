@@ -30,6 +30,8 @@
 #include "CVTranslator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <stdexcept>
 
 
@@ -128,17 +130,40 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
 
 void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 {
+    SourceFilePtr sourceFilePtr = msd.run.defaultSourceFilePtr;
+    if (!sourceFilePtr.get() && !msd.fileDescription.empty())
+        sourceFilePtr = msd.fileDescription.sourceFilePtrs[0];
+
+    if (!sourceFilePtr.get())
+        return;
+
+    const SourceFile& sf = *sourceFilePtr;
+
+    CVID nativeIdFormat = sf.cvParamChild(MS_nativeID_format).cvid;
+    if (nativeIdFormat == CVID_Unknown || nativeIdFormat == MS_no_nativeID_format)
+        return;
+
     string fileName, fileType, fileSha1;
 
-    if (!msd.fileDescription.sourceFilePtrs.empty())
+    fileName = sf.location + "/" + sf.name;
+    switch (nativeIdFormat)
     {
-        const SourceFile& sf = *msd.fileDescription.sourceFilePtrs[0];
-        fileName = sf.location + "/" + sf.name;
-        if (sf.hasCVParam(MS_Thermo_RAW_file)) fileType = "RAWData";
-        fileSha1 = sf.cvParam(MS_SHA_1).value;
-    }
+        // nativeID formats from processed data file types
+        case MS_scan_number_only_nativeID_format:
+        case MS_spectrum_identifier_nativeID_format:
+        case MS_multiple_peak_list_nativeID_format:
+        case MS_single_peak_list_nativeID_format:
+            fileType = "processedData";
+            break;
 
-    XMLWriter::Attributes attributes; 
+        // consider other formats to be raw
+        default:
+            fileType = "RAWData";
+            break;
+    }
+    fileSha1 = sf.cvParam(MS_SHA_1).value;
+
+    XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("fileName", fileName));
     attributes.push_back(make_pair("fileType", fileType));
     attributes.push_back(make_pair("fileSha1", fileSha1));
@@ -334,14 +359,22 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
 }
 
 
-IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
+IndexEntry write_scan(XMLWriter& xmlWriter,
+                      CVID nativeIdFormat,
+                      const Spectrum& spectrum,
                       const SpectrumListPtr spectrumListPtr,
                       const Serializer_mzXML::Config& config)
 {
     IndexEntry result;
-    result.scanNumber = id::valueAs<int>(spectrum.id, "scan");
     result.offset = xmlWriter.positionNext();
-    
+
+    // mzXML scanNumber takes a different form depending on the source's nativeID format
+    string scanNumberStr = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum.id);
+    if (scanNumberStr.empty())
+        result.scanNumber = spectrum.index+1; // scanNumber is a 1-based index for some nativeID formats
+    else
+        result.scanNumber = lexical_cast<int>(scanNumberStr);
+
     // get info
 
     Scan dummy;
@@ -383,7 +416,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter, const Spectrum& spectrum,
     // write out xml
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("num", id::value(spectrum.id, "scan")));
+    attributes.push_back(make_pair("num", lexical_cast<string>(result.scanNumber)));
     if (!scanEvent.empty())
         attributes.push_back(make_pair("scanEvent", scanEvent));
     if (!scanType.empty())
@@ -425,6 +458,8 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
+    CVID defaultNativeIdFormat = id::getDefaultNativeIDFormat(msd);
+
     for (size_t i=0; i<sl->size(); i++)
     {
         // send progress updates, handling cancel
@@ -438,10 +473,23 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
         if (status == IterationListener::Status_Cancel)
             break;
 
-        // write the spectrum 
- 
         SpectrumPtr spectrum = sl->spectrum(i, true);
-        index.push_back(write_scan(xmlWriter, *spectrum, msd.run.spectrumListPtr, config));
+
+        // Thermo spectra not from "controllerType=0 controllerNumber=1" are ignored
+        if (defaultNativeIdFormat == MS_Thermo_nativeID_format &&
+            spectrum->id.find("controllerType=0 controllerNumber=1") != 0)
+            continue;
+
+        // scans from a source file other than the default are ignored;
+        // note: multiple parentFile elements in mzXML are intended to represent
+        //       the data processing history of a single source file
+        if (spectrum->sourceFilePtr.get() &&
+            spectrum->sourceFilePtr != msd.run.defaultSourceFilePtr)
+            continue;
+
+        // write the spectrum
+        index.push_back(write_scan(xmlWriter, defaultNativeIdFormat, *spectrum, msd.run.spectrumListPtr, config));
+
     }
 }
 
@@ -537,6 +585,60 @@ void splitFilename(const string& fullpath, string& path, string& basename)
 }
 
 
+CVID translate_parentFilenameToSourceFileType(const string& name)
+{
+    string fileExtension = bal::to_lower_copy(bfs::extension(name));
+
+    // check for known vendor formats
+    if (fileExtension == ".raw")                                return MS_Thermo_RAW_file;
+    else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_file;
+    else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_file;
+    else if (fileExtension == ".baf")                           return MS_Bruker_BAF_file;
+    else if (name == "fid")                                     return MS_Bruker_FID_file;
+    //else if (name == "msprofile.bin" || name == "mspeak.bin") return MS_Agilent_MassHunter_file);
+
+    // check for known open formats
+    else if (fileExtension == ".mzdata")                        return MS_PSI_mzData_file;
+    else if (fileExtension == ".mgf")                           return MS_Mascot_MGF_file;
+    else if (fileExtension == ".mzxml" ||
+             (fileExtension == ".xml" && /* TPP uses ".mz.xml" */
+              bal::to_lower_copy(bfs::extension(bfs::basename(name))) == ".mz"))
+    {
+        return MS_ISB_mzXML_file;
+    }
+    else if (fileExtension == ".mzml")
+    {
+        throw runtime_error("[Serializer_mzXML::translate_parentFileExtensionToSourceFileType] mzML parentFile not implemented");
+    }
+    else
+        throw runtime_error("[Serializer_mzXML::translate_parentFileExtensionToSourceFileType] unknown file extension for parentFile \"" + name + "\"");
+}
+
+
+CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
+{
+    switch (sourceFileType)
+    {
+        // for these sources we treat the scan number as the nativeID
+        case MS_Thermo_RAW_file:            return MS_Thermo_nativeID_format;
+        case MS_Bruker_Agilent_YEP_file:    return MS_Bruker_Agilent_YEP_nativeID_format;
+        case MS_Bruker_BAF_file:            return MS_Bruker_BAF_nativeID_format;
+        case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
+        case MS_PSI_mzData_file:            return MS_spectrum_identifier_nativeID_format;
+        case MS_Mascot_MGF_file:            return MS_multiple_peak_list_nativeID_format;
+        //case MS_Agilent_MassHunter_file:  return MS_Agilent_MassHunter_nativeID_format;
+
+        // for these sources we must assume the scan number came from the index
+        case MS_ABI_WIFF_file:
+        case MS_Bruker_FID_file:
+            return MS_scan_number_only_nativeID_format;
+
+        default:
+            throw runtime_error("[Serializer_mzXML::translateSourceFileTypeToNativeIdFormat] unknown file type");
+    }
+}
+
+
 void process_parentFile(const string& fileName, const string& fileType,
                         const string& fileSha1, MSData& msd)
 {
@@ -550,13 +652,23 @@ void process_parentFile(const string& fileName, const string& fileType,
     sf.name = name;
     sf.location = location;
 
-    // TODO: make a vendor-independent distinction between RAWFile and processedFile?
+    if (fileType == "RAWData" || fileType == "processedData")
+    {
+        CVID sourceFileType = translate_parentFilenameToSourceFileType(name);
+        sf.set(sourceFileType);
+        sf.set(translateSourceFileTypeToNativeIdFormat(sourceFileType));
+    }
+    else
+        throw runtime_error("[Serializer_mzXML::process_parentFile] invalid value for fileType attribute");
 
-    sf.cvParams.push_back(CVParam(MS_SHA_1, fileSha1));
+    sf.set(MS_SHA_1, fileSha1);
 
     // the file level IDs can't be left empty so we set them to be the filename
-    msd.id = sf.name;
-    msd.run.id = sf.name;
+    if (msd.id.empty() || msd.run.id.empty())
+    {
+        msd.id = sf.name;
+        msd.run.id = sf.name;
+    }
 }
 
 
