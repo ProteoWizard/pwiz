@@ -690,6 +690,72 @@ PWIZ_API_DECL string value(const string& id, const string& name)
 }
 
 
+PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd)
+{
+    if (msd.run.defaultSourceFilePtr.get())
+        return msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
+    else if (!msd.fileDescription.sourceFilePtrs.empty())
+        return msd.fileDescription.sourceFilePtrs[0]->cvParamChild(MS_nativeID_format).cvid;
+    else
+        return CVID_Unknown;
+}
+
+
+PWIZ_API_DECL string translateScanNumberToNativeID(CVID nativeIdFormat, const string& scanNumber)
+{
+    switch (nativeIdFormat)
+    {
+        case MS_Thermo_nativeID_format:
+            return "controllerType=0 controllerNumber=1 scan=" + scanNumber;
+
+        case MS_spectrum_identifier_nativeID_format:
+            return "spectrum=" + scanNumber;
+
+        case MS_multiple_peak_list_nativeID_format:
+            return "index=" + scanNumber;
+
+        //case MS_Agilent_MassHunter_nativeID_format:
+
+        case MS_Bruker_Agilent_YEP_nativeID_format:
+        case MS_Bruker_BAF_nativeID_format:
+        case MS_scan_number_only_nativeID_format:
+            return "scan=" + scanNumber;
+
+        default:
+            return "";
+    }
+}
+
+PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const string& id)
+{
+    switch (nativeIdFormat)
+    {
+        case MS_spectrum_identifier_nativeID_format: // mzData
+            return value(id, "spectrum");
+
+        case MS_multiple_peak_list_nativeID_format: // MGF
+            return value(id, "index");
+
+        //case MS_Agilent_MassHunter_nativeID_format:
+
+        case MS_Thermo_nativeID_format:
+            // conversion from Thermo nativeIDs assumes default controller information
+            if (id.find("controllerType=0 controllerNumber=1") != 0)
+                return "";
+
+            // fall through to get scan
+
+        case MS_Bruker_Agilent_YEP_nativeID_format:
+        case MS_Bruker_BAF_nativeID_format:
+        case MS_scan_number_only_nativeID_format:
+            return value(id, "scan");
+
+        default:
+            return "";
+    }
+}
+
+
 } // namespace id
 
 

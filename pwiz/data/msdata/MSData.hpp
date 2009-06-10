@@ -629,26 +629,6 @@ struct PWIZ_API_DECL ChromatogramIdentity
 };
 
 
-namespace id {
-
-/// parses an id string into a map<string,string>
-PWIZ_API_DECL std::map<std::string,std::string> parse(const std::string& id);
-
-/// convenience function to extract a named value from an id string
-PWIZ_API_DECL std::string value(const std::string& id, const std::string& name);
-
-/// templated convenience function to extract a named value from an id string 
-template<typename value_type>
-value_type valueAs(const std::string& id, const std::string& name)
-{
-    std::string result = value(id, name);
-    return !result.empty() ? boost::lexical_cast<value_type>(result) 
-                          : boost::lexical_cast<value_type>(0);
-}
-
-} // namespace id
-
-
 /// The structure that captures the generation of a peak list (including the underlying acquisitions)
 struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 {
@@ -1011,6 +991,42 @@ struct PWIZ_API_DECL MSData
 
 
 typedef boost::shared_ptr<MSData> MSDataPtr;
+
+
+namespace id {
+
+/// parses an id string into a map<string,string>
+PWIZ_API_DECL std::map<std::string,std::string> parse(const std::string& id);
+
+/// convenience function to extract a named value from an id string
+PWIZ_API_DECL std::string value(const std::string& id, const std::string& name);
+
+/// templated convenience function to extract a named value from an id string 
+template<typename value_type>
+value_type valueAs(const std::string& id, const std::string& name)
+{
+    std::string result = value(id, name);
+    return !result.empty() ? boost::lexical_cast<value_type>(result) 
+                          : boost::lexical_cast<value_type>(0);
+}
+
+/// returns the nativeID format from the defaultSourceFilePtr if set,
+/// or from sourceFilePtrs[0] if the list isn't empty,
+/// or CVID_Unknown
+PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd);
+
+/// translates a "scan number" to a string that is correct for the given nativeID format;
+/// semantic validity requires that scanNumber be parseable as an integer;
+/// some nativeID formats cannot be translated to and will always return an empty string
+/// currently supported formats: Thermo, Bruker/Agilent YEP, Bruker BAF, mzXML, MGF, and mzData
+PWIZ_API_DECL std::string translateScanNumberToNativeID(CVID nativeIDFormat, const std::string& scanNumber);
+
+/// translates a nativeID in the given nativeID format to a simple integer "scan number";
+/// some nativeID formats cannot be translated from and will always return an empty string
+/// currently supported formats: Thermo, Bruker/Agilent YEP, Bruker BAF, mzXML, MGF, and mzData
+PWIZ_API_DECL std::string translateNativeIDToScanNumber(CVID nativeIDFormat, const std::string& id);
+
+} // namespace id
 
 
 } // namespace msdata
