@@ -98,19 +98,6 @@ size_t SpectrumList_mzXMLImpl::find(const string& id) const
 }
 
 
-void addEmptyMzIntensityArrays(Spectrum& spectrum)
-{
-    BinaryDataArrayPtr bd_mz(new BinaryDataArray);
-    BinaryDataArrayPtr bd_intensity(new BinaryDataArray);
-
-    spectrum.binaryDataArrayPtrs.push_back(bd_mz);
-    spectrum.binaryDataArrayPtrs.push_back(bd_intensity);
-
-    bd_mz->cvParams.push_back(MS_m_z_array);
-    bd_intensity->cvParams.push_back(MS_intensity_array);
-}
-
-
 struct HandlerPrecursor : public SAXParser::Handler
 {
     Precursor* precursor;
@@ -221,7 +208,7 @@ class HandlerPeaks : public SAXParser::Handler
     {
         if (peaksCount == 0)
         {
-            addEmptyMzIntensityArrays(spectrum_);
+            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
             return Status::Ok;
         }
 
@@ -250,8 +237,7 @@ class HandlerScan : public SAXParser::Handler
     HandlerScan(const MSData& msd, Spectrum& spectrum, bool getBinaryData)
     :   msd_(msd),
         spectrum_(spectrum), 
-        getBinaryData_(getBinaryData), 
-        peaksCount_(0),
+        getBinaryData_(getBinaryData),
         handlerPeaks_(spectrum),
         nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
     {}
@@ -300,9 +286,7 @@ class HandlerScan : public SAXParser::Handler
             else
                 spectrum_.set(MS_ms_level, msLevel);
 
-            peaksCount_ = lexical_cast<unsigned int>(peaksCount);
-            spectrum_.defaultArrayLength = peaksCount_;
-
+            handlerPeaks_.peaksCount = lexical_cast<unsigned int>(peaksCount);
 
             spectrum_.scanList.set(MS_no_combination);
             spectrum_.scanList.scans.push_back(Scan());
@@ -399,13 +383,13 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "peaks")
         {
-            if (!getBinaryData_ || peaksCount_ == 0)
+            if (!getBinaryData_ || handlerPeaks_.peaksCount == 0)
             {
-                addEmptyMzIntensityArrays(spectrum_);
+                spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+                spectrum_.defaultArrayLength = handlerPeaks_.peaksCount;
                 return Status::Ok;
             }
 
-            handlerPeaks_.peaksCount = peaksCount_;
             return Status(Status::Delegate, &handlerPeaks_);
         }
         else if (name == "scanOrigin")
@@ -440,7 +424,6 @@ class HandlerScan : public SAXParser::Handler
     bool getBinaryData_;
     string scanNumber_;
     string collisionEnergy_;
-    unsigned int peaksCount_;
     HandlerPeaks handlerPeaks_;
     HandlerPrecursor handlerPrecursor_;
     CVID nativeIdFormat_;
@@ -544,8 +527,8 @@ struct HandlerOffset : public SAXParser::Handler
 
         string scanNumber;
         getAttribute(attributes, "id", scanNumber);
-        spectrumIdentity->id = id::translateScanNumberToNativeID(nativeIdFormat, spectrumIdentity->id);
-        if (!spectrumIdentity->id.empty())
+        spectrumIdentity->id = id::translateScanNumberToNativeID(nativeIdFormat, scanNumber);
+        if (spectrumIdentity->id.empty())
             spectrumIdentity->id = "scan=" + scanNumber;
 
         return Status::Ok;

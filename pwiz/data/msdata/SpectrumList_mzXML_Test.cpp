@@ -63,6 +63,9 @@ void test(bool indexed)
     // dummy would normally be read in from file
   
     MSData dummy;
+    dummy.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("tiny1.yep")));
+    dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
+    dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
     dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
     dummy.instrumentConfigurationPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
     dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));

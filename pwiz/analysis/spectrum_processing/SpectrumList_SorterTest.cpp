@@ -152,7 +152,7 @@ void test()
     unit_assert(originalList->spectrumIdentity(1).index == 1);
     unit_assert(originalList->spectrumIdentity(2).id == "scan=21");
     unit_assert(originalList->spectrumIdentity(2).index == 2);
-    unit_assert(originalList->spectrumIdentity(3).id == "scan=22");
+    unit_assert(originalList->spectrumIdentity(3).id == "sample=1 period=1 cycle=22 experiment=1");
     unit_assert(originalList->spectrumIdentity(3).index == 3);
     s = originalList->spectrum(0);
     unit_assert(s->id == "scan=19");
@@ -200,7 +200,7 @@ void test()
     unit_assert(msLevelStableSortedList->spectrumIdentity(0).index == 0);
     unit_assert(msLevelStableSortedList->spectrumIdentity(1).id == "scan=21");
     unit_assert(msLevelStableSortedList->spectrumIdentity(1).index == 1);
-    unit_assert(msLevelStableSortedList->spectrumIdentity(2).id == "scan=22");
+    unit_assert(msLevelStableSortedList->spectrumIdentity(2).id == "sample=1 period=1 cycle=22 experiment=1");
     unit_assert(msLevelStableSortedList->spectrumIdentity(2).index == 2);
     unit_assert(msLevelStableSortedList->spectrumIdentity(3).id == "scan=20");
     unit_assert(msLevelStableSortedList->spectrumIdentity(3).index == 3);
@@ -211,7 +211,7 @@ void test()
     unit_assert(s->id == "scan=21");
     unit_assert(s->index == 1);
     s = msLevelStableSortedList->spectrum(2);
-    unit_assert(s->id == "scan=22");
+    unit_assert(s->id == "sample=1 period=1 cycle=22 experiment=1");
     unit_assert(s->index == 2);
     s = msLevelStableSortedList->spectrum(3);
     unit_assert(s->id == "scan=20");
