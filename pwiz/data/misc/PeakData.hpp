@@ -20,10 +20,6 @@
 // limitations under the License.
 //
 
-//
-// Moved HandlerPeakel, HandlerPeak, and HandlerFeature to hpp so could access HandlerFeature for MatchData
-//
-
 #ifndef _PEAKDATA_HPP_
 #define _PEAKDATA_HPP_
 
@@ -33,16 +29,20 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "CalibrationParameters.hpp"
+#include "boost/shared_ptr.hpp"
 #include <vector>
 #include <string>
+
 
 namespace pwiz {
 namespace data {
 namespace peakdata {
 
+
 using namespace pwiz::utility;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
+
 
 const int PeakDataFormatVersion_Major = 1;
 const int PeakDataFormatVersion_Minor = 1;
@@ -212,8 +212,11 @@ struct PWIZ_API_DECL Peakel
     
     bool operator==(const Peakel& that) const;
     bool operator!=(const Peakel& that) const;
-
 };
+
+
+typedef boost::shared_ptr<Peakel> PeakelPtr;
+
 
 struct HandlerPeakel : public SAXParser::Handler
 {

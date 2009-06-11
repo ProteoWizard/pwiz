@@ -26,7 +26,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
-#include "boost/shared_ptr.hpp"
 #include <set>
 
 
@@ -40,6 +39,7 @@ namespace analysis {
 struct PWIZ_API_DECL LessThan_MZRT
 {
     typedef pwiz::data::peakdata::Peakel Peakel;
+    typedef pwiz::data::peakdata::PeakelPtr PeakelPtr;
 
     bool operator()(const Peakel& a, const Peakel& b) const
     {
@@ -48,7 +48,7 @@ struct PWIZ_API_DECL LessThan_MZRT
         return (a.retentionTime < b.retentionTime); // rare
     }
 
-    bool operator()(const boost::shared_ptr<Peakel>& a, const boost::shared_ptr<Peakel>& b) const
+    bool operator()(const PeakelPtr& a, const PeakelPtr& b) const
     {
         return (*this)(*a, *b);
     }
@@ -58,7 +58,7 @@ struct PWIZ_API_DECL LessThan_MZRT
 ///
 /// PeakelField is a set of Peakels, stored as a binary tree ordered by LessThan_MZRT
 ///
-typedef std::set<boost::shared_ptr<pwiz::data::peakdata::Peakel>, LessThan_MZRT> PeakelField;
+typedef std::set<pwiz::data::peakdata::PeakelPtr, LessThan_MZRT> PeakelField;
 
 
 ///
@@ -69,8 +69,10 @@ class PWIZ_API_DECL PeakelGrower
     public:
 
     typedef pwiz::data::peakdata::Peak Peak;
-    typedef pwiz::data::peakdata::Peakel Peakel;
-
+    
+    virtual void sowPeak(PeakelField& peakelField, const Peak& peak) const = 0;
+    virtual void sowPeaks(PeakelField& peakelField, const std::vector<Peak>& peaks) const;
+    virtual void sowPeaks(PeakelField& peakelField, const std::vector< std::vector<Peak> >& peaks) const;
     
     virtual ~PeakelGrower(){}
 };
@@ -94,6 +96,7 @@ class PWIZ_API_DECL PeakelGrower_Proximity : public PeakelGrower
     };
 
     PeakelGrower_Proximity(const Config& config = Config());
+    virtual void sowPeak(PeakelField&, const Peak& peak) const;
 
     private:
     Config config_;

@@ -32,7 +32,6 @@ using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;
@@ -42,46 +41,15 @@ void testPredicate()
 {
     if (os_) *os_ << "testPredicate()\n";
 
-    Peakel a;
-    a.mz = 1.0;
-    a.retentionTime = 1.0;
-
-    Peakel b;
-    b.mz = 2.0;
-    b.retentionTime = 1.0;
-
-    Peakel c;
-    c.mz = 1.0;
-    c.retentionTime = 2.0;
-
-    LessThan_MZRT lt;
-
-    // a < c < b
-
-    unit_assert(lt(a,b));
-    unit_assert(!lt(b,a));
-    unit_assert(lt(a,c));
-    unit_assert(!lt(c,a));
-    unit_assert(lt(c,b));
-    unit_assert(!lt(b,c));
-
-    unit_assert(!lt(a,a));
-}
-
-
-void testPredicatePtr()
-{
-    if (os_) *os_ << "testPredicatePtr()\n";
-
-    shared_ptr<Peakel> a(new Peakel);
+    PeakelPtr a(new Peakel);
     a->mz = 1.0;
     a->retentionTime = 1.0;
 
-    shared_ptr<Peakel> b(new Peakel);
+    PeakelPtr b(new Peakel);
     b->mz = 2.0;
     b->retentionTime = 1.0;
 
-    shared_ptr<Peakel> c(new Peakel);
+    PeakelPtr c(new Peakel);
     c->mz = 1.0;
     c->retentionTime = 2.0;
 
@@ -89,6 +57,7 @@ void testPredicatePtr()
 
     // a < c < b
 
+    unit_assert(lt(*a,*b));
     unit_assert(lt(a,b));
     unit_assert(!lt(b,a));
     unit_assert(lt(a,c));
@@ -104,15 +73,15 @@ void testPeakelField()
 {
     if (os_) *os_ << "testPeakelField()\n";
 
-    shared_ptr<Peakel> a(new Peakel); // TODO: typedef PeakelPtr
+    PeakelPtr a(new Peakel);
     a->mz = 1.0;
     a->retentionTime = 1.0;
 
-    shared_ptr<Peakel> b(new Peakel);
+    PeakelPtr b(new Peakel);
     b->mz = 2.0;
     b->retentionTime = 1.0;
 
-    shared_ptr<Peakel> c(new Peakel);
+    PeakelPtr c(new Peakel);
     c->mz = 1.0;
     c->retentionTime = 2.0;
 
@@ -125,9 +94,12 @@ void testPeakelField()
     unit_assert(pf.size() == 3);
 
     PeakelField::const_iterator it = pf.begin();
-    (*it)->peaks.push_back(Peak()); // we can modify **it, even though *it is const
     if (os_) *os_ << **it << endl;
     unit_assert(*it == a);
+
+    // note that std::set allows only const access
+    // however, we can modify **it
+    (*it)->peaks.push_back(Peak()); 
 
     ++it;
     if (os_) *os_ << **it << endl;
@@ -138,11 +110,92 @@ void testPeakelField()
     unit_assert(*it == b);
 }
 
+
+vector< vector<Peak> > createToyPeaks()
+{
+    //  rt\mz   1000    1001    1002
+    //    0       x               x
+    //    1       x       x       x
+    //    2               x       x
+    //    3       x       x       x
+    //    4       x               x
+
+    vector< vector<Peak> > peaks(5);
+    Peak peak;
+
+    peak.retentionTime = 0;
+    peak.mz = 1000; peaks[0].push_back(peak);
+    peak.mz = 1002; peaks[0].push_back(peak);
+
+    peak.retentionTime = 1;
+    peak.mz = 1000.01; peaks[1].push_back(peak);
+    peak.mz = 1001; peaks[1].push_back(peak);
+    peak.mz = 1002.01; peaks[1].push_back(peak);
+
+    peak.retentionTime = 2;
+    peak.mz = 1001.01; peaks[2].push_back(peak);
+    peak.mz = 1002-.01; peaks[2].push_back(peak);
+
+    peak.retentionTime = 3;
+    peak.mz = 1000; peaks[3].push_back(peak);
+    peak.mz = 1001-.01; peaks[3].push_back(peak);
+    peak.mz = 1002.02; peaks[3].push_back(peak);
+
+    peak.retentionTime = 4;
+    peak.mz = 1000.01; peaks[4].push_back(peak);
+    peak.mz = 1002-.02; peaks[4].push_back(peak);
+
+    return peaks;
+}
+
+
+void testToyExample()
+{
+    vector< vector<Peak> > peaks = createToyPeaks();
+
+    PeakelGrower_Proximity::Config config;
+    config.toleranceMZ = .1;
+    config.toleranceRetentionTime = 1.5;
+
+    PeakelGrower_Proximity peakelGrower(config);
+
+    PeakelField field;
+    peakelGrower.sowPeaks(field, peaks);
+
+    const double epsilon = .1;
+    unit_assert(field.size() == 4);
+
+    PeakelField::const_iterator it = field.begin();
+
+    unit_assert_equal((*it)->mz, 1000, epsilon);
+    unit_assert_equal((*it)->retentionTime, 0, epsilon);
+
+    ++it;
+    unit_assert_equal((*it)->mz, 1000, epsilon);
+    unit_assert_equal((*it)->retentionTime, 3, epsilon);
+    
+    ++it;
+    unit_assert_equal((*it)->mz, 1001, epsilon);
+    unit_assert_equal((*it)->retentionTime, 1, epsilon);
+    
+    ++it;
+    unit_assert_equal((*it)->mz, 1002, epsilon);
+    unit_assert_equal((*it)->retentionTime, 0, epsilon);
+}
+
+
+void testRealExample()
+{
+    // TODO
+}
+
+
 void test()
 {
     testPredicate();
-    testPredicatePtr();
     testPeakelField();
+    testToyExample();
+    testRealExample();
 }
 
 
