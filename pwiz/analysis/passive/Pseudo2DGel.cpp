@@ -1185,8 +1185,9 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
                                   const IntensityFunction& intensityFunction, 
                                   const Image::Point& begin, const Image::Point& end) 
 {
+    const double rt_range = scansInfo.maxTime - scansInfo.minTime;
     const ScanList& scans = scansInfo.scans;
-    size_t lines = (int)(config_.timeScale * scansInfo.maxTime - scansInfo.minTime + 0.5);
+    size_t lines = (size_t)(config_.timeScale * rt_range);
 
     image.clip(begin, end - Image::Point(1,1));
 
@@ -1207,10 +1208,12 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
     for (size_t j=0; j<scans.size(); j++)
     {
         size_t index = scans[j];
-        size_t rt = (int)(config_.timeScale * scansInfo.rts[j]);
+        //size_t rt_bin = (int)(config_.timeScale * (scansInfo.rts[j]
+        //- scansInfo.minTime));
+        size_t rt_bin = (size_t) lines * (scansInfo.rts[j] - scansInfo.minTime) / rt_range;
 
         startIndex = endIndex;
-        endIndex = rt;
+        endIndex = rt_bin;
 
         for (size_t k=startIndex; k<endIndex; k++)
         {
@@ -1241,7 +1244,6 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
         }
     }
 
-    
     for (size_t j=0; j<pixelBins_.size(); j++)
     {
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
@@ -1278,7 +1280,6 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
     image.line(graphBegin + Image::Point(config_.binCount, 0),
                graphBegin,
                boxColor_); 
-
 
     // captions
     for (int mz=200; mz<4000; mz+=200)

@@ -77,8 +77,8 @@ string usage(const Config& config)
 {
     ostringstream oss;
     
-    oss << "Usage: mspicture [options] [mzxml_filename]\n"
-        << "Mass Spec Picture - command line access to mass spec data files with pep.xml annotation\n"
+    oss << "Usage: mspicture [options] [input_filename]\n"
+        << "Mass Spec Picture - command line access to mass spec data files with optional peptide annotation\n"
         << "\n"
         << "Options:\n" 
         << "\n"
@@ -142,8 +142,6 @@ Config parseCommandArgs(int argc, const char* argv[])
             ": render linearly to time")
         ("scan,s",
             ": render linearly to scans")
-        ("bry",
-            ": use blue-red-yellow gradient")
         ("zRadius,z",
             po::value<float>(&config.pseudo2dConfig.zRadius),
             ": set intensity function z-score radius [=2]")
