@@ -12,11 +12,11 @@ lib pwiz_aux_isb_reader_waters
     : # requirements
         <toolset>msvc:<source>Reader_Waters_Detail.cpp
         <toolset>msvc:<source>SpectrumList_Waters.cpp
-		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
 		<toolset>msvc:<define>PWIZ_READER_WATERS
     : # default-build
     : # usage-requirements
-		<library>../../../../pwiz/data/msdata//pwiz_data_msdata
+		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
 		<toolset>msvc:<define>PWIZ_READER_WATERS
     ;
 
