@@ -80,3 +80,13 @@ run FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect
     : FeatureDetectorSimpleTest #target 
     : # default-build
     ;
+
+run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect 
+    : # args
+    : FeatureDetectorTest.data/FeatureDetectorTest_Bombessin.mzML # input-files
+    : # requirements
+    : FeatureDetectorTuningTest #target 
+    : # default-build
+    ;
+
+
