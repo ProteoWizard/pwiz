@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "FullReaderList.hpp"
-#include "pwiz_aux/isb/readers/waters/Reader_Waters.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/Waters/Reader_Waters.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI.hpp"
 #include <iostream>
