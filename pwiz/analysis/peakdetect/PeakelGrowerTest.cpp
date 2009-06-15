@@ -100,6 +100,7 @@ void testPeakelField()
     // note that std::set allows only const access
     // however, we can modify **it
     (*it)->peaks.push_back(Peak()); 
+    (*it)->peaks.clear();
 
     ++it;
     if (os_) *os_ << **it << endl;
@@ -108,6 +109,23 @@ void testPeakelField()
     ++it;
     if (os_) *os_ << **it << endl;
     unit_assert(*it == b);
+
+    // find()
+
+    vector<PeakelPtr> v = pf.find(1.5, .6, 1, .5);
+
+    if (os_) 
+    {
+        *os_ << "find(): " << v.size() << endl;
+        for (vector<PeakelPtr>::const_iterator it=v.begin(); it!=v.end(); ++it)
+            *os_ << **it << endl;
+    }
+
+    unit_assert(v.size()==2 && v[0]==a && v[1]==b);
+    v = pf.find(1.5, .4, 1, .5);
+    unit_assert(v.empty());
+    v = pf.find(2, .1, 1, .1);
+    unit_assert(v.size()==1 && v[0]==b);
 }
 
 
@@ -148,7 +166,6 @@ vector< vector<Peak> > createToyPeaks()
     return peaks;
 }
 
-
 void testToyExample()
 {
     vector< vector<Peak> > peaks = createToyPeaks();
@@ -184,18 +201,11 @@ void testToyExample()
 }
 
 
-void testRealExample()
-{
-    // TODO
-}
-
-
 void test()
 {
     testPredicate();
     testPeakelField();
     testToyExample();
-    testRealExample();
 }
 
 

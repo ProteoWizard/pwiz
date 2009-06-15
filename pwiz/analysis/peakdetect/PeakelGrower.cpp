@@ -33,8 +33,56 @@ using namespace pwiz::data::peakdata;
 
 
 //
+// PeakelField
+// 
+
+
+namespace {
+bool isWithinRetentionTimeTolerance(const Peakel& peakel, double retentionTime, 
+                                    double toleranceRetentionTime)
+{
+    double rtLow = peakel.retentionTime;
+    double rtHigh = peakel.retentionTime;
+
+    if (!peakel.peaks.empty())
+    {
+        // get retentionTime range from peaks;
+        // assume Peakel::peaks vector is sorted by retentionTime
+        rtLow = peakel.peaks.front().retentionTime;
+        rtHigh = peakel.peaks.back().retentionTime;
+    }
+
+    return (retentionTime > rtLow - toleranceRetentionTime &&
+            retentionTime < rtHigh + toleranceRetentionTime);
+}
+} // namespace
+
+
+vector<PeakelPtr> PeakelField::find(double mz, double toleranceMZ,
+                                    double retentionTime, double toleranceRetentionTime) const
+{
+    PeakelPtr target(new Peakel);
+
+    target->mz = mz - toleranceMZ;
+    PeakelField::const_iterator begin = this->lower_bound(target);
+
+    target->mz = mz + toleranceMZ;
+    PeakelField::const_iterator end = this->upper_bound(target);
+
+    vector<PeakelPtr> result;
+
+    for (PeakelField::const_iterator it=begin; it!=end; ++it)
+        if (isWithinRetentionTimeTolerance(**it, retentionTime, toleranceRetentionTime))
+            result.push_back(*it);
+
+    return result;
+}
+
+
+//
 // PeakelGrower
 // 
+
 
 void PeakelGrower::sowPeaks(PeakelField& peakelField, const vector<Peak>& peaks) const
 {
@@ -63,41 +111,6 @@ PeakelGrower_Proximity::PeakelGrower_Proximity(const Config& config)
 namespace {
 
 //#define PEAKELGROWER_DEBUG
-
-bool isWithinTolerance(const Peakel& peakel, const Peak& peak, 
-                       double toleranceRetentionTime)
-{
-    // assume Peakel::peaks vector is sorted by retentionTime 
-
-    if (peakel.peaks.empty()) throw runtime_error("[PeakelGrower::isWithinTolerance()] This isn't happening.");
-
-    double rtLow = peakel.peaks.front().retentionTime;
-    double rtHigh = peakel.peaks.back().retentionTime;
-
-    return (peak.retentionTime > rtLow - toleranceRetentionTime &&
-            peak.retentionTime < rtHigh + toleranceRetentionTime);
-}
-
-
-vector<PeakelPtr> findCandidates(PeakelField& peakelField, const Peak& peak,
-                                 double toleranceMZ, double toleranceRetentionTime)
-{
-    PeakelPtr target(new Peakel);
-
-    target->mz = peak.mz - toleranceMZ;
-    PeakelField::const_iterator begin = peakelField.lower_bound(target);
-
-    target->mz = peak.mz + toleranceMZ;
-    PeakelField::const_iterator end = peakelField.upper_bound(target);
-
-    vector<PeakelPtr> result;
-    for (PeakelField::const_iterator it=begin; it!=end; ++it)
-        if (isWithinTolerance(**it, peak, toleranceRetentionTime))
-            result.push_back(*it);
-
-    return result;
-}
-
 
 void insertNewPeakel(PeakelField& peakelField, const Peak& peak)
 {
@@ -128,14 +141,22 @@ void updatePeakel(Peakel& peakel, const Peak& peak)
 
 void PeakelGrower_Proximity::sowPeak(PeakelField& peakelField, const Peak& peak) const
 {
-    vector<PeakelPtr> candidates = findCandidates(peakelField, peak, config_.toleranceMZ, config_.toleranceRetentionTime);
+    vector<PeakelPtr> candidates = peakelField.find(peak.mz, config_.toleranceMZ, 
+                                                    peak.retentionTime, config_.toleranceRetentionTime);
 
     if (candidates.empty())
         insertNewPeakel(peakelField, peak);
     else if (candidates.size() == 1)
         updatePeakel(*candidates.front(), peak);
     else
-        throw runtime_error("[PeakelGrower_Proximity::sowPeak()] Multiple candidate peakels.");
+    {
+        cerr << "[PeakelGrower_Proximity::sowPeak()] Warning: multiple candidate peakels.\n";
+        cerr << "  peak: " << peak << endl;
+        cerr << "  candidates: " << candidates.size() << endl;
+        for (vector<PeakelPtr>::const_iterator it=candidates.begin(); it!=candidates.end(); ++it)
+            cerr << **it << endl;
+        cerr << endl;
+    }
 }
 
 

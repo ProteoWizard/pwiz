@@ -58,7 +58,13 @@ struct PWIZ_API_DECL LessThan_MZRT
 ///
 /// PeakelField is a set of Peakels, stored as a binary tree ordered by LessThan_MZRT
 ///
-typedef std::set<pwiz::data::peakdata::PeakelPtr, LessThan_MZRT> PeakelField;
+struct PeakelField : public std::set<pwiz::data::peakdata::PeakelPtr, LessThan_MZRT>
+{
+    typedef pwiz::data::peakdata::PeakelPtr PeakelPtr;
+
+    std::vector<PeakelPtr> find(double mz, double toleranceMZ,
+                                double retentionTime, double toleranceRetentionTime) const;
+};
 
 
 ///

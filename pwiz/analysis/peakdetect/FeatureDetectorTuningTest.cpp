@@ -48,7 +48,7 @@ shared_ptr<PeakExtractor> createPeakExtractor()
 
     PeakFinder_SNR::Config pfsnrConfig;
     pfsnrConfig.windowRadius = 2;
-    pfsnrConfig.zValueThreshold = 4;
+    pfsnrConfig.zValueThreshold = 3;
 
     shared_ptr<PeakFinder> peakFinder(new PeakFinder_SNR(noiseCalculator, pfsnrConfig));
 
@@ -96,6 +96,24 @@ vector< vector<Peak> > extractPeaks(const MSData& msd, const PeakExtractor& peak
 }
 
 
+shared_ptr<PeakelGrower> createPeakelGrower()
+{
+    PeakelGrower_Proximity::Config config;
+    config.toleranceMZ = .01;
+    config.toleranceRetentionTime = 20; // seconds
+
+    return shared_ptr<PeakelGrower>(new PeakelGrower_Proximity(config));
+}
+
+
+void print(ostream& os, const string& label, vector<PeakelPtr> v)
+{
+    os << label << ":\n";
+    for (vector<PeakelPtr>::const_iterator it=v.begin(); it!=v.end(); ++it)
+        os << **it << endl;
+}
+
+
 void testBombessin(const string& filename)
 {
     if (os_) *os_ << "testBombessin()" << endl;
@@ -112,7 +130,45 @@ void testBombessin(const string& filename)
     vector< vector<Peak> > peaks = extractPeaks(msd, *peakExtractor);
     unit_assert(peaks.size() == 8);
 
-    // TODO: grow Peakels, verify Bombessin peaks
+    // grow Peakels
+    shared_ptr<PeakelGrower> peakelGrower = createPeakelGrower();
+    PeakelField peakelField;
+    peakelGrower->sowPeaks(peakelField, peaks);
+
+    if (os_)
+    {
+        *os_ << "peakelField: " << peakelField.size() << endl;
+        for (PeakelField::const_iterator it=peakelField.begin(); it!=peakelField.end(); ++it)
+            *os_ << **it << endl << endl;
+    }
+
+    // verify Bombessin peaks
+
+    vector<PeakelPtr> bombessin_2_0 = peakelField.find(810.41, .01, 1870, 0);
+    if (os_) print(*os_, "bombessin_2_0", bombessin_2_0);
+    unit_assert(bombessin_2_0.size() == 1);
+
+    vector<PeakelPtr> bombessin_2_1 = peakelField.find(810.91, .01, 1870, 0);
+    if (os_) print(*os_, "bombessin_2_1", bombessin_2_1);
+    unit_assert(bombessin_2_1.size() == 1);
+
+    vector<PeakelPtr> bombessin_2_2 = peakelField.find(811.41, .01, 1870, 0);
+    if (os_) print(*os_, "bombessin_2_2", bombessin_2_2);
+    unit_assert(bombessin_2_2.size() == 1);
+
+    // 3-neutron peak here?
+
+    vector<PeakelPtr> bombessin_3_0 = peakelField.find(540.61, .01, 1870, 0);
+    if (os_) print(*os_, "bombessin_3_0", bombessin_3_0);
+    unit_assert(bombessin_3_0.size() == 1);
+
+    /* // we should see an isotope envelope
+    vector<PeakelPtr> bombessin_3_1 = peakelField.find(540.61 + 1./3., .01, 1870, 0);
+    if (os_) print(*os_, "bombessin_3_1", bombessin_3_1);
+    unit_assert(bombessin_3_1.size() == 1);
+    */
+
+ 
 }
 
 
