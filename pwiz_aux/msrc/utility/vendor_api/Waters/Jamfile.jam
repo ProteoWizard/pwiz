@@ -1,0 +1,60 @@
+
+import modules ;
+import path ;
+
+path-constant ROOT : . ;
+
+if [ modules.peek : NT ] &&
+   [ path.exists $(ROOT)/DACServer.dll ]
+{
+
+lib pwiz_vendor_api_waters
+    : # sources
+        RawData.cpp
+    : # requirements
+        <toolset>msvc,<link>shared:<define>RAWDATA_DYN_LINK
+        <toolset>msvc:<library>/ext/boost//filesystem
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <toolset>msvc:<dependency>DACServer.dll
+        <toolset>msvc:<dependency>genutil.dll
+        <toolset>msvc:<dependency>MetaGD32.DLL
+        <toolset>msvc:<dependency>MetaGD32.DLL
+        <toolset>msvc:<dependency>raw.dll
+        <toolset>msvc:<dependency>RawCsm.dll
+        <toolset>msvc:<dependency>SecuritySignature.dll
+    : # default-build
+    : # usage-requirements
+        <toolset>msvc:<library>/ext/boost//filesystem
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <toolset>msvc:<dependency>DACServer.dll
+        <toolset>msvc:<dependency>genutil.dll
+        <toolset>msvc:<dependency>MetaGD32.DLL
+        <toolset>msvc:<dependency>MetaGD32.DLL
+        <toolset>msvc:<dependency>raw.dll
+        <toolset>msvc:<dependency>RawCsm.dll
+        <toolset>msvc:<dependency>SecuritySignature.dll
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+path-constant TEST_PATH1 : "c:/test/160109_Mix1_calcurve_070.raw" ;
+path-constant TEST_PATH2 : "c:/test/010208_ecoli_003.raw" ;
+
+# special run target for RawDataTest, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run RawDataTest.cpp
+    : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
+    : # input-files
+    : # requirements
+        <library>pwiz_vendor_api_waters
+    : # target name
+        RawDataTest 
+    : # default-build
+    ;
+explicit RawDataTest ;
+
+}

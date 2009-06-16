@@ -1,35 +1,50 @@
+//
+// SpectrumList_Waters.hpp
+//
+//
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+//
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
-#include "dacserver_4-1.h"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include "Reader_Waters_Detail.hpp"
 #include <map>
+
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
 
+
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
 
-struct PWIZ_API_DECL FunctionMetaData
-{
-    string type;
-    int msLevel;
-    CVID scanningMethod;
-    CVID spectrumType;
-};
-
-
 //
 // SpectrumList_Waters
 //
-class PWIZ_API_DECL SpectrumList_Waters : public SpectrumList
+class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Waters(const MSData& msd, const string& rawpath);
+    SpectrumList_Waters(RawDataPtr rawdata);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
 /*
@@ -37,33 +52,24 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumList
     virtual size_t findNative(const string& nativeID) const;
 */
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
-    //virtual ChromatogramListPtr Chromatograms() const;
 
 
     private:
 
-    const MSData& msd_;
-    string rawpath_;
+    RawDataPtr rawdata_;
     size_t size_;
-    short functionCount_;
-    vector<pair<SpectrumIdentity, pair<short, long> > > index_;
 
-    // nativeIdToIndexMap_[<function #>][<scan #>] == index
-    map<short, map<long, size_t> > nativeIdToIndexMap_;
+    struct IndexEntry : public SpectrumIdentity
+    {
+        FunctionPtr functionPtr;
+        int process;
+        int scan;
+    };
 
-    map<short, FunctionMetaData> functionToMetaDataMap_;
+    mutable vector<IndexEntry> index_;
+    mutable map<string, size_t> idToIndexMap_;
 
     void createIndex();
-    //string findPrecursorID(int precursorMsLevel, size_t index) const;
-
-    // DAC COM objects
-    IDACFunctionInfoPtr pFunctionInfo_;
-    IDACScanStatsPtr pScanStats_;
-    IDACExScanStatsPtr pExScanStats_;
-    IDACSpectrumPtr pSpectrum_;
-
-    private:
-    //void addSpectrumToChromatogramList(ScanInfo& scanInfo) const;
 };
 
 } // detail

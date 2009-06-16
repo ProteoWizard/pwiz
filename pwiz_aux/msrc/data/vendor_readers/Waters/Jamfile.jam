@@ -6,36 +6,36 @@ project
     ;
 
 
-lib pwiz_aux_isb_reader_waters
+lib pwiz_aux_msrc_reader_waters
     : # sources
         Reader_Waters.cpp
     : # requirements
         <toolset>msvc:<source>Reader_Waters_Detail.cpp
         <toolset>msvc:<source>SpectrumList_Waters.cpp
-		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+        <toolset>msvc:<source>ChromatogramList_Waters.cpp
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
 		<toolset>msvc:<define>PWIZ_READER_WATERS
     : # default-build
     : # usage-requirements
-		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
 		<toolset>msvc:<define>PWIZ_READER_WATERS
     ;
 
 
-#
-# unit tests (ordered by dependency)
-#
-
+path-constant TEST_PATH1 : "c:/test/160109_Mix1_calcurve_070.raw" ;
+path-constant TEST_PATH2 : "c:/test/010208_ecoli_003.raw" ;
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Waters_Test.cpp pwiz_aux_isb_reader_waters 
+run Reader_Waters_Test.cpp pwiz_aux_msrc_reader_waters 
     : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
     : # input-files
-        #Reader_Waters_Test.RAW
     : # requirements
     : # target name
         Reader_Waters_Test 
     : # default-build
     ;
-
-
+explicit Reader_Waters_Test ;

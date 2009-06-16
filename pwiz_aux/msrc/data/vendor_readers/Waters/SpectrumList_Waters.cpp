@@ -1,3 +1,24 @@
+//
+// SpectrumList_Waters.cpp
+//
+//
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+//
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
 #define PWIZ_SOURCE
 
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
@@ -10,36 +31,17 @@
 #include <iostream>
 #include <stdexcept>
 
-using boost::format;
 
-namespace
-{
-
-string convertBstrToString(const BSTR& bstring)
-{
-	_bstr_t bTmp(bstring);
-	return string((const char *)bTmp);
-}
-
-}
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
 
-SpectrumList_Waters::SpectrumList_Waters(const MSData& msd, const string& rawpath)
-:   msd_(msd), rawpath_(rawpath),
-    size_(0), functionCount_(0),
-    pFunctionInfo_(IDACFunctionInfoPtr(CLSID_DACFunctionInfo)),
-    pScanStats_(IDACScanStatsPtr(CLSID_DACScanStats)),
-    pExScanStats_(IDACExScanStatsPtr(CLSID_DACExScanStats)),
-    pSpectrum_(IDACSpectrumPtr(CLSID_DACSpectrum))
+SpectrumList_Waters::SpectrumList_Waters(RawDataPtr rawdata)
+:   rawdata_(rawdata)
 {
-    // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
-    while (bfs::exists(bfs::path(rawpath_) / (format("_FUNC%03d.DAT") % (functionCount_+1)).str()))
-        ++functionCount_;
-
     createIndex();
+    size_ = index_.size();
 }
 
 
@@ -54,7 +56,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size
     if (index>size_)
         throw runtime_error(("[SpectrumList_Waters::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
-    return index_[index].first;
+    return index_[index];
 }
 
 /*
@@ -118,7 +120,7 @@ PWIZ_API_DECL size_t SpectrumList_Waters::findNative(const string& nativeID) con
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
-    if (index > size_)
+    if (index >= size_)
         throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
@@ -127,29 +129,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     if (!result.get())
         throw runtime_error("[SpectrumList_Waters::spectrum()] Allocation error.");
 
+    IndexEntry& ie = index_[index];
 
-    const char* szRawpath = rawpath_.c_str();
-    pair<SpectrumIdentity, pair<short, long> > indexPair = index_[index];
-    SpectrumIdentity& si = indexPair.first;
-    short functionNumber = indexPair.second.first;
-    short processNumber = 0;
-    long scanNumber = indexPair.second.second;
-    const FunctionMetaData& fmd = functionToMetaDataMap_.find(functionNumber)->second;
+    result->index = ie.index;
+    result->id = ie.id;
 
-    pFunctionInfo_->GetFunctionInfo(szRawpath, functionNumber);
-    pScanStats_->GetScanStats(szRawpath, functionNumber, processNumber, scanNumber);
-    pExScanStats_->GetExScanStats(szRawpath, functionNumber, processNumber, scanNumber);
-    pSpectrum_->GetSpectrum(szRawpath, functionNumber, processNumber, scanNumber);
-
-    result->index = si.index;
-    result->id = si.id;
-
-    float laserAimX = pExScanStats_->LaserAimXPos;
+    /*float laserAimX = pExScanStats_->LaserAimXPos;
     float laserAimY = pExScanStats_->LaserAimYPos;
     //if (scanInfo->ionizationType() == IonizationType_MALDI)
     {
         result->spotID = (format("%dx%d") % laserAimX % laserAimY).str();
-    }
+    }*/
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
@@ -158,90 +148,58 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
-    result->set(fmd.spectrumType);
-    result->set(MS_ms_level, fmd.msLevel);
-    scan.set(fmd.scanningMethod);
-    scan.set(MS_preset_scan_configuration, functionNumber);
-    scan.set(MS_scan_start_time, pScanStats_->RetnTime, UO_minute);
+    ScanPtr scanPtr = ie.functionPtr->getScan(ie.process, ie.scan);
+
+    int msLevel;
+    CVID spectrumType;
+    translateFunctionType(ie.functionPtr->getFunctionType(), msLevel, spectrumType);
+
+    result->set(spectrumType);
+    result->set(MS_ms_level, msLevel);
+
+    scan.set(MS_preset_scan_configuration, ie.functionPtr->getFunctionNumber());
+    scan.set(MS_scan_start_time, scanPtr->getStartTime(), UO_minute);
 
     //PolarityType polarityType = scanInfo->polarityType();
     //if (polarityType!=PolarityType_Unknown) scan.cvParams.push_back(translate(polarityType));
 
-    //bool doCentroid = msLevelsToCentroid.contains(scanInfo->msLevel());
-
-    //if (scanInfo->isProfileScan() && !doCentroid) sd.cvParams.push_back(MS_profile_spectrum);
-    //else sd.cvParams.push_back(MS_centroid_spectrum); 
-
-    if (pScanStats_->Continuum > 0)
+    if (scanPtr->getDataIsContinuous())
         result->set(MS_profile_spectrum);
     else
         result->set(MS_centroid_spectrum);
 
-    result->set(MS_base_peak_m_z, pScanStats_->BPM);
-    result->set(MS_base_peak_intensity, pScanStats_->BPI);
-    result->set(MS_total_ion_current, pScanStats_->TIC);
+    result->set(MS_base_peak_m_z, scanPtr->getBasePeakMZ());
+    result->set(MS_base_peak_intensity, scanPtr->getBasePeakIntensity());
+    result->set(MS_total_ion_current, scanPtr->getTIC());
 
     // TODO: get correct values
-    scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass, MS_m_z));
+    scan.scanWindows.push_back(ScanWindow(scanPtr->getMinMZ(), scanPtr->getMaxMZ(), MS_m_z));
 
     //sd.set(MS_lowest_observed_m_z, minObservedMz);
     //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
-    float precursorMz = pExScanStats_->SetMass;
+    PrecursorPtr precursorPtr = scanPtr->getPrecursorInfo();
 
-    if (precursorMz > 0)
+    if (precursorPtr.get())
     {
         Precursor precursor;
-        SelectedIon selectedIon(precursorMz);
+        SelectedIon selectedIon(precursorPtr->mz);
+        precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursorPtr->mz, MS_m_z);
 
-        /*long parentCharge = scanInfo->parentCharge();
-        if (parentCharge > 0)
-            selectedIon.cvParams.push_back(CVParam(MS_charge_state, parentCharge));*/
-
-        // TODO: get correct activation type
         precursor.activation.set(MS_CID);
-        precursor.activation.set(MS_collision_energy, pExScanStats_->CollisionEnergy);
+        precursor.activation.set(MS_collision_energy, precursorPtr->collisionEnergy);
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
     }
 
-    long numPeaks = pScanStats_->PeaksInScan;
-    //pScanStats_->get_PeaksInScan(&numPeaks);
-    result->defaultArrayLength = (size_t) numPeaks;
-
-    // TODO: which of these to use?
-    //pSpectrum_->get_NumPeaks(&result->defaultArrayLength);
+    result->defaultArrayLength = scanPtr->getNumPoints();
 
     if (getBinaryData)
     {
-        VARIANT pfIntensities;
-	    VARIANT pfMasses;
-	    pSpectrum_->get_Intensities(&pfIntensities);
-	    pSpectrum_->get_Masses(&pfMasses);
-
-	    float HUGEP *intensityArrayPtr;
-	    float HUGEP *massArrayPtr;
-
-	    // lock safe arrays for access
-	    HRESULT hr;
-	    // TODO: check hr return value?
-	    hr = SafeArrayAccessData(pfIntensities.parray, (void HUGEP**)&intensityArrayPtr);
-	    hr = SafeArrayAccessData(pfMasses.parray, (void HUGEP**)&massArrayPtr);
-
-	    vector<double> mzArray;
-        mzArray.insert(mzArray.end(), massArrayPtr, massArrayPtr+numPeaks);
-
-        vector<double> intensityArray;
-        intensityArray.insert(intensityArray.end(), intensityArrayPtr, intensityArrayPtr+numPeaks);
-
+	    vector<double> mzArray(scanPtr->masses().begin(), scanPtr->masses().end());
+        vector<double> intensityArray(scanPtr->intensities().begin(), scanPtr->intensities().end());
 	    result->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_counts);
-
-	    // clean up
-	    hr = SafeArrayUnaccessData(pfIntensities.parray);
-	    hr = SafeArrayDestroyData(pfIntensities.parray);
-	    hr = SafeArrayUnaccessData(pfMasses.parray);
-	    hr = SafeArrayDestroyData(pfMasses.parray);
     }
 
     return result;
@@ -250,65 +208,29 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
-    // fill file content metadata while creating index
-    set<CVID> spectrumTypes;
-
-    // Determine number of scans in each function
-    for (short curFunction = 1; curFunction <= functionCount_; ++curFunction)
+    BOOST_FOREACH(const FunctionPtr& functionPtr, rawdata_->functions())
     {
-        pFunctionInfo_->GetFunctionInfo(rawpath_.c_str(), curFunction);
+        if (functionPtr->getFunctionType() == FunctionType_MRM ||
+            functionPtr->getFunctionType() == FunctionType_Daughter)
+            continue;
 
-        // determine function type and corresponding MS level
-        BSTR bstrFuncType = NULL;
-        pFunctionInfo_->get_FunctionType(&bstrFuncType);
-        string funcType = convertBstrToString(bstrFuncType);
-        SysFreeString(bstrFuncType);
-
-        // TODO: figure out a better way. At least complete the list of other possible funcTypes
-
-        FunctionMetaData& fmd = functionToMetaDataMap_[curFunction];
-        fmd.type = funcType;
-        translateFunctionType(funcType, fmd.msLevel, fmd.scanningMethod, fmd.spectrumType);
-        spectrumTypes.insert(fmd.spectrumType);
-
-        long numScans = pFunctionInfo_->NumScans;
-        //pFunctionInfo_->get_NumScans(&numScans);
-        size_ += numScans;
-
-        for (long i=0; i < numScans; ++i)
+        size_t scanCount = functionPtr->getScanCount();
+        for (size_t i=1; i <= scanCount; ++i)
         {
-            index_.push_back(make_pair(SpectrumIdentity(), make_pair(0,0)));
-            pair<SpectrumIdentity, pair<short, long> >& indexPair = index_.back();
-            SpectrumIdentity& si = indexPair.first;
-            si.index = i;
-            si.id = (format("function=%d process=0 scan=%d") % curFunction % (i+1)).str();
-            nativeIdToIndexMap_[curFunction][i+1] = si.index;
-            indexPair.second.first = curFunction;
-            indexPair.second.second = i+1;
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.functionPtr = functionPtr;
+            ie.process = 0;
+            ie.scan = i;
+            ie.index = index_.size()-1;
+            ie.id = (format("function=%d process=%d scan=%d")
+                        % functionPtr->getFunctionNumber()
+                        % ie.process
+                        % ie.scan).str();
         }
-    }
-
-    BOOST_FOREACH(CVID spectrumType, spectrumTypes)
-    {
-        const_cast<MSData&>(msd_).fileDescription.fileContent.set(spectrumType);
     }
 }
 
-
-/*PWIZ_API_DECL string SpectrumList_Waters::findPrecursorID(int precursorMsLevel, size_t index) const
-{
-    // for MSn spectra (n > 1): return first scan with MSn-1
-
-    while (index>0)
-    {
-	    --index;
-	    SpectrumPtr candidate = spectrum(index, false);
-	    if (candidate->cvParam(MS_ms_level).valueAs<int>() == precursorMsLevel)
-		    return candidate->id;
-    }
-
-    return "";
-}*/
 
 } // detail
 } // msdata

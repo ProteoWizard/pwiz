@@ -1,3 +1,24 @@
+//
+// Reader_Waters.cpp
+//
+//
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+//
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
 #define PWIZ_SOURCE
 
 #include "Reader_Waters.hpp"
@@ -18,25 +39,24 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
     if (!bfs::is_directory(filename))
         return result;
 
-    // Count the number of _FUNC[0-9]{3}.DAT files
-    int functionCount = 0;
-    while (bfs::exists(bfs::path(filename) / (boost::format("_FUNC%03d.DAT") % (functionCount+1)).str()))
-        ++functionCount;
-    if (functionCount > 0)
-		result = getType();
+    // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
+    string functionPathmask = filename + "/_FUNC???.DAT";
+    vector<bfs::path> functionFilepaths;
+    pwiz::util::expand_pathmask(functionPathmask, functionFilepaths);
+    if (!functionFilepaths.empty())
+        result = getType();
     return result;
 }
 
 
 #ifdef PWIZ_READER_WATERS
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
 //#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/foreach.hpp>
-#include "dacserver_4-1.h"
 #include "Reader_Waters_Detail.hpp"
 #include "SpectrumList_Waters.hpp"
+#include "ChromatogramList_Waters.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -60,45 +80,44 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ?
-           c :
-           '_';
-}
-
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
-
-void fillInMetadata(const string& rawpath, MSData& msd)
+void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
+    string functionPathmask = rawpath + "/_FUNC???.DAT";
+    vector<bfs::path> functionFilepaths;
+    expand_pathmask(functionPathmask, functionFilepaths);
+
+    // first list all the function DAT files as sources
+    for (size_t i=0; i < functionFilepaths.size(); ++i)
+    {
+        bfs::path sourcePath = functionFilepaths[i];
+        SourceFilePtr sourceFile(new SourceFile);
+        sourceFile->id = sourcePath.leaf();
+        sourceFile->name = sourcePath.leaf();
+        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
+        sourceFile->set(MS_Waters_nativeID_format);
+        sourceFile->set(MS_Waters_raw_file);
+        msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+    }
+
+    // next iterate over any other files
     bfs::path p(rawpath);
     for (bfs::directory_iterator itr(p); itr != bfs::directory_iterator(); ++itr)
     {
+        // skip the function filepaths
+        if (find(functionFilepaths.begin(), functionFilepaths.end(), itr->path()) != functionFilepaths.end())
+            continue;
+
         bfs::path sourcePath = itr->path();
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = stringToIDREF(sourcePath.leaf());
+        sourceFile->id = sourcePath.leaf();
         sourceFile->name = sourcePath.leaf();
         sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
-        if (bal::to_lower_copy(bfs::extension(sourcePath)) == ".dat")
-        {
-            sourceFile->set(MS_Waters_nativeID_format);
-            sourceFile->set(MS_Waters_raw_file);
-        }
-        else
-            sourceFile->set(MS_no_nativeID_format);
+        sourceFile->set(MS_no_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
-    msd.id = stringToIDREF(p.leaf());
+    msd.id = p.leaf();
 
     SoftwarePtr softwareMassLynx(new Software);
     softwareMassLynx->id = "MassLynx";
@@ -123,22 +142,11 @@ void fillInMetadata(const string& rawpath, MSData& msd)
     //if (!msd.instrumentConfigurationPtrs.empty())
     //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(stringToIDREF(rawpath));
+    msd.run.id = boost::to_lower_copy(rawpath);
     //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
 }
 
 } // namespace
-
-
-PWIZ_API_DECL Reader_Waters::Reader_Waters()
-{
-    COMInitializer::initialize();
-}
-
-PWIZ_API_DECL Reader_Waters::~Reader_Waters()
-{
-    COMInitializer::uninitialize();
-}
 
 PWIZ_API_DECL
 void Reader_Waters::read(const string& filename,
@@ -149,11 +157,11 @@ void Reader_Waters::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple samples not supported");
 
-    SpectrumList_Waters* sl = new SpectrumList_Waters(result, filename);
-    result.run.spectrumListPtr = SpectrumListPtr(sl);
-    //result.run.chromatogramListPtr = sl->Chromatograms();
+    RawDataPtr rawdata = RawData::create(filename);
+    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(rawdata));
+    result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
 
-    fillInMetadata(filename, result);
+    fillInMetadata(filename, rawdata, result);
 }
 
 
@@ -174,9 +182,6 @@ namespace pwiz {
 namespace msdata {
 
 using namespace std;
-
-PWIZ_API_DECL Reader_Waters::Reader_Waters() {}
-PWIZ_API_DECL Reader_Waters::~Reader_Waters() {}
 
 PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int runIndex) const
 {

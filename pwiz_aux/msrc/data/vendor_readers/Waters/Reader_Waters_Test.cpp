@@ -114,8 +114,6 @@ void test(const string& rawpath)
 
 int main(int argc, char* argv[])
 {
-    return 0; // TODO: acquire some Waters test data
-
     try
     {
         vector<string> rawpaths;
@@ -126,10 +124,11 @@ int main(int argc, char* argv[])
             else rawpaths.push_back(argv[i]);
         }
 
-        if (rawpaths.size()!=1)
+        if (rawpaths.empty())
             throw runtime_error("Usage: Reader_Waters_Test [-v] rawpath"); 
             
-        test(rawpaths[0]);
+        for (size_t i=0; i < rawpaths.size(); ++i)
+            test(rawpaths[i]);
         return 0;
     }
     catch (exception& e)
