@@ -50,12 +50,13 @@ namespace myrimatch
 
 		FilterByTIC( g_rtConfig->TicCutoffPercentage );
 
+		// Locate water loss ions of the precursor ion
 		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
 		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-		if( precursorWaterLossItr != peakPreData.end() )
-			peakPreData.erase( precursorWaterLossItr );
-		if( precursorDoubleWaterLossItr != peakPreData.end() && precursorDoubleWaterLossItr != precursorWaterLossItr )
-			peakPreData.erase( precursorDoubleWaterLossItr );
+        bool eraseWaterLoss = precursorWaterLossItr != peakPreData.end();
+        bool eraseDoubleWaterLoss = precursorDoubleWaterLossItr != peakPreData.end() && precursorWaterLossItr != precursorDoubleWaterLossItr;
+		if( eraseWaterLoss ) peakPreData.erase( precursorWaterLossItr );
+		if( eraseDoubleWaterLoss ) peakPreData.erase( precursorDoubleWaterLossItr );
 
 		if( g_rtConfig->MakeSpectrumGraphs )
 			writeToSvgFile( "-filtered" + g_rtConfig->OutputSuffix );

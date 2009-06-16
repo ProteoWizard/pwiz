@@ -78,6 +78,7 @@ namespace myrimatch
 		int				minIntensityClassCount;
 		int				minMzFidelityClassCount;
 		vector<double>	PrecursorMassTolerance;
+        int             maxChargeStateFromSpectra;
 
 	private:
 		void finalize()
@@ -165,7 +166,6 @@ namespace myrimatch
 					cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
 			}
 
-
 			if( !DynamicMods.empty() )
 			{
 				DynamicMods = TrimWhitespace( DynamicMods );
@@ -178,10 +178,8 @@ namespace myrimatch
 				staticMods = StaticModSet( StaticMods );
 			}
 
-			vector<double>& precursorMassTolerance = PrecursorMassTolerance;
-			precursorMassTolerance.clear();
-			for( int z=1; z <= NumChargeStates; ++z )
-				precursorMassTolerance.push_back( PrecursorMzTolerance * z );
+            maxChargeStateFromSpectra = 1;
+            PrecursorMassTolerance.push_back(PrecursorMzTolerance);
 
 			if( ClassSizeMultiplier > 1 )
 			{

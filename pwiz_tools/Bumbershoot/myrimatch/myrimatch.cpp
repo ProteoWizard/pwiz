@@ -189,11 +189,16 @@ namespace myrimatch
 		if( spectra.empty() )
 			return 0;
 
-		//size_t numSpectra = spectra.size();
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		    g_rtConfig->maxChargeStateFromSpectra = max((*sItr)->id.charge, g_rtConfig->maxChargeStateFromSpectra);
+
+		g_rtConfig->PrecursorMassTolerance.clear();
+		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
+			g_rtConfig->PrecursorMassTolerance.push_back( g_rtConfig->PrecursorMzTolerance * z );
 
 		// Create a map of precursor masses to the spectrum indices
-		spectraMassMapsByChargeState.resize( g_rtConfig->NumChargeStates );
-		for( int z=0; z < g_rtConfig->NumChargeStates; ++z )
+		spectraMassMapsByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+		for( int z=0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
 		{
 			for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 			{
@@ -289,7 +294,7 @@ namespace myrimatch
 		string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
 
 		map< int, Histogram<double> > meanScoreHistogramsByChargeState;
-		for( int z=1; z <= g_rtConfig->NumChargeStates; ++z )
+		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
 			meanScoreHistogramsByChargeState[ z ] = Histogram<double>( g_rtConfig->NumScoreHistogramBins, g_rtConfig->MaxScoreHistogramValues );
 
 		if( g_rtConfig->CalculateRelativeScores )
@@ -392,7 +397,7 @@ namespace myrimatch
 		}
 
 		if( g_rtConfig->MakeScoreHistograms )
-			for( int z=1; z <= g_rtConfig->NumChargeStates; ++z )
+			for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
 				meanScoreHistogramsByChargeState[ z ].writeToSvgFile( filenameAsScanName + g_rtConfig->OutputSuffix + "_+" + lexical_cast<string>(z) + "_histogram.svg", "MVH score", "Density", g_rtConfig->ScoreHistogramWidth, g_rtConfig->ScoreHistogramHeight );
 
 		RunTimeVariableMap vars = g_rtConfig->getVariables();
@@ -424,7 +429,7 @@ namespace myrimatch
 
 		if( g_rtConfig->DeisotopingMode == 3 /*&& g_rtConfig->DeisotopingTestMode != 0*/ )
 		{
-			spectra.calculateFDRs( g_rtConfig->NumChargeStates, 1.0, "rev_" );
+			spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
 			SpectraList passingSpectra;
 			spectra.filterByFDR( 0.05, &passingSpectra );
 			//g_rtConfig->DeisotopingMode = g_rtConfig->DeisotopingTestMode;
@@ -460,7 +465,7 @@ namespace myrimatch
 
 		if( g_rtConfig->AdjustPrecursorMass == 1 )
 		{
-			spectra.calculateFDRs( g_rtConfig->NumChargeStates, 1.0, "rev_" );
+			spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
 			SpectraList passingSpectra;
 			spectra.filterByFDR( 0.05, &passingSpectra );
 
@@ -695,7 +700,7 @@ namespace myrimatch
 	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool estimateComparisonsOnly = false )
 	{
 		boost::int64_t numComparisonsDone = 0;
-		vector< vector< double > > fragmentIonsByChargeState( g_rtConfig->NumChargeStates );
+		vector< vector< double > > fragmentIonsByChargeState( g_rtConfig->maxChargeStateFromSpectra );
 		Spectrum* spectrum;
 		SearchResult result(candidate);
         string sequence = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
@@ -703,7 +708,7 @@ namespace myrimatch
                                                         : candidate.monoisotopicMass();
 
 		int maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->NumChargeStates );
-		for( int z = 0; z < g_rtConfig->NumChargeStates; ++z )
+		for( int z = 0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
 		{
 			int fragmentChargeState = min( z, maxFragmentChargeState-1 );
 			vector<double>& sequenceIons = fragmentIonsByChargeState[fragmentChargeState];
@@ -1233,6 +1238,8 @@ namespace myrimatch
 						cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
 						//spectra.dump();
 
+						InitWorkerGlobals();
+
 						numSpectra = (int) spectra.size();
 
 						skip = 0;
@@ -1258,7 +1265,6 @@ namespace myrimatch
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
 							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
 
-							InitWorkerGlobals();
 
 							if( !g_rtConfig->EstimateSearchTimeOnly )
 							{
@@ -1275,9 +1281,9 @@ namespace myrimatch
                                 cout << g_hostString << " will make an estimated " << sumSearchStats.numComparisonsDone << " sequence comparisons." << endl;
 								skip = 1;
                             }
-
-							DestroyWorkerGlobals();
 						}
+
+						DestroyWorkerGlobals();
 					}
 
                     if( !skip ) {
