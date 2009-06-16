@@ -144,6 +144,10 @@ void testBombessin(const string& filename)
 
     // verify Bombessin peaks
 
+    // TODO: assert # peaks/peakel, verify metadata
+
+    // charge state 2
+
     vector<PeakelPtr> bombessin_2_0 = peakelField.find(810.41, .01, 1870, 0);
     if (os_) print(*os_, "bombessin_2_0", bombessin_2_0);
     unit_assert(bombessin_2_0.size() == 1);
@@ -156,19 +160,24 @@ void testBombessin(const string& filename)
     if (os_) print(*os_, "bombessin_2_2", bombessin_2_2);
     unit_assert(bombessin_2_2.size() == 1);
 
-    // 3-neutron peak here?
+    vector<PeakelPtr> bombessin_2_3 = peakelField.find(811.91, .01, 1870, 10);
+    if (os_) print(*os_, "bombessin_2_3", bombessin_2_3);
+    unit_assert(bombessin_2_3.size() == 1);
+
+    // charge state 3
 
     vector<PeakelPtr> bombessin_3_0 = peakelField.find(540.61, .01, 1870, 0);
     if (os_) print(*os_, "bombessin_3_0", bombessin_3_0);
     unit_assert(bombessin_3_0.size() == 1);
 
-    /* // we should see an isotope envelope
-    vector<PeakelPtr> bombessin_3_1 = peakelField.find(540.61 + 1./3., .01, 1870, 0);
+    vector<PeakelPtr> bombessin_3_1 = peakelField.find(540.61 + 1./3., .02, 1865, 0);
     if (os_) print(*os_, "bombessin_3_1", bombessin_3_1);
     unit_assert(bombessin_3_1.size() == 1);
-    */
 
- 
+    vector<PeakelPtr> bombessin_3_2 = peakelField.find(540.61 + 2./3., .02, 1865, 5);
+    if (os_) print(*os_, "bombessin_3_2", bombessin_3_2);
+    unit_assert(bombessin_3_2.size() == 1);
+    // TODO: verify peaks.size() == 1
 }
 
 
