@@ -4,28 +4,14 @@ import path ;
 
 path-constant CLI_ROOT : . ;
 
-if [ modules.peek : NT ]
+if [ modules.peek : NT ] &&
+   [ path.exists $(CLI_ROOT)/ABSciex.DataAccess.WiffFileDataReader.dll ]
 {
-
-import path ;
-rule vendor-api-requirements ( properties * )
-{
-    local result ;
-    if [ path.exists $(CLI_ROOT)/ABSciex.DataAccess.WiffFileDataReader.dll ]
-    {
-      result += <dependency>ABSciex.DataAccess.WiffFileDataReader.dll ;
-      result += <dependency>Clearcore.dll ;
-      result += <dependency>ClearCore.Storage.dll ;
-      result += <dependency>rscoree.dll ;
-    }
-    return $(result) ;
-}
 
 lib pwiz_wifffile
     : # sources
         WiffFile.cpp
     : # requirements
-        <toolset>msvc
 
         # - when boost::thread is link=static, the exe header is tweaked to call
         #   thread-local storage initialization routines (before main())
@@ -35,16 +21,44 @@ lib pwiz_wifffile
         #   or the CLR object must be
         # HACK: not needed when using hacked tss_pe.cpp
         #<link>shared
-
-        <link>shared:<define>WIFFFILE_DYN_LINK
+        
+        <toolset>msvc,<link>shared:<define>WIFFFILE_DYN_LINK
         <using-clr>true # requires hacked msvc.jam
         <cxxflags>"/AI $(CLI_ROOT)"
-        <conditional>@vendor-api-requirements
+        <toolset>msvc:<dependency>ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<dependency>Clearcore.dll
+        <toolset>msvc:<dependency>ClearCore.Storage.dll
+        <toolset>msvc:<dependency>Interop.AAOBatchLib.dll
+        <toolset>msvc:<dependency>Interop.AAOLib.dll
+        <toolset>msvc:<dependency>Interop.AcqMethodSvrLib.dll
+        <toolset>msvc:<dependency>Interop.AnalystBridge.dll
+        <toolset>msvc:<dependency>Interop.IDAMethodSvr.dll
+        <toolset>msvc:<dependency>Interop.MSMethodSvrLib.dll
+        <toolset>msvc:<dependency>Interop.ParameterSvrLib.dll
+        <toolset>msvc:<dependency>Interop.SampleStatusServerLib.dll
+        <toolset>msvc:<dependency>nunit.framework.dll
+        <toolset>msvc:<dependency>rscoree.dll
     : # default-build
     : # usage-requirements
-        <conditional>@vendor-api-requirements
+        <toolset>msvc:<dependency>ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<dependency>Clearcore.dll
+        <toolset>msvc:<dependency>ClearCore.Storage.dll
+        <toolset>msvc:<dependency>Interop.AAOBatchLib.dll
+        <toolset>msvc:<dependency>Interop.AAOLib.dll
+        <toolset>msvc:<dependency>Interop.AcqMethodSvrLib.dll
+        <toolset>msvc:<dependency>Interop.AnalystBridge.dll
+        <toolset>msvc:<dependency>Interop.IDAMethodSvr.dll
+        <toolset>msvc:<dependency>Interop.MSMethodSvrLib.dll
+        <toolset>msvc:<dependency>Interop.ParameterSvrLib.dll
+        <toolset>msvc:<dependency>Interop.SampleStatusServerLib.dll
+        <toolset>msvc:<dependency>nunit.framework.dll
+        <toolset>msvc:<dependency>rscoree.dll
     ;
 
+
+#
+# unit tests (ordered by dependency)
+#
 
 path-constant TEST_PATH1 : "c:/test/20061108_CPTAC_1B468.wiff" ;
 path-constant TEST_PATH2 : "c:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscript_Addona et al/Study II/Site 52_done/52_Raw Data/Site52_7.2.wiff" ;

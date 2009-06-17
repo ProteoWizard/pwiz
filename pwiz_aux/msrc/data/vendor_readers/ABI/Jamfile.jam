@@ -26,27 +26,55 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
-path-constant api-location : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
+path-constant api-location : ../../../utility/vendor_api/ABI ;
+
+import path ;
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        {
+            result += <source>SpectrumList_ABI.cpp ;
+            result += <source>ChromatogramList_ABI.cpp ;
+            result += <define>PWIZ_READER_ABI ;
+            result += <library>$(api-location)//pwiz_wifffile ;
+        }
+    }
+    return $(result) ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    if <toolset>msvc in $(properties)
+    {
+        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        {
+            return <define>PWIZ_READER_ABI <library>$(api-location)//pwiz_wifffile ;
+        }
+    }
+}
 
 lib pwiz_aux_msrc_reader_abi
     : # sources
         Reader_ABI.cpp
         Reader_ABI_Detail.cpp
     : # requirements
-        <toolset>msvc:<source>SpectrumList_ABI.cpp
-        <toolset>msvc:<source>ChromatogramList_ABI.cpp
-        <toolset>msvc:<define>PWIZ_READER_ABI
-        <toolset>msvc:<library>$(api-location)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
+        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
+        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<define>PWIZ_READER_ABI
-        <toolset>msvc:<library>$(api-location)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+		<conditional>@vendor-api-usage-requirements
+        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
+        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
     ;
 
+
+#
+# unit tests (ordered by dependency)
+#
 
 path-constant TEST_PATH1 : "c:/test/20061108_CPTAC_1B468.wiff" ;
 path-constant TEST_PATH2 : "C:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscript_Addona et al/Study II/Site 52_done/52_Raw Data/Site52_7.2.wiff" ;
