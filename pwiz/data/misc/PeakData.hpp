@@ -224,11 +224,9 @@ struct HandlerPeakel : public SAXParser::Handler
     HandlerPeakel(Peakel* _peakel = 0) : peakel(_peakel){}
     virtual Status startElement(const std::string& name, const Attributes& attributes, stream_offset position);
 
-private:
-
+    private:
     HandlerPeak _handlerPeak;
     size_t _peakCount;
-
 };
 
 
@@ -247,7 +245,7 @@ struct PWIZ_API_DECL Feature
     int charge;
     double totalIntensity;
     double rtVariance; // calculated from child Peakels?
-    std::vector<Peakel> peakels;
+    std::vector<PeakelPtr> peakels;
     
     void calculateMetadata();
 
@@ -256,7 +254,6 @@ struct PWIZ_API_DECL Feature
   
     bool operator==(const Feature& that) const;
     bool operator!=(const Feature& that) const;
-
 };
  
 struct HandlerFeature : public SAXParser::Handler // included in header file for accession by MatchData
@@ -266,11 +263,9 @@ struct HandlerFeature : public SAXParser::Handler // included in header file for
 
     virtual Status startElement(const std::string& name, const Attributes& attributes, stream_offset position);
 
-private:
-
+    private:
     HandlerPeakel _handlerPeakel;
     size_t _peakelCount;
-
 };
 
 
@@ -285,10 +280,7 @@ struct PWIZ_API_DECL FeatureFile
 
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);
-
-
 };
-
 
 
 } // namespace peakdata 

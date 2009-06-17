@@ -114,18 +114,18 @@ PeakData initializePeakData()
 
 }
 
-Peakel initializePeakel()
+PeakelPtr initializePeakel()
 {
-    Peakel pkl;
-    pkl.mz = 432.1;
-    pkl.retentionTime = 1234.56;
-    pkl.maxIntensity = 9876.54;
-    pkl.totalIntensity = 32123.45;
-    pkl.mzVariance = 6.023;
+    PeakelPtr pkl(new Peakel);
+    pkl->mz = 432.1;
+    pkl->retentionTime = 1234.56;
+    pkl->maxIntensity = 9876.54;
+    pkl->totalIntensity = 32123.45;
+    pkl->mzVariance = 6.023;
 
     PeakFamily peakFamily = initializePeakFamily();
     
-    pkl.peaks = peakFamily.peaks;
+    pkl->peaks = peakFamily.peaks;
     
     return pkl;
 }
@@ -309,13 +309,13 @@ void testPeakel()
 {
     // initialize a peakel
 
-    Peakel dill = initializePeakel();
+    PeakelPtr dill = initializePeakel();
 
 
     // write it out
     ostringstream oss_pkl;
     XMLWriter writer_pkl(oss_pkl);
-    dill.write(writer_pkl);
+    dill->write(writer_pkl);
 
     // instantiate another Peakel
 
@@ -327,7 +327,7 @@ void testPeakel()
     
     // assert that the two Peakels are equal
 
-    unit_assert(dill == gherkin);
+    unit_assert(*dill == gherkin);
     if (os_) *os_ << "Testing Peakel ... " << endl << oss_pkl.str() << endl;
 
 }
@@ -343,8 +343,8 @@ void testFeature()
     feature.totalIntensity = 1776.0704;
     feature.rtVariance = 1969.0720;
     
-    Peakel stateFair = initializePeakel();
-    Peakel deli = initializePeakel();
+    PeakelPtr stateFair = initializePeakel();
+    PeakelPtr deli = initializePeakel();
 
     feature.peakels.push_back(stateFair);
     feature.peakels.push_back(deli);
@@ -365,9 +365,15 @@ void testFeature()
 
     // assert that the two Features are equal
 
-    unit_assert(feature == feature2);
-    if (os_) *os_ << "Testing Feature ... " << endl << oss_f.str() << endl;
+    if (os_) 
+    {
+        *os_ << "Testing Feature ... " << endl << oss_f.str() << endl;
+        *os_ << "feature2:\n";
+        XMLWriter writer(*os_);
+        feature2.write(writer);
+    }
 
+    unit_assert(feature == feature2);
 }
 
 void test()

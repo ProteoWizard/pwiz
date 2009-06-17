@@ -881,34 +881,27 @@ SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const
             {
                 throw runtime_error(("[HandlerPeakel] Unexpected element name: " + name).c_str());
                 return Status::Done;
-
             }
 
           else
             {
-
                 peakel->peaks.push_back(Peak());
                 _handlerPeak.peak = &(peakel->peaks.back());
                 return Status(Status::Delegate, &_handlerPeak);
-              
             }
-
         }
       
       if (_peakCount != peakel->peaks.size())
         {
             throw runtime_error("[HandlerPeakel] <peaks count> != peakel->peaks.size()");
             return Status::Done;
-
         }
-
 }
 
 void Peakel::read(istream& is)
 {
     HandlerPeakel handlerPeakel(this);
     parse(is, handlerPeakel);
-
 }
 
 bool Peakel::operator==(const Peakel& that) const
@@ -958,44 +951,39 @@ void Feature::calculateMetadata()
 
     // calculate metadata of each peakel
     
-    vector<Peakel>::iterator calc_pkl_it = peakels.begin();
+    vector<PeakelPtr>::iterator calc_pkl_it = peakels.begin();
     for(; calc_pkl_it != peakels.end(); ++calc_pkl_it)
         {   
-            calc_pkl_it->calculateMetadata();
-           
+            (*calc_pkl_it)->calculateMetadata();
         }
 
     // write mzMonoisotopic (mz of first peakel)
-    mzMonoisotopic = peakels.begin()->mz;
+    mzMonoisotopic = peakels.front()->mz;
 
     // calculate totalIntensity and maxIntensity 
-    vector<Peakel>::iterator calc_intensity_it = peakels.begin();
+    vector<PeakelPtr>::iterator calc_intensity_it = peakels.begin();
     for(; calc_intensity_it != peakels.end(); ++calc_intensity_it)
         {
-            totalIntensity += calc_intensity_it->totalIntensity;
-           
+            totalIntensity += (*calc_intensity_it)->totalIntensity;
         }
 
     // calculate retentionTime (weighted mean of peakel retentionTimes)
-    vector<Peakel>::iterator calc_mean_it = peakels.begin();
+    vector<PeakelPtr>::iterator calc_mean_it = peakels.begin();
     for(; calc_mean_it != peakels.end(); ++calc_mean_it)
         {
-            retentionTime += (calc_mean_it->retentionTime) * (calc_mean_it->totalIntensity)/totalIntensity; //weighted average
-
+            retentionTime += ((*calc_mean_it)->retentionTime) * ((*calc_mean_it)->totalIntensity)/totalIntensity; //weighted average
         }
     
     // calculate rtVariance ( variance of peakel retentionTimes)
-    vector<Peakel>::iterator calc_var_it = peakels.begin();
+    vector<PeakelPtr>::iterator calc_var_it = peakels.begin();
     for(; calc_var_it != peakels.end(); ++calc_var_it)
         {
-            rtVariance += (calc_var_it->retentionTime - retentionTime) * (calc_var_it->retentionTime - retentionTime);
-            
+            rtVariance += ((*calc_var_it)->retentionTime - retentionTime) * ((*calc_var_it)->retentionTime - retentionTime);
         }
 
     rtVariance = rtVariance / peakels.size();
 
     return;
-
 }
 
 
@@ -1017,17 +1005,15 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
   
     xmlWriter.startElement("peakels",attributes_pkl);
   
-    vector<Peakel>::const_iterator pkl_it = peakels.begin();
+    vector<PeakelPtr>::const_iterator pkl_it = peakels.begin();
     for(; pkl_it != peakels.end(); ++pkl_it)
-        pkl_it->write(xmlWriter);
+        (*pkl_it)->write(xmlWriter);
 
     xmlWriter.endElement();
     xmlWriter.endElement();
-
 }
 
 SAXParser::Handler::Status HandlerFeature::startElement(const string& name, const Attributes& attributes, stream_offset position)
-
 {
       if (name == "feature")
         {
@@ -1039,7 +1025,6 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
             getAttribute(attributes,"rtVariance", feature->rtVariance);
 
             return Handler::Status::Ok;
-
         }
 
       else if (name=="peakels")
@@ -1059,12 +1044,10 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
 
           else
             {
-                feature->peakels.push_back(Peakel());
-                _handlerPeakel.peakel = &(feature->peakels.back());
+                feature->peakels.push_back(PeakelPtr(new Peakel));
+                _handlerPeakel.peakel = feature->peakels.back().get();
                 return Status(Status::Delegate, &_handlerPeakel);
-
             }
-
         }
 
       if (_peakelCount != feature->peakels.size())
@@ -1072,7 +1055,6 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
             throw runtime_error("[HandlerFeature]: <peakels count> != feature->peakels.size()");
             return Status::Done;
         }
-
 }
 
 Feature::Feature(const MSIHandler::Record& record) 
@@ -1088,31 +1070,34 @@ Feature::Feature(const MSIHandler::Record& record)
 
 void Feature::read(istream& is)
 {
-
     HandlerFeature handlerFeature(this);
     parse(is, handlerFeature);
-
-
-
 }
 
 
 bool Feature::operator==(const Feature& that) const
 {
-    return id == that.id &&
+    bool result = (id == that.id &&
       mzMonoisotopic == that.mzMonoisotopic &&
       retentionTime == that.retentionTime &&
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&
-      rtVariance == that.rtVariance &&
-      peakels == that.peakels;
+      rtVariance == that.rtVariance);
 
+    if (!result) return false;
+    if (peakels.size() != that.peakels.size()) return false;
+
+    for (vector<PeakelPtr>::const_iterator it=peakels.begin(), jt=that.peakels.begin();
+         it!=peakels.end(); ++it, ++jt)
+        if (**it != **jt) return false;
+
+    return true;
 }
+
 
 bool Feature::operator!=(const Feature& that) const
 {
     return !(*this==that);
-
 }
 
 

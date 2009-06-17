@@ -118,8 +118,8 @@ Feature FeatureDetectorSimple::Impl::makeFeature(const PeakFamily& pf, FeatureID
     for(vector<Peak>::const_iterator peak_it = pf.peaks.begin(); peak_it != pf.peaks.end(); ++peak_it) 
     {   
         // initialize peakels, one for each peak in the PeakFamily
-        Peakel peakel; 
-        updatePeakel(*peak_it, peakel);
+        PeakelPtr peakel(new Peakel);
+        updatePeakel(*peak_it, *peakel);
         result.peakels.push_back(peakel);
     }
 
@@ -136,18 +136,16 @@ void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, Feature& f
 {   
 
     // iterate through peakels, adding new peaks and updating attributes
-    vector<Peakel>::iterator peakel_it = feature.peakels.begin();
+    vector<PeakelPtr>::iterator peakel_it = feature.peakels.begin();
     vector<Peak>::const_iterator peak_it = pf.peaks.begin();
 
     for(; peak_it != pf.peaks.end(); ++peakel_it, ++peak_it)
     {      
         // update appropriate peakel
-        updatePeakel(*peak_it, *peakel_it);
-
+        updatePeakel(*peak_it, **peakel_it);
     }
 
     return;
-
 }
 
 void FeatureDetectorSimple::Impl::getMetadata(vector<Feature>& detected) const
@@ -270,7 +268,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
     map<FeatureID, Feature>::iterator the_it = featureMap.begin();
     for(; the_it != featureMap.end(); ++the_it)
         {
-            if(the_it->second.peakels.begin()->peaks.size()>1) // for now only write features lasting > 1 scan
+            if(the_it->second.peakels.front()->peaks.size()>1) // for now only write features lasting > 1 scan
                 {
                     detected.push_back(the_it->second);
 
