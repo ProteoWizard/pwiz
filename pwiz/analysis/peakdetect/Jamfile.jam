@@ -30,6 +30,7 @@ project
 
 lib pwiz_analysis_peakdetect
     :   # sources 
+        MZTolerance.cpp
         Noise.cpp
         PeakFamilyDetector.cpp
         PeakFamilyDetectorFT.cpp
@@ -64,6 +65,7 @@ unit-test PeakFamilyDetectorFTTest :
     pwiz_analysis_peakdetect
     ;
 
+unit-test MZToleranceTest : MZToleranceTest.cpp pwiz_analysis_peakdetect ;
 unit-test NoiseTest : NoiseTest.cpp pwiz_analysis_peakdetect ;
 unit-test PeakFinderTest : PeakFinderTest.cpp pwiz_analysis_peakdetect ;
 unit-test PeakFitterTest : PeakFitterTest.cpp pwiz_analysis_peakdetect ;
