@@ -4,41 +4,41 @@ import path ;
 
 path-constant ROOT : . ;
 
-if [ modules.peek : NT ] &&
-   [ path.exists $(ROOT)/DACServer.dll ]
+if [ modules.peek : NT ]
 {
+
+import path ;
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if [ path.exists $(ROOT)/DACServer.dll ]
+    {
+      result += <dependency>DACServer.dll ;
+      result += <dependency>genutil.dll ;
+      result += <dependency>MetaGD32.dll ;
+      result += <dependency>raw.dll ;
+      result += <dependency>RawCsm.dll ;
+      result += <dependency>SecuritySignature.dll ;
+    }
+    return $(result) ;
+}
 
 lib pwiz_vendor_api_waters
     : # sources
         RawData.cpp
     : # requirements
-        <toolset>msvc,<link>shared:<define>RAWDATA_DYN_LINK
-        <toolset>msvc:<library>/ext/boost//filesystem
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-        <toolset>msvc:<dependency>DACServer.dll
-        <toolset>msvc:<dependency>genutil.dll
-        <toolset>msvc:<dependency>MetaGD32.DLL
-        <toolset>msvc:<dependency>MetaGD32.DLL
-        <toolset>msvc:<dependency>raw.dll
-        <toolset>msvc:<dependency>RawCsm.dll
-        <toolset>msvc:<dependency>SecuritySignature.dll
+        <toolset>msvc
+        <link>shared:<define>RAWDATA_DYN_LINK
+        <library>/ext/boost//filesystem
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>/ext/boost//filesystem
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-        <toolset>msvc:<dependency>DACServer.dll
-        <toolset>msvc:<dependency>genutil.dll
-        <toolset>msvc:<dependency>MetaGD32.DLL
-        <toolset>msvc:<dependency>MetaGD32.DLL
-        <toolset>msvc:<dependency>raw.dll
-        <toolset>msvc:<dependency>RawCsm.dll
-        <toolset>msvc:<dependency>SecuritySignature.dll
+        <library>/ext/boost//filesystem
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
     ;
 
-
-#
-# unit tests (ordered by dependency)
-#
 
 path-constant TEST_PATH1 : "c:/test/160109_Mix1_calcurve_070.raw" ;
 path-constant TEST_PATH2 : "c:/test/010208_ecoli_003.raw" ;

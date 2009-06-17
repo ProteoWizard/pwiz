@@ -5,29 +5,30 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
+path-constant api-location : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
 
 lib pwiz_aux_msrc_reader_waters
     : # sources
         Reader_Waters.cpp
     : # requirements
-        <toolset>msvc:<source>Reader_Waters_Detail.cpp
         <toolset>msvc:<source>SpectrumList_Waters.cpp
         <toolset>msvc:<source>ChromatogramList_Waters.cpp
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
-		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-		<toolset>msvc:<define>PWIZ_READER_WATERS
+        <toolset>msvc:<source>Reader_Waters_Detail.cpp
+        <toolset>msvc:<define>PWIZ_READER_WATERS
+        <toolset>msvc:<library>$(api-location)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
-		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-		<toolset>msvc:<define>PWIZ_READER_WATERS
+        <toolset>msvc:<define>PWIZ_READER_WATERS
+        <toolset>msvc:<library>$(api-location)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
 
 path-constant TEST_PATH1 : "c:/test/160109_Mix1_calcurve_070.raw" ;
 path-constant TEST_PATH2 : "c:/test/010208_ecoli_003.raw" ;
 
-# special run target for Reader_Thermo_Test, which needs external data 
+# special run target for Reader_Waters_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run Reader_Waters_Test.cpp pwiz_aux_msrc_reader_waters 
     : # args
