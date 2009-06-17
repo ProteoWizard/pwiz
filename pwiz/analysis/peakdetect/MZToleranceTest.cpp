@@ -25,6 +25,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <cstring>
+#include <limits>
 
 
 using namespace std;
