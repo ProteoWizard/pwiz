@@ -71,7 +71,7 @@ void translateFunctionType(FunctionType functionType,
         case FunctionType_Survey:
         case FunctionType_MALDI_TOF:
             msLevel = 1;
-            spectrumType = MS_MSn_spectrum;
+            spectrumType = MS_MS1_spectrum;
             break;
 
         default:
