@@ -17,6 +17,7 @@ project
 local bound_libs =
         <library>../../../data/msdata//pwiz_data_msdata/<link>static/<asynch-exceptions>off
         <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static/<asynch-exceptions>off
+        <library>../../../analysis//pwiz_analysis_version/<link>static/<asynch-exceptions>off
         <library>../../../utility/proteome/<link>static/<asynch-exceptions>off
         <library>../../../../pwiz_tools/common//pwiz_tools_common/<link>static/<asynch-exceptions>off
         <library>../../../analysis/spectrum_processing/<link>static/<asynch-exceptions>off
