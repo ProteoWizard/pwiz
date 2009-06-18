@@ -69,7 +69,7 @@ struct PWIZ_API_DECL Peak
     typedef std::map<Attribute, double> Attributes; 
     Attributes attributes;
 
-    Peak();
+    Peak(double _mz = 0, double _retentionTime = 0);
 
     double getAttribute(Attribute attribute) const;
 
@@ -209,11 +209,14 @@ struct PWIZ_API_DECL Peakel
     // peak data
     std::vector<Peak> peaks;
     
+    // construction
     Peakel();
+    Peakel(const Peak& peak);
 
     /// recalculates all metadata based on peak data
     void calculateMetadata();
 
+    // retention times grabbed from peak data; assume peaks are ordered by retention time
     double retentionTimeMin() const;
     double retentionTimeMax() const;
 

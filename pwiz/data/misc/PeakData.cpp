@@ -45,8 +45,8 @@ using boost::lexical_cast;
 //
 
 
-Peak::Peak()
-:   mz(0), retentionTime(0), intensity(0), area(0), error(0)
+Peak::Peak(double _mz, double _retentionTime)
+:   mz(_mz), retentionTime(_retentionTime), intensity(0), area(0), error(0)
 {}
 
 
@@ -785,6 +785,17 @@ Peakel::Peakel()
     totalIntensity(0),
     mzVariance(0)
 {}
+
+
+Peakel::Peakel(const Peak& peak)
+:   mz(peak.mz),
+    retentionTime(peak.retentionTime),
+    maxIntensity(0),
+    totalIntensity(0),
+    mzVariance(0)
+{
+    peaks.push_back(peak);
+}
 
 
 void Peakel::calculateMetadata()

@@ -346,6 +346,17 @@ void testPeakelAux()
 }
 
 
+void testPeakelConstruction()
+{
+    Peak peak(420, 666);
+    Peakel peakel(Peak(420,666));
+    unit_assert(peakel.mz == 420);
+    unit_assert(peakel.retentionTime == 666);
+    unit_assert(peakel.peaks.size() == 1);
+    unit_assert(peakel.peaks[0] == peak);
+}
+
+
 void testFeature()
 {
     //    initialize a new Feature
@@ -390,6 +401,7 @@ void testFeature()
     unit_assert(feature == feature2);
 }
 
+
 void test()
 {
     testPeakEquality();
@@ -401,13 +413,13 @@ void test()
     testPeakData();
     testPeakel();
     testPeakelAux();
+    testPeakelConstruction();
     testFeature();
 }
 
 
 int main(int argc, char* argv[])
 {
-
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
