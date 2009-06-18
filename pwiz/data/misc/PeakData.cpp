@@ -968,10 +968,15 @@ SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const
 ///
 
 
+Feature::Feature()
+:   mz(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0)
+{}
+
+
 void Feature::calculateMetadata()
 {
     // wipe out any metadata that may have been set
-    mzMonoisotopic = 0;
+    mz = 0;
     retentionTime = 0;
     rtVariance = 0;
     totalIntensity = 0;
@@ -984,8 +989,8 @@ void Feature::calculateMetadata()
             (*calc_pkl_it)->calculateMetadata();
         }
 
-    // write mzMonoisotopic (mz of first peakel)
-    mzMonoisotopic = peakels.front()->mz;
+    // write mz (mz of first peakel)
+    mz = peakels.front()->mz;
 
     // calculate totalIntensity and maxIntensity 
     vector<PeakelPtr>::iterator calc_intensity_it = peakels.begin();
@@ -1019,7 +1024,7 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", boost::lexical_cast<string>(id)));
-    attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
+    attributes.push_back(make_pair("mz", boost::lexical_cast<string>(mz)));
     attributes.push_back(make_pair("retentionTime", boost::lexical_cast<string>(retentionTime)));
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
     attributes.push_back(make_pair("totalIntensity", boost::lexical_cast<string>(totalIntensity)));
@@ -1045,7 +1050,7 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
       if (name == "feature")
         {
             getAttribute(attributes,"id", feature->id);
-            getAttribute(attributes,"mzMonoisotopic", feature->mzMonoisotopic);
+            getAttribute(attributes,"mz", feature->mz);
             getAttribute(attributes,"retentionTime", feature->retentionTime);
             getAttribute(attributes,"charge", feature->charge);
             getAttribute(attributes,"totalIntensity", feature->totalIntensity);
@@ -1086,13 +1091,11 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
 
 Feature::Feature(const MSIHandler::Record& record) 
 {
-  
-    mzMonoisotopic = record.mz;
+    mz = record.mz;
 	retentionTime = record.time;
 	charge = record.charge;
 	totalIntensity = record.intensity;	
 	rtVariance = 0;
-   
 }
 
 void Feature::read(istream& is)
@@ -1105,7 +1108,7 @@ void Feature::read(istream& is)
 bool Feature::operator==(const Feature& that) const
 {
     bool result = (id == that.id &&
-      mzMonoisotopic == that.mzMonoisotopic &&
+      mz == that.mz &&
       retentionTime == that.retentionTime &&
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&

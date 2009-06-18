@@ -55,7 +55,7 @@ struct mzrtEqual
 
     bool operator()(Feature& b) const // should be enough info to uniquely identify a feature
     {
-        return fabs(a.mzMonoisotopic-b.mzMonoisotopic) < mz_epsilon &&
+        return fabs(a.mz-b.mz) < mz_epsilon &&
             fabs(a.retentionTime - b.retentionTime) < rt_epsilon;
 
     }
@@ -89,7 +89,7 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     // instantiate the bombessin +2 feature that we know is correct, with calculated mzMonoisotopic and eyeballed retentionTime
     
     Feature bombessin2_truth;
-    bombessin2_truth.mzMonoisotopic = 810.4148;
+    bombessin2_truth.mz = 810.4148;
     bombessin2_truth.retentionTime = 1866;
 
     vector<Feature>::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
@@ -104,7 +104,7 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     // do the same for the +3 feature
 
     Feature bombessin3_truth;
-    bombessin3_truth.mzMonoisotopic = 540.6123;
+    bombessin3_truth.mz = 540.6123;
     bombessin3_truth.retentionTime = 1866;
     
     vector<Feature>::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));

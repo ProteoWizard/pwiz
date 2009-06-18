@@ -230,7 +230,7 @@ MSMSRunSummary makeMSMSRunSummary()
 Feature makeFeature()
 {
     Feature feature;
-    feature.mzMonoisotopic = 1.234;
+    feature.mz = 1.234;
     feature.retentionTime = 5.678;
 
     return feature;

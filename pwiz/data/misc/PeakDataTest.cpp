@@ -362,7 +362,7 @@ void testFeature()
     //    initialize a new Feature
     
     Feature feature;
-    feature.mzMonoisotopic = 1863.0101;
+    feature.mz = 1863.0101;
     feature.retentionTime = 1492.1012;
     feature.charge = 3;
     feature.totalIntensity = 1776.0704;

@@ -249,11 +249,11 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel);
 
 struct PWIZ_API_DECL Feature
 {
-    Feature() : mzMonoisotopic(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0) {}
+    Feature();
     Feature(const MSIHandler::Record& record);
 
     std::string id; // assigned by feature detection, for easier lookup 
-    double mzMonoisotopic;
+    double mz;
     double retentionTime;
     int charge;
     double totalIntensity;
