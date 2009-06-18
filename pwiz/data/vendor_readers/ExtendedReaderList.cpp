@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "ExtendedReaderList.hpp"
-#include "pwiz/data/vendor_readers/Reader_Thermo.hpp"
+#include "Thermo/Reader_Thermo.hpp"
 #include "Agilent/Reader_Agilent.hpp"
 #include <iostream>
 #include <fstream>

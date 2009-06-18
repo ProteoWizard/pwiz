@@ -1,5 +1,5 @@
 #
-# Jamfile (data/vendor_readers) 
+# Jamfile (data/vendor_readers/Thermo) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -28,20 +28,37 @@ project
     ;
 
 
-lib pwiz_data_vendor_readers
+lib pwiz_reader_thermo
     : # sources
-        ExtendedReaderList.cpp 
+        Reader_Thermo.cpp
+        Reader_Thermo_Detail.cpp
+        SpectrumList_Thermo.cpp
+        ChromatogramList_Thermo.cpp
     : # requirements
-        <library>Agilent//pwiz_reader_agilent
-        <library>Thermo//pwiz_reader_thermo
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo//pwiz_rawfile
         <toolset>msvc:<define>PWIZ_READER_THERMO
     : # default-build
     : # usage-requirements
-        <library>Agilent//pwiz_reader_agilent
-        <library>Thermo//pwiz_reader_thermo
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo//pwiz_rawfile
         <toolset>msvc:<define>PWIZ_READER_THERMO
     ;
 
 
-build-project Agilent ;
-build-project Thermo ;
+#
+# unit tests (ordered by dependency)
+#
+
+
+# special run target for Reader_Thermo_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Thermo_Test.cpp pwiz_reader_thermo 
+    : # args
+    : # input-files
+        Reader_Thermo_Test.RAW
+    : # requirements
+    : # target name
+        Reader_Thermo_Test 
+    : # default-build
+    ;
