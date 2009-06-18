@@ -139,6 +139,9 @@ namespace freicore {
 			// Returns DynamicModSet object that contains substitutions
 			// which matches a particular mass
 			DynamicModSet getPossibleSubstitutions(float deltaMass);
+			// Returns DynamicModSet object that contains substitutions
+			// which matches a particular mass
+			DynamicModSet getPossibleSubstitutions(float deltaMass, float massTol);
 			// Getter functions
 			MassToAminoAcidMap getMassToAminoAcidMap() { return modificationMassToAminoAcidMap;};
 			InterpretationMap getInterpretationMap() { return interpretationMap;};
