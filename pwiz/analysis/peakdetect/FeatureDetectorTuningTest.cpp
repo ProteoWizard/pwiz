@@ -99,8 +99,8 @@ vector< vector<Peak> > extractPeaks(const MSData& msd, const PeakExtractor& peak
 shared_ptr<PeakelGrower> createPeakelGrower()
 {
     PeakelGrower_Proximity::Config config;
-    config.toleranceMZ = .01;
-    config.toleranceRetentionTime = 20; // seconds
+    config.mzTolerance = .01;
+    config.rtTolerance = 20; // seconds
 
     return shared_ptr<PeakelGrower>(new PeakelGrower_Proximity(config));
 }

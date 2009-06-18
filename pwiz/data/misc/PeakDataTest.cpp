@@ -311,7 +311,6 @@ void testPeakel()
 
     PeakelPtr dill = initializePeakel();
 
-
     // write it out
     ostringstream oss_pkl;
     XMLWriter writer_pkl(oss_pkl);
@@ -329,8 +328,23 @@ void testPeakel()
 
     unit_assert(*dill == gherkin);
     if (os_) *os_ << "Testing Peakel ... " << endl << oss_pkl.str() << endl;
-
 }
+
+
+void testPeakelAux()
+{
+    Peakel p;
+    p.retentionTime = 420;
+    unit_assert(p.retentionTimeMin() == 420);
+    unit_assert(p.retentionTimeMax() == 420);
+
+    p.peaks.resize(2);
+    p.peaks[0].retentionTime = 666;
+    p.peaks[1].retentionTime = 667;
+    unit_assert(p.retentionTimeMin() == 666);
+    unit_assert(p.retentionTimeMax() == 667);
+}
+
 
 void testFeature()
 {
@@ -386,6 +400,7 @@ void test()
     testSoftware();
     testPeakData();
     testPeakel();
+    testPeakelAux();
     testFeature();
 }
 

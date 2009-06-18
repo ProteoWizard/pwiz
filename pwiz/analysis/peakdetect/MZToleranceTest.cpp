@@ -84,7 +84,7 @@ void testIsWithinTolerance()
     unit_assert(isWithinTolerance(1000.001, 1000, delta));
     unit_assert(isWithinTolerance(999.999, 1000, delta));
     unit_assert(!isWithinTolerance(1000.1, 1000, delta));
-    unit_assert(!isWithinTolerance(999.9, 1000, delta));
+    unit_assert(!isWithinTolerance(999.9, 1000, .01)); // automatic conversion
 }
 
 

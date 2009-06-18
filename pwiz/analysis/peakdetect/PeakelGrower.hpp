@@ -24,6 +24,7 @@
 #define _PEAKELGROWER_HPP_
 
 
+#include "MZTolerance.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include <set>
@@ -62,8 +63,8 @@ struct PeakelField : public std::set<pwiz::data::peakdata::PeakelPtr, LessThan_M
 {
     typedef pwiz::data::peakdata::PeakelPtr PeakelPtr;
 
-    std::vector<PeakelPtr> find(double mz, double toleranceMZ,
-                                double retentionTime, double toleranceRetentionTime) const;
+    std::vector<PeakelPtr> find(double mz, MZTolerance mzTolerance,
+                                double retentionTime, double rtTolerance) const;
 };
 
 
@@ -93,11 +94,11 @@ class PWIZ_API_DECL PeakelGrower_Proximity : public PeakelGrower
     
     struct Config
     {
-        double toleranceMZ; // m/z units
-        double toleranceRetentionTime; // seconds
+        MZTolerance mzTolerance; // m/z units
+        double rtTolerance; // seconds
         
-        Config(double _toleranceMZ = .1, double _toleranceRetentionTime = 10)
-        :   toleranceMZ(_toleranceMZ), toleranceRetentionTime(_toleranceRetentionTime)
+        Config(double _mzTolerance = .1, double _rtTolerance = 10)
+        :   mzTolerance(_mzTolerance), rtTolerance(_rtTolerance)
         {}
     };
 

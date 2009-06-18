@@ -832,9 +832,20 @@ void Peakel::calculateMetadata()
 }
 
 
+double Peakel::retentionTimeMin() const
+{
+    return peaks.empty() ? retentionTime : peaks.front().retentionTime;
+}
+
+
+double Peakel::retentionTimeMax() const
+{
+    return peaks.empty() ? retentionTime : peaks.back().retentionTime;
+}
+
+
 void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
-
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("mz", boost::lexical_cast<string>(mz)));
     attributes.push_back(make_pair("retentionTime",boost::lexical_cast<string>(retentionTime)));
@@ -857,8 +868,50 @@ void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     xmlWriter.endElement();
 }
 
+
+void Peakel::read(istream& is)
+{
+    HandlerPeakel handlerPeakel(this);
+    parse(is, handlerPeakel);
+}
+
+
+bool Peakel::operator==(const Peakel& that) const
+{
+    return mz == that.mz &&
+      retentionTime == that.retentionTime &&
+      maxIntensity == that.maxIntensity &&
+      totalIntensity == that.totalIntensity &&
+      mzVariance == that.mzVariance &&
+      peaks == that.peaks;
+
+}
+
+
+bool Peakel::operator!=(const Peakel& that) const
+{
+    return !(*this == that);
+
+}
+
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peakel& peakel)
+{
+    XMLWriter writer(os);
+    peakel.write(writer);
+    return os;
+}
+
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel)
+{
+    peakel.read(is);
+    return is;
+}
+
+
 SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const Attributes& attributes, stream_offset position)
-    {
+{
       if (name == "peakel")
         {
             getAttribute(attributes,"mz", peakel->mz);
@@ -898,43 +951,6 @@ SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const
         }
 }
 
-void Peakel::read(istream& is)
-{
-    HandlerPeakel handlerPeakel(this);
-    parse(is, handlerPeakel);
-}
-
-bool Peakel::operator==(const Peakel& that) const
-{
-    return mz == that.mz &&
-      retentionTime == that.retentionTime &&
-      maxIntensity == that.maxIntensity &&
-      totalIntensity == that.totalIntensity &&
-      mzVariance == that.mzVariance &&
-      peaks == that.peaks;
-
-}
-
-bool Peakel::operator!=(const Peakel& that) const
-{
-    return !(*this == that);
-
-}
-
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Peakel& peakel)
-{
-    XMLWriter writer(os);
-    peakel.write(writer);
-    return os;
-}
-
-
-PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peakel& peakel)
-{
-    peakel.read(is);
-    return is;
-}
 
 ///
 /// Feature

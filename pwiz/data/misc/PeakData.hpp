@@ -194,18 +194,28 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakData& pd);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd);
 
 
+///
+/// struct for an eluted peak (PEAK ELution)
+/// 
 struct PWIZ_API_DECL Peakel
 {
-    Peakel();
-
+    // metadata
     double mz;
     double retentionTime;
     double maxIntensity;
     double totalIntensity;
     double mzVariance;
+
+    // peak data
     std::vector<Peak> peaks;
     
+    Peakel();
+
+    /// recalculates all metadata based on peak data
     void calculateMetadata();
+
+    double retentionTimeMin() const;
+    double retentionTimeMax() const;
 
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);

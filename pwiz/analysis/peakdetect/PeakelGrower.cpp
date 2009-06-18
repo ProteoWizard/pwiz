@@ -22,6 +22,7 @@
                                                                                                      
 #define PWIZ_SOURCE
 #include "PeakelGrower.hpp"
+#include <functional>
 
 
 namespace pwiz {
@@ -30,6 +31,7 @@ namespace analysis {
 
 using namespace std;
 using namespace pwiz::data::peakdata;
+using boost::shared_ptr;
 
 
 //
@@ -38,41 +40,40 @@ using namespace pwiz::data::peakdata;
 
 
 namespace {
-bool isWithinRetentionTimeTolerance(const Peakel& peakel, double retentionTime, 
-                                    double toleranceRetentionTime)
+struct RTMatches
 {
-    double rtLow = peakel.retentionTime;
-    double rtHigh = peakel.retentionTime;
+    double rt;
+    double rtTolerance;
 
-    if (!peakel.peaks.empty())
+    RTMatches(double _rt, double _rtTolerance) : rt(_rt), rtTolerance(_rtTolerance) {}
+
+    bool operator()(const shared_ptr<Peakel>& peakel)
     {
-        // get retentionTime range from peaks;
-        // assume Peakel::peaks vector is sorted by retentionTime
-        rtLow = peakel.peaks.front().retentionTime;
-        rtHigh = peakel.peaks.back().retentionTime;
+        return (rt > peakel->retentionTimeMin() - rtTolerance &&
+                rt < peakel->retentionTimeMax() + rtTolerance);
     }
-
-    return (retentionTime > rtLow - toleranceRetentionTime &&
-            retentionTime < rtHigh + toleranceRetentionTime);
-}
+};
 } // namespace
 
 
-vector<PeakelPtr> PeakelField::find(double mz, double toleranceMZ,
-                                    double retentionTime, double toleranceRetentionTime) const
+vector<PeakelPtr> PeakelField::find(double mz, MZTolerance mzTolerance,
+                                    double retentionTime, double rtTolerance) const
 {
     PeakelPtr target(new Peakel);
 
-    target->mz = mz - toleranceMZ;
+    target->mz = mz - mzTolerance;
     PeakelField::const_iterator begin = this->lower_bound(target);
 
-    target->mz = mz + toleranceMZ;
+    target->mz = mz + mzTolerance;
     PeakelField::const_iterator end = this->upper_bound(target);
 
     vector<PeakelPtr> result;
 
+    RTMatches matches(retentionTime, rtTolerance);
+
+    // copy_if(begin, end, back_inserter(result), matches); // some day this line will compile 
     for (PeakelField::const_iterator it=begin; it!=end; ++it)
-        if (isWithinRetentionTimeTolerance(**it, retentionTime, toleranceRetentionTime))
+        if (matches(*it))
             result.push_back(*it);
 
     return result;
@@ -141,8 +142,8 @@ void updatePeakel(Peakel& peakel, const Peak& peak)
 
 void PeakelGrower_Proximity::sowPeak(PeakelField& peakelField, const Peak& peak) const
 {
-    vector<PeakelPtr> candidates = peakelField.find(peak.mz, config_.toleranceMZ, 
-                                                    peak.retentionTime, config_.toleranceRetentionTime);
+    vector<PeakelPtr> candidates = peakelField.find(peak.mz, config_.mzTolerance,
+                                                    peak.retentionTime, config_.rtTolerance);
 
     if (candidates.empty())
         insertNewPeakel(peakelField, peak);

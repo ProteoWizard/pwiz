@@ -126,6 +126,12 @@ void testPeakelField()
     unit_assert(v.empty());
     v = pf.find(2, .1, 1, .1);
     unit_assert(v.size()==1 && v[0]==b);
+
+    MZTolerance fiveppm(5, MZTolerance::PPM);
+    v = pf.find(1.000001, fiveppm, 1, 10);
+    unit_assert(v.size()==2 && v[0]==a && v[1]==c);
+    v = pf.find(1.000006, fiveppm, 1, 10);
+    unit_assert(v.empty());
 }
 
 
@@ -166,13 +172,14 @@ vector< vector<Peak> > createToyPeaks()
     return peaks;
 }
 
+
 void testToyExample()
 {
     vector< vector<Peak> > peaks = createToyPeaks();
 
     PeakelGrower_Proximity::Config config;
-    config.toleranceMZ = .1;
-    config.toleranceRetentionTime = 1.5;
+    config.mzTolerance = .1;
+    config.rtTolerance = 1.5;
 
     PeakelGrower_Proximity peakelGrower(config);
 
