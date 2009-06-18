@@ -224,6 +224,18 @@ class HandlerPeaks : public SAXParser::Handler
         return Status::Ok;
     }
  
+    virtual Status endElement(const std::string& name, stream_offset position)
+    {
+        if (name == "peaks")
+        {
+            // hack: avoid reading nested <scan> elements
+            // TODO: use nested scans to indicate precursor relationships
+            return Status::Done;
+        }
+
+        return Status::Ok;
+    }
+
     private:
     Spectrum& spectrum_;
     BinaryDataEncoder::Config config_;
@@ -404,18 +416,6 @@ class HandlerScan : public SAXParser::Handler
         }
 
         throw runtime_error("[SpectrumList_mzXML::HandlerScan] Unexpected element name \"" + name + "\" in scan " + scanNumber_);
-    }
-
-    virtual Status endElement(const std::string& name, stream_offset position)
-    {
-        if (name == "peaks")
-        {
-            // hack: avoid reading nested <scan> elements
-            // TODO: use nested scans to indicate precursor relationships
-            return Status::Done;
-        }
-
-        return Status::Ok;
     }
 
     private:
