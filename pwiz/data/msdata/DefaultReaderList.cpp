@@ -141,10 +141,10 @@ class Reader_mzML : public Reader
 		 return std::string((type(iss) != Type_Unknown)?getType():"");
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int sampleIndex = 0) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const
     {
-        if (sampleIndex != 0)
-            throw ReaderFail("[Reader_mzML::read] multiple samples not supported");
+        if (runIndex != 0)
+            throw ReaderFail("[Reader_mzML::read] multiple runs not supported");
 
 		shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
@@ -224,10 +224,10 @@ class Reader_mzXML : public Reader
         return result;
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int sampleIndex = 0) const
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runsIndex = 0) const
     {
-        if (sampleIndex != 0)
-            throw ReaderFail("[Reader_mzXML::read] multiple samples not supported");
+        if (runsIndex != 0)
+            throw ReaderFail("[Reader_mzXML::read] multiple runs not supported");
 
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
@@ -275,10 +275,10 @@ class Reader_MGF : public Reader
 		return std::string(((bal::to_lower_copy(bfs::extension(filename)) == ".mgf"))?getType():"");
     }
 
-    virtual void read(const string& filename, const string& head, MSData& result, int sampleIndex = 0) const
+    virtual void read(const string& filename, const string& head, MSData& result, int runIndex = 0) const
     {
-        if (sampleIndex != 0)
-            throw ReaderFail("[Reader_MGF::read] multiple samples not supported");
+        if (runIndex != 0)
+            throw ReaderFail("[Reader_MGF::read] multiple runs not supported");
 
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
@@ -321,10 +321,10 @@ class Reader_BTDX : public Reader
         return result;
     }
 
-    virtual void read(const string& filename, const string& head, MSData& result, int sampleIndex = 0) const
+    virtual void read(const string& filename, const string& head, MSData& result, int runIndex = 0) const
     {
-        if (sampleIndex != 0)
-            throw ReaderFail("[Reader_BTDX::read] multiple samples not supported");
+        if (runIndex != 0)
+            throw ReaderFail("[Reader_BTDX::read] multiple runs not supported");
 
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
