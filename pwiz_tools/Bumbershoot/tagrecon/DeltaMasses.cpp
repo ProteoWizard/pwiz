@@ -160,6 +160,39 @@ namespace freicore {
 			return candidateSubs;
 		}
 
+		/**
+			getPossibleSubstitutions takes a delta mass and looks up all possible substitutions
+			for the mass. The function creates a dynamic mod set out of the the candidate
+			substitutions. The mod set is then used to generate all possible peptide candidates
+			that contain the each of the substitution. The function uses a defined massTolerance
+			while it is looking up the candidate subs.
+		*/
+		DynamicModSet DeltaMasses::getPossibleSubstitutions(float deltaMass, float massTol) {
+
+			// Create a new dynamic mod set
+			DynamicModSet candidateSubs;
+			// Look up substitutions with the delta mass and the mass tolerance.
+			MassToAminoAcidMap::iterator low = substitutionMassToAminoAcidMap.lower_bound(deltaMass - massTol);
+			MassToAminoAcidMap::iterator high = substitutionMassToAminoAcidMap.upper_bound(deltaMass + massTol);
+			// For each of the substitution create a new dynamic mod and add it to the
+			// mod set. We only add substitutions that have log odds above user defined
+			// threshold.
+			while(low != high) {
+				SubstitutionLogOddsKey key((*low).first,(*low).second);
+				SubstitutionLogOddsMap::iterator iter = substitutionLogOddsMap.find(key);
+				//cout << (*iter).first.first << "," << (*iter).first.second << "->" << (*iter).second << endl;
+				if((*iter).second >= g_rtConfig->BlosumThreshold) {
+					DynamicMod sub((*low).second[0],(*low).second[0], (float) (*low).first);
+					candidateSubs.insert(sub);
+				}
+				++low;
+			}
+
+			// Return the new dynamic mod set.
+			return candidateSubs;
+		}
+
+
 		/// Print function to print out the contents of the delta masses to amino acid map.
 		void DeltaMasses::printMassToAminoAcidMap() {
 			// Print out the modification mass map

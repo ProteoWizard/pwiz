@@ -1476,13 +1476,13 @@ namespace tagrecon
 	inline boost::int64_t ScoreSubstitutionVariants(DigestedPeptide candidate, float mass, float modMass, 
 												size_t locStart, size_t locEnd, Spectrum* spectrum, 
 												int idx, vector<double>& sequenceIons, 
-												const bool * ionTypesToSearchFor) {
+												const bool * ionTypesToSearchFor, float massTol) {
 
 		
 		boost::int64_t numComparisonsDone = 0;
 		//cout << "\t\t\t\t\t" << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
-		// Get all possible amino acid substitutions that fit the modification mass
-		DynamicModSet possibleSubstitutions = deltaMasses->getPossibleSubstitutions(modMass);
+		// Get all possible amino acid substitutions that fit the modification mass with in the mass tolerance
+		DynamicModSet possibleSubstitutions = deltaMasses->getPossibleSubstitutions(modMass, massTol);
 		//cout << "\t\t\t\t\t" << possibleSubstitutions << endl;
 		if(possibleSubstitutions.size() > 0) {
 			// Generate variants of the current peptide using the possible substitutions
@@ -1491,6 +1491,14 @@ namespace tagrecon
 			// For each variant
 			for(size_t aVariantIndex = 0; aVariantIndex < substitutionVariants.size(); aVariantIndex++) {
 				const DigestedPeptide& variant = substitutionVariants[aVariantIndex];
+				// Check to make sure that the insertion of sub doesn't put the mass of the peptide
+				// over the precursor mass tolerance.
+				float neutralMass = g_rtConfig->UseAvgMassOfSequences ? ((float) variant.molecularWeight(0,true))
+                                                       : (float) variant.monoisotopicMass(0,true);
+				float massDiff = fabs(neutralMass - spectrum->mOfPrecursor);
+				if(massDiff > g_rtConfig->PrecursorMassTolerance[spectrum->id.charge]) {
+					continue;
+				}
 				string variantSequence = PEPTIDE_N_TERMINUS_SYMBOL + variant.sequence() + PEPTIDE_C_TERMINUS_SYMBOL;
                 //cout << "\t\t\t\t\t" << tagrecon::getInterpretation(const_cast <DigestedPeptide&>(variant)) << endl;
 				// Initialize the result
@@ -1705,8 +1713,9 @@ namespace tagrecon
 				// total mass difference between the candidate as the mod mass.
 				float modMass = ((float)spectrum->mOfPrecursor) - neutralMass;
            
-				// Don't bother interpreting it if the mass is less than -50.0 Da 
-				if( modMass < -50.0 ) {
+				// Don't bother interpreting it if the mass is less than -130.0 Da
+				// -130 is close to Trp -> Gly substitution mass.
+				if( modMass < -130.0 ) {
 					continue;
 				}
 
@@ -1747,7 +1756,7 @@ namespace tagrecon
                             //comparisonDone = "Seq:Nterm";
                             numComparisonsDone += ScoreSubstitutionVariants(candidate, neutralMass, modMass, 0, 
                                 (size_t) tag.lowPeakMz-1,spectrum, 
-                                idx, sequenceIons, ionTypesToSearchFor);
+                                idx, sequenceIons, ionTypesToSearchFor, g_rtConfig->NTerminalMassTolerance[tagCharge-1]);
                         }
 
                         // If the user wants us to find unknown modifications.
@@ -1775,7 +1784,7 @@ namespace tagrecon
                             // Find the substitutions that fit the mass, generate variants and score them.
                             numComparisonsDone += ScoreSubstitutionVariants(candidate, neutralMass, modMass, (size_t) tag.lowPeakMz + tag.tag.length(), 
                                 aSequence.length()-1,	spectrum, idx, 
-                                sequenceIons, ionTypesToSearchFor);
+                                sequenceIons, ionTypesToSearchFor, g_rtConfig->CTerminalMassTolerance[tagCharge-1]);
                         }
 
                         if(g_rtConfig->FindUnknownMods) {
