@@ -1,5 +1,5 @@
 //
-// PeakelGrowerTest.cpp
+// MZRTFieldTest.cpp
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
