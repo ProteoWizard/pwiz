@@ -35,52 +35,6 @@ using boost::shared_ptr;
 
 
 //
-// PeakelField
-// 
-
-
-namespace {
-struct RTMatches
-{
-    double rt;
-    double rtTolerance;
-
-    RTMatches(double _rt, double _rtTolerance) : rt(_rt), rtTolerance(_rtTolerance) {}
-
-    bool operator()(const shared_ptr<Peakel>& peakel)
-    {
-        return (rt > peakel->retentionTimeMin() - rtTolerance &&
-                rt < peakel->retentionTimeMax() + rtTolerance);
-    }
-};
-} // namespace
-
-
-vector<PeakelPtr> PeakelField::find(double mz, MZTolerance mzTolerance,
-                                    double retentionTime, double rtTolerance) const
-{
-    PeakelPtr target(new Peakel);
-
-    target->mz = mz - mzTolerance;
-    PeakelField::const_iterator begin = this->lower_bound(target);
-
-    target->mz = mz + mzTolerance;
-    PeakelField::const_iterator end = this->upper_bound(target);
-
-    vector<PeakelPtr> result;
-
-    RTMatches matches(retentionTime, rtTolerance);
-
-    // copy_if(begin, end, back_inserter(result), matches); // some day this line will compile 
-    for (PeakelField::const_iterator it=begin; it!=end; ++it)
-        if (matches(*it))
-            result.push_back(*it);
-
-    return result;
-}
-
-
-//
 // PeakelGrower
 // 
 

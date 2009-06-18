@@ -37,104 +37,6 @@ using namespace pwiz::data::peakdata;
 ostream* os_ = 0;
 
 
-void testPredicate()
-{
-    if (os_) *os_ << "testPredicate()\n";
-
-    PeakelPtr a(new Peakel);
-    a->mz = 1.0;
-    a->retentionTime = 1.0;
-
-    PeakelPtr b(new Peakel);
-    b->mz = 2.0;
-    b->retentionTime = 1.0;
-
-    PeakelPtr c(new Peakel);
-    c->mz = 1.0;
-    c->retentionTime = 2.0;
-
-    LessThan_MZRT lt;
-
-    // a < c < b
-
-    unit_assert(lt(*a,*b));
-    unit_assert(lt(a,b));
-    unit_assert(!lt(b,a));
-    unit_assert(lt(a,c));
-    unit_assert(!lt(c,a));
-    unit_assert(lt(c,b));
-    unit_assert(!lt(b,c));
-
-    unit_assert(!lt(a,a));
-}
-
-
-void testPeakelField()
-{
-    if (os_) *os_ << "testPeakelField()\n";
-
-    PeakelPtr a(new Peakel);
-    a->mz = 1.0;
-    a->retentionTime = 1.0;
-
-    PeakelPtr b(new Peakel);
-    b->mz = 2.0;
-    b->retentionTime = 1.0;
-
-    PeakelPtr c(new Peakel);
-    c->mz = 1.0;
-    c->retentionTime = 2.0;
-
-    PeakelField pf;
-
-    pf.insert(a);
-    pf.insert(b);
-    pf.insert(c);
-
-    unit_assert(pf.size() == 3);
-
-    PeakelField::const_iterator it = pf.begin();
-    if (os_) *os_ << **it << endl;
-    unit_assert(*it == a);
-
-    // note that std::set allows only const access
-    // however, we can modify **it
-    (*it)->peaks.push_back(Peak()); 
-    (*it)->peaks.clear();
-
-    ++it;
-    if (os_) *os_ << **it << endl;
-    unit_assert(*it == c);
-
-    ++it;
-    if (os_) *os_ << **it << endl;
-    unit_assert(*it == b);
-
-    // find()
-
-    vector<PeakelPtr> v = pf.find(1.5, .6, 1, .5);
-
-    if (os_) 
-    {
-        *os_ << "find(): " << v.size() << endl;
-        for (vector<PeakelPtr>::const_iterator it=v.begin(); it!=v.end(); ++it)
-            *os_ << **it << endl;
-    }
-
-    unit_assert(v.size()==2 && v[0]==a && v[1]==b);
-    v = pf.find(1.5, .4, 1, .5);
-    unit_assert(v.empty());
-    v = pf.find(2, .1, 1, .1);
-    unit_assert(v.size()==1 && v[0]==b);
-
-    MZTolerance fiveppm(5, MZTolerance::PPM);
-    v = pf.find(1.000001, fiveppm, 1, 10);
-    unit_assert(v.size()==2 && v[0]==a && v[1]==c);
-    v = pf.find(1.000006, fiveppm, 1, 10);
-    unit_assert(v.empty());
-}
-
-
 vector< vector<Peak> > createToyPeaks()
 {
     //  rt\mz   1000    1001    1002
@@ -210,8 +112,6 @@ void testToyExample()
 
 void test()
 {
-    testPredicate();
-    testPeakelField();
     testToyExample();
 }
 

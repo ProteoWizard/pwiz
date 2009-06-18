@@ -25,6 +25,7 @@
 
 
 #include "MZTolerance.hpp"
+#include "MZRTField.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include <set>
@@ -32,40 +33,6 @@
 
 namespace pwiz {
 namespace analysis {
-
-
-///
-/// lexicographic ordering, by m/z then retention time
-///
-struct PWIZ_API_DECL LessThan_MZRT
-{
-    typedef pwiz::data::peakdata::Peakel Peakel;
-    typedef pwiz::data::peakdata::PeakelPtr PeakelPtr;
-
-    bool operator()(const Peakel& a, const Peakel& b) const
-    {
-        if (a.mz < b.mz) return true;
-        if (b.mz < a.mz) return false;
-        return (a.retentionTime < b.retentionTime); // rare
-    }
-
-    bool operator()(const PeakelPtr& a, const PeakelPtr& b) const
-    {
-        return (*this)(*a, *b);
-    }
-};
-
-
-///
-/// PeakelField is a set of Peakels, stored as a binary tree ordered by LessThan_MZRT
-///
-struct PeakelField : public std::set<pwiz::data::peakdata::PeakelPtr, LessThan_MZRT>
-{
-    typedef pwiz::data::peakdata::PeakelPtr PeakelPtr;
-
-    std::vector<PeakelPtr> find(double mz, MZTolerance mzTolerance,
-                                double retentionTime, double rtTolerance) const;
-};
 
 
 ///
