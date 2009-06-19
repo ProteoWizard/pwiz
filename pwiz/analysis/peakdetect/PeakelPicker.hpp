@@ -25,8 +25,8 @@
 
 
 #include "PeakelPicker.hpp"
+#include "MZRTField.hpp"
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/misc/PeakData.hpp"
 
 
 namespace pwiz {
@@ -34,13 +34,54 @@ namespace analysis {
 
 
 ///
-/// interface for picking Peakels and arranging into Features
+/// interface for picking Peakels and arranging into Features;
+///   note: Peakels are actually removed from the PeakelField
 ///
 class PWIZ_API_DECL PeakelPicker
 {
     public:
 
+    virtual void pick(PeakelField& peakels, FeatureField& features) const = 0;
+
     virtual ~PeakelPicker(){}
+};
+
+
+///
+/// basic implementation
+///
+class PWIZ_API_DECL PeakelPicker_Basic
+{
+    public:
+
+    struct Config
+    {
+        size_t minMonoisotopicPeakelSize;
+        size_t minPeakelCount;
+        MZTolerance mzTolerance;
+        double rtTolerance;
+        size_t minCharge;
+        size_t maxCharge;
+
+        //double intensityThreshold; // ? // some kind of tolerance to match isotope envelope
+        //double relativeIntensityTolerance; 
+
+        Config()
+        :   minMonoisotopicPeakelSize(3),
+            minPeakelCount(3),
+            mzTolerance(10, MZTolerance::PPM),
+            rtTolerance(5), // seconds
+            minCharge(2),
+            maxCharge(4)
+        {}
+    };
+
+    PeakelPicker_Basic(const Config& config = Config()) : config_(config) {}
+
+    virtual void pick(PeakelField& peakels, FeatureField& features) const;
+
+    private:
+    Config config_;
 };
 
 

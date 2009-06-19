@@ -32,13 +32,108 @@ using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
+using boost::shared_ptr;
 
 
 ostream* os_ = 0;
 
 
+shared_ptr<PeakelField> createToyPeakelField()
+{
+    //
+    //      0           1           2
+    //      |.....:.....|.....:.....|
+    // 10   x   x o 
+    // 20   x   x o x
+    // 30   x   x o x
+    // 40   x   x o     <-- feature z==3, noise Peakel at mono+.5
+    // 50
+    // 60       x     x      
+    // 70       x     x     x
+    // 80       x     x     x
+    // 90       x              <-- feature z==2
+    //
+
+    shared_ptr<PeakelField> toy(new PeakelField);
+
+    PeakelPtr battery(new Peakel(Peak(0,10)));
+    battery->peaks.push_back(Peak(0, 20));
+    battery->peaks.push_back(Peak(0, 30));
+    battery->peaks.push_back(Peak(0, 40));
+    toy->insert(battery);
+
+    battery.reset(new Peakel(Peak(1./3, 10)));
+    battery->peaks.push_back(Peak(1./3, 20));
+    battery->peaks.push_back(Peak(1./3, 30));
+    battery->peaks.push_back(Peak(1./3, 40));
+    toy->insert(battery);
+
+    battery.reset(new Peakel(Peak(.5, 10)));
+    battery->peaks.push_back(Peak(.5, 20));
+    battery->peaks.push_back(Peak(.5, 30));
+    battery->peaks.push_back(Peak(.5, 40));
+    toy->insert(battery);
+     
+    battery.reset(new Peakel(Peak(2./3, 20)));
+    battery->peaks.push_back(Peak(2./3, 30));
+    toy->insert(battery);
+
+    battery.reset(new Peakel(Peak(1./3, 60)));
+    battery->peaks.push_back(Peak(1./3, 70));
+    battery->peaks.push_back(Peak(1./3, 80));
+    battery->peaks.push_back(Peak(1./3, 90));
+    toy->insert(battery);
+
+    battery.reset(new Peakel(Peak(1./3 + .5, 60)));
+    battery->peaks.push_back(Peak(1./3 + .5, 70));
+    battery->peaks.push_back(Peak(1./3 + .5, 80));
+    toy->insert(battery);
+
+    battery.reset(new Peakel(Peak(1./3 + 1, 70)));
+    battery->peaks.push_back(Peak(1./3 + 1, 80));
+    toy->insert(battery);
+
+    if (os_)
+    {
+        *os_ << "createToyPeakelField()\n";
+        for (PeakelField::const_iterator it=toy->begin(); it!=toy->end(); ++it)
+            *os_ << **it << endl;
+    }
+
+    return toy;
+}
+
+
+void testToy()
+{
+    PeakelPicker_Basic::Config config;
+    // change config?
+
+    PeakelPicker_Basic peterPiper(config);
+
+    shared_ptr<PeakelField> peakels = createToyPeakelField();
+    FeatureField peck;
+
+    peterPiper.pick(*peakels, peck);
+/*
+    unit_assert(peck.size() == 2);
+
+    FeatureField::const_iterator it = peck.begin();
+    unit_assert((*it)->mz == 0);
+    unit_assert((*it)->charge == 3);
+    unit_assert_equal((*it)->retentionTime, 25, 20);
+
+    ++it;
+    unit_assert((*it)->mz == 1./3);
+    unit_assert((*it)->charge == 2);
+    unit_assert_equal((*it)->retentionTime, 75, 20);
+*/
+}
+
+
 void test()
 {
+    testToy();
 }
 
 

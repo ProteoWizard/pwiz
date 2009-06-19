@@ -23,10 +23,64 @@
 
 #define PWIZ_SOURCE
 #include "PeakelPicker.hpp"
+#include <stdexcept>
 
 
 namespace pwiz {
 namespace analysis {
+
+
+using namespace pwiz::data::peakdata;
+using namespace std;
+
+
+namespace {
+
+FeaturePtr findFeature(const PeakelPtr& peakel, const PeakelField& peakelField)
+{
+    FeaturePtr result;
+    return result;
+}
+
+
+PeakelField::iterator removePeakels(PeakelField::iterator it, const Feature& feature, PeakelField& peakelField)
+{
+    if (feature.peakels.empty())
+        throw runtime_error("[PeakelPicker::removePeakels()] Empty feature.");
+
+    return ++it;
+}
+
+
+PeakelField::iterator process(PeakelField::iterator it, PeakelField& peakelField, FeatureField& features)
+{
+    //cout << "process(): " << **it << endl;
+
+    FeaturePtr feature = findFeature(*it, peakelField);
+
+    if (feature.get())
+    {
+        features.insert(feature);
+        return removePeakels(it, *feature, peakelField); // returns next valid iterator
+    }
+    else
+    {
+        return ++it;
+    }
+}
+    
+
+} // namespace
+
+
+void PeakelPicker_Basic::pick(PeakelField& peakels, FeatureField& features) const
+{
+    PeakelField::const_iterator it = peakels.begin();
+    PeakelField::const_iterator end = peakels.end();
+   
+    while (it != end)
+        it = process(it, peakels, features);
+}
 
 
 } // namespace analysis
