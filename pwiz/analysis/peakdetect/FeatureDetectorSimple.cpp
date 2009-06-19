@@ -89,11 +89,11 @@ public:
 
     typedef string FeatureID;
 
-    void detect(const MSData& msd, vector<Feature>& result) const;
-    Feature makeFeature(const PeakFamily& pf, FeatureID& id) const;
+    void detect(const MSData& msd, vector<FeaturePtr>& result) const;
+    FeaturePtr makeFeature(const PeakFamily& pf, FeatureID& id) const;
     void updatePeakel(const Peak& peak, Peakel& peakel) const;
-    void updateFeature(const PeakFamily& pf, Feature& feature) const;
-    void getMetadata(vector<Feature>& result) const;
+    void updateFeature(const PeakFamily& pf, FeaturePtr feature) const;
+    void getMetadata(vector<FeaturePtr>& result) const;
     
 private:
     
@@ -103,24 +103,24 @@ private:
 
 
 FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pimpl(new Impl(pfd)){}
-void FeatureDetectorSimple::detect(const MSData& msd, std::vector<Feature>& result) const 
+void FeatureDetectorSimple::detect(const MSData& msd, std::vector<FeaturePtr>& result) const 
 {
     _pimpl->detect(msd,result);
 }
 
-Feature FeatureDetectorSimple::Impl::makeFeature(const PeakFamily& pf, FeatureID& id) const
+FeaturePtr FeatureDetectorSimple::Impl::makeFeature(const PeakFamily& pf, FeatureID& id) const
 {
-    Feature result;
-    result.id = id;
-    result.charge = pf.charge;
+    FeaturePtr result(new Feature());
+    result->id = id;
+    result->charge = pf.charge;
 
-    result.charge = pf.charge;
+    result->charge = pf.charge;
     for(vector<Peak>::const_iterator peak_it = pf.peaks.begin(); peak_it != pf.peaks.end(); ++peak_it) 
     {   
         // initialize peakels, one for each peak in the PeakFamily
         PeakelPtr peakel(new Peakel);
         updatePeakel(*peak_it, *peakel);
-        result.peakels.push_back(peakel);
+        result->peakels.push_back(peakel);
     }
 
     return result;
@@ -132,11 +132,11 @@ void FeatureDetectorSimple::Impl::updatePeakel(const Peak& peak, Peakel& peakel)
     return;
 }
 
-void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, Feature& feature) const
+void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, FeaturePtr feature) const
 {   
 
     // iterate through peakels, adding new peaks and updating attributes
-    vector<PeakelPtr>::iterator peakel_it = feature.peakels.begin();
+    vector<PeakelPtr>::iterator peakel_it = feature->peakels.begin();
     vector<Peak>::const_iterator peak_it = pf.peaks.begin();
 
     for(; peak_it != pf.peaks.end(); ++peakel_it, ++peak_it)
@@ -148,13 +148,13 @@ void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, Feature& f
     return;
 }
 
-void FeatureDetectorSimple::Impl::getMetadata(vector<Feature>& detected) const
+void FeatureDetectorSimple::Impl::getMetadata(vector<FeaturePtr>& detected) const
 {
   
-    vector<Feature>::iterator feat_it = detected.begin();
+    vector<FeaturePtr>::iterator feat_it = detected.begin();
     for(; feat_it != detected.end(); ++feat_it)
         {
-            feat_it->calculateMetadata();
+            (*feat_it)->calculateMetadata();
           
         }
 
@@ -175,22 +175,21 @@ void FeatureDetectorSimple::Impl::getMetadata(vector<Feature>& detected) const
 // rolled over the scan set, updating the second as it goes.
 
 
-void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& detected) const 
+void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<FeaturePtr>& detected) const 
 {   
     // initialize buffer maps    
-   
     map<FeatureKey, FeatureID> grandparentBuffer;
     map<FeatureKey, FeatureID> parentBuffer;
 
-    map<FeatureID, Feature> featureMap;
+    map<FeatureID, FeaturePtr> featureMap;
     size_t featureCount = 0;
 
     MSDataCache cache;
     cache.open(msd);
-
+   
     for(size_t spectrum_index = 0; spectrum_index < cache.size(); spectrum_index ++) 
     {
-        
+   
         map<FeatureKey, FeatureID> buffer;
         const SpectrumInfo info = cache.spectrumInfo(spectrum_index, true); //getBinaryData ? 
        
@@ -199,14 +198,14 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         vector<MZIntensityPair> mzIntensityPairs = info.data;       
 
         vector<PeakFamily> result;
-		
-		if (info.massAnalyzerType != MS_FT_ICR && info.massAnalyzerType != MS_orbitrap)
-		  {
-			cerr << "Skipping non-FT scan number " << info.scanNumber << endl;
-			continue;
+                
+        if (info.massAnalyzerType != MS_FT_ICR && info.massAnalyzerType != MS_orbitrap)
+            {
+               cerr << "Skipping non-FT scan number " << info.scanNumber << endl;
+               continue;
 
-		  }
-
+            }
+      
         _pfd.detect(mzIntensityPairs,result);
   
         // iterate thru peak families
@@ -216,38 +215,38 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
         
         for(; result_it != result.end(); ++result_it)
             {
+               
                 // set RT attribute
                 for_each(result_it->peaks.begin(), result_it->peaks.end(), SetRT(rt));
               
                 // make keys for search
                 FeatureKey featureKey(floor(result_it->mzMonoisotopic*100)/100, result_it->charge, result_it->peaks.size()); // no digits past 10e-3
                 map<FeatureKey,FeatureID>::iterator grandparentLocation = grandparentBuffer.find(featureKey);
-		map<FeatureKey,FeatureID>::iterator parentLocation = parentBuffer.find(featureKey);
+                map<FeatureKey,FeatureID>::iterator parentLocation = parentBuffer.find(featureKey);
                 
 
                 if ( parentLocation == parentBuffer.end() && grandparentLocation == grandparentBuffer.end())
                     {   
-
+                       
                         // feature doesn't exist, make new feature
                         
                         FeatureID featureID = boost::lexical_cast<string>(++featureCount);
-                        Feature feature = makeFeature(*result_it,featureID);
-
-                        featureMap.insert(pair<FeatureID, Feature>(featureID, feature));
-                        buffer.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
+                        FeaturePtr feature(makeFeature(*result_it,featureID));
+                       
+                        featureMap.insert(pair<FeatureID, FeaturePtr>(featureID, feature));                               buffer.insert(pair<FeatureKey, FeatureID>(featureKey, featureID));
                                         
 
                     }
 
                 else
-                    {
-   		      // if parent location update from parent
-		        FeatureID foundID;
+                    {                      
+                      // if parent location update from parent
+                        FeatureID foundID;
 
-		        if ( parentLocation != parentBuffer.end() ) foundID = parentLocation->second;
-		        else foundID = grandparentLocation->second;
-			
-			// update existing feature
+                        if ( parentLocation != parentBuffer.end() ) foundID = parentLocation->second;
+                        else foundID = grandparentLocation->second;
+                        
+                        // update existing feature
                         updateFeature(*result_it, featureMap[foundID]);
                         buffer.insert(pair<FeatureKey, FeatureID>(featureKey,foundID));
 
@@ -256,19 +255,18 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
             }
 
         // old buffer map := new buffer map
-	//  bufferMap.swap(updatedBufferMap);
+        //  bufferMap.swap(updatedBufferMap);
 
-	grandparentBuffer.swap(parentBuffer);
-	parentBuffer.swap(buffer);
+        grandparentBuffer.swap(parentBuffer);
+        parentBuffer.swap(buffer);
 
     }
  
-    
     // write output vector<Feature>
-    map<FeatureID, Feature>::iterator the_it = featureMap.begin();
+    map<FeatureID, FeaturePtr>::iterator the_it = featureMap.begin();
     for(; the_it != featureMap.end(); ++the_it)
         {
-            if(the_it->second.peakels.front()->peaks.size()>1) // for now only write features lasting > 1 scan
+            if(the_it->second->peakels.front()->peaks.size()>1) // for now only write features lasting > 1 scan
                 {
                     detected.push_back(the_it->second);
 
@@ -278,7 +276,6 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<Feature>& det
     // write metadata attributes
     getMetadata(detected);
     
-
     return; 
 }
 

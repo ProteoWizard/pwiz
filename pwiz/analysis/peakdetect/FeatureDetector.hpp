@@ -31,6 +31,7 @@
 namespace pwiz {
 namespace analysis {
 
+using namespace pwiz::data::peakdata;
 
 class PWIZ_API_DECL FeatureDetector
 
@@ -41,7 +42,7 @@ public:
   typedef msdata::MSData MSData;
   typedef data::peakdata::Feature Feature;
 
-  virtual void detect(const MSData& msd, std::vector<Feature>& result) const = 0; 
+  virtual void detect(const MSData& msd, std::vector<FeaturePtr>& result) const = 0; 
   
   virtual ~FeatureDetector(){}
 

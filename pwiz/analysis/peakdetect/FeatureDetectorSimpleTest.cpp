@@ -50,17 +50,17 @@ double rt_epsilon = 10; // tolerance for rt differences
 struct mzrtEqual
 { 
 
-    mzrtEqual(Feature& a_)
+    mzrtEqual(FeaturePtr a_)
         : a(a_) {}
 
-    bool operator()(Feature& b) const // should be enough info to uniquely identify a feature
+    bool operator()(FeaturePtr b) const // should be enough info to uniquely identify a feature
     {
-        return fabs(a.mz-b.mz) < mz_epsilon &&
-            fabs(a.retentionTime - b.retentionTime) < rt_epsilon;
+        return fabs(a->mz-b->mz) < mz_epsilon &&
+            fabs(a->retentionTime - b->retentionTime) < rt_epsilon;
 
     }
 
-    Feature a;
+    FeaturePtr a;
 };
 
 void testFeatureDetectorSimple(const bfs::path& datadir)
@@ -82,17 +82,21 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     // instantiate MSData from test file
    
     MSDataFile msd((datadir / "FeatureDetectorTest_Bombessin.mzML").string());
+    cout << "chekcpoint 1" << endl;
 
-    vector<Feature> output_features;
+
+    vector<FeaturePtr> output_features;
     fds.detect(msd, output_features);
-    
+
+    cout << "checkpoint2 " << endl;
+
     // instantiate the bombessin +2 feature that we know is correct, with calculated mzMonoisotopic and eyeballed retentionTime
     
-    Feature bombessin2_truth;
-    bombessin2_truth.mz = 810.4148;
-    bombessin2_truth.retentionTime = 1866;
+    FeaturePtr bombessin2_truth(new Feature());
+    bombessin2_truth->mz = 810.4148;
+    bombessin2_truth->retentionTime = 1866;
 
-    vector<Feature>::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
+    vector<FeaturePtr>::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
     
     // assert that it is found, correctly, in the data
     unit_assert(bombessin2_hopeful != output_features.end());
@@ -103,11 +107,11 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     
     // do the same for the +3 feature
 
-    Feature bombessin3_truth;
-    bombessin3_truth.mz = 540.6123;
-    bombessin3_truth.retentionTime = 1866;
+    FeaturePtr bombessin3_truth(new Feature());
+    bombessin3_truth->mz = 540.6123;
+    bombessin3_truth->retentionTime = 1866;
     
-    vector<Feature>::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
+    vector<FeaturePtr>::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
   
     // assert that it is found, correctly, in the data
     unit_assert(bombessin3_hopeful != output_features.end());

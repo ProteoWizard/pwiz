@@ -25,9 +25,12 @@
 
 #include "FeatureDetector.hpp"
 #include "pwiz/analysis/peakdetect/PeakFamilyDetector.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
 
 namespace pwiz{
 namespace analysis{
+
+using namespace pwiz::data::peakdata;
 
 // FeatureDetectorSimple detects 'rectangular' features, ie number of peaks in isotope envelope is the same for each scan included in the feature
 
@@ -37,7 +40,7 @@ class PWIZ_API_DECL FeatureDetectorSimple : public FeatureDetector
 public:
 
     FeatureDetectorSimple(PeakFamilyDetector& _pfd);
-    virtual void detect(const MSData& msd, std::vector<Feature>& result) const;
+    virtual void detect(const MSData& msd, std::vector<FeaturePtr>& result) const;
     
 
 private:
