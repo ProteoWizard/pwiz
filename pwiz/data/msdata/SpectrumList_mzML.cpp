@@ -31,6 +31,9 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include <boost/thread/once.hpp>
+#include <boost/bind.hpp>
+
 
 namespace pwiz {
 namespace msdata {
@@ -43,6 +46,18 @@ using boost::iostreams::offset_to_position;
 
 namespace {
 
+
+// since the call_once implementation on pthreads is defined as an aggregate,
+// this proxy class is used for initializing the per-instance once_flags
+struct once_flag_proxy
+{
+    boost::once_flag flag;
+};
+
+
+once_flag_proxy init_once_flag_proxy = {BOOST_ONCE_INIT};
+
+
 class SpectrumList_mzMLImpl : public SpectrumList_mzML
 {
     public:
@@ -51,7 +66,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
 
     // SpectrumList implementation
 
-    virtual size_t size() const {return index_.size();}
+    virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual IndexList findSpotID(const std::string& spotID) const;
@@ -61,30 +76,41 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     private:
     shared_ptr<istream> is_;
     const MSData& msd_;
-    vector<SpectrumIdentity> index_;
-    map<string,size_t> idToIndex_;
-    map<string,IndexList> spotIDToIndexList_;
+    bool indexed_;
 
-    void readIndex();
-    void createIndex();
-    void createMaps();
+    mutable once_flag_proxy indexSizeSet_;
+    mutable once_flag_proxy indexInitialized_;
+    mutable size_t size_;
+    mutable vector<SpectrumIdentity> index_;
+    mutable map<string,size_t> idToIndex_;
+    mutable map<string,IndexList> spotIDToIndexList_;
+
+    void setIndexSize() const; // set the index size from the spectrumList count attribute
+    void readIndex() const;
+    void createIndex() const;
+    void createMaps() const;
 };
 
 
 SpectrumList_mzMLImpl::SpectrumList_mzMLImpl(shared_ptr<istream> is, const MSData& msd, bool indexed)
-:   is_(is), msd_(msd)
+:   is_(is), msd_(msd),
+    indexed_(indexed),
+    indexSizeSet_(init_once_flag_proxy),
+    indexInitialized_(init_once_flag_proxy)
 {
-    if (indexed) 
-        readIndex(); 
-    else 
-        createIndex();
+}
 
-    createMaps();
+
+size_t SpectrumList_mzMLImpl::size() const
+{
+    boost::call_once(indexSizeSet_.flag, boost::bind(&SpectrumList_mzMLImpl::setIndexSize, this));
+    return size_;
 }
 
 
 const SpectrumIdentity& SpectrumList_mzMLImpl::spectrumIdentity(size_t index) const
 {
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzML::spectrumIdentity()] Index out of bounds.");
 
@@ -94,6 +120,7 @@ const SpectrumIdentity& SpectrumList_mzMLImpl::spectrumIdentity(size_t index) co
 
 size_t SpectrumList_mzMLImpl::find(const string& id) const
 {
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
     return it!=idToIndex_.end() ? it->second : size();
 }
@@ -101,12 +128,14 @@ size_t SpectrumList_mzMLImpl::find(const string& id) const
 
 IndexList SpectrumList_mzMLImpl::findSpotID(const string& spotID) const
 {
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     map<string,IndexList>::const_iterator it=spotIDToIndexList_.find(spotID);
     return it!=spotIDToIndexList_.end() ? it->second : IndexList();
 }
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Index out of bounds.");
 
@@ -199,7 +228,7 @@ class HandlerIndex : public SAXParser::Handler
     public:
 
     HandlerIndex(vector<SpectrumIdentity>& index)
-    :   index_(index)
+    :   index_(index), offsetCount_(0)
     {}
 
     virtual Status startElement(const string& name, 
@@ -212,9 +241,17 @@ class HandlerIndex : public SAXParser::Handler
         }
         else if (name == "offset")
         {
-            index_.push_back(SpectrumIdentity());
-            index_.back().index = index_.size()-1;
-            handlerOffset_.spectrumIdentity = &index_.back();
+            SpectrumIdentity* si;
+            if (offsetCount_ < index_.size())
+                si = &index_[offsetCount_];
+            else // oops - the count attribute was wrong :(
+            {
+                index_.push_back(SpectrumIdentity());
+                si = &index_.back();
+            }
+            si->index = offsetCount_;
+            handlerOffset_.spectrumIdentity = si;
+            ++offsetCount_;
             return Status(Status::Delegate, &handlerOffset_);
         }
         else
@@ -223,6 +260,7 @@ class HandlerIndex : public SAXParser::Handler
 
     private:
     vector<SpectrumIdentity>& index_;
+    size_t offsetCount_;
     HandlerOffset handlerOffset_;
 };
 
@@ -262,7 +300,39 @@ class HandlerIndexList : public SAXParser::Handler
 };
 
 
-void SpectrumList_mzMLImpl::readIndex()
+class HandlerSpectrumListCount : public SAXParser::Handler
+{
+    public:
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "spectrumList")
+        {
+            getAttribute(attributes, "count", spectrumListCount);
+            return Status::Done;
+        }
+        return Status::Ok;
+    }
+
+    size_t getSpectrumListCount() {return spectrumListCount;}
+
+    private:
+    size_t spectrumListCount;
+};
+
+
+void SpectrumList_mzMLImpl::setIndexSize() const
+{
+    is_->seekg(0);
+    HandlerSpectrumListCount handlerSpectrumListCount;
+    SAXParser::parse(*is_, handlerSpectrumListCount);
+    size_ = handlerSpectrumListCount.getSpectrumListCount();
+}
+
+
+void SpectrumList_mzMLImpl::readIndex() const
 {
     // find <indexListOffset>
 
@@ -304,7 +374,7 @@ class HandlerIndexCreator : public SAXParser::Handler
     public:
 
     HandlerIndexCreator(vector<SpectrumIdentity>& index)
-    :   index_(index)
+    :   index_(index), spectrumCount_(0)
     {}
 
     virtual Status startElement(const string& name, 
@@ -313,19 +383,22 @@ class HandlerIndexCreator : public SAXParser::Handler
     {
         if (name == "spectrum")
         {
-            string index;
-            SpectrumIdentity si;
-            getAttribute(attributes, "index", index);
-            getAttribute(attributes, "id", si.id);
-            getAttribute(attributes, "spotID", si.spotID);
+            SpectrumIdentity* si;
+            if (spectrumCount_ < index_.size())
+                si = &index_[spectrumCount_];
+            else // oops - the count attribute was wrong :(
+            {
+                index_.push_back(SpectrumIdentity());
+                si = &index_.back();
+            }
 
-            si.index = lexical_cast<int>(index);
-            si.sourceFilePosition = position;
+            getAttribute(attributes, "id", si->id);
+            getAttribute(attributes, "spotID", si->spotID);
 
-            if (si.index != index_.size())
-                throw runtime_error("[SpectrumList_mzML::HandlerIndexCreator] Bad index.");
+            si->index = spectrumCount_;
+            si->sourceFilePosition = position;
 
-            index_.push_back(si);
+            ++spectrumCount_;
         }
 
         return Status::Ok;
@@ -342,18 +415,31 @@ class HandlerIndexCreator : public SAXParser::Handler
 
     private:
     vector<SpectrumIdentity>& index_;
+    size_t spectrumCount_;
 };
 
 
-void SpectrumList_mzMLImpl::createIndex()
+void SpectrumList_mzMLImpl::createIndex() const
 {
-    is_->seekg(0);
-    HandlerIndexCreator handler(index_);
-    SAXParser::parse(*is_, handler);
+    boost::call_once(indexSizeSet_.flag, boost::bind(&SpectrumList_mzMLImpl::setIndexSize, this));
+
+    // resize the index assuming the count attribute is accurate
+    index_.resize(size_);
+
+    if (indexed_)
+        readIndex();
+    else
+    {
+        is_->seekg(0);
+        HandlerIndexCreator handler(index_);
+        SAXParser::parse(*is_, handler);
+    }
+
+    createMaps();
 }
 
 
-void SpectrumList_mzMLImpl::createMaps()
+void SpectrumList_mzMLImpl::createMaps() const
 {
     vector<SpectrumIdentity>::const_iterator it;
     it=index_.begin();
