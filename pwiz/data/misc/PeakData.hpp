@@ -271,6 +271,12 @@ struct PWIZ_API_DECL Feature
   
     bool operator==(const Feature& that) const;
     bool operator!=(const Feature& that) const;
+
+private:
+    
+    Feature(Feature&);
+    Feature operator=(Feature&);
+
 };
 
 
@@ -297,10 +303,16 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature);
 struct PWIZ_API_DECL FeatureFile
 {
     FeatureFile(){}
-    std::vector<Feature> features;
+    std::vector<FeaturePtr> features;
 
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);
+
+private:
+
+    FeatureFile(FeatureFile&);
+    FeatureFile operator=(FeatureFile&);
+
 };
 
 

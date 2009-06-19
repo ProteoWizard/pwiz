@@ -87,9 +87,33 @@ struct PWIZ_API_DECL SearchDatabase
 
 };
 
-struct PWIZ_API_DECL XResult // replacing PeptideProphetResult 
+struct PWIZ_API_DECL Q3RatioResult
 {
-    XResult() : probability(0) {}
+    Q3RatioResult() : lightFirstScan(0), lightLastScan(0), lightMass(0), heavyFirstScan(0), heavyLastScan(0), heavyMass(0), lightArea(0), heavyArea(0), q2LightArea(0), q2HeavyArea(0), decimalRatio(0) {}
+    
+    int lightFirstScan;
+    int lightLastScan;
+    double lightMass;
+    int heavyFirstScan;
+    int heavyLastScan;
+    double heavyMass;
+    double lightArea;
+    double heavyArea;
+    double q2LightArea;
+    double q2HeavyArea;
+    double decimalRatio;
+
+    void write(XMLWriter& writer) const;
+    void read(istream& is);
+
+    bool operator==(const Q3RatioResult& that) const;
+    bool operator!=(const Q3RatioResult& that) const;
+
+};
+
+struct PWIZ_API_DECL PeptideProphetResult
+{
+    PeptideProphetResult() : probability(0) {}
 
     double probability;
     std::vector<double> allNttProb;
@@ -97,8 +121,8 @@ struct PWIZ_API_DECL XResult // replacing PeptideProphetResult
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
 
-    bool operator==(const XResult& that) const;
-    bool operator!=(const XResult& that) const;
+    bool operator==(const PeptideProphetResult& that) const;
+    bool operator!=(const PeptideProphetResult& that) const;
 
 };
 
@@ -107,7 +131,8 @@ struct PWIZ_API_DECL AnalysisResult
     AnalysisResult() : analysis("peptideprophet_result") {}
 
     std::string analysis;
-    XResult xResult;
+    PeptideProphetResult peptideProphetResult;
+    Q3RatioResult q3RatioResult;
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -321,13 +346,13 @@ struct PWIZ_API_DECL MSMSPipelineAnalysis
 
 struct PWIZ_API_DECL Match
 {
-    Match() : score(0) {}
-    Match(const SpectrumQuery& _spectrumQuery, const Feature& _feature, double _score = 0) : score(_score), spectrumQuery(_spectrumQuery), feature(_feature) {}
+    Match() : score(0), feature(new Feature()) {}
+    Match(const SpectrumQuery& _spectrumQuery, FeaturePtr _feature, double _score = 0) : score(_score), spectrumQuery(_spectrumQuery), feature(_feature) {}
    
     double score;
 
     SpectrumQuery spectrumQuery;
-    Feature feature;
+    FeaturePtr feature;
 
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
@@ -335,17 +360,23 @@ struct PWIZ_API_DECL Match
     bool operator==(const Match& that) const;
     bool operator!=(const Match& that) const;
 
+private:
+    Match(Match&);
+    Match operator=(Match&);
+
 };
+
+typedef boost::shared_ptr<Match> MatchPtr;
 
 struct PWIZ_API_DECL MatchData
 {
     MatchData(){}
     MatchData(std::string wfc, std::string snc) : warpFunctionCalculator(wfc), searchNbhdCalculator(snc) {}
-    MatchData(std::vector<Match> _matches) : matches(_matches){}
+    MatchData(std::vector<MatchPtr> _matches) : matches(_matches){}
 
     std::string warpFunctionCalculator;
     std::string searchNbhdCalculator;
-    std::vector<Match> matches;
+    std::vector<MatchPtr> matches;
 
     void write(minimxml::XMLWriter& writer) const;
     void read(std::istream& is);
@@ -362,3 +393,5 @@ struct PWIZ_API_DECL MatchData
 
 
 #endif // _MINIMUMPEPXML_HPP_
+
+//  LocalWords:  RatioResult

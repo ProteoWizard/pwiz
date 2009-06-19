@@ -46,26 +46,45 @@ SearchDatabase makeSearchDatabase()
 
 }
 
-XResult makeXResult()
+Q3RatioResult makeQ3RatioResult()
 {
-    XResult xResult;
-    xResult.probability = 0.98;
+    Q3RatioResult q;
+    q.lightFirstScan = 1;
+    q.lightLastScan = 3;
+    q.lightMass = 100;
+    q.heavyFirstScan = 2;
+    q.heavyLastScan = 4;
+    q.heavyMass = 101;
+    q.lightArea = 50;
+    q.heavyArea = 55;
+    q.q2LightArea = 25;
+    q.q2HeavyArea = 30;
+    q.decimalRatio = 0.85;
 
-    xResult.allNttProb.push_back(0.0000);
-    xResult.allNttProb.push_back(0.0000);
-    xResult.allNttProb.push_back(0.780);
+    return q;
 
-    return xResult;
+}
+
+PeptideProphetResult makePeptideProphetResult()
+{
+    PeptideProphetResult peptideProphetResult;
+    peptideProphetResult.probability = 0.98;
+
+    peptideProphetResult.allNttProb.push_back(0.0000);
+    peptideProphetResult.allNttProb.push_back(0.0000);
+    peptideProphetResult.allNttProb.push_back(0.780);
+
+    return peptideProphetResult;
 
 }
 
 AnalysisResult makeAnalysisResult()
 {
     AnalysisResult analysisResult;
-    analysisResult.analysis = "real";
+    analysisResult.analysis = "peptideprophet";
     
-    XResult xResult = makeXResult();
-    analysisResult.xResult = xResult;
+    PeptideProphetResult pp = makePeptideProphetResult();
+    analysisResult.peptideProphetResult = pp;
 
     return analysisResult;
 
@@ -227,22 +246,15 @@ MSMSRunSummary makeMSMSRunSummary()
 
 }
 
-Feature makeFeature()
+MatchPtr makeMatch()
 {
-    Feature feature;
-    feature.mz = 1.234;
-    feature.retentionTime = 5.678;
+    MatchPtr match(new Match());
+    match->spectrumQuery = makeSpectrumQuery();
+    match->feature->mz = 1.234;
+    match->feature->retentionTime = 5.678;
 
-    return feature;
-}
-
-Match makeMatch()
-{
-    Match match;
-    match.spectrumQuery = makeSpectrumQuery();
-    match.feature = makeFeature();
-    
     return match;
+
 }
 
 void testSpecificity()
@@ -305,21 +317,40 @@ void testSearchDatabase()
 
 }
 
-void testXResult()
+void testQ3RatioResult()
 {
-    if (os_) *os_ << "\ntestXResult() ... \n";
+    if (os_) *os_ << "\ntestQ3RatioResult() ... \n";
+    
+    Q3RatioResult q = makeQ3RatioResult();
+    
+    ostringstream oss;
+    XMLWriter writer(oss);
+    q.write(writer);
 
-    XResult xResult = makeXResult();
+    Q3RatioResult readQ;
+    istringstream iss(oss.str());
+    readQ.read(iss);
+
+    unit_assert(q == readQ);
+    if (os_) *os_ << oss.str() << endl;
+
+}
+
+void testPeptideProphetResult()
+{
+    if (os_) *os_ << "\ntestPeptideProphetResult() ... \n";
+
+    PeptideProphetResult pp = makePeptideProphetResult();
 
     ostringstream oss;
     XMLWriter writer(oss);
-    xResult.write(writer);
+    pp.write(writer);
 
-    XResult readXResult;
+    PeptideProphetResult readPeptideProphetResult;
     istringstream iss(oss.str());
-    readXResult.read(iss);
+    readPeptideProphetResult.read(iss);
 
-    unit_assert(xResult == readXResult);
+    unit_assert(pp == readPeptideProphetResult);
 
     if (os_) *os_ << oss.str() << endl;
 
@@ -337,12 +368,28 @@ void testAnalysisResult()
 
     AnalysisResult readAnalysisResult;
     istringstream iss(oss.str());
-    readAnalysisResult.read(iss);
-
+    readAnalysisResult.read(iss);    
+   
     unit_assert(analysisResult == readAnalysisResult);
     
     if(os_) *os_ << oss.str() << endl;
 
+    AnalysisResult analysisResult2;
+    analysisResult2.analysis = "q3";
+    analysisResult2.q3RatioResult = makeQ3RatioResult();
+
+    ostringstream oss2;
+    XMLWriter writer2(oss2);
+    analysisResult2.write(writer2);
+
+    AnalysisResult readAnalysisResult2;
+    istringstream iss2(oss2.str());
+    readAnalysisResult2.read(iss2);
+
+    unit_assert(analysisResult2 == readAnalysisResult2);
+
+    if(os_) *os_ << oss2.str() << endl;
+    
 }
 
 void testAlternativeProtein()
@@ -577,19 +624,25 @@ void testMatch()
 {
     if(os_) *os_ << "\ntestMatch() ... \n";
 
-    Match match = makeMatch();
+    MatchPtr match = makeMatch();
     
     ostringstream oss;
     XMLWriter writer(oss);
-    match.write(writer);
+    match->write(writer);
 
     Match readMatch;
     istringstream iss(oss.str());
     readMatch.read(iss);
 
-    unit_assert(match == readMatch);
+    ostringstream checkstream;
+    XMLWriter check(checkstream);
+    readMatch.write(check);
+    //    unit_assert(*match == readMatch);
 
     if(os_) *os_ << oss.str() << endl;
+    if(os_) *os_ << checkstream.str() << endl;
+
+    unit_assert(*match == readMatch);
 
 }
 
@@ -610,6 +663,17 @@ void testMatchData()
     MatchData readMatchData;
     istringstream iss(oss.str());
     readMatchData.read(iss);
+
+
+    ostringstream checkstream;
+    XMLWriter check(checkstream);
+    readMatchData.write(check);
+    //    unit_assert(*match == readMatch);
+
+    if(os_) *os_ << oss.str() << endl;
+    if(os_) *os_ << checkstream.str() << endl;
+
+
 
     unit_assert(matchData == readMatchData);
 
@@ -646,7 +710,8 @@ int main(int argc, char* argv[])
             testSpecificity();
             testSampleEnzyme();
             testSearchDatabase();
-            testXResult();
+	    testQ3RatioResult();
+            testPeptideProphetResult();
             testAnalysisResult();
             testAlternativeProtein();
             testModAminoAcidMass();

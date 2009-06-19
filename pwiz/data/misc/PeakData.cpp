@@ -813,12 +813,12 @@ void Peakel::calculateMetadata()
         {
             if (calc_intensity_it->intensity > maxIntensity) maxIntensity = calc_intensity_it->intensity;
             totalIntensity += calc_intensity_it->intensity;
+
         }
 
-    //ignore peakels of total intensity zero in rt calculations to avoid div by zero
+    // ignore peakels of total intensity zero in rt calculations to avoid div by zero
     // peakels will still be reported in feature
-    
-    
+        
     // calculate mz and retentionTime mean
     vector<Peak>::iterator calc_mean_it = peaks.begin();
     for(; calc_mean_it != peaks.end(); ++calc_mean_it)
@@ -840,6 +840,7 @@ void Peakel::calculateMetadata()
     mzVariance = mzVariance / peaks.size();
 
     return;
+
 }
 
 
@@ -1170,7 +1171,6 @@ bool Feature::operator!=(const Feature& that) const
     return !(*this==that);
 }
 
-
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Feature& feature)
 {
     XMLWriter writer(os);
@@ -1190,9 +1190,9 @@ void FeatureFile::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
     xmlWriter.startElement("features",attributes);
-    vector<Feature>::const_iterator feat_it = features.begin();
+    vector<FeaturePtr>::const_iterator feat_it = features.begin();
     for(; feat_it != features.end(); ++feat_it)
-        feat_it->write(xmlWriter);
+        (*feat_it)->write(xmlWriter);
     xmlWriter.endElement();
     return;
 }
@@ -1214,11 +1214,9 @@ struct HandlerFeatureFile : public SAXParser::Handler
 
       else if (name=="feature")
         {
-            // TODO implement getAttribute(attributes,"count", _peakelCount);
-            Feature feature;
-        
-            featureFile->features.push_back(feature);
-            _handlerFeature.feature = (&(featureFile->features.back()));
+            // TODO implement getAttribute(attributes,"count", _peakelCount);        
+            featureFile->features.push_back(FeaturePtr(new Feature));
+            _handlerFeature.feature = featureFile->features.back().get();
             return Status(Status::Delegate, &_handlerFeature);
 
         }
@@ -1239,6 +1237,7 @@ private:
 
 
 };
+
 
 void FeatureFile::read(istream& is)
 {

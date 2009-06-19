@@ -97,6 +97,21 @@ vector<double> vectorCastString(const string& s)
     return result;
 
 }
+bool operator==(const vector<MatchPtr>& a, const vector<MatchPtr>& b) 
+    {
+        if (a.size() != b.size()) return false;
+        vector<MatchPtr>::const_iterator a_it = a.begin();
+        vector<MatchPtr>::const_iterator b_it = b.begin();
+        for( ; a_it != a.end(); ++a_it, ++b_it)
+            {
+                if (!(**a_it == **b_it)) return false;
+
+            }
+
+        return true;
+
+    }
+
 
 } // anonymous namespace
 
@@ -294,8 +309,93 @@ PWIZ_API_DECL bool SearchDatabase::operator!=(const SearchDatabase& that) const
 
 }
 
+PWIZ_API_DECL void Q3RatioResult::write(XMLWriter& writer) const
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("light_firstscan", boost::lexical_cast<string>(lightFirstScan)));
+    attributes.push_back(make_pair("light_lastscan", boost::lexical_cast<string>(lightLastScan)));
+    attributes.push_back(make_pair("light_mass", boost::lexical_cast<string>(lightMass)));
+    attributes.push_back(make_pair("heavy_firstscan", boost::lexical_cast<string>(heavyFirstScan)));
+    attributes.push_back(make_pair("heavy_lastscan", boost::lexical_cast<string>(heavyLastScan)));
+    attributes.push_back(make_pair("heavy_mass", boost::lexical_cast<string>(heavyMass)));
+    attributes.push_back(make_pair("light_area", boost::lexical_cast<string>(lightArea)));
+    attributes.push_back(make_pair("heavy_area", boost::lexical_cast<string>(heavyArea)));
+    attributes.push_back(make_pair("q2_light_area", boost::lexical_cast<string>(q2LightArea)));
+    attributes.push_back(make_pair("q2_heavy_area", boost::lexical_cast<string>(q2HeavyArea)));
+    attributes.push_back(make_pair("decimal_ratio", boost::lexical_cast<string>(decimalRatio)));
 
-PWIZ_API_DECL void XResult::write(XMLWriter& writer) const
+    writer.startElement("q3ratio_result", attributes, XMLWriter::EmptyElement);
+
+}
+
+struct HandlerQ3RatioResult : public SAXParser::Handler
+{
+    Q3RatioResult* q3RatioResult;
+    HandlerQ3RatioResult(Q3RatioResult* _q3RatioResult = 0) : q3RatioResult(_q3RatioResult) {}  
+
+    virtual Status startElement(const string& name,
+                              const Attributes& attributes,
+                              stream_offset position)
+
+    {
+        if (name == "q3ratio_result")
+            {
+                getAttribute(attributes, "light_firstscan", q3RatioResult->lightFirstScan);
+                getAttribute(attributes, "light_lastscan", q3RatioResult->lightLastScan);
+                getAttribute(attributes, "light_mass", q3RatioResult->lightMass);
+                getAttribute(attributes, "heavy_firstscan", q3RatioResult->heavyFirstScan);
+                getAttribute(attributes, "heavy_lastscan", q3RatioResult->heavyLastScan);
+                getAttribute(attributes, "heavy_mass", q3RatioResult->heavyMass);
+                getAttribute(attributes, "light_area", q3RatioResult->lightArea);
+                getAttribute(attributes, "heavy_area", q3RatioResult->heavyArea);
+                getAttribute(attributes, "q2_light_area", q3RatioResult->q2LightArea);
+                getAttribute(attributes, "q2_heavy_area", q3RatioResult->q2HeavyArea);
+                getAttribute(attributes, "decimal_ratio", q3RatioResult->decimalRatio);
+                
+                return Handler::Status::Ok;
+
+            }
+        
+        else
+            {
+                throw runtime_error(("[HandlerQ3RatioResult] Unexpected element name: " + name).c_str());
+                return Handler::Status::Done;
+            } 
+      
+    }
+
+};
+
+PWIZ_API_DECL void Q3RatioResult::read(istream& is)
+{
+    HandlerQ3RatioResult _handlerQ3RatioResult(this);
+    parse(is, _handlerQ3RatioResult);
+
+}
+
+PWIZ_API_DECL bool Q3RatioResult::operator==(const Q3RatioResult& that) const
+{
+    return lightFirstScan == that.lightFirstScan &&
+      lightLastScan == that.lightLastScan &&
+      lightMass == that.lightMass &&
+      heavyFirstScan == that.heavyFirstScan &&
+      heavyLastScan == that.heavyLastScan &&
+      heavyMass == that.heavyMass &&
+      lightArea == that.lightArea &&
+      heavyArea == that.heavyArea &&
+      q2LightArea == that.q2LightArea &&
+      q2HeavyArea == that.q2HeavyArea &&
+      decimalRatio == that.decimalRatio;
+
+}
+
+PWIZ_API_DECL bool Q3RatioResult::operator!=(const Q3RatioResult& that) const
+{
+    return  !(*this == that);
+
+}
+
+PWIZ_API_DECL void PeptideProphetResult::write(XMLWriter& writer) const
 {
     const string allNttProbStr  = stringCastVector(allNttProb);
   
@@ -303,18 +403,16 @@ PWIZ_API_DECL void XResult::write(XMLWriter& writer) const
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("probability", boost::lexical_cast<string>(probability)));
     attributes.push_back(make_pair("all_ntt_prob", allNttProbStr));
-
     
     writer.startElement("peptideprophet_result", attributes);
     writer.endElement();
     
-
 }
 
-struct HandlerXResult : public SAXParser::Handler
+struct HandlerPeptideProphetResult : public SAXParser::Handler
 {
-    XResult* xResult;
-    HandlerXResult(XResult* _xResult = 0) : xResult(_xResult) {}
+    PeptideProphetResult* peptideProphetResult;
+    HandlerPeptideProphetResult(PeptideProphetResult* _peptideProphetResult = 0) : peptideProphetResult(_peptideProphetResult) {}
 
     virtual Status startElement(const string& name,
                                 const Attributes& attributes,
@@ -323,9 +421,9 @@ struct HandlerXResult : public SAXParser::Handler
     {
         if (name == "peptideprophet_result")
             {
-                getAttribute(attributes, "probability", xResult->probability);
+                getAttribute(attributes, "probability", peptideProphetResult->probability);
                 getAttribute(attributes, "all_ntt_prob", _allNttProbStr);
-                xResult->allNttProb = vectorCastString(_allNttProbStr);
+                peptideProphetResult->allNttProb = vectorCastString(_allNttProbStr);
                 
                 return Handler::Status::Ok;
 
@@ -333,7 +431,7 @@ struct HandlerXResult : public SAXParser::Handler
 
         else
             {
-                if (_log) *_log << ("[HandlerXResult] Ignoring non-essential element name : " + name).c_str() << endl;
+                if (_log) *_log << ("[HandlerPeptideProphetResult] Ignoring non-essential element name : " + name).c_str() << endl;
                 return Handler::Status::Ok;
 
             }
@@ -346,21 +444,21 @@ private:
 
 };
 
-PWIZ_API_DECL void XResult::read(istream& is) 
+PWIZ_API_DECL void PeptideProphetResult::read(istream& is) 
 {
-    HandlerXResult handlerXResult(this);
-    parse(is, handlerXResult);
+    HandlerPeptideProphetResult handlerPeptideProphetResult(this);
+    parse(is, handlerPeptideProphetResult);
 
 }
 
-PWIZ_API_DECL bool XResult::operator==(const XResult& that) const
+PWIZ_API_DECL bool PeptideProphetResult::operator==(const PeptideProphetResult& that) const
 {
     return probability == that.probability &&
         allNttProb == that.allNttProb;
 
 }
 
-PWIZ_API_DECL bool XResult::operator!=(const XResult& that) const
+PWIZ_API_DECL bool PeptideProphetResult::operator!=(const PeptideProphetResult& that) const
 {
     return !(*this == that);
 
@@ -372,7 +470,8 @@ PWIZ_API_DECL void AnalysisResult::write(XMLWriter& writer) const
     attributes.push_back(make_pair("analysis", analysis));
 
     writer.startElement("analysis_result", attributes);
-    xResult.write(writer);
+    if (analysis == "peptideprophet") peptideProphetResult.write(writer);
+    if (analysis == "q3") q3RatioResult.write(writer);
     writer.endElement();
 
 }
@@ -396,11 +495,19 @@ struct HandlerAnalysisResult : public SAXParser::Handler
             }
 
         else if (name == "peptideprophet_result")
-            {   
-                _handlerXResult.xResult = &(analysisResult->xResult);
-                return Handler::Status(Status::Delegate, &_handlerXResult);
+            {             
+	        _handlerPeptideProphetResult.peptideProphetResult = &(analysisResult->peptideProphetResult);
+                 return Handler::Status(Status::Delegate, &_handlerPeptideProphetResult);
+
             }
-        
+
+       else if (name == "q3ratio_result")
+            {
+	        _handlerQ3RatioResult.q3RatioResult = &(analysisResult->q3RatioResult);
+                 return Handler::Status(Status::Delegate, &_handlerQ3RatioResult);
+
+            }
+
         else 
             {
                 if (_log) *_log << ("[HandlerAnalysisResult] Ignoring non-essential element name : " + name).c_str() << endl;
@@ -412,7 +519,8 @@ struct HandlerAnalysisResult : public SAXParser::Handler
 
 private:
     
-    HandlerXResult _handlerXResult;
+    HandlerPeptideProphetResult _handlerPeptideProphetResult;
+    HandlerQ3RatioResult _handlerQ3RatioResult;
 
 };
 
@@ -426,7 +534,8 @@ PWIZ_API_DECL void AnalysisResult::read(istream& is)
 PWIZ_API_DECL bool AnalysisResult::operator==(const AnalysisResult& that) const
 {
     return analysis == that.analysis &&
-        xResult == that.xResult;
+        peptideProphetResult == that.peptideProphetResult &&
+        q3RatioResult == that.q3RatioResult ;
 }
 
 PWIZ_API_DECL bool AnalysisResult::operator!=(const AnalysisResult& that) const
@@ -1357,7 +1466,7 @@ PWIZ_API_DECL void Match::write(minimxml::XMLWriter& writer) const
     writer.startElement("match", attributes);
 
     spectrumQuery.write(writer);
-    feature.write(writer);
+    feature->write(writer);
 
     writer.endElement();
 
@@ -1389,10 +1498,7 @@ struct HandlerMatch : public SAXParser::Handler
 
         else if (name == "feature")
             {
-                /*
-                Feature feature = match->feature;
-                if (!(&feature)) throw runtime_error("not feature");*/
-                _handlerFeature.feature = &(match->feature);
+                _handlerFeature.feature = (match->feature).get();
                 return Handler::Status(Status::Delegate, &_handlerFeature);
 
             }
@@ -1427,7 +1533,7 @@ PWIZ_API_DECL bool Match::operator==(const Match& that) const
 {
     return score == that.score &&
         spectrumQuery == (that.spectrumQuery) &&
-        feature == (that.feature);
+        *feature == *(that.feature);
 
 }
 
@@ -1450,10 +1556,10 @@ PWIZ_API_DECL void MatchData::write(minimxml::XMLWriter& writer) const
     attributes_m.push_back(make_pair("count", boost::lexical_cast<string>(matches.size())));
     writer.startElement("matches", attributes_m);
 
-    vector<Match>::const_iterator match_it = matches.begin();
+    vector<MatchPtr>::const_iterator match_it = matches.begin();
     for(; match_it != matches.end(); ++match_it)
         {
-            match_it->write(writer);
+            (*match_it)->write(writer);
 
         }
 
@@ -1495,8 +1601,8 @@ struct HandlerMatchData : public SAXParser::Handler
                         return Handler::Status::Done;
                     }
 
-                matchData->matches.push_back(Match());
-                _handlerMatch.match = &matchData->matches.back();
+                matchData->matches.push_back(MatchPtr(new Match()));
+                _handlerMatch.match = matchData->matches.back().get();
                 return Handler::Status(Status::Delegate, &_handlerMatch);
 
             }
@@ -1523,6 +1629,7 @@ PWIZ_API_DECL void MatchData::read(istream& is)
     parse(is, handlerMatchData);
 
 }
+
 
 PWIZ_API_DECL bool MatchData::operator==(const MatchData& that) const
 {
