@@ -99,6 +99,7 @@ struct MZRTField : public std::set< boost::shared_ptr<T>, LessThan_MZRT<T> >
 
 
 typedef MZRTField<pwiz::data::peakdata::Peakel> PeakelField;
+typedef MZRTField<pwiz::data::peakdata::Feature> FeatureField;
 
 
 namespace {

@@ -402,6 +402,36 @@ void testFeature()
 }
 
 
+void testFeatureAux()
+{
+    Feature feature;
+    feature.retentionTime = 420;
+    unit_assert(feature.retentionTimeMin() == 420);
+    unit_assert(feature.retentionTimeMax() == 420);
+
+    // retention time ranges determined by first two peakels
+
+    PeakelPtr dill(new Peakel);
+    dill->peaks.push_back(Peak(666,419));
+    dill->peaks.push_back(Peak(666,423));
+
+    PeakelPtr sweet(new Peakel);
+    sweet->peaks.push_back(Peak(666,421));
+    sweet->peaks.push_back(Peak(666,424));
+
+    PeakelPtr gherkin(new Peakel);
+    gherkin->peaks.push_back(Peak(666,418));
+    gherkin->peaks.push_back(Peak(666,425));
+
+    feature.peakels.push_back(dill);
+    feature.peakels.push_back(sweet);
+    feature.peakels.push_back(gherkin);
+
+    unit_assert(feature.retentionTimeMin() == 419);
+    unit_assert(feature.retentionTimeMax() == 424);
+}
+
+
 void test()
 {
     testPeakEquality();
@@ -415,6 +445,7 @@ void test()
     testPeakelAux();
     testPeakelConstruction();
     testFeature();
+    testFeatureAux();
 }
 
 

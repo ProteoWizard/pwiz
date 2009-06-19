@@ -1019,6 +1019,46 @@ void Feature::calculateMetadata()
 }
 
 
+namespace {
+const int maxPeakelsToCheck_ = 2;
+} // namespace
+
+
+double Feature::retentionTimeMin() const
+{
+    double result = retentionTime;
+    
+    vector<PeakelPtr>::const_iterator begin = peakels.begin();
+    vector<PeakelPtr>::const_iterator end = peakels.end();
+    if (end-begin>maxPeakelsToCheck_) end = begin+maxPeakelsToCheck_;
+
+    for (vector<PeakelPtr>::const_iterator it=begin; it!=end; ++it)
+    {
+        double min = (*it)->retentionTimeMin();
+        if (min < result) result = min;
+    }
+    
+    return result;
+}
+
+
+double Feature::retentionTimeMax() const
+{
+    double result = retentionTime;
+    
+    vector<PeakelPtr>::const_iterator begin = peakels.begin();
+    vector<PeakelPtr>::const_iterator end = peakels.end();
+    if (end-begin>maxPeakelsToCheck_) end = begin+maxPeakelsToCheck_;
+
+    for (vector<PeakelPtr>::const_iterator it=begin; it!=end; ++it)
+    {
+        double max = (*it)->retentionTimeMax();
+        if (max > result) result = max;
+    }
+    
+    return result;
+}
+
 
 void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {

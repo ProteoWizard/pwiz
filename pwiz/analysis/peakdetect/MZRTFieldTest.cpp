@@ -152,7 +152,26 @@ void testFeatureField()
 {
     if (os_) *os_ << "testPeakelField()\n";
 
-    //MZRTField<Feature> pf; // TODO: this will compile when retentionTimeMin/Max() added to Feature
+    FeatureField pf;
+
+    FeaturePtr a(new Feature);
+    a->mz=1; a->retentionTime=1;
+
+    FeaturePtr b(new Feature);
+    b->mz=2; b->retentionTime=1;
+
+    FeaturePtr c(new Feature);
+    c->mz=1; c->retentionTime=2;
+
+    pf.insert(a);
+    pf.insert(b);
+    pf.insert(c);
+
+    MZTolerance fiveppm(5, MZTolerance::PPM);
+    vector<FeaturePtr> v = pf.find(1.000001, fiveppm, 1, 10);
+    unit_assert(v.size()==2 && v[0]==a && v[1]==c);
+    v = pf.find(1.000006, fiveppm, 1, 10);
+    unit_assert(v.empty());
 }
 
 

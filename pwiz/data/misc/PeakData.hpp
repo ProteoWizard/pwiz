@@ -262,12 +262,20 @@ struct PWIZ_API_DECL Feature
     
     void calculateMetadata();
 
+    // retention time range calculation based on first two Peakels
+    double retentionTimeMin() const;
+    double retentionTimeMax() const;
+
     void write(pwiz::minimxml::XMLWriter& xmlWriter) const;
     void read(std::istream& is);
   
     bool operator==(const Feature& that) const;
     bool operator!=(const Feature& that) const;
 };
+
+
+typedef boost::shared_ptr<Feature> FeaturePtr;
+
  
 struct HandlerFeature : public SAXParser::Handler // included in header file for accession by MatchData
 {
