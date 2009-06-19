@@ -228,8 +228,13 @@ class HandlerPeaks : public SAXParser::Handler
     {
         if (name == "peaks")
         {
+            // hack: this is necessary for handling wolf-mrm generated mzXML,
+            // hack: which has no </scan> end tags
+            // TODO(dkessner): add unit test to make sure this never breaks
+
             // hack: avoid reading nested <scan> elements
             // TODO: use nested scans to indicate precursor relationships
+
             return Status::Done;
         }
 
