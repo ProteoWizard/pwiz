@@ -75,8 +75,8 @@ PeakelField::iterator process(PeakelField::iterator it, PeakelField& peakelField
 
 void PeakelPicker_Basic::pick(PeakelField& peakels, FeatureField& features) const
 {
-    PeakelField::const_iterator it = peakels.begin();
-    PeakelField::const_iterator end = peakels.end();
+    PeakelField::iterator it = peakels.begin();
+    PeakelField::iterator end = peakels.end();
    
     while (it != end)
         it = process(it, peakels, features);
