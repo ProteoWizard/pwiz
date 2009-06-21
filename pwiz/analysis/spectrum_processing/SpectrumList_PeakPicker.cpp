@@ -27,7 +27,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 
 #ifdef PWIZ_READER_THERMO
-#include "pwiz/data/vendor_readers/SpectrumList_Thermo.hpp"
+#include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 #endif
 
 #ifdef PWIZ_READER_BRUKER

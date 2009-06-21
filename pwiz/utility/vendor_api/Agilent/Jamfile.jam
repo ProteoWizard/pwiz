@@ -1,0 +1,65 @@
+
+import modules ;
+import path ;
+
+path-constant CLI_ROOT : . ;
+
+if [ modules.peek : NT ] &&
+   [ path.exists $(CLI_ROOT)/MassSpecDataReader.dll ]
+{
+
+lib pwiz_agilentdatareader
+    : # sources
+        AgilentDataReader.cpp
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+        
+        <toolset>msvc,<link>shared:<define>AGILENTDATAREADER_DYN_LINK
+        <using-clr>true # requires hacked msvc.jam
+        <cxxflags>"/AI $(CLI_ROOT)"
+        <toolset>msvc:<dependency>MassSpecDataReader.dll
+        <toolset>msvc:<dependency>BaseCommon.dll
+        <toolset>msvc:<dependency>BaseDataAccess.dll
+        <toolset>msvc:<dependency>BaseError.dll
+        <toolset>msvc:<dependency>BaseTof.dll
+        <toolset>msvc:<dependency>agtsampleinforw.dll
+    : # default-build
+    : # usage-requirements
+        <toolset>msvc:<dependency>MassSpecDataReader.dll
+        <toolset>msvc:<dependency>BaseCommon.dll
+        <toolset>msvc:<dependency>BaseDataAccess.dll
+        <toolset>msvc:<dependency>BaseError.dll
+        <toolset>msvc:<dependency>BaseTof.dll
+        <toolset>msvc:<dependency>agtsampleinforw.dll
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+path-constant TEST_PATH1 : "c:/test/MixC-dMRM-06.d" ;
+
+# special run target for WiffFileTest, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run AgilentDataReaderTest.cpp
+    : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
+    : # input-files
+    : # requirements
+        <library>pwiz_agilentdatareader
+    : # target name
+        AgilentDataReaderTest 
+    : # default-build
+    ;
+explicit AgilentDataReaderTest ;
+
+}

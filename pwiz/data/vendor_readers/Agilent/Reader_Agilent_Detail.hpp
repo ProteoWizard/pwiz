@@ -24,47 +24,23 @@
 #define _READER_AGILENT_DETAIL_HPP_ 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "boost/shared_ptr.hpp"
+#include "pwiz/utility/vendor_api/Agilent/AgilentDataReader.hpp"
 
 //#import "BaseCommon.tlb" no_namespace, named_guids
 //#import "BaseDataAccess.tlb" rename_namespace("BDA"), named_guids
 //#import "MassSpecDataReader.tlb" rename_namespace("MSDR"), named_guids
-#include "BaseCommon.tlh"
-#include "BaseDataAccess.tlh"
-#include "MassSpecDataReader.tlh"
+//#include "BaseCommon.tlh"
+//#include "BaseDataAccess.tlh"
+//#include "MassSpecDataReader.tlh"
 
 #include <vector>
+
+using namespace pwiz::agilent;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
-
-
-typedef MSDR::IMsdrDataReaderPtr IDataReaderPtr;
-typedef BDA::IBDAFileInformationPtr IFileInformationPtr;
-typedef BDA::IBDAMSScanFileInformationPtr IScanInformationPtr;
-typedef BDA::IBDASpecDataPtr ISpectrumPtr;
-typedef BDA::IBDASpecFilterPtr ISpectrumFilterPtr;
-typedef MSDR::IMsdrPeakFilterPtr IPeakFilterPtr;
-typedef BDA::IBDAChromDataPtr IChromatogramPtr;
-typedef BDA::IBDAChromFilterPtr IChromatogramFilterPtr;
-
-
-struct AgilentDataReader
-{
-    AgilentDataReader(const std::string& path);
-    ~AgilentDataReader();
-
-    IDataReaderPtr dataReaderPtr;
-    IScanInformationPtr scanFileInfoPtr;
-
-    automation_vector<double> ticTimes, bpcTimes;
-    automation_vector<float> ticIntensities, bpcIntensities;
-};
-
-typedef boost::shared_ptr<AgilentDataReader> AgilentDataReaderPtr;
 
 
 PWIZ_API_DECL

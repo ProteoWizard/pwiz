@@ -123,8 +123,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
                                            AgilentDataReaderPtr rawfile,
                                            const SoftwarePtr& instrumentSoftware)
 {
-    IFileInformationPtr fileInformationPtr = rawfile->dataReaderPtr->FileInformation;
-    DeviceType deviceType = rawfile->scanFileInfoPtr->_DeviceType;
+    DeviceType deviceType = rawfile->getDeviceType();
     CVID cvidModel = translateAsInstrumentModel(deviceType);
 
     // set common instrument parameters
@@ -133,7 +132,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
     if (cvidModel == MS_Agilent_instrument_model)
-        commonInstrumentParams->userParams.push_back(UserParam("instrument model", (const char*) fileInformationPtr->GetDeviceName(deviceType)));
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile->getDeviceName(deviceType)));
     commonInstrumentParams->set(cvidModel);
 
     // create instrument configuration templates based on the instrument model
@@ -156,7 +155,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
 {
     msd.cvs = defaultCVList();
 
-    MSScanType scanTypes = rawfile->scanFileInfoPtr->ScanTypes;
+    MSScanType scanTypes = rawfile->getScanTypes();
     if (scanTypes & MSScanType_Scan)         msd.fileDescription.fileContent.set(MS_MS1_spectrum);
     if (scanTypes & MSScanType_ProductIon)   msd.fileDescription.fileContent.set(MS_MSn_spectrum);
     if (scanTypes & MSScanType_PrecursorIon) msd.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
@@ -166,7 +165,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     {
         // determine which spectrum representations are available
         // TODO: adjust this list according to PeakPicker settings?
-        switch (rawfile->scanFileInfoPtr->SpectraFormat)
+        switch (rawfile->getSpectraFormat())
         {
             case MSStorageMode_Mixed:
                 msd.fileDescription.fileContent.set(MS_centroid_spectrum);
@@ -220,7 +219,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";
     softwareMassHunter->set(MS_MassHunter_Data_Acquisition);
-    softwareMassHunter->version = (const char*) rawfile->dataReaderPtr->Version;
+    softwareMassHunter->version = rawfile->getVersion();
     msd.softwarePtrs.push_back(softwareMassHunter);
 
     SoftwarePtr softwarePwiz(new Software);
@@ -250,7 +249,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     using namespace boost::posix_time;
     using namespace boost::gregorian;
     using namespace boost::local_time;
-    double acquisitionDATE = (double) rawfile->dataReaderPtr->FileInformation->AcquisitionTime;
+    double acquisitionDATE = (double) rawfile->getAcquisitionTime();
     int dayOffset, hourOffset, minuteOffset, secondOffset;
     double fraction = boost::math::modf(acquisitionDATE, &dayOffset) * 24; // fraction = hours
     fraction = boost::math::modf(fraction, &hourOffset) * 60; // fraction = minutes
@@ -286,7 +285,7 @@ void Reader_Agilent::read(const string& filename,
 
     // instantiate RawFile, share ownership with SpectrumList_Agilent
 
-    AgilentDataReaderPtr dataReader(new AgilentDataReader(filename));
+    AgilentDataReaderPtr dataReader(AgilentDataReader::create(filename));
 
     shared_ptr<SpectrumList_Agilent> sl(new SpectrumList_Agilent(dataReader));
     shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(dataReader));

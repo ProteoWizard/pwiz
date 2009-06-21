@@ -32,50 +32,13 @@ namespace msdata {
 namespace detail {
 
 
-AgilentDataReader::AgilentDataReader(const std::string& path)
-:   dataReaderPtr(MSDR::CLSID_MassSpecDataReader),
-    scanFileInfoPtr(BDA::CLSID_BDAMSScanFileInformation)
-{
-    bstr_t bpath(path.c_str());
-    if (!dataReaderPtr->OpenDataFile(bpath))
-        throw std::runtime_error("[AgilentDataReader::ctor()] Error opening source path.");
-
-    scanFileInfoPtr = dataReaderPtr->GetMSScanFileInformation();
-
-    automation_vector<IUnknown*> chromatogramArray;
-
-    // cycle summing can make the full file chromatograms have the wrong number of points
-    IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
-    filterPtr->DoCycleSum = false;
-
-    // set filter for TIC
-    filterPtr->ChromatogramType = ChromType_TotalIon;
-    chromatogramArray.attach(*dataReaderPtr->GetChromatogram(filterPtr));
-    IChromatogramPtr ticPtr = IChromatogramPtr(chromatogramArray[0]);
-    ticTimes.attach(*ticPtr->xArray);
-    ticIntensities.attach(*ticPtr->yArray);
-
-    // set filter for BPC
-    filterPtr->ChromatogramType = ChromType_BasePeak;
-    chromatogramArray.attach(*dataReaderPtr->GetChromatogram(filterPtr));
-    IChromatogramPtr bpcPtr = IChromatogramPtr(chromatogramArray[0]);
-    bpcTimes.attach(*bpcPtr->xArray);
-    bpcIntensities.attach(*bpcPtr->yArray);
-}
-
-AgilentDataReader::~AgilentDataReader()
-{
-    dataReaderPtr->CloseDataFile();
-}
-
-
 PWIZ_API_DECL
 vector<InstrumentConfiguration> createInstrumentConfigurations(AgilentDataReaderPtr rawfile)
 {
     vector<InstrumentConfiguration> configurations;
 
-    DeviceType deviceType = rawfile->scanFileInfoPtr->_DeviceType;
-    IonizationMode ionModes = rawfile->scanFileInfoPtr->IonModes;
+    DeviceType deviceType = rawfile->getDeviceType();
+    IonizationMode ionModes = rawfile->getIonModes();
 
     set<IonizationMode> ionModeSet;
     if (ionModes & IonizationMode_EI)           ionModeSet.insert(IonizationMode_EI);
@@ -187,7 +150,7 @@ PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType)
 }
 
 
-PWIZ_API_DECL CVID translateAsActivationType(ISpectrumPtr spectrumPtr)
+PWIZ_API_DECL CVID translateAsActivationType(MSScanType scanType)
 {
     return MS_CID;
 }

@@ -97,72 +97,57 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
-                result->getTimeArray()->data.assign(rawfile_->ticTimes.begin(), rawfile_->ticTimes.end());
-                result->getIntensityArray()->data.assign(rawfile_->ticIntensities.begin(), rawfile_->ticIntensities.end());
+                result->getTimeArray()->data.assign(rawfile_->getTicTimes().begin(), rawfile_->getTicTimes().end());
+                result->getIntensityArray()->data.assign(rawfile_->getTicIntensities().begin(), rawfile_->getTicIntensities().end());
             }
             else
-                result->defaultArrayLength = rawfile_->ticTimes.size();
+                result->defaultArrayLength = rawfile_->getTicTimes().size();
         }
         break;
 
         case MS_SRM_chromatogram:
         {
-            IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
-            filterPtr->ChromatogramType = ChromType_MultipleReactionMode;
-            filterPtr->SingleChromatogramForAllMasses = VARIANT_FALSE;
-            filterPtr->ExtractOneChromatogramPerScanSegment = VARIANT_TRUE;
-
-            automation_vector<IUnknown*> chromatogramArray(*rawfile_->dataReaderPtr->GetChromatogram(filterPtr), automation_vector<IChromatogramPtr>::MOVE);
-            IChromatogramPtr chromatogramPtr(chromatogramArray[ci.index-1]);
+            pwiz::agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.index, ChromType_MultipleReactionMode));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
-            result->precursor.activation.set(MS_collision_energy, chromatogramPtr->CollisionEnergy);
+            result->precursor.activation.set(MS_collision_energy, chromatogramPtr->getCollisionEnergy());
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
-            automation_vector<double> xArray(*chromatogramPtr->xArray, automation_vector<double>::MOVE);
-
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                vector<double> xArray = chromatogramPtr->getXArray();
                 result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-                automation_vector<float> yArray(*chromatogramPtr->yArray, automation_vector<float>::MOVE);
+                vector<float> yArray = chromatogramPtr->getYArray();
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
             }
             else
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
         }
         break;
 
         case MS_SIM_chromatogram:
         {
-            IChromatogramFilterPtr filterPtr(BDA::CLSID_BDAChromFilter);
-            filterPtr->ChromatogramType = ChromType_SelectedIonMonitoring;
-            filterPtr->SingleChromatogramForAllMasses = VARIANT_FALSE;
-            filterPtr->ExtractOneChromatogramPerScanSegment = VARIANT_TRUE;
-
-            automation_vector<IUnknown*> chromatogramArray(*rawfile_->dataReaderPtr->GetChromatogram(filterPtr), automation_vector<IChromatogramPtr>::MOVE);
-            IChromatogramPtr chromatogramPtr(chromatogramArray[ci.index-1]);
-            chromatogramArray.clear();
+            pwiz::agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.index, ChromType_SelectedIonMonitoring));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
-
-            automation_vector<double> xArray(*chromatogramPtr->xArray, automation_vector<double>::MOVE);
 
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                vector<double> xArray = chromatogramPtr->getXArray();
                 result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-                automation_vector<float> yArray(*chromatogramPtr->yArray, automation_vector<float>::MOVE);
+                vector<float> yArray = chromatogramPtr->getYArray();
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
             }
             else
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
         }
         break;
     }
@@ -182,17 +167,17 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
     ci.id = "TIC";
     idMap_[ci.id] = ci.index;
 
-    automation_vector<IUnknown*> transitions(*rawfile_->scanFileInfoPtr->MRMTransitions, automation_vector<IRangePtr>::MOVE);
+    vector<Transition> transitions(rawfile_->getMRMTransitions());
 
     for (size_t i=0, end=transitions.size(); i < end; ++i)
     {
-        IRangePtr transition(transitions[i]);
+        Transition& transition = transitions[i];
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.chromatogramType = MS_SRM_chromatogram;
-        ci.q1 = transition->Start;
-        ci.q3 = transition->End;
+        ci.q1 = transition.precursor;
+        ci.q3 = transition.product;
         ci.id = (format("SRM SIC %.10g,%.10g")
                  % ci.q1
                  % ci.q3
@@ -200,7 +185,7 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         idMap_[ci.id] = ci.index;
     }
 
-    automation_vector<double> monitoredIons(*rawfile_->scanFileInfoPtr->SIMIons, automation_vector<double>::MOVE);
+    vector<double> monitoredIons(rawfile_->getSIMIons());
 
     for (size_t i=0, end=monitoredIons.size(); i < end; ++i)
     {

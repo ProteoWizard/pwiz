@@ -590,10 +590,24 @@ CVID translate_parentFilenameToSourceFileType(const string& name)
     string fileExtension = bal::to_lower_copy(bfs::extension(name));
 
     // check for known vendor formats
-    if (fileExtension == ".raw")                                return MS_Thermo_RAW_file;
+    if (fileExtension == ".raw")
+    {
+        // hack: only way to tell the difference between thermo and waters
+        //       is Thermo uses .RAW (and a file) and Waters uses .raw (and a directory)
+        //       there is no way to tell file v. dirctory here, so casing must
+        //       be used.
+        string fileExtensionCase = bfs::extension(name);
+        if (fileExtensionCase == ".raw")
+            return MS_Waters_raw_file;
+        
+        // Use Thermo for anything but all lowercase
+        return MS_Thermo_RAW_file;
+    }
     else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_file;
     else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_file;
     else if (fileExtension == ".baf")                           return MS_Bruker_BAF_file;
+    // TODO(mchambers): This case cannot throw, but MS_Agilent_MassHunter_file doesn't appear to exist
+    else if (fileExtension == ".d")                             return MS_Thermo_RAW_file; // MS_Agilent_MassHunter_file;
     else if (name == "fid")                                     return MS_Bruker_FID_file;
     //else if (name == "msprofile.bin" || name == "mspeak.bin") return MS_Agilent_MassHunter_file);
 
@@ -621,12 +635,14 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
     {
         // for these sources we treat the scan number as the nativeID
         case MS_Thermo_RAW_file:            return MS_Thermo_nativeID_format;
+        case MS_Waters_raw_file:            return MS_Waters_nativeID_format;
         case MS_Bruker_Agilent_YEP_file:    return MS_Bruker_Agilent_YEP_nativeID_format;
         case MS_Bruker_BAF_file:            return MS_Bruker_BAF_nativeID_format;
         case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
         case MS_PSI_mzData_file:            return MS_spectrum_identifier_nativeID_format;
         case MS_Mascot_MGF_file:            return MS_multiple_peak_list_nativeID_format;
-        //case MS_Agilent_MassHunter_file:  return MS_Agilent_MassHunter_nativeID_format;
+        // TODO(mchambers): Fix this with the Agilent case above
+//        case MS_Agilent_MassHunter_file:    return MS_Agilent_MassHunter_nativeID_format;
 
         // for these sources we must assume the scan number came from the index
         case MS_ABI_WIFF_file:
