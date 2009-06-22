@@ -95,7 +95,7 @@ shared_ptr<PeakelField> createToyPeakelField()
 
     if (os_)
     {
-        *os_ << "createToyPeakelField()\n";
+        *os_ << "createToyPeakelField(): " << toy->size() << endl;
         for (PeakelField::const_iterator it=toy->begin(); it!=toy->end(); ++it)
             *os_ << **it << endl;
     }
@@ -106,17 +106,33 @@ shared_ptr<PeakelField> createToyPeakelField()
 
 void testToy()
 {
+    if (os_) *os_ << "testToy()\n";
+
     PeakelPicker_Basic::Config config;
     // change config?
 
     PeakelPicker_Basic peterPiper(config);
 
     shared_ptr<PeakelField> peakels = createToyPeakelField();
-    FeatureField peck;
+    unit_assert(peakels->size() == 7);
 
+    FeatureField peck;
     peterPiper.pick(*peakels, peck);
-/*
+
+    if (os_)
+    {
+        *os_ << "after pick()\n";
+        *os_ << "peakelField: " << peakels->size() << endl;
+        for (PeakelField::const_iterator it=peakels->begin(); it!=peakels->end(); ++it)
+            *os_ << **it << endl;
+
+        *os_ << "featureField: " << peck.size() << endl;
+        for (FeatureField::const_iterator it=peck.begin(); it!=peck.end(); ++it)
+            *os_ << **it << endl;
+    }
+
     unit_assert(peck.size() == 2);
+    unit_assert(peakels->size() == 1);
 
     FeatureField::const_iterator it = peck.begin();
     unit_assert((*it)->mz == 0);
@@ -127,7 +143,6 @@ void testToy()
     unit_assert((*it)->mz == 1./3);
     unit_assert((*it)->charge == 2);
     unit_assert_equal((*it)->retentionTime, 75, 20);
-*/
 }
 
 

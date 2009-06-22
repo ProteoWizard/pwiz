@@ -93,8 +93,12 @@ struct MZRTField : public std::set< boost::shared_ptr<T>, LessThan_MZRT<T> >
 
     typedef boost::shared_ptr<T> TPtr;
 
+    /// find all objects in a given mz/rt range
     std::vector<TPtr> find(double mz, MZTolerance mzTolerance,
                            double retentionTime, double rtTolerance) const;
+
+    /// remove an object via a shared reference, rather than an iterator into the set
+    void remove(const TPtr& p); 
 };
 
 
@@ -126,7 +130,6 @@ template <typename T>
 std::vector< boost::shared_ptr<T> >
 MZRTField<T>::find(double mz, MZTolerance mzTolerance,
                    double retentionTime, double rtTolerance) const
-
 {
     TPtr target(new T);
 
@@ -145,6 +148,21 @@ MZRTField<T>::find(double mz, MZTolerance mzTolerance,
             result.push_back(*it);
 
     return result;
+}
+
+
+template <typename T>
+void MZRTField<T>::remove(const boost::shared_ptr<T>& p)
+{
+    std::pair<typename MZRTField<T>::iterator, typename MZRTField<T>::iterator> 
+        range = this->equal_range(p); // uses LessThan_MZRT
+    
+    typename MZRTField<T>::iterator 
+        found = std::find(range.first, range.second, p); // uses shared_ptr::operator==
+
+    if (found == range.second) throw std::runtime_error("[MZRTField::remove()] TPtr not found.");
+
+    this->erase(found);
 }
 
 

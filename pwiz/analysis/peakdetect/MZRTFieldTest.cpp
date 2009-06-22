@@ -125,6 +125,8 @@ void testPeakelField()
 
     // find()
 
+    if (os_) *os_ << "testPeakelField(): find()\n";
+
     vector<PeakelPtr> v = pf.find(1.5, .6, 1, .5);
 
     if (os_) 
@@ -145,12 +147,41 @@ void testPeakelField()
     unit_assert(v.size()==2 && v[0]==a && v[1]==c);
     v = pf.find(1.000006, fiveppm, 1, 10);
     unit_assert(v.empty());
+
+    // remove()
+
+    if (os_) *os_ << "testPeakelField(): remove()\n";
+
+    pf.remove(a); 
+    unit_assert(pf.size() == 2);
+    it = pf.begin();
+    unit_assert(*it == c);
+    ++it; 
+    unit_assert(*it == b);
+
+    bool caught = false;
+    try { 
+        pf.remove(a); 
+    }
+    catch (exception& e) {
+        if (os_) *os_ << "Caught exception correctly: " << e.what() << endl;
+        caught = true; 
+    }
+    unit_assert(caught);
+
+    pf.remove(b);
+    unit_assert(pf.size() == 1);
+    it = pf.begin();
+    unit_assert(*it == c);
+
+    pf.remove(c);
+    unit_assert(pf.empty());
 }
 
 
 void testFeatureField()
 {
-    if (os_) *os_ << "testPeakelField()\n";
+    if (os_) *os_ << "testFeatureField()\n";
 
     FeatureField pf;
 
