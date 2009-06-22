@@ -427,30 +427,68 @@ actions compile.rc
 }
 
 
+import sequence ;
+#import targets ;
+#import virtual-target ;
+rule get-assembly-name ( assembly ) { return [ $(assembly).name ] ; }
+rule copy-assemblies ( target : properties * )
+{
+    #local copy-rule ;
+
+    # .NET assemblies and their native DLL dependencies must be copied to the target's directory
+    local assembly-paths = [ feature.get-values <assembly> : $(properties) ] ;
+    assembly-paths += [ feature.get-values <assembly-dependency> : $(properties) ] ;
+    if $(assembly-paths)
+    {
+        assembly-paths = [ sequence.transform get-assembly-name : $(assembly-paths) ] ;
+        assembly-paths = [ sequence.transform path.native : $(assembly-paths) ] ;
+        local destination = [ on $(target) return $(LOCATE) ] ;
+        #copy-rule = [ class.new install-target-class $(target:S=-copy-assemblies-rule)
+        #                    : $(target:S=-assemblies)
+        #                    : $(assembly-paths)
+        #                    : <location>$(destination)
+        #            ] ;
+
+        # HACK: can the install rule be called immediately after creating it?
+        for local p in $(assembly-paths)
+        {
+            if ! [ path.exists [ path.join $(destination) [ path.basename [ path.make $(p) ] ] ] ]
+            {
+                echo copy $(p) $(destination) ;
+                SHELL "copy $(p) $(destination)" ;
+            }            
+        }
+    }
+    #return $(copy-rule) ;
+}
+
 rule link ( targets + : sources * : properties * )
 {
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest $(targets) : $(sources) : $(properties) ;
-    }    
+    }
+    copy-assemblies $(targets[0]) : $(properties) ;
 }
 
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
-    }    
+    }
+    copy-assemblies $(targets[0]) : $(properties) ;
 }
 
 rule link.clr.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
-    }    
+    }
+    copy-assemblies $(targets[0]) : $(properties) ;
 }
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
@@ -1047,11 +1085,12 @@ local rule register-toolset-really ( )
 
     # Declare msvc toolset specific features.
     {
-        feature.feature debug-store     : object database       : propagated ;
-        feature.feature pch-source      :                       : dependency free ;
-        feature.feature assembly        :                       : free dependency ;
-        feature.feature using-clr       : false true            : composite ;
-        feature.compose <using-clr>true : <asynch-exceptions>on <runtime-link>shared ;
+        feature.feature debug-store         : object database       : propagated ;
+        feature.feature pch-source          :                       : dependency free ;
+        feature.feature assembly            :                       : free dependency ;
+        feature.feature assembly-dependency :                       : free dependency ;
+        feature.feature using-clr           : false true            : composite ;
+        feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
 
     # Declare generators.
@@ -1156,6 +1195,7 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
+        toolset.flags msvc.link ASSEMBLY_DEPENDENCIES <assembly-dependency> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
