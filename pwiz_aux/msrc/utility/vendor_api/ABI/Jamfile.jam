@@ -2,10 +2,11 @@
 import modules ;
 import path ;
 
-path-constant CLI_ROOT : . ;
+path-constant ABI_PATH : . ;
+path-constant ABI_TEST_PATH : ./WiffFileTest.data ;
 
 if [ modules.peek : NT ] &&
-   [ path.exists $(CLI_ROOT)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+   [ path.exists $(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
 {
 
 lib pwiz_wifffile
@@ -24,50 +25,41 @@ lib pwiz_wifffile
         
         <toolset>msvc,<link>shared:<define>WIFFFILE_DYN_LINK
         <using-clr>true # requires hacked msvc.jam
-        <cxxflags>"/AI $(CLI_ROOT)"
-        <toolset>msvc:<dependency>ABSciex.DataAccess.WiffFileDataReader.dll
-        <toolset>msvc:<dependency>Clearcore.dll
-        <toolset>msvc:<dependency>ClearCore.Storage.dll
-        <toolset>msvc:<dependency>Interop.AAOBatchLib.dll
-        <toolset>msvc:<dependency>Interop.AAOLib.dll
-        <toolset>msvc:<dependency>Interop.AcqMethodSvrLib.dll
-        <toolset>msvc:<dependency>Interop.AnalystBridge.dll
-        <toolset>msvc:<dependency>Interop.IDAMethodSvr.dll
-        <toolset>msvc:<dependency>Interop.MSMethodSvrLib.dll
-        <toolset>msvc:<dependency>Interop.ParameterSvrLib.dll
-        <toolset>msvc:<dependency>Interop.SampleStatusServerLib.dll
-        <toolset>msvc:<dependency>nunit.framework.dll
-        <toolset>msvc:<dependency>rscoree.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/Clearcore.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/ClearCore.Storage.dll
+        <toolset>msvc:<assembly-dependency>$(ABI_PATH)/rscoree.dll
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<dependency>ABSciex.DataAccess.WiffFileDataReader.dll
-        <toolset>msvc:<dependency>Clearcore.dll
-        <toolset>msvc:<dependency>ClearCore.Storage.dll
-        <toolset>msvc:<dependency>Interop.AAOBatchLib.dll
-        <toolset>msvc:<dependency>Interop.AAOLib.dll
-        <toolset>msvc:<dependency>Interop.AcqMethodSvrLib.dll
-        <toolset>msvc:<dependency>Interop.AnalystBridge.dll
-        <toolset>msvc:<dependency>Interop.IDAMethodSvr.dll
-        <toolset>msvc:<dependency>Interop.MSMethodSvrLib.dll
-        <toolset>msvc:<dependency>Interop.ParameterSvrLib.dll
-        <toolset>msvc:<dependency>Interop.SampleStatusServerLib.dll
-        <toolset>msvc:<dependency>nunit.framework.dll
-        <toolset>msvc:<dependency>rscoree.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/Clearcore.dll
+        <toolset>msvc:<assembly>$(ABI_PATH)/ClearCore.Storage.dll
+        <toolset>msvc:<assembly-dependency>$(ABI_PATH)/rscoree.dll
     ;
+
+
+# decompress test data
+if [ modules.peek : NT ]
+{
+    SHELL "$(ABI_TEST_PATH)/untar_data.bat $(ABI_TEST_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
+}
+else if [ modules.peek : UNIX ]
+{
+    SHELL "$(ABI_TEST_PATH)/untar_data.sh $(ABI_TEST_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
+}
 
 
 #
 # unit tests (ordered by dependency)
 #
 
-path-constant TEST_PATH1 : "c:/test/20061108_CPTAC_1B468.wiff" ;
-path-constant TEST_PATH2 : "c:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscript_Addona et al/Study II/Site 52_done/52_Raw Data/Site52_7.2.wiff" ;
+path-constant TEST_PATH1 : "$(ABI_TEST_PATH)/Enolase_repeats_AQv1.4.2.wiff" ;
 
 # special run target for WiffFileTest, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run WiffFileTest.cpp
     : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
+        \"$(TEST_PATH1)\"
     : # input-files
     : # requirements
         <library>pwiz_wifffile

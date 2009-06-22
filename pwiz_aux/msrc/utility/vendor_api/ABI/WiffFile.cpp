@@ -32,18 +32,6 @@ using namespace std;
 #pragma managed
 #include <gcroot.h>
 #define GCHANDLE(T) gcroot<T>
-#using "Interop.ParameterSvrLib.dll"
-#using "Interop.MSMethodSvrLib.dll"
-#using "Interop.AAOBatchLib.dll"
-#using "Interop.AAOLib.dll"
-#using "Interop.SampleStatusServerLib.dll"
-#using "Clearcore.Storage.dll"
-#using "Interop.AcqMethodSvrLib.dll"
-#using "Interop.IDAMethodSvr.dll"
-#using "Interop.AnalystBridge.dll"
-#using "nunit.framework.dll"
-#using "Clearcore.dll"
-#using "ABSciex.DataAccess.WiffFileDataReader.dll"
 #using "System.Xml.dll"
 
 using System::String;
