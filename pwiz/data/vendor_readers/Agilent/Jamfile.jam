@@ -35,12 +35,12 @@ lib pwiz_reader_agilent
         <toolset>msvc:<source>Reader_Agilent_Detail.cpp
         <toolset>msvc:<source>SpectrumList_Agilent.cpp
         <toolset>msvc:<source>ChromatogramList_Agilent.cpp
-        <library>$(api-location)//pwiz_agilentdatareader
+        <toolset>msvc:<library>../../../utility/vendor_api/Agilent//pwiz_agilentdatareader
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<define>PWIZ_READER_AGILENT
     : # default-build
     : # usage-requirements
-        <library>$(api-location)//pwiz_agilentdatareader
+        <toolset>msvc:<library>$(api-location)//pwiz_agilentdatareader
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<define>PWIZ_READER_AGILENT
     ;
