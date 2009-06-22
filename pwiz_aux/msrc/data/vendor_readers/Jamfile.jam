@@ -23,5 +23,5 @@
 
 build-project ABI ; 
 build-project Bruker ;
-build-project Waters;
+build-project Waters ;
 
