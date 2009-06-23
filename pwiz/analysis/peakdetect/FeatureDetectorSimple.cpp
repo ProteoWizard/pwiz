@@ -45,6 +45,19 @@ using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
 
+// helper function to fill in Peak id attribute (currently from scan number)
+struct SetID
+{
+    SetID(int id) : _id(id) {}
+    void operator()(Peak& peak)
+    {
+        peak.id = _id;
+    }
+
+    int _id;
+
+};
+
 // helper function to fill in Peak retentionTime attribute
 struct SetRT
 {
@@ -212,13 +225,17 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<FeaturePtr>& 
 
         vector<PeakFamily>::iterator result_it = result.begin();
         double rt = info.retentionTime;
-        
+        int id = info.scanNumber;
+
         for(; result_it != result.end(); ++result_it)
             {
                
+                // set ID attribute
+                for_each(result_it->peaks.begin(), result_it->peaks.end(), SetID(id));
+
                 // set RT attribute
                 for_each(result_it->peaks.begin(), result_it->peaks.end(), SetRT(rt));
-              
+                
                 // make keys for search
                 FeatureKey featureKey(floor(result_it->mzMonoisotopic*100)/100, result_it->charge, result_it->peaks.size()); // no digits past 10e-3
                 map<FeatureKey,FeatureID>::iterator grandparentLocation = grandparentBuffer.find(featureKey);
