@@ -23,6 +23,7 @@
 
 #include "PeakExtractor.hpp"
 #include "PeakelGrower.hpp"
+#include "PeakelPicker.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/utility/misc/unit.hpp"
@@ -114,36 +115,8 @@ void print(ostream& os, const string& label, vector<PeakelPtr> v)
 }
 
 
-void testBombessin(const string& filename)
+void verifyBombessinPeakels(const PeakelField& peakelField)
 {
-    if (os_) *os_ << "testBombessin()" << endl;
-
-    // open data file and check sanity
-
-    MSDataFile msd(filename);
-    unit_assert(msd.run.spectrumListPtr.get());
-    unit_assert(msd.run.spectrumListPtr->size() == 8);
-
-    // instantiate PeakExtractor and extract peaks
-
-    shared_ptr<PeakExtractor> peakExtractor = createPeakExtractor();
-    vector< vector<Peak> > peaks = extractPeaks(msd, *peakExtractor);
-    unit_assert(peaks.size() == 8);
-
-    // grow Peakels
-    shared_ptr<PeakelGrower> peakelGrower = createPeakelGrower();
-    PeakelField peakelField;
-    peakelGrower->sowPeaks(peakelField, peaks);
-
-    if (os_)
-    {
-        *os_ << "peakelField: " << peakelField.size() << endl;
-        for (PeakelField::const_iterator it=peakelField.begin(); it!=peakelField.end(); ++it)
-            *os_ << **it << endl << endl;
-    }
-
-    // verify Bombessin peaks
-
     // TODO: assert # peaks/peakel, verify metadata
 
     // charge state 2
@@ -177,7 +150,58 @@ void testBombessin(const string& filename)
     vector<PeakelPtr> bombessin_3_2 = peakelField.find(540.61 + 2./3., .02, 1865, 5);
     if (os_) print(*os_, "bombessin_3_2", bombessin_3_2);
     unit_assert(bombessin_3_2.size() == 1);
+
     // TODO: verify peaks.size() == 1
+}
+
+
+shared_ptr<PeakelPicker> createPeakelPicker()
+{
+    PeakelPicker_Basic::Config config;
+    //config.log = os_;
+
+    return shared_ptr<PeakelPicker>(new PeakelPicker_Basic(config));
+}
+
+
+void verifyBombessinFeatures(const FeatureField& featureField)
+{
+    // TODO
+}
+
+
+void testBombessin(const string& filename)
+{
+    if (os_) *os_ << "testBombessin()" << endl;
+
+    // open data file and check sanity
+
+    MSDataFile msd(filename);
+    unit_assert(msd.run.spectrumListPtr.get());
+    unit_assert(msd.run.spectrumListPtr->size() == 8);
+
+    // instantiate PeakExtractor and extract peaks
+
+    shared_ptr<PeakExtractor> peakExtractor = createPeakExtractor();
+    vector< vector<Peak> > peaks = extractPeaks(msd, *peakExtractor);
+    unit_assert(peaks.size() == 8);
+
+    // grow peakels
+    shared_ptr<PeakelGrower> peakelGrower = createPeakelGrower();
+    PeakelField peakelField;
+    peakelGrower->sowPeaks(peakelField, peaks);
+
+    if (os_) *os_ << "peakelField:\n" << peakelField << endl;
+    verifyBombessinPeakels(peakelField);
+
+    // pick peakels
+
+    shared_ptr<PeakelPicker> peakelPicker = createPeakelPicker();
+    FeatureField featureField;
+    peakelPicker->pick(peakelField, featureField);
+
+    if (os_) *os_ << "featureField:\n" << featureField << endl;
+    verifyBombessinFeatures(featureField);
 }
 
 

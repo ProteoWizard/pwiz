@@ -88,6 +88,12 @@ PeakelPtr BasicPickImpl::getPeakelIsotope(const PeakelPtr& monoisotopicPeakel,
 
     if (config_.log)
     {
+        /*
+        *config_.log << "mzTarget: " << mzTarget << endl
+                     << "rtTarget: " << rtTarget << endl
+                     << "rtTolerance: " << rtTolerance << endl;
+        */
+
         *config_.log << "[PeakelPicker_Basic] isotopeCandidates: " << isotopeCandidates.size() << endl;    
         for (vector<PeakelPtr>::const_iterator it=isotopeCandidates.begin(); it!=isotopeCandidates.end(); ++it)
             *config_.log << **it;
@@ -99,10 +105,15 @@ PeakelPtr BasicPickImpl::getPeakelIsotope(const PeakelPtr& monoisotopicPeakel,
         return PeakelPtr();
     else if (isotopeCandidates.size() == 1)
         return isotopeCandidates[0];
-    else // TODO
+    else
     {
-        cerr << "isotopeCandidates: " << isotopeCandidates.size() << endl;
-        throw runtime_error("[PeakelPicker::getPeakelIsotope()] Multiple isotope candidates: not implemented.");
+        cerr << "[PeakelPicker_Basic::getPeakelIsotope()] Warning: multiple isotope candidates.\n"
+            << "isotopeCandidates: " << isotopeCandidates.size() << endl;
+
+        for (vector<PeakelPtr>::const_iterator it=isotopeCandidates.begin(); it!=isotopeCandidates.end(); ++it)
+            cerr << **it << endl;
+
+        return isotopeCandidates[0]; // TODO
     }
 }
 
@@ -153,8 +164,11 @@ FeaturePtr BasicPickImpl::findFeature(const PeakelPtr& peakel)
         return candidates[0];
     else
     {
+        cerr << "[PeakelPicker_Basic::findFeature()] Warning: multiple charge state candidates.";
         cerr << "candidates: " << candidates.size() << endl;
-        throw runtime_error("[PeakelPicker::findFeature()] Multiple candidates: not implemented.");
+        for (vector<FeaturePtr>::const_iterator it=candidates.begin(); it!=candidates.end(); ++it)
+            cerr << **it << endl;
+        return candidates[0];
     }
 }
 
