@@ -46,7 +46,7 @@ using boost::lexical_cast;
 
 
 Peak::Peak(double _mz, double _retentionTime)
-:   mz(_mz), retentionTime(_retentionTime), intensity(0), area(0), error(0)
+: id(0),  mz(_mz), retentionTime(_retentionTime), intensity(0), area(0), error(0)
 {}
 
 
@@ -61,7 +61,9 @@ double Peak::getAttribute(Attribute attribute) const
 
 bool Peak::operator==(const Peak& that) const
 {
-    bool result = (mz == that.mz &&
+    bool result = (
+                   id == that.id &&
+                   mz == that.mz &&
                    retentionTime == that.retentionTime &&
                    intensity == that.intensity &&
                    area == that.area &&
@@ -161,6 +163,7 @@ Peak::Attribute stringToAttribute(string name)
 void Peak::write(minimxml::XMLWriter& writer) const
 {
     XMLWriter::Attributes xmlAttributes;
+    xmlAttributes.push_back(make_pair("id", lexical_cast<string>(id)));
     xmlAttributes.push_back(make_pair("mz", lexical_cast<string>(mz)));
     xmlAttributes.push_back(make_pair("retentionTime", lexical_cast<string>(retentionTime)));
     xmlAttributes.push_back(make_pair("intensity", lexical_cast<string>(intensity)));
@@ -184,7 +187,8 @@ SAXParser::Handler::Status HandlerPeak::startElement(const string& name,
 
     for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
     {
-        if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
+        if (it->first == "id") peak->id = lexical_cast<int>(it->second);
+        else if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
         else if (it->first == "retentionTime") peak->retentionTime = lexical_cast<double>(it->second);
         else if (it->first == "intensity") peak->intensity = lexical_cast<double>(it->second);
         else if (it->first == "area") peak->area = lexical_cast<double>(it->second);

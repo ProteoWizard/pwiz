@@ -137,6 +137,7 @@ void testPeakEquality()
 
     Peak peak;
 
+    peak.id = 5;
     peak.mz = 1;
     peak.retentionTime = 1.5;
     peak.intensity = 2;
@@ -164,6 +165,7 @@ void testPeak()
 
     Peak peak;
 
+    peak.id = 5;
     peak.mz = 1;
     peak.retentionTime = 1.5;
     peak.intensity = 2;

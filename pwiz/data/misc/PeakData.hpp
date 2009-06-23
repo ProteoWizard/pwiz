@@ -50,6 +50,8 @@ const int PeakDataFormatVersion_Minor = 1;
 
 struct PWIZ_API_DECL Peak
 {
+    int id;
+
     double mz;
     double retentionTime;
 
