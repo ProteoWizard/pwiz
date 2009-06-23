@@ -104,10 +104,11 @@ void testPeakelField()
     pf.insert(b);
     pf.insert(c);
 
+    if (os_) *os_ << pf << endl;
+
     unit_assert(pf.size() == 3);
 
     PeakelField::const_iterator it = pf.begin();
-    if (os_) *os_ << **it << endl;
     unit_assert(*it == a);
 
     // note that std::set allows only const access
@@ -116,11 +117,9 @@ void testPeakelField()
     (*it)->peaks.clear();
 
     ++it;
-    if (os_) *os_ << **it << endl;
     unit_assert(*it == c);
 
     ++it;
-    if (os_) *os_ << **it << endl;
     unit_assert(*it == b);
 
     // find()
@@ -176,6 +175,8 @@ void testPeakelField()
 
     pf.remove(c);
     unit_assert(pf.empty());
+
+    if (os_) *os_ << endl;
 }
 
 
@@ -183,7 +184,7 @@ void testFeatureField()
 {
     if (os_) *os_ << "testFeatureField()\n";
 
-    FeatureField pf;
+    FeatureField ff;
 
     FeaturePtr a(new Feature);
     a->mz=1; a->retentionTime=1;
@@ -194,14 +195,16 @@ void testFeatureField()
     FeaturePtr c(new Feature);
     c->mz=1; c->retentionTime=2;
 
-    pf.insert(a);
-    pf.insert(b);
-    pf.insert(c);
+    ff.insert(a);
+    ff.insert(b);
+    ff.insert(c);
+
+    if (os_) *os_ << ff << endl;
 
     MZTolerance fiveppm(5, MZTolerance::PPM);
-    vector<FeaturePtr> v = pf.find(1.000001, fiveppm, 1, 10);
+    vector<FeaturePtr> v = ff.find(1.000001, fiveppm, 1, 10);
     unit_assert(v.size()==2 && v[0]==a && v[1]==c);
-    v = pf.find(1.000006, fiveppm, 1, 10);
+    v = ff.find(1.000006, fiveppm, 1, 10);
     unit_assert(v.empty());
 }
 

@@ -30,6 +30,7 @@ project
 
 lib pwiz_analysis_peakdetect
     :   # sources 
+        MZRTField.cpp
         MZTolerance.cpp
         Noise.cpp
         PeakFamilyDetector.cpp

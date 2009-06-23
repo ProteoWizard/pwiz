@@ -106,6 +106,10 @@ typedef MZRTField<pwiz::data::peakdata::Peakel> PeakelField;
 typedef MZRTField<pwiz::data::peakdata::Feature> FeatureField;
 
 
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakelField& peakelField);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const FeatureField& featureField);
+
+
 namespace {
 template <typename T>
 struct RTMatches

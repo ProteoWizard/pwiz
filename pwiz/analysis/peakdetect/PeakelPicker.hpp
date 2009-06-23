@@ -50,31 +50,31 @@ class PWIZ_API_DECL PeakelPicker
 ///
 /// basic implementation
 ///
-class PWIZ_API_DECL PeakelPicker_Basic
+class PWIZ_API_DECL PeakelPicker_Basic : public PeakelPicker
 {
     public:
 
     struct Config
     {
         std::ostream* log;
-        size_t minMonoisotopicPeakelSize;
-        size_t minPeakelCount;
-        MZTolerance mzTolerance;
-        double rtTolerance;
         size_t minCharge;
         size_t maxCharge;
+        size_t minMonoisotopicPeakelSize;
+        MZTolerance mzTolerance;
+        double rtTolerance;
+        size_t minPeakelCount;
 
         //double intensityThreshold; // ? // some kind of tolerance to match isotope envelope
         //double relativeIntensityTolerance; 
 
         Config()
         :   log(0), 
+            minCharge(2),
+            maxCharge(5),
             minMonoisotopicPeakelSize(3),
-            minPeakelCount(3),
             mzTolerance(10, MZTolerance::PPM),
             rtTolerance(5), // seconds
-            minCharge(2),
-            maxCharge(4)
+            minPeakelCount(3)
         {}
     };
 

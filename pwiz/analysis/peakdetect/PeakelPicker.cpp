@@ -55,7 +55,7 @@ class BasicPickImpl
     const PeakelPicker_Basic::Config& config_;
 
     PeakelPtr getPeakelIsotope(const PeakelPtr& monoisotopicPeakel, size_t charge, size_t neutronNumber);
-    void findFeature(const PeakelPtr& peakel, size_t charge, vector<FeaturePtr>& result);
+    void getFeatureCandidate(const PeakelPtr& peakel, size_t charge, vector<FeaturePtr>& result);
     FeaturePtr findFeature(const PeakelPtr& peakel);
     PeakelField::iterator removeFromPeakelField(const Feature& feature);
     PeakelField::iterator process(PeakelField::iterator it);
@@ -65,35 +65,41 @@ class BasicPickImpl
 PeakelPtr BasicPickImpl::getPeakelIsotope(const PeakelPtr& monoisotopicPeakel,
                                           size_t charge, size_t neutronNumber)
 {
-    //cout << "getPeakelIsotope(): " << charge << " " << neutronNumber << endl;
+    if (config_.log) *config_.log << "[PeakelPicker_Basic] getPeakelIsotope(): charge=" << charge 
+        << " neutron=" << neutronNumber << endl;
 
-    // find the peakel
+    // find the peakel:
+    //  - m/z must be within mzTolerance of the theoretical m/z
+    //  - retentionTime must be within range (rtMin-rtTolerance, rtMax+rtTolerance)
 
     double mzTarget = monoisotopicPeakel->mz + 1./charge*neutronNumber;
 
-    PeakelPtr targetBegin(new Peakel(Peak(mzTarget, 
-                                          monoisotopicPeakel->retentionTimeMin())));
+    double rtTarget = (monoisotopicPeakel->retentionTimeMin() + 
+        monoisotopicPeakel->retentionTimeMax()) / 2;
 
-    PeakelPtr targetEnd(new Peakel(Peak(mzTarget, 
-                                        monoisotopicPeakel->retentionTimeMax())));
+    double rtTolerance = (monoisotopicPeakel->retentionTimeMax() - 
+        monoisotopicPeakel->retentionTimeMin()) / 2 + config_.rtTolerance;
 
-    vector<PeakelPtr> isotopeCandidates;
+    vector<PeakelPtr> isotopeCandidates = peakelField_.find(mzTarget, config_.mzTolerance,
+                                                            rtTarget, rtTolerance);
 
-    copy(peakelField_.lower_bound(targetBegin), peakelField_.upper_bound(targetEnd), 
-         back_inserter(isotopeCandidates));
+    // TODO: restrict based on retentionTimeMax() of isotopeCandidates, since find()
+    // uses retentionTimeMin() (via metadata)
 
-    //cout << "isotopeCandidates: " << isotopeCandidates.size() << endl;
-/*
-    for (vector<PeakelPtr>::const_iterator it=isotopeCandidates.begin(); it!=isotopeCandidates.end(); ++it)
-        cout << **it << endl;
-*/
+    if (config_.log)
+    {
+        *config_.log << "[PeakelPicker_Basic] isotopeCandidates: " << isotopeCandidates.size() << endl;    
+        for (vector<PeakelPtr>::const_iterator it=isotopeCandidates.begin(); it!=isotopeCandidates.end(); ++it)
+            *config_.log << **it;
+    }
+
     // if there are multiple candidates, may need to merge
 
     if (isotopeCandidates.empty())
         return PeakelPtr();
     else if (isotopeCandidates.size() == 1)
         return isotopeCandidates[0];
-    else
+    else // TODO
     {
         cerr << "isotopeCandidates: " << isotopeCandidates.size() << endl;
         throw runtime_error("[PeakelPicker::getPeakelIsotope()] Multiple isotope candidates: not implemented.");
@@ -101,9 +107,10 @@ PeakelPtr BasicPickImpl::getPeakelIsotope(const PeakelPtr& monoisotopicPeakel,
 }
 
 
-void BasicPickImpl::findFeature(const PeakelPtr& peakel, size_t charge, vector<FeaturePtr>& result)
+void BasicPickImpl::getFeatureCandidate(const PeakelPtr& peakel, size_t charge, 
+                                        vector<FeaturePtr>& result)
 {
-    //cout << "findFeature: " << *peakel << endl;
+    if (config_.log) *config_.log << "[PeakelPicker_Basic] getFeatureCandidate(): z=" << charge << endl;
 
     FeaturePtr feature(new Feature);
     feature->peakels.push_back(peakel);
@@ -125,16 +132,20 @@ void BasicPickImpl::findFeature(const PeakelPtr& peakel, size_t charge, vector<F
         feature->retentionTime = peakel->retentionTime;
         feature->charge = charge;
         result.push_back(feature);
+
+        if (config_.log) *config_.log << "[PeakelPicker_Basic] Found feature candidate:\n" << *feature << endl;
     }
 }
 
 
 FeaturePtr BasicPickImpl::findFeature(const PeakelPtr& peakel)
 {
+    if (config_.log) *config_.log << "[PeakelPicker_Basic] findFeature():\n" << *peakel;
+
     vector<FeaturePtr> candidates;
 
     for (size_t z=config_.minCharge; z<=config_.maxCharge; z++)
-        findFeature(peakel, z, candidates); 
+        getFeatureCandidate(peakel, z, candidates); 
     
     if (candidates.empty())
         return FeaturePtr();
@@ -150,8 +161,6 @@ FeaturePtr BasicPickImpl::findFeature(const PeakelPtr& peakel)
 
 PeakelField::iterator BasicPickImpl::removeFromPeakelField(const Feature& feature)
 {
-    //cout << "removeFromPeakelField(): " << feature << endl;
-
     if (feature.peakels.empty())
         throw runtime_error("[PeakelPicker::removeFromPeakelField()] Empty feature.");
 
@@ -166,12 +175,11 @@ PeakelField::iterator BasicPickImpl::removeFromPeakelField(const Feature& featur
 
 PeakelField::iterator BasicPickImpl::process(PeakelField::iterator it)
 {
-    //cout << "process(): " << **it << endl;
-
     FeaturePtr feature = findFeature(*it);
 
     if (feature.get())
     {
+        if (config_.log) *config_.log << "[PeakelPicker_Basic] Feature found:\n" << *feature << endl;
         featureField_.insert(feature);
         return removeFromPeakelField(*feature);
     }
@@ -184,11 +192,15 @@ PeakelField::iterator BasicPickImpl::process(PeakelField::iterator it)
 
 void BasicPickImpl::pick()
 {
+    if (config_.log) *config_.log << "[PeakelPicker_Basic] pick() begin\n\n" << peakelField_ << endl;
+
     PeakelField::iterator it = peakelField_.begin();
     PeakelField::iterator end = peakelField_.end();
    
     while (it != end)
         it = process(it);
+
+    if (config_.log) *config_.log << "[PeakelPicker_Basic] pick() end\n\n";
 }
     
 

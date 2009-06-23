@@ -62,7 +62,7 @@ shared_ptr<PeakelField> createToyPeakelField()
     battery->peaks.push_back(Peak(0, 40));
     toy->insert(battery);
 
-    battery.reset(new Peakel(Peak(1./3, 10)));
+    battery.reset(new Peakel(Peak(1./3 + 1e-6, 10)));
     battery->peaks.push_back(Peak(1./3, 20));
     battery->peaks.push_back(Peak(1./3, 30));
     battery->peaks.push_back(Peak(1./3, 40));
@@ -93,23 +93,19 @@ shared_ptr<PeakelField> createToyPeakelField()
     battery->peaks.push_back(Peak(1./3 + 1, 80));
     toy->insert(battery);
 
-    if (os_)
-    {
-        *os_ << "createToyPeakelField(): " << toy->size() << endl;
-        for (PeakelField::const_iterator it=toy->begin(); it!=toy->end(); ++it)
-            *os_ << **it << endl;
-    }
-
     return toy;
 }
 
 
 void testToy()
 {
-    if (os_) *os_ << "testToy()\n";
+    PeakelPicker_Basic::Config config; // TODO: specify parameters?
 
-    PeakelPicker_Basic::Config config;
-    // change config?
+    if (os_) 
+    {
+        *os_ << "testToy()\n";
+        config.log = os_;
+    }
 
     PeakelPicker_Basic peterPiper(config);
 
@@ -118,18 +114,6 @@ void testToy()
 
     FeatureField peck;
     peterPiper.pick(*peakels, peck);
-
-    if (os_)
-    {
-        *os_ << "after pick()\n";
-        *os_ << "peakelField: " << peakels->size() << endl;
-        for (PeakelField::const_iterator it=peakels->begin(); it!=peakels->end(); ++it)
-            *os_ << **it << endl;
-
-        *os_ << "featureField: " << peck.size() << endl;
-        for (FeatureField::const_iterator it=peck.begin(); it!=peck.end(); ++it)
-            *os_ << **it << endl;
-    }
 
     unit_assert(peck.size() == 2);
     unit_assert(peakels->size() == 1);
