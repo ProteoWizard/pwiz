@@ -97,7 +97,7 @@ void updatePeakel(Peakel& peakel, const Peak& peak)
 void PeakelGrower_Proximity::sowPeak(PeakelField& peakelField, const Peak& peak) const
 {
     vector<PeakelPtr> candidates = peakelField.find(peak.mz, config_.mzTolerance,
-                                                    peak.retentionTime, config_.rtTolerance);
+        RTMatches_Contains<Peakel>(peak.retentionTime, config_.rtTolerance));
 
     if (candidates.empty())
         insertNewPeakel(peakelField, peak);

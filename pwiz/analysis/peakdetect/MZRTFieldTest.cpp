@@ -29,6 +29,7 @@
 
 
 using namespace std;
+using boost::shared_ptr;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
@@ -76,17 +77,79 @@ void testPredicate_Feature()
 
 struct Goober
 {
-    // minimum requirements to instantiate MZRTField<>
+    // minimum requirements to instantiate MZRTField<>;
+    // removing any of these will produce compiler error via Boost concept checking
+    // with the struct HasMZRT
+
     double mz;
     double retentionTime;
-    double retentionTimeMin();
-    double retentionTimeMax();
+    double retentionTimeMin() const;
+    double retentionTimeMax() const;
 };
 
 
 void testConceptChecking()
 {
     MZRTField<Goober> gooberField;
+}
+
+
+struct Simple
+{
+    double mz;
+    double retentionTime;
+    double rtMin;
+    double rtMax;
+    double retentionTimeMin() const {return rtMin;}
+    double retentionTimeMax() const {return rtMax;}
+
+    Simple(double _mz = 0, double _rtMin = 0, double _rtMax = 0)
+    :   mz(_mz), 
+        retentionTime((_rtMin+_rtMax)/2),
+        rtMin(_rtMin), rtMax(_rtMax)
+    {}
+};
+
+
+typedef shared_ptr<Simple> SimplePtr;
+
+
+void testFind()
+{
+    // rt\mz  400  410  420  430  440 
+    //  660    a         c
+    //  661    a         c
+    //  662              c
+    //  663
+    //  664    b
+    //  665    b         d
+    //  666    b         d
+    //  667    b         d
+    //  668    b
+    //  669
+
+    SimplePtr a(new Simple(400, 660, 661));
+    SimplePtr b(new Simple(400, 664, 668));
+    SimplePtr c(new Simple(420, 660, 662));
+    SimplePtr d(new Simple(420, 665, 667));
+
+    MZRTField<Simple> simpleField;
+    simpleField.insert(a);
+    simpleField.insert(b);
+    simpleField.insert(c);
+    simpleField.insert(d);
+
+    vector<SimplePtr> result = simpleField.find(420, 1, RTMatches_Any<Simple>());        
+    unit_assert(result.size()==2 && result[0]==c && result[1]==d);
+
+    result = simpleField.find(410, 11, RTMatches_Contains<Simple>(666,0));
+    unit_assert(result.size()==2 && result[0]==b && result[1]==d);
+
+    result = simpleField.find(420, 1, RTMatches_IsContainedIn<Simple>(*b));
+    unit_assert(result.size()==1 && result[0]==d);
+
+    result = simpleField.find(400, 1, RTMatches_IsContainedIn<Simple>(*d, 1.5));
+    unit_assert(result.size()==1 && result[0]==b);
 }
 
 
@@ -126,7 +189,7 @@ void testPeakelField()
 
     if (os_) *os_ << "testPeakelField(): find()\n";
 
-    vector<PeakelPtr> v = pf.find(1.5, .6, 1, .5);
+    vector<PeakelPtr> v = pf.find(1.5, .6, RTMatches_Contains<Peakel>(1, .5));
 
     if (os_) 
     {
@@ -136,15 +199,15 @@ void testPeakelField()
     }
 
     unit_assert(v.size()==2 && v[0]==a && v[1]==b);
-    v = pf.find(1.5, .4, 1, .5);
+    v = pf.find(1.5, .4, RTMatches_Contains<Peakel>(1, .5));
     unit_assert(v.empty());
-    v = pf.find(2, .1, 1, .1);
+    v = pf.find(2, .1, RTMatches_Contains<Peakel>(1, .1));
     unit_assert(v.size()==1 && v[0]==b);
 
     MZTolerance fiveppm(5, MZTolerance::PPM);
-    v = pf.find(1.000001, fiveppm, 1, 10);
+    v = pf.find(1.000001, fiveppm, RTMatches_Contains<Peakel>(1, 10));
     unit_assert(v.size()==2 && v[0]==a && v[1]==c);
-    v = pf.find(1.000006, fiveppm, 1, 10);
+    v = pf.find(1.000006, fiveppm, RTMatches_Contains<Peakel>(1, 10));
     unit_assert(v.empty());
 
     // remove()
@@ -180,6 +243,15 @@ void testPeakelField()
 }
 
 
+struct MyPred
+{
+    void operator()(double mz)
+    {
+        cout << "MyPred: " << mz << endl;
+    }
+};
+
+
 void testFeatureField()
 {
     if (os_) *os_ << "testFeatureField()\n";
@@ -202,9 +274,9 @@ void testFeatureField()
     if (os_) *os_ << ff << endl;
 
     MZTolerance fiveppm(5, MZTolerance::PPM);
-    vector<FeaturePtr> v = ff.find(1.000001, fiveppm, 1, 10);
+    vector<FeaturePtr> v = ff.find(1.000001, fiveppm, RTMatches_Contains<Feature>(1, 10));
     unit_assert(v.size()==2 && v[0]==a && v[1]==c);
-    v = ff.find(1.000006, fiveppm, 1, 10);
+    v = ff.find(1.000006, fiveppm, RTMatches_Contains<Feature>(1, 10));
     unit_assert(v.empty());
 }
 
@@ -214,6 +286,7 @@ void test()
     testPredicate();
     testPredicate_Feature();
     testConceptChecking();
+    testFind();
     testPeakelField();
     testFeatureField();
 }

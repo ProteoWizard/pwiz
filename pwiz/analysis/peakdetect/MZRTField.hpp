@@ -74,8 +74,9 @@ struct HasMZRT
         T t; // default construction
         double a = t.mz; // must have member 'mz'
         a = t.retentionTime; // must have member 'retentionTime'
-        a = t.retentionTimeMin(); // must have member 'double retentionTimeMin()'
-        a = t.retentionTimeMax(); // must have member 'double retentionTimeMin()'
+        const T& c = t;
+        a = c.retentionTimeMin(); // must have member 'double retentionTimeMin() const'
+        a = c.retentionTimeMax(); // must have member 'double retentionTimeMin() const'
     }
 };
 
@@ -93,9 +94,11 @@ struct MZRTField : public std::set< boost::shared_ptr<T>, LessThan_MZRT<T> >
 
     typedef boost::shared_ptr<T> TPtr;
 
-    /// find all objects in a given mz/rt range
-    std::vector<TPtr> find(double mz, MZTolerance mzTolerance,
-                           double retentionTime, double rtTolerance) const;
+    /// find all objects with a given m/z, within a given m/z tolerance,
+    /// satisfying the 'matches' predicate
+    template <typename RTMatches>
+    std::vector<TPtr> 
+    find(double mz, MZTolerance mzTolerance, RTMatches matches) const;
 
     /// remove an object via a shared reference, rather than an iterator into the set
     void remove(const TPtr& p); 
@@ -110,32 +113,60 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const PeakelField& peak
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const FeatureField& featureField);
 
 
-namespace {
+/// predicate always returns true
 template <typename T>
-struct RTMatches
+struct RTMatches_Any
 {
-    double rt;
-    double rtTolerance;
-
-    RTMatches(double _rt, double _rtTolerance) : rt(_rt), rtTolerance(_rtTolerance) {}
-
-    typedef boost::shared_ptr<T> TPtr;
-
-    bool operator()(const TPtr& t)
-    {
-        return (rt > t->retentionTimeMin() - rtTolerance &&
-                rt < t->retentionTimeMax() + rtTolerance);
-    }
+    bool operator()(const T& t) const {return true;}
 };
-} // namespace
+
+
+/// predicate returns true iff the object's retention time range contains the specified
+/// retention time
+template <typename T>
+struct RTMatches_Contains
+{
+    RTMatches_Contains(double rt, double rtTolerance = 0) : rt_(rt), rtTolerance_(rtTolerance) {}
+
+    bool operator()(const T& t) const
+    {
+        return rt_>t.retentionTimeMin()-rtTolerance_ && rt_<t.retentionTimeMax()+rtTolerance_;
+    }
+
+    private:
+    double rt_;
+    double rtTolerance_;
+};
+
+
+/// predicate returns true iff the object's retention time range is completely contained within
+/// the range of the specified reference object, up to the specified tolerance
+template <typename T>
+struct RTMatches_IsContainedIn
+{
+    RTMatches_IsContainedIn(const T& reference, double rtTolerance = 0)
+    :   reference_(reference), rtTolerance_(rtTolerance) {}
+
+    bool operator()(const T& t) const
+    {
+        return t.retentionTimeMin() > reference_.retentionTimeMin() - rtTolerance_ &&
+               t.retentionTimeMax() < reference_.retentionTimeMax() + rtTolerance_;
+    }
+
+    private:
+    const T& reference_;
+    double rtTolerance_;
+};
 
 
 template <typename T>
-std::vector< boost::shared_ptr<T> >
-MZRTField<T>::find(double mz, MZTolerance mzTolerance,
-                   double retentionTime, double rtTolerance) const
+template <typename RTMatches>
+std::vector< boost::shared_ptr<T> > 
+MZRTField<T>::find(double mz, MZTolerance mzTolerance, RTMatches matches) const
 {
     TPtr target(new T);
+
+    // use binary search to get a std::set iterator range
 
     target->mz = mz - mzTolerance;
     typename MZRTField<T>::const_iterator begin = this->lower_bound(target);
@@ -143,12 +174,12 @@ MZRTField<T>::find(double mz, MZTolerance mzTolerance,
     target->mz = mz + mzTolerance;
     typename MZRTField<T>::const_iterator end = this->upper_bound(target);
 
-    std::vector<TPtr> result;
-    RTMatches<T> matches(retentionTime, rtTolerance);
+    // linear copy_if within range 
 
-    // copy_if(begin, end, back_inserter(result), matches); // some day this line will compile 
+    std::vector<TPtr> result;
+
     for (typename MZRTField<T>::const_iterator it=begin; it!=end; ++it)
-        if (matches(*it))
+        if (matches(**it))
             result.push_back(*it);
 
     return result;

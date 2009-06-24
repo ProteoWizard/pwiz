@@ -70,18 +70,12 @@ PeakelPtr BasicPickImpl::getPeakelIsotope(const PeakelPtr& monoisotopicPeakel,
 
     // find the peakel:
     //  - m/z must be within mzTolerance of the theoretical m/z
-    //  - retentionTime must be within range (rtMin-rtTolerance, rtMax+rtTolerance)
+    //  - retention time range must be contained within the monoisotopic peakel range
 
     double mzTarget = monoisotopicPeakel->mz + 1./charge*neutronNumber;
 
-    double rtTarget = (monoisotopicPeakel->retentionTimeMin() + 
-        monoisotopicPeakel->retentionTimeMax()) / 2;
-
-    double rtTolerance = (monoisotopicPeakel->retentionTimeMax() - 
-        monoisotopicPeakel->retentionTimeMin()) / 2 + config_.rtTolerance;
-
     vector<PeakelPtr> isotopeCandidates = peakelField_.find(mzTarget, config_.mzTolerance,
-                                                            rtTarget, rtTolerance);
+        RTMatches_IsContainedIn<Peakel>(*monoisotopicPeakel, config_.rtTolerance));
 
     // TODO: restrict based on retentionTimeMax() of isotopeCandidates, since find()
     // uses retentionTimeMin() (via metadata)
