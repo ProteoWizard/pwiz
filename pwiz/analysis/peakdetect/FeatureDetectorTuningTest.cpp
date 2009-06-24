@@ -101,7 +101,7 @@ shared_ptr<PeakelGrower> createPeakelGrower()
 {
     PeakelGrower_Proximity::Config config;
     config.mzTolerance = .01;
-    config.rtTolerance = 20; // seconds
+    config.rtTolerance = 10; // seconds
 
     return shared_ptr<PeakelGrower>(new PeakelGrower_Proximity(config));
 }
@@ -147,10 +147,9 @@ void verifyBombessinPeakels(const PeakelField& peakelField)
     if (os_) print(*os_, "bombessin_3_1", bombessin_3_1);
     unit_assert(bombessin_3_1.size() == 1);
 
-    vector<PeakelPtr> bombessin_3_2 = peakelField.find(540.61 + 2./3., .02, RTMatches_Contains<Peakel>(1865));
+    vector<PeakelPtr> bombessin_3_2 = peakelField.find(540.61 + 2./3., .02, RTMatches_Contains<Peakel>(1865,5));
     if (os_) print(*os_, "bombessin_3_2", bombessin_3_2);
     unit_assert(bombessin_3_2.size() == 1);
-
     // TODO: verify peaks.size() == 1
 }
 
@@ -159,6 +158,7 @@ shared_ptr<PeakelPicker> createPeakelPicker()
 {
     PeakelPicker_Basic::Config config;
     //config.log = os_;
+    config.minMonoisotopicPeakelSize = 2;
 
     return shared_ptr<PeakelPicker>(new PeakelPicker_Basic(config));
 }
@@ -166,7 +166,33 @@ shared_ptr<PeakelPicker> createPeakelPicker()
 
 void verifyBombessinFeatures(const FeatureField& featureField)
 {
-    // TODO
+    const double epsilon = .01;
+
+    const double mz_bomb2 = 810.415;
+    vector<FeaturePtr> bombessin_2_found = featureField.find(mz_bomb2, epsilon, 
+        RTMatches_Contains<Feature>(1865));
+    unit_assert(bombessin_2_found.size() == 1);
+    const Feature& bombessin_2 = *bombessin_2_found[0];
+    unit_assert(bombessin_2.charge == 2);
+    unit_assert(bombessin_2.peakels.size() == 5);
+    unit_assert_equal(bombessin_2.peakels[0]->mz, mz_bomb2, epsilon);
+    unit_assert_equal(bombessin_2.peakels[1]->mz, mz_bomb2+.5, epsilon);
+    unit_assert_equal(bombessin_2.peakels[2]->mz, mz_bomb2+1, epsilon);
+    unit_assert_equal(bombessin_2.peakels[3]->mz, mz_bomb2+1.5, epsilon);
+    unit_assert_equal(bombessin_2.peakels[4]->mz, mz_bomb2+2, epsilon);
+    //TODO: verify feature metadata
+
+    const double mz_bomb3 = 540.612;
+    vector<FeaturePtr> bombessin_3_found = featureField.find(mz_bomb3, epsilon, 
+        RTMatches_Contains<Feature>(1865));
+    unit_assert(bombessin_3_found.size() == 1);
+    const Feature& bombessin_3 = *bombessin_3_found[0];
+    unit_assert(bombessin_3.charge == 3);
+    unit_assert(bombessin_3.peakels.size() == 3);
+    unit_assert_equal(bombessin_3.peakels[0]->mz, mz_bomb3, epsilon);
+    unit_assert_equal(bombessin_3.peakels[1]->mz, mz_bomb3+1./3, epsilon);
+    unit_assert_equal(bombessin_3.peakels[2]->mz, mz_bomb3+2./3, epsilon);
+    //TODO: verify feature metadata
 }
 
 

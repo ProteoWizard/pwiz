@@ -147,6 +147,9 @@ FeaturePtr BasicPickImpl::findFeature(const PeakelPtr& peakel)
 {
     if (config_.log) *config_.log << "[PeakelPicker_Basic] findFeature():\n" << *peakel;
 
+    if (peakel->peaks.size() < config_.minMonoisotopicPeakelSize)
+        return FeaturePtr();
+        
     vector<FeaturePtr> candidates;
 
     for (size_t z=config_.minCharge; z<=config_.maxCharge; z++)
