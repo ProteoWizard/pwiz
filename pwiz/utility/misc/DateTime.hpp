@@ -19,14 +19,79 @@
 // limitations under the License.
 //
 
+#ifndef _DATETIME_HPP_
+#define _DATETIME_HPP_
+
 #include <boost/date_time/local_time/local_time.hpp>
+#include <boost/math/special_functions/modf.hpp>
 
 namespace bdt = boost::date_time;
+namespace bpt = boost::posix_time;
+namespace blt = boost::local_time;
 
-using boost::posix_time::from_time_t;
+using bpt::from_time_t;
 
 #ifdef WIN32
-using boost::posix_time::from_ftime;
+using bpt::from_ftime;
 #endif
 
 using boost::gregorian::date;
+
+
+namespace boost {
+namespace date_time {
+
+//! Create a time object from an OLE automation date value.
+/*! Create a time object from an OLE automation date value.
+ * An OLE automation date is implemented as a floating-point number *
+ * whose value is the number of days from midnight, 30 December 1899.
+ */
+template<class time_type>
+inline
+time_type time_from_OADATE(double oa_date)
+{
+    typedef typename time_type::date_type date_type;
+    typedef typename time_type::date_duration_type date_duration_type;
+    typedef typename time_type::time_duration_type time_duration_type;
+    using boost::math::modf;
+
+    static const date_type base_date(1899, Dec, 30);
+    static const time_type base_time(base_date, time_duration_type(0,0,0));
+
+    int dayOffset, hourOffset, minuteOffset, secondOffset;
+    double fraction = fabs(modf(oa_date, &dayOffset)) * 24; // fraction = hours
+    fraction = modf(fraction, &hourOffset) * 60; // fraction = minutes
+    fraction = modf(fraction, &minuteOffset) * 60; // fraction = seconds
+    modf(fraction, &secondOffset);
+    time_type t(base_time);
+    t += time_duration_type(hourOffset, minuteOffset, secondOffset);
+    t += date_duration_type(dayOffset);
+    return t;
+}
+
+}
+}
+
+
+namespace pwiz {
+namespace util {
+
+
+template<class time_type>
+inline
+std::string encode_xml_datetime(const time_type& t)
+{
+    blt::local_time_facet* output_facet = new blt::local_time_facet;
+    output_facet->format("%Y-%m-%dT%H:%M:%S"); // 2007-06-27T15:23:45
+    std::stringstream ss;
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    ss << t;
+    return ss.str();
+}
+
+
+} // namespace util
+} // namespace pwiz
+
+
+#endif // _DATETIME_HPP_
