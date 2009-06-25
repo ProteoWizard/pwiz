@@ -96,3 +96,19 @@ run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect
     ;
 
 
+exe msextract  
+    : msextract.cpp
+      pwiz_analysis_peakdetect
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      ../../data/misc//pwiz_data_misc
+    ;
+
+explicit msextract ;
+
+install bin 
+    : msextract
+    : <location>bin
+    ;
+
+explicit bin ;

@@ -202,7 +202,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, FeatureField& detect
    
         map<FeatureKey, FeatureID> buffer;
         const SpectrumInfo info = cache.spectrumInfo(spectrum_index, true); //getBinaryData ? 
-       
+        // if info.PrecursorInfo ? 
         // call peak family detector on each scan
       
         vector<MZIntensityPair> mzIntensityPairs = info.data;       
