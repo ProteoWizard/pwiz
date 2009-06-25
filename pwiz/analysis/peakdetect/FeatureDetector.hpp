@@ -24,6 +24,7 @@
 #define _FEATUREDETECTOR_HPP_
 
 
+#include "MZRTField.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
@@ -42,7 +43,7 @@ public:
   typedef msdata::MSData MSData;
   typedef data::peakdata::Feature Feature;
 
-  virtual void detect(const MSData& msd, std::vector<FeaturePtr>& result) const = 0; 
+  virtual void detect(const MSData& msd, FeatureField& result) const = 0; 
   
   virtual ~FeatureDetector(){}
 

@@ -102,11 +102,11 @@ public:
 
     typedef string FeatureID;
 
-    void detect(const MSData& msd, vector<FeaturePtr>& result) const;
+    void detect(const MSData& msd, FeatureField& result) const;
     FeaturePtr makeFeature(const PeakFamily& pf, FeatureID& id) const;
     void updatePeakel(const Peak& peak, Peakel& peakel) const;
     void updateFeature(const PeakFamily& pf, FeaturePtr feature) const;
-    void getMetadata(vector<FeaturePtr>& result) const;
+    void getMetadata(FeatureField& result) const;
     
 private:
     
@@ -116,7 +116,7 @@ private:
 
 
 FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pimpl(new Impl(pfd)){}
-void FeatureDetectorSimple::detect(const MSData& msd, std::vector<FeaturePtr>& result) const 
+void FeatureDetectorSimple::detect(const MSData& msd, FeatureField& result) const 
 {
     _pimpl->detect(msd,result);
 }
@@ -161,18 +161,15 @@ void FeatureDetectorSimple::Impl::updateFeature(const PeakFamily& pf, FeaturePtr
     return;
 }
 
-void FeatureDetectorSimple::Impl::getMetadata(vector<FeaturePtr>& detected) const
+void FeatureDetectorSimple::Impl::getMetadata(FeatureField& detected) const
 {
-  
-    vector<FeaturePtr>::iterator feat_it = detected.begin();
+    FeatureField::iterator feat_it = detected.begin();
     for(; feat_it != detected.end(); ++feat_it)
         {
             (*feat_it)->calculateMetadata();
-          
         }
 
     return;
-
 }
 
 
@@ -188,7 +185,7 @@ void FeatureDetectorSimple::Impl::getMetadata(vector<FeaturePtr>& detected) cons
 // rolled over the scan set, updating the second as it goes.
 
 
-void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<FeaturePtr>& detected) const 
+void FeatureDetectorSimple::Impl::detect(const MSData& msd, FeatureField& detected) const 
 {   
     // initialize buffer maps    
     map<FeatureKey, FeatureID> grandparentBuffer;
@@ -220,7 +217,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<FeaturePtr>& 
             }
       
         _pfd.detect(mzIntensityPairs,result);
-  
+
         // iterate thru peak families
 
         vector<PeakFamily>::iterator result_it = result.begin();
@@ -285,13 +282,10 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, vector<FeaturePtr>& 
         {
             if(the_it->second->peakels.front()->peaks.size()>1) // for now only write features lasting > 1 scan
                 {
-                    detected.push_back(the_it->second);
-
+                    the_it->second->calculateMetadata();
+                    detected.insert(the_it->second);
                 }
         }
-    
-    // write metadata attributes
-    getMetadata(detected);
     
     return; 
 }

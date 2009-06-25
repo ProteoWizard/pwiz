@@ -40,7 +40,7 @@ class PWIZ_API_DECL FeatureDetectorSimple : public FeatureDetector
 public:
 
     FeatureDetectorSimple(PeakFamilyDetector& _pfd);
-    virtual void detect(const MSData& msd, std::vector<FeaturePtr>& result) const;
+    virtual void detect(const MSData& msd, FeatureField& result) const;
     
 
 private:

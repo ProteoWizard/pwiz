@@ -82,13 +82,9 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     // instantiate MSData from test file
    
     MSDataFile msd((datadir / "FeatureDetectorTest_Bombessin.mzML").string());
-    cout << "chekcpoint 1" << endl;
 
-
-    vector<FeaturePtr> output_features;
+    FeatureField output_features;
     fds.detect(msd, output_features);
-
-    cout << "checkpoint2 " << endl;
 
     // instantiate the bombessin +2 feature that we know is correct, with calculated mzMonoisotopic and eyeballed retentionTime
     
@@ -96,7 +92,7 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     bombessin2_truth->mz = 810.4148;
     bombessin2_truth->retentionTime = 1866;
 
-    vector<FeaturePtr>::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
+    FeatureField::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
     
     // assert that it is found, correctly, in the data
     unit_assert(bombessin2_hopeful != output_features.end());
@@ -111,7 +107,7 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     bombessin3_truth->mz = 540.6123;
     bombessin3_truth->retentionTime = 1866;
     
-    vector<FeaturePtr>::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
+    FeatureField::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
   
     // assert that it is found, correctly, in the data
     unit_assert(bombessin3_hopeful != output_features.end());
