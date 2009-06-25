@@ -1,4 +1,3 @@
-
 ///
 /// Matrix.cpp
 ///
@@ -44,4 +43,23 @@ double Matrix::access(const int& rowCoordinate, const int& columnCoordinate)
 {
     return _rows.at(rowCoordinate).at(columnCoordinate);
 
+}
+
+ostream& Matrix::write(ostream& os) 
+{
+    vector<vector<double> >::const_iterator it = _rows.begin();
+    for( ; it != _rows.end(); ++it)
+        {
+            vector<double>::const_iterator jt = it->begin();
+            for( ; jt!= it->end(); ++jt)
+                {
+                    os << *jt << "    ";
+
+                }
+
+            os << endl;
+            
+        }
+
+    return os;
 }

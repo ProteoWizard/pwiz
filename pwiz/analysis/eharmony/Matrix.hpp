@@ -2,6 +2,9 @@
 /// Matrix.hpp
 ///
 
+#ifndef _MATRIX_HPP_
+#define _MATRIX_HPP_
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -35,9 +38,14 @@ struct Matrix
 
     multimap<double, pair<int,int> > _data;
 
+
+    ostream& write(ostream& os);
+
 };
 
-
+    //ostream& operator<<(ostream& os, const Matrix& m);
 
 } // eharmony
 } // pwiz
+
+#endif

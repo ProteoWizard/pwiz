@@ -16,20 +16,20 @@ using namespace pwiz::eharmony;
 
 ostream* os_ = 0;
 
-Feature makeFeature(double mz, double retentionTime)
+FeaturePtr makeFeature(double mz, double retentionTime)
 {
-    Feature feature;
-    feature.mzMonoisotopic = mz;
-    feature.retentionTime = retentionTime;
+    FeaturePtr feature(new Feature());
+    feature->mz = mz;
+    feature->retentionTime = retentionTime;
 
     return feature;
 
 }
 
-FeatureSequenced makeFeatureSequenced(const Feature& feature, string _ms1_5="", string _ms2="")
+FeatureSequenced makeFeatureSequenced(const FeaturePtr feature, string _ms1_5="", string _ms2="")
 {
     FeatureSequenced fs;
-    fs.feature = boost::shared_ptr<Feature>(new Feature(feature) );
+    fs.feature = feature;
     fs.ms1_5 = _ms1_5;
     fs.ms2 = _ms2;
 
@@ -51,21 +51,21 @@ void test()
     if (os_) *os_ << "\ntest() ... \n\n";
 
     // make a vector of features
-    Feature a = makeFeature(1,2);
-    Feature b = makeFeature(3,4);
-    Feature c = makeFeature(5,6);
+    FeaturePtr a = makeFeature(1,2);
+    FeaturePtr b = makeFeature(3,4);
+    FeaturePtr c = makeFeature(5,6);
 
     // make FeatureSequenced objects
     FeatureSequenced fs_a(a);
     FeatureSequenced fs_b(b);
     FeatureSequenced fs_c(c);
 
-    vector<Feature> features;
+    vector<FeaturePtr> features;
     features.push_back(a);
     features.push_back(b);
     features.push_back(c);
 
-    // test vector<Feature> constructor
+    // test vector<FeaturePtr> constructor
     if (os_) *os_ << "constructing Feature_dataFetcher ... " << endl;
     Feature_dataFetcher fdf(features);
     if (os_) *os_ << "constructed. " << endl;
@@ -128,13 +128,13 @@ void testMerge()
 {
     if(os_) *os_ << "\ntestMerge()...\n" << endl;
 
-    Feature a = makeFeature(5,1);
-    Feature b = makeFeature(20,9);
+    FeaturePtr a = makeFeature(5,1);
+    FeaturePtr b = makeFeature(20,9);
 
     FeatureSequenced fs_b = makeFeatureSequenced(b);
 
-    vector<Feature> v_a;
-    vector<Feature> v_b;
+    vector<FeaturePtr> v_a;
+    vector<FeaturePtr> v_b;
 
     v_a.push_back(a);
     v_b.push_back(b);
@@ -143,7 +143,7 @@ void testMerge()
     Feature_dataFetcher fdf_b(v_b);
     
     fdf_a.merge(fdf_b);
-    vector<boost::shared_ptr<FeatureSequenced> > binContents = fdf_a.getFeatures(b.mzMonoisotopic, b.retentionTime);
+    vector<boost::shared_ptr<FeatureSequenced> > binContents = fdf_a.getFeatures(b->mz, b->retentionTime);
     
     unit_assert(binContents.size() > 0);
 

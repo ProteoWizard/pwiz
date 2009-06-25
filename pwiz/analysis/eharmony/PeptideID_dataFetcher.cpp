@@ -21,7 +21,7 @@ vector<SQBinPair> getCoordinates(const vector<SpectrumQuery>& sq)
         {
             for(; sq_it != sq.end(); ++sq_it) 
                 {
-                    if (sq_it->searchResult.searchHit.analysisResult.xResult.probability >= .7) 
+                    if (sq_it->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .7) 
                         {
                             result.push_back(make_pair(make_pair(Ion::mz(sq_it->precursorNeutralMass,sq_it->assumedCharge), sq_it->retentionTimeSec),*sq_it));
 
@@ -35,21 +35,53 @@ vector<SQBinPair> getCoordinates(const vector<SpectrumQuery>& sq)
 
 }
 
+vector<SQBinPair> getCoordinates(const vector<boost::shared_ptr<SpectrumQuery> >& sq)
+{
+    vector<SQBinPair> result;
+    vector<boost::shared_ptr<SpectrumQuery> >::const_iterator sq_it = sq.begin();
+    if (true)
+        {
+            for(; sq_it != sq.end(); ++sq_it) 
+                {
+                    if ((*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .7) 
+                        {
+                            result.push_back(make_pair(make_pair(Ion::mz((*sq_it)->precursorNeutralMass,(*sq_it)->assumedCharge), (*sq_it)->retentionTimeSec),*(*sq_it)));
+
+                        }
+
+                }
+
+        }
+
+    return result;
+
+}
+
+
+
 PeptideID_dataFetcher::PeptideID_dataFetcher(istream& is) : _rtAdjusted(false)
 {
     MSMSPipelineAnalysis mspa;
     mspa.read(is);
+    id = mspa.summaryXML;
  
     vector<SpectrumQuery> sq = mspa.msmsRunSummary.spectrumQueries;
     vector<SQBinPair> spectrumQueries = getCoordinates(sq);
     _bin = Bin<SpectrumQuery>(spectrumQueries,.005,60);
-   
+
 }
 
-PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<SpectrumQuery>& sqs) : _rtAdjusted(false)
+/*PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<SpectrumQuery>& sqs) : _rtAdjusted(false)
 {
     vector<SQBinPair> spectrumQueries = getCoordinates(sqs);
     _bin = Bin<SpectrumQuery>(spectrumQueries,.005,60);
+
+    }*/
+
+PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<boost::shared_ptr<SpectrumQuery> >& sqs) : _rtAdjusted(false)
+{
+    vector<SQBinPair> spectrumQueries = getCoordinates(sqs);
+    _bin = Bin<SpectrumQuery>(spectrumQueries, .005,60);
 
 }
 
@@ -77,22 +109,64 @@ void PeptideID_dataFetcher::update(const SpectrumQuery& sq)
 
 }
 
+struct SortBySequence
+{
+  SortBySequence(){}
+  bool operator()(boost::shared_ptr<const SpectrumQuery> a, boost::shared_ptr<const SpectrumQuery> b)
+  {
+    return a->searchResult.searchHit.peptide < b->searchResult.searchHit.peptide;
+
+  }
+
+};
+
 void PeptideID_dataFetcher::merge(const PeptideID_dataFetcher& that)
 {
     Bin<SpectrumQuery> bin = that.getBin();
-    vector<boost::shared_ptr<SpectrumQuery> > contents = bin.getAllContents();
-    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = contents.begin();
-    for(; it!= contents.end(); ++it) update(**it);
+    vector<boost::shared_ptr<SpectrumQuery> > b = bin.getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> > a = _bin.getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = b.begin();
+
+    vector<boost::shared_ptr<SpectrumQuery> > result;
+
+    sort(a.begin(), a.end(), SortBySequence());
+    sort(b.begin(), b.end(), SortBySequence());
+
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator itt = a.begin();
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator jt = b.begin();
+
+    while( itt != a.end() && jt != b.end())
+      {
+	if ((*itt)->searchResult.searchHit.peptide == (*jt)->searchResult.searchHit.peptide)
+	  {
+
+	    result.push_back(*itt);
+	    result.push_back(*jt);
+	    
+	    // filtering predicate
+	    if (fabs((*itt)->retentionTimeSec - (*jt)->retentionTimeSec) < 100) { update(**itt); update(**jt);}
+
+	    ++itt;
+	    ++jt;
+
+	  }
+
+	else if ((*itt)->searchResult.searchHit.peptide < (*jt)->searchResult.searchHit.peptide) ++itt;
+	else ++jt;
+
+      }
+
+    for(; it!= b.end(); ++it)
+      {
+	if (find(result.begin(), result.end(), *it) == result.end()) update(**it);
+
+      }
 
 }
 
-vector<SpectrumQuery> PeptideID_dataFetcher::getAllContents() const
+vector<boost::shared_ptr<SpectrumQuery> > PeptideID_dataFetcher::getAllContents() const
 {
-    vector<boost::shared_ptr<SpectrumQuery> > hack = _bin.getAllContents();
-    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = hack.begin();
-    vector<SpectrumQuery> result;
-    for(; it != hack.end(); ++it) result.push_back(**it);
-
+    vector<boost::shared_ptr<SpectrumQuery> > result = _bin.getAllContents();
     return result;
 
 }

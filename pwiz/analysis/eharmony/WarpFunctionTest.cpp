@@ -58,6 +58,18 @@ vector<double> initializeRtVals()
 
 }
 
+vector<pair<double,double> > initializeSplineAnchors()
+{
+  vector<pair<double,double> > splineAnchors;
+  splineAnchors.push_back(make_pair(0,0));
+  splineAnchors.push_back(make_pair(1,1));
+  splineAnchors.push_back(make_pair(2,1.5));
+  splineAnchors.push_back(make_pair(3,4));
+
+  return splineAnchors;
+
+}
+
 void testColinearLinearWarp()
 {
     if (os_) *os_ << "testColinearLinearWarp() ... \n\n";
@@ -165,6 +177,30 @@ void testPiecewiseLinearWarp()
 
 }
 
+void testSplineWarp()
+{
+  vector<pair<double,double> > anchors = initializeSplineAnchors();
+  SplineWarpFunction swf(anchors);
+  
+  vector<double> rtVals = initializeRtVals();
+  vector<double> warpedRtVals;
+  swf(rtVals, warpedRtVals);
+
+  // coefficients:
+  //  0, 0,3,-2;
+  //  1,.125,2.1875,-1.3125;
+  //  2,.5625,1.875,-1.4375;
+
+  const double error = .001;
+
+  unit_assert_equal(warpedRtVals.at(0), 0, error);
+  unit_assert_equal(warpedRtVals.at(1), 4, error);
+  unit_assert_equal(warpedRtVals.at(2), 1.2191162109375, error);
+  unit_assert_equal(warpedRtVals.at(3), 1, error);
+  unit_assert_equal(warpedRtVals.at(4),-395.25, error); // hey, i didn't say it was good.
+
+}
+
 int main(int argc, char* argv[])
 {
     try
@@ -174,6 +210,7 @@ int main(int argc, char* argv[])
             testColinearLinearWarp();
             testNonColinearLinearWarp();
             testPiecewiseLinearWarp();
+            //	    testSplineWarp();
 
         }
     

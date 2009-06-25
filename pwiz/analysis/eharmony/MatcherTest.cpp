@@ -9,10 +9,11 @@ void test()
 {
     Config config;
 
-    config.inputPath = "./2007/";
-    config.batchFileName = "18mix_runs.txt";
-    config.searchNeighborhoodCalculator = "naive[.01,500]";
-    config.warpFunctionCalculator = "linear";
+    config.inputPath = "./fractionData/";
+    config.batchFileName = "fractions_63-90.txt";
+    //    config.searchNeighborhoodCalculator = "naive[.01,500]";
+    config.normalDistributionSearch = "normalDistribution[3]";
+    config.warpFunctionCalculator = "piecewiseLinear";
     config.generateAMTDatabase = true;
 
 //     config.inputPath = "/stf/scratch/atrium/kate/20090112/";

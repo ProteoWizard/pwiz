@@ -12,17 +12,19 @@ using namespace pwiz::data::pepxml;
 namespace pwiz{
 namespace eharmony{
 
-typedef std::vector<std::pair<SpectrumQuery, SpectrumQuery> > PeptideMatchContainer;
+typedef std::vector<std::pair<boost::shared_ptr<SpectrumQuery> , boost::shared_ptr<SpectrumQuery> > > PeptideMatchContainer;
+typedef boost::shared_ptr<PeptideID_dataFetcher> PidfPtr;
+typedef boost::shared_ptr<Feature_dataFetcher> FdfPtr;
 
 class PeptideMatcher
 {
 
 public:
 
-    PeptideMatcher(){} 
-    PeptideMatcher(const DataFetcherContainer& dfc);
+    PeptideMatcher(const PidfPtr a = PidfPtr(new PeptideID_dataFetcher()), const PidfPtr b = PidfPtr(new PeptideID_dataFetcher()));
 
     PeptideMatchContainer getMatches() const { return _matches;}
+
     void calculateDeltaRTDistribution(); // find mean and stdev deltaRT 
     void calculateDeltaMZDistribution();
 

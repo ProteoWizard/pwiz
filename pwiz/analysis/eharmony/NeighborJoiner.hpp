@@ -7,20 +7,12 @@
 
 #include "Matrix.hpp"
 #include "AMTContainer.hpp"
+#include "DistanceAttributes.hpp"
 
 namespace pwiz{
 namespace eharmony{
 
 typedef AMTContainer Entry;
-
-struct DistanceAttribute
-{
-    DistanceAttribute(){}
-    virtual double score(const Entry& a, const Entry& b){ return 0;}
-    virtual double operator()(const Entry& a, const Entry& b){ return this->score(a,b);}
-    virtual ~DistanceAttribute(){}
-
-}; 
 
 struct NeighborJoiner : public Matrix
 {     

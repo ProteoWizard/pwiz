@@ -35,8 +35,8 @@ void NeighborJoiner::calculateDistanceMatrix()
                         {
 			  if (index == jindex) 
 			      {
-			          this->insert(100000000, index, jindex);				 
-				  continue;
+			          this->insert(10000000000, index, jindex);				 
+                      continue;
 			      }
 			  
 			  double score = (*it)->score(*i_it, *j_it);			  
@@ -54,7 +54,7 @@ void NeighborJoiner::joinNearest()
 {
     if (_rowEntries.size() == 1) return;    
     pair<int,int> nearest = getMinValLocation();
-  
+
     cout << "Joining nearest neighbors at current matrix indices: " << nearest.first << " , " << nearest.second << endl;
 
     AMTContainer ra = _rowEntries.at(nearest.first);

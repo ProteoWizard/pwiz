@@ -27,31 +27,36 @@ public:
 
     PeptideID_dataFetcher() : _rtAdjusted(false) {}
     PeptideID_dataFetcher(std::istream& is);
-    PeptideID_dataFetcher(const std::vector<SpectrumQuery>& sqs);
+    //    PeptideID_dataFetcher(const std::vector<SpectrumQuery>& sqs);
+    PeptideID_dataFetcher(const std::vector<boost::shared_ptr<SpectrumQuery> >& sqs);
     PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa);
-    PeptideID_dataFetcher(const PeptideID_dataFetcher& pidf) : _rtAdjusted(pidf.getRtAdjustedFlag()), _bin(pidf.getBin()) {}
 
     void update(const SpectrumQuery& sq);
     void erase(const SpectrumQuery& sq);
-
     void merge(const PeptideID_dataFetcher& that);
+    size_t size(){ return this->getAllContents().size();}
 
-    std::vector<SpectrumQuery> getAllContents() const;
-
-    std::vector<boost::shared_ptr<SpectrumQuery> > getSpectrumQueries(double mz, double rt) ;
+    // accessors
+    std::vector<boost::shared_ptr<SpectrumQuery> > getAllContents() const;
+    std::vector<boost::shared_ptr< SpectrumQuery> > getSpectrumQueries(double mz, double rt) ;
     Bin<SpectrumQuery> getBin() const { return _bin;}
-
     void setRtAdjustedFlag(const bool& flag) { _rtAdjusted = flag; }
     const bool& getRtAdjustedFlag() const { return _rtAdjusted; }
 
     bool operator==(const PeptideID_dataFetcher& that);
     bool operator!=(const PeptideID_dataFetcher& that);
 
+    std::string id;
+
 private:
     
     bool _rtAdjusted;
     Bin<SpectrumQuery> _bin;
     
+    // no copying
+    PeptideID_dataFetcher(PeptideID_dataFetcher&);
+    PeptideID_dataFetcher operator=(PeptideID_dataFetcher&);
+
 };
 
 } // namespace eharmony

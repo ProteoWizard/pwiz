@@ -5,9 +5,7 @@
 #ifndef _AMTDATABASE_HPP_
 #define _AMTDATABASE_HPP_
 
-#include "Matcher.hpp"
 #include "AMTContainer.hpp"
-#include "boost/shared_ptr.hpp"
 
 namespace pwiz{
 namespace eharmony{
@@ -20,9 +18,9 @@ struct AMTDatabase
     std::vector<boost::shared_ptr<SpectrumQuery> > query(const Feature& f) ;
     std::vector<boost::shared_ptr<SpectrumQuery> > query(const double& mz, const double& rt) ;
     std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const SearchNeighborhoodCalculator& snc);
-    std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in);
+    std::vector<SpectrumQuery> query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, SearchNeighborhoodCalculator& nds, MSMSPipelineAnalysis& mspa_in);
     
-    PeptideID_dataFetcher _peptides;
+    PidfPtr _peptides;
     
 };
 

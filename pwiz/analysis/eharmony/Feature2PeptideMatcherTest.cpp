@@ -1,8 +1,8 @@
 ///
-/// Peptide2FeatureMatcherTest.cpp
+/// Feature2PeptideMatcherTest.cpp
 ///
 
-#include "Peptide2FeatureMatcher.hpp"
+#include "Feature2PeptideMatcher.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 
@@ -13,6 +13,15 @@ using namespace pwiz::data::pepxml;
 using namespace pwiz::util;
 
 ostream* os_ = 0;
+
+struct PointsToSame
+{
+    PointsToSame(MatchPtr& mp) : _mp(mp){}
+    bool operator()(const MatchPtr& pm){return (*_mp) == (*pm);}
+    
+    MatchPtr _mp;
+
+};
 
 const char* firstTestPepXML =     
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -33,11 +42,10 @@ const char* firstTestPepXML =
     "</msms_run_summary>\n"
     "</msms_pipeline_analysis>\n";
 
-
-PeptideID_dataFetcher makePeptideID_dataFetcher(const char* samplePepXML)
+PidfPtr makePeptideID_dataFetcher(const char* samplePepXML)
 {
     istringstream iss(samplePepXML);
-    PeptideID_dataFetcher pidf(iss);
+    PidfPtr pidf(new PeptideID_dataFetcher(iss));
 
     return pidf;
 
@@ -99,13 +107,13 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
     AnalysisResult analysisResult;
     analysisResult.analysis = "peptideprophet";
 
-    XResult xresult;
-    xresult.probability = score;
-    xresult.allNttProb.push_back(0);
-    xresult.allNttProb.push_back(0);
-    xresult.allNttProb.push_back(score);
+    PeptideProphetResult ppresult;
+    ppresult.probability = score;
+    ppresult.allNttProb.push_back(0);
+    ppresult.allNttProb.push_back(0);
+    ppresult.allNttProb.push_back(score);
 
-    analysisResult.xResult = xresult;
+    analysisResult.peptideProphetResult = ppresult;
 
     searchHit.analysisResult = analysisResult;
     searchResult.searchHit = searchHit;
@@ -117,12 +125,12 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
 }
 
 
-Feature makeFeature(double mz, double retentionTime, string ms1_5, int charge = 0)
+FeaturePtr makeFeature(double mz, double retentionTime, string ms1_5, int charge = 0)
 {
-    Feature feature;
-    feature.mzMonoisotopic = mz;
-    feature.retentionTime = retentionTime;
-    feature.charge = charge;
+    FeaturePtr feature(new Feature());
+    feature->mz = mz;
+    feature->retentionTime = retentionTime;
+    feature->charge = charge;
 
     return feature;
 
@@ -136,43 +144,43 @@ void testNaive()
     // first test: test that matches that should be found are, and correctly
  
     // read pepxml
-    PeptideID_dataFetcher pidf_a = makePeptideID_dataFetcher(firstTestPepXML);
-    PeptideID_dataFetcher pidf_a2 = makePeptideID_dataFetcher(secondTestPepXML);
-    PeptideID_dataFetcher pidf_a3 = makePeptideID_dataFetcher(thirdTestPepXML);
+    PidfPtr pidf_a = makePeptideID_dataFetcher(firstTestPepXML);
+    PidfPtr pidf_a2 = makePeptideID_dataFetcher(secondTestPepXML);
+    PidfPtr pidf_a3 = makePeptideID_dataFetcher(thirdTestPepXML);
 
     // make candidate features for all tests
-    Feature feat_b1  = makeFeature(33.98246, 117.9, "MARINA", 1); // matches but with large rt dif
-    Feature feat_b2 = makeFeature(33.9824, 118.5, "MARINA", 1); // matches with small rt diff and mz dif (should get picked)
-    Feature feat_b3 = makeFeature(33.988, 118.5, "MARINA", 1);
+    FeaturePtr feat_b1  = makeFeature(33.98246, 117.9, "MARINA", 1); // matches but with large rt diff
+    FeaturePtr feat_b2 = makeFeature(33.9829, 118.5, "MARINA", 1); // matches with small rt diff and small mz diff (should get picked)
+    FeaturePtr feat_b3 = makeFeature(33.988, 118.5, "MARINA", 1); // outside of tolerances, shouldn't get picked
 
     // make Feature_dataFetcher for first test
-    vector<Feature> feats_b;
+    vector<FeaturePtr> feats_b;
     feats_b.push_back(feat_b1);
     feats_b.push_back(feat_b2);
-    Feature_dataFetcher fdf_b(feats_b);
+    FdfPtr fdf_b(new Feature_dataFetcher(feats_b));
 
     // make Feature_dataFetcher for second and third test
-    vector<Feature> feats_b2;
+    vector<FeaturePtr> feats_b2;
     feats_b2.push_back(feat_b3);
-    Feature_dataFetcher fdf_b2(feats_b2);
+    FdfPtr fdf_b2(new Feature_dataFetcher(feats_b2));
 
-    // make peptide records that we want to find / not find
-    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA_ms1_5",0.99998663029333357,1,2);
-    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA_ms1_5", 0.99998663029333357,1,2);
-    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA_ms1_5", 0.99998663029333357, 1, 2);  
+    // make spectrum queries that we want to find / not find
+    SpectrumQuery sq_1 = makeSpectrumQuery(32.975191529999996,118.441016,1,"MARINA",0.99998663029333357,1,2);
+    SpectrumQuery sq_2 = makeSpectrumQuery(32.97512353, 118.5, 1, "MARINA", 0.99998663029333357,1,2);
+    SpectrumQuery sq_3 = makeSpectrumQuery(32.975191529999996, 18.441016, 1, "MARINA", 0.99998663029333357, 1, 2);  
 
     SearchNeighborhoodCalculator snc;
 
-    // construct P2FMs for testing
-    Peptide2FeatureMatcher p2fm(pidf_a, fdf_b, snc);
-    Peptide2FeatureMatcher p2fm2(pidf_a2, fdf_b2, snc);
-    Peptide2FeatureMatcher p2fm3(pidf_a3, fdf_b2, snc);
+    // construct F2PMs for testing
+    Feature2PeptideMatcher f2pm(fdf_b, pidf_a, snc);
+    Feature2PeptideMatcher f2pm2(fdf_b2, pidf_a2, snc);
+    Feature2PeptideMatcher f2pm3(fdf_b2, pidf_a3, snc);
 
-    // do the tests (make separate functions?)
-    vector<Match> matches = p2fm.getMatches();
+    // test
+    vector<MatchPtr> matches = f2pm.getMatches();
   
-    Match match(sq_1, feat_b2);
-    match.score = snc.score(sq_1, feat_b2);
+    MatchPtr match(new Match(sq_1, feat_b2));
+    match->score = snc.score(sq_1, *feat_b2);
 
     if (os_)
         {
@@ -180,72 +188,75 @@ void testNaive()
             XMLWriter writer(*os_);
             *os_ << "\nTesting that potential matches that fit the mz and rt tolerance are found ... \n";
             *os_ << "\nLooking for: \n";
-            match.write(writer);
+            match->write(writer);
             *os_ << "\nFound: \n";
-            vector<Match>::iterator it = matches.begin();
+            vector<MatchPtr>::iterator it = matches.begin();
             for(; it != matches.end(); ++it)
                 {
-                    it->write(writer);
+                    (*it)->write(writer);
 
                 }
 
         }
 
-    unit_assert(find(matches.begin(), matches.end(), match) !=  matches.end());
+    PointsToSame pts(match);
+    unit_assert(find_if(matches.begin(), matches.end(), pts) !=  matches.end());
 
     // second test: test that potential matches that don't fit the mz tolerance fail
 
     // get the resulting matches
-    vector<Match> matches2 = p2fm2.getMatches();
+    vector<MatchPtr> matches2 = f2pm2.getMatches();
         
     // assert that the incorrect one was not found
-    Match match2(sq_2, feat_b3);
-    match2.score = snc.score(sq_2, feat_b3);
+    MatchPtr match2(new Match(sq_2, feat_b3));
+    match2->score = snc.score(sq_2, *feat_b3);
     
     if (os_)
         {
             *os_ << "\nTesting that potential matches that don't fit the mz tolerance are not found ... \n";
             XMLWriter writer(*os_);
             *os_ << "\nLooking for the absence of: \n";
-            match2.write(writer);
+            match2->write(writer);
             *os_ << "\nFound: \n";
-            vector<Match>::iterator it = matches2.begin();
+            vector<MatchPtr>::iterator it = matches2.begin();
             for(; it != matches2.end(); ++it)
                 {
-                    it->write(writer);
+                    (*it)->write(writer);
 
                 }
 
         }
 
-    unit_assert(find(matches2.begin(), matches2.end(), match2) ==  matches2.end());
+    PointsToSame pts2(match2);
+    unit_assert(find_if(matches2.begin(), matches2.end(), pts2) ==  matches2.end());
 
     // third test: test that potential matches that don't fit the rt tolerance aren't found
    
     // get the resulting matches
-    vector<Match> matches3 = p2fm3.getMatches();
+    vector<MatchPtr> matches3 = f2pm3.getMatches();
 
     // assert that the incorrect one was not found
-    Match match3(sq_3, feat_b3);
-    match3.score = snc.score(sq_3, feat_b3);
+    MatchPtr match3(new Match(sq_3, feat_b3));
+    match3->score = snc.score(sq_3, *feat_b3);
 
     if (os_)
         {
             *os_ << "\nTesting that potential matches that don't fit the rt tolerance are not found ... \n";
             XMLWriter writer(*os_);
             *os_ << "\nLooking for the absence of: \n";
-            match3.write(writer);
+            match3->write(writer);
             *os_ << "\nFound: \n";
-            vector<Match>::iterator it = matches3.begin();
+            vector<MatchPtr>::iterator it = matches3.begin();
             for(; it != matches3.end(); ++it)
                 {
-                    it->write(writer);
+                    (*it)->write(writer);
 
                 }
 
         }
-      
-    unit_assert(find(matches3.begin(), matches3.end(), match3) == matches3.end());
+   
+    PointsToSame pts3(match3); 
+    unit_assert(find_if(matches3.begin(), matches3.end(), pts3) == matches3.end());
 
 }
 
@@ -254,9 +265,8 @@ int main(int argc, char* argv[])
     try
         {
             if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-            if (os_) *os_ << "\nPeptide2FeatureMatcherTest ... \n";
-            testNaive();
-            // because the test depends only on finding things that are in the mz and rt tolerance, and the setting of these tolerances is tested elsewhere, we only need to test Naive...
+            if (os_) *os_ << "\nFeature2PeptideMatcherTest ... \n";
+            testNaive();           
 
         }
 

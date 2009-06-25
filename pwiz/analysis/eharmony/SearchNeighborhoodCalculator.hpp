@@ -13,6 +13,8 @@ using namespace pwiz::data::pepxml;
 namespace pwiz{
 namespace eharmony{
 
+typedef boost::shared_ptr<DataFetcherContainer> DfcPtr;
+
 struct SearchNeighborhoodCalculator
 {
     SearchNeighborhoodCalculator() : _id("default"), _mzTol(.005), _rtTol(60) {} // consider moving to calculateTolerances.
@@ -38,8 +40,9 @@ struct NormalDistributionSearch : public SearchNeighborhoodCalculator
 {
     NormalDistributionSearch(double Z = 3) :  _Z(Z) { _id = ("normalDistribution[" + boost::lexical_cast<string>(_Z) + "]").c_str(); }
    
-    virtual void calculateTolerances(const DataFetcherContainer& dfc);
-    virtual double score(const SpectrumQuery& a, const Feature& b) const;
+    virtual void calculateTolerances(const DfcPtr dfc);
+    virtual  double score(const SpectrumQuery& a, const Feature& b) const;
+    virtual bool close(const SpectrumQuery& a, const Feature& b) const;
 
     double _mu_mz;
     double _sigma_mz;

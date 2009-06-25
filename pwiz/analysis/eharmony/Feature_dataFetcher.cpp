@@ -9,31 +9,36 @@ using namespace std;
 using namespace pwiz::eharmony;
 using namespace pwiz::data::peakdata;
 
+namespace{
+
 typedef pair<pair<double,double>, FeatureSequenced> FeatBinPair;
 
-void getCoordinates(const vector<Feature>& f, vector<FeatBinPair>& result)
+void getCoordinates(const vector<FeaturePtr>& f, vector<FeatBinPair>& result)
 {   
-    vector<Feature>::const_iterator f_it = f.begin();
+    vector<FeaturePtr>::const_iterator f_it = f.begin();
     for(; f_it != f.end(); ++f_it)
         {
-	    FeatureSequenced featureSequenced(*f_it);
-            result.push_back(make_pair(make_pair(f_it->mzMonoisotopic, f_it->retentionTime),featureSequenced));
-            
+            FeatureSequenced featureSequenced(*f_it);
+            FeatBinPair fb(make_pair((*f_it)->mz, (*f_it)->retentionTime),featureSequenced);
+            result.push_back(fb);
+
         }
 
 }
 
 
-void getCoordinates(const vector<boost::shared_ptr<FeatureSequenced> >& f, vector<FeatBinPair>& result)
+void getCoordinates(const vector<FeatureSequenced>& f, vector<FeatBinPair>& result)
 {
-  vector<boost::shared_ptr<FeatureSequenced> >::const_iterator f_it = f.begin();
+  vector<FeatureSequenced>::const_iterator f_it = f.begin();
   for(; f_it != f.end(); ++f_it)
-    {;
-      result.push_back(make_pair(make_pair((*f_it)->feature->mzMonoisotopic, (*f_it)->feature->retentionTime),**f_it));
+    {
+        result.push_back(make_pair(make_pair(f_it->feature->mz, f_it->feature->retentionTime),*f_it));
 
     }
 
-}
+} 
+
+} // anonymous namespace
 
 Feature_dataFetcher::Feature_dataFetcher(istream& is)
 {
@@ -46,16 +51,16 @@ Feature_dataFetcher::Feature_dataFetcher(istream& is)
     _bin = Bin<FeatureSequenced>(features,.005, 1000); // be lenient for adjust rt? should be a config option
 
 }
-
+/*
 Feature_dataFetcher::Feature_dataFetcher(vector<Feature>& f)
 {
     vector<FeatBinPair> features;
     getCoordinates(f, features);
     _bin = Bin<FeatureSequenced>(features, .005, 1000); 
 
-}
+    }*/
 
-Feature_dataFetcher::Feature_dataFetcher(vector<boost::shared_ptr<FeatureSequenced> >& f)
+Feature_dataFetcher::Feature_dataFetcher(const vector<FeaturePtr>& f)
 {
     vector<FeatBinPair> features;
     getCoordinates(f, features);
@@ -65,7 +70,7 @@ Feature_dataFetcher::Feature_dataFetcher(vector<boost::shared_ptr<FeatureSequenc
 
 void Feature_dataFetcher::update(const FeatureSequenced& fs)
 {
-    double mz = fs.feature->mzMonoisotopic;
+    double mz = fs.feature->mz;
     double rt = fs.feature->retentionTime;
     _bin.update(fs, make_pair(mz,rt));
 
@@ -73,7 +78,7 @@ void Feature_dataFetcher::update(const FeatureSequenced& fs)
 
 void Feature_dataFetcher::erase(const FeatureSequenced& fs)
 {
-    double mz = fs.feature->mzMonoisotopic;
+    double mz = fs.feature->mz;
     double rt = fs.feature->retentionTime;
     _bin.erase(fs, make_pair(mz,rt));
 

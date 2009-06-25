@@ -79,7 +79,7 @@ template <typename T>
 Bin<T>::Bin(const vector<pair<pair<double,double>, T> >& objects, double binSizeX, double binSizeY)
     : _binSizeX(binSizeX), _binSizeY(binSizeY)
 {
-    typename vector<pair<pair<double,double>, T> >::const_iterator it = objects.begin();
+    typename vector<pair<pair<double,double>,  T> >::const_iterator it = objects.begin();
     for(; it!= objects.end(); ++it)
         {
             int binXCoord = int(floor(it->first.first/_binSizeX));

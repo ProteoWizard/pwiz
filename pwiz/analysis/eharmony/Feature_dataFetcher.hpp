@@ -6,7 +6,7 @@
 #define _FEATURE_DATAFETCHER_HPP_
 
 #include "Bin.hpp"
-#include "FeatureSequenced.cpp"
+#include "FeatureSequenced.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -25,17 +25,14 @@ public:
 
     Feature_dataFetcher(){}
     Feature_dataFetcher(std::istream& is);
-    Feature_dataFetcher(std::vector<Feature>& features);
-    Feature_dataFetcher(std::vector<boost::shared_ptr<FeatureSequenced> >& features);
-    Feature_dataFetcher(const Feature_dataFetcher& fdf) : _bin(fdf.getBin()) {}
+    Feature_dataFetcher(const std::vector<FeaturePtr>& features);
     
     void update(const FeatureSequenced& fs);
     void erase(const FeatureSequenced& fs);
     void merge(const Feature_dataFetcher& that);
 
-    std::vector<boost::shared_ptr<FeatureSequenced> > getFeatures(double mz, double rt) ;
+    std::vector<boost::shared_ptr< FeatureSequenced> > getFeatures(double mz, double rt) ;
     std::vector<FeatureSequenced> getAllContents() const;
-
     Bin<FeatureSequenced> getBin() const { return _bin; } 
     
     void setMS2LabeledFlag(const bool& flag) { _ms2Labeled = flag; }
@@ -49,6 +46,10 @@ private:
     bool _ms2Labeled;
     Bin<FeatureSequenced> _bin;
     
+    // no copying
+    Feature_dataFetcher(Feature_dataFetcher&);
+    Feature_dataFetcher operator=(Feature_dataFetcher&);
+
 };
 
 } // namespace eharmony

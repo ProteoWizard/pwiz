@@ -4,20 +4,20 @@ lib pwiz_analysis_eharmony
       FeatureSequenced.cpp
       Feature_dataFetcher.cpp
       PeptideID_dataFetcher.cpp
-      Match_dataFetcher.cpp
       DataFetcherContainer.cpp
-      Matcher.cpp
       PeptideMatcher.cpp
       SearchNeighborhoodCalculator.cpp
-      Peptide2FeatureMatcher.cpp
+      Feature2PeptideMatcher.cpp
       WarpFunction.cpp
       AMTContainer.cpp
       EharmonyAgglomerator.cpp
       Exporter.cpp
       Matrix.cpp
       NeighborJoiner.cpp
-#      AMTDatabase.cpp
+      DistanceAttributes.cpp
+      MSIAMTData.cpp
       ../../data/misc//pwiz_data_misc
+      ../../utility/proteome//pwiz_utility_proteome 
       ;
 
 ### UNIT TESTS ###
@@ -34,7 +34,7 @@ unit-test PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 
 unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
 
-unit-test Peptide2FeatureMatcher : Peptide2FeatureMatcherTest.cpp pwiz_analysis_eharmony ;
+unit-test Feature2PeptideMatcher : Feature2PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 
 unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
 
@@ -42,6 +42,11 @@ unit-test Matrix : MatrixTest.cpp pwiz_analysis_eharmony ;
 
 unit-test NeighborJoiner : NeighborJoinerTest.cpp pwiz_analysis_eharmony ;
 
+unit-test DistanceAttributes : DistanceAttributesTest.cpp pwiz_analysis_eharmony ;
+
+unit-test MSIAMTData : MSIAMTDataTest.cpp pwiz_analysis_eharmony ;
+
+#unit-test Matcher : MatcherTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp

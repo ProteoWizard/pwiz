@@ -3,7 +3,6 @@
 ///
 
 #include "AMTContainer.hpp"
-#include "Peptide2FeatureMatcher.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/data/misc/MinimumPepXML.cpp" // TODO: DON"T
 
@@ -12,32 +11,22 @@ using namespace eharmony;
 
 void AMTContainer::merge(const AMTContainer& that)
 {
-    _fdf.merge(that._fdf);
-    _pidf.merge(that._pidf);
-    _mdf.merge(that._mdf);
-
+    _fdf->merge(*that._fdf);
+    _pidf->merge(*that._pidf);
     _id += that._id;
 
 }
 
 void AMTContainer::write(XMLWriter& writer) const
 {
-    vector<SpectrumQuery> peptides = _pidf.getAllContents();
-    vector<SpectrumQuery>::iterator it = peptides.begin();
+    vector<boost::shared_ptr<SpectrumQuery> > peptides = _pidf->getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = peptides.begin();
     
     for(; it != peptides.end(); ++it)
         {
-	    it->write(writer);
+            (*it)->write(writer);
 
-	}
-
-    vector<Match> matches = _mdf.getAllContents();
-    vector<Match>::iterator m_it = matches.begin();
-    for(; m_it != matches.end(); ++m_it)
-        {
-	    m_it->spectrumQuery.write(writer);
-
-	}
+        }
 
 }
 
@@ -80,31 +69,14 @@ void AMTContainer::read(istream& is)
     
 }
 
-void AMTContainer::writeRTDiff(ostream& os)
-{
-    PeptideMatchContainer pmc = _pm.getMatches();
-    PeptideMatchContainer::iterator it = pmc.begin();
-    for(; it != pmc.end(); ++it)
-        {
-	    double rt1 = it->first.retentionTimeSec;
-	    double rt2 = it->second.retentionTimeSec;
-	    double rtDiff = rt1 - rt2;
-	    os << rtDiff << "\n";
-	    
-
-        }
-
-}
-
 bool AMTContainer::operator==(const AMTContainer& that)
 {
-    return _pidf == that._pidf
-      && _fdf == that._fdf 
-      && _mdf == that._mdf 
+    return *_pidf == *that._pidf
+      && *_fdf == *that._fdf 
       && _pm == that._pm
-      && _p2fm == that._p2fm
-      && _sqs == that._sqs
-      && _config == that._config;
+      && _f2pm == that._f2pm
+      && _sqs == that._sqs;
+
 
 }
 

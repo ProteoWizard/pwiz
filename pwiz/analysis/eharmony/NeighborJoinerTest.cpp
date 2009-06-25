@@ -9,29 +9,14 @@ using namespace pwiz;
 using namespace eharmony;
 using namespace pwiz::util;
 
-struct NumberOfMS2IDs : public DistanceAttribute
+boost::shared_ptr<SpectrumQuery> makeSpectrumQuery(double precursorNeutralMass, double rt, int charge, string sequence, double score, int startScan, int endScan)
 {
-    NumberOfMS2IDs(){}    
-    virtual double score(const AMTContainer& a, const AMTContainer& b);
-
-};
-
-double NumberOfMS2IDs::score(const AMTContainer& a, const AMTContainer& b)
-{
-    int a_count = a._pidf.getAllContents().size();
-    int b_count = b._pidf.getAllContents().size();
-    return sqrt((a_count-b_count)*(a_count-b_count)); // this is not necessarily a *good* metric, just wanted one for testing
-
-}
-
-SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int charge, string sequence, double score, int startScan, int endScan)
-{
-    SpectrumQuery spectrumQuery;
-    spectrumQuery.startScan = startScan;
-    spectrumQuery.endScan = endScan;
-    spectrumQuery.precursorNeutralMass = precursorNeutralMass;
-    spectrumQuery.assumedCharge = charge;
-    spectrumQuery.retentionTimeSec = rt;
+    boost::shared_ptr<SpectrumQuery> spectrumQuery(new SpectrumQuery());
+    spectrumQuery->startScan = startScan;
+    spectrumQuery->endScan = endScan;
+    spectrumQuery->precursorNeutralMass = precursorNeutralMass;
+    spectrumQuery->assumedCharge = charge;
+    spectrumQuery->retentionTimeSec = rt;
 
     SearchResult searchResult;
 
@@ -41,18 +26,18 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
     AnalysisResult analysisResult;
     analysisResult.analysis = "peptideprophet";
 
-    XResult xresult;
-    xresult.probability = score;
-    xresult.allNttProb.push_back(0);
-    xresult.allNttProb.push_back(0);
-    xresult.allNttProb.push_back(score);
+    PeptideProphetResult ppresult;
+    ppresult.probability = score;
+    ppresult.allNttProb.push_back(0);
+    ppresult.allNttProb.push_back(0);
+    ppresult.allNttProb.push_back(score);
 
-    analysisResult.xResult = xresult;
+    analysisResult.peptideProphetResult = ppresult;
 
     searchHit.analysisResult = analysisResult;
     searchResult.searchHit = searchHit;
 
-    spectrumQuery.searchResult = searchResult;
+    spectrumQuery->searchResult = searchResult;
 
     return spectrumQuery;
 
@@ -60,18 +45,18 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
 
 void test()
 {
-    vector<SpectrumQuery> testSpectrumQueries;
+    vector<boost::shared_ptr<SpectrumQuery> > testSpectrumQueries;
     testSpectrumQueries.push_back(makeSpectrumQuery(550.82, 83.46, 3, "MAHTOMEDI", .95, 612, 651));
     testSpectrumQueries.push_back(makeSpectrumQuery(02.139, 02.142, 3, "CAMBRIDGE", .95, 617, 857));
-    testSpectrumQueries.push_back(makeSpectrumQuery(904.04, 913.60, 3, "LOSANGELES", .95, 310, 805));
-    testSpectrumQueries.push_back(makeSpectrumQuery(537.17, 53.703, 3, "MADISON", .96, 608, 715));
+    testSpectrumQueries.push_back(makeSpectrumQuery(904.04, 913.60, 3, "MAHTOMEDI", .95, 310, 805));
+    testSpectrumQueries.push_back(makeSpectrumQuery(537.17, 53.703, 3, "MAHTOMEDI", .96, 608, 715));
 
-    PeptideID_dataFetcher four(testSpectrumQueries);
+    PidfPtr four(new PeptideID_dataFetcher(testSpectrumQueries));
     testSpectrumQueries.erase(testSpectrumQueries.begin());
     testSpectrumQueries.erase(testSpectrumQueries.begin());
-    PeptideID_dataFetcher two(testSpectrumQueries);
+    PidfPtr two(new PeptideID_dataFetcher(testSpectrumQueries));
     testSpectrumQueries.erase(testSpectrumQueries.begin());
-    PeptideID_dataFetcher one(testSpectrumQueries);
+    PidfPtr one(new PeptideID_dataFetcher(testSpectrumQueries));
 
     boost::shared_ptr<AMTContainer> cuatro(new AMTContainer());
     cuatro->_pidf = four;

@@ -4,89 +4,92 @@
 
 #include "DataFetcherContainer.hpp"
 #include "PeptideMatcher.hpp"
+#include "pwiz/utility/proteome/Peptide.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
+#include <iostream>
+#include <fstream>
 
 using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
 
-DataFetcherContainer::DataFetcherContainer(const PeptideID_dataFetcher& pidf_a, const PeptideID_dataFetcher& pidf_b, const Feature_dataFetcher& fdf_a, const Feature_dataFetcher& fdf_b)
+DataFetcherContainer::DataFetcherContainer(const PidfPtr pidf_a, const PidfPtr pidf_b, const FdfPtr fdf_a, const FdfPtr fdf_b)
 {
-    _pidf_a = PeptideID_dataFetcher(pidf_a);
-    _pidf_b = PeptideID_dataFetcher(pidf_b);
-    _fdf_a = Feature_dataFetcher(fdf_a);
-    _fdf_b = Feature_dataFetcher(fdf_b);
+    _pidf_a = pidf_a;
+    _pidf_b = pidf_b;
+    _fdf_a = fdf_a;
+    _fdf_b = fdf_b;
 
 }
 
 namespace{
     
-    void getBestMatch(const SpectrumQuery& sq, const Feature_dataFetcher& fdf, FeatureSequenced& result)
-    {
-     
-        Bin<FeatureSequenced> featureBin = fdf.getBin();
-	
+    void getBestMatch(const SpectrumQuery& sq, const FdfPtr fdf, FeatureSequenced& result)
+    {     
+        Bin<FeatureSequenced> featureBin = fdf->getBin();	
         pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass, sq.assumedCharge), sq.retentionTimeSec);
-        double bestScore = 1000000;       
-        FeatureSequenced* feat = (FeatureSequenced*) NULL;
 
-	
-        vector<boost::shared_ptr<FeatureSequenced> > adjacentContenders;
+        double bestScore = 1000000;               
+        vector<boost::shared_ptr< FeatureSequenced> > adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
-        vector<boost::shared_ptr<FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
+        vector<boost::shared_ptr< FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
 
         for(; ac_it != adjacentContenders.end(); ++ac_it)
             {
                 if ( (*ac_it)->feature->charge == sq.assumedCharge )
                     {
-                        double mzDiff = ((*ac_it)->feature->mzMonoisotopic - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge));
-                        double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec);
+                        double mzDiff = ((*ac_it)->feature->mz - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge))/.005;
+                        double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec)/60;
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
                         if ( score < bestScore )
                             {
-                                feat = &(*(*ac_it));
-				bestScore = score;
+                                result = **ac_it;     
+                                bestScore = score;
                             }
 
                     }
 
             }            
 
-        if (feat) result = *feat;
         return;
 
     } 
 
-    void executeAdjustRT(PeptideID_dataFetcher& pidf, Feature_dataFetcher& fdf)
+    void executeAdjustRT(PidfPtr pidf, FdfPtr fdf)
     {
         int counter = 0;
-        vector<SpectrumQuery> spectrumQueries = pidf.getAllContents();
-        vector<SpectrumQuery>::iterator sq_it = spectrumQueries.begin();
+
+        vector<boost::shared_ptr<SpectrumQuery> > spectrumQueries = pidf->getAllContents();      
+        vector<boost::shared_ptr<SpectrumQuery> >::iterator sq_it = spectrumQueries.begin();
 
         for(; sq_it != spectrumQueries.end(); ++sq_it)
             {
-	  
-	       if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
-
-		
+	      
+                if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
+           		
                 FeatureSequenced fs;
-                getBestMatch(*sq_it, fdf, fs);
+                getBestMatch(*(*sq_it), fdf, fs);
 			     
                 if (fs.feature->id.size() > 0) // f exists
                     {        
-                        fdf.erase(fs);
-                        fs.ms2 = sq_it->searchResult.searchHit.peptide;                      
-                        fdf.update(fs);
-
-                        pidf.erase(*sq_it);
-                        sq_it->retentionTimeSec = fs.feature->retentionTime;
-                        pidf.update(*sq_it);
+                        fdf->erase(fs);
+                        fs.ms2 = (*sq_it)->searchResult.searchHit.peptide;                      
+                        Peptide peptide(fs.ms2);
+                        fs.calculatedMass = peptide.monoisotopicMass(0, false);
+                        fs.ppProb = (*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
+                        fs.peptideCount += 1;
+                        fdf->update(fs);
+                        
+                        pidf->erase(*(*sq_it));                        
+                        (*sq_it)->retentionTimeSec = fs.feature->retentionTime;
+                        pidf->update(*(*sq_it));
+                                                
                         
                     }
 
                 counter +=1;
 
             }
-
+	
     }
 
 } // anonymous namespace
@@ -97,93 +100,44 @@ void DataFetcherContainer::adjustRT(bool runA, bool runB)
         {
             cout << "[eharmony] Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_a, _fdf_a);
-            _pidf_a.setRtAdjustedFlag(true);
-            _fdf_a.setMS2LabeledFlag(true);
-            
+            _pidf_a->setRtAdjustedFlag(true);
+            _fdf_a->setMS2LabeledFlag(true);            
+                       
         }
     
     if (runB)
         {
-
             cout << "[eharmony] Matching MS2 peptides to their precursor features ... " << endl;
             executeAdjustRT(_pidf_b, _fdf_b);
-            _pidf_b.setRtAdjustedFlag(true);
-            _fdf_b.setMS2LabeledFlag(true);
+            _pidf_b->setRtAdjustedFlag(true);
+            _fdf_b->setMS2LabeledFlag(true);
 
         }
 
 }
 
-void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe) 
+void DataFetcherContainer::getAnchors(const int& freq, const double& tol)
 {
-    // get anchors
- 
-     vector<pair<double,double> > anchors;
-    PeptideMatcher pm(*this);
+    _anchors.clear(); // erase any previous anchors
+
+    PeptideMatcher pm(_pidf_a, _pidf_b);
     PeptideMatchContainer matches = pm.getMatches();
+
+    size_t index = 0; 
     PeptideMatchContainer::iterator it = matches.begin();
-    for(; it != matches.end(); ++it) anchors.push_back(make_pair(it->first.retentionTimeSec, it->second.retentionTimeSec));
 
-  // get rt vals to be warped
-  
- 
-    vector<double> rtUnadulterated;
-    Bin<FeatureSequenced> bin = _fdf_b.getBin();
-    vector<boost::shared_ptr<FeatureSequenced> > features = bin.getAllContents();
+    for( ; it != matches.end() ; ++index, ++it ) 
+        {
+            const double& rt_a = it->first->retentionTimeSec;
+            const double& rt_b = it->second->retentionTimeSec;
+
+            if (index % freq == 0 && fabs(rt_a - rt_b) < tol) _anchors.push_back(make_pair(rt_a, rt_b));
+
+        }         
+
+}
+
+void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe) 
+{    
     
-    vector<boost::shared_ptr<FeatureSequenced> >::iterator fs_it = features.begin();
-    for(; fs_it != features.end(); ++fs_it)
-      {
-        rtUnadulterated.push_back((*fs_it)->feature->retentionTime);
-        
-      }
-
-
-  // warp rt vals
- 
-    vector<double> rtAdulterated;
-    switch (wfe)
-      {
-        case(Default) :
-            {
-              WarpFunction warpFunction(anchors);
-              warpFunction(rtUnadulterated, rtAdulterated);
-
-            } 
-
-          break;
-
-        case(Linear) :
-            {
-              LinearWarpFunction lfw(anchors);
-              lfw(rtUnadulterated, rtAdulterated);
-
-            }
-
-        break;
-
-        case(PiecewiseLinear) :
-            {
-               PiecewiseLinearWarpFunction plwf(anchors);
-               plwf(rtUnadulterated, rtAdulterated);
-
-            }
-
-        break;
-
-      }
-
-  // put them back
-
-    vector<double>::iterator rt_it = rtAdulterated.begin();
-    fs_it = features.begin();
-    for(; fs_it != features.end(); ++fs_it, ++rt_it)
-      {
-        (*fs_it)->feature->retentionTime = *rt_it;
-
-      }
-
-    Feature_dataFetcher _fdf_new(features);
-    _fdf_b = _fdf_new;
-
 }

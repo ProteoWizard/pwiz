@@ -5,9 +5,7 @@
 #ifndef _AMT_CONTAINER_HPP_
 #define _AMT_CONTAINER_HPP_
 
-#include "Matcher.hpp"
-#include "Match_dataFetcher.hpp"
-#include "Peptide2FeatureMatcher.hpp"
+#include "Feature2PeptideMatcher.hpp"
 #include "PeptideMatcher.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 
@@ -19,27 +17,24 @@ struct AMTContainer
     string _id;
     bool rtAdjusted;
 
-    Peptide2FeatureMatcher _p2fm;
+    Feature2PeptideMatcher _f2pm;
     PeptideMatcher _pm;
 
-    Feature_dataFetcher _fdf; // merged features from both runs
-    PeptideID_dataFetcher _pidf; // merged ms2s from both runs
-    Match_dataFetcher _mdf; // merged ms1.5s from both runs
+    FdfPtr _fdf;
+    PidfPtr _pidf;
 
     vector<SpectrumQuery> _sqs; // HACK TODO: FIX
-
-    Config _config;
 
     void merge(const AMTContainer& that);
 
     void write(XMLWriter& writer) const;
     void read(istream& is);
   
-    void writeRTDiff(ostream& os);
     bool operator==(const AMTContainer& that);
     bool operator!=(const AMTContainer& that);
 
-    AMTContainer() : _id(""), rtAdjusted(false){}
+
+    AMTContainer(PidfPtr pidf = PidfPtr(new PeptideID_dataFetcher()), FdfPtr fdf = FdfPtr(new Feature_dataFetcher())) : _id(""), rtAdjusted(false), _fdf(fdf), _pidf(pidf) {}
 
 };
 

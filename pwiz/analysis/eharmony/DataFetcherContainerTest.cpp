@@ -13,6 +13,8 @@ using namespace pwiz::minimxml;
 using namespace pwiz::data::peakdata;
 using namespace eharmony;
 
+typedef boost::shared_ptr<DataFetcherContainer> DfcPtr;
+
 namespace{
 
 ostream* os_ = 0;
@@ -34,13 +36,13 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
     AnalysisResult analysisResult;
     analysisResult.analysis = "peptideprophet";
 
-    XResult xresult;
+    PeptideProphetResult xresult;
     xresult.probability = score;
     xresult.allNttProb.push_back(0);
     xresult.allNttProb.push_back(0);
     xresult.allNttProb.push_back(score);
 
-    analysisResult.xResult = xresult;
+    analysisResult.peptideProphetResult = xresult;
 
     searchHit.analysisResult = analysisResult;
     searchResult.searchHit = searchHit;
@@ -51,32 +53,19 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
 
 }
 
-Feature makeFeature(double mz, double retentionTime)
+FeaturePtr makeFeature(double mz, double retentionTime)
 {
-    Feature feature;
-    feature.mzMonoisotopic = mz;
-    feature.retentionTime = retentionTime;
+    FeaturePtr feature(new Feature());
+    feature->mz = mz;
+    feature->retentionTime = retentionTime;
 
     return feature;
 }
 
-// template <typename T>
-// struct IsObject
-// {
-//     IsObject(const T& t) : _t(t) {}
-//     bool operator()(boost::shared_ptr<T> entry) { return *entry == _t;}
-
-//     T _t;
-
-// };
-
-} // anonymous namespace
-
-void test()
+PidfPtr makePeptideID_dataFetcher()
 {
-    //    SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int charge, string sequence, double score, int startScan, int endScan)
-    SpectrumQuery a =  makeSpectrumQuery(3, 2, 3, "four", 5, 6, 7); 
-    SpectrumQuery b =  makeSpectrumQuery(3, 4, 3, "six", 7, 8, 9); 
+    SpectrumQuery a =  makeSpectrumQuery(3, 2, 3, "KRH", 5, 6, 7);
+    SpectrumQuery b =  makeSpectrumQuery(3, 4, 3, "RAG", 7, 8, 9);
 
     vector<SpectrumQuery> sq;
     sq.push_back(a);
@@ -84,27 +73,57 @@ void test()
 
     MSMSPipelineAnalysis mspa;
     mspa.msmsRunSummary.spectrumQueries = sq;
-    PeptideID_dataFetcher pidf(mspa);
-    
-    // we want a feature that lies in between a and b to find the closest one.
-    Feature ab = makeFeature(2.00727, 3.5);
-    ab.id = "99";
-    ab.charge = 3;
+    PidfPtr pidf(new PeptideID_dataFetcher(mspa));
 
-    FeatureSequenced fs_ab;
-    fs_ab.feature = boost::shared_ptr<Feature>(new Feature(ab));
-    fs_ab.ms1_5="";
-    fs_ab.ms2="six";
+    return pidf;
 
-    vector<Feature> f;
+}
+
+FdfPtr makeFeature_dataFetcher()
+{
+    FeaturePtr ab = makeFeature(2.00727, 3.5);
+    ab->id = "99";
+    ab->charge = 3;
+
+    vector<FeaturePtr> f;
     f.push_back(ab);
 
-    Feature_dataFetcher fdf(f);
-
-    DataFetcherContainer dfc(pidf, pidf, fdf, fdf);
-    dfc.adjustRT();
+    FdfPtr fdf(new Feature_dataFetcher(f));
     
-    vector<boost::shared_ptr<FeatureSequenced> > f_prime = dfc._fdf_a.getBin().getAllContents();
+    return fdf;
+
+}
+
+DfcPtr makeDataFetcherContainer()
+{
+    PidfPtr pidf = makePeptideID_dataFetcher();
+    FdfPtr fdf = makeFeature_dataFetcher();
+
+    DfcPtr dfc(new DataFetcherContainer(pidf, pidf, fdf, fdf));
+    dfc->adjustRT();
+
+    return dfc;
+
+}
+
+} // anonymous namespace
+
+void testAdjustRT()
+{
+    DfcPtr dfc = makeDataFetcherContainer();
+
+    FeaturePtr ab = makeFeature(2.00727, 3.5);
+    ab->id = "99";
+    ab->charge = 3;
+    FeatureSequenced fs_ab;
+    fs_ab.feature = ab;
+    fs_ab.ms1_5="";
+    fs_ab.ms2="RAG";
+        
+    SpectrumQuery a =  makeSpectrumQuery(3, 2, 3, "KRH", 5, 6, 7);
+    SpectrumQuery b =  makeSpectrumQuery(3, 4, 3, "RAG", 7, 8, 9);
+
+    vector<boost::shared_ptr<FeatureSequenced> > f_prime = dfc->_fdf_a->getBin().getAllContents();
     
     if (os_)
         {
@@ -112,23 +131,24 @@ void test()
             XMLWriter writer(oss);
             vector<boost::shared_ptr<FeatureSequenced> >::iterator it = f_prime.begin();
             for(; it != f_prime.end(); ++it) 
-	      {
-		  (*it)->feature->write(writer);
-		  cout << (*it)->ms1_5 << endl;
-		  cout << (*it)->ms2 << endl;
+                {
+                    (*it)->feature->write(writer);
+                    oss << (*it)->ms1_5 << endl;
+                    oss << (*it)->ms2 << endl;
 
-	      }
+                }
 
             *os_ << oss.str() << endl;
 
         }
 
+    // did the feature sequence get assigned as expected?
     unit_assert(find_if(f_prime.begin(), f_prime.end(), IsObject<FeatureSequenced>(fs_ab)) != f_prime.end());
 
-    // did the spectrum query change as expected?
+    // did the peptide retention time get assigned as expected?
     b.retentionTimeSec = 3.5;    
 
-    vector<boost::shared_ptr<SpectrumQuery> > sq_prime = dfc._pidf_a.getBin().getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> > sq_prime = dfc->_pidf_a->getBin().getAllContents();
 
     if (os_)
         {
@@ -151,8 +171,26 @@ void test()
     unit_assert(find_if(sq_prime.begin(), sq_prime.end(), IsObject<SpectrumQuery>(a)) != sq_prime.end());
 
     // were the appropriate flags set?
-    unit_assert(dfc._pidf_a.getRtAdjustedFlag());
-    unit_assert(dfc._fdf_a.getMS2LabeledFlag());
+    unit_assert(dfc->_pidf_a->getRtAdjustedFlag());
+    unit_assert(dfc->_fdf_a->getMS2LabeledFlag());
+
+}
+
+void testGetAnchors()
+{
+
+}
+
+void testWarpRT()
+{
+
+    // test getRTVals
+    // test warpRTVals
+    // test putRTVals
+
+    // test invariance under default
+    // test correct variance under linear
+
 
 }
 
@@ -163,7 +201,7 @@ int main(int argc, char* argv[])
         {
             if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
             if (os_) *os_ << "DataFetcherContainerTest ... \n";
-            test();
+            testAdjustRT();
             return 0;
         }
     catch (exception& e)

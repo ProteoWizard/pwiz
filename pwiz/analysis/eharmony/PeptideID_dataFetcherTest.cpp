@@ -16,6 +16,8 @@ using namespace pwiz::proteome;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::eharmony;
 
+typedef boost::shared_ptr<PeptideID_dataFetcher> PidfPtr;
+
 ostream* os_ = 0;
 
 const char* samplePepXML =
@@ -92,13 +94,13 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
     AnalysisResult analysisResult;
     analysisResult.analysis = "peptideprophet";
 
-    XResult xresult;
+    PeptideProphetResult xresult;
     xresult.probability = score;
     xresult.allNttProb.push_back(0);
     xresult.allNttProb.push_back(0);
     xresult.allNttProb.push_back(score);
 
-    analysisResult.xResult = xresult;
+    analysisResult.peptideProphetResult = xresult;
 
     searchHit.analysisResult = analysisResult;
     searchResult.searchHit = searchHit;
@@ -109,24 +111,24 @@ SpectrumQuery makeSpectrumQuery(double precursorNeutralMass, double rt, int char
 
 }
 
-PeptideID_dataFetcher makePeptideID_dataFetcher(const char* samplePepXML)
+PidfPtr makePeptideID_dataFetcher(const char* samplePepXML)
 {
 
     istringstream iss(samplePepXML);
-    PeptideID_dataFetcher pidf(iss);
+    PidfPtr pidf(new PeptideID_dataFetcher(iss));
 
     return pidf;
 
 }
-
-Feature makeFeature(double mz, double retentionTime)
+/*
+boost::shared_ptr<Feature> makeFeature(double mz, double retentionTime)
 {
-    Feature feature;
-    feature.mzMonoisotopic = mz;
-    feature.retentionTime = retentionTime;
+    boost::shared_ptr<Feature> feature;
+    feature->mz = mz;
+    feature->retentionTime = retentionTime;
 
     return feature;
-}
+    }*/
 
 struct IsSQ
 {
@@ -147,7 +149,7 @@ void testPeptideID_dataFetcherConstructor()
         }
     
     // make the PeptideID_dataFetcher from input pep.xml
-    PeptideID_dataFetcher pidf = makePeptideID_dataFetcher(samplePepXML);
+    PidfPtr pidf = makePeptideID_dataFetcher(samplePepXML);
 
     // make the SpectrumQuery objects that we expect to be read into the PeptideID_dataFetcher 
     SpectrumQuery a = makeSpectrumQuery(1,2,1, "BUCKLEMYSHOE", 0.900, 1,2);  // mz, rt, charge, sequence, score, start scan, end scan
@@ -156,10 +158,10 @@ void testPeptideID_dataFetcherConstructor()
     SpectrumQuery d = makeSpectrumQuery(7,8,1,"LAYTHEMSTRAIGHT",0.900,7,8);
     
     // Access SpectrumQuery objects that are in the PeptideID_dataFetcher at the coordinates we expect
-    vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf.getSpectrumQueries(Ion::mz(1,1),2);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf.getSpectrumQueries(Ion::mz(3,1),4);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf.getSpectrumQueries(Ion::mz(5,1),6);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf.getSpectrumQueries(Ion::mz(7,1),8);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf->getSpectrumQueries(Ion::mz(1,1),2);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf->getSpectrumQueries(Ion::mz(3,1),4);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf->getSpectrumQueries(Ion::mz(5,1),6);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf->getSpectrumQueries(Ion::mz(7,1),8);
 
     // Assert that all SpectrumQuery objects were found at expected coordinates
     unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
@@ -186,22 +188,35 @@ void testMerge()
     if (os_) *os_ << "\ntestMerge() ... \n" << endl;
 
     SpectrumQuery b = makeSpectrumQuery(1,2,1, "BUCKLEMYSHOE", 0.900, 1,2);
-    vector<SpectrumQuery> v_b;
-    v_b.push_back(b);
+    SpectrumQuery c = makeSpectrumQuery(3,4,1, "SHUTTHEDOOR", 0.900, 3,4);
 
-    MSMSPipelineAnalysis mspa;
-    mspa.msmsRunSummary.spectrumQueries = v_b;
+    vector<SpectrumQuery> v;
+    v.push_back(b);
 
-    PeptideID_dataFetcher fiat;
-    PeptideID_dataFetcher chrysler(mspa);
+    vector<SpectrumQuery> v2;
+    SpectrumQuery b2(b);
+    b2.retentionTimeSec = 4000;
+    v2.push_back(b2);
+    v2.push_back(c);
+        
+    MSMSPipelineAnalysis mspa_fiat;
+    mspa_fiat.msmsRunSummary.spectrumQueries = v;
+
+    MSMSPipelineAnalysis mspa_chrysler;
+    mspa_chrysler.msmsRunSummary.spectrumQueries = v2;
+
+    PeptideID_dataFetcher fiat(mspa_fiat);
+    PeptideID_dataFetcher chrysler(mspa_chrysler);
     
     fiat.merge(chrysler);
  
     // test that the merger correctly concatenated all SpectrumQuery objects
-    vector<boost::shared_ptr<SpectrumQuery> > contents = fiat.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
-
-    unit_assert(contents.size() > 0);
+    //    vector<boost::shared_ptr<SpectrumQuery> > contents = fiat.getSpectrumQueries(Ion::mz(b.precursorNeutralMass, b.assumedCharge), b.retentionTimeSec);
+    vector<boost::shared_ptr<SpectrumQuery> > contents = fiat.getBin().getAllContents();
+    unit_assert(contents.size() == 2);
     unit_assert(**contents.begin() == b);
+    unit_assert(*contents.back() == c);
+    
     
 
 }

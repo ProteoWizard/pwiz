@@ -15,7 +15,7 @@ ostream* os_ = 0;
 struct IsInt
 {
     IsInt(int n) : _n(n){}
-    bool operator()( boost::shared_ptr<int> m) { return *m == _n;}
+    bool operator()( boost::shared_ptr<const int> m) { return *m == _n;}
     int _n;
 
 };

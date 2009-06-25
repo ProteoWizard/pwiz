@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 #include "pwiz/utility/misc/Export.hpp"
-
+#include "boost/tuple/tuple_comparison.hpp"
 
 namespace pwiz {
 namespace eharmony {
@@ -27,7 +27,6 @@ public:
 protected:
 
   std::vector<std::pair<double,double> > anchors_;
-    //  std::vector<double> coefficients_;
 
 };
 
@@ -46,7 +45,6 @@ private:
 };
 
 class PWIZ_API_DECL PiecewiseLinearWarpFunction : public WarpFunction
-
 {
 
 public:
@@ -60,6 +58,20 @@ private:
 
 };
 
+class PWIZ_API_DECL SplineWarpFunction : public WarpFunction
+{
+
+public:
+
+  SplineWarpFunction(std::vector<std::pair<double,double> >& anchors);
+  virtual void operator()(std::vector<double>& rt_vals, std::vector<double>& warped_rt_vals);
+  
+
+private:
+
+  std::vector<boost::tuple<double,double,double,double> > coefficients_;
+
+};
 
 } // namespace eharmony
 } // namespace pwiz

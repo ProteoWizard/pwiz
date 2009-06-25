@@ -23,7 +23,7 @@ void test()
     sq.retentionTimeSec = 40;
 
     Feature f;
-    f.mzMonoisotopic = 1.510;
+    f.mz = 1.510;
     f.retentionTime = 98;
 
     unit_assert(snc.close(sq,f));
