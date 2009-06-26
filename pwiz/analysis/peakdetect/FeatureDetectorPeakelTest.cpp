@@ -72,6 +72,35 @@ void verifyBombessinFeatures(const FeatureField& featureField)
 }
 
 
+shared_ptr<FeatureDetectorPeakel> createFeatureDetectorPeakel()
+{
+    FeatureDetectorPeakel::Config config;
+
+    // these are just the defaults, to demonstrate usage
+
+    config.noiseCalculator_2Pass.zValueCutoff = 1;
+
+    config.peakFinder_SNR.windowRadius = 2;
+    config.peakFinder_SNR.zValueThreshold = 3;
+    //config.peakFinder_SNR.preprocessWithLogarithm = true; // not available yet
+
+    config.peakFitter_Parabola.windowRadius = 1;
+
+    config.peakelGrower_Proximity.mzTolerance = .01;
+    config.peakelGrower_Proximity.rtTolerance = 10;
+
+    config.peakelPicker_Basic.log = 0; // ostream*
+    config.peakelPicker_Basic.minCharge = 2;
+    config.peakelPicker_Basic.maxCharge = 5;
+    config.peakelPicker_Basic.minMonoisotopicPeakelSize = 2;
+    config.peakelPicker_Basic.mzTolerance = MZTolerance(10, MZTolerance::PPM);
+    config.peakelPicker_Basic.rtTolerance = 5;
+    config.peakelPicker_Basic.minPeakelCount = 3;
+
+    return FeatureDetectorPeakel::create(config);
+}
+
+
 void testBombessin(const string& filename)
 {
     if (os_) *os_ << "testBombessin()" << endl;
@@ -83,28 +112,14 @@ void testBombessin(const string& filename)
     unit_assert(msd.run.spectrumListPtr->size() == 8);
 
     // instantiate FeatureDetector
-/*
-    shared_ptr<PeakExtractor> peakExtractor = createPeakExtractor();
-    vector< vector<Peak> > peaks = extractPeaks(msd, *peakExtractor);
-    unit_assert(peaks.size() == 8);
 
-    // grow peakels
-    shared_ptr<PeakelGrower> peakelGrower = createPeakelGrower();
-    PeakelField peakelField;
-    peakelGrower->sowPeaks(peakelField, peaks);
+    shared_ptr<FeatureDetectorPeakel> featureDetectorPeakel = createFeatureDetectorPeakel();
 
-    if (os_) *os_ << "peakelField:\n" << peakelField << endl;
-    verifyBombessinPeakels(peakelField);
-
-    // pick peakels
-
-    shared_ptr<PeakelPicker> peakelPicker = createPeakelPicker();
     FeatureField featureField;
-    peakelPicker->pick(peakelField, featureField);
-
+    featureDetectorPeakel->detect(msd, featureField);
+    
     if (os_) *os_ << "featureField:\n" << featureField << endl;
     verifyBombessinFeatures(featureField);
-*/
 }
 
 

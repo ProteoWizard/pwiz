@@ -40,6 +40,7 @@ lib pwiz_analysis_peakdetect
         PeakExtractor.cpp
         PeakelGrower.cpp
         PeakelPicker.cpp
+        FeatureDetectorPeakel.cpp
         FeatureDetectorSimple.cpp
 
     :   # requirements	
@@ -94,6 +95,15 @@ run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect
     : FeatureDetectorTuningTest #target 
     : # default-build
     ;
+
+run FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect 
+    : # args
+    : FeatureDetectorTest.data/FeatureDetectorTest_Bombessin.mzML # input-files
+    : # requirements
+    : FeatureDetectorPeakelTest #target 
+    : # default-build
+    ;
+
 
 
 exe msextract  
