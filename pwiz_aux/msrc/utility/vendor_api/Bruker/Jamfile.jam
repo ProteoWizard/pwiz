@@ -1,0 +1,91 @@
+
+import modules ;
+import path ;
+
+path-constant BRUKER_PATH : . ;
+path-constant BRUKER_TEST_PATH : ./CompassDataTest.data ;
+
+
+# decompress test data (on any platform)
+if [ modules.peek : NT ]
+{
+    SHELL "$(BRUKER_PATH)/untar_data.bat $(BRUKER_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
+}
+else if [ modules.peek : UNIX ]
+{
+    SHELL "$(BRUKER_PATH)/untar_data.sh $(BRUKER_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
+}
+
+
+# don't bother defining this API for non-Windows platforms.
+if [ modules.peek : NT ]
+{
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <assembly>$(BRUKER_PATH)/Interop.EDAL.dll ;
+        result += <assembly>$(BRUKER_PATH)/BDal.CXt.Lc.dll ;
+        result += <assembly>$(BRUKER_PATH)/BDal.CXt.Lc.Factory.dll ;
+        result += <assembly>$(BRUKER_PATH)/BDal.CXt.Lc.Interfaces.dll ;
+        result += <assembly>$(BRUKER_PATH)/BDal.CXt.Lc.UntU2.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/CompassXtractMS.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/libfftw3-3.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/libfftw3f-3.dll ;
+        result += <assembly-dependency>$(BRUKER_PATH)/NTB-vc80-mt-4_3_61.dll ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_bruker
+    : # sources
+        CompassData.cpp
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+        
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <using-clr>true # requires hacked msvc.jam
+        <conditional>@vendor-api-requirements
+        <library>/ext/boost//date_time
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-requirements
+        <library>/ext/boost//date_time
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+path-constant TEST_PATH1 : "$(BRUKER_TEST_PATH)/100 fmol BSA" ;
+path-constant TEST_PATH2 : "$(BRUKER_TEST_PATH)/CsI_Pos_0_G1_000003.d" ;
+path-constant TEST_PATH3 : "$(BRUKER_TEST_PATH)/Sample_1-A,1_01_985.d" ;
+
+# special run target for CompassDataTest, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run CompassDataTest.cpp
+    : # args
+        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
+    : # input-files
+    : # requirements
+        <library>pwiz_vendor_api_bruker
+    : # target name
+        CompassDataTest 
+    : # default-build
+    ;
+}

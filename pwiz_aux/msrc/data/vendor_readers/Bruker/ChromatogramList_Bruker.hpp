@@ -22,32 +22,35 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Bruker_Detail.hpp"
 #include <map>
+
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
 
+
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace pwiz::vendor_api::Bruker;
 
 //
-// SpectrumList_Bruker
+// ChromatogramList_Bruker
 //
-class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
+class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
 {
     public:
 
     ChromatogramList_Bruker(MSData& msd,
                             const string& rootpath,
                             Reader_Bruker_Format format,
-                            CompassXtractWrapperPtr compassXtractWrapperPtr);
+                            CompassDataPtr compassDataPtr);
 
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
@@ -60,6 +63,7 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
     MSData& msd_;
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
+    CompassDataPtr compassDataPtr_;
     size_t size_;
 
     struct IndexEntry : public ChromatogramIdentity
@@ -75,8 +79,6 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramList
     map<string, size_t> idToIndexMap_;
 
     void createIndex();
-
-    CompassXtractWrapperPtr compassXtractWrapperPtr_;
 };
 
 } // detail

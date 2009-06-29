@@ -31,6 +31,7 @@
 #include "Reader_Bruker.hpp"
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include <stdexcept>
 
@@ -61,7 +62,6 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include <boost/foreach.hpp>
-//#include "Reader_Bruker_Detail.hpp"
 #include "SpectrumList_Bruker.hpp"
 #include "ChromatogramList_Bruker.hpp"
 #include <iostream>
@@ -78,6 +78,7 @@ using boost::lexical_cast;
 using boost::bad_lexical_cast;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
+using namespace pwiz::vendor_api::Bruker;
 
 
 //
@@ -86,29 +87,12 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ?
-           c :
-           '_';
-}
-
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
-
-void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format format)
+void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format format, CompassDataPtr compassDataPtr)
 {
     msd.cvs = defaultCVList();
 
     bfs::path p(rootpath);
-    msd.id = stringToIDREF(p.leaf());
+    msd.id = p.leaf();
 
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
@@ -129,14 +113,39 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
     msd.dataProcessingPtrs.push_back(dpPwiz);
 
+    // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
+    SpectrumList_Bruker* sl = dynamic_cast<SpectrumList_Bruker*>(msd.run.spectrumListPtr.get());
+    ChromatogramList_Bruker* cl = dynamic_cast<ChromatogramList_Bruker*>(msd.run.chromatogramListPtr.get());
+    if (sl) sl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
+
+    bool hasMS1 = false;
+    bool hasMSn = false;
+    for (size_t i=0, end=compassDataPtr->getMSSpectrumCount();
+         i < end && (!hasMS1 || !hasMSn);
+         ++i)
+    {
+        int msLevel = sl->getMSSpectrumPtr(i)->getMSMSStage();
+        if (!hasMS1 && msLevel == 1)
+        {
+            hasMS1 = true;
+            msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+        }
+        else if (!hasMSn && msLevel > 1)
+        {
+            hasMSn = true;
+            msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+        }
+    }
+
     // TODO: read instrument "family" from (first) source
 
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     //if (!msd.instrumentConfigurationPtrs.empty())
     //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(stringToIDREF(p.leaf()));
-    //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
+    msd.run.id = p.leaf();
+    msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());
 }
 
 } // namespace
@@ -149,7 +158,7 @@ void Reader_Bruker::read(const string& filename,
                          int runIndex) const
 {
     if (runIndex != 0)
-        throw ReaderFail("[Reader_Bruker::read] multiple samples not supported");
+        throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
 
     Reader_Bruker_Format format = detail::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
@@ -161,14 +170,14 @@ void Reader_Bruker::read(const string& filename,
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    CompassXtractWrapperPtr compassXtractWrapperPtr(new CompassXtractWrapper(rootpath, format));
+    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string()));
 
-    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
-    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassXtractWrapperPtr);
+    SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr);
+    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-    fillInMetadata(filename, result, format);
+    fillInMetadata(filename, result, format, compassDataPtr);
 }
 
 

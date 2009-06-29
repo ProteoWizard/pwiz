@@ -30,28 +30,18 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.cpp"
 
 #define PWIZ_SOURCE
 
-//#include "Reader_Bruker_Detail.hpp"
 #include "SpectrumList_Bruker.hpp"
 #include <iostream>
 #include <stdexcept>
 
 using boost::format;
 using namespace pwiz::util;
-
-namespace
-{
-
-string convertBstrToString(const BSTR& bstring)
-{
-	_bstr_t bTmp(bstring);
-	return string((const char *)bTmp);
-}
-
-}
-
+using namespace pwiz::minimxml;
+using namespace pwiz::vendor_api::Bruker;
 
 namespace pwiz {
 namespace msdata {
@@ -62,9 +52,9 @@ PWIZ_API_DECL
 SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
                                          const string& rootpath,
                                          Reader_Bruker_Format format,
-                                         CompassXtractWrapperPtr compassXtractWrapperPtr)
+                                         CompassDataPtr compassDataPtr)
 :   msd_(msd), rootpath_(rootpath), format_(format),
-    compassXtractWrapperPtr_(compassXtractWrapperPtr),
+    compassDataPtr_(compassDataPtr),
     size_(0)
 {
     fillSourceList();
@@ -73,7 +63,7 @@ SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
     {
         case Reader_Bruker_Format_YEP:
         case Reader_Bruker_Format_BAF:
-            size_ = (size_t) compassXtractWrapperPtr_->msSpectrumCollection_->Count;
+            size_ = compassDataPtr_->getMSSpectrumCount();
             break;
 
         case Reader_Bruker_Format_FID:
@@ -81,22 +71,12 @@ SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
             break;
 
         case Reader_Bruker_Format_U2:
-            {
-                CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr->lcAnalysis_;
-                CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
-                for (size_t i=0; i < ssdList.size(); ++i)
-                    size_ += analysis->GetSpectrumCollection(ssdList[i]->GetSpectrumCollectionId())->GetNumberOfSpectra();
-            }
+            //size_ = compassDataPtr_->getLCSpectrumCount();
             break;
 
         case Reader_Bruker_Format_BAF_and_U2:
-            size_ = (size_t) compassXtractWrapperPtr_->msSpectrumCollection_->Count;
-            {
-                CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr->lcAnalysis_;
-                CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
-                for (size_t i=0; i < ssdList.size(); ++i)
-                    size_ += analysis->GetSpectrumCollection(ssdList[i]->GetSpectrumCollectionId())->GetNumberOfSpectra();
-            }
+            size_ = compassDataPtr_->getMSSpectrumCount();
+            //size_ += compassDataPtr_->getLCSpectrumCount();
             break;
     }
 
@@ -128,35 +108,15 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 }
 
 
-EDAL::IMSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const
+MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const
 {
     if (format_ == Reader_Bruker_Format_FID)
     {
-        HRESULT hr = compassXtractWrapperPtr_->msAnalysis_.CreateInstance("EDAL.MSAnalysis");
-        if (FAILED(hr))
-        {
-            // No success when creating the analysis pointer - we decrypt the error from hr.
-            LPVOID lpMsgBuf;
-
-            ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                           FORMAT_MESSAGE_FROM_SYSTEM,
-                           NULL,
-                           hr,
-                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                           (LPTSTR) &lpMsgBuf,
-                           0,
-                           NULL );
-
-            string error((const char*) lpMsgBuf);
-            LocalFree(lpMsgBuf);
-            throw runtime_error("[SpectrumList_Bruker::getMSSpectrumPtr()] Error initializing CompassXtract MS interface: " + error);
-        }
-        compassXtractWrapperPtr_->msAnalysis_->Open(sourcePaths_[index].string().c_str());
-        compassXtractWrapperPtr_->msSpectrumCollection_ = compassXtractWrapperPtr_->msAnalysis_->MSSpectrumCollection;
-        return compassXtractWrapperPtr_->msSpectrumCollection_->GetItem(1);
+        compassDataPtr_ = CompassData::create(sourcePaths_[index].string());
+        return compassDataPtr_->getMSSpectrum(1);
     }
 
-    return compassXtractWrapperPtr_->msSpectrumCollection_->GetItem((long) index+1);
+    return compassDataPtr_->getMSSpectrum(index+1);
 }
 
 
@@ -184,13 +144,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
 
-    try
-    {
+    //try
+    //{
         // is this spectrum from the LC interface?
         if (si.collection > -1)
         {
             // fill the spectrum from the LC interface
-            CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
+            /*CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
             CompassXtractWrapper::LC_SpectrumSourceDeclarationPtr& ssd = compassXtractWrapperPtr_->spectrumSourceDeclarations_[si.declaration];
             BDal_CXt_Lc_Interfaces::ISpectrumCollectionPtr spectra = analysis->GetSpectrumCollection(si.collection);
             BDal_CXt_Lc_Interfaces::ISpectrumPtr spectrum = spectra->GetItem(si.scan);
@@ -210,18 +170,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             result->getMZArray()->data.assign(lcX.begin(), lcX.end());
 
             automation_vector<double> lcY(*spectrum->GetIntensity(), automation_vector<double>::MOVE);
-            result->getIntensityArray()->data.assign(lcY.begin(), lcY.end());
+            result->getIntensityArray()->data.assign(lcY.begin(), lcY.end());*/
 
             return result;
         }
 
         // get the spectrum from MS interface
-        EDAL::IMSSpectrumPtr pSpectrum = getMSSpectrumPtr(index);
+        MSSpectrumPtr spectrum = getMSSpectrumPtr(index);
 
         //scan.instrumentConfigurationPtr = 
             //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
-        long msLevel = pSpectrum->MSMSStage;
+        int msLevel = spectrum->getMSMSStage();
         result->set(MS_ms_level, msLevel);
 
         if (msLevel == 1)
@@ -229,17 +189,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         else
             result->set(MS_MSn_spectrum);
 
-        double scanTime = pSpectrum->RetentionTime;
+        double scanTime = spectrum->getRetentionTime();
         if (scanTime > 0)
-            scan.set(MS_scan_start_time, pSpectrum->RetentionTime, UO_minute);
+            scan.set(MS_scan_start_time, scanTime, UO_minute);
 
-        EDAL::SpectrumPolarity polarity = pSpectrum->Polarity;
+        IonPolarity polarity = spectrum->getPolarity();
         switch (polarity)
         {
-            case EDAL::IonPolarity_Negative:
+            case IonPolarity_Negative:
                 scan.set(MS_negative_scan);
                 break;
-            case EDAL::IonPolarity_Positive:
+            case IonPolarity_Positive:
                 scan.set(MS_positive_scan);
                 break;
             default:
@@ -256,93 +216,67 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
-        EDAL::IMSSpectrumParameterCollectionPtr pSpectrumParameters = pSpectrum->MSSpectrumParameterCollection;
-        long numParameters = pSpectrumParameters->Count;
+        /*EDAL::IMSSpectrumParameterCollectionPtr spectrumParameters = spectrum->MSSpectrumParameterCollection;
+        long numParameters = spectrumParameters->Count;
         for (long i=1; i < numParameters; ++i)
         {
-            EDAL::IMSSpectrumParameterPtr pParameter = pSpectrumParameters->GetItem(i);
+            EDAL::IMSSpectrumParameterPtr pParameter = spectrumParameters->GetItem(i);
             string group = (const char*) pParameter->GroupName;
             string name = (const char*) pParameter->ParameterName;
             string value = (const char*) pParameter->ParameterValue.bstrVal;
             scan.userParams.push_back(UserParam(name, value, group));
-        }
+        }*/
 
         if (msLevel > 1)
         {
-            HRESULT hr;
-            _variant_t fragmentationMassesVariant;
-            SAFEARRAY* fragmentationModesArray;
-            _variant_t isolationMassesVariant;
-            SAFEARRAY* isolationModesArray;
-
-            long numEntries = pSpectrum->GetFragmentationData(&fragmentationMassesVariant, &fragmentationModesArray);
-            long numEntries2 = pSpectrum->GetIsolationData(&isolationMassesVariant, &isolationModesArray);
-            if (numEntries != numEntries2)
-                throw runtime_error("[SpectrumList_Bruker::spectrum()] Fragmentation data failed to match isolation data");
-
             Precursor precursor;
 
-            if (numEntries > 0)
+            vector<double> fragMZs, isolMZs;
+            vector<FragmentationMode> fragModes;
+            vector<IsolationMode> isolModes;
+
+            spectrum->getFragmentationData(fragMZs, fragModes);
+
+            if (!fragMZs.empty())
             {
-                double HUGEP *fragmentationMassesPtr;
-                EDAL::FragmentationModes HUGEP *fragmentationModesPtr;
-	            hr = SafeArrayAccessData(fragmentationMassesVariant.parray, (void HUGEP**)&fragmentationMassesPtr);
-                hr = SafeArrayAccessData(fragmentationModesArray, (void HUGEP**)&fragmentationModesPtr);
+                spectrum->getIsolationData(isolMZs, isolModes);
 
-	            vector<double> fragmentationMasses;
-                fragmentationMasses.insert(fragmentationMasses.end(), fragmentationMassesPtr, fragmentationMassesPtr+numEntries);
-
-                vector<EDAL::FragmentationModes> fragmentationModes;
-                fragmentationModes.insert(fragmentationModes.end(), fragmentationModesPtr, fragmentationModesPtr+numEntries);
-
-                double HUGEP *isolationMassesPtr;
-                EDAL::IsolationModes HUGEP *isolationModesPtr;
-	            hr = SafeArrayAccessData(isolationMassesVariant.parray, (void HUGEP**)&isolationMassesPtr);
-                hr = SafeArrayAccessData(isolationModesArray, (void HUGEP**)&isolationModesPtr);
-
-	            vector<double> isolationMasses;
-                isolationMasses.insert(isolationMasses.end(), isolationMassesPtr, isolationMassesPtr+numEntries);
-
-                vector<EDAL::IsolationModes> isolationModes;
-                isolationModes.insert(isolationModes.end(), isolationModesPtr, isolationModesPtr+numEntries);
-
-                for (long i=0; i < numEntries; ++i)
+                for (size_t i=0; i < fragMZs.size(); ++i)
                 {
-                    if (fragmentationMasses[i] > 0)
+                    if (fragMZs[i] > 0)
                     {
-                        SelectedIon selectedIon;
-                        selectedIon.set(MS_selected_ion_m_z, fragmentationMasses[i]);
+                        SelectedIon selectedIon(fragMZs[i]);
 
                         //long parentCharge = scanInfo->parentCharge();
                         //if (parentCharge > 0)
                         //    selectedIon.cvParams.push_back(CVParam(MS_charge_state, parentCharge));
 
-                        switch (fragmentationModes[i])
+                        switch (fragModes[i])
                         {
-                            case EDAL::FragMode_CID:
+                            case FragmentationMode_CID:
                                 precursor.activation.set(MS_CID);
                                 break;
-                            case EDAL::FragMode_ETD:
+                            case FragmentationMode_ETD:
                                 precursor.activation.set(MS_ETD);
                                 break;
-                            case EDAL::FragMode_CIDETD_CID:
-                                precursor.activation.set(MS_CID);
-                                precursor.activation.set(MS_ETD);
-                                break;
-                            case EDAL::FragMode_CIDETD_ETD:
+                            case FragmentationMode_CIDETD_CID:
                                 precursor.activation.set(MS_CID);
                                 precursor.activation.set(MS_ETD);
                                 break;
-                            case EDAL::FragMode_ISCID:
+                            case FragmentationMode_CIDETD_ETD:
+                                precursor.activation.set(MS_CID);
+                                precursor.activation.set(MS_ETD);
+                                break;
+                            case FragmentationMode_ISCID:
                                 precursor.activation.set(MS_CID);
                                 break;
-                            case EDAL::FragMode_ECD:
+                            case FragmentationMode_ECD:
                                 precursor.activation.set(MS_ECD);
                                 break;
-                            case EDAL::FragMode_IRMPD:
+                            case FragmentationMode_IRMPD:
                                 precursor.activation.set(MS_IRMPD);
                                 break;
-                            case EDAL::FragMode_PTR:
+                            case FragmentationMode_PTR:
                                 break;
                         }
                         //precursor.activation.set(MS_collision_energy, pExScanStats_->CollisionEnergy);
@@ -350,80 +284,51 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                         precursor.selectedIons.push_back(selectedIon);
                     }
 
-                    if (isolationMasses[i] > 0)
+                    if (isolMZs[i] > 0)
                     {
-                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMasses[i]);
+                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i]);
                     }
                 }
-               
-	            // clean up
-                hr = SafeArrayUnaccessData(fragmentationMassesVariant.parray);
-                hr = SafeArrayUnaccessData(fragmentationModesArray);
-	            hr = SafeArrayUnaccessData(isolationMassesVariant.parray);
-                hr = SafeArrayUnaccessData(isolationModesArray);
             }
-
-            SafeArrayDestroyData(fragmentationMassesVariant.parray);
-            SafeArrayDestroyData(fragmentationModesArray);
-            SafeArrayDestroyData(isolationMassesVariant.parray);
-            SafeArrayDestroyData(isolationModesArray);
 
             if (precursor.selectedIons.size() > 0 || !precursor.isolationWindow.empty())
                 result->precursors.push_back(precursor);
         }
 
-        VARIANT pfIntensities;
-        VARIANT pfMasses;
-        long numDataPoints = pSpectrum->GetMassIntensityValues(EDAL::SpectrumType_Line, &pfMasses, &pfIntensities);
+        bool getLineData = msLevelsToCentroid.contains(msLevel);
 
-        bool getCentroid = msLevelsToCentroid.contains(msLevel);
-
-        if (getCentroid && numDataPoints > 0)
+        if ((getLineData && spectrum->hasLineData()) || !spectrum->hasProfileData())
         {
+            getLineData = true;
             result->set(MS_centroid_spectrum);
+            result->defaultArrayLength = spectrum->getLineDataSize();
         }
         else
         {
+            getLineData = false;
             result->set(MS_profile_spectrum);
-            HRESULT hr = SafeArrayDestroyData(pfIntensities.parray);
-            hr = SafeArrayDestroyData(pfMasses.parray);
-            numDataPoints = pSpectrum->GetMassIntensityValues(EDAL::SpectrumType_Profile, &pfMasses, &pfIntensities);
+            result->defaultArrayLength = spectrum->getProfileDataSize();
         }
 
-        result->defaultArrayLength = numDataPoints;
 
         if (getBinaryData)
         {
-	        double HUGEP *intensityArrayPtr;
-	        double HUGEP *massArrayPtr;
-
-	        // lock safe arrays for access
-	        HRESULT hr;
-	        // TODO: check hr return value?
-	        hr = SafeArrayAccessData(pfIntensities.parray, (void HUGEP**)&intensityArrayPtr);
-	        hr = SafeArrayAccessData(pfMasses.parray, (void HUGEP**)&massArrayPtr);
-
-	        vector<double> mzArray;
-            mzArray.insert(mzArray.end(), massArrayPtr, massArrayPtr+numDataPoints);
-
-            vector<double> intensityArray;
-            intensityArray.insert(intensityArray.end(), intensityArrayPtr, intensityArrayPtr+numDataPoints);
-
-	        result->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_counts);
-
-	        // clean up
-	        hr = SafeArrayUnaccessData(pfIntensities.parray);
-	        hr = SafeArrayUnaccessData(pfMasses.parray);
+            result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+	        automation_vector<double> mzArray, intensityArray;
+            if (getLineData)
+                spectrum->getLineData(mzArray, intensityArray);
+            else
+                spectrum->getProfileData(mzArray, intensityArray);
+            result->getMZArray()->data.assign(mzArray.begin(), mzArray.end());
+            result->getIntensityArray()->data.assign(intensityArray.begin(), intensityArray.end());
+            result->defaultArrayLength = mzArray.size();
         }
-
-        HRESULT hr = SafeArrayDestroyData(pfIntensities.parray);
-        hr = SafeArrayDestroyData(pfMasses.parray);
-    }
+    /*}
     catch (_com_error& e) // not caught by either std::exception or '...'
     {
         throw runtime_error(string("[SpectrumList_Bruker::spectrum()] COM error: ") +
                             (const char*)e.Description());
-    }
+    }*/
 
     return result;
 }
@@ -444,25 +349,10 @@ void recursivelyEnumerateFIDs(vector<bfs::path>& fidPaths, const bfs::path& root
     }
 }
 
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ? 
-           c : 
-           '_';
-}
-
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
 void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPath)
 {
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->id = stringToIDREF(sourcePath.string());
+    sourceFile->id = sourcePath.string();
     sourceFile->name = sourcePath.leaf();
     // sourcePath: <source>\Analysis.yep|<source>\Analysis.baf|<source>\fid
     // rootPath: c:\path\to\<source>[\Analysis.yep|Analysis.baf|fid]
@@ -523,13 +413,11 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
-    if (format_ == Reader_Bruker_Format_U2 ||
+    /*if (format_ == Reader_Bruker_Format_U2 ||
         format_ == Reader_Bruker_Format_BAF_and_U2)
     {
         msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
 
-        CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
-        CompassXtractWrapper::LC_SpectrumSourceDeclarationList& ssdList = compassXtractWrapperPtr_->spectrumSourceDeclarations_;
         for (size_t i=0; i < ssdList.size(); ++i)
         {
             long scId = ssdList[i]->GetSpectrumCollectionId();
@@ -549,27 +437,13 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
                 idToIndexMap_[si.id] = si.index;
             }
         }
-    }
+    }*/
 
     if (format_ != Reader_Bruker_Format_U2)
     {
-        bool hasMS1 = false;
-        bool hasMSn = false;
         size_t remainder = size_ - index_.size();
         for (size_t i=0; i < remainder; ++i)
         {
-            EDAL::IMSSpectrumPtr pSpectrum = getMSSpectrumPtr(i);
-            if (!hasMS1 && pSpectrum->MSMSStage == 1)
-            {
-                hasMS1 = true;
-                msd_.fileDescription.fileContent.set(MS_MS1_spectrum);
-            }
-            else if (!hasMSn)
-            {
-                hasMSn = true;
-                msd_.fileDescription.fileContent.set(MS_MSn_spectrum);
-            }
-
             index_.push_back(IndexEntry());
             IndexEntry& si = index_.back();
             si.declaration = 0;
@@ -579,7 +453,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             switch (format_)
             {
                 case Reader_Bruker_Format_FID:
-                    si.id = "file=" + msd_.fileDescription.sourceFilePtrs[i]->id;
+                    si.id = "file=" + encode_xml_id_copy(msd_.fileDescription.sourceFilePtrs[i]->id);
                     break;
                 default:
                     si.id = "scan=" + lexical_cast<string>(i+1);

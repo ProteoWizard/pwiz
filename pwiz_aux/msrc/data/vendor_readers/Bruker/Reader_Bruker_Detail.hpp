@@ -25,16 +25,13 @@
 #define _READER_BRUKER_DETAIL_HPP_ 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include <string>
-#include <vector>
-#include <boost/shared_ptr.hpp>
 
 #ifdef PWIZ_READER_BRUKER
-#include "compassxtractms.tlh"
-#include "bdal.cxt.lc.interfaces.tlh"
-#include "bdal.cxt.lc.tlh"
+#include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
+using namespace pwiz::vendor_api::Bruker;
 #endif
+
 
 namespace pwiz {
 namespace msdata {
@@ -51,48 +48,15 @@ enum Reader_Bruker_Format
     Reader_Bruker_Format_BAF_and_U2
 };
 
+
 /// returns Bruker format of 'path' if it is a Bruker directory;
 /// otherwise returns empty string
 Reader_Bruker_Format format(const std::string& path);
 
 
-#ifdef PWIZ_READER_BRUKER
-
-/// a transparent wrapper for sharing the CompassXtract interface
-class CompassXtractWrapper
-{
-    public:
-        
-    CompassXtractWrapper(const bfs::path& sourcePath, Reader_Bruker_Format sourceFormat);
-    ~CompassXtractWrapper();
-
-    typedef EDAL::IMSAnalysisPtr MS_AnalysisPtr;
-    typedef EDAL::IMSSpectrumCollectionPtr MS_SpectrumCollectionPtr;
-
-    typedef BDal_CXt_Lc_Interfaces::IAnalysisPtr LC_AnalysisPtr;
-    typedef BDal_CXt_Lc_Interfaces::ISpectrumSourceDeclarationPtr LC_SpectrumSourceDeclarationPtr;
-    typedef BDal_CXt_Lc_Interfaces::ITraceDeclarationPtr LC_TraceDeclarationPtr;
-
-    typedef std::vector<LC_SpectrumSourceDeclarationPtr> LC_SpectrumSourceDeclarationList;
-    typedef std::vector<LC_TraceDeclarationPtr> LC_TraceDeclarationList;
-
-    Reader_Bruker_Format format_;
-
-    MS_AnalysisPtr msAnalysis_;
-    MS_SpectrumCollectionPtr msSpectrumCollection_;
-
-    LC_AnalysisPtr lcAnalysis_;
-    LC_SpectrumSourceDeclarationList spectrumSourceDeclarations_;
-    LC_TraceDeclarationList traceDeclarations_;
-};
-
-typedef boost::shared_ptr<CompassXtractWrapper> CompassXtractWrapperPtr;
-
-#endif // PWIZ_READER_BRUKER
-
-
 } // namespace detail
 } // namespace msdata
 } // namespace pwiz
+
 
 #endif // _READER_BRUKER_DETAIL_HPP_

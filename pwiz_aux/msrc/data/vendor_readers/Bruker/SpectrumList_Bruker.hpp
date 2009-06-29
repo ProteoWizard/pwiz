@@ -21,37 +21,40 @@
 //
 
 
-#ifndef _SPECTRUMLIST_BRUKER_HPP_ 
-#define _SPECTRUMLIST_BRUKER_HPP_ 
+#ifndef _SPECTRUMLIST_BRUKER_HPP_
+#define _SPECTRUMLIST_BRUKER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader_Bruker_Detail.hpp"
 #include <map>
+
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
 
+
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace pwiz::vendor_api::Bruker;
 
 //
 // SpectrumList_Bruker
 //
-class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
+class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 {
     public:
 
     SpectrumList_Bruker(MSData& msd,
                         const string& rootpath,
                         Reader_Bruker_Format format,
-                        CompassXtractWrapperPtr compassXtractWrapperPtr);
+                        CompassDataPtr compassDataPtr);
 
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
@@ -59,12 +62,14 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
+    MSSpectrumPtr getMSSpectrumPtr(size_t index) const;
 
     private:
 
     MSData& msd_;
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
+    mutable CompassDataPtr compassDataPtr_;
     size_t size_;
     vector<bfs::path> sourcePaths_;
 
@@ -82,10 +87,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumList
 
     void fillSourceList();
     void createIndex();
-    EDAL::IMSSpectrumPtr getMSSpectrumPtr(size_t index) const;
     //string findPrecursorID(int precursorMsLevel, size_t index) const;
-
-    CompassXtractWrapperPtr compassXtractWrapperPtr_;
 };
 
 } // detail

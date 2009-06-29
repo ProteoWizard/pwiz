@@ -5,6 +5,9 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
+path-constant BRUKER_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
+path-constant BRUKER_TEST_PATH : $(BRUKER_PATH)/CompassDataTest.data ;
+
 
 lib pwiz_aux_msrc_reader_bruker
     : # sources
@@ -13,32 +16,14 @@ lib pwiz_aux_msrc_reader_bruker
     : # requirements
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
         <toolset>msvc:<source>ChromatogramList_Bruker.cpp
-		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<dependency>CompassXtractMS.dll
-        <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
-        <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
-        <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
-        <toolset>msvc:<dependency>libfftw3-3.dll
-        <toolset>msvc:<dependency>libfftw3f-3.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.Factory.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.Interfaces.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.UntU2.dll
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
+		<toolset>msvc:<library>$(BRUKER_PATH)
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
-		<library>../../../../../pwiz/data/msdata//pwiz_data_msdata
-		<toolset>msvc:<dependency>CompassXtractMS.dll
-        <toolset>msvc:<dependency>NTB-vc80-mt-4_3_61.dll
-        <toolset>msvc:<dependency>boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
-        <toolset>msvc:<dependency>boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
-        <toolset>msvc:<dependency>libfftw3-3.dll
-        <toolset>msvc:<dependency>libfftw3f-3.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.Factory.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.Interfaces.dll
-        <toolset>msvc:<dependency>BDal.CXt.Lc.UntU2.dll
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
+		<toolset>msvc:<library>$(BRUKER_PATH)
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
 
@@ -46,9 +31,9 @@ lib pwiz_aux_msrc_reader_bruker
 # unit tests (ordered by dependency)
 #
 
-path-constant TEST_PATH1 : "100 fmol BSA" ;
-path-constant TEST_PATH2 : "Sample_1-A,1_01_985.d" ;
-path-constant TEST_PATH3 : "CsI_Pos_0_G1_000003.d" ;
+path-constant TEST_PATH1 : "$(BRUKER_TEST_PATH)/100 fmol BSA" ;
+path-constant TEST_PATH2 : "$(BRUKER_TEST_PATH)/CsI_Pos_0_G1_000003.d" ;
+path-constant TEST_PATH3 : "$(BRUKER_TEST_PATH)/Sample_1-A,1_01_985.d" ;
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable

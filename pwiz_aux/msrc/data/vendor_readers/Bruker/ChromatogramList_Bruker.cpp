@@ -34,14 +34,13 @@
 
 #define PWIZ_SOURCE
 
-//#include "Reader_Bruker_Detail.hpp"
 #include "ChromatogramList_Bruker.hpp"
 #include <iostream>
 #include <stdexcept>
 
 using boost::format;
 using namespace pwiz::util;
-
+using namespace pwiz::vendor_api::Bruker;
 
 namespace pwiz {
 namespace msdata {
@@ -52,15 +51,15 @@ PWIZ_API_DECL
 ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,
                                          const string& rootpath,
                                          Reader_Bruker_Format format,
-                                         CompassXtractWrapperPtr compassXtractWrapperPtr)
+                                         CompassDataPtr compassDataPtr)
 :   msd_(msd), rootpath_(rootpath), format_(format),
-    compassXtractWrapperPtr_(compassXtractWrapperPtr),
+    compassDataPtr_(compassDataPtr),
     size_(0)
 {
     switch (format_)
     {
         case Reader_Bruker_Format_U2:
-            size_ = compassXtractWrapperPtr->traceDeclarations_.size();
+            //size_ = compassXtractWrapperPtr->traceDeclarations_.size();
             break;
     }
 
@@ -108,13 +107,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     result->id = ci.id;
     result->set(ci.chromatogramType);
 
-    try
+    /*try
     {
-        // fill the spectrum from the LC interface
-        CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
-        CompassXtractWrapper::LC_TraceDeclarationPtr& td = compassXtractWrapperPtr_->traceDeclarations_[ci.declaration];
-        BDal_CXt_Lc_Interfaces::ITraceDataCollectionPtr trace = analysis->GetTraceDataCollection(ci.trace);
-
         automation_vector<double> xArray(*trace->GetTimes(), automation_vector<double>::MOVE);
 
         if (getBinaryData)
@@ -132,7 +126,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     {
         throw runtime_error(string("[ChromatogramList_Bruker::chromatogram()] COM error: ") +
                             (const char*)e.Description());
-    }
+    }*/
 
     return result;
 }
@@ -140,10 +134,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
 PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
 {
-    if (format_ == Reader_Bruker_Format_U2)
+    /*if (format_ == Reader_Bruker_Format_U2)
     {
-        //msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
-
         CompassXtractWrapper::LC_TraceDeclarationList& tdList = compassXtractWrapperPtr_->traceDeclarations_;
         CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
         for (size_t i=0; i < tdList.size(); ++i)
@@ -165,7 +157,7 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
             //else
             //    throw runtime_error("[ChromatogramList_Bruker::chromatogram()] unexpected TraceUnit");
         }
-    }
+    }*/
 }
 
 
