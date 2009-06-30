@@ -30,6 +30,13 @@ struct PWIZ_API_DECL FeatureSequenced
     bool operator==(const FeatureSequenced& that) const;    
     bool operator!=(const FeatureSequenced& that) const;
 
+private:
+
+    // no copying
+    
+    FeatureSequenced(FeatureSequenced&);
+    FeatureSequenced& operator=(FeatureSequenced&);
+
 };
 
 } // namespace eharmony

@@ -11,28 +11,33 @@ using namespace pwiz::data::peakdata;
 
 namespace{
 
-typedef pair<pair<double,double>, FeatureSequenced> FeatBinPair;
+typedef pair<pair<double,double>, FeatureSequencedPtr> FeatBinPair;
+
+ofstream ofs("feature_coords.txt");
 
 void getCoordinates(const vector<FeaturePtr>& f, vector<FeatBinPair>& result)
 {   
     vector<FeaturePtr>::const_iterator f_it = f.begin();
     for(; f_it != f.end(); ++f_it)
         {
-            FeatureSequenced featureSequenced(*f_it);
-            FeatBinPair fb(make_pair((*f_it)->mz, (*f_it)->retentionTime),featureSequenced);
+            FeatureSequencedPtr fs(new FeatureSequenced());
+            fs->feature = *f_it;
+
+            FeatBinPair fb(make_pair(make_pair((*f_it)->mz, (*f_it)->retentionTime),fs));
             result.push_back(fb);
+            ofs << fb.first.first << "\t" << fb.first.second << "\n";
 
         }
 
 }
 
 
-void getCoordinates(const vector<FeatureSequenced>& f, vector<FeatBinPair>& result)
+void getCoordinates(const vector<FeatureSequencedPtr>& f, vector<FeatBinPair>& result)
 {
-  vector<FeatureSequenced>::const_iterator f_it = f.begin();
+  vector<FeatureSequencedPtr>::const_iterator f_it = f.begin();
   for(; f_it != f.end(); ++f_it)
     {
-        result.push_back(make_pair(make_pair(f_it->feature->mz, f_it->feature->retentionTime),*f_it));
+        result.push_back(make_pair(make_pair((*f_it)->feature->mz, (*f_it)->feature->retentionTime),*f_it));
 
     }
 
@@ -48,7 +53,7 @@ Feature_dataFetcher::Feature_dataFetcher(istream& is)
     vector<FeatBinPair> features;
     getCoordinates(ff.features, features);
 
-    _bin = Bin<FeatureSequenced>(features,.005, 1000); // be lenient for adjust rt? should be a config option
+    _bin = Bin<FeatureSequenced>(features,.01, 1000); // be lenient for adjust rt? should be a config option
 
 }
 /*
@@ -87,30 +92,25 @@ void Feature_dataFetcher::erase(const FeatureSequenced& fs)
 void Feature_dataFetcher::merge(const Feature_dataFetcher& that)
 {
     Bin<FeatureSequenced> bin = that.getBin();
-    vector<boost::shared_ptr<FeatureSequenced> > entries = bin.getAllContents();
-    vector<boost::shared_ptr<FeatureSequenced> >::iterator it = entries.begin();
+    vector<FeatureSequencedPtr> entries = bin.getAllContents();
+    vector<FeatureSequencedPtr>::iterator it = entries.begin();
     for(; it != entries.end(); ++it) update(**it);
     
 }
 
-vector<boost::shared_ptr<FeatureSequenced> > Feature_dataFetcher::getFeatures(double mz, double rt) 
+vector<FeatureSequencedPtr> Feature_dataFetcher::getFeatures(double mz, double rt) 
 {
     pair<double,double> coords = make_pair(mz,rt);
-    vector<boost::shared_ptr<FeatureSequenced> > features;
+    vector<FeatureSequencedPtr> features;
     _bin.getBinContents(coords,features);
     
     return features;
 
 }
 
-vector<FeatureSequenced> Feature_dataFetcher::getAllContents() const
+vector<FeatureSequencedPtr> Feature_dataFetcher::getAllContents() const
 {
-    vector<boost::shared_ptr<FeatureSequenced> > hack = _bin.getAllContents();
-    vector<boost::shared_ptr<FeatureSequenced> >::iterator it = hack.begin();
-    vector<FeatureSequenced> result;
-    for(; it != hack.end(); ++it) result.push_back(**it);
-
-    return result;
+    return _bin.getAllContents();
 
 }
 

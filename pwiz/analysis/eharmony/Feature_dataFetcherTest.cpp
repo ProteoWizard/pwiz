@@ -26,12 +26,12 @@ FeaturePtr makeFeature(double mz, double retentionTime)
 
 }
 
-FeatureSequenced makeFeatureSequenced(const FeaturePtr feature, string _ms1_5="", string _ms2="")
+FeatureSequencedPtr makeFeatureSequenced(const FeaturePtr feature, string _ms1_5="", string _ms2="")
 {
-    FeatureSequenced fs;
-    fs.feature = feature;
-    fs.ms1_5 = _ms1_5;
-    fs.ms2 = _ms2;
+    FeatureSequencedPtr fs(new FeatureSequenced());
+    fs->feature = feature;
+    fs->ms1_5 = _ms1_5;
+    fs->ms2 = _ms2;
 
     return fs;
 
@@ -131,7 +131,7 @@ void testMerge()
     FeaturePtr a = makeFeature(5,1);
     FeaturePtr b = makeFeature(20,9);
 
-    FeatureSequenced fs_b = makeFeatureSequenced(b);
+    FeatureSequencedPtr fs_b = makeFeatureSequenced(b);
 
     vector<FeaturePtr> v_a;
     vector<FeaturePtr> v_b;
@@ -158,13 +158,13 @@ void testMerge()
 
      	    *os_ << "\nOriginal FeatureSequenced:\n " << endl;   
 	     
-	    fs_b.feature->write(writer);
-	    *os_ << "ms1_5: " << fs_b.ms1_5 << endl;
-	    *os_ << "ms2: " << fs_b.ms2 << endl;
+	    fs_b->feature->write(writer);
+	    *os_ << "ms1_5: " << fs_b->ms1_5 << endl;
+	    *os_ << "ms2: " << fs_b->ms2 << endl;
 
         }  
 
-    unit_assert((*binContents.back()) == fs_b);
+    unit_assert((*binContents.back()) == *fs_b);
 
 }
 

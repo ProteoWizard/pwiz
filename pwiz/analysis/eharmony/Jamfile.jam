@@ -58,11 +58,19 @@ exe eharmony
 
 exe amtdb
     : AMTDatabase.cpp
+      pwiz_analysis_eharmony      
+    ;
+
+exe mspostfix
+    : MSPostfix.cpp
       pwiz_analysis_eharmony
+      ../peakdetect//pwiz_analysis_peakdetect
+      ../../data/msdata//pwiz_data_msdata
     ;
 
 install bin
     : eharmony
       amtdb
+      mspostfix
     : <location>.
     ;

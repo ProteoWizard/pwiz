@@ -18,6 +18,8 @@ using namespace pwiz::data::peakdata;
 namespace pwiz{
 namespace eharmony{
 
+typedef boost::shared_ptr<FeatureSequenced> FeatureSequencedPtr;
+
 class Feature_dataFetcher
 {
 
@@ -31,8 +33,8 @@ public:
     void erase(const FeatureSequenced& fs);
     void merge(const Feature_dataFetcher& that);
 
-    std::vector<boost::shared_ptr< FeatureSequenced> > getFeatures(double mz, double rt) ;
-    std::vector<FeatureSequenced> getAllContents() const;
+    std::vector<FeatureSequencedPtr> getFeatures(double mz, double rt) ;
+    std::vector<FeatureSequencedPtr> getAllContents() const;
     Bin<FeatureSequenced> getBin() const { return _bin; } 
     
     void setMS2LabeledFlag(const bool& flag) { _ms2Labeled = flag; }

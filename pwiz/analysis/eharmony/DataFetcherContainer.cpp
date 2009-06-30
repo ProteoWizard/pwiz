@@ -22,12 +22,14 @@ DataFetcherContainer::DataFetcherContainer(const PidfPtr pidf_a, const PidfPtr p
 }
 
 namespace{
-    
-    void getBestMatch(const SpectrumQuery& sq, const FdfPtr fdf, FeatureSequenced& result)
-    {     
-        Bin<FeatureSequenced> featureBin = fdf->getBin();	
-        pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass, sq.assumedCharge), sq.retentionTimeSec);
 
+    ofstream ofs("peptide_coords.txt");
+    FeatureSequencedPtr getBestMatch(boost::shared_ptr<SpectrumQuery> sq, const FdfPtr fdf)
+    {             
+        FeatureSequencedPtr result(new FeatureSequenced());
+        Bin<FeatureSequenced> featureBin = fdf->getBin();	
+        pair<double,double> peptideCoords = make_pair(Ion::mz(sq->precursorNeutralMass, sq->assumedCharge), sq->retentionTimeSec);
+        ofs << peptideCoords.first << "\t" << peptideCoords.second << "\n";
         double bestScore = 1000000;               
         vector<boost::shared_ptr< FeatureSequenced> > adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
@@ -35,22 +37,23 @@ namespace{
 
         for(; ac_it != adjacentContenders.end(); ++ac_it)
             {
-                if ( (*ac_it)->feature->charge == sq.assumedCharge )
+                if ( (*ac_it)->feature->charge == sq->assumedCharge )
                     {
-                        double mzDiff = ((*ac_it)->feature->mz - Ion::mz(sq.precursorNeutralMass,sq.assumedCharge))/.005;
-                        double rtDiff = ((*ac_it)->feature->retentionTime - sq.retentionTimeSec)/60;
+                        double mzDiff = ((*ac_it)->feature->mz - Ion::mz(sq->precursorNeutralMass,sq->assumedCharge))/.005;
+                        double rtDiff = ((*ac_it)->feature->retentionTime - sq->retentionTimeSec)/60;
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
                         if ( score < bestScore )
                             {
-                                result = **ac_it;     
+                                result = *ac_it;     
                                 bestScore = score;
+
                             }
 
                     }
 
             }            
 
-        return;
+        return result;
 
     } 
 
@@ -63,25 +66,23 @@ namespace{
 
         for(; sq_it != spectrumQueries.end(); ++sq_it)
             {
-	      
+                
                 if ( counter % 100 == 0) cout << "Spectrum query:"  << counter << endl;
            		
-                FeatureSequenced fs;
-                getBestMatch(*(*sq_it), fdf, fs);
-			     
-                if (fs.feature->id.size() > 0) // f exists
+                FeatureSequencedPtr fs = getBestMatch((*sq_it), fdf);                                      
+                if (fs->feature->retentionTime > 0) // f exists
                     {        
-                        fdf->erase(fs);
-                        fs.ms2 = (*sq_it)->searchResult.searchHit.peptide;                      
-                        Peptide peptide(fs.ms2);
-                        fs.calculatedMass = peptide.monoisotopicMass(0, false);
-                        fs.ppProb = (*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
-                        fs.peptideCount += 1;
-                        fdf->update(fs);
-                        
-                        pidf->erase(*(*sq_it));                        
-                        (*sq_it)->retentionTimeSec = fs.feature->retentionTime;
-                        pidf->update(*(*sq_it));
+
+                        // set FeatureSequenced attributes
+                        fs->ms2 = (*sq_it)->searchResult.searchHit.peptide;                      
+                        Peptide peptide(fs->ms2);
+                        fs->calculatedMass = peptide.monoisotopicMass(0, false);
+                        fs->ppProb = (*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
+                        fs->peptideCount += 1;
+
+                        // change peptide retention time
+                        (*sq_it)->retentionTimeSec = fs->feature->retentionTime;
+
                                                 
                         
                     }
@@ -137,7 +138,155 @@ void DataFetcherContainer::getAnchors(const int& freq, const double& tol)
 
 }
 
-void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe) 
+void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe, const int& anchorFreq, const double& anchorTol) 
 {    
+    getAnchors(anchorFreq, anchorTol);
+    pair<vector<double>, vector<double> > peptideRetentionTimes = getPeptideRetentionTimes();
+    pair<vector<double>, vector<double> > featureRetentionTimes = getFeatureRetentionTimes();
     
+    switch(wfe)
+        {
+
+        case Default:
+            {}            
+            break;
+
+        case Linear:
+            {
+                LinearWarpFunction lwf(_anchors);
+
+                vector<double> result_a;
+                vector<double> result_b;
+                vector<double> feature_result_a;
+                vector<double> feature_result_b;
+
+                lwf(peptideRetentionTimes.first, result_a);
+                lwf(peptideRetentionTimes.second, result_b);
+                lwf(featureRetentionTimes.first, feature_result_a);
+                lwf(featureRetentionTimes.second, feature_result_b);
+                
+                const pair<vector<double> , vector<double> > warpedPeptideTimes = make_pair(result_a, result_b);
+                const pair<vector<double> , vector<double> > warpedFeatureTimes = make_pair(feature_result_a, feature_result_b);
+
+                putPeptideRetentionTimes(warpedPeptideTimes);
+                putFeatureRetentionTimes(warpedFeatureTimes);
+
+            }
+
+            break;
+
+        case PiecewiseLinear:
+            {
+                PiecewiseLinearWarpFunction plwf(_anchors);
+
+                vector<double> result_a;
+                vector<double> result_b;
+                vector<double> feature_result_a;
+                vector<double> feature_result_b;
+
+                plwf(peptideRetentionTimes.first, result_a);
+                plwf(peptideRetentionTimes.second, result_b);
+                plwf(featureRetentionTimes.first, feature_result_a);
+                plwf(featureRetentionTimes.second, feature_result_b);
+
+                const pair<vector<double> , vector<double> > warpedPeptideTimes = make_pair(result_a, result_b);
+                const pair<vector<double> , vector<double> > warpedFeatureTimes = make_pair(feature_result_a, feature_result_b);
+
+                putPeptideRetentionTimes(warpedPeptideTimes);
+                putFeatureRetentionTimes(warpedFeatureTimes);
+
+            }
+            
+            break;
+
+        }
+
+}
+
+// helper functions
+vector<double> getRTs(PidfPtr pidf)
+{
+    vector<double> result;
+    vector<boost::shared_ptr<SpectrumQuery> > sqs = pidf->getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = sqs.begin();
+    for(; it != sqs.end(); ++it) result.push_back((*it)->retentionTimeSec);
+    
+    return result;
+
+}
+
+vector<double> getRTs(FdfPtr fdf)
+{
+    vector<double> result;
+    vector<FeatureSequencedPtr> fss = fdf->getAllContents();
+    vector<FeatureSequencedPtr>::iterator it = fss.begin();
+    for(; it != fss.end(); ++it) result.push_back((*it)->feature->retentionTime);
+
+    return result;
+
+}
+
+pair<vector<double>, vector<double> > DataFetcherContainer::getPeptideRetentionTimes()
+{
+    vector<double> pidf_a_rts = getRTs(_pidf_a);
+    vector<double> pidf_b_rts = getRTs(_pidf_b);
+    
+    return make_pair(pidf_a_rts, pidf_b_rts);
+
+}
+
+
+pair<vector<double>, vector<double> > DataFetcherContainer::getFeatureRetentionTimes()
+{
+    vector<double> fdf_a_rts = getRTs(_fdf_a);
+    vector<double> fdf_b_rts = getRTs(_fdf_b);
+
+    return make_pair(fdf_a_rts, fdf_b_rts);
+
+}
+
+// helper function
+void putRTs(vector<boost::shared_ptr<SpectrumQuery> > sqs, vector<double> times)
+{
+    vector<boost::shared_ptr<SpectrumQuery> >::iterator it = sqs.begin();
+    vector<double>::iterator time_it = times.begin();
+    for(; it != sqs.end(); ++it, ++time_it)
+        {
+            (*it)->retentionTimeSec = *time_it;
+
+        }
+    
+
+}
+
+void putRTs(vector<FeatureSequencedPtr> fs, vector<double> times)
+{
+    vector<FeatureSequencedPtr>::iterator it = fs.begin();
+    vector<double>::iterator time_it = times.begin();
+    for(; it != fs.end(); ++it, ++time_it)
+        {
+            (*it)->feature->retentionTime = *time_it;
+
+        }
+
+}
+
+void DataFetcherContainer::putPeptideRetentionTimes(const pair<vector<double>, vector<double> >& times)
+{
+    vector<boost::shared_ptr<SpectrumQuery> > sqs_a = _pidf_a->getAllContents();
+    vector<boost::shared_ptr<SpectrumQuery> > sqs_b = _pidf_b->getAllContents();
+    
+    putRTs(sqs_a, times.first);
+    putRTs(sqs_b, times.second);
+
+}
+
+void DataFetcherContainer::putFeatureRetentionTimes(const pair<vector<double>, vector<double> >& times)
+{
+    vector<FeatureSequencedPtr> fs_a = _fdf_a->getAllContents();
+    vector<FeatureSequencedPtr> fs_b = _fdf_b->getAllContents();
+
+    putRTs(fs_a, times.first);
+    putRTs(fs_b, times.second);
+
 }
