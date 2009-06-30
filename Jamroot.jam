@@ -103,6 +103,17 @@ project pwiz
     ;
 
 
+# define script for decompressing vendor-specific test data (on any platform)
+if [ modules.peek : NT ]
+{
+    path-constant UNTAR_TEST_DATA_SCRIPT : "$(PWIZ_ROOT_PATH)/scripts/test/untar_test_data.bat" ;
+}
+else if [ modules.peek : UNIX ]
+{
+    path-constant UNTAR_TEST_DATA_SCRIPT : "$(PWIZ_ROOT_PATH)/scripts/test/untar_test_data.sh" ;
+}
+
+
 # external library declarations
 
 lib pthread 
