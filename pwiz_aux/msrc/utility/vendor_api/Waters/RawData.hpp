@@ -24,22 +24,11 @@
 #ifndef _RAWDATA_HPP_
 #define _RAWDATA_HPP_
 
-#ifdef RAWDATA_DYN_LINK
-#ifdef RAWDATA_SOURCE
-#define RAWDATA_API __declspec(dllexport)
-#else
-#define RAWDATA_API __declspec(dllimport)
-#endif  // RAWDATA_SOURCE
-#endif  // RAWDATA_DYN_LINK
-
-// if RAWDATA_API isn't defined yet define it now:
-#ifndef RAWDATA_API
-#define RAWDATA_API
-#endif
 
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 
 
@@ -48,7 +37,7 @@ namespace vendor_api {
 namespace Waters {
 
 
-RAWDATA_API enum FunctionType
+PWIZ_API_DECL enum FunctionType
 {
     FunctionType_Unknown,
     FunctionType_Survey,
@@ -62,13 +51,13 @@ RAWDATA_API enum FunctionType
 };
 
 
-RAWDATA_API enum InstrumentType
+PWIZ_API_DECL enum InstrumentType
 {
     InstrumentType_Xevo
 };
 
 
-struct RAWDATA_API Precursor
+struct PWIZ_API_DECL Precursor
 {
     double mz;
     bool hasAccurateMass;
@@ -79,7 +68,7 @@ struct RAWDATA_API Precursor
 typedef boost::shared_ptr<Precursor> PrecursorPtr;
 
 
-struct RAWDATA_API Scan
+struct PWIZ_API_DECL Scan
 {
     virtual const int getFunctionNumber() const = 0;
     virtual const int getProcessNumber() const = 0;
@@ -120,10 +109,10 @@ struct RAWDATA_API Scan
 typedef boost::shared_ptr<Scan> ScanPtr;
 
 
-struct RAWDATA_API SRMTarget { double Q1, Q3; };
+struct PWIZ_API_DECL SRMTarget { double Q1, Q3; };
 
 
-struct RAWDATA_API Function
+struct PWIZ_API_DECL Function
 {
     virtual int getFunctionNumber() const = 0;
 
@@ -151,7 +140,7 @@ typedef boost::shared_ptr<Function> FunctionPtr;
 typedef std::vector<FunctionPtr> FunctionList;
 
 
-class RAWDATA_API RawData
+class PWIZ_API_DECL RawData
 {
     public:
     typedef boost::shared_ptr<RawData> Ptr;

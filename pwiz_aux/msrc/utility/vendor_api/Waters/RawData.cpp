@@ -21,7 +21,7 @@
 //
 
 
-#define RAWDATA_SOURCE
+#define PWIZ_SOURCE
 
 #include "RawData.hpp"
 #include "dacserver.tlh"
@@ -295,7 +295,7 @@ class RawDataImpl : public RawData
 };
 
 
-RAWDATA_API RawDataPtr RawData::create(const string& rawpath)
+PWIZ_API_DECL RawDataPtr RawData::create(const string& rawpath)
 {
     return RawDataPtr(new RawDataImpl(rawpath));
 }
