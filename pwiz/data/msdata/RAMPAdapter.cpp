@@ -48,7 +48,7 @@ class RAMPAdapter::Impl
     public:
 
     Impl(const string& filename) 
-    :   msd_(filename), firstIndex_(-1), lastIndex_(0)
+    :   msd_(filename), firstIndex_((size_t)-1), lastIndex_(0)
     {
         if (!msd_.run.spectrumListPtr.get())
             throw runtime_error("[RAMPAdapter] Null spectrumListPtr.");
