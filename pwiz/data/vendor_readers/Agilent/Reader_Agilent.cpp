@@ -101,7 +101,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 }
 
 
-void fillInMetadata(const string& filename, MassHunterDataPtr rawfile, MSData& msd)
+void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
@@ -138,35 +138,37 @@ void fillInMetadata(const string& filename, MassHunterDataPtr rawfile, MSData& m
     if (scanTypes & MSScanType_MultipleReaction)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
-    bfs::path p = bfs::path(filename) / "AcqData/mspeak.bin";
-    if (bfs::exists(p))
+    bfs::path p(rawpath);
+
+    bfs::path datapath = p / "AcqData/mspeak.bin";
+    if (bfs::exists(datapath))
     {
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "PeakData";
-        sourceFile->name = p.leaf();
-        string location = bfs::complete(p.parent_path()).string();
+        sourceFile->name = datapath.filename();
+        string location = bfs::complete(datapath.parent_path()).string();
         if (location.empty()) location = ".";
         sourceFile->location = string("file:///") + location;
-        //sourceFile->set(MS_Agilent_nativeID_format);
-        //sourceFile->set(MS_Agilent_MassHunter_file);
+        sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
+        sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    p = bfs::path(filename) / "AcqData/msprofile.bin";
-    if (bfs::exists(p))
+    datapath = p / "AcqData/msprofile.bin";
+    if (bfs::exists(datapath))
     {
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "ProfileData";
-        sourceFile->name = p.leaf();
-        string location = bfs::complete(p.parent_path()).string();
+        sourceFile->name = datapath.filename();
+        string location = bfs::complete(datapath.parent_path()).string();
         if (location.empty()) location = ".";
         sourceFile->location = string("file:///") + location;
-        //sourceFile->set(MS_Agilent_nativeID_format);
-        //sourceFile->set(MS_Agilent_MassHunter_file);
+        sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
+        sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    msd.id = filename;
+    msd.id = bal::to_lower_copy(p.filename());
 
     SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";
@@ -196,7 +198,7 @@ void fillInMetadata(const string& filename, MassHunterDataPtr rawfile, MSData& m
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = filename;
+    msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime());
 }
 

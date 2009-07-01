@@ -185,7 +185,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
             
             int parentScanId = spectrumPtr->getParentScanId();
             if (parentScanId > 0)
-                precursor.spectrumID = "scan=" + lexical_cast<string>(parentScanId);
+                precursor.spectrumID = "scanId=" + lexical_cast<string>(parentScanId);
 
             selectedIon.set(MS_selected_ion_m_z, precursorMZs[0], MS_m_z);
             precursor.selectedIons.push_back(selectedIon);
@@ -270,7 +270,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
             ie.index = index_.size()-1;
 
             ostringstream oss;
-            oss << "scan=" << ie.scanId;
+            oss << "scanId=" << ie.scanId;
             ie.id = oss.str();
         }
     }
