@@ -1321,43 +1321,79 @@ PWIZ_API_DECL bool MSData::empty() const
 }
 
 
-PWIZ_API_DECL DataProcessingPtr MSData::currentDataProcessingPtr() const
+namespace {
+
+template <typename object_type>
+struct HasID
 {
-    if (!run.spectrumListPtr.get() || !run.spectrumListPtr->dataProcessingPtr().get())
-        return DataProcessingPtr();
+    const string& id_;
+    HasID(const string& id) : id_(id) {}
 
-    // make a copy of the SpectrumList dataProcessing
-    DataProcessingPtr dp(new DataProcessing(*run.spectrumListPtr->dataProcessingPtr()));
-
-    bool isUnique = true;
-    do
+    bool operator()(const shared_ptr<object_type>& objectPtr)
     {
-        // good-faith effort to make the id unique
-        isUnique = true;
-        for (size_t i=0; i < dataProcessingPtrs.size(); ++i)
-            if ((dp != dataProcessingPtrs[i]) &&
-                (dp->id == dataProcessingPtrs[i]->id))
-            {
-                isUnique = false;
-                dp->id = "more_" + dp->id;
-                break;
-            }
-    } while (!isUnique);
+        return objectPtr.get() && objectPtr->id == id_;
+    }
+};
 
-    return dp;
+string makeUniqueID(const vector<DataProcessingPtr>& dpList, const string& id)
+{
+    string result = id;
+    while (std::find_if(dpList.begin(), dpList.end(), HasID<DataProcessing>(result)) != dpList.end())
+        result = "more_" + result;
+    return result;
 }
+
+} // namespace
 
 
 PWIZ_API_DECL vector<DataProcessingPtr> MSData::allDataProcessingPtrs() const
 {
     vector<DataProcessingPtr> result(dataProcessingPtrs);
-    DataProcessingPtr current = currentDataProcessingPtr();
-    if (current.get()) result.push_back(current); 
+
+    if (run.spectrumListPtr.get())
+    {
+        // if SpectrumList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
+        const shared_ptr<const DataProcessing> sldp = run.spectrumListPtr->dataProcessingPtr();
+        if (sldp.get() && std::find(result.begin(), result.end(), sldp) == result.end())
+        {
+            string uniqueID = makeUniqueID(dataProcessingPtrs, sldp->id);
+            DataProcessingPtr addedDP;
+            if (uniqueID != sldp->id)
+            {
+                addedDP = DataProcessingPtr(new DataProcessing(*sldp));
+                addedDP->id = uniqueID;
+            }
+            else
+                addedDP = boost::const_pointer_cast<DataProcessing>(sldp);
+
+            result.push_back(addedDP);
+        }
+    }
+
+    if (run.chromatogramListPtr.get())
+    {
+        // if ChromatogramList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
+        const shared_ptr<const DataProcessing> cldp = run.chromatogramListPtr->dataProcessingPtr();
+        if (cldp.get() && std::find(result.begin(), result.end(), cldp) == result.end())
+        {
+            string uniqueID = makeUniqueID(dataProcessingPtrs, cldp->id);
+            DataProcessingPtr addedDP;
+            if (uniqueID != cldp->id)
+            {
+                addedDP = DataProcessingPtr(new DataProcessing(*cldp));
+                addedDP->id = uniqueID;
+            }
+            else
+                addedDP = boost::const_pointer_cast<DataProcessing>(cldp);
+
+            result.push_back(addedDP);
+        }
+    }
+
     return result;
 }
 
 
 } // namespace msdata
 } // namespace pwiz
-
 

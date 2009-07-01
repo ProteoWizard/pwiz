@@ -304,22 +304,13 @@ void testIDParsing()
 }
 
 
-void testCurrentDataProcessing()
+void testAllDataProcessing()
 {
     MSData msd;
     SpectrumListSimplePtr sl(new SpectrumListSimple);
     msd.run.spectrumListPtr = sl;
-
-    unit_assert(!msd.currentDataProcessingPtr().get());
-    
     sl->dp = DataProcessingPtr(new DataProcessing("dp"));
-    unit_assert(msd.currentDataProcessingPtr().get() &&
-                msd.currentDataProcessingPtr()->id == "dp");
-
-    // test unique name adjustment
     msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
-    unit_assert(msd.currentDataProcessingPtr().get() &&
-                msd.currentDataProcessingPtr()->id == "more_dp");
 
     // test allDataProcessingPtrs()
     vector<DataProcessingPtr> all = msd.allDataProcessingPtrs();
@@ -337,7 +328,7 @@ int main()
         testSpectrumListSimple();
         testChromatograms();
         testIDParsing();
-        testCurrentDataProcessing();
+        testAllDataProcessing();
         return 0;
     }
     catch (exception& e)

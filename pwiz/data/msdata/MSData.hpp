@@ -970,10 +970,7 @@ struct PWIZ_API_DECL MSData
     /// list and descriptions of data processing applied to this data.
     std::vector<DataProcessingPtr> dataProcessingPtrs;
 
-    /// current data processing, held in SpectrumList
-    DataProcessingPtr currentDataProcessingPtr() const;
-    
-    /// return dataProcessingPtrs + currentDataProcessingPtr()
+    /// return dataProcessingPtrs augmented by the dataProcessingPtr() set in SpectrumList and/or ChromatogramList
     std::vector<DataProcessingPtr> allDataProcessingPtrs() const;
 
     /// a run in mzML should correspond to a single, consecutive and coherent set of scans on an instrument.

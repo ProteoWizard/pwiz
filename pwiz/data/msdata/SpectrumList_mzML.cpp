@@ -229,7 +229,9 @@ class HandlerIndex : public SAXParser::Handler
 
     HandlerIndex(vector<SpectrumIdentity>& index)
     :   index_(index), offsetCount_(0)
-    {}
+    {
+        handlerOffset_.autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -432,6 +434,7 @@ void SpectrumList_mzMLImpl::createIndex() const
     {
         is_->seekg(0);
         HandlerIndexCreator handler(index_);
+        handler.autoUnescapeCharacters = false;
         SAXParser::parse(*is_, handler);
     }
 

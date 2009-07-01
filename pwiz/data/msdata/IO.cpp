@@ -1792,6 +1792,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray)
 {
     HandlerBinaryDataArray handler(&binaryDataArray);
+    handler.autoUnescapeCharacters = false;
     SAXParser::parse(is, handler);
 }
 
@@ -2481,11 +2482,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.scanSettingsPtrs, "scanSettingsList");
     writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
-
-    vector<DataProcessingPtr> dataProcessingPtrs(msd.dataProcessingPtrs);
-    DataProcessingPtr current = msd.currentDataProcessingPtr();
-    if (current.get()) dataProcessingPtrs.push_back(current);
-    writeList(writer, dataProcessingPtrs, "dataProcessingList");
+    writeList(writer, msd.allDataProcessingPtrs(), "dataProcessingList");
 
     write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
 
