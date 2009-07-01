@@ -50,7 +50,7 @@ class PWIZ_API_DECL Reader
 
     /// return file type iff Reader recognizes the file, else empty;
 	/// note: for formats requiring a 3rd party DLL identify() should
-	/// return true if it recognized the format, even though reading
+	/// return non-empty if it recognized the format, even though reading
 	/// may fail if the 3rd party DLL isn't actually present
     /// Reader may filter based on filename and/or head of the file
     virtual std::string identify(const std::string& filename,
