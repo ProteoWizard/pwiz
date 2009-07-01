@@ -44,7 +44,7 @@ class PWIZ_API_DECL ChromatogramList_Agilent : public ChromatogramListBase
 {
 public:
 
-    ChromatogramList_Agilent(AgilentDataReaderPtr reader);
+    ChromatogramList_Agilent(MassHunterDataPtr reader);
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
@@ -52,13 +52,14 @@ public:
     
     private:
 
-    AgilentDataReaderPtr rawfile_;
+    MassHunterDataPtr rawfile_;
 
     mutable boost::once_flag indexInitialized_;
 
     struct IndexEntry : public ChromatogramIdentity
     {
         CVID chromatogramType;
+        size_t targetIndex;
         double q1, q3;
     };
 

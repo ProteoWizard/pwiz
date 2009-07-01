@@ -25,18 +25,10 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/utility/vendor_api/Agilent/AgilentDataReader.hpp"
-
-//#import "BaseCommon.tlb" no_namespace, named_guids
-//#import "BaseDataAccess.tlb" rename_namespace("BDA"), named_guids
-//#import "MassSpecDataReader.tlb" rename_namespace("MSDR"), named_guids
-//#include "BaseCommon.tlh"
-//#include "BaseDataAccess.tlh"
-//#include "MassSpecDataReader.tlh"
-
+#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <vector>
 
-using namespace pwiz::agilent;
+using namespace pwiz::vendor_api::Agilent;
 
 namespace pwiz {
 namespace msdata {
@@ -44,7 +36,7 @@ namespace detail {
 
 
 PWIZ_API_DECL
-std::vector<InstrumentConfiguration> createInstrumentConfigurations(AgilentDataReaderPtr rawfile);
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(MassHunterDataPtr rawfile);
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(DeviceType deviceType);
 PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType);

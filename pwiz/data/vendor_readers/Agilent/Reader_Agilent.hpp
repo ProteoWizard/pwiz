@@ -36,9 +36,6 @@ class PWIZ_API_DECL Reader_Agilent : public Reader
 {
     public:
 
-    Reader_Agilent();
-    virtual ~Reader_Agilent();
-
     virtual std::string identify(const std::string& filename,
                         const std::string& head) const;
 

@@ -22,7 +22,12 @@
 
 #include "Reader_Agilent.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Diff.hpp"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -49,107 +54,67 @@ void testAccept(const string& filename)
 	                       // even if not all can actually read it
 }
 
-
-void testRead(const string& filename)
+void hackInMemoryMSData(MSData& msd)
 {
-    if (os_) *os_ << "testRead(): " << filename << endl;
+    // remove metadata ptrs appended on read
+    vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
+    if (!sfs.empty()) sfs.erase(sfs.end()-1);
+    //vector<SoftwarePtr>& sws = msd.softwarePtrs;
+    //if (!sws.empty()) sws.erase(sws.end()-1);
 
-    // read RAW file into MSData object
-
-    Reader_Agilent reader;
-    MSData msd;
-    reader.read(filename, "dummy", msd);
-
-    // make assertions about msd
-
-    //if (os_) TextWriter(*os_,0)(msd); 
-
-    unit_assert(msd.run.spectrumListPtr.get());
-    SpectrumList& sl = *msd.run.spectrumListPtr;
-    if (os_) *os_ << "spectrum list size: " << sl.size() << endl;
-    unit_assert(sl.size() == 48);
-
-    SpectrumPtr spectrum = sl.spectrum(0, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 0);
-    unit_assert(spectrum->id == "controllerType=0 controllerNumber=1 scan=1"); // derived from scan number
-    unit_assert(sl.spectrumIdentity(0).index == 0);
-    unit_assert(sl.spectrumIdentity(0).id == "controllerType=0 controllerNumber=1 scan=1");
-    unit_assert(spectrum->scanList.scans.size() == 1);
-    int scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
-    unit_assert(scanEvent == 1);
-    unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-    //CVParam massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    //unit_assert(massAnalyzer.cvid == MS_FT_ICR);
-    vector<MZIntensityPair> data;
-    spectrum->getMZIntensityPairs(data);
-    unit_assert(data.size() == 19914);
-
-    spectrum = sl.spectrum(1, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 1);
-    unit_assert(spectrum->id == "controllerType=0 controllerNumber=1 scan=2"); // derived from scan number
-    unit_assert(sl.spectrumIdentity(1).index == 1);
-    unit_assert(sl.spectrumIdentity(1).id == "controllerType=0 controllerNumber=1 scan=2");
-    unit_assert(spectrum->scanList.scans.size() == 1);
-    scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
-    unit_assert(scanEvent == 2);
-    unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 1); 
-    //massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    //unit_assert(massAnalyzer.cvid == MS_ion_trap);
-    spectrum->getMZIntensityPairs(data);
-    unit_assert(data.size() == 19800);
-
-    spectrum = sl.spectrum(2, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(spectrum->index == 2);
-    unit_assert(spectrum->id == "controllerType=0 controllerNumber=1 scan=3"); // scan number
-    unit_assert(sl.spectrumIdentity(2).index == 2);
-    unit_assert(sl.spectrumIdentity(2).id == "controllerType=0 controllerNumber=1 scan=3");
-    unit_assert(spectrum->scanList.scans.size() == 1);
-    scanEvent = spectrum->scanList.scans[0].cvParamChild(MS_preset_scan_configuration).valueAs<int>();
-    unit_assert(scanEvent == 3);
-    unit_assert(spectrum->cvParam(MS_ms_level).valueAs<int>() == 2); 
-    //massAnalyzer = spectrum->spectrumDescription.scan.cvParamChild(MS_mass_analyzer_type);
-    //unit_assert(massAnalyzer.cvid == MS_ion_trap);
-    spectrum->getMZIntensityPairs(data);
-    unit_assert(data.size() == 485);
-    unit_assert(spectrum->precursors.size() == 1);
-    const Precursor& precursor = spectrum->precursors[0];
-    const SelectedIon& selectedIon = precursor.selectedIons[0];
-    unit_assert(precursor.spectrumID == "controllerType=0 controllerNumber=1 scan=2"); // previous ms1 scan
-    unit_assert_equal(selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>(), 810.79, 1e-15);
-    unit_assert_equal(selectedIon.cvParam(MS_intensity).valueAs<double>(), 0, 1e-15);
-
-    spectrum = sl.spectrum(5, true);
-    if (os_) TextWriter(*os_,0)(*spectrum); 
-    unit_assert(sl.spectrumIdentity(5).index == 5);
-    unit_assert(sl.spectrumIdentity(5).id == "controllerType=0 controllerNumber=1 scan=6");
-    unit_assert(spectrum->precursors.size() == 1);
-    const Precursor& precursor2 = spectrum->precursors[0];
-    unit_assert(precursor2.spectrumID == "controllerType=0 controllerNumber=1 scan=2"); // previous ms1 scan
-
-    // test chromatogram list
-    unit_assert(msd.run.chromatogramListPtr.get());
-    ChromatogramList& cl = *msd.run.chromatogramListPtr;
-    if (os_) *os_ << "chromatogram list size: " << cl.size() << endl;
-    unit_assert(cl.size() == 1);
-
-    ChromatogramPtr chromatogram = cl.chromatogram(0, true);
-    if (os_) TextWriter(*os_,0)(*chromatogram); 
-    unit_assert(chromatogram->id == "TIC");
-
-    // test file-level metadata 
-    unit_assert(msd.fileDescription.fileContent.hasCVParam(MS_MSn_spectrum));
+    // remove current DataProcessing created on read
+    SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
+    ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
+    if (sl) sl->setDataProcessingPtr(DataProcessingPtr());
+    if (cl) cl->setDataProcessingPtr(DataProcessingPtr());
 }
 
 
-void test(const string& filename)
+void testRead(const string& rawpath)
 {
-    testAccept(filename);
+    if (os_) *os_ << "testRead(): " << rawpath << endl;
+
+    MSDataFile targetResult(bfs::change_extension(rawpath, ".mzML").string());
+    hackInMemoryMSData(targetResult);
+
+    // read file into MSData object
+    Reader_Agilent reader;
+    MSData msd;
+    reader.read(rawpath, "dummy", msd);
+    if (os_) TextWriter(*os_,0)(msd);
+
+    // test for 1:1 equality
+    Diff<MSData> diff(msd, targetResult);
+    if (os_ && diff) *os_ << diff << endl; 
+    unit_assert(!diff);
+}
+
+
+void test(const string& rawpath)
+{
+    testAccept(rawpath);
     
     #ifdef _MSC_VER
-    testRead(filename);
+    testRead(rawpath);
+    #else
+    if (os_) *os_ << "Not MSVC -- nothing to do.\n";
+    #endif // _MSC_VER
+}
+
+
+void generate(const string& rawpath)
+{
+    #ifdef _MSC_VER
+    // read file into MSData object
+    Reader_Agilent reader;
+    MSData msd;
+    reader.read(rawpath, "dummy", msd);
+    MSDataFile::WriteConfig config;
+    config.indexed = false;
+    config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+    config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+    if (os_) *os_ << "Writing mzML for " << rawpath << endl;
+    MSDataFile::write(msd, bfs::change_extension(rawpath, ".mzML").string(), config);
     #else
     if (os_) *os_ << "Not MSVC -- nothing to do.\n";
     #endif // _MSC_VER
@@ -160,18 +125,31 @@ int main(int argc, char* argv[])
 {
     try
     {
-        vector<string> filenames;
+        bool generateMzML = false;
+        vector<string> rawpaths;
 
         for (int i=1; i<argc; i++)
         {
             if (!strcmp(argv[i],"-v")) os_ = &cout;
-            else filenames.push_back(argv[i]);
+            else if (!strcmp(argv[i],"--generate-mzML")) generateMzML = true;
+            else rawpaths.push_back(argv[i]);
         }
 
-        if (filenames.empty())
-            throw runtime_error("Usage: Reader_Agilent_Test [-v] filename"); 
-            
-        test(filenames[0]);
+        vector<string> args(argv, argv+argc);
+        if (rawpaths.empty())
+            throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
+                                "\nUsage: Reader_Agilent_Test [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
+
+        for (size_t i=0; i < rawpaths.size(); ++i)
+            for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
+            {
+                if (itr->path().extension() == ".mzML")
+                    continue;
+                else if (generateMzML)
+                    generate(itr->path().string());
+                else
+                    test(itr->path().string());
+            }
         return 0;
     }
     catch (exception& e)

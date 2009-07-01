@@ -1,5 +1,5 @@
 #
-# Jamfile (data/vendor_readers/Agilent) 
+# Jamfile (pwiz/data/vendor_readers/Agilent) 
 #
 #
 # Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -26,7 +26,15 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
-path-constant api-location : ../../../utility/vendor_api/Agilent ;
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent ;
+path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
+
+
+# decompress test data (on any platform)
+SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+
 
 lib pwiz_reader_agilent
     : # sources
@@ -35,12 +43,12 @@ lib pwiz_reader_agilent
         <toolset>msvc:<source>Reader_Agilent_Detail.cpp
         <toolset>msvc:<source>SpectrumList_Agilent.cpp
         <toolset>msvc:<source>ChromatogramList_Agilent.cpp
-        <toolset>msvc:<library>../../../utility/vendor_api/Agilent//pwiz_agilentdatareader
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_agilent
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<define>PWIZ_READER_AGILENT
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>$(api-location)//pwiz_agilentdatareader
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_agilent
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<define>PWIZ_READER_AGILENT
     ;
@@ -50,20 +58,15 @@ lib pwiz_reader_agilent
 # unit tests (ordered by dependency)
 #
 
-
-path-constant TEST_PATH1 : "AgilentExampleData/QQQ/MRM Neg C5.d" ;
-path-constant TEST_PATH2 : "AgilentExampleData/QTOF/BSA050-r001.d" ;
-path-constant TEST_PATH3 : "AgilentExampleData/TOF/TOFsulfasMS4GHzDualMode+DADSpectra+UVSignal272.d" ;
-
 # special run target for Reader_Agilent_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Agilent_Test.cpp pwiz_reader_agilent 
+run Reader_Agilent_Test.cpp
     : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
+        \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <library>pwiz_reader_agilent
     : # target name
         Reader_Agilent_Test 
     : # default-build
     ;
-explicit Reader_Agilent_Test ;

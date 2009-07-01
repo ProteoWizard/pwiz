@@ -41,7 +41,7 @@ namespace msdata {
 namespace detail {
 
 
-SpectrumList_Agilent::SpectrumList_Agilent(AgilentDataReaderPtr rawfile)
+SpectrumList_Agilent::SpectrumList_Agilent(MassHunterDataPtr rawfile)
 :   rawfile_(rawfile),
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
@@ -60,7 +60,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Agilent::spectrumIdentity(siz
 {
     boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Agilent::createIndex, this));
     if (index>size_)
-        throw runtime_error(("[SpectrumList_Agilent::spectrumIdentity()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Agilent::spectrumIdentity] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
 }
@@ -100,7 +100,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 { 
     boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Agilent::createIndex, this));
     if (index>size_)
-        throw runtime_error(("[SpectrumList_Agilent::spectrum()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Agilent::spectrum] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
     IndexEntry& ie = index_[index];
@@ -108,19 +108,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
     if (!result.get())
-        throw runtime_error("[SpectrumList_Agilent::spectrum()] Allocation error.");
+        throw runtime_error("[SpectrumList_Agilent::spectrum] Allocation error.");
 
     result->index = index;
     result->id = ie.id;
 
-    pwiz::agilent::SpectrumPtr spectrumPtr = rawfile_->getSpectrum(index);
+    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumByRow(ie.rowNumber);
     MSScanType scanType = spectrumPtr->getMSScanType();
     DeviceType deviceType = spectrumPtr->getDeviceType();
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
-    scan.set(MS_scan_start_time, rawfile_->getTicTimes()[index], UO_minute);
+    scan.set(MS_scan_start_time, rawfile_->getTicTimes()[ie.rowNumber], UO_minute);
     scan.set(translateAsPolarityType(spectrumPtr->getIonPolarity()));
 
     int msLevel = translateAsMSLevel(scanType);
@@ -152,16 +152,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     }
 
     //result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), MS_m_z);
-    result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[index], MS_number_of_counts);
-    result->set(MS_total_ion_current, rawfile_->getTicIntensities()[index], MS_number_of_counts);
+    result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[ie.rowNumber], MS_number_of_counts);
+    result->set(MS_total_ion_current, rawfile_->getTicIntensities()[ie.rowNumber], MS_number_of_counts);
 
     MassRange minMaxMz = spectrumPtr->getMeasuredMassRange();
     scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
 
-    int precursorCount;
-    vector<double> precursorMZs = spectrumPtr->getPrecursorIon(precursorCount);
-    if (precursorCount > 0)
+    vector<double> precursorMZs;
+    spectrumPtr->getPrecursorIons(precursorMZs);
+    if (!precursorMZs.empty())
     {
+        if (precursorMZs.size() > 1)
+            throw runtime_error("[SpectrumList_Agilent::spectrum] Cannot handle more than one precursor.");
+
         Precursor precursor;
         Product product;
         SelectedIon selectedIon;
@@ -180,8 +183,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
             //precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
             //precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
             
-            long parentScanId = spectrumPtr->getParentScanId();
-            precursor.spectrumID = "scan=" + lexical_cast<string>(parentScanId);
+            int parentScanId = spectrumPtr->getParentScanId();
+            if (parentScanId > 0)
+                precursor.spectrumID = "scan=" + lexical_cast<string>(parentScanId);
 
             selectedIon.set(MS_selected_ion_m_z, precursorMZs[0], MS_m_z);
             precursor.selectedIons.push_back(selectedIon);
@@ -212,21 +216,25 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     // if a centroided spectrum is desired, we make a new call
     if (doCentroid)
     {
-        spectrumPtr = rawfile_->getSpectrum(index, true);
+        spectrumPtr = rawfile_->getPeakSpectrumByRow(ie.rowNumber);
     }
 
     if (getBinaryData)
     {
         result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
  
-        vector<double> xArray = spectrumPtr->getXArray();
+        automation_vector<double> xArray;
+        spectrumPtr->getXArray(xArray);
         result->getMZArray()->data.assign(xArray.begin(), xArray.end());
 
-        vector<float> yArray = spectrumPtr->getYArray();
+        automation_vector<float> yArray;
+        spectrumPtr->getYArray(yArray);
         result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
-    }
 
-    result->defaultArrayLength = (size_t) spectrumPtr->getTotalDataPoints();
+        result->defaultArrayLength = xArray.size();
+    }
+    else
+        result->defaultArrayLength = (size_t) spectrumPtr->getTotalDataPoints();
 
     return result;
 }
@@ -241,12 +249,12 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
         scanTypes & MSScanType_ProductIon ||
         scanTypes & MSScanType_PrecursorIon)
     {
-        __int64 size = rawfile_->getTotalScansPresent();
+        int size = rawfile_->getTotalScansPresent();
         index_.reserve(size);
 
         for (size_t i=0, end = (size_t) size; i < end; ++i)
         {
-            pwiz::agilent::SpectrumPtr spectrumPtr = rawfile_->getSpectrum(i);
+            pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumByRow(i);
             MSScanType scanType = spectrumPtr->getMSScanType();
 
             // these spectra are chromatogram-centric
@@ -257,11 +265,12 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
             index_.push_back(IndexEntry());
             IndexEntry& ie = index_.back();
-            ie.scan = spectrumPtr->getScanId();
+            ie.rowNumber = (int) i;
+            ie.scanId = spectrumPtr->getScanId();
             ie.index = index_.size()-1;
 
             ostringstream oss;
-            oss << "scan=" << ie.scan;
+            oss << "scan=" << ie.scanId;
             ie.id = oss.str();
         }
     }

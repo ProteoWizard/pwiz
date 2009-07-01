@@ -1,16 +1,39 @@
+#
+# Jamfile (pwiz/utility/vendor_api/Agilent) 
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
 
 import modules ;
 import path ;
 
-path-constant CLI_ROOT : . ;
+
+path-constant API_PATH : . ;
+
 
 if [ modules.peek : NT ] &&
-   [ path.exists $(CLI_ROOT)/MassSpecDataReader.dll ]
+   [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
 {
 
-lib pwiz_agilentdatareader
+lib pwiz_vendor_api_agilent
     : # sources
-        AgilentDataReader.cpp
+        MassHunterData.cpp
     : # requirements
 
         # - when boost::thread is link=static, the exe header is tweaked to call
@@ -22,44 +45,33 @@ lib pwiz_agilentdatareader
         # HACK: not needed when using hacked tss_pe.cpp
         #<link>shared
         
-        <toolset>msvc,<link>shared:<define>AGILENTDATAREADER_DYN_LINK
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <using-clr>true # requires hacked msvc.jam
-        <cxxflags>"/AI $(CLI_ROOT)"
-        <toolset>msvc:<dependency>MassSpecDataReader.dll
-        <toolset>msvc:<dependency>BaseCommon.dll
-        <toolset>msvc:<dependency>BaseDataAccess.dll
-        <toolset>msvc:<dependency>BaseError.dll
-        <toolset>msvc:<dependency>BaseTof.dll
-        <toolset>msvc:<dependency>agtsampleinforw.dll
+        <toolset>msvc:<assembly>$(API_PATH)/MassSpecDataReader.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseCommon.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseDataAccess.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseError.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseTof.dll
+        <toolset>msvc:<assembly-dependency>$(API_PATH)/agtsampleinforw.dll
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<dependency>MassSpecDataReader.dll
-        <toolset>msvc:<dependency>BaseCommon.dll
-        <toolset>msvc:<dependency>BaseDataAccess.dll
-        <toolset>msvc:<dependency>BaseError.dll
-        <toolset>msvc:<dependency>BaseTof.dll
-        <toolset>msvc:<dependency>agtsampleinforw.dll
+        <toolset>msvc:<assembly>$(API_PATH)/MassSpecDataReader.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseCommon.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseDataAccess.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseError.dll
+        <toolset>msvc:<assembly>$(API_PATH)/BaseTof.dll
+        <toolset>msvc:<assembly-dependency>$(API_PATH)/agtsampleinforw.dll
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     ;
 
 
-#
-# unit tests (ordered by dependency)
-#
-
-path-constant TEST_PATH1 : "c:/test/MixC-dMRM-06.d" ;
-
-# special run target for WiffFileTest, which needs external data 
-# use --preserve-test-targets to prevent bjam from deleting the executable
-run AgilentDataReaderTest.cpp
-    : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
-    : # input-files
-    : # requirements
-        <library>pwiz_agilentdatareader
-    : # target name
-        AgilentDataReaderTest 
-    : # default-build
+# a test utility, not a unit test
+exe MassHunterDataTest
+    : MassHunterDataTest.cpp
+      pwiz_vendor_api_agilent
     ;
-explicit AgilentDataReaderTest ;
+
+explicit MassHunterDataTest ;
 
 }

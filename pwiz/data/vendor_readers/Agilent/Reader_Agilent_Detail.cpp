@@ -33,7 +33,7 @@ namespace detail {
 
 
 PWIZ_API_DECL
-vector<InstrumentConfiguration> createInstrumentConfigurations(AgilentDataReaderPtr rawfile)
+vector<InstrumentConfiguration> createInstrumentConfigurations(MassHunterDataPtr rawfile)
 {
     vector<InstrumentConfiguration> configurations;
 

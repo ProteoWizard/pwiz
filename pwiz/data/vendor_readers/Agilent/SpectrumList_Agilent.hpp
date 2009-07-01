@@ -42,7 +42,7 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Agilent(AgilentDataReaderPtr rawfile);
+    SpectrumList_Agilent(MassHunterDataPtr rawfile);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
@@ -51,14 +51,15 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     
     private:
 
-    AgilentDataReaderPtr rawfile_;
+    MassHunterDataPtr rawfile_;
     mutable size_t size_;
 
     mutable boost::once_flag indexInitialized_;
 
     struct IndexEntry : public SpectrumIdentity
     {
-        long scan; // unique but not contiguous
+        int rowNumber; // continguous 0-based index (not equal to SpectrumIdentity::index since some scan types are skipped)
+        int scanId; // unique but not contiguous
     };
 
     mutable vector<IndexEntry> index_;

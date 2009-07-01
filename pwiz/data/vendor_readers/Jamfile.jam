@@ -34,12 +34,10 @@ lib pwiz_data_vendor_readers
     : # requirements
         <library>Agilent//pwiz_reader_agilent
         <library>Thermo//pwiz_reader_thermo
-        <toolset>msvc:<define>PWIZ_READER_THERMO
     : # default-build
     : # usage-requirements
         <library>Agilent//pwiz_reader_agilent
         <library>Thermo//pwiz_reader_thermo
-        <toolset>msvc:<define>PWIZ_READER_THERMO
     ;
 
 

@@ -39,7 +39,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_Agilent::ChromatogramList_Agilent(AgilentDataReaderPtr rawfile)
+ChromatogramList_Agilent::ChromatogramList_Agilent(MassHunterDataPtr rawfile)
 :   rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)
 {
 }
@@ -99,6 +99,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
                 result->getTimeArray()->data.assign(rawfile_->getTicTimes().begin(), rawfile_->getTicTimes().end());
                 result->getIntensityArray()->data.assign(rawfile_->getTicIntensities().begin(), rawfile_->getTicIntensities().end());
+
+                result->defaultArrayLength = result->getTimeArray()->data.size();
             }
             else
                 result->defaultArrayLength = rawfile_->getTicTimes().size();
@@ -107,7 +109,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SRM_chromatogram:
         {
-            pwiz::agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.index, ChromType_MultipleReactionMode));
+            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.targetIndex, ChromatogramType_MultipleReactionMode));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
@@ -120,11 +122,16 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
-                vector<double> xArray = chromatogramPtr->getXArray();
+
+                automation_vector<double> xArray;
+                chromatogramPtr->getXArray(xArray);
                 result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-                vector<float> yArray = chromatogramPtr->getYArray();
+                automation_vector<float> yArray;
+                chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+
+                result->defaultArrayLength = xArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
@@ -133,18 +140,23 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SIM_chromatogram:
         {
-            pwiz::agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.index, ChromType_SelectedIonMonitoring));
+            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.targetIndex, ChromatogramType_SelectedIonMonitoring));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
 
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
-                vector<double> xArray = chromatogramPtr->getXArray();
+
+                automation_vector<double> xArray;
+                chromatogramPtr->getXArray(xArray);
                 result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
-                vector<float> yArray = chromatogramPtr->getYArray();
+                automation_vector<float> yArray;
+                chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+
+                result->defaultArrayLength = xArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
@@ -176,8 +188,9 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.chromatogramType = MS_SRM_chromatogram;
-        ci.q1 = transition.precursor;
-        ci.q3 = transition.product;
+        ci.targetIndex = i;
+        ci.q1 = transition.Q1;
+        ci.q3 = transition.Q3;
         ci.id = (format("SRM SIC %.10g,%.10g")
                  % ci.q1
                  % ci.q3
@@ -193,6 +206,7 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.chromatogramType = MS_SIM_chromatogram;
+        ci.targetIndex = i;
         ci.q1 = monitoredIons[i];
         ci.q3 = 0;
         ci.id = (format("SIM SIC %.10g")

@@ -27,7 +27,6 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
-#include <boost/math/special_functions/modf.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::string& filename, const std::string& head) const
@@ -44,11 +43,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/COMInitializer.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/algorithm/string.hpp"
 #include "Reader_Agilent_Detail.hpp"
 #include "SpectrumList_Agilent.hpp"
 #include "ChromatogramList_Agilent.hpp"
@@ -74,53 +69,8 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-string creationDateToStartTimeStamp(string creationDate)
-{
-	// input format: "6/27/2007 15:23:45"
-	// output format: "2007-06-27T15:23:45.00035"
-
-	int month, day, year, hour, minute, second;
-	char separator;
-
-	istringstream iss(creationDate);
-	iss >> month >> separator
-	    >> day >> separator
-		>> year
-		>> hour >> separator
-		>> minute >> separator
-		>> second;
-
-	ostringstream result;
-	result << year << "-"
-           << setfill('0')
-	       << setw(2) << month << "-"
-	       << setw(2) << day << "T"
-	       << setw(2) << hour << ":"
-	       << setw(2) << minute << ":"
-	       << setw(2) << second;
-
-	return result.str();
-}
-
-
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ?
-           c :
-           '_';
-}
-
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
-
 void initializeInstrumentConfigurationPtrs(MSData& msd,
-                                           AgilentDataReaderPtr rawfile,
+                                           MassHunterDataPtr rawfile,
                                            const SoftwarePtr& instrumentSoftware)
 {
     DeviceType deviceType = rawfile->getDeviceType();
@@ -151,7 +101,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 }
 
 
-void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData& msd)
+void fillInMetadata(const string& filename, MassHunterDataPtr rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
@@ -183,14 +133,15 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     }
 
     msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
-    if (scanTypes & MSScanType_SelectedIon ||
-        scanTypes & MSScanType_MultipleReaction)
-        msd.fileDescription.fileContent.set(MS_SIC_chromatogram);
+    if (scanTypes & MSScanType_SelectedIon)
+        msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
+    if (scanTypes & MSScanType_MultipleReaction)
+        msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
-    SourceFilePtr sourceFile(new SourceFile);
     bfs::path p = bfs::path(filename) / "AcqData/mspeak.bin";
     if (bfs::exists(p))
     {
+        SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "PeakData";
         sourceFile->name = p.leaf();
         string location = bfs::complete(p.parent_path()).string();
@@ -204,6 +155,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     p = bfs::path(filename) / "AcqData/msprofile.bin";
     if (bfs::exists(p))
     {
+        SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "ProfileData";
         sourceFile->name = p.leaf();
         string location = bfs::complete(p.parent_path()).string();
@@ -214,7 +166,7 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    msd.id = stringToIDREF(filename);
+    msd.id = filename;
 
     SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";
@@ -244,48 +196,25 @@ void fillInMetadata(const string& filename, AgilentDataReaderPtr rawfile, MSData
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(stringToIDREF(filename));
-
-    using namespace boost::posix_time;
-    using namespace boost::gregorian;
-    using namespace boost::local_time;
-    double acquisitionDATE = (double) rawfile->getAcquisitionTime();
-    int dayOffset, hourOffset, minuteOffset, secondOffset;
-    double fraction = boost::math::modf(acquisitionDATE, &dayOffset) * 24; // fraction = hours
-    fraction = boost::math::modf(fraction, &hourOffset) * 60; // fraction = minutes
-    fraction = boost::math::modf(fraction, &minuteOffset) * 60; // fraction = seconds
-    boost::math::modf(fraction, &secondOffset);
-    ptime pt(date(1899, bdt::Dec, 30),
-             time_duration(hourOffset, minuteOffset, secondOffset));
-    local_date_time ldt(pt, time_zone_ptr());
-    ldt += days(dayOffset);
-    local_time_facet* output_facet = new local_time_facet;
-    output_facet->format("%Y-%m-%dT%H:%M:%S"); // 2007-06-27T15:23:45
-    stringstream ss;
-    ss.imbue(locale(locale::classic(), output_facet));
-    ss << ldt;
-    msd.run.startTimeStamp = ss.str();
+    msd.run.id = filename;
+    msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime());
 }
 
 } // namespace
-
-
-Reader_Agilent::Reader_Agilent() {COMInitializer::initialize();}
-Reader_Agilent::~Reader_Agilent() {COMInitializer::uninitialize();}
 
 
 PWIZ_API_DECL
 void Reader_Agilent::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int sampleIndex /* = 0 */) const
+                         int runIndex /* = 0 */) const
 {
-    if (sampleIndex != 0)
-        throw ReaderFail("[Reader_Agilent::read] multiple samples not supported");
+    if (runIndex != 0)
+        throw ReaderFail("[Reader_Agilent::read] multiple runs not supported");
 
     // instantiate RawFile, share ownership with SpectrumList_Agilent
 
-    AgilentDataReaderPtr dataReader(AgilentDataReader::create(filename));
+    MassHunterDataPtr dataReader(MassHunterData::create(filename));
 
     shared_ptr<SpectrumList_Agilent> sl(new SpectrumList_Agilent(dataReader));
     shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(dataReader));
@@ -312,9 +241,6 @@ namespace pwiz {
 namespace msdata {
 
 using namespace std;
-
-Reader_Agilent::Reader_Agilent() {}
-Reader_Agilent::~Reader_Agilent() {}
 
 PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& head, MSData& result,	int sampleIndex /* = 0 */) const
 {
