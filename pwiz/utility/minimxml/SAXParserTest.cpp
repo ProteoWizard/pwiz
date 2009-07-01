@@ -300,6 +300,7 @@ void test()
     if (os_)
     {
         *os_ << "root.param: " << root.param << endl
+             << "first.escaped_attribute: " << root.first.escaped_attribute << endl
              << "first.text: " << root.first.text << endl
              << "second.param2: " << root.second.param2 << endl
              << "second.param3: " << root.second.param3 << endl
@@ -311,6 +312,41 @@ void test()
     unit_assert(root.param == "value");
     unit_assert(root.first.escaped_attribute == "\"<&lt;>\"");
     unit_assert(root.first.text == "Some Text with Entity References: <&>");
+    unit_assert(root.second.param2 == "something");
+    unit_assert(root.second.param3 == "something.else 1234-56");
+    unit_assert(root.second.text.size() == 3);
+    unit_assert(root.second.text[0] == "Pre-Text");
+    unit_assert(root.second.text[1] == "Inlined text");
+    unit_assert(root.second.text[2] == "Post-text.");
+}
+
+
+void testNoAutoUnescape()
+{
+    if (os_) *os_ << "testNoAutoUnescape()\n";
+
+    istringstream is(sampleXML);
+    Root root;
+    RootHandler rootHandler(root);
+    rootHandler.autoUnescapeAttributes = false;
+    rootHandler.autoUnescapeCharacters = false;
+    parse(is, rootHandler);
+
+    if (os_)
+    {
+        *os_ << "root.param: " << root.param << endl
+             << "first.escaped_attribute: " << root.first.escaped_attribute << endl
+             << "first.text: " << root.first.text << endl
+             << "second.param2: " << root.second.param2 << endl
+             << "second.param3: " << root.second.param3 << endl
+             << "second.text: ";
+        copy(root.second.text.begin(), root.second.text.end(), ostream_iterator<string>(*os_,"|"));
+        *os_ << "\n\n"; 
+    }
+
+    unit_assert(root.param == "value");
+    unit_assert(root.first.escaped_attribute == "&quot;&lt;&amp;lt;&gt;&quot;");
+    unit_assert(root.first.text == "Some Text with Entity References: &lt;&amp;&gt;");
     unit_assert(root.second.param2 == "something");
     unit_assert(root.second.param3 == "something.else 1234-56");
     unit_assert(root.second.text.size() == 3);
@@ -427,6 +463,7 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         demo();
         test();
+        testNoAutoUnescape();
         testDone();
         testBadXML();
         testNested();

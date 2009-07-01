@@ -52,6 +52,10 @@ class Handler
 {
     public:
 
+    /// Setting these to false will disable the auto-unescaping feature of the parser;
+    /// this is useful for handlers which deal with large amounts of data
+    bool autoUnescapeAttributes, autoUnescapeCharacters;
+
     /// Handler returns the Status struct as a means of changing the parser's behavior.  
     struct Status
     {
@@ -88,6 +92,7 @@ class Handler
     virtual Status characters(const std::string& text,
                               stream_offset position) {return Status::Ok;}
 
+    Handler() : autoUnescapeAttributes(true), autoUnescapeCharacters(true) {}
     virtual ~Handler(){}
 
     protected:

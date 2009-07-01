@@ -156,7 +156,7 @@ const string whitespace_ = " \t\n\r";
 const string quote_ = "\"\'";
 
 
-void parseAttribute(const string& tag, string::size_type& index, Handler::Attributes& attributes)
+void parseAttribute(const string& tag, string::size_type& index, Handler::Attributes& attributes, bool unescapeAttributes)
 {
     string::size_type indexNameBegin = tag.find_first_not_of(whitespace_, index);
     string::size_type indexNameEnd = tag.find_first_of(whitespace_ + '=', indexNameBegin+1);
@@ -176,7 +176,9 @@ void parseAttribute(const string& tag, string::size_type& index, Handler::Attrib
     string name = tag.substr(indexNameBegin, indexNameEnd-indexNameBegin);
     string value = tag.substr(indexQuoteOpen+1, indexQuoteClose-indexQuoteOpen-1);
 
-    attributes[name] = unescapeXML(value);
+    if (unescapeAttributes)
+        unescapeXML(value);
+    attributes[name] = value;
     index = tag.find_first_not_of(whitespace_, indexQuoteClose+1);
 }
 
@@ -187,7 +189,7 @@ struct StartTag
     Handler::Attributes attributes;
     bool end;
 
-    StartTag(const string& buffer)
+    StartTag(const string& buffer, bool unescapeAttributes)
     :   end(false)
     {
         if (buffer[buffer.size()-1] == '/') end = true;
@@ -208,7 +210,7 @@ struct StartTag
         string::size_type index = indexNameEnd + 1;
         string::size_type indexEnd = end ? buffer.size()-1 : buffer.size();
         while (index < indexEnd)
-            parseAttribute(buffer, index, attributes);
+            parseAttribute(buffer, index, attributes, unescapeAttributes);
     }
 };
 
@@ -349,7 +351,8 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         if (!buffer.empty())
         {
-            unescapeXML(buffer);
+            if (handler.autoUnescapeCharacters)
+                unescapeXML(buffer);
             Handler::Status status = wrangler.characters(buffer, position);
             if (status.flag == Handler::Status::Done) return;
         }
@@ -393,7 +396,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
             }
             default: 
             {
-                StartTag tag(buffer);
+                StartTag tag(buffer, handler.autoUnescapeAttributes);
 
                 Handler::Status status = wrangler.startElement(tag.name, tag.attributes, position);
                 if (status.flag == Handler::Status::Done) return;
