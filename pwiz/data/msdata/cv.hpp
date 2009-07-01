@@ -35,12 +35,12 @@
 // [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 30:04:2009 11:14
-//   saved-by: edeutsch
+//   saved-by: Matt Chambers
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.7.0
-//   remark: release date: 2009-05-27
+//   remark: version: 2.16.0
+//   remark: release date: 2009-07-01
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
@@ -1965,22 +1965,22 @@ enum PWIZ_API_DECL CVID
     /// signal to noise array: A data array of signal-to-noise values.
     MS_signal_to_noise_array = 1000517,
 
-    /// binary data type: Encoding type of binary data, e.g. 64-bit float.
+    /// binary data type: Encoding type of binary data specifying the binary representation and precision, e.g. 64-bit float.
     MS_binary_data_type = 1000518,
 
-    /// 32-bit integer: Signed 32-bit integer.
-    MS_32_bit_integer_OBSOLETE = 1000519,
+    /// 32-bit integer: Signed 32-bit little-endian integer.
+    MS_32_bit_integer = 1000519,
 
     /// 16-bit float: Signed 16-bit float.
     MS_16_bit_float_OBSOLETE = 1000520,
 
-    /// 32-bit float: Signed 32-bit float. IEEE-754.
+    /// 32-bit float: 32-bit precision little-endian floating point conforming to IEEE-754.
     MS_32_bit_float = 1000521,
 
-    /// 64-bit integer: Signed 64-bit integer.
-    MS_64_bit_integer_OBSOLETE = 1000522,
+    /// 64-bit integer: Signed 64-bit little-endian integer.
+    MS_64_bit_integer = 1000522,
 
-    /// 64-bit float: Signed 64-bit float. IEEE-754.
+    /// 64-bit float: 64-bit precision little-endian floating point conforming to IEEE-754.
     MS_64_bit_float = 1000523,
 
     /// data file content: Describes the data content on the file.
@@ -3199,7 +3199,7 @@ enum PWIZ_API_DECL CVID
     MS_database_filtering = 1001019,
 
     /// DB filter taxonomy: The taxonomy filter applied (if any) to the database search.
-    MS_DB_filter_taxonomy = 1001020,
+    MS_DB_filter_taxonomy_OBSOLETE = 1001020,
 
     /// DB filter on accession numbers: Filtering applied specifically by accession number pattern.
     MS_DB_filter_on_accession_numbers = 1001021,
@@ -3666,8 +3666,8 @@ enum PWIZ_API_DECL CVID
     /// decoy DB type randomized: Decoy type: Amino acids of protein sequences are randomized (keeping the original protein mass).
     MS_decoy_DB_type_randomized = 1001196,
 
-    /// DB composition forward+decoy: Decoy database composition: database contains original (forward) and decoy entries.
-    MS_DB_composition_forward_decoy = 1001197,
+    /// DB composition target+decoy: Decoy database composition: database contains original (target) and decoy entries.
+    MS_DB_composition_target_decoy = 1001197,
 
     /// protein quality estimation measure: Quality estimation score for a protein (p-value, Expect value, confidence, local FDR).
     MS_protein_quality_estimation_measure = 1001198,
@@ -4425,13 +4425,13 @@ enum PWIZ_API_DECL CVID
     /// taxonomy: NCBI TaxID: This term is used if a NCBI TaxID is specified, e.g. 9606 for Homo sapiens.
     MS_taxonomy__NCBI_TaxID = 1001467,
 
-    /// taxonomy: common name: This term is used if a common name is specified, e.g. human.
+    /// taxonomy: common name: This term is used if a common name is specified, e.g. human. Recommend using MS:1001467 (taxonomy: NCBI TaxID) where possible.
     MS_taxonomy__common_name = 1001468,
 
-    /// taxonomy: scientific name: This term is used if a scientific name is specified, e.g. Homo sapiens.
+    /// taxonomy: scientific name: This term is used if a scientific name is specified, e.g. Homo sapiens. Recommend using MS:1001467 (taxonomy: NCBI TaxID) where possible.
     MS_taxonomy__scientific_name = 1001469,
 
-    /// taxonomy: Swiss-Prot ID: This term is used if a swiss prot taxonomy id is specified, e.g. Human.
+    /// taxonomy: Swiss-Prot ID: This term is used if a swiss prot taxonomy id is specified, e.g. Human. Recommend using MS:1001467 (taxonomy: NCBI TaxID) where possible.
     MS_taxonomy__Swiss_Prot_ID = 1001470,
 
     /// peptide modification details: The children of this term can be used to describe modifications.
@@ -4454,6 +4454,114 @@ enum PWIZ_API_DECL CVID
 
     /// consecutive reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.
     MS_CRM_chromatogram_OBSOLETE = MS_consecutive_reaction_monitoring_chromatogram_OBSOLETE,
+
+    /// OMSSA: Open Mass Spectrometry Search Algorithm was used to analyze the spectra.
+    MS_OMSSA = 1001475,
+
+    /// xtandem: X!Tandem was used to analyze the spectra.
+    MS_xtandem = 1001476,
+
+    /// SpectraST: SpectraST was used to analyze the spectra.
+    MS_SpectraST = 1001477,
+
+    /// Mascot Parser: Mascot Parser was used to analyze the spectra.
+    MS_Mascot_Parser = 1001478,
+
+    /// null-terminated ASCII string: Sequence of zero or more non-zero ASCII characters terminated by a single null (0) byte.
+    MS_null_terminated_ASCII_string = 1001479,
+
+    /// AB SCIEX TOF/TOF nativeID format: jobRun=xsd:nonNegativeInteger spotLabel=xsd:string spectrum=xsd:nonNegativeInteger.
+    MS_AB_SCIEX_TOF_TOF_nativeID_format = 1001480,
+
+    /// AB SCIEX TOF/TOF database: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument database.
+    MS_AB_SCIEX_TOF_TOF_database = 1001481,
+
+    /// AB SCIEX TOF/TOF 5800: AB SCIEX or Applied Biosystems|MDS Analytical Technologies AB SCIEX TOF/TOF 5800 Analyzer.
+    MS_AB_SCIEX_TOF_TOF_5800 = 1001482,
+
+    /// AB SCIEX TOF/TOF Series Explorer Software: AB SCIEX or Applied Biosystems software for TOF/TOF data acquisition and analysis.
+    MS_AB_SCIEX_TOF_TOF_Series_Explorer_Software = 1001483,
+
+    /// intensity normalization: Normalization of data point intensities.
+    MS_intensity_normalization = 1001484,
+
+    /// m/z calibration: Calibration of data point m/z positions.
+    MS_m_z_calibration = 1001485,
+
+    /// data filtering: Filtering out part of the data.
+    MS_data_filtering = 1001486,
+
+    /// ProteinExtractor: An algorithm for protein determination/assembly integrated into Bruker's ProteinScape.
+    MS_ProteinExtractor = 1001487,
+
+    /// Mascot Distiller : Mascot Distiller.
+    MS_Mascot_Distiller_ = 1001488,
+
+    /// Mascot Integra : Mascot Integra.
+    MS_Mascot_Integra_ = 1001489,
+
+    /// Percolator : Percolator.
+    MS_Percolator_ = 1001490,
+
+    /// percolator:Q value: percolator:Q value.
+    MS_percolator_Q_value = 1001491,
+
+    /// percolator:score : percolator:score.
+    MS_percolator_score_ = 1001492,
+
+    /// percolaror:PEP : Posterior error probability.
+    MS_percolaror_PEP_ = 1001493,
+
+    /// no threshold: In case no threshold was used.
+    MS_no_threshold = 1001494,
+
+    /// ProteinScape:SearchResultId: The SearchResultId of this peptide as SearchResult in the ProteinScape database.
+    MS_ProteinScape_SearchResultId = 1001495,
+
+    /// ProteinScape:SearchEventId: The SearchEventId of the SearchEvent in the ProteinScape database.
+    MS_ProteinScape_SearchEventId = 1001496,
+
+    /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
+    MS_ProteinScape_ProfoundProbability = 1001597,
+
+    /// Profound:z value: The Profound z value.
+    MS_Profound_z_value = 1001498,
+
+    /// Profound:Cluster: The Profound cluster score.
+    MS_Profound_Cluster = 1001499,
+
+    /// Profound:ClusterRank: The Profound cluster rank.
+    MS_Profound_ClusterRank = 1001500,
+
+    /// MSFit:Mowse score: The MSFit Mowse score.
+    MS_MSFit_Mowse_score = 1001501,
+
+    /// Sonar:Score: The Sonar score.
+    MS_Sonar_Score = 1001502,
+
+    /// ProteinScape:PFFSolverExp: The ProteinSolver exp value stored by ProteinScape.
+    MS_ProteinScape_PFFSolverExp = 1001503,
+
+    /// ProteinScape:PFFSolverScore: The ProteinSolver score stored by ProteinScape.
+    MS_ProteinScape_PFFSolverScore = 1001504,
+
+    /// ProteinScape:IntensityCoverage: The intensity coverage of the identified peaks in the spectrum calculated by ProteinScape.
+    MS_ProteinScape_IntensityCoverage = 1001505,
+
+    /// ProteinScape:SequestMetaScore: The Sequest meta score calculated by ProteinScape from the original Sequest scores.
+    MS_ProteinScape_SequestMetaScore = 1001506,
+
+    /// ProteinExtractor:Score: The score calculated by ProteinExtractor.
+    MS_ProteinExtractor_Score = 1001507,
+
+    /// Agilent MassHunter nativeID format: scanId=xsd:nonNegativeInteger.
+    MS_Agilent_MassHunter_nativeID_format = 1001508,
+
+    /// Agilent MassHunter file: A data file found in an Agilent MassHunter directory which contains raw data acquired by an Agilent mass spectrometer.
+    MS_Agilent_MassHunter_file = 100509,
+
+    /// TSQ Vantage: TSQ Vantage.
+    MS_TSQ_Vantage = 1001510,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
