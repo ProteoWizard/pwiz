@@ -1,3 +1,24 @@
+#
+# Jamfile (pwiz_aux/msrc/data/vendor_readers/Waters) 
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
 
 project
     : requirements 
@@ -5,7 +26,15 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
-path-constant api-location : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
+path-constant TEST_DATA_PATH : ./Reader_Waters_Test.data ;
+
+
+# decompress test data (on any platform)
+SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+
 
 lib pwiz_aux_msrc_reader_waters
     : # sources
@@ -15,28 +44,25 @@ lib pwiz_aux_msrc_reader_waters
         <toolset>msvc:<source>ChromatogramList_Waters.cpp
         <toolset>msvc:<source>Reader_Waters_Detail.cpp
         <toolset>msvc:<define>PWIZ_READER_WATERS
-        <toolset>msvc:<library>$(api-location)
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
         <toolset>msvc:<define>PWIZ_READER_WATERS
-        <toolset>msvc:<library>$(api-location)
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
 
-path-constant TEST_PATH1 : "c:/test/160109_Mix1_calcurve_070.raw" ;
-path-constant TEST_PATH2 : "c:/test/010208_ecoli_003.raw" ;
-
 # special run target for Reader_Waters_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Waters_Test.cpp pwiz_aux_msrc_reader_waters 
+run Reader_Waters_Test.cpp
     : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" -v
+        \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <library>pwiz_aux_msrc_reader_waters
     : # target name
-        Reader_Waters_Test 
+        Reader_Waters_Test
     : # default-build
     ;
-explicit Reader_Waters_Test ;
