@@ -21,18 +21,17 @@
 //
 
 
-#define WIFFFILE_SOURCE
+#define PWIZ_SOURCE
 
 #pragma unmanaged
 #include "WiffFile.hpp"
-#include <iostream>
-using namespace std;
+#include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-//#ifdef _MANAGED
+
 #pragma managed
 #include <gcroot.h>
-#define GCHANDLE(T) gcroot<T>
-#using "System.Xml.dll"
 
 using System::String;
 using System::Math;
@@ -47,10 +46,6 @@ using ClearCore::Obsolete::MSExperiment;
 using ClearCore::Utility::ZeroBasedInt;
 using ClearCore::Utility::OneBasedInt;
 using namespace System;
-using namespace System::Xml;
-//#else
-//#define GCHANDLE(T) intptr_t
-//#endif
 
 
 // forwards managed exception to unmanaged code
@@ -91,7 +86,8 @@ std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
 
 
 namespace pwiz {
-namespace wiff {
+namespace vendor_api {
+namespace ABI {
 
 
 class WiffFileImpl : public WiffFile
@@ -100,7 +96,7 @@ class WiffFileImpl : public WiffFile
     WiffFileImpl(const std::string& wiffpath);
     ~WiffFileImpl();
 
-    GCHANDLE(DataReader^) reader;
+    gcroot<DataReader^> reader;
 
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
@@ -112,7 +108,7 @@ class WiffFileImpl : public WiffFile
     virtual InstrumentModel getInstrumentModel() const;
     virtual InstrumentType getInstrumentType() const;
     virtual IonSourceType getIonSourceType() const;
-    virtual std::string getSampleAcquisitionTime() const;
+    virtual blt::local_date_time getSampleAcquisitionTime() const;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
@@ -154,7 +150,7 @@ struct ExperimentImpl : public Experiment
     virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const;
 
     const WiffFileImpl* wifffile_;
-    GCHANDLE(MSExperiment^) msExperiment;
+    gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
     vector<double> cycleStartTimes;
 };
@@ -190,7 +186,7 @@ struct SpectrumImpl : public Spectrum
     virtual double getMaxX() const {return maxX;}
 
     ExperimentImplPtr experiment;
-    GCHANDLE(MassSpectrum^) spectrum;
+    gcroot<MassSpectrum^> spectrum;
     int cycle;
 
     // data points
@@ -283,12 +279,12 @@ IonSourceType WiffFileImpl::getIonSourceType() const
     CATCH_AND_FORWARD(return (IonSourceType) reader->Provider->IonSource;)
 }
 
-std::string WiffFileImpl::getSampleAcquisitionTime() const
+blt::local_date_time WiffFileImpl::getSampleAcquisitionTime() const
 {
     CATCH_AND_FORWARD
     (
-        return ToStdString(XmlConvert::ToString(reader->Provider->SampleAcquisitionDateTime,
-                                                XmlDateTimeSerializationMode::RoundtripKind));
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader->Provider->SampleAcquisitionDateTime.ToOADate()));
+        return blt::local_date_time(pt, blt::time_zone_ptr());
     )
 }
 
@@ -597,7 +593,7 @@ void WiffFileImpl::setCycle(int sample, int period, int experiment, int cycle) c
 }
 
 
-WIFFFILE_API
+PWIZ_API_DECL
 WiffFilePtr WiffFile::create(const string& wiffpath)
 {
     WiffFileImplPtr wifffile(new WiffFileImpl(wiffpath));
@@ -605,5 +601,6 @@ WiffFilePtr WiffFile::create(const string& wiffpath)
 }
 
 
-} // wiff
+} // ABI
+} // vendor_api
 } // pwiz

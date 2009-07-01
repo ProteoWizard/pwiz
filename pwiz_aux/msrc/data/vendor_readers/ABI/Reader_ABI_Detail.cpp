@@ -25,7 +25,7 @@
 #include "Reader_ABI_Detail.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
-using namespace pwiz::wiff;
+using namespace pwiz::vendor_api::ABI;
 
 namespace pwiz {
 namespace msdata {
@@ -33,9 +33,12 @@ namespace detail {
 
 
 PWIZ_API_DECL
-InstrumentConfiguration translateAsInstrumentConfiguration(WiffFilePtr wifffile)
+InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffile)
 {
-    InstrumentConfiguration ic;
+    InstrumentConfigurationPtr icPtr(new InstrumentConfiguration);
+    InstrumentConfiguration& ic = *icPtr;
+
+    ic.id = "IC1";
     ic.set(translateAsInstrumentModel(wifffile->getInstrumentModel()));
 
     Component source(ComponentType_Source, 1);
@@ -97,7 +100,7 @@ InstrumentConfiguration translateAsInstrumentConfiguration(WiffFilePtr wifffile)
             break;
     }
 
-    return ic;
+    return icPtr;
 }
 
 

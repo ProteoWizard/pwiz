@@ -24,29 +24,20 @@
 #ifndef _WIFFFILE_HPP_
 #define _WIFFFILE_HPP_
 
-#ifdef WIFFFILE_DYN_LINK
-#ifdef WIFFFILE_SOURCE
-#define WIFFFILE_API __declspec(dllexport)
-#else
-#define WIFFFILE_API __declspec(dllimport)
-#endif  // WIFFFILE_SOURCE
-#endif  // WIFFFILE_DYN_LINK
 
-// if WIFFFILE_API isn't defined yet define it now:
-#ifndef WIFFFILE_API
-#define WIFFFILE_API
-#endif
-
+#include "pwiz/utility/misc/Export.hpp"
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/date_time.hpp>
 
 
 namespace pwiz {
-namespace wiff {
+namespace vendor_api {
+namespace ABI {
 
 
-WIFFFILE_API enum ScanType
+PWIZ_API_DECL enum ScanType
 {
     UNDEFINED_SCAN = -1,
     Q1_SCAN = 0,
@@ -68,7 +59,7 @@ WIFFFILE_API enum ScanType
     ENHANCED_MULTCHARGE_SCAN = 16
 };
 
-WIFFFILE_API enum InstrumentModel
+PWIZ_API_DECL enum InstrumentModel
 {
     API100 = 1,
     API100LC = 2,
@@ -96,7 +87,7 @@ WIFFFILE_API enum InstrumentModel
     QStarElite = 2005
 };
 
-WIFFFILE_API enum InstrumentType
+PWIZ_API_DECL enum InstrumentType
 {
     SingleQuad = 0,
     TripleQuad = 1,
@@ -105,7 +96,7 @@ WIFFFILE_API enum InstrumentType
     Tof = 4
 };
 
-WIFFFILE_API enum IonSourceType
+PWIZ_API_DECL enum IonSourceType
 {
     Medusa = 1,
     Duo = 2,
@@ -118,7 +109,7 @@ WIFFFILE_API enum IonSourceType
     PhotoSpray = 9
 };
 
-WIFFFILE_API enum Polarity
+PWIZ_API_DECL enum Polarity
 {
     NotDefined = -10,
     Negative = -1,
@@ -126,7 +117,7 @@ WIFFFILE_API enum Polarity
 };
 
 
-struct WIFFFILE_API Spectrum
+struct PWIZ_API_DECL Spectrum
 {
     virtual int getSampleNumber() const = 0;
     virtual int getPeriodNumber() const = 0;
@@ -157,7 +148,7 @@ struct WIFFFILE_API Spectrum
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
 
 
-enum WIFFFILE_API TargetType
+enum PWIZ_API_DECL TargetType
 {
     TargetType_SRM,    // selected reaction monitoring (q1 and q3)
     TargetType_SIM,    // selected ion monitoring (q1 but no q3)
@@ -165,7 +156,7 @@ enum WIFFFILE_API TargetType
 };
 
 
-struct WIFFFILE_API Target
+struct PWIZ_API_DECL Target
 {
     TargetType type;
     double Q1, Q3;
@@ -176,7 +167,7 @@ struct WIFFFILE_API Target
 };
 
 
-struct WIFFFILE_API Experiment
+struct PWIZ_API_DECL Experiment
 {
     virtual int getSampleNumber() const = 0;
     virtual int getPeriodNumber() const = 0;
@@ -200,7 +191,7 @@ struct WIFFFILE_API Experiment
 typedef boost::shared_ptr<Experiment> ExperimentPtr;
 
 
-class WIFFFILE_API WiffFile
+class PWIZ_API_DECL WiffFile
 {
     public:
     typedef boost::shared_ptr<WiffFile> Ptr;
@@ -216,7 +207,7 @@ class WIFFFILE_API WiffFile
     virtual InstrumentModel getInstrumentModel() const = 0;
     virtual InstrumentType getInstrumentType() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
-    virtual std::string getSampleAcquisitionTime() const = 0;
+    virtual boost::local_time::local_date_time getSampleAcquisitionTime() const = 0;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const = 0;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;
@@ -228,7 +219,8 @@ class WIFFFILE_API WiffFile
 typedef WiffFile::Ptr WiffFilePtr;
 
 
-} // wiff
+} // ABI
+} // vendor_api
 } // pwiz
 
 

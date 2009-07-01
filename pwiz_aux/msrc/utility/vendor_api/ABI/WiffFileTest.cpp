@@ -30,7 +30,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::wiff;
+using namespace pwiz::vendor_api::ABI;
 
 
 ostream* os_ = 0;
@@ -44,7 +44,7 @@ void test(const string& rawpath)
     int sampleCount = wiffFile->getSampleCount();
     for (int sample=1; sample <= sampleCount; ++sample)
     {
-        cout << "Sample " << sample << endl;
+        cout << "Sample " << sample << " (acquired " << wiffFile->getSampleAcquisitionTime().to_string() << ")" << endl;
         int periodCount = wiffFile->getPeriodCount(sample);
         for (int period=1; period <= periodCount; ++period)
         {

@@ -2,14 +2,15 @@
 import modules ;
 import path ;
 
-path-constant ABI_PATH : . ;
-path-constant ABI_TEST_PATH : ./WiffFileTest.data ;
+
+path-constant API_PATH : . ;
+
 
 if [ modules.peek : NT ] &&
-   [ path.exists $(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+   [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
 {
 
-lib pwiz_wifffile
+lib pwiz_vendor_api_abi
     : # sources
         WiffFile.cpp
     : # requirements
@@ -22,51 +23,30 @@ lib pwiz_wifffile
         #   or the CLR object must be
         # HACK: not needed when using hacked tss_pe.cpp
         #<link>shared
-        
-        <toolset>msvc,<link>shared:<define>WIFFFILE_DYN_LINK
+
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <using-clr>true # requires hacked msvc.jam
-        <toolset>msvc:<assembly>$(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
-        <toolset>msvc:<assembly>$(ABI_PATH)/Clearcore.dll
-        <toolset>msvc:<assembly>$(ABI_PATH)/ClearCore.Storage.dll
-        <toolset>msvc:<assembly-dependency>$(ABI_PATH)/rscoree.dll
+        <toolset>msvc:<assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<assembly>$(API_PATH)/Clearcore.dll
+        <toolset>msvc:<assembly>$(API_PATH)/ClearCore.Storage.dll
+        <toolset>msvc:<assembly-dependency>$(API_PATH)/rscoree.dll
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<assembly>$(ABI_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
-        <toolset>msvc:<assembly>$(ABI_PATH)/Clearcore.dll
-        <toolset>msvc:<assembly>$(ABI_PATH)/ClearCore.Storage.dll
-        <toolset>msvc:<assembly-dependency>$(ABI_PATH)/rscoree.dll
+        <toolset>msvc:<assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
+        <toolset>msvc:<assembly>$(API_PATH)/Clearcore.dll
+        <toolset>msvc:<assembly>$(API_PATH)/ClearCore.Storage.dll
+        <toolset>msvc:<assembly-dependency>$(API_PATH)/rscoree.dll
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     ;
 
 
-# decompress test data
-if [ modules.peek : NT ]
-{
-    SHELL "$(ABI_TEST_PATH)/untar_data.bat $(ABI_TEST_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
-}
-else if [ modules.peek : UNIX ]
-{
-    SHELL "$(ABI_TEST_PATH)/untar_data.sh $(ABI_TEST_PATH) $(PWIZ_ROOT_PATH)" : no-output ;
-}
-
-
-#
-# unit tests (ordered by dependency)
-#
-
-path-constant TEST_PATH1 : "$(ABI_TEST_PATH)/Enolase_repeats_AQv1.4.2.wiff" ;
-
-# special run target for WiffFileTest, which needs external data 
-# use --preserve-test-targets to prevent bjam from deleting the executable
-run WiffFileTest.cpp
-    : # args
-        \"$(TEST_PATH1)\"
-    : # input-files
-    : # requirements
-        <library>pwiz_wifffile
-    : # target name
-        WiffFileTest 
-    : # default-build
+# a test utility, not a unit test
+exe WiffFileTest
+    : WiffFileTest.cpp
+      pwiz_vendor_api_abi
     ;
+
 explicit WiffFileTest ;
 
 }

@@ -25,6 +25,7 @@
 #include "Reader_ABI.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "boost/shared_ptr.hpp"
@@ -69,20 +70,6 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ?
-           c :
-           '_';
-}
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
 void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, int sample)
 {
     msd.cvs = defaultCVList();
@@ -96,7 +83,10 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
         for (int iii=1; iii <= experimentCount; ++iii)
         {
             ExperimentPtr msExperiment = wifffile->getExperiment(sample, ii, iii);
-            msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getScanType()));
+            if (msExperiment->getScanType() != MRM)
+                msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getScanType()));
+            else
+                msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
         }
     }
 
@@ -111,7 +101,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     sourceFile->set(MS_ABI_WIFF_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
-    msd.id = stringToIDREF(sampleName);
+    msd.id = sampleName.empty() ? wiffpath : sampleName;
 
     SoftwarePtr acquisitionSoftware(new Software);
     acquisitionSoftware->id = "Analyst";
@@ -138,13 +128,13 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    InstrumentConfigurationPtr ic(new InstrumentConfiguration(translateAsInstrumentConfiguration(wifffile)));
+    InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(wifffile);
     ic->softwarePtr = acquisitionSoftware;
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
-    msd.run.id = boost::to_lower_copy(sampleName);
-    msd.run.startTimeStamp = wifffile->getSampleAcquisitionTime();
+    msd.run.id = sampleName.empty() ? wiffpath : boost::to_lower_copy(sampleName);
+    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
 }
 
 } // namespace
@@ -220,7 +210,7 @@ void Reader_ABI::readIds(const string& filename,
         WiffFilePtr wifffile = WiffFile::create(filename);
         vector<string> sampleNames = wifffile->getSampleNames();
         for (vector<string>::iterator it = sampleNames.begin(); it != sampleNames.end(); it++)
-            results.push_back(stringToIDREF(*it));
+            results.push_back(*it);
     }
     catch (std::exception& e)
     {

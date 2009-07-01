@@ -30,7 +30,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace pwiz::wiff;
+using namespace pwiz::vendor_api::ABI;
 
 class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
 {

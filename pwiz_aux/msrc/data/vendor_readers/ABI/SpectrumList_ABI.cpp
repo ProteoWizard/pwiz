@@ -116,7 +116,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
     Scan& scan = result->scanList.scans[0];
 
     ExperimentPtr msExperiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
-    pwiz::wiff::SpectrumPtr spectrum = wifffile_->getSpectrum(msExperiment, ie.cycle);
+    pwiz::vendor_api::ABI::SpectrumPtr spectrum = wifffile_->getSpectrum(msExperiment, ie.cycle);
 
     double scanTime = msExperiment->getCycleStartTime(ie.cycle);
     if (scanTime > 0)

@@ -159,7 +159,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         case MS_SRM_chromatogram:
         {
             ExperimentPtr experiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
-            pwiz::wiff::Target target;
+            pwiz::vendor_api::ABI::Target target;
             experiment->getSRM(ie.transition, target);
 
             result->set(MS_dwell_time, target.dwellTime);
@@ -203,7 +203,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     ie.id = "TIC";
     ie.chromatogramType = MS_TIC_chromatogram;
 
-    pwiz::wiff::Target target;
+    pwiz::vendor_api::ABI::Target target;
 
     int periodCount = wifffile_->getPeriodCount(sample);
     for (int ii=1; ii <= periodCount; ++ii)

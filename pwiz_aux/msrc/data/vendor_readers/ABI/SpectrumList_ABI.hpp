@@ -31,7 +31,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace pwiz::wiff;
+using namespace pwiz::vendor_api::ABI;
 
 class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
 {

@@ -32,14 +32,16 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-PWIZ_API_DECL
-InstrumentConfiguration translateAsInstrumentConfiguration(pwiz::wiff::WiffFilePtr wifffile);
+using namespace pwiz::vendor_api::ABI;
 
-PWIZ_API_DECL CVID translateAsInstrumentModel(pwiz::wiff::InstrumentModel instrumentModel);
-PWIZ_API_DECL CVID translateAsIonSource(pwiz::wiff::IonSourceType ionSourceType);
-PWIZ_API_DECL CVID translateAsSpectrumType(pwiz::wiff::ScanType scanType);
-PWIZ_API_DECL int translateAsMSLevel(pwiz::wiff::ScanType scanType);
-PWIZ_API_DECL CVID translate(pwiz::wiff::Polarity polarity);
+PWIZ_API_DECL
+InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffile);
+
+PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel);
+PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType);
+PWIZ_API_DECL CVID translateAsSpectrumType(ScanType scanType);
+PWIZ_API_DECL int translateAsMSLevel(ScanType scanType);
+PWIZ_API_DECL CVID translate(Polarity polarity);
 
 } // detail
 } // msdata

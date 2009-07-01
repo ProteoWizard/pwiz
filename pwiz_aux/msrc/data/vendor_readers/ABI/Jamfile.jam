@@ -1,5 +1,5 @@
 #
-# Jamfile (pwiz_aux_msrc_reader_abi)
+# Jamfile (pwiz_aux/msrc/data/vendor_readers/ABI)
 #
 #
 # Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -26,7 +26,14 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
-path-constant api-location : ../../../utility/vendor_api/ABI ;
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
+path-constant TEST_DATA_PATH : ./Reader_ABI_Test.data ;
+
+
+# decompress test data (on any platform)
+SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+
 
 import path ;
 rule vendor-api-requirements ( properties * )
@@ -34,12 +41,12 @@ rule vendor-api-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
-        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
         {
             result += <source>SpectrumList_ABI.cpp ;
             result += <source>ChromatogramList_ABI.cpp ;
             result += <define>PWIZ_READER_ABI ;
-            result += <library>$(api-location)//pwiz_wifffile ;
+            result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
         }
     }
     return $(result) ;
@@ -49,9 +56,9 @@ rule vendor-api-usage-requirements ( properties * )
 {
     if <toolset>msvc in $(properties)
     {
-        if [ path.exists $(api-location)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
         {
-            return <define>PWIZ_READER_ABI <library>$(api-location)//pwiz_wifffile ;
+            return <define>PWIZ_READER_ABI <library>$(API_PATH)//pwiz_vendor_api_abi ;
         }
     }
 }
@@ -62,13 +69,13 @@ lib pwiz_aux_msrc_reader_abi
         Reader_ABI_Detail.cpp
     : # requirements
         <conditional>@vendor-api-requirements
-        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
-        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
 		<conditional>@vendor-api-usage-requirements
-        <library>../../../../../pwiz/utility/misc//pwiz_utility_misc
-        <library>../../../../../pwiz/data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
 
@@ -76,18 +83,15 @@ lib pwiz_aux_msrc_reader_abi
 # unit tests (ordered by dependency)
 #
 
-path-constant TEST_PATH1 : "c:/test/20061108_CPTAC_1B468.wiff" ;
-path-constant TEST_PATH2 : "C:/test/cptac/SRM/TEST_CPTAC_Verification WG manuscript_Addona et al/Study II/Site 52_done/52_Raw Data/Site52_7.2.wiff" ;
-
 # special run target for Reader_ABI_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_ABI_Test.cpp pwiz_aux_msrc_reader_abi
+run Reader_ABI_Test.cpp
     : # args
-        \"$(TEST_PATH1)\" # \"$(TEST_PATH2)\"
+        \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <library>pwiz_aux_msrc_reader_abi
     : # target name
         Reader_ABI_Test 
     : # default-build
     ;
-explicit Reader_ABI_Test ;
