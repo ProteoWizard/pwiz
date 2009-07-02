@@ -77,15 +77,17 @@ namespace pwiz {
 namespace util {
 
 
+/// returns a string representation suitable for an xsd:datetime attribute;
+/// output string is UTC time (as denoted by the 'Z' suffix)
 template<class time_type>
 inline
 std::string encode_xml_datetime(const time_type& t)
 {
     blt::local_time_facet* output_facet = new blt::local_time_facet;
-    output_facet->format("%Y-%m-%dT%H:%M:%S"); // 2007-06-27T15:23:45
+    output_facet->format("%Y-%m-%dT%H:%M:%SZ"); // 2007-06-27T15:23:45Z
     std::stringstream ss;
     ss.imbue(std::locale(std::locale::classic(), output_facet));
-    ss << t;
+    ss << blt::local_date_time(t.utc_time(), blt::time_zone_ptr());
     return ss.str();
 }
 

@@ -65,23 +65,53 @@ void test_encode_xml_datetime()
     typedef blt::local_date_time datetime;
     typedef datetime::time_duration_type time;
 
+    // New York City time zone for testing local->UTC conversion
+    blt::time_zone_ptr nyc(new blt::posix_time_zone("EST-05:00:00EDT+01:00:00,M4.1.0/02:00:00,M10.5.0/02:00:00"));
+    blt::time_zone_ptr utc;
+
     std::string encoded;
 
-    encoded = encode_xml_datetime(datetime(ptime(date(1899, bdt::Dec, 30), time(0,0,0)), blt::time_zone_ptr()));
-    if (os_) *os_ << encoded << endl;
-    unit_assert(encoded == "1899-12-30T00:00:00");
+    // test output from UTC times
+    datetime dt = datetime(ptime(date(1899, bdt::Dec, 30), time(0,0,0)), utc);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "1899-12-30T00:00:00Z");
 
-    encoded = encode_xml_datetime(datetime(ptime(date(1999, bdt::Dec, 31), time(23,59,59)), blt::time_zone_ptr()));
-    if (os_) *os_ << encoded << endl;
-    unit_assert(encoded == "1999-12-31T23:59:59");
+    dt = datetime(ptime(date(1999, bdt::Dec, 31), time(23,59,59)), utc);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "1999-12-31T23:59:59Z");
 
-    encoded = encode_xml_datetime(datetime(ptime(date(2525, bdt::Jan, 1), time(1,2,3)), blt::time_zone_ptr()));
-    if (os_) *os_ << encoded << endl;
-    unit_assert(encoded == "2525-01-01T01:02:03");
+    dt = datetime(ptime(date(2525, bdt::Jan, 1), time(1,2,3)), utc);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "2525-01-01T01:02:03Z");
 
-    encoded = encode_xml_datetime(datetime(ptime(date(1492, bdt::Feb, 3), time(4,5,6)), blt::time_zone_ptr()));
-    if (os_) *os_ << encoded << endl;
-    unit_assert(encoded == "1492-02-03T04:05:06");
+    dt = datetime(ptime(date(1492, bdt::Feb, 3), time(4,5,6)), utc);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "1492-02-03T04:05:06Z");
+
+    // test output from NYC times
+    dt = datetime(date(1899, bdt::Dec, 30), time(0,0,0), nyc, datetime::NOT_DATE_TIME_ON_ERROR);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "1899-12-30T05:00:00Z"); // UTC=EST+5
+
+    dt = datetime(date(1999, bdt::Dec, 31), time(23,59,59), nyc, datetime::NOT_DATE_TIME_ON_ERROR);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "2000-01-01T04:59:59Z"); // UTC=EST+5
+
+    dt = datetime(date(2525, bdt::Jan, 1), time(1,2,3), nyc, datetime::NOT_DATE_TIME_ON_ERROR);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "2525-01-01T06:02:03Z"); // UTC=EST+5
+
+    dt = datetime(date(1492, bdt::Jun, 3), time(4,5,6), nyc, datetime::NOT_DATE_TIME_ON_ERROR);
+    encoded = encode_xml_datetime(dt);
+    if (os_) *os_ << dt << " -> " << encoded << endl;
+    unit_assert(encoded == "1492-06-03T08:05:06Z"); // UTC=EDT+4
 }
 
 
