@@ -274,8 +274,8 @@ blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
 {
     CATCH_AND_FORWARD
     (
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader_->FileInformation->AcquisitionTime.ToOADate()));
-        return blt::local_date_time(pt, blt::time_zone_ptr());
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader_->FileInformation->AcquisitionTime.ToUniversalTime().ToOADate()));
+        return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     )
 }
 
