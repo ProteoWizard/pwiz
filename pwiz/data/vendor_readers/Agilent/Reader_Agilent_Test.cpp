@@ -54,13 +54,20 @@ void testAccept(const string& filename)
 	                       // even if not all can actually read it
 }
 
+void mangleSourceFileLocations(vector<SourceFilePtr>& sourceFiles)
+{
+    // mangling the absolute paths is necessary for the test to work from any path
+    for (size_t i=0; i < sourceFiles.size(); ++i)
+        sourceFiles[i]->location = "file:///";
+}
+
 void hackInMemoryMSData(MSData& msd)
 {
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
     if (!sfs.empty()) sfs.erase(sfs.end()-1);
-    //vector<SoftwarePtr>& sws = msd.softwarePtrs;
-    //if (!sws.empty()) sws.erase(sws.end()-1);
+
+    mangleSourceFileLocations(sfs);
 
     // remove current DataProcessing created on read
     SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
@@ -81,6 +88,7 @@ void testRead(const string& rawpath)
     Reader_Agilent reader;
     MSData msd;
     reader.read(rawpath, "dummy", msd);
+    mangleSourceFileLocations(msd.fileDescription.sourceFilePtrs);
     if (os_) TextWriter(*os_,0)(msd);
 
     // test for 1:1 equality
