@@ -35,22 +35,12 @@ using boost::shared_ptr;
 
 
 PeakExtractor::PeakExtractor(shared_ptr<PeakFinder> peakFinder,
-                             shared_ptr<PeakFitter> peakFitter,
-                             const Config& config)
-:   peakFinder_(peakFinder), peakFitter_(peakFitter), config_(config)
+                             shared_ptr<PeakFitter> peakFitter)
+:   peakFinder_(peakFinder), peakFitter_(peakFitter)
 {
     if (!peakFinder.get()) throw runtime_error("[PeakExtractor] Null PeakFinder.");
     if (!peakFitter.get()) throw runtime_error("[PeakExtractor] Null PeakFitter.");
 }
-
-
-namespace {
-OrderedPair computeLogarithm(const OrderedPair& p)
-{
-    double value = p.y>0 ? log(p.y) : 0;
-    return OrderedPair(p.x, value);
-}
-} // namespace
 
 
 void PeakExtractor::extractPeaks(const OrderedPairContainerRef& pairs,
@@ -58,15 +48,8 @@ void PeakExtractor::extractPeaks(const OrderedPairContainerRef& pairs,
 {
     result.clear();
 
-    vector<OrderedPair> processedData;
-    if (config_.preprocessWithLogarithm)
-        transform(pairs.begin(), pairs.end(), back_inserter(processedData), computeLogarithm);
-
-    const OrderedPairContainerRef& data(config_.preprocessWithLogarithm ? processedData : pairs);
-
     vector<size_t> peakIndices;
-    peakFinder_->findPeaks(data, peakIndices);
-
+    peakFinder_->findPeaks(pairs, peakIndices);
     peakFitter_->fitPeaks(pairs, peakIndices, result);
 }
 

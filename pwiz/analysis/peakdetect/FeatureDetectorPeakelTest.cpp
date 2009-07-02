@@ -82,7 +82,7 @@ shared_ptr<FeatureDetectorPeakel> createFeatureDetectorPeakel()
 
     config.peakFinder_SNR.windowRadius = 2;
     config.peakFinder_SNR.zValueThreshold = 3;
-    //config.peakFinder_SNR.preprocessWithLogarithm = true; // not available yet
+    config.peakFinder_SNR.preprocessWithLogarithm = true;
 
     config.peakFitter_Parabola.windowRadius = 1;
 

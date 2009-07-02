@@ -48,15 +48,8 @@ class PWIZ_API_DECL PeakExtractor
 
     typedef pwiz::data::peakdata::Peak Peak;
 
-    struct Config
-    {
-        bool preprocessWithLogarithm; // TODO: move to PeakFinder_SNR
-        Config() : preprocessWithLogarithm(true) {}
-    };
-
     PeakExtractor(boost::shared_ptr<PeakFinder> peakFinder,
-                  boost::shared_ptr<PeakFitter> peakFitter,
-                  const Config& config = Config());
+                  boost::shared_ptr<PeakFitter> peakFitter);
     
     void extractPeaks(const pwiz::math::OrderedPairContainerRef& pairs,
                       std::vector<Peak>& result) const; 
@@ -65,7 +58,6 @@ class PWIZ_API_DECL PeakExtractor
 
     boost::shared_ptr<PeakFinder> peakFinder_;
     boost::shared_ptr<PeakFitter> peakFitter_;
-    Config config_;
 };
 
 

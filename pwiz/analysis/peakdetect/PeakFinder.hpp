@@ -57,9 +57,14 @@ class PWIZ_API_DECL PeakFinder_SNR : public PeakFinder
     {
         size_t windowRadius;
         double zValueThreshold;
+        bool preprocessWithLogarithm;
         
-        Config(size_t _windowRadius = 1, double _zValueThreshold = 3)
-        :   windowRadius(_windowRadius), zValueThreshold(_zValueThreshold)
+        Config(size_t _windowRadius = 1, 
+               double _zValueThreshold = 3,
+               bool _preprocessWithLogarithm = true)
+        :   windowRadius(_windowRadius), 
+            zValueThreshold(_zValueThreshold),
+            preprocessWithLogarithm(_preprocessWithLogarithm)
         {}
     };
 

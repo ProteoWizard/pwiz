@@ -45,6 +45,15 @@ PeakFinder_SNR::PeakFinder_SNR(shared_ptr<NoiseCalculator> noiseCalculator, cons
 
 namespace {
 
+struct ComputeLogarithm
+{
+    OrderedPair operator()(const OrderedPair& p)
+    {
+        double value = p.y>0 ? log(p.y) : 0;
+        return OrderedPair(p.x, value);
+    }
+};
+
 struct CalculatePValue
 {
     double operator()(const OrderedPair& p) {return noise_.pvalue(p.y);}
@@ -83,13 +92,19 @@ vector<double> calculateRollingProducts(const vector<double>& in, size_t radius)
 void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
                                vector<size_t>& resultIndices) const
 {
-    Noise noise = noiseCalculator_->calculateNoise(pairs);
+    vector<OrderedPair> preprocessedData;
+    if (config_.preprocessWithLogarithm)
+        transform(pairs.begin(), pairs.end(), back_inserter(preprocessedData), ComputeLogarithm());  
+
+    const OrderedPairContainerRef& data = config_.preprocessWithLogarithm ? preprocessedData : pairs;
+
+    Noise noise = noiseCalculator_->calculateNoise(data); // TODO: investigate calculating noise on unprocessed data
 
     vector<double> pvalues;
-    transform(pairs.begin(), pairs.end(), back_inserter(pvalues), CalculatePValue(noise));
+    transform(data.begin(), data.end(), back_inserter(pvalues), CalculatePValue(noise));
     
     vector<double> rollingProducts = calculateRollingProducts(pvalues, config_.windowRadius);
-    if (rollingProducts.size() != pairs.size()) 
+    if (rollingProducts.size() != data.size()) 
         throw runtime_error("[PeakFinder_SNR::findPeaks()] This isn't happening"); 
 
     double thresholdValue = noise.mean + config_.zValueThreshold * noise.standardDeviation;
@@ -109,7 +124,7 @@ void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
 
 #if 0
     cout << "noise: " << noise.mean << " " << noise.standardDeviation << endl;
-    copy(pairs.begin(), pairs.end(), ostream_iterator<OrderedPair>(cout, "\n"));
+    copy(data.begin(), data.end(), ostream_iterator<OrderedPair>(cout, "\n"));
 
     cout << "pvalues:\n";
     copy(pvalues.begin(), pvalues.end(), ostream_iterator<double>(cout, "\n"));
