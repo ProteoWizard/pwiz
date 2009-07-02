@@ -21,7 +21,7 @@
 
 path-constant PWIZ_ROOT_PATH : . ;
 
-local default_boost_src = "./libraries/boost_1_36_0" ;
+local default_boost_src = "./libraries/boost_1_39_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -37,7 +37,7 @@ import testing ; # needed to enable unit-test rule
 #   build                   Build ProteoWizard applications
 #   =====
 #   --boost-src=<DIR>       Find Boost source distribution here.
-#                           Default: "./libraries/boost_1_36_0"
+#                           Default: "./libraries/boost_1_39_0"
 #
 #   --zlib-src=<DIR>        Find zlib source distribution here.
 #                           Default: "./libraries/zlib-1.23.0"
@@ -169,7 +169,7 @@ else if [ modules.peek : UNIX ]
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 
-using ext-boost : 1.36.0 : $(BOOST_SOURCE) ;
+using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
 
 
 # build/install

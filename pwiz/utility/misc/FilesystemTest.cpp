@@ -36,7 +36,7 @@ using boost::system::system_error;
 
 // platform-specific path elements
 #ifdef WIN32
-#   define ABS "c:\\"         // test at c:\ because FindFile behaves a little tricky there
+#   define ABS "c:/"         // test at c:\ because FindFile behaves a little tricky there
 #   define REL ".\\relative"
 #   define A "\\"             // both slash types should work
 #   define D ";"              // path separator
