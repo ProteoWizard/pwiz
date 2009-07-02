@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # $1 = working directory containing the tarball
 # $2 = pwiz root path
 # $3 = name of untar'd result (adding .tar.bz2 must be the tarball filename)

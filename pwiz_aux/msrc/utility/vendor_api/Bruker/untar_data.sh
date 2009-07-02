@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pushd $1
 if [ ! -e CompassDataTest.data ]; then
