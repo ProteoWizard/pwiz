@@ -50,7 +50,7 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects,
     if (!objects.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
+        //attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objects.begin(); it!=objects.end(); ++it)
             write(writer, *it);
@@ -65,7 +65,7 @@ void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& object
     if (!objectPtrs.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
+        //attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
             write(writer, **it);
@@ -170,10 +170,147 @@ struct HandlerCVParam : public SAXParser::Handler
 };
 
 //
+// UserParam
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("name", userParam.name));
+    if (!userParam.value.empty())
+        attributes.push_back(make_pair("value", userParam.value));
+    if (!userParam.type.empty())
+        attributes.push_back(make_pair("type", userParam.type));
+    if (userParam.units != CVID_Unknown)
+    {
+        attributes.push_back(make_pair("unitAccession", cvTermInfo(userParam.units).id));
+        attributes.push_back(make_pair("unitName", cvTermInfo(userParam.units).name));
+    }
+
+    writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerUserParam : public SAXParser::Handler
+{
+    UserParam* userParam;
+    HandlerUserParam(UserParam* _userParam = 0) : userParam(_userParam) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "userParam")
+            throw runtime_error(("[IO::HandlerUserParam] Unexpected element name: " + name).c_str());
+
+        if (!userParam)
+            throw runtime_error("[IO::HandlerUserParam] Null userParam.");
+
+        getAttribute(attributes, "name", userParam->name);
+        getAttribute(attributes, "value", userParam->value);
+        getAttribute(attributes, "type", userParam->type);
+
+        string unitAccession;
+        getAttribute(attributes, "unitAccession", unitAccession);
+        if (!unitAccession.empty())
+            userParam->units = cvTermInfo(unitAccession).cvid;
+
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
+{
+    HandlerUserParam handler(&userParam);
+    SAXParser::parse(is, handler);
+}
+    
+
+//
+// ParamContainer
+//
+//
+// note: These are auxilliary functions to be called by ParamContainer subclasses
+//
+
+
+PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc)
+{
+    for (vector<CVParam>::const_iterator it=pc.cvParams.begin(); 
+         it!=pc.cvParams.end(); ++it)
+         write(writer, *it);
+
+    for (vector<UserParam>::const_iterator it=pc.userParams.begin(); 
+         it!=pc.userParams.end(); ++it)
+         write(writer, *it);
+}
+
+
+struct HandlerParamContainer : public SAXParser::Handler
+{
+    ParamContainer* paramContainer;
+
+    HandlerParamContainer(ParamContainer* _paramContainer = 0)
+    :   paramContainer(_paramContainer)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!paramContainer)
+            throw runtime_error("[IO::HandlerParamContainer] Null paramContainer.");
+
+        if (name == "cvParam")
+        {
+            paramContainer->cvParams.push_back(CVParam()); 
+            handlerCVParam_.cvParam = &paramContainer->cvParams.back();
+            return Status(Status::Delegate, &handlerCVParam_);
+        }
+        else if (name == "userParam")
+        {
+            paramContainer->userParams.push_back(UserParam()); 
+            handlerUserParam_.userParam = &paramContainer->userParams.back();
+            return Status(Status::Delegate, &handlerUserParam_);
+        }
+
+        throw runtime_error(("[IO::HandlerParamContainer] Unknown element " + name).c_str()); 
+    }
+
+    private:
+
+    HandlerCVParam handlerCVParam_;
+    HandlerUserParam handlerUserParam_;
+};
+
+
+struct HandlerNamedParamContainer : public HandlerParamContainer
+{
+    const string name_;
+
+    HandlerNamedParamContainer(const string& name, ParamContainer* paramContainer = 0)
+    :   HandlerParamContainer(paramContainer), name_(name)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == name_)
+            return Status::Ok;
+
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+};
+
+
+//
 // addIdAttributes
 //
 // Adds attributes for IdentifiableType child classes.
-void addIdAttributes(const IdentifiableType& id, XMLWriter::Attributes attributes)
+void addIdAttributes(const IdentifiableType& id, XMLWriter::Attributes& attributes)
 {
     attributes.push_back(make_pair("id", id.id));
     if (!id.name.empty())
@@ -215,15 +352,29 @@ PWIZ_API_DECL void read(std::istream& is, BibliographicReference& br)
     SAXParser::parse(is, handler);
 }
 
+
 //
 // DBSequence
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& ds)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequencePtr ds)
 {
     XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("id", ds->id));
+    attributes.push_back(make_pair("length", ds->length));
+    attributes.push_back(make_pair("accession", ds->accession));
+    attributes.push_back(make_pair("SearchDatabase_ref", ds->SearchDatabase_ref));
+    
     writer.startElement("DBSequence", attributes);
+
+    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+    writer.startElement("seq");
+    writer.characters(ds->seq);
+    writer.endElement();
+    writer.popStyle();
+
+    writeParamContainer(writer, ds->paramGroup);
     writer.endElement();
 }
 
@@ -244,11 +395,231 @@ struct HandlerDBSequence : public SAXParser::Handler
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, DBSequence& ds)
+PWIZ_API_DECL void read(std::istream& is, DBSequencePtr ds)
 {
-    HandlerDBSequence handler(&ds);
+    // TODO throw exception if pointer is NULL
+    HandlerDBSequence handler(ds.get());
     SAXParser::parse(is, handler);
 }
+
+
+//
+// SequenceCollection
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& sc)
+{
+    XMLWriter::Attributes attributes;
+    writer.startElement("SequenceCollection", attributes);
+    for(vector<DBSequencePtr>::const_iterator it=sc.dbSequences.begin(); it!=sc.dbSequences.end(); it++)
+        write(writer, *it);
+    // TODO write out Peptides.
+    writer.endElement();
+}
+
+
+struct HandlerSequenceCollection : public SAXParser::Handler
+{
+    SequenceCollection* sc;
+    HandlerSequenceCollection(SequenceCollection* _sc = 0) : sc(_sc) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "SequenceCollection")
+            throw runtime_error(("[IO::HandlerSequenceCollection] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc)
+{
+    HandlerSequenceCollection handler(&sc);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Affiliations
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
+                         const Affiliations& affiliations)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("Organization_ref", affiliations.organization_ref));
+
+    writer.startElement("affiliations", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerAffiliations : public SAXParser::Handler
+{
+    Affiliations* aff;
+    HandlerAffiliations(Affiliations* _aff = 0) : aff(_aff) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "affiliations")
+            throw runtime_error(("[IO::HandlerAffiliations] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Affiliations& aff)
+{
+    HandlerAffiliations handler(&aff);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Person
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
+                         XMLWriter::Attributes attributes,
+                         const Person* pp)
+{
+    writer.startElement("Person", attributes);
+    for(vector<Affiliations>::const_iterator it=pp->affiliations.begin();
+        it != pp->affiliations.end();
+        it++)
+        write(writer, *it);
+    writer.endElement();
+}
+
+
+struct HandlerPerson : public SAXParser::Handler
+{
+    Person* per;
+    HandlerPerson(Person* _per = 0) : per(_per) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Person")
+            throw runtime_error(("[IO::HandlerPerson] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Person* pp)
+{
+    // TODO add throw if pointer is NULL
+    HandlerPerson handler(pp);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Organization
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
+                         XMLWriter::Attributes attributes,
+                         const Organization* op)
+{
+    writer.startElement("Organization", attributes);
+    writer.endElement();
+}
+
+
+struct HandlerOrganization : public SAXParser::Handler
+{
+    Organization* org;
+    HandlerOrganization(Organization* _org = 0) : org(_org) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Organization")
+            throw runtime_error(("[IO::HandlerOrganization] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Organization* op)
+{
+    // TODO add throw if pointer is NULL
+    HandlerOrganization handler(op);
+    SAXParser::parse(is, handler);
+}
+
+//
+// Contact
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*cp, attributes);
+    if (!cp->address.empty())
+        attributes.push_back(make_pair("address", cp->address));
+    if (!cp->phone.empty())
+        attributes.push_back(make_pair("phone", cp->phone));
+    if (!cp->email.empty())
+        attributes.push_back(make_pair("email", cp->email));
+    if (!cp->fax.empty())
+        attributes.push_back(make_pair("fax", cp->fax));
+    if (!cp->tollFreePhone.empty())
+        attributes.push_back(make_pair("tollFreePhone", cp->tollFreePhone));
+
+    if (dynamic_cast<Person*>(cp.get()) != NULL)
+    {
+        write(writer, attributes, (const Person*)cp.get());
+    }
+    if (dynamic_cast<Organization*>(cp.get())!= NULL)
+    {
+        write(writer, attributes, (const Organization*)cp.get());
+    }
+}
+
+
+struct HandlerContact : public SAXParser::Handler
+{
+    Contact* ct;
+    HandlerContact(Contact* _ct = 0) : ct(_ct) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "Person")
+        {
+            // Delegate to Person handler
+        }
+        else if (name == "Organization")
+        {
+            // Delegate to Organization handler
+        }
+        
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, ContactPtr cp)
+{
+    // TODO add throw if pointer DNE
+    HandlerContact handler(cp.get());
+    SAXParser::parse(is, handler);
+}
+
 
 //
 // ContactRole
@@ -261,7 +632,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& cr)
     attributes.push_back(make_pair("Contact_ref", cr.Contact_ref));
 
     writer.startElement("ContactRole", attributes);
-    writeList(writer, cr.role, "role");
+    writer.startElement("role");
+    writeParamContainer(writer, cr.role);
+    writer.endElement();
     writer.endElement();
 }
 
@@ -299,12 +672,19 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& an
     attributes.push_back(make_pair("version", anal.version));
     attributes.push_back(make_pair("URI", anal.URI));
 
-    writer.startElement("AnalysisSoftwareCollection", attributes);
+    writer.startElement("AnalysisSoftware", attributes);
 
-    // write(writer, anal.ContactRole);
-    // write(writer, anal.SoftwareName);
-    writer.startElement("Customizations");
+    write(writer, anal.contactRole);
+    
+    writer.startElement("SoftwareName");
+    writeParamContainer(writer, anal.softwareName);
     writer.endElement();
+
+    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+    writer.startElement("Customizations");
+    writer.characters(anal.customizations);
+    writer.endElement();
+    writer.popStyle();
     
     writer.endElement();
 }
@@ -462,6 +842,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Provider& provider)
     addIdAttributes(provider, attributes);
     
     writer.startElement("Provider", attributes);
+    write(writer, provider.contactRole);
     writer.endElement();
 }
 
@@ -499,11 +880,13 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     writer.startElement("MzIdentML", attributes);
 
     writeList(writer, mzid.cvs, "cvList");
-    writePtrList(writer, mzid.analysisSoftwareList, "AnalysisSoftware");
+    writePtrList(writer, mzid.analysisSoftwareList, "AnalysisSoftwareList");
     write(writer, mzid.provider);
     write(writer, mzid.analysisSampleCollection);
-    //writeList(writer, mzid.referenceableCollection, "");
-    writePtrList(writer, mzid.sequenceCollection, "SequenceCollection");
+
+    writeList(writer, mzid.auditCollection, "AuditCollection");
+
+    write(writer, mzid.sequenceCollection);
     write(writer, mzid.analysisCollection);
     writePtrList(writer, mzid.analysisProtocolCollection, "AnalysisProtocolCollection");
     writeList(writer, mzid.dataCollection, "DataCollection" );
@@ -566,8 +949,6 @@ struct HandlerMzIdentML : public SAXParser::Handler
         }
         else if (name == "DBSequence")
         {
-            mim->sequenceCollection.push_back(
-                shared_ptr<DBSequence>(new DBSequence()));
         }
         else if (name == "AnalysisCollection")
         {

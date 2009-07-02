@@ -115,6 +115,20 @@ void diff(const DBSequence& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Peptide& a,
+          const Peptide& b,
+          Peptide& a_b,
+          Peptide& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SequenceCollection& a,
+          const SequenceCollection& b,
+          SequenceCollection& a_b,
+          SequenceCollection& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const AnalysisSampleCollection& a,
           const AnalysisSampleCollection& b,
           AnalysisSampleCollection& a_b,

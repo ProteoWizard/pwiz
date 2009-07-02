@@ -42,6 +42,62 @@ namespace mziddata {
 using msdata::CVParam;
 using msdata::UserParam;
 
+/// The base class for elements that may contain cvParams or userParams
+struct PWIZ_API_DECL ParamContainer
+{
+    /// a collection of controlled vocabulary terms
+    std::vector<CVParam> cvParams;
+
+    /// a collection of uncontrolled user terms
+    std::vector<UserParam> userParams;
+    
+    /// finds cvid in the container:
+    /// - returns first CVParam result such that (result.cvid == cvid); 
+    /// - if not found, returns CVParam(CVID_Unknown)
+    /// - recursive: looks into paramGroupPtrs
+    CVParam cvParam(CVID cvid) const; 
+
+    /// finds child of cvid in the container:
+    /// - returns first CVParam result such that (result.cvid is_a cvid); 
+    /// - if not found, CVParam(CVID_Unknown)
+    /// - recursive: looks into paramGroupPtrs
+    CVParam cvParamChild(CVID cvid) const; 
+
+    /// returns true iff cvParams contains exact cvid (recursive)
+    bool hasCVParam(CVID cvid) const;
+
+    /// returns true iff cvParams contains a child (is_a) of cvid (recursive)
+    bool hasCVParamChild(CVID cvid) const;
+
+    /// finds UserParam with specified name 
+    /// - returns UserParam() if name not found 
+    /// - not recursive: looks only at local userParams
+    UserParam userParam(const std::string&) const; 
+
+    /// set/add a CVParam (not recursive)
+    void set(CVID cvid, const std::string& value = "", CVID units = CVID_Unknown);
+
+    /// set/add a CVParam (not recursive)
+    template <typename value_type>
+    void set(CVID cvid, value_type value, CVID units = CVID_Unknown)
+    {
+        set(cvid, boost::lexical_cast<std::string>(value), units);
+    }
+
+    /// returns true iff the element contains no params or param groups
+    bool empty() const;
+
+    /// clears the collections
+    void clear();
+
+    /// returns true iff this and that have the exact same cvParams and userParams
+    bool operator==(const ParamContainer& that) const;
+
+    /// returns !(this==that)
+    bool operator!=(const ParamContainer& that) const;
+};
+
+
 struct IdentifiableType
 {
     virtual ~IdentifiableType() {}
@@ -72,7 +128,7 @@ typedef boost::shared_ptr<BibliographicReference> BibliographicReferencePtr;
 struct PWIZ_API_DECL ContactRole
 {
     std::string Contact_ref;
-    std::vector<CVParam> role;
+    ParamContainer role;
 
     bool empty() const;
 };
@@ -92,13 +148,18 @@ struct PWIZ_API_DECL Contact : public IdentifiableType
 
 typedef boost::shared_ptr<Contact> ContactPtr;
 
+struct PWIZ_API_DECL Affiliations 
+{
+    std::string organization_ref;
+};
+
 struct PWIZ_API_DECL Person : public Contact
 {
     std::string lastName;
     std::string firstName;
     std::string midInitials;
     
-    std::vector<std::string> affiliations;
+    std::vector<Affiliations> affiliations;
 
     virtual bool empty() const;
 };
@@ -119,8 +180,9 @@ struct PWIZ_API_DECL Organization : public Contact
 
 typedef boost::shared_ptr<Organization> OrganizationPtr;
 
-struct PWIZ_API_DECL Provider : public Contact
+struct PWIZ_API_DECL Provider : public IdentifiableType // : public Contact
 {
+    ContactRole contactRole;
 };
 
 typedef boost::shared_ptr<Provider> ProviderPtr;
@@ -129,7 +191,7 @@ struct PWIZ_API_DECL Material : public IdentifiableType
 {
     ContactRole contactRole;
 
-    std::vector<CVParam> cvParam;
+    ParamContainer cvParam;
 };
 
 struct PWIZ_API_DECL Sample : public Material
@@ -152,6 +214,7 @@ struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
 
     // SoftwareType elements
     ContactRole contactRole;
+    ParamContainer softwareName;
 
     // Included in examples, but not in schema
     std::string URI;
@@ -171,6 +234,7 @@ struct PWIZ_API_DECL AnalysisSampleCollection
     virtual bool empty() const;
 };
 
+
 typedef boost::shared_ptr<AnalysisSampleCollection> AnalysisSampleCollectionPtr;
 
 struct PWIZ_API_DECL SearchDatabase
@@ -188,16 +252,56 @@ typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
 
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
 {
-    std::string id;
+    std::string length;
     std::string accession;
     std::string SearchDatabase_ref;
 
     std::string seq;
 
-    std::vector<CVParam> cvParam;
+    ParamContainer paramGroup;
 };
 
 typedef boost::shared_ptr<DBSequence> DBSequencePtr;
+
+struct PWIZ_API_DECL Modification
+{
+    std::string location;
+    std::string residues;
+    std::string avgMassDelta;
+    std::string monoisotopicMassDelta;
+
+    ParamContainer paramContainer;
+};
+    
+
+struct PWIZ_API_DECL SubstitutionModification
+{
+    std::string originalResidue;
+    std::string replacementResidue;
+    std::string location;
+    std::string avgMassDelta;
+    std::string monoisotopicMassDelta;
+};
+
+
+struct PWIZ_API_DECL Peptide : public IdentifiableType
+{
+    std::string peptideSequence;
+    Modification modification;
+    SubstitutionModification substitutionModification;
+
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<Peptide> PeptidePtr;
+
+struct PWIZ_API_DECL SequenceCollection
+{
+    std::vector<DBSequencePtr> dbSequences;
+    std::vector<PeptidePtr> peptides;
+
+    bool empty() const;
+};
 
 struct PWIZ_API_DECL SpectraData
 {
@@ -205,7 +309,7 @@ struct PWIZ_API_DECL SpectraData
     std::string id;
     std::string name;
 
-    std::vector<CVParam> fileFormat;
+    ParamContainer fileFormat;
 };
 
 struct PWIZ_API_DECL SpectrumIdentification : public CVParam
@@ -238,8 +342,8 @@ struct PWIZ_API_DECL ProteinDetectionProtocol
     std::string id;
     std::string AnalysisSoftware_ref;
     
-    std::vector<CVParam> analysisParams;
-    std::vector<CVParam> Threshold;
+    ParamContainer analysisParams;
+    ParamContainer Threshold;
 
     std::vector< std::string > inputSpectrumIdentifications;
 };
@@ -260,8 +364,8 @@ typedef boost::shared_ptr<Analysis> AnalysisPtr;
 /// ProteinDetectinoProtocol, and related elements.
 struct PWIZ_API_DECL AnalysisProtocol
 {
-    std::vector<CVParam> spectrumIdentificationProtocol;
-    std::vector<CVParam> proteinDetectionProtocol;
+    ParamContainer spectrumIdentificationProtocol;
+    ParamContainer proteinDetectionProtocol;
 
     bool empty() const;
 };
@@ -272,7 +376,7 @@ struct PWIZ_API_DECL SourceFile
 {
     std::string id;
     std::string location;
-    std::vector<CVParam> fileFormat;
+    ParamContainer fileFormat;
 };
 
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;
@@ -294,8 +398,8 @@ typedef boost::shared_ptr<Inputs> InputsPtr;
 /// DataCollection's AnalysisData element. 
 struct PWIZ_API_DECL AnalysisData
 {
-    std::vector<CVParam> spectrumIdentificationList;
-    std::vector<CVParam> proteinDetectionList;
+    ParamContainer spectrumIdentificationList;
+    ParamContainer proteinDetectionList;
 
     bool empty() const;
 };
@@ -332,7 +436,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
 
     AnalysisSampleCollection analysisSampleCollection;
     
-    std::vector<DBSequencePtr> sequenceCollection;
+    SequenceCollection sequenceCollection;
 
     Analysis analysisCollection;
 

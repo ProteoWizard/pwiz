@@ -314,6 +314,17 @@ void ptr_diff(const shared_ptr<object_type>& a,
 }
 
 PWIZ_API_DECL
+void diff(const ParamContainer& a,
+          const ParamContainer& b,
+          ParamContainer& a_b,
+          ParamContainer& b_a,
+          const DiffConfig& config)
+{
+    vector_diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams);
+    vector_diff(a.userParams, b.userParams, a_b.userParams, b_a.userParams);
+}
+
+PWIZ_API_DECL
 void diff(const DataCollection& a,
           const DataCollection& b,
           DataCollection& a_b,
@@ -368,6 +379,24 @@ void diff(const DBSequence& a,
 }
 
 PWIZ_API_DECL
+void diff(const Peptide& a,
+          const Peptide& b,
+          Peptide& a_b,
+          Peptide& b_a,
+          const DiffConfig& config)
+{
+}
+
+PWIZ_API_DECL
+void diff(const SequenceCollection& a,
+          const SequenceCollection& b,
+          SequenceCollection& a_b,
+          SequenceCollection& b_a,
+          const DiffConfig& config)
+{
+}
+
+PWIZ_API_DECL
 void diff(const AnalysisSampleCollection& a,
           const AnalysisSampleCollection& b,
           AnalysisSampleCollection& a_b,
@@ -393,7 +422,7 @@ void diff(const ContactRole& a,
           const DiffConfig& config)
 {
     diff(a.Contact_ref, b.Contact_ref, a_b.Contact_ref, b_a.Contact_ref, config);
-    vector_diff_diff(a.role, b.role, a_b.role, b_a.role, config);
+    diff(a.role, b.role, a_b.role, b_a.role, config);
 }
 
 PWIZ_API_DECL
@@ -446,8 +475,8 @@ void diff(const MzIdentML& a,
     vector_diff_deep(a.auditCollection, b.auditCollection, a_b.auditCollection, b_a.auditCollection, config);
     diff(a.analysisSampleCollection, b.analysisSampleCollection,
          a_b.analysisSampleCollection, b_a.analysisSampleCollection, config);
-    vector_diff_deep(a.sequenceCollection, b.sequenceCollection,
-                     a_b.sequenceCollection, b_a.sequenceCollection, config);
+    diff(a.sequenceCollection, b.sequenceCollection,
+         a_b.sequenceCollection, b_a.sequenceCollection, config);
     diff(a.analysisCollection, b.analysisCollection, a_b.analysisCollection, b_a.analysisCollection, config);
     vector_diff_deep(a.analysisProtocolCollection, b.analysisProtocolCollection, a_b.analysisProtocolCollection, b_a.analysisProtocolCollection, config);
     vector_diff_deep(a.dataCollection, b.dataCollection, a_b.dataCollection, b_a.dataCollection, config);
