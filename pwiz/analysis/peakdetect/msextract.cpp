@@ -22,6 +22,7 @@
 
 
 #include "FeatureDetectorSimple.hpp"
+#include "FeatureDetectorPeakel.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -53,16 +54,50 @@ using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 
+enum FeatureDetectorEnum{ Simple, PeakelFarmer };
+
+MZTolerance translateMzTol(string& curr)
+{
+    if (curr.find("mz") != string::npos)
+        {
+            size_t pos = curr.find("mz");
+            curr.erase(pos,2);
+
+            double mzTol = boost::lexical_cast<double>(curr);
+            MZTolerance mzTolerance(mzTol);
+            mzTolerance.units = MZTolerance::MZ;
+
+            return mzTolerance;
+
+        }
+    else if (curr.find("ppm") != string::npos)
+        {
+            size_t pos = curr.find("ppm");
+            curr.erase(pos,3);
+
+            double mzTol = boost::lexical_cast<double>(curr);
+            MZTolerance mzTolerance(mzTol);
+            mzTolerance.units = MZTolerance::MZ;
+
+            return mzTolerance;
+        }
+
+    else throw runtime_error("[msextract] Bad MZTolerance");
+}
+
 struct Config
 {
     vector<string> filenames;
     int maxChargeState;
+    string featureDetectorImplementation;
     string inputPath;
     string outputPath;
     string extension;
     bool writeFeatureFile;
     bool writeTSV;
-    Config() : maxChargeState(6), inputPath("."), outputPath(".") {}
+    FeatureDetectorPeakel::Config fdpConfig;
+
+    Config() : maxChargeState(6), featureDetectorImplementation("Simple"), inputPath("."), outputPath("."){}
 
     string outputFileName(string inputFileName);
 };
@@ -85,14 +120,32 @@ Config parseCommandLine(int argc, char* argv[])
     usage << "Usage: msextract [options] [file]\n"
           << endl;
     
+    // local variables that will be translated to MZTolerance objects
+    string pgmz;
+    string ppmz;
+
     // define command line options
     po::options_description od_config("Options");
     od_config.add_options()
+        ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation), " : specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
+        ("noiseCalculatorZLevel,z", po::value<double>(&(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)), " : specify cutoff for NoiseCalculator_2Pass")
+         ("peakFinderSNRWindowRadius,w", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius), " : specify window radius for PeakFinder_SNR")
+         ("peakFinderZThreshold,Z", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold), " : specify z threshold for PeakFinder_SNR")
+         ("peakFitterWindowRadius,W", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius), " : specify window radius for PeakFitter_Parabola")
+          ("peakelGrowerMZTol,m", po::value<string>(&pgmz), " : specify mz tolerance for PeakelGrower_Proximity")
+         ("peakelGrowerRTTol,r", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance), " : specify rt tolerance for PeakelGrower_Proximity")
+         ("peakelPickerMinCharge,c", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge), " : specify min charge for PeakelPicker_Basic")
+         ("peakelPickerMaxCharge,C", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge), " : specify max charge for PeakelPicker_Basic")
+         ("peakelPickerMinMPS,s", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), " : specify min monoisotopic peakel size for PeakelPicker_Basic")
+         ("peakelPickerMZTol,M", po::value<string>(&ppmz), " : specify mz tolerance for PeakelPicker_Basic")
+         ("peakelPickerRTTol,P", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance), " : specify rt tolerance for PeakelPicker_Basic")
+         ("peakelPickerMinPC,n", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount), " : specify min peakel count for PeakelPicker_Basic")
         ("inputPath,i", po::value<string>(&config.inputPath), " : specify input path")
         ("outputPath,o", po::value<string>(&config.outputPath), " : specify output path")
-        ("writeFeatureFile"," : write xml representation of detected features (.features file) ")
-        ("writeTSV", " : write tab-separated file");
+        ("writeFeatureFile"," : write xml representation of detected features (.features file) ") // to bool
+        ("writeTSV", " : write tab-separated file"); // to bool
 
+    
     // append options to usage string
     usage << od_config;
 
@@ -127,6 +180,9 @@ Config parseCommandLine(int argc, char* argv[])
     // usage if no files
     if (config.filenames.empty())
         throw runtime_error(usage.str());
+
+    if (pgmz.size()>0) config.fdpConfig.peakelGrower_Proximity.mzTolerance = translateMzTol(pgmz);
+    if (ppmz.size()>0) config.fdpConfig.peakelPicker_Basic.mzTolerance = translateMzTol(ppmz);
 
     return config;
 }
@@ -174,10 +230,19 @@ void processFile(const string& file, Config& config)
     //    pfd_config.isotopeMaxChargeState = config.maxChargeState;
         
     PeakFamilyDetectorFT detector(pfd_config);   
-    FeatureDetectorSimple fds(detector);
-
     FeatureField output_features;
-    fds.detect(msd, output_features);
+    if (config.featureDetectorImplementation == "Simple") 
+        {
+            FeatureDetectorSimple fd(detector);
+            fd.detect(msd, output_features);
+        }
+    else if (config.featureDetectorImplementation == "PeakelFarmer")
+        {           
+            boost::shared_ptr<FeatureDetectorPeakel> fd(FeatureDetectorPeakel::create(config.fdpConfig));
+            fd->detect(msd, output_features);
+        }
+  
+    else throw runtime_error(("Error in msextract: Unsupported featureDetectorImplementation: " + config.featureDetectorImplementation).c_str());
 
     if (config.writeFeatureFile)
         {
@@ -262,7 +327,7 @@ int main(int argc, char* argv[])
 
      catch (...)
          {
-             cout << "[FeatureDetectorSimple.cpp::main()] Abnormal termination.\n";
+             cout << "[msextract.cpp::main()] Abnormal termination.\n";
 
          }
 
