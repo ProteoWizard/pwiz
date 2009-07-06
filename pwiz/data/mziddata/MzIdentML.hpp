@@ -237,19 +237,6 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 
 typedef boost::shared_ptr<AnalysisSampleCollection> AnalysisSampleCollectionPtr;
 
-struct PWIZ_API_DECL SearchDatabase
-{
-    std::string location;
-    std::string id;
-    std::string name;
-    std::string numDatabaseSequences;
-    std::string numResidues;
-    std::string releaseDate;
-    std::string version;
-};
-
-typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
-
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
 {
     std::string length;
@@ -270,7 +257,9 @@ struct PWIZ_API_DECL Modification
     std::string avgMassDelta;
     std::string monoisotopicMassDelta;
 
-    ParamContainer paramContainer;
+    ParamContainer paramGroup;
+
+    bool empty() const;
 };
     
 
@@ -281,6 +270,8 @@ struct PWIZ_API_DECL SubstitutionModification
     std::string location;
     std::string avgMassDelta;
     std::string monoisotopicMassDelta;
+
+    bool empty() const;
 };
 
 
@@ -303,28 +294,19 @@ struct PWIZ_API_DECL SequenceCollection
     bool empty() const;
 };
 
-struct PWIZ_API_DECL SpectraData
-{
-    std::string location;
-    std::string id;
-    std::string name;
-
-    ParamContainer fileFormat;
-};
-
-struct PWIZ_API_DECL SpectrumIdentification : public CVParam
+struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
 {
     std::string SpectrumIdentificationProtocol_ref;
     std::string SpectrumIdentificationList_ref;
     std::string activityDate;
 
-    std::vector< boost::shared_ptr<SpectraData> > inputSpectra;
-    std::vector< boost::shared_ptr<SearchDatabase> > searchDatabase;
+    std::vector<std::string> inputSpectra;
+    std::vector<std::string> searchDatabase;
 };
 
 typedef boost::shared_ptr<SpectrumIdentification> SpectrumIdentificationPtr;
 
-struct PWIZ_API_DECL ProteinDetection : public CVParam
+struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
 {
     std::string ProteinDetectionProtocol_ref;
     std::string ProteinDetectionList_ref;
@@ -337,40 +319,135 @@ struct PWIZ_API_DECL ProteinDetection : public CVParam
 
 typedef boost::shared_ptr<ProteinDetection> ProteinDetectionPtr;
 
-struct PWIZ_API_DECL ProteinDetectionProtocol
-{
-    std::string id;
-    std::string AnalysisSoftware_ref;
-    
-    ParamContainer analysisParams;
-    ParamContainer Threshold;
-
-    std::vector< std::string > inputSpectrumIdentifications;
-};
-
-/// Parent type of SpectrumIdentification, ProteinDetection, and
-/// related elements.
-struct PWIZ_API_DECL Analysis
+struct PWIZ_API_DECL AnalysisCollection
 {
     std::vector<SpectrumIdentificationPtr> spectrumIdentification;
-    ProteinDetectionPtr proteinDetection;
+    ProteinDetection proteinDetection;
 
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Analysis> AnalysisPtr;
-
-/// Parent type of SpectrumIdentificationProtocol,
-/// ProteinDetectinoProtocol, and related elements.
-struct PWIZ_API_DECL AnalysisProtocol
+struct PWIZ_API_DECL ModParam
 {
-    ParamContainer spectrumIdentificationProtocol;
-    ParamContainer proteinDetectionProtocol;
+    std::string massDelta;
+    std::string residues;
+
+    std::vector<CVParam> cvParams;
+};
+
+struct PWIZ_API_DECL SearchModification
+{
+    std::string fixedMod;
+    
+    ModParam modParam;
+    std::vector<CVParam> specificityRules;
 
     bool empty() const;
 };
 
-typedef boost::shared_ptr<AnalysisProtocol> AnalysisProtocolPtr;
+typedef boost::shared_ptr<SearchModification> SearchModificationPtr;
+
+
+struct PWIZ_API_DECL Enzyme
+{
+    std::string id;
+    std::string nTermGain;
+    std::string cTermGain;
+    std::string semiSpecific;
+    std::string missedCleavages;
+    std::string minDistance;
+
+    std::string siteRegexp;
+    ParamContainer enzymeName;
+    
+};
+
+typedef boost::shared_ptr<Enzyme> EnzymePtr;
+
+
+struct PWIZ_API_DECL Enzymes
+{
+    std::string independent;
+
+    std::vector<EnzymePtr> enzymes;
+};
+
+struct PWIZ_API_DECL Residue
+{
+    std::string Code;
+    std::string Mass;
+};
+
+typedef boost::shared_ptr<Residue> ResiduePtr;
+
+
+struct PWIZ_API_DECL AmbiguousResidue
+{
+    std::string Code;
+    
+    ParamContainer params;
+};
+
+typedef boost::shared_ptr<AmbiguousResidue> AmbiguousResiduePtr;
+
+
+struct PWIZ_API_DECL MassTable
+{
+    std::string id;
+    std::string msLevel;
+    
+    std::vector<ResiduePtr> residues;
+    std::vector<AmbiguousResiduePtr> ambiguousResidue; 
+};
+
+struct PWIZ_API_DECL Filter
+{
+    ParamContainer filterType;
+    ParamContainer include;
+    ParamContainer exclude;
+};
+
+typedef boost::shared_ptr<Filter> FilterPtr;
+
+struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
+{
+    std::string AnalysisSoftware_ref;
+
+    ParamContainer searchType; // Only 1 element is allowed.
+    ParamContainer additionalSearchParams;
+    std::vector<SearchModificationPtr> modificationParams;
+    Enzymes enzymes;
+    MassTable massTable;
+    ParamContainer fragmentTolerance;
+    ParamContainer parentTolerance;
+    ParamContainer threshold;
+    std::vector<FilterPtr> databaseFilters;
+};
+
+typedef boost::shared_ptr<SpectrumIdentificationProtocol> SpectrumIdentificationProtocolPtr;
+
+
+struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
+{
+    std::string AnalysisSoftware_ref;
+
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
+
+
+struct PWIZ_API_DECL AnalysisProtocolCollection
+{
+    std::vector<SpectrumIdentificationProtocolPtr> spectrumIdentificationProtocol;
+    std::vector<ProteinDetectionProtocolPtr> proteinDetectionProtocol;
+
+    
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<AnalysisProtocolCollection> AnalysisProtocolCollectionPtr;
+
 
 struct PWIZ_API_DECL SourceFile
 {
@@ -389,7 +466,7 @@ struct PWIZ_API_DECL Inputs
     std::vector< boost::shared_ptr<SourceFile> > sourceFile;
     std::vector< std::string > searchDatabase;
     std::vector< std::string > spectraData;
-
+    
     bool empty() const;
 };
 
@@ -438,11 +515,11 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     
     SequenceCollection sequenceCollection;
 
-    Analysis analysisCollection;
+    AnalysisCollection analysisCollection;
 
-    std::vector<AnalysisProtocolPtr> analysisProtocolCollection;
+    AnalysisProtocolCollection analysisProtocolCollection;
 
-    std::vector<DataCollectionPtr> dataCollection;
+    DataCollection dataCollection;
     
     std::vector<BibliographicReferencePtr> bibliographicReference;
 

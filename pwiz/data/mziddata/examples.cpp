@@ -105,18 +105,96 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     dbSequence->paramGroup.set(MS_protein_description, peptideList[0]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
+    PeptidePtr peptide(new Peptide());
+    peptide->id="peptide_1_1";
+    peptide->peptideSequence="QLYENKPRRPYIL";
+    peptide->modification.location="0";
+    peptide->modification.monoisotopicMassDelta="-17.026549";
+    // set UNIMOD:28 & value w/ peptide->modification.paramGroup.set();
+    mzid.sequenceCollection.peptides.push_back(peptide);
+
+    peptide=PeptidePtr(new Peptide());
+    peptide->id="peptide_11_1";
+    peptide->peptideSequence="RPKPQQFFGLM";
+    mzid.sequenceCollection.peptides.push_back(peptide);
+    
+    peptide=PeptidePtr(new Peptide());    
+    peptide->id="peptide_13_1";
+    peptide->peptideSequence="RPKPQQFFGLM";
+    mzid.sequenceCollection.peptides.push_back(peptide);
+    
     SpectrumIdentificationPtr spectrumIdentificationPtr(
         new SpectrumIdentification());
+    spectrumIdentificationPtr->id="SI";
+    spectrumIdentificationPtr->SpectrumIdentificationProtocol_ref="SIP";
+    spectrumIdentificationPtr->SpectrumIdentificationList_ref="SIL_1";
+    spectrumIdentificationPtr->activityDate="2009-05-21T17:01:53";
+    spectrumIdentificationPtr->inputSpectra.push_back("SD_1");;
+    spectrumIdentificationPtr->searchDatabase.push_back("SDB_5peptideMix");
     mzid.analysisCollection.spectrumIdentification.push_back(spectrumIdentificationPtr);
-    ProteinDetectionPtr proteinDetectionPtr(new ProteinDetection());
-    mzid.analysisCollection.proteinDetection = proteinDetectionPtr;
 
-    AnalysisProtocolPtr analysisProtocolPtr(new AnalysisProtocol());
-    mzid.analysisProtocolCollection.push_back(analysisProtocolPtr);
+    mzid.analysisCollection.proteinDetection.id="PD_1";
+    mzid.analysisCollection.proteinDetection.ProteinDetectionProtocol_ref="PDP_MascotParser_1";
+    mzid.analysisCollection.proteinDetection.ProteinDetectionList_ref="PDL_1";
+    mzid.analysisCollection.proteinDetection.activityDate="2009-06-30T15:36:35";
+    mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications.push_back("SIL_1");
 
-    DataCollectionPtr dataCollectionPtr(new DataCollection());
-    mzid.dataCollection.push_back(dataCollectionPtr);
+    SpectrumIdentificationProtocolPtr sip(new SpectrumIdentificationProtocol());
+    sip->id="SIP";
+    sip->AnalysisSoftware_ref="AS_mascot_server";
+    sip->searchType.set(MS_ms_ms_search);
+    sip->additionalSearchParams.set(MS_parent_mass_type_mono);
+    sip->additionalSearchParams.set(MS_param__a_ion);
+    sip->additionalSearchParams.set(MS_param__a_ion_NH3);
+    sip->additionalSearchParams.set(MS_param__b_ion);
+    sip->additionalSearchParams.set(MS_param__b_ion_NH3);
+    sip->additionalSearchParams.set(MS_param__y_ion);
+    sip->additionalSearchParams.set(MS_param__y_ion_NH3);
+    SearchModificationPtr smp(new SearchModification());
+    smp->modParam.massDelta="-17.026549";
+    smp->modParam.residues="Q";
+    // TODO add UNIMOD:28
+    smp->specificityRules.push_back(CVParam(MS_modification_specificity_N_term, string("")));
+    sip->modificationParams.push_back(smp);
 
+    EnzymePtr ep(new Enzyme());
+    ep->id="ENZ_0";
+    ep->cTermGain="OH";
+    ep->nTermGain="H";
+    ep->missedCleavages="1";
+    ep->semiSpecific="0";
+    ep->siteRegexp="(?<=[KR])(?!P)";
+    ep->enzymeName.set(MS_Trypsin);
+    sip->enzymes.enzymes.push_back(ep);
+
+    sip->massTable.id="MT";
+    sip->massTable.msLevel="1 2";
+
+    ResiduePtr rp(new Residue());
+    rp->Code="A"; rp->Mass="71.037114";
+    sip->massTable.residues.push_back(rp);
+
+    AmbiguousResiduePtr arp(new AmbiguousResidue());
+    arp->Code="B";
+    arp->params.set(MS_alternate_single_letter_codes);
+    sip->massTable.ambiguousResidue.push_back(arp);
+
+    sip->fragmentTolerance.set(MS_search_tolerance_plus_value);
+    sip->fragmentTolerance.set(MS_search_tolerance_minus_value);
+
+    sip->parentTolerance.set(MS_search_tolerance_plus_value);
+    sip->parentTolerance.set(MS_search_tolerance_minus_value);
+
+    sip->threshold.set(MS_mascot_SigThreshold);
+    
+    FilterPtr fp(new Filter());
+    fp->filterType.set(MS_DB_filter_taxonomy);
+    sip->databaseFilters.push_back(fp);
+
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
+
+    ProteinDetectionProtocolPtr adp(new ProteinDetectionProtocol());
+    mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(adp);
 }
 
 PWIZ_API_DECL vector<CV> defaultCVList()

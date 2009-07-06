@@ -206,6 +206,33 @@ bool Organization::empty() const
 
 
 //
+// Modification
+//
+
+bool Modification::empty() const
+{
+    return location.empty() &&
+        residues.empty() &&
+        avgMassDelta.empty() &&
+        monoisotopicMassDelta.empty() &&
+        paramGroup.empty();
+}
+
+
+//
+// SubstitutionModification
+//
+
+bool SubstitutionModification::empty() const
+{
+    return originalResidue.empty() &&
+        replacementResidue.empty() &&
+        location.empty() &&
+        avgMassDelta.empty() &&
+        monoisotopicMassDelta.empty();
+}
+
+//
 // SequenceCollection
 //
 
@@ -214,6 +241,7 @@ bool SequenceCollection::empty() const
     return dbSequences.empty() &&
         peptides.empty();
 }
+
 
 //
 // AnalysisSoftware
@@ -233,10 +261,10 @@ bool AnalysisSoftware::empty() const
 // Analysis
 //
 
-bool Analysis::empty() const
+bool AnalysisCollection::empty() const
 {
     return spectrumIdentification.empty() &&
-        (!proteinDetection.get() || proteinDetection->empty());
+        proteinDetection.empty();
 }
 
 //
@@ -255,7 +283,7 @@ bool ProteinDetection::empty() const
 // AnalysisProtocol
 //
 
-bool AnalysisProtocol::empty() const
+bool AnalysisProtocolCollection::empty() const
 {
     return spectrumIdentificationProtocol.empty() &&
         proteinDetectionProtocol.empty();

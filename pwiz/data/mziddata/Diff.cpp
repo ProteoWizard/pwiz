@@ -334,10 +334,10 @@ void diff(const DataCollection& a,
 }
 
 PWIZ_API_DECL
-void diff(const AnalysisProtocol& a,
-          const AnalysisProtocol& b,
-          AnalysisProtocol& a_b,
-          AnalysisProtocol& b_a,
+void diff(const AnalysisProtocolCollection& a,
+          const AnalysisProtocolCollection& b,
+          AnalysisProtocolCollection& a_b,
+          AnalysisProtocolCollection& b_a,
           const DiffConfig& config)
 {
 }
@@ -361,10 +361,10 @@ void diff(const BibliographicReference& a,
 }
 
 PWIZ_API_DECL
-void diff(const Analysis& a,
-          const Analysis& b,
-          Analysis& a_b,
-          Analysis& b_a,
+void diff(const AnalysisCollection& a,
+          const AnalysisCollection& b,
+          AnalysisCollection& a_b,
+          AnalysisCollection& b_a,
           const DiffConfig& config)
 {
 }
@@ -478,8 +478,8 @@ void diff(const MzIdentML& a,
     diff(a.sequenceCollection, b.sequenceCollection,
          a_b.sequenceCollection, b_a.sequenceCollection, config);
     diff(a.analysisCollection, b.analysisCollection, a_b.analysisCollection, b_a.analysisCollection, config);
-    vector_diff_deep(a.analysisProtocolCollection, b.analysisProtocolCollection, a_b.analysisProtocolCollection, b_a.analysisProtocolCollection, config);
-    vector_diff_deep(a.dataCollection, b.dataCollection, a_b.dataCollection, b_a.dataCollection, config);
+    diff(a.analysisProtocolCollection, b.analysisProtocolCollection, a_b.analysisProtocolCollection, b_a.analysisProtocolCollection, config);
+    diff(a.dataCollection, b.dataCollection, a_b.dataCollection, b_a.dataCollection, config);
     vector_diff_deep(a.bibliographicReference, b.bibliographicReference, a_b.bibliographicReference, b_a.bibliographicReference, config);
     
 

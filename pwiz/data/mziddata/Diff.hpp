@@ -80,10 +80,10 @@ void diff(const DataCollection& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const AnalysisProtocol& a,
-          const AnalysisProtocol& b,
-          AnalysisProtocol& a_b,
-          AnalysisProtocol& b_a,
+void diff(const AnalysisProtocolCollection& a,
+          const AnalysisProtocolCollection& b,
+          AnalysisProtocolCollection& a_b,
+          AnalysisProtocolCollection& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -101,10 +101,10 @@ void diff(const BibliographicReference& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Analysis& a,
-          const Analysis& b,
-          Analysis& a_b,
-          Analysis& b_a,
+void diff(const AnalysisCollection& a,
+          const AnalysisCollection& b,
+          AnalysisCollection& a_b,
+          AnalysisCollection& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

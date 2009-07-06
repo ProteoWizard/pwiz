@@ -54,24 +54,52 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const pwiz::CV& CV);
 PWIZ_API_DECL void read(std::istream& is, pwiz::CV& CV);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisProtocol& analysisProtocol);
-PWIZ_API_DECL void read(std::istream& is, AnalysisProtocol& analysisProtocol);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& sm);
+PWIZ_API_DECL void read(std::istream& is, SearchModification& sm);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Filter& filter);
+PWIZ_API_DECL void read(std::istream& is, Filter& filter);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocolPtr sip);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocolPtr sip);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProtocolPtr pdp);
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocolPtr pdp);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisProtocolCollection& apc);
+PWIZ_API_DECL void read(std::istream& is, AnalysisProtocolCollection& apc);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReference& bibliographicReference);
 PWIZ_API_DECL void read(std::istream& is, BibliographicReference& bibliographicReference);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollectionPtr& dataCollectionPtr);
-PWIZ_API_DECL void read(std::istream& is, DataCollectionPtr& dataCollectionPtr);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dataCollection);
+PWIZ_API_DECL void read(std::istream& is, DataCollection& dataCollection);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& analysisSoftware);
 PWIZ_API_DECL void read(std::istream& is, AnalysisSoftware& analysisSoftware);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& dbSequence);
-PWIZ_API_DECL void read(std::istream& is, DBSequence& dbSequence);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequencePtr dbSequence);
+PWIZ_API_DECL void read(std::istream& is, DBSequencePtr dbSequence);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr peptide);
+PWIZ_API_DECL void read(std::istream& is, PeptidePtr peptide);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod);
+PWIZ_API_DECL void read(std::istream& is, Modification& mod);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModification& sm);
+PWIZ_API_DECL void read(std::istream& is, SubstitutionModification& sm);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MzIdentML& mzidDataPtr);
