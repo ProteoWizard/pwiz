@@ -11,10 +11,10 @@ call %PWIZ_ROOT%\libraries\untar_boost.bat  %PWIZ_ROOT%
 
 REM # Extract Boost.Build (for VC9 support)
 pushd %PWIZ_ROOT%\libraries
-copy /Y msvc.jam boost-build\tools
 IF EXIST boost-build\jam_src\build.bat GOTO SKIP_BB
 bsdtar.exe -xkjvf boost-build.tar.bz2
 :SKIP_BB
+copy /Y msvc.jam boost-build\tools
 popd
 
 set PWIZ_BJAM=%PWIZ_ROOT%\libraries\boost-build\jam_src\bin.ntx86\bjam.exe
