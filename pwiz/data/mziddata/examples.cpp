@@ -193,8 +193,21 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
 
-    ProteinDetectionProtocolPtr adp(new ProteinDetectionProtocol());
-    mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(adp);
+    ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol());
+    pdp->id="PDP_MascotParser_1";
+    pdp->AnalysisSoftware_ref="AS_mascot_parser";
+    pdp->analysisParams.set(MS_mascot_SigThreshold);
+    pdp->analysisParams.set(MS_mascot_MaxProteinHits);
+    pdp->analysisParams.set(MS_mascot_ProteinScoringMethod);
+    pdp->analysisParams.set(MS_mascot_MinMSMSThreshold);
+    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSamePeptides);
+    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSubsetOfPeptides);
+    pdp->analysisParams.set(MS_mascot_RequireBoldRed);
+    pdp->analysisParams.set(MS_mascot_UseUnigeneClustering);
+    pdp->analysisParams.set(MS_mascot_IncludeErrorTolerantMatches);
+    pdp->analysisParams.set(MS_mascot_ShowDecoyMatches);
+    pdp->threshold.set(MS_mascot_SigThreshold);
+    mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(pdp);
 }
 
 PWIZ_API_DECL vector<CV> defaultCVList()

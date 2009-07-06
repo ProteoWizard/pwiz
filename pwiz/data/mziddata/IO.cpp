@@ -1468,8 +1468,25 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisProtocolCollection& anal)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProtocolPtr pdp)
 {
     XMLWriter::Attributes attributes;
-
+    addIdAttributes(*pdp, attributes);
+    attributes.push_back(make_pair("AnalysisSoftware_ref", pdp->AnalysisSoftware_ref));
+    
     writer.startElement("ProteinDetectionProtocol", attributes);
+
+    if (!pdp->analysisParams.empty())
+    {
+        writer.startElement("AnalysisParams");
+        writeParamContainer(writer, pdp->analysisParams);
+        writer.endElement();
+    }
+
+    if (!pdp->threshold.empty())
+    {
+        writer.startElement("Threshold");
+        writeParamContainer(writer, pdp->threshold);
+        writer.endElement();
+    }
+    
     writer.endElement();
 }
 

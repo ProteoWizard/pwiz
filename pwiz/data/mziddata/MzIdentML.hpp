@@ -431,7 +431,8 @@ struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
 {
     std::string AnalysisSoftware_ref;
 
-    ParamContainer paramGroup;
+    ParamContainer analysisParams;
+    ParamContainer threshold;
 };
 
 typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
