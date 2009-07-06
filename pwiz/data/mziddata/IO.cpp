@@ -1540,15 +1540,248 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisSampleCollection& asc)
     SAXParser::parse(is, handler);
 }
 
+
+//
+// SpectraData
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectraDataPtr sd)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*sd, attributes);
+    attributes.push_back(make_pair("location", sd->location));
+
+    writer.startElement("SpectraData", attributes);
+
+    // TODO write out externalFormatDocumentation
+
+    if (!sd->fileFormat.empty())
+    {
+        writer.startElement("fileFormat");
+        writeParamContainer(writer, sd->fileFormat);
+        writer.endElement();
+    }
+    
+    writer.endElement();
+}
+
+struct HandlerSpectraData : public SAXParser::Handler
+{
+    SpectraData* sd;
+    HandlerSpectraData(SpectraData* _sd = 0) : sd(_sd) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, SpectraDataPtr sd)
+{
+    HandlerSpectraData handler(sd.get());
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// SearchDatabase
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*sd, attributes);
+    attributes.push_back(make_pair("version", sd->version));
+    attributes.push_back(make_pair("releaseDate", sd->releaseDate));
+    attributes.push_back(make_pair("numDatabaseSequences", sd->numDatabaseSequences));
+    attributes.push_back(make_pair("numResidues", sd->numResidues));
+
+    writer.startElement("SearchDatabase", attributes);
+
+    if (!sd->fileFormat.empty())
+    {
+        writer.startElement("fileFormat");
+        writeParamContainer(writer, sd->fileFormat);
+        writer.endElement();
+    }
+    
+    if (!sd->DatabaseName.empty())
+    {
+        writer.startElement("DatabaseName");
+        writeParamContainer(writer, sd->DatabaseName);
+        writer.endElement();
+    }
+    
+    writer.endElement();
+}
+
+struct HandlerSearchDatabase : public SAXParser::Handler
+{
+    SearchDatabase* sd;
+    HandlerSearchDatabase(SearchDatabase* _sd = 0) : sd(_sd) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, SearchDatabasePtr sd)
+{
+    HandlerSearchDatabase handler(sd.get());
+    SAXParser::parse(is, handler);
+}
+
+//
+// SourceFile
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFilePtr sf)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*sf, attributes);
+    attributes.push_back(make_pair("location", sf->location));
+
+    writer.startElement("SourceFile", attributes);
+
+    if (!sf->fileFormat.empty())
+    {
+        writer.startElement("fileFormat");
+        writeParamContainer(writer, sf->fileFormat);
+        writer.endElement();
+    }
+
+    // TODO write out externalFormatDocumentation.
+    
+    writeParamContainer(writer, sf->paramGroup);
+    
+    writer.endElement();
+}
+
+struct HandlerSourceFile : public SAXParser::Handler
+{
+    SourceFile* sf;
+    HandlerSourceFile(SourceFile* _sf = 0) : sf(_sf) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, SourceFilePtr sf)
+{
+    HandlerSourceFile handler(sf.get());
+    SAXParser::parse(is, handler);
+}
+
+//
+// Inputs
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Inputs& inputs)
+{
+    writer.startElement("Inputs");
+
+    if (!inputs.sourceFile.empty())
+    {
+        for (vector<SourceFilePtr>::const_iterator it=inputs.sourceFile.begin();
+             it!=inputs.sourceFile.end(); it++)
+            write(writer, *it);
+    }
+    
+    if (!inputs.searchDatabase.empty())
+    {
+        for (vector<SearchDatabasePtr>::const_iterator it=inputs.searchDatabase.begin();
+             it!=inputs.searchDatabase.end(); it++)
+            write(writer, *it);
+    }
+    
+    if (!inputs.spectraData.empty())
+    {
+        for (vector<SpectraDataPtr>::const_iterator it=inputs.spectraData.begin();
+             it!=inputs.spectraData.end(); it++)
+            write(writer, *it);
+    }
+    
+    writer.endElement();
+}
+
+struct HandlerInputs : public SAXParser::Handler
+{
+    Inputs* inputs;
+    HandlerInputs(Inputs* _inputs = 0) : inputs(_inputs) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, Inputs& inputs)
+{
+    HandlerInputs handler(&inputs);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// AnalysisData
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisData& ad)
+{
+    XMLWriter::Attributes attributes;
+    writer.startElement("AnalysisData", attributes);
+    writer.endElement();
+}
+
+
+struct HandlerAnalysisData : public SAXParser::Handler
+{
+    AnalysisData* ad;
+    HandlerAnalysisData(AnalysisData* _ad = 0) : ad(_ad) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "AnalysisData")
+            throw runtime_error(("[IO::HandlerAnalysisData] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, AnalysisData& ad)
+{
+    HandlerAnalysisData handler(&ad);
+    SAXParser::parse(is, handler);
+}
+
+
 //
 // DataCollection
 //
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dcp)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dc)
 {
     XMLWriter::Attributes attributes;
 
     writer.startElement("DataCollection", attributes);
+
+    write(writer, dc.inputs);
+    write(writer, dc.analysisData);
+    
     writer.endElement();
 }
 
@@ -1570,6 +1803,7 @@ PWIZ_API_DECL void read(std::istream& is, DataCollection& dc)
     HandlerDataCollection handler(&dc);
     SAXParser::parse(is, handler);
 }
+
 
 //
 // Provider

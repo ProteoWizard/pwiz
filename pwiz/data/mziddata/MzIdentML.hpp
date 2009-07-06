@@ -450,11 +450,38 @@ struct PWIZ_API_DECL AnalysisProtocolCollection
 typedef boost::shared_ptr<AnalysisProtocolCollection> AnalysisProtocolCollectionPtr;
 
 
-struct PWIZ_API_DECL SourceFile
+struct PWIZ_API_DECL SpectraData : public IdentifiableType
 {
-    std::string id;
+    std::string location;
+
+    std::vector<std::string> externalFormatDocumentation;
+    ParamContainer fileFormat;
+};
+
+typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
+
+struct PWIZ_API_DECL SearchDatabase : public IdentifiableType
+{
+    std::string version;
+    std::string releaseDate;
+    std::string numDatabaseSequences;
+    std::string numResidues;
+
+    ParamContainer fileFormat;
+    ParamContainer DatabaseName;
+};
+
+typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
+
+
+struct PWIZ_API_DECL SourceFile : public IdentifiableType
+{
     std::string location;
     ParamContainer fileFormat;
+
+    std::vector<std::string> externalFormatDocumentation;
+
+    ParamContainer paramGroup;
 };
 
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;
@@ -464,20 +491,63 @@ typedef boost::shared_ptr<SourceFile> SourceFilePtr;
 struct PWIZ_API_DECL Inputs
 {
     // Replace these 3 members w/ their types
-    std::vector< boost::shared_ptr<SourceFile> > sourceFile;
-    std::vector< std::string > searchDatabase;
-    std::vector< std::string > spectraData;
+    std::vector<SourceFilePtr> sourceFile;
+    std::vector<SearchDatabasePtr> searchDatabase;
+    std::vector<SpectraDataPtr> spectraData;
     
     bool empty() const;
 };
 
 typedef boost::shared_ptr<Inputs> InputsPtr;
 
+
+struct PWIZ_API_DECL FragmentationTable
+{
+    // TODO complete
+};
+
+
+struct PWIZ_API_DECL SpectrumIdentificationResult
+{
+    // TODO complete
+};
+
+typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationResultPtr;
+
+
+struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
+{
+    std::string numSequencesSearched;
+
+    FragmentationTable fragmentationTable;
+    std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
+};
+
+typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
+
+
+struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
+{
+    // TODO complete
+};
+
+typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
+
+struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
+{
+
+    std::vector<ProteinAmbiguityGroupPtr> proteinAmbiguityGroup;
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<ProteinDetectionList> ProteinDetectionListPtr;
+
+
 /// DataCollection's AnalysisData element. 
 struct PWIZ_API_DECL AnalysisData
 {
-    ParamContainer spectrumIdentificationList;
-    ParamContainer proteinDetectionList;
+    std::vector<SpectrumIdentificationListPtr> spectrumIdentificationList;
+    ProteinDetectionList proteinDetectionList;
 
     bool empty() const;
 };
