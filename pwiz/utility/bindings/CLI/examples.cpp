@@ -22,11 +22,14 @@
 
 
 #include "examples.hpp"
-#include "../../../data/msdata/examples.hpp"
 #include "spectrum_processing.hpp"
 //#include "chromatogram_processing.hpp"
 #include "Version.hpp"
 
+#pragma warning( push )
+#pragma warning( disable : 4634 4635 )
+#include "../../../data/msdata/examples.hpp"
+#pragma warning( pop )
 
 namespace pwiz {
 namespace CLI {

@@ -26,7 +26,7 @@
 
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 #include "MSData.hpp"
 #include "../../../data/msdata/Diff.hpp"
 #pragma warning( pop )
@@ -37,19 +37,25 @@ namespace CLI {
 namespace msdata {
 
 
+/// <summary>
 /// configuration struct for diffs
+/// </summary>
 public ref class DiffConfig 
 {
     public:
 
+    /// <summary>
     /// precision with which two doubles are compared
+    /// </summary>
     double precision;
 
+    /// <summary>
     /// ignore all file level metadata, and most scan level metadata,
     /// i.e. verify scan binary data, plus important scan metadata:
-    ///  - msLevel 
-    ///  - scanNumber 
-    ///  - precursor.ionSelection
+    /// <para>- msLevel</para>
+    /// <para>- scanNumber</para>
+    /// <para>- precursor.ionSelection</para>
+    /// </summary>
     bool ignoreMetadata;
 
     bool ignoreChromatograms;
@@ -65,22 +71,18 @@ public ref class DiffConfig
 };
 
 
+/// <summary>
 /// Calculate diffs of objects in the MSData structure hierarchy.
-///
-/// A diff between two objects a and b calculates the set differences
-/// a\b and b\a.
-///
-/// The Diff struct acts as a functor, but also stores the 
-/// results of the diff calculation.  
-///
-/// The bool conversion operator is provided to indicate whether 
-/// the two objects are different (either a\b or b\a is non-empty).
-///
-/// object_type requirements:
-///   object_type a;
-///   a.empty();
-///   diff(const object_type& a, const object_type& b, object_type& a_b, object_type& b_a);
-///
+/// <para/>
+/// <para>A diff between two objects a and b calculates the set differences
+/// a\b and b\a.</para>
+/// <para/>
+/// <para>The Diff struct acts as a functor, but also stores the 
+/// results of the diff calculation.</para>
+/// <para/>
+/// <para>The bool conversion operator is provided to indicate whether 
+/// the two objects are different (either a\b or b\a is non-empty).</para>
+/// </summary>
 public ref class Diff
 {
     DEFINE_INTERNAL_BASE_CODE(Diff, pwiz::msdata::Diff<pwiz::msdata::MSData>);
@@ -97,9 +99,11 @@ public ref class Diff
     property MSData^ a_b {MSData^ get();}
     property MSData^ b_a {MSData^ get();}
 
+    /// <summary>
     /// conversion to bool, with same semantics as *nix diff command:
     ///  true == different
     ///  false == not different
+    /// </summary>
     static operator bool (Diff^ diff) {return (bool) *diff->base_;}
     static operator bool (Diff% diff) {return (bool) *diff.base_;}
 

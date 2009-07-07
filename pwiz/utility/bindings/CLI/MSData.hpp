@@ -26,7 +26,7 @@
 
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 #include "CVParam.hpp"
 #include "../../../data/msdata/MSData.hpp"
 #pragma warning( pop )

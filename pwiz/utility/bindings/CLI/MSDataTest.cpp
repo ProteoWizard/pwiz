@@ -229,6 +229,20 @@ void testChromatograms()
 }
 
 
+void testExample()
+{
+    MSData tiny;
+    examples::initializeTiny(%tiny);
+
+    SpectrumList^ sl = tiny.run->spectrumList;
+    Spectrum^ s = sl->spectrum(1, false);
+    unit_assert(s->precursors->Count == 1);
+    Precursor^ p = s->precursors[0];
+    IsolationWindow^ iw = p->isolationWindow;
+    unit_assert_equal(s->precursors[0]->isolationWindow->cvParam(CVID::MS_isolation_window_lower_offset)->value, 0.5, 1e-6);
+}
+
+
 int main()
 {
     try
@@ -236,6 +250,7 @@ int main()
         testParamContainer();
         testSpectrumListSimple();
         testChromatograms();
+        testExample();
         return 0;
     }
     catch (std::exception& e)

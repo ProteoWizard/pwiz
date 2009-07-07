@@ -27,7 +27,7 @@
 
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 #include "../../../data/msdata/Version.hpp"
 #include "../../../analysis/Version.hpp"
 #include "../../../utility/proteome/Version.hpp"

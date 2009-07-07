@@ -9,9 +9,9 @@ namespace CLI {
 namespace proteome {
 
 
-double Chemistry::Proton::get() {return pwiz::proteome::Chemistry::Proton;}
-double Chemistry::Neutron::get() {return pwiz::proteome::Chemistry::Neutron;}
-double Chemistry::Electron::get() {return pwiz::proteome::Chemistry::Electron;}
+double Chemistry::Proton::get() {return b::Chemistry::Proton;}
+double Chemistry::Neutron::get() {return b::Chemistry::Neutron;}
+double Chemistry::Electron::get() {return b::Chemistry::Electron;}
 
 
 Peptide::Peptide()
@@ -75,6 +75,8 @@ double Fragmentation::x(int length, int charge) {return base_->x((size_t) length
 double Fragmentation::y(int length, int charge) {return base_->y((size_t) length, (size_t) charge);}
 
 double Fragmentation::z(int length, int charge) {return base_->z((size_t) length, (size_t) charge);}
+
+double Fragmentation::zRadical(int length, int charge) {return base_->zRadical((size_t) length, (size_t) charge);}
 
 
 Modification::Modification(String^ formula)

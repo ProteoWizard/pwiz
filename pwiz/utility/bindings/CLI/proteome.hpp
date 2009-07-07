@@ -3,7 +3,7 @@
 
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 #include "SharedCLI.hpp"
 #include "pwiz/utility/proteome/Chemistry.hpp"
 #include "pwiz/utility/proteome/Peptide.hpp"
@@ -209,6 +209,13 @@ public ref class Fragmentation
     /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
     /// </summary>
     double z(int length, int charge);
+
+    /// <summary>
+    /// returns the z radical ion of length &lt;length&gt;
+    /// <para>- if &lt;charge&gt; = 0: returns neutral mass</para>
+    /// <para>- if &lt;charge&gt; > 0: returns charged m/z</para>
+    /// </summary>
+    double zRadical(int length, int charge);
 };
 
 

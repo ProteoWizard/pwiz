@@ -25,7 +25,7 @@
 #define _CVPARAM_HPP_CLI_
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 #include "SharedCLI.hpp"
 #include "cv.hpp"
 #include "../../../data/msdata/CVParam.hpp"
