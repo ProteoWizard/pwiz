@@ -283,8 +283,8 @@ blt::local_date_time WiffFileImpl::getSampleAcquisitionTime() const
 {
     CATCH_AND_FORWARD
     (
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader->Provider->SampleAcquisitionDateTime.ToOADate()));
-        return blt::local_date_time(pt, blt::time_zone_ptr());
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader->Provider->SampleAcquisitionDateTime.ToUniversalTime().ToOADate()));
+        return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     )
 }
 
