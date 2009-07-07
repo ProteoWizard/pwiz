@@ -288,7 +288,7 @@ class Reader_MGF : public Reader
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
         result.fileDescription.sourceFilePtrs.back()->set(MS_multiple_peak_list_nativeID_format);
-        // TODO: result.fileDescription.sourceFilePtrs.back()->set(MS_Matrix_Science_MGF_file);
+        result.fileDescription.sourceFilePtrs.back()->set(MS_Mascot_MGF_file);
         return;
     }
 
