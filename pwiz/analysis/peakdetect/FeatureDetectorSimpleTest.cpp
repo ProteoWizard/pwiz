@@ -76,7 +76,7 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
     PeakFamilyDetectorFT::Config config;
     config.log = os_log_;
     config.cp = CalibrationParameters::thermo_FT();
-    PeakFamilyDetectorFT detector(config); 
+    boost::shared_ptr<PeakFamilyDetectorFT> detector(new PeakFamilyDetectorFT(config)); 
     FeatureDetectorSimple fds(detector);
    
     // instantiate MSData from test file

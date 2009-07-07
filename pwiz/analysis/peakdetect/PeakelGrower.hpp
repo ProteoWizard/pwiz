@@ -63,9 +63,10 @@ class PWIZ_API_DECL PeakelGrower_Proximity : public PeakelGrower
     {
         MZTolerance mzTolerance; // m/z units
         double rtTolerance; // seconds
+        std::ostream* log;
         
         Config(double _mzTolerance = .1, double _rtTolerance = 10)
-        :   mzTolerance(_mzTolerance), rtTolerance(_rtTolerance)
+        :   mzTolerance(_mzTolerance), rtTolerance(_rtTolerance), log(0)
         {}
     };
 

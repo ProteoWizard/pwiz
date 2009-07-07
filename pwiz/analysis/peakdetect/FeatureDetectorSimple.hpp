@@ -30,31 +30,31 @@
 namespace pwiz{
 namespace analysis{
 
+
 using namespace pwiz::data::peakdata;
 
-// FeatureDetectorSimple detects 'rectangular' features, ie number of peaks in isotope envelope is the same for each scan included in the feature
 
+/// FeatureDetectorSimple detects 'rectangular' features, ie number of peaks in 
+/// isotope envelope is the same for each scan included in the feature
 class PWIZ_API_DECL FeatureDetectorSimple : public FeatureDetector
 {
+    public:
 
-public:
-
-    FeatureDetectorSimple(PeakFamilyDetector& _pfd);
+    FeatureDetectorSimple(boost::shared_ptr<PeakFamilyDetector> _pfd);
     virtual void detect(const MSData& msd, FeatureField& result) const;
-    
 
-private:
+    private:
 
     class Impl;
     boost::shared_ptr<Impl> _pimpl;
-    
-
+    FeatureDetectorSimple(const FeatureDetectorSimple&);
+    FeatureDetectorSimple& operator=(const FeatureDetectorSimple&);
 };
-
 
 
 } // namespace analysis
 } // namespace pwiz
+
 
 #endif // _FEATUREDETECTORSIMPLE_HPP_
 

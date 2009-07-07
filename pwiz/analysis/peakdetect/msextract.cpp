@@ -42,10 +42,8 @@
 #include <iostream>
 #include <fstream>
 
-namespace{
 
 using namespace std;
-
 using namespace pwiz;
 using namespace pwiz::analysis;
 using namespace pwiz::data;
@@ -53,8 +51,8 @@ using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
+using boost::shared_ptr;
 
-enum FeatureDetectorEnum{ Simple, PeakelFarmer };
 
 MZTolerance translateMzTol(string& curr)
 {
@@ -92,24 +90,29 @@ struct Config
     string featureDetectorImplementation;
     string inputPath;
     string outputPath;
-    string extension;
     bool writeFeatureFile;
     bool writeTSV;
+    bool writeLog;
     FeatureDetectorPeakel::Config fdpConfig;
 
-    Config() : maxChargeState(6), featureDetectorImplementation("Simple"), inputPath("."), outputPath("."){}
+    Config() 
+    :   maxChargeState(6), featureDetectorImplementation("Simple"), 
+        inputPath("."), outputPath("."),
+        writeFeatureFile(true), writeTSV(true), writeLog(false)
+    {}
 
-    string outputFileName(string inputFileName);
+    string outputFileName(const string& inputFileName, const string& extension) const;
 };
 
-string Config::outputFileName(string inputFileName)
+
+string Config::outputFileName(const string& inputFileName, const string& extension) const
 {
     namespace bfs = boost::filesystem;
-    string newFilename = bfs::basename(inputFileName) + this->extension;
+    string newFilename = bfs::basename(inputFileName) + extension;
     bfs::path fullPath = bfs::path(this->outputPath) / newFilename;
     return fullPath.string(); 
-
 }
+
 
 Config parseCommandLine(int argc, char* argv[])
 {
@@ -142,9 +145,9 @@ Config parseCommandLine(int argc, char* argv[])
         ("peakelPickerMinPC,n", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), " : specify min peakel count for PeakelPicker_Basic")
         ("inputPath,i", po::value<string>(&config.inputPath)->default_value(config.inputPath), " : specify input path")
         ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), " : specify output path")
-        ("writeFeatureFile"," : write xml representation of detected features (.features file) ") // to bool
-        ("writeTSV", " : write tab-separated file"); // to bool
-
+        ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), " : write xml representation of detected features (.features file) ")
+        ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), " : write tab-separated file")
+        ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), " : write log file (for debugging)");
     
     // append options to usage string
     usage << od_config;
@@ -171,12 +174,6 @@ Config parseCommandLine(int argc, char* argv[])
     if (vm.count(label_args))
         config.filenames = vm[label_args].as< vector<string> >();
 
-    if (vm.count("writeFeatureFile"))
-        config.writeFeatureFile = true;
-    
-    if (vm.count("writeTSV"))
-        config.writeTSV = true;
-
     // usage if no files
     if (config.filenames.empty())
         throw runtime_error(usage.str());
@@ -187,97 +184,100 @@ Config parseCommandLine(int argc, char* argv[])
     return config;
 }
 
-void processFile(const string& file, Config& config)
+
+shared_ptr<FeatureDetector> createFeatureDetector(const MSData& msd,
+                                                  const Config& config,
+                                                  ostream* log)
 {
-    string filename = (config.inputPath + "/" + file).c_str();
+    if (config.featureDetectorImplementation == "Simple") 
+    {
+        PeakFamilyDetectorFT::Config pfd_config;
+        //pfd_config.log = log; // TODO: too much output!
 
-    ostream* os_log_ = 0;
-    PeakFamilyDetectorFT::Config pfd_config;
-    pfd_config.log = os_log_;
-
-    // set calibration parameters
-
-    MSDataFile msd(filename);
-    
-    bool done = false;
-    vector<InstrumentConfigurationPtr>::iterator icp_it = msd.instrumentConfigurationPtrs.begin();
-    while (!done && icp_it != msd.instrumentConfigurationPtrs.end())
+        // set calibration parameters
+        bool done = false;
+        vector<InstrumentConfigurationPtr>::const_iterator icp_it = msd.instrumentConfigurationPtrs.begin();
+        while (!done && icp_it != msd.instrumentConfigurationPtrs.end())
         {
-           
-
             if ((*icp_it)->componentList.analyzer(0).hasCVParam(MS_FT_ICR))
-                {
-                    pfd_config.cp = CalibrationParameters::thermo_FT();
-		    cout << "thermo_FT params set" << endl;
-                    done = true;
-
-                }
+            {
+                pfd_config.cp = CalibrationParameters::thermo_FT();
+                if (log) *log << "thermo_FT params set" << endl;
+                done = true;
+            }
 
             else if ((*icp_it)->componentList.analyzer(0).hasCVParam(MS_orbitrap))
-                {
-                    pfd_config.cp = CalibrationParameters::thermo_Orbitrap();
-		    cout << "thermo_Orbitrap params set" << endl;
-                    done = true;
-
-                }
+            {
+                pfd_config.cp = CalibrationParameters::thermo_Orbitrap();
+                if (log) *log << "thermo_Orbitrap params set" << endl;
+                done = true;
+            }
 
             else ++icp_it;
-
         }
-    
-    if (!done) throw runtime_error("[FeatureDetectorSimple] Unsupported mass analyzer.");
-
-    //    pfd_config.isotopeMaxChargeState = config.maxChargeState;
         
-    PeakFamilyDetectorFT detector(pfd_config);   
-    FeatureField output_features;
-    if (config.featureDetectorImplementation == "Simple") 
-        {
-            FeatureDetectorSimple fd(detector);
-            fd.detect(msd, output_features);
-        }
+        if (!done) throw runtime_error("[FeatureDetectorSimple] Unsupported mass analyzer.");
+
+        // pfd_config.isotopeMaxChargeState = config.maxChargeState; // TODO: Kate, why is this disabled?
+            
+        shared_ptr<PeakFamilyDetectorFT> detector(new PeakFamilyDetectorFT(pfd_config));
+        return shared_ptr<FeatureDetector>(new FeatureDetectorSimple(detector));
+    }
     else if (config.featureDetectorImplementation == "PeakelFarmer")
-        {           
-            boost::shared_ptr<FeatureDetectorPeakel> fd(FeatureDetectorPeakel::create(config.fdpConfig));
-            fd->detect(msd, output_features);
-        }
-  
-    else throw runtime_error(("Error in msextract: Unsupported featureDetectorImplementation: " + config.featureDetectorImplementation).c_str());
+    {           
+        FeatureDetectorPeakel::Config temp = config.fdpConfig;
+        temp.log = log; // TODO: remove or propagate in FeatureDetectorPeakel::create()
+        temp.peakelGrower_Proximity.log = log;
+        temp.peakelPicker_Basic.log = log;
+        return FeatureDetectorPeakel::create(temp);
+    }
+    else 
+    {
+        throw runtime_error(("[msextract]  Unsupported featureDetectorImplementation: " + config.featureDetectorImplementation).c_str());
+    }
+}
+
+
+void processFile(const string& file, const Config& config)
+{
+    string filename = (config.inputPath + "/" + file).c_str(); // TODO: bfs
+
+    ofstream log;
+    if (config.writeLog)
+        log.open(config.outputFileName(filename, ".log").c_str());
+
+    MSDataFile msd(filename);
+    shared_ptr<FeatureDetector> fd = createFeatureDetector(msd, config, config.writeLog ? &log : 0);
+
+    FeatureField output_features;
+    fd->detect(msd, output_features);
 
     if (config.writeFeatureFile)
-        {
-            config.extension = ".features";
+    {
+        vector<FeaturePtr> features;
+        FeatureField::iterator it = output_features.begin();
+        for( ; it != output_features.end(); ++it) features.push_back(*it);
 
-            vector<FeaturePtr> features;
-            FeatureField::iterator it = output_features.begin();
-            for( ; it != output_features.end(); ++it) features.push_back(*it);
+        FeatureFile featureFile;
+        featureFile.features = features;
 
-            FeatureFile featureFile;
-            featureFile.features = features;
-
-            ofstream ofs(config.outputFileName(filename).c_str());
-            XMLWriter writer(ofs);
-            featureFile.write(writer);
-
-        }
+        ofstream ofs(config.outputFileName(filename, ".features").c_str());
+        XMLWriter writer(ofs);
+        featureFile.write(writer);
+    }
 
     if (config.writeTSV)
+    {
+        FeatureField::iterator it = output_features.begin();
+        ofstream ofs(config.outputFileName(filename, ".features.tsv").c_str());
+        ofs << "mzMonoisotopic\tretentionTime\tretentionTimeMin\tretentionTimeMax\ttotalIntensity\n";
+        for(; it != output_features.end(); ++it)
         {
-            config.extension = ".features.tsv";
-            FeatureField::iterator it = output_features.begin();
-            ofstream ofs(config.outputFileName(filename).c_str());
-            ofs << "mzMonoisotopic\tretentionTime\tretentionTimeMin\tretentionTimeMax\ttotalIntensity\n";
-            for(; it != output_features.end(); ++it)
-                {
-                    ofs << (*it)->mz << "\t" << (*it)->retentionTime  << "\t" << (*it)->retentionTimeMin() << "\t" << (*it)->retentionTimeMax() << "\t" << (*it)->totalIntensity << "\n";
-
-                }
-
+            ofs << (*it)->mz << "\t" << (*it)->retentionTime  << "\t" << (*it)->retentionTimeMin() << "\t" << (*it)->retentionTimeMax() << "\t" << (*it)->totalIntensity << "\n";
         }
-
-    return;
-
+    }
 }
+
 
 void go(Config& config)
 {
@@ -307,7 +307,6 @@ void go(Config& config)
         }
 }
 
-} // anonymous namespace
 
 int main(int argc, char* argv[])
 {

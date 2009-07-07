@@ -105,12 +105,15 @@ void PeakelGrower_Proximity::sowPeak(PeakelField& peakelField, const Peak& peak)
         updatePeakel(*candidates.front(), peak);
     else
     {
-        cerr << "[PeakelGrower_Proximity::sowPeak()] Warning: multiple candidate peakels.\n";
-        cerr << "  peak: " << peak << endl;
-        cerr << "  candidates: " << candidates.size() << endl;
-        for (vector<PeakelPtr>::const_iterator it=candidates.begin(); it!=candidates.end(); ++it)
-            cerr << **it << endl;
-        cerr << endl;
+        if (config_.log)
+        {
+            *config_.log << "[PeakelGrower_Proximity::sowPeak()] Warning: multiple candidate peakels.\n"
+                 << "  peak: " << peak
+                 << "  candidates: " << candidates.size() << endl;
+            for (vector<PeakelPtr>::const_iterator it=candidates.begin(); it!=candidates.end(); ++it)
+                *config_.log << **it << endl;
+            *config_.log << endl;
+        }
     }
 }
 

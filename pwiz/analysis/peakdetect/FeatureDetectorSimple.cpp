@@ -44,6 +44,8 @@ using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
+using boost::shared_ptr;
+
 
 // helper function to fill in Peak id attribute (currently from scan number)
 struct SetID
@@ -98,7 +100,7 @@ class  FeatureDetectorSimple::Impl
 {
 public:
     
-    Impl(PeakFamilyDetector& pfd) : _pfd(pfd) {}
+    Impl(shared_ptr<PeakFamilyDetector> pfd) : _pfd(pfd) {}
 
     typedef string FeatureID;
 
@@ -110,12 +112,12 @@ public:
     
 private:
     
-    PeakFamilyDetector& _pfd;
-
+    shared_ptr<PeakFamilyDetector> _pfd;
 };
 
 
-FeatureDetectorSimple::FeatureDetectorSimple(PeakFamilyDetector& pfd) : _pimpl(new Impl(pfd)){}
+FeatureDetectorSimple::FeatureDetectorSimple(shared_ptr<PeakFamilyDetector> pfd) : _pimpl(new Impl(pfd)){}
+
 void FeatureDetectorSimple::detect(const MSData& msd, FeatureField& result) const 
 {
     _pimpl->detect(msd,result);
@@ -216,7 +218,7 @@ void FeatureDetectorSimple::Impl::detect(const MSData& msd, FeatureField& detect
 
             }
       
-        _pfd.detect(mzIntensityPairs,result);
+        _pfd->detect(mzIntensityPairs,result);
 
         // iterate thru peak families
 
