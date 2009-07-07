@@ -445,8 +445,31 @@ rule copy-assemblies ( target : properties * )
     }
 }
 
+rule set-manifest-dependencies ( target : properties * )
+{
+    local manifest-dependencies-string ;
+    local manifest-dependencies = [ feature.get-values <manifest-dependency> : $(properties) ] ;
+    if $(manifest-dependencies)
+    {
+        # type='win32' name='<assembly_basename>' version='<assembly_version>'
+        for local dependency in $(manifest-dependencies)
+        {
+            local dependency-path = [ path.native [ $(dependency).name ] ] ;
+            local dependency-version = [ MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe $(dependency-path)" ] ] ;
+            
+            # unknown version will cause a runtime-error; is there a better solution?
+            dependency-version ?= "unknown" ;
+            
+            # the name of the manifest can not match the basename of the DLL because of a Windows XP loader bug
+            manifest-dependencies-string += " /MANIFESTDEPENDENCY:\"type='win32' name='$(dependency-path:B).SxS' version='$(dependency-version)'\"" ;
+        }
+    }
+    MANIFEST_DEPENDENCIES on $(target) = $(manifest-dependencies-string) ;
+}
+
 rule link ( targets + : sources * : properties * )
 {
+    set-manifest-dependencies $(<[1]) : $(properties) ;
     if <embed-manifest>on in $(properties)
     {
         msvc.manifest $(targets) : $(sources) : $(properties) ;
@@ -456,6 +479,7 @@ rule link ( targets + : sources * : properties * )
 
 rule link.dll ( targets + : sources * : properties * )
 {
+    set-manifest-dependencies $(<[1]) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
     {
@@ -466,6 +490,7 @@ rule link.dll ( targets + : sources * : properties * )
 
 rule link.clr.dll ( targets + : sources * : properties * )
 {
+    set-manifest-dependencies $(<[1]) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
     {
@@ -488,12 +513,12 @@ if [ os.name ] in NT
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
     
     actions manifest
-    {        
+    {
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
@@ -501,13 +526,13 @@ if [ os.name ] in NT
 
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
     
     actions link.clr.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
@@ -1072,6 +1097,7 @@ local rule register-toolset-really ( )
         feature.feature pch-source          :                       : dependency free ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
+        feature.feature manifest-dependency :                       : free dependency ;
         feature.feature using-clr           : false true            : composite ;
         feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
@@ -1178,7 +1204,6 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
-        toolset.flags msvc.link ASSEMBLY_DEPENDENCIES <assembly-dependency> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
