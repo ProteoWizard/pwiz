@@ -142,10 +142,15 @@ int main(int argc, char* argv[])
                                 "\nUsage: Reader_Bruker_Test [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
 
         for (size_t i=0; i < rawpaths.size(); ++i)
-            if (generateMzML)
-                generate(rawpaths[i]);
-            else
-                test(rawpaths[i]);
+            for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
+            {
+                if (itr->path().extension() == ".mzML")
+                    continue;
+                else if (generateMzML)
+                    generate(itr->path().string());
+                else
+                    test(itr->path().string());
+            }
         return 0;
     }
     catch (exception& e)

@@ -24,6 +24,7 @@
 #include "CompassData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -44,6 +45,7 @@ void test(const string& rawpath)
     cout << compassData->getAnalysisDateTime().to_string() << endl;
     cout << compassData->getSampleName() << endl;
     cout << compassData->getOperatorName() << endl;
+    cout << compassData->getInstrumentFamily() << endl;
     cout << compassData->getInstrumentDescription() << endl;
     cout << compassData->getMSSpectrumCount() << endl;
 
@@ -82,22 +84,26 @@ int main(int argc, char* argv[])
 {
     try
     {
-        vector<string> rawpaths;
+        vector<string> rawpathmasks;
 
         for (int i=1; i<argc; i++)
         {
             if (!strcmp(argv[i],"-v")) os_ = &cout;
-            else rawpaths.push_back(argv[i]);
+            else rawpathmasks.push_back(argv[i]);
         }
 
         vector<string> args(argv, argv+argc);
-        if (rawpaths.empty())
+        if (rawpathmasks.empty())
             throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
-                                "\nUsage: CompassDataTest [-v] <source path 1> [source path 2] ..."); 
+                                "\nUsage: CompassDataTest [-v] <source pathmask 1> [source pathmask 2] ..."); 
 
-        for (size_t i=0; i < rawpaths.size(); ++i)
-            for (size_t j=0; j < 5; ++j) // test that the API destructor is cleaning up
-                test(rawpaths[i]);
+        for (size_t i=0; i < rawpathmasks.size(); ++i)
+        {
+            vector<bfs::path> rawpaths;
+            expand_pathmask(rawpathmasks[i], rawpaths);
+            for (size_t j=0; j < rawpaths.size(); ++j)
+                test(rawpaths[j].string());
+        }
         return 0;
     }
     catch (exception& e)

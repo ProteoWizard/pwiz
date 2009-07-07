@@ -5,8 +5,15 @@ project
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
     ;
 
-path-constant BRUKER_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
-path-constant BRUKER_TEST_PATH : $(BRUKER_PATH)/CompassDataTest.data ;
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
+path-constant TEST_DATA_PATH : ./Reader_Bruker_Test.data ;
+
+
+# decompress test data (on any platform)
+SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+
 
 
 lib pwiz_aux_msrc_reader_bruker
@@ -17,12 +24,12 @@ lib pwiz_aux_msrc_reader_bruker
         <toolset>msvc:<source>SpectrumList_Bruker.cpp
         <toolset>msvc:<source>ChromatogramList_Bruker.cpp
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
-		<toolset>msvc:<library>$(BRUKER_PATH)
+		<toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_bruker
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
-		<toolset>msvc:<library>$(BRUKER_PATH)
+		<toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_bruker
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
@@ -31,17 +38,14 @@ lib pwiz_aux_msrc_reader_bruker
 # unit tests (ordered by dependency)
 #
 
-path-constant TEST_PATH1 : "$(BRUKER_TEST_PATH)/100 fmol BSA" ;
-path-constant TEST_PATH2 : "$(BRUKER_TEST_PATH)/CsI_Pos_0_G1_000003.d" ;
-path-constant TEST_PATH3 : "$(BRUKER_TEST_PATH)/Sample_1-A,1_01_985.d" ;
-
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Bruker_Test.cpp pwiz_aux_msrc_reader_bruker
+run Reader_Bruker_Test.cpp
     : # args
-        \"$(TEST_PATH1)\" \"$(TEST_PATH2)\" \"$(TEST_PATH3)\"
+        \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <library>pwiz_aux_msrc_reader_bruker
     : # target name
         Reader_Bruker_Test 
     : # default-build
