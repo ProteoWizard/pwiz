@@ -89,6 +89,42 @@ double RTDiffDistribution::score(const Entry& a, const Entry& b)
 
 }
 
+HammingDistance::HammingDistance(const vector<boost::shared_ptr<Entry> >& v)
+{
+    vector<boost::shared_ptr<Entry> >::const_iterator it = v.begin();
+    for(; it != v.end(); ++it)
+        {
+            vector<boost::shared_ptr<Entry> >::const_iterator jt = v.begin();
+            while (jt < it)
+                {
+                    vector<string> a = getUniquePeptides((*it)->_pidf);
+                    vector<string> b = getUniquePeptides((*jt)->_pidf);
+                    ++jt;
+
+                    vector<string>::iterator a_it = a.begin();
+                    for(; a_it != a.end(); ++a_it)
+                        {
+                            const string& currentPeptide = *a_it;
+                            if (find(allUniquePeptides.begin(),allUniquePeptides.end(),currentPeptide) == allUniquePeptides.end()) allUniquePeptides.push_back(currentPeptide);
+
+                        }
+
+                    vector<string>::iterator b_it = b.begin();
+                    for(; b_it != b.end(); ++b_it)
+                        {
+                            const string& currentPeptide = *b_it;
+                            if (find(allUniquePeptides.begin(),allUniquePeptides.end(),currentPeptide) == allUniquePeptides.end()) allUniquePeptides.push_back(currentPeptide);
+
+                        }
+
+                }
+
+        }
+
+    sort(allUniquePeptides.begin(), allUniquePeptides.end());
+
+}
+
 WeightedHammingDistance::WeightedHammingDistance(const vector<boost::shared_ptr<Entry> >& v)
 {
   // get  normalizationFactor
@@ -138,6 +174,19 @@ double WeightedHammingDistance::score(const Entry& a, const Entry& b)
     return hammingDistance;
 
 }
+
+double HammingDistance::score(const Entry& a, const Entry& b)
+{
+    vector<string> asqs = getUniquePeptides(a._pidf);
+    vector<string> bsqs = getUniquePeptides(b._pidf);
+
+    // get hamming distance(a,b)
+    double hammingDistance = getHammingDistance(a,b,allUniquePeptides);
+
+    return hammingDistance;
+
+}
+
 
 
 EditDistance::EditDistance() : insertionCost(1), deletionCost(1), translocationCost(100){}

@@ -43,6 +43,15 @@ struct RTDiffDistribution : public DistanceAttribute
 
 };
 
+struct HammingDistance : public DistanceAttribute
+{
+    HammingDistance(const vector<boost::shared_ptr<Entry> >& v);
+    virtual double score(const Entry& a, const Entry& b);
+    
+    vector<string> allUniquePeptides;
+
+};
+
 struct WeightedHammingDistance : public DistanceAttribute
 {
     WeightedHammingDistance(const vector<boost::shared_ptr<Entry> >& v);
