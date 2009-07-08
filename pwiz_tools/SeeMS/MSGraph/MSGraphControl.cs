@@ -293,6 +293,10 @@ namespace MSGraph
                 ( newCurve as LineItem ).Line.IsOptimizedDraw = true;
             }
 
+            IMSGraphItemExtended extended = item as IMSGraphItemExtended;
+            if (extended != null)
+                extended.CustomizeCurve(newCurve);
+
             newCurve.Tag = item;
             return newCurve;
         }

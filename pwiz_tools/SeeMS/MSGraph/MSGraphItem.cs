@@ -119,4 +119,14 @@ namespace MSGraph
         /// </summary>
         IPointList Points { get; }
     }
+
+    public interface IMSGraphItemExtended : IMSGraphItemInfo
+    {
+        /// <summary>
+        /// Allow the graph item finer control of display properties on the
+        /// underlying <see cref="CurveItem"/> created from it.
+        /// </summary>
+        /// <param name="curveItem"></param>
+        void CustomizeCurve(CurveItem curveItem);
+    }
 }
