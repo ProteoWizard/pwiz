@@ -42,11 +42,14 @@ lib pwiz_data_mzid
         Reader.cpp
         IO.cpp
         Serializer_mzid.cpp
+        Pep2MzIdent.cpp
     : # requirements
         <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
     : # default-build
     : # usage-requirements
         <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
     ;
 
 
