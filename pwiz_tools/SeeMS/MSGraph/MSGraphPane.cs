@@ -299,7 +299,7 @@ namespace MSGraph
                 {
                     PointPair p = points[k];
 
-                    if( points[k + 1].X < rL )
+                    if( k + 1 < points.Count && points[k + 1].X < rL )
                         break;
                     if( p.Y > rB )
                         return true;
