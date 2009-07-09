@@ -2227,6 +2227,8 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(mzid, attributes);
+    attributes.push_back(make_pair("xsi:schemaLocation",
+                                   "http://psidev.info/psi/pi/mzIdentML/1.0  ../schema/mzIdentML_working.xsd"));
     attributes.push_back(make_pair("version", mzid.version));
     attributes.push_back(make_pair("creationDate", mzid.creationDate));
 
