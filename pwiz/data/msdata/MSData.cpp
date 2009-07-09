@@ -1300,7 +1300,7 @@ PWIZ_API_DECL bool Run::empty() const
 //
 
 
-PWIZ_API_DECL MSData::MSData() : version("1.1.0") {}
+PWIZ_API_DECL MSData::MSData() {}
 PWIZ_API_DECL MSData::~MSData() {}
 
 
