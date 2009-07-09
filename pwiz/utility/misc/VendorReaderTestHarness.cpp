@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 
 #include "VendorReaderTestHarness.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
@@ -159,6 +161,7 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
 } // namespace
 
 
+PWIZ_API_DECL
 int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, const TestPathPredicate& isPathTestable)
 {
     try
@@ -185,11 +188,11 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        throw runtime_error(string("std::exception: ") + e.what());
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        throw runtime_error("Caught unknown exception.\n");
     }
     
     return 1;

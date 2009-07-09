@@ -20,6 +20,7 @@
 //
 
 
+#include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 #include <string>
 #include <vector>
@@ -30,7 +31,7 @@ namespace util {
 
 
 /// test implementations derive from this to define which paths should be tested
-struct TestPathPredicate
+struct PWIZ_API_DECL TestPathPredicate
 {
     /// returns true iff the given rawpath is a real path to test/generate
     virtual bool operator() (const std::string& rawpath) const = 0;
@@ -40,6 +41,7 @@ struct TestPathPredicate
 
 
 /// A common test harness for vendor readers;
+PWIZ_API_DECL
 int testReader(const pwiz::msdata::Reader& reader,
                const std::vector<std::string>& args,
                bool testAcceptOnly,
