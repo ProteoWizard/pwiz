@@ -71,12 +71,12 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
                 const SpectrumListPtr& spectrumListPtr,
                 const vector<stream_offset>& positions)
 {
-    XMLWriter::Attributes indexAttributes;
-    indexAttributes.push_back(make_pair("name", "spectrum"));        
-    xmlWriter.startElement("index", indexAttributes);
-
-    if (spectrumListPtr.get())
+    if (spectrumListPtr.get() && spectrumListPtr->size() > 0)
     {
+        XMLWriter::Attributes indexAttributes;
+        indexAttributes.push_back(make_pair("name", "spectrum"));        
+        xmlWriter.startElement("index", indexAttributes);
+
         if (spectrumListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Sizes differ.");
 
@@ -95,21 +95,20 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
             xmlWriter.endElement();
         }
         xmlWriter.popStyle();
+        xmlWriter.endElement(); 
     }
-
-    xmlWriter.endElement(); 
 }
 
 void writeChromatogramIndex(XMLWriter& xmlWriter, 
                 const ChromatogramListPtr& chromatogramListPtr,
                 const vector<stream_offset>& positions)
 {
-    XMLWriter::Attributes indexAttributes;
-    indexAttributes.push_back(make_pair("name", "chromatogram"));        
-    xmlWriter.startElement("index", indexAttributes);
-
-    if (chromatogramListPtr.get())
+    if (chromatogramListPtr.get() && chromatogramListPtr->size() > 0)
     {
+        XMLWriter::Attributes indexAttributes;
+        indexAttributes.push_back(make_pair("name", "chromatogram"));        
+        xmlWriter.startElement("index", indexAttributes);
+
         if (chromatogramListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::WriteChromatogramIndex()] sizes differ.");
 
@@ -126,9 +125,8 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
             xmlWriter.endElement();
         }
         xmlWriter.popStyle();
+        xmlWriter.endElement(); 
     }
-
-    xmlWriter.endElement(); 
 }
 
 } // namespace
