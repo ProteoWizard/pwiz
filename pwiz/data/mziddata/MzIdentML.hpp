@@ -108,7 +108,7 @@ struct IdentifiableType
     virtual bool empty() const;
 };
 
-struct PWIZ_API_DECL BibliographicReference
+struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
 {
     std::string authors;
     std::string publication;
@@ -501,41 +501,127 @@ struct PWIZ_API_DECL Inputs
 typedef boost::shared_ptr<Inputs> InputsPtr;
 
 
-struct PWIZ_API_DECL FragmentationTable
+struct PWIZ_API_DECL Measure : public IdentifiableType
 {
-    // TODO complete
+    ParamContainer paramGroup;
 };
 
+typedef boost::shared_ptr<Measure> MeasurePtr;
 
-struct PWIZ_API_DECL SpectrumIdentificationResult
+struct PWIZ_API_DECL FragmentArray
 {
-    // TODO complete
+    std::vector<float> values;
+    std::string Measure_ref;
+
+    FragmentArray& setValues(const std::string& values);
+    FragmentArray& setValues(const std::vector<float>& values);
+    std::string getValues() const;
+};
+
+typedef boost::shared_ptr<FragmentArray> FragmentArrayPtr;
+
+
+struct PWIZ_API_DECL IonType
+{
+    std::vector<int> index;
+    int charge;
+
+    ParamContainer paramGroup;
+    std::vector<FragmentArrayPtr> fragmentArray;
+
+    IonType& setIndex(const std::string& value);
+    IonType& setIndex(const std::vector<int>& value);
+
+    std::string getIndex() const;
+};
+
+typedef boost::shared_ptr<IonType> IonTypePtr;
+
+
+struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
+{
+    std::string DBSequence_ref;
+    int start;
+    int end;
+    std::string pre;
+    std::string post;
+    std::string TranslationTable_ref;
+    int frame;
+    bool isDecoy;
+    int missedCleavages;
+    
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
+
+
+struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
+{
+    int chargeState;
+    double experimentalMassToCharge;
+    double calculatedMassToCharge;
+    float calculatedPI;
+    std::string Peptide_ref;
+    int rank;
+    bool passThreshold;
+    std::string MassTable_ref;
+    std::string Sample_ref;
+
+    
+    std::vector<PeptideEvidencePtr> peptideEvidence;
+    std::vector<IonTypePtr> fragmentation;
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<SpectrumIdentificationItem> SpectrumIdentificationItemPtr;
+
+struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
+{
+    std::string spectrumID;
+    std::string SpectraData_ref;
+    
+    std::vector<SpectrumIdentificationItemPtr> spectrumIdentificationItem;
+    ParamContainer paramGroup;
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationResultPtr;
 
+struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
+{
+    std::string DBSequence_ref;
+    bool passThreshold;
+
+    // written out in the PeptideEvidence_Ref attribute of the
+    // PeptideHypothesis tag
+    std::vector<std::string> peptideHypothesis;
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<ProteinDetectionHypothesis> ProteinDetectionHypothesisPtr;
+
+
+struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
+{
+    std::vector<ProteinDetectionHypothesisPtr> proteinDetectionHypothesis;
+    ParamContainer paramGroup;
+};
+
+typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
 
 struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 {
-    std::string numSequencesSearched;
+    int numSequencesSearched;
 
-    FragmentationTable fragmentationTable;
+    std::vector<MeasurePtr> fragmentationTable;
     std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
 
 
-struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
-{
-    // TODO complete
-};
-
-typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
-
 struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 {
-
     std::vector<ProteinAmbiguityGroupPtr> proteinAmbiguityGroup;
     ParamContainer paramGroup;
 };

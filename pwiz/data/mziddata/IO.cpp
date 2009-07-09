@@ -48,7 +48,7 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects,
                const string& label)
 {
     if (!objects.empty())
-   {
+    {
         XMLWriter::Attributes attributes;
         //attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
         writer.startElement(label, attributes);
@@ -240,11 +240,11 @@ PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamC
 {
     for (vector<CVParam>::const_iterator it=pc.cvParams.begin(); 
          it!=pc.cvParams.end(); ++it)
-         write(writer, *it);
+        write(writer, *it);
 
     for (vector<UserParam>::const_iterator it=pc.userParams.begin(); 
          it!=pc.userParams.end(); ++it)
-         write(writer, *it);
+        write(writer, *it);
 }
 
 
@@ -253,7 +253,7 @@ struct HandlerParamContainer : public SAXParser::Handler
     ParamContainer* paramContainer;
 
     HandlerParamContainer(ParamContainer* _paramContainer = 0)
-    :   paramContainer(_paramContainer)
+        :   paramContainer(_paramContainer)
     {}
 
     virtual Status startElement(const string& name, 
@@ -279,7 +279,7 @@ struct HandlerParamContainer : public SAXParser::Handler
         throw runtime_error(("[IO::HandlerParamContainer] Unknown element " + name).c_str()); 
     }
 
-    private:
+private:
 
     HandlerCVParam handlerCVParam_;
     HandlerUserParam handlerUserParam_;
@@ -291,7 +291,7 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
     const string name_;
 
     HandlerNamedParamContainer(const string& name, ParamContainer* paramContainer = 0)
-    :   HandlerParamContainer(paramContainer), name_(name)
+        :   HandlerParamContainer(paramContainer), name_(name)
     {}
 
     virtual Status startElement(const string& name, 
@@ -325,6 +325,17 @@ void addIdAttributes(const IdentifiableType& id, XMLWriter::Attributes& attribut
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReference& br)
 {
     XMLWriter::Attributes attributes;
+    addIdAttributes(br, attributes);
+    attributes.push_back(make_pair("authors", br.authors));
+    attributes.push_back(make_pair("publication", br.publication));
+    attributes.push_back(make_pair("publisher", br.publisher));
+    attributes.push_back(make_pair("editor", br.editor));
+    attributes.push_back(make_pair("year", lexical_cast<string>(br.year)));
+    attributes.push_back(make_pair("volume", br.volume));
+    attributes.push_back(make_pair("issue", br.issue));
+    attributes.push_back(make_pair("pages", br.pages));
+    attributes.push_back(make_pair("title", br.title));
+    
     writer.startElement("BibliographicReference", attributes, XMLWriter::EmptyElement);
     //writer.endElement();
 }
@@ -866,9 +877,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     XMLWriter::Attributes attributes;
     addIdAttributes(*sip, attributes);
     attributes.push_back(make_pair("SpectrumIdentificationProtocol_ref",
-                             sip->SpectrumIdentificationProtocol_ref));
+                                   sip->SpectrumIdentificationProtocol_ref));
     attributes.push_back(make_pair("SpectrumIdentificationList_ref",
-                             sip->SpectrumIdentificationList_ref));
+                                   sip->SpectrumIdentificationList_ref));
     attributes.push_back(make_pair("activityDate", sip->activityDate));
 
     writer.startElement("SpectrumIdentification", attributes);
@@ -932,7 +943,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd
     {
         attributes.clear();
         attributes.push_back(make_pair("SpectrumIdentificationList_ref",
-                                 *it));
+                                       *it));
         writer.startElement("InputSpectrumIdentifications", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1593,10 +1604,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(*sd, attributes);
-    attributes.push_back(make_pair("version", sd->version));
-    attributes.push_back(make_pair("releaseDate", sd->releaseDate));
-    attributes.push_back(make_pair("numDatabaseSequences", sd->numDatabaseSequences));
-    attributes.push_back(make_pair("numResidues", sd->numResidues));
+    if (!sd->version.empty())
+        attributes.push_back(make_pair("version", sd->version));
+    if (!sd->releaseDate.empty())
+        attributes.push_back(make_pair("releaseDate", sd->releaseDate));
+    if (!sd->numDatabaseSequences.empty())
+        attributes.push_back(make_pair("numDatabaseSequences", sd->numDatabaseSequences));
+    if (!sd->numResidues.empty())
+        attributes.push_back(make_pair("numResidues", sd->numResidues));
 
     writer.startElement("SearchDatabase", attributes);
 
@@ -1644,7 +1659,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFilePtr sf)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(*sf, attributes);
-    attributes.push_back(make_pair("location", sf->location));
+    if (!sf->location.empty())
+        attributes.push_back(make_pair("location", sf->location));
 
     writer.startElement("SourceFile", attributes);
 
@@ -1734,14 +1750,378 @@ PWIZ_API_DECL void read(std::istream& is, Inputs& inputs)
 
 
 //
+// ProteinDetectionList
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList& pdl)
+{
+    writer.startElement("ProteinDetectionList");
+    writer.endElement();
+}
+
+
+struct HandlerProteinDetectionList : public SAXParser::Handler
+{
+    ProteinDetectionList* pdl;
+    HandlerProteinDetectionList(ProteinDetectionList* _pdl = 0) : pdl(_pdl) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "ProteinDetectionList")
+            throw runtime_error(("[IO::HandlerProteinDetectionList] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionList& pdl)
+{
+    HandlerProteinDetectionList handler(&pdl);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// PeptideEvidence
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidencePtr pep)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*pep, attributes);
+    if (!pep->DBSequence_ref.empty())
+        attributes.push_back(make_pair("DBSequence_ref", pep->DBSequence_ref));
+    attributes.push_back(make_pair("start", lexical_cast<string>(pep->start)));
+    attributes.push_back(make_pair("end", lexical_cast<string>(pep->end)));
+    attributes.push_back(make_pair("pre", pep->pre));
+    attributes.push_back(make_pair("post", pep->post));
+    if (!pep->TranslationTable_ref.empty())
+        attributes.push_back(make_pair("TranslationTable_ref", pep->TranslationTable_ref));
+    attributes.push_back(make_pair("frame", lexical_cast<string>(pep->frame)));
+    attributes.push_back(make_pair("isDecoy", lexical_cast<string>(pep->isDecoy)));
+    attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep->missedCleavages)));
+    
+    writer.startElement("PeptideEvidence", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerPeptideEvidence : public SAXParser::Handler
+{
+    PeptideEvidence* pep;
+    HandlerPeptideEvidence(PeptideEvidence* _pep = 0) : pep(_pep) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "PeptideEvidence")
+            throw runtime_error(("[IO::HandlerPeptideEvidence] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidencePtr pep)
+{
+    HandlerPeptideEvidence handler(pep.get());
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// FragmentArray
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArrayPtr fa)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("values", fa->getValues()));
+    if (!fa->Measure_ref.empty())
+        attributes.push_back(make_pair("Measure_ref", fa->Measure_ref));
+    
+    writer.startElement("FragmentArray", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerFragmentArray : public SAXParser::Handler
+{
+    FragmentArray* fa;
+    HandlerFragmentArray(FragmentArray* _fa = 0) : fa(_fa) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "FragmentArray")
+            throw runtime_error(("[IO::HandlerFragmentArray] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, FragmentArrayPtr fa)
+{
+    HandlerFragmentArray handler(fa.get());
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// IonType
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("index", itype.getIndex()));
+    attributes.push_back(make_pair("charge", lexical_cast<string>(itype.charge)));
+
+    writer.startElement("IonType", attributes);
+
+    for(vector<FragmentArrayPtr>::const_iterator it=itype.fragmentArray.begin();
+        it!=itype.fragmentArray.end(); it++)
+        write(writer, *it);
+    
+    writeParamContainer(writer, itype.paramGroup);
+    writer.endElement();
+}
+
+
+struct HandlerIonType : public SAXParser::Handler
+{
+    IonType* it;
+    HandlerIonType(IonType* _it = 0) : it(_it) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "IonType")
+            throw runtime_error(("[IO::HandlerIonType] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, IonType& it)
+{
+    HandlerIonType handler(&it);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// SpectrumIdentificationItem
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationItemPtr siip)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*siip, attributes);
+    attributes.push_back(make_pair("chargeState", lexical_cast<string>(siip->chargeState)));
+    attributes.push_back(make_pair("experimentalMassToCharge", lexical_cast<string>(siip->experimentalMassToCharge)));
+    attributes.push_back(make_pair("calculatedMassToCharge", lexical_cast<string>(siip->calculatedMassToCharge)));
+    attributes.push_back(make_pair("calculatedPI", lexical_cast<string>(siip->calculatedPI)));
+    if (!siip->Peptide_ref.empty())
+        attributes.push_back(make_pair("Peptide_ref", siip->Peptide_ref));
+    attributes.push_back(make_pair("rank", lexical_cast<string>(siip->rank)));
+    attributes.push_back(make_pair("passThreshold", lexical_cast<string>(siip->passThreshold)));
+    if (!siip->MassTable_ref.empty())
+        attributes.push_back(make_pair("MassTable_ref", siip->MassTable_ref));
+    if (!siip->Sample_ref.empty())
+        attributes.push_back(make_pair("Sample_ref", siip->Sample_ref));
+
+
+    writer.startElement("SpectrumIdentificationItem", attributes);
+
+    for(vector<PeptideEvidencePtr>::const_iterator it=siip->peptideEvidence.begin();
+        it!=siip->peptideEvidence.end(); it++)
+    {
+        write(writer, *it);
+    }
+
+    writePtrList(writer, siip->fragmentation, "Fragmentation");
+    
+    writeParamContainer(writer, siip->paramGroup);
+    writer.endElement();
+}
+
+
+struct HandlerSpectrumIdentificationItem : public SAXParser::Handler
+{
+    SpectrumIdentificationItem* siip;
+    HandlerSpectrumIdentificationItem(SpectrumIdentificationItem* _siip = 0) : siip(_siip) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "SpectrumIdentificationItem")
+            throw runtime_error(("[IO::HandlerSpectrumIdentificationItem] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationItemPtr siip)
+{
+    HandlerSpectrumIdentificationItem handler(siip.get());
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// SpectrumIdentificationResult
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationResultPtr sirp)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*sirp, attributes);
+    attributes.push_back(make_pair("spectrumID", sirp->spectrumID));
+    attributes.push_back(make_pair("SpectraData_ref", sirp->SpectraData_ref));
+    
+    writer.startElement("SpectrumIdentificationResult", attributes);
+
+    for (vector<SpectrumIdentificationItemPtr>::const_iterator it=sirp->spectrumIdentificationItem.begin(); it!=sirp->spectrumIdentificationItem.end(); it++)
+        write(writer, *it);
+    
+    writeParamContainer(writer, sirp->paramGroup);
+    writer.endElement();
+}
+
+
+struct HandlerSpectrumIdentificationResult : public SAXParser::Handler
+{
+    SpectrumIdentificationResult* sirp;
+    HandlerSpectrumIdentificationResult(SpectrumIdentificationResult* _sirp = 0) : sirp(_sirp) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "SpectrumIdentificationResult")
+            throw runtime_error(("[IO::HandlerSpectrumIdentificationResult] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationResult& sirp)
+{
+    HandlerSpectrumIdentificationResult handler(&sirp);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Measure
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Measure& measure)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(measure, attributes);
+
+    writer.startElement("Measure", attributes);
+
+    writeParamContainer(writer, measure.paramGroup);
+    
+    writer.endElement();
+}
+
+
+struct HandlerMeasure : public SAXParser::Handler
+{
+    Measure* measure;
+    HandlerMeasure(Measure* _measure = 0) : measure(_measure) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Measure")
+            throw runtime_error(("[IO::HandlerMeasure] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Measure measure)
+{
+    HandlerMeasure handler(&measure);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// SpectrumIdentificationList
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationListPtr silp)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(*silp, attributes);
+    attributes.push_back(make_pair("numSequencesSearched", lexical_cast<string>(silp->numSequencesSearched)));
+    
+    writer.startElement("SpectrumIdentificationList", attributes);
+
+    writePtrList(writer, silp->fragmentationTable, "FragmentationTable");
+
+    for (vector<SpectrumIdentificationResultPtr>::const_iterator it=silp->spectrumIdentificationResult.begin(); it!=silp->spectrumIdentificationResult.end(); it++)
+        write(writer, *it);
+    
+    writer.endElement();
+}
+
+
+struct HandlerSpectrumIdentificationList : public SAXParser::Handler
+{
+    SpectrumIdentificationList* silp;
+    HandlerSpectrumIdentificationList(SpectrumIdentificationList* _silp = 0) : silp(_silp) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "SpectrumIdentificationList")
+            throw runtime_error(("[IO::HandlerSpectrumIdentificationList] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationListPtr silp)
+{
+    HandlerSpectrumIdentificationList handler(silp.get());
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // AnalysisData
 //
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisData& ad)
 {
-    XMLWriter::Attributes attributes;
-    writer.startElement("AnalysisData", attributes);
+    writer.startElement("AnalysisData");
+
+    for (vector<SpectrumIdentificationListPtr>::const_iterator it=ad.spectrumIdentificationList.begin(); it!=ad.spectrumIdentificationList.end(); it++)
+        write(writer, *it);
+
+    write(writer, ad.proteinDetectionList);
+    
     writer.endElement();
 }
 
@@ -1864,7 +2244,7 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     write(writer, mzid.analysisProtocolCollection);
     write(writer, mzid.dataCollection);
     writePtrList(writer, mzid.bibliographicReference,
-    "BibliographicReference");
+                 "BibliographicReference");
 
     writer.endElement();
 }
@@ -1879,7 +2259,8 @@ struct HandlerMzIdentML : public SAXParser::Handler
                                 stream_offset position)
     {
         if (name != "mzIdentML")
-            throw runtime_error(("[IO::HandlerMzIdentML] Unexpected element name: " + name).c_str());
+            throw runtime_error(("[IO::HandlerMzIdentML] Unexpected element name: " +
+                                 name).c_str());
 
         if (!mim)
             throw runtime_error("[IO::HandlerMzIdentML] Null mzIdentML.");
@@ -1943,7 +2324,7 @@ struct HandlerMzIdentML : public SAXParser::Handler
         return Status::Ok;
     }
 
-    private:
+private:
 };
 
 PWIZ_API_DECL void read(std::istream& is, MzIdentML& mziddata)

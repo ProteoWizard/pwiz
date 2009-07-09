@@ -23,6 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "MzIdentML.hpp"
+#include <iterator>
 
 
 namespace pwiz {
@@ -147,7 +148,8 @@ bool IdentifiableType::empty() const
 
 bool BibliographicReference::empty() const
 {
-    return authors.empty() &&
+    return IdentifiableType::empty() &&
+        authors.empty() &&
         publication.empty() &&
         publisher.empty() &&
         editor.empty() &&
@@ -218,6 +220,67 @@ bool Modification::empty() const
         paramGroup.empty();
 }
 
+
+//
+// FragmentArray
+//
+
+FragmentArray& FragmentArray::setValues(const std::string& values)
+{
+    istringstream iss(values);
+
+    this->values.clear();
+    copy(istream_iterator<float>(iss), istream_iterator<float>(), back_inserter(this->values));
+
+    return *this;
+}
+
+FragmentArray& FragmentArray::setValues(const std::vector<float>& values)
+{
+    this->values.clear();
+    copy(values.begin(), values.end(), back_inserter(this->values));
+    
+    return *this;
+}
+
+string FragmentArray::getValues() const
+{
+    ostringstream oss;
+    copy(values.begin(), values.end(), ostream_iterator<float>(oss, " "));
+
+    return oss.str();
+}
+
+
+//
+// IonType
+//
+
+IonType& IonType::setIndex(const string& value)
+{
+    istringstream iss(value);
+
+    index.clear();
+    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(index));
+
+    return *this;
+}
+
+IonType& IonType::setIndex(const vector<int>& value)
+{
+    index.clear();
+    copy(value.begin(), value.end(), back_inserter(index));
+    
+    return *this;
+}
+
+string IonType::getIndex() const
+{
+    ostringstream oss;
+    copy(index.begin(), index.end(), ostream_iterator<int>(oss, " "));
+
+    return oss.str();
+}
 
 //
 // SubstitutionModification

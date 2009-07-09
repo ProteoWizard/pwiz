@@ -46,6 +46,7 @@ const char* peptideList[] = {
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 {
     mzid.id="";
+    // Look up Matt's recent commits for boost date class
     mzid.creationDate = "2009-06-23T11:04:10";
     
     mzid.cvs = defaultCVList();
@@ -154,6 +155,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     smp->modParam.massDelta="-17.026549";
     smp->modParam.residues="Q";
     // TODO add UNIMOD:28
+    // Use ParamContainer in place of vector<CVParam>
     smp->specificityRules.push_back(CVParam(MS_modification_specificity_N_term, string("")));
     sip->modificationParams.push_back(smp);
 
@@ -188,7 +190,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->threshold.set(MS_mascot_SigThreshold);
     
     FilterPtr fp(new Filter());
-    fp->filterType.set(MS_DB_filter_taxonomy);
+    fp->filterType.set(MS_DB_filter_taxonomy_OBSOLETE);
     sip->databaseFilters.push_back(fp);
 
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
@@ -208,36 +210,136 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdp->analysisParams.set(MS_mascot_ShowDecoyMatches);
     pdp->threshold.set(MS_mascot_SigThreshold);
     mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(pdp);
+
+
+    // Fill in mzid.dataCollection.inputs;
+    // Add SourceFilePtr
+    SourceFilePtr sourceFile(new SourceFile());
+    sourceFile->id="SF_1";
+    sourceFile->location="file:///../data/Mascot_mzml_example.dat";
+    sourceFile->fileFormat.set(MS_Mascot_DAT_file);
+    mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
+
+    // Add SearchDatabasePtr
+    SearchDatabasePtr searchDb(new SearchDatabase());
+    //searchDb->location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
+    searchDb->id="SDB_5peptideMix";
+    searchDb->name="5peptideMix";
+    searchDb->numDatabaseSequences="5";
+    searchDb->numResidues="52";
+    searchDb->releaseDate="5peptideMix_20090515.fasta";
+    searchDb->version="5peptideMix_20090515.fasta";
+    searchDb->fileFormat.set(MS_FASTA_format);
+    mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
+
+    // Add SpectraDataPtr
+    SpectraDataPtr spectraData(new SpectraData());
+    spectraData->id="SD_1";
+    spectraData->location="file:///small.pwiz.1.1.mzML";
+    spectraData->fileFormat.set(MS_mzML_file);
+    mzid.dataCollection.inputs.spectraData.push_back(spectraData);
+    
+    // Fill in mzid.analysisData
+    // Add SpectrumIdentificationListPtr
+    SpectrumIdentificationListPtr silp(new SpectrumIdentificationList());
+    silp->id="SIL_1";
+    silp->numSequencesSearched=5;
+    
+    MeasurePtr measure(new Measure());
+    measure->id="m_mz";
+    measure->paramGroup.set(MS_product_ion_m_z);
+    silp->fragmentationTable.push_back(measure);
+
+    measure = MeasurePtr(new Measure());
+    measure->id="m_intensity";
+    measure->paramGroup.set(MS_product_ion_intensity);
+    silp->fragmentationTable.push_back(measure);
+
+    measure = MeasurePtr(new Measure());
+    measure->id="m_error";
+    measure->paramGroup.set(MS_product_ion_m_z_error);
+    silp->fragmentationTable.push_back(measure);
+
+    SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
+    sirp->id="SIR_1";
+    sirp->spectrumID="controllerType=0 controllerNumber=1 scan=33" ;
+    sirp->SpectraData_ref="SD_1";
+    SpectrumIdentificationItemPtr siip(new SpectrumIdentificationItem());
+    siip->id="SII_1_1";
+    siip->calculatedMassToCharge=557.303212333333;
+    siip->chargeState=3;
+    siip->experimentalMassToCharge=558.75;
+    siip->Peptide_ref="peptide_1_1";
+    siip->rank=1;
+    siip->passThreshold=true;
+    siip->paramGroup.set(MS_mascot_score, "15.71");
+    siip->paramGroup.set(MS_mascot_expectation_value, "0.0268534444565851");
+    PeptideEvidencePtr pep(new PeptideEvidence());
+    pep->id="PE_1_1_Neurotensin";
+    pep->start=1;
+    pep->end=13;
+    pep->pre="-";
+    pep->post="-" ;
+    pep->missedCleavages=1;
+    pep->frame=0;
+    pep->isDecoy=false;
+    pep->DBSequence_ref="DBSeq_Neurotensin";
+    siip->peptideEvidence.push_back(pep);
+    siip->paramGroup.set(MS_mascot_score);
+    siip->paramGroup.set(MS_mascot_expectation_value);
+
+    IonTypePtr ionType(new IonType());
+    ionType->setIndex("2 3 4 5 6 7").charge=1;
+    ionType->paramGroup.set(MS_frag__a_ion);
+    siip->fragmentation.push_back(ionType);
+    FragmentArrayPtr fap(new FragmentArray());
+    fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
+    fap->Measure_ref="m_mz";
+    ionType->fragmentArray.push_back(fap);
+    sirp->spectrumIdentificationItem.push_back(siip);
+    
+    silp->spectrumIdentificationResult.push_back(sirp);
+    mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(silp);
+
+    // Fill in proteinDetectionList
+    ProteinDetectionList& pdl = mzid.dataCollection.analysisData.proteinDetectionList;
+    pdl.id="PDL_1";
+    ProteinAmbiguityGroupPtr pagp(new ProteinAmbiguityGroup());
+    pagp->id="PAG_hit_1";
+    ProteinDetectionHypothesisPtr pdhp(new ProteinDetectionHypothesis());
+    pdhp->id="PDH_Bombessin";
+    pdhp->DBSequence_ref="DBSeq_Bombessin";
+    pdhp->passThreshold=true;
+    pdhp->peptideHypothesis.push_back("PE_19_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_20_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_21_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_22_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_23_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_24_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_25_1_Bombessin");
+    pdhp->paramGroup.set(MS_mascot_score);
+    pdhp->paramGroup.set(MS_coverage);
+    pdhp->paramGroup.set(MS_distinct_peptide_sequences);
+    pagp->proteinDetectionHypothesis.push_back(pdhp);
+    pdl.proteinAmbiguityGroup.push_back(pagp);
+    
 }
 
 PWIZ_API_DECL vector<CV> defaultCVList()
 {
-    vector<CV> cvs;
+    vector<CV> result;
+    result.resize(3);
 
-    CV  cv;
+    result[0] = cv("MS");
+    result[2] = cv("UO");
 
-    cv.id = "MS";
-    cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Vocabularies" ;
-    cv.URI = "http://www.psidev.info/PSI-MS";
-    cv.version = "2.0.0";
-    cvs.push_back(cv);
-
+    CV cv;
     cv.id = "UNIMOD";
     cv.fullName = "UNIMOD" ;
     cv.URI = "http://www.unimod.org/xml/unimod.xml";
-    cvs.push_back(cv);
-
-    cv.id = "NCBI-TAXONOMY";
-    cv.fullName = "NCBI-TAXONOMY" ;
-    cv.URI = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz";
-    cvs.push_back(cv);
+    result[1] = cv;
     
-    cv.id = "UO";
-    cv.fullName = "UNIT-ONTOLOGY" ;
-    cv.URI = "http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo";
-    cvs.push_back(cv);
-    
-    return cvs;
+    return result;
 }
 
 } // namespace pwiz
