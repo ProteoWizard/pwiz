@@ -23,12 +23,13 @@
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 
 struct IsWiffFile : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return bfs::path(rawpath).extension() == ".wiff";
+        return bal::to_lower_copy(bfs::path(rawpath).extension()) == ".wiff";
     }
 };
 
@@ -40,8 +41,16 @@ int main(int argc, char* argv[])
     const bool testAcceptOnly = true;
     #endif
 
-    return pwiz::util::testReader(pwiz::msdata::Reader_ABI(),
-                                  vector<string>(argv, argv+argc),
-                                  testAcceptOnly,
-                                  IsWiffFile());
+    try
+    {
+        return pwiz::util::testReader(pwiz::msdata::Reader_ABI(),
+                                      vector<string>(argv, argv+argc),
+                                      testAcceptOnly,
+                                      IsWiffFile());
+    }
+    catch (std::runtime_error& e)
+    {
+        cerr << e.what() << endl;
+        return 1;
+    }
 }
