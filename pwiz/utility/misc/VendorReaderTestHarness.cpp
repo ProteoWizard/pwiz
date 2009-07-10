@@ -54,7 +54,7 @@ void testAccept(const Reader& reader, const string& rawpath)
 {
     if (os_) *os_ << "testAccept(): " << rawpath << endl;
 
-    bool accepted = reader.accept(rawpath, "");
+    bool accepted = reader.accept(rawpath, pwiz::util::read_file_header(rawpath, 512));
     if (os_) *os_ << "accepted: " << boolalpha << accepted << endl;
 
     unit_assert(accepted);
@@ -91,7 +91,7 @@ void testRead(const Reader& reader, const string& rawpath)
 
     // read file into MSData object
     vector<MSDataPtr> msds;
-    reader.read(rawpath, "dummy", msds);
+    reader.read(rawpath, pwiz::util::read_file_header(rawpath, 512), msds);
 
     for (size_t i=0; i < msds.size(); ++i)
     {
