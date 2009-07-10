@@ -1,5 +1,5 @@
 #
-# Jamfile (pwiz/utility/vendor_api/Agilent) 
+# Jamfile (pwiz_vendor_api_agilent) 
 #
 #
 # Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -27,9 +27,23 @@ import path ;
 path-constant API_PATH : . ;
 
 
-if [ modules.peek : NT ] &&
-   [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+if [ modules.peek : NT ]
 {
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
+        result += <assembly>$(API_PATH)/BaseCommon.dll ;
+        result += <assembly>$(API_PATH)/BaseDataAccess.dll ;
+        result += <assembly>$(API_PATH)/BaseError.dll ;
+        result += <assembly>$(API_PATH)/BaseTof.dll ;
+        result += <assembly-dependency>$(API_PATH)/agtsampleinforw.dll ;
+    }
+    return $(result) ;
+}
 
 lib pwiz_vendor_api_agilent
     : # sources
@@ -46,23 +60,14 @@ lib pwiz_vendor_api_agilent
         #<link>shared
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <using-clr>true # requires hacked msvc.jam
-        <toolset>msvc:<assembly>$(API_PATH)/MassSpecDataReader.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseCommon.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseDataAccess.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseError.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseTof.dll
-        <toolset>msvc:<assembly-dependency>$(API_PATH)/agtsampleinforw.dll
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<assembly>$(API_PATH)/MassSpecDataReader.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseCommon.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseDataAccess.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseError.dll
-        <toolset>msvc:<assembly>$(API_PATH)/BaseTof.dll
-        <toolset>msvc:<assembly-dependency>$(API_PATH)/agtsampleinforw.dll
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
     ;
 
 
@@ -73,5 +78,17 @@ exe MassHunterDataTest
     ;
 
 explicit MassHunterDataTest ;
+
+
+install install_pwiz_vendor_api_agilent
+    : $(API_PATH)/MassSpecDataReader.dll
+      $(API_PATH)/BaseCommon.dll
+      $(API_PATH)/BaseDataAccess.dll
+      $(API_PATH)/BaseError.dll
+      $(API_PATH)/BaseTof.dll
+      $(API_PATH)/agtsampleinforw.dll
+    ;
+
+explicit install_pwiz_vendor_api_agilent ;
 
 }

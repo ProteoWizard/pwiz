@@ -1,8 +1,31 @@
+#
+# Jamfile (pwiz_vendor_api_waters) 
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
 
 import modules ;
 import path ;
 
-path-constant ROOT : . ;
+
+path-constant API_PATH : . ;
+
 
 if [ modules.peek : NT ]
 {
@@ -11,14 +34,14 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if [ path.exists $(ROOT)/DACServer.dll ]
+    if [ path.exists $(API_PATH)/DACServer.dll ]
     {
-      result += <dependency>DACServer.dll ;
-      result += <dependency>genutil.dll ;
-      result += <dependency>MetaGD32.dll ;
-      result += <dependency>raw.dll ;
-      result += <dependency>RawCsm.dll ;
-      result += <dependency>SecuritySignature.dll ;
+      result += <dependency>$(API_PATH)/DACServer.dll ;
+      result += <dependency>$(API_PATH)/genutil.dll ;
+      result += <dependency>$(API_PATH)/MetaGD32.dll ;
+      result += <dependency>$(API_PATH)/raw.dll ;
+      result += <dependency>$(API_PATH)/RawCsm.dll ;
+      result += <dependency>$(API_PATH)/SecuritySignature.dll ;
     }
     return $(result) ;
 }
@@ -27,10 +50,10 @@ lib pwiz_vendor_api_waters
     : # sources
         RawData.cpp
     : # requirements
-        <toolset>msvc
         <link>shared:<define>RAWDATA_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
@@ -45,5 +68,17 @@ exe RawDataTest
     ;
 
 explicit RawDataTest ;
+
+
+install install_pwiz_vendor_api_waters
+    : $(API_PATH)/DACServer.dll
+      $(API_PATH)/genutil.dll
+      $(API_PATH)/MetaGD32.dll
+      $(API_PATH)/raw.dll
+      $(API_PATH)/RawCsm.dll
+      $(API_PATH)/SecuritySignature.dll
+    ;
+
+explicit install_pwiz_vendor_api_waters ;
 
 }

@@ -4,7 +4,8 @@ if [ modules.peek : NT ] {
 
 project
     : requirements
-        <using-clr>true # requires hacked msvc.jam
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <conditional>@msvc-requirement
         <define>UNICODE
         <define>_UNICODE
     : usage-requirements
@@ -128,18 +129,24 @@ package.install install
     ;
 explicit install ;
 
-alias unit-test-requirements
-    : # sources
-    : # requirements
-        <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli
-    : # default-build
-    : # usage-requirements
-        <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli
-    ;
 
-unit-test MSDataTest : MSDataTest.cpp : <use>unit-test-requirements ;
-unit-test DiffTest : DiffTest.cpp : <use>unit-test-requirements ;
-unit-test MSDataFileTest : MSDataFileTest.cpp : <use>unit-test-requirements ;
+rule unit-test-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli ;
+    }
+    else
+    {
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+unit-test MSDataTest : MSDataTest.cpp : <conditional>@unit-test-requirements ;
+unit-test DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
+unit-test MSDataFileTest : MSDataFileTest.cpp : <conditional>@unit-test-requirements ;
 explicit MSDataFileTest ;
 
 }

@@ -100,8 +100,8 @@ run TabReaderTest.cpp pwiz_utility_misc
 import modules ;
 if [ modules.peek : NT ]
 {
-    unit-test automation_vector_test : automation_vector_test.cpp pwiz_utility_misc ;
-    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc ;
+    unit-test automation_vector_test : automation_vector_test.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement  ;
 }
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;

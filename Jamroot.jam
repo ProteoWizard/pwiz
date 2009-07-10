@@ -30,6 +30,7 @@ local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
 
 import testing ; # needed to enable unit-test rule
+import feature ; # needed for install rules
 
 ################################
 ## Targets and Related Options #
@@ -180,24 +181,42 @@ build-project pwiz_aux ;
 build-project pwiz_tools ;
 
 
+rule install-location ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    return <location>build/$(toolsets[1])-$(variants[1]) ;
+}
+
+rule install-vendor-api-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    local dependencies ;
+    if <toolset>msvc in $(properties)
+    {
+        dependencies += #<dependency>pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location)
+                        <dependency>pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location)
+                        <dependency>pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location)
+                        <dependency>pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location)
+                        <dependency>pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ;
+    }
+    return $(dependencies) ;
+}
+
+
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
       pwiz_tools/examples
     : <install-type>EXE
-      <toolset>gcc,<variant>release:<location>build/gcc-release
-      <toolset>gcc,<variant>debug:<location>build/gcc-debug
-      <toolset>msvc,<variant>release:<location>build/msvc-release
-      <toolset>msvc,<variant>debug:<location>build/msvc-debug
-      <toolset>darwin,<variant>release:<location>build/darwin-release
-      <toolset>darwin,<variant>debug:<location>build/darwin-debug
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
     ;
 
 
 install bgddll
     : libraries/bgd.dll
-    : <toolset>msvc,<variant>release:<location>build/msvc-release
-      <toolset>msvc,<variant>debug:<location>build/msvc-debug
+    : <conditional>@install-location
       <toolset>gcc:<build>no
       <toolset>darwin:<build>no
     ;
@@ -205,12 +224,12 @@ install bgddll
 
 install package_docs
     : doc/package/readme.txt
-    : <toolset>gcc,<variant>release:<location>build/gcc-release
-      <toolset>gcc,<variant>debug:<location>build/gcc-debug
-      <toolset>msvc,<variant>release:<location>build/msvc-release
-      <toolset>msvc,<variant>debug:<location>build/msvc-debug
-      <toolset>darwin,<variant>release:<location>build/darwin-release
-      <toolset>darwin,<variant>debug:<location>build/darwin-debug
+    : <conditional>@install-location
     ;
 
 
+# predicate for use as a <conditional> requirement of targets that must only build with MSVC
+rule msvc-requirement ( properties * )
+{
+    if ! <toolset>msvc in $(properties) { return <build>no ; }
+}
