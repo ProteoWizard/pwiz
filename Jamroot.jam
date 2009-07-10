@@ -169,8 +169,9 @@ else if [ modules.peek : UNIX ]
 }
 
 path-constant BOOST_SOURCE : $(boost_src) ;
+path-constant ZLIB_SOURCE : $(zlib_src) ;
 
-using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
+using ext-boost : 1.39.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
 
 # build/install

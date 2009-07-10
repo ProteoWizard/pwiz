@@ -71,12 +71,12 @@ lib pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>/ext/boost//thread
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-requirement
     ;
 
 unit-test ScanFilterTest
     : ScanFilterTest.cpp
       pwiz_vendor_api_thermo
+    : <conditional>@msvc-requirement
     ;
 
 # a test utility, not a unit test

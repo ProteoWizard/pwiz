@@ -24,6 +24,7 @@ extension.declare boost ;
 
 feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
 feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
+feature.feature zlib-src-location : : free path ;
 
 feature.feature boost-interprocess : : free ;
 feature.feature boost-asio : : free ;
@@ -37,8 +38,10 @@ rule boost-tag ( name : type ? : property-set )
 
 rule init ( version ? : location : options * )
 {
-		path-constant ZLIB_SOURCE : $(location)/../zlib-1.2.3 ;
-		using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+    local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
+    zlib-src-location ?= $(location)/../zlib-1.2.3 ;
+    path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
+    using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
     version ?= default ;
     local requirements =
