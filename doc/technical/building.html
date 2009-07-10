@@ -34,10 +34,13 @@
         See <a href="http://boost.org/boost-build2" target="_blank">http://boost.org/boost-build2</a> for Boost.Build documentation.
     </p>
     <p>
-        Running <code>bjam</code> in the ProteoWizard source root directory will build the entire project.
+        Running <code>bjam</code> in the ProteoWizard source root directory will build the entire project.  
+		In the event that doesn't work (probably due to a missing or outdated bjam executable) try the
+		<code>quickbuild.sh</code> script in the ProteoWizard source root directory (it's useful for linux,
+		Darwin, and mingw/msys).
     </p>
     <p>
-        Alternatively, on Windows, you may run <code>quickbuild.bat</code> 
+        Alternatively, on Windows with MSVC, you may run <code>quickbuild.bat</code> 
         (found in the ProteoWizard source root directory), 
         which will automatically extract <code>bjam.exe</code> and build the necessary 
         3rd party library dependencies from source.
