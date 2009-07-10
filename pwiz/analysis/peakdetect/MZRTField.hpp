@@ -90,7 +90,7 @@ struct HasMZRT
 template <typename T>
 struct MZRTField : public std::set< boost::shared_ptr<T>, LessThan_MZRT<T> >
 {
-    BOOST_CONCEPT_ASSERT((HasMZRT<T>));
+    //BOOST_CONCEPT_ASSERT((HasMZRT<T>));
 
     typedef boost::shared_ptr<T> TPtr;
 
