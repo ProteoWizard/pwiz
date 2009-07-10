@@ -184,6 +184,15 @@ bool Contact::empty() const
 }
 
 //
+// Affiliations
+//
+
+bool Affiliations::empty() const
+{
+    return organization_ref.empty();
+}
+
+//
 // Person
 //
 
@@ -218,6 +227,54 @@ bool Modification::empty() const
         avgMassDelta.empty() &&
         monoisotopicMassDelta.empty() &&
         paramGroup.empty();
+}
+
+//
+// Filter
+//
+
+bool Filter::empty() const
+{
+    return filterType.empty() &&
+        include.empty() &&
+        exclude.empty();
+}
+
+//
+// Residue
+//
+
+bool Residue::empty() const
+{
+    return Code.empty() &&
+        Mass.empty();
+}
+
+//
+// AmbiguousResidue
+//
+
+bool AmbiguousResidue::empty() const
+{
+    return Code.empty() &&
+        params.empty();
+}
+
+
+//
+// Enzyme
+//
+
+bool Enzyme::empty() const
+{
+    return id.empty() &&
+        nTermGain.empty() &&
+        cTermGain.empty() &&
+        semiSpecific.empty() &&
+        missedCleavages.empty() &&
+        minDistance.empty() &&
+        siteRegexp.empty() &&
+        enzymeName.empty();
 }
 
 
@@ -352,6 +409,11 @@ bool AnalysisProtocolCollection::empty() const
         proteinDetectionProtocol.empty();
 }
 
+bool Sample::Component::empty() const
+{
+    return Sample_ref.empty();
+}
+
 //
 // AnalysisSampleCollection
 //
@@ -370,6 +432,16 @@ bool Inputs::empty() const
     return sourceFile.empty() &&
         searchDatabase.empty() &&
         spectraData.empty();
+}
+
+//
+// SearchDatabase
+//
+
+SearchDatabase::SearchDatabase()
+{
+    numDatabaseSequences = -1;
+    numResidues = -1;
 }
 
 //

@@ -36,6 +36,7 @@ ostream* os_ = 0;
 
 void testMzIdentML()
 {
+    cerr << "begin testMzIdentML\n";
     if (os_) *os_ << "testMzIdentML()\n";
 
     MzIdentML a, b;
@@ -57,6 +58,7 @@ void testMzIdentML()
     unit_assert(diff.a_b.cvs.size() == 1);
     unit_assert(diff.b_a.cvs.empty());
 
+    cerr << "end testMzIdentML\n";
 }
 
 void test()

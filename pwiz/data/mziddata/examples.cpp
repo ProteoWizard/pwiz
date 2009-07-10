@@ -225,8 +225,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     //searchDb->location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
     searchDb->id="SDB_5peptideMix";
     searchDb->name="5peptideMix";
-    searchDb->numDatabaseSequences="5";
-    searchDb->numResidues="52";
+    searchDb->numDatabaseSequences=5;
+    searchDb->numResidues=52;
     searchDb->releaseDate="5peptideMix_20090515.fasta";
     searchDb->version="5peptideMix_20090515.fasta";
     searchDb->fileFormat.set(MS_FASTA_format);

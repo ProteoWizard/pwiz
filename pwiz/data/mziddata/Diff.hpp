@@ -73,10 +73,122 @@ void diff(const CVParam& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const ParamContainer& a,
+          const ParamContainer& b,
+          ParamContainer& a_b,
+          ParamContainer& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const DataCollection& a,
           const DataCollection& b,
           DataCollection& a_b,
           DataCollection& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationList& a,
+          const SpectrumIdentificationList& b,
+          SpectrumIdentificationList& a_b,
+          SpectrumIdentificationList& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ProteinDetectionList& a,
+          const ProteinDetectionList& b,
+          ProteinDetectionList& a_b,
+          ProteinDetectionList& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const AnalysisData& a,
+          const AnalysisData& b,
+          AnalysisData& a_b,
+          AnalysisData& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SearchDatabase& a,
+          const SearchDatabase& b,
+          SearchDatabase& a_b,
+          SearchDatabase& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectraData& a,
+          const SpectraData& b,
+          SpectraData& a_b,
+          SpectraData& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SourceFile& a,
+          const SourceFile& b,
+          SourceFile& a_b,
+          SourceFile& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Inputs& a,
+          const Inputs& b,
+          Inputs& a_b,
+          Inputs& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Enzyme& a,
+          const Enzyme& b,
+          Enzyme& a_b,
+          Enzyme& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Enzymes& a,
+          const Enzymes& b,
+          Enzymes& a_b,
+          Enzymes& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const MassTable& a,
+          const MassTable& b,
+          MassTable& a_b,
+          MassTable& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Residue& a,
+          const Residue& b,
+          Residue& a_b,
+          Residue& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const AmbiguousResidue& a,
+          const AmbiguousResidue& b,
+          AmbiguousResidue& a_b,
+          AmbiguousResidue& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Filter& a,
+          const Filter& b,
+          Filter& a_b,
+          Filter& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationProtocol& a,
+          const SpectrumIdentificationProtocol& b,
+          SpectrumIdentificationProtocol& a_b,
+          SpectrumIdentificationProtocol& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ProteinDetectionProtocol& a,
+          const ProteinDetectionProtocol& b,
+          ProteinDetectionProtocol& a_b,
+          ProteinDetectionProtocol& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -94,10 +206,45 @@ void diff(const Contact& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Affiliations& a,
+          const Affiliations& b,
+          Affiliations& a_b,
+          Affiliations& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Person& a,
+          const Person& b,
+          Person& a_b,
+          Person& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Organization& a,
+          const Organization& b,
+          Organization& a_b,
+          Organization& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const BibliographicReference& a,
           const BibliographicReference& b,
           BibliographicReference& a_b,
           BibliographicReference& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ProteinDetection& a,
+          const ProteinDetection& b,
+          ProteinDetection& a_b,
+          ProteinDetection& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentification& a,
+          const SpectrumIdentification& b,
+          SpectrumIdentification& a_b,
+          SpectrumIdentification& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -115,6 +262,20 @@ void diff(const DBSequence& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Modification& a,
+          const Modification& b,
+          Modification& a_b,
+          Modification& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SubstitutionModification& a,
+          const SubstitutionModification& b,
+          SubstitutionModification& a_b,
+          SubstitutionModification& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Peptide& a,
           const Peptide& b,
           Peptide& a_b,
@@ -126,6 +287,20 @@ void diff(const SequenceCollection& a,
           const SequenceCollection& b,
           SequenceCollection& a_b,
           SequenceCollection& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Sample::Component& a,
+          const Sample::Component& b,
+          Sample::Component& a_b,
+          Sample::Component& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Sample& a,
+          const Sample& b,
+          Sample& a_b,
+          Sample& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -150,10 +325,10 @@ void diff(const ContactRole& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const AnalysisSoftwarePtr& a,
-          const AnalysisSoftwarePtr& b,
-          AnalysisSoftwarePtr& a_b,
-          AnalysisSoftwarePtr& b_a,
+void diff(const AnalysisSoftware& a,
+          const AnalysisSoftware& b,
+          AnalysisSoftware& a_b,
+          AnalysisSoftware& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -168,6 +343,13 @@ void diff(const MzIdentML& a,
           const MzIdentML& b,
           MzIdentML& a_b,
           MzIdentML& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const IdentifiableType& a,
+          const IdentifiableType& b,
+          IdentifiableType& a_b,
+          IdentifiableType& b_a,
           const DiffConfig& config);
 
 } // namespace diff_impl

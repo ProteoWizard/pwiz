@@ -97,7 +97,6 @@ struct PWIZ_API_DECL ParamContainer
     bool operator!=(const ParamContainer& that) const;
 };
 
-
 struct IdentifiableType
 {
     virtual ~IdentifiableType() {}
@@ -151,6 +150,8 @@ typedef boost::shared_ptr<Contact> ContactPtr;
 struct PWIZ_API_DECL Affiliations 
 {
     std::string organization_ref;
+
+    bool empty() const;
 };
 
 struct PWIZ_API_DECL Person : public Contact
@@ -199,6 +200,8 @@ struct PWIZ_API_DECL Sample : public Material
     // SampleType schema elements
     struct Component{
         std::string Sample_ref;
+
+        bool empty() const;
     };
 
     std::vector<Component> components;
@@ -359,7 +362,8 @@ struct PWIZ_API_DECL Enzyme
 
     std::string siteRegexp;
     ParamContainer enzymeName;
-    
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Enzyme> EnzymePtr;
@@ -376,6 +380,8 @@ struct PWIZ_API_DECL Residue
 {
     std::string Code;
     std::string Mass;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Residue> ResiduePtr;
@@ -386,6 +392,8 @@ struct PWIZ_API_DECL AmbiguousResidue
     std::string Code;
     
     ParamContainer params;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<AmbiguousResidue> AmbiguousResiduePtr;
@@ -405,6 +413,8 @@ struct PWIZ_API_DECL Filter
     ParamContainer filterType;
     ParamContainer include;
     ParamContainer exclude;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Filter> FilterPtr;
@@ -462,10 +472,12 @@ typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
 
 struct PWIZ_API_DECL SearchDatabase : public IdentifiableType
 {
+    SearchDatabase();
+    
     std::string version;
     std::string releaseDate;
-    std::string numDatabaseSequences;
-    std::string numResidues;
+    int numDatabaseSequences;
+    int numResidues;
 
     ParamContainer fileFormat;
     ParamContainer DatabaseName;

@@ -1608,10 +1608,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd
         attributes.push_back(make_pair("version", sd->version));
     if (!sd->releaseDate.empty())
         attributes.push_back(make_pair("releaseDate", sd->releaseDate));
-    if (!sd->numDatabaseSequences.empty())
-        attributes.push_back(make_pair("numDatabaseSequences", sd->numDatabaseSequences));
-    if (!sd->numResidues.empty())
-        attributes.push_back(make_pair("numResidues", sd->numResidues));
+    if (sd->numDatabaseSequences>0)
+        attributes.push_back(
+            make_pair("numDatabaseSequences",
+                      lexical_cast<string>(sd->numDatabaseSequences)));
+    if (sd->numResidues>0)
+        attributes.push_back(
+            make_pair("numResidues",
+                      lexical_cast<string>(sd->numResidues)));
 
     writer.startElement("SearchDatabase", attributes);
 
