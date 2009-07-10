@@ -28,10 +28,12 @@ import path ;
 path-constant API_PATH : ./xdk ;
 
 
-if [ modules.peek : NT ] &&
-   [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+if [ modules.peek : NT ]
 {
 
+if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+{
+    
 rule vendor-api-requirements ( properties * )
 {
     local result ;
@@ -45,6 +47,12 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(API_PATH)/fileio.dll ;
     }
     return $(result) ;
+}
+
+}
+else
+{
+    rule vendor-api-requirements ( properties * ) { } # no-op
 }
 
 lib pwiz_vendor_api_thermo
@@ -80,14 +88,21 @@ exe RawFileTest
 explicit RawFileTest ;
 
 
-install install_pwiz_vendor_api_thermo
-    : $(API_PATH)/MSFileReader.XRawfile2.dll
-      $(API_PATH)/MSFileReader.XRawfile2.dll
-      $(API_PATH)/MSFileReader.XRawfile2.SxS.manifest
-      $(API_PATH)/fregistry.dll
-      $(API_PATH)/finSSClientLib.dll
-      $(API_PATH)/fileio.dll
-    ;
+if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+{
+    install install_pwiz_vendor_api_thermo
+        : $(API_PATH)/MSFileReader.XRawfile2.dll
+          $(API_PATH)/MSFileReader.XRawfile2.dll
+          $(API_PATH)/MSFileReader.XRawfile2.SxS.manifest
+          $(API_PATH)/fregistry.dll
+          $(API_PATH)/finSSClientLib.dll
+          $(API_PATH)/fileio.dll
+        ;
+}
+else
+{
+    install install_pwiz_vendor_api_thermo ; # no-op
+}
 
 explicit install_pwiz_vendor_api_thermo ;
 
