@@ -70,6 +70,8 @@ exe RawDataTest
 explicit RawDataTest ;
 
 
+if [ path.exists $(API_PATH)/DACServer.dll ]
+{
 install install_pwiz_vendor_api_waters
     : $(API_PATH)/DACServer.dll
       $(API_PATH)/genutil.dll
@@ -78,7 +80,11 @@ install install_pwiz_vendor_api_waters
       $(API_PATH)/RawCsm.dll
       $(API_PATH)/SecuritySignature.dll
     ;
-
+}
+else
+{
+install install_pwiz_vendor_api_waters ; # no-op
+}
 explicit install_pwiz_vendor_api_waters ;
 
 }

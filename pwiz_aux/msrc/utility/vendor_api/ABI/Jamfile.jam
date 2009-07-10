@@ -27,14 +27,14 @@ import path ;
 path-constant API_PATH : . ;
 
 
-if [ modules.peek : NT ] &&
-   [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+if [ modules.peek : NT ]
 {
 
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
         result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
         result += <assembly>$(API_PATH)/Clearcore.dll ;
@@ -79,13 +79,19 @@ exe WiffFileTest
 explicit WiffFileTest ;
 
 
+if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
 install install_pwiz_vendor_api_abi
     : $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
       $(API_PATH)/Clearcore.dll
       $(API_PATH)/ClearCore.Storage.dll
       $(API_PATH)/rscoree.dll
     ;
-
+}
+else
+{
+install install_pwiz_vendor_api_abi ; # no-op
+}
 explicit install_pwiz_vendor_api_abi ;
 
 }
