@@ -20,7 +20,7 @@
 // limitations under the License.
 //
 
-#define RAWFILE_SOURCE
+#define PWIZ_SOURCE
 
 #include "RawFileValues.h"
 
@@ -29,7 +29,8 @@ using namespace std;
 
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 namespace RawFileValues {
 
 ValueDescriptor<ValueID_Long> ValueID_Long_descriptors[] =
@@ -154,5 +155,6 @@ ValueData<ValueID_String>::ValueData(boost::restricted)
 
 
 } // namespace RawFileValues
-} // namespace raw
+} // namespace Thermo
+} // namespace vendor_api
 } // namespace pwiz

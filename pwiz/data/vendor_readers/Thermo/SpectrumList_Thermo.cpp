@@ -36,7 +36,7 @@
 
 
 using boost::format;
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 
 
 namespace pwiz {
@@ -49,6 +49,8 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
 {
+    spectraByScanType.resize(ScanType_Count, 0);
+
     // calculate total spectra count from all controllers
     for (int controllerType = Controller_MS;
          controllerType <= Controller_UV;
@@ -63,9 +65,18 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> 
         for (long n=1; n <= numControllers; ++n)
         {
             rawfile_->setCurrentController((ControllerType) controllerType, n);
-            size_ += rawfile_->value(NumSpectra);
+            long numSpectra = rawfile_->value(NumSpectra);
+            for (long scan=1; scan <= numSpectra; ++scan)
+            {
+                ++spectraByScanType[rawfile_->getScanType(scan)];
+            }
         }
     }
+
+    size_ = spectraByScanType[ScanType_Full] +
+            spectraByScanType[ScanType_Zoom] +
+            spectraByScanType[ScanType_Q1MS] +
+            spectraByScanType[ScanType_Q3MS];
 }
 
 
@@ -142,7 +153,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     {
         rawfile_->setCurrentController(ie.controllerType, ie.controllerNumber);
     }
-    catch (RawEgg& e)
+    catch (RawEgg&)
     {
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error setting controller to: " +
                             lexical_cast<string>(ie.controllerType) + "," +
@@ -150,7 +161,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     }
 
     // get rawfile::ScanInfo and translate
-    auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(ie.scan);
+    ScanInfoPtr scanInfo = rawfile_->getScanInfo(ie.scan);
     if (!scanInfo.get())
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
 
@@ -180,7 +191,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
             scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), UO_nanometer));
 
-            MassListPtr xyList = rawfile_->getMassList(ie.scan, "", raw::Cutoff_None, 0, 0, false);
+            MassListPtr xyList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, false);
             result->defaultArrayLength = xyList->size();
 
             if (xyList->size() > 0)
@@ -347,7 +358,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         }
         else
         {
-            massList = rawfile_->getMassList(ie.scan, "", raw::Cutoff_None, 0, 0, doCentroid);
+            massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
         }
 
         result->defaultArrayLength = massList->size();
@@ -366,7 +377,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         return result;
     }
-    catch (RawEgg& e)
+    catch (RawEgg&)
     {
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\"");
     }
@@ -397,6 +408,14 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
                 {
                     for (long scan=1, last=rawfile_->value(NumSpectra); scan <= last; ++scan)
                     {
+                        switch (rawfile_->getScanType(scan))
+                        {
+                            // skip chromatogram-centric scan types
+                            case ScanType_SIM:
+                            case ScanType_SRM:
+                                continue;
+                        }
+
                         index_.push_back(IndexEntry());
                         IndexEntry& ie = index_.back();
                         ie.controllerType = (ControllerType) controllerType;
@@ -449,7 +468,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
         if (cachedMsLevel == 0)
         {
             // populate the missing MS level
-            auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(index_[index].scan);
+            ScanInfoPtr scanInfo = rawfile_->getScanInfo(index_[index].scan);
 	        cachedMsLevel = scanInfo->msLevel();
         }
         if (cachedMsLevel == precursorMsLevel)

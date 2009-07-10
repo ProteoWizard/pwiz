@@ -28,6 +28,15 @@ project
     ;
 
 
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo ;
+path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
+
+
+# decompress test data (on any platform)
+SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+
+
 lib pwiz_reader_thermo
     : # sources
         Reader_Thermo.cpp
@@ -35,13 +44,13 @@ lib pwiz_reader_thermo
         SpectrumList_Thermo.cpp
         ChromatogramList_Thermo.cpp
     : # requirements
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo//pwiz_rawfile
         <toolset>msvc:<define>PWIZ_READER_THERMO
     : # default-build
     : # usage-requirements
+        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo//pwiz_rawfile
         <toolset>msvc:<define>PWIZ_READER_THERMO
     ;
 
@@ -53,11 +62,12 @@ lib pwiz_reader_thermo
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Thermo_Test.cpp pwiz_reader_thermo 
+run Reader_Thermo_Test.cpp 
     : # args
+        \"$(TEST_DATA_PATH)\"
     : # input-files
-        Reader_Thermo_Test.RAW
     : # requirements
+        <library>pwiz_reader_thermo
     : # target name
         Reader_Thermo_Test 
     : # default-build

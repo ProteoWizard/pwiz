@@ -1,28 +1,17 @@
 #ifndef _RAWFILETYPES_H_
 #define _RAWFILETYPES_H_
 
-#ifdef RAWFILE_DYN_LINK
-#ifdef RAWFILE_SOURCE
-#define RAWFILE_API __declspec(dllexport)
-#else
-#define RAWFILE_API __declspec(dllimport)
-#endif  // RAWFILE_SOURCE
-#endif  // RAWFILE_DYN_LINK
-
-// if RAWFILE_API isn't defined yet define it now:
-#ifndef RAWFILE_API
-#define RAWFILE_API
-#endif
-
+#include "pwiz/utility/misc/Export.hpp"
 #include <string>
 #include <vector>
 #include <boost/algorithm/string/case_conv.hpp>
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 
 
-enum RAWFILE_API InstrumentModelType
+enum PWIZ_API_DECL InstrumentModelType
 {
     InstrumentModelType_Unknown = -1,
 
@@ -77,12 +66,14 @@ enum RAWFILE_API InstrumentModelType
     InstrumentModelType_TSQ_Quantum_Access,
     InstrumentModelType_TSQ_Quantum_Ultra,
     InstrumentModelType_TSQ_Quantum_Ultra_AM,
+    InstrumentModelType_TSQ_Vantage_Standard,
     InstrumentModelType_Element_XR,
     InstrumentModelType_Element_GD,
     InstrumentModelType_GC_IsoLink,
     InstrumentModelType_Exactive,
     InstrumentModelType_Surveyor_PDA,
-    InstrumentModelType_Accela_PDA
+    InstrumentModelType_Accela_PDA,
+    InstrumentModelType_LTQ_Velos
 };
 
 
@@ -120,6 +111,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "LTQ ORBITRAP")            return InstrumentModelType_LTQ_Orbitrap;
     else if (type == "LTQ ORBITRAP DISCOVERY")  return InstrumentModelType_LTQ_Orbitrap_Discovery;
     else if (type == "LTQ ORBITRAP XL")         return InstrumentModelType_LTQ_Orbitrap_XL;
+    else if (type == "LTQ VELOS")               return InstrumentModelType_LTQ_Velos;
     else if (type == "LXQ")                     return InstrumentModelType_LXQ;
     else if (type == "LCQ FLEET")               return InstrumentModelType_LCQ_Fleet;
     else if (type == "ITQ 700")                 return InstrumentModelType_ITQ_700;
@@ -136,6 +128,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "TSQ QUANTUM ACCESS")      return InstrumentModelType_TSQ_Quantum_Access;
     else if (type == "TSQ QUANTUM ULTRA")       return InstrumentModelType_TSQ_Quantum_Ultra;
     else if (type == "TSQ QUANTUM ULTRA AM")    return InstrumentModelType_TSQ_Quantum_Ultra_AM;
+    else if (type == "TSQ VANTAGE STANDARD")    return InstrumentModelType_TSQ_Vantage_Standard;
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
@@ -147,7 +140,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
 }
 
 
-enum RAWFILE_API IonizationType
+enum PWIZ_API_DECL IonizationType
 {
     IonizationType_Unknown = -1,
     IonizationType_EI = 0,       // Electron Ionization
@@ -261,7 +254,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
 }
 
 
-enum RAWFILE_API ScanFilterMassAnalyzerType
+enum PWIZ_API_DECL ScanFilterMassAnalyzerType
 {
     ScanFilterMassAnalyzerType_Unknown = -1,
     ScanFilterMassAnalyzerType_ITMS = 0,      // Ion Trap
@@ -274,7 +267,7 @@ enum RAWFILE_API ScanFilterMassAnalyzerType
 };
 
 
-enum RAWFILE_API MassAnalyzerType
+enum PWIZ_API_DECL MassAnalyzerType
 {
     MassAnalyzerType_Unknown = -1,
     MassAnalyzerType_Linear_Ion_Trap,
@@ -472,7 +465,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
 }
 
 
-enum RAWFILE_API DetectorType
+enum PWIZ_API_DECL DetectorType
 {
     DetectorType_Unknown = -1,
     DetectorType_Electron_Multiplier,
@@ -559,7 +552,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
 }
 
 
-enum RAWFILE_API ActivationType
+enum PWIZ_API_DECL ActivationType
 {
     ActivationType_Unknown = -1,
     ActivationType_CID = 0,     // Collision Induced Dissociation
@@ -591,14 +584,15 @@ inline std::string toString(ActivationType type)
 }
 
 
-enum RAWFILE_API ScanType
+enum PWIZ_API_DECL ScanType
 {
     ScanType_Unknown = -1,
     ScanType_Full = 0,
-    ScanType_SIM,
     ScanType_Zoom,
+    ScanType_SIM,
     ScanType_SRM,
     ScanType_CRM,
+    ScanType_Any, /// "any scan type" when used as an input parameter
     ScanType_Q1MS,
     ScanType_Q3MS,
     ScanType_Count
@@ -616,12 +610,13 @@ inline std::string toString(ScanType type)
         case ScanType_Q1MS: return "Q1MS";
         case ScanType_Q3MS: return "Q3MS";
         case ScanType_Zoom: return "Zoom";
+        case ScanType_Any: return "Any";
         case ScanType_Unknown: default: return "Unknown";
     }
 }
 
 
-enum RAWFILE_API PolarityType
+enum PWIZ_API_DECL PolarityType
 {
     PolarityType_Unknown = -1,
     PolarityType_Positive = 0,
@@ -641,7 +636,7 @@ inline std::string toString(PolarityType type)
 }
 
 
-enum RAWFILE_API DataPointType
+enum PWIZ_API_DECL DataPointType
 {
 	DataPointType_Unknown = -1,
 	DataPointType_Centroid = 0,
@@ -650,7 +645,7 @@ enum RAWFILE_API DataPointType
 };
 
 
-enum RAWFILE_API AccurateMassType
+enum PWIZ_API_DECL AccurateMassType
 {
 	AccurateMass_Unknown = -1,
 	AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
@@ -660,14 +655,15 @@ enum RAWFILE_API AccurateMassType
 };
 
 
-enum RAWFILE_API TriBool
+enum PWIZ_API_DECL TriBool
 {
 	TriBool_Unknown = -1,
 	TriBool_False = 0,
 	TriBool_True = 1
 };
 
-} // raw
-} // pwiz
+} // namespace Thermo
+} // namespace vendor_api
+} // namespace pwiz
 
 #endif // _RAWFILETYPES_H_

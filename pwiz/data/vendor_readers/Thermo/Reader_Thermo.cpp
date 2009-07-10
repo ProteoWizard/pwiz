@@ -26,6 +26,7 @@
 #include "Reader_Thermo.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
 
@@ -57,9 +58,8 @@ bool _hasRAWHeader(const std::string& head)
 #include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/algorithm/string.hpp"
 #include "boost/filesystem/path.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
@@ -75,9 +75,7 @@ namespace msdata {
 
 using namespace std;
 using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 namespace bfs = boost::filesystem;
 using namespace pwiz::msdata::detail;
@@ -93,52 +91,8 @@ PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
     return _hasRAWHeader(head);
 }
 
+
 namespace {
-
-string creationDateToStartTimeStamp(string creationDate)
-{
-	// input format: "6/27/2007 15:23:45"
-	// output format: "2007-06-27T15:23:45.00035"
-
-	int month, day, year, hour, minute, second;
-	char separator;
-
-	istringstream iss(creationDate);
-	iss >> month >> separator
-	    >> day >> separator
-		>> year
-		>> hour >> separator
-		>> minute >> separator
-		>> second;
-
-	ostringstream result;
-	result << year << "-"
-           << setfill('0')
-	       << setw(2) << month << "-"
-	       << setw(2) << day << "T"
-	       << setw(2) << hour << ":"
-	       << setw(2) << minute << ":"
-	       << setw(2) << second;
-
-	return result.str();
-}
-
-
-inline char idref_allowed(char c)
-{
-    return isalnum(c) || c=='-' ?
-           c :
-           '_';
-}
-
-
-string stringToIDREF(const string& s)
-{
-    string result = s;
-    transform(result.begin(), result.end(), result.begin(), idref_allowed);
-    return result;
-}
-
 
 void initializeInstrumentConfigurationPtrs(MSData& msd,
                                            RawFile& rawfile,
@@ -190,7 +144,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     sourceFile->set(MS_Thermo_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
-    msd.id = stringToIDREF(p.leaf());
+    msd.id = p.leaf();
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
@@ -220,8 +174,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(stringToIDREF(filename));
-    msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
+    msd.run.id = boost::to_lower_copy(filename);
+    msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate());
 }
 
 } // namespace
@@ -244,7 +198,7 @@ void Reader_Thermo::read(const string& filename,
 
     // instantiate RawFile, share ownership with SpectrumList_Thermo
 
-    shared_ptr<RawFile> rawfile(RawFile::create(filename).release());
+    RawFilePtr rawfile = RawFile::create(filename);
     rawfile->setCurrentController(Controller_MS, 1);
 
     shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile));

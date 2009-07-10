@@ -29,10 +29,7 @@
 
 
 using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 
 
 namespace pwiz {
@@ -44,17 +41,20 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile);
+    SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
-    
+
+    /// an array of size ScanType_Count to count the occurrence of each type
+    vector<int> spectraByScanType;
+
     private:
 
     const MSData& msd_;
-    shared_ptr<RawFile> rawfile_;
+    RawFilePtr rawfile_;
     size_t size_;
 
     mutable vector<int> scanMsLevelCache_;

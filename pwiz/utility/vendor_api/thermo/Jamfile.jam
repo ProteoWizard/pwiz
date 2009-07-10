@@ -1,5 +1,5 @@
 #
-# Jamfile (rawfile) 
+# Jamfile (pwiz_vendor_api_thermo) 
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -22,32 +22,73 @@
 
 
 import modules ;
+import path ;
 
 
-if [ modules.peek : NT ] {
+path-constant API_PATH : ./xdk ;
 
-lib pwiz_rawfile
-    : ScanFilter.cpp
-      RawFile.cpp
-      RawFileValues.cpp
-    : <toolset>msvc,<link>shared:<define>RAWFILE_DYN_LINK
-      <library>../../../data/msdata//pwiz_data_msdata
-      <library>/ext/boost//thread
-    : <library>../../../data/msdata//pwiz_data_msdata
-      <library>/ext/boost//thread
+
+if [ modules.peek : NT ] &&
+   [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+{
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <manifest-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
+        result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
+        result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.SxS.manifest ;
+        result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
+        result += <assembly-dependency>$(API_PATH)/finSSClientLib.dll ;
+        result += <assembly-dependency>$(API_PATH)/fileio.dll ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_thermo
+    : # sources
+        ScanFilter.cpp
+        RawFile.cpp
+        RawFileValues.cpp
+    : # requirements
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>/ext/boost//thread
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>/ext/boost//thread
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
     ;
 
 unit-test ScanFilterTest
     : ScanFilterTest.cpp
-      pwiz_rawfile
+      pwiz_vendor_api_thermo
     ;
 
 # a test utility, not a unit test
 exe RawFileTest
     : RawFileTest.cpp
-      pwiz_rawfile
+      pwiz_vendor_api_thermo
     ;
 
 explicit RawFileTest ;
+
+
+install install_pwiz_vendor_api_thermo
+    : $(API_PATH)/MSFileReader.XRawfile2.dll
+      $(API_PATH)/MSFileReader.XRawfile2.dll
+      $(API_PATH)/MSFileReader.XRawfile2.SxS.manifest
+      $(API_PATH)/fregistry.dll
+      $(API_PATH)/finSSClientLib.dll
+      $(API_PATH)/fileio.dll
+    ;
+
+explicit install_pwiz_vendor_api_thermo ;
 
 }

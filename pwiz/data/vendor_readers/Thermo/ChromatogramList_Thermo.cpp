@@ -73,7 +73,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case MS_TIC_chromatogram:
         {
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
                 "", "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
@@ -86,7 +86,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case MS_SIC_chromatogram: // generate SIC for <precursor>
         {
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
                 index_[index].filter, "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
@@ -101,7 +101,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
         {
             vector<string> tokens;
             bal::split(tokens, ci.id, bal::is_any_of(" "));
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_TIC, Operator_None, Type_MassRange,
                 "ms2 " + tokens[2], "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
@@ -118,7 +118,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             ScanFilter filterParser;
             filterParser.parse(ci.filter);
-            result->precursor.activation.set(translate(filterParser.activationType_));
+            ActivationType activationType = filterParser.activationType_;
+            if (activationType == ActivationType_Unknown)
+                activationType = ActivationType_CID; // assume CID
+
+            result->precursor.activation.set(translate(activationType));
             if (filterParser.activationType_ == ActivationType_CID)
                 result->precursor.activation.set(MS_collision_energy, filterParser.cidEnergy_[0]);
 
@@ -132,9 +136,31 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                               % (ci.q3 + ci.q3Offset)
                              ).str();
 
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_BasePeak, Operator_None, Type_MassRange,
-                "ms2 " + q1, q3Range, "", 0,
+                "SRM ms2 " + q1, q3Range, "", 0,
+                0, rawfile_->rt(rawfile_->value(NumSpectra)),
+                Smoothing_None, 0);
+            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_counts);
+            else result->defaultArrayLength = cd->size();
+        }
+        break;
+
+        case MS_SIM_chromatogram:
+        {
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+            result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
+            result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+            string q1Range = (format("%.10g-%.10g")
+                              % (ci.q1 - ci.q3Offset)
+                              % (ci.q1 + ci.q3Offset)
+                             ).str();
+
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
+                Type_BasePeak, Operator_None, Type_MassRange,
+                "SIM ms", q1Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -145,7 +171,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
         {
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_TotalScan, Operator_None, Type_MassRange,
                 "", "", "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
@@ -158,7 +184,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
         case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
         {
-            auto_ptr<ChromatogramData> cd = rawfile_->getChromatogramData(
+            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_ECD, Operator_None, Type_MassRange,
                 "", "", "", 0,
                 0, std::numeric_limits<double>::max(),
@@ -210,62 +236,78 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     for (size_t i=0, ic=filterArray->size(); i < ic; ++i)
                     {
                         string filterString = filterArray->item(i);
-                        if (filterString.find("ms2") == string::npos)
-                            continue;
-
                         filterParser.initialize();
                         filterParser.parse(filterString);
 
-                        if (!filterParser.cidParentMass_.empty())
+                        switch (filterParser.scanType_)
                         {
-                            switch (filterParser.scanType_)
+                            case ScanType_SRM:
                             {
-                                case ScanType_SRM:
+                                string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
+                                /*index_.push_back(IndexEntry());
+                                IndexEntry& ci = index_.back();
+                                ci.controllerType = (ControllerType) controllerType;
+                                ci.controllerNumber = n;
+                                ci.filter = filterString;
+                                ci.index = index_.size()-1;
+                                ci.id = "SRM TIC " + precursorMZ;
+                                ci.q1 = filterParser.cidParentMass_[0];
+                                idMap_[ci.id] = ci.index;*/
+
+                                for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
                                 {
-                                    string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
-                                    /*index_.push_back(IndexEntry());
+                                    index_.push_back(IndexEntry());
                                     IndexEntry& ci = index_.back();
+                                    ci.chromatogramType = MS_SRM_chromatogram;
                                     ci.controllerType = (ControllerType) controllerType;
                                     ci.controllerNumber = n;
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
-                                    ci.id = "SRM TIC " + precursorMZ;
                                     ci.q1 = filterParser.cidParentMass_[0];
-                                    idMap_[ci.id] = ci.index;*/
-
-                                    for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
-                                    {
-                                        index_.push_back(IndexEntry());
-                                        IndexEntry& ci = index_.back();
-                                        ci.chromatogramType = MS_SRM_chromatogram;
-                                        ci.controllerType = (ControllerType) controllerType;
-                                        ci.controllerNumber = n;
-                                        ci.filter = filterString;
-                                        ci.index = index_.size()-1;
-                                        ci.q1 = filterParser.cidParentMass_[0];
-                                        ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                        ci.id = (format("SRM SIC %s,%.10g")
-                                                 % precursorMZ
-                                                 % ci.q3
-                                                ).str();
-                                        ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
-                                        idMap_[ci.id] = ci.index;
-                                    }
-                                }
-                                break; // case ScanType_SRM
-
-                                default:
-                                case ScanType_Full:
-                                /*{
-                                    string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
-                                    index_.push_back(make_pair(ChromatogramIdentity(), filterString));
-                                    ChromatogramIdentity& ci = index_.back().first;
-                                    ci.index = index_.size()-1;
-                                    ci.id = "SIC " + precursorMZ;
+                                    ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
+                                    ci.id = (format("SRM SIC %s,%.10g")
+                                             % precursorMZ
+                                             % ci.q3
+                                            ).str();
+                                    ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
                                     idMap_[ci.id] = ci.index;
-                                }*/
-                                break;
+                                }
                             }
+                            break; // case ScanType_SRM
+
+                            case ScanType_SIM:
+                            {
+                                for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                                {
+                                    index_.push_back(IndexEntry());
+                                    IndexEntry& ci = index_.back();
+                                    ci.chromatogramType = MS_SIM_chromatogram;
+                                    ci.controllerType = (ControllerType) controllerType;
+                                    ci.controllerNumber = n;
+                                    ci.filter = filterString;
+                                    ci.index = index_.size()-1;
+                                    ci.q1 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
+                                    ci.id = (format("SIM SIC %.10g")
+                                             % ci.q1
+                                            ).str();
+                                    // this should be q1Offset
+                                    ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
+                                    idMap_[ci.id] = ci.index;
+                                }
+                            }
+                            break; // case ScanType_SIM
+
+                            default:
+                            case ScanType_Full:
+                            /*{
+                                string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                                index_.push_back(make_pair(ChromatogramIdentity(), filterString));
+                                ChromatogramIdentity& ci = index_.back().first;
+                                ci.index = index_.size()-1;
+                                ci.id = "SIC " + precursorMZ;
+                                idMap_[ci.id] = ci.index;
+                            }*/
+                            break;
                         }
                     }
                 }

@@ -37,7 +37,8 @@
 
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 namespace RawFileValues {
 
 
@@ -102,7 +103,8 @@ const ValueDescriptor<id_type>* descriptor(id_type id)
 
 
 } // namespace values
-} // namespace raw
+} // namespace Thermo
+} // namespace vendor_api
 } // namespace pwiz 
 
 

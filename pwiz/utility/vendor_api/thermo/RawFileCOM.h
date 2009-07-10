@@ -33,7 +33,8 @@ using namespace std;
 
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 
 
 class ManagedSafeArray
@@ -129,7 +130,8 @@ class VariantLabelValueArray : public LabelValueArray
 };
 */
 
-} // namespace raw
+} // namespace Thermo
+} // namespace vendor_api
 } // namespace pwiz 
 
 

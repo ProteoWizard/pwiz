@@ -26,7 +26,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 
 
 void testFilter(const ScanFilter& scanFilter,
@@ -201,6 +201,13 @@ const TestScanFilter testScanFilters[] =
      "191", "-35", "300", "900", -1,
      ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,
      IonizationType_Unknown, AccurateMass_Unknown, ScanType_Full, ActivationType_CID,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},
+
+    {"ITMS + c NSI SIM ms [428.00-438.00, 646.50-651.50, 669.50-684.50]",
+     "", "", "428 646.5 669.5", "438 651.5 684.5", 1,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_SIM, ActivationType_Unknown,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown}
 };

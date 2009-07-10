@@ -25,24 +25,11 @@
 #ifndef _SCANFILTER_H_
 #define _SCANFILTER_H_
 
-#ifdef RAWFILE_DYN_LINK
-#ifdef RAWFILE_SOURCE
-#define RAWFILE_API __declspec(dllexport)
-#else
-#define RAWFILE_API __declspec(dllimport)
-#endif  // RAWFILE_SOURCE
-#endif  // RAWFILE_DYN_LINK
-
-// if RAWFILE_API isn't defined yet define it now:
-#ifndef RAWFILE_API
-#define RAWFILE_API
-#endif
 
 // disable warning "class needs to have dll-interface to be used by clients of class"
-#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4251)
-#endif
+
 
 #include "RawFileTypes.h"
 #include <string>
@@ -50,10 +37,11 @@
 
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 
 
-class RAWFILE_API ScanFilter
+class PWIZ_API_DECL ScanFilter
 {
     public:
 
@@ -99,11 +87,13 @@ class RAWFILE_API ScanFilter
 
 };
 
-} // namespace raw
+
+} // namespace Thermo
+} // namespace vendor_api
 } // namespace pwiz
 
-#ifdef _MSC_VER
+
 #pragma warning(pop)
-#endif
+
 
 #endif // _SCANFILTER_H_

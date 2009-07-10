@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 14.00.50727.762 (4078b574).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (aaf570ae).
 //
-// c:\mainline\imports\pwiz\release\xrawfile2.tli
+// c:\bumbershoot\src\pwiz-src\build\pwiz\utility\vendor_api\thermo\msvc-9.0\release\link-static\threading-multi\xrawfile2.tli
 //
 // Wrapper implementations for Win32 type library xdk/XRawFile2.dll
-// compiler-generated file created 03/11/08 at 12:33:02 - DO NOT EDIT!
+// compiler-generated file created 04/29/09 at 04:58:37 - DO NOT EDIT!
 
 #pragma once
 
@@ -729,6 +729,165 @@ inline HRESULT IXRawfile2::GetNoiseData ( VARIANT * pvarNoisePacket, long * pnSc
     return _hr;
 }
 
+inline HRESULT IXRawfile2::GetSegmentedMassListFromRT ( double * pdRT, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, long * pnArraySize, VARIANT * pvarSegments, long * pnNumSegments, VARIANT * pvarLowHighMassRange ) {
+    HRESULT _hr = raw_GetSegmentedMassListFromRT(pdRT, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, pnArraySize, pvarSegments, pnNumSegments, pvarLowHighMassRange);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile2::GetSegmentedMassListFromScanNum ( long * pnScanNumber, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, long * pnArraySize, VARIANT * pvarSegments, long * pnNumSegments, VARIANT * pvarLowHighMassRange ) {
+    HRESULT _hr = raw_GetSegmentedMassListFromScanNum(pnScanNumber, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, pnArraySize, pvarSegments, pnNumSegments, pvarLowHighMassRange);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile2::GetScanEventForScanNum ( long nScanNumber, BSTR * pbstrScanEvent ) {
+    HRESULT _hr = raw_GetScanEventForScanNum(nScanNumber, pbstrScanEvent);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile2::GetSeqRowUserTextEx ( long nIndex, BSTR * pbstrUserText ) {
+    HRESULT _hr = raw_GetSeqRowUserTextEx(nIndex, pbstrUserText);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile2::GetSeqRowBarcode ( BSTR * pbstrBarcode ) {
+    HRESULT _hr = raw_GetSeqRowBarcode(pbstrBarcode);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile2::GetSeqRowBarcodeStatus ( long * pnBarcodeStatus ) {
+    HRESULT _hr = raw_GetSeqRowBarcodeStatus(pnBarcodeStatus);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IXRawfile3 wrapper method implementations
+//
+
+inline HRESULT IXRawfile3::GetMassListRangeFromScanNum ( long * pnScanNumber, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, LPWSTR szMassRange1, long * pnArraySize ) {
+    HRESULT _hr = raw_GetMassListRangeFromScanNum(pnScanNumber, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, szMassRange1, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile3::GetMassListRangeFromRT ( double * pdRT, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, LPWSTR szMassRange1, long * pnArraySize ) {
+    HRESULT _hr = raw_GetMassListRangeFromRT(pdRT, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, szMassRange1, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile3::GetNextMassListRangeFromScanNum ( long * pnScanNumber, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, LPWSTR szMassRange1, long * pnArraySize ) {
+    HRESULT _hr = raw_GetNextMassListRangeFromScanNum(pnScanNumber, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, szMassRange1, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile3::GetPrevMassListRangeFromScanNum ( long * pnScanNumber, _bstr_t bstrFilter, long nIntensityCutoffType, long nIntensityCutoffValue, long nMaxNumberOfPeaks, long bCentroidResult, double * pdCentroidPeakWidth, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, LPWSTR szMassRange1, long * pnArraySize ) {
+    HRESULT _hr = raw_GetPrevMassListRangeFromScanNum(pnScanNumber, bstrFilter, nIntensityCutoffType, nIntensityCutoffValue, nMaxNumberOfPeaks, bCentroidResult, pdCentroidPeakWidth, pvarMassList, pvarPeakFlags, szMassRange1, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile3::GetPrecursorInfoFromScanNum ( long nScanNumber, VARIANT * pvarPrecursorInfos, long * pnArraySize ) {
+    HRESULT _hr = raw_GetPrecursorInfoFromScanNum(nScanNumber, pvarPrecursorInfos, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IXRawfile4 wrapper method implementations
+//
+
+inline HRESULT IXRawfile4::ExtractInstMethodFromRaw ( _bstr_t szInstMethodFileName ) {
+    HRESULT _hr = raw_ExtractInstMethodFromRaw(szInstMethodFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetSegmentAndEventForScanNum ( long nScanNumber, long * pnSegment, long * pnScanEvent ) {
+    HRESULT _hr = raw_GetSegmentAndEventForScanNum(nScanNumber, pnSegment, pnScanEvent);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline SAFEARRAY * IXRawfile4::GetMassPrecisionEstimate ( long lScanNumber, long * pnArraySize ) {
+    SAFEARRAY * _result = 0;
+    HRESULT _hr = raw_GetMassPrecisionEstimate(lScanNumber, pnArraySize, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline HRESULT IXRawfile4::GetActivationTypeForScanNum ( long nScan, long lMSOrder, long * pnActivationType ) {
+    HRESULT _hr = raw_GetActivationTypeForScanNum(nScan, lMSOrder, pnActivationType);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetDetectorTypeForScanNum ( long nScan, long * pnDetectorType ) {
+    HRESULT _hr = raw_GetDetectorTypeForScanNum(nScan, pnDetectorType);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetMassAnalyzerTypeForScanNum ( long nScan, long * pnMassAnalyzerType ) {
+    HRESULT _hr = raw_GetMassAnalyzerTypeForScanNum(nScan, pnMassAnalyzerType);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetMSOrderForScanNum ( long nScan, long * pnMSOrder ) {
+    HRESULT _hr = raw_GetMSOrderForScanNum(nScan, pnMSOrder);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetPrecursorMassForScanNum ( long nScan, long lMSOrder, double * pdMass ) {
+    HRESULT _hr = raw_GetPrecursorMassForScanNum(nScan, lMSOrder, pdMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetScanTypeForScanNum ( long nScan, long * pnScanType ) {
+    HRESULT _hr = raw_GetScanTypeForScanNum(nScan, pnScanType);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetAveragedMassSpectrum ( long * pnScanNumbers, long nScansToAverage, VARIANT_BOOL bCentroidResult, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, long * pnArraySize ) {
+    HRESULT _hr = raw_GetAveragedMassSpectrum(pnScanNumbers, nScansToAverage, bCentroidResult, pvarMassList, pvarPeakFlags, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetSummedMassSpectrum ( long * pnScanNumbers, long nScansToSum, VARIANT_BOOL bCentroidResult, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, long * pnArraySize ) {
+    HRESULT _hr = raw_GetSummedMassSpectrum(pnScanNumbers, nScansToSum, bCentroidResult, pvarMassList, pvarPeakFlags, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::GetAveragedLabelData ( long * pnScanNumbers, long nScansToAverage, VARIANT * pvarMassList, VARIANT * pvarPeakFlags, long * pnArraySize ) {
+    HRESULT _hr = raw_GetAveragedLabelData(pnScanNumbers, nScansToAverage, pvarMassList, pvarPeakFlags, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::FindPrecursorMassInFullScan ( long nScan, long * pnMasterScan, double * pdFoundMass, double * pdHeaderMass, long * pnChargeState ) {
+    HRESULT _hr = raw_FindPrecursorMassInFullScan(nScan, pnMasterScan, pdFoundMass, pdHeaderMass, pnChargeState);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile4::Version ( long * pnMajorVersion, long * pnMinorVersion, long * pnSubMinorVersion, long * nBuildNumber ) {
+    HRESULT _hr = raw_Version(pnMajorVersion, pnMinorVersion, pnSubMinorVersion, nBuildNumber);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
 //
 // interface IXVirMS wrapper method implementations
 //
@@ -906,6 +1065,22 @@ inline HRESULT IXVirMS::InitializeScanIndex ( long nScanIndexPosition, enum MS_P
 
 inline HRESULT IXVirMS::WriteScanIndex2 ( struct MS_ScanIndex * pScanIndex ) {
     HRESULT _hr = raw_WriteScanIndex2(pScanIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IXVirMS64 wrapper method implementations
+//
+
+inline HRESULT IXVirMS64::WriteScanIndex_64 ( struct MS_ScanIndex64 * pScanIndex, struct MS_ScanEvent * pScanEvent ) {
+    HRESULT _hr = raw_WriteScanIndex_64(pScanIndex, pScanEvent);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXVirMS64::WriteScanIndex2_64 ( struct MS_ScanIndex64 * pScanIndex ) {
+    HRESULT _hr = raw_WriteScanIndex2_64(pScanIndex);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
     return _hr;
 }

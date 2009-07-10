@@ -194,7 +194,7 @@ rule install-vendor-api-dependencies ( properties * )
     local dependencies ;
     if <toolset>msvc in $(properties)
     {
-        dependencies += #<dependency>pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location)
+        dependencies += <dependency>pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location)
                         <dependency>pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location)
                         <dependency>pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location)
                         <dependency>pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location)

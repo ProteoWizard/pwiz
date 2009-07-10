@@ -2,6 +2,7 @@
 
 #include "Reader_Thermo_Detail.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -48,6 +49,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap:              return MS_LTQ_Orbitrap;
         case InstrumentModelType_LTQ_Orbitrap_Discovery:    return MS_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
+        case InstrumentModelType_LTQ_Velos:                 return MS_LTQ_Velos;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
         case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
@@ -63,6 +65,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_Quantum_Access:        return MS_TSQ_Quantum_Access;
         case InstrumentModelType_TSQ_Quantum_Ultra:         return MS_TSQ_Quantum_Ultra;
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:      return MS_TSQ_Quantum_Ultra_AM;
+        case InstrumentModelType_TSQ_Vantage_Standard:      return MS_TSQ_Vantage;
         case InstrumentModelType_Element_XR:                return MS_Element_XR;
         case InstrumentModelType_Element_GD:                return MS_Element_GD;
         case InstrumentModelType_GC_IsoLink:                return MS_GC_IsoLink;
@@ -70,8 +73,10 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
 
-        case InstrumentModelType_Unknown:
         default:
+            throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
+
+        case InstrumentModelType_Unknown:
             // TODO: is it possible to distiguish between Finnigan MAT and Thermo Electron?
             return MS_Thermo_Electron_instrument_model;
     }
@@ -86,7 +91,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
     InstrumentModelType model = parseInstrumentModelType(rawfile.value(InstModel));
 
     // source common to all configurations (TODO: handle multiple sources in a single run?)
-    std::auto_ptr<ScanInfo> firstScanInfo = rawfile.getScanInfo(1);
+    ScanInfoPtr firstScanInfo = rawfile.getScanInfo(1);
     CVID firstIonizationType = translateAsIonizationType(firstScanInfo->ionizationType());
     CVID firstInletType = translateAsInletType(firstScanInfo->ionizationType());
 
@@ -154,6 +159,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_LTQ_XL_ETD:
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
+        case InstrumentModelType_LTQ_Velos:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
@@ -178,6 +184,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_GC_Quantum:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -216,8 +223,10 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
             configurations.back().componentList.push_back(Component(MS_PDA, 1));
             break;
 
-        case InstrumentModelType_Unknown:
         default:
+            throw std::runtime_error("[Reader_Thermo::createInstrumentConfigurations] Enumerated instrument model " + lexical_cast<string>(model) + " has no instrument configuration!");
+
+        case InstrumentModelType_Unknown:
             break; // unknown configuration
     }
 

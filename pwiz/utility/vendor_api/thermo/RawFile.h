@@ -24,42 +24,35 @@
 #ifndef _RAWFILE_H_
 #define _RAWFILE_H_
 
-#ifdef RAWFILE_DYN_LINK
-#ifdef RAWFILE_SOURCE
-#define RAWFILE_API __declspec(dllexport)
-#else
-#define RAWFILE_API __declspec(dllimport)
-#endif  // RAWFILE_SOURCE
-#endif  // RAWFILE_DYN_LINK
 
-// if RAWFILE_API isn't defined yet define it now:
-#ifndef RAWFILE_API
-#define RAWFILE_API
-#endif
-
+#include "pwiz/utility/misc/Export.hpp"
 #include "ScanFilter.h"
 #include <string>
 #include <memory>
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
-#include "pwiz/data/msdata/Reader.hpp" // for ReaderFail exception defn
+#include <boost/date_time.hpp>
 
 
 namespace pwiz {
-namespace raw {
+namespace vendor_api {
+namespace Thermo {
 
 
-class RAWFILE_API RawEgg : public pwiz::msdata::ReaderFail // Eggception class
+using boost::shared_ptr;
+
+
+class PWIZ_API_DECL RawEgg : public std::runtime_error
 {
     public:
 
     RawEgg(const std::string& error)
-    :   pwiz::msdata::ReaderFail(("[ThermoRawFile] " + error).c_str())
+        : std::runtime_error(("[ThermoRawFile] " + error).c_str())
     {}
 };
 
 
-enum RAWFILE_API ControllerType
+enum PWIZ_API_DECL ControllerType
 {
     Controller_None = -1,
     Controller_MS = 0,
@@ -70,14 +63,14 @@ enum RAWFILE_API ControllerType
 };
 
 
-struct RAWFILE_API ControllerInfo
+struct PWIZ_API_DECL ControllerInfo
 {
     ControllerType type;
     long controllerNumber;
 };
 
 
-enum RAWFILE_API ValueID_String
+enum PWIZ_API_DECL ValueID_String
 {
     FileName,
     CreatorID,
@@ -113,7 +106,7 @@ enum RAWFILE_API ValueID_String
 };
 
 
-enum RAWFILE_API ValueID_Long
+enum PWIZ_API_DECL ValueID_Long
 {
     VersionNumber,
     IsError,
@@ -144,7 +137,7 @@ enum RAWFILE_API ValueID_Long
 };
 
 
-enum RAWFILE_API ValueID_Double
+enum PWIZ_API_DECL ValueID_Double
 {
     SeqRowInjectionVolume,
     SeqRowSampleWeight,
@@ -165,7 +158,7 @@ enum RAWFILE_API ValueID_Double
 };
 
 
-class RAWFILE_API StringArray
+class PWIZ_API_DECL StringArray
 {
     public:
     virtual int size() const = 0;
@@ -174,7 +167,7 @@ class RAWFILE_API StringArray
 };
 
 
-class RAWFILE_API LabelValueArray
+class PWIZ_API_DECL LabelValueArray
 {
     public:
     virtual int size() const = 0;
@@ -192,7 +185,7 @@ class RAWFILE_API LabelValueArray
 // or define a Type enum.
 
 
-enum RAWFILE_API CutoffType
+enum PWIZ_API_DECL CutoffType
 {
     Cutoff_None = 0,
     Cutoff_Absolute,
@@ -200,7 +193,7 @@ enum RAWFILE_API CutoffType
 };
 
 
-enum RAWFILE_API WhichMassList
+enum PWIZ_API_DECL WhichMassList
 {
     MassList_Current,
     MassList_Previous,
@@ -208,14 +201,14 @@ enum RAWFILE_API WhichMassList
 };
 
 
-struct RAWFILE_API MassIntensityPair
+struct PWIZ_API_DECL MassIntensityPair
 {
     double mass;
     double intensity;
 };
 
 
-class RAWFILE_API MassList
+class PWIZ_API_DECL MassList
 {
     public:
     virtual long scanNumber() const = 0;
@@ -234,17 +227,26 @@ class RAWFILE_API MassList
 };
 
 
-typedef boost::shared_ptr<MassList> MassListPtr;
+typedef shared_ptr<MassList> MassListPtr;
 
 
-struct RAWFILE_API MassRange
+struct PWIZ_API_DECL MassRange
 {
     double low;
     double high;
 };
 
 
-class RAWFILE_API ScanInfo
+struct PWIZ_API_DECL PrecursorInfo
+{
+    double monoisotopicMZ;
+    double isolationMZ;
+    int chargeState;
+    int scanNumber;
+};
+
+
+class PWIZ_API_DECL ScanInfo
 {
     public:
 
@@ -259,6 +261,7 @@ class RAWFILE_API ScanInfo
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
 
+    virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
     virtual long precursorCharge() const = 0;
     virtual double precursorMZ(long index, bool preferMonoisotope = true) const = 0;
@@ -299,8 +302,10 @@ class RAWFILE_API ScanInfo
     virtual ~ScanInfo(){}
 };
 
+typedef shared_ptr<ScanInfo> ScanInfoPtr;
 
-class RAWFILE_API ScanEvent
+
+class PWIZ_API_DECL ScanEvent
 {
     public:
 
@@ -341,17 +346,17 @@ class RAWFILE_API ScanEvent
     long arrSourceFragmentationEnergiesValid[50];*/
 };
 
-typedef boost::shared_ptr<ScanEvent> ScanEventPtr;
+typedef shared_ptr<ScanEvent> ScanEventPtr;
 
 
-struct RAWFILE_API ErrorLogItem
+struct PWIZ_API_DECL ErrorLogItem
 {
     double rt;
     std::string errorMessage;
 };
 
 
-enum RAWFILE_API ChromatogramType
+enum PWIZ_API_DECL ChromatogramType
 {
     Type_MassRange,
     Type_ECD = Type_MassRange,
@@ -362,7 +367,7 @@ enum RAWFILE_API ChromatogramType
 };
 
 
-enum RAWFILE_API ChromatogramOperatorType
+enum PWIZ_API_DECL ChromatogramOperatorType
 {
     Operator_None,
     Operator_Minus,
@@ -370,7 +375,7 @@ enum RAWFILE_API ChromatogramOperatorType
 };
 
 
-enum RAWFILE_API ChromatogramSmoothingType
+enum PWIZ_API_DECL ChromatogramSmoothingType
 {
     Smoothing_None,
     Smoothing_Boxcar,
@@ -378,14 +383,14 @@ enum RAWFILE_API ChromatogramSmoothingType
 };
 
 
-struct RAWFILE_API TimeIntensityPair
+struct PWIZ_API_DECL TimeIntensityPair
 {
     double time;
     double intensity;
 };
 
 
-class RAWFILE_API ChromatogramData
+class PWIZ_API_DECL ChromatogramData
 {
     public:
     virtual double startTime() const = 0;
@@ -395,12 +400,14 @@ class RAWFILE_API ChromatogramData
     virtual ~ChromatogramData(){}
 };
 
+typedef shared_ptr<ChromatogramData> ChromatogramDataPtr;
 
-class RAWFILE_API RawFile
+
+class PWIZ_API_DECL RawFile
 {
     public:
 
-    static std::auto_ptr<RawFile> create(const std::string& filename);
+    static shared_ptr<RawFile> create(const std::string& filename);
 
     virtual std::string name(ValueID_Long id) = 0;
     virtual std::string name(ValueID_Double id) = 0;
@@ -410,7 +417,7 @@ class RAWFILE_API RawFile
     virtual std::string value(ValueID_String id) = 0;
 
     virtual std::string getFilename() = 0;
-    virtual std::string getCreationDate() = 0;
+    virtual boost::local_time::local_date_time getCreationDate() = 0;
     virtual std::auto_ptr<LabelValueArray> getSequenceRowUserInfo() = 0;
 
     virtual ControllerInfo getCurrentController() = 0;
@@ -446,8 +453,9 @@ class RAWFILE_API RawFile
     virtual MassListPtr getMassListFromLabelData(long scanNumber) = 0;
 
     virtual std::auto_ptr<StringArray> getFilters() = 0;
-    virtual std::auto_ptr<ScanInfo> getScanInfo(long scanNumber) = 0;
+    virtual ScanInfoPtr getScanInfo(long scanNumber) = 0;
     virtual long getMSLevel(long scanNumber) = 0;
+    virtual ScanType getScanType(long scanNumber) = 0;
     virtual ErrorLogItem getErrorLogItem(long itemNumber) = 0;
     virtual std::auto_ptr<LabelValueArray> getTuneData(long segmentNumber) = 0;
     virtual std::auto_ptr<LabelValueArray> getInstrumentMethods() = 0;
@@ -458,7 +466,7 @@ class RAWFILE_API RawFile
     virtual const std::vector<MassAnalyzerType>& getMassAnalyzers() = 0;
     virtual const std::vector<DetectorType>& getDetectors() = 0;
 
-    virtual std::auto_ptr<ChromatogramData>
+    virtual ChromatogramDataPtr
     getChromatogramData(ChromatogramType type1,
                         ChromatogramOperatorType op,
                         ChromatogramType type2,
@@ -474,32 +482,11 @@ class RAWFILE_API RawFile
     virtual ~RawFile(){}
 };
 
-
-template<typename T>
-class auto_handle
-{
-    public:
-
-    template <typename Parameter>
-    auto_handle(Parameter parameter)
-    :   t_(T::create(parameter).release())
-    {}
-
-    ~auto_handle() {delete t_;}
-
-    T* operator->() {return t_;}
-
-    private:
-    T* t_;
-    auto_handle(auto_handle&);
-    auto_handle& operator=(auto_handle&);
-};
+typedef shared_ptr<RawFile> RawFilePtr;
 
 
-typedef auto_handle<RawFile> RawFilePtr;
-
-
-} // namespace raw
+} // namespace Thermo
+} // namespace vendor_api
 } // namespace pwiz
 
 

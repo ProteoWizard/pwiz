@@ -20,13 +20,13 @@
 // limitations under the License.
 //
 
-#define RAWFILE_SOURCE
+#define PWIZ_SOURCE
 
 #include "RawFile.h"
 //#ifdef PWIZ_NO_EXCALIBUR_SDK
 #include "xdk/XRawFile2.tlh" // use canned header
 //#else
-//#import "xdk/XRawFile2.dll" rename_namespace("XRawfile")
+//#import "xdk/Xcalibur.XRawfile2.dll" rename_namespace("XRawfile")
 //#endif
 #include "RawFileValues.h"
 #include "RawFileCOM.h"
@@ -38,11 +38,12 @@
 #include <vector>
 #include <algorithm>
 #include "pwiz/utility/misc/COMInitializer.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include <boost/thread/once.hpp>
 #include <boost/bind.hpp>
 #include <windows.h>
 
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 using namespace XRawfile;
 using namespace std;
@@ -82,7 +83,7 @@ class RawFileImpl : public RawFile
 
     virtual std::string getFilename() {return filename_;}
 
-    virtual string getCreationDate();
+    virtual blt::local_date_time getCreationDate();
     virtual auto_ptr<LabelValueArray> getSequenceRowUserInfo();
 
     virtual ControllerInfo getCurrentController();
@@ -117,8 +118,9 @@ class RawFileImpl : public RawFile
     virtual MassListPtr getMassListFromLabelData(long scanNumber);
 
     virtual auto_ptr<StringArray> getFilters();
-    virtual auto_ptr<ScanInfo> getScanInfo(long scanNumber);
+    virtual ScanInfoPtr getScanInfo(long scanNumber);
     virtual long getMSLevel(long scanNumber);
+    virtual ScanType getScanType(long scanNumber);
     virtual ErrorLogItem getErrorLogItem(long itemNumber);
     virtual auto_ptr<LabelValueArray> getTuneData(long segmentNumber);
     virtual auto_ptr<LabelValueArray> getInstrumentMethods();
@@ -129,7 +131,7 @@ class RawFileImpl : public RawFile
     virtual const vector<MassAnalyzerType>& getMassAnalyzers();
     virtual const vector<DetectorType>& getDetectors();
 
-    virtual auto_ptr<ChromatogramData>
+    virtual ChromatogramDataPtr
     getChromatogramData(ChromatogramType type1,
                         ChromatogramOperatorType op,
                         ChromatogramType type2,
@@ -156,9 +158,9 @@ class RawFileImpl : public RawFile
 };
 
 
-RAWFILE_API auto_ptr<RawFile> RawFile::create(const string& filename)
+PWIZ_API_DECL RawFilePtr RawFile::create(const string& filename)
 {
-    return auto_ptr<RawFile>(new RawFileImpl(filename));
+    return RawFilePtr(new RawFileImpl(filename));
 }
 
 
@@ -171,26 +173,44 @@ RawFileImpl::RawFileImpl(const string& filename)
 
     // use the latest version of IXRawfile that will initialize
     IXRawfile2Ptr raw2(NULL);
-    if (FAILED(raw2.CreateInstance("XRawfile.XRawfile.1")))
+    IXRawfile3Ptr raw3(NULL);
+    IXRawfile4Ptr raw4(NULL);
+    if (FAILED(raw4.CreateInstance("MSFileReader.XRawfile.1")))
     {
-        if (FAILED(raw_.CreateInstance("XRawfile.XRawfile.1")))
+        if (FAILED(raw3.CreateInstance("MSFileReader.XRawfile.1")))
         {
-            rawInterfaceVersion_ = 0;
-			throw RawEgg("[RawFileImpl()] Unable to initialize XRawfile interface: is Thermo DLL installed?");
+            if (FAILED(raw2.CreateInstance("MSFileReader.XRawfile.1")))
+            {
+                if (FAILED(raw_.CreateInstance("MSFileReader.XRawfile.1")))
+                {
+                    rawInterfaceVersion_ = 0;
+                    throw RawEgg("[RawFile::ctor] Unable to initialize XRawfile; are the MSFileReader DLLs side-by-side with the current application?\nIt is available for download at: http://sjsupport.thermofinnigan.com/public/detail.asp?id=586");
+                }
+                else
+                {
+                    rawInterfaceVersion_ = 1;
+                }
+            }
+            else
+            {
+                raw_ = raw2;
+                rawInterfaceVersion_ = 2;
+            }
         }
         else
         {
-            rawInterfaceVersion_ = 1;
+            raw_ = raw3;
+            rawInterfaceVersion_ = 3;
         }
     }
     else
     {
-        raw_ = raw2;
-        rawInterfaceVersion_ = 2;
+        raw_ = raw4;
+        rawInterfaceVersion_ = 4;
     }
 
     if (raw_->Open(filename.c_str()))
-        throw RawEgg("[RawFileImpl()] Unable to open file " + filename);
+        throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
 }
 
 
@@ -279,21 +299,12 @@ string RawFileImpl::value(ValueID_String id)
 }
 
 
-string RawFileImpl::getCreationDate()
+blt::local_date_time RawFileImpl::getCreationDate()
 {
-    DATE date;
-    checkResult(raw_->GetCreationDate(&date), "[RawFileImpl::getCreationDate(), GetCreationDate()] ");
-
-    UDATE udate;
-    HRESULT hr = VarUdateFromDate(date, 0, &udate);
-    if (FAILED(hr))
-        throw RawEgg("RawFileImpl::getCreationDate(): error converting date.\n");
-
-    SYSTEMTIME& st = udate.st;
-    ostringstream oss;
-    oss << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " <<
-           st.wHour << ":" << st.wMinute << ":" << st.wSecond;
-    return oss.str();
+    DATE oadate;
+    checkResult(raw_->GetCreationDate(&oadate), "[RawFileImpl::getCreationDate(), GetCreationDate()] ");
+    bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(oadate));
+    return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
 }
 
 
@@ -655,6 +666,7 @@ class ScanInfoImpl : public ScanInfo
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
 
+    virtual std::vector<PrecursorInfo> precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
     virtual long precursorCharge() const;
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
@@ -875,6 +887,21 @@ void ScanInfoImpl::parseFilterString()
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 }
 
+vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
+{
+    if (rawfile_->rawInterfaceVersion_ < 3)
+        throw RawEgg("[RawFileImpl::getMassListFromLabelData()] GetPrecursorInfoFromScanNum requires the IXRawfile3 interface.");
+
+    IXRawfile3Ptr raw3 = (IXRawfile3Ptr) rawfile_->raw_;
+    vector<PrecursorInfo> precursorInfo;
+	VARIANT varInfo;
+    VariantInit(&varInfo);
+    long precursorCount;
+    raw3->GetPrecursorInfoFromScanNum(scanNumber_, &varInfo, &precursorCount);
+    cout << precursorCount << " " << varInfo.vt << endl;
+    return precursorInfo;
+}
+
 long ScanInfoImpl::precursorCharge() const
 {
     try
@@ -943,9 +970,9 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
 }
 
 
-auto_ptr<ScanInfo> RawFileImpl::getScanInfo(long scanNumber)
+ScanInfoPtr RawFileImpl::getScanInfo(long scanNumber)
 {
-    auto_ptr<ScanInfo> scanInfo(new ScanInfoImpl(scanNumber, this));
+    ScanInfoPtr scanInfo(new ScanInfoImpl(scanNumber, this));
     return scanInfo;
 }
 
@@ -959,6 +986,19 @@ long RawFileImpl::getMSLevel(long scanNumber)
     if (ms && strlen(ms)>2 && ms[2]!=' ')
         result = atol(ms+2);
     return result;
+}
+
+
+ScanType RawFileImpl::getScanType(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 3)
+        throw RawEgg("[RawFileImpl::getScanType()] GetScanTypeForScanNum requires the IXRawfile4 interface.");
+
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+
+    ScanType scanType;
+    raw4->GetScanTypeForScanNum(scanNumber, (long*) &scanType);
+    return scanType;
 }
 
 
@@ -1169,7 +1209,7 @@ class ChromatogramDataImpl : public ChromatogramData
 } // namespace
 
 
-auto_ptr<ChromatogramData>
+ChromatogramDataPtr
 RawFileImpl::getChromatogramData(ChromatogramType type1,
                                  ChromatogramOperatorType op,
                                  ChromatogramType type2,
@@ -1197,8 +1237,7 @@ RawFileImpl::getChromatogramData(ChromatogramType type1,
                                   smoothingType, smoothingValue,
                                   &variantChromatogramData, &variantPeakFlags, &size));
 
-    return auto_ptr<ChromatogramData>
-        (new ChromatogramDataImpl(variantChromatogramData, size, startTime, endTime));
+    return ChromatogramDataPtr(new ChromatogramDataImpl(variantChromatogramData, size, startTime, endTime));
 }
 
 

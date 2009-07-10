@@ -23,22 +23,18 @@
 */
 
 
-#define RAWFILE_SOURCE
+#define PWIZ_SOURCE
 
 #include "ScanFilter.h"
 
-#include <sstream>
 #include <stack>
 #include <iostream>
-#include <cctype> // for toupper
 #include <algorithm>
 #include <vector>
-#include "boost/algorithm/string.hpp"
-#include "boost/lexical_cast.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 using namespace std;
-using boost::lexical_cast;
 
 /*
 

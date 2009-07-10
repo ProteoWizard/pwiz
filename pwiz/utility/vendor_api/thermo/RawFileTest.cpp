@@ -23,7 +23,7 @@
 
 
 using namespace std;
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 
 
 int main(int argc, char* argv[])

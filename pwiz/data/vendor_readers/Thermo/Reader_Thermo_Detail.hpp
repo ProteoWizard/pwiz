@@ -6,7 +6,7 @@
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <vector>
 
-using namespace pwiz::raw;
+using namespace pwiz::vendor_api::Thermo;
 
 namespace pwiz {
 namespace msdata {
