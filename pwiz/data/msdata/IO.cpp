@@ -804,7 +804,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfigurat
     writer.startElement("instrumentConfiguration", attributes);
 
     writeParamContainer(writer, instrumentConfiguration);
-    write(writer, instrumentConfiguration.componentList);
+    if (!instrumentConfiguration.componentList.empty()) // optional element
+        write(writer, instrumentConfiguration.componentList);
 
     if (instrumentConfiguration.softwarePtr.get())
     {
@@ -2317,7 +2318,7 @@ PWIZ_API_DECL void read(std::istream& is, ChromatogramListSimple& chromatogramLi
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Run& run,
+void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
@@ -2325,8 +2326,17 @@ void write(minimxml::XMLWriter& writer, const Run& run,
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", encode_xml_id_copy(run.id)));
+
+    // defaultInstrumentConfigurationPtr is mandatory for schematic validity;
+    // at least one (possibly unknown) instrument configuration is mandatory for schematic validity;
+    // therefore we set this attribute to a reasonable default if the client didn't set it
     if (run.defaultInstrumentConfigurationPtr.get())
         attributes.push_back(make_pair("defaultInstrumentConfigurationRef", encode_xml_id_copy(run.defaultInstrumentConfigurationPtr->id)));
+    else if (!msd.instrumentConfigurationPtrs.empty())
+        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", encode_xml_id_copy(msd.instrumentConfigurationPtrs.front()->id)));
+    else
+        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", "IC"));
+
     if (run.samplePtr.get())
         attributes.push_back(make_pair("sampleRef", encode_xml_id_copy(run.samplePtr->id)));
     if (!run.startTimeStamp.empty())
@@ -2338,10 +2348,17 @@ void write(minimxml::XMLWriter& writer, const Run& run,
 
     writeParamContainer(writer, run);
 
-    if (run.spectrumListPtr.get())
+    bool hasSpectrumList = run.spectrumListPtr.get() && run.spectrumListPtr->size() > 0;
+    bool hasChromatogramList = run.chromatogramListPtr.get() && run.chromatogramListPtr->size() > 0;
+
+    // at least one spectrum or chromatogram is mandatory for schematic validity
+    if (!hasSpectrumList && !hasChromatogramList)
+        throw runtime_error("[IO::write(Run)] At least one spectrum or chromatogram must be present.");
+
+    if (hasSpectrumList)
         write(writer, *run.spectrumListPtr, config, spectrumPositions, iterationListenerRegistry);
 
-    if (run.chromatogramListPtr.get())
+    if (hasChromatogramList)
         write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry);
 
     writer.endElement();
@@ -2481,10 +2498,21 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     writeList(writer, msd.samplePtrs, "sampleList");
     writeList(writer, msd.softwarePtrs, "softwareList");
     writeList(writer, msd.scanSettingsPtrs, "scanSettingsList");
-    writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
+
+    // instrumentConfigurationList and at least one instrumentConfiguration is mandatory for schematic validity
+    if (msd.instrumentConfigurationPtrs.empty())
+    {
+        // the base term "instrument model" indicates the instrument is unknown
+        vector<InstrumentConfigurationPtr> list(1, InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
+        list.back()->set(MS_instrument_model);
+        writeList(writer, list, "instrumentConfigurationList");
+    }
+    else
+        writeList(writer, msd.instrumentConfigurationPtrs, "instrumentConfigurationList");
+
     writeList(writer, msd.allDataProcessingPtrs(), "dataProcessingList");
 
-    write(writer, msd.run, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
+    write(writer, msd.run, msd, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
 
     writer.endElement();
 }

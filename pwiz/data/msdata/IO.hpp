@@ -185,7 +185,7 @@ enum PWIZ_API_DECL SpectrumListFlag {IgnoreSpectrumList, ReadSpectrumList};
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Run& run,
+void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
