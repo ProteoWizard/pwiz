@@ -20,6 +20,17 @@
 # 
 
 
+# Waters support status:
+# - DLLs are COM and thus MSVC only
+# - cannot redistribute DLLs, but we can compile without them:
+#   * if MSVC:
+#       * if DLLs are present: PWIZ_READER_WATERS is defined for all dependents
+#       * else:
+#           * PWIZ_READER_WATERS is not defined for Reader_Waters_Test
+#           * PWIZ_READER_WATERS is defined for all other dependents
+#   * else: PWIZ_READER_WATERS is never defined
+
+
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
@@ -36,23 +47,58 @@ path-constant TEST_DATA_PATH : ./Reader_Waters_Test.data ;
 SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
 
 
+rule requirements ( properties * )
+{
+    if <toolset>msvc in $(properties)
+    {
+        return <source>SpectrumList_Waters.cpp
+               <source>ChromatogramList_Waters.cpp
+               <source>Reader_Waters_Detail.cpp
+               <library>$(API_PATH)//pwiz_vendor_api_waters
+               <define>PWIZ_READER_WATERS ;
+    }
+}
+
+rule usage-requirements ( properties * )
+{
+    if <toolset>msvc in $(properties)
+    {
+        return <library>$(API_PATH)//pwiz_vendor_api_waters
+               <define>PWIZ_READER_WATERS ;
+    }
+}
+
 lib pwiz_aux_msrc_reader_waters
     : # sources
         Reader_Waters.cpp
     : # requirements
-        <toolset>msvc:<source>SpectrumList_Waters.cpp
-        <toolset>msvc:<source>ChromatogramList_Waters.cpp
-        <toolset>msvc:<source>Reader_Waters_Detail.cpp
-        <toolset>msvc:<define>PWIZ_READER_WATERS
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@requirements
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<define>PWIZ_READER_WATERS
         <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@usage-requirements
     ;
 
+
+rule test-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <source>Reader_Waters.cpp ;
+        result += <source>SpectrumList_Waters.cpp ;
+        result += <source>ChromatogramList_Waters.cpp ;
+        result += <source>Reader_Waters_Detail.cpp ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
+        if [ path.exists $(API_PATH)/DACServer.dll ]
+        {
+            result += <define>PWIZ_READER_WATERS ;
+        }
+    }
+    return $(result) ;
+}
 
 # special run target for Reader_Waters_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
@@ -61,7 +107,8 @@ run Reader_Waters_Test.cpp
         \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
-        <library>pwiz_aux_msrc_reader_waters
+        <conditional>@test-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # target name
         Reader_Waters_Test
     : # default-build
