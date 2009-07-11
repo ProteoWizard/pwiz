@@ -31,8 +31,10 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include <iostream>
 #include <fstream>
+#include <boost/foreach.hpp>
 
 
 using namespace std;
@@ -69,6 +71,21 @@ void mangleSourceFileLocations(vector<SourceFilePtr>& sourceFiles)
 }
 
 
+void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
+{
+    BOOST_FOREACH(SourceFilePtr sourceFile, sourceFiles)
+    {
+        const string uriPrefix = "file://";
+        if (sourceFile->location.substr(0, uriPrefix.size()) != uriPrefix) return;
+        bfs::path p(sourceFile->location.substr(uriPrefix.size()));
+        p /= sourceFile->name;
+
+        string sha1 = SHA1Calculator::hashFile(p.string());
+        sourceFile->set(MS_SHA_1, sha1);
+    }
+}
+
+
 void hackInMemoryMSData(MSData& msd)
 {
     // remove metadata ptrs appended on read
@@ -96,6 +113,7 @@ void testRead(const Reader& reader, const string& rawpath)
     for (size_t i=0; i < msds.size(); ++i)
     {
         MSData& msd = *msds[i];
+        calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
         mangleSourceFileLocations(msd.fileDescription.sourceFilePtrs);
         if (os_) TextWriter(*os_,0)(msd);
 
@@ -142,6 +160,7 @@ void generate(const Reader& reader, const string& rawpath)
             outputFilename = bfs::change_extension(rawpath, ".mzML").string();
         else
             outputFilename = bfs::change_extension(rawpath, "-" + msds[i]->run.id + ".mzML").string();
+        calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
         MSDataFile::write(*msds[i], outputFilename, config);
     }
 }
