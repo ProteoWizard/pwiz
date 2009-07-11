@@ -20,6 +20,11 @@
 #
 
 
+# ABI support status:
+# - DLLs are .NET and thus MSVC only
+# - cannot redistribute DLLs and we can't compile the API without them
+
+
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
@@ -39,27 +44,23 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
-        if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
-        {
-            result += <source>SpectrumList_ABI.cpp ;
-            result += <source>ChromatogramList_ABI.cpp ;
-            result += <define>PWIZ_READER_ABI ;
-            result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
-        }
+        result += <source>SpectrumList_ABI.cpp ;
+        result += <source>ChromatogramList_ABI.cpp ;
+        result += <define>PWIZ_READER_ABI ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
     return $(result) ;
 }
 
 rule vendor-api-usage-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
-        if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
-        {
-            return <define>PWIZ_READER_ABI <library>$(API_PATH)//pwiz_vendor_api_abi ;
-        }
+        return <define>PWIZ_READER_ABI <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
 }
 
