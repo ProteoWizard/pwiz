@@ -139,7 +139,6 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
     }
 
     // TODO: read instrument "family" from (first) source
-
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     //if (!msd.instrumentConfigurationPtrs.empty())
     //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];

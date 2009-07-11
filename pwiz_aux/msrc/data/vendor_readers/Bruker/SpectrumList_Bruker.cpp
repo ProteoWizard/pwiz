@@ -373,6 +373,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             // each fid's source path is a directory but the source file is the fid
             for (size_t i=0; i < sourcePaths_.size(); ++i)
             {
+                // in "/foo/bar/1/1SRef/fid", replace "/foo/bar/" with "" so relativePath is "1/1SRef/fid"
                 bfs::path relativePath = bal::replace_first_copy((sourcePaths_[i] / "fid").string(), rootpath_.branch_path().string() + "/", "");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
@@ -382,31 +383,58 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
         // a YEP's source path is the same as the source file
         case Reader_Bruker_Format_YEP:
-            sourcePaths_.push_back(rootpath_ / "Analysis.yep");
-            addSource(msd_, sourcePaths_.back(), rootpath_);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.yep");
+                // in "/foo/bar.d/Analysis.yep", replace "/foo/" with "" so relativePath is "bar.d/Analysis.yep"
+                bfs::path relativePath = bal::replace_first_copy(sourcePaths_.back().string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
+            }
             break;
 
         // a BAF's source path is the same as the source file
         case Reader_Bruker_Format_BAF:
-            sourcePaths_.push_back(rootpath_ / "Analysis.baf");
-            addSource(msd_, sourcePaths_.back(), rootpath_);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.baf");
+                // in "/foo/bar.d/Analysis.baf", replace "/foo/" with "" so relativePath is "bar.d/Analysis.baf"
+                bfs::path relativePath = bal::replace_first_copy(sourcePaths_.back().string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+            }
             break;
 
         // a BAF/U2 combo has two sources, with different nativeID formats
         case Reader_Bruker_Format_BAF_and_U2:
-            sourcePaths_.push_back(rootpath_ / "Analysis.baf");
-            addSource(msd_, sourcePaths_.back(), rootpath_);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.baf");
+                // in "/foo/bar.d/Analysis.baf", replace "/foo/" with "" so relativePath is "bar.d/Analysis.baf"
+                bfs::path relativePath = bal::replace_first_copy(sourcePaths_.back().string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+            }
 
-            sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
-            addSource(msd_, sourcePaths_.back(), rootpath_);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
-            msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
+            {
+                sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
+                // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
+                bfs::path relativePath = bal::replace_first_copy(sourcePaths_.back().string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
+            }
+            break;
+
+        case Reader_Bruker_Format_U2:
+            {
+                sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
+                // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
+                bfs::path relativePath = bal::replace_first_copy(sourcePaths_.back().string(), rootpath_.branch_path().string() + "/", "");
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
+            }
             break;
     }
 }
