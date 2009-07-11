@@ -140,8 +140,10 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
 
     // TODO: read instrument "family" from (first) source
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
-    //if (!msd.instrumentConfigurationPtrs.empty())
-    //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
+    msd.instrumentConfigurationPtrs.back()->set(MS_Bruker_Daltonics_instrument_model);
+    if (!msd.instrumentConfigurationPtrs.empty())
+        msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = p.leaf();
     msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());
