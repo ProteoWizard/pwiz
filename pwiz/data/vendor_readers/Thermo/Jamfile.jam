@@ -21,6 +21,17 @@
 # 
 
 
+# Thermo support status:
+# - DLLs are COM and thus MSVC only
+# - cannot redistribute DLLs, but we can compile without them:
+#   * if MSVC:
+#       * if DLLs are present: PWIZ_READER_THERMO is defined for all dependents
+#       * else:
+#           * PWIZ_READER_THERMO is not defined for Reader_Thermo_Test
+#           * PWIZ_READER_THERMO is defined for all other dependents
+#   * else: PWIZ_READER_THERMO is never defined
+
+
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
@@ -37,6 +48,18 @@ path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
 SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
 
 
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_thermo
+                  <define>PWIZ_READER_THERMO ;
+    }
+    return $(result) ;
+}
+
+
 lib pwiz_reader_thermo
     : # sources
         Reader_Thermo.cpp
@@ -44,21 +67,29 @@ lib pwiz_reader_thermo
         SpectrumList_Thermo.cpp
         ChromatogramList_Thermo.cpp
     : # requirements
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<define>PWIZ_READER_THERMO
+        <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<define>PWIZ_READER_THERMO
+        <conditional>@vendor-api-requirements
     ;
 
 
-#
-# unit tests (ordered by dependency)
-#
-
+rule test-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <source>Reader_Thermo.cpp ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
+        if [ path.exists $(API_PATH)/xdk/MSFileReader.XRawfile.dll ]
+        {
+            result += <define>PWIZ_READER_THERMO ;
+        }
+    }
+    return $(result) ;
+}
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
@@ -67,7 +98,8 @@ run Reader_Thermo_Test.cpp
         \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
-        <library>pwiz_reader_thermo
+        <conditional>@test-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # target name
         Reader_Thermo_Test 
     : # default-build
