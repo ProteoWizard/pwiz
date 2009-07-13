@@ -117,7 +117,6 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         sourceFile->set(MS_no_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
-    msd.id = p.leaf();
 
     SoftwarePtr softwareMassLynx(new Software);
     softwareMassLynx->id = "MassLynx";
@@ -139,10 +138,13 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     msd.dataProcessingPtrs.push_back(dpPwiz);
 
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
-    //if (!msd.instrumentConfigurationPtrs.empty())
-    //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
+    msd.instrumentConfigurationPtrs.back()->set(MS_Waters_instrument_model);
+    if (!msd.instrumentConfigurationPtrs.empty())
+        msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(rawpath);
+    msd.id = p.leaf();
+    msd.run.id = p.leaf();
     //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
 }
 
