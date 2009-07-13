@@ -92,16 +92,31 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
 
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(wiffpath);
-    sourceFile->id = "WIFF1";
+    sourceFile->id = "WIFF";
     sourceFile->name = p.leaf();
     string location = bfs::complete(p.branch_path()).string();
     if (location.empty()) location = ".";
-    sourceFile->location = string("file:///") + location;
+    sourceFile->location = "file://" + location;
     sourceFile->set(MS_WIFF_nativeID_format);
     sourceFile->set(MS_ABI_WIFF_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
-    msd.id = sampleName.empty() ? wiffpath : sampleName;
+    // add a SourceFile for the .scan file if it exists
+    bfs::path wiffscan = wiffpath + ".scan";
+    if (bfs::exists(wiffscan))
+    {
+        SourceFilePtr sourceFile(new SourceFile);
+        sourceFile->id = "WIFFSCAN";
+        sourceFile->name = wiffscan.leaf();
+        string location = bfs::complete(wiffscan.branch_path()).string();
+        if (location.empty()) location = ".";
+        sourceFile->location = "file://" + location;
+        sourceFile->set(MS_WIFF_nativeID_format);
+        sourceFile->set(MS_ABI_WIFF_file);
+        msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+    }
+
+    msd.id = sampleName.empty() ? p.leaf() : sampleName;
 
     SoftwarePtr acquisitionSoftware(new Software);
     acquisitionSoftware->id = "Analyst";
@@ -133,7 +148,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
-    msd.run.id = sampleName.empty() ? wiffpath : boost::to_lower_copy(sampleName);
+    msd.run.id = sampleName.empty() ? p.leaf() : boost::to_lower_copy(sampleName);
     msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
 }
 
