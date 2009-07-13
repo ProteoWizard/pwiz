@@ -60,6 +60,7 @@ unit-test TransientGeneratorTest : TransientGeneratorTest.cpp pwiz_aux_sfcap_tra
 #exe maketrans : maketrans.cpp ; # broken
 exe transgen : transgen.cpp pwiz_aux_sfcap_transient_generator /ext/boost//program_options ;
 
+explicit pwiz_aux_sfcap_transient pwiz_aux_sfcap_transient_generator TransientDataTest TransientGeneratorTest transgen ;
 
 install bin : transgen : <location>bin ;
 explicit bin ;
