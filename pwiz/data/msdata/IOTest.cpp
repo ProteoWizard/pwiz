@@ -835,9 +835,11 @@ void testRun()
 
     // write 'a' out to a stream
 
+    MSData dummy;
+
     ostringstream oss;
     XMLWriter writer(oss);
-    IO::write(writer, a, MSData());
+    IO::write(writer, a, dummy);
     if (os_) *os_ << oss.str() << endl;
 
     // read 'b' in from stream, ignoring SpectrumList (default)
