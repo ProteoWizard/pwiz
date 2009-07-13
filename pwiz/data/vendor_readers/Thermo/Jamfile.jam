@@ -81,7 +81,6 @@ rule test-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <source>Reader_Thermo.cpp ;
         result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
         if [ path.exists $(API_PATH)/xdk/MSFileReader.XRawfile.dll ]
         {
@@ -98,6 +97,7 @@ run Reader_Thermo_Test.cpp
         \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <source>Reader_Thermo.cpp
         <conditional>@test-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # target name

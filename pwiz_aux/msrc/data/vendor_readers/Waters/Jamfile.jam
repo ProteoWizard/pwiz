@@ -107,6 +107,7 @@ run Reader_Waters_Test.cpp
         \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
+        <source>Reader_Waters.cpp
         <conditional>@test-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # target name
