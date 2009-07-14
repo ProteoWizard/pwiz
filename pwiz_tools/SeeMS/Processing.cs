@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 

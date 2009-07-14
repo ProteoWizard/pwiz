@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
 using DigitalRune.Windows.Docking;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using MSGraph;
@@ -377,7 +378,7 @@ namespace seems
 			try
 			{
 				SpectrumSource source = managedDataSource.Source;
-				MSDataFile msDataFile = source.MSDataFile;
+				MSData msDataFile = source.MSDataFile;
 				ChromatogramListForm chromatogramListForm = managedDataSource.ChromatogramListForm;
 				SpectrumListForm spectrumListForm = managedDataSource.SpectrumListForm;
 
@@ -455,7 +456,7 @@ namespace seems
 
                 // get spectrum type from fileContent if possible, otherwise from first spectrum
 				CVParam spectrumType = msDataFile.fileDescription.fileContent.cvParamChild( CVID.MS_spectrum_type );
-				if( spectrumType.cvid == CVID.CVID_Unknown && !sl.empty() )
+				if( spectrumType.cvid == CVID.CVID_Unknown && sl.size() > 0 )
 					spectrumType = sl.spectrum( 0 ).cvParamChild( CVID.MS_spectrum_type );
 
 				if( cl != null )
@@ -535,9 +536,9 @@ namespace seems
 
 			} catch( Exception ex )
 			{
-				string message = "SeeMS encountered an error reading metadata from \"" + managedDataSource.Source.CurrentFilepath + "\" (" + ex.Message + ")";
+                string message = "SeeMS encountered an error reading metadata from \"" + managedDataSource.Source.CurrentFilepath + "\" (" + ex.ToString() + ")";
 				if( ex.InnerException != null )
-					message += "\n\nAdditional information: " + ex.InnerException.Message;
+                    message += "\n\nAdditional information: " + ex.InnerException.ToString();
 				MessageBox.Show( message,
 								"Error reading source metadata",
 								MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
@@ -1126,7 +1127,7 @@ namespace seems
             string tmp = Path.GetTempFileName();
             System.Threading.ParameterizedThreadStart threadStart = new System.Threading.ParameterizedThreadStart( startWritePreviewMzML );
             System.Threading.Thread writeThread = new System.Threading.Thread( threadStart );
-            writeThread.Start( new KeyValuePair<string, MSDataFile>( tmp, currentGraphForm.PaneList[0][0].Source.Source.MSDataFile ));
+            writeThread.Start( new KeyValuePair<string, MSData>( tmp, currentGraphForm.PaneList[0][0].Source.Source.MSDataFile ));
             writeThread.Join( 1000 );
             while( writeThread.IsAlive )
             {

@@ -13,7 +13,7 @@
     </StartupObject>
     <ApplicationIcon>Misc\SpectrumIcon.ico</ApplicationIcon>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
     <SignManifests>false</SignManifests>
     <FileUpgradeFlags>
@@ -458,6 +458,16 @@
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\..\build\msvc-release\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\..\build\msvc-release\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

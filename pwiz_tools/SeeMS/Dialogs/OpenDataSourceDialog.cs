@@ -7,13 +7,65 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Xml;
+using System.Threading;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
+using MSGraph;
 
 namespace seems
 {
     public partial class OpenDataSourceDialog : Form
     {
         private ListViewColumnSorter listViewColumnSorter;
+        private BackgroundWorker backgroundSourceLoader;
+        private MSGraphControl ticGraphControl;
+
+        private class BackgroundSourceLoaderArgs
+        {
+            public BackgroundSourceLoaderArgs()
+            {
+                sourceDirectories = new List<DirectoryInfo>();
+                sourceFiles = new List<FileInfo>();
+                getDetails = false;
+            }
+
+            public SourceInfo[] sourceInfoList;
+
+            /// <summary>
+            /// Lists paths to Waters, Bruker, etc. source directories
+            /// </summary>
+            public List<DirectoryInfo> SourceDirectories
+            {
+                get { return sourceDirectories; }
+                set { sourceDirectories = value; }
+            }
+            private List<DirectoryInfo> sourceDirectories;
+
+            /// <summary>
+            /// Lists paths to mzML, mzXML, Thermo, etc. source files
+            /// </summary>
+            public List<FileInfo> SourceFiles
+            {
+                get { return sourceFiles; }
+                set { sourceFiles = value; }
+            }
+            private List<FileInfo> sourceFiles;
+
+            /// <summary>
+            /// The total number of source directories and files.
+            /// </summary>
+            public int TotalSourceCount { get { return sourceDirectories.Count + sourceFiles.Count; } }
+
+            /// <summary>
+            /// If true, will open files to get some file-level metadata
+            /// </summary>
+            public bool GetDetails
+            {
+                get { return getDetails; }
+                set { getDetails = value; }
+            }
+            private bool getDetails;
+        }
 
         public OpenDataSourceDialog()
         {
@@ -32,10 +84,12 @@ namespace seems
 				"mzXML",
 				"Thermo RAW",
                 "Waters RAW",
-				//"Analyst WIFF",
-				//"Bruker YEP",
+				"ABSciex WIFF",
+				//"Bruker/Agilent YEP",
                 //"Bruker BAF",
                 //"Bruker FID",
+                "Bruker Analysis",
+                "Agilent MassHunter",
 				"Mascot Generic",
                 "Bruker Data Exchange",
 				//"Sequest DTA"
@@ -68,6 +122,110 @@ namespace seems
             lookInComboBox.SelectedIndex = 1;
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
+
+            ticGraphControl = new MSGraphControl()
+            {
+                Dock = DockStyle.Fill,
+            };
+            ticGraphControl.GraphPane.Legend.IsVisible = false;
+            ticGraphControl.Visible = false;
+            splitContainer1.Panel2.Controls.Add( ticGraphControl );
+            splitContainer1.Panel2Collapsed = false;
+        }
+
+        void initializeBackgroundSourceLoader()
+        {
+            if( backgroundSourceLoader != null )
+                backgroundSourceLoader.CancelAsync();
+
+            backgroundSourceLoader = new BackgroundWorker();
+            backgroundSourceLoader.WorkerReportsProgress = true;
+            backgroundSourceLoader.WorkerSupportsCancellation = true;
+            backgroundSourceLoader.DoWork += new DoWorkEventHandler( backgroundSourceLoader_DoWork );
+            backgroundSourceLoader.ProgressChanged += new ProgressChangedEventHandler( backgroundSourceLoader_ProgressChanged );
+        }
+
+        void backgroundSourceLoader_ProgressChanged( object sender, ProgressChangedEventArgs arg )
+        {
+            if( ( sender as BackgroundWorker ).CancellationPending )
+                return;
+
+            SourceInfo[] sourceInfoList = arg.UserState as SourceInfo[];
+            if( sourceInfoList != null )
+            {
+                foreach( SourceInfo sourceInfo in sourceInfoList )
+                {
+                    // mandatory first pass will be without details for a quick listing;
+                    // optional second pass will have details of already listed items
+
+                    if( !sourceInfo.hasDetails ) // first pass
+                    {
+                        if( sourceInfo.type == "File Folder" ||
+                            sourceTypeComboBox.SelectedIndex == 0 ||
+                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type )
+                        {
+                            // subitems: Name, Type, Spectra, Size, Date Modified
+                            ListViewItem item;
+                            if( sourceInfo.type == "File Folder" )
+                                item = new ListViewItem( sourceInfo.ToArray(), 0 );
+                            else
+                                item = new ListViewItem( sourceInfo.ToArray(), 2 );
+                            item.SubItems[3].Tag = (object) sourceInfo.size;
+                            item.SubItems[4].Tag = (object) sourceInfo.dateModified;
+                            item.Name = sourceInfo.name;
+                            listView.Items.Add( item );
+                        }
+                    } else // second pass
+                    {
+                        ListViewItem item = listView.Items[sourceInfo.name];
+                        if( item == null ) // a virtual document from a multi-run source
+                        {
+                            if( sourceInfo.type == "File Folder" )
+                                item = new ListViewItem( sourceInfo.ToArray(), 0 );
+                            else
+                                item = new ListViewItem( sourceInfo.ToArray(), 2 );
+                            item.SubItems[3].Tag = (object) sourceInfo.size;
+                            item.SubItems[4].Tag = (object) sourceInfo.dateModified;
+                            item.Name = sourceInfo.name;
+                            listView.Items.Add( item );
+                        }
+
+                        if( sourceInfo.type != "File Folder" )
+                        {
+                            item.SubItems[2].Text = sourceInfo.spectra.ToString();
+                            item.SubItems[3].Tag = (object) sourceInfo.size;
+                            item.SubItems[4].Tag = (object) sourceInfo.dateModified;
+                            item.SubItems[5].Text = sourceInfo.ionSource;
+                            item.SubItems[6].Text = sourceInfo.analyzer;
+                            item.SubItems[7].Text = sourceInfo.detector;
+                            item.SubItems[8].Text = sourceInfo.contentType;
+                        }
+                    }
+                }
+            }
+        }
+
+        void backgroundSourceLoader_DoWork( object sender, DoWorkEventArgs arg )
+        {
+            var worker = sender as BackgroundWorker;
+            var workerArgs = arg.Argument as BackgroundSourceLoaderArgs;
+
+            for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceDirectories[i], false ) );
+
+            for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceFiles[i], false ) );
+
+            if( workerArgs.GetDetails )
+            {
+                for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                    worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceDirectories[i], true ) );
+
+                for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                    worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceFiles[i], true ) );
+            }
+
+            arg.Cancel = worker.CancellationPending;
         }
 
         public new DialogResult ShowDialog()
@@ -78,6 +236,7 @@ namespace seems
 
         private Stack<string> previousDirectories = new Stack<string>();
 
+        #region Properties
         private string currentDirectory;
         private string CurrentDirectory
         {
@@ -110,14 +269,17 @@ namespace seems
         {
             get { return dataSources; }
         }
+        #endregion
 
         private class SourceInfo
         {
             public string name;
             public string type;
-            public int spectra;
             public UInt64 size;
             public DateTime dateModified;
+
+            public bool hasDetails;
+            public int spectra;
             public string ionSource;
             public string analyzer;
             public string detector;
@@ -125,6 +287,7 @@ namespace seems
 
             public void populateFromMSData( MSData msInfo )
             {
+                hasDetails = true;
                 spectra = msInfo.run.spectrumList.size();
                 ionSource = analyzer = detector = "";
                 foreach( InstrumentConfiguration ic in msInfo.instrumentConfigurationList )
@@ -214,11 +377,21 @@ namespace seems
             }
         }
 
+        private string getSourceType( string path )
+        {
+            if( File.Exists( path ) )
+                return getSourceType( new FileInfo( path ) );
+            else if( Directory.Exists( path ) )
+                return getSourceType( new DirectoryInfo( path ) );
+            else
+                throw new ArgumentException( "path is not a file or a directory" );
+        }
+
         private string getSourceType( DirectoryInfo dirInfo )
         {
             try
             {
-                string type = MSDataFile.identify( dirInfo.FullName );
+                string type = ReaderList.FullReaderList.identify( dirInfo.FullName );
                 if( type == String.Empty )
                     return "File Folder";
                 return type;
@@ -232,140 +405,131 @@ namespace seems
         {
             try
             {
-                return MSDataFile.identify( fileInfo.FullName );
+                return ReaderList.FullReaderList.identify( fileInfo.FullName );
             } catch
             {
                 return "";
             }
         }
 
-        private SourceInfo getSourceInfo( DirectoryInfo dirInfo )
+        private SourceInfo[] getSourceInfo( DirectoryInfo dirInfo, bool getDetails )
         {
-            SourceInfo sourceInfo = new SourceInfo();
-            sourceInfo.type = getSourceType( dirInfo );
-            sourceInfo.name = dirInfo.Name;
-            sourceInfo.dateModified = dirInfo.LastWriteTime;
+            var sourceInfoList = new List<SourceInfo>();
+            sourceInfoList.Add( new SourceInfo() );
+            sourceInfoList[0].type = getSourceType( dirInfo );
+            sourceInfoList[0].name = dirInfo.Name;
+            sourceInfoList[0].dateModified = dirInfo.LastWriteTime;
+            sourceInfoList[0].hasDetails = getDetails;
 
-            if( listView.View != View.Details ||
-                ( sourceTypeComboBox.SelectedIndex > 0 &&
-                  sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type ) )
-                return sourceInfo;
+            if( !getDetails )
+                return sourceInfoList.ToArray();
 
-            if( sourceInfo.type == "File Folder" )
+            if( sourceInfoList[0].type == "File Folder" )
             {
-                return sourceInfo;
-            } else if( sourceInfo.type != String.Empty )
+                return sourceInfoList.ToArray();
+            } else if( sourceInfoList[0].type != String.Empty )
             {
                 try
                 {
-                    //MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
-                    //sourceInfo.populateFromMSData( msInfo );
-                    
+                    MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
+                    sourceInfoList[0].populateFromMSData( msInfo );
+
+                } catch( ThreadAbortException )
+                {
+                    return null;
                 } catch
                 {
-                    sourceInfo.spectra = 0;
-                    sourceInfo.type = "Invalid " + sourceInfo.type;
+                    sourceInfoList[0].spectra = 0;
+                    sourceInfoList[0].type = "Invalid " + sourceInfoList[0].type;
                 }
 
-                sourceInfo.size = 0;
-                foreach( FileInfo fileInfo in dirInfo.GetFiles("*", SearchOption.AllDirectories) )
-                    sourceInfo.size += (UInt64) fileInfo.Length;
-                return sourceInfo;
+                sourceInfoList[0].size = 0;
+                sourceInfoList[0].dateModified = DateTime.MinValue;
+                foreach( FileInfo fileInfo in dirInfo.GetFiles( "*", SearchOption.AllDirectories ) )
+                {
+                    sourceInfoList[0].size += (UInt64) fileInfo.Length;
+                    if( fileInfo.LastWriteTime > sourceInfoList[0].dateModified )
+                        sourceInfoList[0].dateModified = fileInfo.LastWriteTime;
+                }
+                return sourceInfoList.ToArray();
             }
             return null;
         }
 
-        private SourceInfo getSourceInfo( FileInfo fileInfo )
+        private SourceInfo[] getSourceInfo( FileInfo fileInfo, bool getDetails )
         {
-            SourceInfo sourceInfo = new SourceInfo();
-            sourceInfo.type = getSourceType( fileInfo );
-            sourceInfo.name = fileInfo.Name;
-            if( sourceInfo.type != String.Empty )
+            var sourceInfoList = new List<SourceInfo>();
+            sourceInfoList.Add( new SourceInfo() );
+            sourceInfoList[0].type = getSourceType( fileInfo );
+            sourceInfoList[0].name = fileInfo.Name;
+            sourceInfoList[0].hasDetails = getDetails;
+            sourceInfoList[0].size = (UInt64) fileInfo.Length;
+            sourceInfoList[0].dateModified = fileInfo.LastWriteTime;
+            if( sourceInfoList[0].type != String.Empty )
             {
-                if( listView.View != View.Details ||
-                    ( sourceTypeComboBox.SelectedIndex > 0 &&
-                      sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type ) )
-                    return sourceInfo;
+                if( !getDetails )
+                    return sourceInfoList.ToArray();
 
                 try
                 {
-                    MSDataFile msInfo = new MSDataFile( fileInfo.FullName );
-                    sourceInfo.populateFromMSData( msInfo );
-                } catch
-                {
-                    sourceInfo.spectra = 0;
-                    sourceInfo.type = "Invalid " + sourceInfo.type;
-                }
+                    ReaderList readerList = ReaderList.FullReaderList;
 
-                sourceInfo.size = (UInt64) fileInfo.Length;
-                sourceInfo.dateModified = fileInfo.LastWriteTime;
-                return sourceInfo;
-            }
-            return null;
-        }
+                    MSDataList msInfo = new MSDataList();
+                    readerList.read( fileInfo.FullName, msInfo );
 
-        private bool abortPopulateList;
-        private void populateListViewFromDirectory( string directory )
-        {
-            abortPopulateList = false;
-            listView.Items.Clear();
-            DirectoryInfo dirInfo = new DirectoryInfo( directory );
-
-            // subitems: Name, Type, Spectra, Size, Date Modified
-            foreach( DirectoryInfo subdirInfo in dirInfo.GetDirectories() )
-            {
-                try
-                {
-                    SourceInfo sourceInfo = getSourceInfo( subdirInfo );
-                    if( sourceInfo != null )
+                    foreach( MSData msData in msInfo )
                     {
-                        if( sourceInfo.type == "File Folder" ||
-                            sourceTypeComboBox.SelectedIndex == 0 ||
-                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type )
-                        {
-                            ListViewItem item;
-                            if( sourceInfo.type == "File Folder" )
-                                item = new ListViewItem( sourceInfo.ToArray(), 0 );
-                            else
-                                item = new ListViewItem( sourceInfo.ToArray(), 2 );
-                            item.SubItems[3].Tag = (object) sourceInfo.size;
-                            item.SubItems[4].Tag = (object) sourceInfo.dateModified;
-                            listView.Items.Add( item );
-                        }
-                        Application.DoEvents();
-                        if( abortPopulateList )
-                        {
-                            //MessageBox.Show( "abort" );
-                            abortPopulateList = false;
-                            break;
-                        }
+                        SourceInfo sourceInfo = new SourceInfo();
+                        sourceInfo.type = sourceInfoList[0].type;
+                        sourceInfo.name = sourceInfoList[0].name;
+                        sourceInfo.populateFromMSData( msData );
+                        sourceInfoList.Add( sourceInfo );
                     }
                 } catch
                 {
-                    // skip errors
+                    sourceInfoList[0].spectra = 0;
+                    sourceInfoList[0].type = "Invalid " + sourceInfoList[0].type;
+                }
+
+                foreach( SourceInfo sourceInfo in sourceInfoList )
+                {
+                    sourceInfo.size = (UInt64) fileInfo.Length;
+                    sourceInfo.dateModified = fileInfo.LastWriteTime;
+                }
+                return sourceInfoList.ToArray();
+            }
+            return null;
+        }
+
+
+        private void populateListViewFromDirectory( string directory )
+        {
+            initializeBackgroundSourceLoader();
+            listView.Items.Clear();
+            DirectoryInfo dirInfo = new DirectoryInfo( directory );
+
+            BackgroundSourceLoaderArgs args = new BackgroundSourceLoaderArgs();
+            args.GetDetails = listView.View == View.Details;
+
+            foreach( DirectoryInfo subdirInfo in dirInfo.GetDirectories() )
+            {
+                if( sourceTypeComboBox.SelectedIndex == 0 ||
+                    sourceTypeComboBox.SelectedItem.ToString() == getSourceType( subdirInfo ) )
+                {
+                    args.SourceDirectories.Add( subdirInfo );
                 }
             }
 
             foreach( FileInfo fileInfo in dirInfo.GetFiles() )
             {
-                SourceInfo sourceInfo = getSourceInfo( fileInfo );
-                if( sourceInfo != null &&
-                    ( sourceTypeComboBox.SelectedIndex == 0 ||
-                      sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type ) )
+                if( sourceTypeComboBox.SelectedIndex == 0 ||
+                    sourceTypeComboBox.SelectedItem.ToString() == getSourceType( fileInfo ) )
                 {
-                    ListViewItem item = new ListViewItem( sourceInfo.ToArray(), 2 );
-                    item.SubItems[3].Tag = (object) sourceInfo.size;
-                    item.SubItems[4].Tag = (object) sourceInfo.dateModified;
-                    listView.Items.Add( item );
-                }
-                Application.DoEvents();
-                if( abortPopulateList )
-                {
-                    //MessageBox.Show( "abort" );
-                    abortPopulateList = false;
-                    break;
+                    args.SourceFiles.Add( fileInfo );
                 }
             }
+
+            backgroundSourceLoader.RunWorkerAsync( args );
         }
 
         private void populateComboBoxFromDirectory( string directory )
@@ -483,21 +647,23 @@ namespace seems
                     }
                     break;
                 case Keys.F5:
-                    abortPopulateList = true;
                     populateListViewFromDirectory( currentDirectory ); // refresh
                     break;
             }
         }
 
+        #region ListView handlers
         private void listView_ItemActivate( object sender, EventArgs e )
         {
+            if( listView.SelectedItems.Count == 0 )
+                return;
+
             ListViewItem item = listView.SelectedItems[0];
             if( item.SubItems[1].Text == "File Folder" )
             {
                 if( currentDirectory != null )
                     previousDirectories.Push( currentDirectory ); 
                 CurrentDirectory = Path.Combine( CurrentDirectory, item.SubItems[0].Text );
-                abortPopulateList = true;
             }  else
             {
                 dataSources = new string[] { Path.Combine( CurrentDirectory, item.SubItems[0].Text ) };
@@ -527,6 +693,76 @@ namespace seems
             listView.Sort();
         }
 
+        private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
+        {
+            if( listView.SelectedItems.Count > 1 )
+            {
+                List<string> dataSourceList = new List<string>();
+                foreach( ListViewItem item in listView.SelectedItems )
+                {
+                    if( item.SubItems[1].Text != "File Folder" )
+                        dataSourceList.Add( String.Format( "\"{0}\"", item.SubItems[0].Text ) );
+                }
+                sourcePathTextBox.Text = String.Join( " ", dataSourceList.ToArray() );
+
+                ticGraphControl.GraphPane.GraphObjList.Clear();
+                ticGraphControl.Visible = false;
+
+            } else if( listView.SelectedItems.Count > 0 )
+            {
+                sourcePathTextBox.Text = listView.SelectedItems[0].SubItems[0].Text;
+
+                ticGraphControl.GraphPane.GraphObjList.Clear();
+
+                string sourcePath = Path.Combine( CurrentDirectory, sourcePathTextBox.Text );
+                string sourceType = getSourceType( sourcePath );
+                if( !String.IsNullOrEmpty( sourceType ) &&
+                    sourceType != "File Folder" )
+                {
+                    MSDataFile msData = new MSDataFile( sourcePath );
+                    ChromatogramList cl = msData.run.chromatogramList;
+                    if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
+                    {
+                        ticGraphControl.Visible = true;
+                        pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
+                        Map<double, double> sortedFullPointList = new Map<double, double>();
+                        IList<double> timeList = tic.binaryDataArrays[0].data;
+                        IList<double> intensityList = tic.binaryDataArrays[1].data;
+                        int arrayLength = timeList.Count;
+                        for( int i = 0; i < arrayLength; ++i )
+                            sortedFullPointList[timeList[i]] = intensityList[i];
+                        ZedGraph.PointPairList points = new ZedGraph.PointPairList(
+                            new List<double>( sortedFullPointList.Keys ).ToArray(),
+                            new List<double>( sortedFullPointList.Values ).ToArray() );
+                        ZedGraph.LineItem item = ticGraphControl.GraphPane.AddCurve( "TIC", points, Color.Black, ZedGraph.SymbolType.None );
+                        item.Line.IsAntiAlias = true;
+                        ticGraphControl.AxisChange();
+                        ticGraphControl.Refresh();
+                    } else
+                        ticGraphControl.Visible = false;
+                } else
+                    ticGraphControl.Visible = false;
+            } else
+                sourcePathTextBox.Text = "";
+        }
+
+        private void listView_KeyDown( object sender, KeyEventArgs e )
+        {
+            switch( e.KeyCode )
+            {
+                case Keys.F5:
+                    populateListViewFromDirectory( currentDirectory ); // refresh
+                    break;
+            }
+        }
+        #endregion
+
+        private void sourceTypeComboBox_SelectionChangeCommitted( object sender, EventArgs e )
+        {
+            populateListViewFromDirectory( currentDirectory );
+        }
+
+        #region Button click handlers
         private void openButton_Click( object sender, EventArgs e )
         {
             if( listView.SelectedItems.Count > 0 )
@@ -538,7 +774,7 @@ namespace seems
                         dataSourceList.Add( Path.Combine( CurrentDirectory, item.SubItems[0].Text ) );
                 }
                 dataSources = dataSourceList.ToArray();
-                abortPopulateList = true;
+                initializeBackgroundSourceLoader();
                 DialogResult = DialogResult.OK;
                 Close();
                 Application.DoEvents();
@@ -548,7 +784,7 @@ namespace seems
 
         private void cancelButton_Click( object sender, EventArgs e )
         {
-            abortPopulateList = true;
+            initializeBackgroundSourceLoader();
             DialogResult = DialogResult.Cancel;
             Close();
             Application.DoEvents();
@@ -619,44 +855,9 @@ namespace seems
                 CurrentDirectory = previousDirectories.Pop();
         }
 
-        private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
-        {
-            if( listView.SelectedItems.Count > 1 )
-            {
-                List<string> dataSourceList = new List<string>();
-                foreach( ListViewItem item in listView.SelectedItems )
-                {
-                    if( item.SubItems[1].Text != "File Folder" )
-                        dataSourceList.Add( String.Format( "\"{0}\"", item.SubItems[0].Text ) );
-                }
-                sourcePathTextBox.Text = String.Join( " ", dataSourceList.ToArray() );
-            } else if( listView.SelectedItems.Count > 0 )
-            {
-                sourcePathTextBox.Text = listView.SelectedItems[0].SubItems[0].Text;
-            } else
-                sourcePathTextBox.Text = "";
-        }
-
-        private void sourceTypeComboBox_SelectionChangeCommitted( object sender, EventArgs e )
-        {
-            populateListViewFromDirectory( currentDirectory );
-            abortPopulateList = true;
-        }
-
-        private void listView_KeyDown( object sender, KeyEventArgs e )
-        {
-            switch( e.KeyCode )
-            {
-                case Keys.F5:
-                    populateListViewFromDirectory( currentDirectory ); // refresh
-                    abortPopulateList = true;
-                    break;
-            }
-        }
-
         private void recentDocumentsButton_Click( object sender, EventArgs e )
         {
-            CurrentDirectory = Environment.GetFolderPath( Environment.SpecialFolder.Recent );
+
         }
 
         private void desktopButton_Click( object sender, EventArgs e )
@@ -678,7 +879,10 @@ namespace seems
         {
 
         }
+        #endregion
 
+
+        #region Look-In ComboBox handlers
         System.Collections.Generic.Map<string, bool> driveReadiness = new System.Collections.Generic.Map<string, bool>();
         private void lookInComboBox_DropDown( object sender, EventArgs e )
         {
@@ -754,5 +958,6 @@ namespace seems
                     break;
             }
         }
+        #endregion
     }
 }

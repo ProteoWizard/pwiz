@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.ComponentModel;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 
 using ChromatogramData = System.Collections.Generic.Map<double, double>;
@@ -68,13 +69,13 @@ namespace seems
 
 	public class SpectrumSource
 	{
-		private MSDataFile msDataFile;
+		private MSData msDataFile;
 		private string sourceFilepath;
 		private List<Chromatogram> chromatograms = new List<Chromatogram>();
 		private List<MassSpectrum> spectra = new List<MassSpectrum>();
 
 		public string Name { get { return Path.GetFileNameWithoutExtension( sourceFilepath ); } }
-		public MSDataFile MSDataFile { get { return msDataFile; } }
+		public MSData MSDataFile { get { return msDataFile; } }
 		public string CurrentFilepath { get { return sourceFilepath; } }
 
         public List<Chromatogram> Chromatograms { get { return chromatograms; } }
@@ -112,7 +113,10 @@ namespace seems
 
 		public SpectrumSource( string filepath )
 		{
-			msDataFile = new MSDataFile(filepath);
+            MSDataList msdList = new MSDataList();
+            ReaderList.FullReaderList.read( filepath, msdList );
+            msDataFile = msdList[0];
+			//msDataFile = new MSDataFile(filepath);
 			sourceFilepath = filepath;
 
 			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );

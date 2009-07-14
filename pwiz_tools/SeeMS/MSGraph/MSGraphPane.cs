@@ -194,7 +194,7 @@ namespace MSGraph
                             if (points2 != null)
                             {
                                 int nearestMaxIndex = points2.GetNearestMaxIndexToBin(i);
-                                if (nearestMaxIndex < 0)
+                                if (nearestMaxIndex < 0 || nearestMaxIndex >= points2.FullCount)
                                     continue;
                                 RectangleF r = new RectangleF((float)pt.X - pointLabelWidth / 2,
                                                                (float)labelY - baseLabelHeight,

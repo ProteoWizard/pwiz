@@ -119,9 +119,9 @@ namespace seems
 			newSeems.Start();
 			Process.GetCurrentProcess().Kill();*/
 
-			string message = e.Exception.Message;
+			string message = e.Exception.ToString();
 			if( e.Exception.InnerException != null )
-				message += "\n\nAdditional information: " + e.Exception.InnerException.Message;
+                message += "\n\nAdditional information: " + e.Exception.InnerException.ToString();
 			MessageBox.Show( message,
 							"Unhandled Exception",
 							MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,

@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using seems.Misc;
@@ -83,7 +84,7 @@ namespace seems
 
             gridView.Columns["SpectrumType"].ToolTipText = new CVTermInfo(CVID.MS_spectrum_type).def;
             gridView.Columns["MsLevel"].ToolTipText = new CVTermInfo( CVID.MS_ms_level ).def;
-            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_time ).def;
+            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_start_time ).def;
             gridView.Columns["BasePeakMz"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_m_z ).def;
             gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).def;
             gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).def;
@@ -103,8 +104,15 @@ namespace seems
 
             Spectrum s = spectrum.Element;
             DataProcessing dp = spectrum.DataProcessing;
-            Scan scan = s.scanList.scans[0];
-            InstrumentConfiguration ic = scan.instrumentConfiguration;
+            Scan scan = null;
+            InstrumentConfiguration ic = null;
+
+            if(s.scanList.scans.Count > 0)
+            {
+                scan = s.scanList.scans[0];
+                ic = scan.instrumentConfiguration;
+            }
+
             if( dp == null )
                 dp = s.dataProcessing;
 
@@ -113,7 +121,7 @@ namespace seems
             param = s.cvParam( CVID.MS_ms_level );
             row.MsLevel = !param.empty() ? (int) param.value : 0;
 
-            param = scan.cvParam( CVID.MS_scan_time );
+            param = scan != null ? scan.cvParam( CVID.MS_scan_start_time ) : new CVParam();
             row.ScanTime = !param.empty() ? (double) param.value : 0;
 
             param = s.cvParam( CVID.MS_base_peak_m_z );

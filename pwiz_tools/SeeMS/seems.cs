@@ -11,6 +11,7 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Xml;
 using System.Text.RegularExpressions;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 using JWC;
 using Microsoft.Win32;

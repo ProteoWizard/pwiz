@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Data;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 
@@ -323,24 +324,6 @@ namespace seems
         public override SpectrumList ProcessList( SpectrumList list )
         {
             return new SpectrumList_Smoother( list, null, new int[] { 1, 2, 3, 4, 5, 6 } );
-        }
-    }
-
-    public class SpectrumList_NativeCentroider_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
-    {
-        public SpectrumList_NativeCentroider_ListViewItem()
-            : base("Native Centroider")
-        {
-        }
-
-        public override int ImageIndex { get { return 0; } }
-
-        public override CVID CVID { get { return CVID.MS_peak_picking; } }
-
-        public override SpectrumList ProcessList( SpectrumList list )
-        {
-            return new SpectrumList_NativeCentroider( list, new int[] { 1, 2, 3, 4, 5, 6 } );
         }
     }
 

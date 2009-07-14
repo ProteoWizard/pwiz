@@ -412,7 +412,9 @@ namespace seems
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size( 400, 150 );
             this.Name = "seemsForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SeeMS";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.ResizeBegin += new System.EventHandler( this.seems_ResizeBegin );
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler( this.seems_FormClosing );
             this.Resize += new System.EventHandler( this.seems_Resize );
