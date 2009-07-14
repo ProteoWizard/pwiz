@@ -97,7 +97,7 @@ struct PWIZ_API_DECL ParamContainer
     bool operator!=(const ParamContainer& that) const;
 };
 
-struct IdentifiableType
+struct PWIZ_API_DECL IdentifiableType
 {
     virtual ~IdentifiableType() {}
     
@@ -528,6 +528,8 @@ struct PWIZ_API_DECL FragmentArray
     FragmentArray& setValues(const std::string& values);
     FragmentArray& setValues(const std::vector<float>& values);
     std::string getValues() const;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<FragmentArray> FragmentArrayPtr;
@@ -545,6 +547,8 @@ struct PWIZ_API_DECL IonType
     IonType& setIndex(const std::vector<int>& value);
 
     std::string getIndex() const;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<IonType> IonTypePtr;

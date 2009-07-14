@@ -230,6 +230,28 @@ bool Modification::empty() const
 }
 
 //
+// IonType
+//
+
+bool IonType::empty() const
+{
+    return index.empty() &&
+        paramGroup.empty() &&
+        fragmentArray.empty();
+}
+
+//
+// FragmentArray
+//
+
+bool FragmentArray::empty() const
+{
+    return values.empty() &&
+        Measure_ref.empty() ;
+;
+}
+
+//
 // Filter
 //
 

@@ -80,6 +80,63 @@ void diff(const ParamContainer& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const FragmentArray& a,
+          const FragmentArray& b,
+          FragmentArray& a_b,
+          FragmentArray& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const IonType& a,
+          const IonType& b,
+          IonType& a_b,
+          IonType& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Material& a,
+          const Material& b,
+          Material& a_b,
+          Material& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Measure& a,
+          const Measure& b,
+          Measure& a_b,
+          Measure& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ModParam& a,
+          const ModParam& b,
+          ModParam& a_b,
+          ModParam& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const PeptideEvidence& a,
+          const PeptideEvidence& b,
+          PeptideEvidence& a_b,
+          PeptideEvidence& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ProteinAmbiguityGroup& a,
+          const ProteinAmbiguityGroup& b,
+          ProteinAmbiguityGroup& a_b,
+          ProteinAmbiguityGroup& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const ProteinDetectionHypothesis& a,
+          const ProteinDetectionHypothesis& b,
+          ProteinDetectionHypothesis& a_b,
+          ProteinDetectionHypothesis& b_a,
+          const DiffConfig& config);
+
+
+PWIZ_API_DECL
 void diff(const DataCollection& a,
           const DataCollection& b,
           DataCollection& a_b,
@@ -301,6 +358,27 @@ void diff(const Sample& a,
           const Sample& b,
           Sample& a_b,
           Sample& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SearchModification& a,
+          const SearchModification& b,
+          SearchModification& a_b,
+          SearchModification& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationItem& a,
+          const SpectrumIdentificationItem& b,
+          SpectrumIdentificationItem& a_b,
+          SpectrumIdentificationItem& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationResult& a,
+          const SpectrumIdentificationResult& b,
+          SpectrumIdentificationResult& a_b,
+          SpectrumIdentificationResult& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

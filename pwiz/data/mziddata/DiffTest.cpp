@@ -20,6 +20,7 @@
 //
 
 #include "Diff.hpp"
+#include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <cstring>
@@ -34,18 +35,47 @@ using boost::shared_ptr;
 
 ostream* os_ = 0;
 
+void testString()
+{
+    if (os_) *os_ << "testString()\n";
+
+    Diff<string> diff("goober", "goober");
+    unit_assert(diff.a_b.empty() && diff.b_a.empty());
+    unit_assert(!diff);
+
+    diff("goober", "goo");
+    unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+}
+
+
+void testDataCollection()
+{
+    if (os_) *os_ << "testDataCollection()\n";
+
+    
+}
+
+
 void testMzIdentML()
 {
-    cerr << "begin testMzIdentML\n";
     if (os_) *os_ << "testMzIdentML()\n";
 
     MzIdentML a, b;
+
+    examples::initializeTiny(a);
+    examples::initializeTiny(b);
+
 
     Diff<MzIdentML> diff(a, b);
     unit_assert(!diff);
 
     b.version = "version";
     a.cvs.push_back(CV());
+    b.analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware));
+    a.auditCollection.push_back(ContactPtr(new Contact()));
+    b.bibliographicReference.push_back(BibliographicReferencePtr(new BibliographicReference));
+    
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -57,12 +87,11 @@ void testMzIdentML()
 
     unit_assert(diff.a_b.cvs.size() == 1);
     unit_assert(diff.b_a.cvs.empty());
-
-    cerr << "end testMzIdentML\n";
 }
 
 void test()
 {
+    testString();
     testMzIdentML();
 }
 

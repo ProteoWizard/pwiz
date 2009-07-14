@@ -66,7 +66,7 @@ lib pwiz_data_mzid_examples
 #
 
 unit-test MzIdentMLTest : MzIdentMLTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; 
-unit-test DiffTest : DiffTest.cpp pwiz_data_mzid ; # Diff.cpp TraData.cpp cv.cpp ;
+unit-test DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; # Diff.cpp TraData.cpp cv.cpp ;
 #unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_tradata ; # References.cpp TraData.cpp cv.cpp ;
 #unit-test IOTest : IOTest.cpp pwiz_data_tradata pwiz_data_tradata_examples ; # IO.cpp TraData.cpp Diff.cpp cv.cpp References.cpp ../minimxml ../util ;
 unit-test Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;

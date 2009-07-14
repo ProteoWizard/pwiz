@@ -321,8 +321,19 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->paramGroup.set(MS_coverage);
     pdhp->paramGroup.set(MS_distinct_peptide_sequences);
     pagp->proteinDetectionHypothesis.push_back(pdhp);
-    pdl.proteinAmbiguityGroup.push_back(pagp);
     
+    pdhp = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis());
+    pdhp->id="PDH_HSP71_RAT";
+    pdhp->DBSequence_ref="DBSeq_HSP71_RAT";
+    pdhp->passThreshold="false";
+    pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT");
+    pdhp->paramGroup.set(MS_mascot_score, 40.95);
+    pdhp->paramGroup.set(MS_coverage, 2);
+    pdhp->paramGroup.set(MS_distinct_peptide_sequences, 1);
+    pdhp->paramGroup.set(MS_manual_validation);
+    pagp->proteinDetectionHypothesis.push_back(pdhp);
+    
+    pdl.proteinAmbiguityGroup.push_back(pagp);
 }
 
 PWIZ_API_DECL vector<CV> defaultCVList()

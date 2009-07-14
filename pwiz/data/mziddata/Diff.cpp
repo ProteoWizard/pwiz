@@ -327,6 +327,43 @@ void diff(const ParamContainer& a,
 
 
 PWIZ_API_DECL
+void diff(const FragmentArray& a,
+          const FragmentArray& b,
+          FragmentArray& a_b,
+          FragmentArray& b_a,
+          const DiffConfig& config)
+{
+    vector_diff(a.values, b.values, a_b.values, b_a.values);
+    diff(a.Measure_ref, b.Measure_ref, a_b.Measure_ref, b_a.Measure_ref, config);
+}
+
+
+PWIZ_API_DECL
+void diff(const Measure& a,
+          const Measure& b,
+          Measure& a_b,
+          Measure& b_a,
+          const DiffConfig& config)
+{
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+
+PWIZ_API_DECL
+void diff(const IonType& a,
+          const IonType& b,
+          IonType& a_b,
+          IonType& b_a,
+          const DiffConfig& config)
+{
+    vector_diff(a.index, b.index, a_b.index, b_a.index);
+    vector_diff_deep(a.fragmentArray, b.fragmentArray,
+         a_b.fragmentArray, b_a.fragmentArray, config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const DataCollection& a,
           const DataCollection& b,
           DataCollection& a_b,
@@ -335,6 +372,97 @@ void diff(const DataCollection& a,
 {
     diff(a.inputs, b.inputs, a_b.inputs, b_a.inputs, config);
     diff(a.analysisData, b.analysisData, a_b.analysisData, b_a.analysisData, config);
+}
+
+
+PWIZ_API_DECL
+void diff(const PeptideEvidence& a,
+          const PeptideEvidence& b,
+          PeptideEvidence& a_b,
+          PeptideEvidence& b_a,
+          const DiffConfig& config)
+{
+    diff(a.DBSequence_ref, b.DBSequence_ref, a_b.DBSequence_ref, b_a.DBSequence_ref, config);
+    diff_numeric(a.start, b.start, a_b.start, b_a.start, config);
+    diff_numeric(a.end, b.end, a_b.end, b_a.end, config);
+    diff(a.pre, b.pre, a_b.pre, b_a.pre, config);
+    diff(a.post, b.post, a_b.post, b_a.post, config);
+    diff(a.TranslationTable_ref, b.TranslationTable_ref,
+         a_b.TranslationTable_ref, b_a.TranslationTable_ref, config);
+    diff_numeric(a.frame, b.frame, a_b.frame, b_a.frame, config);
+    if(a.isDecoy != b.isDecoy)
+    {
+        a_b.isDecoy = a.isDecoy;
+        b_a.isDecoy = b.isDecoy;
+    }
+    diff_numeric(a.missedCleavages, b.missedCleavages,
+                 a_b.missedCleavages, b_a.missedCleavages, config);
+    
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationItem& a,
+          const SpectrumIdentificationItem& b,
+          SpectrumIdentificationItem& a_b,
+          SpectrumIdentificationItem& b_a,
+          const DiffConfig& config)
+{
+    diff_numeric(a.chargeState, b.chargeState, a_b.chargeState, b_a.chargeState,
+                 config);
+    
+    diff_numeric(a.experimentalMassToCharge, b.experimentalMassToCharge,
+                 a_b.experimentalMassToCharge, b_a.experimentalMassToCharge,
+                 config);
+    diff_numeric(a.calculatedMassToCharge, b.calculatedMassToCharge,
+                 a_b.calculatedMassToCharge, b_a.calculatedMassToCharge,
+                 config);
+    diff_numeric(a.calculatedPI, b.calculatedPI,
+                 a_b.calculatedPI, b_a.calculatedPI,
+                 config);
+    diff(a.Peptide_ref, b.Peptide_ref,
+                 a_b.Peptide_ref, b_a.Peptide_ref,
+                 config);
+    diff_numeric(a.rank, b.rank, a_b.rank, b_a.rank, config);
+
+    if(a.passThreshold != b.passThreshold)
+    {
+        a_b.passThreshold = a.passThreshold;
+        b_a.passThreshold = b.passThreshold;
+    }
+
+    diff(a.MassTable_ref, b.MassTable_ref,
+                 a_b.MassTable_ref, b_a.MassTable_ref, config);
+    
+    diff(a.Sample_ref, b.Sample_ref,
+                 a_b.Sample_ref, b_a.Sample_ref, config);
+
+    vector_diff_deep(a.peptideEvidence, b.peptideEvidence,
+                     a_b.peptideEvidence, b_a.peptideEvidence, config);
+
+    vector_diff_deep(a.fragmentation, b.fragmentation,
+                     a_b.fragmentation, b_a.fragmentation, config);
+    
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+
+PWIZ_API_DECL
+void diff(const SpectrumIdentificationResult& a,
+          const SpectrumIdentificationResult& b,
+          SpectrumIdentificationResult& a_b,
+          SpectrumIdentificationResult& b_a,
+          const DiffConfig& config)
+{
+    diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
+    diff(a.SpectraData_ref, b.SpectraData_ref,
+         a_b.SpectraData_ref, b_a.SpectraData_ref, config);
+
+    vector_diff_deep(a.spectrumIdentificationItem, b.spectrumIdentificationItem,
+         a_b.spectrumIdentificationItem, b_a.spectrumIdentificationItem,
+         config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 
 PWIZ_API_DECL
@@ -359,13 +487,45 @@ void diff(const SpectrumIdentificationList& a,
 }
 
 PWIZ_API_DECL
+void diff(const ProteinDetectionHypothesis& a,
+          const ProteinDetectionHypothesis& b,
+          ProteinDetectionHypothesis& a_b,
+          ProteinDetectionHypothesis& b_a,
+          const DiffConfig& config)
+{
+    diff(a.DBSequence_ref, b.DBSequence_ref,
+         a_b.DBSequence_ref, b_a.DBSequence_ref, config);
+    if (a.passThreshold != b.passThreshold)
+    {
+        a_b.passThreshold = a.passThreshold;
+        b_a.passThreshold = b.passThreshold;
+    }
+    vector_diff(a.peptideHypothesis, b.peptideHypothesis,
+                a_b.peptideHypothesis, b_a.peptideHypothesis);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+PWIZ_API_DECL
+void diff(const ProteinAmbiguityGroup& a,
+          const ProteinAmbiguityGroup& b,
+          ProteinAmbiguityGroup& a_b,
+          ProteinAmbiguityGroup& b_a,
+          const DiffConfig& config)
+{
+    vector_diff_deep(a.proteinDetectionHypothesis, b.proteinDetectionHypothesis, a_b.proteinDetectionHypothesis, b_a.proteinDetectionHypothesis, config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+}
+
+PWIZ_API_DECL
 void diff(const ProteinDetectionList& a,
           const ProteinDetectionList& b,
           ProteinDetectionList& a_b,
           ProteinDetectionList& b_a,
           const DiffConfig& config)
 {
-    vector_diff_deep(a.proteinAmbiguityGroup, b.proteinAmbiguityGroup, a_b.proteinAmbiguityGroup, b_a.proteinAmbiguityGroup, config);
+    vector_diff_deep(a.proteinAmbiguityGroup, b.proteinAmbiguityGroup,
+                     a_b.proteinAmbiguityGroup, b_a.proteinAmbiguityGroup,
+                     config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 
