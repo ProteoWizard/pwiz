@@ -696,6 +696,8 @@ PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd)
         return msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
     else if (!msd.fileDescription.sourceFilePtrs.empty())
         return msd.fileDescription.sourceFilePtrs[0]->cvParamChild(MS_nativeID_format).cvid;
+    else if (msd.version.find("1.0") == 0)
+        return MS_scan_number_only_nativeID_format;
     else
         return CVID_Unknown;
 }
