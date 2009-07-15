@@ -4,6 +4,6 @@
 
 pushd %1
 IF EXIST %3 GOTO SKIP
-%2\libraries\bsdtar.exe -xkjvf %3.tar.bz2
+%2\libraries\bsdtar.exe -xkjf %3.tar.bz2
 :SKIP
 popd

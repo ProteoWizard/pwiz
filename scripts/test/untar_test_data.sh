@@ -5,6 +5,6 @@
 
 pushd $1
 if [ ! -e $3 ]; then
-  tar -xkjvf $3.tar.bz2
+  tar -xkjf $3.tar.bz2
 fi;
 popd
