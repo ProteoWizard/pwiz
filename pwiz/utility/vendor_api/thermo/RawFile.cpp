@@ -119,8 +119,13 @@ class RawFileImpl : public RawFile
 
     virtual auto_ptr<StringArray> getFilters();
     virtual ScanInfoPtr getScanInfo(long scanNumber);
-    virtual long getMSLevel(long scanNumber);
+
+    virtual MSOrder getMSOrder(long scanNumber);
+    virtual double getPrecursorMass(long scanNumber);
     virtual ScanType getScanType(long scanNumber);
+    virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber);
+    virtual ActivationType getActivationType(long scanNumber);
+
     virtual ErrorLogItem getErrorLogItem(long itemNumber);
     virtual auto_ptr<LabelValueArray> getTuneData(long segmentNumber);
     virtual auto_ptr<LabelValueArray> getInstrumentMethods();
@@ -977,28 +982,68 @@ ScanInfoPtr RawFileImpl::getScanInfo(long scanNumber)
 }
 
 
-long RawFileImpl::getMSLevel(long scanNumber)
+MSOrder RawFileImpl::getMSOrder(long scanNumber)
 {
-    long result = 1;
-    _bstr_t bstrFilter;
-    checkResult(raw_->GetFilterForScanNum(scanNumber, bstrFilter.GetAddress()));
-    const char* ms = strstr((const char*)(bstrFilter), "ms");
-    if (ms && strlen(ms)>2 && ms[2]!=' ')
-        result = atol(ms+2);
+    if (rawInterfaceVersion_ < 4)
+        throw RawEgg("[RawFileImpl::getMSOrder()] GetMSOrderForScanNum requires the IXRawfile4 interface.");
+
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+
+    long result;
+    checkResult(raw4->GetMSOrderForScanNum(scanNumber, &result));
+    return (MSOrder) result;
+}
+
+
+double RawFileImpl::getPrecursorMass(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 4)
+        throw RawEgg("[RawFileImpl::getPrecursorMass()] GetPrecursorMassForScanNum requires the IXRawfile4 interface.");
+
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+
+    double result;
+    checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, MSOrder_Any, &result));
     return result;
 }
 
 
 ScanType RawFileImpl::getScanType(long scanNumber)
 {
-    if (rawInterfaceVersion_ < 3)
+    if (rawInterfaceVersion_ < 4)
         throw RawEgg("[RawFileImpl::getScanType()] GetScanTypeForScanNum requires the IXRawfile4 interface.");
 
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-    ScanType scanType;
-    raw4->GetScanTypeForScanNum(scanNumber, (long*) &scanType);
-    return scanType;
+    long result;
+    checkResult(raw4->GetScanTypeForScanNum(scanNumber, &result));
+    return (ScanType) result;
+}
+
+
+ScanFilterMassAnalyzerType RawFileImpl::getMassAnalyzerType(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 4)
+        throw RawEgg("[RawFileImpl::getMassAnalyzerType()] GetMassAnalyzerTypeForScanNum requires the IXRawfile4 interface.");
+
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+
+    long result;
+    checkResult(raw4->GetMassAnalyzerTypeForScanNum(scanNumber, &result));
+    return (ScanFilterMassAnalyzerType) result;
+}
+
+
+ActivationType RawFileImpl::getActivationType(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 4)
+        throw RawEgg("[RawFileImpl::getActivationType()] GetActivationTypeForScanNum requires the IXRawfile4 interface.");
+
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+
+    long result;
+    checkResult(raw4->GetActivationTypeForScanNum(scanNumber, MSOrder_Any, &result));
+    return (ActivationType) result;
 }
 
 
@@ -1353,3 +1398,5 @@ ScanEventPtr RawFileImpl::getScanEvent(long index)
         cout << foo->label(i) << ": " << foo->value(i) << endl;*/
     return ScanEventPtr();//new ScanEventImpl(0));
 }
+
+#endif // PWIZ_READER_THERMO

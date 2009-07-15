@@ -449,13 +449,19 @@ class PWIZ_API_DECL RawFile
                        long maxPeakCount,
                        bool centroidResult) = 0;
 
-    // use label data to get centroids for FTMS scans
+    /// use label data to get centroids for FTMS scans
     virtual MassListPtr getMassListFromLabelData(long scanNumber) = 0;
 
     virtual std::auto_ptr<StringArray> getFilters() = 0;
     virtual ScanInfoPtr getScanInfo(long scanNumber) = 0;
-    virtual long getMSLevel(long scanNumber) = 0;
+
+    virtual MSOrder getMSOrder(long scanNumber) = 0;
+    virtual double getPrecursorMass(long scanNumber) = 0;
     virtual ScanType getScanType(long scanNumber) = 0;
+    virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) = 0;
+    virtual ActivationType getActivationType(long scanNumber) = 0;
+    // getDetectorType is obsolete?
+
     virtual ErrorLogItem getErrorLogItem(long itemNumber) = 0;
     virtual std::auto_ptr<LabelValueArray> getTuneData(long segmentNumber) = 0;
     virtual std::auto_ptr<LabelValueArray> getInstrumentMethods() = 0;

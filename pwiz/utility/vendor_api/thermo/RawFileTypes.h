@@ -157,25 +157,6 @@ enum PWIZ_API_DECL IonizationType
 };
 
 
-inline std::string toString(IonizationType type)
-{
-    switch (type)
-    {
-        case IonizationType_EI: return "Electron Impact";
-        case IonizationType_CI: return "Chemical Ionization";
-        case IonizationType_FAB: return "Fast Atom Bombardment";
-        case IonizationType_ESI: return "Electrospray Ionization";
-        case IonizationType_NSI: return "Nanospray Ionization";
-        case IonizationType_APCI: return "Atmospheric Pressure Chemical Ionization";
-        case IonizationType_TSP: return "Thermospray";
-        case IonizationType_FD: return "Field Desorption";
-        case IonizationType_MALDI: return "Matrix-assisted Laser Desorption Ionization";
-        case IonizationType_GD: return "Glow Discharge";
-        case IonizationType_Unknown: default: return "Unknown";
-    }
-}
-
-
 inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentModelType type)
 {
     std::vector<IonizationType> ionSources;
@@ -257,13 +238,13 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
 enum PWIZ_API_DECL ScanFilterMassAnalyzerType
 {
     ScanFilterMassAnalyzerType_Unknown = -1,
-    ScanFilterMassAnalyzerType_ITMS = 0,      // Ion Trap
-    ScanFilterMassAnalyzerType_FTMS,          // Fourier Transform
-    ScanFilterMassAnalyzerType_TOFMS,         // Time of Flight
-    ScanFilterMassAnalyzerType_TQMS,          // Triple Quadrupole
-    ScanFilterMassAnalyzerType_SQMS,          // Single Quadrupole
-    ScanFilterMassAnalyzerType_Sector,        // Magnetic Sector
-    ScanFilterMassAnalyzerType_Count
+    ScanFilterMassAnalyzerType_ITMS = 0,          // Ion Trap
+    ScanFilterMassAnalyzerType_TQMS = 1,          // Triple Quadrupole
+    ScanFilterMassAnalyzerType_SQMS = 2,          // Single Quadrupole
+    ScanFilterMassAnalyzerType_TOFMS = 3,         // Time of Flight
+    ScanFilterMassAnalyzerType_FTMS = 4,          // Fourier Transform
+    ScanFilterMassAnalyzerType_Sector = 5,        // Magnetic Sector
+    ScanFilterMassAnalyzerType_Count = 6
 };
 
 
@@ -555,65 +536,54 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
 enum PWIZ_API_DECL ActivationType
 {
     ActivationType_Unknown = -1,
-    ActivationType_CID = 0,     // Collision Induced Dissociation
-    ActivationType_ETD,         // Electron Transfer Dissociation
-    ActivationType_ECD,         // Electron Capture Dissociation
-    ActivationType_MPD,         // TODO: what is this?
-    ActivationType_PQD,         // Pulsed Q Dissociation
-    ActivationType_HCD,         // High Energy CID
-    ActivationType_SA,          // Supplemental CID
-    ActivationType_PTR,         // Proton Transfer Reaction
-    ActivationType_Count
+    ActivationType_CID = 0,         // Collision Induced Dissociation
+    ActivationType_MPD = 1,         // TODO: what is this?
+    ActivationType_ECD = 2,         // Electron Capture Dissociation
+    ActivationType_PQD = 3,         // Pulsed Q Dissociation
+    ActivationType_ETD = 4,         // Electron Transfer Dissociation
+    ActivationType_HCD = 5,         // High Energy CID
+    ActivationType_Any = 6,         // "any activation type" when used as input parameter
+    ActivationType_SA = 7,          // Supplemental CID
+    ActivationType_PTR = 8,         // Proton Transfer Reaction
+    ActivationType_NETD = 9,        // TODO: nano-ETD?
+    ActivationType_NPTR = 10,       // TODO: nano-PTR?
+    ActivationType_Count = 11
 };
 
 
-inline std::string toString(ActivationType type)
+enum PWIZ_API_DECL MSOrder
 {
-    switch (type)
-    {
-        case ActivationType_CID: return "Collision Induced Dissociation";
-        case ActivationType_ETD: return "Electron Transfer Dissociation";
-        case ActivationType_ECD: return "Electron Capture Dissociation";
-        case ActivationType_MPD: return "MPD"; // TODO: what is this?
-        case ActivationType_PQD: return "Pulsed Q Dissociation";
-        case ActivationType_HCD: return "High Energy CID";
-        case ActivationType_SA: return "Supplemental CID";
-        case ActivationType_PTR: return "Proton Transfer Reaction";
-        case ActivationType_Unknown: default: return "Unknown";
-    }
-}
+    MSOrder_NeutralGain = -3,
+    MSOrder_NeutralLoss = -2,
+    MSOrder_ParentScan = -1,
+    MSOrder_Any = 0,
+    MSOrder_MS = 1,
+    MSOrder_MS2 = 2,
+    MSOrder_MS3 = 3,
+    MSOrder_MS4 = 4,
+    MSOrder_MS5 = 5,
+    MSOrder_MS6 = 6,
+    MSOrder_MS7 = 7,
+    MSOrder_MS8 = 8,
+    MSOrder_MS9 = 9,
+    MSOrder_MS10 = 10,
+    MSOrder_Count = 11
+};
 
 
 enum PWIZ_API_DECL ScanType
 {
     ScanType_Unknown = -1,
     ScanType_Full = 0,
-    ScanType_Zoom,
-    ScanType_SIM,
-    ScanType_SRM,
-    ScanType_CRM,
-    ScanType_Any, /// "any scan type" when used as an input parameter
-    ScanType_Q1MS,
-    ScanType_Q3MS,
-    ScanType_Count
+    ScanType_Zoom = 1,
+    ScanType_SIM = 2,
+    ScanType_SRM = 3,
+    ScanType_CRM = 4,
+    ScanType_Any = 5, /// "any scan type" when used as an input parameter
+    ScanType_Q1MS = 6,
+    ScanType_Q3MS = 7,
+    ScanType_Count = 8
 };
-
-
-inline std::string toString(ScanType type)
-{
-    switch (type)
-    {
-        case ScanType_Full: return "Full";
-        case ScanType_SIM: return "Selected ion monitoring";
-        case ScanType_SRM: return "Selected reaction monitoring";
-        case ScanType_CRM: return "Constant reaction monitoring";
-        case ScanType_Q1MS: return "Q1MS";
-        case ScanType_Q3MS: return "Q3MS";
-        case ScanType_Zoom: return "Zoom";
-        case ScanType_Any: return "Any";
-        case ScanType_Unknown: default: return "Unknown";
-    }
-}
 
 
 enum PWIZ_API_DECL PolarityType
@@ -623,17 +593,6 @@ enum PWIZ_API_DECL PolarityType
     PolarityType_Negative,
     PolarityType_Count
 };
-
-
-inline std::string toString(PolarityType type)
-{
-    switch (type)
-    {
-        case PolarityType_Positive: return "+";
-        case PolarityType_Negative: return "-";
-        case PolarityType_Unknown: default: return "Unknown";
-    }
-}
 
 
 enum PWIZ_API_DECL DataPointType
