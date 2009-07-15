@@ -23,5 +23,6 @@
 
 build-project misc ;
 build-project msdata ;
+build-project common ;
 build-project vendor_readers ;
 
