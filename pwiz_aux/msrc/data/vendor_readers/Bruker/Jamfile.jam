@@ -47,9 +47,9 @@ lib pwiz_aux_msrc_reader_bruker
     : # sources
         Reader_Bruker.cpp
         Reader_Bruker_Detail.cpp
+        SpectrumList_Bruker.cpp
+        ChromatogramList_Bruker.cpp
     : # requirements
-        <toolset>msvc:<source>SpectrumList_Bruker.cpp
-        <toolset>msvc:<source>ChromatogramList_Bruker.cpp
 		<toolset>msvc:<define>PWIZ_READER_BRUKER
 		<toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_bruker
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata

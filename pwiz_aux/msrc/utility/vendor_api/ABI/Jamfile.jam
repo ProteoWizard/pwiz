@@ -40,6 +40,11 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(API_PATH)/Clearcore.dll ;
         result += <assembly>$(API_PATH)/ClearCore.Storage.dll ;
         result += <assembly-dependency>$(API_PATH)/rscoree.dll ;
+        result += <define>PWIZ_READER_ABI ;
+    }
+    else
+    {
+        result += <build>no ;
     }
     return $(result) ;
 }
@@ -61,7 +66,6 @@ lib pwiz_vendor_api_abi
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-requirement
         <toolset>msvc:<using-clr>true # requires hacked msvc.jam
     : # default-build
     : # usage-requirements

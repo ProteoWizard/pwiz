@@ -38,7 +38,6 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     public:
 
     SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
-    ~SpectrumList_ABI();
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
@@ -68,7 +67,6 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     mutable std::map<std::string, size_t> idToIndexMap_;
 
     void createIndex() const;
-    size_t findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const;
 };
 
 

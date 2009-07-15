@@ -24,9 +24,6 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Thermo.hpp"
-#include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
 
@@ -49,24 +46,22 @@ bool _hasRAWHeader(const std::string& head)
 }
 } // namespace
 
-// Xcalibur DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && defined(PWIZ_READER_THERMO))
-#undef PWIZ_READER_THERMO
-#endif
 
 #ifdef PWIZ_READER_THERMO
-#include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/String.hpp"
-#include "boost/shared_ptr.hpp"
-#include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
 #include "ChromatogramList_Thermo.hpp"
+#include "boost/shared_ptr.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+#include <numeric>
 
 
 namespace pwiz {
@@ -77,7 +72,6 @@ using namespace std;
 using boost::shared_ptr;
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
-namespace bfs = boost::filesystem;
 using namespace pwiz::msdata::detail;
 
 
@@ -130,16 +124,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    rawfile.setCurrentController(Controller_MS, 1);
-    msd.fileDescription.fileContent.set(translateAsSpectrumType(rawfile.getScanInfo(1)->scanType()));
-
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
     sourceFile->id = "RAW1";
     sourceFile->name = p.leaf();
     string location = bfs::complete(p.branch_path()).string();
     if (location.empty()) location = ".";
-    sourceFile->location = string("file:///") + location;
+    sourceFile->location = string("file://") + location;
     sourceFile->set(MS_Thermo_nativeID_format);
     sourceFile->set(MS_Thermo_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -170,6 +161,42 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
+    // add file content metadata
+
+    // the +3 offset is because MSOrder_NeutralLoss == -3
+    if (sl->spectraByMSOrder[MSOrder_NeutralLoss+3] > 0)
+        msd.fileDescription.fileContent.set(MS_constant_neutral_loss_spectrum);
+    if (sl->spectraByMSOrder[MSOrder_NeutralGain+3] > 0)
+        msd.fileDescription.fileContent.set(MS_constant_neutral_gain_spectrum);
+    if (sl->spectraByMSOrder[MSOrder_ParentScan+3] > 0)
+        msd.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
+
+    if (sl->spectraByScanType[ScanType_Full] > 0)
+    {
+        int simScanCount = sl->spectraByScanType[ScanType_SIM]; // MS1
+        int srmScanCount = sl->spectraByScanType[ScanType_SRM]; // MS2
+
+        // MS can be either Full scans or SIM scans so we compare against the SIM scan count
+        if (sl->spectraByMSOrder[MSOrder_MS+3] > simScanCount)
+            msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+
+        // MS2 can be either Full or SRM scans so we compare against the SRM scan count
+        if (sl->spectraByMSOrder[MSOrder_MS2+3] > srmScanCount)
+            msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+        
+        // MS3+ scans are definitely MSn
+        if (std::accumulate(sl->spectraByMSOrder.begin() + MSOrder_MS3 + 3,
+                            sl->spectraByMSOrder.end(), 0) > 0)
+            msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    }
+
+    // these scan types should be represented as chromatograms
+    if (sl->spectraByScanType[ScanType_SIM] > 0)
+        msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
+    if (sl->spectraByScanType[ScanType_SRM] > 0)
+        msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
+
+    // add instrument configuration metadata
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
@@ -214,13 +241,12 @@ void Reader_Thermo::read(const string& filename,
 } // namespace pwiz
 
 
-#else // PWIZ_READER_THERMO /////////////////////////////////////////////////////////////////////////////
+#else // PWIZ_READER_THERMO
 
 //
 // non-MSVC implementation
 //
 
-#include "Reader_Thermo.hpp"
 #include <stdexcept>
 
 namespace pwiz {
@@ -255,5 +281,5 @@ PWIZ_API_DECL bool Reader_Thermo::hasRAWHeader(const string& head)
 } // namespace msdata
 } // namespace pwiz
 
-#endif // PWIZ_READER_THERMO /////////////////////////////////////////////////////////////////////////////
+#endif // PWIZ_READER_THERMO
 

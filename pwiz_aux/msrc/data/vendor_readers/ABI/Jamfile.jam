@@ -47,8 +47,7 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
-        result += <source>SpectrumList_ABI.cpp ;
-        result += <source>ChromatogramList_ABI.cpp ;
+        result += <source>Reader_ABI_Detail.cpp ;
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
@@ -67,15 +66,14 @@ rule vendor-api-usage-requirements ( properties * )
 lib pwiz_aux_msrc_reader_abi
     : # sources
         Reader_ABI.cpp
-        Reader_ABI_Detail.cpp
+        SpectrumList_ABI.cpp
+        ChromatogramList_ABI.cpp
     : # requirements
         <conditional>@vendor-api-requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # default-build
     : # usage-requirements
 		<conditional>@vendor-api-usage-requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
@@ -96,3 +94,4 @@ run Reader_ABI_Test.cpp
         Reader_ABI_Test 
     : # default-build
     ;
+

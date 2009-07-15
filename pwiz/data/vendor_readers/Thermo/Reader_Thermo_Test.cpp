@@ -37,7 +37,7 @@ struct IsRawFile : public pwiz::util::TestPathPredicate
 
 int main(int argc, char* argv[])
 {
-    #ifdef PWIZ_READER_THERMO
+    #if defined(PWIZ_READER_THERMO) && !defined(PWIZ_READER_THERMO_TEST_ACCEPT_ONLY)
     const bool testAcceptOnly = false;
     #else
     const bool testAcceptOnly = true;

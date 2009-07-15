@@ -21,6 +21,12 @@
 //
 
 
+#define PWIZ_SOURCE
+
+
+#include "ChromatogramList_Bruker.hpp"
+
+
 #ifdef PWIZ_READER_BRUKER
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
@@ -30,11 +36,6 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
-
-
-#define PWIZ_SOURCE
-
-#include "ChromatogramList_Bruker.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -160,6 +161,32 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
     }*/
 }
 
+
+} // detail
+} // msdata
+} // pwiz
+
+#else // PWIZ_READER_BRUKER
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const ChromatogramIdentity emptyIdentity;}
+
+ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,
+                            const string& rootpath,
+                            Reader_Bruker_Format format,
+                            CompassDataPtr compassDataPtr) : msd_(msd) {}
+size_t ChromatogramList_Bruker::size() const {return 0;}
+const ChromatogramIdentity& ChromatogramList_Bruker::chromatogramIdentity(size_t index) const {return emptyIdentity;}
+size_t ChromatogramList_Bruker::find(const string& id) const {return 0;}
+ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+void ChromatogramList_Bruker::createIndex() {}
 
 } // detail
 } // msdata

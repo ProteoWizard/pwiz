@@ -76,7 +76,6 @@ lib pwiz_aux_msrc_reader_waters
         <conditional>@requirements
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@usage-requirements
     ;

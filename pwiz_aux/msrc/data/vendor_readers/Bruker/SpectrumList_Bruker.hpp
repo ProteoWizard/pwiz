@@ -32,16 +32,12 @@
 #include <map>
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
-
-
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace std;
+using boost::shared_ptr;
 using namespace pwiz::vendor_api::Bruker;
 
 //

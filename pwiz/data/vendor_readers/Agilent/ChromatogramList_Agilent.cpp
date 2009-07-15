@@ -22,16 +22,18 @@
 
 #define PWIZ_SOURCE
 
+
+#include "ChromatogramList_Agilent.hpp"
+
+
 #ifdef PWIZ_READER_AGILENT
+#include "Reader_Agilent_Detail.hpp"
 #include "pwiz/data/msdata/CVTranslator.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
-#include "Reader_Agilent_Detail.hpp"
-#include "ChromatogramList_Agilent.hpp"
+#include "boost/shared_ptr.hpp"
 #include <boost/bind.hpp>
 
 
@@ -215,6 +217,30 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         idMap_[ci.id] = ci.index;
     }
 }
+
+} // detail
+} // msdata
+} // pwiz
+
+
+#else // PWIZ_READER_AGILENT
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const ChromatogramIdentity emptyIdentity;}
+
+ChromatogramList_Agilent::ChromatogramList_Agilent(const MSData& msd, MassHunterDataPtr rawfile) : msd_(msd) {}
+size_t ChromatogramList_Agilent::size() const {return 0;}
+const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const {return emptyIdentity;}
+size_t ChromatogramList_Agilent::find(const string& id) const {return 0;}
+ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+void ChromatogramList_Agilent::createIndex() const {}
 
 } // detail
 } // msdata

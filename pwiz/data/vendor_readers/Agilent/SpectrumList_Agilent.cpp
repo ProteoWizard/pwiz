@@ -22,13 +22,16 @@
 
 #define PWIZ_SOURCE
 
+
+#include "SpectrumList_Agilent.hpp"
+
+
 #ifdef PWIZ_READER_AGILENT
+#include "Reader_Agilent_Detail.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "Reader_Agilent_Detail.hpp"
-#include "SpectrumList_Agilent.hpp"
 #include "boost/shared_ptr.hpp"
 #include <boost/bind.hpp>
 
@@ -284,5 +287,29 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 } // pwiz
 
 
-#endif // PWIZ_READER_AGILENT
+#else // PWIZ_READER_AGILENT
 
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const SpectrumIdentity emptyIdentity;}
+
+SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile) : msd_(msd) {}
+size_t SpectrumList_Thermo::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
+size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+void SpectrumList_Thermo::createIndex() const {}
+size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const {return 0;}
+
+} // detail
+} // msdata
+} // pwiz
+
+#endif // PWIZ_READER_AGILENT

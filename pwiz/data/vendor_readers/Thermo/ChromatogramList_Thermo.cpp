@@ -1,15 +1,40 @@
+//
+// ChromatogramList_Thermo.cpp
+//
+//
+// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2008 Spielberg Family Center for Applied Proteomics
+//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
 #define PWIZ_SOURCE
+
+
+#include "ChromatogramList_Thermo.hpp"
+
 
 #ifdef PWIZ_READER_THERMO
 #include "pwiz/data/msdata/CVTranslator.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "Reader_Thermo_Detail.hpp"
-#include "ChromatogramList_Thermo.hpp"
 #include <boost/bind.hpp>
 
 
@@ -17,7 +42,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
+ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile)
 :   msd_(msd), rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)
 {
 }
@@ -355,6 +380,29 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
     //  Parent   Center    Width   Time   CE   Q1PW   Q3PW   TubeLens
     boost::regex scanEventRegex("^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+$");*/
 }
+
+} // detail
+} // msdata
+} // pwiz
+
+#else // PWIZ_READER_THERMO
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const ChromatogramIdentity emptyIdentity;}
+
+ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile) : msd_(msd) {}
+size_t ChromatogramList_Thermo::size() const {return 0;}
+const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const {return emptyIdentity;}
+size_t ChromatogramList_Thermo::find(const string& id) const {return 0;}
+ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+void ChromatogramList_Thermo::createIndex() const {}
 
 } // detail
 } // msdata

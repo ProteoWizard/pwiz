@@ -28,6 +28,8 @@
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 #include <vector>
 
+#ifdef PWIZ_READER_ABI
+
 namespace pwiz {
 namespace msdata {
 namespace detail {
@@ -46,5 +48,7 @@ PWIZ_API_DECL CVID translate(Polarity polarity);
 } // detail
 } // msdata
 } // pwiz
+
+#endif // PWIZ_READER_ABI
 
 #endif // _READER_ABI_DETAIL_HPP_

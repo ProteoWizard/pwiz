@@ -23,12 +23,15 @@
 
 #define PWIZ_SOURCE
 
+#ifndef PWIZ_READER_ABI
+#error compiler is not MSVC or DLL not available
+#else // PWIZ_READER_ABI
+
 #pragma unmanaged
 #include "WiffFile.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
-
 
 #pragma managed
 #include <gcroot.h>
@@ -604,3 +607,5 @@ WiffFilePtr WiffFile::create(const string& wiffpath)
 } // ABI
 } // vendor_api
 } // pwiz
+
+#endif

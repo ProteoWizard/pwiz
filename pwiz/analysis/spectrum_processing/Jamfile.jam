@@ -40,21 +40,21 @@ lib pwiz_analysis_spectrum_processing
         PrecursorRecalculatorDefault.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
+        <library>../../data/vendor_readers/Thermo//pwiz_reader_thermo
+        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
+        <library>../../data/vendor_readers/Thermo//pwiz_reader_thermo
+        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
         <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
     ;

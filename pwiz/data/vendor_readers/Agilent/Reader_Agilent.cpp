@@ -23,10 +23,8 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Agilent.hpp"
-#include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/DateTime.hpp"
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::string& filename, const std::string& head) const
@@ -36,17 +34,14 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 }
 
 
-// MassHunter DLL usage is msvc only - mingw doesn't provide com support
-#if (!defined(_MSC_VER) && defined(PWIZ_READER_AGILENT))
-#undef PWIZ_READER_AGILENT
-#endif
-
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
+#include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "Reader_Agilent_Detail.hpp"
 #include "SpectrumList_Agilent.hpp"
 #include "ChromatogramList_Agilent.hpp"
+#include "boost/shared_ptr.hpp"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -87,6 +82,8 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 
     // create instrument configuration templates based on the instrument model
     vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
+    if (configurations.empty())
+        configurations.resize(1); // provide at least one configuration
 
     for (size_t i=0; i < configurations.size(); ++i)
     {
@@ -148,7 +145,7 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         sourceFile->name = datapath.filename();
         string location = bfs::complete(datapath.parent_path()).string();
         if (location.empty()) location = ".";
-        sourceFile->location = string("file:///") + location;
+        sourceFile->location = string("file://") + location;
         sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
         sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -162,7 +159,7 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         sourceFile->name = datapath.filename();
         string location = bfs::complete(datapath.parent_path()).string();
         if (location.empty()) location = ".";
-        sourceFile->location = string("file:///") + location;
+        sourceFile->location = string("file://") + location;
         sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
         sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

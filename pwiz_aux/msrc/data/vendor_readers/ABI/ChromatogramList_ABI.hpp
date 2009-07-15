@@ -37,7 +37,6 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     public:
 
     ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
-    ~ChromatogramList_ABI();
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;

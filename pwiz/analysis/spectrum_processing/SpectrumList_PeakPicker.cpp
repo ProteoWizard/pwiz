@@ -26,23 +26,10 @@
 #include "SpectrumList_PeakPicker.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
-#ifdef PWIZ_READER_THERMO
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
-#endif
-
-#ifdef PWIZ_READER_BRUKER
-#include "pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
-#endif
-
-#ifdef PWIZ_READER_ABI
-#include "pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
-#endif
-
-#ifdef PWIZ_READER_AGILENT
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
-#endif
+#include "pwiz_aux/msrc/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
 
 
 namespace pwiz {
@@ -66,37 +53,29 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
 {
     if (preferVendorPeakPicking)
     {
-        #ifdef PWIZ_READER_THERMO
         detail::SpectrumList_Thermo* thermo = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner);
         if (thermo)
         {
             mode_ = 1;
         }
-        #endif
 
-        #ifdef PWIZ_READER_BRUKER
         detail::SpectrumList_Bruker* bruker = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner);
         if (bruker)
         {
             mode_ = 2;
         }
-        #endif
 
-        #ifdef PWIZ_READER_ABI
         detail::SpectrumList_ABI* abi = dynamic_cast<detail::SpectrumList_ABI*>(&*inner);
         if (abi)
         {
             mode_ = 3;
         }
-        #endif
 
-        #ifdef PWIZ_READER_AGILENT
         detail::SpectrumList_Agilent* agilent = dynamic_cast<detail::SpectrumList_Agilent*>(&*inner);
         if (agilent)
         {
             mode_ = 4;
         }
-        #endif
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -129,29 +108,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     
     switch (mode_)
     {
-        #ifdef PWIZ_READER_THERMO
         case 1:
             s = dynamic_cast<detail::SpectrumList_Thermo*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
-        #endif
 
-        #ifdef PWIZ_READER_BRUKER
         case 2:
             s = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
-        #endif
-
-        #ifdef PWIZ_READER_ABI
         case 3:
             s = dynamic_cast<detail::SpectrumList_ABI*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
-        #endif
 
-        #ifdef PWIZ_READER_AGILENT
         case 4:
             s = dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
-        #endif
 
         case 0:
         default:

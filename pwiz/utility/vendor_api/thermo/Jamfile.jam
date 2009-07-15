@@ -30,29 +30,23 @@ path-constant API_PATH : ./xdk ;
 
 if [ modules.peek : NT ]
 {
-
-if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
-{
     
 rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <manifest-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
-        result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
-        result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.SxS.manifest ;
-        result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
-        result += <assembly-dependency>$(API_PATH)/finSSClientLib.dll ;
-        result += <assembly-dependency>$(API_PATH)/fileio.dll ;
+        result += <define>PWIZ_READER_THERMO ;
+        if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+        {
+            result += <manifest-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
+            result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
+            result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.SxS.manifest ;
+            result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
+            result += <assembly-dependency>$(API_PATH)/fileio.dll ;
+        }
     }
     return $(result) ;
-}
-
-}
-else
-{
-    rule vendor-api-requirements ( properties * ) { } # no-op
 }
 
 lib pwiz_vendor_api_thermo
@@ -95,7 +89,6 @@ if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
           $(API_PATH)/MSFileReader.XRawfile2.dll
           $(API_PATH)/MSFileReader.XRawfile2.SxS.manifest
           $(API_PATH)/fregistry.dll
-          $(API_PATH)/finSSClientLib.dll
           $(API_PATH)/fileio.dll
         ;
 }

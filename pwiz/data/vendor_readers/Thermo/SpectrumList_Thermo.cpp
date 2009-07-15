@@ -23,15 +23,17 @@
 
 #define PWIZ_SOURCE
 
+
+#include "SpectrumList_Thermo.hpp"
+
+
 #ifdef PWIZ_READER_THERMO
+#include "Reader_Thermo_Detail.hpp"
 #include "pwiz/data/msdata/CVTranslator.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "Reader_Thermo_Detail.hpp"
-#include "SpectrumList_Thermo.hpp"
+#include "boost/shared_ptr.hpp"
 #include <boost/bind.hpp>
 
 
@@ -44,33 +46,42 @@ namespace msdata {
 namespace detail {
 
 
-SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile)
+SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
 {
     spectraByScanType.resize(ScanType_Count, 0);
+    spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
 
-    // calculate total spectra count from all controllers
-    for (int controllerType = Controller_MS;
-         controllerType <= Controller_UV;
-         ++controllerType)
+    try
     {
-        // some controllers don't have spectra (even if they have a NumSpectra value!)
-        if (controllerType == Controller_Analog ||
-            controllerType == Controller_UV)
-            continue;
-
-        long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
-        for (long n=1; n <= numControllers; ++n)
+        // calculate total spectra count from all controllers
+        for (int controllerType = Controller_MS;
+             controllerType <= Controller_UV;
+             ++controllerType)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
-            long numSpectra = rawfile_->value(NumSpectra);
-            for (long scan=1; scan <= numSpectra; ++scan)
+            // some controllers don't have spectra (even if they have a NumSpectra value!)
+            if (controllerType == Controller_Analog ||
+                controllerType == Controller_UV)
+                continue;
+
+            long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
+            for (long n=1; n <= numControllers; ++n)
             {
-                ++spectraByScanType[rawfile_->getScanType(scan)];
+                rawfile_->setCurrentController((ControllerType) controllerType, n);
+                long numSpectra = rawfile_->value(NumSpectra);
+                for (long scan=1; scan <= numSpectra; ++scan)
+                {
+                    ++spectraByScanType[rawfile_->getScanType(scan)];
+                    ++spectraByMSOrder[rawfile_->getMSOrder(scan)+3];
+                }
             }
         }
+    }
+    catch (std::exception& e)
+    {
+        throw std::runtime_error(string("[SpectrumList_Thermo::ctor] ") + e.what());
     }
 
     size_ = spectraByScanType[ScanType_Full] +
@@ -325,7 +336,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             }
 
             // TODO: better test here for data dependent modes
-            if ((scanType==ScanType_Full || scanType==ScanType_Zoom ) && msLevel > 1)
+            if ((scanType==ScanType_Full || scanType==ScanType_Zoom) && msLevel > 1)
                 precursor.spectrumID = index_[findPrecursorSpectrumIndex(msLevel-1, index)].id;
 
             selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
@@ -484,5 +495,29 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
 } // pwiz
 
 
-#endif // PWIZ_READER_THERMO
+#else // PWIZ_READER_THERMO
 
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const SpectrumIdentity emptyIdentity;}
+
+SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile) : msd_(msd) {}
+size_t SpectrumList_Thermo::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
+size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+void SpectrumList_Thermo::createIndex() const {}
+size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const {return 0;}
+
+} // detail
+} // msdata
+} // pwiz
+
+#endif // PWIZ_READER_THERMO

@@ -27,9 +27,6 @@
 #include "boost/filesystem/convenience.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 
-#ifdef PWIZ_READER_BRUKER
-#include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
-#endif
 
 namespace pwiz {
 namespace msdata {

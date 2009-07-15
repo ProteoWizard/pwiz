@@ -21,6 +21,12 @@
 //
 
 
+#define PWIZ_SOURCE
+
+
+#include "SpectrumList_Bruker.hpp"
+
+
 #ifdef PWIZ_READER_BRUKER
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
@@ -31,10 +37,6 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.cpp"
-
-#define PWIZ_SOURCE
-
-#include "SpectrumList_Bruker.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -42,6 +44,7 @@ using boost::format;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::vendor_api::Bruker;
+
 
 namespace pwiz {
 namespace msdata {
@@ -492,20 +495,36 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
     }
 }
 
-/*PWIZ_API_DECL string SpectrumList_Bruker::findPrecursorID(int precursorMsLevel, size_t index) const
-{
-    // for MSn spectra (n > 1): return first scan with MSn-1
+} // detail
+} // msdata
+} // pwiz
 
-    while (index>0)
-    {
-	    --index;
-	    SpectrumPtr candidate = spectrum(index, false);
-	    if (candidate->cvParam(MS_ms_level).valueAs<int>() == precursorMsLevel)
-		    return candidate->id;
-    }
 
-    return "";
-}*/
+#else // PWIZ_READER_BRUKER
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const SpectrumIdentity emptyIdentity;}
+
+SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
+                                         const string& rootpath,
+                                         Reader_Bruker_Format format,
+                                         CompassDataPtr compassDataPtr)
+:   msd_(msd) {}
+size_t SpectrumList_Bruker::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_Bruker::spectrumIdentity(size_t index) const {return emptyIdentity;}
+size_t SpectrumList_Bruker::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const {return MSSpectrumPtr();}
+void SpectrumList_Bruker::fillSourceList() {}
+void SpectrumList_Bruker::createIndex() {}
 
 } // detail
 } // msdata

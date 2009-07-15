@@ -22,10 +22,12 @@
 
 #define PWIZ_SOURCE
 
-#ifdef PWIZ_READER_ABI
 
 #include "SpectrumList_ABI.hpp"
 #include "Reader_ABI_Detail.hpp"
+
+
+#ifdef PWIZ_READER_ABI
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
@@ -35,8 +37,6 @@
 
 using namespace std;
 using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 
 
 namespace pwiz {
@@ -50,11 +50,6 @@ PWIZ_API_DECL SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr 
     sample(sample),
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
-{
-}
-
-
-PWIZ_API_DECL SpectrumList_ABI::~SpectrumList_ABI()
 {
 }
 
@@ -254,31 +249,33 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 }
 
 
-PWIZ_API_DECL size_t SpectrumList_ABI::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const
-{
-    // for MSn spectra (n > 1): return first scan with MSn-1
-
-    /*while (index > 0)
-    {
-	    --index;
-        int& cachedMsLevel = scanMsLevelCache_[index];
-        if (cachedMsLevel == 0)
-        {
-            // populate the missing MS level
-            auto_ptr<ScanInfo> scanInfo = rawfile_->getScanInfo(index_[index].scan);
-	        cachedMsLevel = scanInfo->msLevel();
-        }
-        if (cachedMsLevel == precursorMsLevel)
-            return index;
-    }*/
-
-    return size_;
-}
-
-
 } // detail
 } // msdata
 } // pwiz
 
+
+#else // PWIZ_READER_ABI
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const SpectrumIdentity emptyIdentity;}
+
+SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample) : msd_(msd) {}
+size_t SpectrumList_ABI::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t index) const {return emptyIdentity;}
+size_t SpectrumList_ABI::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+void SpectrumList_ABI::createIndex() const {}
+
+} // detail
+} // msdata
+} // pwiz
 
 #endif // PWIZ_READER_ABI

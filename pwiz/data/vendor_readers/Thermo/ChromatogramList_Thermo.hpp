@@ -23,7 +23,7 @@ class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramListBase
 {
 public:
 
-    ChromatogramList_Thermo(const MSData& msd, shared_ptr<RawFile> rawfile);
+    ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile);
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;

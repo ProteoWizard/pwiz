@@ -22,10 +22,12 @@
 
 #define PWIZ_SOURCE
 
-#ifdef PWIZ_READER_ABI
 
 #include "ChromatogramList_ABI.hpp"
 #include "Reader_ABI_Detail.hpp"
+
+
+#ifdef PWIZ_READER_ABI
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "pwiz/utility/misc/String.hpp"
@@ -35,8 +37,6 @@
 
 using namespace std;
 using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 
 
 namespace pwiz {
@@ -50,11 +50,6 @@ PWIZ_API_DECL ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, Wiff
     sample(sample),
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
-{
-}
-
-
-PWIZ_API_DECL ChromatogramList_ABI::~ChromatogramList_ABI()
 {
 }
 
@@ -250,5 +245,28 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
 } // msdata
 } // pwiz
 
+
+#else // PWIZ_READER_ABI
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const ChromatogramIdentity emptyIdentity;}
+
+ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample) : msd_(msd) {}
+size_t ChromatogramList_ABI::size() const {return 0;}
+const ChromatogramIdentity& ChromatogramList_ABI::chromatogramIdentity(size_t index) const {return emptyIdentity;}
+size_t ChromatogramList_ABI::find(const std::string& id) const {return 0;}
+ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+void ChromatogramList_ABI::createIndex() const {}
+
+} // detail
+} // msdata
+} // pwiz
 
 #endif // PWIZ_READER_ABI

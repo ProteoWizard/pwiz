@@ -79,13 +79,10 @@ lib pwiz_reader_thermo
 rule test-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if ! <toolset>msvc in $(properties) ||
+       ! [ path.exists $(API_PATH)/xdk/MSFileReader.XRawfile.dll ]
     {
-        result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
-        if [ path.exists $(API_PATH)/xdk/MSFileReader.XRawfile.dll ]
-        {
-            result += <define>PWIZ_READER_THERMO ;
-        }
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
     }
     return $(result) ;
 }
@@ -97,9 +94,8 @@ run Reader_Thermo_Test.cpp
         \"$(TEST_DATA_PATH)\"
     : # input-files
     : # requirements
-        <source>Reader_Thermo.cpp
+        <library>pwiz_reader_thermo
         <conditional>@test-requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     : # target name
         Reader_Thermo_Test 
     : # default-build

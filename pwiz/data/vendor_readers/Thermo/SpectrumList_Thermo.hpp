@@ -28,14 +28,12 @@
 #include <boost/thread/once.hpp>
 
 
-using namespace std;
-using namespace pwiz::vendor_api::Thermo;
-
-
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace std;
+using namespace pwiz::vendor_api::Thermo;
 
 class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 {
@@ -50,6 +48,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 
     /// an array of size ScanType_Count to count the occurrence of each type
     vector<int> spectraByScanType;
+    vector<int> spectraByMSOrder;
 
     private:
 
@@ -78,4 +77,3 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 } // detail
 } // msdata
 } // pwiz
-

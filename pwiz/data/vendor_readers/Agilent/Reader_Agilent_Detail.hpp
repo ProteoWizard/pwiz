@@ -28,12 +28,11 @@
 #include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <vector>
 
-using namespace pwiz::vendor_api::Agilent;
-
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace pwiz::vendor_api::Agilent;
 
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(MassHunterDataPtr rawfile);
