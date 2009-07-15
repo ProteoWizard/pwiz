@@ -57,10 +57,14 @@ PWIZ_API_DECL double CVParam::timeInSeconds() const
 {
     if (units == UO_second) 
         return valueAs<double>();
-    else if (units == UO_minute) 
+    else if (units == UO_minute)
         return valueAs<double>() * 60;
     else if (units == UO_hour)
         return valueAs<double>() * 3600;
+    else if (units == MS_second_OBSOLETE) // mzML 1.0 support
+        return valueAs<double>();
+    else if (units == MS_minute_OBSOLETE) // mzML 1.0 support
+        return valueAs<double>() * 60;
     return 0; 
 }
 
