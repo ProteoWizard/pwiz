@@ -1399,4 +1399,3 @@ ScanEventPtr RawFileImpl::getScanEvent(long index)
     return ScanEventPtr();//new ScanEventImpl(0));
 }
 
-#endif // PWIZ_READER_THERMO
