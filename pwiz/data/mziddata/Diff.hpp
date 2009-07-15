@@ -21,8 +21,8 @@
 //
 
 
-#ifndef _MSIDDATA_HPP_
-#define _MSIDDATA_HPP_
+#ifndef _MSIDDATA_DIFF_HPP_
+#define _MSIDDATA_DIFF_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
@@ -515,4 +515,4 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Diff<MzIdentML>& 
 } // namespace mziddata
 } // namespace pwiz
 
-#endif // _MSIDDATA_HPP_
+#endif // _MSIDDATA_DIFF_HPP_
