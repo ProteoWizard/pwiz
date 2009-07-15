@@ -127,9 +127,14 @@ Config parseCommandLine(int argc, char* argv[])
     string pgmz;
     string ppmz;
 
+    // input file of config parameters
+    string configFilename;
+
     // define command line options
+
     po::options_description od_config("Options");
     od_config.add_options()
+        ("configFilename", po::value<string>(&configFilename), " : specify file of config options, in format optionName=optionValue")
         ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), " : specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
         ("noiseCalculatorZLevel,z", po::value<double>(&config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)->default_value(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff), " : specify cutoff for NoiseCalculator_2Pass")
         ("peakFinderSNRWindowRadius,w", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), " : specify window radius for PeakFinder_SNR")
@@ -169,6 +174,22 @@ Config parseCommandLine(int argc, char* argv[])
     po::store(po::command_line_parser(argc, (char**)argv).
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
+
+    if (configFilename.size() > 0)
+        {
+            ifstream is(configFilename.c_str());
+
+            if (is)
+                {
+                    cout << "Reading configuration file " << configFilename << "\n\n";
+                    po::store(parse_config_file(is, od_config), vm);
+                    po::notify(vm);
+                }
+            else
+                {
+                    cout << "Unable to read configuration file " << configFilename << "\n\n";
+                }
+        }
 
     // get filenames
     if (vm.count(label_args))
