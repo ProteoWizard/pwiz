@@ -574,6 +574,8 @@ typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
 
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 {
+    SpectrumIdentificationItem() : chargeState(0), experimentalMassToCharge(0), calculatedMassToCharge(0), calculatedPI(0), rank(0), passThreshold(0) {}
+
     int chargeState;
     double experimentalMassToCharge;
     double calculatedMassToCharge;

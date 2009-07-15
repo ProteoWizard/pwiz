@@ -46,10 +46,12 @@ lib pwiz_data_mzid
     : # requirements
         <library>../msdata//pwiz_data_msdata
         <library>../misc//pwiz_data_misc
+        <library>../../utility/proteome//pwiz_utility_proteome
     : # default-build
     : # usage-requirements
         <library>../msdata//pwiz_data_msdata
         <library>../misc//pwiz_data_misc
+        <library>../../utility/proteome//pwiz_utility_proteome
     ;
 
 
@@ -70,6 +72,7 @@ unit-test DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; # Dif
 #unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_tradata ; # References.cpp TraData.cpp cv.cpp ;
 #unit-test IOTest : IOTest.cpp pwiz_data_tradata pwiz_data_tradata_examples ; # IO.cpp TraData.cpp Diff.cpp cv.cpp References.cpp ../minimxml ../util ;
 unit-test Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
 #unit-test TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
 #unit-test ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
 
