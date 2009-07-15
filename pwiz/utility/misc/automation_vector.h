@@ -16,6 +16,13 @@
 #ifndef __AUTOMATION_VECTOR_H__
 #define __AUTOMATION_VECTOR_H__
 
+#ifndef _MSC_VER
+// Because automation_vector provides std::vector semantics, non-MSVC compilers
+// can parse it equivalently.
+#include <vector>
+#define automation_vector std::vector
+#else // _MSC_VER
+
 /******************************************************************************
 Template class automation_vector<T>
 Purpose: to wrap the VB safe one-dimensional arrays while having the following
@@ -799,5 +806,7 @@ void automation_vector<T>::attach(SAFEARRAY &Array)
     }
     attach(v);
 }
+
+#endif // _MSC_VER
 
 #endif //__AUTOMATION_VECTOR_H__
