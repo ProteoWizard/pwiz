@@ -238,8 +238,6 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 };
 
 
-typedef boost::shared_ptr<AnalysisSampleCollection> AnalysisSampleCollectionPtr;
-
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
 {
     std::string length;
@@ -374,6 +372,8 @@ struct PWIZ_API_DECL Enzymes
     std::string independent;
 
     std::vector<EnzymePtr> enzymes;
+
+    bool empty() const;
 };
 
 struct PWIZ_API_DECL Residue
@@ -405,7 +405,9 @@ struct PWIZ_API_DECL MassTable
     std::string msLevel;
     
     std::vector<ResiduePtr> residues;
-    std::vector<AmbiguousResiduePtr> ambiguousResidue; 
+    std::vector<AmbiguousResiduePtr> ambiguousResidue;
+
+    bool empty() const;
 };
 
 struct PWIZ_API_DECL Filter
@@ -434,7 +436,7 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
     std::vector<FilterPtr> databaseFilters;
 };
 
-typedef boost::shared_ptr<SpectrumIdentificationProtocol> SpectrumIdentificationProtocolPtr;
+typedef boost::shared_ptr<SpectrumIdentificationProtocol>SpectrumIdentificationProtocolPtr;
 
 
 struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType

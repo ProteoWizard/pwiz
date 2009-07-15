@@ -230,6 +230,30 @@ bool Modification::empty() const
 }
 
 //
+// Enzymes
+//
+
+bool Enzymes::empty() const
+{
+    return independent.empty() &&
+        enzymes.empty();
+}
+
+//
+// MassTable
+//
+
+
+bool MassTable::empty() const
+{
+    return id.empty() &&
+        msLevel.empty() &&
+        residues.empty() &&
+        ambiguousResidue.empty();
+}
+
+
+//
 // IonType
 //
 

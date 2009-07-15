@@ -30,6 +30,7 @@ using namespace std;
 using namespace pwiz::util;
 using namespace pwiz;
 using namespace pwiz::mziddata;
+using namespace pwiz::mziddata::diff_impl;
 using boost::shared_ptr;
 
 
@@ -45,6 +46,23 @@ void testString()
 
     diff("goober", "goo");
     unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+}
+
+void testIdentifiableType()
+{
+    IdentifiableType a, b;
+    a.id="a";
+    a.name="a_name";
+    b = a;
+
+    Diff<IdentifiableType> diff(a, b);
+    if (diff && os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.id="b";
+    
+    diff(a, b);
     if (os_) *os_ << diff << endl;
 }
 
@@ -92,6 +110,7 @@ void testMzIdentML()
 void test()
 {
     testString();
+    testIdentifiableType();
     testMzIdentML();
 }
 
@@ -99,7 +118,9 @@ int main(int argc, char* argv[])
 {
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        //if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        // TODO debug - remove
+        os_ = &cout;
         test();
         return 0;
     }

@@ -93,33 +93,250 @@ class PWIZ_API_DECL TextWriter
     }
 
 
+    TextWriter& operator()(const std::string& label, const ParamContainer& paramContainer)
+    {
+        (*this)(label+": ");
+        for_each(paramContainer.cvParams.begin(), paramContainer.cvParams.end(), *this);
+        for_each(paramContainer.userParams.begin(), paramContainer.userParams.end(), *this);
+        return *this;
+    }
+    
+    TextWriter& operator()(const ParamContainer& paramContainer)
+    {
+        for_each(paramContainer.cvParams.begin(), paramContainer.cvParams.end(), *this);
+        for_each(paramContainer.userParams.begin(), paramContainer.userParams.end(), *this);
+        return *this;
+    }
+
+
+    TextWriter& operator()(const BibliographicReferencePtr& br)
+    {
+        (*this)((IdentifiableType)*br);
+        if (!br->authors.empty())
+            child()("authors: "+br->authors);
+        if (!br->publication.empty())
+            child()("publication: "+br->publication);
+        if (!br->publisher.empty())
+            child()(br->publisher);
+        if (!br->editor.empty())
+            child()("editor: "+br->editor);
+        child()("year: "+br->year);
+        if (!br->volume.empty())
+            child()("volume: "+br->volume);
+        if (!br->issue.empty())
+            child()("issue: "+br->issue);
+        if (!br->pages.empty())
+            child()("pages: "+br->pages);
+        if (!br->title.empty())
+            child()("title: "+br->title);
+        return *this;
+    }
+    
+    TextWriter& operator()(const std::vector<BibliographicReferencePtr>& br)
+    {
+        (*this)("BibliographicReference ");
+        if (!br.empty())
+            for_each(br.begin(), br.end(), *this);
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SpectrumIdentificationProtocolPtr& sip)
+    {
+        (*this)("SpectrumIdentificationProtocol:");
+        (*this)((IdentifiableType)*sip);
+        if (!sip->AnalysisSoftware_ref.empty())
+            child()("AnalysisSoftware_ref: "+sip->AnalysisSoftware_ref);
+        if (!sip->searchType.empty())
+            child()("searchType", sip->searchType);
+        if (!sip->additionalSearchParams.empty())
+            child()("additionalSearchParams", sip->additionalSearchParams);
+        if (!sip->modificationParams.empty())
+        {
+            child()("modificationParams");
+            for_each(sip->modificationParams.begin(),
+                     sip->modificationParams.end(), child());
+        }
+        if (!sip->enzymes.empty())
+            child()(sip->enzymes);
+        if (!sip->massTable.empty())
+            child()(sip->massTable);
+        if (!sip->fragmentTolerance.empty())
+            child()("fragmentTolerance", sip->fragmentTolerance);
+        if (!sip->parentTolerance.empty())
+            child()("parentTolerance", sip->parentTolerance);
+        if (!sip->threshold.empty())
+            child()("threshold", sip->threshold);
+        if (!sip->databaseFilters.empty())
+            child()("databaseFilters", sip->databaseFilters);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const DataCollection& dc)
+    {
+        (*this)("DataCollection: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const Filter& dc)
+    {
+        (*this)("Filter: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SearchModification& dc)
+    {
+        (*this)("SearchModification: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const Enzymes& ez)
+    {
+        (*this)("Enzymes: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const MassTable& mt)
+    {
+        (*this)("MassTable: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const AnalysisProtocolCollection& apc)
+    {
+        (*this)("AnalysisProtocolCollection: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const AnalysisCollection& ac)
+    {
+        (*this)("AnalysisCollection: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SequenceCollection& sc)
+    {
+        (*this)("SequenceCollection: ");
+        // TODO finish
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const Provider& provider)
+    {
+        (*this)("Provider: ");
+        if (!provider.contactRole.empty())
+            child()(provider.contactRole);
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const Sample::Component& component)
+    {
+        (*this)("component: "+component.Sample_ref);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SamplePtr& sample)
+    {
+        (*this)("samples: ");
+        for_each(sample->components.begin(), sample->components.end(), *this);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const AnalysisSampleCollection& asc)
+    {
+        for_each(asc.samples.begin(), asc.samples.end(), *this);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const ContactRole& cr)
+    {
+        (*this)("ContactRole: ");
+        if (!cr.Contact_ref.empty())
+            child()("Contact_ref: "+cr.Contact_ref);
+        if (!cr.role.empty())
+            child()("role: ", cr.role);
+        return (*this);
+    }
+
+    
+    TextWriter& operator()(const AnalysisSoftwarePtr& asp)
+    {
+        (*this)("analysisSoftwareList:");
+        (*this)((IdentifiableType)*asp);
+        if (asp->version.empty())
+            child()("version: "+asp->version);
+        if (asp->contactRole.empty())
+            child()(asp->contactRole);
+        if (asp->softwareName.empty())
+            child()("softwareName: ", asp->softwareName);
+        if (asp->URI.empty())
+            child()("URI: "+asp->URI);
+        if (asp->customizations.empty())
+            child()("customizations: "+asp->customizations);
+        //for_each(window.cvParams.begin(), window.cvParams.end(), child());
+        return *this;
+    }
+    
+    TextWriter& operator()(const IdentifiableType& id)
+    {
+        if (!id.id.empty())
+            child()("id: "+id.id);
+        if (!id.name.empty())
+            child()("name: "+id.name);
+
+        return *this;
+    }
+    
     TextWriter& operator()(const MzIdentML& mzid)
     {
-        /*
         (*this)("mzid:");
+        child()((IdentifiableType)mzid);
         if (!mzid.version.empty())
             child()("version: " + mzid.version);
         if (!mzid.cvs.empty())
             child()("cvList: ", mzid.cvs);
         if (!mzid.analysisSoftwareList.empty())
             child()("analysisSoftwareList: ", mzid.analysisSoftwareList);
-//        if (!mzid.provider.empty())
-//            child()("provider: ", mzid.provider);
+        if (!mzid.provider.empty())
+            child()(mzid.provider);
         if (!mzid.auditCollection.empty())
             child()("auditCollection: ", mzid.auditCollection);
-//        if (!mzid.analysisSampleCollection.empty())
-//            child()("analysisSampleCollection: ", mzid.analysisSampleCollection);
-        if (!mzid.referenceableCollection.empty())
-            child()("referenceableCollection: ", mzid.referenceableCollection);
+        if (!mzid.analysisSampleCollection.empty())
+            child()(mzid.analysisSampleCollection);
         if (!mzid.sequenceCollection.empty())
-            child()("sequenceCollection: ", mzid.sequenceCollection);
-//        if (!mzid.analysisCollection.empty())
-            child()("analysisCollection: ", mzid.analysisCollection);
+            child()(mzid.sequenceCollection);
+        if (!mzid.analysisCollection.empty())
+            child()(mzid.analysisCollection);
+        if (!mzid.analysisProtocolCollection.empty())
+            child()(mzid.analysisProtocolCollection);
         if (!mzid.dataCollection.empty())
-            child()("dataCollection: ", mzid.dataCollection);
-//        if (!mzid.BibliographicReference_ref.empty())
-//            child()("BibliographicReference_ref: ", mzid.BibliographicReference_ref);
-*/
+            child()(mzid.dataCollection);
+        if (!mzid.bibliographicReference.empty())
+            child()(mzid.bibliographicReference);
         return *this;
     }
     
