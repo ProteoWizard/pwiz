@@ -70,12 +70,14 @@ void test()
 
     IPIFASTADatabase::const_iterator it = db.records().begin();
     unit_assert(it->id == 1);
+    unit_assert(it->faID == "IPI:IPI00000001.2");
     unit_assert(it->sequence.size() == 577);
     unit_assert(it->sequence.find("PVPPLL") == 120);
     if (os_) *os_ << *it << endl;
 
     ++it;
     unit_assert(it->id == 5);
+    unit_assert(it->faID == "IPI:IPI00000005.1");
     unit_assert(it->sequence.size() == 189);
     unit_assert(it->sequence.find("PTRTVD") == 120);
     if (os_) *os_ << *it << endl;

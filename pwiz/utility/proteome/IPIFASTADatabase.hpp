@@ -49,15 +49,22 @@ class PWIZ_API_DECL IPIFASTADatabase
     struct PWIZ_API_DECL Record
     {
         int id;
+        std::string faID;
         std::string sequence;
+        
         Record(int _id=0) : id(_id) {}
     };
 
+    
     /// access to the data in memory
     const std::vector<Record>& records() const; 
     
     /// typedef to simplify declaration of Record iterator
     typedef std::vector<Record>::const_iterator const_iterator;
+
+    // begin() and end()
+    const_iterator begin();
+    const_iterator end();
 
     private:
     class Impl;

@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <fstream>
 #include <stdexcept>
+#include <cstring>
 #include <cstdlib>
 
 
@@ -37,6 +38,15 @@ using namespace std;
 namespace pwiz {
 namespace proteome {
 
+IPIFASTADatabase::const_iterator IPIFASTADatabase::begin()
+{
+    return records().begin();
+}
+
+IPIFASTADatabase::const_iterator IPIFASTADatabase::end()
+{
+    return records().end();
+}
 
 class IPIFASTADatabase::Impl
 {
@@ -73,7 +83,27 @@ void IPIFASTADatabase::Impl::readRecords(istream& is)
             // start a new record, and set current pointer
             records_.push_back(Record(atoi(buffer.c_str()+8)));
             current = &records_.back(); 
+
+            // get protein ID (e.g. IPI number, or whatever precedes first pipe)
+            // TODO: Increase flexibility (e.g. what if no pipe, get all ids between pipes as different 
+            // variables, etc ... 
+
+            const char* pipe = "|";
+            if (buffer.find(pipe) != string::npos)
+                {
+                    const size_t& pipeLocation = buffer.find(pipe);                    
+                    char protein[30];
+                    memset(protein, '\0', 30);
+
+                    buffer.copy(protein, pipeLocation - 1, 1);  // skip initial '>'
+                    current->faID = protein;
+
+                }
+            
+            else current->faID ="unknown";
+
         }
+
         else if (current)
         {
             // update current record with next line of the sequence
