@@ -353,12 +353,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="boost_date_time-vc90-mt.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="boost_thread-vc90-mt.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Misc\Centroider.ico" />
     <None Include="Misc\ChromatogramDataSet.xsc">
       <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
