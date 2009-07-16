@@ -28,9 +28,12 @@
 #include "ChromatogramListBase.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/copy.hpp>
 
 
 using namespace std;
@@ -104,25 +107,23 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
 
-	    // now give the gzip read a workout
-	    std::string cmd("gzip ");
-	    cmd += filename1;
-	    if (!system(cmd.c_str())) // don't fret if gzip command isn't present
-        {
-		    filename1+=".gz";
-		    MSDataFile msd1(filename1);
-            hackInMemoryMSData(msd1);
+        // now give the gzip read a workout
+        bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename1));
+        bio::copy(tinyGZ, bio::file_descriptor_sink(filename1+".gz", ios::out|ios::binary));
 
-            // compare
-            Diff<MSData> diff(tiny, msd1, diffConfig);
-            if (diff && os_) *os_ << diff << endl;
-            unit_assert(!diff);
-        }
+        MSDataFile msd3(filename1+".gz");
+        hackInMemoryMSData(msd3);
+
+        // compare
+        diff(tiny, msd3);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
 	}
 
     // remove temp files
     boost::filesystem::remove(filename1);
     boost::filesystem::remove(filename2);
+    boost::filesystem::remove(filename1 + ".gz");
 }
 
 void test()

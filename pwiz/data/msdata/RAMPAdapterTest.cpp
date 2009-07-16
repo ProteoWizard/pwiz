@@ -25,8 +25,12 @@
 #include "MSDataFile.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <boost/filesystem/operations.hpp>
-#include <iostream>
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/copy.hpp>
 #include <iterator>
 
 
@@ -244,15 +248,15 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         string filename = writeTempFile();
         test(filename);
-		// now try it with a gzipped file
-		string cmd("gzip ");
-		cmd += filename;
-		if (!system(cmd.c_str()))  // don't bother if no gzip on system
-		{
-			filename += ".gz";
-	        test(filename); // run it again with a gzipped file
-		}
+
+        // now try it with a gzipped file
+        string gzfilename = filename + ".gz";
+		bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename));
+        bio::copy(tinyGZ, bio::file_descriptor_sink(gzfilename, ios::out|ios::binary));
+        test(gzfilename);
+
         boost::filesystem::remove(filename);
+        boost::filesystem::remove(gzfilename);
         return 0;
     }
     catch (exception& e)
