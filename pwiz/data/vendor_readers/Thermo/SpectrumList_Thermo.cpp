@@ -325,14 +325,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             if (msLevel == -1) // precursor ion scan
             {
                 product.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
+                product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
+                product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
             else
             {
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
 
             // TODO: better test here for data dependent modes
