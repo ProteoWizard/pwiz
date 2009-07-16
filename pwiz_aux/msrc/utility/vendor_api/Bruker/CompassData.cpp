@@ -219,7 +219,7 @@ struct CompassDataImpl : public CompassData
         using bpt::ptime;
         using blt::local_date_time;
         if (!hasMSData_) return local_date_time(bdt::not_a_date_time);
-        ptime pt(bdt::time_from_OADATE<ptime>(msAnalysis_->AnalysisDateTime.ToUniversalTime().ToOADate()));
+        ptime pt(bdt::time_from_OADATE<ptime>(msAnalysis_->AnalysisDateTime.ToOADate()));
         return local_date_time(pt, blt::time_zone_ptr());
     }
 
