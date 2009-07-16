@@ -26,9 +26,11 @@
 #define _SCANFILTER_H_
 
 
+#ifdef _MSC_VER
 // disable warning "class needs to have dll-interface to be used by clients of class"
 #pragma warning(push)
 #pragma warning(disable:4251)
+#endif
 
 
 #include "RawFileTypes.h"
@@ -92,8 +94,8 @@ class PWIZ_API_DECL ScanFilter
 } // namespace vendor_api
 } // namespace pwiz
 
-
+#ifdef _MSC_VER
 #pragma warning(pop)
-
+#endif
 
 #endif // _SCANFILTER_H_
