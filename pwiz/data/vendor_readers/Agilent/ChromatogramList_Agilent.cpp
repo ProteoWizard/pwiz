@@ -235,7 +235,7 @@ namespace detail {
 
 namespace {const ChromatogramIdentity emptyIdentity;}
 
-ChromatogramList_Agilent::ChromatogramList_Agilent(const MSData& msd, MassHunterDataPtr rawfile) : msd_(msd) {}
+ChromatogramList_Agilent::ChromatogramList_Agilent(MassHunterDataPtr rawfile) {}
 size_t ChromatogramList_Agilent::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Agilent::find(const string& id) const {return 0;}

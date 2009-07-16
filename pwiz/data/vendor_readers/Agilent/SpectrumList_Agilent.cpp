@@ -299,14 +299,13 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile) : msd_(msd) {}
-size_t SpectrumList_Thermo::size() const {return 0;}
-const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
-size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
-SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
-SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-void SpectrumList_Thermo::createIndex() const {}
-size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const {return 0;}
+SpectrumList_Agilent::SpectrumList_Agilent(MassHunterDataPtr rawfile) {}
+size_t SpectrumList_Agilent::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_Agilent::spectrumIdentity(size_t index) const {return emptyIdentity;}
+size_t SpectrumList_Agilent::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+void SpectrumList_Agilent::createIndex() const {}
 
 } // detail
 } // msdata

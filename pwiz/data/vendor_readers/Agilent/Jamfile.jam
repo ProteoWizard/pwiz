@@ -39,10 +39,10 @@ SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PA
 lib pwiz_reader_agilent
     : # sources
         Reader_Agilent.cpp
+        SpectrumList_Agilent.cpp
+        ChromatogramList_Agilent.cpp
     : # requirements
         <toolset>msvc:<source>Reader_Agilent_Detail.cpp
-        <toolset>msvc:<source>SpectrumList_Agilent.cpp
-        <toolset>msvc:<source>ChromatogramList_Agilent.cpp
         <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_agilent
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <toolset>msvc:<define>PWIZ_READER_AGILENT
