@@ -26,6 +26,7 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/lexical_cast.hpp"
 #include <stdexcept>
 #include <functional>
@@ -2474,11 +2475,11 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd"));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML" + msd.version() + ".xsd"));
     if (!msd.accession.empty())
         attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id)); // not an XML:ID
-    attributes.push_back(make_pair("version", msd.version));
+    // deprecate? attributes.push_back(make_pair("version", msd.version()));
 
     writer.startElement("mzML", attributes);
 
@@ -2537,7 +2538,19 @@ struct HandlerMSData : public SAXParser::Handler
         {
             getAttribute(attributes, "accession", msd->accession);
             getAttribute(attributes, "id", msd->id); // not an XML:ID
-            getAttribute(attributes, "version", msd->version);
+
+            // "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML<version>.xsd
+            string schemaLocation;
+            getAttribute(attributes, "xsi:schemaLocation", schemaLocation);
+            if (schemaLocation.empty())
+                getAttribute(attributes, "version", msd->version_); // deprecated?
+            else
+            {
+                schemaLocation = schemaLocation.substr(schemaLocation.find(' ')+1);
+                string xsdName = bfs::path(schemaLocation).filename();
+                msd->version_ = xsdName.substr(4, xsdName.length()-8); // read between "mzML" and ".xsd"
+            }
+
             return Status::Ok;
         }
         else if (name == "cvList" || 

@@ -90,8 +90,8 @@ class PWIZ_API_DECL TextWriter
             ("id: " + msd.id);
         if (!msd.accession.empty())
             child()("accession: " + msd.accession);
-        if (!msd.version.empty())
-            child()("version: " + msd.version);
+        if (!msd.version().empty())
+            child()("version: " + msd.version());
         if (!msd.cvs.empty())
             child()("cvList: ", msd.cvs);
         if (!msd.fileDescription.empty())

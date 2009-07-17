@@ -932,6 +932,9 @@ struct PWIZ_API_DECL Run : public ParamContainer
 };
 
 
+namespace IO {struct HandlerMSData;} // forward declaration for friend
+
+
 /// This is the root element of ProteoWizard; it represents the mzML element, defined as:
 /// intended to capture the use of a mass spectrometer, the data generated, and the initial processing of that data (to the level of the peak list).
 struct PWIZ_API_DECL MSData
@@ -941,9 +944,6 @@ struct PWIZ_API_DECL MSData
 
     /// an optional id for the mzML document. It is recommended to use LSIDs when possible.
     std::string id;
-
-    /// the version of this mzML document.
-    std::string version;
 
     /// container for one or more controlled vocabulary definitions.
     /// note: one of the <cv> elements in this list MUST be the PSI MS controlled vocabulary. All <cvParam> elements in the document MUST refer to one of the <cv> elements in this list.
@@ -979,11 +979,20 @@ struct PWIZ_API_DECL MSData
     MSData();
     virtual ~MSData();
     bool empty() const;
+    
+    /// returns the version of this mzML document;
+    /// for a document created programmatically, the version is the current release version of mzML;
+    /// for a document created from a file/stream, the version is the schema version read from the file/stream
+    const std::string& version() const;
 
     private:
     // no copying
     MSData(const MSData&);
     MSData& operator=(const MSData&);
+
+    protected:
+    std::string version_; // schema version read from the file/stream
+    friend struct IO::HandlerMSData;
 };
 
 

@@ -2005,15 +2005,6 @@ public ref class MSData
     }
 
     /// <summary>
-    /// the version of this mzML document.
-    /// </summary>
-    property System::String^ version
-    {
-        System::String^ get();
-        void set(System::String^ value);
-    }
-
-    /// <summary>
     /// container for one or more controlled vocabulary definitions.
     /// <para>- note: one of the &lt;cv&gt; elements in this list MUST be the PSI MS controlled vocabulary. All &lt;cvParam&gt; elements in the document MUST refer to one of the &lt;cv&gt; elements in this list.</para>
     /// </summary>
@@ -2099,6 +2090,14 @@ public ref class MSData
     MSData();
 
     bool empty();
+
+    /// <summary>
+    /// returns the version of this mzML document;
+    /// for a document created programmatically, the version is the current release version of mzML;
+    /// for a document created from a file/stream, the version is the schema version read from the file/stream
+    /// </summary>
+    System::String^ version();
+
 
     internal:
     // no copying

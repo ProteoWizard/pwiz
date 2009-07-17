@@ -1054,11 +1054,13 @@ void testRun()
 }
 
 
+struct MSDataWithSettableVersion : public MSData {using MSData::version; void version(const string& v) {version_ = v;}};
+
 void testMSData()
 {
     if (os_) *os_ << "testMSData()\n";
 
-    MSData a, b;
+    MSDataWithSettableVersion a, b;
    
     a.id = "goober";
     b.id = "goober";
@@ -1067,7 +1069,7 @@ void testMSData()
     unit_assert(!diff);
 
     a.accession = "different";
-    b.version = "version";
+    b.version("version");
     a.cvs.push_back(CV());
     b.fileDescription.fileContent.cvParams.push_back(MS_reflectron_on);
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("pg")));
@@ -1085,8 +1087,8 @@ void testMSData()
     unit_assert(diff.a_b.accession == "different");
     unit_assert(diff.b_a.accession.empty());
 
-    unit_assert(diff.a_b.version.empty());
-    unit_assert(diff.b_a.version == "version");
+    unit_assert(diff.a_b.id == (a.id + " (" + a.version() + ")"));
+    unit_assert(diff.b_a.id == (b.id + " (" + b.version() + ")"));
 
     unit_assert(diff.a_b.cvs.size() == 1);
     unit_assert(diff.b_a.cvs.empty());

@@ -696,7 +696,7 @@ PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd)
         return msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
     else if (!msd.fileDescription.sourceFilePtrs.empty())
         return msd.fileDescription.sourceFilePtrs[0]->cvParamChild(MS_nativeID_format).cvid;
-    else if (msd.version.find("1.0") == 0)
+    else if (msd.version().find("1.0") == 0)
         return MS_scan_number_only_nativeID_format;
     else
         return CVID_Unknown;
@@ -1302,7 +1302,7 @@ PWIZ_API_DECL bool Run::empty() const
 //
 
 
-PWIZ_API_DECL MSData::MSData() {}
+PWIZ_API_DECL MSData::MSData() : version_("1.1.0") {}
 PWIZ_API_DECL MSData::~MSData() {}
 
 
@@ -1310,7 +1310,6 @@ PWIZ_API_DECL bool MSData::empty() const
 {
     return accession.empty() &&
            id.empty() &&
-           version.empty() &&
            cvs.empty() &&
            fileDescription.empty() &&
            paramGroupPtrs.empty() &&
@@ -1321,6 +1320,9 @@ PWIZ_API_DECL bool MSData::empty() const
            dataProcessingPtrs.empty() &&
            run.empty();
 }
+
+
+PWIZ_API_DECL const string& MSData::version() const {return version_;}
 
 
 namespace {

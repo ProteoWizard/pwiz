@@ -51,7 +51,6 @@ void testMSData()
     unit_assert(!(bool)diff);
 
     a.accession = "different";
-    b.version = "version";
     a.cvs->Add(gcnew CV());
     b.fileDescription->fileContent->set(CVID::MS_reflectron_on);
     a.paramGroups->Add(gcnew ParamGroup("pg"));
@@ -68,9 +67,6 @@ void testMSData()
 
     unit_assert(diff.a_b->accession == "different");
     unit_assert(diff.b_a->accession->Length == 0);
-
-    unit_assert(diff.a_b->version->Length == 0);
-    unit_assert(diff.b_a->version == "version");
 
     unit_assert(diff.a_b->cvs->Count == 1);
     unit_assert(diff.b_a->cvs->Count == 0);

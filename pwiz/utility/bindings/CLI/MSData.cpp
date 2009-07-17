@@ -923,9 +923,6 @@ void MSData::accession::set(System::String^ value) {(*base_)->accession = ToStdS
 System::String^ MSData::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void MSData::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ MSData::version::get() {return gcnew System::String((*base_)->version.c_str());}
-void MSData::version::set(System::String^ value) {(*base_)->version = ToStdString(value);}
-
 CVList^ MSData::cvs::get() {return gcnew CVList(&(*base_)->cvs, this);}
 void MSData::cvs::set(CVList^ value) {(*base_)->cvs = *value->base_;}
 
@@ -954,6 +951,7 @@ Run^ MSData::run::get()  {return gcnew Run(&(*base_)->run, this);}
 //void set(Run^ value) {(*base_)->run = *value->base_;}
 
 bool MSData::empty() {return (*base_)->empty();}
+System::String^ MSData::version() {return gcnew System::String((*base_)->version().c_str());}
 
 
 } // namespace msdata

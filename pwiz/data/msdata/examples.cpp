@@ -38,7 +38,6 @@ using namespace std;
 PWIZ_API_DECL void initializeTiny(MSData& msd)
 {
     msd.id = "urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz";
-    msd.version = "1.0";
 
     // cvList
 
@@ -406,7 +405,6 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
 {
     msd.id = "urn:lsid:psidev.info:mzML.instanceDocuments.small_miape.pwiz";
-    msd.version = "1.0";
 
     msd.cvs = defaultCVList(); // TODO: move this to Reader_Thermo
 

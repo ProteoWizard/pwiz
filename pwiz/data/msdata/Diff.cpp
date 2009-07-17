@@ -1025,11 +1025,13 @@ void diff(const MSData& a,
           MSData& b_a,
           const DiffConfig& config)
 {
+    string a_b_version, b_a_version;
+
     if (!config.ignoreMetadata)
     {
         diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
         diff(a.id, b.id, a_b.id, b_a.id, config);
-        diff(a.version, b.version, a_b.version, b_a.version, config);
+        diff(a.version(), b.version(), a_b_version, b_a_version, config);
         vector_diff_diff(a.cvs, b.cvs, a_b.cvs, b_a.cvs, config);
         diff(a.fileDescription, b.fileDescription, a_b.fileDescription, b_a.fileDescription, config);
         vector_diff_deep(a.paramGroupPtrs, b.paramGroupPtrs, a_b.paramGroupPtrs, b_a.paramGroupPtrs, config);
@@ -1048,10 +1050,11 @@ void diff(const MSData& a,
     diff(a.run, b.run, a_b.run, b_a.run, config_ignoreDataProcessing);
 
     // provide context
-    if (!a_b.empty() || !b_a.empty()) 
+    if (!a_b.empty() || !b_a.empty() ||
+        !a_b_version.empty() || !b_a_version.empty()) 
     {
-        a_b.id = a.id; 
-        b_a.id = b.id; 
+        a_b.id = a.id + (a_b_version.empty() ? "" : " (" + a_b_version + ")");
+        b_a.id = b.id + (b_a_version.empty() ? "" : " (" + b_a_version + ")");
     }
 }
 
