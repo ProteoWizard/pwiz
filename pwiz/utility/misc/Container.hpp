@@ -27,6 +27,7 @@
 #include <set>
 #include <deque>
 #include <algorithm>
+#include <utility>
 
 using std::vector;
 using std::list;
@@ -36,6 +37,7 @@ using std::set;
 using std::multiset;
 using std::deque;
 using std::pair;
+using std::make_pair;
 
 using std::find;
 using std::find_end;
