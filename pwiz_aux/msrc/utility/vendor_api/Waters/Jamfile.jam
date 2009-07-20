@@ -42,6 +42,8 @@ rule vendor-api-requirements ( properties * )
       result += <dependency>$(API_PATH)/raw.dll ;
       result += <dependency>$(API_PATH)/RawCsm.dll ;
       result += <dependency>$(API_PATH)/SecuritySignature.dll ;
+      result += <dependency>$(API_PATH)/SecuritySettings.dll ;
+      result += <dependency>$(API_PATH)/SecurityAccess.dll ;
     }
     return $(result) ;
 }
@@ -79,6 +81,8 @@ install install_pwiz_vendor_api_waters
       $(API_PATH)/raw.dll
       $(API_PATH)/RawCsm.dll
       $(API_PATH)/SecuritySignature.dll
+      $(API_PATH)/SecuritySettings.dll
+      $(API_PATH)/SecurityAccess.dll
     ;
 }
 else
