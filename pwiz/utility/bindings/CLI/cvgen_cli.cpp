@@ -158,7 +158,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "public enum class CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
         os << ",\n\n"
            << "    /// <summary>" << it->name << ": " << it->def << "</summary>\n"
@@ -295,7 +295,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const TermInfo termInfos_[] =\n{\n";
     os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\"},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         os << "    {" << enumName(*it) << ", "
            << "\"" << it->prefix << ":" << setw(7) << setfill('0') << it->id << "\", "
            << "\"" << it->name << "\", " 
@@ -315,12 +315,12 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     vector< map<Term::id_type, const Term*> > termMaps(obos.size());
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         termMaps[obo-obos.begin()][it->id] = &*it;
 
     os << "CVIDPair relationsIsA_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (Term::id_list::const_iterator jt=it->parentsIsA.begin(); jt!=it->parentsIsA.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
@@ -330,7 +330,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "CVIDPair relationsPartOf_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (Term::id_list::const_iterator jt=it->parentsPartOf.begin(); jt!=it->parentsPartOf.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
@@ -348,7 +348,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "{\n"
        << "    {CVID_Unknown, \"Unknown\"},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (vector<string>::const_iterator jt=it->exactSynonyms.begin(); jt!=it->exactSynonyms.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << "\"" << *jt << "\"" << "},\n";
