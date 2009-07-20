@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "obo.hpp"
-#include "boost/lexical_cast.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "boost/regex.hpp"
 #include <iostream>
 #include <fstream>
@@ -35,8 +35,8 @@ namespace msdata {
 
 
 using namespace std;
-using boost::lexical_cast;
 
+const Term::id_type Term::MAX_ID = std::numeric_limits<id_type>::max();
 
 namespace {
 
@@ -59,6 +59,32 @@ namespace {
 //  \\w matches [a-zA-Z_]
 
 
+// OBO format has some escape characters that C++ doesn't,
+// so we unescape them when reading in a tag:value pair.
+// http://www.geneontology.org/GO.format.obo-1_2.shtml#S.1.5
+string& unescape(string& str)
+{
+    bal::replace_all(str, "\\!", "!");
+    bal::replace_all(str, "\\:", ":");
+    bal::replace_all(str, "\\,", ",");
+    bal::replace_all(str, "\\(", "(");
+    bal::replace_all(str, "\\)", ")");
+    bal::replace_all(str, "\\[", "[");
+    bal::replace_all(str, "\\]", "]");
+    bal::replace_all(str, "\\{", "{");
+    bal::replace_all(str, "\\}", "}");
+    return str;
+}
+
+
+string unescape_copy(const string& str)
+{
+    string copy(str);
+    unescape(copy);
+    return copy;
+}
+
+
 void parse_id(const string& line, Term& term)
 {
     static const boost::regex e("id: (\\w+):(\\d+)");
@@ -67,8 +93,13 @@ void parse_id(const string& line, Term& term)
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term id on line: " + line);
 
-    term.prefix = what[1];
-    term.id = lexical_cast<Term::id_type>(what[2]);
+    term.prefix = unescape_copy(what[1]);
+    string id = what[2];
+    bal::trim_left_if(id, bal::is_any_of("0")); // trim leading zeros
+    if(id.empty())
+        term.id = 0; // id was all zeros
+    else
+        term.id = lexical_cast<Term::id_type>(unescape(id));
 }
 
 
@@ -80,7 +111,7 @@ void parse_name(const string& line, Term& term)
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term name.");    
 
-    term.name = what[1];
+    term.name = unescape_copy(what[1]);
 }
 
 
@@ -92,7 +123,7 @@ void parse_def(const string& line, Term& term)
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term def.");    
 
-    term.def = what[2];
+    term.def = what[2]; // TODO: is unescaping needed in a quoted string?
     term.isObsolete = what[1].matched;
 }
 
@@ -105,19 +136,16 @@ void parse_relationship(const string& line, Term& term)
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term relationship.");
 
-    if (what[2] != term.prefix)
-    {
-        //cerr << "[obo] Ignoring relationship with different prefix:\n  " << line << endl;
-        return;
-    }
-
     if (what[1] == "part_of")
     {
-        term.parentsPartOf.push_back(lexical_cast<Term::id_type>(what[3]));
+        if (what[2] != term.prefix)
+            cerr << "[obo] Ignoring part_of relationship with different prefix:\n  " << line << endl;
+        else
+            term.parentsPartOf.push_back(lexical_cast<Term::id_type>(what[3]));
         return;
     }
 
-    cerr << "[obo] Ignoring unknown relationship type " << what[1] << ":\n  " << line << endl;
+    term.relations.insert(make_pair(unescape_copy(what[1]), make_pair(what[2], lexical_cast<Term::id_type>(what[3]))));
 }
 
 
@@ -159,7 +187,7 @@ void parse_exact_synonym(const string& line, Term& term)
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term exact_synonym.");    
 
-    term.exactSynonyms.push_back(what[1]);
+    term.exactSynonyms.push_back(unescape_copy(what[1]));
 }
 
 
@@ -172,7 +200,7 @@ void parse_synonym(const string& line, Term& term)
         throw runtime_error("Error matching term synonym.");    
 
     if (what[2] == "EXACT")
-        term.exactSynonyms.push_back(what[1]);
+        term.exactSynonyms.push_back(unescape_copy(what[1]));
 }
 
 
@@ -205,7 +233,11 @@ void parseTagValuePair(const string& line, Term& term)
              tag == "comment" ||
              tag == "alt_id" ||
              tag == "namespace" ||
-			 tag == "xref")
+			 tag == "xref" ||
+             tag == "xref_analog" ||
+             tag == "replaced_by" ||
+             tag == "created_by" ||
+             tag == "creation_date")
         ; // ignore these tags
     else
         cerr << "[obo] Unknown tag \"" << tag << "\":\n  " << line << endl;
@@ -247,7 +279,7 @@ void parseStanza(istream& is, OBO& obo)
         }
 
         // add all terms, even obsolete ones
-        obo.terms.push_back(term);
+        obo.terms.insert(term);
     }
     else
     {
@@ -297,6 +329,10 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const Term& term)
     for (Term::id_list::const_iterator it=term.parentsPartOf.begin();
          it!=term.parentsPartOf.end(); ++it)
         os << "relationship: part_of " << term.prefix << ":" << *it << endl;
+
+    for (Term::relation_map::const_iterator it=term.relations.begin();
+         it!=term.relations.end(); ++it)
+        os << "relationship: " << it->first << " " << it->second.first << ":" << it->second.second << endl;
 
     return os;
 }

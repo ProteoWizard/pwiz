@@ -52,13 +52,13 @@ const char* oboText_ =
     "def: \"MZ controlled vocabularies.\" [PSI:MS]\n"
     "\n"
     "[Term]\n"
-    "id: MS:1000001\n"
+    "id: MS:0000001\n"
     "name: sample number\n"
     "def: \"A reference number relevant to the sample under study.\" [PSI:MS]\n"
     "relationship: part_of MS:1000548 ! sample attribute\n"
     "\n"
     "[Term]\n"
-    "id: MS:1000011\n"
+    "id: MS:0000011\n"
     "name: mass resolution\n"
     "def: \"The maximum m/z value at which two peaks can be resolved, according to one of the standard measures.\" [PSI:MS]\n"
     "is_a: MS:1000503 ! scan attribute\n"
@@ -82,6 +82,25 @@ const char* oboText_ =
     "name: obsolete by definition\n"
     "def: \"OBSOLETE description\" [PSI:MS]\n"
     "\n"
+    "[Term]\n"
+    "id: MS:1001272\n"
+    "name: (?<=R)(?\\!P)\n"
+    "\n"
+    "[Term]\n"
+    "id: MS:1001280\n"
+    "name: accuracy\n"
+    "def: \"Accuracy is the degree of conformity of a measured mass to its actual value.\" [PSI:MS]\n"
+    "xref: value-type:xsd\\:float \"The allowed value-type for this CV term.\"\n"
+    "is_a: MS:1000480 ! mass analyzer attribute\n"
+    "relationship: has_units MS:1000040 ! m/z\n"
+    "relationship: has_units UO:0000169 ! parts per million\n"
+    "\n"
+    "[Term]\n"
+    "id: MS:1001303\n"
+    "name: Arg-C\n"
+    "is_a: MS:1001045 ! cleavage agent name\n"
+    "relationship: has_regexp MS:1001272 ! (?<=R)(?!P)\n"
+    "\n"
     // OBO format 1.2
     "[Term]\n"
     "id: MS:2000025\n"
@@ -92,7 +111,7 @@ const char* oboText_ =
     "is_a: MS:1000480 ! mass analyzer attribute\n"
     "\n"
     "[Term]\n"
-    "id: MS:0000000\n"
+    "id: MS:9999999\n"
     "name: unit\n"
     "namespace: unit.ontology\n"
     "def: \"description\" [ignore this Wikipedia:Wikipedia \"http://www.wikipedia.org/\"]\n"
@@ -114,9 +133,9 @@ void test()
     unit_assert(obo.filename == filename);    
     unit_assert(obo.header.size() == 5); 
     unit_assert(obo.prefix == "MS");
-    unit_assert(obo.terms.size() == 8); // including obsolete terms
+    unit_assert(obo.terms.size() == 11); // including obsolete terms
 
-    const Term* term = &obo.terms[0];
+    set<Term>::const_iterator term = obo.terms.begin();
     unit_assert(term->prefix == "MS");
     unit_assert(term->id == 0);
     unit_assert(term->name == "MZ controlled vocabularies");
@@ -124,40 +143,63 @@ void test()
     unit_assert(term->parentsPartOf.empty());
     unit_assert(term->parentsIsA.empty());
 
-    term = &obo.terms[1];
-    unit_assert(term->id == 1000001);
+    ++term;
+    unit_assert(term->id == 1);
     unit_assert(term->name == "sample number");
     unit_assert(term->parentsPartOf.size() == 1);
     unit_assert(term->parentsPartOf[0] == 1000548);
  
-    term = &obo.terms[2];
-    unit_assert(term->id == 1000011);
+    ++term;
+    unit_assert(term->id == 11);
     unit_assert(term->name == "mass resolution");
     unit_assert(term->parentsIsA.size() == 1);
     unit_assert(term->parentsIsA[0] == 1000503);
 
-    term = &obo.terms[3];
+    ++term;
     unit_assert(term->id == 1000025);
     unit_assert(term->exactSynonyms.size() == 1);
     unit_assert(term->exactSynonyms[0] == "B");
 
-    term = &obo.terms[4];
+    ++term;
     unit_assert(term->id == 1000030);
     unit_assert(term->isObsolete);
 
-    term = &obo.terms[5];
+    ++term;
     unit_assert(term->id == 1000035);
     unit_assert(term->isObsolete);
 
+    // test unescaping "\!"
+    ++term;
+    unit_assert(term->id == 1001272);
+    unit_assert(term->name == "(?<=R)(?!P)");
+
+    // test other relationships
+    ++term;
+    unit_assert(term->id == 1001280);
+    unit_assert(term->relations.size() == 2);
+    unit_assert(term->relations.begin()->first == "has_units");
+    unit_assert(term->relations.begin()->second.first == "MS");
+    unit_assert(term->relations.begin()->second.second == 1000040);
+    unit_assert(term->relations.rbegin()->second.first == "UO");
+    unit_assert(term->relations.rbegin()->second.second == 169);
+
+    ++term;
+    unit_assert(term->id == 1001303);
+    unit_assert(term->name == "Arg-C");
+    unit_assert(term->relations.size() == 1);
+    unit_assert(term->relations.begin()->first == "has_regexp");
+    unit_assert(term->relations.begin()->second.first == "MS");
+    unit_assert(term->relations.begin()->second.second == 1001272);
+
     // test term with OBO 1.2 synonym format
-    term = &obo.terms[6];
+    ++term;
     unit_assert(term->id == 2000025);
     unit_assert(term->exactSynonyms.size() == 1);
     unit_assert(term->exactSynonyms[0] == "B");
 
     // test term with [stuff to ignore]
-    term = &obo.terms[7];
-    unit_assert(term->id == 0);
+    ++term;
+    unit_assert(term->id == 9999999);
     unit_assert(term->def == "description");
  
     boost::filesystem::remove(filename); 

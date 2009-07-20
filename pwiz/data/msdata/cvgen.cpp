@@ -137,6 +137,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "#define " << includeGuard << "\n\n\n"
        << "#include <string>\n"
        << "#include <vector>\n"
+       << "#include <map>\n"
        << "#include \"pwiz/utility/misc/Export.hpp\"\n"
        << "\n\n";
 
@@ -157,7 +158,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "enum PWIZ_API_DECL CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
         os << ",\n\n"
            << "    /// " << it->name << ": " << it->def << "\n"
@@ -214,6 +215,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    typedef std::vector<CVID> id_list;\n"
           "    id_list parentsIsA;\n"
           "    id_list parentsPartOf;\n"
+          "    std::multimap<std::string, CVID> otherRelations;\n"
           "    std::vector<std::string> exactSynonyms;\n"
           "\n"
           "    CVTermInfo() : cvid((CVID)-1) {}\n"
@@ -236,25 +238,6 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     namespaceEnd(os, basename);
 
     os << "#endif // " << includeGuard << "\n\n\n";
-}
-
-
-// OBO format has some escape characters that C++ doesn't,
-// so we double-escape them:
-// http://www.geneontology.org/GO.format.obo-1_2.shtml#S.1.5
-string escape_copy(const string& str)
-{
-    string copy(str);
-    bal::replace_all(copy, "\\!", "\\\\!");
-    bal::replace_all(copy, "\\:", "\\\\:");
-    bal::replace_all(copy, "\\,", "\\\\,");
-    bal::replace_all(copy, "\\(", "\\\\(");
-    bal::replace_all(copy, "\\)", "\\\\)");
-    bal::replace_all(copy, "\\[", "\\\\[");
-    bal::replace_all(copy, "\\]", "\\\\]");
-    bal::replace_all(copy, "\\{", "\\\\{");
-    bal::replace_all(copy, "\\}", "\\\\}");
-    return copy;
 }
 
 
@@ -289,11 +272,11 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const TermInfo termInfos_[] =\n{\n";
     os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\", false},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         os << "    {" << enumName(*it) << ", "
            << "\"" << it->prefix << ":" << setw(7) << setfill('0') << it->id << "\", "
-           << "\"" << escape_copy(it->name) << "\", " 
-           << "\"" << escape_copy(it->def) << "\", "
+           << "\"" << it->name << "\", " 
+           << "\"" << it->def << "\", "
            << (it->isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
     os << "}; // termInfos_\n\n\n";
@@ -310,12 +293,12 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     vector< map<Term::id_type, const Term*> > termMaps(obos.size());
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         termMaps[obo-obos.begin()][it->id] = &*it;
 
     os << "CVIDPair relationsIsA_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (Term::id_list::const_iterator jt=it->parentsIsA.begin(); jt!=it->parentsIsA.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
@@ -325,13 +308,51 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "CVIDPair relationsPartOf_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (Term::id_list::const_iterator jt=it->parentsPartOf.begin(); jt!=it->parentsPartOf.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << enumName(*termMaps[obo-obos.begin()][*jt]) << "},\n";
     os << "}; // relationsPartOf_\n\n\n";
 
     os << "const size_t relationsPartOfSize_ = sizeof(relationsPartOf_)/sizeof(CVIDPair);\n\n\n";
+
+
+    os << "struct OtherRelationPair\n"
+          "{\n"
+          "    CVID subject;\n"
+          "    const char* relation;\n"
+          "    CVID object;\n"
+          "};\n\n\n";
+
+    os << "OtherRelationPair relationsOther_[] =\n"
+       << "{\n"
+       << "    {CVID_Unknown, \"Unknown\", CVID_Unknown},\n";
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (Term::relation_map::const_iterator jt=it->relations.begin(); jt!=it->relations.end(); ++jt)
+    {
+        const Term* relatedTerm = NULL;
+        for (vector<OBO>::const_iterator obo2=obos.begin(); obo2!=obos.end(); ++obo2)
+        {
+            set<Term>::const_iterator relatedTermItr = obo2->terms.find(Term(jt->second.second));
+            if (relatedTermItr != obo2->terms.end())
+            {
+                relatedTerm = &*relatedTermItr;
+                break;
+            }
+        }
+
+        if (!relatedTerm)
+             cerr << "[writeCpp] Warning: unable to find object of term relationship." << endl;
+        else
+            os << "    {" << enumName(*it) << ", " 
+               << "\"" << jt->first << "\", "
+               << enumName(*relatedTerm) << "},\n";
+    }
+    os << "}; // relationsOther_\n\n\n";
+
+    os << "const size_t relationsOtherSize_ = sizeof(relationsOther_)/sizeof(OtherRelationPair);\n\n\n";
+
 
     os << "struct CVIDStringPair\n"
           "{\n"
@@ -343,7 +364,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "{\n"
        << "    {CVID_Unknown, \"Unknown\"},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
-    for (vector<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
+    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     for (vector<string>::const_iterator jt=it->exactSynonyms.begin(); jt!=it->exactSynonyms.end(); ++jt)
         os << "    {" << enumName(*it) << ", " 
            << "\"" << *jt << "\"" << "},\n";
@@ -376,6 +397,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "    for (const CVIDPair* it=relationsPartOf_; it!=relationsPartOf_+relationsPartOfSize_; ++it)\n"
           "        infoMap_[it->first].parentsPartOf.push_back(it->second);\n"
+          "\n"
+          "    for (const OtherRelationPair* it=relationsOther_; it!=relationsOther_+relationsOtherSize_; ++it)\n"
+          "        infoMap_[it->subject].otherRelations.insert(make_pair(it->relation, it->object));\n"
           "\n"
           "    for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
           "        infoMap_[it->first].exactSynonyms.push_back(it->second);\n"

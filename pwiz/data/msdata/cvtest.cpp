@@ -72,6 +72,22 @@ void testIsA()
 }
 
 
+void testOtherRelations()
+{
+    const CVTermInfo& info = cvTermInfo(MS_accuracy);
+    unit_assert(info.otherRelations.size() == 2);
+    unit_assert(info.otherRelations.begin()->first == "has_units");
+    unit_assert(info.otherRelations.begin()->second == MS_m_z);
+    unit_assert(info.otherRelations.rbegin()->first == "has_units");
+    unit_assert(info.otherRelations.rbegin()->second == UO_parts_per_million);
+
+    const CVTermInfo& info2 = cvTermInfo(MS_Trypsin);
+    unit_assert(info2.otherRelations.size() == 1);
+    unit_assert(info2.otherRelations.begin()->first == "has_regexp");
+    unit_assert(info2.otherRelations.begin()->second == MS______KR_____P_);
+}
+
+
 void testSynonyms()
 {
     const CVTermInfo& info = cvTermInfo(MS_B);
@@ -104,6 +120,7 @@ int main(int argc, char* argv[])
     {
         test();
         testIsA();
+        testOtherRelations();
         testSynonyms();
         testIDTranslation();
         return 0;

@@ -29,28 +29,30 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "pwiz/utility/misc/Export.hpp"
 
 
 // [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
-//   date: 30:04:2009 11:14
-//   saved-by: Matt Chambers
+//   date: 14:07:2009 18:30
+//   saved-by: Eric Deutsch
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.16.0
-//   remark: release date: 2009-07-01
+//   remark: version: 2.20.2
+//   remark: release date: 2009-07-20T17:57:48Z
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
+//   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.20
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
 // [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
-//   date: 04:03:2009 17:16
-//   saved-by: george gkoutos
+//   date: 14:07:2009 12:37
+//   saved-by: George Gkoutos
 //   auto-generated-by: OBO-Edit 2.000-beta55
 //   subsetdef: abnormal_slim "Abnormal/normal slim"
 //   subsetdef: absent_slim "Absent/present slim"
@@ -3180,26 +3182,26 @@ enum PWIZ_API_DECL CVID
     /// database name: The name of the search database (nr, SwissProt or est_human).
     MS_database_name = 1001013,
 
-    /// database local file path: Local file path of the search database from the search engine's point of view.
-    MS_database_local_file_path = 1001014,
+    /// database local file path: OBSOLETE: Use attribute in mzIdentML instead. Local file path of the search database from the search engine's point of view.
+    MS_database_local_file_path_OBSOLETE = 1001014,
 
     /// database original uri: URI, from where the search database was originally downloaded.
     MS_database_original_uri = 1001015,
 
-    /// database version: Version of the search database .
-    MS_database_version = 1001016,
+    /// database version: OBSOLETE: Use attribute in mzIdentML instead. Version of the search database .
+    MS_database_version_OBSOLETE = 1001016,
 
-    /// database release date: Release date of the search database.
-    MS_database_release_date = 1001017,
+    /// database release date: OBSOLETE: Use attribute in mzIdentML instead. Release date of the search database.
+    MS_database_release_date_OBSOLETE = 1001017,
 
     /// database type: Database containing amino acid or nucleic acid sequences.
     MS_database_type = 1001018,
 
-    /// database filtering: Was there filtering used on the database(s), public or private.
+    /// database filtering: Was there filtering used on the database.
     MS_database_filtering = 1001019,
 
-    /// DB filter taxonomy: The taxonomy filter applied (if any) to the database search.
-    MS_DB_filter_taxonomy_OBSOLETE = 1001020,
+    /// DB filter taxonomy: A taxonomy filter was to the database search.
+    MS_DB_filter_taxonomy = 1001020,
 
     /// DB filter on accession numbers: Filtering applied specifically by accession number pattern.
     MS_DB_filter_on_accession_numbers = 1001021,
@@ -3210,8 +3212,8 @@ enum PWIZ_API_DECL CVID
     /// DB PI filter: Filtering applied specifically by predicted protein isoelectric focussing point (pI), specified as either a range or above/below a threshold value.
     MS_DB_PI_filter = 1001023,
 
-    /// translation frame: The translated open reading frames from a nucleotide database considered in the search (range: 1-6).
-    MS_translation_frame = 1001024,
+    /// translation frame: OSBOLETE: use attribute in mzIdentML instead. The translated open reading frames from a nucleotide database considered in the search (range: 1-6).
+    MS_translation_frame_OBSOLETE = 1001024,
 
     /// translation table: The translation table used to translate the nucleotides to amino acids.
     MS_translation_table = 1001025,
@@ -3219,8 +3221,8 @@ enum PWIZ_API_DECL CVID
     /// sequest:NormalizeXCorrValues: 
     MS_sequest_NormalizeXCorrValues = 1001026,
 
-    /// DB filter on sequences: Filtering applied specifically by amino acid sequence pattern.
-    MS_DB_filter_on_sequences = 1001027,
+    /// DB filter on sequence pattern: Filtering applied specifically by amino acid sequence pattern.
+    MS_DB_filter_on_sequence_pattern = 1001027,
 
     /// sequest:SequenceHeaderFilter: 
     MS_sequest_SequenceHeaderFilter = 1001028,
@@ -3237,8 +3239,8 @@ enum PWIZ_API_DECL CVID
     /// sequest:SequencePartialFilter: 
     MS_sequest_SequencePartialFilter = 1001032,
 
-    /// date / time search performed: Date and time of the actual search run.
-    MS_date___time_search_performed = 1001035,
+    /// date / time search performed: OBSOLETE: use attribute in mzIdentML instead. Date and time of the actual search run.
+    MS_date___time_search_performed_OBSOLETE = 1001035,
 
     /// search time taken: The time taken to complete the search in seconds.
     MS_search_time_taken = 1001036,
@@ -3279,8 +3281,8 @@ enum PWIZ_API_DECL CVID
     /// sequest:sort_by_P: 
     MS_sequest_sort_by_P = 1001050,
 
-    /// multiple enzyme combination rules: Description of multiple enzyme digestion protocol, if any.
-    MS_multiple_enzyme_combination_rules = 1001051,
+    /// multiple enzyme combination rules: OBSOLETE: use attribute independent in mzIdentML instead. Description of multiple enzyme digestion protocol, if any.
+    MS_multiple_enzyme_combination_rules_OBSOLETE = 1001051,
 
     /// sequest:sort_by_PreviousAminoAcid: 
     MS_sequest_sort_by_PreviousAminoAcid = 1001052,
@@ -3294,8 +3296,8 @@ enum PWIZ_API_DECL CVID
     /// modification specificity rule: The specificity rules for the modifications applied by the search engine.
     MS_modification_specificity_rule = 1001056,
 
-    /// tolerance on types: Tolerance on types.
-    MS_tolerance_on_types = 1001057,
+    /// tolerance on types: OBSOLETE: Tolerance on types.
+    MS_tolerance_on_types_OBSOLETE = 1001057,
 
     /// quality estimation by manual validation: The quality estimation was done manually.
     MS_quality_estimation_by_manual_validation = 1001058,
@@ -3303,8 +3305,8 @@ enum PWIZ_API_DECL CVID
     /// sequest:sort_by_RSp: 
     MS_sequest_sort_by_RSp = 1001059,
 
-    /// quality estimation details: Method for quality estimation (manually or wih decoy database).
-    MS_quality_estimation_details = 1001060,
+    /// quality estimation method details: Method for quality estimation (manually or wih decoy database).
+    MS_quality_estimation_method_details = 1001060,
 
     /// neutral loss: OBSOLETE: replaced by MS:1000336 (neutral loss): Leave this to PSI-MOD?
     MS_neutral_loss_OBSOLETE = 1001061,
@@ -3333,11 +3335,11 @@ enum PWIZ_API_DECL CVID
     /// sequest:sort_by_Sf: 
     MS_sequest_sort_by_Sf = 1001072,
 
-    /// database type AA: Database contains amino acid sequences.
-    MS_database_type_AA = 1001073,
+    /// database type amino acid: Database contains amino acid sequences.
+    MS_database_type_amino_acid = 1001073,
 
-    /// database type NA: Database contains nucleid acid sequences.
-    MS_database_type_NA = 1001079,
+    /// database type nucleotide: Database contains nucleid acid sequences.
+    MS_database_type_nucleotide = 1001079,
 
     /// search type: Enumeration of type of search value (i.e. from PMF, sequence tag, MS-MS).
     MS_search_type = 1001080,
@@ -3378,8 +3380,8 @@ enum PWIZ_API_DECL CVID
     /// peptide quality estimation measure: 
     MS_peptide_quality_estimation_measure = 1001092,
 
-    /// coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).
-    MS_coverage = 1001093,
+    /// sequence coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).
+    MS_sequence_coverage = 1001093,
 
     /// sequest:sort_by_z: 
     MS_sequest_sort_by_z = 1001094,
@@ -3444,8 +3446,8 @@ enum PWIZ_API_DECL CVID
     /// retention time(s): Retention time of the spectrum from the source file
     MS_retention_time_s_ = 1001114,
 
-    /// scan number(s): Take from mzData. TODO: What does this mean?
-    MS_scan_number_s_ = 1001115,
+    /// scan number(s): OBSOLETE: use spectrumID attribute of SpectrumIdentificationResult. Take from mzData.
+    MS_scan_number_s__OBSOLETE = 1001115,
 
     /// single protein result details: Results specific for one protein as part of a protein ambiguity group (a result not valid for all the other proteins in the protein ambiguity group).
     MS_single_protein_result_details = 1001116,
@@ -3627,8 +3629,8 @@ enum PWIZ_API_DECL CVID
     /// peptide shared in multiple proteins: 
     MS_peptide_shared_in_multiple_proteins = 1001175,
 
-    /// (?<=[KR])(?\!P): 
-    MS______KR______P_ = 1001176,
+    /// (?<=[KR])(?!P): 
+    MS______KR_____P_ = 1001176,
 
     /// number of molecular hypothesis considered: Number of Molecular Hypothesis Considered - This is the number of molecules (e.g. peptides for proteomics) considered for a particular search.
     MS_number_of_molecular_hypothesis_considered = 1001177,
@@ -3726,70 +3728,76 @@ enum PWIZ_API_DECL CVID
     /// sequest:PeptideIdnumber: The SEQUEST result 'Id#' in out file (peptide).
     MS_sequest_PeptideIdnumber = 1001219,
 
-    /// frag: y ion: Type of fragment: y ion (ADD more documentation here).
+    /// frag: y ion: Type of fragment: y ion.
     MS_frag__y_ion = 1001220,
 
     /// fragmentation information: Fragmentation information like ion types.
     MS_fragmentation_information = 1001221,
 
-    /// frag: b ion - H2O: Type of fragment: b ion without water (ADD more documentation here).
+    /// frag: b ion - H2O: Type of fragment: b ion without water.
     MS_frag__b_ion___H2O = 1001222,
 
-    /// frag: y ion - H2O: Type of fragment: y ion without water (ADD more documentation here).
+    /// frag: y ion - H2O: Type of fragment: y ion without water.
     MS_frag__y_ion___H2O = 1001223,
 
-    /// frag: b ion: Type of fragment: b ion (ADD more documentation here).
+    /// frag: b ion: Type of fragment: b ion.
     MS_frag__b_ion = 1001224,
 
     /// product ion m/z: The m/z of the product ion.
     MS_product_ion_m_z = 1001225,
 
+    /// product ion m/z: The m/z of the product ion.
+    MS_fragment_ion_m_z = MS_product_ion_m_z,
+
     /// product ion intensity: The intensity of the product ion.
     MS_product_ion_intensity = 1001226,
 
-    /// product ion m/z error: The product ion m/z error (ADD more docu here).
+    /// product ion intensity: The intensity of the product ion.
+    MS_fragment_ion_intensity = MS_product_ion_intensity,
+
+    /// product ion m/z error: The product ion m/z error.
     MS_product_ion_m_z_error = 1001227,
 
-    /// frag: x ion: Type of fragment: x ion (ADD more documentation here).
+    /// frag: x ion: Type of fragment: x ion.
     MS_frag__x_ion = 1001228,
 
-    /// frag: a ion: Type of fragment: a ion (ADD more documentation here).
+    /// frag: a ion: Type of fragment: a ion.
     MS_frag__a_ion = 1001229,
 
-    /// frag: z ion: Type of fragment: z ion (ADD more documentation here).
+    /// frag: z ion: Type of fragment: z ion.
     MS_frag__z_ion = 1001230,
 
-    /// frag: c ion: Type of fragment: c ion (ADD more documentation here).
+    /// frag: c ion: Type of fragment: c ion.
     MS_frag__c_ion = 1001231,
 
-    /// frag: b ion - NH3: Type of fragment: b ion without ammonium ion (ADD more documentation here).
+    /// frag: b ion - NH3: Type of fragment: b ion without ammonium ion.
     MS_frag__b_ion___NH3 = 1001232,
 
-    /// frag: y ion - NH3: Type of fragment: y ion without ammonium ion (ADD more documentation here).
+    /// frag: y ion - NH3: Type of fragment: y ion without ammonium ion.
     MS_frag__y_ion___NH3 = 1001233,
 
-    /// frag: a ion - H2O: Type of fragment: a ion without water (ADD more documentation here).
+    /// frag: a ion - H2O: Type of fragment: a ion without water.
     MS_frag__a_ion___H2O = 1001234,
 
-    /// frag: a ion - NH3: Type of fragment: a ion without ammonium ion (ADD more documentation here).
+    /// frag: a ion - NH3: Type of fragment: a ion without ammonium.
     MS_frag__a_ion___NH3 = 1001235,
 
-    /// frag: d ion: Type of fragment: d ion (ADD more documentation here).
+    /// frag: d ion: Type of fragment: d ion.
     MS_frag__d_ion = 1001236,
 
-    /// frag: v ion: Type of fragment: v ion (ADD more documentation here).
+    /// frag: v ion: Type of fragment: v ion.
     MS_frag__v_ion = 1001237,
 
-    /// frag: w ion: Type of fragment: w ion (ADD more documentation here).
+    /// frag: w ion: Type of fragment: w ion.
     MS_frag__w_ion = 1001238,
 
-    /// frag: immonium ion: Type of fragment: immonium ion (ADD more documentation here).
+    /// frag: immonium ion: Type of fragment: immonium ion.
     MS_frag__immonium_ion = 1001239,
 
-    /// non-identified ion: Non-identified ion (ADD more documentation here).
+    /// non-identified ion: Non-identified ion.
     MS_non_identified_ion = 1001240,
 
-    /// co-eluting ion: Co-eluting ion (ADD more documentation here).
+    /// co-eluting ion: Co-eluting ion.
     MS_co_eluting_ion = 1001241,
 
     /// Sequest out folder: Source file for this mzIdentML was a Sequest folder with its out files.
@@ -3864,14 +3872,14 @@ enum PWIZ_API_DECL CVID
     /// instrument vendor: 
     MS_instrument_vendor = 1001269,
 
-    /// lab personnell: 
-    MS_lab_personnell = 1001270,
+    /// lab personnel: 
+    MS_lab_personnel = 1001270,
 
     /// researcher: 
     MS_researcher = 1001271,
 
-    /// (?<=R)(?\!P): 
-    MS_____R_____P_ = 1001272,
+    /// (?<=R)(?!P): 
+    MS_____R____P_ = 1001272,
 
     /// (?=[BD]): 
     MS_____BD__ = 1001273,
@@ -4015,7 +4023,7 @@ enum PWIZ_API_DECL CVID
     MS_mascot_ShowDecoyMatches = 1001325,
 
     /// TODO_add_others: 
-    MS_TODO_add_others = 1001326,
+    MS_TODO_add_others_OBSOLETE = 1001326,
 
     /// OMSSA:evalue: OMSSA E-value.
     MS_OMSSA_evalue = 1001328,
@@ -4029,8 +4037,8 @@ enum PWIZ_API_DECL CVID
     /// xtandem:hyperscore: The X!Tandem hyperscore.
     MS_xtandem_hyperscore = 1001331,
 
-    /// (?<=[FYWL])(?\!P): 
-    MS______FYWL______P_ = 1001332,
+    /// (?<=[FYWL])(?!P): 
+    MS______FYWL_____P_ = 1001332,
 
     /// (?<=M): 
     MS_____M_ = 1001333,
@@ -4038,8 +4046,8 @@ enum PWIZ_API_DECL CVID
     /// ((?<=D))|((?=D)): 
     MS______D_______D__ = 1001334,
 
-    /// (?<=K)(?\!P): 
-    MS_____K_____P_ = 1001335,
+    /// (?<=K)(?!P): 
+    MS_____K____P_ = 1001335,
 
     /// (?<=K): 
     MS_____K_ = 1001336,
@@ -4047,17 +4055,17 @@ enum PWIZ_API_DECL CVID
     /// (?<=[FL]): 
     MS______FL__ = 1001337,
 
-    /// (?<=[FYWLKR])(?\!P): 
-    MS______FYWLKR______P_ = 1001338,
+    /// (?<=[FYWLKR])(?!P): 
+    MS______FYWLKR_____P_ = 1001338,
 
     /// (?<=[KR]): 
     MS______KR__ = 1001339,
 
-    /// (?<=[BDEZ])(?\!P): 
-    MS______BDEZ______P_ = 1001340,
+    /// (?<=[BDEZ])(?!P): 
+    MS______BDEZ_____P_ = 1001340,
 
-    /// (?<=[EZ])(?\!P): 
-    MS______EZ______P_ = 1001341,
+    /// (?<=[EZ])(?!P): 
+    MS______EZ_____P_ = 1001341,
 
     /// database sequence details: Details about a single database sequence.
     MS_database_sequence_details = 1001342,
@@ -4521,9 +4529,6 @@ enum PWIZ_API_DECL CVID
     /// ProteinScape:SearchEventId: The SearchEventId of the SearchEvent in the ProteinScape database.
     MS_ProteinScape_SearchEventId = 1001496,
 
-    /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
-    MS_ProteinScape_ProfoundProbability = 1001597,
-
     /// Profound:z value: The Profound z value.
     MS_Profound_z_value = 1001498,
 
@@ -4558,10 +4563,58 @@ enum PWIZ_API_DECL CVID
     MS_Agilent_MassHunter_nativeID_format = 1001508,
 
     /// Agilent MassHunter file: A data file found in an Agilent MassHunter directory which contains raw data acquired by an Agilent mass spectrometer.
-    MS_Agilent_MassHunter_file = 100509,
+    MS_Agilent_MassHunter_file = 1001509,
 
     /// TSQ Vantage: TSQ Vantage.
     MS_TSQ_Vantage = 1001510,
+
+    /// Sequence database filter types: Filter types which are used to filter a sequence database.
+    MS_Sequence_database_filter_types = 1001511,
+
+    /// Sequence database filters: Sequence database filters which actually can contains values, e.g. to limit PI value of the sequences used to search.
+    MS_Sequence_database_filters = 1001512,
+
+    /// DB sequence filter pattern: 
+    MS_DB_sequence_filter_pattern = 1001513,
+
+    /// DB accession filter string: 
+    MS_DB_accession_filter_string = 1001514,
+
+    /// frag: c ion - H2O: Type of fragment: c ion without water.
+    MS_frag__c_ion___H2O = 1001515,
+
+    /// frag: c ion - NH3: Type of fragment: c ion without ammonia.
+    MS_frag__c_ion___NH3 = 1001516,
+
+    /// frag: z ion - H2O: Type of fragment: z ion without water.
+    MS_frag__z_ion___H2O = 1001517,
+
+    /// frag: z ion - NH3: Type of fragment: z ion without ammonia.
+    MS_frag__z_ion___NH3 = 1001518,
+
+    /// frag: x ion - H2O: Type of fragment: x ion without water.
+    MS_frag__x_ion___H2O = 1001519,
+
+    /// frag: x ion - NH3: Type of fragment: x ion without ammonia.
+    MS_frag__x_ion___NH3 = 1001520,
+
+    /// frag: precursor ion - H2O: Type of fragment: precursor ion without water.
+    MS_frag__precursor_ion___H2O = 1001521,
+
+    /// frag: precursor ion - NH3: Type of fragment: precursor ion without ammonia.
+    MS_frag__precursor_ion___NH3 = 1001522,
+
+    /// frag: precursor ion: Type of fragment: precursor ion.
+    MS_frag__precursor_ion = 1001523,
+
+    /// fragment neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.
+    MS_fragment_neutral_loss = 1001524,
+
+    /// precursor neutral loss : This term can describe a neutral loss m/z value that is lost from an ion.
+    MS_precursor_neutral_loss_ = 1001525,
+
+    /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
+    MS_ProteinScape_ProfoundProbability = 1001597,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
@@ -5368,7 +5421,10 @@ enum PWIZ_API_DECL CVID
     UO_electric_field_strength_unit = 100000267,
 
     /// volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.
-    UO_volt_per_meter = 100000268
+    UO_volt_per_meter = 100000268,
+
+    /// absorbance unit: A dimensionless logarithmic unit assigned to a measure of absorbance of light through a partially absorbing substance, defined as -log10(I/I_0) where I = transmitted light and I_0 = incident light.
+    UO_absorbance_unit = 100000269
 }; // enum CVID
 
 
@@ -5412,6 +5468,7 @@ struct PWIZ_API_DECL CVTermInfo
     typedef std::vector<CVID> id_list;
     id_list parentsIsA;
     id_list parentsPartOf;
+    std::multimap<std::string, CVID> otherRelations;
     std::vector<std::string> exactSynonyms;
 
     CVTermInfo() : cvid((CVID)-1) {}

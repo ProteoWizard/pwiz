@@ -27,6 +27,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <vector>
+#include <set>
+#include <map>
 #include <string>
 #include <limits>
 
@@ -39,7 +41,9 @@ namespace msdata {
 struct PWIZ_API_DECL Term
 {
     typedef unsigned int id_type;
-    typedef std::vector<id_type> id_list; 
+    typedef std::vector<id_type> id_list;
+    typedef std::multimap<std::string, std::pair<std::string, id_type> > relation_map;
+    const static id_type MAX_ID;
 
     std::string prefix;
     id_type id;
@@ -47,12 +51,15 @@ struct PWIZ_API_DECL Term
     std::string def;
     id_list parentsIsA;
     id_list parentsPartOf;
+    relation_map relations; // other than is_a and part_of
     std::vector<std::string> exactSynonyms;
     bool isObsolete;
 
-    Term()
-    :   id(std::numeric_limits<int>::max()), isObsolete(false)
+    Term(id_type id = MAX_ID)
+    :   id(id), isObsolete(false)
     {}
+
+    bool operator< (const Term& rhs) const {return id < rhs.id;}
 };
 
 
@@ -64,14 +71,13 @@ struct PWIZ_API_DECL Term
 /// - dbxrefs
 /// - synonym tags other than exact_synonym
 /// - non-Term stanzas
-/// - obsolete Terms
 ///
 struct PWIZ_API_DECL OBO
 {
     std::string filename;
     std::vector<std::string> header;
     std::string prefix; // e.g. "MS", "UO"
-    std::vector<Term> terms;
+    std::set<Term> terms;
 
     OBO(){}
     OBO(const std::string& filename);
