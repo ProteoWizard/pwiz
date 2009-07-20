@@ -135,31 +135,24 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
     if (scanTypes & MSScanType_MultipleReaction)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
+    // iterate over all files in AcqData
     bfs::path p(rawpath);
-
-    bfs::path datapath = p / "AcqData/mspeak.bin";
-    if (bfs::exists(datapath))
+    for (bfs::directory_iterator itr(p / "AcqData"); itr != bfs::directory_iterator(); ++itr)
     {
-        SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = "PeakData";
-        sourceFile->name = datapath.filename();
-        string location = bfs::complete(datapath.parent_path()).string();
-        if (location.empty()) location = ".";
-        sourceFile->location = string("file://") + location;
-        sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
-        sourceFile->set(MS_Agilent_MassHunter_file);
-        msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
-    }
+        bfs::path sourcePath = itr->path();
+        if (bfs::is_directory(sourcePath))
+            continue;
 
-    datapath = p / "AcqData/msprofile.bin";
-    if (bfs::exists(datapath))
-    {
+        // skip non-native files that might be cluttering up the directory
+        string ext = bfs::extension(sourcePath);
+        bal::to_lower(ext);
+        if (ext == ".mzxml" || ext == ".mzdata" || ext == ".mgf" || ext == ".ms2" || ext == ".txt")
+            continue;
+
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = "ProfileData";
-        sourceFile->name = datapath.filename();
-        string location = bfs::complete(datapath.parent_path()).string();
-        if (location.empty()) location = ".";
-        sourceFile->location = string("file://") + location;
+        sourceFile->id = sourcePath.leaf();
+        sourceFile->name = sourcePath.leaf();
+        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
         sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
         sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
