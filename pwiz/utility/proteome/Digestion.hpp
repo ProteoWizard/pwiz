@@ -27,11 +27,14 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/cv.hpp"
 #include "Chemistry.hpp"
 #include "Peptide.hpp"
+#include <boost/regex.hpp>
 #include <string>
 #include <memory>
 #include <limits>
+#include <set>
 
 
 namespace pwiz {
@@ -128,6 +131,35 @@ class PWIZ_API_DECL Digestion
     };
 
     struct Motif;
+
+    /// gets a set of predefined cleavage agents defined in the PSI-MS CV
+    static const std::set<CVID>& getCleavageAgents();
+
+    /// returns the Perl regular expression defining the places in a
+    /// polypeptide or protein that the agent will cut.
+    static const std::string& getCleavageAgentRegex(CVID agentCvid);
+
+    /// specifies digestion occurs by a commonly used cleavage agent
+    Digestion(const Peptide& peptide,
+              CVID cleavageAgent,
+              const Config& config = Config());
+
+    /// specifies digestion occurs by a combination of commonly used cleavage agents
+    Digestion(const Peptide& peptide,
+              const std::vector<CVID>& cleavageAgents,
+              const Config& config = Config());
+
+    /// specifies digestion occurs by a user-specified, zero-width Perl regular expression 
+    /// example: "(?<=K)" means "cleaves after K"
+    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?=[DE])" means "cleaves before D or E"
+    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    Digestion(const Peptide& peptide,
+              const boost::regex& cleavageAgentRegex,
+              const Config& config = Config());
+
+
+    // DEPRECATED CONSTRUCTORS ////////////////////////////
 
     /// specifies digestion occurs by a commonly used enzyme
     Digestion(const Peptide& peptide,

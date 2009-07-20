@@ -29,12 +29,15 @@
 #include "AminoAcid.hpp"
 #include "pwiz/utility/misc/CharIndexedVector.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "boost/utility/singleton.hpp"
+
 
 namespace pwiz {
 namespace proteome {
 
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::util;
 
 #undef SECURE_SCL
@@ -307,9 +310,92 @@ PWIZ_API_DECL bool Digestion::Motif::testSite(const string& sequence, int offset
 }
 
 
+namespace {
+
+class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
+{
+    public:
+    CleavageAgentInfo(boost::restricted)
+    {
+        const vector<CVID>& cvids = pwiz::cvids();
+        for (vector<CVID>::const_iterator itr = cvids.begin();
+             itr != cvids.end(); ++itr)
+        {
+            if (!pwiz::cvIsA(*itr, MS_cleavage_agent_name))
+                continue;
+
+            const CVTermInfo& cvTermInfo = pwiz::cvTermInfo(*itr);
+            multimap<string, CVID>::const_iterator regexRelationItr =
+                cvTermInfo.otherRelations.find("has_regexp");
+            if (regexRelationItr != cvTermInfo.otherRelations.end())
+            {
+                cleavageAgents_.insert(*itr);
+                const CVTermInfo& cleavageAgentRegexTerm = pwiz::cvTermInfo(regexRelationItr->second);
+                cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;
+            }
+        }
+    }
+
+    const set<CVID>& cleavageAgents() {return cleavageAgents_;}
+
+    const std::string& getCleavageAgentRegex(CVID agentCvid)
+    {
+        if (!pwiz::cvIsA(agentCvid, MS_cleavage_agent_name))
+            throw invalid_argument("[getRegexForCleavageAgent] CVID is not a cleavage agent.");
+
+        map<CVID, const CVTermInfo*>::const_iterator regexTermItr =
+            cleavageAgentToRegexMap_.find(agentCvid);
+
+        if (regexTermItr == cleavageAgentToRegexMap_.end())
+            throw runtime_error("[getRegexForCleavageAgent] No regex relation for cleavage agent " + cvTermInfo(agentCvid).name);
+
+        return regexTermItr->second->name;
+    }
+
+    private:
+    set<CVID> cleavageAgents_;
+    map<CVID, const CVTermInfo*> cleavageAgentToRegexMap_;
+};
+
+} // namespace
+
+
+const set<CVID>& Digestion::getCleavageAgents()
+{
+    return CleavageAgentInfo::instance->cleavageAgents();
+}
+
+const string& Digestion::getCleavageAgentRegex(CVID agentCvid)
+{
+    return CleavageAgentInfo::instance->getCleavageAgentRegex(agentCvid);
+}
+
+
 class Digestion::Impl
 {
     public:
+    Impl(const Peptide& peptide, const std::vector<CVID>& cleavageAgents, const Config& config)
+        :   peptide_(peptide), config_(config)
+    {
+        if (cleavageAgents.size() == 1)
+        {
+            cleavageAgentRegex_ = getCleavageAgentRegex(cleavageAgents[0]);
+            return;
+        }
+
+        string mergedRegex = "((" + getCleavageAgentRegex(cleavageAgents[0]);
+        for (size_t i=1; i < cleavageAgents.size(); ++i)
+            mergedRegex += ")|(" + getCleavageAgentRegex(cleavageAgents[i]);
+        mergedRegex += "))";
+
+        cleavageAgentRegex_ = mergedRegex;
+    }
+
+    Impl(const Peptide& peptide, const boost::regex& cleavageAgentRegex, const Config& config)
+        :   peptide_(peptide), config_(config), cleavageAgentRegex_(cleavageAgentRegex)
+    {
+    }
+
     Impl(const Peptide& peptide, const std::vector<ProteolyticEnzyme>& enzymes, const Config& config)
         :   peptide_(peptide), config_(config)
     {
@@ -339,7 +425,7 @@ class Digestion::Impl
     }
 
     Impl(const Peptide& peptide, const vector<Motif>& motifs, const Config& config)
-        :   peptide_(peptide), motifs_(motifs), config_(config)
+        :   peptide_(peptide), config_(config), motifs_(motifs)
     {
         motifs_.push_back(Motif("{|"));
         motifs_.push_back(Motif("|}"));
@@ -353,16 +439,37 @@ class Digestion::Impl
             {
                 const string& sequence = peptide_.sequence();
 
-                // iterate to find all valid digestion sites
-                for (int offset = -1, end = (int) sequence.length(); offset < end; ++offset)
+                if (!cleavageAgentRegex_.empty())
                 {
-                    for (size_t i=0; i < motifs_.size(); ++i)
+                    sites_.push_back(-1); // n-terminus is a valid digestion site
+
+                    std::string::const_iterator start = sequence.begin();
+                    std::string::const_iterator end = sequence.end();
+                    boost::smatch what;
+                    boost::match_flag_type flags = boost::match_default;
+                    while (regex_search(start, end, what, cleavageAgentRegex_, flags))
                     {
-                        if (motifs_[i].testSite(sequence, offset))
-                        {
-                            sites_.push_back(offset);
-                            break; // skip other motifs after finding a valid site
-                        }
+                        sites_.push_back(int(what[0].first-sequence.begin()-1));
+
+                        // update search position and flags
+                        start = what[0].second;
+                        flags |= boost::match_prev_avail;
+                        flags |= boost::match_not_bob;
+                    }
+
+                    sites_.push_back(sequence.length()-1); // c-terminus is a valid digestion site
+                }
+                else
+                {
+                    // iterate to find all valid digestion sites
+                    for (int offset = -1, end = (int) sequence.length(); offset < end; ++offset)
+                    {
+                        for (size_t i=0; i < motifs_.size(); ++i)
+                            if (motifs_[i].testSite(sequence, offset))
+                            {
+                                sites_.push_back(offset);
+                                break; // skip other motifs after finding a valid site
+                            }
                     }
                 }
             }
@@ -375,8 +482,9 @@ class Digestion::Impl
 
     private:
     const Peptide& peptide_;
-    vector<Motif> motifs_;
     Config config_;
+    boost::regex cleavageAgentRegex_;
+    vector<Motif> motifs_;
     friend class Digestion::const_iterator::Impl;
 
     // precalculated offsets to digestion sites in order of occurence;
@@ -385,6 +493,34 @@ class Digestion::Impl
     // peptide_.sequence().length()-1 is the C terminus digestion site
     mutable vector<int> sites_;
 };
+
+
+PWIZ_API_DECL
+Digestion::Digestion(const Peptide& peptide,
+                     CVID cleavageAgent,
+                     const Config& config)
+:   impl_(new Impl(peptide, vector<CVID>(1, cleavageAgent), config))
+{
+}
+
+PWIZ_API_DECL
+Digestion::Digestion(const Peptide& peptide,
+                     const vector<CVID>& cleavageAgents,
+                     const Config& config)
+:   impl_(new Impl(peptide, cleavageAgents, config))
+{
+}
+
+PWIZ_API_DECL
+Digestion::Digestion(const Peptide& peptide,
+                     const boost::regex& cleavageAgentRegex,
+                     const Config& config)
+:   impl_(new Impl(peptide, cleavageAgentRegex, config))
+{
+}
+
+
+// DEPRECATED CONSTRUCTORS
 
 PWIZ_API_DECL
 Digestion::Digestion(const Peptide& peptide,

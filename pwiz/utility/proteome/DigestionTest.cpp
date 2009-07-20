@@ -32,11 +32,37 @@
 #include <set>
 
 using namespace std;
+using namespace pwiz;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 
 
 ostream* os_ = 0;
+
+
+void testCleavageAgents()
+{
+    const set<CVID>& cleavageAgents = Digestion::getCleavageAgents();
+
+    if (os_)
+    {
+        *os_ << "Cleavage agents:" << endl;
+        BOOST_FOREACH(CVID agentCvid, cleavageAgents)
+        {
+            *os_ << cvTermInfo(agentCvid).name << " ("
+                 << Digestion::getCleavageAgentRegex(agentCvid)
+                 << ")" << endl;
+        }
+    }
+
+    unit_assert(cleavageAgents.size() == 14);
+    unit_assert(*cleavageAgents.begin() == MS_Trypsin);
+    unit_assert(*cleavageAgents.rbegin() == MS_V8_E);
+    unit_assert(Digestion::getCleavageAgentRegex(MS_Trypsin) == "(?<=[KR])(?!P)");
+    unit_assert(Digestion::getCleavageAgentRegex(MS_V8_E) == "(?<=[EZ])(?!P)");
+
+    unit_assert_throws(Digestion::getCleavageAgentRegex(MS_ion_trap), std::invalid_argument);
+}
 
 
 struct DigestedPeptideLessThan
@@ -47,24 +73,10 @@ struct DigestedPeptideLessThan
     }
 };
 
-void test()
+void testTrypticBSA(const Digestion& trypticDigestion)
 {
-    // >P02769|ALBU_BOVIN Serum albumin - Bos taurus (Bovine).
-    Peptide bsa("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPF"
-                "DEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEP"
-                "ERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYY"
-                "ANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVA"
-                "RLSQKFPKAEFVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKE"
-                "CCDKPLLEKSHCIAEVEKDAIPENLPPLTADFAEDKDVCKNYQEAKDAFLGSFLYEYSRR"
-                "HPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEK"
-                "LGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLIL"
-                "NRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLP"
-                "DTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVV"
-                "STQTALA");
-
     set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
-    Digestion trypticDigestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(3, 5, 40));
     vector<DigestedPeptide> trypticPeptides(trypticDigestion.begin(), trypticDigestion.end());
     set<DigestedPeptide, DigestedPeptideLessThan> trypticPeptideSet(trypticPeptides.begin(), trypticPeptides.end());
 
@@ -127,14 +139,12 @@ void test()
 
     // test maximum peptide length
     unit_assert(!trypticPeptideSet.count("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFK"));
-    unit_assert(!trypticPeptideSet.count(bsa.sequence()));
+}
 
+void testSemitrypticBSA(const Digestion& semitrypticDigestion)
+{
+    set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
-
-
-
-    // test semi-specific
-    Digestion semitrypticDigestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(1, 5, 20, Digestion::SemiSpecific));
     vector<DigestedPeptide> semitrypticPeptides(semitrypticDigestion.begin(), semitrypticDigestion.end());
     set<DigestedPeptide, DigestedPeptideLessThan> semitrypticPeptideSet(semitrypticPeptides.begin(), semitrypticPeptides.end());
     
@@ -218,12 +228,12 @@ void test()
     // test semi-specific peptides at the C terminus
     unit_assert(semitrypticPeptideSet.count("FAVEGPKLVVSTQTALA")); // semi-tryptic
     unit_assert(!semitrypticPeptideSet.count("FAVEGPKLVVSTQTAL")); // non-tryptic
+}
 
+void testNontrypticBSA(const Digestion& nontrypticDigestion)
+{
+    set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
-
-
-    // test non-specific
-    Digestion nontrypticDigestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(1, 5, 20, Digestion::NonSpecific));
     vector<DigestedPeptide> nontrypticPeptides(nontrypticDigestion.begin(), nontrypticDigestion.end());
     set<DigestedPeptide, DigestedPeptideLessThan> nontrypticPeptideSet(nontrypticPeptides.begin(), nontrypticPeptides.end());
     
@@ -317,10 +327,40 @@ void test()
 
     // test maximum peptide length
     unit_assert(!nontrypticPeptideSet.count("EYEATLEECCAKDDPHACYSTVFDK"));
+}
 
+void test()
+{
+    // >P02769|ALBU_BOVIN Serum albumin - Bos taurus (Bovine).
+    Peptide bsa("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPF"
+                "DEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEP"
+                "ERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYY"
+                "ANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVA"
+                "RLSQKFPKAEFVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKE"
+                "CCDKPLLEKSHCIAEVEKDAIPENLPPLTADFAEDKDVCKNYQEAKDAFLGSFLYEYSRR"
+                "HPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEK"
+                "LGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLIL"
+                "NRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLP"
+                "DTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVV"
+                "STQTALA");
 
+    // test fully-specific trypsin digest
+    testTrypticBSA(Digestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(3, 5, 40)));
+    testTrypticBSA(Digestion(bsa, "[KR]|", Digestion::Config(3, 5, 40)));
+    testTrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(3, 5, 40)));
+    testTrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(3, 5, 40)));
 
-    
+    // test semi-specific trypsin digest
+    testSemitrypticBSA(Digestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticBSA(Digestion(bsa, "[KR]|", Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+
+    // test non-specific trypsin digest
+    testNontrypticBSA(Digestion(bsa, ProteolyticEnzyme_Trypsin, Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
+    testNontrypticBSA(Digestion(bsa, "[KR]|", Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
+    testNontrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
+    testNontrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
 
     // test funky digestion
     Digestion funkyDigestion(bsa, "A[DE]|[FG]", Digestion::Config(0));
@@ -338,6 +378,7 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "DigestionTest\n";
+        testCleavageAgents();
         test();
         return 0;
     }

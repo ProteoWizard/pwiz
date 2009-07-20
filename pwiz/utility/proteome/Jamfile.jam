@@ -23,27 +23,31 @@
 
 lib pwiz_utility_proteome
     : # sources
-      AminoAcid.cpp 
-      Chemistry.cpp 
-      ChemistryData.cpp 
-      IPIFASTADatabase.cpp 
-      IsotopeCalculator.cpp 
-      IsotopeEnvelopeEstimator.cpp 
-      IsotopeTable.cpp 
-      Peptide.cpp
-      Modification.cpp
-      Digestion.cpp
-      Version.cpp
+        AminoAcid.cpp 
+        Chemistry.cpp 
+        ChemistryData.cpp 
+        IPIFASTADatabase.cpp 
+        IsotopeCalculator.cpp 
+        IsotopeEnvelopeEstimator.cpp 
+        IsotopeTable.cpp 
+        Peptide.cpp
+        Modification.cpp
+        Digestion.cpp
+        Version.cpp
     : # requirements
-      <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-      <library>/ext/boost//thread
-      <library>/ext/zlib//z
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//thread
+        <library>/ext/boost//regex
+        <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
-      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-      <library>/ext/boost//thread
-      <library>/ext/zlib//z
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//thread
+        <library>/ext/boost//regex
+        <library>/ext/zlib//z
     ;
 
 
