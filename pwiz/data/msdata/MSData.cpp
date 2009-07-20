@@ -716,7 +716,8 @@ PWIZ_API_DECL string translateScanNumberToNativeID(CVID nativeIdFormat, const st
         case MS_multiple_peak_list_nativeID_format:
             return "index=" + scanNumber;
 
-        //case MS_Agilent_MassHunter_nativeID_format:
+        case MS_Agilent_MassHunter_nativeID_format:
+            return "scanId=" + scanNumber;
 
         case MS_Bruker_Agilent_YEP_nativeID_format:
         case MS_Bruker_BAF_nativeID_format:
@@ -738,7 +739,8 @@ PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const st
         case MS_multiple_peak_list_nativeID_format: // MGF
             return value(id, "index");
 
-        //case MS_Agilent_MassHunter_nativeID_format:
+        case MS_Agilent_MassHunter_nativeID_format:
+            return value(id, "scanId");
 
         case MS_Thermo_nativeID_format:
             // conversion from Thermo nativeIDs assumes default controller information
