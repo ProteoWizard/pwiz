@@ -40,6 +40,9 @@ namespace myrimatch
 		double pvalue;
 		double expect;
 		double fdr;
+		double newMZFidelity;
+		// Mean absolute error
+		double mzMAE;
 		
 		//#ifdef DELTA_SCORES
 		/*double deltaMVHAvgBased;
@@ -75,6 +78,8 @@ namespace myrimatch
 			scoreList.push_back( SearchScoreInfo( "massError", massError ) );
 			scoreList.push_back( SearchScoreInfo( "mzSSE", mzSSE ) );
             scoreList.push_back( SearchScoreInfo( "mzFidelity", mzFidelity ) );
+			scoreList.push_back( SearchScoreInfo( "newMZFidelity" , newMZFidelity ) );
+			scoreList.push_back( SearchScoreInfo( "mzMAE", mzMAE ) ); 
 			if( g_rtConfig->CalculateRelativeScores )
 			{
 				scoreList.push_back( SearchScoreInfo( "pvalue", pvalue ) );
@@ -139,7 +144,7 @@ namespace myrimatch
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity;
+			ar & mvh & massError & mzSSE & mzFidelity & newMZFidelity & mzMAE;
 			//#ifdef DELTA_SCORES
 			//ar & deltaMVHAvgBased & deltaMVHModeBased & deltaMVHSeqType & deltaMVHSmartSeqType;
 			//ar & deltaMZFidelityModeBased & deltaMZFidelityAvgBased & deltaMZFidelitySeqType & deltaMZFidelitySmartSeqType;
@@ -215,21 +220,25 @@ namespace myrimatch
 			intenSortedPeakPreData.clear();
 		}
 
-		inline void ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector<double>& seqIons )
+		inline void ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector< double >& seqIons )
 		{
 			PeakData::iterator peakItr;
-            MvIntKey mzFidelityKey;
+			MvIntKey mzFidelityKey;
 
 			result.key.clear();
 			result.key.resize( g_rtConfig->NumIntensityClasses+1, 0 );
-            mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
+			mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
 			result.mvh = 0.0;
 			result.mzSSE = 0.0;
-            result.mzFidelity = 0.0;
-            result.matchedIons.clear();
+			result.mzFidelity = 0.0;
+			result.newMZFidelity = 0.0;
+			result.mzMAE = 0.0;
+			result.matchedIons.clear();
+
 
 			START_PROFILER(6);
 			int totalPeaks = (int) seqIons.size();
+
 			for( size_t j=0; j < seqIons.size(); ++j )
 			{
 				// skip theoretical ions outside the scan range of the spectrum
@@ -240,28 +249,43 @@ namespace myrimatch
 					continue;
 				}
 
+
 				START_PROFILER(7);
-				peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
+				// Find the fragment ion peak. Consider the fragment ion charge state while setting the
+				// mass window for the fragment ion lookup.
+				double massError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (seqIons[j] * g_rtConfig->FragmentMzTolerance * pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+				peakItr = peakData.findNear( seqIons[j], massError );
 				STOP_PROFILER(7);
 
 				// If a peak was found, increment the sequenceInstance's ion correlation triplet
 				if( peakItr != peakData.end() )
 				{
-                    double mzError = peakItr->first - seqIons[j];
+					double mzError = peakItr->first - seqIons[j];
+					// Convert the mass error appropriately
+					if(g_rtConfig->fragmentMzToleranceUnits == PPM)
+						mzError = (mzError/seqIons[j])*pow(10,6);
 					result.key.incrementClass( peakItr->second.intenClass-1 );
 					result.mzSSE += pow( mzError, 2.0 );
-                    mzFidelityKey.incrementClass( ClassifyError( fabs( mzError ), mzFidelityThresholds ) );
-                    result.matchedIons.push_back(peakItr->first);
+					result.mzMAE += fabs(mzError);
+					mzFidelityKey.incrementClass( ClassifyError( fabs( mzError ), mzFidelityThresholds ) );
+					int mzFidelityClass = ClassifyError( fabs( mzError ), g_rtConfig->massErrors );
+					result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+					result.matchedIons.push_back(peakItr->first);
 				} else
 				{
 					result.key.incrementClass( g_rtConfig->NumIntensityClasses );
 					result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
-                    mzFidelityKey.incrementClass( g_rtConfig->NumMzFidelityClasses );
+					result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
+					mzFidelityKey.incrementClass( g_rtConfig->NumMzFidelityClasses );
 				}
+
 			}
 			STOP_PROFILER(6);
 
 			result.mzSSE /= totalPeaks;
+			result.mzMAE /= totalPeaks;
+			// Convert the new mzFidelity score into normal domain.
+			result.newMZFidelity = exp(result.newMZFidelity);
 
 			double mvh = 0.0;
 
@@ -273,12 +297,12 @@ namespace myrimatch
 				int numVoids = intenClassCounts.back();
 				int totalPeakBins = numVoids + peakCount;
 
-                for( size_t i=0; i < intenClassCounts.size(); ++i ) {
+				for( size_t i=0; i < intenClassCounts.size(); ++i ) {
 					mvh += lnCombin( intenClassCounts[i], result.key[i] );
                     /*if(result.sequence().compare("HVGDLGNVTADK")==0) {
                         cout << "IC["<< i << "]:"<< intenClassCounts[i] << "," << result.key[i] << endl;
                     }*/
-                }
+				}
 				mvh -= lnCombin( totalPeakBins, keySum );
                 /*if(result.sequence().compare("HVGDLGNVTADK")==0) {
                     cout << numVoids << "," << totalPeakBins << "," << peakCount << "," << keySum <<endl;
@@ -287,14 +311,14 @@ namespace myrimatch
 				result.mvh = -mvh;
 
 
-                int N;
-			    double sum1 = 0, sum2 = 0;
-			    int numHits = accumulate( result.key.begin(), result.key.end(), 0 );
-                int totalPeakSpace = numVoids + numHits;
-			    double pHits = (double) numHits / (double) totalPeakSpace;
-			    double pMisses = 1.0 - pHits;
+				int N;
+				double sum1 = 0, sum2 = 0;
+				int numHits = accumulate( result.key.begin(), result.key.end(), 0 );
+				int totalPeakSpace = numVoids + numHits;
+				double pHits = (double) numHits / (double) totalPeakSpace;
+				double pMisses = 1.0 - pHits;
 
-                N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
+				N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
 				int p = 0;
 
 				//cout << id << ": " << mzFidelityKey << endl;
@@ -306,13 +330,13 @@ namespace myrimatch
 					double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
 					//if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
 					sum1 += log( pow( pKey, mzFidelityKey[i] ) );
-					//cout << mzFidelityKey[i] << endl;
 					sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
 				}
 				sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
-                sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
-                result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
+				sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
+				result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
 			}
+			
 			STOP_PROFILER(8);
 		}
 
@@ -338,6 +362,7 @@ namespace myrimatch
 
 		vector< int >		intenClassCounts;
         vector< double >		mzFidelityThresholds;
+		vector< double>			newMZFidelityThresholds;
         FragmentTypesBitset fragmentTypes;
 		
 		vector< double >	mOfPrecursorList;
