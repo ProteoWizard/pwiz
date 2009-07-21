@@ -294,6 +294,10 @@ struct prob_comp
         {
             // cerr << "caught range_error: "<<re.what()<<endl;;
         }
+        catch(logic_error le)
+        {
+            cerr << "caught logic_error: "<<le.what()<<endl;
+        }
         catch(...) {}
 
         return result;
@@ -1246,6 +1250,9 @@ void Pseudo2DGel::Impl::drawTimes(Image& image,
 
     for (size_t j=0; j<pixelBins_.size(); j++)
     {
+        if (pixelBins_.at(j).empty())
+            break;
+        
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)j);
 
         // draw the bin as a row
@@ -1511,7 +1518,7 @@ void Pseudo2DGel::Impl::drawTIC(Image& image, const ScanList& scans,
         double t = (logtic-logmin)/(logmax-logmin); // t in [0,1]
         int i = (int)(t * (graphEnd.x-graphBegin.x)); // pixel x-offset
    
-        Image::Point current = graphBegin + Image::Point(i,(int)j);
+        Image::Point current = graphBegin + Image::Point(i,(int)config_.timeScale*j);
         bool currentPositive = (t >= .5); 
 
         Image::Point midpoint((graphEnd.x+graphBegin.x)/2, (current.y+last.y)/2); 
@@ -1542,15 +1549,15 @@ void Pseudo2DGel::Impl::drawTIC(Image& image, const ScanList& scans,
     // box
 
     image.line(graphBegin, 
-               graphBegin + Image::Point(0,(int)scans.size()), 
+               graphBegin + Image::Point(0,(int)config_.timeScale*scans.size()), 
                boxColor_); 
 
     image.line(graphBegin + Image::Point(graphWidth/2, 0), 
-               graphBegin + Image::Point(graphWidth/2, (int)scans.size()), 
+               graphBegin + Image::Point(graphWidth/2, (int)config_.timeScale*scans.size()), 
                boxColor_); 
 
     image.line(graphBegin + Image::Point(graphWidth, 0), 
-               graphBegin + Image::Point(graphWidth, (int)scans.size()), 
+               graphBegin + Image::Point(graphWidth, (int)config_.timeScale*scans.size()), 
                boxColor_); 
 
     image.line(graphBegin,

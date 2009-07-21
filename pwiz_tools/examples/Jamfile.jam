@@ -89,6 +89,12 @@ exe write_traml_example_files
     : <include>../../..
     ;
 
+exe write_mzid_example_files
+    : write_mzid_example_files.cpp
+      ../../pwiz/data/mziddata
+    : <include>../../..
+    ;
+
 #
 # local install for testing
 #
