@@ -39,6 +39,7 @@ namespace proteome {
 using namespace std;
 using namespace pwiz;
 using namespace pwiz::util;
+using boost::shared_ptr;
 
 #undef SECURE_SCL
 
@@ -887,15 +888,13 @@ class Digestion::const_iterator::Impl
     {
         switch (config_.minimumSpecificity)
         {
-            default:
-            case FullySpecific:
-                return begin_ == sites_.end();
-                break;
-
             case SemiSpecific: // TODO: optimize semi-specific
             case NonSpecific:
                 return beginNonSpecific_ == (int) sequence_.length();
-                break;
+
+            case FullySpecific:
+            default:
+                return begin_ == sites_.end();
         }
     }
 
@@ -918,12 +917,11 @@ class Digestion::const_iterator::Impl
     int beginNonSpecific_;
     int endNonSpecific_;
 
-    mutable auto_ptr<DigestedPeptide> peptide_;
+    mutable shared_ptr<DigestedPeptide> peptide_;
     friend class Digestion::const_iterator;
 };
 
 PWIZ_API_DECL Digestion::const_iterator::const_iterator()
-:   impl_(0)
 {
 }
 

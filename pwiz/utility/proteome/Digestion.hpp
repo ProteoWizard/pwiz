@@ -31,8 +31,8 @@
 #include "Chemistry.hpp"
 #include "Peptide.hpp"
 #include <boost/regex.hpp>
+#include "boost/shared_ptr.hpp"
 #include <string>
-#include <memory>
 #include <limits>
 #include <set>
 
@@ -222,7 +222,7 @@ class PWIZ_API_DECL Digestion
 
         private:
         class Impl;
-        std::auto_ptr<Impl> impl_;
+        boost::shared_ptr<Impl> impl_;
     };
 
     private:
@@ -258,7 +258,7 @@ class PWIZ_API_DECL Digestion
         friend class Digestion::Impl;
 
         class Impl;
-        std::auto_ptr<Impl> impl_;
+        boost::shared_ptr<Impl> impl_;
     };
 
     const_iterator begin() const;
@@ -267,7 +267,7 @@ class PWIZ_API_DECL Digestion
     private:
 	friend class const_iterator;
 	friend class const_iterator::Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 
@@ -275,4 +275,4 @@ class PWIZ_API_DECL Digestion
 } // namespace pwiz
 
 
-#endif // _CLEAVAGE_HPP_
+#endif // _DIGESTION_HPP_
