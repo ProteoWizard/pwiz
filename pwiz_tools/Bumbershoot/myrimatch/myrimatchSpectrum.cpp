@@ -33,7 +33,8 @@ namespace myrimatch
 		//cout << g_residueMap->GetMassOfResidues( "AGLLGLLEEMR", false ) << endl;
 
 		// Eliminate peaks above the precursor's mass with a given tolerance
-		double maxPeakMass = mOfPrecursor + PROTON + g_rtConfig->PrecursorMassTolerance.back();
+		double parentMassError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mOfPrecursor * g_rtConfig->PrecursorMassTolerance.back() *pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back();
+		double maxPeakMass = mOfPrecursor + PROTON + parentMassError;
 		itr = peakPreData.upper_bound( maxPeakMass );
 		peakPreData.erase( itr, peakPreData.end() );
 
@@ -50,13 +51,13 @@ namespace myrimatch
 
 		FilterByTIC( g_rtConfig->TicCutoffPercentage );
 
-		// Locate water loss ions of the precursor ion
-		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-        bool eraseWaterLoss = precursorWaterLossItr != peakPreData.end();
-        bool eraseDoubleWaterLoss = precursorDoubleWaterLossItr != peakPreData.end() && precursorWaterLossItr != precursorDoubleWaterLossItr;
-		if( eraseWaterLoss ) peakPreData.erase( precursorWaterLossItr );
-		if( eraseDoubleWaterLoss ) peakPreData.erase( precursorDoubleWaterLossItr );
+		double neutralLossMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (mzOfPrecursor*g_rtConfig->FragmentMzTolerance*pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, neutralLossMassError, true );
+		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, neutralLossMassError, true );
+		if( precursorWaterLossItr != peakPreData.end() )
+			peakPreData.erase( precursorWaterLossItr );
+		if( precursorDoubleWaterLossItr != peakPreData.end() && precursorDoubleWaterLossItr != precursorWaterLossItr )
+			peakPreData.erase( precursorDoubleWaterLossItr );
 
 		if( g_rtConfig->MakeSpectrumGraphs )
 			writeToSvgFile( "-filtered" + g_rtConfig->OutputSuffix );
@@ -153,7 +154,12 @@ namespace myrimatch
 
 		peakCount = (int) peakData.size();
 
-		int totalPeakBins = (int) round( totalPeakSpace / ( g_rtConfig->FragmentMzTolerance * 2.0f ), 0 );
+		// Divide the spectrum peak space into equal m/z bins
+		//cout << mzUpperBound << "," << mzLowerBound << endl;
+		double spectrumMedianMass = totalPeakSpace/2.0;
+		double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (spectrumMedianMass*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+		//cout << fragMassError << "," << mOfPrecursor << endl;
+		int totalPeakBins = (int) round( totalPeakSpace / ( fragMassError * 2.0f ), 0 );
 		initialize( g_rtConfig->NumIntensityClasses+1, g_rtConfig->NumMzFidelityClasses );
 		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
 		{
@@ -168,7 +174,7 @@ namespace myrimatch
 		    divider += 1 << i;
 		    mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
 	    }
-	    mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance;
+		mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance;
         //cout << id.index << ": " << mzFidelityThresholds << endl;
 
 		//totalPeakSpace = peakPreData.rbegin()->first - peakPreData.begin()->first;
