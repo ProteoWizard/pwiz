@@ -2,9 +2,10 @@
 // DiffTest.cpp
 //
 //
-// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+// Original author: Robert Burke <robetr.burke@proteowizard.org>
 //
-// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+// Copyright 2009 Spielberg Family Center for Applied Proteomics
+//   University of Southern California, Los Angeles, California  90033
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -30,7 +31,6 @@ using namespace std;
 using namespace pwiz::util;
 using namespace pwiz;
 using namespace pwiz::mziddata;
-using namespace pwiz::mziddata::diff_impl;
 using boost::shared_ptr;
 
 
@@ -67,11 +67,134 @@ void testIdentifiableType()
 }
 
 
+void testParamContainer()
+{
+    if (os_) *os_ << "testParamContainer()\n";
+
+    ParamContainer a, b;
+    a.userParams.push_back(UserParam("common"));
+    b.userParams.push_back(UserParam("common"));
+    a.cvParams.push_back(MS_m_z);
+    b.cvParams.push_back(MS_m_z);
+
+    Diff<ParamContainer> diff(a, b);
+    unit_assert(!diff);
+
+    a.userParams.push_back(UserParam("different", "1"));
+    b.userParams.push_back(UserParam("different", "2"));
+    a.cvParams.push_back(MS_charge_state);
+    b.cvParams.push_back(MS_intensity);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.userParams.size() == 1);
+    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
+    unit_assert(diff.b_a.userParams.size() == 1);
+    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
+
+    unit_assert(diff.a_b.cvParams.size() == 1);
+    unit_assert(diff.a_b.cvParams[0] == MS_charge_state);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.b_a.cvParams[0] == MS_intensity);
+}
+
+
+void testAnalysisProtocolCollection()
+{
+    if (os_) *os_ << "testAnalysisProtocolCollection()\n";
+    
+}
+
+
+void testAnalysisCollection()
+{
+    if (os_) *os_ << "testAnalysisCollection()\n";
+    
+}
+
+void testSequenceCollection()
+{
+    if (os_) *os_ << "testSequenceCollection()\n";
+    
+}
+
+
+void testAnalysisSampleCollection()
+{
+    if (os_) *os_ << "testAnalysisSampleCollection()\n";
+}
+
+
+void testContact()
+{
+    if (os_) *os_ << "testContact()\n";
+    
+}
+
+
+void testPerson()
+{
+    if (os_) *os_ << "testPerson()\n";
+    
+}
+
+
+void testOrganization()
+{
+    if (os_) *os_ << "testOrganization()\n";
+    
+}
+
+
+void testProvider()
+{
+    if (os_) *os_ << "testProvider()\n";
+    
+}
+
+
+void testContactRole()
+{
+    if (os_) *os_ << "testContactRole()\n";
+    
+}
+
+void testAnalysisSoftware()
+{
+    if (os_) *os_ << "testAnalysisSoftware()\n";
+
+    AnalysisSoftware a, b;
+
+    Diff<AnalysisSoftware> diff(a,b);
+    unit_assert(!diff);
+
+    // a.version
+    a.version="version";
+    // b.contactRole
+    // a.softwareName
+    // b.URI
+    b.URI="URI";
+    // a.customizations
+    a.customizations="customizations";
+
+    diff(a, b);
+}
+
+
 void testDataCollection()
 {
     if (os_) *os_ << "testDataCollection()\n";
 
-    
+    DataCollection a, b;
+    Diff<DataCollection> diff(a, b);
+    unit_assert(!diff);
+
+    // a.inputs
+    // b.analysisData
+
+    diff(a, b);
 }
 
 
@@ -93,7 +216,12 @@ void testMzIdentML()
     b.analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware));
     a.auditCollection.push_back(ContactPtr(new Contact()));
     b.bibliographicReference.push_back(BibliographicReferencePtr(new BibliographicReference));
-    
+    // a.analysisSampleCollection
+    // b.sequenceCollection
+    // a.analysisCollection
+    // b.analysisProtocolCollection
+    // a.dataCollection
+    // b.bibliographicReference
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -111,6 +239,11 @@ void test()
 {
     testString();
     testIdentifiableType();
+    testParamContainer();
+    
+    testAnalysisProtocolCollection();
+    
+    testDataCollection();
     testMzIdentML();
 }
 

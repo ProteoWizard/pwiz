@@ -1,5 +1,5 @@
 //
-// MzIdentMLFile.hpp
+// MziddataFile.hpp
 //
 //
 // Original author: Robert Burke <robetr.burke@proteowizard.org>
@@ -21,8 +21,9 @@
 //
 
 
-#ifndef _MSIDDATAFILE_HPP_
-#define _MSIDDATAFILE_HPP_
+#ifndef _MZIDENTMLFILE_HPP_
+#define _MZIDENTMLFILE_HPP_
+
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
@@ -32,12 +33,14 @@
 namespace pwiz {
 namespace mziddata {
 
+
+/// Mziddata object plus file I/O
 struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
 {
-    /// constructs MzIdentML object backed by file;
+    /// constructs Mziddata object backed by file;
     /// reader==0 -> use DefaultReaderList 
     MzIdentMLFile(const std::string& filename, 
-                const Reader* reader = 0);
+                 const Reader* reader = 0);
 
     /// data format for write()
     enum PWIZ_API_DECL Format {Format_Text, Format_MzIdentML};
@@ -46,14 +49,13 @@ struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
     struct PWIZ_API_DECL WriteConfig
     {
         Format format;
-		bool gzipped; // if true, file is written as .gz
 
         WriteConfig(Format format = Format_MzIdentML)
-            :   format(format)
+        :   format(format)
         {}
     };
 
-    /// static write function for any MzIdentML object;
+    /// static write function for any Mziddata object;
     static void write(const MzIdentML& mzid,
                       const std::string& filename,
                       const WriteConfig& config = WriteConfig());
@@ -63,6 +65,7 @@ struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
                const WriteConfig& config = WriteConfig());
 };
 
+
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, MzIdentMLFile::Format format);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MzIdentMLFile::WriteConfig& config);
 
@@ -71,7 +74,4 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MzIdentMLFile::Wr
 } // namespace pwiz
 
 
-#endif // _MSIDDATAFILE_HPP_
-
-
-
+#endif // _MZIDENTMLFILE_HPP_

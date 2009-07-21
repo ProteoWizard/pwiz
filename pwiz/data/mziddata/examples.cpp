@@ -190,7 +190,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->threshold.set(MS_mascot_SigThreshold);
     
     FilterPtr fp(new Filter());
-    fp->filterType.set(MS_DB_filter_taxonomy_OBSOLETE);
+    fp->filterType.set(MS_DB_filter_taxonomy);
     sip->databaseFilters.push_back(fp);
 
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
@@ -318,7 +318,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->peptideHypothesis.push_back("PE_24_1_Bombessin");
     pdhp->peptideHypothesis.push_back("PE_25_1_Bombessin");
     pdhp->paramGroup.set(MS_mascot_score);
-    pdhp->paramGroup.set(MS_coverage);
+    pdhp->paramGroup.set(MS_sequence_coverage);
     pdhp->paramGroup.set(MS_distinct_peptide_sequences);
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
@@ -328,7 +328,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->passThreshold="false";
     pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT");
     pdhp->paramGroup.set(MS_mascot_score, 40.95);
-    pdhp->paramGroup.set(MS_coverage, 2);
+    pdhp->paramGroup.set(MS_sequence_coverage, 2);
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, 1);
     pdhp->paramGroup.set(MS_manual_validation);
     pagp->proteinDetectionHypothesis.push_back(pdhp);

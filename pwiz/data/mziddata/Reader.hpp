@@ -2,8 +2,7 @@
 // Reader.hpp
 //
 //
-// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
-// Adapting author: Robert Burke <robert.burke@proteowizard.org>
+// Origional author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
@@ -77,6 +76,8 @@ class PWIZ_API_DECL Reader
 
     virtual ~Reader(){}
 };
+
+typedef boost::shared_ptr<Reader> ReaderPtr;
 
 class PWIZ_API_DECL ReaderFail : public std::runtime_error // reader failure exception
 {

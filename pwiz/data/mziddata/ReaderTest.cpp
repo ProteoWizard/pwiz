@@ -2,9 +2,10 @@
 // ReaderTest.cpp
 //
 //
-// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+// Original author: Robert Burke <robetr.burke@proteowizard.org>
 //
-// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+// Copyright 2009 Spielberg Family Center for Applied Proteomics
+//   University of Southern California, Los Angeles, California  90033
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
