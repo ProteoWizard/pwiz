@@ -4,6 +4,7 @@
 
 #include "pwiz/utility/proteome/IPIFASTADatabase.hpp"
 #include "pwiz/utility/proteome/Digestion.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "boost/program_options.hpp"
 #include <iostream>
 #include <fstream>
@@ -12,15 +13,24 @@
 using namespace std;
 using namespace pwiz;
 using namespace pwiz::proteome;
+using boost::shared_ptr;
 
 struct Config
 {
     ProteolyticEnzyme proteolyticEnzyme;
+    string digestionMotif;
+    string cleavageAgentRegex;
     Digestion::Config digestionConfig;
     vector<string> filenames;
     size_t precision;
+    bool benchmark;
 
-    Config() : proteolyticEnzyme(ProteolyticEnzyme_Trypsin), digestionConfig(0,0,100000), precision(12) {}
+    Config()
+        :   proteolyticEnzyme(ProteolyticEnzyme_Trypsin),
+            digestionConfig(0,0,100000),
+            precision(12),
+            benchmark(false)
+    {}
 
 };
 
@@ -62,11 +72,14 @@ Config parseCommandLine(int argc, const char* argv[])
     po::options_description od_config("Options");
     od_config.add_options()
         ("proteolyticEnzyme,e", po::value<string>(&tempEnzyme), " : specify proteolytic enzyme for digestion. Options: trypsin, chromotrypsin, clostripain, cyanogenBromide, pepsin. \nDefault : trypsin")
+        ("digestionMotif,d", po::value<string>(&config.digestionMotif), " : specify a digestion motif (e.g. trypsin = \"[KR]|[^P]\")")
+        ("cleavageAgentRegex,r", po::value<string>(&config.cleavageAgentRegex), " : specify a cleavage agent regex (e.g. trypsin = \"(?<=[KR])(?!P)\")")
         ("numMissedCleavages,n", po::value<int>(&config.digestionConfig.maximumMissedCleavages)->default_value(config.digestionConfig.maximumMissedCleavages), " : specify number of missed cleavages to allow.")
         ("specificity,s", po::value<string>(&tempSpecificity)," : specify minimum specificity. Options: non, semi, fully. \nDefault: fully")
         ("minLength,m",po::value<int>(&config.digestionConfig.minimumLength)->default_value(config.digestionConfig.minimumLength), " : specify minimum length of digested peptides")
         ("maxLength,M",po::value<int>(&config.digestionConfig.maximumLength)->default_value(config.digestionConfig.maximumLength), " : specify maximum length of digested peptides")
-        ("massPrecison,p", po::value<size_t>(&config.precision)->default_value(config.precision)," : specify precision of calculated mass of digested peptides");
+        ("massPrecison,p", po::value<size_t>(&config.precision)->default_value(config.precision)," : specify precision of calculated mass of digested peptides")
+        ("benchmark", po::value<bool>(&config.benchmark)->zero_tokens()," : do not write results");
     
     
     // append options to usage string                                                                                        
@@ -110,42 +123,59 @@ void go(const Config& config)
     vector<string>::const_iterator file_it = config.filenames.begin();
     for( ; file_it != config.filenames.end(); ++file_it)
         {
-            ofstream ofs((*file_it + "_digestedPeptides.txt").c_str());
-            ofs << "sequence" 
-                << "\t" << "protein" 
-                << "\t" << "mass" 
-                << "\t" << "missedCleavages" 
-                << "\t" << "specificity"
-                << "\t" << "nTerminusIsSpecific"
-                << "\t" << "cTerminusIsSpecific"
-                << "\n";
+            ofstream ofs;
+            if (!config.benchmark)
+                {
+                    ofs.open((*file_it + "_digestedPeptides.txt").c_str());
+                    ofs << "sequence" 
+                        << "\t" << "protein" 
+                        << "\t" << "mass" 
+                        << "\t" << "missedCleavages" 
+                        << "\t" << "specificity"
+                        << "\t" << "nTerminusIsSpecific"
+                        << "\t" << "cTerminusIsSpecific"
+                        << "\n";
 
-            ofs.precision(config.precision);
+                    ofs.precision(config.precision);
+                }
 
-            IPIFASTADatabase db(*config.filenames.begin());
+            cout << "Reading database: " << *file_it << endl;
+            IPIFASTADatabase db(*file_it);
             IPIFASTADatabase::const_iterator it = db.begin();
 
+            cout << "Finished reading database. Digesting " << db.records().size() << " proteins..." << endl;
+            bpt::ptime digestStart = bpt::microsec_clock::local_time();
             for(; it != db.end(); ++it)
                 {
                     // digest
                     Peptide peptide(it->sequence);
-                    Digestion digestion(peptide, config.proteolyticEnzyme, config.digestionConfig);        
+                    shared_ptr<Digestion> digestion;
+                    if (!config.cleavageAgentRegex.empty())
+                        digestion.reset(new Digestion(peptide, boost::regex(config.cleavageAgentRegex), config.digestionConfig));
+                    else if (!config.digestionMotif.empty())
+                        digestion.reset(new Digestion(peptide, config.digestionMotif, config.digestionConfig));
+                    else
+                        digestion.reset(new Digestion(peptide, config.proteolyticEnzyme, config.digestionConfig));
 
                     // iterate through digested peptides and output
-                    vector<DigestedPeptide> digestedPeptides(digestion.begin(), digestion.end());
-                    vector<DigestedPeptide>::iterator jt = digestedPeptides.begin();
-                    for(; jt!= digestedPeptides.end(); ++jt)                
-                        ofs << jt->sequence() 
-                            << "\t" << it->faID 
-                            << "\t" << jt->monoisotopicMass(0, false) /* unmodified neutral mass + h2o*/ 
-                            << "\t" << jt->missedCleavages() 
-                            << "\t" << jt->specificTermini() 
-                            << "\t" << jt->NTerminusIsSpecific() 
-                            << "\t" << jt->CTerminusIsSpecific() 
-                            << "\n";
-                
+                    vector<DigestedPeptide> digestedPeptides(digestion->begin(), digestion->end());
+                    if (!config.benchmark)
+                        {
+                            vector<DigestedPeptide>::iterator jt = digestedPeptides.begin();
+                            for(; jt!= digestedPeptides.end(); ++jt)                
+                                ofs << jt->sequence() 
+                                    << "\t" << it->faID 
+                                    << "\t" << jt->monoisotopicMass(0, false) /* unmodified neutral mass + h2o*/ 
+                                    << "\t" << jt->missedCleavages() 
+                                    << "\t" << jt->specificTermini() 
+                                    << "\t" << jt->NTerminusIsSpecific() 
+                                    << "\t" << jt->CTerminusIsSpecific() 
+                                    << "\n";
+                        }
                 }
-
+            bpt::ptime digestStop = bpt::microsec_clock::local_time();
+            bpt::time_duration digestDuration = digestStop - digestStart;
+            cout << "Digestion finished. Time elapsed: " << bpt::to_simple_string(digestDuration) << endl;
         }
 }
 
