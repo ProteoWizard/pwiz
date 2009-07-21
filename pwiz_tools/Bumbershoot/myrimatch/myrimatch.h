@@ -8,12 +8,12 @@
 #include <boost/cstdint.hpp>
 
 #define MYRIMATCH_MAJOR				1.
-#define MYRIMATCH_MINOR				5.
-#define MYRIMATCH_BUILD				8
+#define MYRIMATCH_MINOR				6.
+#define MYRIMATCH_BUILD				0
 
 #define MYRIMATCH_VERSION			BOOST_PP_CAT( MYRIMATCH_MAJOR, BOOST_PP_CAT( MYRIMATCH_MINOR, MYRIMATCH_BUILD ) )
 #define MYRIMATCH_VERSION_STRING	BOOST_PP_STRINGIZE( MYRIMATCH_VERSION )
-#define MYRIMATCH_BUILD_DATE		"6/9/2009"
+#define MYRIMATCH_BUILD_DATE		"07/21/2009"
 
 #define MYRIMATCH_LICENSE			COMMON_LICENSE
 
@@ -41,6 +41,35 @@ namespace myrimatch
 
 		double mass;
 		int charge;
+	};
+
+	/**
+		This class takes a mass tolerance and mass units and uses them to compare
+		two precursor masses.
+	*/
+	class SpectraMassMapComparator {
+		// Mass Tol
+		double massTolerance;
+		// Daltons or PPM
+		MassUnits units;
+	public:
+		SpectraMassMapComparator(){}
+		
+		// Init
+		SpectraMassMapComparator(double tol, MassUnits unts) 
+		{
+			massTolerance = tol;
+			units = unts;
+		}
+		
+		bool operator()(const double lhs, const double rhs) const {
+			float delta = ComputeMassError(lhs,rhs,units);
+			if(delta > massTolerance) {
+				return lhs < rhs;
+			} else {
+				return false;
+			}
+		}
 	};
 
 	typedef multimap< double, SpectraList::iterator >					SpectraMassMap;
