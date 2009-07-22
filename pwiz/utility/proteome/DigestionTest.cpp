@@ -29,6 +29,8 @@
 #include <iostream>
 #include <iterator>
 #include "boost/foreach.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 #include <set>
 
 using namespace std;
@@ -43,6 +45,7 @@ ostream* os_ = 0;
 void testCleavageAgents()
 {
     const set<CVID>& cleavageAgents = Digestion::getCleavageAgents();
+    const vector<string>& cleavageAgentNames = Digestion::getCleavageAgentNames();
 
     if (os_)
     {
@@ -53,14 +56,41 @@ void testCleavageAgents()
                  << Digestion::getCleavageAgentRegex(agentCvid)
                  << ")" << endl;
         }
+
+        *os_ << "\nCleavage agent names" << endl;
+        BOOST_FOREACH(string agentName, cleavageAgentNames)
+        {
+            *os_ << agentName << endl;
+        }
     }
 
     unit_assert(cleavageAgents.size() == 14);
     unit_assert(*cleavageAgents.begin() == MS_Trypsin);
     unit_assert(*cleavageAgents.rbegin() == MS_V8_E);
+    unit_assert(!cleavageAgents.count(MS_NoEnzyme));
+
+    unit_assert(Digestion::getCleavageAgentByName("TRYPSIN") == MS_Trypsin);
+    unit_assert(Digestion::getCleavageAgentByName("trypsin") == MS_Trypsin);
+    unit_assert(Digestion::getCleavageAgentByName("ion trap") == CVID_Unknown);
+    unit_assert(Digestion::getCleavageAgentByName("!@#$%^&*") == CVID_Unknown);
+
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[0]) == MS_Trypsin);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[1]) == MS_Arg_C);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[2]) == MS_Asp_N);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[3]) == MS_Asp_N_ambic);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[4]) == MS_Chymotrypsin);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[5]) == MS_CNBr);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[6]) == MS_Formic_acid);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[7]) == MS_Lys_C);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[8]) == MS_Lys_C_P);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[9]) == MS_PepsinA);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[10]) == MS_TrypChymo);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[11]) == MS_Trypsin_P);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[12]) == MS_V8_DE);
+    unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[13]) == MS_V8_E);
+
     unit_assert(Digestion::getCleavageAgentRegex(MS_Trypsin) == "(?<=[KR])(?!P)");
     unit_assert(Digestion::getCleavageAgentRegex(MS_V8_E) == "(?<=[EZ])(?!P)");
-
     unit_assert_throws(Digestion::getCleavageAgentRegex(MS_ion_trap), std::invalid_argument);
 }
 
@@ -75,6 +105,8 @@ struct DigestedPeptideLessThan
 
 void testTrypticBSA(const Digestion& trypticDigestion)
 {
+    if (os_) *os_ << "Fully-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
+
     set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
     vector<DigestedPeptide> trypticPeptides(trypticDigestion.begin(), trypticDigestion.end());
@@ -82,7 +114,6 @@ void testTrypticBSA(const Digestion& trypticDigestion)
 
     if (os_)
     {
-        *os_ << "Fully-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
         BOOST_FOREACH(DigestedPeptide peptide, trypticPeptides)
         {
             *os_ << peptide.offset() << "\t" << peptide.missedCleavages() << "\t" <<
@@ -143,6 +174,8 @@ void testTrypticBSA(const Digestion& trypticDigestion)
 
 void testSemitrypticBSA(const Digestion& semitrypticDigestion)
 {
+    if (os_) *os_ << "Semi-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
+
     set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
     vector<DigestedPeptide> semitrypticPeptides(semitrypticDigestion.begin(), semitrypticDigestion.end());
@@ -150,7 +183,6 @@ void testSemitrypticBSA(const Digestion& semitrypticDigestion)
     
     if (os_)
     {
-        *os_ << "Semi-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
         BOOST_FOREACH(DigestedPeptide peptide, semitrypticPeptides)
         {
             *os_ << peptide.offset() << "\t" << peptide.missedCleavages() << "\t" <<
@@ -232,6 +264,8 @@ void testSemitrypticBSA(const Digestion& semitrypticDigestion)
 
 void testNontrypticBSA(const Digestion& nontrypticDigestion)
 {
+    if (os_) *os_ << "Non-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
+
     set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
     vector<DigestedPeptide> nontrypticPeptides(nontrypticDigestion.begin(), nontrypticDigestion.end());
@@ -239,7 +273,6 @@ void testNontrypticBSA(const Digestion& nontrypticDigestion)
     
     if (os_)
     {
-        *os_ << "Non-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
         BOOST_FOREACH(DigestedPeptide peptide, nontrypticPeptides)
         {
             *os_ << peptide.offset() << "\t" << peptide.missedCleavages() << "\t" <<
@@ -329,8 +362,104 @@ void testNontrypticBSA(const Digestion& nontrypticDigestion)
     unit_assert(!nontrypticPeptideSet.count("EYEATLEECCAKDDPHACYSTVFDK"));
 }
 
-void test()
+void testSemitrypticMethionineClippingBSA(const Digestion& semitrypticDigestion)
 {
+    if (os_) *os_ << "Semi-specific BSA digest w/ methionine clipping (offset, missed cleavages, specific termini, length, sequence)" << endl;
+
+    set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
+
+    vector<DigestedPeptide> semitrypticPeptides(semitrypticDigestion.begin(), semitrypticDigestion.end());
+    set<DigestedPeptide, DigestedPeptideLessThan> semitrypticPeptideSet(semitrypticPeptides.begin(), semitrypticPeptides.end());
+    
+    if (os_)
+    {
+        BOOST_FOREACH(DigestedPeptide peptide, semitrypticPeptides)
+        {
+            *os_ << peptide.offset() << "\t" << peptide.missedCleavages() << "\t" <<
+                    peptide.specificTermini() << "\t" << peptide.sequence().length() <<
+                    "\t" << peptide.sequence() << "\n";
+        }
+    }
+
+    // test count
+    unit_assert(semitrypticPeptides.size() > 3);
+
+    // test order of enumeration and peptides at the N terminus;
+    // with methionine clipping, MKWVT contains two missed cleavages
+    unit_assert(semitrypticPeptides[0].sequence() == "KWVTF");
+    unit_assert(semitrypticPeptides[1].sequence() == "KWVTFI");
+    unit_assert(semitrypticPeptides[2].sequence() == "KWVTFIS");
+
+    // test order of enumeration and peptides at the C terminus
+    unit_assert(semitrypticPeptides.rbegin()->sequence() == "QTALA");
+    unit_assert((semitrypticPeptides.rbegin()+1)->sequence() == "TQTALA");
+    unit_assert((semitrypticPeptides.rbegin()+2)->sequence() == "STQTALA");
+    unit_assert((semitrypticPeptides.rbegin()+5)->sequence() == "LVVSTQTALA");
+    unit_assert((semitrypticPeptides.rbegin()+6)->sequence() == "LVVSTQTAL");
+    unit_assert((semitrypticPeptides.rbegin()+10)->sequence() == "LVVST");
+
+    // test digestion metadata ([0]: KWVTF)
+    unit_assert(semitrypticPeptides[0].offset() == 1);
+    unit_assert(semitrypticPeptides[0].missedCleavages() == 1);
+    unit_assert(semitrypticPeptides[0].specificTermini() == 1);
+    unit_assert(semitrypticPeptides[0].NTerminusIsSpecific() &&
+                !semitrypticPeptides[0].CTerminusIsSpecific());
+
+    peptideItr = semitrypticPeptideSet.find("MKWVTFISLLLLFSSAYSR"); // 2 missed cleavages
+    unit_assert(peptideItr == semitrypticPeptideSet.end());
+
+    peptideItr = semitrypticPeptideSet.find("KWVTFISLLLLFSSAYS"); // clipped methionine
+    unit_assert(peptideItr != semitrypticPeptideSet.end());
+    unit_assert(peptideItr->offset() == 1);
+    unit_assert(peptideItr->missedCleavages() == 1);
+    unit_assert(peptideItr->specificTermini() == 1);
+    unit_assert(peptideItr->NTerminusIsSpecific());
+
+    peptideItr = semitrypticPeptideSet.find("KWVTFISLLLLFSSAYSR"); // clipped methionine
+    unit_assert(peptideItr != semitrypticPeptideSet.end());
+    unit_assert(peptideItr->offset() == 1);
+    unit_assert(peptideItr->missedCleavages() == 1);
+    unit_assert(peptideItr->specificTermini() == 2);
+    unit_assert(peptideItr->NTerminusIsSpecific() &&
+                peptideItr->CTerminusIsSpecific());
+
+    peptideItr = semitrypticPeptideSet.find("KWVTFISLLLLFSSAYSRG"); // 2 missed cleavages
+    unit_assert(peptideItr == semitrypticPeptideSet.end());
+
+    peptideItr = semitrypticPeptideSet.find("WVTFISLLLLFSSAYSR");
+    unit_assert(peptideItr != semitrypticPeptideSet.end());
+    unit_assert(peptideItr->offset() == 2);
+    unit_assert(peptideItr->missedCleavages() == 0);
+    unit_assert(peptideItr->specificTermini() == 2);
+    unit_assert(peptideItr->NTerminusIsSpecific() &&
+                peptideItr->CTerminusIsSpecific());
+
+    peptideItr = semitrypticPeptideSet.find("WVTFISLLLLFSSAYSRG");
+    unit_assert(peptideItr != semitrypticPeptideSet.end());
+    unit_assert(peptideItr->offset() == 2);
+    unit_assert(peptideItr->missedCleavages() == 1);
+    unit_assert(peptideItr->specificTermini() == 1);
+    unit_assert(peptideItr->NTerminusIsSpecific() &&
+                !peptideItr->CTerminusIsSpecific());
+
+    peptideItr = semitrypticPeptideSet.find("VTFISLLLLFSSAYSRG"); // non-tryptic
+    unit_assert(peptideItr == semitrypticPeptideSet.end());
+
+    // test for non-specific peptides
+    unit_assert(semitrypticPeptideSet.count("WVTFISLLLLFSSAYSR")); // tryptic
+    unit_assert(semitrypticPeptideSet.count("KWVTFISLLLLFSSAYSR")); // semi-tryptic
+    unit_assert(semitrypticPeptideSet.count("KWVTFISLLLLFSSAYS")); // clipped methionine & semi-specific
+    unit_assert(!semitrypticPeptideSet.count("VTFISLLLLFSSAYS")); // non-specific
+
+    // test semi-specific peptides at the C terminus
+    unit_assert(semitrypticPeptideSet.count("FAVEGPKLVVSTQTALA")); // semi-tryptic
+    unit_assert(!semitrypticPeptideSet.count("FAVEGPKLVVSTQTAL")); // non-tryptic
+}
+
+void testBSADigestion()
+{
+    if (os_) *os_ << "BSA digestion test" << endl;
+
     // >P02769|ALBU_BOVIN Serum albumin - Bos taurus (Bovine).
     Peptide bsa("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPF"
                 "DEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEP"
@@ -362,6 +491,12 @@ void test()
     testNontrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
     testNontrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
 
+    // test semi-specific trypsin digest with n-terminal methionine clipping (motif and regex only)
+    vector<Digestion::Motif> motifs; motifs.push_back("{M|"); motifs.push_back("[KR]|");
+    testSemitrypticMethionineClippingBSA(Digestion(bsa, motifs, Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticMethionineClippingBSA(Digestion(bsa, boost::regex("(?<=^M)|(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticMethionineClippingBSA(Digestion(bsa, boost::regex("(?<=(^M)|([KR]))"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+
     // test funky digestion
     Digestion funkyDigestion(bsa, "A[DE]|[FG]", Digestion::Config(0));
     vector<Peptide> funkyPeptides(funkyDigestion.begin(), funkyDigestion.end());
@@ -372,6 +507,36 @@ void test()
 }
 
 
+void testThreadSafetyWorker(boost::barrier* testBarrier)
+{
+    testBarrier->wait(); // wait until all threads have started
+
+    try
+    {
+        testCleavageAgents();
+        testBSADigestion();
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
+}
+
+void testThreadSafety()
+{
+    const int testThreadCount = 10;
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+    testThreadGroup.join_all();
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -379,7 +544,8 @@ int main(int argc, char* argv[])
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "DigestionTest\n";
         testCleavageAgents();
-        test();
+        testBSADigestion();
+        testThreadSafety();
         return 0;
     }
     catch (exception& e)

@@ -29,6 +29,7 @@
 #include "AminoAcid.hpp"
 #include "pwiz/utility/misc/CharIndexedVector.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include "boost/utility/singleton.hpp"
 
 
@@ -331,15 +332,29 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
             if (regexRelationItr != cvTermInfo.otherRelations.end())
             {
                 cleavageAgents_.insert(*itr);
+                cleavageAgentNames_.push_back(cvTermInfo.name);
+                cleavageAgentNameToCvidMap_[bal::to_lower_copy(cvTermInfo.name)] = *itr;
                 const CVTermInfo& cleavageAgentRegexTerm = pwiz::cvTermInfo(regexRelationItr->second);
                 cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;
             }
         }
     }
 
-    const set<CVID>& cleavageAgents() {return cleavageAgents_;}
+    const set<CVID>& cleavageAgents() const {return cleavageAgents_;}
+    const vector<string>& cleavageAgentNames() const {return cleavageAgentNames_;}
 
-    const std::string& getCleavageAgentRegex(CVID agentCvid)
+    CVID getCleavageAgentByName(const string& agentName) const
+    {
+        string name = bal::to_lower_copy(agentName);
+        map<string, CVID>::const_iterator agentTermItr = cleavageAgentNameToCvidMap_.find(name);
+
+        if (agentTermItr == cleavageAgentNameToCvidMap_.end())
+            return CVID_Unknown;
+
+        return agentTermItr->second;
+    }
+
+    const std::string& getCleavageAgentRegex(CVID agentCvid) const
     {
         if (!pwiz::cvIsA(agentCvid, MS_cleavage_agent_name))
             throw invalid_argument("[getRegexForCleavageAgent] CVID is not a cleavage agent.");
@@ -355,6 +370,8 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
 
     private:
     set<CVID> cleavageAgents_;
+    vector<string> cleavageAgentNames_;
+    map<string, CVID> cleavageAgentNameToCvidMap_;
     map<CVID, const CVTermInfo*> cleavageAgentToRegexMap_;
 };
 
@@ -364,6 +381,16 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
 const set<CVID>& Digestion::getCleavageAgents()
 {
     return CleavageAgentInfo::instance->cleavageAgents();
+}
+
+const vector<string>& Digestion::getCleavageAgentNames()
+{
+    return CleavageAgentInfo::instance->cleavageAgentNames();
+}
+
+CVID Digestion::getCleavageAgentByName(const string& agentName)
+{
+    return CleavageAgentInfo::instance->getCleavageAgentByName(agentName);
 }
 
 const string& Digestion::getCleavageAgentRegex(CVID agentCvid)
@@ -649,15 +676,12 @@ class Digestion::const_iterator::Impl
         // try each possible pair of digestion sites;
         // initialize beginNonSpecific_ and beginNonSpecific_ to the first pair that meet
         // config's filtering criteria
-        for (int testBegin = -1; testBegin < maxLength; ++testBegin)
+        bool passesFilter = false;
+        for (int testBegin = -1; testBegin < maxLength && !passesFilter; ++testBegin)
         {
-            for (int testEnd = testBegin+config_.minimumLength; testEnd <maxLength; ++testEnd)
+            for (int testEnd = testBegin+config_.minimumLength; testEnd < maxLength; ++testEnd)
             {
-                // this can happen if minimumLength is high enough
-                int curMissedCleavages = int(end_ - begin_)-1;
-                if (curMissedCleavages > config_.maximumMissedCleavages)
-                    break;
-
+                // end offset is too far, start again with a new begin offset
                 int curLength = testEnd - testBegin;
                 if (curLength > config_.maximumLength)
                     break;
@@ -672,11 +696,18 @@ class Digestion::const_iterator::Impl
                     while (end_ != sites_.end() && *end_ < endNonSpecific_)
                         ++end_;
                 }
-                break;
-            }
 
-            if (beginNonSpecific_ != maxLength)
-                break;
+                // end offset is too far, start again with a new begin offset
+                int curMissedCleavages = int(end_ - begin_)-1;
+                if (curMissedCleavages > config_.maximumMissedCleavages)
+                    break;
+
+                if (beginNonSpecific_ != maxLength)
+                {
+                    passesFilter = true;
+                    break;
+                }
+            }
         }
     }
 

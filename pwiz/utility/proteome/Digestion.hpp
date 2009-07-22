@@ -132,8 +132,15 @@ class PWIZ_API_DECL Digestion
 
     struct Motif;
 
-    /// gets a set of predefined cleavage agents defined in the PSI-MS CV
+    /// returns the set of predefined cleavage agents defined in the PSI-MS CV
     static const std::set<CVID>& getCleavageAgents();
+
+    /// returns the names of the set of predefined cleavage agents defined in the PSI-MS CV
+    static const std::vector<std::string>& getCleavageAgentNames();
+
+    /// returns the cvid of the specified cleavage agent using a case-insensitive search,
+    /// or CVID_Unknown if the agent is not found
+    static CVID getCleavageAgentByName(const std::string& agentName);
 
     /// returns the Perl regular expression defining the places in a
     /// polypeptide or protein that the agent will cut.
