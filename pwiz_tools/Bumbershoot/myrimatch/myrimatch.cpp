@@ -6,6 +6,7 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/proteome/Version.hpp"
 
+
 namespace freicore
 {
 namespace myrimatch
@@ -22,6 +23,7 @@ namespace myrimatch
 	float							totalSequenceComparisons;
 
 	RunTimeConfig*					g_rtConfig;
+
 
 	int InitProcess( argList_t& args )
 	{
@@ -189,12 +191,16 @@ namespace myrimatch
 		if( spectra.empty() )
 			return 0;
 
-        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		// Determine the maximum seen charge state
+		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		    g_rtConfig->maxChargeStateFromSpectra = max((*sItr)->id.charge, g_rtConfig->maxChargeStateFromSpectra);
 
+		g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
 		g_rtConfig->PrecursorMassTolerance.clear();
 		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
 			g_rtConfig->PrecursorMassTolerance.push_back( g_rtConfig->PrecursorMzTolerance * z );
+
+		//size_t numSpectra = spectra.size();
 
 		// Create a map of precursor masses to the spectrum indices
 		spectraMassMapsByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
@@ -227,13 +233,14 @@ namespace myrimatch
 			if( (*sItr)->mOfPrecursor > g_rtConfig->curMaxSequenceMass )
 				g_rtConfig->curMaxSequenceMass = (*sItr)->mOfPrecursor;
 
-			size_t totalPeakBins = (size_t) round( (*sItr)->totalPeakSpace / ( g_rtConfig->FragmentMzTolerance * 2.0 ) );
+			double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? ((*sItr)->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance * pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+			size_t totalPeakBins = (size_t) round( (*sItr)->totalPeakSpace / ( fragMassError * 2.0 ) );
 			if( totalPeakBins > maxPeakBins )
 				maxPeakBins = totalPeakBins;
 		}
 
-		g_rtConfig->curMinSequenceMass -= g_rtConfig->PrecursorMassTolerance.back();
-		g_rtConfig->curMaxSequenceMass += g_rtConfig->PrecursorMassTolerance.back();
+		g_rtConfig->curMinSequenceMass -= (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMinSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back());
+		g_rtConfig->curMaxSequenceMass += (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMaxSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back());
 
         // set the effective minimum and maximum sequence masses based on config and precursors
         g_rtConfig->curMinSequenceMass = max( g_rtConfig->curMinSequenceMass, g_rtConfig->MinSequenceMass );
@@ -378,7 +385,8 @@ namespace myrimatch
                     cout << ionMasses << endl << ionNames << endl;
 					for( size_t i=0; i < ionMasses.size(); ++i )
 					{
-						PeakPreData::iterator itr = s->peakPreData.findNear( ionMasses[i], g_rtConfig->FragmentMzTolerance );
+						double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+						PeakPreData::iterator itr = s->peakPreData.findNear( ionMasses[i], fragMassError );
 						if( itr != s->peakPreData.end() )
 						{
 							ionLabels[ itr->first ] = ionNames[i];
@@ -453,9 +461,11 @@ namespace myrimatch
 						int fragmentsPredicted = accumulate( itr->key.begin(), itr->key.end(), 0 );
 						int fragmentsFound = fragmentsPredicted - itr->key.back();
 						int fragmentsFoundAfterDeisotoping = 0;
-						for( size_t i=0; i < ionMasses.size(); ++i )
-							if( s->peakPreData.findNear( ionMasses[i], g_rtConfig->FragmentMzTolerance ) != s->peakPreData.end() )
+						for( size_t i=0; i < ionMasses.size(); ++i ) {
+							double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+							if( s->peakPreData.findNear( ionMasses[i], fragMassError ) != s->peakPreData.end() )
 								++ fragmentsFoundAfterDeisotoping;
+						}
 						deisotopingDetails << s->id.index << "\t" << s->id.charge << "\t" << theSequence << "\t" << fragmentsPredicted << "\t" << fragmentsFound << "\t" << fragmentsFoundAfterDeisotoping << "\n";
 					}
 				}
@@ -626,95 +636,25 @@ namespace myrimatch
 
 	vector< int > workerNumbers;
 
-	/*void DigestProteinSequence( const proteinData& protein, CandidateSequenceList& candidates )
-	{
-		float minDynamicModMass = min( g_residueMap->smallestDynamicModMass(), 0.0f ) * g_rtConfig->MaxDynamicMods;
-		float maxDynamicModMass = max( g_residueMap->largestDynamicModMass(), 0.0f ) * g_rtConfig->MaxDynamicMods;
-
-		const string& p = protein.getSequence();
-
-		for( int nIndex = 0; nIndex < (int) p.length(); ++nIndex )
-		{
-			int nTerminusCanCleave = 0;
-			const char& n_r = p[ nIndex ];
-			if( !g_residueMap->hasResidue( n_r ) )
-				continue;
-
-			int numTotalCleavages = 0;
-
-			CleavageRuleSet::const_iterator nTermCleavageItr = protein.testCleavage( g_rtConfig->_CleavageRules, nIndex );
-			if( nTermCleavageItr != g_rtConfig->_CleavageRules.end() )
-			{
-				++numTotalCleavages;
-				nTerminusCanCleave = 1;
-			}
-
-			if( numTotalCleavages < g_rtConfig->NumMinTerminiCleavages-1 )
-				continue;
-
-			for( int cIndex = nIndex; cIndex < (int) p.length(); ++cIndex )
-			{
-				int cTerminusCanCleave = 0;
-				const char& c_r = p[ cIndex ];
-
-				if( !g_residueMap->hasResidue( c_r ) )
-					break;
-
-				CleavageRuleSet::const_iterator cTermCleavageItr = protein.testCleavage( g_rtConfig->_CleavageRules, cIndex+1 );
-				if( cTermCleavageItr != g_rtConfig->_CleavageRules.end() )
-				{
-					++numTotalCleavages;
-					cTerminusCanCleave = 1;
-				}
-
-				if( cIndex - nIndex + 1 < g_rtConfig->MinCandidateLength )
-					continue;
-
-				int numTerminiCleavages = nTerminusCanCleave + cTerminusCanCleave;
-
-				if( numTerminiCleavages < g_rtConfig->NumMinTerminiCleavages )
-					continue;
-
-				int numMissedCleavages = numTotalCleavages - numTerminiCleavages;
-
-				if( g_rtConfig->NumMaxMissedCleavages != -1 && numMissedCleavages > g_rtConfig->NumMaxMissedCleavages )
-					break;
-
-				string aSequence = PEPTIDE_N_TERMINUS_SYMBOL + p.substr( nIndex, cIndex - nIndex + 1 ) + PEPTIDE_C_TERMINUS_SYMBOL;
-				float aSequenceMass = g_residueMap->GetMassOfResidues( aSequence, g_rtConfig->UseAvgMassOfSequences );
-
-				if( aSequenceMass + maxDynamicModMass < g_rtConfig->curMinSequenceMass )
-					continue;
-
-				if( aSequenceMass + minDynamicModMass > g_rtConfig->curMaxSequenceMass )
-					break;
-
-				// All tests passed, we have a genuine bonafide sequence candidate!
-				CandidateSequenceInfo candidate( aSequence, aSequenceMass, nIndex, numTerminiCleavages, numMissedCleavages );
-				//cout << p[max(0,nIndex-1)] << '.' << aSequence << '.' << p[min(p.length()-1,cIndex+1)] << " " << numTerminiCleavages << " " << numMissedCleavages << endl;
-				//MakePtmVariants( candidate, candidates, g_rtConfig->MaxDynamicMods );
-			}
-		}
-	}*/
-
 	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool estimateComparisonsOnly = false )
 	{
 		boost::int64_t numComparisonsDone = 0;
-		vector< vector< double > > fragmentIonsByChargeState( g_rtConfig->maxChargeStateFromSpectra );
 		Spectrum* spectrum;
 		SearchResult result(candidate);
         string sequence = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
         double mass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                         : candidate.monoisotopicMass();
 
-		int maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->NumChargeStates );
+
 		for( int z = 0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
 		{
-			int fragmentChargeState = min( z, maxFragmentChargeState-1 );
-			vector<double>& sequenceIons = fragmentIonsByChargeState[fragmentChargeState];
-
-			SpectraMassMap::iterator cur, end = spectraMassMapsByChargeState[z].upper_bound( mass + g_rtConfig->PrecursorMassTolerance[z] );
-			for( cur = spectraMassMapsByChargeState[z].lower_bound( mass - g_rtConfig->PrecursorMassTolerance[z] ); cur != end; ++cur )
+			int fragmentChargeState = min( z, g_rtConfig->maxFragmentChargeState-1 );
+			vector< double > sequenceIons;
+			// Set the mass error based on mass units.
+			double massError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mass * g_rtConfig->PrecursorMassTolerance[z] * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance[z];
+			// Look up the spectra that have precursor masses between mass + massError and mass - massError
+			SpectraMassMap::iterator cur, end = spectraMassMapsByChargeState[z].upper_bound( mass + massError );
+			for( cur = spectraMassMapsByChargeState[z].lower_bound( mass - massError ); cur != end; ++cur )
 			{
 				spectrum = *cur->second;
 				//if( spectrum->mOfPrecursor != cur->first )
@@ -1238,8 +1178,6 @@ namespace myrimatch
 						cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
 						//spectra.dump();
 
-						InitWorkerGlobals();
-
 						numSpectra = (int) spectra.size();
 
 						skip = 0;
@@ -1265,6 +1203,7 @@ namespace myrimatch
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
 							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
 
+							InitWorkerGlobals();
 
 							if( !g_rtConfig->EstimateSearchTimeOnly )
 							{
