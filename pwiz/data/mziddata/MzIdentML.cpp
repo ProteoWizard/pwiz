@@ -225,12 +225,19 @@ bool Organization::empty() const
 // Modification
 //
 
+Modification::Modification()
+    : location(IdentifiableType::INVALID_NATURAL),
+      avgMassDelta(IdentifiableType::INVALID_NATURAL),
+      monoisotopicMassDelta(IdentifiableType::INVALID_NATURAL)
+{
+}
+
 bool Modification::empty() const
 {
-    return location.empty() &&
+    return location == IdentifiableType::INVALID_NATURAL &&
         residues.empty() &&
-        avgMassDelta.empty() &&
-        monoisotopicMassDelta.empty() &&
+        avgMassDelta == IdentifiableType::INVALID_NATURAL &&
+        monoisotopicMassDelta == IdentifiableType::INVALID_NATURAL &&
         paramGroup.empty();
 }
 
@@ -273,6 +280,20 @@ bool IonType::empty() const
     return index.empty() &&
         paramGroup.empty() &&
         fragmentArray.empty();
+}
+
+//
+// SpectrumIdentificationItem
+//
+
+SpectrumIdentificationItem::SpectrumIdentificationItem()
+    : chargeState(INVALID_NATURAL),
+    experimentalMassToCharge(INVALID_NATURAL),
+    calculatedMassToCharge(INVALID_NATURAL),
+    calculatedPI(INVALID_NATURAL),
+    rank(INVALID_NATURAL),
+    passThreshold(INVALID_NATURAL) 
+{
 }
 
 //
@@ -325,7 +346,7 @@ bool Filter::empty() const
 bool Residue::empty() const
 {
     return Code.empty() &&
-        Mass.empty();
+        Mass == IdentifiableType::INVALID_NATURAL;
 }
 
 //
@@ -365,12 +386,12 @@ FragmentArray& FragmentArray::setValues(const std::string& values)
     istringstream iss(values);
 
     this->values.clear();
-    copy(istream_iterator<float>(iss), istream_iterator<float>(), back_inserter(this->values));
+    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(this->values));
 
     return *this;
 }
 
-FragmentArray& FragmentArray::setValues(const std::vector<float>& values)
+FragmentArray& FragmentArray::setValues(const std::vector<double>& values)
 {
     this->values.clear();
     copy(values.begin(), values.end(), back_inserter(this->values));
@@ -381,7 +402,7 @@ FragmentArray& FragmentArray::setValues(const std::vector<float>& values)
 string FragmentArray::getValues() const
 {
     ostringstream oss;
-    copy(values.begin(), values.end(), ostream_iterator<float>(oss, " "));
+    copy(values.begin(), values.end(), ostream_iterator<double>(oss, " "));
 
     return oss.str();
 }

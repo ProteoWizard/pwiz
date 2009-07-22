@@ -257,10 +257,12 @@ typedef boost::shared_ptr<DBSequence> DBSequencePtr;
 
 struct PWIZ_API_DECL Modification
 {
-    std::string location;
+    Modification();
+    
+    int location;
     std::string residues;
-    std::string avgMassDelta;
-    std::string monoisotopicMassDelta;
+    double avgMassDelta;
+    double monoisotopicMassDelta;
 
     ParamContainer paramGroup;
 
@@ -334,7 +336,7 @@ struct PWIZ_API_DECL AnalysisCollection
 
 struct PWIZ_API_DECL ModParam
 {
-    std::string massDelta;
+    double massDelta;
     std::string residues;
 
     std::vector<CVParam> cvParams;
@@ -383,7 +385,7 @@ struct PWIZ_API_DECL Enzymes
 struct PWIZ_API_DECL Residue
 {
     std::string Code;
-    std::string Mass;
+    double Mass;
 
     bool empty() const;
 };
@@ -528,11 +530,11 @@ typedef boost::shared_ptr<Measure> MeasurePtr;
 
 struct PWIZ_API_DECL FragmentArray
 {
-    std::vector<float> values;
+    std::vector<double> values;
     std::string Measure_ref;
 
     FragmentArray& setValues(const std::string& values);
-    FragmentArray& setValues(const std::vector<float>& values);
+    FragmentArray& setValues(const std::vector<double>& values);
     std::string getValues() const;
 
     bool empty() const;
@@ -584,12 +586,12 @@ typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
 
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 {
-    SpectrumIdentificationItem() : chargeState(0), experimentalMassToCharge(0), calculatedMassToCharge(0), calculatedPI(0), rank(0), passThreshold(0) {}
+    SpectrumIdentificationItem();
 
     int chargeState;
     double experimentalMassToCharge;
     double calculatedMassToCharge;
-    float calculatedPI;
+    double calculatedPI;
     std::string Peptide_ref;
     int rank;
     bool passThreshold;

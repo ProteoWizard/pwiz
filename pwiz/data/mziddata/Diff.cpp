@@ -666,7 +666,7 @@ void diff(const Residue& a,
           const DiffConfig& config)
 {
     diff(a.Code, b.Code, a_b.Code, b_a.Code, config);
-    diff(a.Mass, b.Mass, a_b.Mass, b_a.Mass, config);
+    diff_numeric(a.Mass, b.Mass, a_b.Mass, b_a.Mass, config);
 }
 
 PWIZ_API_DECL
@@ -911,10 +911,10 @@ void diff(const Modification& a,
           Modification& b_a,
           const DiffConfig& config)
 {
-    diff(a.location, b.location, a_b.location, b_a.location, config);
+    diff_numeric(a.location, b.location, a_b.location, b_a.location, config);
     diff(a.residues, b.residues, a_b.residues, b_a.residues, config);
-    diff(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta, b_a.avgMassDelta, config);
-    diff(a.monoisotopicMassDelta, b.monoisotopicMassDelta, a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
+    diff_numeric(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta, b_a.avgMassDelta, config);
+    diff_numeric(a.monoisotopicMassDelta, b.monoisotopicMassDelta, a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 

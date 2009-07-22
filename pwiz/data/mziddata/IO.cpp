@@ -422,14 +422,14 @@ PWIZ_API_DECL void read(std::istream& is, DBSequencePtr ds)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
 {
     XMLWriter::Attributes attributes;
-    if (!mod.location.empty())
-        attributes.push_back(make_pair("location", mod.location));
+    if (mod.location != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("location", lexical_cast<string>(mod.location)));
     if (!mod.residues.empty())
         attributes.push_back(make_pair("residues", mod.residues));
-    if (!mod.avgMassDelta.empty())
-        attributes.push_back(make_pair("avgMassDelta", mod.avgMassDelta));
-    if (!mod.monoisotopicMassDelta.empty())
-        attributes.push_back(make_pair("monoisotopicMassDelta", mod.monoisotopicMassDelta));
+    if (mod.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("avgMassDelta", lexical_cast<string>(mod.avgMassDelta)));
+    if (!mod.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(mod.monoisotopicMassDelta)));
     
     writer.startElement("Modification", attributes);
     writeParamContainer(writer, mod.paramGroup);
@@ -1160,7 +1160,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ResiduePtr residue)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("Code", residue->Code));
-    attributes.push_back(make_pair("Mass", residue->Mass));
+    attributes.push_back(make_pair("Mass", lexical_cast<string>(residue->Mass)));
     
     writer.startElement("Residue", attributes, XMLWriter::EmptyElement);
 }
@@ -1241,7 +1241,7 @@ PWIZ_API_DECL void read(std::istream& is, MassTable& mt)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ModParam& mp)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("massDelta", mp.massDelta));
+    attributes.push_back(make_pair("massDelta", lexical_cast<string>(mp.massDelta)));
     attributes.push_back(make_pair("residues", mp.residues));
 
     writer.startElement("ModParam", attributes);

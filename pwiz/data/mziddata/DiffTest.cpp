@@ -122,7 +122,7 @@ void testFragmentArray()
     diff(a, b);
     unit_assert(diff);
 
-    vector<float> values;
+    vector<double> values;
     values.push_back(1.0);
     b.setValues(values);
 

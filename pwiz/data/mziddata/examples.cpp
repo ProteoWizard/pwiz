@@ -109,8 +109,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     PeptidePtr peptide(new Peptide());
     peptide->id="peptide_1_1";
     peptide->peptideSequence="QLYENKPRRPYIL";
-    peptide->modification.location="0";
-    peptide->modification.monoisotopicMassDelta="-17.026549";
+    peptide->modification.location=0;
+    peptide->modification.monoisotopicMassDelta=-17.026549;
     // set UNIMOD:28 & value w/ peptide->modification.paramGroup.set();
     mzid.sequenceCollection.peptides.push_back(peptide);
 
@@ -152,7 +152,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->additionalSearchParams.set(MS_param__y_ion);
     sip->additionalSearchParams.set(MS_param__y_ion_NH3);
     SearchModificationPtr smp(new SearchModification());
-    smp->modParam.massDelta="-17.026549";
+    smp->modParam.massDelta=-17.026549;
     smp->modParam.residues="Q";
     // TODO add UNIMOD:28
     // Use ParamContainer in place of vector<CVParam>
@@ -173,7 +173,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->massTable.msLevel="1 2";
 
     ResiduePtr rp(new Residue());
-    rp->Code="A"; rp->Mass="71.037114";
+    rp->Code="A"; rp->Mass=71.037114;
     sip->massTable.residues.push_back(rp);
 
     AmbiguousResiduePtr arp(new AmbiguousResidue());
