@@ -27,10 +27,14 @@
 #include "examples.hpp"
 
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
+
+ostream* os_ = 0;
+
 
 void testSerialize()
 {
@@ -42,15 +46,31 @@ void testSerialize()
     ostringstream oss;
     ser.write(oss, mzid);
 
-    cout << oss.str();
+    //cout << oss.str();
     // TODO finish adding something useful
-    
-    cerr << "end testSerialize\n";
+}
+
+void test()
+{
+    testSerialize();
 }
 
 int main(int argc, char** argv)
 {
-    testSerialize();
+    try
+    {
+        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        test();
+        return 0;
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
     
-    return 0;
+    return 1;
 }

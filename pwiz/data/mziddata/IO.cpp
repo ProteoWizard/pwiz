@@ -2233,6 +2233,10 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     addIdAttributes(mzid, attributes);
     attributes.push_back(make_pair("xsi:schemaLocation",
                                    "http://psidev.info/psi/pi/mzIdentML/1.0  ../schema/mzIdentML_working.xsd"));
+    attributes.push_back(make_pair("xmlns",
+                                   "http://psidev.info/psi/pi/mzIdentML/1.0"));
+    attributes.push_back(make_pair("xmlns:xsi",
+                                   "http://www.w3.org/2001/XMLSchema-instance"));
     attributes.push_back(make_pair("version", mzid.version));
     attributes.push_back(make_pair("creationDate", mzid.creationDate));
 

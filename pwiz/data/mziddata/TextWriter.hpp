@@ -57,6 +57,12 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+    TextWriter& operator()(const float value)
+    {
+        os_ << indent_ << value << std::endl;
+        return *this;
+    }
+
     TextWriter& operator()(const CVParam& cvParam)
     {
         os_ << indent_ << "cvParam: " << cvTermInfo(cvParam.cvid).name;
@@ -181,10 +187,111 @@ class PWIZ_API_DECL TextWriter
     }
 
     
+    TextWriter& operator()(const IonType& it)
+    {
+        (*this)("IonType: ");
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const Measure& m)
+    {
+        (*this)("Measure: ");
+
+        if (!m.paramGroup.empty())
+            child()(m.paramGroup);
+        
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SpectrumIdentificationList& sil)
+    {
+        (*this)("SpectrumIdentificationList: ");
+
+        (*this)((IdentifiableType)sil);
+        if (!sil.numSequencesSearched != IdentifiableType::INVALID_NATURAL)
+        {
+            std::ostringstream oss;
+            oss << "numSequencesSearched: "
+                << sil.numSequencesSearched;
+            child()(oss.str());
+        }
+        if (!sil.fragmentationTable.empty())
+            child()("fragmentationTable", sil.fragmentationTable);
+        if (!sil.spectrumIdentificationResult.empty())
+            child()("spectrumIdentificationResult", sil.spectrumIdentificationResult);
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const AnalysisData& ad)
+    {
+        (*this)("analysisData: ");
+
+        if (!ad.spectrumIdentificationList.empty())
+            child()("spectrumIdentificationList: ", ad.spectrumIdentificationList);
+        if (!ad.proteinDetectionList.empty())
+            child()(ad.proteinDetectionList);
+        
+        return *this;
+    }
+    
+
+    TextWriter& operator()(const FragmentArray& fa)
+    {
+        (*this)("FragmentArray: ");
+
+        if (!fa.values.empty())
+            child()("values: ", fa.values);
+        if (!fa.Measure_ref.empty())
+            child()("Measure_ref: " + fa.Measure_ref);
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SourceFile& sf)
+    {
+        //(*this)("sourceFile: ");
+
+        (*this)((IdentifiableType)sf);
+        if (!sf.location.empty())
+            child()("location", sf.location);
+        if (!sf.fileFormat.empty())
+            child()(sf.fileFormat);
+        if (!sf.externalFormatDocumentation.empty())
+            child()("externalFormatDocumentation",
+                    sf.externalFormatDocumentation);
+        if (!sf.paramGroup.empty())
+            child()(sf.paramGroup);
+        
+        return *this;
+    }
+    
+    TextWriter& operator()(const Inputs& inputs)
+    {
+        (*this)("Inputs: ");
+
+        if (!inputs.sourceFile.empty())
+            child()("sourceFile: ", inputs.sourceFile);
+        if (!inputs.searchDatabase.empty())
+            child()("searchDatabase: ", inputs.searchDatabase);
+        if (!inputs.spectraData.empty())
+            child()("spectraData: ", inputs.spectraData);
+        
+        return *this;
+    }
+
+    
     TextWriter& operator()(const DataCollection& dc)
     {
         (*this)("DataCollection: ");
-        // TODO finish
+
+        if (!dc.inputs.empty())
+            child()(dc.inputs);
+        if (!dc.analysisData.empty())
+            child()(dc.analysisData);
+        
         return *this;
     }
 

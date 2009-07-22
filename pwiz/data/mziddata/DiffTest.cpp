@@ -51,6 +51,8 @@ void testString()
 
 void testIdentifiableType()
 {
+    if (os_) *os_ << "testIdentifiableType()\n";
+
     IdentifiableType a, b;
     a.id="a";
     a.name="a_name";
@@ -61,9 +63,11 @@ void testIdentifiableType()
     unit_assert(!diff);
 
     b.id="b";
+    b.name="b_name";
     
     diff(a, b);
     if (os_) *os_ << diff << endl;
+    unit_assert(diff);
 }
 
 
@@ -100,66 +104,303 @@ void testParamContainer()
     unit_assert(diff.b_a.cvParams[0] == MS_intensity);
 }
 
+void testFragmentArray()
+{
+    if (os_) *os_ << "testFragmentArray()\n";
+
+    FragmentArray a, b;
+
+    a.values.push_back(1.0);
+    a.Measure_ref = "Measure_ref";
+    b = a;
+
+    Diff<FragmentArray> diff(a, b);
+    unit_assert(!diff);
+    if (os_) *os_ << diff << endl;
+
+    b.values.push_back(2.0);
+    diff(a, b);
+    unit_assert(diff);
+
+    vector<float> values;
+    values.push_back(1.0);
+    b.setValues(values);
+
+    diff(a, b);
+    unit_assert(!diff);
+
+    const char* value_str = "1 2.1 ";
+    a.values.push_back(2.1);
+    b.setValues(value_str);
+    diff(a, b);
+    unit_assert(!diff);
+
+    unit_assert(a.getValues() == value_str);
+}
+
+void testIonType()
+{
+    if (os_) *os_ << "testIonType()\n";
+
+    IonType a, b;
+    a.index.push_back(1);
+    a.charge = 1;
+    a.paramGroup.set(MS_frag__a_ion);
+    a.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
+
+    b = a;
+
+    Diff<IonType> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.index.push_back(2);
+    diff(a, b);
+
+    unit_assert(diff);
+
+    vector<int> indices;
+    indices.push_back(1);
+    b.setIndex(indices);
+
+    diff(a, b);
+    unit_assert(!diff);
+
+    b.charge = 2;
+    diff(a, b);
+    unit_assert(!diff);
+
+    b.charge = 1;
+
+    const char* indexStr = "1 ";
+    b.setIndex(indexStr);
+    diff(a, b);
+    unit_assert(!diff);
+
+    b.paramGroup.set(MS_frag__z_ion);
+    diff(a, b);
+    unit_assert(diff);
+}
+
+
+void testMaterial()
+{
+    Material a, b;
+
+    a.contactRole.Contact_ref = "Contact_ref";
+    //a.cvParam.set();
+}
+
+
+void testMeasure()
+{
+}
+
+
+void testModParam()
+{
+}
+
+
+void testPeptideEvidence()
+{
+}
+
+
+void testProteinAmbiguityGroup()
+{
+}
+
+
+void testProteinDetectionHypothesis()
+{
+}
+
+
+void testSpectrumIdentificationList()
+{
+}
+
+
+void testProteinDetectionList()
+{
+}
+
+
+void testAnalysisData()
+{
+}
+
+
+void testSearchDatabase()
+{
+}
+
+
+void testSpectraData()
+{
+}
+
+
+void testSourceFile()
+{
+}
+
+
+void testInputs()
+{
+}
+
+
+void testEnzyme()
+{
+}
+
+
+void testEnzymes()
+{
+}
+
+
+void testMassTable()
+{
+}
+
+
+void testResidue()
+{
+}
+
+
+void testAmbiguousResidue()
+{
+}
+
+
+void testFilter()
+{
+}
+
+
+void testSpectrumIdentificationProtocol()
+{
+}
+
+
+void testProteinDetectionProtocol()
+{
+}
+
 
 void testAnalysisProtocolCollection()
 {
-    if (os_) *os_ << "testAnalysisProtocolCollection()\n";
-    
-}
-
-
-void testAnalysisCollection()
-{
-    if (os_) *os_ << "testAnalysisCollection()\n";
-    
-}
-
-void testSequenceCollection()
-{
-    if (os_) *os_ << "testSequenceCollection()\n";
-    
-}
-
-
-void testAnalysisSampleCollection()
-{
-    if (os_) *os_ << "testAnalysisSampleCollection()\n";
 }
 
 
 void testContact()
 {
-    if (os_) *os_ << "testContact()\n";
-    
+}
+
+
+void testAffiliations()
+{
 }
 
 
 void testPerson()
 {
-    if (os_) *os_ << "testPerson()\n";
-    
 }
 
 
 void testOrganization()
 {
-    if (os_) *os_ << "testOrganization()\n";
-    
+}
+
+
+void testBibliographicReference()
+{
+}
+
+
+void testProteinDetection()
+{
+}
+
+
+void testSpectrumIdentification()
+{
+}
+
+
+void testAnalysisCollection()
+{
+}
+
+
+void testDBSequence()
+{
+}
+
+
+void testModification()
+{
+}
+
+
+void testSubstitutionModification()
+{
+}
+
+
+void testPeptide()
+{
+}
+
+
+void testSequenceCollection()
+{
+}
+
+
+void testSampleComponent()
+{
+}
+
+
+void testSample()
+{
+}
+
+
+void testSearchModification()
+{
+}
+
+
+void testSpectrumIdentificationItem()
+{
+}
+
+
+void testSpectrumIdentificationResult()
+{
+}
+
+
+void testAnalysisSampleCollection()
+{
 }
 
 
 void testProvider()
 {
-    if (os_) *os_ << "testProvider()\n";
-    
 }
 
 
 void testContactRole()
 {
-    if (os_) *os_ << "testContactRole()\n";
-    
 }
+
 
 void testAnalysisSoftware()
 {
@@ -192,9 +433,16 @@ void testDataCollection()
     unit_assert(!diff);
 
     // a.inputs
+    a.inputs.sourceFile.push_back(SourceFilePtr(new SourceFile()));
+    b.inputs.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase()));
+    a.inputs.spectraData.push_back(SpectraDataPtr(new SpectraData()));
+    
     // b.analysisData
-
+    b.analysisData.spectrumIdentificationList.push_back(SpectrumIdentificationListPtr(new SpectrumIdentificationList()));
+        
     diff(a, b);
+    if (os_) *os_ << diff << endl;
+    
 }
 
 
@@ -238,22 +486,64 @@ void testMzIdentML()
 void test()
 {
     testString();
-    testIdentifiableType();
     testParamContainer();
-    
-    testAnalysisProtocolCollection();
-    
+    testFragmentArray();
+    testIonType();
+    testMaterial();
+    testMeasure();
+    testModParam();
+    testPeptideEvidence();
+    testProteinAmbiguityGroup();
+    testProteinDetectionHypothesis();
     testDataCollection();
+    testSpectrumIdentificationList();
+    testProteinDetectionList();
+    testAnalysisData();
+    testSearchDatabase();
+    testSpectraData();
+    testSourceFile();
+    testInputs();
+    testEnzyme();
+    testEnzymes();
+    testMassTable();
+    testResidue();
+    testAmbiguousResidue();
+    testFilter();
+    testSpectrumIdentificationProtocol();
+    testProteinDetectionProtocol();
+    testAnalysisProtocolCollection();
+    testContact();
+    testAffiliations();
+    testPerson();
+    testOrganization();
+    testBibliographicReference();
+    testProteinDetection();
+    testSpectrumIdentification();
+    testAnalysisCollection();
+    testDBSequence();
+    testModification();
+    testSubstitutionModification();
+    testPeptide();
+    testSequenceCollection();
+    testSampleComponent();
+    testSample();
+    testSearchModification();
+    testSpectrumIdentificationItem();
+    testSpectrumIdentificationResult();
+    testAnalysisSampleCollection();
+    testProvider();
+    testContactRole();
+    testAnalysisSoftware();
+    testAnalysisSoftware();
     testMzIdentML();
+    testIdentifiableType();
 }
 
 int main(int argc, char* argv[])
 {
     try
     {
-        //if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        // TODO debug - remove
-        os_ = &cout;
+        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         test();
         return 0;
     }

@@ -99,6 +99,8 @@ struct PWIZ_API_DECL ParamContainer
 
 struct PWIZ_API_DECL IdentifiableType
 {
+    static const int INVALID_NATURAL = -1;
+    
     virtual ~IdentifiableType() {}
     
     std::string id;
@@ -109,6 +111,8 @@ struct PWIZ_API_DECL IdentifiableType
 
 struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
 {
+    BibliographicReference();
+    
     std::string authors;
     std::string publication;
     std::string publisher;
@@ -500,8 +504,8 @@ struct PWIZ_API_DECL SourceFile : public IdentifiableType
 
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;
 
-/// DataCollection's Input element. Contains 0+ of SourceFile,
-/// SearchDatabase, SpectraData
+/// Input element. Contains 0+ of SourceFile, SearchDatabase,
+/// SpectraData
 struct PWIZ_API_DECL Inputs
 {
     // Replace these 3 members w/ their types
@@ -539,6 +543,8 @@ typedef boost::shared_ptr<FragmentArray> FragmentArrayPtr;
 
 struct PWIZ_API_DECL IonType
 {
+    IonType();
+    
     std::vector<int> index;
     int charge;
 
@@ -558,6 +564,8 @@ typedef boost::shared_ptr<IonType> IonTypePtr;
 
 struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
 {
+    PeptideEvidence();
+    
     std::string DBSequence_ref;
     int start;
     int end;
@@ -631,6 +639,8 @@ typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
 
 struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 {
+    SpectrumIdentificationList();
+    
     int numSequencesSearched;
 
     std::vector<MeasurePtr> fragmentationTable;
@@ -649,7 +659,7 @@ struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 typedef boost::shared_ptr<ProteinDetectionList> ProteinDetectionListPtr;
 
 
-/// DataCollection's AnalysisData element. 
+/// AnalysisData element. 
 struct PWIZ_API_DECL AnalysisData
 {
     std::vector<SpectrumIdentificationListPtr> spectrumIdentificationList;

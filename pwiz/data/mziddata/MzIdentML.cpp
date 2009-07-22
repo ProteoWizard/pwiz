@@ -146,6 +146,11 @@ bool IdentifiableType::empty() const
 // BibliographicReference
 //
 
+BibliographicReference::BibliographicReference()
+{
+    year = INVALID_NATURAL;
+}
+
 bool BibliographicReference::empty() const
 {
     return IdentifiableType::empty() &&
@@ -153,7 +158,7 @@ bool BibliographicReference::empty() const
         publication.empty() &&
         publisher.empty() &&
         editor.empty() &&
-     // int year;
+        year != INVALID_NATURAL &&
         volume.empty() &&
         issue.empty() &&
         pages.empty() &&
@@ -257,11 +262,38 @@ bool MassTable::empty() const
 // IonType
 //
 
+IonType::IonType()
+{
+    charge = 0;
+}
+
+
 bool IonType::empty() const
 {
     return index.empty() &&
         paramGroup.empty() &&
         fragmentArray.empty();
+}
+
+//
+// SpectrumIdentificationList
+//
+
+SpectrumIdentificationList::SpectrumIdentificationList()
+{
+    numSequencesSearched = INVALID_NATURAL;
+}
+
+//
+// PeptideEvidence
+//
+
+PeptideEvidence::PeptideEvidence()
+{
+    start = INVALID_NATURAL;
+    end = INVALID_NATURAL;
+    frame = INVALID_NATURAL;
+    missedCleavages = INVALID_NATURAL;
 }
 
 //
@@ -486,8 +518,8 @@ bool Inputs::empty() const
 
 SearchDatabase::SearchDatabase()
 {
-    numDatabaseSequences = -1;
-    numResidues = -1;
+    numDatabaseSequences = INVALID_NATURAL;
+    numResidues = INVALID_NATURAL;
 }
 
 //
