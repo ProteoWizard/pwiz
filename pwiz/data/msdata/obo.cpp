@@ -121,7 +121,7 @@ void parse_def(const string& line, Term& term)
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
-        throw runtime_error("Error matching term def.");    
+        throw runtime_error("Error matching term def.");
 
     term.def = what[2]; // TODO: is unescaping needed in a quoted string?
     term.isObsolete = what[1].matched;
@@ -237,7 +237,8 @@ void parseTagValuePair(const string& line, Term& term)
              tag == "xref_analog" ||
              tag == "replaced_by" ||
              tag == "created_by" ||
-             tag == "creation_date")
+             tag == "creation_date" ||
+             tag == "property_value")
         ; // ignore these tags
     else
         cerr << "[obo] Unknown tag \"" << tag << "\":\n  " << line << endl;

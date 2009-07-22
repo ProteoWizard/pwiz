@@ -33,7 +33,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [psi-ms.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 18:30
 //   saved-by: Eric Deutsch
@@ -49,7 +49,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [unit.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 12:37
 //   saved-by: George Gkoutos
@@ -63,6 +63,12 @@
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
+//
+// [unimod.obo]
+//   format-version: 1.0
+//   date: 19:11:2008 14:50
+//   saved-by: psi-pi_team
+//   default-namespace: UNIMOD
 //
 
 
@@ -5424,7 +5430,1789 @@ enum PWIZ_API_DECL CVID
     UO_volt_per_meter = 100000268,
 
     /// absorbance unit: A dimensionless logarithmic unit assigned to a measure of absorbance of light through a partially absorbing substance, defined as -log10(I/I_0) where I = transmitted light and I_0 = incident light.
-    UO_absorbance_unit = 100000269
+    UO_absorbance_unit = 100000269,
+
+    /// unimod root node: The root node of the unimod modifications ontology.
+    UNIMOD_unimod_root_node = 200000000,
+
+    /// Acetyl: Acetylation
+    UNIMOD_Acetyl = 200000001,
+
+    /// Amidated: Amidation
+    UNIMOD_Amidated = 200000002,
+
+    /// Biotin: Biotinylation
+    UNIMOD_Biotin = 200000003,
+
+    /// Carbamidomethyl: Iodoacetamide derivative
+    UNIMOD_Carbamidomethyl = 200000004,
+
+    /// Carbamyl: Carbamylation
+    UNIMOD_Carbamyl = 200000005,
+
+    /// Carboxymethyl: Iodoacetic acid derivative
+    UNIMOD_Carboxymethyl = 200000006,
+
+    /// Deamidated: Deamidation
+    UNIMOD_Deamidated = 200000007,
+
+    /// ICAT-G: Gygi ICAT(TM) d0
+    UNIMOD_ICAT_G = 200000008,
+
+    /// ICAT-G:2H(8): Gygi ICAT(TM) d8
+    UNIMOD_ICAT_G_2H_8_ = 200000009,
+
+    /// Met->Hse: Homoserine
+    UNIMOD_Met__Hse = 200000010,
+
+    /// Met->Hsl: Homoserine lactone
+    UNIMOD_Met__Hsl = 200000011,
+
+    /// ICAT-D:2H(8): Applied Biosystems original ICAT(TM) d8
+    UNIMOD_ICAT_D_2H_8_ = 200000012,
+
+    /// ICAT-D: Applied Biosystems original ICAT(TM) d0
+    UNIMOD_ICAT_D = 200000013,
+
+    /// NIPCAM: N-isopropylcarboxamidomethyl
+    UNIMOD_NIPCAM = 200000017,
+
+    /// PEO-Iodoacetyl-LC-Biotin: Biotinyl-iodoacetamidyl-3,6-dioxaoctanediamine
+    UNIMOD_PEO_Iodoacetyl_LC_Biotin = 200000020,
+
+    /// Phospho: Phosphorylation
+    UNIMOD_Phospho = 200000021,
+
+    /// Dehydrated: Dehydration
+    UNIMOD_Dehydrated = 200000023,
+
+    /// Propionamide: Acrylamide adduct
+    UNIMOD_Propionamide = 200000024,
+
+    /// Pyridylacetyl: pyridylacetyl
+    UNIMOD_Pyridylacetyl = 200000025,
+
+    /// Pyro-carbamidomethyl: S-carbamoylmethylcysteine cyclization (N-terminus)
+    UNIMOD_Pyro_carbamidomethyl = 200000026,
+
+    /// Glu->pyro-Glu: Pyro-glu from E
+    UNIMOD_Glu__pyro_Glu = 200000027,
+
+    /// Gln->pyro-Glu: Pyro-glu from Q
+    UNIMOD_Gln__pyro_Glu = 200000028,
+
+    /// SMA: N-Succinimidyl-3-morpholine acetate
+    UNIMOD_SMA = 200000029,
+
+    /// Cation:Na: Sodium adduct
+    UNIMOD_Cation_Na = 200000030,
+
+    /// Pyridylethyl: S-pyridylethylation
+    UNIMOD_Pyridylethyl = 200000031,
+
+    /// Methyl: Methylation
+    UNIMOD_Methyl = 200000034,
+
+    /// Oxidation: Oxidation or Hydroxylation
+    UNIMOD_Oxidation = 200000035,
+
+    /// Dimethyl: di-Methylation
+    UNIMOD_Dimethyl = 200000036,
+
+    /// Trimethyl: tri-Methylation
+    UNIMOD_Trimethyl = 200000037,
+
+    /// Methylthio: Beta-methylthiolation
+    UNIMOD_Methylthio = 200000039,
+
+    /// Sulfo: O-Sulfonation
+    UNIMOD_Sulfo = 200000040,
+
+    /// Hex: Hexose
+    UNIMOD_Hex = 200000041,
+
+    /// Lipoyl: Lipoyl
+    UNIMOD_Lipoyl = 200000042,
+
+    /// HexNAc: N-Acetylhexosamine
+    UNIMOD_HexNAc = 200000043,
+
+    /// Farnesyl: Farnesylation
+    UNIMOD_Farnesyl = 200000044,
+
+    /// Myristoyl: Myristoylation
+    UNIMOD_Myristoyl = 200000045,
+
+    /// PyridoxalPhosphate: Pyridoxal phosphate
+    UNIMOD_PyridoxalPhosphate = 200000046,
+
+    /// Palmitoyl: Palmitoylation
+    UNIMOD_Palmitoyl = 200000047,
+
+    /// GeranylGeranyl: Geranyl-geranyl
+    UNIMOD_GeranylGeranyl = 200000048,
+
+    /// Phosphopantetheine: Phosphopantetheine
+    UNIMOD_Phosphopantetheine = 200000049,
+
+    /// FAD: Flavin adenine dinucleotide
+    UNIMOD_FAD = 200000050,
+
+    /// Tripalmitate: N-acyl diglyceride cysteine
+    UNIMOD_Tripalmitate = 200000051,
+
+    /// Guanidinyl: Guanidination
+    UNIMOD_Guanidinyl = 200000052,
+
+    /// HNE: 4-hydroxynonenal (HNE)
+    UNIMOD_HNE = 200000053,
+
+    /// Glucuronyl: N-glucuronylation
+    UNIMOD_Glucuronyl = 200000054,
+
+    /// Glutathione: glutathione disulfide
+    UNIMOD_Glutathione = 200000055,
+
+    /// Acetyl:2H(3): Acetate labeling reagent (N-term & K) (heavy form, +3amu)
+    UNIMOD_Acetyl_2H_3_ = 200000056,
+
+    /// Propionyl: Propionate labeling reagent light form (N-term & K)
+    UNIMOD_Propionyl = 200000058,
+
+    /// Propionyl:13C(3): Propionate labeling reagent heavy form (+3amu), N-term & K
+    UNIMOD_Propionyl_13C_3_ = 200000059,
+
+    /// GIST-Quat: Quaternary amine labeling reagent light form (N-term & K)
+    UNIMOD_GIST_Quat = 200000060,
+
+    /// GIST-Quat:2H(3): Quaternary amine labeling reagent heavy (+3amu) form, N-term & K
+    UNIMOD_GIST_Quat_2H_3_ = 200000061,
+
+    /// GIST-Quat:2H(6): Quaternary amine labeling reagent heavy form (+6amu), N-term & K
+    UNIMOD_GIST_Quat_2H_6_ = 200000062,
+
+    /// GIST-Quat:2H(9): Quaternary amine labeling reagent heavy form (+9amu), N-term & K
+    UNIMOD_GIST_Quat_2H_9_ = 200000063,
+
+    /// Succinyl: Succinic anhydride labeling reagent light form (N-term & K)
+    UNIMOD_Succinyl = 200000064,
+
+    /// Succinyl:2H(4): Succinic anhydride labeling reagent, heavy form (+4amu, 4H2), N-term & K
+    UNIMOD_Succinyl_2H_4_ = 200000065,
+
+    /// Succinyl:13C(4): Succinic anhydride labeling reagent, heavy form (+4amu, 4C13), N-term & K
+    UNIMOD_Succinyl_13C_4_ = 200000066,
+
+    /// Iminobiotin: Iminobiotinylation
+    UNIMOD_Iminobiotin = 200000089,
+
+    /// ESP: ESP-Tag light d0
+    UNIMOD_ESP = 200000090,
+
+    /// ESP:2H(10): ESP-Tag heavy d10
+    UNIMOD_ESP_2H_10_ = 200000091,
+
+    /// NHS-LC-Biotin: NHS-LC-Biotin
+    UNIMOD_NHS_LC_Biotin = 200000092,
+
+    /// EDT-maleimide-PEO-biotin: EDT-maleimide-PEO-biotin
+    UNIMOD_EDT_maleimide_PEO_biotin = 200000093,
+
+    /// IMID: IMID d0
+    UNIMOD_IMID = 200000094,
+
+    /// IMID:2H(4): IMID d4
+    UNIMOD_IMID_2H_4_ = 200000095,
+
+    /// Propionamide:2H(3): Acrylamide d3
+    UNIMOD_Propionamide_2H_3_ = 200000097,
+
+    /// ICAT-C: Applied Biosystems cleavable ICAT(TM) light
+    UNIMOD_ICAT_C = 200000105,
+
+    /// ICAT-C:13C(9): Applied Biosystems cleavable ICAT(TM) heavy
+    UNIMOD_ICAT_C_13C_9_ = 200000106,
+
+    /// FormylMet: Addition of N-formyl met
+    UNIMOD_FormylMet = 200000107,
+
+    /// Nethylmaleimide: N-ethylmaleimide on cysteines
+    UNIMOD_Nethylmaleimide = 200000108,
+
+    /// OxLysBiotinRed: Oxidized lysine biotinylated with biotin-LC-hydrazide, reduced
+    UNIMOD_OxLysBiotinRed = 200000112,
+
+    /// OxLysBiotin: Oxidized lysine biotinylated with biotin-LC-hydrazide
+    UNIMOD_OxLysBiotin = 200000113,
+
+    /// OxProBiotinRed: Oxidized proline biotinylated with biotin-LC-hydrazide, reduced
+    UNIMOD_OxProBiotinRed = 200000114,
+
+    /// OxProBiotin: Oxidized Proline biotinylated with biotin-LC-hydrazide
+    UNIMOD_OxProBiotin = 200000115,
+
+    /// OxArgBiotin: Oxidized arginine biotinylated with biotin-LC-hydrazide
+    UNIMOD_OxArgBiotin = 200000116,
+
+    /// OxArgBiotinRed: Oxidized arginine biotinylated with biotin-LC-hydrazide, reduced
+    UNIMOD_OxArgBiotinRed = 200000117,
+
+    /// EDT-iodoacetyl-PEO-biotin: EDT-iodo-PEO-biotin
+    UNIMOD_EDT_iodoacetyl_PEO_biotin = 200000118,
+
+    /// IBTP: Thio Ether Formation - BTP Adduct
+    UNIMOD_IBTP = 200000119,
+
+    /// GlyGly: ubiquitinylation residue
+    UNIMOD_GlyGly = 200000121,
+
+    /// Formyl: Formylation
+    UNIMOD_Formyl = 200000122,
+
+    /// ICAT-H: N-iodoacetyl, p-chlorobenzyl-12C6-glucamine
+    UNIMOD_ICAT_H = 200000123,
+
+    /// ICAT-H:13C(6): N-iodoacetyl, p-chlorobenzyl-13C6-glucamine
+    UNIMOD_ICAT_H_13C_6_ = 200000124,
+
+    /// Thioacyl: thioacylation of primary amines (N-term and Lys)
+    UNIMOD_Thioacyl = 200000126,
+
+    /// Fluoro: fluorophenylalanine replacement of phenylalanine
+    UNIMOD_Fluoro = 200000127,
+
+    /// Fluorescein: 5-Iodoacetamidofluorescein (Molecular Probe, Eugene, OR)
+    UNIMOD_Fluorescein = 200000128,
+
+    /// Iodo: Iodination
+    UNIMOD_Iodo = 200000129,
+
+    /// Diiodo: di-Iodination
+    UNIMOD_Diiodo = 200000130,
+
+    /// Triiodo: tri-Iodination
+    UNIMOD_Triiodo = 200000131,
+
+    /// Myristoleyl: (cis-delta 5)-tetradecaenoyl
+    UNIMOD_Myristoleyl = 200000134,
+
+    /// Myristoyl+Delta:H(-4): (cis,cis-delta 5, delta 8)-tetradecadienoyl
+    UNIMOD_Myristoyl_Delta_H__4_ = 200000135,
+
+    /// Benzoyl: labeling reagent light form (N-term & K)
+    UNIMOD_Benzoyl = 200000136,
+
+    /// Hex(5)HexNAc(2): N-linked glycan core
+    UNIMOD_Hex_5_HexNAc_2_ = 200000137,
+
+    /// Dansyl: 5-dimethylaminonaphthalene-1-sulfonyl
+    UNIMOD_Dansyl = 200000139,
+
+    /// a-type-ion: ISD a-series (C-Term)
+    UNIMOD_a_type_ion = 200000140,
+
+    /// Amidine: amidination of lysines or N-terminal amines with methyl acetimidate
+    UNIMOD_Amidine = 200000141,
+
+    /// HexNAc(1)dHex(1): HexNAc1dHex1
+    UNIMOD_HexNAc_1_dHex_1_ = 200000142,
+
+    /// HexNAc(2): HexNAc2
+    UNIMOD_HexNAc_2_ = 200000143,
+
+    /// Hex(3): Hex3
+    UNIMOD_Hex_3_ = 200000144,
+
+    /// HexNAc(1)dHex(2): HexNAc1dHex2
+    UNIMOD_HexNAc_1_dHex_2_ = 200000145,
+
+    /// Hex(1)HexNAc(1)dHex(1): Hex1HexNAc1dHex1
+    UNIMOD_Hex_1_HexNAc_1_dHex_1_ = 200000146,
+
+    /// HexNAc(2)dHex(1): HexNAc2dHex1
+    UNIMOD_HexNAc_2_dHex_1_ = 200000147,
+
+    /// Hex(1)HexNAc(2): Hex1HexNAc2
+    UNIMOD_Hex_1_HexNAc_2_ = 200000148,
+
+    /// Hex(1)HexNAc(1)NeuAc(1): Hex1HexNAc1NeuAc1
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_1_ = 200000149,
+
+    /// HexNAc(2)dHex(2): HexNAc2dHex2
+    UNIMOD_HexNAc_2_dHex_2_ = 200000150,
+
+    /// Hex(1)HexNAc(2)Pent(1): Hex1HexNAc2Pent1
+    UNIMOD_Hex_1_HexNAc_2_Pent_1_ = 200000151,
+
+    /// Hex(1)HexNAc(2)dHex(1): Hex1HexNAc2dHex1
+    UNIMOD_Hex_1_HexNAc_2_dHex_1_ = 200000152,
+
+    /// Hex(2)HexNAc(2): Hex2HexNAc2
+    UNIMOD_Hex_2_HexNAc_2_ = 200000153,
+
+    /// Hex(3)HexNAc(1)Pent(1): Hex3HexNAc1Pent1
+    UNIMOD_Hex_3_HexNAc_1_Pent_1_ = 200000154,
+
+    /// Hex(1)HexNAc(2)dHex(1)Pent(1): Hex1HexNAc2dHex1Pent1
+    UNIMOD_Hex_1_HexNAc_2_dHex_1_Pent_1_ = 200000155,
+
+    /// Hex(1)HexNAc(2)dHex(2): Hex1HexNAc2dHex2
+    UNIMOD_Hex_1_HexNAc_2_dHex_2_ = 200000156,
+
+    /// Hex(2)HexNAc(2)Pent(1): Hex2HexNAc2Pent1
+    UNIMOD_Hex_2_HexNAc_2_Pent_1_ = 200000157,
+
+    /// Hex(2)HexNAc(2)dHex(1): Hex2HexNAc2dHex1
+    UNIMOD_Hex_2_HexNAc_2_dHex_1_ = 200000158,
+
+    /// Hex(3)HexNAc(2): Hex3HexNAc2
+    UNIMOD_Hex_3_HexNAc_2_ = 200000159,
+
+    /// Hex(1)HexNAc(1)NeuAc(2): Hex1HexNAc1NeuAc2
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_2_ = 200000160,
+
+    /// Hex(3)HexNAc(2)P(1): Hex3HexNAc2P1
+    UNIMOD_Hex_3_HexNAc_2_P_1_ = 200000161,
+
+    /// Delta:S(-1)Se(1): Selenium replaces sulphur
+    UNIMOD_Delta_S__1_Se_1_ = 200000162,
+
+    /// Delta:H(1)O(-1)18O(1): glycosylated asparagine 18O labeling
+    UNIMOD_Delta_H_1_O__1_18O_1_ = 200000170,
+
+    /// NBS:13C(6): Shimadzu NBS-13C
+    UNIMOD_NBS_13C_6_ = 200000171,
+
+    /// NBS: Shimadzu NBS-12C
+    UNIMOD_NBS = 200000172,
+
+    /// BHT: Michael addition of BHT quinone methide to Cysteine and Lysine
+    UNIMOD_BHT = 200000176,
+
+    /// DAET: phosphorylation to amine thiol
+    UNIMOD_DAET = 200000178,
+
+    /// Label:13C(9): 13C(9) Silac label
+    UNIMOD_Label_13C_9_ = 200000184,
+
+    /// Label:13C(9)+Phospho: C13 label (Phosphotyrosine)
+    UNIMOD_Label_13C_9__Phospho = 200000185,
+
+    /// HPG: Hydroxyphenylglyoxal arginine
+    UNIMOD_HPG = 200000186,
+
+    /// 2HPG: bis(hydroxphenylglyoxal) arginine
+    UNIMOD_2HPG = 200000187,
+
+    /// Label:13C(6): 13C(6) Silac label
+    UNIMOD_Label_13C_6_ = 200000188,
+
+    /// Label:18O(2): O18 label at both C-terminal oxygens
+    UNIMOD_Label_18O_2_ = 200000193,
+
+    /// AccQTag: 6-aminoquinolyl-N-hydroxysuccinimidyl carbamate
+    UNIMOD_AccQTag = 200000194,
+
+    /// QAT: APTA-d0
+    UNIMOD_QAT = 200000195,
+
+    /// QAT:2H(3): APTA d3
+    UNIMOD_QAT_2H_3_ = 200000196,
+
+    /// EQAT: EAPTA d0
+    UNIMOD_EQAT = 200000197,
+
+    /// EQAT:2H(5): EAPTA d5
+    UNIMOD_EQAT_2H_5_ = 200000198,
+
+    /// Dimethyl:2H(4): DiMethyl-CHD2
+    UNIMOD_Dimethyl_2H_4_ = 200000199,
+
+    /// Ethanedithiol: EDT
+    UNIMOD_Ethanedithiol = 200000200,
+
+    /// Delta:H(6)C(6)O(1): Acrolein addition +94
+    UNIMOD_Delta_H_6_C_6_O_1_ = 200000205,
+
+    /// Delta:H(4)C(3)O(1): Acrolein addition +56
+    UNIMOD_Delta_H_4_C_3_O_1_ = 200000206,
+
+    /// Delta:H(2)C(3): Acrolein addition +38
+    UNIMOD_Delta_H_2_C_3_ = 200000207,
+
+    /// Delta:H(4)C(6): Acrolein addition +76
+    UNIMOD_Delta_H_4_C_6_ = 200000208,
+
+    /// Delta:H(8)C(6)O(2): Acrolein addition +112
+    UNIMOD_Delta_H_8_C_6_O_2_ = 200000209,
+
+    /// NEIAA: N-ethyl iodoacetamide-d0
+    UNIMOD_NEIAA = 200000211,
+
+    /// NEIAA:2H(5): N-ethyl iodoacetamide-d5
+    UNIMOD_NEIAA_2H_5_ = 200000212,
+
+    /// ADP-Ribosyl: ADP  Ribose addition
+    UNIMOD_ADP_Ribosyl = 200000213,
+
+    /// iTRAQ4plex: Representative mass and accurate mass for 116 & 117
+    UNIMOD_iTRAQ4plex = 200000214,
+
+    /// IGBP: Light IDBEST tag for quantitation
+    UNIMOD_IGBP = 200000243,
+
+    /// Crotonaldehyde: Crotonaldehyde
+    UNIMOD_Crotonaldehyde = 200000253,
+
+    /// Delta:H(2)C(2): Acetaldehyde +26
+    UNIMOD_Delta_H_2_C_2_ = 200000254,
+
+    /// Delta:H(4)C(2): Acetaldehyde +28
+    UNIMOD_Delta_H_4_C_2_ = 200000255,
+
+    /// Delta:H(4)C(3): Propionaldehyde +40
+    UNIMOD_Delta_H_4_C_3_ = 200000256,
+
+    /// Label:18O(1): O18 Labeling
+    UNIMOD_Label_18O_1_ = 200000258,
+
+    /// Label:13C(6)15N(2): 13C(6) 15N(2) Silac label
+    UNIMOD_Label_13C_6_15N_2_ = 200000259,
+
+    /// Thiophospho: Thiophosphorylation
+    UNIMOD_Thiophospho = 200000260,
+
+    /// SPITC: 4-sulfophenyl isothiocyanate
+    UNIMOD_SPITC = 200000261,
+
+    /// Label:2H(3): Trideuteration
+    UNIMOD_Label_2H_3_ = 200000262,
+
+    /// PET: phosphorylation to pyridyl thiol
+    UNIMOD_PET = 200000264,
+
+    /// Label:13C(6)15N(4): 13C(6) 15N(4) Silac label
+    UNIMOD_Label_13C_6_15N_4_ = 200000267,
+
+    /// Label:13C(5)15N(1): 13C(5) 15N(1) Silac label
+    UNIMOD_Label_13C_5_15N_1_ = 200000268,
+
+    /// Label:13C(9)15N(1): 13C(9) 15N(1) Silac label
+    UNIMOD_Label_13C_9_15N_1_ = 200000269,
+
+    /// Cytopiloyne: nucleophilic addtion to cytopiloyne
+    UNIMOD_Cytopiloyne = 200000270,
+
+    /// Cytopiloyne+water: nucleophilic addition to cytopiloyne+H2O
+    UNIMOD_Cytopiloyne_water = 200000271,
+
+    /// CAF: sulfonation of N-terminus
+    UNIMOD_CAF = 200000272,
+
+    /// Xlink:SSD: covalent modification of lysine by cross-linking reagent
+    UNIMOD_Xlink_SSD = 200000273,
+
+    /// Nitrosyl: S-nitrosylation
+    UNIMOD_Nitrosyl = 200000275,
+
+    /// AEBS: Aminoethylbenzenesulfonylation
+    UNIMOD_AEBS = 200000276,
+
+    /// Ethanolyl: Ethanolation of Cys
+    UNIMOD_Ethanolyl = 200000278,
+
+    /// Ethyl: Ethylation
+    UNIMOD_Ethyl = 200000280,
+
+    /// CoenzymeA: Cysteine modified Coenzyme A
+    UNIMOD_CoenzymeA = 200000281,
+
+    /// Methyl:2H(2): Deuterium Methylation of Lysine
+    UNIMOD_Methyl_2H_2_ = 200000284,
+
+    /// SulfanilicAcid: Light Sulfanilic Acid (SA) C12
+    UNIMOD_SulfanilicAcid = 200000285,
+
+    /// SulfanilicAcid:13C(6): Heavy Sulfanilic Acid (SA) C13
+    UNIMOD_SulfanilicAcid_13C_6_ = 200000286,
+
+    /// Trp->Oxolactone: Tryptophan oxidation to oxolactone
+    UNIMOD_Trp__Oxolactone = 200000288,
+
+    /// Biotin-PEO-Amine: Biotin polyethyleneoxide amine
+    UNIMOD_Biotin_PEO_Amine = 200000289,
+
+    /// Biotin-HPDP: Pierce EZ-Link Biotin-HPDP
+    UNIMOD_Biotin_HPDP = 200000290,
+
+    /// Delta:Hg(1): Mercury Mercaptan
+    UNIMOD_Delta_Hg_1_ = 200000291,
+
+    /// IodoU-AMP: Cross-link of (Iodo)-uracil MP with W,F,Y
+    UNIMOD_IodoU_AMP = 200000292,
+
+    /// CAMthiopropanoyl: 3-(carbamidomethylthio)propanoyl
+    UNIMOD_CAMthiopropanoyl = 200000293,
+
+    /// IED-Biotin: biotinoyl-iodoacetyl-ethylenediamine
+    UNIMOD_IED_Biotin = 200000294,
+
+    /// dHex: Fucose
+    UNIMOD_dHex = 200000295,
+
+    /// Methyl:2H(3): deuterated methyl ester
+    UNIMOD_Methyl_2H_3_ = 200000298,
+
+    /// Carboxy: Carboxylation
+    UNIMOD_Carboxy = 200000299,
+
+    /// Bromobimane: Monobromobimane derivative
+    UNIMOD_Bromobimane = 200000301,
+
+    /// Menadione: Menadione quinone derivative
+    UNIMOD_Menadione = 200000302,
+
+    /// DeStreak: Cysteine mercaptoethanol
+    UNIMOD_DeStreak = 200000303,
+
+    /// dHex(1)Hex(3)HexNAc(4): Fucosylated biantennary (-2 galactose)
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_ = 200000305,
+
+    /// dHex(1)Hex(4)HexNAc(4): Fucosylated biantennary (-1 galactose)
+    UNIMOD_dHex_1_Hex_4_HexNAc_4_ = 200000307,
+
+    /// dHex(1)Hex(5)HexNAc(4): Fucosylated biantennary
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_ = 200000308,
+
+    /// Hex(3)HexNAc(4): Biantennary (-2 galactose)
+    UNIMOD_Hex_3_HexNAc_4_ = 200000309,
+
+    /// Hex(4)HexNAc(4): Biantennary (-1 galactose)
+    UNIMOD_Hex_4_HexNAc_4_ = 200000310,
+
+    /// Hex(5)HexNAc(4): Biantennary
+    UNIMOD_Hex_5_HexNAc_4_ = 200000311,
+
+    /// Cysteinyl: Cysteinylation
+    UNIMOD_Cysteinyl = 200000312,
+
+    /// Lys-loss: Loss of C-terminal K from Heavy Chain of MAb
+    UNIMOD_Lys_loss = 200000313,
+
+    /// Nmethylmaleimide: Nmethylmaleimide
+    UNIMOD_Nmethylmaleimide = 200000314,
+
+    /// DimethylpyrroleAdduct: 2,5-dimethypyrrole
+    UNIMOD_DimethylpyrroleAdduct = 200000316,
+
+    /// Delta:H(2)C(5): MDA adduct +62
+    UNIMOD_Delta_H_2_C_5_ = 200000318,
+
+    /// Delta:H(2)C(3)O(1): MDA adduct +54
+    UNIMOD_Delta_H_2_C_3_O_1_ = 200000319,
+
+    /// Nethylmaleimide+water: Nethylmaleimidehydrolysis
+    UNIMOD_Nethylmaleimide_water = 200000320,
+
+    /// Xlink:B10621: bis-N-I-sulfonerahodamine
+    UNIMOD_Xlink_B10621 = 200000323,
+
+    /// DTBP: dimethyl 3,3\'-dithiobispropionimidate
+    UNIMOD_DTBP = 200000324,
+
+    /// FP-Biotin: 10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide
+    UNIMOD_FP_Biotin = 200000325,
+
+    /// Delta:H(4)C(2)O(-1)S(1): S-Ethylcystine from Serine
+    UNIMOD_Delta_H_4_C_2_O__1_S_1_ = 200000327,
+
+    /// Methyl:2H(3)13C(1): monomethylated arginine
+    UNIMOD_Methyl_2H_3_13C_1_ = 200000329,
+
+    /// Dimethyl:2H(6)13C(2): dimethylated arginine
+    UNIMOD_Dimethyl_2H_6_13C_2_ = 200000330,
+
+    /// Thiophos-S-S-biotin: thiophosphate labeled with biotin-HPDP
+    UNIMOD_Thiophos_S_S_biotin = 200000332,
+
+    /// Can-FP-biotin: 6-N-biotinylaminohexyl isopropyl phosphate
+    UNIMOD_Can_FP_biotin = 200000333,
+
+    /// HNE+Delta:H(2): reduced 4-Hydroxynonenal
+    UNIMOD_HNE_Delta_H_2_ = 200000335,
+
+    /// Methylamine: Michael addition with methylamine
+    UNIMOD_Methylamine = 200000337,
+
+    /// Bromo: bromination
+    UNIMOD_Bromo = 200000340,
+
+    /// Amino: Tyrosine oxidation to 2-aminotyrosine
+    UNIMOD_Amino = 200000342,
+
+    /// Argbiotinhydrazide: oxidized Arginine biotinylated with biotin hydrazide
+    UNIMOD_Argbiotinhydrazide = 200000343,
+
+    /// Arg->GluSA: Arginine oxidation to glutamic semialdehyde
+    UNIMOD_Arg__GluSA = 200000344,
+
+    /// Trioxidation: cysteine oxidation to cysteic acid
+    UNIMOD_Trioxidation = 200000345,
+
+    /// His->Asn: histidine oxidation to aspargine
+    UNIMOD_His__Asn = 200000348,
+
+    /// His->Asp: histidine oxidation to aspartic acid
+    UNIMOD_His__Asp = 200000349,
+
+    /// Trp->Hydroxykynurenin: tryptophan oxidation to hydroxykynurenin
+    UNIMOD_Trp__Hydroxykynurenin = 200000350,
+
+    /// Trp->Kynurenin: tryptophan oxidation to kynurenin
+    UNIMOD_Trp__Kynurenin = 200000351,
+
+    /// Lys->Allysine: Lysine oxidation to aminoadipic semialdehyde
+    UNIMOD_Lys__Allysine = 200000352,
+
+    /// Lysbiotinhydrazide: oxidized Lysine biotinylated with biotin hydrazide
+    UNIMOD_Lysbiotinhydrazide = 200000353,
+
+    /// Nitro: Oxidation to nitro
+    UNIMOD_Nitro = 200000354,
+
+    /// probiotinhydrazide: oxidized proline biotinylated with biotin hydrazide
+    UNIMOD_probiotinhydrazide = 200000357,
+
+    /// Pro->pyro-Glu: proline oxidation to pyroglutamic acid
+    UNIMOD_Pro__pyro_Glu = 200000359,
+
+    /// Pro->Pyrrolidinone: Proline oxidation to pyrrolidinone
+    UNIMOD_Pro__Pyrrolidinone = 200000360,
+
+    /// Thrbiotinhydrazide: oxidized Threonine biotinylated with biotin hydrazide
+    UNIMOD_Thrbiotinhydrazide = 200000361,
+
+    /// Diisopropylphosphate: O-Diisopropylphosphorylation
+    UNIMOD_Diisopropylphosphate = 200000362,
+
+    /// Isopropylphospho: O-Isopropylphosphorylation
+    UNIMOD_Isopropylphospho = 200000363,
+
+    /// ICPL:13C(6): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, heavy form
+    UNIMOD_ICPL_13C_6_ = 200000364,
+
+    /// ICPL: Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, light form
+    UNIMOD_ICPL = 200000365,
+
+    /// Deamidated:18O(1): Deamidation in presence of O18
+    UNIMOD_Deamidated_18O_1_ = 200000366,
+
+    /// Cys->Dha: Dehydroalanine (from Cysteine)
+    UNIMOD_Cys__Dha = 200000368,
+
+    /// Pro->Pyrrolidone: Pyrrolidone from Proline
+    UNIMOD_Pro__Pyrrolidone = 200000369,
+
+    /// HMVK: Michael addition of hydroxymethylvinyl ketone to cysteine
+    UNIMOD_HMVK = 200000371,
+
+    /// Arg->Orn: Ornithine from Arginine
+    UNIMOD_Arg__Orn = 200000372,
+
+    /// Dehydro: Half of a disulfide bridge
+    UNIMOD_Dehydro = 200000374,
+
+    /// Diphthamide: Diphthamide
+    UNIMOD_Diphthamide = 200000375,
+
+    /// Hydroxyfarnesyl: hydroxyfarnesyl
+    UNIMOD_Hydroxyfarnesyl = 200000376,
+
+    /// Diacylglycerol: diacylglycerol
+    UNIMOD_Diacylglycerol = 200000377,
+
+    /// Carboxyethyl: carboxyethyl
+    UNIMOD_Carboxyethyl = 200000378,
+
+    /// Hypusine: hypusine
+    UNIMOD_Hypusine = 200000379,
+
+    /// Retinylidene: retinal
+    UNIMOD_Retinylidene = 200000380,
+
+    /// Lys->AminoadipicAcid: alpha-amino adipic acid
+    UNIMOD_Lys__AminoadipicAcid = 200000381,
+
+    /// Cys->PyruvicAcid: pyruvic acid from N-term cys
+    UNIMOD_Cys__PyruvicAcid = 200000382,
+
+    /// Ammonia-loss: Loss of ammonia
+    UNIMOD_Ammonia_loss = 200000385,
+
+    /// Phycocyanobilin: phycocyanobilin
+    UNIMOD_Phycocyanobilin = 200000387,
+
+    /// Phycoerythrobilin: phycoerythrobilin
+    UNIMOD_Phycoerythrobilin = 200000388,
+
+    /// Phytochromobilin: phytochromobilin
+    UNIMOD_Phytochromobilin = 200000389,
+
+    /// Heme: heme
+    UNIMOD_Heme = 200000390,
+
+    /// Molybdopterin: molybdopterin
+    UNIMOD_Molybdopterin = 200000391,
+
+    /// Quinone: quinone
+    UNIMOD_Quinone = 200000392,
+
+    /// Glucosylgalactosyl: glucosylgalactosyl hydroxylysine
+    UNIMOD_Glucosylgalactosyl = 200000393,
+
+    /// GPIanchor: glycosylphosphatidylinositol
+    UNIMOD_GPIanchor = 200000394,
+
+    /// PhosphoribosyldephosphoCoA: phosphoribosyl dephospho-coenzyme A
+    UNIMOD_PhosphoribosyldephosphoCoA = 200000395,
+
+    /// GlycerylPE: glycerylphosphorylethanolamine
+    UNIMOD_GlycerylPE = 200000396,
+
+    /// Triiodothyronine: triiodo
+    UNIMOD_Triiodothyronine = 200000397,
+
+    /// Thyroxine: tetraiodo
+    UNIMOD_Thyroxine = 200000398,
+
+    /// Tyr->Dha: Dehydroalanine (from Tyrosine)
+    UNIMOD_Tyr__Dha = 200000400,
+
+    /// Didehydro: 2-amino-3-oxo-butanoic_acid
+    UNIMOD_Didehydro = 200000401,
+
+    /// Cys->Oxoalanine: oxoalanine
+    UNIMOD_Cys__Oxoalanine = 200000402,
+
+    /// Ser->LacticAcid: lactic acid from N-term Ser
+    UNIMOD_Ser__LacticAcid = 200000403,
+
+    /// Phosphoadenosine: AMP binding site
+    UNIMOD_Phosphoadenosine = 200000405,
+
+    /// Hydroxycinnamyl: hydroxycinnamyl
+    UNIMOD_Hydroxycinnamyl = 200000407,
+
+    /// Glycosyl: glycosyl-L-hydroxyproline
+    UNIMOD_Glycosyl = 200000408,
+
+    /// FMNH: flavin mononucleotide
+    UNIMOD_FMNH = 200000409,
+
+    /// Archaeol: S-diphytanylglycerol diether
+    UNIMOD_Archaeol = 200000410,
+
+    /// Phenylisocyanate: phenyl isocyanate
+    UNIMOD_Phenylisocyanate = 200000411,
+
+    /// Phenylisocyanate:2H(5): d5-phenyl isocyanate
+    UNIMOD_Phenylisocyanate_2H_5_ = 200000412,
+
+    /// Phosphoguanosine: phospho-guanosine
+    UNIMOD_Phosphoguanosine = 200000413,
+
+    /// Hydroxymethyl: hydroxymethyl
+    UNIMOD_Hydroxymethyl = 200000414,
+
+    /// MolybdopterinGD+Delta:S(-1)Se(1): L-selenocysteinyl molybdenum bis(molybdopterin guanine dinucleotide)
+    UNIMOD_MolybdopterinGD_Delta_S__1_Se_1_ = 200000415,
+
+    /// Dipyrrolylmethanemethyl: dipyrrolylmethanemethyl
+    UNIMOD_Dipyrrolylmethanemethyl = 200000416,
+
+    /// PhosphoUridine: uridine phosphodiester
+    UNIMOD_PhosphoUridine = 200000417,
+
+    /// Glycerophospho: glycerophospho
+    UNIMOD_Glycerophospho = 200000419,
+
+    /// Carboxy->Thiocarboxy: thiocarboxylic acid
+    UNIMOD_Carboxy__Thiocarboxy = 200000420,
+
+    /// Sulfide: persulfide
+    UNIMOD_Sulfide = 200000421,
+
+    /// PyruvicAcidIminyl: N-pyruvic acid 2-iminyl
+    UNIMOD_PyruvicAcidIminyl = 200000422,
+
+    /// Delta:Se(1): selenyl
+    UNIMOD_Delta_Se_1_ = 200000423,
+
+    /// MolybdopterinGD: molybdenum bis(molybdopterin guanine dinucleotide)
+    UNIMOD_MolybdopterinGD = 200000424,
+
+    /// Dioxidation: dihydroxy
+    UNIMOD_Dioxidation = 200000425,
+
+    /// Octanoyl: octanoyl
+    UNIMOD_Octanoyl = 200000426,
+
+    /// PhosphoHexNAc: N-acetylglucosamine-1-phosphoryl
+    UNIMOD_PhosphoHexNAc = 200000428,
+
+    /// PhosphoHex: phosphoglycosyl-D-mannose-1-phosphoryl
+    UNIMOD_PhosphoHex = 200000429,
+
+    /// Palmitoleyl: palmitoleyl
+    UNIMOD_Palmitoleyl = 200000431,
+
+    /// Cholesterol: cholesterol ester
+    UNIMOD_Cholesterol = 200000432,
+
+    /// Didehydroretinylidene: 3,4-didehydroretinylidene
+    UNIMOD_Didehydroretinylidene = 200000433,
+
+    /// CHDH: cis-14-hydroxy-10,13-dioxo-7-heptadecenoic ester
+    UNIMOD_CHDH = 200000434,
+
+    /// Methylpyrroline: 4-methyl-delta-1-pyrroline-5-carboxyl
+    UNIMOD_Methylpyrroline = 200000435,
+
+    /// Hydroxyheme: hydroxyheme
+    UNIMOD_Hydroxyheme = 200000436,
+
+    /// MicrocinC7: (3-aminopropyl)(L-aspartyl-1-amino)phosphoryl-5-adenosine
+    UNIMOD_MicrocinC7 = 200000437,
+
+    /// Cyano: cyano
+    UNIMOD_Cyano = 200000438,
+
+    /// Diironsubcluster: hydrogenase diiron subcluster
+    UNIMOD_Diironsubcluster = 200000439,
+
+    /// Amidino: amidino
+    UNIMOD_Amidino = 200000440,
+
+    /// FMN: O3-(riboflavin phosphoryl)
+    UNIMOD_FMN = 200000442,
+
+    /// FMNC: S-(4a-FMN)
+    UNIMOD_FMNC = 200000443,
+
+    /// CuSMo: copper sulfido molybdopterin cytosine dinuncleotide
+    UNIMOD_CuSMo = 200000444,
+
+    /// Hydroxytrimethyl: 5-hydroxy-N6,N6,N6-trimethyl
+    UNIMOD_Hydroxytrimethyl = 200000445,
+
+    /// Deoxy: reduction
+    UNIMOD_Deoxy = 200000447,
+
+    /// Microcin: microcin E492 siderophore ester from serine
+    UNIMOD_Microcin = 200000448,
+
+    /// Decanoyl: lipid
+    UNIMOD_Decanoyl = 200000449,
+
+    /// Glu: monoglutamyl
+    UNIMOD_Glu = 200000450,
+
+    /// GluGlu: diglutamyl
+    UNIMOD_GluGlu = 200000451,
+
+    /// GluGluGlu: triglutamyl
+    UNIMOD_GluGluGlu = 200000452,
+
+    /// GluGluGluGlu: tetraglutamyl
+    UNIMOD_GluGluGluGlu = 200000453,
+
+    /// HexN: Hexosamine
+    UNIMOD_HexN = 200000454,
+
+    /// Xlink:DMP-s: One end of crosslink attached, one end free
+    UNIMOD_Xlink_DMP_s = 200000455,
+
+    /// Xlink:DMP: Both ends of crosslink attached to same peptide
+    UNIMOD_Xlink_DMP = 200000456,
+
+    /// NDA: naphthalene-2,3-dicarboxaldehyde
+    UNIMOD_NDA = 200000457,
+
+    /// SPITC:13C(6): 4-sulfophenyl isothiocyanate (Heavy C13)
+    UNIMOD_SPITC_13C_6_ = 200000464,
+
+    /// AEC-MAEC: aminoethylcysteine
+    UNIMOD_AEC_MAEC = 200000472,
+
+    /// TMAB: 4-trimethyllammoniumbutyryl-
+    UNIMOD_TMAB = 200000476,
+
+    /// TMAB:2H(9): d9-4-trimethyllammoniumbutyryl-
+    UNIMOD_TMAB_2H_9_ = 200000477,
+
+    /// FTC: fluorescein-5-thiosemicarbazide
+    UNIMOD_FTC = 200000478,
+
+    /// Label:2H(4): 4,4,5,5-D4 Lysine
+    UNIMOD_Label_2H_4_ = 200000481,
+
+    /// DHP: Dehydropyrrolizidine alkaloid (dehydroretronecine) on cysteines
+    UNIMOD_DHP = 200000488,
+
+    /// Hep: Heptose
+    UNIMOD_Hep = 200000490,
+
+    /// BADGE: Bisphenol A diglycidyl ether derivative
+    UNIMOD_BADGE = 200000493,
+
+    /// CyDye-Cy3: Cy3 CyDye DIGE Fluor saturation dye
+    UNIMOD_CyDye_Cy3 = 200000494,
+
+    /// CyDye-Cy5: Cy5 CyDye DIGE Fluor saturation dye
+    UNIMOD_CyDye_Cy5 = 200000495,
+
+    /// BHTOH: Michael addition of t-butyl hydroxylated BHT (BHTOH) to C, H or K
+    UNIMOD_BHTOH = 200000498,
+
+    /// IGBP:13C(2): Heavy IDBEST tag for quantitation
+    UNIMOD_IGBP_13C_2_ = 200000499,
+
+    /// Nmethylmaleimide+water: Nmethylmaleimidehydrolysis
+    UNIMOD_Nmethylmaleimide_water = 200000500,
+
+    /// PyMIC: 3-methyl-2-pyridyl isocyanate
+    UNIMOD_PyMIC = 200000501,
+
+    /// LG-lactam-K: Levuglandinyl - lysine lactam adduct
+    UNIMOD_LG_lactam_K = 200000503,
+
+    /// LG-Hlactam-K: Levuglandinyl - lysine hydroxylactam adduct
+    UNIMOD_LG_Hlactam_K = 200000504,
+
+    /// LG-lactam-R: Levuglandinyl - arginine lactam adduct
+    UNIMOD_LG_lactam_R = 200000505,
+
+    /// LG-Hlactam-R: Levuglandinyl - arginine hydroxylactam adduct
+    UNIMOD_LG_Hlactam_R = 200000506,
+
+    /// Dimethyl:2H(4)13C(2): DiMethyl-C13HD2
+    UNIMOD_Dimethyl_2H_4_13C_2_ = 200000510,
+
+    /// Hex(2): Lactosylation
+    UNIMOD_Hex_2_ = 200000512,
+
+    /// C8-QAT: [3-(2,5)-Dioxopyrrolidin-1-yloxycarbonyl)-propyl]dimethyloctylammonium
+    UNIMOD_C8_QAT = 200000513,
+
+    /// PropylNAGthiazoline: propyl-1,2-dideoxy-2\'-methyl-alpha-D-glucopyranoso-[2,1-d]-Delta2\'-thiazoline
+    UNIMOD_PropylNAGthiazoline = 200000514,
+
+    /// FNEM: fluorescein-5-maleimide
+    UNIMOD_FNEM = 200000515,
+
+    /// Diethyl: Diethylation, analogous to Dimethylation
+    UNIMOD_Diethyl = 200000518,
+
+    /// BisANS: 4,4\'-dianilino-1,1\'-binaphthyl-5,5\'-disulfonic acid
+    UNIMOD_BisANS = 200000519,
+
+    /// Piperidine: Piperidination
+    UNIMOD_Piperidine = 200000520,
+
+    /// Maleimide-PEO2-Biotin: Maleimide-PEO2-Biotin
+    UNIMOD_Maleimide_PEO2_Biotin = 200000522,
+
+    /// Sulfo-NHS-LC-LC-Biotin: Sulfo-NHS-LC-LC-Biotin
+    UNIMOD_Sulfo_NHS_LC_LC_Biotin = 200000523,
+
+    /// CLIP_TRAQ_1: CLIP_TRAQ_1
+    UNIMOD_CLIP_TRAQ_1 = 200000524,
+
+    /// CLIP_TRAQ_2: CLIP_TRAQ_2
+    UNIMOD_CLIP_TRAQ_2 = 200000525,
+
+    /// Dethiomethyl: Prompt loss of side chain from oxidised Met
+    UNIMOD_Dethiomethyl = 200000526,
+
+    /// Methyl+Deamidated: Deamidation followed by a methylation
+    UNIMOD_Methyl_Deamidated = 200000528,
+
+    /// Delta:H(5)C(2): Dimethylation of proline residue
+    UNIMOD_Delta_H_5_C_2_ = 200000529,
+
+    /// Cation:K: Replacement of proton by potassium
+    UNIMOD_Cation_K = 200000530,
+
+    /// Cation:Cu[I]: Replacement of proton by copper
+    UNIMOD_Cation_Cu_I_ = 200000531,
+
+    /// iTRAQ4plex114: Accurate mass for 114
+    UNIMOD_iTRAQ4plex114 = 200000532,
+
+    /// iTRAQ4plex115: Accurate mass for 115
+    UNIMOD_iTRAQ4plex115 = 200000533,
+
+    /// Dibromo: Dibromo
+    UNIMOD_Dibromo = 200000534,
+
+    /// LeuArgGlyGly: Ubiquitination
+    UNIMOD_LeuArgGlyGly = 200000535,
+
+    /// CLIP_TRAQ_3: CLIP_TRAQ_3
+    UNIMOD_CLIP_TRAQ_3 = 200000536,
+
+    /// CLIP_TRAQ_4: CLIP_TRAQ_4
+    UNIMOD_CLIP_TRAQ_4 = 200000537,
+
+    /// 15dB-biotin: 15-deoxy-delta 12,14-Prostaglandin J2-biotinimide
+    UNIMOD_15dB_biotin = 200000538,
+
+    /// PGA1-biotin: Prostaglandin A1-biotinimide
+    UNIMOD_PGA1_biotin = 200000539,
+
+    /// Ala->Ser: Ala->Ser substitution
+    UNIMOD_Ala__Ser = 200000540,
+
+    /// Ala->Thr: Ala->Thr substitution
+    UNIMOD_Ala__Thr = 200000541,
+
+    /// Ala->Asp: Ala->Asp substitution
+    UNIMOD_Ala__Asp = 200000542,
+
+    /// Ala->Pro: Ala->Pro substitution
+    UNIMOD_Ala__Pro = 200000543,
+
+    /// Ala->Gly: Ala->Gly substitution
+    UNIMOD_Ala__Gly = 200000544,
+
+    /// Ala->Glu: Ala->Glu substitution
+    UNIMOD_Ala__Glu = 200000545,
+
+    /// Ala->Val: Ala->Val substitution
+    UNIMOD_Ala__Val = 200000546,
+
+    /// Cys->Phe: Cys->Phe substitution
+    UNIMOD_Cys__Phe = 200000547,
+
+    /// Cys->Ser: Cys->Ser substitution
+    UNIMOD_Cys__Ser = 200000548,
+
+    /// Cys->Trp: Cys->Trp substitution
+    UNIMOD_Cys__Trp = 200000549,
+
+    /// Cys->Tyr: Cys->Tyr substitution
+    UNIMOD_Cys__Tyr = 200000550,
+
+    /// Cys->Arg: Cys->Arg substitution
+    UNIMOD_Cys__Arg = 200000551,
+
+    /// Cys->Gly: Cys->Gly substitution
+    UNIMOD_Cys__Gly = 200000552,
+
+    /// Asp->Ala: Asp->Ala substitution
+    UNIMOD_Asp__Ala = 200000553,
+
+    /// Asp->His: Asp->His substitution
+    UNIMOD_Asp__His = 200000554,
+
+    /// Asp->Asn: Asp->Asn substitution
+    UNIMOD_Asp__Asn = 200000555,
+
+    /// Asp->Gly: Asp->Gly substitution
+    UNIMOD_Asp__Gly = 200000556,
+
+    /// Asp->Tyr: Asp->Tyr substitution
+    UNIMOD_Asp__Tyr = 200000557,
+
+    /// Asp->Glu: Asp->Glu substitution
+    UNIMOD_Asp__Glu = 200000558,
+
+    /// Asp->Val: Asp->Val substitution
+    UNIMOD_Asp__Val = 200000559,
+
+    /// Glu->Ala: Glu->Ala substitution
+    UNIMOD_Glu__Ala = 200000560,
+
+    /// Glu->Gln: Glu->Gln substitution
+    UNIMOD_Glu__Gln = 200000561,
+
+    /// Glu->Asp: Glu->Asp substitution
+    UNIMOD_Glu__Asp = 200000562,
+
+    /// Glu->Lys: Glu->Lys substitution
+    UNIMOD_Glu__Lys = 200000563,
+
+    /// Glu->Gly: Glu->Gly substitution
+    UNIMOD_Glu__Gly = 200000564,
+
+    /// Glu->Val: Glu->Val substitution
+    UNIMOD_Glu__Val = 200000565,
+
+    /// Phe->Ser: Phe->Ser substitution
+    UNIMOD_Phe__Ser = 200000566,
+
+    /// Phe->Cys: Phe->Cys substitution
+    UNIMOD_Phe__Cys = 200000567,
+
+    /// Phe->Ile: Phe->Ile or Phe->Leu substitution
+    UNIMOD_Phe__Ile = 200000568,
+
+    /// Phe->Tyr: Phe->Tyr substitution
+    UNIMOD_Phe__Tyr = 200000569,
+
+    /// Phe->Val: Phe->Val substitution
+    UNIMOD_Phe__Val = 200000570,
+
+    /// Gly->Ala: Gly->Ala substitution
+    UNIMOD_Gly__Ala = 200000571,
+
+    /// Gly->Ser: Gly->Ser substitution
+    UNIMOD_Gly__Ser = 200000572,
+
+    /// Gly->Trp: Gly->Trp substitution
+    UNIMOD_Gly__Trp = 200000573,
+
+    /// Gly->Glu: Gly->Glu substitution
+    UNIMOD_Gly__Glu = 200000574,
+
+    /// Gly->Val: Gly->Val substitution
+    UNIMOD_Gly__Val = 200000575,
+
+    /// Gly->Asp: Gly->Asp substitution
+    UNIMOD_Gly__Asp = 200000576,
+
+    /// Gly->Cys: Gly->Cys substitution
+    UNIMOD_Gly__Cys = 200000577,
+
+    /// Gly->Arg: Gly->Arg substitution
+    UNIMOD_Gly__Arg = 200000578,
+
+    /// His->Pro: His->Pro substitution
+    UNIMOD_His__Pro = 200000580,
+
+    /// His->Tyr: His->Tyr substitution
+    UNIMOD_His__Tyr = 200000581,
+
+    /// His->Gln: His->Gln substitution
+    UNIMOD_His__Gln = 200000582,
+
+    /// His->Arg: His->Arg substitution
+    UNIMOD_His__Arg = 200000584,
+
+    /// His->Leu: His->Leu substitution
+    UNIMOD_His__Leu = 200000585,
+
+    /// Ile->Phe: Ile->Phe substitution
+    UNIMOD_Ile__Phe = 200000586,
+
+    /// Ile->Ser: Ile->Ser substitution
+    UNIMOD_Ile__Ser = 200000587,
+
+    /// Ile->Thr: Ile->Thr substitution
+    UNIMOD_Ile__Thr = 200000588,
+
+    /// Ile->Asn: Ile->Asn substitution
+    UNIMOD_Ile__Asn = 200000589,
+
+    /// Ile->Lys: Ile->Lys substitution
+    UNIMOD_Ile__Lys = 200000590,
+
+    /// Ile->Val: Ile->Val substitution
+    UNIMOD_Ile__Val = 200000591,
+
+    /// Ile->Met: Ile->Met substitution
+    UNIMOD_Ile__Met = 200000592,
+
+    /// Ile->Arg: Ile->Arg substitution
+    UNIMOD_Ile__Arg = 200000593,
+
+    /// Lys->Thr: Lys->Thr substitution
+    UNIMOD_Lys__Thr = 200000594,
+
+    /// Lys->Asn: Lys->Asn substitution
+    UNIMOD_Lys__Asn = 200000595,
+
+    /// Lys->Glu: Lys->Glu substitution
+    UNIMOD_Lys__Glu = 200000596,
+
+    /// Lys->Gln: Lys->Gln substitution
+    UNIMOD_Lys__Gln = 200000597,
+
+    /// Lys->Met: Lys->Met substitution
+    UNIMOD_Lys__Met = 200000598,
+
+    /// Lys->Arg: Lys->Arg substitution
+    UNIMOD_Lys__Arg = 200000599,
+
+    /// Lys->Ile: Lys->Ile substitution
+    UNIMOD_Lys__Ile = 200000600,
+
+    /// Leu->Ser: Leu->Ser substitution
+    UNIMOD_Leu__Ser = 200000601,
+
+    /// Leu->Phe: Leu->Phe substitution
+    UNIMOD_Leu__Phe = 200000602,
+
+    /// Leu->Trp: Leu->Trp substitution
+    UNIMOD_Leu__Trp = 200000603,
+
+    /// Leu->Pro: Leu->Pro substitution
+    UNIMOD_Leu__Pro = 200000604,
+
+    /// Leu->Val: Leu->Val substitution
+    UNIMOD_Leu__Val = 200000605,
+
+    /// Leu->His: Leu->His substitution
+    UNIMOD_Leu__His = 200000606,
+
+    /// Leu->Gln: Leu->Gln substitution
+    UNIMOD_Leu__Gln = 200000607,
+
+    /// Leu->Met: Leu->Met substitution
+    UNIMOD_Leu__Met = 200000608,
+
+    /// Leu->Arg: Leu->Arg substitution
+    UNIMOD_Leu__Arg = 200000609,
+
+    /// Met->Thr: Met->Thr substitution
+    UNIMOD_Met__Thr = 200000610,
+
+    /// Met->Arg: Met->Arg substitution
+    UNIMOD_Met__Arg = 200000611,
+
+    /// Met->Ile: Met->Ile substitution
+    UNIMOD_Met__Ile = 200000612,
+
+    /// Met->Lys: Met->Lys substitution
+    UNIMOD_Met__Lys = 200000613,
+
+    /// Met->Leu: Met->Leu substitution
+    UNIMOD_Met__Leu = 200000614,
+
+    /// Met->Val: Met->Val substitution
+    UNIMOD_Met__Val = 200000615,
+
+    /// Asn->Ser: Asn->Ser substitution
+    UNIMOD_Asn__Ser = 200000616,
+
+    /// Asn->Thr: Asn->Thr substitution
+    UNIMOD_Asn__Thr = 200000617,
+
+    /// Asn->Lys: Asn->Lys substitution
+    UNIMOD_Asn__Lys = 200000618,
+
+    /// Asn->Tyr: Asn->Tyr substitution
+    UNIMOD_Asn__Tyr = 200000619,
+
+    /// Asn->His: Asn->His substitution
+    UNIMOD_Asn__His = 200000620,
+
+    /// Asn->Asp: Asn->Asp substitution
+    UNIMOD_Asn__Asp = 200000621,
+
+    /// Asn->Ile: Asn->Ile substitution
+    UNIMOD_Asn__Ile = 200000622,
+
+    /// Pro->Ser: Pro->Ser substitution
+    UNIMOD_Pro__Ser = 200000623,
+
+    /// Pro->Ala: Pro->Ala substitution
+    UNIMOD_Pro__Ala = 200000624,
+
+    /// Pro->His: Pro->His substitution
+    UNIMOD_Pro__His = 200000625,
+
+    /// Pro->Gln: Pro->Gln substitution
+    UNIMOD_Pro__Gln = 200000626,
+
+    /// Pro->Thr: Pro->Thr substitution
+    UNIMOD_Pro__Thr = 200000627,
+
+    /// Pro->Arg: Pro->Arg substitution
+    UNIMOD_Pro__Arg = 200000628,
+
+    /// Pro->Leu: Pro->Leu substitution
+    UNIMOD_Pro__Leu = 200000629,
+
+    /// Gln->Pro: Gln->Pro substitution
+    UNIMOD_Gln__Pro = 200000630,
+
+    /// Gln->Lys: Gln->Lys substitution
+    UNIMOD_Gln__Lys = 200000631,
+
+    /// Gln->Glu: Gln->Glu substitution
+    UNIMOD_Gln__Glu = 200000632,
+
+    /// Gln->His: Gln->His substitution
+    UNIMOD_Gln__His = 200000633,
+
+    /// Gln->Arg: Gln->Arg substitution
+    UNIMOD_Gln__Arg = 200000634,
+
+    /// Gln->Leu: Gln->Leu substitution
+    UNIMOD_Gln__Leu = 200000635,
+
+    /// Arg->Ser: Arg->Ser substitution
+    UNIMOD_Arg__Ser = 200000636,
+
+    /// Arg->Trp: Arg->Trp substitution
+    UNIMOD_Arg__Trp = 200000637,
+
+    /// Arg->Thr: Arg->Thr substitution
+    UNIMOD_Arg__Thr = 200000638,
+
+    /// Arg->Pro: Arg->Pro substitution
+    UNIMOD_Arg__Pro = 200000639,
+
+    /// Arg->Lys: Arg->Lys substitution
+    UNIMOD_Arg__Lys = 200000640,
+
+    /// Arg->His: Arg->His substitution
+    UNIMOD_Arg__His = 200000641,
+
+    /// Arg->Gln: Arg->Gln substitution
+    UNIMOD_Arg__Gln = 200000642,
+
+    /// Arg->Met: Arg->Met substitution
+    UNIMOD_Arg__Met = 200000643,
+
+    /// Arg->Cys: Arg->Cys substitution
+    UNIMOD_Arg__Cys = 200000644,
+
+    /// Arg->Ile: Arg->Ile or Arg->Leu substitution
+    UNIMOD_Arg__Ile = 200000645,
+
+    /// Arg->Gly: Arg->Gly substitution
+    UNIMOD_Arg__Gly = 200000646,
+
+    /// Ser->Phe: Ser->Phe substitution
+    UNIMOD_Ser__Phe = 200000647,
+
+    /// Ser->Ala: Ser->Ala substitution
+    UNIMOD_Ser__Ala = 200000648,
+
+    /// Ser->Trp: Ser->Trp substitution
+    UNIMOD_Ser__Trp = 200000649,
+
+    /// Ser->Thr: Ser->Thr substitution
+    UNIMOD_Ser__Thr = 200000650,
+
+    /// Ser->Asn: Ser->Asn substitution
+    UNIMOD_Ser__Asn = 200000651,
+
+    /// Ser->Pro: Ser->Pro substitution
+    UNIMOD_Ser__Pro = 200000652,
+
+    /// Ser->Tyr: Ser->Tyr substitution
+    UNIMOD_Ser__Tyr = 200000653,
+
+    /// Ser->Cys: Ser->Cys substitution
+    UNIMOD_Ser__Cys = 200000654,
+
+    /// Ser->Arg: Ser->Arg substitution
+    UNIMOD_Ser__Arg = 200000655,
+
+    /// Ser->Ile: Ser->Ile or Ser->Leu substitution
+    UNIMOD_Ser__Ile = 200000656,
+
+    /// Ser->Gly: Ser->Gly substitution
+    UNIMOD_Ser__Gly = 200000657,
+
+    /// Thr->Ser: Thr->Ser substitution
+    UNIMOD_Thr__Ser = 200000658,
+
+    /// Thr->Ala: Thr->Ala substitution
+    UNIMOD_Thr__Ala = 200000659,
+
+    /// Thr->Asn: Thr->Asn substitution
+    UNIMOD_Thr__Asn = 200000660,
+
+    /// Thr->Lys: Thr->Lys substitution
+    UNIMOD_Thr__Lys = 200000661,
+
+    /// Thr->Pro: Thr->Pro substitution
+    UNIMOD_Thr__Pro = 200000662,
+
+    /// Thr->Met: Thr->Met substitution
+    UNIMOD_Thr__Met = 200000663,
+
+    /// Thr->Ile: Thr->Ile substitution
+    UNIMOD_Thr__Ile = 200000664,
+
+    /// Thr->Arg: Thr->Arg substitution
+    UNIMOD_Thr__Arg = 200000665,
+
+    /// Val->Phe: Val->Phe substitution
+    UNIMOD_Val__Phe = 200000666,
+
+    /// Val->Ala: Val->Ala substitution
+    UNIMOD_Val__Ala = 200000667,
+
+    /// Val->Glu: Val->Glu substitution
+    UNIMOD_Val__Glu = 200000668,
+
+    /// Val->Met: Val->Met substitution
+    UNIMOD_Val__Met = 200000669,
+
+    /// Val->Asp: Val->Asp substitution
+    UNIMOD_Val__Asp = 200000670,
+
+    /// Val->Ile: Val->Ile or Val->Leu substitution
+    UNIMOD_Val__Ile = 200000671,
+
+    /// Val->Gly: Val->Gly substitution
+    UNIMOD_Val__Gly = 200000672,
+
+    /// Trp->Ser: Trp->Ser substitution
+    UNIMOD_Trp__Ser = 200000673,
+
+    /// Trp->Cys: Trp->Cys substitution
+    UNIMOD_Trp__Cys = 200000674,
+
+    /// Trp->Arg: Trp->Arg substitution
+    UNIMOD_Trp__Arg = 200000675,
+
+    /// Trp->Gly: Trp->Gly substitution
+    UNIMOD_Trp__Gly = 200000676,
+
+    /// Trp->Leu: Trp->Leu substitution
+    UNIMOD_Trp__Leu = 200000677,
+
+    /// Tyr->Phe: Tyr->Phe substitution
+    UNIMOD_Tyr__Phe = 200000678,
+
+    /// Tyr->Ser: Tyr->Ser substitution
+    UNIMOD_Tyr__Ser = 200000679,
+
+    /// Tyr->Asn: Tyr->Asn substitution
+    UNIMOD_Tyr__Asn = 200000680,
+
+    /// Tyr->His: Tyr->His substitution
+    UNIMOD_Tyr__His = 200000681,
+
+    /// Tyr->Asp: Tyr->Asp substitution
+    UNIMOD_Tyr__Asp = 200000682,
+
+    /// Tyr->Cys: Tyr->Cys substitution
+    UNIMOD_Tyr__Cys = 200000683,
+
+    /// BDMAPP: Mass Defect Tag on lysine e-amino
+    UNIMOD_BDMAPP = 200000684,
+
+    /// NA-LNO2: Nitroalkylation by Nitro Linoleic Acid
+    UNIMOD_NA_LNO2 = 200000685,
+
+    /// NA-OA-NO2: Nitroalkylation by Nitro Oleic Acid
+    UNIMOD_NA_OA_NO2 = 200000686,
+
+    /// ICPL:2H(4): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, medium form
+    UNIMOD_ICPL_2H_4_ = 200000687,
+
+    /// Label:13C(6)15N(1): 13C(6) 15N(1) Silac label
+    UNIMOD_Label_13C_6_15N_1_ = 200000695,
+
+    /// Label:2H(9)13C(6)15N(2): 13C(6) 15N(2) (D)9 SILAC label
+    UNIMOD_Label_2H_9_13C_6_15N_2_ = 200000696,
+
+    /// NIC: Nicotinic Acid
+    UNIMOD_NIC = 200000697,
+
+    /// dNIC: deuterated Nicotinic Acid
+    UNIMOD_dNIC = 200000698,
+
+    /// HNE-Delta:H(2)O: Dehydrated 4-hydroxynonenal
+    UNIMOD_HNE_Delta_H_2_O = 200000720,
+
+    /// 4-ONE: 4-Oxononenal (ONE)
+    UNIMOD_4_ONE = 200000721,
+
+    /// O-Dimethylphosphate: O-Dimethylphosphorylation
+    UNIMOD_O_Dimethylphosphate = 200000723,
+
+    /// O-Methylphosphate: O-Methylphosphorylation
+    UNIMOD_O_Methylphosphate = 200000724,
+
+    /// O-Diethylphosphate: O-Diethylphosphorylation
+    UNIMOD_O_Diethylphosphate = 200000725,
+
+    /// O-Ethylphosphate: O-Ethylphosphorylation
+    UNIMOD_O_Ethylphosphate = 200000726,
+
+    /// O-pinacolylmethylphosphonate: O-pinacolylmethylphosphonylation
+    UNIMOD_O_pinacolylmethylphosphonate = 200000727,
+
+    /// Methylphosphonate: Methylphosphonylation
+    UNIMOD_Methylphosphonate = 200000728,
+
+    /// O-Isopropylmethylphosphonate: O-Isopropylmethylphosphonylation
+    UNIMOD_O_Isopropylmethylphosphonate = 200000729,
+
+    /// iTRAQ8plex: Representative mass and accurate mass for 113, 114, 116 & 117
+    UNIMOD_iTRAQ8plex = 200000730,
+
+    /// iTRAQ8plex:13C(6)15N(2): Accurate mass for 115, 118, 119 & 121
+    UNIMOD_iTRAQ8plex_13C_6_15N_2_ = 200000731,
+
+    /// Ethanolamine: Carboxyl modification with ethanolamine
+    UNIMOD_Ethanolamine = 200000734,
+
+    /// DTT_ST: Dithiothreitol (DTT)
+    UNIMOD_DTT_ST = 200000735,
+
+    /// DTT_C: Dithiothreitol (DTT) on Cys
+    UNIMOD_DTT_C = 200000736,
+
+    /// TMT6plex: Sixplex Tandem Mass Tag®
+    UNIMOD_TMT6plex = 200000737,
+
+    /// TMT2plex: Duplex Tandem Mass Tag®
+    UNIMOD_TMT2plex = 200000738,
+
+    /// TMT: Native Tandem Mass Tag®
+    UNIMOD_TMT = 200000739,
+
+    /// ExacTagThiol: ExacTag Thiol label mass for 2-4-7-10 plex
+    UNIMOD_ExacTagThiol = 200000740,
+
+    /// ExacTagAmine: ExacTag Amine label mass for 2-4-7-10 plex
+    UNIMOD_ExacTagAmine = 200000741,
+
+    /// 4-ONE+Delta:H(-2)O(-1): Dehydrated 4-Oxononenal Michael adduct
+    UNIMOD_4_ONE_Delta_H__2_O__1_ = 200000743,
+
+    /// NO_SMX_SEMD: Nitroso Sulfamethoxazole Sulphenamide thiol adduct
+    UNIMOD_NO_SMX_SEMD = 200000744,
+
+    /// NO_SMX_SMCT: Nitroso Sulfamethoxazole semimercaptal thiol adduct
+    UNIMOD_NO_SMX_SMCT = 200000745,
+
+    /// NO_SMX_SIMD: Nitroso Sulfamethoxazole Sulfinamide thiol adduct
+    UNIMOD_NO_SMX_SIMD = 200000746,
+
+    /// Malonyl: Malonylation of C and S residues
+    UNIMOD_Malonyl = 200000747,
+
+    /// 3sulfo: derivatization by N-term modification using 3-Sulfobenzoic succinimidyl ester
+    UNIMOD_3sulfo = 200000748,
+
+    /// trifluoro: trifluoroleucine replacement of leucine
+    UNIMOD_trifluoro = 200000750,
+
+    /// TNBS: tri nitro benzene
+    UNIMOD_TNBS = 200000751,
+
+    /// IDEnT: Isotope Distribution Encoded Tag
+    UNIMOD_IDEnT = 200000762,
+
+    /// DTT_ST:2H(6): Isotopically labeled Dithiothreitol (DTT) modification of serines or threonines
+    UNIMOD_DTT_ST_2H_6_ = 200000763,
+
+    /// DTT_C:2H(6): Isotopically labeled Dithiothreitol (DTT) modification of cysteines
+    UNIMOD_DTT_C_2H_6_ = 200000764,
+
+    /// Met-loss: Removal of initiator methionine from protein N-terminus
+    UNIMOD_Met_loss = 200000765,
+
+    /// Met-loss+Acetyl: Removal of initiator methionine from protein N-terminus, then acetylation of the new N-terminus
+    UNIMOD_Met_loss_Acetyl = 200000766,
+
+    /// Menadione-HQ: Menadione hydroquinone derivative
+    UNIMOD_Menadione_HQ = 200000767,
+
+    /// Methyl+Acetyl:2H(3): Mono-methylated lysine labelled with Acetyl_heavy
+    UNIMOD_Methyl_Acetyl_2H_3_ = 200000768,
+
+    /// lapachenole: lapachenole photochemically added to cysteine
+    UNIMOD_lapachenole = 200000771,
+
+    /// Label:13C(5): 13C(5) Silac label
+    UNIMOD_Label_13C_5_ = 200000772,
+
+    /// maleimide: maleimide
+    UNIMOD_maleimide = 200000773,
+
+    /// Biotin-phenacyl: Alkylation by biotinylated form of phenacyl bromide
+    UNIMOD_Biotin_phenacyl = 200000774,
+
+    /// Carboxymethyl:13C(2): Iodoacetic acid derivative w/ 13C label
+    UNIMOD_Carboxymethyl_13C_2_ = 200000775,
+
+    /// NEM:2H(5): D5 N-ethylmaleimide on cysteines
+    UNIMOD_NEM_2H_5_ = 200000776,
+
+    /// AEC-MAEC:2H(4): deuterium cysteamine modification to S or T
+    UNIMOD_AEC_MAEC_2H_4_ = 200000792,
+
+    /// Hex1HexNAc1: Hex1HexNAc1
+    UNIMOD_Hex1HexNAc1 = 200000793,
+
+    /// Label:13C(6)+GlyGly: 13C6 labeled ubiquitinylation residue
+    UNIMOD_Label_13C_6__GlyGly = 200000799,
+
+    /// PentylamineBiotin: Used for labeling glutamine-donor substrate of transglutaminase
+    UNIMOD_PentylamineBiotin = 200000800,
+
+    /// Pentylamine: Labeling transglutaminase substrate on glutamine side chain
+    UNIMOD_Pentylamine = 200000801,
+
+    /// Biotin-PEO4-hydrazide: Pierce EZ link biotin hydrazide prod no. 21360
+    UNIMOD_Biotin_PEO4_hydrazide = 200000811,
+
+    /// Cy3b-maleimide: fluorescent dye that labels cysteines
+    UNIMOD_Cy3b_maleimide = 200000821,
+
+    /// Gly-loss+Amide: Enzymatic glycine removal leaving an amidated C-terminus
+    UNIMOD_Gly_loss_Amide = 200000822,
+
+    /// BMOE: Addition of BMOE crosslinker
+    UNIMOD_BMOE = 200000824,
+
+    /// DFDNB: Addition of DFDNB crosslinker
+    UNIMOD_DFDNB = 200000825,
+
+    /// TMPP-Ac: tris(2,4,6-trimethoxyphenyl)phosphonium acetic acid N-hydroxysuccinimide ester derivative
+    UNIMOD_TMPP_Ac = 200000827,
+
+    /// Dihydroxyimidazolidine: Dihydroxy methylglyoxal adduct
+    UNIMOD_Dihydroxyimidazolidine = 200000830,
+
+    /// Label:2H(4)+Acetyl: Acetyl 4,4,5,5-D4 Lysine
+    UNIMOD_Label_2H_4__Acetyl = 200000834,
+
+    /// Label:13C(6)+Acetyl: Acetyl 13C(6) Silac label
+    UNIMOD_Label_13C_6__Acetyl = 200000835,
+
+    /// Label:13C(6)15N(2)+Acetyl: Acetyl_13C(6) 15N(2) Silac label
+    UNIMOD_Label_13C_6_15N_2__Acetyl = 200000836,
+
+    /// Arg->Npo: Arginine replacement by Nitropyrimidyl ornithine
+    UNIMOD_Arg__Npo = 200000837,
+
+    /// EQIGG: Sumo mutant Smt3-WT tail following trypsin digestion
+    UNIMOD_EQIGG = 200000846,
+
+    /// Arg2PG: Adduct of phenylglyoxal with Arg
+    UNIMOD_Arg2PG = 200000848,
+
+    /// cGMP: S-guanylation
+    UNIMOD_cGMP = 200000849,
+
+    /// cGMP+RMP-loss: S-guanylation-2
+    UNIMOD_cGMP_RMP_loss = 200000851,
+
+    /// Label:2H(4)+GlyGly: Ubiquitination 2H4 lysine
+    UNIMOD_Label_2H_4__GlyGly = 200000853,
+
+    /// Label:13C(8)15N(2): 13C(8) 15N(2) Silac label
+    UNIMOD_Label_13C_8_15N_2_ = 200000854,
+
+    /// MG-H1: Methylglyoxal-derived hydroimidazolone
+    UNIMOD_MG_H1 = 200000859,
+
+    /// G-H1: Glyoxal-derived hydroimiadazolone
+    UNIMOD_G_H1 = 200000860,
+
+    /// ZGB: NHS ester linked Green Fluorescent Bodipy Dye
+    UNIMOD_ZGB = 200000861,
+
+    /// Label:13C(1)2H(3): SILAC
+    UNIMOD_Label_13C_1_2H_3_ = 200000862,
+
+    /// Label:13C(6)15N(2)+GlyGly: 13C(6) 15N(2) Lysine glygly
+    UNIMOD_Label_13C_6_15N_2__GlyGly = 200000864,
+
+    /// ICPL:13C(6)2H(4): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, +10 Da form
+    UNIMOD_ICPL_13C_6_2H_4_ = 200000866,
+
+    /// QEQTGG: SUMOylation by SUMO-1
+    UNIMOD_QEQTGG = 200000876,
+
+    /// QQQTGG: SUMOylation by SUMO-2/3
+    UNIMOD_QQQTGG = 200000877,
+
+    /// Bodipy: Bodipy modifications onto cysteine
+    UNIMOD_Bodipy = 200000878,
+
+    /// ChromoBiotin: EZ-Link NHS-Chromogenic Biotin
+    UNIMOD_ChromoBiotin = 200000884,
+
+    /// Label:13C(1)2H(3)+Oxidation: Oxidised methionine 13C(1)2H(3) SILAC label
+    UNIMOD_Label_13C_1_2H_3__Oxidation = 200000885,
+
+    /// HydroxymethylOP: 2-ammonio-6-[4-(hydroxymethyl)-3-oxidopyridinium-1-yl]- hexanoate
+    UNIMOD_HydroxymethylOP = 200000886,
+
+    /// MDCC: covalent linkage of maleimidyl coumarin probe (Molecular Probes D-10253)
+    UNIMOD_MDCC = 200000887,
+
+    /// mTRAQ: mTRAQ light
+    UNIMOD_mTRAQ = 200000888,
+
+    /// mTRAQ:13C(3)15N(1): mTRAQ heavy
+    UNIMOD_mTRAQ_13C_3_15N_1_ = 200000889,
+
+    /// DyLight-maleimide: Thiol-reactive dye for fluorescence labelling of proteins
+    UNIMOD_DyLight_maleimide = 200000890,
+
+    /// Methyl-PEO12-Maleimide: Methyl-PEO12-Maleimide
+    UNIMOD_Methyl_PEO12_Maleimide = 200000891,
+
+    /// CarbamidomethylDTT: Carbamidomethylated DTT modification of cysteine
+    UNIMOD_CarbamidomethylDTT = 200000893,
+
+    /// CarboxymethylDTT: Carboxymethylated DTT modification of cysteine
+    UNIMOD_CarboxymethylDTT = 200000894,
+
+    /// Biotin-PEG-PRA: Biotin polyethyleneoxide (n=3) alkyne
+    UNIMOD_Biotin_PEG_PRA = 200000895,
+
+    /// Met->Aha: Methionine replacement by azido homoalanine
+    UNIMOD_Met__Aha = 200000896,
+
+    /// Label:15N(4): SILAC 15N(4)
+    UNIMOD_Label_15N_4_ = 200000897,
+
+    /// pyrophospho: pyrophosphorylation of Ser/Thr
+    UNIMOD_pyrophospho = 200000898,
+
+    /// Met->Hpg: methionine replacement by homopropargylglycine
+    UNIMOD_Met__Hpg = 200000899,
+
+    /// 4AcAllylGal: 2,3,4,6-tetra-O-Acetyl-1-allyl-α-D-galactopyranoside modification of cysteine
+    UNIMOD_4AcAllylGal = 200000901,
+
+    /// DimethylArsino: Reaction with dimethylarsinous (AsIII) acid
+    UNIMOD_DimethylArsino = 200000902,
+
+    /// Lys->CamCys: Lys->Cys substitution and carbamidomethylation
+    UNIMOD_Lys__CamCys = 200000903,
+
+    /// Phe->CamCys: Phe->Cys substitution and carbamidomethylation
+    UNIMOD_Phe__CamCys = 200000904,
+
+    /// Leu->MetOx: Leu->Met substitution and sulfoxidation
+    UNIMOD_Leu__MetOx = 200000905,
+
+    /// Lys->MetOx: Lys->Met substitution and sulfoxidation
+    UNIMOD_Lys__MetOx = 200000906,
+
+    /// Galactosyl: Galactosyl hydroxylysine
+    UNIMOD_Galactosyl = 200000907,
+
+    /// SMCC-maleimide: Modified SMCC maleimide with 3-(dimethylamino)-1-propylamine
+    UNIMOD_SMCC_maleimide = 200000908,
+
+    /// Bacillosamine: 2,4-diacetamido-2,4,6-trideoxyglucopyranose
+    UNIMOD_Bacillosamine = 200000910,
+
+    /// MTSL: Cys modification by (1-oxyl-2,2,5,5-tetramethyl-3-pyrroline-3-methyl)methanesulfonate (MTSL)
+    UNIMOD_MTSL = 200000911,
+
+    /// HNE-BAHAH: 4-hydroxy-2-nonenal and biotinamidohexanoic acid hydrazide, reduced
+    UNIMOD_HNE_BAHAH = 200000912,
+
+    /// Methylmalonylation: Methylmalonylation on Serine
+    UNIMOD_Methylmalonylation = 200000914
 }; // enum CVID
 
 
