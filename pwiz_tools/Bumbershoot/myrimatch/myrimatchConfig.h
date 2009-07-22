@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "BaseRunTimeConfig.h"
+#include "pwiz/utility/math/erf.hpp"
 
 using namespace freicore;
 
@@ -77,8 +78,15 @@ namespace myrimatch
 		double			curMaxSequenceMass;
 		int				minIntensityClassCount;
 		int				minMzFidelityClassCount;
+		int				maxFragmentChargeState;
+		int             maxChargeStateFromSpectra;
 		vector<double>	PrecursorMassTolerance;
-        int             maxChargeStateFromSpectra;
+		// Compute the fragment mass error bins and their associated log odds scores
+		vector < double > massErrors;
+		vector < double > mzFidelityLods;
+		// Mass units
+		MassUnits		precursorMzToleranceUnits;
+		MassUnits		fragmentMzToleranceUnits;
 
 	private:
 		void finalize()
@@ -140,7 +148,7 @@ namespace myrimatch
             } else
                 throw runtime_error("invalid fragmentation mode \"" + mode + "\"");
 
-            if( ProteinSamplingTime == 0 )
+			if( ProteinSamplingTime == 0 )
             {
                 EstimateSearchTimeOnly = 0;
                 if( g_pid == 0 )
@@ -166,6 +174,7 @@ namespace myrimatch
 					cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
 			}
 
+
 			if( !DynamicMods.empty() )
 			{
 				DynamicMods = TrimWhitespace( DynamicMods );
@@ -178,8 +187,46 @@ namespace myrimatch
 				staticMods = StaticModSet( StaticMods );
 			}
 
-            maxChargeStateFromSpectra = 1;
-            PrecursorMassTolerance.push_back(PrecursorMzTolerance);
+			// Setting mass units to unknown.
+			precursorMzToleranceUnits = UNKNOWN;
+			fragmentMzToleranceUnits = UNKNOWN;
+			// Convert the user input to lower case
+			to_lower(PrecursorMzToleranceUnits);
+			to_lower(FragmentMzToleranceUnits);
+			// Set the units approriately
+			if(PrecursorMzToleranceUnits.compare("daltons")==0) 
+			{
+				precursorMzToleranceUnits = DALTONS;
+			} else if(PrecursorMzToleranceUnits.compare("ppm")==0) {
+				precursorMzToleranceUnits = PPM;
+			}
+			if(FragmentMzToleranceUnits.compare("daltons")==0) 
+			{
+				fragmentMzToleranceUnits = DALTONS;
+			} else if(FragmentMzToleranceUnits.compare("ppm")==0) {
+				fragmentMzToleranceUnits = PPM;
+			}
+			// Make sure we know the mass units before we proceed with the search
+			if(precursorMzToleranceUnits == UNKNOWN || fragmentMzToleranceUnits == UNKNOWN) 
+			{
+				cout << "Error: Precursor and Fragment mass units are either unknown. Please set them to either daltons or ppm" << endl;
+				exit(1);
+			}
+			// Sanity checks
+			if((PrecursorMzTolerance-(int)PrecursorMzTolerance) > 0.0 && precursorMzToleranceUnits == PPM) 
+			{
+				cout << "Warning: PrecusorMzTolerance is set to fractional PPM (" << PrecursorMzTolerance << ")" << endl;
+			}
+			if((FragmentMzTolerance-(int)FragmentMzTolerance) > 0.0 && fragmentMzToleranceUnits == PPM) 
+			{
+				cout << "Warning: FragmentMzTolerance is set to fractional PPM (" << FragmentMzTolerance << ")" << endl;
+			}
+
+			// Set the mass tolerances for different charge state precursors
+			vector<double>& precursorMassTolerance = PrecursorMassTolerance;
+			precursorMassTolerance.clear();
+			for( int z=1; z <= NumChargeStates; ++z )
+				precursorMassTolerance.push_back( PrecursorMzTolerance * z );
 
 			if( ClassSizeMultiplier > 1 )
 			{
@@ -190,6 +237,55 @@ namespace myrimatch
 				minIntensityClassCount = NumIntensityClasses;
 				minMzFidelityClassCount = NumMzFidelityClasses;
 			}
+			
+			maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
+			
+			vector<double> insideProbs;
+			int numBins = 5;
+			// Divide the fragment mass error into half and use it as standard deviation
+			double stdev = FragmentMzTolerance*0.5;
+			massErrors.clear();
+			insideProbs.clear();
+			mzFidelityLods.clear();
+			// Divide the mass error distributions into 10 bins.
+			for(int j = 1; j <= numBins; ++j) 
+			{
+				// Compute the mass error associated with each bin.
+				double massError = FragmentMzTolerance*((double)j/(double)numBins);
+				// Compute the cumulative distribution function of massError 
+				// with mu=0 and sig=stdev
+				double errX = (massError-0)/(stdev*sqrt(2));
+				double cdf = 0.5 * (1.0+erf(errX));
+				// Compute the gaussian inside probability
+				double insideProb = 2.0*cdf-1.0;
+				// Save the mass errors and inside probabilities
+				massErrors.push_back(massError);
+				insideProbs.push_back(insideProb);
+			}
+			// mzFidelity bin probablities are dependent on the number of bin. So,
+			// compute the probabilities only once.
+			// Compute the probability associated with each mass error bin
+			double denom = insideProbs.back();
+			for(int j = 0; j < numBins; ++j) 
+			{
+				double prob;
+				if(j==0) {
+					prob = insideProbs[j]/denom;
+				} else {
+					prob = (insideProbs[j]-insideProbs[j-1])/denom;
+				}
+				// Compute the log odds ratio of GaussianProb to Uniform probability and save it
+				mzFidelityLods.push_back(log(prob*(double)numBins));
+			}
+			/*cout << "Error-Probs:" << endl;
+			for(int j = 0; j < numBins; ++j) 
+			{
+				cout << massErrors[j] << ":" << mzFidelityLods[j] << " ";
+			}
+			cout << endl;*/
+			//exit(1);
+
+			
 		}
 	};
 
