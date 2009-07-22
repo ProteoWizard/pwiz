@@ -739,8 +739,19 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
 
-    peptideTest();
-    fragmentTest();
+    try
+    {
+        peptideTest();
+        fragmentTest();
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
 }
 
 void testThreadSafety()
@@ -771,7 +782,11 @@ int main(int argc, char* argv[])
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
+    catch (...)
+    {
+        cerr << "Unhandled exception in main thread." << endl;
+    }
+    return 1;
 }
 

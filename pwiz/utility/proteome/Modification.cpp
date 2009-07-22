@@ -25,7 +25,6 @@
 #define PWIZ_SOURCE
 
 #include "Modification.hpp"
-#include "Peptide.hpp"
 #include <climits>
 #include "pwiz/utility/misc/Exception.hpp"
 
@@ -163,18 +162,18 @@ class ModificationMap::Impl
 {
     public:
 
-    Impl(ModificationMap* mods, Peptide* peptide)
+    Impl(ModificationMap* mods)
         :   dirty_(false),
             monoDeltaMass_(0), avgDeltaMass_(0),
-            mods_(mods), peptide_(peptide)
+            mods_(mods)
     {
     }
 
-    Impl(ModificationMap* mods, Peptide* peptide, const Impl& other)
+    Impl(ModificationMap* mods, const Impl& other)
         :   dirty_(other.dirty_),
             monoDeltaMass_(other.monoDeltaMass_),
             avgDeltaMass_(other.avgDeltaMass_),
-            mods_(mods), peptide_(peptide)
+            mods_(mods)
     {
         mods_->virtual_map<int, ModificationList>::insert(other.mods_->begin(), other.mods_->end());
     }
@@ -198,7 +197,6 @@ class ModificationMap::Impl
     private:
 
     ModificationMap* mods_;
-    Peptide* peptide_;
 
     inline void calculateMasses() const
     {
@@ -220,13 +218,13 @@ PWIZ_API_DECL ModificationMap::~ModificationMap()
 {
 }
 
-PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide)
-:   impl_(new Impl(this, peptide))
+PWIZ_API_DECL ModificationMap::ModificationMap()
+:   impl_(new Impl(this))
 {
 }
 
-PWIZ_API_DECL ModificationMap::ModificationMap(Peptide* peptide, const ModificationMap& other)
-:   impl_(new Impl(this, peptide, *other.impl_))
+PWIZ_API_DECL ModificationMap::ModificationMap(const ModificationMap& other)
+:   impl_(new Impl(this, *other.impl_))
 {
 }
 

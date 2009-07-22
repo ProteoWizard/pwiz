@@ -47,31 +47,31 @@ class Peptide::Impl
     public:
 
     Impl(Peptide* peptide, const std::string& sequence, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(sequence)), mods_(peptide)
+        :   sequence_(new string(sequence)), mods_(0)
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, const char* sequence, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(sequence)), mods_(peptide)
+        :   sequence_(new string(sequence)), mods_(0)
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, string::const_iterator begin, string::const_iterator end, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(begin, end)), mods_(peptide)
+        :   sequence_(new string(begin, end)), mods_(0)
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, const char* begin, const char* end, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(begin, end)), mods_(peptide)
+        :   sequence_(new string(begin, end)), mods_(0)
     {
         parse(mp, md);
     }
 
-    Impl(Peptide* peptide, const Impl& other)
-        :   sequence_(other.sequence_), mods_(peptide, other.mods_),
+    Impl(const Impl& other)
+        :   sequence_(other.sequence_), mods_(other.mods_ ? new ModificationMap(*other.mods_) : 0),
             monoMass_(other.monoMass_), avgMass_(other.avgMass_)
     {
     }
@@ -97,11 +97,12 @@ class Peptide::Impl
 
         Formula formula;
 
-        ModificationMap::const_iterator modItr = mods_.begin();
+        ModificationMap::const_iterator modItr;
+        if (mods_) modItr = mods_->begin();
 
         // add N terminus formula and modifications
         formula += H1;
-        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
+        if (mods_ && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -119,7 +120,7 @@ class Peptide::Impl
             formula += AminoAcid::Info::record(sequence[i]).residueFormula; // add AA residue formula
 
             // add modification formulae
-            if (modified && modItr != mods_.end() && modItr->first == (int) i)
+            if (mods_ && modified && modItr != mods_->end() && modItr->first == (int) i)
             {
                 const ModificationList& modList = modItr->second;
                 for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -135,7 +136,7 @@ class Peptide::Impl
 
         // add C terminus formula and modifications
         formula += O1H1;
-        if (modified && modItr != mods_.end() && modItr->first == ModificationMap::NTerminus())
+        if (mods_ && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -153,17 +154,17 @@ class Peptide::Impl
 
     inline double monoMass(bool modified) const
     {
-        return modified ? monoMass_ + mods_.monoisotopicDeltaMass() : monoMass_;
+        return modified && mods_ ? monoMass_ + mods_->monoisotopicDeltaMass() : monoMass_;
     }
 
     inline double avgMass(bool modified) const
     {
-        return modified ? avgMass_ + mods_.averageDeltaMass() : avgMass_;
+        return modified && mods_ ? avgMass_ + mods_->averageDeltaMass() : avgMass_;
     }
 
     inline ModificationMap& modifications()
     {
-        return mods_;
+        return *mods_;
     }
 
     inline Fragmentation fragmentation(const Peptide& peptide, bool mono, bool mods) const
@@ -175,13 +176,16 @@ class Peptide::Impl
     // since sequence can't be changed after a Peptide is constructed,
     // the sequence can be shared between copies of the same Peptide
     shared_ptr<string> sequence_;
-    ModificationMap mods_;
+    ModificationMap* mods_;
     double monoMass_;
     double avgMass_;
 
     inline void parse(ModificationParsing mp, ModificationDelimiter md)
     {
         string& sequence = *sequence_;
+
+        // TODO: use boost::thread::once to make initialization thread safe
+        if (!mods_) mods_ = new ModificationMap();
 
         // strip non-AA characters and behave according to the specified parsing style
         char startDelimiter, endDelimiter;
@@ -287,7 +291,7 @@ class Peptide::Impl
                                                         : i-1));
         try
         {
-            mods_[offset].push_back(Formula(sequence.substr(i+1, j-i-1))); // exclude delimiters
+            (*mods_)[offset].push_back(Formula(sequence.substr(i+1, j-i-1))); // exclude delimiters
         }
         catch (exception&)
         {
@@ -310,11 +314,11 @@ class Peptide::Impl
             vector<string> tokens;
             split(tokens, massStr, bal::is_any_of(","));
             if (tokens.size() == 1)
-                mods_[offset].push_back(Modification(lexical_cast<double>(massStr),
-                                                     lexical_cast<double>(massStr)));
+                (*mods_)[offset].push_back(Modification(lexical_cast<double>(massStr),
+                                                         lexical_cast<double>(massStr)));
             else if (tokens.size() == 2)
-                mods_[offset].push_back(Modification(lexical_cast<double>(tokens[0]),
-                                                     lexical_cast<double>(tokens[1])));
+                (*mods_)[offset].push_back(Modification(lexical_cast<double>(tokens[0]),
+                                                         lexical_cast<double>(tokens[1])));
             else
                 return false;
         }
@@ -348,13 +352,13 @@ PWIZ_API_DECL Peptide::Peptide(const char* begin,
 :   impl_(new Impl(this, begin, end, mp, md)) {}
 
 PWIZ_API_DECL Peptide::Peptide(const Peptide& other)
-:   impl_(new Impl(this, *other.impl_))
+:   impl_(new Impl(*other.impl_))
 {
 }
 
 PWIZ_API_DECL Peptide& Peptide::operator=(const Peptide& rhs)
 {
-    impl_.reset(new Impl(this, *rhs.impl_));
+    impl_.reset(new Impl(*rhs.impl_));
     return *this;
 }
 

@@ -167,14 +167,13 @@ class PWIZ_API_DECL ModificationMap
 
     private:
 
-    ModificationMap(Peptide* peptide);
-    ModificationMap(Peptide* peptide, const ModificationMap& other);
+    ModificationMap();
+    ModificationMap(const ModificationMap& other);
+    ModificationMap& operator=(const ModificationMap&);
     class Impl;
     std::auto_ptr<Impl> impl_;
-    ModificationMap(const ModificationMap&);
-    ModificationMap& operator=(const ModificationMap&);
     virtual void swap(ModificationMap&);
-    friend class Peptide::Impl;
+    friend class Peptide::Impl; // allow only Peptide::Impl to construct a ModificationMap
 };
 
 

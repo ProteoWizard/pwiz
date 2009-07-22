@@ -103,7 +103,7 @@ class PWIZ_API_DECL Peptide
     bool operator==(const Peptide& rhs) const;
 
     private:
-    friend class ModificationMap;
+    friend class ModificationMap; // allow ModificationMap to befriend Peptide::Impl
     friend class Fragmentation;
     class Impl;
     std::auto_ptr<Impl> impl_;
