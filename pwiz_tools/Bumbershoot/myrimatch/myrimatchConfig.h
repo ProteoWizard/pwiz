@@ -7,6 +7,7 @@
 #include "pwiz/utility/math/erf.hpp"
 
 using namespace freicore;
+using namespace pwiz::math;
 
 #define MYRIMATCH_RUNTIME_CONFIG \
 	COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
@@ -254,8 +255,8 @@ namespace myrimatch
 				double massError = FragmentMzTolerance*((double)j/(double)numBins);
 				// Compute the cumulative distribution function of massError 
 				// with mu=0 and sig=stdev
-				double errX = (massError-0)/(stdev*sqrt(2));
-				double cdf = 0.5 * (1.0+erf(errX));
+				double errX = (massError-0)/(stdev*sqrt(2.0));
+				double cdf = 0.5 * (1.0+pwiz::math::erf(errX));
 				// Compute the gaussian inside probability
 				double insideProb = 2.0*cdf-1.0;
 				// Save the mass errors and inside probabilities

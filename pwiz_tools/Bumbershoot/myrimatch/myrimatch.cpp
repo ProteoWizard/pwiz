@@ -233,14 +233,14 @@ namespace myrimatch
 			if( (*sItr)->mOfPrecursor > g_rtConfig->curMaxSequenceMass )
 				g_rtConfig->curMaxSequenceMass = (*sItr)->mOfPrecursor;
 
-			double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? ((*sItr)->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance * pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+			double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? ((*sItr)->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance * pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
 			size_t totalPeakBins = (size_t) round( (*sItr)->totalPeakSpace / ( fragMassError * 2.0 ) );
 			if( totalPeakBins > maxPeakBins )
 				maxPeakBins = totalPeakBins;
 		}
 
-		g_rtConfig->curMinSequenceMass -= (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMinSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back());
-		g_rtConfig->curMaxSequenceMass += (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMaxSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back());
+		g_rtConfig->curMinSequenceMass -= (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMinSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
+		g_rtConfig->curMaxSequenceMass += (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMaxSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
 
         // set the effective minimum and maximum sequence masses based on config and precursors
         g_rtConfig->curMinSequenceMass = max( g_rtConfig->curMinSequenceMass, g_rtConfig->MinSequenceMass );
@@ -385,7 +385,7 @@ namespace myrimatch
                     cout << ionMasses << endl << ionNames << endl;
 					for( size_t i=0; i < ionMasses.size(); ++i )
 					{
-						double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+						double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
 						PeakPreData::iterator itr = s->peakPreData.findNear( ionMasses[i], fragMassError );
 						if( itr != s->peakPreData.end() )
 						{
@@ -462,7 +462,7 @@ namespace myrimatch
 						int fragmentsFound = fragmentsPredicted - itr->key.back();
 						int fragmentsFoundAfterDeisotoping = 0;
 						for( size_t i=0; i < ionMasses.size(); ++i ) {
-							double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+							double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
 							if( s->peakPreData.findNear( ionMasses[i], fragMassError ) != s->peakPreData.end() )
 								++ fragmentsFoundAfterDeisotoping;
 						}
@@ -651,7 +651,7 @@ namespace myrimatch
 			int fragmentChargeState = min( z, g_rtConfig->maxFragmentChargeState-1 );
 			vector< double > sequenceIons;
 			// Set the mass error based on mass units.
-			double massError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mass * g_rtConfig->PrecursorMassTolerance[z] * pow(10,-6)) : g_rtConfig->PrecursorMassTolerance[z];
+			double massError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mass * g_rtConfig->PrecursorMassTolerance[z] * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance[z];
 			// Look up the spectra that have precursor masses between mass + massError and mass - massError
 			SpectraMassMap::iterator cur, end = spectraMassMapsByChargeState[z].upper_bound( mass + massError );
 			for( cur = spectraMassMapsByChargeState[z].lower_bound( mass - massError ); cur != end; ++cur )

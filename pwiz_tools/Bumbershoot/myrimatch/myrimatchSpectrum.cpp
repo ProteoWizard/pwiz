@@ -33,7 +33,7 @@ namespace myrimatch
 		//cout << g_residueMap->GetMassOfResidues( "AGLLGLLEEMR", false ) << endl;
 
 		// Eliminate peaks above the precursor's mass with a given tolerance
-		double parentMassError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mOfPrecursor * g_rtConfig->PrecursorMassTolerance.back() *pow(10,-6)) : g_rtConfig->PrecursorMassTolerance.back();
+		double parentMassError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mOfPrecursor * g_rtConfig->PrecursorMassTolerance.back() *pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back();
 		double maxPeakMass = mOfPrecursor + PROTON + parentMassError;
 		itr = peakPreData.upper_bound( maxPeakMass );
 		peakPreData.erase( itr, peakPreData.end() );
@@ -51,7 +51,7 @@ namespace myrimatch
 
 		FilterByTIC( g_rtConfig->TicCutoffPercentage );
 
-		double neutralLossMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (mzOfPrecursor*g_rtConfig->FragmentMzTolerance*pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+		double neutralLossMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (mzOfPrecursor*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
 		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, neutralLossMassError, true );
 		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, neutralLossMassError, true );
 		if( precursorWaterLossItr != peakPreData.end() )
@@ -157,7 +157,7 @@ namespace myrimatch
 		// Divide the spectrum peak space into equal m/z bins
 		//cout << mzUpperBound << "," << mzLowerBound << endl;
 		double spectrumMedianMass = totalPeakSpace/2.0;
-		double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (spectrumMedianMass*g_rtConfig->FragmentMzTolerance*pow(10,-6)):g_rtConfig->FragmentMzTolerance;
+		double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (spectrumMedianMass*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
 		//cout << fragMassError << "," << mOfPrecursor << endl;
 		int totalPeakBins = (int) round( totalPeakSpace / ( fragMassError * 2.0f ), 0 );
 		initialize( g_rtConfig->NumIntensityClasses+1, g_rtConfig->NumMzFidelityClasses );

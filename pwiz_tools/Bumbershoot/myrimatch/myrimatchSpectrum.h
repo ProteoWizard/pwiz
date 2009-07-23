@@ -253,7 +253,7 @@ namespace myrimatch
 				START_PROFILER(7);
 				// Find the fragment ion peak. Consider the fragment ion charge state while setting the
 				// mass window for the fragment ion lookup.
-				double massError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (seqIons[j] * g_rtConfig->FragmentMzTolerance * pow(10,-6)) : g_rtConfig->FragmentMzTolerance;
+				double massError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (seqIons[j] * g_rtConfig->FragmentMzTolerance * pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
 				peakItr = peakData.findNear( seqIons[j], massError );
 				STOP_PROFILER(7);
 
@@ -263,7 +263,7 @@ namespace myrimatch
 					double mzError = peakItr->first - seqIons[j];
 					// Convert the mass error appropriately
 					if(g_rtConfig->fragmentMzToleranceUnits == PPM)
-						mzError = (mzError/seqIons[j])*pow(10,6);
+						mzError = (mzError/seqIons[j])*pow(10.0,6);
 					result.key.incrementClass( peakItr->second.intenClass-1 );
 					result.mzSSE += pow( mzError, 2.0 );
 					result.mzMAE += fabs(mzError);
