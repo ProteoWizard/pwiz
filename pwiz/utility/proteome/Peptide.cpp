@@ -47,25 +47,25 @@ class Peptide::Impl
     public:
 
     Impl(Peptide* peptide, const std::string& sequence, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(sequence)), mods_(0)
+        :   sequence_(new string(sequence))
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, const char* sequence, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(sequence)), mods_(0)
+        :   sequence_(new string(sequence))
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, string::const_iterator begin, string::const_iterator end, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(begin, end)), mods_(0)
+        :   sequence_(new string(begin, end))
     {
         parse(mp, md);
     }
 
     Impl(Peptide* peptide, const char* begin, const char* end, ModificationParsing mp, ModificationDelimiter md)
-        :   sequence_(new string(begin, end)), mods_(0)
+        :   sequence_(new string(begin, end))
     {
         parse(mp, md);
     }
@@ -98,11 +98,11 @@ class Peptide::Impl
         Formula formula;
 
         ModificationMap::const_iterator modItr;
-        if (mods_) modItr = mods_->begin();
+        if (mods_.get()) modItr = mods_->begin();
 
         // add N terminus formula and modifications
         formula += H1;
-        if (mods_ && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
+        if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -136,7 +136,7 @@ class Peptide::Impl
 
         // add C terminus formula and modifications
         formula += O1H1;
-        if (mods_ && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
+        if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
@@ -154,16 +154,17 @@ class Peptide::Impl
 
     inline double monoMass(bool modified) const
     {
-        return modified && mods_ ? monoMass_ + mods_->monoisotopicDeltaMass() : monoMass_;
+        return modified && mods_.get() ? monoMass_ + mods_->monoisotopicDeltaMass() : monoMass_;
     }
 
     inline double avgMass(bool modified) const
     {
-        return modified && mods_ ? avgMass_ + mods_->averageDeltaMass() : avgMass_;
+        return modified && mods_.get() ? avgMass_ + mods_->averageDeltaMass() : avgMass_;
     }
 
     inline ModificationMap& modifications()
     {
+        initMods();
         return *mods_;
     }
 
@@ -176,16 +177,19 @@ class Peptide::Impl
     // since sequence can't be changed after a Peptide is constructed,
     // the sequence can be shared between copies of the same Peptide
     shared_ptr<string> sequence_;
-    ModificationMap* mods_;
+    shared_ptr<ModificationMap> mods_;
     double monoMass_;
     double avgMass_;
+
+    inline void initMods()
+    {
+        // TODO: use boost::thread::once to make initialization thread safe
+        if (!mods_.get()) mods_.reset(new ModificationMap());
+    }
 
     inline void parse(ModificationParsing mp, ModificationDelimiter md)
     {
         string& sequence = *sequence_;
-
-        // TODO: use boost::thread::once to make initialization thread safe
-        if (!mods_) mods_ = new ModificationMap();
 
         // strip non-AA characters and behave according to the specified parsing style
         char startDelimiter, endDelimiter;
@@ -286,6 +290,7 @@ class Peptide::Impl
     inline bool parseModByFormula(string& sequence_, size_t& i, size_t& j)
     {
         string& sequence = sequence_;
+        initMods();
         int offset = (i == 0 ? ModificationMap::NTerminus()
                              : (j == sequence.length() ? ModificationMap::CTerminus()
                                                         : i-1));
@@ -305,6 +310,7 @@ class Peptide::Impl
     inline bool parseModByMass(string& sequence_, size_t& i, size_t& j)
     {
         string& sequence = sequence_;
+        initMods();
         int offset = (i == 0 ? ModificationMap::NTerminus()
                              : (j == sequence.length() ? ModificationMap::CTerminus()
                                                         : i-1));

@@ -71,6 +71,8 @@ void testCleavageAgents()
 
     unit_assert(Digestion::getCleavageAgentByName("TRYPSIN") == MS_Trypsin);
     unit_assert(Digestion::getCleavageAgentByName("trypsin") == MS_Trypsin);
+    unit_assert(Digestion::getCleavageAgentByName("TRYPSIN/P") == MS_Trypsin_P);
+    unit_assert(Digestion::getCleavageAgentByName("trypsin/p") == MS_Trypsin_P);
     unit_assert(Digestion::getCleavageAgentByName("ion trap") == CVID_Unknown);
     unit_assert(Digestion::getCleavageAgentByName("!@#$%^&*") == CVID_Unknown);
 
