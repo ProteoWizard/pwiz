@@ -469,8 +469,6 @@ class Digestion::Impl
 
                 if (!cleavageAgentRegex_.empty())
                 {
-                    sites_.push_back(-1); // n-terminus is a valid digestion site
-
                     std::string::const_iterator start = sequence.begin();
                     std::string::const_iterator end = sequence.end();
                     boost::smatch what;
@@ -485,7 +483,13 @@ class Digestion::Impl
                         flags |= boost::match_not_bob;
                     }
 
-                    sites_.push_back(sequence.length()-1); // c-terminus is a valid digestion site
+                    // if regex didn't match n-terminus, insert it
+                    if (sites_.empty() || sites_.front() > -1)
+                        sites_.insert(sites_.begin(), -1);
+
+                    // if regex didn't match c-terminus, insert it
+                    if (sites_.back() < (int)sequence.length()-1)
+                        sites_.push_back(sequence.length()-1);
                 }
                 else
                 {
