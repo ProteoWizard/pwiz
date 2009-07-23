@@ -802,7 +802,7 @@ namespace myrimatch
                     Peptide protein(proteins[i].getSequence());
                     STOP_PROFILER(9);
                     START_PROFILER(10);
-                    Digestion digestion( protein, g_rtConfig->digestionMotifs, g_rtConfig->digestionConfig );
+                    Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
                     STOP_PROFILER(10);
                     for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                     {

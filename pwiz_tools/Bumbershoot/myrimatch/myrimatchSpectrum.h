@@ -270,7 +270,7 @@ namespace myrimatch
 					mzFidelityKey.incrementClass( ClassifyError( fabs( mzError ), mzFidelityThresholds ) );
 					int mzFidelityClass = ClassifyError( fabs( mzError ), g_rtConfig->massErrors );
 					result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
-					result.matchedIons.push_back(peakItr->first);
+					//result.matchedIons.push_back(peakItr->first);
 				} else
 				{
 					result.key.incrementClass( g_rtConfig->NumIntensityClasses );

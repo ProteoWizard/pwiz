@@ -58,6 +58,10 @@ project bumbershoot
 	    <include>$(pwiz_src)/libraries/boost_aux
 
         <toolset>gcc,<link>shared:<runtime-link>shared
+        
+        # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
+        # regardless of how pwiz_wifffile is linked
+        <toolset>msvc:<runtime-link>shared
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows

@@ -7,6 +7,7 @@
 #include "pwiz/utility/math/erf.hpp"
 
 using namespace freicore;
+using namespace pwiz;
 using namespace pwiz::math;
 
 #define MYRIMATCH_RUNTIME_CONFIG \
@@ -38,8 +39,7 @@ using namespace pwiz::math;
 	RTCONFIG_VARIABLE( bool,			EstimateSearchTimeOnly,		false			) \
 	RTCONFIG_VARIABLE( int,				StartProteinIndex,			0				) \
 	RTCONFIG_VARIABLE( int,				EndProteinIndex,			-1				) \
-	RTCONFIG_VARIABLE( string,			CleavageRules,				"[|K|R . . ]"	) \
-    RTCONFIG_VARIABLE( string,          DigestionRules,             "[KR]|"         ) \
+	RTCONFIG_VARIABLE( string,			CleavageRules,				"trypsin/p"     ) \
 	RTCONFIG_VARIABLE( int,				NumMinTerminiCleavages,		2				) \
 	RTCONFIG_VARIABLE( int,				NumMaxMissedCleavages,		-1				) \
 	RTCONFIG_VARIABLE( int,				MinCandidateLength,			5				) \
@@ -63,8 +63,7 @@ namespace myrimatch
 	public:
 		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, MYRIMATCH_RUNTIME_CONFIG, "\r\n\t ", "myrimatch.cfg", "\r\n#" )
 
-		CleavageRuleSet	_CleavageRules;
-        vector<Digestion::Motif> digestionMotifs;
+        boost::regex cleavageAgentRegex;
         Digestion::Config digestionConfig;
 
         FragmentTypesBitset defaultFragmentTypes;
@@ -92,14 +91,44 @@ namespace myrimatch
 	private:
 		void finalize()
 		{
-			stringstream CleavageRulesStream( CleavageRules );
-			_CleavageRules.clear();
-			CleavageRulesStream >> _CleavageRules;
+            trim(CleavageRules); // trim flanking whitespace
+            if( CleavageRules.find(' ') == string::npos )
+            {
+                // a single token must be either a cleavage agent name or regex
 
-            vector<string> motifs;
-            boost::split(motifs, DigestionRules, boost::is_space());
-            digestionMotifs.clear();
-            digestionMotifs.insert(digestionMotifs.end(), motifs.begin(), motifs.end());
+                // first try to parse the token as the name of an agent
+                CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
+                if( cleavageAgent == CVID_Unknown )
+                {
+                    // next try to parse the token as a Perl regex
+                    try
+                    {
+                        // regex must be zero width, so it must use at least one parenthesis;
+                        // this will catch most bad cleavage agent names (e.g. "tripsen")
+                        if( CleavageRules.find('(') == string::npos )
+                            throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
+                        cleavageAgentRegex = boost::regex(CleavageRules);
+                    }
+                    catch (boost::bad_expression&)
+                    {
+                        // a bad regex or agent name is fatal
+                        throw runtime_error("invalid cleavage agent name or regex: " + CleavageRules);
+                    }
+                }
+                else
+                {
+                    // use regex for predefined cleavage agent
+                    cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
+                }
+            }
+            else
+            {
+                // multiple tokens must be a CleavageRuleSet
+                CleavageRuleSet tmpRuleSet;
+			    stringstream CleavageRulesStream( CleavageRules );
+			    CleavageRulesStream >> tmpRuleSet;
+                cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
+            }
 
             NumMaxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
 
