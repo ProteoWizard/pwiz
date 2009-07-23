@@ -39,6 +39,7 @@ function copy_files()
 function echo_info()
 {
     echo "##teamcity[message text='$*']" | tee -a $log $err
+    echo "##teamcity[progressMessage '$*']"
 }
 
 function echo_error()
@@ -51,6 +52,7 @@ function echo_error()
 
 # clean build directory always?
 echo "##teamcity[message text='Cleaning build directory...']"
+echo "##teamcity[progressMessage text='Cleaning build directory...']"
 rm -Rf $build
 mkdir -p $outdir
 
