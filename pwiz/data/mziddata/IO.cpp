@@ -38,6 +38,7 @@ namespace IO {
 using namespace std;
 using namespace minimxml;
 using namespace minimxml::SAXParser;
+using namespace boost::logic;
 //using namespace util;
 using boost::lexical_cast;
 using boost::shared_ptr;
@@ -318,6 +319,14 @@ void addIdAttributes(const IdentifiableType& id, XMLWriter::Attributes& attribut
 }
 
 //
+// addExternalDataAttributes
+//
+void addExternalDataAttributes(const ExternalData& ed, XMLWriter::Attributes& attributes)
+{
+    addIdAttributes(ed, attributes);
+    attributes.push_back(make_pair("location", ed.location));
+}
+//
 // BibliographicReference
 //
 
@@ -519,16 +528,16 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr peptide)
     
     writer.startElement("Peptide", attributes);
 
-    if (!peptide->modification.empty())
-        write(writer, peptide->modification);
-    if (!peptide->substitutionModification.empty())
-        write(writer, peptide->substitutionModification);
-
     writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("peptideSequence");
     writer.characters(peptide->peptideSequence);
     writer.endElement();
     writer.popStyle();
+
+    if (!peptide->modification.empty())
+        write(writer, peptide->modification);
+    if (!peptide->substitutionModification.empty())
+        write(writer, peptide->substitutionModification);
 
     writeParamContainer(writer, peptide->paramGroup);
     writer.endElement();
@@ -975,6 +984,129 @@ PWIZ_API_DECL void read(std::istream& is, ProteinDetection& pd)
 
 
 //
+// Material
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Material& mat)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(mat, attributes);
+    
+    writer.startElement("Material", attributes);
+    write(writer, mat.contactRole);
+    writeParamContainer(writer, mat.cvParams);
+    writer.endElement();
+}
+
+
+struct HandlerMaterial : public SAXParser::Handler
+{
+    Material* mat;
+    HandlerMaterial(Material* _mat = 0) : mat(_mat) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Material")
+            throw runtime_error(("[IO::HandlerMaterial] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Material& mat)
+{
+    HandlerMaterial handler(&mat);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Sample
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& samp)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(samp, attributes);
+    
+    writer.startElement("Sample", attributes);
+
+    write(writer, samp.contactRole);
+    writeParamContainer(writer, samp.cvParams);
+
+    for(vector<Sample::subSample>::const_iterator it=samp.subSamples.begin();
+        it != samp.subSamples.end(); it++)
+        write(writer, *it);
+    
+    writer.endElement();
+}
+
+
+struct HandlerSample : public SAXParser::Handler
+{
+    Sample* samp;
+    HandlerSample(Sample* _samp = 0) : samp(_samp) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Sample")
+            throw runtime_error(("[IO::HandlerSample] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Sample& samp)
+{
+    HandlerSample handler(&samp);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Sample::subSample
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample::subSample& sc)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("Sample_ref", sc.Sample_ref));
+    
+    writer.startElement("Component", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerSampleSubSample : public SAXParser::Handler
+{
+    Sample::subSample* sc;
+    HandlerSampleSubSample(Sample::subSample* _sc = 0) : sc(_sc) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name != "Sample::subSample")
+            throw runtime_error(("[IO::HandlerSample::subSample] Unexpected element name: " + name).c_str());
+        return Status::Ok;
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Sample::subSample& sc)
+{
+    HandlerSampleSubSample handler(&sc);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // AnalysisCollection
 //
 
@@ -1025,8 +1157,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const EnzymePtr& ez)
         attributes.push_back(make_pair("CTermGain", ez->cTermGain));
     if (!ez->nTermGain.empty())
         attributes.push_back(make_pair("NTermGain", ez->nTermGain));
-    if (!ez->semiSpecific.empty())
-        attributes.push_back(make_pair("semiSpecific", ez->semiSpecific));
+    if (ez->semiSpecific != indeterminate)
+        attributes.push_back(make_pair("semiSpecific", ez->semiSpecific ? "true" : "false"));
     if (!ez->missedCleavages.empty())
         attributes.push_back(make_pair("missedCleavages", ez->missedCleavages));
     if (!ez->minDistance.empty())
@@ -1246,8 +1378,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ModParam& mp)
 
     writer.startElement("ModParam", attributes);
     
-    for (vector<CVParam>::const_iterator it=mp.cvParams.begin(); it!=mp.cvParams.end(); it++)
-        write(writer, *it);
+    writeParamContainer(writer, mp.cvParams);
 
     writer.endElement();
 }
@@ -1283,14 +1414,15 @@ PWIZ_API_DECL void read(std::istream& is, ModParam& mp)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& sm)
 {
     XMLWriter::Attributes attributes;
-    if (!sm.fixedMod.empty())
-        attributes.push_back(make_pair("fixedMod", sm.fixedMod));
+    attributes.push_back(make_pair("fixedMod", sm.fixedMod ? "true" : "false"));
     
     writer.startElement("SearchModification", attributes);
     write(writer, sm.modParam);
 
-    for (vector<CVParam>::const_iterator it=sm.specificityRules.begin(); it!=sm.specificityRules.end(); it++)
-        write(writer, *it);
+    writer.startElement("SpecificityRules");
+    writeParamContainer(writer, sm.specificityRules);
+    writer.endElement();
+
     writer.endElement();
 }
 
@@ -1382,6 +1514,7 @@ PWIZ_API_DECL void read(std::istream& is, Filter& filter)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocolPtr sip)
 {
     XMLWriter::Attributes attributes;
+    addIdAttributes(*sip, attributes);
     attributes.push_back(make_pair("AnalysisSoftware_ref", sip->AnalysisSoftware_ref));
 
     writer.startElement("SpectrumIdentificationProtocol", attributes);
@@ -1603,7 +1736,7 @@ PWIZ_API_DECL void read(std::istream& is, SpectraDataPtr sd)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd)
 {
     XMLWriter::Attributes attributes;
-    addIdAttributes(*sd, attributes);
+    addExternalDataAttributes(*sd, attributes);
     if (!sd->version.empty())
         attributes.push_back(make_pair("version", sd->version));
     if (!sd->releaseDate.empty())
@@ -1754,13 +1887,102 @@ PWIZ_API_DECL void read(std::istream& is, Inputs& inputs)
 
 
 //
+// ProteinDetectionHypothesis
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypothesis& pdh)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(pdh, attributes);
+    attributes.push_back(make_pair("DBSequence_ref", pdh.DBSequence_ref));
+    attributes.push_back(make_pair("passThreshold", pdh.passThreshold ? "true" : "false"));
+
+    writer.startElement("ProteinDetectionHypothesis", attributes);
+    for(vector<string>::const_iterator it=pdh.peptideHypothesis.begin();
+        it != pdh.peptideHypothesis.end(); it++)
+    {
+        XMLWriter::Attributes pepAttrs;
+        pepAttrs.push_back(make_pair("PeptideEvidence_Ref", *it));
+        writer.startElement("PeptideHypothesis", pepAttrs, XMLWriter::EmptyElement);
+    }
+    writeParamContainer(writer, pdh.paramGroup);
+    
+    writer.endElement();
+}
+
+struct HandlerProteinDetectionHypothesis : public SAXParser::Handler
+{
+    ProteinDetectionHypothesis* pdh;
+    HandlerProteinDetectionHypothesis(ProteinDetectionHypothesis* _pdh = 0) : pdh(_pdh) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh)
+{
+    HandlerProteinDetectionHypothesis handler(&pdh);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// ProteinAmbiguityGroup
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGroup& pag)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(pag, attributes);
+
+    writer.startElement("ProteinAmbiguityGroup", attributes);
+    for(vector<ProteinDetectionHypothesisPtr>::const_iterator it=pag.proteinDetectionHypothesis.begin();
+        it != pag.proteinDetectionHypothesis.end(); it++)
+        write(writer, **it);
+    
+    writer.endElement();
+}
+
+struct HandlerProteinAmbiguityGroup : public SAXParser::Handler
+{
+    ProteinAmbiguityGroup* pag;
+    HandlerProteinAmbiguityGroup(ProteinAmbiguityGroup* _pag = 0) : pag(_pag) {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pag)
+{
+    HandlerProteinAmbiguityGroup handler(&pag);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // ProteinDetectionList
 //
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList& pdl)
 {
-    writer.startElement("ProteinDetectionList");
+    XMLWriter::Attributes attributes;
+    addIdAttributes(pdl, attributes);
+    
+    writer.startElement("ProteinDetectionList", attributes);
+    
+    writeParamContainer(writer, pdl.paramGroup);
+    for (vector<ProteinAmbiguityGroupPtr>::const_iterator it=pdl.proteinAmbiguityGroup.begin();
+         it!= pdl.proteinAmbiguityGroup.end(); it++)
+        write(writer, **it);
     writer.endElement();
 }
 
@@ -1797,19 +2019,23 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidencePtr p
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(*pep, attributes);
-    if (!pep->DBSequence_ref.empty())
-        attributes.push_back(make_pair("DBSequence_ref", pep->DBSequence_ref));
+    attributes.push_back(make_pair("DBSequence_Ref", pep->DBSequence_ref));
     attributes.push_back(make_pair("start", lexical_cast<string>(pep->start)));
     attributes.push_back(make_pair("end", lexical_cast<string>(pep->end)));
     attributes.push_back(make_pair("pre", pep->pre));
     attributes.push_back(make_pair("post", pep->post));
     if (!pep->TranslationTable_ref.empty())
         attributes.push_back(make_pair("TranslationTable_ref", pep->TranslationTable_ref));
-    attributes.push_back(make_pair("frame", lexical_cast<string>(pep->frame)));
-    attributes.push_back(make_pair("isDecoy", lexical_cast<string>(pep->isDecoy)));
-    attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep->missedCleavages)));
+    if (pep->frame != 0)
+        attributes.push_back(make_pair("frame", lexical_cast<string>(pep->frame)));
+    attributes.push_back(make_pair("isDecoy", pep->isDecoy  ? "true" : "false"));
+    if (pep->missedCleavages != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep->missedCleavages)));
     
-    writer.startElement("PeptideEvidence", attributes, XMLWriter::EmptyElement);
+    writer.startElement("PeptideEvidence", attributes); //, XMLWriter::EmptyElement);
+
+    writeParamContainer(writer, pep->paramGroup);
+    writer.endElement();
 }
 
 
@@ -1888,11 +2114,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
 
     writer.startElement("IonType", attributes);
 
+    writeParamContainer(writer, itype.paramGroup);
+    
     for(vector<FragmentArrayPtr>::const_iterator it=itype.fragmentArray.begin();
         it!=itype.fragmentArray.end(); it++)
         write(writer, *it);
     
-    writeParamContainer(writer, itype.paramGroup);
     writer.endElement();
 }
 
@@ -1951,9 +2178,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         write(writer, *it);
     }
 
+    writeParamContainer(writer, siip->paramGroup);
+
     writePtrList(writer, siip->fragmentation, "Fragmentation");
     
-    writeParamContainer(writer, siip->paramGroup);
     writer.endElement();
 }
 
@@ -2231,30 +2459,44 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(mzid, attributes);
+
+    attributes.push_back(make_pair("creationDate", mzid.creationDate));
+    attributes.push_back(make_pair("version", mzid.version));
+
+
     attributes.push_back(make_pair("xsi:schemaLocation",
                                    "http://psidev.info/psi/pi/mzIdentML/1.0  ../schema/mzIdentML_working.xsd"));
     attributes.push_back(make_pair("xmlns",
                                    "http://psidev.info/psi/pi/mzIdentML/1.0"));
     attributes.push_back(make_pair("xmlns:xsi",
                                    "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("version", mzid.version));
-    attributes.push_back(make_pair("creationDate", mzid.creationDate));
-
-    writer.startElement("MzIdentML", attributes);
+    writer.startElement("mzIdentML", attributes);
 
     writeList(writer, mzid.cvs, "cvList");
-    writePtrList(writer, mzid.analysisSoftwareList, "AnalysisSoftwareList");
-    write(writer, mzid.provider);
-    write(writer, mzid.analysisSampleCollection);
+    if (!mzid.analysisSoftwareList.empty())
+        writePtrList(writer, mzid.analysisSoftwareList, "AnalysisSoftwareList");
+    if (!mzid.provider.empty())
+        write(writer, mzid.provider);
+    if (!mzid.analysisSampleCollection.empty())
+    {
+        cerr << "writing analysisSampleCollection\n";
+        write(writer, mzid.analysisSampleCollection);
+    }
 
-    writeList(writer, mzid.auditCollection, "AuditCollection");
+    if (!mzid.auditCollection.empty())
+    {
+        cerr << "writing AuditCollection\n";
+        writeList(writer, mzid.auditCollection, "AuditCollection");
+    }
 
-    write(writer, mzid.sequenceCollection);
+    if (!mzid.sequenceCollection.empty())
+        write(writer, mzid.sequenceCollection);
     write(writer, mzid.analysisCollection);
     write(writer, mzid.analysisProtocolCollection);
     write(writer, mzid.dataCollection);
-    writePtrList(writer, mzid.bibliographicReference,
-                 "BibliographicReference");
+    if (!mzid.bibliographicReference.empty())
+        writePtrList(writer, mzid.bibliographicReference,
+                     "BibliographicReference");
 
     writer.endElement();
 }

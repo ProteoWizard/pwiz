@@ -188,32 +188,169 @@ void testMaterial()
     Material a, b;
 
     a.contactRole.Contact_ref = "Contact_ref";
-    //a.cvParam.set();
+    a.cvParams.set(MS_sample_number);
+    b = a;
+
+    Diff<Material> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    a.contactRole.Contact_ref = "other_ref";
+    diff(a, b);
+    unit_assert(diff);
+
+    b.contactRole.Contact_ref = "other_ref";
+    b.cvParams.set(MS_sample_name);
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testMeasure()
 {
-}
+    Measure a, b;
+    a.paramGroup.set(MS_product_ion_m_z, 200);
+    b = a;
 
+    Diff<Measure> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.paramGroup.set(MS_product_ion_intensity, 1);
+    diff(a, b);
+    //unit_assert(diff);
+}
 
 void testModParam()
 {
+    ModParam a, b;
+
+    a.massDelta = 1;
+    a.residues = "ABCD";
+    a.cvParams.set(UNIMOD_Gln__pyro_Glu);
+    b = a;
+
+    Diff<ModParam> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    a.massDelta = 3;
+    diff(a, b);
+    unit_assert(diff);
+
+    b.massDelta = 2;
+    b.residues = "EFG";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.residues = "EFG";
+    a.cvParams.set(UNIMOD_Glu__pyro_Glu);
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testPeptideEvidence()
 {
+    PeptideEvidence a, b;
+
+    a.DBSequence_ref = "DBSequence_ref";
+    a.start = 1;
+    a.end = 6;
+    a.pre = "-";
+    a.post = "-";
+    a.TranslationTable_ref = "TranslationTable_ref";
+    a.frame = 0;
+    a.isDecoy = true;
+    a.missedCleavages = 0;
+    a.paramGroup.set(MS_mascot_score, 15.71);
+    b = a;
+
+    Diff<PeptideEvidence> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    //unit_assert(!diff);
+
+    a.DBSequence_ref = "not_DBSequence_ref";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.DBSequence_ref = "DBSequence_ref";
+    b.start = 2;
+    diff(a, b);
+    unit_assert(diff);
+
+    b.start = 2;
+    a.end = 7;
+    diff(a, b);
+    unit_assert(diff);
+
+    b.end = 7;
+    a.pre = "A";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.pre = "-";
+    b.post = "A";
+    diff(a, b);
+    unit_assert(diff);
+
+    b.post = "-";
+    a.TranslationTable_ref = "not_TranslationTable_ref";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.TranslationTable_ref = "TranslationTable_ref";
+    b.frame = 1;
+    diff(a, b);
+    unit_assert(diff);
+
+    b.frame = 0;
+    a.isDecoy = false;
+    diff(a, b);
+    unit_assert(diff);
+    
+    a.isDecoy = true;
+    b.missedCleavages = 10;
+    diff(a, b);
+    unit_assert(diff);
+
+    b.missedCleavages = 0;
+    a.paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testProteinAmbiguityGroup()
 {
+    ProteinAmbiguityGroup a, b;
+
+    a.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
+    a.paramGroup.set(MS_mascot_score, 164.4);
+    b = a;
+
+    Diff<ProteinAmbiguityGroup> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.proteinDetectionHypothesis.clear();
+    diff(a, b);
+    unit_assert(diff);
+
+    b.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
+    a.paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testProteinDetectionHypothesis()
 {
+    ProteinDetectionHypothesis a, b;
+
+    a.DBSequence_ref = "DBSequence_ref";
+    a.passThreshold = true;
+    //a.peptideHypothesis.push_back();
 }
 
 
@@ -455,7 +592,6 @@ void testMzIdentML()
     examples::initializeTiny(a);
     examples::initializeTiny(b);
 
-
     Diff<MzIdentML> diff(a, b);
     unit_assert(!diff);
 
@@ -476,7 +612,7 @@ void testMzIdentML()
 
     unit_assert(diff);
 
-    unit_assert(diff.a_b.version.empty());
+    unit_assert(diff.a_b.version == "0.9.0");
     unit_assert(diff.b_a.version == "version");
 
     unit_assert(diff.a_b.cvs.size() == 1);
@@ -486,7 +622,9 @@ void testMzIdentML()
 void test()
 {
     testString();
+    testIdentifiableType();
     testParamContainer();
+    testContactRole();
     testFragmentArray();
     testIonType();
     testMaterial();
@@ -532,11 +670,9 @@ void test()
     testSpectrumIdentificationResult();
     testAnalysisSampleCollection();
     testProvider();
-    testContactRole();
     testAnalysisSoftware();
     testAnalysisSoftware();
     testMzIdentML();
-    testIdentifiableType();
 }
 
 int main(int argc, char* argv[])

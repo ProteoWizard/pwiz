@@ -347,10 +347,10 @@ void diff(const SequenceCollection& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Sample::Component& a,
-          const Sample::Component& b,
-          Sample::Component& a_b,
-          Sample::Component& b_a,
+void diff(const Sample::subSample& a,
+          const Sample::subSample& b,
+          Sample::subSample& a_b,
+          Sample::subSample& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

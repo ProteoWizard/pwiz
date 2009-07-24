@@ -31,6 +31,7 @@ namespace mziddata {
 
 
 using namespace std;
+using namespace boost::logic;
 using msdata::CVParamIs;
 using msdata::CVParamIsChildOf;
 
@@ -142,16 +143,28 @@ bool IdentifiableType::empty() const
         name.empty();
 }
 
+
+//
+// ExternalData
+//
+
+bool ExternalData::empty() const
+{
+    return IdentifiableType::empty() &&
+        location.empty();
+}
+
+
 //
 // BibliographicReference
 //
 
-BibliographicReference::BibliographicReference()
+PWIZ_API_DECL BibliographicReference::BibliographicReference()
 {
     year = INVALID_NATURAL;
 }
 
-bool BibliographicReference::empty() const
+PWIZ_API_DECL bool BibliographicReference::empty() const
 {
     return IdentifiableType::empty() &&
         authors.empty() &&
@@ -169,7 +182,7 @@ bool BibliographicReference::empty() const
 // ContactRole
 //
 
-bool ContactRole::empty() const
+PWIZ_API_DECL bool ContactRole::empty() const
 {
     return Contact_ref.empty() &&
         role.empty();
@@ -179,7 +192,7 @@ bool ContactRole::empty() const
 // Contact
 //
 
-bool Contact::empty() const
+PWIZ_API_DECL bool Contact::empty() const
 {
     return address.empty() &&
         phone.empty() &&
@@ -192,7 +205,7 @@ bool Contact::empty() const
 // Affiliations
 //
 
-bool Affiliations::empty() const
+PWIZ_API_DECL bool Affiliations::empty() const
 {
     return organization_ref.empty();
 }
@@ -201,7 +214,7 @@ bool Affiliations::empty() const
 // Person
 //
 
-bool Person::empty() const
+PWIZ_API_DECL bool Person::empty() const
 {
     return Contact::empty() &&
         lastName.empty() &&
@@ -214,7 +227,7 @@ bool Person::empty() const
 // Organization
 //
 
-bool Organization::empty() const
+PWIZ_API_DECL bool Organization::empty() const
 {
     return Contact::empty() &&
         parent.organization_ref.empty();
@@ -225,14 +238,14 @@ bool Organization::empty() const
 // Modification
 //
 
-Modification::Modification()
+PWIZ_API_DECL Modification::Modification()
     : location(IdentifiableType::INVALID_NATURAL),
       avgMassDelta(IdentifiableType::INVALID_NATURAL),
       monoisotopicMassDelta(IdentifiableType::INVALID_NATURAL)
 {
 }
 
-bool Modification::empty() const
+PWIZ_API_DECL bool Modification::empty() const
 {
     return location == IdentifiableType::INVALID_NATURAL &&
         residues.empty() &&
@@ -245,7 +258,7 @@ bool Modification::empty() const
 // Enzymes
 //
 
-bool Enzymes::empty() const
+PWIZ_API_DECL bool Enzymes::empty() const
 {
     return independent.empty() &&
         enzymes.empty();
@@ -256,7 +269,7 @@ bool Enzymes::empty() const
 //
 
 
-bool MassTable::empty() const
+PWIZ_API_DECL bool MassTable::empty() const
 {
     return id.empty() &&
         msLevel.empty() &&
@@ -269,13 +282,13 @@ bool MassTable::empty() const
 // IonType
 //
 
-IonType::IonType()
+PWIZ_API_DECL IonType::IonType()
 {
     charge = 0;
 }
 
 
-bool IonType::empty() const
+PWIZ_API_DECL bool IonType::empty() const
 {
     return index.empty() &&
         paramGroup.empty() &&
@@ -286,7 +299,7 @@ bool IonType::empty() const
 // SpectrumIdentificationItem
 //
 
-SpectrumIdentificationItem::SpectrumIdentificationItem()
+PWIZ_API_DECL SpectrumIdentificationItem::SpectrumIdentificationItem()
     : chargeState(INVALID_NATURAL),
     experimentalMassToCharge(INVALID_NATURAL),
     calculatedMassToCharge(INVALID_NATURAL),
@@ -297,10 +310,20 @@ SpectrumIdentificationItem::SpectrumIdentificationItem()
 }
 
 //
+// ProteinAmbiguityGroup
+//
+bool ProteinAmbiguityGroup::empty() const
+{
+    return proteinDetectionHypothesis.empty() &&
+        paramGroup.empty();
+}
+
+
+//
 // SpectrumIdentificationList
 //
 
-SpectrumIdentificationList::SpectrumIdentificationList()
+PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList()
 {
     numSequencesSearched = INVALID_NATURAL;
 }
@@ -309,30 +332,43 @@ SpectrumIdentificationList::SpectrumIdentificationList()
 // PeptideEvidence
 //
 
-PeptideEvidence::PeptideEvidence()
+PWIZ_API_DECL PeptideEvidence::PeptideEvidence()
+    : start(INVALID_NATURAL), end(INVALID_NATURAL),
+      frame(0), isDecoy(false),
+      missedCleavages(INVALID_NATURAL)
 {
-    start = INVALID_NATURAL;
-    end = INVALID_NATURAL;
-    frame = INVALID_NATURAL;
-    missedCleavages = INVALID_NATURAL;
 }
+
+
+PWIZ_API_DECL bool PeptideEvidence::empty() const
+{
+    return DBSequence_ref.empty() &&
+        start == INVALID_NATURAL &&
+        end == INVALID_NATURAL &&
+        pre.empty() &&
+        post.empty() &&
+        frame == INVALID_NATURAL &&
+        isDecoy == false &&
+        missedCleavages == INVALID_NATURAL &&
+        paramGroup.empty();
+}
+
 
 //
 // FragmentArray
 //
 
-bool FragmentArray::empty() const
+PWIZ_API_DECL bool FragmentArray::empty() const
 {
     return values.empty() &&
         Measure_ref.empty() ;
-;
 }
 
 //
 // Filter
 //
 
-bool Filter::empty() const
+PWIZ_API_DECL bool Filter::empty() const
 {
     return filterType.empty() &&
         include.empty() &&
@@ -343,7 +379,7 @@ bool Filter::empty() const
 // Residue
 //
 
-bool Residue::empty() const
+PWIZ_API_DECL bool Residue::empty() const
 {
     return Code.empty() &&
         Mass == IdentifiableType::INVALID_NATURAL;
@@ -353,7 +389,7 @@ bool Residue::empty() const
 // AmbiguousResidue
 //
 
-bool AmbiguousResidue::empty() const
+PWIZ_API_DECL bool AmbiguousResidue::empty() const
 {
     return Code.empty() &&
         params.empty();
@@ -364,12 +400,17 @@ bool AmbiguousResidue::empty() const
 // Enzyme
 //
 
-bool Enzyme::empty() const
+PWIZ_API_DECL Enzyme::Enzyme()
+    : semiSpecific(indeterminate)
+{
+}
+
+PWIZ_API_DECL bool Enzyme::empty() const
 {
     return id.empty() &&
         nTermGain.empty() &&
         cTermGain.empty() &&
-        semiSpecific.empty() &&
+        semiSpecific == indeterminate &&
         missedCleavages.empty() &&
         minDistance.empty() &&
         siteRegexp.empty() &&
@@ -381,7 +422,7 @@ bool Enzyme::empty() const
 // FragmentArray
 //
 
-FragmentArray& FragmentArray::setValues(const std::string& values)
+PWIZ_API_DECL FragmentArray& FragmentArray::setValues(const std::string& values)
 {
     istringstream iss(values);
 
@@ -391,7 +432,7 @@ FragmentArray& FragmentArray::setValues(const std::string& values)
     return *this;
 }
 
-FragmentArray& FragmentArray::setValues(const std::vector<double>& values)
+PWIZ_API_DECL FragmentArray& FragmentArray::setValues(const std::vector<double>& values)
 {
     this->values.clear();
     copy(values.begin(), values.end(), back_inserter(this->values));
@@ -399,7 +440,7 @@ FragmentArray& FragmentArray::setValues(const std::vector<double>& values)
     return *this;
 }
 
-string FragmentArray::getValues() const
+PWIZ_API_DECL string FragmentArray::getValues() const
 {
     ostringstream oss;
     copy(values.begin(), values.end(), ostream_iterator<double>(oss, " "));
@@ -437,6 +478,28 @@ string IonType::getIndex() const
 
     return oss.str();
 }
+
+//
+// Material
+//
+
+bool Material::empty() const
+{
+    return contactRole.empty() &&
+        cvParams.empty();
+}
+
+
+//
+// Sample
+//
+
+bool Sample::empty() const
+{
+    return Material::empty() &&
+        subSamples.empty();
+}
+
 
 //
 // SubstitutionModification
@@ -487,6 +550,39 @@ bool AnalysisCollection::empty() const
 }
 
 //
+// ModParam
+//
+
+ModParam::ModParam()
+    : massDelta(0)
+{
+}
+
+bool ModParam::empty() const
+{
+    return massDelta == 0 &&
+        residues.empty() &&
+        cvParams.empty();
+}
+
+
+//
+// SearchModification
+//
+
+SearchModification::SearchModification()
+    : fixedMod(false)
+{
+}
+
+
+bool SearchModification::empty() const
+{
+    return modParam.empty() &&
+        specificityRules.empty();
+}
+
+//
 // ProteinDetection
 //
 
@@ -508,7 +604,7 @@ bool AnalysisProtocolCollection::empty() const
         proteinDetectionProtocol.empty();
 }
 
-bool Sample::Component::empty() const
+bool Sample::subSample::empty() const
 {
     return Sample_ref.empty();
 }

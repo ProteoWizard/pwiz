@@ -130,9 +130,8 @@ class PWIZ_API_DECL TextWriter
             child()(br->publisher);
         if (!br->editor.empty())
             child()("editor: "+br->editor);
-        std::ostringstream oss;
-        oss << "year: " << br->year;
-        child()(oss.str());
+        if (br->year != IdentifiableType::INVALID_NATURAL)
+            child()("year: "+boost::lexical_cast<std::string>(br->year));
         if (!br->volume.empty())
             child()("volume: "+br->volume);
         if (!br->issue.empty())
@@ -190,6 +189,12 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const IonType& it)
     {
         (*this)("IonType: ");
+
+        if (!it.index.empty())
+            child()("index", it.index);
+        if (it.charge != IdentifiableType::INVALID_NATURAL)
+            child()("charge: "+boost::lexical_cast<std::string>(it.charge));
+        
         return *this;
     }
 
@@ -205,18 +210,22 @@ class PWIZ_API_DECL TextWriter
     }
 
     
+    TextWriter& operator()(const ModParam& dc)
+    {
+        (*this)("ModParam: ");
+        // TODO finish
+        return *this;
+    }
+
+    
     TextWriter& operator()(const SpectrumIdentificationList& sil)
     {
         (*this)("SpectrumIdentificationList: ");
 
         (*this)((IdentifiableType)sil);
         if (!sil.numSequencesSearched != IdentifiableType::INVALID_NATURAL)
-        {
-            std::ostringstream oss;
-            oss << "numSequencesSearched: "
-                << sil.numSequencesSearched;
-            child()(oss.str());
-        }
+            child()("numSequencesSearched: "+
+                    boost::lexical_cast<std::string>(sil.numSequencesSearched));
         if (!sil.fragmentationTable.empty())
             child()("fragmentationTable", sil.fragmentationTable);
         if (!sil.spectrumIdentificationResult.empty())
@@ -361,9 +370,9 @@ class PWIZ_API_DECL TextWriter
     }
 
     
-    TextWriter& operator()(const Sample::Component& component)
+    TextWriter& operator()(const Sample::subSample& subSample)
     {
-        (*this)("component: "+component.Sample_ref);
+        (*this)("component: "+subSample.Sample_ref);
 
         return *this;
     }
@@ -372,7 +381,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SamplePtr& sample)
     {
         (*this)("samples: ");
-        for_each(sample->components.begin(), sample->components.end(), *this);
+        for_each(sample->subSamples.begin(), sample->subSamples.end(), *this);
 
         return *this;
     }

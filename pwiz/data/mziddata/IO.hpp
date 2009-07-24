@@ -55,6 +55,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Measure& measure);
 PWIZ_API_DECL void read(std::istream& writer, Measure& measure);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample);
+PWIZ_API_DECL void read(std::istream& writer, Sample& sample);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample::subSample& subsample);
+PWIZ_API_DECL void read(std::istream& writer, Sample::subSample& subsample);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp);
 PWIZ_API_DECL void read(std::istream& writer, ContactPtr cp);
 

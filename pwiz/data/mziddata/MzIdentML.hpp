@@ -30,6 +30,7 @@
 #include "pwiz/data/msdata/cv.hpp"
 #include "pwiz/data/msdata/CVParam.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/logic/tribool.hpp"
 #include <vector>
 #include <string>
 #include <map>
@@ -107,6 +108,13 @@ struct PWIZ_API_DECL IdentifiableType
     std::string name;
 
     virtual bool empty() const;
+};
+
+struct PWIZ_API_DECL ExternalData : public IdentifiableType
+{
+    std::string location;
+    
+    bool empty() const;
 };
 
 struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
@@ -196,20 +204,23 @@ struct PWIZ_API_DECL Material : public IdentifiableType
 {
     ContactRole contactRole;
 
-    ParamContainer cvParam;
+    ParamContainer cvParams;
+
+    virtual bool empty() const;
 };
 
 struct PWIZ_API_DECL Sample : public Material
 {
     // SampleType schema elements
-    struct Component{
+    struct subSample{
         std::string Sample_ref;
 
         bool empty() const;
     };
 
-    std::vector<Component> components;
-    
+    std::vector<subSample> subSamples;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Sample> SamplePtr;
@@ -336,18 +347,24 @@ struct PWIZ_API_DECL AnalysisCollection
 
 struct PWIZ_API_DECL ModParam
 {
+    ModParam();
+    
     double massDelta;
     std::string residues;
 
-    std::vector<CVParam> cvParams;
+    ParamContainer cvParams;
+
+    bool empty() const;
 };
 
 struct PWIZ_API_DECL SearchModification
 {
-    std::string fixedMod;
+    SearchModification();
+    
+    bool fixedMod;
     
     ModParam modParam;
-    std::vector<CVParam> specificityRules;
+    ParamContainer specificityRules;
 
     bool empty() const;
 };
@@ -357,10 +374,12 @@ typedef boost::shared_ptr<SearchModification> SearchModificationPtr;
 
 struct PWIZ_API_DECL Enzyme
 {
+    Enzyme();
+    
     std::string id;
     std::string nTermGain;
     std::string cTermGain;
-    std::string semiSpecific;
+    boost::logic::tribool semiSpecific;
     std::string missedCleavages;
     std::string minDistance;
 
@@ -478,7 +497,7 @@ struct PWIZ_API_DECL SpectraData : public IdentifiableType
 
 typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
 
-struct PWIZ_API_DECL SearchDatabase : public IdentifiableType
+struct PWIZ_API_DECL SearchDatabase : public ExternalData
 {
     SearchDatabase();
     
@@ -579,6 +598,8 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
     int missedCleavages;
     
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
@@ -635,6 +656,8 @@ struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
 {
     std::vector<ProteinDetectionHypothesisPtr> proteinDetectionHypothesis;
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;

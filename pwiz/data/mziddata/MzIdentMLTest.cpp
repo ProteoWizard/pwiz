@@ -36,6 +36,7 @@ using namespace pwiz::mziddata::examples;
 
 void testCreation()
 {
+    /*
     MzIdentML mzid;
     initializeTiny(mzid);
 
@@ -45,7 +46,7 @@ void testCreation()
 
     //cout << oss.str() << endl;
     // TODO finish adding something useful
-    
+    */
 }
 
 int main(int argc, char** argv)

@@ -34,6 +34,7 @@ namespace diff_impl {
 
 using namespace std;
 using namespace boost;
+using namespace boost::logic;
 
 PWIZ_API_DECL
 void diff(const string& a, 
@@ -44,6 +45,23 @@ void diff(const string& a,
 {
     a_b.clear();
     b_a.clear();
+    
+    if (a != b)
+    {
+        a_b = a;
+        b_a = b;
+    }
+}
+
+PWIZ_API_DECL
+void diff(const tribool& a, 
+          const tribool& b, 
+          tribool& a_b, 
+          tribool& b_a,
+          const DiffConfig& config)
+{
+    a_b = indeterminate;
+    b_a = indeterminate;
     
     if (a != b)
     {
@@ -350,6 +368,19 @@ void diff(const Measure& a,
 
 
 PWIZ_API_DECL
+void diff(const ModParam& a,
+          const ModParam& b,
+          ModParam& a_b,
+          ModParam& b_a,
+          const DiffConfig& config)
+{
+    diff_numeric(a.massDelta, b.massDelta, a_b.massDelta, b_a.massDelta, config);
+    diff(a.residues, b.residues, a_b.residues, b_a.residues, config);
+    diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const IonType& a,
           const IonType& b,
           IonType& a_b,
@@ -362,6 +393,18 @@ void diff(const IonType& a,
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 
+
+
+PWIZ_API_DECL
+void diff(const Material& a,
+          const Material& b,
+          Material& a_b,
+          Material& b_a,
+          const DiffConfig& config)
+{
+    diff(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
+    diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams, config);
+}
 
 PWIZ_API_DECL
 void diff(const DataCollection& a,
@@ -951,10 +994,10 @@ void diff(const SequenceCollection& a,
 }
 
 PWIZ_API_DECL
-void diff(const Sample::Component& a,
-          const Sample::Component& b,
-          Sample::Component& a_b,
-          Sample::Component& b_a,
+void diff(const Sample::subSample& a,
+          const Sample::subSample& b,
+          Sample::subSample& a_b,
+          Sample::subSample& b_a,
           const DiffConfig& config)
 {
     diff(a.Sample_ref, b.Sample_ref, a_b.Sample_ref, b_a.Sample_ref, config);
@@ -967,8 +1010,8 @@ void diff(const Sample& a,
           Sample& b_a,
           const DiffConfig& config)
 {
-    vector_diff_diff(a.components, b.components, a_b.components,
-                     b_a.components, config);
+    vector_diff_diff(a.subSamples, b.subSamples, a_b.subSamples,
+                     b_a.subSamples, config);
 }
 
 PWIZ_API_DECL

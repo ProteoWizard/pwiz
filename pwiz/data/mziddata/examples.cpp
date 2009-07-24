@@ -24,7 +24,6 @@
 
 #include "examples.hpp"
 
-
 namespace pwiz {
 namespace mziddata {
 namespace examples {
@@ -36,16 +35,19 @@ using namespace std;
 
 
 const char* dbsequenceList[] = {
-    "QQRLGNQWAVGHLM"
+    "QQRLGNQWAVGHLM",
+    "QLYENKPRRPYIL"
 };
 
 const char* peptideList[] = {
-    "Bombessin B-4272 pGlu-Gln-Arg-Leu-Gly-Asn-Gln-Trp-Ala-Val-Gly-His-Leu-Met-NH2 (C71 H110 N24 O18 S1) ?(C71 H111 N23 O20 S1) H+ Adducts: 1619.8223, 810.4148, 540.6123, 405.7110"
+    "Bombessin B-4272 pGlu-Gln-Arg-Leu-Gly-Asn-Gln-Trp-Ala-Val-Gly-His-Leu-Met-NH2 (C71 H110 N24 O18 S1) ?(C71 H111 N23 O20 S1) H+ Adducts: 1619.8223, 810.4148, 540.6123, 405.7110",
+    "Neurotensin: N-6383 pGlu-Leu-Tyr-Glu-Asn-Lys-Pro-Arg-Arg-Pro-Tyr-Ile-Leu  (C78 H121 N21 O20) H+ Adducts: 1672.9170, 836.9621, 558.3105, 418.9847, 335.3892"
 };
 
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 {
     mzid.id="";
+    mzid.version="0.9.0";
     // Look up Matt's recent commits for boost date class
     mzid.creationDate = "2009-06-23T11:04:10";
     
@@ -94,8 +96,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     organization=OrganizationPtr(new Organization());
     organization->id="ORG_DOC_OWNER";
     
-    SamplePtr sample(new Sample());
-    mzid.analysisSampleCollection.samples.push_back(sample);
+    //SamplePtr sample(new Sample());
+    //mzid.analysisSampleCollection.samples.push_back(sample);
     
     DBSequencePtr dbSequence(new DBSequence());
     dbSequence->id="DBSeq_Bombessin";
@@ -104,6 +106,15 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     dbSequence->accession="Bombessin";
     dbSequence->seq=dbsequenceList[0];
     dbSequence->paramGroup.set(MS_protein_description, peptideList[0]);
+    mzid.sequenceCollection.dbSequences.push_back(dbSequence);
+
+    dbSequence = DBSequencePtr(new DBSequence());
+    dbSequence->id="DBSeq_Neurotensin";
+    dbSequence->length="13";
+    dbSequence->SearchDatabase_ref="SDB_5peptideMix";
+    dbSequence->accession="Neurotensin";
+    dbSequence->seq=dbsequenceList[1];
+    dbSequence->paramGroup.set(MS_protein_description, peptideList[1]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
     PeptidePtr peptide(new Peptide());
@@ -154,9 +165,10 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     SearchModificationPtr smp(new SearchModification());
     smp->modParam.massDelta=-17.026549;
     smp->modParam.residues="Q";
+    smp->modParam.cvParams.set(UNIMOD_Gln__pyro_Glu);
     // TODO add UNIMOD:28
     // Use ParamContainer in place of vector<CVParam>
-    smp->specificityRules.push_back(CVParam(MS_modification_specificity_N_term, string("")));
+    smp->specificityRules.set(MS_modification_specificity_N_term, string(""));
     sip->modificationParams.push_back(smp);
 
     EnzymePtr ep(new Enzyme());
@@ -222,14 +234,15 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     // Add SearchDatabasePtr
     SearchDatabasePtr searchDb(new SearchDatabase());
-    //searchDb->location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
     searchDb->id="SDB_5peptideMix";
     searchDb->name="5peptideMix";
+    searchDb->location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
     searchDb->numDatabaseSequences=5;
     searchDb->numResidues=52;
     searchDb->releaseDate="5peptideMix_20090515.fasta";
     searchDb->version="5peptideMix_20090515.fasta";
     searchDb->fileFormat.set(MS_FASTA_format);
+    searchDb->DatabaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
     mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
 
     // Add SpectraDataPtr
@@ -342,13 +355,8 @@ PWIZ_API_DECL vector<CV> defaultCVList()
     result.resize(3);
 
     result[0] = cv("MS");
+    result[1] = cv("UNIMOD");
     result[2] = cv("UO");
-
-    CV cv;
-    cv.id = "UNIMOD";
-    cv.fullName = "UNIMOD" ;
-    cv.URI = "http://www.unimod.org/xml/unimod.xml";
-    result[1] = cv;
     
     return result;
 }
