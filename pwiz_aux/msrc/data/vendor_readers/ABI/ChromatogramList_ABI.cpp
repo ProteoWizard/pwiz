@@ -157,12 +157,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             pwiz::vendor_api::ABI::Target target;
             experiment->getSRM(ie.transition, target);
 
-            result->set(MS_dwell_time, target.dwellTime);
+            // TODO: move to global scan settings or leave out entirely?
+            result->userParams.push_back(UserParam("MS_dwell_time", lexical_cast<string>(target.dwellTime /* milliseconds->seconds */ / 1000.0), "xs:float"));
+
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ie.q1, MS_m_z);
             //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
             //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
-            result->precursor.activation.set(MS_collision_energy, target.collisionEnergy);
+            result->precursor.activation.set(MS_collision_energy, target.collisionEnergy, UO_electronvolt);
             result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ie.q3, MS_m_z);

@@ -482,31 +482,31 @@ PWIZ_API_DECL bool ScanSettings::empty() const
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz)
 {
-    set(MS_selected_ion_m_z, mz);
+    set(MS_selected_ion_m_z, mz, MS_m_z);
 }
 
 
 PWIZ_API_DECL
-SelectedIon::SelectedIon(double mz, double intensity)
+SelectedIon::SelectedIon(double mz, double intensity, CVID intensityUnit)
 {
-    set(MS_selected_ion_m_z, mz);
-    set(MS_intensity, intensity);
+    set(MS_selected_ion_m_z, mz, MS_m_z);
+    set(MS_intensity, intensity, intensityUnit);
 }
 
 
 PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, int chargeState)
 {
-    set(MS_selected_ion_m_z, mz);
+    set(MS_selected_ion_m_z, mz, MS_m_z);
     set(MS_charge_state, chargeState);
 }
 
 
 PWIZ_API_DECL
-SelectedIon::SelectedIon(double mz, double intensity, int chargeState)
+SelectedIon::SelectedIon(double mz, double intensity, int chargeState, CVID intensityUnit)
 {
-    set(MS_selected_ion_m_z, mz);
-    set(MS_intensity, intensity);
+    set(MS_selected_ion_m_z, mz, MS_m_z);
+    set(MS_intensity, intensity, intensityUnit);
     set(MS_charge_state, chargeState);
 }
 
@@ -524,9 +524,9 @@ Precursor::Precursor(double mz)
 
 
 PWIZ_API_DECL
-Precursor::Precursor(double mz, double intensity)
+Precursor::Precursor(double mz, double intensity, CVID intensityUnit)
 {
-    selectedIons.push_back(SelectedIon(mz, intensity));
+    selectedIons.push_back(SelectedIon(mz, intensity, intensityUnit));
 }
 
 
@@ -538,9 +538,9 @@ Precursor::Precursor(double mz, int chargeState)
 
 
 PWIZ_API_DECL
-Precursor::Precursor(double mz, double intensity, int chargeState)
+Precursor::Precursor(double mz, double intensity, int chargeState, CVID intensityUnit)
 {
-    selectedIons.push_back(SelectedIon(mz, intensity, chargeState));
+    selectedIons.push_back(SelectedIon(mz, intensity, chargeState, intensityUnit));
 }
 
 

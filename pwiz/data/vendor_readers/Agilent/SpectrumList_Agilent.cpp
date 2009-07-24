@@ -120,11 +120,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     MSScanType scanType = spectrumPtr->getMSScanType();
     DeviceType deviceType = spectrumPtr->getDeviceType();
 
+    result->set(translateAsPolarityType(spectrumPtr->getIonPolarity()));
+
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
     scan.set(MS_scan_start_time, rawfile_->getTicTimes()[ie.rowNumber], UO_minute);
-    scan.set(translateAsPolarityType(spectrumPtr->getIonPolarity()));
 
     int msLevel = translateAsMSLevel(scanType);
     if (msLevel == -1) // precursor ion scan

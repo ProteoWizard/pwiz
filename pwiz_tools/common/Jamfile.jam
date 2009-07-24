@@ -37,7 +37,7 @@ lib pwiz_tools_common
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters
+        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters//pwiz_aux_msrc_reader_waters
         <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
@@ -49,7 +49,7 @@ lib pwiz_tools_common
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/data/vendor_readers
         <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters
+        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters//pwiz_aux_msrc_reader_waters
         <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
         <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core

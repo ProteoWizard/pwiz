@@ -426,9 +426,9 @@ struct PWIZ_API_DECL SelectedIon : public ParamContainer
 {
     SelectedIon() {}
     explicit SelectedIon(double mz);
-    explicit SelectedIon(double mz, double intensity);
+    explicit SelectedIon(double mz, double intensity, CVID intensityUnit);
     explicit SelectedIon(double mz, int chargeState);
-    explicit SelectedIon(double mz, double intensity, int chargeState);
+    explicit SelectedIon(double mz, double intensity, int chargeState, CVID intensityUnit);
 };
 
 
@@ -462,9 +462,9 @@ struct PWIZ_API_DECL Precursor : public ParamContainer
 
     Precursor() {}
     explicit Precursor(double mz);
-    explicit Precursor(double mz, double intensity);
+    explicit Precursor(double mz, double intensity, CVID intensityUnit);
     explicit Precursor(double mz, int chargeState);
-    explicit Precursor(double mz, double intensity, int chargeState);
+    explicit Precursor(double mz, double intensity, int chargeState, CVID intensityUnit);
 
 
     /// returns true iff the element contains no params and all members are empty or null

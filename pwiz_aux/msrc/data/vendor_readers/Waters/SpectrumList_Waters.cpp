@@ -187,7 +187,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
         precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursorPtr->mz, MS_m_z);
 
         precursor.activation.set(MS_CID);
-        precursor.activation.set(MS_collision_energy, precursorPtr->collisionEnergy);
+        precursor.activation.set(MS_collision_energy, precursorPtr->collisionEnergy, UO_electronvolt);
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);

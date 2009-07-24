@@ -121,6 +121,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
     int msLevel = translateAsMSLevel(scanType);
     result->set(MS_ms_level, msLevel);
     result->set(translateAsSpectrumType(scanType));
+    result->set(translate(msExperiment->getPolarity()));
 
     double startMz, stopMz;
     msExperiment->getAcquisitionMassRange(startMz, stopMz);

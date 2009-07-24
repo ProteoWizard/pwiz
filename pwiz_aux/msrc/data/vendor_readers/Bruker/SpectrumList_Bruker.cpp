@@ -200,10 +200,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         switch (polarity)
         {
             case IonPolarity_Negative:
-                scan.set(MS_negative_scan);
+                result->set(MS_negative_scan);
                 break;
             case IonPolarity_Positive:
-                scan.set(MS_positive_scan);
+                result->set(MS_positive_scan);
                 break;
             default:
                 break;
@@ -289,7 +289,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
                     if (isolMZs[i] > 0)
                     {
-                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i]);
+                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i], MS_m_z);
                     }
                 }
             }

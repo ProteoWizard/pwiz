@@ -2479,7 +2479,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
     if (!msd.accession.empty())
         attributes.push_back(make_pair("accession", msd.accession));
     attributes.push_back(make_pair("id", msd.id)); // not an XML:ID
-    // deprecate? attributes.push_back(make_pair("version", msd.version()));
+    attributes.push_back(make_pair("version", msd.version()));
 
     writer.startElement("mzML", attributes);
 

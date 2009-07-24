@@ -247,7 +247,7 @@ class HandlerCompound : public SAXParser::Handler
             int zValue = lexical_cast<int>(z);
 
             spectrum_.precursors.push_back(
-                Precursor(mzValue, iValue, zValue));
+                Precursor(mzValue, iValue, zValue, MS_number_of_counts));
             // TODO: support sn: spectrum_.precursors.back().set(MS_signal_to_noise, sn);
             return Status::Ok;
         }
