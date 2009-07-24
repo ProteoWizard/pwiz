@@ -83,26 +83,66 @@ MZTolerance translateMzTol(string& curr)
     else throw runtime_error("[msextract] Bad MZTolerance");
 }
 
+
 struct Config
 {
     vector<string> filenames;
-    int maxChargeState;
+
     string featureDetectorImplementation;
     string inputPath;
     string outputPath;
+
     bool writeFeatureFile;
     bool writeTSV;
     bool writeLog;
+
     FeatureDetectorPeakel::Config fdpConfig;
+    int maxChargeState;
 
     Config() 
-    :   maxChargeState(6), featureDetectorImplementation("Simple"), 
+    :   featureDetectorImplementation("Simple"), 
         inputPath("."), outputPath("."),
-        writeFeatureFile(true), writeTSV(true), writeLog(false)
+        writeFeatureFile(true), writeTSV(true), writeLog(false), 
+        maxChargeState(6)
     {}
 
+    void write_program_options_config(ostream& os) const;
     string outputFileName(const string& inputFileName, const string& extension) const;
 };
+
+
+void Config::write_program_options_config(ostream& os) const
+{
+    // write out configuration options in format parseable by program_options
+
+    os << "featureDetectorImplementation=" << featureDetectorImplementation << endl;
+    //os << "noiseCalculatorZLevel=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
+    os << "noiseCalculator_2Pass.zValueCutoff=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
+    os << "peakFinder_SNR.windowRadius=" << fdpConfig.peakFinder_SNR.windowRadius << endl;
+    os << "peakFinder_SNR.zValueThreshold=" << fdpConfig.peakFinder_SNR.zValueThreshold << endl;
+    os << "peakFitter_Parabola.windowRadius=" << fdpConfig.peakFitter_Parabola.windowRadius << endl;
+    os << "#peakelGrowerMZTol=TODO" << endl; // TODO
+    os << "peakelGrower_Proximity.rtTolerance=" << fdpConfig.peakelGrower_Proximity.rtTolerance << endl;
+    os << "peakelPicker_Basic.minCharge=" << fdpConfig.peakelPicker_Basic.minCharge << endl;
+    os << "peakelPicker_Basic.maxCharge=" << fdpConfig.peakelPicker_Basic.maxCharge << endl;
+    os << "peakelPicker_Basic.minMonoisotopicPeakelSize=" << fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize << endl;
+    os << "#peakelPickerMZTol=TODO" << endl; // TODO
+    os << "peakelPicker_Basic.rtTolerance=" << fdpConfig.peakelPicker_Basic.rtTolerance << endl;
+    os << "peakelPicker_Basic.minPeakelCount=" << fdpConfig.peakelPicker_Basic.minPeakelCount << endl;
+    os << "#maxChargeState=TODO" << endl; // TODO
+}
+
+
+ostream& operator<<(ostream& os, const Config& config)
+{
+    config.write_program_options_config(os);
+    
+    os << "filenames:\n  ";
+    copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os, "\n  "));
+    os << endl;
+
+    return os;
+}
 
 
 string Config::outputFileName(const string& inputFileName, const string& extension) const
@@ -129,33 +169,51 @@ Config parseCommandLine(int argc, char* argv[])
 
     // input file of config parameters
     string configFilename;
+    bool printDefaultConfig = false;
 
     // define command line options
 
     po::options_description od_config("Options");
     od_config.add_options()
-        ("configFilename", po::value<string>(&configFilename), " : specify file of config options, in format optionName=optionValue")
-        ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), " : specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
-        ("noiseCalculatorZLevel,z", po::value<double>(&config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)->default_value(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff), " : specify cutoff for NoiseCalculator_2Pass")
-        ("peakFinderSNRWindowRadius,w", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), " : specify window radius for PeakFinder_SNR")
-        ("peakFinderZThreshold,Z", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold)->default_value(config.fdpConfig.peakFinder_SNR.zValueThreshold), " : specify z threshold for PeakFinder_SNR")
-        ("peakFitterWindowRadius,W", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius)->default_value(config.fdpConfig.peakFitter_Parabola.windowRadius), " : specify window radius for PeakFitter_Parabola")
-        ("peakelGrowerMZTol,m", po::value<string>(&pgmz), " : specify mz tolerance for PeakelGrower_Proximity")
-        ("peakelGrowerRTTol,r", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance)->default_value(config.fdpConfig.peakelGrower_Proximity.rtTolerance), " : specify rt tolerance for PeakelGrower_Proximity")
-        ("peakelPickerMinCharge,c", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge)->default_value(config.fdpConfig.peakelPicker_Basic.minCharge), " : specify min charge for PeakelPicker_Basic")
-        ("peakelPickerMaxCharge,C", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge)->default_value(config.fdpConfig.peakelPicker_Basic.maxCharge), " : specify max charge for PeakelPicker_Basic")
-        ("peakelPickerMinMPS,s", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize)->default_value(config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), " : specify min monoisotopic peakel size for PeakelPicker_Basic")
-        ("peakelPickerMZTol,M", po::value<string>(&ppmz), " : specify mz tolerance for PeakelPicker_Basic")
-        ("peakelPickerRTTol,P", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance)->default_value(config.fdpConfig.peakelPicker_Basic.rtTolerance), " : specify rt tolerance for PeakelPicker_Basic")
-        ("peakelPickerMinPC,n", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), " : specify min peakel count for PeakelPicker_Basic")
-        ("inputPath,i", po::value<string>(&config.inputPath)->default_value(config.inputPath), " : specify input path")
-        ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), " : specify output path")
-        ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), " : write xml representation of detected features (.features file) ")
-        ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), " : write tab-separated file")
-        ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), " : write log file (for debugging)");
+        ("config,c", po::value<string>(&configFilename), ": specify file of config options, in format optionName=optionValue")
+        ("defaults,d", po::value<bool>(&printDefaultConfig)->zero_tokens(), ": print configuration defaults")
+        ("inputPath,i", po::value<string>(&config.inputPath)->default_value(config.inputPath), ": specify input path")
+        ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), ": specify output path")
+        ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), ": specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
+        ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), ": write xml representation of detected features (.features file) ")
+        ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), ": write tab-separated file")
+        ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), ": write log file (for debugging)")
+        ;
+
+    po::options_description od_config_peakel("FeatureDetectorPeakel Options");
+    od_config_peakel.add_options()
+        ("noiseCalculator_2Pass.zValueCutoff", po::value<double>(&config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)->default_value(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff), ": specify cutoff for NoiseCalculator_2Pass")
+        ("peakFinder_SNR.windowRadius", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), ": specify window radius for PeakFinder_SNR")
+        ("peakFinder_SNR.zValueThreshold", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold)->default_value(config.fdpConfig.peakFinder_SNR.zValueThreshold), ": specify z threshold for PeakFinder_SNR")
+        ("peakFitter_Parabola.windowRadius", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius)->default_value(config.fdpConfig.peakFitter_Parabola.windowRadius), ": specify window radius for PeakFitter_Parabola")
+        ("peakelGrowerMZTol", po::value<string>(&pgmz), ": specify mz tolerance for PeakelGrower_Proximity")
+        ("peakelGrower_Proximity.rtTolerance", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance)->default_value(config.fdpConfig.peakelGrower_Proximity.rtTolerance), ": specify rt tolerance for PeakelGrower_Proximity")
+        ("peakelPicker_Basic.minCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge)->default_value(config.fdpConfig.peakelPicker_Basic.minCharge), ": specify min charge for PeakelPicker_Basic")
+        ("peakelPicker_Basic.maxCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge)->default_value(config.fdpConfig.peakelPicker_Basic.maxCharge), ": specify max charge for PeakelPicker_Basic")
+        ("peakelPicker_Basic.minMonoisotopicPeakelSize", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize)->default_value(config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), ": specify min monoisotopic peakel size for PeakelPicker_Basic")
+        ("peakelPickerMZTol", po::value<string>(&ppmz), ": specify mz tolerance for PeakelPicker_Basic")
+        ("peakelPicker_Basic.rtTolerance", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance)->default_value(config.fdpConfig.peakelPicker_Basic.rtTolerance), ": specify rt tolerance for PeakelPicker_Basic")
+        ("peakelPicker_Basic.minPeakelCount", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), ": specify min peakel count for PeakelPicker_Basic")
+        ;    
     
     // append options to usage string
-    usage << od_config;
+
+    usage << od_config << endl << od_config_peakel;
+
+    usage << "Examples:\n"
+          << "\n"
+          << "# print default configuration parameters to config.txt\n"
+          << "msextract -d > config.txt\n"
+          << "\n"
+          << "# run using parameters in config.txt, output in outputdir\n"
+          << "msextract -c config.txt -o outputdir file1.mzML file2.mzML\n"
+          << "\n";   
+
 
     // handle positional args
     const char* label_args = "args";
@@ -167,7 +225,7 @@ Config parseCommandLine(int argc, char* argv[])
     pod_args.add(label_args, -1);
 
     po::options_description od_parse;
-    od_parse.add(od_config).add(od_args);
+    od_parse.add(od_config).add(od_config_peakel).add(od_args);
     
     // parse command line
     po::variables_map vm;
@@ -182,7 +240,7 @@ Config parseCommandLine(int argc, char* argv[])
             if (is)
                 {
                     cout << "Reading configuration file " << configFilename << "\n\n";
-                    po::store(parse_config_file(is, od_config), vm);
+                    po::store(parse_config_file(is, od_parse), vm);
                     po::notify(vm);
                 }
             else
@@ -195,7 +253,15 @@ Config parseCommandLine(int argc, char* argv[])
     if (vm.count(label_args))
         config.filenames = vm[label_args].as< vector<string> >();
 
-    // usage if no files
+    // special handling
+
+    if (printDefaultConfig)
+    {
+        Config defaultConfig;
+        defaultConfig.write_program_options_config(cout);
+        throw runtime_error("");
+    }
+
     if (config.filenames.empty())
         throw runtime_error(usage.str());
 
@@ -334,25 +400,19 @@ int main(int argc, char* argv[])
      try
          {
              Config config = parseCommandLine(argc, argv);
+             cout << "Config:\n" << config << endl;
              go(config);
              return 0;
-
          }
-
      catch (exception& e)
          {
              cout << e.what() << endl;
-
          }
-
      catch (...)
          {
              cout << "[msextract.cpp::main()] Abnormal termination.\n";
-
          }
-
      return 1;
-
 }
 
 
