@@ -283,11 +283,13 @@ struct PWIZ_API_DECL Modification
 
 struct PWIZ_API_DECL SubstitutionModification
 {
+    SubstitutionModification();
+
     std::string originalResidue;
     std::string replacementResidue;
-    std::string location;
-    std::string avgMassDelta;
-    std::string monoisotopicMassDelta;
+    int location;
+    double avgMassDelta;
+    double monoisotopicMassDelta;
 
     bool empty() const;
 };
@@ -403,6 +405,8 @@ struct PWIZ_API_DECL Enzymes
 
 struct PWIZ_API_DECL Residue
 {
+    Residue();
+
     std::string Code;
     double Mass;
 
@@ -508,6 +512,8 @@ struct PWIZ_API_DECL SearchDatabase : public ExternalData
 
     ParamContainer fileFormat;
     ParamContainer DatabaseName;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
@@ -623,6 +629,8 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
     std::vector<PeptideEvidencePtr> peptideEvidence;
     std::vector<IonTypePtr> fragmentation;
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationItem> SpectrumIdentificationItemPtr;
@@ -670,6 +678,9 @@ struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 
     std::vector<MeasurePtr> fragmentationTable;
     std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
+
+    bool empty() const;
+
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;

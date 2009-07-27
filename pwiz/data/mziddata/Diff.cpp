@@ -972,10 +972,10 @@ void diff(const SubstitutionModification& a,
          b_a.originalResidue, config);
     diff(a.replacementResidue, b.replacementResidue, a_b.replacementResidue,
          b_a.replacementResidue, config);
-    diff(a.location, b.location, a_b.location, b_a.location, config);
-    diff(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta,
+    diff_numeric(a.location, b.location, a_b.location, b_a.location, config);
+    diff_numeric(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta,
          b_a.avgMassDelta, config);
-    diff(a.monoisotopicMassDelta, b.monoisotopicMassDelta,
+    diff_numeric(a.monoisotopicMassDelta, b.monoisotopicMassDelta,
          a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
 }
 

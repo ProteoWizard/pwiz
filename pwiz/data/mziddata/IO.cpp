@@ -481,12 +481,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModifica
         attributes.push_back(make_pair("originalResidue", peptide.originalResidue));
     if (!peptide.replacementResidue.empty())
         attributes.push_back(make_pair("replacementResidue", peptide.replacementResidue));
-    if (!peptide.location.empty())
-        attributes.push_back(make_pair("location", peptide.location));
-    if (!peptide.avgMassDelta.empty())
-        attributes.push_back(make_pair("avgMassDelta", peptide.avgMassDelta));
-    if (!peptide.monoisotopicMassDelta.empty())
-        attributes.push_back(make_pair("monoisotopicMassDelta", peptide.monoisotopicMassDelta));
+    if (peptide.location != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("location", boost::lexical_cast<string>(peptide.location)));
+    if (peptide.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("avgMassDelta", boost::lexical_cast<string>(peptide.avgMassDelta)));
+    if (peptide.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+        attributes.push_back(make_pair("monoisotopicMassDelta", boost::lexical_cast<string>(peptide.monoisotopicMassDelta)));
     
     writer.startElement("SubstitutionModification", attributes, XMLWriter::EmptyElement);
 }
