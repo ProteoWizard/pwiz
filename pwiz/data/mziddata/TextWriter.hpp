@@ -210,10 +210,15 @@ class PWIZ_API_DECL TextWriter
     }
 
     
-    TextWriter& operator()(const ModParam& dc)
+    TextWriter& operator()(const ModParam& mp)
     {
         (*this)("ModParam: ");
-        // TODO finish
+        if (mp.massDelta != IdentifiableType::INVALID_NATURAL)
+            child()("massDelta: ", boost::lexical_cast<std::string>(mp.massDelta));
+        if (!mp.residues.empty())
+            child()("residues: ", mp.residues);
+        if (!mp.cvParams.empty())
+            child()("cvParams: ", mp.cvParams);
         return *this;
     }
 
@@ -305,26 +310,60 @@ class PWIZ_API_DECL TextWriter
     }
 
     
-    TextWriter& operator()(const Filter& dc)
+    TextWriter& operator()(const Filter& f)
     {
         (*this)("Filter: ");
-        // TODO finish
+        if (!f.filterType.empty())
+            child()("filterType: ", f.filterType);
+        if (!f.include.empty())
+            child()("include: ", f.include);
+        if (!f.exclude.empty())
+            child()("exclude: ", f.exclude);
         return *this;
     }
 
     
-    TextWriter& operator()(const SearchModification& dc)
+    TextWriter& operator()(const SearchModification& sm)
     {
         (*this)("SearchModification: ");
-        // TODO finish
+        if (sm.fixedMod != IdentifiableType::INVALID_NATURAL)
+            child()("fixedMod: ", boost::lexical_cast<std::string>(sm.fixedMod));
+        if (!sm.modParam.empty()){}
+            //TODO          child()("modParam: ", sm.modParam);
+        if (!sm.specificityRules.empty())
+            child()("specificityRules: ", sm.specificityRules);       
         return *this;
     }
 
-    
-    TextWriter& operator()(const Enzymes& ez)
+    TextWriter& operator()(const Enzymes& ezs)
+    {
+        (*this)("Enzyme: ");
+        if (!ezs.independent.empty())
+            child()("independent: ", ezs.independent);
+        if (!ezs.enzymes.empty())
+            child()("enzymes: ", ezs.enzymes);
+        return *this;
+    }
+
+    TextWriter& operator()(const Enzyme& ez)
     {
         (*this)("Enzymes: ");
-        // TODO finish
+        if (!ez.id.empty())
+            child()("id: ", ez.id);
+        if (!ez.nTermGain.empty())
+            child()("nTermGain: ", ez.nTermGain);
+        if (!ez.cTermGain.empty())
+            child()("cTermGain: ", ez.cTermGain);
+        if (ez.semiSpecific != IdentifiableType::INVALID_NATURAL)
+            child()("semiSpecific: " , boost::lexical_cast<std::string>(ez.semiSpecific));
+        if (!ez.missedCleavages.empty())
+            child()("missedCleavages: ", ez.missedCleavages);
+        if (!ez.minDistance.empty())
+            child()("minDistance: ", ez.minDistance);
+        if (!ez.siteRegexp.empty())
+            child()("siteRegexp: ", ez.siteRegexp);
+        if (!ez.enzymeName.empty())
+            child()("enzymeName: ", ez.enzymeName);
         return *this;
     }
 
@@ -332,7 +371,14 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const MassTable& mt)
     {
         (*this)("MassTable: ");
-        // TODO finish
+        if (!mt.id.empty())
+            child()("id: ", mt.id);
+        if (!mt.msLevel.empty())
+            child()("msLevel: ", mt.msLevel);
+        if (!mt.residues.empty())
+            child()("residues: ", mt.residues);
+        if (!mt.ambiguousResidue.empty())
+            child()("ambiguousResidue: ", mt.residues);
         return *this;
     }
 
@@ -340,15 +386,34 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const AnalysisProtocolCollection& apc)
     {
         (*this)("AnalysisProtocolCollection: ");
-        // TODO finish
+        if (!apc.spectrumIdentificationProtocol.empty())
+            child()("spectrumIdentificationProtocol: ", apc.spectrumIdentificationProtocol);
+        if (!apc.proteinDetectionProtocol.empty())
+            child()("proteinDetectionProtocol: ", apc.proteinDetectionProtocol);
         return *this;
     }
 
+    TextWriter& operator()(const ProteinDetection& pd)
+    {
+        (*this)("ProteinDetection: ");
+        if (!pd.ProteinDetectionProtocol_ref.empty())
+            child()("ProteinDetectionProtocol_ref: ", pd.ProteinDetectionProtocol_ref);
+        if (!pd.ProteinDetectionList_ref.empty())
+            child()("ProteinDetectionList_ref: ", pd.ProteinDetectionList_ref);
+        if (!pd.activityDate.empty())
+            child()("activityDate: ", pd.activityDate);
+        if (!pd.inputSpectrumIdentifications.empty())
+            child()("inputSpectrumIdentifications: ", pd.inputSpectrumIdentifications);
+        return *this;
+    }
     
     TextWriter& operator()(const AnalysisCollection& ac)
     {
         (*this)("AnalysisCollection: ");
-        // TODO finish
+        if (!ac.spectrumIdentification.empty())
+            child()("spectrumIdentification: ", ac.spectrumIdentification);
+        if (!ac.proteinDetection.empty()){}
+            //TODO           child()("proteinDetection: ", ac.proteinDetection);
         return *this;
     }
 
@@ -356,7 +421,10 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SequenceCollection& sc)
     {
         (*this)("SequenceCollection: ");
-        // TODO finish
+        if (!sc.dbSequences.empty())
+            child()("dbSequences: ", sc.dbSequences);
+        if (!sc.peptides.empty())
+            child()("peptides: ", sc.peptides);
         return *this;
     }
 
@@ -434,6 +502,33 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
     
+    TextWriter& operator()(const Residue& res)
+    {
+        (*this)("Residue: ");
+        if (!res.Code.empty())
+            child()("Code: ", res.Code);
+        if (res.Mass != IdentifiableType::INVALID_NATURAL)
+            child()("Mass: " + boost::lexical_cast<std::string>(res.Mass));
+        return *this;
+    }
+
+    TextWriter& operator()(const Modification& mod)
+    {
+        (*this)("Modification: ");
+        if (mod.location != IdentifiableType::INVALID_NATURAL)
+            child()("location: " + boost::lexical_cast<std::string>(mod.location));
+        if (!mod.residues.empty())
+            child()("residues: " + mod.residues);
+        if (mod.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+            child()("avgMassDelta: " + boost::lexical_cast<std::string>(mod.avgMassDelta));
+        if (mod.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+            child()("monoisotopicMassDelta: ", boost::lexical_cast<std::string>(mod.monoisotopicMassDelta));
+        if (!mod.paramGroup.empty())
+            child()("paramGroup: ", mod.paramGroup);
+
+        return *this;
+    }
+
     TextWriter& operator()(const MzIdentML& mzid)
     {
         (*this)("mzid:");
