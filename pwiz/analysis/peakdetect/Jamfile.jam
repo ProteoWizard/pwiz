@@ -112,6 +112,7 @@ exe msextract
       /ext/boost//program_options
       /ext/boost//filesystem
       ../../data/misc//pwiz_data_misc
+      ../spectrum_processing//pwiz_analysis_spectrum_processing
     ;
 
 explicit msextract ;

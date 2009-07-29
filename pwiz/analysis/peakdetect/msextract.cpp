@@ -23,18 +23,19 @@
 
 #include "FeatureDetectorSimple.hpp"
 #include "FeatureDetectorPeakel.hpp"
-#include "pwiz/data/misc/PeakData.hpp"
+#include "PeakFamilyDetectorFT.hpp"
+#include "pwiz/analysis/passive/MSDataCache.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
-#include "boost/iostreams/positioning.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/SpectrumIterator.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
-#include "pwiz/analysis/passive/MSDataCache.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
-#include "PeakFamilyDetectorFT.hpp"
-#include "pwiz/data/msdata/MSDataFile.hpp"
+#include "boost/iostreams/positioning.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include <string>
 #include <vector>
@@ -52,14 +53,15 @@ using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using boost::shared_ptr;
+namespace bfs = boost::filesystem;
 
 
 struct Config
 {
     vector<string> filenames;
+    vector<string> filters;
 
     string featureDetectorImplementation;
-    string inputPath;
     string outputPath;
 
     bool writeFeatureFile;
@@ -71,7 +73,7 @@ struct Config
 
     Config() 
     :   featureDetectorImplementation("Simple"), 
-        inputPath("."), outputPath("."),
+        outputPath("."),
         writeFeatureFile(true), writeTSV(true), writeLog(false), 
         maxChargeState(6)
     {}
@@ -110,13 +112,16 @@ ostream& operator<<(ostream& os, const Config& config)
     copy(config.filenames.begin(), config.filenames.end(), ostream_iterator<string>(os, "\n  "));
     os << endl;
 
+    os << "filters:\n  ";
+    copy(config.filters.begin(), config.filters.end(), ostream_iterator<string>(os,"\n  "));
+    os << endl;
+
     return os;
 }
 
 
 string Config::outputFileName(const string& inputFileName, const string& extension) const
 {
-    namespace bfs = boost::filesystem;
     string newFilename = bfs::basename(inputFileName) + extension;
     bfs::path fullPath = bfs::path(this->outputPath) / newFilename;
     return fullPath.string(); 
@@ -142,12 +147,12 @@ Config parseCommandLine(int argc, char* argv[])
     od_config.add_options()
         ("config,c", po::value<string>(&configFilename), ": specify file of config options, in format optionName=optionValue")
         ("defaults,d", po::value<bool>(&printDefaultConfig)->zero_tokens(), ": print configuration defaults")
-        ("inputPath,i", po::value<string>(&config.inputPath)->default_value(config.inputPath), ": specify input path")
         ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), ": specify output path")
         ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), ": specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
         ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), ": write xml representation of detected features (.features file) ")
         ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), ": write tab-separated file")
         ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), ": write log file (for debugging)")
+        ("filter", po::value< vector<string> >(&config.filters), (": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
         ;
 
     po::options_description od_config_peakel("FeatureDetectorPeakel Options");
@@ -177,6 +182,10 @@ Config parseCommandLine(int argc, char* argv[])
           << "\n"
           << "# run using parameters in config.txt, output in outputdir\n"
           << "msextract -c config.txt -o outputdir file1.mzML file2.mzML\n"
+          << "\n"
+          << "# filters: select scan numbers\n"
+          << "msextract file1.mzML --filter \"scanNumber [500,1000]\"\n"
+          << endl
           << "\n";   
 
 
@@ -287,28 +296,12 @@ shared_ptr<FeatureDetector> createFeatureDetector(const MSData& msd,
 }
 
 
-void processFile(const string& file, const Config& config)
+void writeOutputFiles(const FeatureField& features, const string& filename, const Config& config)
 {
-    string filename = (config.inputPath + "/" + file).c_str(); // TODO: bfs
-
-    ofstream log;
-    if (config.writeLog)
-        log.open(config.outputFileName(filename, ".log").c_str());
-
-    MSDataFile msd(filename);
-    shared_ptr<FeatureDetector> fd = createFeatureDetector(msd, config, config.writeLog ? &log : 0);
-
-    FeatureField output_features;
-    fd->detect(msd, output_features);
-
     if (config.writeFeatureFile)
     {
-        vector<FeaturePtr> features;
-        FeatureField::iterator it = output_features.begin();
-        for( ; it != output_features.end(); ++it) features.push_back(*it);
-
         FeatureFile featureFile;
-        featureFile.features = features;
+        copy(features.begin(), features.end(), back_inserter(featureFile.features));
 
         ofstream ofs(config.outputFileName(filename, ".features").c_str());
         XMLWriter writer(ofs);
@@ -317,63 +310,74 @@ void processFile(const string& file, const Config& config)
 
     if (config.writeTSV)
     {
-        FeatureField::iterator it = output_features.begin();
         ofstream ofs(config.outputFileName(filename, ".features.tsv").c_str());
         ofs << "mzMonoisotopic\tretentionTime\tretentionTimeMin\tretentionTimeMax\ttotalIntensity\n";
-        for(; it != output_features.end(); ++it)
-        {
+        for (FeatureField::const_iterator it=features.begin(); it!=features.end(); ++it)
             ofs << (*it)->mz << "\t" << (*it)->retentionTime  << "\t" << (*it)->retentionTimeMin() << "\t" << (*it)->retentionTimeMax() << "\t" << (*it)->totalIntensity << "\n";
-        }
     }
+}
+
+
+void processFile(const string& filename, const Config& config)
+{
+    shared_ptr<ofstream> log;
+    if (config.writeLog)
+        log = shared_ptr<ofstream>(new ofstream(config.outputFileName(filename,".log").c_str()));
+
+    MSDataFile msd(filename);
+    SpectrumListFactory::wrap(msd, config.filters);
+
+    shared_ptr<FeatureDetector> fd = createFeatureDetector(msd, config, log.get());
+
+    FeatureField features;
+    fd->detect(msd, features);
+
+    writeOutputFiles(features, filename, config);
 }
 
 
 void go(Config& config)
 {
-    namespace bfs = boost::filesystem;
     bfs::create_directories(config.outputPath);
 
     // process each file
     for (vector<string>::const_iterator it=config.filenames.begin(); it!=config.filenames.end(); ++it)
-        {
+    {
         try
-            {
-                processFile(*it, config);
-            }
-
-        catch (exception& e)
-
-            {
-                cout << e.what() << endl;
-                cout << "Error processing file " << *it << endl;
-            }
-
-        catch (...)
-            {
-                cout << "Unknown error.\n";
-                cout << "Error processing file " << *it << endl;
-            }
+        {
+            processFile(*it, config);
         }
+        catch (exception& e)
+        {
+            cout << e.what() << endl;
+            cout << "Error processing file " << *it << endl;
+        }
+        catch (...)
+        {
+            cout << "Unknown error.\n";
+            cout << "Error processing file " << *it << endl;
+        }
+    }
 }
 
 
 int main(int argc, char* argv[])
 {
      try
-         {
-             Config config = parseCommandLine(argc, argv);
-             cout << "Config:\n" << config << endl;
-             go(config);
-             return 0;
-         }
+     {
+         Config config = parseCommandLine(argc, argv);
+         cout << "Config:\n" << config << endl;
+         go(config);
+         return 0;
+     }
      catch (exception& e)
-         {
-             cout << e.what() << endl;
-         }
+     {
+         cout << e.what() << endl;
+     }
      catch (...)
-         {
-             cout << "[msextract.cpp::main()] Abnormal termination.\n";
-         }
+     {
+         cout << "[msextract.cpp::main()] Abnormal termination.\n";
+     }
      return 1;
 }
 
