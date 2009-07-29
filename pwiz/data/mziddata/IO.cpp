@@ -431,13 +431,13 @@ PWIZ_API_DECL void read(std::istream& is, DBSequencePtr ds)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
 {
     XMLWriter::Attributes attributes;
-    if (mod.location != IdentifiableType::INVALID_NATURAL)
+    if (mod.location != 0)
         attributes.push_back(make_pair("location", lexical_cast<string>(mod.location)));
     if (!mod.residues.empty())
         attributes.push_back(make_pair("residues", mod.residues));
-    if (mod.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+    if (mod.avgMassDelta != 0)
         attributes.push_back(make_pair("avgMassDelta", lexical_cast<string>(mod.avgMassDelta)));
-    if (!mod.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+    if (!mod.monoisotopicMassDelta != 0)
         attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(mod.monoisotopicMassDelta)));
     
     writer.startElement("Modification", attributes);
@@ -481,11 +481,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModifica
         attributes.push_back(make_pair("originalResidue", peptide.originalResidue));
     if (!peptide.replacementResidue.empty())
         attributes.push_back(make_pair("replacementResidue", peptide.replacementResidue));
-    if (peptide.location != IdentifiableType::INVALID_NATURAL)
+    if (peptide.location != 0)
         attributes.push_back(make_pair("location", boost::lexical_cast<string>(peptide.location)));
-    if (peptide.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+    if (peptide.avgMassDelta != 0)
         attributes.push_back(make_pair("avgMassDelta", boost::lexical_cast<string>(peptide.avgMassDelta)));
-    if (peptide.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+    if (peptide.monoisotopicMassDelta != 0)
         attributes.push_back(make_pair("monoisotopicMassDelta", boost::lexical_cast<string>(peptide.monoisotopicMassDelta)));
     
     writer.startElement("SubstitutionModification", attributes, XMLWriter::EmptyElement);
@@ -2029,7 +2029,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidencePtr p
     if (pep->frame != 0)
         attributes.push_back(make_pair("frame", lexical_cast<string>(pep->frame)));
     attributes.push_back(make_pair("isDecoy", pep->isDecoy  ? "true" : "false"));
-    if (pep->missedCleavages != IdentifiableType::INVALID_NATURAL)
+    if (pep->missedCleavages != 0)
         attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep->missedCleavages)));
     
     writer.startElement("PeptideEvidence", attributes); //, XMLWriter::EmptyElement);

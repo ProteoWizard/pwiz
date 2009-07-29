@@ -35,6 +35,7 @@ using boost::shared_ptr;
 
 
 ostream* os_ = 0;
+const double epsilon = numeric_limits<double>::epsilon();
 
 void testString()
 {
@@ -118,24 +119,23 @@ void testFragmentArray()
     unit_assert(!diff);
     if (os_) *os_ << diff << endl;
 
+    a.values.push_back(2.1);
     b.values.push_back(2.0);
+    b.Measure_ref = "fer_erusaeM";
     diff(a, b);
+
+    // a diff was found
     unit_assert(diff);
 
-    vector<double> values;
-    values.push_back(1.0);
-    b.setValues(values);
+    // the values of the diff are correct
+    unit_assert(diff.a_b.values.size() == 1);
+    unit_assert(diff.a_b.values.size() == 1);
+    unit_assert_equal(*diff.a_b.values.begin(), 2.1, epsilon);
+    unit_assert_equal(*diff.b_a.values.begin(), 2.0, epsilon);
+    unit_assert(diff.a_b.Measure_ref == "Measure_ref");
+    unit_assert(diff.b_a.Measure_ref == "fer_erusaeM");
 
-    diff(a, b);
-    unit_assert(!diff);
-
-    const char* value_str = "1 2.1 ";
-    a.values.push_back(2.1);
-    b.setValues(value_str);
-    diff(a, b);
-    unit_assert(!diff);
-
-    unit_assert(a.getValues() == value_str);
+    if (os_) *os_ << diff << endl;
 }
 
 void testIonType()
@@ -154,32 +154,31 @@ void testIonType()
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
-    b.index.push_back(2);
-    diff(a, b);
-
-    unit_assert(diff);
-
-    vector<int> indices;
-    indices.push_back(1);
-    b.setIndex(indices);
-
-    diff(a, b);
-    unit_assert(!diff);
-
+    b.index.back() = 2; 
     b.charge = 2;
-    diff(a, b);
-    unit_assert(!diff);
-
-    b.charge = 1;
-
-    const char* indexStr = "1 ";
-    b.setIndex(indexStr);
-    diff(a, b);
-    unit_assert(!diff);
-
     b.paramGroup.set(MS_frag__z_ion);
+    b.fragmentArray.back()->Measure_ref = "Graduated_cylinder";
     diff(a, b);
+
+    // a diff was found
     unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+
+    // and correctly
+    unit_assert(diff.a_b.index.size() == 1);
+    unit_assert(diff.b_a.index.size() == 1);
+    unit_assert_equal(*diff.a_b.index.begin(), 1, epsilon);
+    unit_assert_equal(*diff.b_a.index.begin(), 2, epsilon);
+    unit_assert_equal(diff.a_b.charge, 1, epsilon);
+    unit_assert_equal(diff.b_a.charge, 2, epsilon);
+    unit_assert(diff.a_b.paramGroup.empty());
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__z_ion));
+    // TODO finish
+    //    unit_assert(diff.a_b.fragmentArray.size() == 1);
+    //    unit_assert(diff.b_a.fragmentArray.size() == 1);
+    //    unit_assert(diff.a_b.fragmentArray.back()->Measure_ref == "");
+    //    unit_assert(diff.b_a.fragmentArray.back()->Measure_ref == "Graduated_cylinder");
+
 }
 
 
@@ -252,7 +251,13 @@ void testModParam()
 
 void testPeptideEvidence()
 {
+    if (os_) *os_ << "testPeptideEvidence()\n";
+
     PeptideEvidence a, b;
+
+    Diff<PeptideEvidence> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
 
     a.DBSequence_ref = "DBSequence_ref";
     a.start = 1;
@@ -266,9 +271,8 @@ void testPeptideEvidence()
     a.paramGroup.set(MS_mascot_score, 15.71);
     b = a;
 
-    Diff<PeptideEvidence> diff(a, b);
-    if (os_) *os_ << diff << endl;
-    //unit_assert(!diff);
+    diff(a,b);
+    unit_assert(!diff);
 
     a.DBSequence_ref = "not_DBSequence_ref";
     diff(a, b);
@@ -323,6 +327,8 @@ void testPeptideEvidence()
 
 void testProteinAmbiguityGroup()
 {
+    if (os_) *os_ << "testProteinAmbiguityGroup()\n";
+
     ProteinAmbiguityGroup a, b;
 
     a.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
@@ -346,21 +352,56 @@ void testProteinAmbiguityGroup()
 
 void testProteinDetectionHypothesis()
 {
+    if (os_) *os_ << "testProteinDetectionHypothesis()\n";
+
     ProteinDetectionHypothesis a, b;
-
+    Diff<ProteinDetectionHypothesis> diff(a,b);
+    unit_assert(!diff);
+    
     a.DBSequence_ref = "DBSequence_ref";
-    a.passThreshold = true;
-    //a.peptideHypothesis.push_back();
-}
+    b.DBSequence_ref = "fer_ecneuqeSDB";
+    diff(a,b);
+    unit_assert(diff);
 
+    a.passThreshold = true;
+    b.passThreshold = false;    
+    diff(a,b);
+    unit_assert(diff);
+    
+    if (os_) *os_ << diff << endl;
+    
+}
 
 void testSpectrumIdentificationList()
 {
+    if (os_) *os_ << "testSpectrumIdentificationList()\n";
+
+    SpectrumIdentificationList a, b;
+    Diff<SpectrumIdentificationList> diff(a,b);
+    unit_assert(!diff);
+    
+    a.numSequencesSearched = 9;
+    b.numSequencesSearched = 5;
+    diff(a,b);
+    unit_assert(diff);
+
+    a.fragmentationTable.push_back(MeasurePtr(new Measure()));
+    diff(a,b);
+    unit_assert(diff);
+
+    a.spectrumIdentificationResult.push_back(SpectrumIdentificationResultPtr(new SpectrumIdentificationResult()));
+    diff(a,b);
+    unit_assert(diff);
+    
+
+    if (os_) *os_ << diff << endl;
 }
 
 
 void testProteinDetectionList()
 {
+    if (os_) *os_ << "testProteinDetectionList()\n";
+
 }
 
 

@@ -100,7 +100,7 @@ struct PWIZ_API_DECL ParamContainer
 
 struct PWIZ_API_DECL IdentifiableType
 {
-    static const int INVALID_NATURAL = -1;
+    //    static const int INVALID_NATURAL = -1;
     
     virtual ~IdentifiableType() {}
     
@@ -648,6 +648,8 @@ typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationRe
 
 struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
 {
+    ProteinDetectionHypothesis();
+
     std::string DBSequence_ref;
     bool passThreshold;
 
@@ -655,6 +657,8 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
     // PeptideHypothesis tag
     std::vector<std::string> peptideHypothesis;
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<ProteinDetectionHypothesis> ProteinDetectionHypothesisPtr;

@@ -2,7 +2,7 @@
 // MzIdentML.cpp
 //
 //
-// Original author: Robert Burke <robetr.burke@proteowizard.org>
+// Original author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
@@ -24,7 +24,6 @@
 
 #include "MzIdentML.hpp"
 #include <iterator>
-
 
 namespace pwiz {
 namespace mziddata {
@@ -159,9 +158,8 @@ bool ExternalData::empty() const
 // BibliographicReference
 //
 
-PWIZ_API_DECL BibliographicReference::BibliographicReference()
+PWIZ_API_DECL BibliographicReference::BibliographicReference() : year(0)
 {
-    year = INVALID_NATURAL;
 }
 
 PWIZ_API_DECL bool BibliographicReference::empty() const
@@ -171,7 +169,7 @@ PWIZ_API_DECL bool BibliographicReference::empty() const
         publication.empty() &&
         publisher.empty() &&
         editor.empty() &&
-        year != INVALID_NATURAL &&
+        year != 0 &&
         volume.empty() &&
         issue.empty() &&
         pages.empty() &&
@@ -239,18 +237,18 @@ PWIZ_API_DECL bool Organization::empty() const
 //
 
 PWIZ_API_DECL Modification::Modification()
-    : location(IdentifiableType::INVALID_NATURAL),
-      avgMassDelta(IdentifiableType::INVALID_NATURAL),
-      monoisotopicMassDelta(IdentifiableType::INVALID_NATURAL)
+    : location(0),
+      avgMassDelta(0),
+      monoisotopicMassDelta(0)
 {
 }
 
 PWIZ_API_DECL bool Modification::empty() const
 {
-    return location == IdentifiableType::INVALID_NATURAL &&
+    return location == 0 &&
         residues.empty() &&
-        avgMassDelta == IdentifiableType::INVALID_NATURAL &&
-        monoisotopicMassDelta == IdentifiableType::INVALID_NATURAL &&
+        avgMassDelta == 0 &&
+        monoisotopicMassDelta == 0 &&
         paramGroup.empty();
 }
 
@@ -282,15 +280,15 @@ PWIZ_API_DECL bool MassTable::empty() const
 // IonType
 //
 
-PWIZ_API_DECL IonType::IonType()
+PWIZ_API_DECL IonType::IonType() : charge(0)
 {
-    charge = 0;
 }
 
 
 PWIZ_API_DECL bool IonType::empty() const
 {
-    return index.empty() &&
+    return charge == 0 &&
+        index.empty() &&
         paramGroup.empty() &&
         fragmentArray.empty();
 }
@@ -300,28 +298,41 @@ PWIZ_API_DECL bool IonType::empty() const
 //
 
 PWIZ_API_DECL SpectrumIdentificationItem::SpectrumIdentificationItem()
-    : chargeState(INVALID_NATURAL),
-    experimentalMassToCharge(INVALID_NATURAL),
-    calculatedMassToCharge(INVALID_NATURAL),
-    calculatedPI(INVALID_NATURAL),
-    rank(INVALID_NATURAL),
-    passThreshold(INVALID_NATURAL) 
+    : chargeState(0),
+    experimentalMassToCharge(0),
+    calculatedMassToCharge(0),
+    calculatedPI(0),
+    rank(0),
+    passThreshold(0) 
 {
 }
 
 PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
 {
-    return chargeState == INVALID_NATURAL &&
-        experimentalMassToCharge == INVALID_NATURAL &&
-        calculatedMassToCharge == INVALID_NATURAL &&
-        calculatedPI == INVALID_NATURAL &&
+    return chargeState == 0 &&
+        experimentalMassToCharge == 0 &&
+        calculatedMassToCharge == 0 &&
+        calculatedPI == 0 &&
         Peptide_ref.empty() &&
-        rank == INVALID_NATURAL &&
-        passThreshold == INVALID_NATURAL &&
+        rank == 0 &&
+        passThreshold == 0 &&
         MassTable_ref.empty() &&
         Sample_ref.empty() &&
         peptideEvidence.empty() &&
         fragmentation.empty() &&
+        paramGroup.empty();
+}
+
+
+PWIZ_API_DECL ProteinDetectionHypothesis::ProteinDetectionHypothesis() : passThreshold(0) 
+{
+}
+
+PWIZ_API_DECL bool ProteinDetectionHypothesis::empty() const
+{
+    return DBSequence_ref.empty() &&
+        passThreshold == 0 &&
+        peptideHypothesis.empty() &&
         paramGroup.empty();
 }
 
@@ -339,14 +350,14 @@ bool ProteinAmbiguityGroup::empty() const
 // SpectrumIdentificationList
 //
 
-PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList()
+PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList() :
+    numSequencesSearched(0)
 {
-    numSequencesSearched = INVALID_NATURAL;
 }
 
 PWIZ_API_DECL bool SpectrumIdentificationList::empty() const
 {
-    return numSequencesSearched == INVALID_NATURAL &&
+    return numSequencesSearched == 0 &&
         fragmentationTable.empty() &&
         spectrumIdentificationResult.empty();
 }
@@ -356,9 +367,9 @@ PWIZ_API_DECL bool SpectrumIdentificationList::empty() const
 //
 
 PWIZ_API_DECL PeptideEvidence::PeptideEvidence()
-    : start(INVALID_NATURAL), end(INVALID_NATURAL),
+    : start(0), end(0),
       frame(0), isDecoy(false),
-      missedCleavages(INVALID_NATURAL)
+      missedCleavages(0)
 {
 }
 
@@ -366,13 +377,13 @@ PWIZ_API_DECL PeptideEvidence::PeptideEvidence()
 PWIZ_API_DECL bool PeptideEvidence::empty() const
 {
     return DBSequence_ref.empty() &&
-        start == INVALID_NATURAL &&
-        end == INVALID_NATURAL &&
+        start == 0 &&
+        end == 0 &&
         pre.empty() &&
         post.empty() &&
-        frame == INVALID_NATURAL &&
+        frame == 0 &&
         isDecoy == false &&
-        missedCleavages == INVALID_NATURAL &&
+        missedCleavages == 0 &&
         paramGroup.empty();
 }
 
@@ -403,14 +414,14 @@ PWIZ_API_DECL bool Filter::empty() const
 //
 
 PWIZ_API_DECL Residue::Residue() :
-    Mass(IdentifiableType::INVALID_NATURAL)
+    Mass(0)
 {
 }
 
 PWIZ_API_DECL bool Residue::empty() const
 {
     return Code.empty() &&
-        Mass == IdentifiableType::INVALID_NATURAL;
+        Mass == 0;
 }
 
 //
@@ -534,9 +545,9 @@ bool Sample::empty() const
 //
 
 PWIZ_API_DECL SubstitutionModification::SubstitutionModification() :
-    location(IdentifiableType::INVALID_NATURAL),
-    avgMassDelta(IdentifiableType::INVALID_NATURAL),
-    monoisotopicMassDelta(IdentifiableType::INVALID_NATURAL)
+    location(0),
+    avgMassDelta(0),
+    monoisotopicMassDelta(0)
 {
 }
 
@@ -545,9 +556,9 @@ PWIZ_API_DECL bool SubstitutionModification::empty() const
 {
     return originalResidue.empty() &&
         replacementResidue.empty() &&
-        location == IdentifiableType::INVALID_NATURAL &&
-        avgMassDelta == IdentifiableType::INVALID_NATURAL &&
-        monoisotopicMassDelta == IdentifiableType::INVALID_NATURAL;
+        location == 0 &&
+        avgMassDelta == 0 &&
+        monoisotopicMassDelta == 0;
 }
 
 //
@@ -671,16 +682,16 @@ bool Inputs::empty() const
 
 PWIZ_API_DECL SearchDatabase::SearchDatabase()
 {
-    numDatabaseSequences = IdentifiableType::INVALID_NATURAL;
-    numResidues = IdentifiableType::INVALID_NATURAL;
+    numDatabaseSequences = 0;
+    numResidues = 0;
 }
 
 PWIZ_API_DECL bool SearchDatabase::empty() const
 {
     return version.empty() &&
         releaseDate.empty() &&
-        numDatabaseSequences == IdentifiableType::INVALID_NATURAL &&
-        numResidues == IdentifiableType::INVALID_NATURAL;
+        numDatabaseSequences == 0 &&
+        numResidues == 0;
 }
 
 //

@@ -130,7 +130,7 @@ class PWIZ_API_DECL TextWriter
             child()(br->publisher);
         if (!br->editor.empty())
             child()("editor: "+br->editor);
-        if (br->year != IdentifiableType::INVALID_NATURAL)
+        if (br->year != 0)
             child()("year: "+boost::lexical_cast<std::string>(br->year));
         if (!br->volume.empty())
             child()("volume: "+br->volume);
@@ -191,8 +191,8 @@ class PWIZ_API_DECL TextWriter
         (*this)("IonType: ");
 
         if (!it.index.empty())
-            child()("index", it.index);
-        if (it.charge != IdentifiableType::INVALID_NATURAL)
+            child()("index: ", it.index);
+        if (it.charge != 0)
             child()("charge: "+boost::lexical_cast<std::string>(it.charge));
         
         return *this;
@@ -213,7 +213,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const ModParam& mp)
     {
         (*this)("ModParam: ");
-        if (mp.massDelta != IdentifiableType::INVALID_NATURAL)
+        if (mp.massDelta != 0)
             child()("massDelta: ", boost::lexical_cast<std::string>(mp.massDelta));
         if (!mp.residues.empty())
             child()("residues: ", mp.residues);
@@ -228,7 +228,7 @@ class PWIZ_API_DECL TextWriter
         (*this)("SpectrumIdentificationList: ");
 
         (*this)((IdentifiableType)sil);
-        if (!sil.numSequencesSearched != IdentifiableType::INVALID_NATURAL)
+        if (!sil.numSequencesSearched != 0)
             child()("numSequencesSearched: "+
                     boost::lexical_cast<std::string>(sil.numSequencesSearched));
         if (!sil.fragmentationTable.empty())
@@ -326,7 +326,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SearchModification& sm)
     {
         (*this)("SearchModification: ");
-        if (sm.fixedMod != IdentifiableType::INVALID_NATURAL)
+        if (sm.fixedMod != 0)
             child()("fixedMod: ", boost::lexical_cast<std::string>(sm.fixedMod));
         if (!sm.modParam.empty()){}
             //TODO          child()("modParam: ", sm.modParam);
@@ -354,7 +354,7 @@ class PWIZ_API_DECL TextWriter
             child()("nTermGain: ", ez.nTermGain);
         if (!ez.cTermGain.empty())
             child()("cTermGain: ", ez.cTermGain);
-        if (ez.semiSpecific != IdentifiableType::INVALID_NATURAL)
+        if (ez.semiSpecific != false)
             child()("semiSpecific: " , boost::lexical_cast<std::string>(ez.semiSpecific));
         if (!ez.missedCleavages.empty())
             child()("missedCleavages: ", ez.missedCleavages);
@@ -507,7 +507,7 @@ class PWIZ_API_DECL TextWriter
         (*this)("Residue: ");
         if (!res.Code.empty())
             child()("Code: ", res.Code);
-        if (res.Mass != IdentifiableType::INVALID_NATURAL)
+        if (res.Mass != 0)
             child()("Mass: " + boost::lexical_cast<std::string>(res.Mass));
         return *this;
     }
@@ -515,17 +515,35 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const Modification& mod)
     {
         (*this)("Modification: ");
-        if (mod.location != IdentifiableType::INVALID_NATURAL)
+        if (mod.location != 0)
             child()("location: " + boost::lexical_cast<std::string>(mod.location));
         if (!mod.residues.empty())
             child()("residues: " + mod.residues);
-        if (mod.avgMassDelta != IdentifiableType::INVALID_NATURAL)
+        if (mod.avgMassDelta != 0)
             child()("avgMassDelta: " + boost::lexical_cast<std::string>(mod.avgMassDelta));
-        if (mod.monoisotopicMassDelta != IdentifiableType::INVALID_NATURAL)
+        if (mod.monoisotopicMassDelta != 0)
             child()("monoisotopicMassDelta: ", boost::lexical_cast<std::string>(mod.monoisotopicMassDelta));
         if (!mod.paramGroup.empty())
             child()("paramGroup: ", mod.paramGroup);
 
+        return *this;
+    }
+
+    TextWriter& operator()(const PeptideEvidence& pe)
+    {
+        (*this)("PeptideEvidence: ");
+        if (pe.start != 0)
+            child()("start: " + boost::lexical_cast<std::string>(pe.start));
+        if (pe.end != 0)
+            child()("end: " + boost::lexical_cast<std::string>(pe.end));
+        if (!pe.pre.empty())
+            child()("pre: " + pe.pre);
+        if (!pe.post.empty())
+            child()("post: " + pe.post);
+        if (pe.frame != 0)
+            child()("frame: " + boost::lexical_cast<std::string>(pe.frame));
+        if (pe.missedCleavages != 0)
+            child()("frame: " + boost::lexical_cast<std::string>(pe.missedCleavages));
         return *this;
     }
 

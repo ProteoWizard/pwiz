@@ -387,6 +387,7 @@ void diff(const IonType& a,
           IonType& b_a,
           const DiffConfig& config)
 {
+    diff_numeric(a.charge, b.charge, a_b.charge, b_a.charge, config);
     vector_diff(a.index, b.index, a_b.index, b_a.index);
     vector_diff_deep(a.fragmentArray, b.fragmentArray,
          a_b.fragmentArray, b_a.fragmentArray, config);
