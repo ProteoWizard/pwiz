@@ -24,6 +24,10 @@
 #define PWIZ_SOURCE
 #include "MZTolerance.hpp"
 #include <stdexcept>
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <string>
 
 
 namespace pwiz {
@@ -31,6 +35,34 @@ namespace analysis {
 
 
 using namespace std;
+
+
+ostream& PWIZ_API_DECL operator<<(ostream& os, const MZTolerance& mzt)
+{
+    const char* units = (mzt.units==MZTolerance::MZ) ? "mz" : "ppm";
+    os << mzt.value << units;
+    return os;
+}
+
+
+istream& PWIZ_API_DECL operator>>(istream& is, MZTolerance& mzt)
+{
+    string temp;
+    is >> mzt.value >> temp;
+
+    transform(temp.begin(), temp.end(), temp.begin(), ::toupper);
+    if (temp == "MZ") mzt.units = MZTolerance::MZ;
+    else if (temp == "PPM") mzt.units = MZTolerance::PPM;
+    else throw runtime_error(("[MZTolerance::operator>>] Unable to parse units: " + temp).c_str());
+
+    return is;
+}
+
+
+bool PWIZ_API_DECL operator==(const MZTolerance& a, const MZTolerance& b)
+{
+    return a.value==b.value && a.units==b.units;
+}
 
 
 double& PWIZ_API_DECL operator+=(double& d, const MZTolerance& tolerance)

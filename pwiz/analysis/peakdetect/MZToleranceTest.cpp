@@ -88,11 +88,43 @@ void testIsWithinTolerance()
 }
 
 
+void testIO()
+{
+    if (os_) *os_ << "testIO()\n";
+
+    MZTolerance temp;
+    if (os_) *os_ << "temp: " << temp << endl; 
+
+    MZTolerance fiveppm(5, MZTolerance::PPM);
+    ostringstream oss;
+    oss << fiveppm;
+    if (os_) *os_ << "fiveppm: " << oss.str() << endl;
+
+    istringstream iss(oss.str());
+    iss >> temp;
+    if (os_) *os_ << "temp: " << temp << endl; 
+
+    unit_assert(temp == fiveppm);
+
+    MZTolerance blackbirds(4.20, MZTolerance::MZ);
+    ostringstream oss2;
+    oss2 << blackbirds;
+    if (os_) *os_ << "blackbirds: " << oss2.str() << endl;
+
+    istringstream iss2(oss2.str());
+    iss2 >> temp;
+    if (os_) *os_ << "temp: " << temp << endl; 
+
+    unit_assert(temp == blackbirds);
+}
+
+
 void test()
 {
     testMZ();
     testPPM();
     testIsWithinTolerance();
+    testIO();
 }
 
 

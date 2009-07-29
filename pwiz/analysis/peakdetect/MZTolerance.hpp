@@ -25,6 +25,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include <iosfwd>
 
 
 namespace pwiz {
@@ -40,10 +41,15 @@ struct PWIZ_API_DECL MZTolerance
     double value;
     Units units;
 
-    MZTolerance(double _value, Units _units = MZ)
+    MZTolerance(double _value = 0, Units _units = MZ)
     :   value(_value), units(_units)
     {}
 };
+
+
+std::ostream& PWIZ_API_DECL operator<<(std::ostream& os, const MZTolerance& mzt);
+std::istream& PWIZ_API_DECL operator>>(std::istream& is, MZTolerance& mzt);
+bool PWIZ_API_DECL operator==(const MZTolerance& a, const MZTolerance& b);
 
 
 double& PWIZ_API_DECL operator+=(double& d, const MZTolerance& tolerance);

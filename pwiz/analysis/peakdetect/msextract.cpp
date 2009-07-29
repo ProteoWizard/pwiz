@@ -54,36 +54,6 @@ using namespace pwiz::minimxml;
 using boost::shared_ptr;
 
 
-MZTolerance translateMzTol(string& curr)
-{
-    if (curr.find("mz") != string::npos)
-        {
-            size_t pos = curr.find("mz");
-            curr.erase(pos,2);
-
-            double mzTol = boost::lexical_cast<double>(curr);
-            MZTolerance mzTolerance(mzTol);
-            mzTolerance.units = MZTolerance::MZ;
-
-            return mzTolerance;
-
-        }
-    else if (curr.find("ppm") != string::npos)
-        {
-            size_t pos = curr.find("ppm");
-            curr.erase(pos,3);
-
-            double mzTol = boost::lexical_cast<double>(curr);
-            MZTolerance mzTolerance(mzTol);
-            mzTolerance.units = MZTolerance::MZ;
-
-            return mzTolerance;
-        }
-
-    else throw runtime_error("[msextract] Bad MZTolerance");
-}
-
-
 struct Config
 {
     vector<string> filenames;
@@ -116,17 +86,16 @@ void Config::write_program_options_config(ostream& os) const
     // write out configuration options in format parseable by program_options
 
     os << "featureDetectorImplementation=" << featureDetectorImplementation << endl;
-    //os << "noiseCalculatorZLevel=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
     os << "noiseCalculator_2Pass.zValueCutoff=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
     os << "peakFinder_SNR.windowRadius=" << fdpConfig.peakFinder_SNR.windowRadius << endl;
     os << "peakFinder_SNR.zValueThreshold=" << fdpConfig.peakFinder_SNR.zValueThreshold << endl;
     os << "peakFitter_Parabola.windowRadius=" << fdpConfig.peakFitter_Parabola.windowRadius << endl;
-    os << "#peakelGrowerMZTol=TODO" << endl; // TODO
+    os << "peakelGrower_Proximity.mzTolerance=" << fdpConfig.peakelGrower_Proximity.mzTolerance << endl;
     os << "peakelGrower_Proximity.rtTolerance=" << fdpConfig.peakelGrower_Proximity.rtTolerance << endl;
     os << "peakelPicker_Basic.minCharge=" << fdpConfig.peakelPicker_Basic.minCharge << endl;
     os << "peakelPicker_Basic.maxCharge=" << fdpConfig.peakelPicker_Basic.maxCharge << endl;
     os << "peakelPicker_Basic.minMonoisotopicPeakelSize=" << fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize << endl;
-    os << "#peakelPickerMZTol=TODO" << endl; // TODO
+    os << "peakelPicker_Basic.mzTolerance=" << fdpConfig.peakelPicker_Basic.mzTolerance << endl;
     os << "peakelPicker_Basic.rtTolerance=" << fdpConfig.peakelPicker_Basic.rtTolerance << endl;
     os << "peakelPicker_Basic.minPeakelCount=" << fdpConfig.peakelPicker_Basic.minPeakelCount << endl;
     os << "#maxChargeState=TODO" << endl; // TODO
@@ -162,10 +131,6 @@ Config parseCommandLine(int argc, char* argv[])
     ostringstream usage;
     usage << "Usage: msextract [options] [file]\n"
           << endl;
-    
-    // local variables that will be translated to MZTolerance objects
-    string pgmz;
-    string ppmz;
 
     // input file of config parameters
     string configFilename;
@@ -191,12 +156,12 @@ Config parseCommandLine(int argc, char* argv[])
         ("peakFinder_SNR.windowRadius", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), ": specify window radius for PeakFinder_SNR")
         ("peakFinder_SNR.zValueThreshold", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold)->default_value(config.fdpConfig.peakFinder_SNR.zValueThreshold), ": specify z threshold for PeakFinder_SNR")
         ("peakFitter_Parabola.windowRadius", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius)->default_value(config.fdpConfig.peakFitter_Parabola.windowRadius), ": specify window radius for PeakFitter_Parabola")
-        ("peakelGrowerMZTol", po::value<string>(&pgmz), ": specify mz tolerance for PeakelGrower_Proximity")
+        ("peakelGrower_Proximity.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelGrower_Proximity.mzTolerance), ": specify mz tolerance for PeakelGrower_Proximity")
         ("peakelGrower_Proximity.rtTolerance", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance)->default_value(config.fdpConfig.peakelGrower_Proximity.rtTolerance), ": specify rt tolerance for PeakelGrower_Proximity")
         ("peakelPicker_Basic.minCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge)->default_value(config.fdpConfig.peakelPicker_Basic.minCharge), ": specify min charge for PeakelPicker_Basic")
         ("peakelPicker_Basic.maxCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge)->default_value(config.fdpConfig.peakelPicker_Basic.maxCharge), ": specify max charge for PeakelPicker_Basic")
         ("peakelPicker_Basic.minMonoisotopicPeakelSize", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize)->default_value(config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), ": specify min monoisotopic peakel size for PeakelPicker_Basic")
-        ("peakelPickerMZTol", po::value<string>(&ppmz), ": specify mz tolerance for PeakelPicker_Basic")
+        ("peakelPicker_Basic.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelPicker_Basic.mzTolerance), ": specify mz tolerance for PeakelPicker_Basic")
         ("peakelPicker_Basic.rtTolerance", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance)->default_value(config.fdpConfig.peakelPicker_Basic.rtTolerance), ": specify rt tolerance for PeakelPicker_Basic")
         ("peakelPicker_Basic.minPeakelCount", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), ": specify min peakel count for PeakelPicker_Basic")
         ;    
@@ -264,9 +229,6 @@ Config parseCommandLine(int argc, char* argv[])
 
     if (config.filenames.empty())
         throw runtime_error(usage.str());
-
-    if (pgmz.size()>0) config.fdpConfig.peakelGrower_Proximity.mzTolerance = translateMzTol(pgmz);
-    if (ppmz.size()>0) config.fdpConfig.peakelPicker_Basic.mzTolerance = translateMzTol(ppmz);
 
     return config;
 }
