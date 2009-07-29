@@ -17,7 +17,7 @@ typedef boost::shared_ptr<DataFetcherContainer> DfcPtr;
 
 struct SearchNeighborhoodCalculator
 {
-    SearchNeighborhoodCalculator() : _id("default"), _mzTol(.005), _rtTol(60) {} // consider moving to calculateTolerances.
+    SearchNeighborhoodCalculator() : _id("default"), _mzTol(.005), _rtTol(60) {}
     SearchNeighborhoodCalculator(double mzTol, double rtTol) : _mzTol(mzTol), _rtTol(rtTol) { _id = ("naive[" + boost::lexical_cast<string>(_mzTol) + "," + boost::lexical_cast<string>(_rtTol) + "]").c_str();}
 
     virtual void calculateTolerances(const DataFetcherContainer& dfc) {}
@@ -30,15 +30,18 @@ struct SearchNeighborhoodCalculator
 
     virtual ~SearchNeighborhoodCalculator(){}
 
-    virtual bool operator==(const SearchNeighborhoodCalculator& that){ return _id == that._id && _mzTol == that._mzTol && _rtTol == that._rtTol;}
-    virtual bool operator!=(const SearchNeighborhoodCalculator& that){ return !(*this == that); }
+    virtual bool operator==(const SearchNeighborhoodCalculator& that) const;
+    virtual bool operator!=(const SearchNeighborhoodCalculator& that) const;
 
 };
 
 
 struct NormalDistributionSearch : public SearchNeighborhoodCalculator
 {
-    NormalDistributionSearch(double Z = 3) :  _Z(Z) { _id = ("normalDistribution[" + boost::lexical_cast<string>(_Z) + "]").c_str(); }
+    NormalDistributionSearch(double threshold = 0.95) :  _threshold(threshold) 
+    { 
+        _id = ("normalDistribution[" + boost::lexical_cast<string>(_threshold) + "]").c_str(); 
+    }
    
     virtual void calculateTolerances(const DfcPtr dfc);
     virtual  double score(const SpectrumQuery& a, const Feature& b) const;
@@ -49,9 +52,9 @@ struct NormalDistributionSearch : public SearchNeighborhoodCalculator
   
     double _mu_rt;
     double _sigma_rt;
+   
+    double _threshold;
 
-    double _Z;
-        
 };
 
 

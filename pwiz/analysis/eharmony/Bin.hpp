@@ -42,7 +42,7 @@ public:
     void update(const T& t, pair<double,double> coordinates);
     void erase(const T& t, pair<double,double> coordinates);
     void rebin(const double& binSizeX, const double& binSizeY);
-
+    size_t size() const { return _data.size();}
     size_t count(pair<int, int> coordinates) const
     {
         return _data.count(coordinates);

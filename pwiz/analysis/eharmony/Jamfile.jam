@@ -1,5 +1,5 @@
 lib pwiz_analysis_eharmony
-    :
+    : AMTDatabase.cpp
       Bin.hpp 
       FeatureSequenced.cpp
       Feature_dataFetcher.cpp
@@ -10,11 +10,11 @@ lib pwiz_analysis_eharmony
       Feature2PeptideMatcher.cpp
       WarpFunction.cpp
       AMTContainer.cpp
-      EharmonyAgglomerator.cpp
       Exporter.cpp
       Matrix.cpp
       NeighborJoiner.cpp
       DistanceAttributes.cpp
+      DatabaseQuery.cpp
       MSIAMTData.cpp
       ../../data/misc//pwiz_data_misc
       ../../utility/proteome//pwiz_utility_proteome 
@@ -46,7 +46,7 @@ unit-test DistanceAttributes : DistanceAttributesTest.cpp pwiz_analysis_eharmony
 
 unit-test MSIAMTData : MSIAMTDataTest.cpp pwiz_analysis_eharmony ;
 
-#unit-test Matcher : MatcherTest.cpp pwiz_analysis_eharmony ;
+unit-test DatabaseQuery : DatabaseQueryTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp
@@ -56,21 +56,15 @@ exe eharmony
       pwiz_analysis_eharmony
     ;
 
-exe amtdb
-    : AMTDatabase.cpp
-      pwiz_analysis_eharmony      
-    ;
-
-exe mspostfix
-    : MSPostfix.cpp
+exe mscupid
+    : mscupid.cpp
       pwiz_analysis_eharmony
-      ../peakdetect//pwiz_analysis_peakdetect
-      ../../data/msdata//pwiz_data_msdata
+      /ext/boost//program_options
+      /ext/boost//filesystem
     ;
 
-install bin
+install bin      
     : eharmony
-      amtdb
-      mspostfix
+      mscupid
     : <location>.
     ;

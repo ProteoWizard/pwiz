@@ -14,66 +14,26 @@ using namespace pwiz::proteome;
 
 AMTDatabase::AMTDatabase(const AMTContainer& amtContainer)
 {
-    //    vector<SpectrumQuery> ms2 = amtContainer._sqs;
     vector<boost::shared_ptr<SpectrumQuery> > ms2 = amtContainer._pidf->getAllContents();
     _peptides = PidfPtr(new PeptideID_dataFetcher(ms2));
 
 }
 
-vector<boost::shared_ptr<SpectrumQuery> > AMTDatabase::query(const Feature& f) 
+vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in, string outputDir)
 {
-    double mz = f.mz;           
-    double rt = f.retentionTime;
-    return _peptides->getSpectrumQueries(mz,rt);
+    outputDir += "/amtdb_query";
+    outputDir += boost::lexical_cast<string>(boost::lexical_cast<int>(nds._threshold * 100));
 
-}
-
-vector<boost::shared_ptr<SpectrumQuery> > AMTDatabase::query(const double& mz, const double& rt) 
-{
-    return _peptides->getSpectrumQueries(mz,rt);
-
-}
-
-// pass in data fetcher container of AMTDatabase peptides, dummy features, query run peptides, query run features
-
-vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, const SearchNeighborhoodCalculator& snc)
-{
-    cout << "querying" << endl;
-    //    dfc.adjustRT(true, false);
-    dfc.warpRT(wfe);
-
-    //    Peptide2FeatureMatcher p2fm(dfc._pidf_b, dfc._fdf_a, snc);
-    Feature2PeptideMatcher f2pm(dfc._fdf_a, dfc._pidf_b, snc);
-    vector<SpectrumQuery> result;
-    vector<MatchPtr> matches = f2pm.getMatches();
-    vector<MatchPtr>::iterator it = matches.begin();
-    for(; it != matches.end(); ++it) result.push_back((*it)->spectrumQuery);
-
-    return result;
-
-}
-
-vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFunctionEnum& wfe, SearchNeighborhoodCalculator& nds, MSMSPipelineAnalysis& mspa_in)
-{
-    cout << "querying ... " << endl;
-    string outputDir = "./amtdb_query";
-    //    outputDir += boost::lexical_cast<string>(boost::lexical_cast<int>(nds._Z * 100));
     boost::filesystem::create_directory(outputDir);
 
-    if (!(dfc._pidf_a->getRtAdjustedFlag() && dfc._fdf_a->getMS2LabeledFlag())) dfc.adjustRT(true,false); // only do the second runs , not the whole database again  
+    PeptideMatcher pm(dfc->_pidf_a, dfc->_pidf_b);
+    Feature2PeptideMatcher f2pm(dfc->_fdf_a, dfc->_pidf_b, nds);
 
-    dfc.warpRT(wfe);
-    nds.calculateTolerances(dfc);
-    cout << "constructing pm ... " << endl;
-    PeptideMatcher pm(dfc._pidf_a, dfc._pidf_b);
-
-    cout << "constructing f2pm ... " << endl;
-    
-    Feature2PeptideMatcher f2pm(dfc._fdf_a, dfc._pidf_b, nds);
+    cout << "[AMTDatabase] Number of matches accepted: " << f2pm.getMatches().size() << endl;
 
     Exporter exporter(pm, f2pm);
-    exporter._dfc = DfcPtr(new DataFetcherContainer(dfc._pidf_a, dfc._pidf_b, dfc._fdf_a, dfc._fdf_b));
-    
+    exporter._dfc = dfc;
+
     ofstream ofs_anch((outputDir + "/anchors.txt").c_str());
     exporter.writeAnchors(ofs_anch);
 
@@ -108,7 +68,7 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
 
     ofstream ofs_r((outputDir + "/r_input.txt").c_str());
     exporter.writeRInputFile(ofs_r);
-
+    
     ofstream ofs_tp((outputDir + "/tp.txt").c_str());
     exporter.writeTruePositives(ofs_tp);
 
@@ -120,6 +80,12 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
 
     ofstream ofs_fn((outputDir + "/fn.txt").c_str());
     exporter.writeFalseNegatives(ofs_fn);
+    
+    ofstream ofs_up((outputDir + "/up.txt").c_str());
+    exporter.writeUnknownPositives(ofs_up);
+
+    ofstream ofs_un((outputDir + "/un.txt").c_str());
+    exporter.writeUnknownNegatives(ofs_un);
 
     vector<SpectrumQuery> result;
     vector<MatchPtr> matches = f2pm.getMatches();
@@ -130,7 +96,6 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
 
     ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
     exporter.writePepXML(mspa_in, ofs_pepxml);
-
     
     ofstream ofs_missed((outputDir + "/mismatches.xml").c_str());
     XMLWriter writer(ofs_missed);
@@ -140,114 +105,4 @@ vector<SpectrumQuery> AMTDatabase::query(DataFetcherContainer& dfc, const WarpFu
 
 
     return result;
-}
-
-int main(int argc, char* argv[])
-{
-  if (argc < 4) 
-    {
-      cout << "Usage: ./amtdb pepxml featurefile stdev" << endl;
-      return 1;
-    }
-
-    ifstream dbFile("amt/database.xml");
-    AMTContainer amt;
-    cout << "[amtdb] reading database file ... " << endl;
-    amt.read(dbFile);
-    cout << "[amtdb] constructing database for query ... " << endl;
-    AMTDatabase db(amt);
-
-    cout << "[amtdb] reading peptide file ... " << endl;
-    ifstream queryPeptideFile(argv[1]);
-    PidfPtr pidf_query(new PeptideID_dataFetcher(queryPeptideFile));
-    MSMSPipelineAnalysis mspa_query;
-    mspa_query.read(queryPeptideFile);
-
-    cout << "[amtdb] reading feature file ... " << endl;
-    ifstream queryFeatureFile(argv[2]);
-    FdfPtr fdf_query(new Feature_dataFetcher(queryFeatureFile));
-    //    DataFetcherContainer dfc(db._peptides, pidf_query, amt._fdf, fdf_query);
-    DataFetcherContainer dfc(pidf_query, db._peptides, fdf_query, amt._fdf);
-    dfc.adjustRT(true, false);    
-
-    PeptideMatcher pm(pidf_query, db._peptides);
-    Exporter exporter(pm, Feature2PeptideMatcher());
-    
-    string outputDir = "./amtdb_query";
-    // outputDir += boost::lexical_cast<string>(boost::lexical_cast<int>(boost::lexical_cast<double>(argv[1]) * 100));
-    boost::filesystem::create_directory(outputDir);
-    /*
-    ofstream ofs((outputDir + "/preWiggle.txt").c_str());
-    exporter.writeWigglePlot(ofs);
-    
-    ofstream ofs2((outputDir + "/initialFeatures.txt").c_str());
-    vector<FeatureSequenced> fsss = fdf_query.getAllContents();
-    vector<FeatureSequenced>::iterator fritter = fsss.begin();
-    for(; fritter != fsss.end(); ++fritter)
-      {
-	  ofs2 << fritter->feature->mz << "\t" << fritter->feature->retentionTime << "\n";
-
-      }
-    */
-    //    ofstream ofs3((outputDir + "/anchors.txt").c_str());
-    //exporter.writeAnchors(ofs3);
-
-    WarpFunctionEnum wfe=PiecewiseLinear;
-    SearchNeighborhoodCalculator snc(.001,72);
-    //NormalDistributionSearch nds(boost::lexical_cast<double>(argv[3]));   
-
-    cout << "[amtdb] querying amt database ... " << endl;
-    db.query(dfc,wfe,snc,mspa_query);
-    /*
-    nds._Z = .01;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .1;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .2;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .3;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .4;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .5;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = .75;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 1;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 2;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 3;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 5;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 7;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 10;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 15;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 20;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    nds._Z = 50;
-    cout << "[amtdb] " << nds._Z;
-    db.query(dfc,wfe,nds,mspa_query);
-    */
-    return 0;
-
 }

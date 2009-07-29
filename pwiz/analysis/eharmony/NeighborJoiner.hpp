@@ -16,7 +16,7 @@ typedef AMTContainer Entry;
 
 struct NeighborJoiner : public Matrix
 {     
-    NeighborJoiner(const vector<boost::shared_ptr<Entry> >& entries);
+    NeighborJoiner(const vector<boost::shared_ptr<Entry> >& entries, const WarpFunctionEnum& wfe = Default);
 
     void addDistanceAttribute(boost::shared_ptr<DistanceAttribute> attr) { _attributes.push_back(attr); }
     void calculateDistanceMatrix();
@@ -28,6 +28,8 @@ struct NeighborJoiner : public Matrix
 
     vector<boost::shared_ptr<DistanceAttribute> > _attributes;
     vector<pair<int, int> > _tree; // stores the row/column indices of the merge at each step
+    
+    WarpFunctionEnum _wfe;
 
 };
 

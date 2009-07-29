@@ -11,15 +11,7 @@ using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
 using namespace pwiz::minimxml;
 
-// namespace {
-
-// double zscore(double value, double mean, double stdev)
-// {
-//     return (fabs(value - mean) / stdev);
-
-// }
-
-// } // anonymous namespace
+double square(const double& d){ return d*d;}
 
 bool SearchNeighborhoodCalculator::close(const SpectrumQuery& a, const Feature& b) const
 {
@@ -36,12 +28,27 @@ double SearchNeighborhoodCalculator::score(const SpectrumQuery& a, const Feature
 
 }
 
+bool SearchNeighborhoodCalculator::operator==(const SearchNeighborhoodCalculator& that) const
+{
+    return _id == that._id &&
+        _mzTol == that._mzTol &&
+        _rtTol == that._rtTol;
+
+}
+
+bool SearchNeighborhoodCalculator::operator!=(const SearchNeighborhoodCalculator& that) const
+{
+    return (*this) != that;
+
+}   
+
 void NormalDistributionSearch::calculateTolerances(const DfcPtr dfc) 
 {
     PeptideMatcher pm(dfc->_pidf_a, dfc->_pidf_b);
     pm.calculateDeltaRTDistribution();
     pm.calculateDeltaMZDistribution();
 
+    // calculate normal distribution
     pair<double,double> mz_params = pm.getDeltaMZParams();
     pair<double,double> rt_params = pm.getDeltaRTParams();
     
@@ -51,51 +58,39 @@ void NormalDistributionSearch::calculateTolerances(const DfcPtr dfc)
     _mu_mz = mz_params.first;
     _sigma_mz = mz_params.second;
 
-    _mzTol = _Z*_sigma_mz;
-    _rtTol = _Z*_sigma_rt;
+    _mzTol = 100;
+    _rtTol = 6000;
 
 }
 
 bool NormalDistributionSearch::close(const SpectrumQuery& a, const Feature& b) const
 {
-    cout << "using close" << endl;
-    return (this->score(a,b) > .006);
+    return this->score(a, b) > _threshold;
+
+}
+
+double calculateFoldedNormalPval(const double& x, const double& mu, const double& sigma)
+{ 
+    double firstterm = -.5 * (1 + erf((-x-mu)/(sqrt(2) * sigma))) + .5 * (1 + erf((-mu)/(sqrt(2) * sigma))); 
+    double secondterm = .5 * (1 + erf((x-mu)/(sqrt(2) * sigma))) - .5 * (1 + erf((-mu)/(sqrt(2) * sigma)));
+    
+    if (firstterm + secondterm < 0) 
+        throw runtime_error(("[SearchNeighborhoodCalculator] Negative pval! x = " 
+                             + boost::lexical_cast<string>(x) ).c_str());
+    
+    return ( firstterm + secondterm);
+
 }
 
 double NormalDistributionSearch::score(const SpectrumQuery& a, const Feature& b) const
 {
-    const double e = 2.718;
-    const double pi = 3.14159;
+    double mzDiff = fabs(Ion::mz(a.precursorNeutralMass, a.assumedCharge) - b.mz);
+    double rtDiff = fabs(a.retentionTimeSec - b.retentionTime);
 
-    double mzDiff = (Ion::mz(a.precursorNeutralMass, a.assumedCharge) - b.mz);
-    double rtDiff = (a.retentionTimeSec - b.retentionTime);
-    double pval_rt = 0;
-    //    double pval_mz= 0.5 * erfc(-(mzDiff - _mu_mz)/(sqrt(2)*_sigma_mz));
-    //    double pval_rt = 0.5 * erfc(-(rtDiff - _mu_rt)/(sqrt(2)*_sigma_rt));
-    if (rtDiff < _mu_rt) 
-        {
-            pval_rt = 1/(_sigma_rt * sqrt(2*pi));
-            //            cout << " first: " << endl;
-            //            pval_rt -= 1/(_sigma_rt * sqrt(2*pi))*pow(e,(-((rtDiff-_mu_rt)*(rtDiff - _mu_rt))/(2*pow(_sigma_rt,2))));
-            pval_rt -= 1/(_sigma_rt * sqrt(2*pi)) * pow(e,-(rtDiff- _mu_rt)*(rtDiff - _mu_rt)/(2*_sigma_rt * _sigma_rt)) ;
-            //cout << "rtDiff: " << rtDiff << endl;
-            /*cout << "mu rt: " << _mu_rt << endl;
-            cout << "sigma: " << _sigma_rt << endl;
-            cout << "numerator: " << -(rtDiff-_mu_rt)*(rtDiff-_mu_rt) << endl;
-            cout << "denominator: " << 2*_sigma_rt * _sigma_rt << endl;
-            */
-      }
-
-    if (rtDiff >= _mu_rt)
-        {
-            pval_rt = 1/(_sigma_rt * sqrt(2*pi))*pow(e,(-pow((rtDiff - _mu_rt),2)/(2*_sigma_rt*_sigma_rt))) -1/(_sigma_rt * (sqrt(2*pi)));
-            //            cout << "bigger: " << pval_rt << endl;
-
-        }
-
-    //    cout << "rtdiff: " << rtDiff << " pval_rt: " << pval_rt << " score: " << 1-pval_rt << endl;
-    return (pval_rt); //test
-    //    return ((1 - pval_mz)*(1-pval_rt)); // not a legitimate p(h_0) but a quantitative measure of how bad/good
+    double pval_mz = calculateFoldedNormalPval(mzDiff, _mu_mz, _sigma_mz);    
+    double pval_rt = calculateFoldedNormalPval(rtDiff, _mu_rt, _sigma_rt);
+    
+    return (1-pval_mz)*(1-pval_rt); // not a legitimate p(h_0) but a quantitative measure of how bad/good
 
 }
 

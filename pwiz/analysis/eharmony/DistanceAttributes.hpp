@@ -15,6 +15,8 @@ namespace eharmony{
 
 typedef AMTContainer Entry;
 
+enum DistanceAttributeEnum { _Hamming, _NumberOfMS2IDs, _Random, _RTDiff, _WeightedHamming};
+
 struct DistanceAttribute
 {
     DistanceAttribute(){}

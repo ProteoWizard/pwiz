@@ -8,7 +8,7 @@
 using namespace pwiz;
 using namespace eharmony;
 
-NeighborJoiner::NeighborJoiner(const vector<boost::shared_ptr<Entry> >& entries) : Matrix(entries.size(), entries.size())
+NeighborJoiner::NeighborJoiner(const vector<boost::shared_ptr<Entry> >& entries, const WarpFunctionEnum& wfe) : Matrix(entries.size(), entries.size()), _wfe(wfe)
 {
     vector<boost::shared_ptr<Entry> >::const_iterator it = entries.begin();
     for(; it!= entries.end(); ++it)
@@ -60,26 +60,34 @@ void NeighborJoiner::joinNearest()
     AMTContainer ra = _rowEntries.at(nearest.first);
     AMTContainer rb = _rowEntries.at(nearest.second);
 
-    cout << "to be merged: " << ra._id << " and " << rb._id << endl;
+    cout << "Merging: " << ra._id << " and " << rb._id << endl;
     AMTContainer ra_copy = ra;
 
+    // adjust rt and warp entries
+
+    DataFetcherContainer dfc(ra._pidf, rb._pidf, ra._fdf, rb._fdf);
+
+    const bool adjust_a = (ra._pidf->getRtAdjustedFlag() + 1) % 2;
+    const bool adjust_b = (rb._pidf->getRtAdjustedFlag() + 1) % 2;
+
+    dfc.adjustRT(adjust_a, adjust_b);
+    dfc.warpRT(_wfe);
+
+    // merge using the row indices
     ra.merge(rb);
     replace(_rowEntries.begin(), _rowEntries.end(), ra_copy, ra);
     _rowEntries.erase(find(_rowEntries.begin(), _rowEntries.end(),rb));
     
-    AMTContainer ca = _columnEntries.at(nearest.first);
+    // no need to merge the column indices (shared ptrs) but do need to erase
     AMTContainer cb = _columnEntries.at(nearest.second);
-
-    AMTContainer ca_copy = ca;
-    
-    ca.merge(cb);
-    replace(_columnEntries.begin(), _columnEntries.end(), ca_copy, ca);
     _columnEntries.erase(find(_columnEntries.begin(), _columnEntries.end(), cb));
+    
+    // store indices of merging
+    _tree.push_back(nearest); 
 
-    _tree.push_back(nearest); // store merging 
-
-    _data.clear(); // old distance matrix is not any good
-    calculateDistanceMatrix(); // recalculate it
+    // recalculate distance matrix with new entries
+    _data.clear(); 
+    calculateDistanceMatrix();
 
 }
 

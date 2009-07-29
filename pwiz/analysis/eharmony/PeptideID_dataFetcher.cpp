@@ -17,18 +17,15 @@ vector<SQBinPair> getCoordinates(const vector<SpectrumQuery>& sq)
 {
     vector<SQBinPair> result;
     vector<SpectrumQuery>::const_iterator sq_it = sq.begin();
-    if (true)
+    for(; sq_it != sq.end(); ++sq_it) 
         {
-            for(; sq_it != sq.end(); ++sq_it) 
+            if (sq_it->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .9) 
                 {
-                    if (sq_it->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .7) 
-                        {
-                            result.push_back(make_pair(make_pair(Ion::mz(sq_it->precursorNeutralMass,sq_it->assumedCharge), sq_it->retentionTimeSec),*sq_it));
-
-                        }
-
+                    SpectrumQuery curr = *sq_it;
+                    const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
+                    const double rt = curr.retentionTimeSec;
+                    result.push_back(make_pair(make_pair(mz, rt), curr));
                 }
-
         }
 
     return result;
@@ -39,16 +36,14 @@ vector<SQBinPair> getCoordinates(const vector<boost::shared_ptr<SpectrumQuery> >
 {
     vector<SQBinPair> result;
     vector<boost::shared_ptr<SpectrumQuery> >::const_iterator sq_it = sq.begin();
-    if (true)
+    for(; sq_it != sq.end(); ++sq_it) 
         {
-            for(; sq_it != sq.end(); ++sq_it) 
+            if ((*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .9) 
                 {
-                    if ((*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= .7) 
-                        {
-                            result.push_back(make_pair(make_pair(Ion::mz((*sq_it)->precursorNeutralMass,(*sq_it)->assumedCharge), (*sq_it)->retentionTimeSec),*(*sq_it)));
-
-                        }
-
+                    SpectrumQuery curr = **sq_it;
+                    const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
+                    const double rt = curr.retentionTimeSec;
+                    result.push_back(make_pair(make_pair(mz, rt), curr));
                 }
 
         }
@@ -56,8 +51,6 @@ vector<SQBinPair> getCoordinates(const vector<boost::shared_ptr<SpectrumQuery> >
     return result;
 
 }
-
-
 
 PeptideID_dataFetcher::PeptideID_dataFetcher(istream& is) : _rtAdjusted(false)
 {
@@ -70,13 +63,6 @@ PeptideID_dataFetcher::PeptideID_dataFetcher(istream& is) : _rtAdjusted(false)
     _bin = Bin<SpectrumQuery>(spectrumQueries,.005,60);
 
 }
-
-/*PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<SpectrumQuery>& sqs) : _rtAdjusted(false)
-{
-    vector<SQBinPair> spectrumQueries = getCoordinates(sqs);
-    _bin = Bin<SpectrumQuery>(spectrumQueries,.005,60);
-
-    }*/
 
 PeptideID_dataFetcher::PeptideID_dataFetcher(const vector<boost::shared_ptr<SpectrumQuery> >& sqs) : _rtAdjusted(false)
 {

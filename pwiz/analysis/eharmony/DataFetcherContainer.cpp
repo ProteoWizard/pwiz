@@ -4,6 +4,7 @@
 
 #include "DataFetcherContainer.hpp"
 #include "PeptideMatcher.hpp"
+#include "SearchNeighborhoodCalculator.hpp"
 #include "pwiz/utility/proteome/Peptide.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
 #include <iostream>
@@ -26,26 +27,35 @@ namespace{
     ofstream ofs("peptide_coords.txt");
     FeatureSequencedPtr getBestMatch(boost::shared_ptr<SpectrumQuery> sq, const FdfPtr fdf)
     {             
+        SearchNeighborhoodCalculator snc;
+        snc._mzTol = .005;
+        snc._rtTol = 60;
+
         FeatureSequencedPtr result(new FeatureSequenced());
         Bin<FeatureSequenced> featureBin = fdf->getBin();	
+
         pair<double,double> peptideCoords = make_pair(Ion::mz(sq->precursorNeutralMass, sq->assumedCharge), sq->retentionTimeSec);
         ofs << peptideCoords.first << "\t" << peptideCoords.second << "\n";
-        double bestScore = 1000000;               
+
+        double bestScore = 100000000;               
         vector<boost::shared_ptr< FeatureSequenced> > adjacentContenders;
         featureBin.getAdjacentBinContents(peptideCoords, adjacentContenders);
         vector<boost::shared_ptr< FeatureSequenced> >::iterator ac_it = adjacentContenders.begin();
 
         for(; ac_it != adjacentContenders.end(); ++ac_it)
             {
+
                 if ( (*ac_it)->feature->charge == sq->assumedCharge )
                     {
-                        double mzDiff = ((*ac_it)->feature->mz - Ion::mz(sq->precursorNeutralMass,sq->assumedCharge))/.005;
-                        double rtDiff = ((*ac_it)->feature->retentionTime - sq->retentionTimeSec)/60;
+                        double mzDiff = fabs(peptideCoords.first - (*ac_it)->feature->mz);
+                        double rtDiff = fabs(peptideCoords.second - (*ac_it)->feature->retentionTime);
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
+
                         if ( score < bestScore )
                             {
                                 result = *ac_it;     
                                 bestScore = score;
+                                (*ac_it)->ms2 = sq->searchResult.searchHit.peptide;
 
                             }
 
@@ -71,15 +81,15 @@ namespace{
            		
                 FeatureSequencedPtr fs = getBestMatch((*sq_it), fdf);                                      
                 if (fs->feature->retentionTime > 0) // f exists
-                    {        
-
+                    {   
+                        
                         // set FeatureSequenced attributes
                         fs->ms2 = (*sq_it)->searchResult.searchHit.peptide;                      
                         Peptide peptide(fs->ms2);
                         fs->calculatedMass = peptide.monoisotopicMass(0, false);
                         fs->ppProb = (*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
                         fs->peptideCount += 1;
-
+                        
                         // change peptide retention time
                         (*sq_it)->retentionTimeSec = fs->feature->retentionTime;
 
@@ -140,6 +150,7 @@ void DataFetcherContainer::getAnchors(const int& freq, const double& tol)
 
 void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe, const int& anchorFreq, const double& anchorTol) 
 {    
+    cout << "[eharmony] Warping retention time ... " << endl;
     getAnchors(anchorFreq, anchorTol);
     pair<vector<double>, vector<double> > peptideRetentionTimes = getPeptideRetentionTimes();
     pair<vector<double>, vector<double> > featureRetentionTimes = getFeatureRetentionTimes();

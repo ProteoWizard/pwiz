@@ -4,6 +4,7 @@
 
 #include "Feature2PeptideMatcher.hpp"
 #include "PeptideMatcher.hpp"
+#include "DatabaseQuery.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include <math.h>
@@ -19,137 +20,89 @@ using namespace pwiz::data::peakdata;
 using namespace pwiz::proteome;
 
 
-namespace{
-
-    void getBestMatch(vector<FeatureSequencedPtr>::iterator fs, Bin<SpectrumQuery>& sqBin, SpectrumQuery& sq, const SearchNeighborhoodCalculator& snc)
+struct SortByScore
 {
-  //    pair<double,double> peptideCoords = make_pair(Ion::mz(sq.precursorNeutralMass,sq.assumedCharge), sq.retentionTimeSec);
-    pair<double,double> featureCoords = make_pair((*fs)->feature->mz, (*fs)->feature->retentionTime);
+    SortByScore(){}
+    bool operator()(MatchPtr a, MatchPtr b) { return a->score > b->score;}
 
-    double bestScore = 0;
-    SpectrumQuery* best_it = (SpectrumQuery*) NULL;
+};
 
-    vector<boost::shared_ptr<SpectrumQuery> > adjacentContenders;
-    sqBin.getAdjacentBinContents(featureCoords, adjacentContenders);
-    vector<boost::shared_ptr<SpectrumQuery> >::iterator ac_it = adjacentContenders.begin();
-           
-    for(; ac_it != adjacentContenders.end(); ++ac_it)
+
+ofstream matches("matchSequences.txt");
+
+Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const NormalDistributionSearch& nds)
+{
+    DatabaseQuery db(b);
+
+    vector<FeatureSequencedPtr> featureSequenceds = a->getAllContents();
+    vector<FeatureSequencedPtr>::iterator fs_it = featureSequenceds.begin();
+    int counter = 0;
+    int known = 0;
+    ofstream all("all.txt");
+
+    for(; fs_it != featureSequenceds.end(); ++fs_it)
         {
-            if (true) // consider filtering by charge state here
-                {		
-                    double score = snc.score(**ac_it, *((*fs)->feature));
-                    if ( score > bestScore )
-                        {
-                            //                            best_it = &(*(*ac_it));
-                            sq = **ac_it;
-                            (*fs)->ms1_5 = (*ac_it)->searchResult.searchHit.peptide;
-                            bestScore = score;
-			     
-                        }                  
+            if (counter % 100 == 0) cout << "Feature: " << counter << endl;
+            if (!((*fs_it)->ms2.size() > 0))
+                {
+                    counter++;
+                    continue;
 
                 }
 
+            else { counter++; known++;}
+            vector<MatchPtr> matches = db.query(*fs_it, nds, .95);
+
+            sort(matches.begin(), matches.end(), SortByScore());            
+
+            const string& feature_ms2 = (*fs_it)->ms2;
+            string peptide_ms2 = "";
+            string next_peptide_ms2 = "";
+
+            if (matches.size() > 0)
+                {
+                     _matches.push_back(*matches.begin());
+                     peptide_ms2 = _matches.back()->spectrumQuery.searchResult.searchHit.peptide;
+                    
+                }
+            
+            vector<MatchPtr> nextMatches = db.query(*fs_it, nds, -.1);
+            sort(nextMatches.begin(), nextMatches.end(), SortByScore());
+            if (matches.size() > 0) nextMatches.erase(nextMatches.begin()); // b/c we already got it in matches
+            if (nextMatches.size() == 0 ) 
+                {
+                    cerr << "Error: What the heck, .6 not big enough ... " << endl;             
+                    if (matches.size() == 0) cerr << "Error: matches also of size 0 ! " << endl;
+                }
+
+             else 
+                {
+                    _mismatches.push_back(*nextMatches.begin());
+                     next_peptide_ms2 = _mismatches.back()->spectrumQuery.searchResult.searchHit.peptide;
+
+                }
+
+            // In the case that something was within the original search radius, analyze the positives
+            if (matches.size() > 0)
+                {
+                    if (feature_ms2 == peptide_ms2) _truePositives.push_back(*matches.begin());
+                    if (feature_ms2 != peptide_ms2) _falsePositives.push_back(*matches.begin());
+
+                }
+
+            // In the case that nothing was within the original search radius, analyze the negatives
+            if ( matches.size() == 0 && nextMatches.size() > 0)
+                {
+                    if (feature_ms2 == next_peptide_ms2) _falseNegatives.push_back(*nextMatches.begin());
+                    if (feature_ms2 != next_peptide_ms2) _trueNegatives.push_back(*nextMatches.begin());
+
+                }
+
+            else cerr << "Nothing nearby." << endl;
+            
         }
 
-    //    if (best_it) sq = *best_it;
-    return;
-        
-}
-
-} // anonymous namespace
-
-Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const SearchNeighborhoodCalculator& snc)
-{
-  Bin<SpectrumQuery> bin = b->getBin();
-  bin.rebin(snc._mzTol, snc._rtTol);
-  
-  cout << "_mzTol" << snc._mzTol << endl;
-  cout << "_rtTol" << snc._rtTol << endl;
-
-  vector<FeatureSequencedPtr> featureSequenceds = a->getAllContents();
-  vector<FeatureSequencedPtr>::iterator fs_it = featureSequenceds.begin();
-  int counter = 0;
-  for(; fs_it != featureSequenceds.end(); ++ fs_it)
-    {
-      if (counter % 100 == 0) cout << "Feature: " << counter << endl;
-
-      SpectrumQuery sq;
-      getBestMatch(fs_it, bin, sq, snc); // if there exists a peptide close enough, call it a match and assign the ms1.5
-
-      if ((*fs_it)->ms1_5.size() > 0 && snc.close(sq, *((*fs_it)->feature)))
-          {
-              MatchPtr match(new Match(sq,((*fs_it)->feature)));
-              match->score = snc.score(sq,*((*fs_it)->feature));           
-              _matches.push_back(match);
-
-              if ((*fs_it)->ms1_5 != (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0)
-                  {
-                      _falsePositives.push_back(match);
-	      
-                  }
-
-              if ((*fs_it)->ms1_5 == (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0)
-                  {
-
-                      _truePositives.push_back(match);
-
-                  }
-	  
-              if ((*fs_it)->ms2.size() == 0) _unknownPositives.push_back(match);
-
-          }
-
-      else
-          {
-              bool done = false;
-              if ((*fs_it)->ms1_5.size() > 0)
-                  {
-                      done = true;
-                      MatchPtr match(new Match(sq, ((*fs_it)->feature)));
-                      match->score = snc.score(sq,*((*fs_it)->feature));
-
-                      _mismatches.push_back(match);
-                      if ((*fs_it)->ms1_5 == (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0) _falseNegatives.push_back(match);
-                      if ((*fs_it)->ms1_5 != (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0) _trueNegatives.push_back(match);
-                      if ((*fs_it)->ms2.size() == 0) _unknownNegatives.push_back(match);
-
-                  }
-
-              size_t i = 1;
-
-	  // look in really big neighborhood for the next closest match.  Entire thing for ROC purposes, once done with ROC, change to smaller neighborhood and grow with "while" loop as big as desired
-
-              double local_mzTol = 2000/3;
-              double local_rtTol = 2000;
-
-              while ( !done && i < 2) 
-                  {	    
-                      SpectrumQuery gs;
-                      bin.rebin(local_mzTol, local_rtTol);
-                      getBestMatch(fs_it, bin, gs,snc);
-                      if ((*fs_it)->ms1_5.size() != 0)
-                          {
-                              done = true;
-                              MatchPtr match(new Match(gs, (*fs_it)->feature));
-                              match->score = snc.score(gs, *((*fs_it)->feature));
-                              _mismatches.push_back(match);
-		   
-                              if ((*fs_it)->ms1_5 == (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0) _falseNegatives.push_back(match);
-                              if ((*fs_it)->ms1_5 != (*fs_it)->ms2 && (*fs_it)->ms2.size() > 0) _trueNegatives.push_back(match);
-                              if ((*fs_it)->ms2.size() == 0 ) _unknownNegatives.push_back(match);
-                          }
-
-                      ++i;
-
-                  }
-
-      // if ( !done ) cerr << "[Feature2PeptideMatcher] No feature within 4*search radius." << endl;
-
-    }
-
-  counter += 1;
-
-}
+  cout << "KNOWN: " << known << endl;
 
 }
 
@@ -161,6 +114,7 @@ bool Feature2PeptideMatcher::operator==(const Feature2PeptideMatcher& that)
     _falsePositives == that.getFalsePositives() &&
     _trueNegatives == that.getTrueNegatives() &&
     _falseNegatives == that.getFalseNegatives();
+
 }
 
 bool Feature2PeptideMatcher::operator!=(const Feature2PeptideMatcher& that)

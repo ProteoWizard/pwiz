@@ -23,10 +23,9 @@ struct AMTContainer
     FdfPtr _fdf;
     PidfPtr _pidf;
 
-    vector<SpectrumQuery> _sqs; // HACK TODO: FIX
+    vector<boost::shared_ptr<SpectrumQuery> > _sqs; // HACK TODO: FIX
 
     void merge(const AMTContainer& that);
-
     void write(XMLWriter& writer) const;
     void read(istream& is);
   

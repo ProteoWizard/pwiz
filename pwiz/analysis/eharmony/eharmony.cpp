@@ -1,20 +1,25 @@
-
 ///
 /// eharmony.cpp
 ///
 
-#include "eharmony.hpp"
 #include "PeptideMatcher.hpp"
 #include "Feature2PeptideMatcher.hpp"
 #include "Exporter.hpp"
 #include "Matrix.hpp"
 #include "NeighborJoiner.hpp"
-#include "EharmonyAgglomerator.hpp"
+#include "WarpFunction.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
-#include "boost/tuple/tuple_comparison.hpp"
+#include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/program_options.hpp"
+#include "boost/filesystem/path.hpp"
+#include "boost/tuple/tuple_comparison.hpp"
 #include <algorithm>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
 #include <string>
 
 using namespace std;
@@ -22,105 +27,185 @@ using namespace pwiz::minimxml;
 using namespace pwiz;
 using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
+using namespace pwiz::eharmony;
+using namespace pwiz::data::pepxml;
+using namespace std;
 
 namespace{
 
-    boost::shared_ptr<SearchNeighborhoodCalculator> translateSearchNeighborhoodCalculator(const string& curr_str)
-    {      
-        const char* curr = curr_str.c_str();
-        const char* naive = "naive";
-        const char* normalDistribution = "normalDistribution";
+WarpFunctionEnum translateWarpFunction(const string& wfe_string)
+{
 
-        if (!strncmp(curr, naive, 5))
-            {
-                const char* open = "[";
-                const char* split = ",";
-                const char* close = "]";
+    const char* linear = "linear";
+    const char* piecewiseLinear = "piecewiseLinear";
+    const char* curr = wfe_string.c_str();
+    if (!strncmp(linear, curr, 6))
+        {
+            return Linear;
 
-                size_t open_index = curr_str.find(open) + 1;
-                size_t split_index = curr_str.find(split);
-                size_t close_index = curr_str.find(close);
+        }
 
-                string mzTolerance(curr_str.substr(open_index, split_index));
+    if (!strncmp(piecewiseLinear, curr, 15))
+        {
+            return PiecewiseLinear;
 
-                split_index += 1;
-                string rtTolerance(curr_str.substr(split_index, close_index));
+        }
 
 
-                return boost::shared_ptr<SearchNeighborhoodCalculator>(new SearchNeighborhoodCalculator(boost::lexical_cast<double>(mzTolerance), boost::lexical_cast<double>(rtTolerance)));
-       
-            }
-        
-        else if (!strncmp(curr, normalDistribution, 18)){}
-           
-         
-    }
 
-    boost::shared_ptr<NormalDistributionSearch> translateNormalDistributionSearch(const string& curr_str)
-    {
-       
-        const char* open = "[";
-        const char* close = "]";
+    return Default;
 
-        size_t open_index = curr_str.find(open) + 1;
-        size_t close_index = curr_str.find(close);
+}
 
-        string numberOfStdDevs(curr_str.substr(open_index, close_index));
-       
 
-        NormalDistributionSearch result(boost::lexical_cast<double>(numberOfStdDevs));
+DistanceAttributeEnum translateDistanceAttribute(const string& dist_attr_str)
+{
+    const char* curr = dist_attr_str.c_str();
 
-        return boost::shared_ptr<NormalDistributionSearch>(new NormalDistributionSearch(boost::lexical_cast<double>(numberOfStdDevs)));
+    const char* hamming = "hammingDistance";
+    const char* numberOfMS2IDs = "numberOfMS2IDs";
+    const char* random = "randomDistance";
+    const char* rt = "rtDistributionDistance";
+    const char* weightedHamming = "weightedHammingDistance";
 
-    }
 
-    WarpFunctionEnum translateWarpFunctionCalculator(const string& wfe_string)
-    {
-  
-              const char* linear = "linear";
-              const char* piecewiseLinear = "piecewiseLinear";
-              const char* curr = wfe_string.c_str();
-              if (!strncmp(linear, curr, 6))
-                  {
-                    return Linear;
-                    
-                  }
+    if (!strncmp(hamming, curr, 15)) return _Hamming;
+    if (!strncmp(numberOfMS2IDs, curr, 14)) return _NumberOfMS2IDs;
+    if (!strncmp(random, curr, 14)) return _Random;
+    if (!strncmp(rt, curr, 22)) return _RTDiff;
+    if (!strncmp(weightedHamming, curr, 23)) return _WeightedHamming;
 
-              if (!strncmp(piecewiseLinear, curr, 15))
-                  {
-                    return PiecewiseLinear;
+    // if distance attribute is unrecognized, throw and exit                                                                                        
+    throw runtime_error(("[eharmony] Unrecognized distance attribute : " + dist_attr_str).c_str());
+    return _Random; // so compiler doesn't whine                                                                                                    
 
-                  }
+}
 
-  
 
-              return Default;
+struct Config
+{
+    std::vector<std::string> filenames;
+    std::string inputPath;
+    std::string outputPath;
+    std::string batchFileName;
 
-    }
+    WarpFunctionEnum warpFunction;
+    DistanceAttributeEnum distanceAttribute;
 
-    DistanceAttribute translateDistanceAttribute(const string& dist_attr_str)
-    {
-        const char* curr = dist_attr_str.c_str();
+    Config() : inputPath("."), outputPath(".") {}
+    bool operator==(const Config& that);
+    bool operator!=(const Config& that);
 
-        const char* random = "randomDistance";
-        const char* rt = "rtDistributionDistance";
-        //        const char* hamming = "WeightedHammingDistance";
+};
 
-        if (!strncmp(random, curr, 14)) return RandomDistance();
-        else if (!strncmp(rt, curr, 22)) return RTDiffDistribution();
-        //        if (!strncmp(hamming, curr, 15)) return WeightedHammingDistance();
-        
-        else 
-            {
-                throw runtime_error(("[eharmony] Unrecognized distance attribute : " + dist_attr_str).c_str());
-                return DistanceAttribute();
+bool Config::operator==(const Config& that)
+{
+    return filenames == that.filenames &&
+        inputPath == that.inputPath &&
+        outputPath == that.outputPath &&
+        batchFileName == that.batchFileName &&
+        warpFunction == that.warpFunction &&
+        distanceAttribute == that.distanceAttribute;       
 
-            }
+}
 
-    }
 
-} // anonymous namespace
+bool Config::operator!=(const Config& that)
+{
+    return !(*this == that);
 
+}
+
+class Matcher
+{
+
+public:
+
+    Matcher(){}
+    Matcher(Config& config);
+
+    void checkSourceFiles();
+    void readSourceFiles();
+    void processFiles();
+
+
+private:
+
+    Config _config;
+
+    std::map<std::string, PidfPtr> _peptideData;
+    std::map<std::string, FdfPtr> _featureData;
+
+};
+
+
+
+void processFile(Config& config)
+{
+    Matcher matcher(config);
+    return;
+
+}
+
+
+Config parseCommandLine(int argc, const char* argv[])
+{
+    namespace po = boost::program_options;
+    Config config;
+
+    ostringstream usage;
+    usage << "Usage: eharmony [options] [filenames] \n"
+          << endl;
+
+
+    // define local variables to be read in as strings and translated
+    string warpFunctionCalculator;
+    string distanceAttribute;
+
+    // define command line options
+    po::options_description od_config("Options");
+    od_config.add_options()
+        ("inputPath,i", po::value<string>(&config.inputPath)," : specify location of input files")
+        ("outputPath,o", po::value<string>(&config.outputPath), " : specify output path")
+        ("filename,f", po::value<string>(&config.batchFileName)," : specify file listing input runIDs (e.g., 20090109-B-Run)")        
+        ("warpFunctionCalculator,w", po::value<string >(&warpFunctionCalculator), " : specify method of calculating the rt-calibrating warp function.\nOptions:\nlinear, piecewiseLinear")
+        ("distanceAttribute,d", po::value<string>(&distanceAttribute), " : specify distance attribute.\nOptions:\nhammingDistance, numberOfMS2IDs, randomDistance, rtDistributionDistance, weightedHammingDistance");
+
+    // append options to usage string
+    usage << od_config;
+
+    // handle positional args
+    const char* label_args = "args";
+
+    po::options_description od_args;
+    od_args.add_options()(label_args, po::value< vector<string> >(), "");
+
+    po::positional_options_description pod_args;
+    pod_args.add(label_args, -1);
+
+    po::options_description od_parse;
+    od_parse.add(od_config).add(od_args);
+
+    // parse command line
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, (char**)argv).options(od_parse).positional(pod_args).run(), vm);
+    po::notify(vm);
+
+    // get filenames
+    if (vm.count(label_args))
+        config.filenames = vm[label_args].as< vector<string> >();
+
+    // translate local variables
+    if (warpFunctionCalculator.size() > 0) config.warpFunction = translateWarpFunction(warpFunctionCalculator);
+    if (distanceAttribute.size() > 0) config.distanceAttribute = translateDistanceAttribute(distanceAttribute);
+
+    // usage if incorrect
+    if (config.filenames.empty() && config.batchFileName == "")
+        throw runtime_error(usage.str());
+
+    return config;
+
+}
 
 void Matcher::checkSourceFiles()
 {
@@ -183,8 +268,7 @@ void Matcher::readSourceFiles()
 void Matcher::processFiles()
 {
  
-    if ( _config.generateAMTDatabase )
-        {
+
             vector<AMTContainer> amtv;
 	   
             vector<boost::shared_ptr<AMTContainer> > sp;
@@ -195,19 +279,51 @@ void Matcher::processFiles()
                 PidfPtr pidf =  _peptideData.find(*run_it)->second;
                 FdfPtr fdf = _featureData.find(*run_it)->second;
                 string id = *run_it;
-
+                
+                DataFetcherContainer dfc(pidf, pidf, fdf, fdf); // dummy
+                dfc.adjustRT(true, false); // just do this up front
+                pidf->setRtAdjustedFlag(true);
+                
                 sp.push_back(boost::shared_ptr<AMTContainer>(new AMTContainer(pidf,fdf)));
                 sp.back()->_id = id;
-
+                sp.back()->rtAdjusted = true;
 	        }
-	    
-	    NeighborJoiner nj(sp);
-	    //      boost::shared_ptr<NumberOfMS2IDs> num(new NumberOfMS2IDs());
-        //	    boost::shared_ptr<RTDiffDistribution> num(new RTDiffDistribution());
-        //boost::shared_ptr<DummyDistance> num(new DummyDistance());
-        boost::shared_ptr<WeightedHammingDistance> num(new WeightedHammingDistance(sp));
-        //boost::shared_ptr<RandomDistance> num(new RandomDistance());
-	    nj._attributes.push_back(num);
+
+            // big switch here
+        NeighborJoiner nj(sp, _config.warpFunction);
+        switch (_config.distanceAttribute)
+            {
+            case _Hamming:
+                {
+                    nj._attributes.push_back(boost::shared_ptr<HammingDistance>(new HammingDistance(sp)));
+                }
+
+            case _NumberOfMS2IDs:
+                {
+                    nj._attributes.push_back(boost::shared_ptr<NumberOfMS2IDs>(new NumberOfMS2IDs()));
+                }
+
+            case _Random:
+                {
+                    nj._attributes.push_back(boost::shared_ptr<RandomDistance>(new RandomDistance()));
+                }
+
+            case _RTDiff:
+                {
+                    nj._attributes.push_back(boost::shared_ptr<RTDiffDistribution>(new RTDiffDistribution()));
+                }
+            
+            case _WeightedHamming:
+                {
+                    nj._attributes.push_back(boost::shared_ptr<WeightedHammingDistance>(new WeightedHammingDistance(sp)));
+                }
+
+            default:
+                {
+                    throw runtime_error("[eharmony] We shouldn't be here. Improper translation of DistanceAttribute.");
+                }
+            }
+            
 	    nj.calculateDistanceMatrix();
         
         ofstream beforeMatrix("beforeMatrix.txt");	
@@ -218,11 +334,10 @@ void Matcher::processFiles()
 	    vector<pair<int, int> >::iterator njit = nj._tree.begin();
 	    cout << "Tree: " << endl;
 	    for(; njit!= nj._tree.end(); ++njit) cout << njit->first << "  "  << njit->second << endl;
-	    //	    _config.warpFunction = PiecewiseLinear;
-	    boost::shared_ptr<AMTContainer> amtDatabase = generateAMTDatabase(sp, nj._tree, _config.warpFunction, _config.parsedNDS);
         
-
-        // boost::shared_ptr<AMTContainer> amtDatabase = generateAMTDatabase(sp);
+        //        vector<pair<int, int> > oldTree = nj._tree;
+        
+        boost::shared_ptr<AMTContainer> amtDatabase(new AMTContainer(nj._rowEntries.at(0)));
 	    
 	    ///
 	    /// Exporting
@@ -238,20 +353,9 @@ void Matcher::processFiles()
 	    ofstream ofs_pm((outputDir + "/pm.xml").c_str());
 	    exporter_amt.writePM(ofs_pm);
 
-	    ofstream ofs_f2pm((outputDir + "/f2pm.xml").c_str());
-	    exporter_amt.writeF2PM(ofs_f2pm);
-
 	    ofstream ofs_roc((outputDir + "/roc.txt").c_str());
 	    exporter_amt.writeROCStats(ofs_roc);
-
        
-	    /* TODO: Decide what a pepXML output for the AMT database generation schema should be and if the concept even makes sense
-	    ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
-	    exporter_amt.writePepXML(mspa, ofs_pepxml);
-
-	    ofstream ofs_combxml((outputDir + "/ms2_ms1_5.pep.xml").c_str());
-	    exporter_amt.writeCombinedPepXML(mspa, ofs_combxml);
-	    */
 	    ofstream ofs_r((outputDir + "/r_input.txt").c_str());
 	    exporter_amt.writeRInputFile(ofs_r);
 
@@ -260,6 +364,7 @@ void Matcher::processFiles()
 	    ///
 	    
 	    ofstream ofs_amt((outputDir + "/database.xml").c_str());
+        ofs_amt.precision(16);
 	    XMLWriter writer(ofs_amt);
 	    amtDatabase->write(writer);
         
@@ -275,6 +380,7 @@ void Matcher::processFiles()
             }
 
         ofstream ofs_rr((outputDir + "/allvsall_r.txt").c_str());
+        ofs_rr.precision(16);
         ofstream ofs_rr_mass((outputDir + "/allvsall_mass_r.txt").c_str());
         vector<boost::shared_ptr<SpectrumQuery> >::iterator it = v.begin();
         for(; it != v.end(); ++it)
@@ -287,7 +393,6 @@ void Matcher::processFiles()
         
 	    return;
         
-        }
 }
 
 Matcher::Matcher(Config& config) : _config(config)
@@ -308,17 +413,7 @@ Matcher::Matcher(Config& config) : _config(config)
     // read in source files
     cout << "[eharmony] Reading data files ...  " << endl;
     readSourceFiles();
-
-    // parse SNC and NDS
-    cout << "[eharmony] Parsing search neighborhood calculator ... " << endl;
-    if (_config.searchNeighborhoodCalculator.size() != 0 ) _config.parsedSNC = *(translateSearchNeighborhoodCalculator(_config.searchNeighborhoodCalculator));
-    cout << "[eharmony] Parsing normal distribution search ... " << endl;
-    if (_config.normalDistributionSearch.size() != 0 ) _config.parsedNDS = *(translateNormalDistributionSearch(_config.normalDistributionSearch));
-    
-    // same with WFC
-    cout << "[eharmony] Parsing warp function calculator ... " << endl;
-    _config.warpFunction = translateWarpFunctionCalculator(_config.warpFunctionCalculator);
-
+   
     // process each pair of run IDs
     cout << "[eharmony] Processing files ... " << endl;
     processFiles();
@@ -326,6 +421,8 @@ Matcher::Matcher(Config& config) : _config(config)
     cout << "[eharmony] Done." << endl;
 
 }
+
+} // anonymous namespace
 
 int main(int argc, const char* argv[])
 {

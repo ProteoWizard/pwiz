@@ -11,6 +11,13 @@ using namespace pwiz::util;
 
 ostream* os_ = 0;
 
+void testNormalDistribution()
+{
+    // TODO
+    // Test that folded normal distribution is correctly calculated from normal distribution parameters
+    // Test that scoring function is correct
+}
+
 void test()
 {
     if (os_) *os_ << "test() ..." << endl;
@@ -43,6 +50,7 @@ int main(int argc, char* argv[])
             if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
             if (os_) *os_ << "SearchNeighborhoodCalculatorTest: " << endl;
             test();
+            testNormalDistribution();
 
         }
 

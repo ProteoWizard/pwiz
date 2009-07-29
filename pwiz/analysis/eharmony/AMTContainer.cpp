@@ -14,6 +14,7 @@ void AMTContainer::merge(const AMTContainer& that)
     _fdf->merge(*that._fdf);
     _pidf->merge(*that._pidf);
     _id += that._id;
+    cout << "size: " << _pidf->getAllContents().size() << endl;
 
 }
 
@@ -41,10 +42,11 @@ struct HandlerAMTContainer : public SAXParser::Handler
     {
       if (name == "spectrum_query")
 	  {
-	      amtContainer->_sqs.push_back(SpectrumQuery());
-	      _handlerSpectrumQuery.spectrumQuery = &amtContainer->_sqs.back();
+	      amtContainer->_sqs.push_back(boost::shared_ptr<SpectrumQuery>( new SpectrumQuery()));
+	      _handlerSpectrumQuery.spectrumQuery = amtContainer->_sqs.back().get();
 	      
 	      return Handler::Status(Status::Delegate, &_handlerSpectrumQuery);
+
 	  }
 
       else 
@@ -66,7 +68,9 @@ void AMTContainer::read(istream& is)
 {
     HandlerAMTContainer handlerAMTContainer(this);
     parse(is, handlerAMTContainer);
-    
+    PidfPtr pidf(new PeptideID_dataFetcher(_sqs));
+    _pidf = pidf;
+
 }
 
 bool AMTContainer::operator==(const AMTContainer& that)

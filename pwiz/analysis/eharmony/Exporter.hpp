@@ -32,6 +32,8 @@ struct Exporter
     void writeFalsePositives(ostream& os);
     void writeTrueNegatives(ostream& os);
     void writeFalseNegatives(ostream& os);
+    void writeUnknownPositives(ostream& os);
+    void writeUnknownNegatives(ostream& os);
     void writeRTCalibrationData(ostream& ospep, ostream& osf0, ostream& osf1);
     void writeAnchors(ostream& os);
 

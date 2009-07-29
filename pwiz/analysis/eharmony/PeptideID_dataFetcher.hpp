@@ -27,7 +27,6 @@ public:
 
     PeptideID_dataFetcher() : _rtAdjusted(false) {}
     PeptideID_dataFetcher(std::istream& is);
-    //    PeptideID_dataFetcher(const std::vector<SpectrumQuery>& sqs);
     PeptideID_dataFetcher(const std::vector<boost::shared_ptr<SpectrumQuery> >& sqs);
     PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa);
 

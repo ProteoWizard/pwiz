@@ -91,7 +91,7 @@ void PeptideMatcher::calculateDeltaMZDistribution()
 
   if (_matches.size() == 0)
     {
-      cerr << "[PeptideMatcher::calculateDeltaRTDistribution] No matching MS/MS IDS found. DeltaMZ params are both set to 0." << endl;
+      cerr << "[PeptideMatcher::calculateDeltaMZDistribution] No matching MS/MS IDS found. DeltaMZ params are both set to 0." << endl;
       return;
     }
 
