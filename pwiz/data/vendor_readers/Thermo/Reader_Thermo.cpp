@@ -201,7 +201,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(filename);
+    msd.run.id = boost::to_lower_copy(p.leaf());
     msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate());
 }
 
