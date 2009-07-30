@@ -203,7 +203,6 @@ typedef boost::shared_ptr<Provider> ProviderPtr;
 struct PWIZ_API_DECL Material : public IdentifiableType
 {
     ContactRole contactRole;
-
     ParamContainer cvParams;
 
     virtual bool empty() const;
@@ -549,6 +548,8 @@ typedef boost::shared_ptr<Inputs> InputsPtr;
 struct PWIZ_API_DECL Measure : public IdentifiableType
 {
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Measure> MeasurePtr;
@@ -684,7 +685,6 @@ struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
     std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
 
     bool empty() const;
-
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
@@ -694,10 +694,11 @@ struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 {
     std::vector<ProteinAmbiguityGroupPtr> proteinAmbiguityGroup;
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<ProteinDetectionList> ProteinDetectionListPtr;
-
 
 /// AnalysisData element. 
 struct PWIZ_API_DECL AnalysisData

@@ -324,6 +324,13 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
 }
 
 
+
+PWIZ_API_DECL bool ProteinDetectionList::empty() const
+{
+    return proteinAmbiguityGroup.empty() &&
+        paramGroup.empty();
+}
+
 PWIZ_API_DECL ProteinDetectionHypothesis::ProteinDetectionHypothesis() : passThreshold(0) 
 {
 }
@@ -526,6 +533,15 @@ bool Material::empty() const
 {
     return contactRole.empty() &&
         cvParams.empty();
+}
+
+//
+// Measure
+//
+
+PWIZ_API_DECL bool Measure::empty() const
+{
+    return paramGroup.empty();
 }
 
 

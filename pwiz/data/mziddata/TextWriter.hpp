@@ -102,7 +102,7 @@ class PWIZ_API_DECL TextWriter
 
     TextWriter& operator()(const std::string& label, const ParamContainer& paramContainer)
     {
-        (*this)(label+": ");
+        (*this)(label); // + ":"
         for_each(paramContainer.cvParams.begin(), paramContainer.cvParams.end(), *this);
         for_each(paramContainer.userParams.begin(), paramContainer.userParams.end(), *this);
         return *this;
@@ -226,7 +226,6 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SpectrumIdentificationList& sil)
     {
         (*this)("SpectrumIdentificationList: ");
-
         (*this)((IdentifiableType)sil);
         if (!sil.numSequencesSearched != 0)
             child()("numSequencesSearched: "+
@@ -235,6 +234,16 @@ class PWIZ_API_DECL TextWriter
             child()("fragmentationTable", sil.fragmentationTable);
         if (!sil.spectrumIdentificationResult.empty())
             child()("spectrumIdentificationResult", sil.spectrumIdentificationResult);
+        return *this;
+    }
+
+    TextWriter& operator()(const ProteinDetectionList& pdl)
+    {
+        (*this)("ProteinDetectionList: ");
+        if (!pdl.proteinAmbiguityGroup.empty())
+            child()("proteinAmbiguityGroup: ", pdl.proteinAmbiguityGroup);
+        if (!pdl.paramGroup.empty())
+            child()("paramGroup: ", pdl.paramGroup);
         return *this;
     }
 
@@ -390,6 +399,31 @@ class PWIZ_API_DECL TextWriter
             child()("spectrumIdentificationProtocol: ", apc.spectrumIdentificationProtocol);
         if (!apc.proteinDetectionProtocol.empty())
             child()("proteinDetectionProtocol: ", apc.proteinDetectionProtocol);
+        return *this;
+    }
+
+    TextWriter& operator()(const ProteinDetectionHypothesis& pdh)
+    {
+        (*this)("ProteinDetectionHypothesis: ");
+        if (!pdh.DBSequence_ref.empty())
+            child()("DBSequence_ref: " + pdh.DBSequence_ref);
+        // TODO: Resolve        if (!pdh.passThreshold.empty())
+        //  child()("passThreshold: " + boost::lexical_cast<string>(pdh.passThreshold));
+        if (!pdh.peptideHypothesis.empty())
+            child()("peptideHypothesis: ", pdh.peptideHypothesis);
+        if (!pdh.paramGroup.empty())
+            child()("paramGroup: ", pdh.paramGroup);                    
+        return *this;
+    }
+
+    TextWriter& operator()(const ProteinAmbiguityGroup& pag)
+    {
+        (*this)("ProteinAmbiguityGroup: ");
+        if (!pag.proteinDetectionHypothesis.empty())
+            child()("proteinDetectionHypothesis: ", pag.proteinDetectionHypothesis);
+        if (!pag.paramGroup.empty())
+            child()("paramGroup: ", pag.paramGroup);
+
         return *this;
     }
 
