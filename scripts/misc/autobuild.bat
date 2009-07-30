@@ -1,5 +1,5 @@
 @echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
+if exists "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" else set ERROR_TEXT="Could not find vcvarsall.bat!" & goto error
 setlocal
 @echo off
 
