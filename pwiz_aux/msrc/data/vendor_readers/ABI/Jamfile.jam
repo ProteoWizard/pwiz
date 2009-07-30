@@ -61,6 +61,10 @@ rule vendor-api-usage-requirements ( properties * )
     {
         return <define>PWIZ_READER_ABI <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
+    else
+    {
+        echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABSciex.DataAccess.WiffFileDataReader.dll: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+    }
 }
 
 lib pwiz_aux_msrc_reader_abi

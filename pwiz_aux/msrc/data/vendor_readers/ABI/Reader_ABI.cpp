@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#include <windows.h> // GetModuleFileName
 #include "boost/shared_ptr.hpp"
 #include <boost/foreach.hpp>
 #include <iostream>
@@ -152,6 +153,35 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
 }
 
+void copyProteinPilotDLLs()
+{
+    // get the filepath of the calling .exe using WinAPI
+    TCHAR tmpFilepath[1024];
+    DWORD tmpFilepathLength = ::GetModuleFileName(NULL, (LPCH) tmpFilepath, 1024);
+    bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
+
+    // make sure the necessary DLLs are available side-by-side or copy them if ProteinPilot is installed
+    if (!bfs::exists(callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
+    {
+        // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
+        char* programFilesPath = ::getenv("ProgramFiles");
+        bfs::path proteinPilotPath = bfs::path(programFilesPath) / "ProteinPilot";
+        delete programFilesPath;
+        if (bfs::exists(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
+        {
+            bfs::copy_file(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll", callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll");
+            if (!bfs::exists(callingExecutablePath / "Clearcore.dll"))
+                bfs::copy_file(proteinPilotPath / "Clearcore.dll", callingExecutablePath / "Clearcore.dll");
+            if (!bfs::exists(callingExecutablePath / "ClearCore.Storage.dll"))
+                bfs::copy_file(proteinPilotPath / "ClearCore.Storage.dll", callingExecutablePath / "ClearCore.Storage.dll");
+            if (!bfs::exists(callingExecutablePath / "rscoree.dll"))
+                bfs::copy_file(proteinPilotPath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
+        }
+        else
+            throw std::runtime_error("[WiffFile::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 to be installed. A trial version is available for download at:\nhttps://licensing.appliedbiosystems.com/download/ProteinPilot/3.0");
+    }
+}
+
 } // namespace
 
 
@@ -161,6 +191,8 @@ void Reader_ABI::read(const string& filename,
                       MSData& result,
                       int runIndex) const
 {
+    copyProteinPilotDLLs();
+
     try
     {
         runIndex++; // one-based index
@@ -187,6 +219,8 @@ void Reader_ABI::read(const string& filename,
                       const string& head,
                       vector<MSDataPtr>& results) const
 {
+    copyProteinPilotDLLs();
+
     try
     {
         WiffFilePtr wifffile = WiffFile::create(filename);
@@ -220,6 +254,8 @@ void Reader_ABI::readIds(const string& filename,
                       const string& head,
                       vector<string>& results) const
 {
+    copyProteinPilotDLLs();
+
     try
     {
         WiffFilePtr wifffile = WiffFile::create(filename);
@@ -233,7 +269,7 @@ void Reader_ABI::readIds(const string& filename,
     }
     catch (...)
     {
-        throw runtime_error("[Reader_ABI::read()] unhandled exception");
+        throw runtime_error("[Reader_ABI::readIds()] unhandled exception");
     }
 }
 
