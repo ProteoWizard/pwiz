@@ -9,10 +9,6 @@ using namespace freicore;
 
 // Program parameters
 
-#define DMM_MATCH_KNOWN_MASSES	0
-#define DMM_MATCH_EXACT_MASSES	1
-#define DMM_MATCH_ALL_MASSES		2
-
 #define TAGRECON_RUNTIME_CONFIG \
     COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
     RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
@@ -67,6 +63,7 @@ using namespace freicore;
     RTCONFIG_VARIABLE( int,				ScoreHistogramHeight,		600				) \
     RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
     RTCONFIG_VARIABLE( double,			MaxTagMassDeviation,		300.0			) \
+	RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
     RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
 	RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) 
     
