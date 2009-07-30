@@ -1,5 +1,5 @@
 @echo off
-if exists "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" else set ERROR_TEXT="Could not find vcvarsall.bat!" & goto error
+call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT="Error setting up Visual C++ environment variables" & goto error
 setlocal
 @echo off
