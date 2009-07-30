@@ -769,8 +769,6 @@ struct HandlerSoftware : public HandlerParamContainer
 
         else if (name == "softwareParam") // mzML 1.0
         {
-            cerr << "[IO::HandlerSoftware] Warning - mzML 1.0: <softwareParam>\n";
-
             string accession;
             getAttribute(attributes, "accession", accession);
             if (!accession.empty())
@@ -975,7 +973,6 @@ struct HandlerDataProcessing : public HandlerParamContainer
             getAttribute(attributes, "softwareRef", softwareRef);
             if (!softwareRef.empty())
             {
-                cerr << "[IO::HandlerDataProcessing] Warning - mzML 1.0: <dataProcessing>::softwareRef\n";
                 handlerProcessingMethod_.defaultSoftwareRef = softwareRef;
             }
 
@@ -1482,7 +1479,7 @@ struct HandlerScan : public HandlerParamContainer
                     try
                     {
                         lexical_cast<int>(externalNativeID);
-                        cerr << "[IO::HandlerScan] Warning - mzML 1.0: <acquisition>::externalNativeID\n";
+                        //cerr << "[IO::HandlerScan] Warning - mzML 1.0: <acquisition>::externalNativeID\n";
                         scan->externalSpectrumID = "scan=" + externalNativeID;
                     }
                     catch(exception&)
@@ -1904,7 +1901,7 @@ struct HandlerSpectrum : public HandlerParamContainer
                 try
                 {
                     lexical_cast<int>(nativeID);
-                    cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
+                    //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
                     spectrum->id = "scan=" + nativeID;
                 }
                 catch(exception&)
@@ -1965,12 +1962,10 @@ struct HandlerSpectrum : public HandlerParamContainer
         }
         else if (name == "spectrumDescription") // mzML 1.0
         {
-            cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrumDescription>\n";
             return Status::Ok;
         }
         else if (name == "scan") // mzML 1.0
         {
-            cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>/<scan>\n";
             spectrum->scanList.scans.push_back(Scan());
             handlerScan_.scan = &spectrum->scanList.scans.back();
             return Status(Status::Delegate, &handlerScan_);
