@@ -255,7 +255,7 @@ struct IndexEntry
 
 string getPolarity(const Spectrum& spectrum)
 {
-    string result = "Unknown";
+    string result = "";
     CVParam paramPolarity = spectrum.cvParamChild(MS_polarity);
     if (paramPolarity.cvid == MS_positive_scan) result = "+";
     if (paramPolarity.cvid == MS_negative_scan) result = "-";
@@ -425,15 +425,21 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.push_back(make_pair("centroided", "1"));
     attributes.push_back(make_pair("msLevel", msLevel));
     attributes.push_back(make_pair("peaksCount", lexical_cast<string>(mzIntensityPairs.size())));
-    attributes.push_back(make_pair("polarity", polarity));
+    if (!polarity.empty())
+        attributes.push_back(make_pair("polarity", polarity));
     attributes.push_back(make_pair("retentionTime", retentionTime));
-    if (precursorInfo.size() == 1)
+    if (!precursorInfo.empty() && !precursorInfo[0].collisionEnergy.empty())
         attributes.push_back(make_pair("collisionEnergy", precursorInfo[0].collisionEnergy));
-    attributes.push_back(make_pair("lowMz", lowMz));
-    attributes.push_back(make_pair("highMz", highMz));
-    attributes.push_back(make_pair("basePeakMz", basePeakMz));
-    attributes.push_back(make_pair("basePeakIntensity", basePeakIntensity));
-    attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
+    if (!lowMz.empty())
+        attributes.push_back(make_pair("lowMz", lowMz));
+    if (!highMz.empty())
+        attributes.push_back(make_pair("highMz", highMz));
+    if (!basePeakMz.empty())
+        attributes.push_back(make_pair("basePeakMz", basePeakMz));
+    if (!basePeakIntensity.empty())
+        attributes.push_back(make_pair("basePeakIntensity", basePeakIntensity));
+    if (!totIonCurrent.empty())
+        attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
 
     if (scan.instrumentConfigurationPtr.get())
         attributes.push_back(make_pair("msInstrumentID", scan.instrumentConfigurationPtr->id));
