@@ -23,11 +23,16 @@
 #define PWIZ_SOURCE
 
 #include "RawFile.h"
-//#ifdef PWIZ_NO_EXCALIBUR_SDK
-#include "xdk/XRawFile2.tlh" // use canned header
-//#else
-//#import "xdk/Xcalibur.XRawfile2.dll" rename_namespace("XRawfile")
-//#endif
+
+// Uncommenting the following line (assuming you have the necessary DLL) will update the tlh/tli files on the next compile
+//#define UPDATE_TLH
+
+#ifdef UPDATE_TLH
+#import "xdk/MSFileReader.XRawfile2.dll" rename_namespace("XRawfile")
+#else
+#include "xdk/XRawFile2.tlh"
+#endif
+
 #include "RawFileValues.h"
 #include "RawFileCOM.h"
 #include <iostream>
@@ -39,9 +44,10 @@
 #include <algorithm>
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/thread/once.hpp>
 #include <boost/bind.hpp>
-#include <windows.h>
+#include <windows.h> // GetModuleFileName
 
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
@@ -176,6 +182,31 @@ RawFileImpl::RawFileImpl(const string& filename)
 {
     COMInitializer::initialize();
 
+    // get the filepath of the calling .exe using WinAPI
+    TCHAR tmpFilepath[1024];
+    DWORD tmpFilepathLength = ::GetModuleFileName(NULL, (LPCH) tmpFilepath, 1024);
+    bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
+
+    // make sure the necessary DLLs are available side-by-side or copy them if MSFileReader is installed
+    if (!bfs::exists(callingExecutablePath / "MSFileReader.XRawfile2.dll"))
+    {
+        // copy the MSFileReader DLLs if it is installed, else throw an exception informing the user to download it
+        char* programFilesPath = ::getenv("ProgramFiles");
+        bfs::path msFileReaderPath = bfs::path(programFilesPath) / "Thermo/MSFileReader";
+        cout << msFileReaderPath.string() << endl;
+        delete programFilesPath;
+        if (bfs::exists(msFileReaderPath / "XRawfile2.dll"))
+        {
+            bfs::copy_file(msFileReaderPath / "XRawfile2.dll", callingExecutablePath / "MSFileReader.XRawfile2.dll");
+            if (!bfs::exists(callingExecutablePath / "fileio.dll"))
+                bfs::copy_file(msFileReaderPath / "fileio.dll", callingExecutablePath / "fileio.dll");
+            if (!bfs::exists(callingExecutablePath / "fregistry.dll"))
+                bfs::copy_file(msFileReaderPath / "fregistry.dll", callingExecutablePath / "fregistry.dll");
+        }
+        else
+            throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires MSFileReader to be installed. It is available for download at:\nhttp://sjsupport.thermofinnigan.com/public/detail.asp?id=586");
+    }
+
     // use the latest version of IXRawfile that will initialize
     IXRawfile2Ptr raw2(NULL);
     IXRawfile3Ptr raw3(NULL);
@@ -189,7 +220,7 @@ RawFileImpl::RawFileImpl(const string& filename)
                 if (FAILED(raw_.CreateInstance("MSFileReader.XRawfile.1")))
                 {
                     rawInterfaceVersion_ = 0;
-                    throw RawEgg("[RawFile::ctor] Unable to initialize XRawfile; are the MSFileReader DLLs side-by-side with the current application?\nIt is available for download at: http://sjsupport.thermofinnigan.com/public/detail.asp?id=586");
+                    throw RawEgg("[RawFile::ctor] Unable to initialize XRawfile; is MSFileReader installed?");
                 }
                 else
                 {
