@@ -56,6 +56,11 @@ class Handler
     /// this is useful for handlers which deal with large amounts of data
     bool autoUnescapeAttributes, autoUnescapeCharacters;
 
+    /// contextual version available to control handler logic which support multiple versions of a schema;
+    /// the default value 0 indicates handler should ignore the version;
+    /// the handler determines the meaning of any non-zero value
+    int version;
+
     /// Handler returns the Status struct as a means of changing the parser's behavior.  
     struct Status
     {
@@ -92,7 +97,7 @@ class Handler
     virtual Status characters(const std::string& text,
                               stream_offset position) {return Status::Ok;}
 
-    Handler() : autoUnescapeAttributes(true), autoUnescapeCharacters(true) {}
+    Handler() : autoUnescapeAttributes(true), autoUnescapeCharacters(true), version(0) {}
     virtual ~Handler(){}
 
     protected:
