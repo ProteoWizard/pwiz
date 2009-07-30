@@ -1,18 +1,38 @@
 #!/bin/bash
 
+#
+# parse version from pwiz/Version.cpp
+#
+
+
 pwiz_root=$(dirname $0)/../..
 pushd $pwiz_root > /dev/null
 
-# parse version string from pwiz/Version.cpp Version::str() implementation
-#version_string=$(cat pwiz/Version.cpp | grep 'Version::str()' | awk -F\" '{print $2}')
-#if [ $? -ne 0 ]
-#then
-#    echo "Error getting version string."
-#    return 1
-#fi
 
-# hack -- do this right!
-version_string=1.5.1
+get_value()
+{
+    #
+    # grabs the value returned by a function in pwiz/Version.cpp
+    #
+    # $1 == function name in Version.cpp
+    # $2 == local variable name to set
+    #
+
+    eval "$2=$(grep Version::$1 pwiz/Version.cpp | sed 's/;/ /g' | awk '{ print $4 }')"
+
+    if [ $? -ne 0 ]
+    then
+        echo "Error getting version string."
+        return 1
+    fi
+}
+
+
+get_value Major major
+get_value Minor minor
+get_value Revision revision
+
+version_string=$major.$minor.$revision
 
 echo $version_string
 
