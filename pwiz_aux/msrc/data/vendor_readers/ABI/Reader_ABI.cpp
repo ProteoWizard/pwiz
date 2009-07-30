@@ -28,7 +28,6 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
-#include <windows.h> // GetModuleFileName
 #include "boost/shared_ptr.hpp"
 #include <boost/foreach.hpp>
 #include <iostream>
@@ -51,6 +50,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& 
 #include "SpectrumList_ABI.hpp"
 #include "ChromatogramList_ABI.hpp"
 #include "Reader_ABI_Detail.hpp"
+#include <windows.h> // GetModuleFileName
 
 
 namespace pwiz {
