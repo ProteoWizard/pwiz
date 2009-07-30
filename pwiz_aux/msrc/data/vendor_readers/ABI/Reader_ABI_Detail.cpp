@@ -27,6 +27,8 @@
 
 using namespace pwiz::vendor_api::ABI;
 
+#ifdef PWIZ_READER_ABI
+
 namespace pwiz {
 namespace msdata {
 namespace detail {
@@ -231,3 +233,5 @@ PWIZ_API_DECL CVID translate(Polarity polarity)
 } // detail
 } // msdata
 } // pwiz
+
+#endif // PWIZ_READER_ABI
