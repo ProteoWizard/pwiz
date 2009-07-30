@@ -193,7 +193,6 @@ RawFileImpl::RawFileImpl(const string& filename)
         // copy the MSFileReader DLLs if it is installed, else throw an exception informing the user to download it
         char* programFilesPath = ::getenv("ProgramFiles");
         bfs::path msFileReaderPath = bfs::path(programFilesPath) / "Thermo/MSFileReader";
-        cout << msFileReaderPath.string() << endl;
         delete programFilesPath;
         if (bfs::exists(msFileReaderPath / "XRawfile2.dll"))
         {
