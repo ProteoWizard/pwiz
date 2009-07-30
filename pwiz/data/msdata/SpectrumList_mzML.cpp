@@ -150,7 +150,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
         throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
 
     IO::BinaryDataFlag binaryDataFlag = getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData;
-    IO::read(*is_, *result, binaryDataFlag);
+    IO::read(*is_, *result, binaryDataFlag, (msd_.version().find("1.0") == 0 ? 1 : 0));
 
     // resolve any references into the MSData object
 

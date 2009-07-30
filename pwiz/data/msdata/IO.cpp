@@ -767,7 +767,8 @@ struct HandlerSoftware : public HandlerParamContainer
             return Status::Ok;
         }
 
-        else if (name == "softwareParam") // mzML 1.0
+        // mzML 1.0
+        else if (version == 1 && name == "softwareParam")
         {
             string accession;
             getAttribute(attributes, "accession", accession);
@@ -969,11 +970,12 @@ struct HandlerDataProcessing : public HandlerParamContainer
             decode_xml_id(getAttribute(attributes, "id", dataProcessing->id));
 
             // mzML 1.0
-            string softwareRef;
-            getAttribute(attributes, "softwareRef", softwareRef);
-            if (!softwareRef.empty())
+            if (version == 1)
             {
-                handlerProcessingMethod_.defaultSoftwareRef = softwareRef;
+                string softwareRef;
+                getAttribute(attributes, "softwareRef", softwareRef);
+                if (!softwareRef.empty())
+                    handlerProcessingMethod_.defaultSoftwareRef = softwareRef;
             }
 
             return Status::Ok;
@@ -1465,7 +1467,7 @@ struct HandlerScan : public HandlerParamContainer
                 scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
             return Status::Ok;
         }
-        else if (name == "acquisition")
+        else if (version == 1 && name == "acquisition")
         {
             // note: spectrumRef, externalNativeID, and externalSpectrumID are mutually exclusive
             getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
@@ -1484,7 +1486,7 @@ struct HandlerScan : public HandlerParamContainer
                     }
                     catch(exception&)
                     {
-                        cerr << "[IO::HandlerScan] Warning - mzML 1.0: non-integral <acquisition>::externalNativeID; externalSpectrumID format unknown\n";
+                        //cerr << "[IO::HandlerScan] Warning - mzML 1.0: non-integral <acquisition>::externalNativeID; externalSpectrumID format unknown\n";
                         scan->externalSpectrumID = externalNativeID;
                     }
             }
@@ -1890,24 +1892,28 @@ struct HandlerSpectrum : public HandlerParamContainer
             getAttribute(attributes, "index", spectrum->index);
             getAttribute(attributes, "spotID", spectrum->spotID);
             getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
+            getAttribute(attributes, "id", spectrum->id); // not an XML:ID
 
-            // note: in the mzML 1.1 data model, id and nativeID are mutually exclusive
-            string nativeID;
-            getAttribute(attributes, "nativeID", nativeID);
-            if (nativeID.empty())
-                getAttribute(attributes, "id", spectrum->id); // not an XML:ID
-            else
+            // mzML 1.0
+            if (version == 1)
             {
-                try
+                string nativeID;
+                getAttribute(attributes, "nativeID", nativeID);
+                if (nativeID.empty())
+                    getAttribute(attributes, "id", spectrum->id); // not an XML:ID
+                else
                 {
-                    lexical_cast<int>(nativeID);
-                    //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
-                    spectrum->id = "scan=" + nativeID;
-                }
-                catch(exception&)
-                {
-                    cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: non-integral <spectrum>::nativeID; id format unknown\n";
-                    spectrum->id = nativeID;
+                    try
+                    {
+                        lexical_cast<int>(nativeID);
+                        //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
+                        spectrum->id = "scan=" + nativeID;
+                    }
+                    catch(exception&)
+                    {
+                        //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: non-integral <spectrum>::nativeID; id format unknown\n";
+                        spectrum->id = nativeID;
+                    }
                 }
             }
 
@@ -1925,9 +1931,10 @@ struct HandlerSpectrum : public HandlerParamContainer
 
             return Status::Ok;
         }
-        else if (name == "scanList" || name == "acquisitionList")
+        else if (version == 1 && name == "acquisitionList" /* mzML 1.0 */ || name == "scanList")
         {
             handlerScanList_.scanList = &spectrum->scanList;
+            handlerScanList_.version = version;
             return Status(Status::Delegate, &handlerScanList_);
         }
         else if (name == "precursorList" || name == "productList")
@@ -1960,13 +1967,15 @@ struct HandlerSpectrum : public HandlerParamContainer
         {
             return Status::Ok;
         }
-        else if (name == "spectrumDescription") // mzML 1.0
+        else if (version == 1 && name == "spectrumDescription") // mzML 1.0
         {
+            // read cvParams, userParams, and referenceableParamGroups in <spectrumDescription> into <spectrum>
             return Status::Ok;
         }
-        else if (name == "scan") // mzML 1.0
+        else if (version == 1 && name == "scan") // mzML 1.0
         {
             spectrum->scanList.scans.push_back(Scan());
+            handlerScan_.version = version;
             handlerScan_.scan = &spectrum->scanList.scans.back();
             return Status(Status::Delegate, &handlerScan_);
         }
@@ -1985,9 +1994,11 @@ struct HandlerSpectrum : public HandlerParamContainer
 
 
 PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
-          BinaryDataFlag binaryDataFlag)
+                        BinaryDataFlag binaryDataFlag,
+                        int version)
 {
     HandlerSpectrum handler(binaryDataFlag, &spectrum);
+    handler.version = version;
     SAXParser::parse(is, handler);
 }
 
@@ -2192,6 +2203,7 @@ struct HandlerSpectrumListSimple : public HandlerParamContainer
         else if (name == "spectrum")
         {
             spectrumListSimple->spectra.push_back(SpectrumPtr(new Spectrum));
+            handlerSpectrum_.version = version;
             handlerSpectrum_.spectrum = spectrumListSimple->spectra.back().get();
             return Status(Status::Delegate, &handlerSpectrum_);
         }
@@ -2534,7 +2546,7 @@ struct HandlerMSData : public SAXParser::Handler
             getAttribute(attributes, "accession", msd->accession);
             getAttribute(attributes, "id", msd->id); // not an XML:ID
 
-            // "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML<version>.xsd
+            // "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML<version>.xsd"
             string schemaLocation;
             getAttribute(attributes, "xsi:schemaLocation", schemaLocation);
             if (schemaLocation.empty())
@@ -2545,6 +2557,9 @@ struct HandlerMSData : public SAXParser::Handler
                 string xsdName = bfs::path(schemaLocation).filename();
                 msd->version_ = xsdName.substr(4, xsdName.length()-8); // read between "mzML" and ".xsd"
             }
+
+            if (msd->version_.find("1.0") == 0)
+                version = 1;
 
             return Status::Ok;
         }
@@ -2561,7 +2576,7 @@ struct HandlerMSData : public SAXParser::Handler
         }
         else if (name == "cv")
         {
-            msd->cvs.push_back(CV()); 
+            msd->cvs.push_back(CV());
             handlerCV_.cv = &msd->cvs.back();
             return Status(Status::Delegate, &handlerCV_);
         }
@@ -2572,37 +2587,39 @@ struct HandlerMSData : public SAXParser::Handler
         }
         else if (name == "referenceableParamGroup")
         {
-            msd->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup));            
+            msd->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup));
             handlerParamGroup_.paramGroup = msd->paramGroupPtrs.back().get();
             return Status(Status::Delegate, &handlerParamGroup_);
         }
         else if (name == "sample")
         {
-            msd->samplePtrs.push_back(SamplePtr(new Sample));            
+            msd->samplePtrs.push_back(SamplePtr(new Sample));
             handlerSample_.sample = msd->samplePtrs.back().get();
             return Status(Status::Delegate, &handlerSample_);
         }
         else if (name == "instrumentConfiguration")
         {
-            msd->instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration));            
+            msd->instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration));
             handlerInstrumentConfiguration_.instrumentConfiguration = msd->instrumentConfigurationPtrs.back().get();
             return Status(Status::Delegate, &handlerInstrumentConfiguration_);
         }        
         else if (name == "software")
         {
-            msd->softwarePtrs.push_back(SoftwarePtr(new Software));            
+            msd->softwarePtrs.push_back(SoftwarePtr(new Software));
+            handlerSoftware_.version = version;
             handlerSoftware_.software = msd->softwarePtrs.back().get();
             return Status(Status::Delegate, &handlerSoftware_);
         }        
         else if (name == "dataProcessing")
         {
-            msd->dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing));            
+            msd->dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing));
+            handlerDataProcessing_.version = version;
             handlerDataProcessing_.dataProcessing = msd->dataProcessingPtrs.back().get();
             return Status(Status::Delegate, &handlerDataProcessing_);
         }
         else if (name == "scanSettings")
         {
-            msd->scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings));            
+            msd->scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings));
             handlerScanSettings_.scanSettings = msd->scanSettingsPtrs.back().get();
             return Status(Status::Delegate, &handlerScanSettings_);
         }

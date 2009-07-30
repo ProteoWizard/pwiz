@@ -154,7 +154,8 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
-          BinaryDataFlag binaryDataFlag = IgnoreBinaryData);
+          BinaryDataFlag binaryDataFlag = IgnoreBinaryData,
+          int version = 0);
 
 
 PWIZ_API_DECL
