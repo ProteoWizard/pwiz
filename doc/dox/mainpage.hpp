@@ -11,5 +11,5 @@
 /// mirrors the source code directory structure. 
 ///
 /// \section Questions
-/// Email Darren:  Darren.Kessner@cshs.org  
+/// Email Darren Kessner:  darren@proteowizard.org
 
