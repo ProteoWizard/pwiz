@@ -240,6 +240,37 @@ void test(const string& filename)
     unit_assert(!strcmp(instrument.detector, "electron multiplier"));
 }
 
+static void test_mzML_1_0(const char *test_app_name) {
+	// depending on where you invoke bjam from, test_app_name will have name like...
+	// ..\build\pwiz\data\msdata\gcc-mingw-3.4.5\release\link-static\runtime-link-static\threading-multi\RAMPAdapterTest.exe
+	// build\pwiz\data\msdata\gcc-mingw-3.4.5\release\link-static\runtime-link-static\threading-multi\RAMPAdapterTest.exe
+	std::string buildparent(test_app_name);
+	size_t pos = buildparent.find("build");
+	buildparent.resize(pos);
+	std::string example_data_dir = buildparent + "example_data/";
+	RAMPAdapter adapter_1_0(example_data_dir + "small.pwiz.1.0.mzML");
+	RAMPAdapter adapter_1_1(example_data_dir + "small.pwiz.1.1.mzML");
+
+	unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount());
+	for (int scan = 4;scan--;) {
+		ScanHeaderStruct header1_0, header1_1;
+		adapter_1_0.getScanHeader(scan, header1_0);
+		adapter_1_1.getScanHeader(scan, header1_1);
+		unit_assert(header1_0.seqNum == header1_1.seqNum );
+		unit_assert(header1_0.acquisitionNum == header1_1.acquisitionNum );
+		unit_assert(header1_0.msLevel == header1_1.msLevel );
+		unit_assert(header1_0.peaksCount == header1_1.peaksCount );
+		const double epsilon = 1e-6;
+		unit_assert_equal(header1_0.totIonCurrent, header1_1.totIonCurrent, epsilon);
+		unit_assert_equal(header1_0.retentionTime, header1_1.retentionTime, epsilon);
+		unit_assert_equal(header1_0.basePeakMZ, header1_1.basePeakMZ, epsilon);
+		unit_assert_equal(header1_0.basePeakIntensity, header1_1.basePeakIntensity, epsilon);
+		unit_assert_equal(header1_0.collisionEnergy, header1_1.collisionEnergy, epsilon);
+		unit_assert_equal(header1_0.lowMZ, header1_1.lowMZ, epsilon);
+		unit_assert_equal(header1_0.highMZ, header1_1.highMZ, epsilon);
+		unit_assert(header1_0.precursorScanNum == header1_1.precursorScanNum );
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -249,7 +280,7 @@ int main(int argc, char* argv[])
         string filename = writeTempFile();
         test(filename);
 
-        // now try it with a gzipped file
+		// now try it with a gzipped file
         string gzfilename = filename + ".gz";
 		bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename));
         bio::copy(tinyGZ, bio::file_descriptor_sink(gzfilename, ios::out|ios::binary));
@@ -257,6 +288,9 @@ int main(int argc, char* argv[])
 
         boost::filesystem::remove(filename);
         boost::filesystem::remove(gzfilename);
+		// and make sure we're still good with older files
+		test_mzML_1_0(argv[0]); // passing in app name as it contains our path
+        
         return 0;
     }
     catch (exception& e)

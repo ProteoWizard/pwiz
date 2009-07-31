@@ -692,14 +692,14 @@ PWIZ_API_DECL string value(const string& id, const string& name)
 
 PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd)
 {
+	CVID result = CVID_Unknown;
     if (msd.run.defaultSourceFilePtr.get())
-        return msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
+        result = msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
     else if (!msd.fileDescription.sourceFilePtrs.empty())
-        return msd.fileDescription.sourceFilePtrs[0]->cvParamChild(MS_nativeID_format).cvid;
-    else if (msd.version().find("1.0") == 0)
-        return MS_scan_number_only_nativeID_format;
-    else
-        return CVID_Unknown;
+        result = msd.fileDescription.sourceFilePtrs[0]->cvParamChild(MS_nativeID_format).cvid;
+    if (( CVID_Unknown == result ) && (msd.version().find("1.0") == 0))
+        result = MS_scan_number_only_nativeID_format;
+    return result;
 }
 
 
