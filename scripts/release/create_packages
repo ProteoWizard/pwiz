@@ -16,13 +16,30 @@ read -p "<enter> to continue..."
 rm -rf $packagedir
 mkdir -p $packagedir
 
+
 package_windows=pwiz-$tag-tools-windows-i386.zip
 package_linux=pwiz-$tag-tools-linux-i386.zip
 package_osx=pwiz-$tag-tools-osx-i386.zip
 package_src=pwiz-$tag-src.tgz
 
+
+# avoid distributing some DLLs
+rm -rf $bindir/msvc-release-stage
+mkdir -p $bindir/msvc-release-stage
+cp $bindir/msvc-release/* $bindir/msvc-release-stage
+pushd $bindir/msvc-release-stage
+rm ABSciex.DataAccess.WiffFileDataReader.dll \
+   Clearcore.dll \
+   ClearCore.Storage.dll \
+   rscoree.dll \
+   MSFileReader.XRawfile2.dll \
+   fileio.dll \
+   fregistry.dll
+popd
+
+
 echo "Creating $package_windows."
-zip -j $packagedir/$package_windows $bindir/msvc-release/*
+zip -j $packagedir/$package_windows $bindir/msvc-release-stage/*
 echo "Creating $package_linux."
 zip -j $packagedir/$package_linux $bindir/gcc-release/*
 echo "Creating $package_osx."
