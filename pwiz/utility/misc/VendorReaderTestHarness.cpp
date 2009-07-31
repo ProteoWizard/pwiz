@@ -28,6 +28,7 @@
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -71,6 +72,33 @@ void mangleSourceFileLocations(vector<SourceFilePtr>& sourceFiles)
 }
 
 
+void manglePwizSoftware(MSData& msd)
+{
+    // a pwiz version change isn't worth regenerating the test data
+    vector<size_t> oldPwizSoftwarePtrs;
+    SoftwarePtr pwizSoftware;
+    for (size_t i=0; i < msd.softwarePtrs.size(); ++i)
+        if (msd.softwarePtrs[i]->hasCVParam(MS_pwiz))
+        {
+            if (msd.softwarePtrs[i]->version != pwiz::msdata::Version::str())
+                oldPwizSoftwarePtrs.push_back(i);
+            else
+                pwizSoftware = msd.softwarePtrs[i];
+        }
+
+    pwizSoftware->id = "current pwiz";
+
+    BOOST_FOREACH(DataProcessingPtr& dp, msd.dataProcessingPtrs)
+        BOOST_FOREACH(ProcessingMethod& pm, dp->processingMethods)
+            pm.softwarePtr = pwizSoftware;
+
+    for (vector<size_t>::reverse_iterator itr = oldPwizSoftwarePtrs.rbegin();
+         itr != oldPwizSoftwarePtrs.rend();
+         ++itr)
+         msd.softwarePtrs.erase(msd.softwarePtrs.begin()+(*itr));
+}
+
+
 void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 {
     BOOST_FOREACH(SourceFilePtr sourceFile, sourceFiles)
@@ -93,6 +121,7 @@ void hackInMemoryMSData(MSData& msd)
     if (!sfs.empty()) sfs.erase(sfs.end()-1);
 
     mangleSourceFileLocations(sfs);
+    manglePwizSoftware(msd);
 
     // remove current DataProcessing created on read
     SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
@@ -115,6 +144,7 @@ void testRead(const Reader& reader, const string& rawpath)
         MSData& msd = *msds[i];
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
         mangleSourceFileLocations(msd.fileDescription.sourceFilePtrs);
+        manglePwizSoftware(msd);
         if (os_) TextWriter(*os_,0)(msd);
 
         string targetResultFilename;
