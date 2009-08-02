@@ -40,6 +40,7 @@ namespace mziddata {
 
 using msdata::CVParam;
 using msdata::UserParam;
+using namespace boost::logic;
 
 class PWIZ_API_DECL TextWriter
 {
@@ -222,12 +223,41 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+    TextWriter& operator()(const SearchDatabase& sd)
+    {
+        (*this)("SearchDatabase: ");
+        if (!sd.version.empty())
+            child()("version: " + sd.version);
+        if (!sd.releaseDate.empty())
+            child()("releaseDate: " + sd.releaseDate);
+        if (sd.numDatabaseSequences != 0)
+            child()("numDatabaseSequences: " + boost::lexical_cast<std::string>(sd.numDatabaseSequences));
+        if (sd.numResidues != 0)
+            child()("numResidues: " + boost::lexical_cast<std::string>(sd.numResidues));
+        if (!sd.fileFormat.empty())
+            child()("fileFormat: ", sd.fileFormat);
+        if (!sd.DatabaseName.empty())
+            child()("DatabaseName: ", sd.DatabaseName);
+        return *this;
+    }
     
+    TextWriter& operator()(const SpectraData& sd)
+    {
+        (*this)("SpectraData: ");
+        if (!sd.location.empty())
+            child()("location: " + sd.location);
+        if (!sd.externalFormatDocumentation.empty())
+            child()("externalFormatDocumentation: ", sd.externalFormatDocumentation);
+        if (!sd.fileFormat.empty())
+            child()("fileFormat: ", sd.fileFormat);
+        return *this;
+    }
+
     TextWriter& operator()(const SpectrumIdentificationList& sil)
     {
         (*this)("SpectrumIdentificationList: ");
         (*this)((IdentifiableType)sil);
-        if (!sil.numSequencesSearched != 0)
+        if (sil.numSequencesSearched != 0)
             child()("numSequencesSearched: "+
                     boost::lexical_cast<std::string>(sil.numSequencesSearched));
         if (!sil.fragmentationTable.empty())
@@ -279,14 +309,14 @@ class PWIZ_API_DECL TextWriter
 
         (*this)((IdentifiableType)sf);
         if (!sf.location.empty())
-            child()("location", sf.location);
+            child()("location: " + sf.location);
         if (!sf.fileFormat.empty())
             child()(sf.fileFormat);
         if (!sf.externalFormatDocumentation.empty())
-            child()("externalFormatDocumentation",
+            child()("externalFormatDocumentation: ",
                     sf.externalFormatDocumentation);
         if (!sf.paramGroup.empty())
-            child()(sf.paramGroup);
+            child()("paramGroup: ", sf.paramGroup);
         
         return *this;
     }
@@ -346,7 +376,7 @@ class PWIZ_API_DECL TextWriter
 
     TextWriter& operator()(const Enzymes& ezs)
     {
-        (*this)("Enzyme: ");
+        (*this)("Enzymes: ");
         if (!ezs.independent.empty())
             child()("independent: ", ezs.independent);
         if (!ezs.enzymes.empty())
@@ -356,14 +386,14 @@ class PWIZ_API_DECL TextWriter
 
     TextWriter& operator()(const Enzyme& ez)
     {
-        (*this)("Enzymes: ");
+        (*this)("Enzyme: ");
         if (!ez.id.empty())
             child()("id: ", ez.id);
         if (!ez.nTermGain.empty())
             child()("nTermGain: ", ez.nTermGain);
         if (!ez.cTermGain.empty())
             child()("cTermGain: ", ez.cTermGain);
-        if (ez.semiSpecific != false)
+        if (ez.semiSpecific != indeterminate)
             child()("semiSpecific: " , boost::lexical_cast<std::string>(ez.semiSpecific));
         if (!ez.missedCleavages.empty())
             child()("missedCleavages: ", ez.missedCleavages);

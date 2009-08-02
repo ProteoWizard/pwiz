@@ -34,6 +34,8 @@ using namespace pwiz::mziddata;
 using boost::shared_ptr;
 
 
+// TODO: Add IdentifiableType diff to all subclasses of IdentifiableType
+
 ostream* os_ = 0;
 const double epsilon = numeric_limits<double>::epsilon();
 
@@ -479,35 +481,248 @@ void testProteinDetectionList()
 
 void testAnalysisData()
 {
+    if (os_) *os_ << "testAnalysisData()\n";
+
     AnalysisData a, b;
     Diff<AnalysisData> diff(a,b);
     unit_assert(!diff);
 
+    a.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
+    a.spectrumIdentificationList.back()->numSequencesSearched = 5;    
+    b.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
+    b.spectrumIdentificationList.back()->numSequencesSearched = 15;
+
+    a.proteinDetectionList.id = "rosemary";
+    b.proteinDetectionList.id = "sage";
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+
+    // a diff was found
+    unit_assert(diff);
+
+    // and correctly
+    unit_assert(diff.a_b.spectrumIdentificationList.size() == 1);
+    unit_assert(diff.b_a.spectrumIdentificationList.size() == 1);
+    unit_assert_equal(diff.a_b.spectrumIdentificationList.back()->numSequencesSearched, 5, epsilon);
+    unit_assert_equal(diff.b_a.spectrumIdentificationList.back()->numSequencesSearched, 15, epsilon);
+    unit_assert(diff.a_b.proteinDetectionList.id == "rosemary");
+    unit_assert(diff.b_a.proteinDetectionList.id == "sage");
+        
 }
 
 
 void testSearchDatabase()
 {
+    if (os_) *os_ << "testSearchDatabase()" << endl;
+
+    SearchDatabase a, b;
+    Diff<SearchDatabase> diff(a,b);
+    unit_assert(!diff);
+
+    a.version = "1.0";
+    b.version = "1.1";
+
+    a.releaseDate = "20090726";
+    b.releaseDate = "20090727";
+
+    a.numDatabaseSequences = 5;
+    b.numDatabaseSequences = 15;
+
+    a.numResidues = 3;
+    b.numResidues = 13;
+    
+    a.fileFormat.set(MS_frag__z_ion);
+    a.DatabaseName.set(MS_frag__z_ion);
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+
+    // a diff was found
+    unit_assert(diff);
+    
+    // and correctly
+    unit_assert(diff.a_b.version == "1.0");
+    unit_assert(diff.b_a.version == "1.1");
+    unit_assert(diff.a_b.releaseDate == "20090726");
+    unit_assert(diff.b_a.releaseDate == "20090727");
+    unit_assert_equal(diff.a_b.numDatabaseSequences, 5, epsilon);
+    unit_assert_equal(diff.b_a.numDatabaseSequences, 15, epsilon);
+    unit_assert_equal(diff.a_b.numResidues, 3, epsilon);
+    unit_assert_equal(diff.b_a.numResidues, 13, epsilon);
+    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
+    unit_assert(diff.b_a.fileFormat.cvParams.size() == 0);
+    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_frag__z_ion));
+    unit_assert(diff.a_b.DatabaseName.cvParams.size() == 1);
+    unit_assert(diff.b_a.DatabaseName.cvParams.size() == 0);
+    unit_assert(diff.a_b.DatabaseName.hasCVParam(MS_frag__z_ion));
+                   
 }
 
 
 void testSpectraData()
 {
+    if (os_) *os_ << "testSpectraData()\n" << endl;
+
+    SpectraData a, b;
+    Diff<SpectraData> diff(a,b);
+    unit_assert(!diff);
+
+    a.location = "mahtomedi";
+    b.location = "white_bear_lake";
+    a.externalFormatDocumentation.push_back("wikipedia");
+    b.externalFormatDocumentation.push_back("ehow");
+    a.fileFormat.set(MS_frag__b_ion);
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+
+    // a diff was found
+    unit_assert(diff);
+
+    // and correctly
+    unit_assert(diff.a_b.location == "mahtomedi");
+    unit_assert(diff.b_a.location == "white_bear_lake");
+    unit_assert(diff.a_b.externalFormatDocumentation.size() == 1);
+    unit_assert(diff.b_a.externalFormatDocumentation.size() == 1);
+    unit_assert(diff.a_b.externalFormatDocumentation.back() == "wikipedia");
+    unit_assert(diff.b_a.externalFormatDocumentation.back() == "ehow");
+    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
+    unit_assert(diff.b_a.fileFormat.cvParams.size() == 0);
+    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_frag__b_ion));
+
 }
 
 
 void testSourceFile()
 {
+    if (os_) *os_ << "testSourceFile()\n" << endl;
+
+    SourceFile a,b;
+    Diff<SourceFile> diff(a,b);
+    unit_assert(!diff);
+
+    a.location = "madison";
+    b.location = "middleton";
+    a.fileFormat.set(MS_wolf);
+    b.fileFormat.set(MS_ReAdW);
+    a.externalFormatDocumentation.push_back("The Idiot's Guide to External Formats");
+    b.externalFormatDocumentation.push_back("External Formats for Dummies");
+    a.paramGroup.set(MS_sample_number);
+    b.paramGroup.set(MS_sample_name);
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+
+    // a diff was found
+    unit_assert(diff);
+    
+    // and correctly
+    unit_assert(diff.a_b.location == "madison");
+    unit_assert(diff.b_a.location == "middleton");
+    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
+    unit_assert(diff.b_a.fileFormat.cvParams.size() == 1);
+    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_wolf));
+    unit_assert(diff.b_a.fileFormat.hasCVParam(MS_ReAdW));
+    unit_assert(diff.a_b.externalFormatDocumentation.size() == 1);
+    unit_assert(diff.b_a.externalFormatDocumentation.size() == 1);
+    unit_assert(diff.a_b.externalFormatDocumentation.back() == "The Idiot's Guide to External Formats");
+    unit_assert(diff.b_a.externalFormatDocumentation.back() == "External Formats for Dummies");
+    unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
+    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
+    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_sample_number));
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_sample_name));               
+                
 }
 
 
 void testInputs()
 {
+
+    if (os_) *os_ << "testInputs()\n";
+    
+    Inputs a, b;
+    Diff<Inputs> diff(a,b);
+    unit_assert(!diff);
+
+    a.sourceFile.push_back(SourceFilePtr(new SourceFile()));
+    a.sourceFile.back()->location = "Sector 9";
+    
+    a.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase()));
+    a.searchDatabase.back()->numDatabaseSequences = 100;
+
+    a.spectraData.push_back(SpectraDataPtr(new SpectraData()));
+    a.spectraData.back()->location = "Cloud 9";
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+    
+    // a diff was found
+    unit_assert(diff);
+    
+    // and correctly
+    unit_assert(diff.a_b.sourceFile.size() == 1);
+    unit_assert(diff.b_a.sourceFile.size() == 0);
+    unit_assert(diff.a_b.sourceFile.back()->location == "Sector 9");
+    unit_assert(diff.a_b.searchDatabase.size() == 1);
+    unit_assert(diff.b_a.searchDatabase.size() == 0);
+    unit_assert_equal(diff.a_b.searchDatabase.back()->numDatabaseSequences, 100, epsilon);
+    unit_assert(diff.a_b.spectraData.size() == 1);
+    unit_assert(diff.b_a.spectraData.size() == 0);
+    unit_assert(diff.a_b.spectraData.back()->location == "Cloud 9");
+
 }
 
 
 void testEnzyme()
 {
+    if (os_) *os_ << "testEnzyme()\n";
+
+    Enzyme a,b;
+    Diff<Enzyme> diff(a,b);
+    if (diff && os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    a.id = "Donald Trump";
+    b.id = "Donald Duck";
+    a.nTermGain = "y";
+    b.nTermGain = "n";
+    a.cTermGain = "y";
+    b.cTermGain = "n";
+    a.semiSpecific = 1;
+    b.semiSpecific = 2;
+    a.missedCleavages = "1"; //TODO check if this should be int
+    b.missedCleavages = "5";
+    a.minDistance = "2";
+    b.minDistance = "4";
+    a.siteRegexp = "^";
+    b.siteRegexp = "$";
+    a.enzymeName.set(MS_Trypsin);
+
+    diff(a,b);
+    if (os_) *os_ << diff << endl;
+    
+    // a diff was found
+    unit_assert(diff);
+    
+    // and correctly
+    //TODO Removed semiSpecific assertion - resolve difficulties with boost::tribool and Enzyme::empty()
+    unit_assert(diff.a_b.id == "Donald Trump");
+    unit_assert(diff.b_a.id == "Donald Duck");
+    unit_assert(diff.a_b.nTermGain == "y");
+    unit_assert(diff.b_a.nTermGain == "n");
+    unit_assert(diff.a_b.cTermGain == "y");
+    unit_assert(diff.b_a.cTermGain == "n");
+    unit_assert(diff.a_b.missedCleavages == "1");
+    unit_assert(diff.b_a.missedCleavages == "5");
+    unit_assert(diff.a_b.minDistance == "2");
+    unit_assert(diff.b_a.minDistance == "4");
+    unit_assert(diff.a_b.siteRegexp == "^");
+    unit_assert(diff.b_a.siteRegexp == "$");
+    unit_assert(diff.a_b.enzymeName.cvParams.size() == 1);
+    unit_assert(diff.b_a.enzymeName.cvParams.size() == 0);
+    unit_assert(diff.a_b.enzymeName.hasCVParam(MS_Trypsin));
+        
 }
 
 
@@ -529,7 +744,6 @@ void testResidue()
 void testAmbiguousResidue()
 {
 }
-
 
 void testFilter()
 {

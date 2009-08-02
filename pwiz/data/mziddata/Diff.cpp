@@ -516,11 +516,7 @@ void diff(const SpectrumIdentificationList& a,
           SpectrumIdentificationList& b_a,
           const DiffConfig& config)
 {
-    if (a.numSequencesSearched != b.numSequencesSearched)
-    {
-        a_b.numSequencesSearched = a.numSequencesSearched;
-        b_a.numSequencesSearched = b.numSequencesSearched;
-    }
+    diff_numeric(a.numSequencesSearched, b.numSequencesSearched, a_b.numSequencesSearched, b_a.numSequencesSearched, config);
     vector_diff_deep(a.fragmentationTable, b.fragmentationTable,
                      a_b.fragmentationTable, b_a.fragmentationTable,
                      config);
@@ -566,7 +562,9 @@ void diff(const ProteinDetectionList& a,
           ProteinDetectionList& a_b,
           ProteinDetectionList& b_a,
           const DiffConfig& config)
-{
+{    
+    diff((const IdentifiableType&)a, (const IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     vector_diff_deep(a.proteinAmbiguityGroup, b.proteinAmbiguityGroup,
                      a_b.proteinAmbiguityGroup, b_a.proteinAmbiguityGroup,
                      config);

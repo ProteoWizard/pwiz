@@ -496,6 +496,8 @@ struct PWIZ_API_DECL SpectraData : public IdentifiableType
 
     std::vector<std::string> externalFormatDocumentation;
     ParamContainer fileFormat;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
@@ -526,6 +528,8 @@ struct PWIZ_API_DECL SourceFile : public IdentifiableType
     std::vector<std::string> externalFormatDocumentation;
 
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SourceFile> SourceFilePtr;

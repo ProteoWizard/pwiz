@@ -456,7 +456,7 @@ PWIZ_API_DECL bool Enzyme::empty() const
     return id.empty() &&
         nTermGain.empty() &&
         cTermGain.empty() &&
-        semiSpecific == indeterminate &&
+        //        semiSpecific == indeterminate &&
         missedCleavages.empty() &&
         minDistance.empty() &&
         siteRegexp.empty() &&
@@ -681,6 +681,13 @@ bool AnalysisSampleCollection::empty() const
     return samples.empty();
 }
 
+PWIZ_API_DECL bool SpectraData::empty() const
+{
+    return location.empty() &&
+        externalFormatDocumentation.empty() &&
+        fileFormat.empty();
+}
+
 //
 // Inputs
 //
@@ -708,6 +715,18 @@ PWIZ_API_DECL bool SearchDatabase::empty() const
         releaseDate.empty() &&
         numDatabaseSequences == 0 &&
         numResidues == 0;
+}
+
+//
+// SourceFile
+//
+
+PWIZ_API_DECL bool SourceFile::empty() const
+{
+    return location.empty() &&
+        fileFormat.empty() &&
+        externalFormatDocumentation.empty() &&
+        paramGroup.empty();
 }
 
 //
