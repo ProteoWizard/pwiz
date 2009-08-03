@@ -190,7 +190,7 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
 {
     if (sourceFile.hasCVParam(MS_SHA_1)) return;
 
-    const string uriPrefix = "file:///";
+    const string uriPrefix = "file://";
     if (sourceFile.location.substr(0, uriPrefix.size()) != uriPrefix) return;
     bfs::path p(sourceFile.location.substr(uriPrefix.size()));
     p /= sourceFile.name;

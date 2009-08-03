@@ -52,7 +52,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     SourceFilePtr sfp(new SourceFile);
     sfp->id = "tiny1.yep";
     sfp->name = "tiny1.yep";
-    sfp->location = "file:///F:/data/Exp01";
+    sfp->location = "file://F:/data/Exp01";
     sfp->set(MS_Bruker_Agilent_YEP_file);
     sfp->set(MS_SHA_1,"1234567890123456789012345678901234567890");
     sfp->set(MS_Bruker_Agilent_YEP_nativeID_format);
@@ -61,13 +61,13 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     SourceFilePtr sfp2(new SourceFile);
     sfp2->id = "tiny.wiff";
     sfp2->name = "tiny.wiff";
-    sfp2->location = "file:///F:/data/Exp01";
+    sfp2->location = "file://F:/data/Exp01";
     sfp2->set(MS_ABI_WIFF_file);
     sfp2->set(MS_SHA_1,"2345678901234567890123456789012345678901");
     sfp2->set(MS_WIFF_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp2);
 
-    SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/settings/"));
+    SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file://C:/settings/"));
     sfp_parameters->set(MS_parameter_file);
     sfp_parameters->set(MS_SHA_1, "3456789012345678901234567890123456789012");
     sfp_parameters->set(MS_no_nativeID_format);
