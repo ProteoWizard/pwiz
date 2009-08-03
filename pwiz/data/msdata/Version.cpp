@@ -1,4 +1,4 @@
-//
+//foo
 // Version.cpp
 //
 // $Revision$
