@@ -1,6 +1,8 @@
 #
-# Jamfile (data/vendor_readers/Thermo) 
+# Jamfile (data/vendor_readers/Thermo)
 #
+# $Revision$
+# $Date$
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
 #
