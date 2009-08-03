@@ -10,19 +10,19 @@ set SCRIPTS_MISC_ROOT=%SCRIPTS_MISC_ROOT:~0,-1%
 pushd %SCRIPTS_MISC_ROOT%\..\..
 
 REM # call bootstrap
-echo ##teamcity[message 'Running bootstrap...']
+echo ##teamcity[message text='Running bootstrap...']
 echo ##teamcity[progressMessage 'Running bootstrap...']
 call bootstrap.bat
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing bootstrap & goto error
 
 REM # call quickbuild to build only the bindings first
-echo ##teamcity[message 'Building bindings...']
+echo ##teamcity[message text='Building bindings...']
 echo ##teamcity[progressMessage 'Building bindings...']
 call quickbuild.bat -j4 pwiz\utility\bindings\CLI//pwiz_bindings_cli
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error building bindings & goto error
 
 REM # call quickbuild again to build the rest and run tests
-echo ##teamcity[message 'Running quickbuild...']
+echo ##teamcity[message text='Running quickbuild...']
 echo ##teamcity[progressMessage 'Running quickbuild...']
 call quickbuild.bat -j4
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing quickbuild & goto error
