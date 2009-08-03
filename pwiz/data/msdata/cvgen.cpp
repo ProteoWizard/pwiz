@@ -274,7 +274,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
         os << "    {" << enumName(*it) << ", "
-           << "\"" << it->prefix << ":" << setw(7) << setfill('0') << it->id << "\", "
+           << "\"" << it->prefix << ":" << (it->prefix != "UNIMOD" ? setw(7) : setw(1) )  << setfill('0') << it->id << "\", "
            << "\"" << it->name << "\", " 
            << "\"" << it->def << "\", "
            << (it->isObsolete ? "true" : "false") // setw(7) screws up direct output

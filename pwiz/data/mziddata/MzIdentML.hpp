@@ -508,8 +508,8 @@ struct PWIZ_API_DECL SearchDatabase : public ExternalData
     
     std::string version;
     std::string releaseDate;
-    int numDatabaseSequences;
-    int numResidues;
+    long numDatabaseSequences;
+    long numResidues;
 
     ParamContainer fileFormat;
     ParamContainer DatabaseName;
@@ -683,7 +683,7 @@ struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 {
     SpectrumIdentificationList();
     
-    int numSequencesSearched;
+    long numSequencesSearched;
 
     std::vector<MeasurePtr> fragmentationTable;
     std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
