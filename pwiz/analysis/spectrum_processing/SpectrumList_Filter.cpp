@@ -202,5 +202,42 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanEventSet::accept(const msdat
 }
 
 
+//
+// SpectrumList_FilterPredicate_ScanTimeRange 
+//
+
+
+SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh)
+:   scanTimeLow_(scanTimeLow), scanTimeHigh_(scanTimeHigh), done_(false)
+{}
+
+
+tribool SpectrumList_FilterPredicate_ScanTimeRange::accept(const SpectrumIdentity& spectrumIdentity) const
+{
+    // TODO: encode scan time in mzML index (and SpectrumIdentity)
+    return boost::logic::indeterminate;
+}
+
+
+bool SpectrumList_FilterPredicate_ScanTimeRange::accept(const msdata::Spectrum& spectrum) const
+{
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+    CVParam param = scan.cvParam(MS_scan_start_time);
+    if (param.cvid == CVID_Unknown) return false;
+    double time = param.timeInSeconds();
+
+    if (time > scanTimeHigh_) done_ = true;
+    return (time>=scanTimeLow_ && time<=scanTimeHigh_);
+}
+
+
+bool SpectrumList_FilterPredicate_ScanTimeRange::done() const
+{
+    return done_;
+}
+
+
 } // namespace analysis
 } // namespace pwiz
+

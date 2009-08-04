@@ -41,6 +41,23 @@ using boost::logic::tribool;
 ostream* os_ = 0;
 
 
+void printSpectrumList(const SpectrumList& sl, ostream& os)
+{
+    os << "size: " << sl.size() << endl;
+
+    for (size_t i=0, end=sl.size(); i<end; i++)
+    {
+        SpectrumPtr spectrum = sl.spectrum(i, false);
+        os << spectrum->index << " " 
+           << spectrum->id << " "
+           << "ms" << spectrum->cvParam(MS_ms_level).value << " "
+           << "scanEvent:" << spectrum->scanList.scans[0].cvParam(MS_preset_scan_configuration).value << " "
+           << "scanTime:" << spectrum->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << " "
+           << endl;
+    }
+}
+
+
 SpectrumListPtr createSpectrumList()
 {
     SpectrumListSimplePtr sl(new SpectrumListSimple);
@@ -55,23 +72,14 @@ SpectrumListPtr createSpectrumList()
         spectrum->set(MS_ms_level, i%3==0?1:2);
         spectrum->scanList.scans.push_back(Scan());
         spectrum->scanList.scans[0].set(MS_preset_scan_configuration, i%4);
+        spectrum->scanList.scans[0].set(MS_scan_start_time, 420+i, UO_second);
         sl->spectra.push_back(spectrum);
     }
 
     if (os_)
     {
         *os_ << "original spectrum list:\n";
-        
-        for (size_t i=0, end=sl->size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = sl->spectrum(i, false);
-            *os_ << spectrum->index << " " 
-                 << spectrum->id << " "
-                 << "ms" << spectrum->cvParam(MS_ms_level).value << " "
-                 << "scanEvent:" << spectrum->scanList.scans[0].cvParam(MS_preset_scan_configuration).value << " "
-                 << endl;
-        }
-
+        printSpectrumList(*sl, *os_); 
         *os_ << endl;
     }
 
@@ -93,7 +101,13 @@ void testEven(SpectrumListPtr sl)
     if (os_) *os_ << "testEven:\n";
 
     SpectrumList_Filter filter(sl, EvenPredicate());
-    if (os_) *os_ << "size: " << filter.size() << endl;
+
+    if (os_) 
+    {
+        printSpectrumList(filter, *os_);
+        *os_ << endl;
+    }
+
     unit_assert(filter.size() == 5);
 
     for (size_t i=0, end=filter.size(); i<end; i++)
@@ -103,12 +117,9 @@ void testEven(SpectrumListPtr sl)
         unit_assert(id.id == "scan=" + lexical_cast<string>(100+i*2));
 
         SpectrumPtr spectrum = filter.spectrum(i);
-        if (os_) *os_ << spectrum->index << " " << spectrum->id << endl;
         unit_assert(spectrum->index == i);
         unit_assert(spectrum->id == "scan=" + lexical_cast<string>(100+i*2));
     }
-
-    if (os_) *os_ << endl;
 }
 
 
@@ -133,16 +144,9 @@ void testEvenMS2(SpectrumListPtr sl)
 
     SpectrumList_Filter filter(sl, EvenMS2Predicate());
     
-    if (os_)
+    if (os_) 
     {
-        *os_ << "size: " << filter.size() << endl;
-
-        for (size_t i=0, end=filter.size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->id << endl;
-        }
-
+        printSpectrumList(filter, *os_);
         *os_ << endl;
     }
 
@@ -181,16 +185,9 @@ void testSelectedIndices(SpectrumListPtr sl)
 
     SpectrumList_Filter filter(sl, SelectedIndexPredicate());
     
-    if (os_)
+    if (os_) 
     {
-        *os_ << "size: " << filter.size() << endl;
-
-        for (size_t i=0, end=filter.size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->id << endl;
-        }
-
+        printSpectrumList(filter, *os_);
         *os_ << endl;
     }
 
@@ -212,16 +209,9 @@ void testIndexSet(SpectrumListPtr sl)
 
     SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_IndexSet(indexSet));
     
-    if (os_)
+    if (os_) 
     {
-        *os_ << "size: " << filter.size() << endl;
-
-        for (size_t i=0, end=filter.size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->id << endl;
-        }
-
+        printSpectrumList(filter, *os_);
         *os_ << endl;
     }
 
@@ -244,16 +234,9 @@ void testScanNumberSet(SpectrumListPtr sl)
 
     SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_ScanNumberSet(scanNumberSet));
     
-    if (os_)
+    if (os_) 
     {
-        *os_ << "size: " << filter.size() << endl;
-
-        for (size_t i=0, end=filter.size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->id << endl;
-        }
-
+        printSpectrumList(filter, *os_);
         *os_ << endl;
     }
 
@@ -275,16 +258,9 @@ void testScanEventSet(SpectrumListPtr sl)
 
     SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_ScanEventSet(scanEventSet));
     
-    if (os_)
+    if (os_) 
     {
-        *os_ << "size: " << filter.size() << endl;
-
-        for (size_t i=0, end=filter.size(); i<end; i++)
-        {
-            SpectrumPtr spectrum = filter.spectrum(i);
-            *os_ << spectrum->index << " " << spectrum->id << endl;
-        }
-
+        printSpectrumList(filter, *os_);
         *os_ << endl;
     }
 
@@ -299,6 +275,30 @@ void testScanEventSet(SpectrumListPtr sl)
 }
 
 
+void testScanTimeRange(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testScanTimeRange:\n";
+
+    const double low = 422.5;
+    const double high = 427.5;
+
+    SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_ScanTimeRange(low, high));
+
+    if (os_) 
+    {
+        printSpectrumList(filter, *os_);
+        *os_ << endl;
+    }
+
+    unit_assert(filter.size() == 5);
+    unit_assert(filter.spectrumIdentity(0).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=105");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=106");
+    unit_assert(filter.spectrumIdentity(4).id == "scan=107");
+}
+
+ 
 void test()
 {
     SpectrumListPtr sl = createSpectrumList();
@@ -308,6 +308,7 @@ void test()
     testIndexSet(sl);
     testScanNumberSet(sl);
     testScanEventSet(sl);
+    testScanTimeRange(sl);
 }
 
 

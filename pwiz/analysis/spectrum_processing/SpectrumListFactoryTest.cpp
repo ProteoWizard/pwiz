@@ -73,10 +73,29 @@ void testWrap()
 }
 
 
+void testWrapScanTimeRange()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    SpectrumListPtr& sl = msd.run.spectrumListPtr;
+    unit_assert(sl.get());
+    unit_assert(sl->size() > 2);
+
+    double timeHighInSeconds = 5.9 * 60; // between first and second scan
+    ostringstream oss;
+    oss << "scanTime [0," << timeHighInSeconds << "]";
+    SpectrumListFactory::wrap(msd, oss.str());
+    unit_assert(sl->size() == 1);
+    unit_assert(sl->spectrumIdentity(0).id == "scan=19");
+}
+
+
 void test()
 {
     testUsage(); 
     testWrap();
+    testWrapScanTimeRange();
 }
 
 

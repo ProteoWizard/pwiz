@@ -87,6 +87,24 @@ SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg)
 }
 
 
+SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg)
+{
+    double scanTimeLow = 0;
+    double scanTimeHigh = 0;
+
+    istringstream iss(arg);
+    char open='\0', comma='\0', close='\0';
+    iss >> open >> scanTimeLow >> comma >> scanTimeHigh >> close;
+
+    if (open!='[' || comma!=',' || close!=']')
+        return SpectrumListPtr();
+
+    return SpectrumListPtr(new
+        SpectrumList_Filter(msd.run.spectrumListPtr, 
+                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh)));
+}
+
+
 SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg)
 {
     istringstream parser(arg);
@@ -149,6 +167,7 @@ JumpTableEntry jumpTable_[] =
     {"index", "[indexBegin,indexEnd] ...", filterCreator_index},
     {"scanNumber", "[scanNumberBegin,scanNumberEnd] ...", filterCreator_scanNumber},
     {"scanEvent", "[scanEventBegin,scanEventEnd] ...", filterCreator_scanEvent},
+    {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"peakPicking", "prefer vendor peak picking: <true|false>   [msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},

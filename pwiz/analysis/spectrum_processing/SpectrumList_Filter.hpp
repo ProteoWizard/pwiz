@@ -118,6 +118,21 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet : public SpectrumL
 };
 
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
+    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual bool done() const;
+
+    private:
+    double scanTimeLow_;
+    double scanTimeHigh_;
+    mutable bool done_;
+};
+
+
 } // namespace analysis
 } // namespace pwiz
 
