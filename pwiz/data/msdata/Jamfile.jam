@@ -1,5 +1,8 @@
 #
-# Jamfile (data/msdata) 
+# Jamfile (data/msdata)
+#
+# $Revision:$
+# $Date:$
 #
 #
 # Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -51,10 +54,14 @@ lib pwiz_data_msdata_obo
     ;
 
 
-lib pwiz_data_msdata 
-    :   # sources 
-        cv.cpp
+# only Version.cpp is out of date when svnrev.hpp is changed
+obj Version : Version.cpp : <dependency>svnrev.hpp ;
+
+
+lib pwiz_data_msdata
+    : # sources
         pwiz_data_msdata_obo
+        cv.cpp
         BinaryDataEncoder.cpp
         ChromatogramList_mzML.cpp
         CVParam.cpp 
@@ -78,7 +85,7 @@ lib pwiz_data_msdata
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
-        Version.cpp
+        Version
     : # requirements
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
@@ -187,3 +194,37 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
 
 
 
+# generate automatic version file "svnrev.hpp"
+# svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+
+install install_svnrev
+    : ../../utility/misc//svnrev
+    : <location>.
+    ;
+explicit install_svnrev ;
+
+path-constant MSDATA_PATH : . ;
+actions piecemeal updated do_svnrev
+{
+   $(MSDATA_PATH)/svnrev -v -i -o$(MSDATA_PATH)/svnrev.hpp "$(>)"
+}
+
+import path ;
+make svnrev.hpp
+    : # sources
+        [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/msdata
+                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers
+                         $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api
+                         $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers
+                         $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api
+            : Jamfile.jam *.cpp *.hpp
+            : *Test.cpp
+        ]
+    : # action
+        do_svnrev
+    : # requirements
+        <location>.
+        <dependency>../../utility/misc//svnrev # update if svnrev.c is updated
+        <dependency>install_svnrev
+    ;
+explicit svnrev.hpp ;

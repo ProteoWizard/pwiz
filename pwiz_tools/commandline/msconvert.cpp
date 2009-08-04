@@ -28,6 +28,8 @@
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/Version.hpp"
+#include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/analysis/Version.hpp"
 #include "boost/program_options.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -228,7 +230,9 @@ Config parseCommandLine(int argc, const char* argv[])
           << "http://proteowizard.sourceforge.net\n"
           << "support@proteowizard.org\n"
           << "\n"
-          << "ProteoWizard release: " << pwiz::Version::str() << endl
+          << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
+          << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
+          << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if (argc <= 1)
