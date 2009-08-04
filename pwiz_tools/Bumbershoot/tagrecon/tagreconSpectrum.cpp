@@ -61,9 +61,9 @@ namespace tagrecon
 		// Locate water loss ions of the precursor ion
 		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
 		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-		if( precursorWaterLossItr != peakPreData.end() )
+		if( precursorDoubleWaterLossItr != precursorWaterLossItr && precursorWaterLossItr != peakPreData.end() )
 			peakPreData.erase( precursorWaterLossItr );
-		if( precursorWaterLossItr != precursorDoubleWaterLossItr && precursorDoubleWaterLossItr != peakPreData.end() )
+		if( precursorDoubleWaterLossItr != peakPreData.end() )
 			peakPreData.erase( precursorDoubleWaterLossItr );
 
 		if( g_rtConfig->MakeSpectrumGraphs )

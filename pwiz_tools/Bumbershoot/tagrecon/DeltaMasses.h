@@ -55,13 +55,14 @@ namespace freicore {
 				if(fabs(deltaMass) > deltaMassTolerance) {
 					return lhs.first < rhs.first;
 				} else {
-					if(lhs.second < rhs.second) {
+					return lhs.second < rhs.second;
+					/*if(lhs.second < rhs.second) {
 						return lhs.second < rhs.second;
 					} else if(lhs.second > rhs.second) {
 						return lhs.second > rhs.second;
 					} else {
 						return false;
-					}
+					}*/
 				}
 			}
 		};

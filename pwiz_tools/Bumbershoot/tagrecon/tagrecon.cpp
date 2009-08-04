@@ -1394,7 +1394,7 @@ namespace tagrecon
 
 					simplethread_lock_mutex( &resourceMutex );
 					cout << threadInfo->workerHostString << " has searched " << threadInfo->stats.numProteinsDigested << " of " <<	numProteins <<
-							" proteins; " << proteinsPerSec << " per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
+							" proteins; " << ((int) proteinsPerSec) << " per second, " << ((int)totalSearchTime) << " elapsed, " << ((int) estimatedTimeRemaining) << " remaining." << endl;
 
 					PRINT_PROFILERS(cout, threadInfo->workerHostString + " profiling")
 

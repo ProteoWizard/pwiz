@@ -53,7 +53,7 @@ namespace freicore {
                         // Add (mass, amino acid) pair into the map
 						modificationMassToAminoAcidMap.insert(MassToAminoAcidMap::value_type(candidateMass-staticModMass, (*aaSpecIter).aminoAcid));
                         // Add (<mass,amino acid>, UniModObject) pair into the interpretation map
-                        interpretationMap.insert(InterpretationMap::value_type( pair<float,string>(candidateMass-staticModMass,(*aaSpecIter).aminoAcid), (*itr)));
+                        interpretationMap.insert(make_pair( make_pair(candidateMass-staticModMass,(*aaSpecIter).aminoAcid), (*itr)));
                     } 
                 }
             }

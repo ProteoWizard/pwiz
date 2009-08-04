@@ -615,8 +615,8 @@ namespace tagrecon
 				float proteinsPerSec = float(i+1) / totalSearchTime;
 				float estimatedTimeRemaining = float(numProteins-i) / proteinsPerSec;
 
-				cout << g_hostString << " has searched " << (i+1) << " of " <<	numProteins << " proteins; " << proteinsPerSec <<
-						" per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
+				cout << g_hostString << " has searched " << (i+1) << " of " <<	numProteins << " proteins; " << ((int)proteinsPerSec) <<
+						" per second, " << ((int)totalSearchTime) << " elapsed, " << ((int)estimatedTimeRemaining) << " remaining." << endl;
 					
 				//cout << threadInfo->workerHostString << " has searched " << curProtein << " of " <<	threadInfo->endIndex+1 <<
 				//		" proteins " << i+1 << "; " << proteinsPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
