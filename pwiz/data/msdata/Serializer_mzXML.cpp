@@ -921,6 +921,7 @@ class Handler_mzXML : public SAXParser::Handler
             getAttribute(attributes, "msInstrumentID", id);
             if (id.empty()) getAttribute(attributes, "id", id);
             if (id.empty()) getAttribute(attributes, "ID", id); // hack: id or ID
+            if (id.empty()) id = "IC1"; // xml:ID cannot be empty
             msd_.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration(id)));
             handler_msInstrument_.instrumentConfiguration = msd_.instrumentConfigurationPtrs.back().get();
             return Status(Status::Delegate, &handler_msInstrument_);

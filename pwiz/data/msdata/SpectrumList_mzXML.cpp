@@ -352,12 +352,15 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_product_ion_scan);
             }
 
-            // assume centroid if not specified
-            if (!spectrum_.hasCVParam(MS_centroid_spectrum) &&
-                centroided == "1")
-                spectrum_.set(MS_centroid_spectrum);
-            else
-                spectrum_.set(MS_profile_spectrum);
+            // ignore centroided attribute if it was set by the dataProcessing element
+            if (!spectrum_.hasCVParam(MS_centroid_spectrum))
+            {
+                // assume profile if not specified
+                if (centroided == "1")
+                    spectrum_.set(MS_centroid_spectrum);
+                else
+                    spectrum_.set(MS_profile_spectrum);
+            }
 
             if (msInstrumentID.empty() && !msd_.instrumentConfigurationPtrs.empty())
                 msInstrumentID = msd_.instrumentConfigurationPtrs[0]->id;
