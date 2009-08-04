@@ -77,6 +77,10 @@ lib pwiz_utility_image
     ;
 
 
+exe svnrev : svnrev.c ;
+explicit svrev ;
+
+
 unit-test almost_equal_test : almost_equal_test.cpp ;
 unit-test endian_test : endian_test.cpp ;
 unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;
