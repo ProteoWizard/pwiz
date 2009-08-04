@@ -158,7 +158,7 @@ void testRead(const Reader& reader, const string& rawpath)
 
         // test for 1:1 equality
         Diff<MSData> diff(msd, targetResult);
-        if (os_ && diff) *os_ << diff << endl; 
+        if (diff) cerr << diff << endl; 
         unit_assert(!diff);
     }
 }
