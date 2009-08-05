@@ -202,7 +202,7 @@ class PWIZ_API_DECL WiffFile
     virtual int getExperimentCount(int sample, int period) const = 0;
     virtual int getCycleCount(int sample, int period, int experiment) const = 0;
 
-    virtual std::vector<std::string> getSampleNames() /* const - cache names */ = 0;
+    virtual const std::vector<std::string>& getSampleNames() const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
     virtual InstrumentType getInstrumentType() const = 0;

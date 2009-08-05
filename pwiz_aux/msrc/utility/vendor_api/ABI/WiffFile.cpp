@@ -106,7 +106,7 @@ class WiffFileImpl : public WiffFile
     virtual int getExperimentCount(int sample, int period) const;
     virtual int getCycleCount(int sample, int period, int experiment) const;
 
-    virtual std::vector<std::string> getSampleNames(); // const; - cache names
+    virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
     virtual InstrumentType getInstrumentType() const;
@@ -125,8 +125,8 @@ class WiffFileImpl : public WiffFile
     mutable int currentSample, currentPeriod, currentExperiment, currentCycle;
 
     private:
-    // sample names
-    std::vector<std::string> sampleNames;
+    // on first access, sample names are made unique (giving duplicates a count suffix) and cached
+    mutable vector<string> sampleNames;
 };
 
 typedef boost::shared_ptr<WiffFileImpl> WiffFileImplPtr;
@@ -252,19 +252,27 @@ int WiffFileImpl::getCycleCount(int sample, int period, int experiment) const
     )
 }
 
-vector<string> WiffFileImpl::getSampleNames() // const - cache names
+const vector<string>& WiffFileImpl::getSampleNames() const
 {
-    CATCH_AND_FORWARD
-    (
+    //CATCH_AND_FORWARD
+    //(
         if (sampleNames.size() == 0)
         {
+            // make duplicate sample names unique by appending the duplicate count
+            // e.g. foo, bar, foo (2), foobar, bar (2), foo (3)
+            map<string, int> duplicateCountMap;
             array<System::String^>^ sampleNamesManaged = reader->SampleNames;
             sampleNames.resize(sampleNamesManaged->Length);
             for (int i=0; i < sampleNamesManaged->Length; ++i)
+            {
                 sampleNames[i] = ToStdString(sampleNamesManaged[i]);
+                int duplicateCount = duplicateCountMap[sampleNames[i]]++; // increment after getting current count
+                if (duplicateCount)
+                    sampleNames[i] += " (" + lexical_cast<string>(duplicateCount+1) + ")";
+            }
         }
         return sampleNames;
-    )
+    //)
 }
 
 InstrumentModel WiffFileImpl::getInstrumentModel() const
