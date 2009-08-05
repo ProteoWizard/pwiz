@@ -210,8 +210,12 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
     BOOST_FOREACH(const FunctionPtr& functionPtr, rawdata_->functions())
     {
-        if (functionPtr->getFunctionType() == FunctionType_MRM ||
-            functionPtr->getFunctionType() == FunctionType_Daughter)
+        FunctionType functionType = functionPtr->getFunctionType();
+        if (functionType == FunctionType_MRM)
+            continue;
+
+        // Daughter can be either MSn or MRM; determine which by checking FunctionSetMass
+        if (functionType == FunctionType_Daughter && functionPtr->getSetMass() > 0)
             continue;
 
         size_t scanCount = functionPtr->getScanCount();
