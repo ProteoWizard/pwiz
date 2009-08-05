@@ -77,8 +77,8 @@ lib pwiz_utility_image
     ;
 
 
-exe svnrev : svnrev.c ;
-explicit svrev ;
+exe svnrev : svnrev.cpp pwiz_utility_misc /ext/boost//regex /ext/boost//program_options ;
+explicit svnrev ;
 
 
 unit-test almost_equal_test : almost_equal_test.cpp ;
