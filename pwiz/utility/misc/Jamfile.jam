@@ -77,7 +77,14 @@ lib pwiz_utility_image
     ;
 
 
-exe svnrev : svnrev.cpp pwiz_utility_misc /ext/boost//regex /ext/boost//program_options ;
+exe svnrev
+    : # sources
+        svnrev.cpp
+        pwiz_utility_misc
+        /ext/boost//regex
+        /ext/boost//date_time
+        /ext/boost//program_options
+    ;
 explicit svnrev ;
 
 
