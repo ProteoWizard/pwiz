@@ -272,6 +272,8 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
                 t.acquiredTimeRange.start = chromatogram->AcquiredTimeRange[0]->Start;
                 t.acquiredTimeRange.end = chromatogram->AcquiredTimeRange[0]->End;
             }
+            else
+                t.acquiredTimeRange.start = t.acquiredTimeRange.end = 0;
 
             transitionToChromatogramIndexMap_[t] = transitions_.size();
             transitions_.insert(t);
@@ -296,6 +298,8 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
                 t.acquiredTimeRange.start = chromatogram->AcquiredTimeRange[0]->Start;
                 t.acquiredTimeRange.end = chromatogram->AcquiredTimeRange[0]->End;
             }
+            else
+                t.acquiredTimeRange.start = t.acquiredTimeRange.end = 0;
 
             transitionToChromatogramIndexMap_[t] = transitions_.size() - mrmCount;
             transitions_.insert(t);
