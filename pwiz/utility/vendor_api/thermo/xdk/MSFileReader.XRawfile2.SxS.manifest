@@ -15,7 +15,6 @@
     <comClass clsid="{b3db6431-a183-43f1-8bbd-f354064d9041}" threadingModel="Apartment" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" progid="MSFileReader.XVirUV.1" description="MSFileReader XVirUV Class" />
   </file>
   <file name="fileio.dll" />
-  <file name="finSSClientLib.dll" />
   <file name="fregistry.dll" />
   <comInterfaceExternalProxyStub name="IXRawfile" iid="{11B488A0-69B1-41FC-A660-FE8DF2A31F5B}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
   <comInterfaceExternalProxyStub name="IXRawfile2" iid="{55A25FF7-F437-471F-909A-D7F2B5930805}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
