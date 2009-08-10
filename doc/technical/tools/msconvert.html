@@ -1,23 +1,14 @@
 <html>
 
 <head>
-    <title>ProteoWizard Documentation: Tools Tutorial</title>
-    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+    <title>ProteoWizard Technical Documentation: msconvert</title>
+    <link rel="stylesheet" href="../main.css" type="text/css" media="screen" />
 </head>
 
 <body>
-
-    <h1>ProteoWizard Tools Tutorial</h1>
-    <hr/>
+    <h2>msconvert</h2>
 
     <p>
-        <h2>Downloading the tools</h2>
-        Zip files containing binary executables for various platforms may be downloaded
-        from the ProteoWizard home page.
-    </p>
-
-    <p>
-        <h2>File format conversion</h2>
         <i>msconvert</i> is a command line tool for converting between various file formats.
 
         <p>
@@ -56,27 +47,11 @@
         </p>
     </p>
 
-    <p>
-        <h2>Data extraction</h2>
-        <i>msaccess</i> is a command line tool for extracting data and metadata from data files. 
-
-        <p>
-        Examples:
-        <ul>
-            <li><code>msaccess data.mzML -x spectrum_table</code><br/>
-            (creates data.mzML.spectrum_table.txt with summary information for all spectra)<p/></li>
-
-            <li><code>msaccess data.mzML -x "binary 0-3"</code><br/>
-            (creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)<p/></li>
-
-            <li><code>msaccess data.mzML -x image</code><br/>
-            (creates data.mzML.image* with pseudo-2D-gel image of the data file)<p/></li>
-        </ul>
-        </p>
     <hr/>
-    <a href="index.html">Technical documentation home</a>
+    <a href="index.html">Tools home</a><br/>
+    <a href="../index.html">Technical documentation home</a>
+
 
 </body>
-
 </html>
 
