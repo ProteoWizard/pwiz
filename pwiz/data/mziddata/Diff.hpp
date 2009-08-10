@@ -410,13 +410,6 @@ void diff(const AnalysisSoftware& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const AnalysisSoftware& a,
-          const AnalysisSoftware& b,
-          AnalysisSoftware& a_b,
-          AnalysisSoftware& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const MzIdentML& a,
           const MzIdentML& b,
           MzIdentML& a_b,
