@@ -122,7 +122,9 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     peptide->peptideSequence="QLYENKPRRPYIL";
     peptide->modification.location=0;
     peptide->modification.monoisotopicMassDelta=-17.026549;
-    // set UNIMOD:28 & value w/ peptide->modification.paramGroup.set();
+    // set UNIMOD:28 & value w/
+    // peptide->modification.paramGroup.set();
+    peptide->modification.paramGroup.set(UNIMOD_Gln__pyro_Glu);
     mzid.sequenceCollection.peptides.push_back(peptide);
 
     peptide=PeptidePtr(new Peptide());
@@ -193,13 +195,13 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     arp->params.set(MS_alternate_single_letter_codes);
     sip->massTable.ambiguousResidue.push_back(arp);
 
-    sip->fragmentTolerance.set(MS_search_tolerance_plus_value);
-    sip->fragmentTolerance.set(MS_search_tolerance_minus_value);
+    sip->fragmentTolerance.set(MS_search_tolerance_plus_value, "0.6", UO_dalton);
+    sip->fragmentTolerance.set(MS_search_tolerance_minus_value, "0.6", UO_dalton);
 
-    sip->parentTolerance.set(MS_search_tolerance_plus_value);
-    sip->parentTolerance.set(MS_search_tolerance_minus_value);
+    sip->parentTolerance.set(MS_search_tolerance_plus_value, "3", UO_dalton);
+    sip->parentTolerance.set(MS_search_tolerance_minus_value, "3", UO_dalton);
 
-    sip->threshold.set(MS_mascot_SigThreshold);
+    sip->threshold.set(MS_mascot_SigThreshold, "0.05");
     
     FilterPtr fp(new Filter());
     fp->filterType.set(MS_DB_filter_taxonomy);
@@ -210,17 +212,17 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol());
     pdp->id="PDP_MascotParser_1";
     pdp->AnalysisSoftware_ref="AS_mascot_parser";
-    pdp->analysisParams.set(MS_mascot_SigThreshold);
-    pdp->analysisParams.set(MS_mascot_MaxProteinHits);
-    pdp->analysisParams.set(MS_mascot_ProteinScoringMethod);
-    pdp->analysisParams.set(MS_mascot_MinMSMSThreshold);
-    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSamePeptides);
-    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSubsetOfPeptides);
-    pdp->analysisParams.set(MS_mascot_RequireBoldRed);
-    pdp->analysisParams.set(MS_mascot_UseUnigeneClustering);
-    pdp->analysisParams.set(MS_mascot_IncludeErrorTolerantMatches);
-    pdp->analysisParams.set(MS_mascot_ShowDecoyMatches);
-    pdp->threshold.set(MS_mascot_SigThreshold);
+    pdp->analysisParams.set(MS_mascot_SigThreshold, "0.05");
+    pdp->analysisParams.set(MS_mascot_MaxProteinHits, "Auto");
+    pdp->analysisParams.set(MS_mascot_ProteinScoringMethod, "MudPIT");
+    pdp->analysisParams.set(MS_mascot_MinMSMSThreshold, "0");
+    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSamePeptides, "1");
+    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSubsetOfPeptides, "1");
+    pdp->analysisParams.set(MS_mascot_RequireBoldRed, "0");
+    pdp->analysisParams.set(MS_mascot_UseUnigeneClustering, "false");
+    pdp->analysisParams.set(MS_mascot_IncludeErrorTolerantMatches, "1");
+    pdp->analysisParams.set(MS_mascot_ShowDecoyMatches, "0");
+    pdp->threshold.set(MS_mascot_SigThreshold, "0.05", CVID_Unknown);
     mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(pdp);
 
 
@@ -270,7 +272,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     measure = MeasurePtr(new Measure());
     measure->id="m_error";
-    measure->paramGroup.set(MS_product_ion_m_z_error);
+    measure->paramGroup.set(MS_product_ion_m_z_error, "", MS_m_z);
     silp->fragmentationTable.push_back(measure);
 
     SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
@@ -298,8 +300,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->isDecoy=false;
     pep->DBSequence_ref="DBSeq_Neurotensin";
     siip->peptideEvidence.push_back(pep);
-    siip->paramGroup.set(MS_mascot_score);
-    siip->paramGroup.set(MS_mascot_expectation_value);
+    siip->paramGroup.set(MS_mascot_score, "15.71");
+    siip->paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
 
     IonTypePtr ionType(new IonType());
     ionType->setIndex("2 3 4 5 6 7").charge=1;
@@ -330,9 +332,9 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->peptideHypothesis.push_back("PE_23_1_Bombessin");
     pdhp->peptideHypothesis.push_back("PE_24_1_Bombessin");
     pdhp->peptideHypothesis.push_back("PE_25_1_Bombessin");
-    pdhp->paramGroup.set(MS_mascot_score);
-    pdhp->paramGroup.set(MS_sequence_coverage);
-    pdhp->paramGroup.set(MS_distinct_peptide_sequences);
+    pdhp->paramGroup.set(MS_mascot_score, "164.4");
+    pdhp->paramGroup.set(MS_sequence_coverage, "100");
+    pdhp->paramGroup.set(MS_distinct_peptide_sequences, "7");
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
     pdhp = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis());
@@ -340,9 +342,9 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->DBSequence_ref="DBSeq_HSP71_RAT";
     pdhp->passThreshold="false";
     pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT");
-    pdhp->paramGroup.set(MS_mascot_score, 40.95);
-    pdhp->paramGroup.set(MS_sequence_coverage, 2);
-    pdhp->paramGroup.set(MS_distinct_peptide_sequences, 1);
+    pdhp->paramGroup.set(MS_mascot_score, "40.95");
+    pdhp->paramGroup.set(MS_sequence_coverage, "2");
+    pdhp->paramGroup.set(MS_distinct_peptide_sequences, "1");
     pdhp->paramGroup.set(MS_manual_validation);
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
