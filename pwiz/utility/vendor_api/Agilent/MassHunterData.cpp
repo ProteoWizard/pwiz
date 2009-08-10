@@ -130,15 +130,13 @@ class MassHunterDataImpl : public MassHunterData
     virtual MSStorageMode getSpectraFormat() const;
     virtual int getTotalScansPresent() const;
 
-    virtual const vector<Transition>& getMRMTransitions() const;
-    virtual const vector<double>& getSIMIons() const;
+    virtual const set<Transition>& getTransitions() const;
+    virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
 
     virtual const automation_vector<double>& getTicTimes() const;
     virtual const automation_vector<double>& getBpcTimes() const;
     virtual const automation_vector<float>& getTicIntensities() const;
     virtual const automation_vector<float>& getBpcIntensities() const;
-
-    virtual ChromatogramPtr getChromatogram(int index, ChromatogramType type) const;
 
     virtual SpectrumPtr getProfileSpectrumByRow(int row) const;
     virtual SpectrumPtr getPeakSpectrumByRow(int row, PeakFilterPtr peakFilter = PeakFilterPtr()) const;
@@ -151,8 +149,8 @@ class MassHunterDataImpl : public MassHunterData
     gcroot<MHDAC::IBDAMSScanFileInformation^> scanFileInfo_;
     automation_vector<double> ticTimes_, bpcTimes_;
     automation_vector<float> ticIntensities_, bpcIntensities_;
-    vector<Transition> transitions_;
-    vector<double> simIons_;
+    set<Transition> transitions_;
+    map<Transition, int> transitionToChromatogramIndexMap_;
 };
 
 typedef boost::shared_ptr<MassHunterDataImpl> MassHunterDataImplPtr;
@@ -201,6 +199,25 @@ typedef boost::shared_ptr<ChromatogramImpl> ChromatogramImplPtr;
 
 
 PWIZ_API_DECL
+bool Transition::operator< (const Transition& rhs) const
+{
+    if (type == rhs.type)
+        if (Q1 == rhs.Q1)
+            if (Q3 == rhs.Q3)
+                if (acquiredTimeRange.start == rhs.acquiredTimeRange.start)
+                    return acquiredTimeRange.end < rhs.acquiredTimeRange.end;
+                else
+                    return acquiredTimeRange.start < rhs.acquiredTimeRange.start;
+            else
+                return Q3 < rhs.Q3;
+        else
+            return Q1 < rhs.Q1;
+    else
+        return type < rhs.type;
+}
+
+
+PWIZ_API_DECL
 MassHunterDataPtr MassHunterData::create(const string& path)
 {
     MassHunterDataImplPtr dataReader(new MassHunterDataImpl(path));
@@ -233,14 +250,56 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
         ToAutomationVector(bpc->XArray, bpcTimes_);
         ToAutomationVector(bpc->YArray, bpcIntensities_);
 
-        for each (MHDAC::IRange^ transition in scanFileInfo_->MRMTransitions)
+        // calculate total chromatograms present
+        filter->ExtractOneChromatogramPerScanSegment = true;
+
+        // note: we use this instead of MassSpecDataReader.MRMTransitions in case of time segments
+        filter->ChromatogramType = MHDAC::ChromType::MultipleReactionMode;
+        for each (MHDAC::IBDAChromData^ chromatogram in reader_->GetChromatogram(filter))
         {
-            transitions_.push_back(Transition());
-            transitions_.back().Q1 = transition->Start;
-            transitions_.back().Q3 = transition->End;
+            if (chromatogram->MZOfInterest->Length == 0 ||
+                chromatogram->MeasuredMassRange->Length == 0)
+                // TODO: log this anomaly
+                continue;
+
+            Transition t;
+            t.type = Transition::MRM;
+            t.Q1 = chromatogram->MZOfInterest[0]->Start;
+            t.Q3 = chromatogram->MeasuredMassRange[0]->Start;
+
+            if (chromatogram->AcquiredTimeRange->Length > 0)
+            {
+                t.acquiredTimeRange.start = chromatogram->AcquiredTimeRange[0]->Start;
+                t.acquiredTimeRange.end = chromatogram->AcquiredTimeRange[0]->End;
+            }
+
+            transitionToChromatogramIndexMap_[t] = transitions_.size();
+            transitions_.insert(t);
         }
 
-        ToStdVector(scanFileInfo_->SIMIons, simIons_);
+        int mrmCount = transitions_.size();
+
+        filter->ChromatogramType = MHDAC::ChromType::SelectedIonMonitoring;
+        for each (MHDAC::IBDAChromData^ chromatogram in reader_->GetChromatogram(filter))
+        {
+            if (chromatogram->MeasuredMassRange->Length == 0)
+                // TODO: log this anomaly
+                continue;
+
+            Transition t;
+            t.type = Transition::SIM;
+            t.Q1 = chromatogram->MeasuredMassRange[0]->Start;
+            t.Q3 = 0;
+
+            if (chromatogram->AcquiredTimeRange->Length > 0)
+            {
+                t.acquiredTimeRange.start = chromatogram->AcquiredTimeRange[0]->Start;
+                t.acquiredTimeRange.end = chromatogram->AcquiredTimeRange[0]->End;
+            }
+
+            transitionToChromatogramIndexMap_[t] = transitions_.size() - mrmCount;
+            transitions_.insert(t);
+        }
     )
 }
 
@@ -299,14 +358,9 @@ int MassHunterDataImpl::getTotalScansPresent() const
     CATCH_AND_FORWARD( return (int) scanFileInfo_->TotalScansPresent; )
 }
 
-const vector<Transition>& MassHunterDataImpl::getMRMTransitions() const
+const set<Transition>& MassHunterDataImpl::getTransitions() const
 {
     return transitions_;
-}
-
-const vector<double>& MassHunterDataImpl::getSIMIons() const
-{
-    return simIons_;
 }
 
 const automation_vector<double>& MassHunterDataImpl::getTicTimes() const
@@ -329,20 +383,24 @@ const automation_vector<float>& MassHunterDataImpl::getBpcIntensities() const
     return bpcIntensities_;
 }
 
-ChromatogramPtr MassHunterDataImpl::getChromatogram(int index, ChromatogramType type) const
+ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
 {
 //    CATCH_AND_FORWARD
 //    (
-        MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
-        filter->ChromatogramType = (MHDAC::ChromType) type;
-        filter->SingleChromatogramForAllMasses = false;
-        filter->ExtractOneChromatogramPerScanSegment = true;
+    MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+    filter->ChromatogramType = transition.type == Transition::MRM ? MHDAC::ChromType::MultipleReactionMode
+                                                                  : MHDAC::ChromType::SelectedIonMonitoring;
+    filter->ExtractOneChromatogramPerScanSegment = true;
+    filter->DoCycleSum = false;
 
-        ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
-        return chromatogramPtr;
+    if (!transitionToChromatogramIndexMap_.count(transition))
+        throw std::runtime_error("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
+
+    int index = transitionToChromatogramIndexMap_.find(transition)->second;
+    ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
+    return chromatogramPtr;
 //    )
 }
-
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
 {

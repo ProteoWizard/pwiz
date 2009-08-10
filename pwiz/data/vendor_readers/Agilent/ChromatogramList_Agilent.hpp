@@ -59,8 +59,7 @@ public:
     struct IndexEntry : public ChromatogramIdentity
     {
         CVID chromatogramType;
-        size_t targetIndex;
-        double q1, q3;
+        Transition transition;
     };
 
     mutable vector<IndexEntry> index_;

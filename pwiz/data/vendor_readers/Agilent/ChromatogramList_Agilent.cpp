@@ -34,6 +34,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "boost/shared_ptr.hpp"
+#include <boost/foreach.hpp>
 #include <boost/bind.hpp>
 
 
@@ -111,13 +112,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SRM_chromatogram:
         {
-            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.targetIndex, ChromatogramType_MultipleReactionMode));
+            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
 
-            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, chromatogramPtr->getCollisionEnergy());
 
-            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
+            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
@@ -142,9 +143,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SIM_chromatogram:
         {
-            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.targetIndex, ChromatogramType_SelectedIonMonitoring));
+            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
 
-            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
 
             if (getBinaryData)
             {
@@ -177,42 +178,24 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
     IndexEntry& ci = index_.back();
     ci.index = index_.size()-1;
     ci.chromatogramType = MS_TIC_chromatogram;
-    ci.q1 = ci.q3 = 0;
     ci.id = "TIC";
     idMap_[ci.id] = ci.index;
 
-    vector<Transition> transitions(rawfile_->getMRMTransitions());
+    const set<Transition>& transitions = rawfile_->getTransitions();
 
-    for (size_t i=0, end=transitions.size(); i < end; ++i)
-    {
-        Transition& transition = transitions[i];
-        index_.push_back(IndexEntry());
-        IndexEntry& ci = index_.back();
-        ci.index = index_.size()-1;
-        ci.chromatogramType = MS_SRM_chromatogram;
-        ci.targetIndex = i;
-        ci.q1 = transition.Q1;
-        ci.q3 = transition.Q3;
-        ci.id = (format("SRM SIC %.10g,%.10g")
-                 % ci.q1
-                 % ci.q3
-                ).str();
-        idMap_[ci.id] = ci.index;
-    }
-
-    vector<double> monitoredIons(rawfile_->getSIMIons());
-
-    for (size_t i=0, end=monitoredIons.size(); i < end; ++i)
+    BOOST_FOREACH(const Transition& transition, transitions)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
-        ci.chromatogramType = MS_SIM_chromatogram;
-        ci.targetIndex = i;
-        ci.q1 = monitoredIons[i];
-        ci.q3 = 0;
-        ci.id = (format("SIM SIC %.10g")
-                 % ci.q1
+        ci.chromatogramType = transition.type == Transition::MRM ? MS_SRM_chromatogram
+                                                                 : MS_SIM_chromatogram;
+        ci.transition = transition;
+        ci.id = (format("SRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
+                 % transition.Q1
+                 % transition.Q3
+                 % transition.acquiredTimeRange.start
+                 % transition.acquiredTimeRange.end
                 ).str();
         idMap_[ci.id] = ci.index;
     }

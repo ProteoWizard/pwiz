@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/automation_vector.h"
 #include <string>
 #include <vector>
+#include <set>
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time.hpp>
 
@@ -137,8 +138,21 @@ PWIZ_API_DECL enum ChromatogramType
 };
 
 
-struct PWIZ_API_DECL Transition { double Q1, Q3; };
 struct PWIZ_API_DECL MassRange { double start, end; };
+struct PWIZ_API_DECL TimeRange { double start, end; };
+
+
+struct PWIZ_API_DECL Transition
+{
+    enum Type { MRM, SIM };
+
+    Type type;
+    double Q1;
+    double Q3;
+    TimeRange acquiredTimeRange;
+
+    bool operator< (const Transition& rhs) const;
+};
 
 
 struct PWIZ_API_DECL PeakFilter
@@ -203,19 +217,13 @@ class PWIZ_API_DECL MassHunterData
     virtual MSStorageMode getSpectraFormat() const = 0;
     virtual int getTotalScansPresent() const = 0;
 
-    virtual const std::vector<Transition>& getMRMTransitions() const = 0;
-    virtual const std::vector<double>& getSIMIons() const = 0;
+    virtual const std::set<Transition>& getTransitions() const = 0;
+    virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;
 
     virtual const automation_vector<double>& getTicTimes() const = 0;
     virtual const automation_vector<double>& getBpcTimes() const = 0;
     virtual const automation_vector<float>& getTicIntensities() const = 0;
     virtual const automation_vector<float>& getBpcIntensities() const = 0;
-
-    /// The meaning of index changes depending on the type:
-    /// MultipleReactionMode: the chromatogram for getMRMTransitions()[index]
-    /// SingleIonMonitoring: the chromatogram for getSIMIons()[index]
-    /// other types are not yet supported.
-    virtual ChromatogramPtr getChromatogram(int index, ChromatogramType type) const = 0;
 
     /// rowNumber is a 0-based index
     virtual SpectrumPtr getProfileSpectrumByRow(int rowNumber) const = 0;
