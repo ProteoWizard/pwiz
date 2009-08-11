@@ -24,7 +24,11 @@
 
 #include "Reader.hpp"
 #include "pwiz_tools/common/FullReaderList.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
+#include "comdef.h" // for _com_error
 
+using System::Exception;
+using System::String;
 
 //#pragma unmanaged
 //#include <boost/utility/mutexed_singleton.hpp>
@@ -71,13 +75,19 @@ array<System::String^>^ Reader::readIds(System::String^ filename, System::String
 }
 
 System::String^ ReaderList::identify(System::String^ filename)
-{
-    return gcnew System::String(base_->identify(ToStdString(filename)).c_str());
+{    
+    try { return gcnew System::String(base_->identify(ToStdString(filename)).c_str()); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::identify()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::identify()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::identify()] Unhandled exception"); }
 }
 
 System::String^ ReaderList::identify(System::String^ filename, System::String^ head)
-{
-    return gcnew System::String(base_->identify(ToStdString(filename), ToStdString(head)).c_str());
+{    
+    try { return gcnew System::String(base_->identify(ToStdString(filename), ToStdString(head)).c_str()); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::identify()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::identify()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::identify()] Unhandled exception"); }
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result)
@@ -86,42 +96,66 @@ void ReaderList::read(System::String^ filename, System::String^ head, MSData^ re
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex)
-{
-    base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);
+{    
+    try { base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::read()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::read()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::read()] Unhandled exception"); }
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSDataList^ results)
-{
-    base_->read(ToStdString(filename), ToStdString(head), *results->base_);
+{    
+    try { base_->read(ToStdString(filename), ToStdString(head), *results->base_); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::read()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::read()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::read()] Unhandled exception"); }
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename, System::String^ head)
 {
-    std::vector<std::string> ids;
-    base_->readIds(ToStdString(filename), ToStdString(head), ids);
-    return vectorToStringArray(ids);
+    try
+    {
+        std::vector<std::string> ids;
+        base_->readIds(ToStdString(filename), ToStdString(head), ids);
+        return vectorToStringArray(ids);
+    }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::readIds()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::readIds()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::readIds()] Unhandled exception"); }
 }
 
 void ReaderList::read(System::String^ filename, MSData^ result)
-{
-    base_->read(ToStdString(filename), **result->base_);
+{    
+    read(filename, result, 0);
 }
 
 void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
-{
-    base_->read(ToStdString(filename), **result->base_, sampleIndex);
+{    
+    try { base_->read(ToStdString(filename), **result->base_, sampleIndex); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::read()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::read()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::read()] Unhandled exception"); }
 }
 
 void ReaderList::read(System::String^ filename, MSDataList^ results)
-{
-    base_->read(ToStdString(filename), *results->base_);
+{    
+    try { base_->read(ToStdString(filename), *results->base_); }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::read()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::read()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::read()] Unhandled exception"); }
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename)
 {
-    std::vector<std::string> ids;
-    base_->readIds(ToStdString(filename), ids);
-    return vectorToStringArray(ids);
+    try
+    {
+        std::vector<std::string> ids;
+        base_->readIds(ToStdString(filename), ids);
+        return vectorToStringArray(ids);
+    }
+    catch (exception& e) { throw gcnew Exception("[ReaderList::readIds()] " + gcnew String(e.what())); }
+    catch (_com_error& e) { throw gcnew Exception("[ReaderList::readIds()] COM error: " + gcnew String(e.ErrorMessage())); }
+    catch (...) { throw gcnew Exception("[ReaderList::readIds()] Unhandled exception"); }
 }
 
 namespace {
