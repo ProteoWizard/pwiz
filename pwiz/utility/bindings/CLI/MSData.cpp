@@ -23,8 +23,6 @@
 
 #include "MSData.hpp"
 //#include "../../../data/msdata/MSData.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
-#include "comdef.h" // for _com_error
 
 
 using System::Exception;
@@ -612,19 +610,22 @@ void Spectrum::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->bina
 
 void Spectrum::getMZIntensityPairs(MZIntensityPairList^% output)
 {
-    std::vector<b::MZIntensityPair>* p = new std::vector<b::MZIntensityPair>();
-    (*base_)->getMZIntensityPairs(*p);
-    output = gcnew MZIntensityPairList(p);
+    CATCH_AND_FORWARD
+    (
+        std::vector<b::MZIntensityPair>* p = new std::vector<b::MZIntensityPair>();
+        (*base_)->getMZIntensityPairs(*p);
+        output = gcnew MZIntensityPairList(p);
+    )
 }
 
 BinaryDataArray^ Spectrum::getMZArray()
 {
-    return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));
+    CATCH_AND_FORWARD(return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));)
 }
 
 BinaryDataArray^ Spectrum::getIntensityArray()
 {
-    return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));
+    CATCH_AND_FORWARD(return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));)
 }
 
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input)
@@ -704,14 +705,17 @@ void Chromatogram::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->
 
 void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
 {
-    std::vector<b::TimeIntensityPair>* p = new std::vector<b::TimeIntensityPair>();
-    (*base_)->getTimeIntensityPairs(*p);
-    output = gcnew TimeIntensityPairList(p);
+    CATCH_AND_FORWARD
+    (
+        std::vector<b::TimeIntensityPair>* p = new std::vector<b::TimeIntensityPair>();
+        (*base_)->getTimeIntensityPairs(*p);
+        output = gcnew TimeIntensityPairList(p);
+    )
 }
 
 void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits)
 {
-    (*base_)->setTimeIntensityPairs(*input->base_, (pwiz::CVID) timeUnits, (pwiz::CVID) intensityUnits);
+    CATCH_AND_FORWARD((*base_)->setTimeIntensityPairs(*input->base_, (pwiz::CVID) timeUnits, (pwiz::CVID) intensityUnits);)
 }
 
 bool Chromatogram::empty()
@@ -732,20 +736,23 @@ bool SpectrumList::empty()
 
 SpectrumIdentity^ SpectrumList::spectrumIdentity(int index)
 {
-    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);
+    CATCH_AND_FORWARD(return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);)
 }
 
 int SpectrumList::find(System::String^ id)
 {
-    return (int) (*base_)->find(ToStdString(id));
+    CATCH_AND_FORWARD(return (int) (*base_)->find(ToStdString(id));)
 }
 
 IndexList^ SpectrumList::findNameValue(System::String^ name, System::String^ value)
 {
-    b::IndexList indexList = (*base_)->findNameValue(ToStdString(name), ToStdString(value));
-    std::vector<size_t>* ownedIndexListPtr = new std::vector<size_t>();
-    ownedIndexListPtr->swap(indexList);
-    return gcnew IndexList(ownedIndexListPtr);
+    CATCH_AND_FORWARD
+    (
+        b::IndexList indexList = (*base_)->findNameValue(ToStdString(name), ToStdString(value));
+        std::vector<size_t>* ownedIndexListPtr = new std::vector<size_t>();
+        ownedIndexListPtr->swap(indexList);
+        return gcnew IndexList(ownedIndexListPtr);
+    )
 }
 
 
@@ -756,10 +763,7 @@ Spectrum^ SpectrumList::spectrum(int index)
 
 Spectrum^ SpectrumList::spectrum(int index, bool getBinaryData)
 {
-    try { return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData))); }
-    catch (exception& e) { throw gcnew Exception("[SpectrumList::spectrum()] " + gcnew String(e.what())); }
-    catch (_com_error& e) { throw gcnew Exception("[SpectrumList::spectrum()] COM error: " + gcnew String(e.ErrorMessage())); }
-    catch (...) { throw gcnew Exception("[SpectrumList::spectrum()] Unhandled exception"); }
+    CATCH_AND_FORWARD(return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));)
 }
 
 DataProcessing^ SpectrumList::dataProcessing()
@@ -796,12 +800,12 @@ SpectrumIdentity^ SpectrumListSimple::spectrumIdentity(int index)
 
 Spectrum^ SpectrumListSimple::spectrum(int index)
 {
-    return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, false)));
+    return spectrum(index, false);
 }
 
 Spectrum^ SpectrumListSimple::spectrum(int index, bool getBinaryData)
 {
-    return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));
+    CATCH_AND_FORWARD(return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));)
 }
 
 
@@ -817,12 +821,12 @@ bool ChromatogramList::empty()
 
 ChromatogramIdentity^ ChromatogramList::chromatogramIdentity(int index)
 {
-    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);
+    CATCH_AND_FORWARD(return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);)
 }
 
 int ChromatogramList::find(System::String^ id)
 {
-    return (int) (*base_)->find(ToStdString(id));
+    CATCH_AND_FORWARD(return (int) (*base_)->find(ToStdString(id));)
 }
 
 Chromatogram^ ChromatogramList::chromatogram(int index)
@@ -832,10 +836,7 @@ Chromatogram^ ChromatogramList::chromatogram(int index)
 
 Chromatogram^ ChromatogramList::chromatogram(int index, bool getBinaryData)
 {
-    try { return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData))); }
-    catch (exception& e) { throw gcnew Exception("[ChromatogramList::chromatogram()] " + gcnew String(e.what())); }
-    catch (_com_error& e) { throw gcnew Exception("[ChromatogramList::chromatogram()] COM error: " + gcnew String(e.ErrorMessage())); }
-    catch (...) { throw gcnew Exception("[ChromatogramList::chromatogram()] Unhandled exception"); }
+    CATCH_AND_FORWARD(return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));)
 }
 
 DataProcessing^ ChromatogramList::dataProcessing()
@@ -867,17 +868,17 @@ bool ChromatogramListSimple::empty()
 
 ChromatogramIdentity^ ChromatogramListSimple::chromatogramIdentity(int index)
 {
-    return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);
+    CATCH_AND_FORWARD(return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);)
 }
 
 Chromatogram^ ChromatogramListSimple::chromatogram(int index)
 {
-    return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, false)));
+    return chromatogram(index, false);
 }
 
 Chromatogram^ ChromatogramListSimple::chromatogram(int index, bool getBinaryData)
 {
-    return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));
+    CATCH_AND_FORWARD(return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));)
 }
 
 

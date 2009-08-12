@@ -7,6 +7,8 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/preprocessor/stringize.hpp>
+#include "pwiz/utility/misc/Exception.hpp"
+#include "comdef.h" // for _com_error
 
 
 inline std::string ToStdString(System::String^ source)
@@ -73,6 +75,15 @@ public ref class ObjectStructorLog
 #endif
 
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
+
+// catch a C++ or COM exception and rethrow it as a .NET Exception
+#define CATCH_AND_FORWARD(x) \
+    try { x } \
+    /* runtime_error has been rethrown by pwiz so don't prepend the forwarding function */ \
+    catch (std::runtime_error& e) { throw gcnew Exception(gcnew String(e.what())); } \
+    catch (std::exception& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled exception: " + gcnew String(e.what())); } \
+    catch (_com_error& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew String(e.ErrorMessage())); } \
+    catch (...) { throw gcnew Exception("[" + __FUNCTION__ + "] Unknown exception"); }
 
 #include "vector.hpp"
 #include "map.hpp"

@@ -22,13 +22,14 @@
 
 
 //#include "MSData.hpp"
-#include "pwiz/utility/misc/unit.hpp"
+#include "unit.hpp"
+#include <stdexcept>
 
 
 using namespace System;
 using namespace pwiz::CLI;
 using namespace pwiz::CLI::msdata;
-using namespace pwiz::util;
+using namespace pwiz::CLI::util;
 
 
 void testParamContainer()
@@ -243,6 +244,16 @@ void testExample()
 }
 
 
+void testCatchAndForward()
+{
+    // cause some exceptions in native code and test that we can catch them as .NET exceptions
+    SpectrumListSimple^ sl = gcnew SpectrumListSimple();
+    unit_assert_throws_what(sl->spectrum(123), System::Exception, "[MSData::SpectrumListSimple::spectrum()] Invalid index.");
+
+    // TODO: where should we test catch-and-forward for other unbound classes, e.g. Reader_Thermo?
+}
+
+
 int main()
 {
     try
@@ -251,11 +262,12 @@ int main()
         testSpectrumListSimple();
         testChromatograms();
         testExample();
+        testCatchAndForward();
         return 0;
     }
     catch (std::exception& e)
     {
-        System::Console::Error->WriteLine(gcnew String(e.what()));
+        System::Console::Error->WriteLine("Caught std::exception not converted to System::Exception: " + gcnew String(e.what()));
         return 1;
     }
     catch (System::Exception^ e)
