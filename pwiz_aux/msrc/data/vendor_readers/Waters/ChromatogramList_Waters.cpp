@@ -178,6 +178,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
     ie.index = index_.size()-1;
     ie.id = "TIC";
     ie.chromatogramType = MS_TIC_chromatogram;
+    idToIndexMap_[ie.id] = ie.index;
 
     BOOST_FOREACH(const FunctionPtr& functionPtr, rawdata_->functions())
     {
@@ -200,6 +201,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
                    " function=" << ie.functionPtr->getFunctionNumber() <<
                    " index=" << i;
             ie.id = oss.str();
+            idToIndexMap_[ie.id] = ie.index;
         }
     }
 
