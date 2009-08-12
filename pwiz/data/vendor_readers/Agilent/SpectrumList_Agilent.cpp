@@ -192,16 +192,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
                 precursor.spectrumID = "scanId=" + lexical_cast<string>(parentScanId);
 
             selectedIon.set(MS_selected_ion_m_z, precursorMZs[0], MS_m_z);
+
+            int precursorCharge;
+            if (spectrumPtr->getPrecursorCharge(precursorCharge) && precursorCharge > 0)
+                selectedIon.set(MS_charge_state, precursorCharge);
+
+            double precursorIntensity;
+            if (spectrumPtr->getPrecursorIntensity(precursorIntensity) && precursorIntensity > 0)
+                selectedIon.set(MS_intensity, precursorIntensity, MS_number_of_counts);
+
             precursor.selectedIons.push_back(selectedIon);
         }
-
-        int precursorCharge;
-        if (spectrumPtr->getPrecursorCharge(precursorCharge))
-            selectedIon.set(MS_charge_state, precursorCharge);
-
-        double precursorIntensity;
-        if (spectrumPtr->getPrecursorIntensity(precursorIntensity))
-            selectedIon.set(MS_intensity, precursorIntensity, MS_number_of_counts);
 
         precursor.activation.set(MS_CID); // MSDR provides no access to this, so assume CID
         precursor.activation.set(MS_collision_energy, spectrumPtr->getCollisionEnergy(), UO_electronvolt);
