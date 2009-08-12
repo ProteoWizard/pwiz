@@ -11,6 +11,8 @@ using namespace pwiz;
 using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
 
+ostream* os_ = NULL;
+
 const char* samplePepXML =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<msms_pipeline_analysis>\n"
@@ -79,14 +81,15 @@ void test()
     Serializer_mzIdentML serializer;
     ostringstream oss;
     serializer.write(oss, *result);
-    
-    cout << oss.str() << endl;
+
+    if (os_)
+        *os_ << oss.str() << endl;
 
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    // TODO Change to -v option
+    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
 
     cout << "\ntesting Pep2MzIdent ... \n" << endl;
     test();
