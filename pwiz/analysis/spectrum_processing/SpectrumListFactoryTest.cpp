@@ -91,11 +91,36 @@ void testWrapScanTimeRange()
 }
 
 
+void testWrapMZWindow()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    SpectrumListPtr& sl = msd.run.spectrumListPtr;
+    unit_assert(sl.get() && sl->size()>2);
+    SpectrumPtr spectrum = sl->spectrum(0, true);
+    vector<MZIntensityPair> data;
+    spectrum->getMZIntensityPairs(data);
+    unit_assert(data.size() == 15);
+
+    SpectrumListFactory::wrap(msd, "mzWindow [9.5,15]");
+
+    spectrum = sl->spectrum(0, true);
+    spectrum->getMZIntensityPairs(data);
+    unit_assert(data.size() == 5);
+
+    spectrum = sl->spectrum(1, true);
+    spectrum->getMZIntensityPairs(data);
+    unit_assert(data.size() == 3);
+}
+
+
 void test()
 {
     testUsage(); 
     testWrap();
     testWrapScanTimeRange();
+    testWrapMZWindow();
 }
 
 

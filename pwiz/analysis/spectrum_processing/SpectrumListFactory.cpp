@@ -28,6 +28,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <iostream>
 
@@ -154,6 +155,22 @@ SpectrumListPtr filterCreator_precursorRecalculation(const MSData& msd, const st
 }
 
 
+SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg)
+{
+    double mzLow = 0;
+    double mzHigh = 0;
+
+    istringstream iss(arg);
+    char open='\0', comma='\0', close='\0';
+    iss >> open >> mzLow >> comma >> mzHigh >> close;
+
+    if (open!='[' || comma!=',' || close!=']')
+        return SpectrumListPtr();
+
+    return SpectrumListPtr(new SpectrumList_MZWindow(msd.run.spectrumListPtr, mzLow, mzHigh));
+}
+
+
 struct JumpTableEntry
 {
     const char* command;
@@ -165,12 +182,13 @@ struct JumpTableEntry
 JumpTableEntry jumpTable_[] =
 {
     {"index", "[indexBegin,indexEnd] ...", filterCreator_index},
+    {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
+    {"peakPicking", "prefer vendor peak picking: <true|false>   [msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
+    {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
     {"scanNumber", "[scanNumberBegin,scanNumberEnd] ...", filterCreator_scanNumber},
     {"scanEvent", "[scanEventBegin,scanEventEnd] ...", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
-    {"peakPicking", "prefer vendor peak picking: <true|false>   [msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
-    {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
 };
 
 
