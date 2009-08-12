@@ -9,11 +9,21 @@
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
       <dsig:DigestValue>evaeJmGu7pX1yolO39ilB9IkzQI=</dsig:DigestValue>
     </hash>
-    <typelib tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" version="1.0" helpdir="asdf" resourceid="0" flags="HASDISKIMAGE" />
+    <typelib tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" version="1.0" helpdir="" resourceid="0" flags="HASDISKIMAGE" />
     <comClass clsid="{012a4beb-99ec-4a65-a4af-7d09a20b5034}" threadingModel="Apartment" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" progid="EDAL.MSAnalysis.1" description="MSAnalysis Class" />
     <comClass clsid="{39913b26-a61d-472f-945f-932f24736ce5}" threadingModel="Apartment" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" progid="EDAL.MSSpectrumParameters.1" description="MSSpectrumParameterCollection Class" />
     <comClass clsid="{510c30e5-c631-4dc6-9183-4115b59fd462}" threadingModel="Apartment" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" progid="EDAL.MSSpectrumParameter.1" description="MSSpectrumParameter Class" />
   </file>
+  <file name="Interop.EDAL.dll" />
+  <file name="BDal.CXt.Lc.dll" />
+  <file name="BDal.CXt.Lc.Factory.dll" />
+  <file name="BDal.CXt.Lc.Interfaces.dll" />
+  <file name="BDal.CXt.Lc.UntU2.dll" />
+  <file name="libfftw3-3.dll" />
+  <file name="libfftw3f-3.dll" />
+  <file name="NTB-vc80-mt-4_3_61.dll" />
+  <file name="boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" />
+  <file name="boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" />
   <comInterfaceExternalProxyStub name="IMSAnalysis" iid="{401AFF6A-C542-4B50-8723-58C14BBABE06}" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
   <comInterfaceExternalProxyStub name="IMSSpectrum" iid="{ac28c948-f617-4e6d-a31e-c1a7a4748c23}" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
   <comInterfaceExternalProxyStub name="IMSSpectrumCollection" iid="{c2da5f65-b1c7-4bb8-bfa9-4c422ddcd2f7}" tlbid="{8e79b9a2-107e-4e91-a0ff-01f2591103f3}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
