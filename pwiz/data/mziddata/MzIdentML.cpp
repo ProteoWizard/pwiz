@@ -72,7 +72,7 @@ PWIZ_API_DECL bool BibliographicReference::empty() const
         publication.empty() &&
         publisher.empty() &&
         editor.empty() &&
-        year != 0 &&
+        year == 0 &&
         volume.empty() &&
         issue.empty() &&
         pages.empty() &&
