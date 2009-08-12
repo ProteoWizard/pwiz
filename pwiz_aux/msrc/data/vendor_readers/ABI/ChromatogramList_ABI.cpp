@@ -199,6 +199,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     ie.index = index_.size()-1;
     ie.id = "TIC";
     ie.chromatogramType = MS_TIC_chromatogram;
+    idToIndexMap_[ie.id] = ie.index;
 
     pwiz::vendor_api::ABI::Target target;
 
@@ -235,6 +236,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                        " experiment=" << ie.experiment <<
                        " transition=" << ie.transition;
                 ie.id = oss.str();
+                idToIndexMap_[ie.id] = ie.index;
             }
         }
     }
