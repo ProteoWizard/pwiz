@@ -9,11 +9,11 @@ set SCRIPTS_MISC_ROOT=%~dp0
 set SCRIPTS_MISC_ROOT=%SCRIPTS_MISC_ROOT:~0,-1%
 pushd %SCRIPTS_MISC_ROOT%\..\..
 
-REM # call bootstrap
-echo ##teamcity[message text='Running bootstrap...']
-echo ##teamcity[progressMessage 'Running bootstrap...']
-call bootstrap.bat
-if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing bootstrap & goto error
+REM # call clean
+echo ##teamcity[message text='Cleaning project...']
+echo ##teamcity[progressMessage 'Cleaning project...']
+call clean.bat
+if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 
 REM # call quickbuild to build only the bindings first
 echo ##teamcity[message text='Building bindings...']
