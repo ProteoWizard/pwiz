@@ -36,8 +36,17 @@ using namespace std;
 using boost::shared_ptr;
 
 
-shared_ptr<FeatureDetectorPeakel> FeatureDetectorPeakel::create(const FeatureDetectorPeakel::Config& config)
+shared_ptr<FeatureDetectorPeakel> FeatureDetectorPeakel::create(FeatureDetectorPeakel::Config config)
 {
+    // note: config passed by value, allowing us to propagate the log pointers
+
+    if (config.log)
+    {
+        config.peakFinder_SNR.log = config.log;
+        config.peakelGrower_Proximity.log = config.log;
+        config.peakelPicker_Basic.log = config.log;
+    }
+
     shared_ptr<NoiseCalculator> noiseCalculator(
         new NoiseCalculator_2Pass(config.noiseCalculator_2Pass));
 

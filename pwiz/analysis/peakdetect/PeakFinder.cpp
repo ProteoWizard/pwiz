@@ -27,6 +27,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <cmath>
+#include <iomanip>
 
 
 namespace pwiz {
@@ -122,22 +123,28 @@ void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
         }
     }
 
-#if 0
-    cout << "noise: " << noise.mean << " " << noise.standardDeviation << endl;
-    copy(data.begin(), data.end(), ostream_iterator<OrderedPair>(cout, "\n"));
+    if (config_.log) 
+    {
+        ostream& log = *config_.log;
 
-    cout << "pvalues:\n";
-    copy(pvalues.begin(), pvalues.end(), ostream_iterator<double>(cout, "\n"));
-    cout << endl;
+        log << "[PeakFinder_SNR::findPeaks()]\n";
 
-    cout << "rollingProducts:\n";
-    copy(rollingProducts.begin(), rollingProducts .end(), ostream_iterator<double>(cout, "\n"));
-    cout << endl;
+        log << "# noise: " << noise.mean << " " << noise.standardDeviation << endl;
+        log << "# thresholdValue: " << thresholdValue << endl;
+        log << "# thresholdPValue: " << thresholdPValue << endl;
+        log << "# threshold: " << threshold << endl;
+        log << "#\n";
 
-    cout << "thresholdValue: " << thresholdValue << endl;
-    cout << "thresholdPValue: " << thresholdPValue << endl;
-    cout << "threshold: " << threshold << endl;
-#endif
+        log << "# found data pvalue rollingProduct\n";
+        for (size_t i=0; i<data.size(); ++i)
+        {
+            bool found = (find(resultIndices.begin(), resultIndices.end(), i) != resultIndices.end());
+            log << (found?"* ":"  ") << fixed << setprecision(6) << data[i] << scientific << setw(15) << pvalues[i] << setw(15) << rollingProducts[i] << endl;
+        }
+        log << endl;
+
+        log << "[PeakFinder_SNR::findPeaks()] end\n";
+    }
 }
 
 

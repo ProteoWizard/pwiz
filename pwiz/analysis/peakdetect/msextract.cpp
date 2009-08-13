@@ -284,9 +284,7 @@ shared_ptr<FeatureDetector> createFeatureDetector(const MSData& msd,
     else if (config.featureDetectorImplementation == "PeakelFarmer")
     {           
         FeatureDetectorPeakel::Config temp = config.fdpConfig;
-        temp.log = log; // TODO: remove or propagate in FeatureDetectorPeakel::create()
-        temp.peakelGrower_Proximity.log = log;
-        temp.peakelPicker_Basic.log = log;
+        temp.log = log; // specific to the file we're processing
         return FeatureDetectorPeakel::create(temp);
     }
     else 

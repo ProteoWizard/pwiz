@@ -84,6 +84,7 @@ void test_SNR()
 
     PeakFinder_SNR::Config config;
     config.windowRadius = 2;
+    config.log = os_;
 
     PeakFinder_SNR peakFinder(noiseCalculator, config);
 

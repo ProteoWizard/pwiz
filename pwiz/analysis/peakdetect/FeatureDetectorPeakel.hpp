@@ -58,7 +58,7 @@ class PWIZ_API_DECL FeatureDetectorPeakel : public FeatureDetector
 
     struct Config
     {
-        std::ostream* log; // TODO: implement
+        std::ostream* log; // propagates to sub-objects during create()
         NoiseCalculator_2Pass::Config noiseCalculator_2Pass;
         PeakFinder_SNR::Config peakFinder_SNR;
         PeakFitter_Parabola::Config peakFitter_Parabola;
@@ -68,20 +68,13 @@ class PWIZ_API_DECL FeatureDetectorPeakel : public FeatureDetector
         Config() : log(0) {}
     };
     
-    static boost::shared_ptr<FeatureDetectorPeakel> create(const Config& config);
+    static boost::shared_ptr<FeatureDetectorPeakel> create(Config config);
 
     private:
     boost::shared_ptr<PeakExtractor> peakExtractor_;
     boost::shared_ptr<PeakelGrower> peakelGrower_;
     boost::shared_ptr<PeakelPicker> peakelPicker_;
 };
-
-
-//
-// TODO:
-//        filtering on mz/rt -- ok to use SpectrumList_Filter for RT filter?
-//          -- handle m/z window internally -- we want full arrays for noise calculation
-// 
 
 
 } // namespace analysis
