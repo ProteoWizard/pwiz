@@ -1,4 +1,11 @@
 @echo off
+setlocal
+@echo off
+
+REM # Get the location of quickbuild.bat and drop trailing slash
+set PWIZ_ROOT=%~dp0..\..
+pushd %PWIZ_ROOT%
+
 echo Cleaning project...
 IF EXIST build rmdir /s /q build
 IF EXIST libraries\boost_1_36_0 rmdir /s /q libraries\boost_1_36_0
@@ -14,3 +21,5 @@ IF EXIST pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data rmdir /s /q p
 IF EXIST pwiz_aux\msrc\data\vendor_readers\ABI\Reader_ABI_Test.data rmdir /s /q pwiz_aux\msrc\data\vendor_readers\ABI\Reader_ABI_Test.data
 IF EXIST pwiz_aux\msrc\data\vendor_readers\Waters\Reader_Waters_Test.data rmdir /s /q pwiz_aux\msrc\data\vendor_readers\Waters\Reader_Waters_Test.data
 IF EXIST pwiz_aux\msrc\data\vendor_readers\Bruker\Reader_Bruker_Test.data rmdir /s /q pwiz_aux\msrc\data\vendor_readers\Bruker\Reader_Bruker_Test.data
+
+popd
