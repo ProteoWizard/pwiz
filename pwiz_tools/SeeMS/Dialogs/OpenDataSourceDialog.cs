@@ -230,6 +230,7 @@ namespace seems
                 if( sourceInfo == null ||
                     sourceInfo.Length == 0 ||
                     ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
+                     sourceInfo[0].type != "File Folder" &&
                      sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
                     continue;
                 directoriesPassingFilter.Add( workerArgs.SourceDirectories[i] );
@@ -242,6 +243,7 @@ namespace seems
                 if( sourceInfo == null ||
                     sourceInfo.Length == 0 ||
                     ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
+                     sourceInfo[0].type != "File Folder" &&
                      sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
                     continue;
                 filesPassingFilter.Add( workerArgs.SourceFiles[i] );
