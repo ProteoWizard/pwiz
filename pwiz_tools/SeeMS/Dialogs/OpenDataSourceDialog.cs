@@ -26,13 +26,14 @@ namespace seems
             {
                 sourceDirectories = new List<DirectoryInfo>();
                 sourceFiles = new List<FileInfo>();
+                sourceTypeFilter = null;
                 getDetails = false;
             }
 
             public SourceInfo[] sourceInfoList;
 
             /// <summary>
-            /// Lists paths to Waters, Bruker, etc. source directories
+            /// Lists paths to Waters, Bruker, Agilent, etc. source directories
             /// </summary>
             public List<DirectoryInfo> SourceDirectories
             {
@@ -55,6 +56,16 @@ namespace seems
             /// The total number of source directories and files.
             /// </summary>
             public int TotalSourceCount { get { return sourceDirectories.Count + sourceFiles.Count; } }
+
+            /// <summary>
+            /// If not null or empty, this string must match getSourceType() for a source to pass the filter
+            /// </summary>
+            public string SourceTypeFilter
+            {
+                get { return sourceTypeFilter; }
+                set { sourceTypeFilter = value; }
+            }
+            private string sourceTypeFilter;
 
             /// <summary>
             /// If true, will open files to get some file-level metadata
@@ -210,19 +221,40 @@ namespace seems
             var worker = sender as BackgroundWorker;
             var workerArgs = arg.Argument as BackgroundSourceLoaderArgs;
 
+            var directoriesPassingFilter = new List<DirectoryInfo>();
+            var filesPassingFilter = new List<FileInfo>();
+
             for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
-                worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceDirectories[i], false ) );
+            {
+                SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceDirectories[i], false );
+                if( sourceInfo == null ||
+                    sourceInfo.Length == 0 ||
+                    ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
+                     sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
+                    continue;
+                directoriesPassingFilter.Add( workerArgs.SourceDirectories[i] );
+                worker.ReportProgress( 0, (object) sourceInfo );
+            }
 
             for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
-                worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceFiles[i], false ) );
+            {
+                SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceFiles[i], false );
+                if( sourceInfo == null ||
+                    sourceInfo.Length == 0 ||
+                    ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
+                     sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
+                    continue;
+                filesPassingFilter.Add( workerArgs.SourceFiles[i] );
+                worker.ReportProgress( 0, (object) sourceInfo );
+            }
 
             if( workerArgs.GetDetails )
             {
-                for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
-                    worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceDirectories[i], true ) );
+                for( int i = 0; i < directoriesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                    worker.ReportProgress( 0, (object) getSourceInfo( directoriesPassingFilter[i], true ) );
 
-                for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
-                    worker.ReportProgress( 0, (object) getSourceInfo( workerArgs.SourceFiles[i], true ) );
+                for( int i = 0; i < filesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                    worker.ReportProgress( 0, (object) getSourceInfo( filesPassingFilter[i], true ) );
             }
 
             arg.Cancel = worker.CancellationPending;
@@ -482,6 +514,8 @@ namespace seems
                         SourceInfo sourceInfo = new SourceInfo();
                         sourceInfo.type = sourceInfoList[0].type;
                         sourceInfo.name = sourceInfoList[0].name;
+                        if( msInfo.Count > 1 )
+                            sourceInfo.name += " (" + msData.run.id + ")";
                         sourceInfo.populateFromMSData( msData );
                         sourceInfoList.Add( sourceInfo );
                     }
@@ -510,24 +544,14 @@ namespace seems
 
             BackgroundSourceLoaderArgs args = new BackgroundSourceLoaderArgs();
             args.GetDetails = listView.View == View.Details;
+            if( sourceTypeComboBox.SelectedIndex > 0 )
+                args.SourceTypeFilter = sourceTypeComboBox.SelectedItem.ToString();
 
             foreach( DirectoryInfo subdirInfo in dirInfo.GetDirectories() )
-            {
-                if( sourceTypeComboBox.SelectedIndex == 0 ||
-                    sourceTypeComboBox.SelectedItem.ToString() == getSourceType( subdirInfo ) )
-                {
-                    args.SourceDirectories.Add( subdirInfo );
-                }
-            }
+                args.SourceDirectories.Add( subdirInfo );
 
             foreach( FileInfo fileInfo in dirInfo.GetFiles() )
-            {
-                if( sourceTypeComboBox.SelectedIndex == 0 ||
-                    sourceTypeComboBox.SelectedItem.ToString() == getSourceType( fileInfo ) )
-                {
-                    args.SourceFiles.Add( fileInfo );
-                }
-            }
+                args.SourceFiles.Add( fileInfo );
 
             backgroundSourceLoader.RunWorkerAsync( args );
         }
@@ -706,6 +730,7 @@ namespace seems
                 sourcePathTextBox.Text = String.Join( " ", dataSourceList.ToArray() );
 
                 ticGraphControl.GraphPane.GraphObjList.Clear();
+                ticGraphControl.GraphPane.CurveList.Clear();
                 ticGraphControl.Visible = false;
 
             } else if( listView.SelectedItems.Count > 0 )
@@ -713,6 +738,7 @@ namespace seems
                 sourcePathTextBox.Text = listView.SelectedItems[0].SubItems[0].Text;
 
                 ticGraphControl.GraphPane.GraphObjList.Clear();
+                ticGraphControl.GraphPane.CurveList.Clear();
 
                 string sourcePath = Path.Combine( CurrentDirectory, sourcePathTextBox.Text );
                 string sourceType = getSourceType( sourcePath );
