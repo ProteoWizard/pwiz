@@ -1,5 +1,5 @@
 //
-// cvgen.cpp
+// $Id$
 //
 // 
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>
@@ -49,7 +49,7 @@ namespace bfs = boost::filesystem;
 void writeCopyright(ostream& os, const string& filename)
 {
     os << "//\n"
-       << "// " << filename << endl
+       << "// $Id$" << endl
        << "//\n"
           "//\n"
           "// Darren Kessner <Darren.Kessner@cshs.org>\n"

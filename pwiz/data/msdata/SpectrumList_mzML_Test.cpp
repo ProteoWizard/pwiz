@@ -1,5 +1,5 @@
 //
-// SpectrumList_mzML_Test.cpp
+// $Id$
 //
 //
 // Original author: Darren Kessner <Darren.Kessner@cshs.org>

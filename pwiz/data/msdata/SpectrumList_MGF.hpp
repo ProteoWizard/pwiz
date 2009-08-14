@@ -1,5 +1,5 @@
 //
-// SpectrumList_MGF.hpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

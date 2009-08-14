@@ -1,5 +1,5 @@
 //
-// Serializer_MGF.cpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

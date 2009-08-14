@@ -1,5 +1,5 @@
 //
-// cv.hpp
+// $Id$
 //
 //
 // Darren Kessner <Darren.Kessner@cshs.org>
@@ -33,7 +33,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [psi-ms.obo]
+// [pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 18:30
 //   saved-by: Eric Deutsch
@@ -49,7 +49,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
-// [unit.obo]
+// [pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 12:37
 //   saved-by: George Gkoutos
@@ -64,7 +64,7 @@
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
 //
-// [unimod.obo]
+// [pwiz\data\msdata\unimod.obo]
 //   format-version: 1.0
 //   date: 19:11:2008 14:50
 //   saved-by: psi-pi_team
