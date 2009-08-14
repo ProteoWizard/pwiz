@@ -381,6 +381,24 @@ void diff(const ModParam& a,
 
 
 PWIZ_API_DECL
+void diff(const SearchModification& a,
+          const SearchModification& b,
+          SearchModification& a_b,
+          SearchModification& b_a,
+          const DiffConfig& config)
+{
+    if (a.fixedMod != b.fixedMod)
+    {
+        a_b.fixedMod = a.fixedMod;
+        b_a.fixedMod = b.fixedMod;
+    }
+    diff(a.modParam, b.modParam, a_b.modParam, b_a.modParam, config);
+    diff(a.specificityRules, b.specificityRules,
+         a_b.specificityRules, b_a.specificityRules, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const IonType& a,
           const IonType& b,
           IonType& a_b,
@@ -669,8 +687,8 @@ void diff(const Enzyme& a,
     diff(a.nTermGain, b.nTermGain, a_b.nTermGain, b_a.nTermGain,config);
     diff(a.cTermGain, b.cTermGain, a_b.cTermGain, b_a.cTermGain,config);
     diff(a.semiSpecific, b.semiSpecific, a_b.semiSpecific, b_a.semiSpecific,config);
-    diff(a.missedCleavages, b.missedCleavages, a_b.missedCleavages, b_a.missedCleavages,config);
-    diff(a.minDistance, b.minDistance, a_b.minDistance, b_a.minDistance,config);
+    diff_numeric(a.missedCleavages, b.missedCleavages, a_b.missedCleavages, b_a.missedCleavages,config);
+    diff_numeric(a.minDistance, b.minDistance, a_b.minDistance, b_a.minDistance,config);
     diff(a.siteRegexp, b.siteRegexp, a_b.siteRegexp, b_a.siteRegexp,config);
     diff(a.enzymeName, b.enzymeName, a_b.enzymeName, b_a.enzymeName,config);
 }
@@ -832,6 +850,15 @@ void diff(const Person& a,
                 b_a.affiliations, config);
 }
 
+void diff(const PersonPtr a,
+          const PersonPtr b,
+          PersonPtr a_b,
+          PersonPtr b_a,
+          const DiffConfig& config)
+{
+    diff(*a, *b, *a_b, *b_a, config);
+}
+
 PWIZ_API_DECL
 void diff(const Organization& a,
           const Organization& b,
@@ -846,6 +873,17 @@ void diff(const Organization& a,
         config);
 }
 
+
+PWIZ_API_DECL
+void diff(const OrganizationPtr a,
+          const OrganizationPtr b,
+          OrganizationPtr a_b,
+          OrganizationPtr b_a,
+          const DiffConfig& config)
+{
+    diff(*a, *b, *a_b, *b_a, config);
+}
+
 PWIZ_API_DECL
 void diff(const BibliographicReference& a,
           const BibliographicReference& b,
@@ -853,6 +891,17 @@ void diff(const BibliographicReference& a,
           BibliographicReference& b_a,
           const DiffConfig& config)
 {
+    diff((const IdentifiableType&)a, (const IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a,  config);
+    diff(a.authors, b.authors, a_b.authors, b_a.authors, config);
+    diff(a.publication, b.publication, a_b.publication, b_a.publication, config);
+    diff(a.publisher, b.publisher, a_b.publisher, b_a.publisher, config);
+    diff(a.editor, b.editor, a_b.editor, b_a.editor, config);
+    diff_numeric(a.year, b.year, a_b.year, b_a.year, config);
+    diff(a.volume, b.volume, a_b.volume, b_a.volume, config);
+    diff(a.issue, b.issue, a_b.issue, b_a.issue, config);
+    diff(a.pages, b.pages, a_b.pages, b_a.pages, config);
+    diff(a.title, b.title, a_b.title, b_a.title, config);
 }
 
 PWIZ_API_DECL
@@ -921,7 +970,7 @@ void diff(const DBSequence& a,
           DBSequence& b_a,
           const DiffConfig& config)
 {
-    diff(a.length, b.length, a_b.length, b_a.length, config);
+    diff_numeric(a.length, b.length, a_b.length, b_a.length, config);
     diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
     diff(a.SearchDatabase_ref, b.SearchDatabase_ref, a_b.SearchDatabase_ref,
          b_a.SearchDatabase_ref, config);

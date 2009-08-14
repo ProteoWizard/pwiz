@@ -277,10 +277,24 @@ void diff(const Person& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const PersonPtr a,
+          const PersonPtr b,
+          PersonPtr a_b,
+          PersonPtr b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Organization& a,
           const Organization& b,
           Organization& a_b,
           Organization& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const OrganizationPtr a,
+          const OrganizationPtr b,
+          OrganizationPtr a_b,
+          OrganizationPtr b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

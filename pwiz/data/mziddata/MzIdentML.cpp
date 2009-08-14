@@ -25,6 +25,8 @@
 #include "MzIdentML.hpp"
 #include <iterator>
 
+#include <iostream>
+
 namespace pwiz {
 namespace mziddata {
 
@@ -350,7 +352,8 @@ PWIZ_API_DECL bool AmbiguousResidue::empty() const
 //
 
 PWIZ_API_DECL Enzyme::Enzyme()
-    : semiSpecific(indeterminate)
+    : semiSpecific(indeterminate), missedCleavages(0), minDistance(0)
+
 {
 }
 
@@ -359,9 +362,9 @@ PWIZ_API_DECL bool Enzyme::empty() const
     return id.empty() &&
         nTermGain.empty() &&
         cTermGain.empty() &&
-        //        semiSpecific == indeterminate &&
-        missedCleavages.empty() &&
-        minDistance.empty() &&
+        (indeterminate(semiSpecific) || semiSpecific== false) &&
+        missedCleavages == 0 &&
+        minDistance == 0 &&
         siteRegexp.empty() &&
         enzymeName.empty();
 }
@@ -503,6 +506,25 @@ bool AnalysisSoftware::empty() const
         softwareName.empty() &&
         URI.empty() &&
         customizations.empty();
+}
+
+
+//
+// DBSequence
+//
+
+DBSequence::DBSequence()
+    : length(0)
+{}
+
+bool DBSequence::empty() const
+{
+    return IdentifiableType::empty() &&
+        length == 0 &&
+        accession.empty() &&
+        SearchDatabase_ref.empty() &&
+        seq.empty() &&
+        paramGroup.empty();
 }
 
 //

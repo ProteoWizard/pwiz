@@ -101,7 +101,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     
     DBSequencePtr dbSequence(new DBSequence());
     dbSequence->id="DBSeq_Bombessin";
-    dbSequence->length="14";
+    dbSequence->length=14;
     dbSequence->SearchDatabase_ref="SDB_5peptideMix";
     dbSequence->accession="Bombessin";
     dbSequence->seq=dbsequenceList[0];
@@ -110,7 +110,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     dbSequence = DBSequencePtr(new DBSequence());
     dbSequence->id="DBSeq_Neurotensin";
-    dbSequence->length="13";
+    dbSequence->length=13;
     dbSequence->SearchDatabase_ref="SDB_5peptideMix";
     dbSequence->accession="Neurotensin";
     dbSequence->seq=dbsequenceList[1];
@@ -177,8 +177,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     ep->id="ENZ_0";
     ep->cTermGain="OH";
     ep->nTermGain="H";
-    ep->missedCleavages="1";
-    ep->semiSpecific="0";
+    ep->missedCleavages=1;
+    ep->semiSpecific=false;
     ep->siteRegexp="(?<=[KR])(?!P)";
     ep->enzymeName.set(MS_Trypsin);
     sip->enzymes.enzymes.push_back(ep);

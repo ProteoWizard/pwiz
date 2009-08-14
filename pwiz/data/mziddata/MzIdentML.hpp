@@ -198,13 +198,17 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
 {
-    std::string length;
+    DBSequence();
+    
+    int length;
     std::string accession;
     std::string SearchDatabase_ref;
 
     std::string seq;
 
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<DBSequence> DBSequencePtr;
@@ -325,8 +329,8 @@ struct PWIZ_API_DECL Enzyme
     std::string nTermGain;
     std::string cTermGain;
     boost::logic::tribool semiSpecific;
-    std::string missedCleavages;
-    std::string minDistance;
+    int missedCleavages;
+    int minDistance;
 
     std::string siteRegexp;
     ParamContainer enzymeName;

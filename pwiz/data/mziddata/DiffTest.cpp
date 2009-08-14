@@ -689,12 +689,12 @@ void testEnzyme()
     b.nTermGain = "n";
     a.cTermGain = "y";
     b.cTermGain = "n";
-    a.semiSpecific = 1;
-    b.semiSpecific = 2;
-    a.missedCleavages = "1"; //TODO check if this should be int
-    b.missedCleavages = "5";
-    a.minDistance = "2";
-    b.minDistance = "4";
+    a.semiSpecific = true;
+    b.semiSpecific = false;
+    a.missedCleavages = 1;
+    b.missedCleavages = 5;
+    a.minDistance = 2;
+    b.minDistance = 4;
     a.siteRegexp = "^";
     b.siteRegexp = "$";
     a.enzymeName.set(MS_Trypsin);
@@ -713,10 +713,10 @@ void testEnzyme()
     unit_assert(diff.b_a.nTermGain == "n");
     unit_assert(diff.a_b.cTermGain == "y");
     unit_assert(diff.b_a.cTermGain == "n");
-    unit_assert(diff.a_b.missedCleavages == "1");
-    unit_assert(diff.b_a.missedCleavages == "5");
-    unit_assert(diff.a_b.minDistance == "2");
-    unit_assert(diff.b_a.minDistance == "4");
+    unit_assert(diff.a_b.missedCleavages == 1);
+    unit_assert(diff.b_a.missedCleavages == 5);
+    unit_assert(diff.a_b.minDistance == 2);
+    unit_assert(diff.b_a.minDistance == 4);
     unit_assert(diff.a_b.siteRegexp == "^");
     unit_assert(diff.b_a.siteRegexp == "$");
     unit_assert(diff.a_b.enzymeName.cvParams.size() == 1);
