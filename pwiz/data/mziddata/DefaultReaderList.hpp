@@ -1,5 +1,5 @@
 //
-// DefaultReaderList.hpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robert.burke@proteowizard.org>

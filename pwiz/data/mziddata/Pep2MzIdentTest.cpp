@@ -1,6 +1,6 @@
-///
-/// Pep2MzIdentTest.cpp
-///
+//
+// $Id$
+//
 
 #include "Pep2MzIdent.hpp"
 #include "Serializer_mzid.hpp"

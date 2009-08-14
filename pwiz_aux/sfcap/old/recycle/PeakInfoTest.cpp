@@ -1,5 +1,5 @@
 //
-// PeakInfoTest.hpp
+// $Id$
 //
 //
 // Darren Kessner <darren@proteowizard.org>

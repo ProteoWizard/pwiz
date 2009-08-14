@@ -1,5 +1,5 @@
 //
-// ChromatogramList_Bruker.cpp
+// $Id$
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

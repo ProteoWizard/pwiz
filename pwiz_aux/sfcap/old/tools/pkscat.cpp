@@ -1,5 +1,5 @@
 //
-// pkscat.cpp
+// $Id$
 //
 //
 // Darren Kessner <darren@proteowizard.org>

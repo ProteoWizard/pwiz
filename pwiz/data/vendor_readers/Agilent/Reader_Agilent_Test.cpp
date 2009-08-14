@@ -1,5 +1,5 @@
 //
-// Reader_Agilent_Test.cpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

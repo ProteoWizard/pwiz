@@ -1,5 +1,5 @@
 //
-// cvgen.cpp
+// $Id$
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -48,7 +48,7 @@ namespace bfs = boost::filesystem;
 void writeCopyright(ostream& os, const string& filename)
 {
     os << "//\n"
-       << "// " << filename << endl
+       << "// $Id$" << endl
        << "//\n"
           "//\n"
           "// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>\n"

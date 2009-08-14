@@ -1,5 +1,5 @@
 /*
-    File: ScanFilter.h
+    $Id$
     Description: parsing for Thermo/Xcalibur "filter line".
     Date: July 25, 2007
 

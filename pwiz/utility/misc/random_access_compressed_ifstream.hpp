@@ -1,4 +1,4 @@
-// random_access_compressed_ifstream.hpp
+// $Id$
 //
 // This is just an istream which chooses its streambuf implementation
 // based on whether the file is gzipped or not.  Could be extended

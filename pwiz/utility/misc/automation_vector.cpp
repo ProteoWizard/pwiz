@@ -1,5 +1,5 @@
 //
-// automation_vector.cpp
+// $Id$
 //
 //
 // Original author: Andrei Alexandrescu

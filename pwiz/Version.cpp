@@ -1,5 +1,5 @@
 //
-// Version.cpp
+// $Id$
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 #include "pwiz/Version.hpp"
 #include <sstream>
+#include "svnrev.hpp"
 
 #ifdef PWIZ_USER_VERSION_INFO_H // in case you need to add any info version of your own
 #include PWIZ_USER_VERSION_INFO_H  // must define PWIZ_USER_VERSION_INFO_H_STR for use below
@@ -37,8 +38,8 @@ using std::string;
 
 int Version::Major()                {return 1;}
 int Version::Minor()                {return 6;}
-int Version::Revision()             {return 0;}
-string Version::LastModified()      {return "7/30/2009";}
+int Version::Revision()             {return SVN_REV;}
+string Version::LastModified()      {return SVN_REVDATE;}
 string Version::str()               
 {
 	std::ostringstream v;

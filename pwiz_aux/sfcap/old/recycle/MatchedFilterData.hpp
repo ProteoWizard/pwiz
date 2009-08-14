@@ -1,5 +1,5 @@
 //
-// MatchedFilterData.hpp
+// $Id$
 //
 //
 // Darren Kessner <darren@proteowizard.org>

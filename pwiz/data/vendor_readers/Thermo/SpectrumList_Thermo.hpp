@@ -1,5 +1,5 @@
 //
-// SpectrumList_Thermo.hpp
+// $Id$
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -19,6 +19,10 @@
 // See the License for the specific language governing permissions and 
 // limitations under the License.
 //
+
+
+#ifndef _SPECTRUMLIST_THERMO_
+#define _SPECTRUMLIST_THERMO_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -77,3 +81,5 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 } // detail
 } // msdata
 } // pwiz
+
+#endif // _SPECTRUMLIST_THERMO_

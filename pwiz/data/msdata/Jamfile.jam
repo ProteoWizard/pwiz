@@ -195,7 +195,7 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
 
 install install_svnrev
-    : ../../utility/misc//svnrev
+    : $(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev
     : <location>.
     ;
 explicit install_svnrev ;
@@ -208,6 +208,10 @@ path-constant MSDATA_VERSIONED_FILEMASKS
         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Jamfile.jam
         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/*.?pp
         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
         $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/*.?pp
         $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/Jamfile.jam
         $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/*.?pp
@@ -239,7 +243,7 @@ make svnrev.hpp
         do_svnrev
     : # requirements
         <location>.
-        <dependency>../../utility/misc//svnrev # update if svnrev.cpp is updated
+        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev # update if svnrev.cpp is updated
         <dependency>install_svnrev
     ;
 explicit svnrev.hpp ;

@@ -1,5 +1,5 @@
 //
-// SHA1_ostream_test.cpp 
+// $Id$ 
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>

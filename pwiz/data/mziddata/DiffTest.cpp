@@ -1,5 +1,5 @@
 //
-// DiffTest.cpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robetr.burke@proteowizard.org>

@@ -1,5 +1,5 @@
 //
-// write_mzid_example_files.cpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robetr.burke@proteowizard.org>

@@ -1,5 +1,5 @@
 //
-// MinimumPepXML.cpp
+// $Id$
 //
 //
 // Original author: Kate Hoff <katherine.hoff@proteowizard.org>

@@ -1,5 +1,5 @@
 //
-// Reader.cpp
+// $Id$
 //
 //
 // Origional author: Robert Burke <robert.burke@proteowizard.org>

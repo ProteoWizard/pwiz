@@ -1,6 +1,6 @@
-///
-/// MinimumPepXMLTest.cpp
-///
+//
+// $Id$
+//
 
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/misc/unit.hpp"

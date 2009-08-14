@@ -1,5 +1,5 @@
 //
-// optimized_lexical_cast.hpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

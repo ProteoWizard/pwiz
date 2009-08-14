@@ -1,5 +1,5 @@
 //
-// Pep2MzIdent.hpp
+// $Id$
 //
 
 #ifndef _PEP2MZIDENT_HPP_

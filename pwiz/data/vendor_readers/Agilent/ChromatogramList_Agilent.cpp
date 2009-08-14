@@ -1,5 +1,5 @@
 //
-// ChromatogramList_Agilent.cpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
