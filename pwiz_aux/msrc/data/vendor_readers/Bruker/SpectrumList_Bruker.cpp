@@ -1,5 +1,5 @@
 //
-// SpectrumList_Bruker.cpp
+// $Id$
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -36,7 +36,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "pwiz/utility/minimxml/XMLWriter.cpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include <iostream>
 #include <stdexcept>
 
