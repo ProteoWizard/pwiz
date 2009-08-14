@@ -2,7 +2,7 @@
 // $Id$
 //
 // 
-// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Original author: Darren Kessner <darren@proteowizard.org>
 //
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
@@ -52,7 +52,7 @@ void writeCopyright(ostream& os, const string& filename)
        << "// $Id$" << endl
        << "//\n"
           "//\n"
-          "// Darren Kessner <Darren.Kessner@cshs.org>\n"
+          "// Darren Kessner <darren@proteowizard.org>\n"
           "//\n"
           "// Copyright 2007 Spielberg Family Center for Applied Proteomics\n"
           "//   Cedars-Sinai Medical Center, Los Angeles, California  90048\n"
