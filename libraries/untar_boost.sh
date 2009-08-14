@@ -12,7 +12,7 @@ if [ ! -e boost_1_39_0/tools/jam/test/var_expand.jam ]; then
   fi
 
   # we only extract [chi]pp from boost_1_39_0/libs and [hi]pp from boost_1_39_0/boost
-	tar -xkjf boost_1_39_0.tar.bz2 "boost_1_39_0/libs*.?pp" "boost_1_39_0/boost*.?pp" boost_1_39_0/tools/jam boost_1_39_0/tools/build "boost_1_39_0/libs*timeconv.inl"
+	tar -xkjf --wildcards boost_1_39_0.tar.bz2 "boost_1_39_0/libs*.?pp" "boost_1_39_0/boost*.?pp" boost_1_39_0/tools/jam boost_1_39_0/tools/build "boost_1_39_0/libs*timeconv.inl"
 fi
 
 popd > /dev/null
