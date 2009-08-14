@@ -1,5 +1,5 @@
 //
-// PeptideID_flatTest.cpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robert.burke@cshs.org>

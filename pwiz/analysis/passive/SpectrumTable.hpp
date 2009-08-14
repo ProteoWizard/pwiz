@@ -1,5 +1,5 @@
 //
-// SpectrumTable.hpp
+// $Id$
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>

@@ -1,5 +1,5 @@
 //
-// ChromatogramList_SavitskyGolaySmoother.cpp
+// $Id$
 //
 //
 // Original author: Eric Purser <Eric.Purser .@. Vanderbilt.edu>

@@ -1,5 +1,5 @@
 #
-# Jamfile (analysis) 
+# $Id$
 #
 #
 # Original author: Darren Kessner <darren@proteowizard.org>
@@ -27,9 +27,67 @@ build-project peakdetect ;
 build-project peptideid ;
 build-project spectrum_processing ;
 
+
 lib pwiz_analysis_version 
     : # sources
         Version.cpp
     : # requirements 
+        <dependency>svnrev.hpp
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
 ;
+
+
+# generate automatic version file "svnrev.hpp"
+# svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+
+install install_svnrev
+    : ../../utility/misc//svnrev
+    : <location>.
+    ;
+explicit install_svnrev ;
+
+path-constant ANALYSIS_PATH : . ;
+path-constant ANALYSIS_VERSIONED_FILEMASKS
+    :   $(PWIZ_ROOT_PATH)/pwiz/analysis/calibration/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/calibration/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/common/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/common/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/digestion/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/digestion/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/frequency/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/frequency/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/passive/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/passive/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/peakdetect/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/peakdetect/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/peptideid/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/peptideid/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
+        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
+        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
+    ;
+
+actions do_svnrev
+{
+   $(ANALYSIS_PATH)/svnrev -v -i -h$(ANALYSIS_PATH)/svnrev.hpp $(ANALYSIS_VERSIONED_FILEMASKS)
+}
+
+import path ;
+make svnrev.hpp
+    : # sources
+        Jamfile.jam # must have at least one source or the target will be ignored
+    : # action
+        do_svnrev
+    : # requirements
+        <location>.
+        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev # update if svnrev.cpp is updated
+        <dependency>install_svnrev
+    ;
+explicit svnrev.hpp ;

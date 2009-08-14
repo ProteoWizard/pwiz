@@ -1,5 +1,5 @@
 //
-// SpectrumList_ThresholderTest.Cpp
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>

@@ -1,5 +1,5 @@
 //
-// PeptideID_pepXMLTest.cpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robert.burke@cshs.org>

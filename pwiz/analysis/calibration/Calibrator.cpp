@@ -1,5 +1,5 @@
 //
-// Calibrator.cpp
+// $Id$
 //
 //
 // Darren Kessner <darren@proteowizard.org>

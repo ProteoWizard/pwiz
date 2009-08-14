@@ -1,5 +1,5 @@
 //
-// FeatureDetector.hpp
+// $Id$
 //
 //
 // Original author: Kate Hoff <Katherine.Hoff@cshs.org>

@@ -1,5 +1,5 @@
 //
-// PeptideID_flat.hpp
+// $Id$
 //
 //
 // Original author: Robert Burke <robert.burke@cshs.org>
