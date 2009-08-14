@@ -1,5 +1,5 @@
 //
-// PeptideTest.cpp
+// $Id$
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -511,7 +511,7 @@ struct TestFragmentation
 };
 
 // test masses calculated at:
-// http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+// $Id$tml
 const TestFragmentation testFragmentations[] =
 {
     { "MEERKAT",
