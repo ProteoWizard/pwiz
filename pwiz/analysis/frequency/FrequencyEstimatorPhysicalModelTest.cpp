@@ -2,7 +2,7 @@
 // FrequencyEstimatorPhysicalModelTest.cpp
 //
 //
-// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Original author: Darren Kessner <darren@proteowizard.org>
 //
 // Copyright 2007 Spielberg Family Center for Appled Proteomics 
 //   Cedars Sinai Medical Center, Los Angeles, California  90048

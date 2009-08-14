@@ -2,7 +2,7 @@
 // mspicture.cpp
 //
 //
-// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Original author: Darren Kessner <darren@proteowizard.org>
 // Modifieing author: Robert Burke <robert.burke@cshs.org>
 //
 // Copyright 2008 Spielberg Family Center for Applied Proteomics

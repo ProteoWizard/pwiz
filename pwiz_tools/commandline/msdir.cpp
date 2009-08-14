@@ -159,6 +159,12 @@ Config parseCommandLine(int argc, const char* argv[])
     if (full)
         config.verbosityLevel = VerbosityLevel_Full;
 
+    if (help)
+    {
+        cout << usage << endl;
+        return config; // ignore any other arguments
+    }
+
     // expand pathmasks (files or directories) from command line
     if (vm.count(label_args))
     {
@@ -252,6 +258,9 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
 
         //is.read(&head[0], (std::streamsize)head.size());
     }
+
+    //for (ReaderList::const_iterator itr = readers.begin(); itr != readers.end(); ++itr)
+    //    cout << (*itr)->getType() << endl;
 
     string pathType = readers.identify(path.string(), head);
     if (pathType == "Mascot Generic")

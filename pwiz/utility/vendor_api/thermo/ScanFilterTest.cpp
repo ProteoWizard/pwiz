@@ -2,7 +2,7 @@
 // RawFileTest.cpp
 //
 //
-// Original author: Darren Kessner <Darren.Kessner@cshs.org>
+// Original author: Darren Kessner <darren@proteowizard.org>
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 

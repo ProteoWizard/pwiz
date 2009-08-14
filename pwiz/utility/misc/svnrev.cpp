@@ -1,8 +1,6 @@
 //
-// svnrev.cpp
+// $Id:$
 //
-// $Revision$
-// $Date$
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //

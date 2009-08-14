@@ -2,7 +2,7 @@
 // simnoise.cpp
 //
 //
-// Darren Kessner <Darren.Kessner@cshs.org>
+// Darren Kessner <darren@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics 
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
