@@ -157,7 +157,10 @@ void copyProteinPilotDLLs()
 {
     // get the filepath of the calling .exe using WinAPI
     TCHAR tmpFilepath[1024];
-    DWORD tmpFilepathLength = ::GetModuleFileName(NULL, (LPCH) tmpFilepath, 1024);
+    // check for pwiz_bindings_cli.dll first, so that unit tests run from
+    // vstesthost.exe run correctly.  if pwiz_bindings_cli.dll is not running,
+    // GetModuleHandle will return NULL, and the exe path will be returned.
+    DWORD tmpFilepathLength = ::GetModuleFileName(::GetModuleHandle("pwiz_bindings_cli.dll"), (LPCH) tmpFilepath, 1024);
     bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
 
     // make sure the necessary DLLs are available side-by-side or copy them if ProteinPilot is installed
