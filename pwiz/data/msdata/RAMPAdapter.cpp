@@ -132,11 +132,16 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 
     CVID nativeIdFormat = id::getDefaultNativeIDFormat(msd_);
     string scanNumber = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum->id);
-    if (scanNumber.empty())
-        throw runtime_error("[RAMPAdapter::getScanHeader] Undetermined or unsupported nativeID format");
-
     result.seqNum = static_cast<int>(index + 1);
-    result.acquisitionNum = lexical_cast<int>(scanNumber);
+    if (scanNumber.empty()) // unsupported nativeID type
+    {
+        // assume scanNumber is a 1-based index, consistent with this->index() method
+        result.acquisitionNum = result.seqNum;
+    } 
+    else 
+    {
+        result.acquisitionNum = lexical_cast<int>(scanNumber);
+    }
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
