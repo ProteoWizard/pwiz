@@ -142,6 +142,8 @@ typedef boost::shared_ptr<Organization> OrganizationPtr;
 struct PWIZ_API_DECL Provider : public IdentifiableType // : public Contact
 {
     ContactRole contactRole;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Provider> ProviderPtr;
@@ -511,6 +513,9 @@ struct PWIZ_API_DECL FragmentArray
     std::vector<double> values;
     std::string Measure_ref;
 
+    // Used for diffs.
+    ParamContainer params;
+    
     FragmentArray& setValues(const std::string& values);
     FragmentArray& setValues(const std::vector<double>& values);
     std::string getValues() const;
@@ -595,6 +600,8 @@ struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
     
     std::vector<SpectrumIdentificationItemPtr> spectrumIdentificationItem;
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationResultPtr;

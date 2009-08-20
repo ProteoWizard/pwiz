@@ -344,6 +344,32 @@ void diff(const ParamContainer& a,
 }
 
 
+// measure maximum relative difference between elements in the vectors
+double maxdiff(const vector<double>& a, const vector<double>& b)
+{
+    if (a.size() != b.size()) 
+        throw runtime_error("[Diff::maxdiff()] Sizes differ.");
+
+    vector<double>::const_iterator i = a.begin(); 
+    vector<double>::const_iterator j = b.begin(); 
+
+    double max = 0;
+
+    for (; i!=a.end(); ++i, ++j)
+    {
+        double denominator = min(*i, *j);
+        if (denominator == 0) denominator = 1;
+        double current = fabs(*i - *j)/denominator;
+        if (max < current) max = current;
+
+    }
+
+    return max;
+}
+
+
+const char* userParamName_FragmentArrayDifference_ = "FragmentArray difference";
+
 PWIZ_API_DECL
 void diff(const FragmentArray& a,
           const FragmentArray& b,
@@ -351,7 +377,27 @@ void diff(const FragmentArray& a,
           FragmentArray& b_a,
           const DiffConfig& config)
 {
-    vector_diff(a.values, b.values, a_b.values, b_a.values);
+    if (a.values.size() != b.values.size())
+    {
+        a_b.params.userParams.push_back(UserParam("Binary data array size: " + 
+                                           lexical_cast<string>(a.values.size())));
+        b_a.params.userParams.push_back(UserParam("Binary data array size: " + 
+                                           lexical_cast<string>(b.values.size())));
+    }
+    else
+    {
+        double max = maxdiff(a.values, b.values);
+       
+        if (max > config.precision + numeric_limits<double>::epsilon())
+        {
+            a_b.params.userParams.push_back(UserParam(userParamName_FragmentArrayDifference_,
+                                               lexical_cast<string>(max),
+                                               "xsd:float"));
+            b_a.params.userParams.push_back(UserParam(userParamName_FragmentArrayDifference_,
+                                               lexical_cast<string>(max),
+					       "xsd:float"));
+        }
+    }
     diff(a.Measure_ref, b.Measure_ref, a_b.Measure_ref, b_a.Measure_ref, config);
 }
 
@@ -409,7 +455,8 @@ void diff(const IonType& a,
     vector_diff(a.index, b.index, a_b.index, b_a.index);
     vector_diff_deep(a.fragmentArray, b.fragmentArray,
          a_b.fragmentArray, b_a.fragmentArray, config);
-    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup,
+    config);
 }
 
 
@@ -473,7 +520,7 @@ void diff(const SpectrumIdentificationItem& a,
 {
     diff_numeric(a.chargeState, b.chargeState, a_b.chargeState, b_a.chargeState,
                  config);
-    
+
     diff_numeric(a.experimentalMassToCharge, b.experimentalMassToCharge,
                  a_b.experimentalMassToCharge, b_a.experimentalMassToCharge,
                  config);
@@ -506,7 +553,8 @@ void diff(const SpectrumIdentificationItem& a,
     vector_diff_deep(a.fragmentation, b.fragmentation,
                      a_b.fragmentation, b_a.fragmentation, config);
     
-    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup,
+    config);
 }
 
 
@@ -524,7 +572,8 @@ void diff(const SpectrumIdentificationResult& a,
     vector_diff_deep(a.spectrumIdentificationItem, b.spectrumIdentificationItem,
          a_b.spectrumIdentificationItem, b_a.spectrumIdentificationItem,
          config);
-    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
+    diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup,
+         config);
 }
 
 PWIZ_API_DECL
@@ -534,7 +583,8 @@ void diff(const SpectrumIdentificationList& a,
           SpectrumIdentificationList& b_a,
           const DiffConfig& config)
 {
-    diff_numeric(a.numSequencesSearched, b.numSequencesSearched, a_b.numSequencesSearched, b_a.numSequencesSearched, config);
+    diff_numeric(a.numSequencesSearched, b.numSequencesSearched,
+                 a_b.numSequencesSearched, b_a.numSequencesSearched, config);
     vector_diff_deep(a.fragmentationTable, b.fragmentationTable,
                      a_b.fragmentationTable, b_a.fragmentationTable,
                      config);
@@ -1143,8 +1193,8 @@ void diff(const MzIdentML& a,
 
     
     // provide names for context
-    if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
-    if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
+    //if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
+    //if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
 }
 
 PWIZ_API_DECL

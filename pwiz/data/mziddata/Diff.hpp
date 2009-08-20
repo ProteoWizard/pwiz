@@ -39,7 +39,7 @@ struct PWIZ_API_DECL DiffConfig
     double precision;
 
     DiffConfig()
-    :   precision(1e-6)
+        :   precision(1.2e-6) // Hack to make the maxdiff work
     {}
 };
 

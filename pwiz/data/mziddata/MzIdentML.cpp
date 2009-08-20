@@ -214,7 +214,8 @@ PWIZ_API_DECL SpectrumIdentificationItem::SpectrumIdentificationItem()
 
 PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
 {
-    return chargeState == 0 &&
+    return IdentifiableType::empty() &&
+        chargeState == 0 &&
         experimentalMassToCharge == 0 &&
         calculatedMassToCharge == 0 &&
         calculatedPI == 0 &&
@@ -229,6 +230,23 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
 }
 
 
+//
+// SpectrumIdentificationResult
+//
+
+PWIZ_API_DECL bool SpectrumIdentificationResult::empty() const
+{
+    return IdentifiableType::empty() &&
+        spectrumID.empty() &&
+        SpectraData_ref.empty() &&
+        spectrumIdentificationItem.empty() &&
+        paramGroup.empty();
+}
+
+
+//
+// ProteinDetectionList
+//
 
 PWIZ_API_DECL bool ProteinDetectionList::empty() const
 {
@@ -255,6 +273,16 @@ bool ProteinAmbiguityGroup::empty() const
 {
     return proteinDetectionHypothesis.empty() &&
         paramGroup.empty();
+}
+
+
+//
+// Provider
+//
+bool Provider::empty() const
+{
+    return IdentifiableType::empty() &&
+        contactRole.empty();
 }
 
 
@@ -293,6 +321,7 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
         end == 0 &&
         pre.empty() &&
         post.empty() &&
+        TranslationTable_ref.empty() &&
         frame == 0 &&
         isDecoy == false &&
         missedCleavages == 0 &&
@@ -307,7 +336,8 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
 PWIZ_API_DECL bool FragmentArray::empty() const
 {
     return values.empty() &&
-        Measure_ref.empty() ;
+        Measure_ref.empty() &&
+        params.empty();
 }
 
 //

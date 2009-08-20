@@ -23,6 +23,7 @@
 
 #include "IO.hpp"
 #include "Diff.hpp"
+#include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
@@ -579,8 +580,253 @@ void testSourceFile()
 }
 
 
+void testInputs()
+{
+    Inputs a;
+
+    SourceFilePtr b(new SourceFile());
+    b->location = "blah";
+    a.sourceFile.push_back(b);
+
+    SearchDatabasePtr c(new SearchDatabase());
+    c->version = "1.0b";
+    a.searchDatabase.push_back(c);
+
+    SpectraDataPtr d(new SpectraData());
+    d->location = "bleh";
+    a.spectraData.push_back(d);
+
+    testObject(a);
+}
+
+
+void testMeasure()
+{
+    Measure a;
+
+    a.id = "id";
+    a.paramGroup.set(MS_product_ion_m_z);
+
+    testObject(a);
+}
+
+
+void testFragmentArray()
+{
+    FragmentArray a;
+
+    a.values.push_back(1.);
+    a.values.push_back(2.);
+    a.values.push_back(3.);
+    a.values.push_back(4.);
+    a.Measure_ref = "ref";
+
+    testObject(a);
+
+    a.setValues("4.0 3.0 2.0 1.0");
+    testObject(a);
+}
+
+
+void testIonType()
+{
+    IonType a;
+
+    a.index.push_back(0);
+    a.index.push_back(1);
+    a.index.push_back(2);
+    a.index.push_back(3);
+    a.charge = 2;
+
+    a.paramGroup.set(MS_frag__a_ion);
+    FragmentArrayPtr b(new FragmentArray());
+    a.fragmentArray.push_back(b);
+    
+    testObject(a);
+}
+
+
+void testPeptideEvidence()
+{
+    PeptideEvidence a;
+
+    a.id = "id";
+    a.DBSequence_ref = "dbs_ref";
+    a.start = 1;
+    a.end = 2;
+    a.pre = "PRE";
+    a.post = "POST";
+    a.TranslationTable_ref = "tranny_ref";
+    a.frame = 3;
+    a.isDecoy = true;
+    a.missedCleavages = 4;
+    
+    a.paramGroup.set(MS_mascot_score, "15.71");
+
+    testObject(a);
+}
+
+
+void testSpectrumIdentificationItem()
+{
+    SpectrumIdentificationItem a;
+
+    a.id = "id";
+    
+    a.chargeState = 1;
+    a.experimentalMassToCharge = 1.1;
+    a.calculatedMassToCharge = 2.2;
+    a.calculatedPI = 3.3;
+    a.Peptide_ref = "pep_ref";
+    a.rank = 4;
+    a.passThreshold = true;
+    a.MassTable_ref = "mt_ref";
+    a.Sample_ref = "s_ref";
+
+
+    PeptideEvidencePtr b(new PeptideEvidence());
+    b->DBSequence_ref = "db_ref";
+    a.peptideEvidence.push_back(b);
+
+    IonTypePtr c(new IonType());
+    c->charge = 5;
+    a.fragmentation.push_back(c);
+
+    a.paramGroup.set(MS_mascot_score, "15.71");
+    
+    testObject(a);
+}
+
+
+void testSpectrumIdentificationResult()
+{
+    SpectrumIdentificationResult a;
+
+    a.id = "id";
+
+    a.spectrumID = "sid";
+    a.SpectraData_ref = "sd_ref";
+
+    SpectrumIdentificationItemPtr b(new SpectrumIdentificationItem());
+    b->chargeState = 1;
+    a.spectrumIdentificationItem.push_back(b);
+    
+    a.paramGroup.set(MS_mascot_score, "15.71");
+
+    testObject(a);
+}
+
+
+void testProteinDetectionHypothesis()
+{
+    ProteinDetectionHypothesis a;
+
+    a.id = "id";
+    a.DBSequence_ref = "dbs_ref";
+    a.passThreshold = "pt";
+
+    a.peptideHypothesis.push_back("test");
+    a.paramGroup.set(MS_mascot_score, "164.4");
+
+    testObject(a);
+}
+
+
+void testProteinAmbiguityGroup()
+{
+    ProteinAmbiguityGroup a;
+
+    a.id = "id";
+    ProteinDetectionHypothesisPtr b(new ProteinDetectionHypothesis());
+    b->DBSequence_ref = "dbs_ref";
+    a.proteinDetectionHypothesis.push_back(b);
+    a.paramGroup.set(MS_mascot_score, "164.4");
+
+    testObject(a);
+}
+
+
+void testSpectrumIdentificationList()
+{
+    SpectrumIdentificationList a;
+
+    a.id = "id";
+    a.numSequencesSearched = 1;
+
+    MeasurePtr b(new Measure());
+    b->paramGroup.set(MS_mascot_score, "164.4");
+    a.fragmentationTable.push_back(b);
+    
+    SpectrumIdentificationResultPtr c(new SpectrumIdentificationResult());
+    c->id = "sid";
+    c->spectrumID = "sID";
+    a.spectrumIdentificationResult.push_back(c);
+
+    testObject(a);
+}
+
+
+void testProteinDetectionList()
+{
+    ProteinDetectionList a;
+
+    a.id = "id";
+    ProteinAmbiguityGroupPtr b(new ProteinAmbiguityGroup());
+    a.proteinAmbiguityGroup.push_back(b);
+
+    a.paramGroup.set(MS_mascot_score, "164.4");
+
+    testObject(a);
+}
+
+
+void testAnalysisData()
+{
+    AnalysisData a;
+
+    SpectrumIdentificationListPtr b(new SpectrumIdentificationList());
+    b->id = "id";
+    b->numSequencesSearched = 5;
+    a.spectrumIdentificationList.push_back(b);
+
+    a.proteinDetectionList.id = "id2";
+    a.proteinDetectionList.paramGroup.set(MS_mascot_score, "164.4");
+
+    testObject(a);
+}
+
+
+void testDataCollection()
+{
+    DataCollection a;
+
+    SourceFilePtr b(new SourceFile());
+    a.inputs.sourceFile.push_back(b);
+
+    SpectrumIdentificationListPtr c(new SpectrumIdentificationList());
+    c->id = "SIL_1";
+    c->numSequencesSearched = 5;
+    a.analysisData.spectrumIdentificationList.push_back(c);
+
+    testObject(a);
+}
+
+
+void testMzIdentML()
+{
+    MzIdentML a;
+
+    examples::initializeTiny(a);
+
+    testObject(a.dataCollection.analysisData);
+    
+    //testObject(a);
+}
+
+
 void test()
 {
+    /*
     testCV();
     testIdentifiableType();
     testBibliographicReference();
@@ -613,6 +859,21 @@ void test()
     testSpectraData();
     testSearchDatabase();
     testSourceFile();
+    testInputs();
+    testMeasure();
+    testFragmentArray();
+    testIonType();
+    testPeptideEvidence();
+    testSpectrumIdentificationItem();
+    testSpectrumIdentificationResult();
+    testProteinDetectionHypothesis();
+    testProteinAmbiguityGroup();
+    testSpectrumIdentificationList();
+    testProteinDetectionList();
+    testDataCollection();
+    */
+    testAnalysisData();
+    testMzIdentML();
 }
 
 

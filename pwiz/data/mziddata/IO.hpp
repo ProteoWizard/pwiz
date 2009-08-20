@@ -56,6 +56,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& contact
 PWIZ_API_DECL void read(std::istream& writer, ContactRole& contactRole);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Provider& provider);
+PWIZ_API_DECL void read(std::istream& writer, Provider& provider);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentification& si);
 PWIZ_API_DECL void read(std::istream& writer, SpectrumIdentification& si);
 
@@ -173,16 +177,68 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectraDataPtr sd);
 PWIZ_API_DECL void read(std::istream& is, SpectraDataPtr sd);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd);
-PWIZ_API_DECL void read(std::istream& is, SearchDatabase& sd);
-
-
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf);
 PWIZ_API_DECL void read(std::istream& is, SourceFile& sf);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd);
+PWIZ_API_DECL void read(std::istream& is, SearchDatabase& sd);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd);
 PWIZ_API_DECL void read(std::istream& is, SearchDatabasePtr sd);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Inputs& inputs);
+PWIZ_API_DECL void read(std::istream& is, Inputs& inputs);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArrayPtr fa);
+PWIZ_API_DECL void read(std::istream& is, FragmentArrayPtr fa);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArray& fa);
+PWIZ_API_DECL void read(std::istream& is, FragmentArray& fa);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationItemPtr sir);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationItemPtr sir);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationItem& sir);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationItem& sir);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationResultPtr sir);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationResultPtr sir);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypothesis& pdh);
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGroup& pdh);
+PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pdh);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationList& pdh);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationList& pdh);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationListPtr pdh);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationListPtr pdh);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationResult& sir);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationResult& sir);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList& pdl);
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionList& pdl);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisData& pdl);
+PWIZ_API_DECL void read(std::istream& is, AnalysisData& pdl);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReference& bibliographicReference);
@@ -211,6 +267,14 @@ PWIZ_API_DECL void read(std::istream& is, Peptide& peptide);
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr peptide);
 PWIZ_API_DECL void read(std::istream& is, PeptidePtr peptide);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidencePtr pe);
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidencePtr pe);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pe);
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidence& pe);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod);
