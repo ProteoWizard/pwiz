@@ -27,7 +27,7 @@ case "$1" in
 	PWIZ_TOOLSET="gcc"
 	;;
   "darwin" ) 
-	BJAM_BIN=bin.darwin 
+	BJAM_BIN=bin.macosxx86 
 	BJAM_TOOLSET="darwin"
 	PWIZ_TOOLSET="darwin"
 	;;
