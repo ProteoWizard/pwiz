@@ -28,8 +28,8 @@ namespace{
     FeatureSequencedPtr getBestMatch(boost::shared_ptr<SpectrumQuery> sq, const FdfPtr fdf)
     {             
         SearchNeighborhoodCalculator snc;
-        snc._mzTol = .005;
-        snc._rtTol = 60;
+        snc._mzTol = .05;
+        snc._rtTol = 1000;
 
         FeatureSequencedPtr result(new FeatureSequenced());
         Bin<FeatureSequenced> featureBin = fdf->getBin();	
@@ -47,8 +47,8 @@ namespace{
 
                 if ( (*ac_it)->feature->charge == sq->assumedCharge )
                     {
-                        double mzDiff = fabs(peptideCoords.first - (*ac_it)->feature->mz);
-                        double rtDiff = fabs(peptideCoords.second - (*ac_it)->feature->retentionTime);
+                        double mzDiff = fabs(peptideCoords.first - (*ac_it)->feature->mz)/.001;
+                        double rtDiff = fabs(peptideCoords.second - (*ac_it)->feature->retentionTime)/100;
                         double score = sqrt(mzDiff*mzDiff + rtDiff*rtDiff);
 
                         if ( score < bestScore )
@@ -154,7 +154,7 @@ void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe, const int& anchor
     getAnchors(anchorFreq, anchorTol);
     pair<vector<double>, vector<double> > peptideRetentionTimes = getPeptideRetentionTimes();
     pair<vector<double>, vector<double> > featureRetentionTimes = getFeatureRetentionTimes();
-    
+   
     switch(wfe)
         {
 
@@ -163,7 +163,7 @@ void DataFetcherContainer::warpRT(const WarpFunctionEnum& wfe, const int& anchor
             break;
 
         case Linear:
-            {
+            {   
                 LinearWarpFunction lwf(_anchors);
 
                 vector<double> result_a;
@@ -229,8 +229,9 @@ vector<double> getRTs(PidfPtr pidf)
 vector<double> getRTs(FdfPtr fdf)
 {
     vector<double> result;
-    vector<FeatureSequencedPtr> fss = fdf->getAllContents();
+    vector<FeatureSequencedPtr> fss = fdf->getAllContents();    
     vector<FeatureSequencedPtr>::iterator it = fss.begin();
+
     for(; it != fss.end(); ++it) result.push_back((*it)->feature->retentionTime);
 
     return result;
@@ -249,6 +250,7 @@ pair<vector<double>, vector<double> > DataFetcherContainer::getPeptideRetentionT
 
 pair<vector<double>, vector<double> > DataFetcherContainer::getFeatureRetentionTimes()
 {
+
     vector<double> fdf_a_rts = getRTs(_fdf_a);
     vector<double> fdf_b_rts = getRTs(_fdf_b);
 

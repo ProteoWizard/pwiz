@@ -20,7 +20,9 @@ typedef boost::shared_ptr<SpectrumQuery> SpectrumQueryPtr;
 struct DatabaseQuery
 {
     std::vector<MatchPtr> query(FeatureSequencedPtr fs, NormalDistributionSearch nds, double threshold);
+
     pair<double,double> calculateSearchRegion(const double& mu1, const double& mu2, const double& sigma1, const double& sigma2, const double& threshold);
+    pair<double,double> calculateNormalSearchRegion(const double& mu1, const double& mu2, double& sigma1, double& sigma2, const double& threshold);
 
     PidfPtr _database;
     DatabaseQuery(const PidfPtr database) : _database(database){}    

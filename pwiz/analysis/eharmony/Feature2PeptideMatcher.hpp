@@ -35,7 +35,6 @@ public:
     bool operator==(const Feature2PeptideMatcher& that);
     bool operator!=(const Feature2PeptideMatcher& that);
 
-private:
 
     std::vector<MatchPtr> _matches;
     std::vector<MatchPtr> _mismatches; // un-apt type name Match, but want to store all the info in the Match struct so we can look at why there was a missed match

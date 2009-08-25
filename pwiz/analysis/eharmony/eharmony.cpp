@@ -41,18 +41,20 @@ WarpFunctionEnum translateWarpFunction(const string& wfe_string)
     const char* curr = wfe_string.c_str();
     if (!strncmp(linear, curr, 6))
         {
+            cout << "Translated: linear" << endl;
             return Linear;
 
         }
 
     if (!strncmp(piecewiseLinear, curr, 15))
         {
+            cout << "Translated: piecewiseLinear" << endl;
             return PiecewiseLinear;
 
         }
 
 
-
+    cout << "Translated: default" << endl;
     return Default;
 
 }
@@ -272,7 +274,7 @@ void Matcher::processFiles()
             vector<AMTContainer> amtv;
 	   
             vector<boost::shared_ptr<AMTContainer> > sp;
-
+            
             vector<string>::iterator run_it = _config.filenames.begin();
             for(; run_it != _config.filenames.end(); ++run_it)
 	        {		    
@@ -284,12 +286,14 @@ void Matcher::processFiles()
                 dfc.adjustRT(true, false); // just do this up front
                 pidf->setRtAdjustedFlag(true);
                 
-                sp.push_back(boost::shared_ptr<AMTContainer>(new AMTContainer(pidf,fdf)));
+                sp.push_back(boost::shared_ptr<AMTContainer>(new AMTContainer()));
+                sp.back()->_pidf = pidf;
+                sp.back()->_fdf = fdf;
                 sp.back()->_id = id;
                 sp.back()->rtAdjusted = true;
 	        }
 
-            // big switch here
+        // big switch here
         NeighborJoiner nj(sp, _config.warpFunction);
         switch (_config.distanceAttribute)
             {
@@ -298,30 +302,42 @@ void Matcher::processFiles()
                     nj._attributes.push_back(boost::shared_ptr<HammingDistance>(new HammingDistance(sp)));
                 }
 
+                break;
+
             case _NumberOfMS2IDs:
                 {
                     nj._attributes.push_back(boost::shared_ptr<NumberOfMS2IDs>(new NumberOfMS2IDs()));
                 }
+                
+                break;
 
             case _Random:
                 {
                     nj._attributes.push_back(boost::shared_ptr<RandomDistance>(new RandomDistance()));
                 }
+                
+                break;
 
             case _RTDiff:
                 {
                     nj._attributes.push_back(boost::shared_ptr<RTDiffDistribution>(new RTDiffDistribution()));
                 }
+                
+                break;
             
             case _WeightedHamming:
                 {
                     nj._attributes.push_back(boost::shared_ptr<WeightedHammingDistance>(new WeightedHammingDistance(sp)));
                 }
 
+                break;
+
             default:
                 {
                     throw runtime_error("[eharmony] We shouldn't be here. Improper translation of DistanceAttribute.");
                 }
+                
+                break;
             }
             
 	    nj.calculateDistanceMatrix();
@@ -339,13 +355,14 @@ void Matcher::processFiles()
         
         boost::shared_ptr<AMTContainer> amtDatabase(new AMTContainer(nj._rowEntries.at(0)));
 	    
+
 	    ///
 	    /// Exporting
 	    ///
 
 	    Exporter exporter_amt(amtDatabase->_pm, amtDatabase->_f2pm);
 	    
-	    string outputDir = "amt";
+	    string outputDir = "amt_barf";
 	    if (!boost::filesystem::exists(_config.outputPath)) boost::filesystem::create_directory(_config.outputPath);
 	    outputDir = _config.outputPath + "/" + outputDir;
 	    boost::filesystem::create_directory(outputDir);

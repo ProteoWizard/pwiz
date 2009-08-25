@@ -32,9 +32,6 @@ struct AMTContainer
     bool operator==(const AMTContainer& that);
     bool operator!=(const AMTContainer& that);
 
-
-    AMTContainer(PidfPtr pidf = PidfPtr(new PeptideID_dataFetcher()), FdfPtr fdf = FdfPtr(new Feature_dataFetcher())) : _id(""), rtAdjusted(false), _fdf(fdf), _pidf(pidf) {}
-
 };
 
 

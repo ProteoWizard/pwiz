@@ -12,13 +12,41 @@ using namespace std;
 using namespace pwiz;
 using namespace pwiz::eharmony;
 
+namespace{
+
+    WarpFunctionEnum translateWarpFunction(const string& wfe_string)
+    {
+
+        const char* linear = "linear";
+        const char* piecewiseLinear = "piecewiseLinear";
+        const char* curr = wfe_string.c_str();
+        if (!strncmp(linear, curr, 6))
+            {
+                cout << "Translated: linear" << endl;
+                return Linear;
+
+            }
+
+        if (!strncmp(piecewiseLinear, curr, 15))
+            {
+                cout << "Translated: piecewiseLinear" << endl;
+                return PiecewiseLinear;
+
+            }
+        cout << "Translated: default" << endl;
+
+        return Default;
+
+    }
+
+}
 struct Config
 {    
     double _threshold;
     WarpFunctionEnum _warpFunction;
     vector<string> filenames;
 
-    Config() : _threshold(.95),
+    Config() : _threshold(.9420),
                _warpFunction(Default)
     {}
 
@@ -40,15 +68,21 @@ void go(const Config& config)
     
     cout << "[mscupid] Reading AMT database ... " << endl;
 
-    AMTContainer amt;
-    amt.read(ifs_db);
-    AMTDatabase db(amt);;
+    boost::shared_ptr<AMTContainer> amt(new AMTContainer());
+    amt->read(ifs_db);
+    //    AMTDatabase db(amt);;
+    IslandizedDatabase id(amt);
 
-    DfcPtr dfc(new DataFetcherContainer(pidf_query, db._peptides, fdf_query, amt._fdf));
+    AMTContainer amt2;
+    amt2.read(ifs_db);
+
+    FdfPtr dummy(new Feature_dataFetcher());
+
+    DfcPtr dfc(new DataFetcherContainer(pidf_query, id._peptides, fdf_query, dummy));
     dfc->adjustRT((pidf_query->getRtAdjustedFlag()+1)%2, false);
 
     cout << "[mscupid] Querying database ... " << endl;
-    PeptideMatcher pm(pidf_query, db._peptides);
+    PeptideMatcher pm(pidf_query, id._peptides);
 
     string outputDir = "./amtdb_query";
     boost::filesystem::create_directory(outputDir);
@@ -57,9 +91,10 @@ void go(const Config& config)
     nds._threshold = (config._threshold);
     nds.calculateTolerances(dfc);
 
-    db.query(dfc,config._warpFunction,nds,mspa, outputDir);
+    id.query(dfc,config._warpFunction,nds,mspa, outputDir);
 
     return;
+
 }
 
 Config parseCommandLine(int argc, const char* argv[])
@@ -104,6 +139,8 @@ Config parseCommandLine(int argc, const char* argv[])
     if (vm.count(label_args))
         config.filenames = vm[label_args].as< vector<string> >();
 
+    // translate local variables
+    if (warpFunctionCalculator.size() > 0) config._warpFunction = translateWarpFunction(warpFunctionCalculator);
 
     // usage if incorrect                                                                                                
     if (config.filenames.empty())

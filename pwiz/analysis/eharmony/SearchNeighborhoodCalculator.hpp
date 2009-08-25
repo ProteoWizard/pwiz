@@ -44,7 +44,7 @@ struct NormalDistributionSearch : public SearchNeighborhoodCalculator
     }
    
     virtual void calculateTolerances(const DfcPtr dfc);
-    virtual  double score(const SpectrumQuery& a, const Feature& b) const;
+    virtual double score(const SpectrumQuery& a, const Feature& b) const;
     virtual bool close(const SpectrumQuery& a, const Feature& b) const;
 
     double _mu_mz;
@@ -56,7 +56,6 @@ struct NormalDistributionSearch : public SearchNeighborhoodCalculator
     double _threshold;
 
 };
-
 
 } // eharmony
 } // pwiz

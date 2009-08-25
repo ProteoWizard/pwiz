@@ -27,6 +27,11 @@ struct SortByScore
 
 };
 
+void normalizeMatches(vector<MatchPtr>& v, const double& maxScore)
+{
+    vector<MatchPtr>::iterator it = v.begin();
+    for(; it != v.end(); ++it) (*it)->score /= maxScore;
+}
 
 ofstream matches("matchSequences.txt");
 
@@ -51,7 +56,7 @@ Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const Normal
                 }
 
             else { counter++; known++;}
-            vector<MatchPtr> matches = db.query(*fs_it, nds, .95);
+            vector<MatchPtr> matches = db.query(*fs_it, nds, 50);
 
             sort(matches.begin(), matches.end(), SortByScore());            
 
@@ -63,47 +68,44 @@ Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const Normal
                 {
                      _matches.push_back(*matches.begin());
                      peptide_ms2 = _matches.back()->spectrumQuery.searchResult.searchHit.peptide;
+
+                     if (feature_ms2 == peptide_ms2) _truePositives.push_back(*matches.begin());
+                     if (feature_ms2 != peptide_ms2) _falsePositives.push_back(*matches.begin());
                     
                 }
-            
-            vector<MatchPtr> nextMatches = db.query(*fs_it, nds, -.1);
-            sort(nextMatches.begin(), nextMatches.end(), SortByScore());
-            if (matches.size() > 0) nextMatches.erase(nextMatches.begin()); // b/c we already got it in matches
-            if (nextMatches.size() == 0 ) 
+
+            else // look further
                 {
-                    cerr << "Error: What the heck, .6 not big enough ... " << endl;             
-                    if (matches.size() == 0) cerr << "Error: matches also of size 0 ! " << endl;
-                }
+                    vector<MatchPtr> nextMatches = db.query(*fs_it, nds, .01);
+                    sort(nextMatches.begin(), nextMatches.end(), SortByScore());
+                    if (nextMatches.size() == 0 ) 
+                        {
+                            cerr << "Error: What the heck, .6 not big enough ... " << endl;             
+                            if (matches.size() == 0) cerr << "Error: matches also of size 0 ! " << endl;
+                        }
 
              else 
                 {
                     _mismatches.push_back(*nextMatches.begin());
                      next_peptide_ms2 = _mismatches.back()->spectrumQuery.searchResult.searchHit.peptide;
-
-                }
-
-            // In the case that something was within the original search radius, analyze the positives
-            if (matches.size() > 0)
-                {
-                    if (feature_ms2 == peptide_ms2) _truePositives.push_back(*matches.begin());
-                    if (feature_ms2 != peptide_ms2) _falsePositives.push_back(*matches.begin());
-
-                }
-
-            // In the case that nothing was within the original search radius, analyze the negatives
-            if ( matches.size() == 0 && nextMatches.size() > 0)
-                {
-                    if (feature_ms2 == next_peptide_ms2) _falseNegatives.push_back(*nextMatches.begin());
-                    if (feature_ms2 != next_peptide_ms2) _trueNegatives.push_back(*nextMatches.begin());
-
-                }
-
-            else cerr << "Nothing nearby." << endl;
-            
+                     
+                     if (feature_ms2 == next_peptide_ms2) _falseNegatives.push_back(*nextMatches.begin());
+                     if (feature_ms2 != next_peptide_ms2) _trueNegatives.push_back(*nextMatches.begin());
+                }             
         }
+        }
+    /*
+    // normalize matches - doesn't make much sense with arbitrarilyLarge in there, hmm.
+    sort(_matches.begin(), _matches.end(), SortByScore());
+    double maxScore = (*_matches.begin())->score;
 
-  cout << "KNOWN: " << known << endl;
-
+    normalizeMatches(_matches, maxScore);
+    normalizeMatches(_mismatches, maxScore);
+    normalizeMatches(_truePositives, maxScore);
+    normalizeMatches(_falsePositives, maxScore);
+    normalizeMatches(_trueNegatives, maxScore);
+    normalizeMatches(_falseNegatives, maxScore);
+    */
 }
 
 bool Feature2PeptideMatcher::operator==(const Feature2PeptideMatcher& that)

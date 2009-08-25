@@ -71,6 +71,7 @@ void LinearWarpFunction::operator()(vector<double>& rt_vals, vector<double>& war
 
 PiecewiseLinearWarpFunction::PiecewiseLinearWarpFunction(vector<pair<double,double> >& anchors) : WarpFunction(anchors)
 {
+  
   sort(anchors_.begin(), anchors_.end());
   vector<pair<double,double> >::iterator anchor_it = anchors_.begin();
   vector<pair<double,double> >::iterator anchor_it_plus = anchors_.begin() + 1;
@@ -122,9 +123,6 @@ bool second_less_than(pair<int,double> a, pair<int,double> b)
 
 void PiecewiseLinearWarpFunction::operator()(vector<double>& rt_vals, vector<double>& warped_rt_vals)
 {
-  //if rt_vals is not sorted, will need to sort, but then store original place, and output in the same order again
-  // multimap? 
-
   vector<pair<int,double> > rt_table;
   vector<pair<int,double> > warped_rt_table;
   

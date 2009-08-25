@@ -82,15 +82,68 @@ double calculateFoldedNormalPval(const double& x, const double& mu, const double
 
 }
 
+double calculatePVal(const double& x, const double& mu, const double& sigma)
+{
+    double result = 0;
+    
+    if (x >= mu) result = .5 * (1 + erf((-x-mu)/(sqrt(2) * sigma)));
+    else result = .5 * (1 + erf((x-mu)/(sqrt(2) * sigma)));
+
+    result *= 2;   
+    return result;
+}
+
+const double epsilon = 2 * numeric_limits<double>::epsilon();
+const double arbitrarilyLarge = 100000000;
+
+const double null_mu_mz = 0;
+const double null_sigma_mz = 0.001;
+
+const double null_mu_rt = 0;
+const double null_sigma_rt = 10;
+
+double calculateMzPVal(const double& x, const double& mu, const double& sigma)
+{
+    double result = 0;
+    if (x >= mu) result = .5 * (1 + erf((-x - (null_mu_mz + mu))/(sqrt(2) * (sqrt(square(null_sigma_mz) + square(sigma))))));
+    else result = .5 * (1 + erf((x - (null_mu_mz + mu))/(sqrt(2) * (sqrt(square(null_sigma_mz) + square(sigma))))));
+   
+    return result;
+}
+
+double calculateRtPVal(const double& x, const double& mu, const double& sigma)
+{
+    double result = 0;
+    if (x >= mu) result = .5 * (1 + erf((-x - (null_mu_rt + mu))/(sqrt(2) * (sqrt(square(null_sigma_rt) + square(sigma))))));
+    else result = .5 * (1 + erf((x - (null_mu_rt + mu))/(sqrt(2) * (sqrt(square(null_sigma_rt) + square(sigma))))));
+
+    return result;
+}
 double NormalDistributionSearch::score(const SpectrumQuery& a, const Feature& b) const
 {
-    double mzDiff = fabs(Ion::mz(a.precursorNeutralMass, a.assumedCharge) - b.mz);
-    double rtDiff = fabs(a.retentionTimeSec - b.retentionTime);
+    double mzDiff = (Ion::mz(a.precursorNeutralMass, a.assumedCharge) - b.mz);
+    double rtDiff = (a.retentionTimeSec - b.retentionTime);
 
-    double pval_mz = calculateFoldedNormalPval(mzDiff, _mu_mz, _sigma_mz);    
-    double pval_rt = calculateFoldedNormalPval(rtDiff, _mu_rt, _sigma_rt);
+    //    double pval_mz = calculateFoldedNormalPval(mzDiff, _mu_mz, _sigma_mz);    
+    //    double pval_rt = calculateFoldedNormalPval(rtDiff, _mu_rt, _sigma_rt);
     
-    return (1-pval_mz)*(1-pval_rt); // not a legitimate p(h_0) but a quantitative measure of how bad/good
+    double pval_mz = 0;
+    double pval_rt = 0;
+
+    // Weighting by mzDiff and rtDiff as well as scales on which we expect this diff to occur
+    /* if (fabs(mzDiff) < epsilon) pval_mz = arbitrarilyLarge;
+    else pval_mz = calculatePVal(mzDiff, _mu_mz, _sigma_mz) / mzDiff * 1000;
+
+    if (fabs(rtDiff) < epsilon) pval_rt = arbitrarilyLarge;
+    else pval_rt = calculatePVal(rtDiff, _mu_rt, _sigma_rt) / (rtDiff * 100);
+    */
+    pval_mz = calculatePVal(mzDiff, _mu_mz, _sigma_mz);
+    pval_rt = calculatePVal(rtDiff, _mu_rt, _sigma_rt);
+
+    //    cout.precision(16);
+    //    cout << pval_mz << "\t" << mzDiff << "\t" << pval_rt << "\t" << rtDiff << endl;
+
+    return (pval_mz) * (pval_rt); // scores will be crazy numbers for now
 
 }
 

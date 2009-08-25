@@ -26,7 +26,7 @@ public:
 
 
     PeptideID_dataFetcher() : _rtAdjusted(false) {}
-    PeptideID_dataFetcher(std::istream& is);
+    PeptideID_dataFetcher(std::istream& is, const double& threshold = .9);
     PeptideID_dataFetcher(const std::vector<boost::shared_ptr<SpectrumQuery> >& sqs);
     PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa);
 
@@ -37,7 +37,7 @@ public:
 
     // accessors
     std::vector<boost::shared_ptr<SpectrumQuery> > getAllContents() const;
-    std::vector<boost::shared_ptr< SpectrumQuery> > getSpectrumQueries(double mz, double rt) ;
+    std::vector<boost::shared_ptr<SpectrumQuery> > getSpectrumQueries(double mz, double rt) ;
     Bin<SpectrumQuery> getBin() const { return _bin;}
     void setRtAdjustedFlag(const bool& flag) { _rtAdjusted = flag; }
     const bool& getRtAdjustedFlag() const { return _rtAdjusted; }

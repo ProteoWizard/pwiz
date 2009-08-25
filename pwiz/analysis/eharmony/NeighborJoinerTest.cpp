@@ -58,12 +58,17 @@ void test()
     testSpectrumQueries.erase(testSpectrumQueries.begin());
     PidfPtr one(new PeptideID_dataFetcher(testSpectrumQueries));
 
+    boost::shared_ptr<Feature_dataFetcher> dummy_fdf(new Feature_dataFetcher());
+
     boost::shared_ptr<AMTContainer> cuatro(new AMTContainer());
     cuatro->_pidf = four;
+    cuatro->_fdf = dummy_fdf;
     boost::shared_ptr<AMTContainer> dos(new AMTContainer());
     dos->_pidf = two;
+    dos->_fdf = dummy_fdf;
     boost::shared_ptr<AMTContainer> uno(new AMTContainer());
     uno->_pidf = one;
+    uno->_fdf = dummy_fdf;
 
     vector<boost::shared_ptr<AMTContainer> > testEntries;
     testEntries.push_back(cuatro);

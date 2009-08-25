@@ -22,6 +22,8 @@ lib pwiz_analysis_eharmony
 
 ### UNIT TESTS ###
 
+unit-test AMTDatabase : AMTDatabaseTest.cpp pwiz_analysis_eharmony ;
+
 unit-test Bin : BinTest.cpp pwiz_analysis_eharmony ;
 
 unit-test Feature_dataFetcher : Feature_dataFetcherTest.cpp pwiz_analysis_eharmony ;

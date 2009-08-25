@@ -158,10 +158,10 @@ void testPeptideID_dataFetcherConstructor()
     SpectrumQuery d = makeSpectrumQuery(7,8,1,"LAYTHEMSTRAIGHT",0.900,7,8);
     
     // Access SpectrumQuery objects that are in the PeptideID_dataFetcher at the coordinates we expect
-    vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf->getSpectrumQueries(Ion::mz(1,1),2);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf->getSpectrumQueries(Ion::mz(3,1),4);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf->getSpectrumQueries(Ion::mz(5,1),6);
-    vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf->getSpectrumQueries(Ion::mz(7,1),8);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_a = pidf->getSpectrumQueries(1,2);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_b = pidf->getSpectrumQueries(3,4);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_c = pidf->getSpectrumQueries(5,6);
+    vector<boost::shared_ptr<SpectrumQuery> > sq_d = pidf->getSpectrumQueries(7,8);
 
     // Assert that all SpectrumQuery objects were found at expected coordinates
     unit_assert(find_if(sq_a.begin(), sq_a.end(),IsSQ(a)) != sq_a.end());
