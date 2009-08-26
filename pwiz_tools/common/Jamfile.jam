@@ -27,6 +27,20 @@ project
     ;
 
 
+rule vendor-reader-libraries ( properties * )
+{
+    local libraries ;
+    local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
+    local msrc_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers ;
+    if [ path.exists $(core_vendor_reader_path)/Thermo ] { libraries += <library>$(core_vendor_reader_path)/Thermo ; }
+    if [ path.exists $(core_vendor_reader_path)/Agilent ] { libraries += <library>$(core_vendor_reader_path)/Agilent ; }
+    if [ path.exists $(msrc_vendor_reader_path)/ABI ] { libraries += <library>$(msrc_vendor_reader_path)/ABI ; }
+    if [ path.exists $(msrc_vendor_reader_path)/Bruker ] { libraries += <library>$(msrc_vendor_reader_path)/Bruker ; }
+    if [ path.exists $(msrc_vendor_reader_path)/Waters ] { libraries += <library>$(msrc_vendor_reader_path)/Waters ; }
+    return $(libraries) ;
+}
+
+
 lib pwiz_tools_common
     : # sources
         FullReaderList.cpp 
@@ -35,25 +49,17 @@ lib pwiz_tools_common
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
-        <library>../../pwiz/data/vendor_readers
-        <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters//pwiz_aux_msrc_reader_waters
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
-        <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
         <library>../../pwiz/analysis/spectrum_processing
+        <conditional>@vendor-reader-libraries
 : # default-build
     : # usage-requirements
         <library>/ext/boost//program_options
         <library>/ext/boost//filesystem
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
-        <library>../../pwiz/data/vendor_readers
-        <library>../../pwiz/data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Waters//pwiz_aux_msrc_reader_waters
-        <library>../../pwiz_aux/msrc/data/vendor_readers/Bruker//pwiz_aux_msrc_reader_bruker
-        <library>../../pwiz_aux/msrc/data/vendor_readers/ABI//pwiz_aux_msrc_reader_abi
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
         <library>../../pwiz/analysis/spectrum_processing
+        <conditional>@vendor-reader-libraries
     ;
 
 unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common  ;

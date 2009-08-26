@@ -27,6 +27,20 @@ project
     ;
 
 
+rule vendor-reader-libraries ( properties * )
+{
+    local libraries ;
+    local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
+    local msrc_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers ;
+    if [ path.exists $(core_vendor_reader_path)/Thermo ] { libraries += <library>$(core_vendor_reader_path)/Thermo ; }
+    if [ path.exists $(core_vendor_reader_path)/Agilent ] { libraries += <library>$(core_vendor_reader_path)/Agilent ; }
+    if [ path.exists $(msrc_vendor_reader_path)/ABI ] { libraries += <library>$(msrc_vendor_reader_path)/ABI ; }
+    if [ path.exists $(msrc_vendor_reader_path)/Bruker ] { libraries += <library>$(msrc_vendor_reader_path)/Bruker ; }
+    if [ path.exists $(msrc_vendor_reader_path)/Waters ] { libraries += <library>$(msrc_vendor_reader_path)/Waters ; }
+    return $(libraries) ;
+}
+
+
 lib pwiz_analysis_spectrum_processing
     : # sources  
         SpectrumListFactory.cpp
@@ -44,20 +58,14 @@ lib pwiz_analysis_spectrum_processing
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
-        <library>../../data/vendor_readers/Thermo//pwiz_reader_thermo
-        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
+        <conditional>@vendor-reader-libraries
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
-        <library>../../data/vendor_readers/Thermo//pwiz_reader_thermo
-        <library>../../data/vendor_readers/Agilent//pwiz_reader_agilent
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//Bruker//pwiz_aux_msrc_reader_bruker
-        <library>../../../pwiz_aux/msrc/data/vendor_readers//ABI//pwiz_aux_msrc_reader_abi
+        <conditional>@vendor-reader-libraries
     ;
 
 
