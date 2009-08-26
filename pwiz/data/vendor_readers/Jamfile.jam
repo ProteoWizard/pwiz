@@ -41,5 +41,5 @@ lib pwiz_data_vendor_readers
     ;
 
 
-build-project Agilent ;
-build-project Thermo ;
+build-project-if-exists Agilent ;
+build-project-if-exists Thermo ;

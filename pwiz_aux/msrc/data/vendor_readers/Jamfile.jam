@@ -21,7 +21,7 @@
 #
 
 
-build-project ABI ; 
-build-project Bruker ;
-build-project Waters ;
+build-project-if-exists ABI ; 
+build-project-if-exists Bruker ;
+build-project-if-exists Waters ;
 

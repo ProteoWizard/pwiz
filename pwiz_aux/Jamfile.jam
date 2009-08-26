@@ -21,6 +21,6 @@
 #
 
 
-build-project sfcap ;
-build-project msrc ;
+build-project-if-exists sfcap ;
+build-project-if-exists msrc ;
 

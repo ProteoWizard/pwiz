@@ -21,9 +21,9 @@
 #
 
 
-build-project common ;
-build-project commandline ;
-build-project examples ;
-build-project SeeMS ;
-build-project sld ;
+build-project-if-exists common ;
+build-project-if-exists commandline ;
+build-project-if-exists examples ;
+build-project-if-exists SeeMS ;
+build-project-if-exists sld ;
 

@@ -21,9 +21,9 @@
 #
 
 
-build-project utility ;
-build-project data ;
-build-project analysis ;
+build-project-if-exists utility ;
+build-project-if-exists data ;
+build-project-if-exists analysis ;
 
 
 lib pwiz_version 

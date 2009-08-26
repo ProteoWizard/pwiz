@@ -21,4 +21,4 @@
 #
 
 
-build-project vendor_api ;
+build-project-if-exists vendor_api ;

@@ -20,5 +20,5 @@
 # limitations under the License.
 #
 
-build-project transient ; 
+build-project-if-exists transient ; 
 

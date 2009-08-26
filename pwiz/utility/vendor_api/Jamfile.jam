@@ -21,6 +21,6 @@
 #
 
 
-build-project Agilent ;
-build-project thermo ;
+build-project-if-exists Agilent ;
+build-project-if-exists thermo ;
 

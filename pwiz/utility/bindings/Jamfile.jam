@@ -21,4 +21,4 @@
 #
 
 
-build-project CLI ;
+build-project-if-exists CLI ;

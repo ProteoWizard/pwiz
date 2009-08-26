@@ -21,8 +21,8 @@
 #
 
 
-build-project misc ;
-build-project msdata ;
-build-project common ;
-build-project vendor_readers ;
+build-project-if-exists misc ;
+build-project-if-exists msdata ;
+build-project-if-exists common ;
+build-project-if-exists vendor_readers ;
 
