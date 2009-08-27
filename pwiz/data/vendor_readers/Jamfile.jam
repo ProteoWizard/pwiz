@@ -28,16 +28,23 @@ project
     ;
 
 
+rule vendor-reader-libraries ( properties * )
+{
+    local libraries ;
+    if [ project-exists Thermo ] { libraries += <library>Thermo//pwiz_reader_thermo ; }
+    if [ project-exists Agilent ] { libraries += <library>Agilent//pwiz_reader_agilent ; }
+    return $(libraries) ;
+}
+
+
 lib pwiz_data_vendor_readers
     : # sources
         ExtendedReaderList.cpp 
     : # requirements
-        <library>Agilent//pwiz_reader_agilent
-        <library>Thermo//pwiz_reader_thermo
+        <conditional>@vendor-reader-libraries
     : # default-build
     : # usage-requirements
-        <library>Agilent//pwiz_reader_agilent
-        <library>Thermo//pwiz_reader_thermo
+        <conditional>@vendor-reader-libraries
     ;
 
 

@@ -175,12 +175,24 @@ path-constant ZLIB_SOURCE : $(zlib_src) ;
 using ext-boost : 1.39.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
 
+rule project-exists ( project-path )
+{
+    if [ path.exists $(project-path) ] &&
+       [ path.glob $(project-path) : [Jj]amroot.jam [Jj]amfile.jam [Jj]amroot [Jj]amfile ]
+    {
+        return true ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
 # to make subsetting the source tree much easier,
 # use this rule to test that a sub-project path exists before building it
 rule build-project-if-exists ( project-path )
 {
-    if [ path.exists $(project-path) ] &&
-       [ path.glob $(project-path) : [Jj]amroot.jam [Jj]amfile.jam [Jj]amroot [Jj]amfile ]
+    if [ project-exists $(project-path) ]
     {
         build-project $(project-path) ;
     }
