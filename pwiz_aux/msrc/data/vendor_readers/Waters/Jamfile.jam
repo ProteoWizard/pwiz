@@ -53,8 +53,6 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ project-exists $(API_PATH) ]
     {
-        result += <source>SpectrumList_Waters.cpp ;
-        result += <source>ChromatogramList_Waters.cpp ;
         result += <source>Reader_Waters_Detail.cpp ;
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
@@ -64,8 +62,7 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ project-exists $(API_PATH) ] &&
-       [ path.exists $(API_PATH)/DACServer.dll ]
+       [ project-exists $(API_PATH) ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -92,6 +89,8 @@ rule vendor-api-usage-requirements ( properties * )
 lib pwiz_aux_msrc_reader_waters
     : # sources
         Reader_Waters.cpp
+        SpectrumList_Waters.cpp
+        ChromatogramList_Waters.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements

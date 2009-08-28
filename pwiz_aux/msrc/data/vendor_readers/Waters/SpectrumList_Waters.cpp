@@ -21,13 +21,17 @@
 
 #define PWIZ_SOURCE
 
+
+#include "SpectrumList_Waters.hpp"
+
+
+#ifdef PWIZ_READER_WATERS
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "Reader_Waters_Detail.hpp"
-#include "SpectrumList_Waters.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -239,3 +243,26 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 } // detail
 } // msdata
 } // pwiz
+
+#else // PWIZ_READER_WATERS
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const SpectrumIdentity emptyIdentity;}
+
+size_t SpectrumList_Waters::size() const {return 0;}
+const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) const {return emptyIdentity;}
+//size_t SpectrumList_Waters::find(const std::string& id) const {return 0;}
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+
+} // detail
+} // msdata
+} // pwiz
+
+#endif // PWIZ_READER_WATERS

@@ -22,9 +22,11 @@
 
 #define PWIZ_SOURCE
 
-#ifdef PWIZ_READER_WATERS
 
 #include "ChromatogramList_Waters.hpp"
+
+
+#ifdef PWIZ_READER_WATERS
 #include "Reader_Waters_Detail.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/shared_ptr.hpp"
@@ -208,5 +210,25 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 } // msdata
 } // pwiz
 
+#else // PWIZ_READER_WATERS
+
+//
+// non-MSVC implementation
+//
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+
+namespace {const ChromatogramIdentity emptyIdentity;}
+
+size_t ChromatogramList_Waters::size() const {return 0;}
+const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const {return emptyIdentity;}
+size_t ChromatogramList_Waters::find(const string& id) const {return 0;}
+ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+
+} // detail
+} // msdata
+} // pwiz
 
 #endif // PWIZ_READER_WATERS
