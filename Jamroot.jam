@@ -192,9 +192,13 @@ rule project-exists ( project-path )
 # use this rule to test that a sub-project path exists before building it
 rule build-project-if-exists ( project-path )
 {
-    if [ project-exists $(project-path) ]
+    local project = [ project.current ] ;
+    local p = [ path.join [ $(project).location ] $(project-path) ] ;
+    if [ project-exists $(p) ]
     {
-        build-project $(project-path) ;
+        local attributes = [ project.attributes [ $(project).name ] ] ;
+        local now = [ $(attributes).get projects-to-build ] ;
+        $(attributes).set projects-to-build : $(now) $(project-path) ;
     }
 }
 
