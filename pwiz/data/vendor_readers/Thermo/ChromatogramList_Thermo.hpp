@@ -27,16 +27,20 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <map>
 #include <vector>
+
+#ifdef PWIZ_READER_THERMO
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <boost/thread/once.hpp>
+using namespace pwiz::vendor_api::Thermo;
+#endif // PWIZ_READER_THERMO
+
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
-using namespace pwiz::vendor_api::Thermo;
 
 namespace pwiz {
 namespace msdata {
@@ -46,12 +50,14 @@ class PWIZ_API_DECL ChromatogramList_Thermo : public ChromatogramListBase
 {
 public:
 
-    ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile);
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
+#ifdef PWIZ_READER_THERMO
+    ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile);
+
     private:
 
     const MSData& msd_;
@@ -73,6 +79,7 @@ public:
     mutable map<string, size_t> idMap_;
 
     void createIndex() const;
+#endif // PWIZ_READER_THERMO
 };
 
 } // detail

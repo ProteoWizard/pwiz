@@ -47,25 +47,46 @@ path-constant TEST_DATA_PATH : ./Reader_Waters_Test.data ;
 SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
 
 
-rule requirements ( properties * )
+rule vendor-api-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
     {
-        return <source>SpectrumList_Waters.cpp
-               <source>ChromatogramList_Waters.cpp
-               <source>Reader_Waters_Detail.cpp
-               <library>$(API_PATH)//pwiz_vendor_api_waters
-               <define>PWIZ_READER_WATERS ;
+        result += <source>SpectrumList_Waters.cpp ;
+        result += <source>ChromatogramList_Waters.cpp ;
+        result += <source>Reader_Waters_Detail.cpp ;
     }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
 
-rule usage-requirements ( properties * )
+rule vendor-api-usage-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ path.exists $(API_PATH)/DACServer.dll ]
     {
-        return <library>$(API_PATH)//pwiz_vendor_api_waters
-               <define>PWIZ_READER_WATERS ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
+        result += <define>PWIZ_READER_WATERS ;
     }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Non-MSVC build: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing RawData API: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/DACServer.dll ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters DAC: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+    }
+    return $(result) ;
 }
 
 lib pwiz_aux_msrc_reader_waters
@@ -73,11 +94,11 @@ lib pwiz_aux_msrc_reader_waters
         Reader_Waters.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <conditional>@requirements
+        <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <conditional>@usage-requirements
+        <conditional>@vendor-api-usage-requirements
     ;
 
 

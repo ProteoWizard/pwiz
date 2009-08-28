@@ -34,7 +34,8 @@ if [ modules.peek : NT ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/Interop.EDAL.dll ]
     {
         result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.dll ;
@@ -89,14 +90,7 @@ explicit CompassDataTest ;
 
 
 install install_pwiz_vendor_api_bruker
-    : $(API_PATH)/CompassXtractMS.dll
-      $(API_PATH)/boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll
-      $(API_PATH)/boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll
-      $(API_PATH)/libfftw3-3.dll
-      $(API_PATH)/libfftw3f-3.dll
-      $(API_PATH)/NTB-vc80-mt-4_3_61.dll
-      $(API_PATH)/Interop.EDAL.dll
-      $(API_PATH)/Interop.EDAL.SxS.manifest
+    : [ path.glob $(API_PATH) : *.dll *.manifest ]
     ;
 
 explicit install_pwiz_vendor_api_bruker ;

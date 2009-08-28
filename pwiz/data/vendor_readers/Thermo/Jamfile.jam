@@ -53,19 +53,41 @@ SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PA
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
     {
-        result += <library>$(API_PATH)//pwiz_vendor_api_thermo
-                  <define>PWIZ_READER_THERMO ;
+        result += <source>Reader_Thermo_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
+        result += <define>PWIZ_READER_THERMO ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo can only identify RAW files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[data/vendor_readers/Thermo] Missing RawFile API: Reader_Thermo can only identify RAW files, not read them." ;
+        }
     }
     return $(result) ;
 }
 
-
 lib pwiz_reader_thermo
     : # sources
         Reader_Thermo.cpp
-        Reader_Thermo_Detail.cpp
         SpectrumList_Thermo.cpp
         ChromatogramList_Thermo.cpp
     : # requirements
@@ -74,7 +96,7 @@ lib pwiz_reader_thermo
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <conditional>@vendor-api-requirements
+        <conditional>@vendor-api-usage-requirements
     ;
 
 
@@ -91,6 +113,12 @@ rule test-requirements ( properties * )
     {
         echo "[data/vendor_readers/Thermo] Missing xdk/MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
         result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+    }
+    
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        echo "[data/vendor_readers/Thermo] Missing Thermo RAW test data." ;
+        result += <build>no ;
     }
     return $(result) ;
 }

@@ -33,7 +33,19 @@ if [ modules.peek : NT ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+    {
+        result += <source>MassHunterData.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
     {
         result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
         result += <assembly>$(API_PATH)/BaseCommon.dll ;
@@ -47,7 +59,6 @@ rule vendor-api-requirements ( properties * )
 
 lib pwiz_vendor_api_agilent
     : # sources
-        MassHunterData.cpp
     : # requirements
 
         # - when boost::thread is link=static, the exe header is tweaked to call
@@ -67,7 +78,7 @@ lib pwiz_vendor_api_agilent
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-        <conditional>@vendor-api-requirements
+        <conditional>@vendor-api-usage-requirements
     ;
 
 
@@ -81,12 +92,7 @@ explicit MassHunterDataTest ;
 
 
 install install_pwiz_vendor_api_agilent
-    : $(API_PATH)/MassSpecDataReader.dll
-      $(API_PATH)/BaseCommon.dll
-      $(API_PATH)/BaseDataAccess.dll
-      $(API_PATH)/BaseError.dll
-      $(API_PATH)/BaseTof.dll
-      $(API_PATH)/agtsampleinforw.dll
+    : [ path.glob $(API_PATH) : *.dll *.manifest ]
     ;
 
 explicit install_pwiz_vendor_api_agilent ;

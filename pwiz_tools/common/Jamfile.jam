@@ -32,7 +32,7 @@ rule vendor-reader-libraries ( properties * )
     local libraries ;
     local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
     local msrc_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers ;
-    libraries += <library>$(core_vendor_reader_path)//pwiz_data_vendor_readers ;
+    if [ project-exists $(core_vendor_reader_path) ] { libraries += <library>$(core_vendor_reader_path)//pwiz_data_vendor_readers ; }
     if [ project-exists $(msrc_vendor_reader_path)/ABI ] { libraries += <library>$(msrc_vendor_reader_path)/ABI//pwiz_aux_msrc_reader_abi ; }
     if [ project-exists $(msrc_vendor_reader_path)/Bruker ] { libraries += <library>$(msrc_vendor_reader_path)/Bruker//pwiz_aux_msrc_reader_bruker ; }
     if [ project-exists $(msrc_vendor_reader_path)/Waters ] { libraries += <library>$(msrc_vendor_reader_path)/Waters//pwiz_aux_msrc_reader_waters ; }

@@ -26,10 +26,14 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
-#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <map>
 #include <vector>
+
+#ifdef PWIZ_READER_AGILENT
+#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <boost/thread/once.hpp>
+using namespace pwiz::vendor_api::Agilent;
+#endif // PWIZ_READER_AGILENT
 
 
 namespace pwiz {
@@ -38,18 +42,19 @@ namespace detail {
 
 using namespace std;
 using boost::shared_ptr;
-using namespace pwiz::vendor_api::Agilent;
 
 class PWIZ_API_DECL ChromatogramList_Agilent : public ChromatogramListBase
 {
 public:
 
-    ChromatogramList_Agilent(MassHunterDataPtr reader);
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
+#ifdef PWIZ_READER_AGILENT
+    ChromatogramList_Agilent(MassHunterDataPtr reader);
+
     private:
 
     MassHunterDataPtr rawfile_;
@@ -66,6 +71,7 @@ public:
     mutable map<string, size_t> idMap_;
 
     void createIndex() const;
+#endif // PWIZ_READER_AGILENT
 };
 
 } // detail

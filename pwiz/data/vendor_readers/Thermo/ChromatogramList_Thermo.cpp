@@ -397,12 +397,10 @@ namespace detail {
 
 namespace {const ChromatogramIdentity emptyIdentity;}
 
-ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile) : msd_(msd) {}
 size_t ChromatogramList_Thermo::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Thermo::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-void ChromatogramList_Thermo::createIndex() const {}
 
 } // detail
 } // msdata

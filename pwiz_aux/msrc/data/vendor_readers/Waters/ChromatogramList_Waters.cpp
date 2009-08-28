@@ -53,11 +53,6 @@ PWIZ_API_DECL ChromatogramList_Waters::ChromatogramList_Waters(RawDataPtr rawdat
 }
 
 
-PWIZ_API_DECL ChromatogramList_Waters::~ChromatogramList_Waters()
-{
-}
-
-
 PWIZ_API_DECL size_t ChromatogramList_Waters::size() const
 {
     boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
@@ -214,4 +209,4 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 } // pwiz
 
 
-#endif // PWIZ_READER_Waters
+#endif // PWIZ_READER_WATERS

@@ -26,9 +26,13 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+
+#ifdef PWIZ_READER_AGILENT
+#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <boost/thread/once.hpp>
+using namespace pwiz::vendor_api::Agilent;
+#endif // PWIZ_READER_AGILENT
 
 
 namespace pwiz {
@@ -37,19 +41,20 @@ namespace detail {
 
 using namespace std;
 using boost::shared_ptr;
-using namespace pwiz::vendor_api::Agilent;
 
 class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Agilent(MassHunterDataPtr rawfile);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     
+#ifdef PWIZ_READER_AGILENT
+    SpectrumList_Agilent(MassHunterDataPtr rawfile);
+
     private:
 
     MassHunterDataPtr rawfile_;
@@ -67,6 +72,7 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     mutable map<string, size_t> idToIndexMap_;
 
     void createIndex() const;
+#endif // PWIZ_READER_AGILENT
 };
 
 

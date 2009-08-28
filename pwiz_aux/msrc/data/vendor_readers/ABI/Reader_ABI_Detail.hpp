@@ -25,10 +25,10 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 #include <vector>
 
 #ifdef PWIZ_READER_ABI
+#include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 
 namespace pwiz {
 namespace msdata {

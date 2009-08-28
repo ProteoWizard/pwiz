@@ -22,28 +22,32 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+
+#ifdef PWIZ_READER_ABI
+#include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 #include <boost/thread/once.hpp>
+using namespace pwiz::vendor_api::ABI;
+#endif // PWIZ_READER_ABI
 
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace pwiz::vendor_api::ABI;
-
 class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
 {
     public:
 
-    SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     
+#ifdef PWIZ_READER_ABI
+    SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
+
     private:
 
     const MSData& msd_;
@@ -67,6 +71,7 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     mutable std::map<std::string, size_t> idToIndexMap_;
 
     void createIndex() const;
+#endif // PWIZ_READER_ABI
 };
 
 

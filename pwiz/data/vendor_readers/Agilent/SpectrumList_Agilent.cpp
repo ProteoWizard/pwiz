@@ -301,13 +301,11 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-SpectrumList_Agilent::SpectrumList_Agilent(MassHunterDataPtr rawfile) {}
 size_t SpectrumList_Agilent::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Agilent::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Agilent::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-void SpectrumList_Agilent::createIndex() const {}
 
 } // detail
 } // msdata

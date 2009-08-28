@@ -34,6 +34,18 @@ if [ modules.peek : NT ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/XRawFile2.tlh ]
+    {
+        result += <source>RawFile.cpp ;
+        result += <source>RawFileValues.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
     if <toolset>msvc in $(properties)
     {
         result += <define>PWIZ_READER_THERMO ;
@@ -52,8 +64,6 @@ rule vendor-api-requirements ( properties * )
 lib pwiz_vendor_api_thermo
     : # sources
         ScanFilter.cpp
-        RawFile.cpp
-        RawFileValues.cpp
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
@@ -64,7 +74,7 @@ lib pwiz_vendor_api_thermo
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>/ext/boost//thread
-        <conditional>@vendor-api-requirements
+        <conditional>@vendor-api-usage-requirements
     ;
 
 unit-test ScanFilterTest
@@ -82,20 +92,9 @@ exe RawFileTest
 explicit RawFileTest ;
 
 
-if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
-{
-    install install_pwiz_vendor_api_thermo
-        : $(API_PATH)/MSFileReader.XRawfile2.dll
-          $(API_PATH)/MSFileReader.XRawfile2.dll
-          $(API_PATH)/MSFileReader.XRawfile2.SxS.manifest
-          $(API_PATH)/fregistry.dll
-          $(API_PATH)/fileio.dll
-        ;
-}
-else
-{
-    install install_pwiz_vendor_api_thermo ; # no-op
-}
+install install_pwiz_vendor_api_thermo
+    : [ path.glob $(API_PATH) : *.dll *.manifest ]
+    ;
 
 explicit install_pwiz_vendor_api_thermo ;
 

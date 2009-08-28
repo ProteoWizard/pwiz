@@ -38,7 +38,6 @@ namespace detail {
 
 using namespace std;
 using boost::shared_ptr;
-using namespace pwiz::vendor_api::Bruker;
 
 //
 // SpectrumList_Bruker
@@ -47,16 +46,17 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Bruker(MSData& msd,
-                        const string& rootpath,
-                        Reader_Bruker_Format format,
-                        CompassDataPtr compassDataPtr);
-
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+
+#ifdef PWIZ_READER_BRUKER
+    SpectrumList_Bruker(MSData& msd,
+                        const string& rootpath,
+                        Reader_Bruker_Format format,
+                        CompassDataPtr compassDataPtr);
 
     MSSpectrumPtr getMSSpectrumPtr(size_t index) const;
 
@@ -84,6 +84,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     void fillSourceList();
     void createIndex();
     //string findPrecursorID(int precursorMsLevel, size_t index) const;
+#endif // PWIZ_READER_BRUKER
 };
 
 } // detail

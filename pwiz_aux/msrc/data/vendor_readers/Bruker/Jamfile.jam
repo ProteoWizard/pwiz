@@ -42,6 +42,35 @@ path-constant TEST_DATA_PATH : ./Reader_Bruker_Test.data ;
 SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
 
 
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_bruker ;
+        result += <define>PWIZ_READER_BRUKER ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Non-MSVC build: Reader_Bruker can only identify Bruker directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing ABI API: Reader_Bruker can only identify Bruker directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing CompassXtract DLLs: Reader_ABI can only identify Bruker directories, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
 
 lib pwiz_aux_msrc_reader_bruker
     : # sources
@@ -50,14 +79,12 @@ lib pwiz_aux_msrc_reader_bruker
         SpectrumList_Bruker.cpp
         ChromatogramList_Bruker.cpp
     : # requirements
-		<toolset>msvc:<define>PWIZ_READER_BRUKER
-		<toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_bruker
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+		<conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-		<toolset>msvc:<define>PWIZ_READER_BRUKER
-		<toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_bruker
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+		<conditional>@vendor-api-requirements
     ;
 
 local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;

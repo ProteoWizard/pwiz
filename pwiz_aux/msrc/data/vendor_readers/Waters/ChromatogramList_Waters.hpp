@@ -36,13 +36,14 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
 {
     public:
 
-    ChromatogramList_Waters(RawDataPtr rawdata);
-    ~ChromatogramList_Waters();
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
-    
+
+#ifdef PWIZ_READER_WATERS
+    ChromatogramList_Waters(RawDataPtr rawdata);
+
     private:
 
     RawDataPtr rawdata_;
@@ -62,6 +63,7 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
     mutable std::map<std::string, size_t> idToIndexMap_;
 
     void createIndex() const;
+#endif // PWIZ_READER_WATERS
 };
 
 

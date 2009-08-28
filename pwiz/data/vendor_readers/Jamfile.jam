@@ -31,8 +31,9 @@ project
 rule vendor-reader-libraries ( properties * )
 {
     local libraries ;
-    if [ project-exists Thermo ] { libraries += <library>Thermo//pwiz_reader_thermo ; }
-    if [ project-exists Agilent ] { libraries += <library>Agilent//pwiz_reader_agilent ; }
+    local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
+    if [ project-exists $(core_vendor_reader_path)/Thermo ] { libraries += <library>$(core_vendor_reader_path)/Thermo//pwiz_reader_thermo ; }
+    if [ project-exists $(core_vendor_reader_path)/Agilent ] { libraries += <library>$(core_vendor_reader_path)/Agilent//pwiz_reader_agilent ; }
     return $(libraries) ;
 }
 
@@ -46,7 +47,6 @@ lib pwiz_data_vendor_readers
     : # usage-requirements
         <conditional>@vendor-reader-libraries
     ;
-
 
 build-project-if-exists Agilent ;
 build-project-if-exists Thermo ;

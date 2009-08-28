@@ -178,15 +178,10 @@ namespace detail {
 
 namespace {const ChromatogramIdentity emptyIdentity;}
 
-ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,
-                            const string& rootpath,
-                            Reader_Bruker_Format format,
-                            CompassDataPtr compassDataPtr) : msd_(msd) {}
 size_t ChromatogramList_Bruker::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Bruker::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Bruker::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-void ChromatogramList_Bruker::createIndex() {}
 
 } // detail
 } // msdata

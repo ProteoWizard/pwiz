@@ -262,12 +262,10 @@ namespace detail {
 
 namespace {const ChromatogramIdentity emptyIdentity;}
 
-ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample) : msd_(msd) {}
 size_t ChromatogramList_ABI::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_ABI::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_ABI::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-void ChromatogramList_ABI::createIndex() const {}
 
 } // detail
 } // msdata

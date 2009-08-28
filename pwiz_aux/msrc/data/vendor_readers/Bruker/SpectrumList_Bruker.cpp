@@ -512,19 +512,11 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
-                                         const string& rootpath,
-                                         Reader_Bruker_Format format,
-                                         CompassDataPtr compassDataPtr)
-:   msd_(msd) {}
 size_t SpectrumList_Bruker::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Bruker::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Bruker::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const {return MSSpectrumPtr();}
-void SpectrumList_Bruker::fillSourceList() {}
-void SpectrumList_Bruker::createIndex() {}
 
 } // detail
 } // msdata

@@ -38,8 +38,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace pwiz::vendor_api::Bruker;
-
 //
 // ChromatogramList_Bruker
 //
@@ -47,16 +45,16 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
 {
     public:
 
-    ChromatogramList_Bruker(MSData& msd,
-                            const string& rootpath,
-                            Reader_Bruker_Format format,
-                            CompassDataPtr compassDataPtr);
-
     virtual size_t size() const;
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
 
+#ifdef PWIZ_READER_BRUKER
+    ChromatogramList_Bruker(MSData& msd,
+                            const string& rootpath,
+                            Reader_Bruker_Format format,
+                            CompassDataPtr compassDataPtr);
 
     private:
 
@@ -79,6 +77,7 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
     map<string, size_t> idToIndexMap_;
 
     void createIndex();
+#endif // PWIZ_READER_BRUKER
 };
 
 } // detail

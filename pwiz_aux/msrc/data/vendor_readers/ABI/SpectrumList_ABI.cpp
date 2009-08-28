@@ -267,13 +267,11 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample) : msd_(msd) {}
 size_t SpectrumList_ABI::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_ABI::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-void SpectrumList_ABI::createIndex() const {}
 
 } // detail
 } // msdata

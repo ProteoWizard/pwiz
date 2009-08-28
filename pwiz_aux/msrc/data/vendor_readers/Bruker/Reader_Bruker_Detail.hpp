@@ -26,8 +26,11 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
+
+#ifdef PWIZ_READER_BRUKER
 #include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
 using namespace pwiz::vendor_api::Bruker;
+#endif
 
 
 namespace pwiz {

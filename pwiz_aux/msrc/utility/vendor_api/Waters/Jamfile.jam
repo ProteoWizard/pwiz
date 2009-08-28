@@ -34,16 +34,17 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if [ path.exists $(API_PATH)/DACServer.dll ]
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/DACServer.dll ]
     {
-      result += <dependency>$(API_PATH)/DACServer.dll ;
-      result += <dependency>$(API_PATH)/genutil.dll ;
-      result += <dependency>$(API_PATH)/MetaGD32.dll ;
-      result += <dependency>$(API_PATH)/raw.dll ;
-      result += <dependency>$(API_PATH)/RawCsm.dll ;
-      result += <dependency>$(API_PATH)/SecuritySignature.dll ;
-      result += <dependency>$(API_PATH)/SecuritySettings.dll ;
-      result += <dependency>$(API_PATH)/SecurityAccess.dll ;
+        result += <dependency>$(API_PATH)/DACServer.dll ;
+        result += <dependency>$(API_PATH)/genutil.dll ;
+        result += <dependency>$(API_PATH)/MetaGD32.dll ;
+        result += <dependency>$(API_PATH)/raw.dll ;
+        result += <dependency>$(API_PATH)/RawCsm.dll ;
+        result += <dependency>$(API_PATH)/SecuritySignature.dll ;
+        result += <dependency>$(API_PATH)/SecuritySettings.dll ;
+        result += <dependency>$(API_PATH)/SecurityAccess.dll ;
     }
     return $(result) ;
 }
@@ -72,23 +73,10 @@ exe RawDataTest
 explicit RawDataTest ;
 
 
-if [ path.exists $(API_PATH)/DACServer.dll ]
-{
 install install_pwiz_vendor_api_waters
-    : $(API_PATH)/DACServer.dll
-      $(API_PATH)/genutil.dll
-      $(API_PATH)/MetaGD32.dll
-      $(API_PATH)/raw.dll
-      $(API_PATH)/RawCsm.dll
-      $(API_PATH)/SecuritySignature.dll
-      $(API_PATH)/SecuritySettings.dll
-      $(API_PATH)/SecurityAccess.dll
+    : [ path.glob $(API_PATH) : *.dll *.manifest ]
     ;
-}
-else
-{
-install install_pwiz_vendor_api_waters ; # no-op
-}
+
 explicit install_pwiz_vendor_api_waters ;
 
 }

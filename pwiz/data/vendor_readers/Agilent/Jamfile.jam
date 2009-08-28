@@ -36,21 +36,58 @@ path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
 SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
 
 
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <source>Reader_Agilent_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
+        result += <define>PWIZ_READER_AGILENT ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[data/vendor_readers/Agilent] Non-MSVC build: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[data/vendor_readers/Agilent] Missing MassHunter API: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+        {
+            echo "[data/vendor_readers/Agilent] Missing MassHunter DLLs: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
 lib pwiz_reader_agilent
     : # sources
         Reader_Agilent.cpp
         SpectrumList_Agilent.cpp
         ChromatogramList_Agilent.cpp
     : # requirements
-        <toolset>msvc:<source>Reader_Agilent_Detail.cpp
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_agilent
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<define>PWIZ_READER_AGILENT
+        <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>$(API_PATH)//pwiz_vendor_api_agilent
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <toolset>msvc:<define>PWIZ_READER_AGILENT
+        <conditional>@vendor-api-usage-requirements
     ;
 
 local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;

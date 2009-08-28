@@ -27,9 +27,13 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+
+#ifdef PWIZ_READER_THERMO
+#include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include <boost/thread/once.hpp>
+using namespace pwiz::vendor_api::Thermo;
+#endif // PWIZ_READER_THERMO
 
 
 namespace pwiz {
@@ -37,18 +41,19 @@ namespace msdata {
 namespace detail {
 
 using namespace std;
-using namespace pwiz::vendor_api::Thermo;
 
 class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+
+#ifdef PWIZ_READER_THERMO
+    SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile);
 
     /// an array of size ScanType_Count to count the occurrence of each type
     vector<int> spectraByScanType;
@@ -75,6 +80,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 
     void createIndex() const;
     size_t findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const;
+#endif // PWIZ_READER_THERMO
 };
 
 

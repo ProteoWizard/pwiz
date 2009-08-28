@@ -48,23 +48,37 @@ rule vendor-api-requirements ( properties * )
        [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
         result += <source>Reader_ABI_Detail.cpp ;
-        result += <define>PWIZ_READER_ABI ;
-        result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
-    return $(result) ;
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
 
 rule vendor-api-usage-requirements ( properties * )
 {
+    local result ;
     if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
        [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
-        return <define>PWIZ_READER_ABI <library>$(API_PATH)//pwiz_vendor_api_abi ;
+        result += <define>PWIZ_READER_ABI ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
-    else
+    else if ! $(.warn-once)
     {
-        echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABSciex.DataAccess.WiffFileDataReader.dll: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Non-MSVC build: Reader_ABI can only identify RAW files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI API: Reader_ABI can only identify RAW files, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing WiffFileDataReader DLL: Reader_ABI can only identify WIFF files, not read them." ;
+        }
     }
+    return $(result) ;
 }
 
 lib pwiz_aux_msrc_reader_abi

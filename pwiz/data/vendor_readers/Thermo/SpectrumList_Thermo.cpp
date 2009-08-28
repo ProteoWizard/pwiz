@@ -507,14 +507,11 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile) : msd_(msd) {}
 size_t SpectrumList_Thermo::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-void SpectrumList_Thermo::createIndex() const {}
-size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const {return 0;}
 
 } // detail
 } // msdata

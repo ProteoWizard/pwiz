@@ -44,7 +44,6 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
 {
     public:
 
-    SpectrumList_Waters(RawDataPtr rawdata);
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
 /*
@@ -53,6 +52,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
 */
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
 
+#ifdef PWIZ_READER_WATERS
+    SpectrumList_Waters(RawDataPtr rawdata);
 
     private:
 
@@ -70,6 +71,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     mutable map<string, size_t> idToIndexMap_;
 
     void createIndex();
+#endif // PWIZ_READER_WATERS
 };
 
 } // detail
