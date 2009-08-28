@@ -264,3 +264,146 @@ rule msvc-requirement ( properties * )
     if ! <toolset>msvc in $(properties) { return <build>no ; }
 }
 
+
+
+# full source trees automatically build source tarballs
+
+import os ;
+import path ;
+
+if ! [ path.exists $(PWIZ_ROOT_PATH)/SUBSET ]
+{
+
+import bcp ;
+using bcp : $(BOOST_SOURCE) ;
+
+path-constant BOOST_SUBSET_PATH : $(PWIZ_ROOT_PATH)/build/boost-subset ;
+
+bcp.copy-boost-dependencies copy_boost_subset
+  : # sources
+
+    # scan all source files for boost dependencies
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_aux : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/libraries/boost_aux : *.cpp *.hpp ]
+
+    # scan all targets and their dependencies
+    $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
+
+  : # requirements
+    <location>$(BOOST_SUBSET_PATH)/boost_1_39_0
+  ;
+
+import tar ;
+if [ os.on-windows ]
+{
+  using tar : bsdtar.exe ;
+}
+else
+{
+  using tar ;
+}
+
+tar.create boost_1_39_0.tar.bz2
+  : # sources
+
+      path-anchor:$(BOOST_SUBSET_PATH)
+      $(BOOST_SUBSET_PATH)/boost_1_39_0
+
+      path-anchor:$(PWIZ_ROOT_PATH)/libraries
+      $(PWIZ_ROOT_PATH)/libraries/boost_1_39_0/tools/build
+      $(PWIZ_ROOT_PATH)/libraries/boost_1_39_0/tools/jam
+
+  : # requirements
+    <location>$(BOOST_SUBSET_PATH)/libraries
+    <dependency>copy_boost_subset
+  ;
+
+.exclusion-list =
+  exclude:.svn
+  exclude:*.bak
+  exclude:cvgen*.exe
+  exclude:svnrev.exe
+  exclude:svnrev.hpp
+  exclude:Reader_*_Test.data
+  exclude:bin exclude:obj # C#.NET intermediate directories
+  exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
+;
+
+# the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
+make SUBSET : : @make_SUBSET : <location>$(PWIZ_ROOT_PATH)/build ;
+actions make_SUBSET
+{
+@($(STDOUT):E=
+This source tree is a subset of the full pwiz source tree.
+) > "$(<)"
+}
+
+.common-sources =
+  $(PWIZ_ROOT_PATH)/Jamroot.jam
+  $(PWIZ_ROOT_PATH)/NOTICE
+  $(PWIZ_ROOT_PATH)/LICENSE
+  $(PWIZ_ROOT_PATH)/quickbuild.bat
+  $(PWIZ_ROOT_PATH)/quickbuild.sh
+  $(PWIZ_ROOT_PATH)/clean.bat
+  $(PWIZ_ROOT_PATH)/clean.sh
+
+  $(PWIZ_ROOT_PATH)/doc
+  $(PWIZ_ROOT_PATH)/example_data
+  $(PWIZ_ROOT_PATH)/libraries/boost-build.tar.bz2
+  $(PWIZ_ROOT_PATH)/libraries/boost_aux
+  [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+
+  path-anchor:$(PWIZ_ROOT_PATH)/build
+  $(PWIZ_ROOT_PATH)/build/SUBSET
+
+  # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
+  path-anchor:$(BOOST_SUBSET_PATH)
+  $(BOOST_SUBSET_PATH)/libraries
+;
+
+.common-location = $(PWIZ_ROOT_PATH)/build ;
+
+tar.create pwiz-src.tbz2
+  : # sources
+
+    path-anchor:$(PWIZ_ROOT_PATH)
+
+    $(.exclusion-list)
+
+    $(PWIZ_ROOT_PATH)/pwiz
+    $(PWIZ_ROOT_PATH)/pwiz_aux
+    $(PWIZ_ROOT_PATH)/pwiz_tools
+    $(PWIZ_ROOT_PATH)/scripts
+
+    $(.common-sources)
+
+  : # requirements
+    <location>$(.common-location)
+    <dependency>boost_1_39_0.tar.bz2
+  ;
+
+tar.create pwiz-src-without-vendor-support.tbz2
+  : # sources
+
+    path-anchor:$(PWIZ_ROOT_PATH)
+
+    $(.exclusion-list)
+    exclude:vendor_readers/*/*.data.tar.bz2
+    exclude:vendor_readers/*/*.bat
+    exclude:vendor_api
+
+    $(PWIZ_ROOT_PATH)/pwiz
+    $(PWIZ_ROOT_PATH)/pwiz_aux
+    $(PWIZ_ROOT_PATH)/pwiz_tools
+    $(PWIZ_ROOT_PATH)/scripts
+
+    $(.common-sources)
+
+  : # requirements
+    <location>$(.common-location)
+    <dependency>boost_1_39_0.tar.bz2
+  ;
+
+} # if SUBSET
