@@ -164,11 +164,27 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
         size_t precursorIndex = msd_.run.spectrumListPtr->find(precursor.spectrumID);
 
         if (precursorIndex < spectrumList.size())
-            result.precursorScanNum = id::valueAs<int>(spectrumList.spectrum(precursorIndex)->id, "scan");
-
+        {
+            SpectrumPtr precursorSpectrum = spectrumList.spectrum(precursorIndex);
+            string precursorScanNumber = id::translateNativeIDToScanNumber(nativeIdFormat, precursorSpectrum->id);
+            
+            if (precursorScanNumber.empty()) // unsupported nativeID type
+            {
+                // assume scanNumber is a 1-based index, consistent with this->index() method
+                result.precursorScanNum = precursorIndex+1;
+            } 
+            else 
+            {
+                result.precursorScanNum = lexical_cast<int>(precursorScanNumber);
+            }
+        }
         if (!precursor.selectedIons.empty())
         {
             result.precursorMZ = precursor.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();
+            if (!result.precursorMZ)
+            { // mzML 1.0?
+                result.precursorMZ = precursor.selectedIons[0].cvParam(MS_m_z).valueAs<double>();
+            }
             result.precursorCharge = precursor.selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
             result.precursorIntensity = precursor.selectedIons[0].cvParam(MS_intensity).valueAs<double>();
         }
