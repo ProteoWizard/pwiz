@@ -16,7 +16,7 @@ import "class" : new ;
 project.initialize $(__name__) ;
 project bcp ;
 
-rule init ( boost-root )
+rule init ( boost-root : requirements * )
 {
     if ! $(.initialized)
     {
@@ -29,11 +29,12 @@ rule init ( boost-root )
 
         exe bcp
         : # sources
-            [ glob $(BOOST_PATH)/../boost_aux/tools/bcp/*.cpp ] # TODO: patch changes to official bcp
+            [ path.glob $(BOOST_PATH)/../boost_aux/tools/bcp : *.cpp ] # TODO: patch changes to official bcp
             /ext/boost//filesystem
             /ext/boost//regex
             /ext/boost//prg_exec_monitor
         : # requirements
+            $(requirements)
         ;
     }
 }

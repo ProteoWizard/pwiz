@@ -11,6 +11,9 @@ import generators ;
 import "class" : new ;
 import os ;
 
+# use this feature instead of <source> in tar.create's requirements
+feature.feature tar-source : : free incidental ;
+
 # Make this module into a project.
 project.initialize $(__name__) ;
 project tar ;
@@ -35,23 +38,11 @@ rule init ( tar-binary-filepath ? )
     }
 
     .tar-binary-filepath = [ path.make $(tar-binary-filepath) ] ;
-
-    if $(.tar-binary-filepath:B) = bsdtar
-    {
-        .use-bsdtar-syntax = true ;
-    }
-
-    #if $(tar.use-bsdtar-syntax) { echo Using bsdtar syntax. ; }
-    #else { echo Using GNU tar syntax. ; }
-
-    IMPORT $(__name__) : use-bsdtar-syntax : : use-bsdtar-syntax ;
 }
 
-rule use-bsdtar-syntax { return $(.use-bsdtar-syntax) ; }
-
-type.register TBZ2 : tbz2 tar.bz2 ;
-type.register TGZ : tgz tar.gz ;
-type.register TLZ : tlz tar.lzma ;
+type.register TBZ2 : tar.bz2 tbz2 ;
+type.register TGZ : tar.gz tgz ;
+type.register TLZ : tar.lzma tlz ;
 
 # $(.tar-binary-filepath) -cvjf $(<) -T $(<:B)_file_list.txt $(TAR_ARGS)
 actions tar.tbz2.create-really
@@ -71,80 +62,18 @@ actions tar.tlz.create-really
 
 class tar-target-class : basic-target
 {
-    import regex path type ;
+    import regex path type targets ;
 
     rule __init__ ( name : project : sources * : requirements *
         : default-build * : usage-requirements * )
     {
-        local pwd = [ path.make [ path.pwd ] ] ;
-        local anchor = $(pwd) ;
-        self.tar-args += -C [ path.native $(anchor) ] ;
+        self.pwd = [ path.make [ path.pwd ] ] ;
+        self.anchor = $(self.pwd) ;
+        self.tar-args += -C [ path.native $(self.anchor) ] ;
+        
         for local s in $(sources)
         {
-            local possible-anchor = [ MATCH "^path-anchor:(.*)" : $(s) ] ;
-            local possible-exclude = [ MATCH "^exclude:(.*)" : $(s) ] ;
-
-            # TODO: An include option? It's very hard to do portably :(
-
-            if $(possible-anchor)
-            {
-                local source-path = [ path.root [ path.make $(possible-anchor) ] $(pwd) ] ;
-                self.tar-args += -C [ path.relative-to [ path.make $(anchor) ] $(source-path) ] ;
-                anchor = [ path.native $(source-path) ] ;
-                if [ use-bsdtar-syntax ]
-                {
-                    self.tar-file-lines += -C ;
-                    self.tar-file-lines += $(anchor) ;
-                }
-                else
-                {
-                    self.tar-file-lines += -C$(anchor) ;
-                }
-                anchor = [ path.make $(anchor) ] ;
-            }
-            else if $(possible-exclude)
-            {
-                self.tar-args += --exclude \"$(possible-exclude)\" ;
-            }
-            else
-            {
-                # move files from main sources to private list that is never virtualized or scanned
-                local native-path = [ path.native $(s) ] ;
-                local entry = [ GLOB $(native-path:D) : $(native-path:D=) ] ;
-                if $(entry) && [ CHECK_IF_FILE $(entry) ]
-                {
-                    local source-path = [ path.make $(s) ] ;
-
-                    if ! [ path.is-rooted $(source-path) ]
-                    {
-                        source-path = [ path.root $(source-path) $(pwd) ] ;
-                    }
-
-                    #echo Anchor: $(anchor) ;
-                    #echo Original path: $(source-path) ;
-                    #echo Final path: [ path.relative-to [ path.make $(anchor) ] $(source-path) ] ;
-                    #echo ;
-                    self.tar-file-lines += [ path.relative-to [ path.make $(anchor) ] $(source-path) ] ;
-                    self.files += $(s) ;
-                    self.tar-args += [ path.relative-to [ path.make $(anchor) ] $(source-path) ] ;
-                }
-                #else if ! $(entry)
-                #{
-                    #non-file-sources += $(s) ;
-                #}
-                else
-                {
-                    local source-path = [ path.make $(s) ] ;
-
-                    if ! [ path.is-rooted $(source-path) ]
-                    {
-                        source-path = [ path.root $(source-path) $(pwd) ] ;
-                    }
-
-                    self.directories += $(s) ;
-                    self.tar-args += [ path.relative-to [ path.make $(anchor) ] $(source-path) ] ;
-                }
-            }
+            add-source $(s) ;
         }
 
         self.tar-args = [ sequence.join $(self.tar-args) : " " ] ;
@@ -153,13 +82,16 @@ class tar-target-class : basic-target
             $(requirements) : $(default-build) : $(usage-requirements) ;
     }
 
-    import utility ;
     rule construct ( name : sources * : property-set )
     {
-        #echo $(self.files) ;
-        #echo $(self.directories) ;
-        #echo $(self.tar-file-lines) ;
-        #for local s in $(sources) { echo [ utility.str $(s) ] ; echo ; }
+        local more-sources = [ feature.get-values <tar-source> : [ $(property-set).raw ] ] ;
+        for local s in $(more-sources)
+        {
+            for local s2 in [ regex.split $(s) "&&" ]
+            {
+                add-source $(s2) ;
+            }
+        }
 
         local action-name ;
         local extension = $(name:B=) ;
@@ -168,20 +100,77 @@ class tar-target-class : basic-target
         else if $(extension) = .lzma || $(extension) = .tlz { action-name = tar.tlz.create-really ; }
         else { errors.error Unknown suffix on action ; }
 
-        local NL = "
-" ;
-        #local tar-file-list = $(self.tar-file-lines:J=$(NL)) ;
-        #local f = @($(name:B)_file_list.txt:E=$(tar-file-list)) ;
+        local name = [ feature.get-values <name> : [ $(property-set).raw ] ] ;
+        name = $(name[-1]) ; # take last <name>
+        name ?= $(self.name) ; # use target name as last resort
 
         local a = [ new action : $(action-name) : $(property-set) ] ;
-        local t = [ new file-target $(self.name) exact : [ type.type $(self.name) ] : $(self.project) : $(a) ] ;
+        local t = [ new file-target $(name) exact : [ type.type $(name) ] : $(self.project) : $(a) ] ;
         local t = [ virtual-target.register $(t) ] ;
-        #echo $(self.name) ;
+
         local actual-result = [ $(t).actualize ] ;
         ALWAYS $(actual-result) ;
         TAR_ARGS on $(actual-result) = $(self.tar-args) ;
         return [ property-set.empty ] $(t) ;
     }
+
+    rule add-source ( s )
+    {
+        local possible-anchor = [ MATCH "^path-anchor:(.*)" : $(s) ] ;
+        local possible-exclude = [ MATCH "^exclude:(.*)" : $(s) ] ;
+
+        # TODO: An include option? It's very hard to do portably :(
+
+        if $(possible-anchor)
+        {
+            local source-path = [ path.root [ path.make $(possible-anchor) ] $(self.pwd) ] ;
+            self.tar-args += -C [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            self.anchor = [ path.make $(source-path) ] ;
+        }
+        else if $(possible-exclude)
+        {
+            self.tar-args += --exclude \"$(possible-exclude)\" ;
+        }
+        else
+        {
+            # move files from main sources to private list that is never virtualized or scanned
+            local native-path = [ path.native $(s) ] ;
+            local entry = [ GLOB $(native-path:D) : $(native-path:D=) ] ;
+            if $(entry) && [ CHECK_IF_FILE $(entry) ]
+            {
+                local source-path = [ path.make $(s) ] ;
+
+                if ! [ path.is-rooted $(source-path) ]
+                {
+                    source-path = [ path.root $(source-path) $(self.pwd) ] ;
+                }
+
+                #echo Anchor: $(anchor) ;
+                #echo Original path: $(source-path) ;
+                #echo Final path: [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+                #echo ;
+                self.files += $(s) ;
+                self.tar-args += [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            }
+            #else if ! $(entry)
+            #{
+                #non-file-sources += $(s) ;
+            #}
+            else
+            {
+                local source-path = [ path.make $(s) ] ;
+
+                if ! [ path.is-rooted $(source-path) ]
+                {
+                    source-path = [ path.root $(source-path) $(self.pwd) ] ;
+                }
+
+                self.directories += $(s) ;
+                self.tar-args += [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            }
+        }
+    }
+
 }
 
 # TODO: surely there's a better way to do this, but damned if I can figure it out

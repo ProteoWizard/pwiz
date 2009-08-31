@@ -266,18 +266,56 @@ rule msvc-requirement ( properties * )
 
 
 
-# full source trees automatically build source tarballs
+# any source tree can build binary tarballs
 
 import os ;
 import path ;
+import common ;
+import property-set ;
+import tar ;
+
+if [ os.on-windows ]
+{
+  using tar : bsdtar.exe ;
+}
+else
+{
+  using tar ;
+}
+
+.common-location = $(PWIZ_ROOT_PATH)/build ;
+
+rule binary-tarball-requirements ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local result = <tar-source>path-anchor:$(.common-location)/$(toolsets[1])-$(variants[1])&&$(.common-location)/$(toolsets[1])-$(variants[1]) ;
+    local name = [ common.format-name <base> <toolset> <threading> <runtime> -1.6
+                                      : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
+                                      echo $(name) ;
+    result += <name>$(name) ;
+    return $(result) ;
+}
+
+tar.create pwiz-bin.tar.bz2
+  : # sources are handled by the conditional
+
+  : # requirements
+    <conditional>@binary-tarball-requirements
+    <location>$(.common-location)
+    <dependency>executables
+  ;
+
+
+# full source trees automatically build source tarballs
 
 if ! [ path.exists $(PWIZ_ROOT_PATH)/SUBSET ]
 {
 
 import bcp ;
-using bcp : $(BOOST_SOURCE) ;
+using bcp : $(BOOST_SOURCE) : <location>$(.common-location)/bcp ;
 
-path-constant BOOST_SUBSET_PATH : $(PWIZ_ROOT_PATH)/build/boost-subset ;
+path-constant BOOST_SUBSET_PATH : $(.common-location)/boost-subset ;
 
 bcp.copy-boost-dependencies copy_boost_subset
   : # sources
@@ -295,15 +333,6 @@ bcp.copy-boost-dependencies copy_boost_subset
     <location>$(BOOST_SUBSET_PATH)/boost_1_39_0
   ;
 
-import tar ;
-if [ os.on-windows ]
-{
-  using tar : bsdtar.exe ;
-}
-else
-{
-  using tar ;
-}
 
 tar.create boost_1_39_0.tar.bz2
   : # sources
@@ -332,7 +361,7 @@ tar.create boost_1_39_0.tar.bz2
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
-make SUBSET : : @make_SUBSET : <location>$(PWIZ_ROOT_PATH)/build ;
+make SUBSET : : @make_SUBSET : <location>$(.common-location) ;
 actions make_SUBSET
 {
 @($(STDOUT):E=
@@ -363,9 +392,7 @@ This source tree is a subset of the full pwiz source tree.
   $(BOOST_SUBSET_PATH)/libraries
 ;
 
-.common-location = $(PWIZ_ROOT_PATH)/build ;
-
-tar.create pwiz-src.tbz2
+tar.create pwiz-src.tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)
@@ -384,7 +411,7 @@ tar.create pwiz-src.tbz2
     <dependency>boost_1_39_0.tar.bz2
   ;
 
-tar.create pwiz-src-without-vendor-support.tbz2
+tar.create pwiz-src-without-vendor-support.tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)
