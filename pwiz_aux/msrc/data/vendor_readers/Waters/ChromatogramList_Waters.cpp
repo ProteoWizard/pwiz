@@ -224,7 +224,7 @@ namespace {const ChromatogramIdentity emptyIdentity;}
 
 size_t ChromatogramList_Waters::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const {return emptyIdentity;}
-size_t ChromatogramList_Waters::find(const string& id) const {return 0;}
+size_t ChromatogramList_Waters::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
 
 } // detail
