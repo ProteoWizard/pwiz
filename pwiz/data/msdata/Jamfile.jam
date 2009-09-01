@@ -193,57 +193,36 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
 
 # generate automatic version file "svnrev.hpp"
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+import svnrev ;
+using svnrev : $(BOOST_SOURCE) : <location>build/svnrev ;
 
-install install_svnrev
-    : $(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev
-    : <location>.
+svnrev.generate-version-header svnrev.hpp
+    :
+    :   <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/Jamfile.jam
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/*.?pp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/Jamfile.jam
+    :   <location>.
     ;
-explicit install_svnrev ;
-
-path-constant MSDATA_PATH : . ;
-path-constant MSDATA_VERSIONED_FILEMASKS
-    :   $(PWIZ_ROOT_PATH)/pwiz/data/msdata/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/Jamfile.jam
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/*.?pp
-        $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/Jamfile.jam
-    ;
-
-actions do_svnrev
-{
-   $(MSDATA_PATH)/svnrev -v -i -h$(MSDATA_PATH)/svnrev.hpp $(MSDATA_VERSIONED_FILEMASKS)
-}
-
-import path ;
-make svnrev.hpp
-    : # sources
-        Jamfile.jam # must have at least one source or the target will be ignored
-    : # action
-        do_svnrev
-    : # requirements
-        <location>.
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev # update if svnrev.cpp is updated
-        <dependency>install_svnrev
-    ;
-explicit svnrev.hpp ;

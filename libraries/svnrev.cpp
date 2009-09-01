@@ -1,5 +1,5 @@
 //
-// $Id:$
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -20,27 +20,129 @@
 //
 
 
-// This utility retrieves the highest number that follows the "$Id: $" keyword
-// or a combination of the $Rev: $ and $Date: $ keywords. The Subversion
+// This utility retrieves the highest number that follows the "Id:" keyword
+// or a combination of the "Rev:" and "Date:" keywords. The Subversion
 // version control system expands these keywords and keeps them up to date.
-// For an example of the tag, see the end of this comment.
+// For an example of the tag, see the top of the file. The delimiting $'s have
+// been stripped from the above quoted keywords so that SVN doesn't expand them.
 //
 // This is a C++ tool inspired by the C version copyrighted by ITB CompuPhase.
 // Their version of the tool is available at http://www.compuphase.com/svnrev.htm.
 //
 
 
-#include "Filesystem.hpp"
-#include "Stream.hpp"
-#include "DateTime.hpp"
-#include "Exception.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <vector>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/iostreams/operations.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 
-using namespace pwiz::util;
+#ifdef BOOST_WINDOWS_API
+    #define _WIN32_WINNT 0x0400
+    #define NOMINMAX
+    #include <windows.h>
+    #include <direct.h>
+#else
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <glob.h>
+    #include <dirent.h>
+    #include <unistd.h>
+    #include <errno.h>
+    #ifndef MAX_PATH
+        #define MAX_PATH 255
+    #endif
+#endif
+
+
+namespace bfs = boost::filesystem;
+namespace bdt = boost::date_time;
+namespace bpt = boost::posix_time;
+namespace blt = boost::local_time;
+namespace bio = boost::iostreams;
+
+using std::vector;
+
+using std::iostream;
+using std::istream;
+using std::ostream;
+
+using std::ifstream;
+using std::ofstream;
+
+using std::stringstream;
+using std::istringstream;
+using std::ostringstream;
+
+using std::cin;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::flush;
+
+using std::exception;
+using std::runtime_error;
+
+using std::string;
+using boost::lexical_cast;
+using boost::bad_lexical_cast;
+
+
+void expand_pathmask(const bfs::path& pathmask,
+                     vector<bfs::path>& matchingPaths)
+{
+    using bfs::path;
+
+#ifdef WIN32
+    path maskParentPath = pathmask.branch_path();
+	WIN32_FIND_DATA fdata;
+	HANDLE srcFile = FindFirstFileEx(pathmask.string().c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
+	if (srcFile == INVALID_HANDLE_VALUE)
+		return; // no matches
+
+    do
+    {
+        if (strcmp(fdata.cFileName, ".") != 0 &&
+            strcmp(fdata.cFileName, "..") != 0)
+	        matchingPaths.push_back( maskParentPath / fdata.cFileName );
+    }
+    while (FindNextFile(srcFile, &fdata));
+
+	FindClose(srcFile);
+
+#else
+
+	glob_t globbuf;
+	int rv = glob(pathmask.string().c_str(), 0, NULL, &globbuf);
+	if(rv > 0 && rv != GLOB_NOMATCH)
+		throw runtime_error("FindFilesByMask(): glob() error");
+
+	DIR* curDir = opendir(".");
+	struct stat curEntryData;
+
+	for (size_t i=0; i < globbuf.gl_pathc; ++i)
+	{
+		stat(globbuf.gl_pathv[i], &curEntryData);
+		if (S_ISDIR(curEntryData.st_mode) ||
+            S_ISREG(curEntryData.st_mode) ||
+            S_ISLNK(curEntryData.st_mode))
+			matchingPaths.push_back(globbuf.gl_pathv[i]);
+	}
+	closedir(curDir);
+
+	globfree(&globbuf);
+
+#endif
+}
 
 
 struct Config
@@ -60,8 +162,8 @@ Config parseCommandLine(int argc, const char* argv[])
 
     ostringstream usage;
     usage << "Usage: svnrev [options] [filemasks]\n"
-          << "This utility retrieves the highest number that follows the \"$Id: $\" keyword\n"
-          << "or a combination of the $Rev$ and $Date$ keywords. The Subversion\n"
+          << "This utility retrieves the highest number that follows the \"$" << "Id: $\" keyword\n"
+          << "or a combination of the \"$" << "Rev: $\" and \"$" << "Date: $\" keywords. The Subversion\n"
           << "version control system expands these keywords and keeps them up to date.\n"
           << "\n";
         
@@ -156,15 +258,15 @@ void imbueDateFacet(stream_type& stream)
 
 Revision getRevision(const bfs::path& filepath)
 {
-    // $Id: calc.c 148 2002-07-28 21:30:43Z sally $
+    // $Id$
     static const boost::regex idRegex(".*?\\$Id: \\S+ (\\d+) (\\d{4}-\\d{2}-\\d{2}) \\d{2}:\\d{2}:\\d{2}Z \\S+ \\$.*?");
 
-    // $Date$
+    // $Date: 2009-08-14 12:48:37 -0500 (Fri, 14 Aug 2009) $
     // or
-    // $Date: 2002-07-22
+    // $Date: 2002-07-22 $
     static const boost::regex dateRegex(".*?\\$(?:Date|LastChangedDate): (\\d{4}-\\d{2}-\\d{2}) (?:\\d{2}:\\d{2}:\\d{2} \\S+ \\(.+\\) )?\\$.*?");
 
-    // $Revision$
+    // $Revision: 1190 $
     static const boost::regex revisionRegex(".*?\\$(?:Revision|Rev|LastChangedRevision): (\\d+) \\$.*?");
 
     Revision r;
@@ -220,7 +322,7 @@ int go(const Config& config)
             if (!fileRevision.empty())
             {
                 if (config.verbose)
-                    cout << filepath << ": " << fileRevision << endl;
+                    cout << fileRevision << " : " << filepath << endl;
                 maxRevision = std::max(maxRevision, getRevision(filepath));
             }
             maxLastWriteTime = std::max(bfs::last_write_time(filepath), maxLastWriteTime);

@@ -40,7 +40,7 @@ lib pwiz_utility_proteome
         Version
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata # needed for access to CV (TODO: move CV out of msdata!)
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//thread
         <library>/ext/boost//regex
@@ -71,33 +71,10 @@ unit-test DigestionTest : DigestionTest.cpp pwiz_utility_proteome ;
 
 # generate automatic version file "svnrev.hpp"
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+import svnrev path ;
+using svnrev : $(BOOST_SOURCE) : <location>build/svnrev ;
 
-install install_svnrev
-    : $(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev
-    : <location>.
+svnrev.generate-version-header svnrev.hpp
+    :   [ glob *.?pp Jamfile.jam ]
+    :   <location>.
     ;
-explicit install_svnrev ;
-
-path-constant PROTEOME_PATH : . ;
-path-constant PROTEOME_VERSIONED_FILEMASKS
-    :   $(PROTEOME_PATH)/*.?pp
-        $(PROTEOME_PATH)/Jamfile.jam
-    ;
-
-actions do_svnrev
-{
-   $(PROTEOME_PATH)/svnrev -v -i -h$(PROTEOME_PATH)/svnrev.hpp $(PROTEOME_VERSIONED_FILEMASKS)
-}
-
-import path ;
-make svnrev.hpp
-    : # sources
-        Jamfile.jam # must have at least one source or the target will be ignored
-    : # action
-        do_svnrev
-    : # requirements
-        <location>.
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev # update if svnrev.cpp is updated
-        <dependency>install_svnrev
-    ;
-explicit svnrev.hpp ;

@@ -77,17 +77,6 @@ lib pwiz_utility_image
     ;
 
 
-exe svnrev
-    : # sources
-        svnrev.cpp
-        pwiz_utility_misc
-        /ext/boost//regex
-        /ext/boost//date_time
-        /ext/boost//program_options
-    ;
-explicit svnrev ;
-
-
 unit-test almost_equal_test : almost_equal_test.cpp ;
 unit-test endian_test : endian_test.cpp ;
 unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;

@@ -37,39 +37,18 @@ lib pwiz_version
 
 # generate automatic version file "svnrev.hpp"
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+import svnrev path ;
+using svnrev : $(BOOST_SOURCE) : <location>build/svnrev ;
 
-install install_svnrev
-    : $(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev
-    : <location>.
-    ;
-explicit install_svnrev ;
-
-# to generate the global version, we take the max of the individual namespace versions
-path-constant PWIZ_PATH : . ;
-path-constant PWIZ_VERSIONED_FILEMASKS
-    :   $(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp
+svnrev.generate-version-header svnrev.hpp
+    : # sources
+        $(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp
         $(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp
         $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp
         # TODO: make versions for other namespaces?
-    ;
-
-actions do_svnrev
-{
-   $(PWIZ_PATH)/svnrev -v -i -h$(PWIZ_PATH)/svnrev.hpp $(PWIZ_VERSIONED_FILEMASKS)
-}
-
-import path ;
-make svnrev.hpp
-    : # sources
-        Jamfile.jam # must have at least one source or the target will be ignored
-    : # action
-        do_svnrev
     : # requirements
-        <location>.
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//svnrev # update if svnrev.cpp is updated
-        <dependency>install_svnrev
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//svnrev.hpp
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/analysis//svnrev.hpp
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//svnrev.hpp
+        <location>.
     ;
-explicit svnrev.hpp ;

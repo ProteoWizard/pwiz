@@ -290,9 +290,8 @@ rule binary-tarball-requirements ( properties * )
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     local result = <tar-source>path-anchor:$(.common-location)/$(toolsets[1])-$(variants[1])&&$(.common-location)/$(toolsets[1])-$(variants[1]) ;
-    local name = [ common.format-name <base> <toolset> <threading> <runtime> -1.6
+    local name = [ common.format-name <base> <property:target-os> <toolset> <threading> <runtime> -1.6
                                       : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
-                                      echo $(name) ;
     result += <name>$(name) ;
     return $(result) ;
 }
