@@ -40,7 +40,7 @@ lib pwiz_analysis_version
 # generate automatic version file "svnrev.hpp"
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
 import svnrev path ;
-using svnrev : $(BOOST_SOURCE) : <location>build/svnrev ;
+using svnrev : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>build/svnrev ;
 
 svnrev.generate-version-header svnrev.hpp
     :

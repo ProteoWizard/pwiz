@@ -17,9 +17,9 @@ project.initialize $(__name__) ;
 # BUG: source-location should default to the current jamfile's directory,
 # but a bug in bjam appears to be making the default the CWD instead whenever
 # the project is initialized with a 'using' statement (i.e. "using svnrev ;")
-project svnrev : source-location libraries ;
+project svnrev ;
 
-rule init ( boost-root : requirements * )
+rule init ( boost-root : svnrev-path : requirements * )
 {
     if ! $(.initialized)
     {
@@ -32,7 +32,7 @@ rule init ( boost-root : requirements * )
 
         exe svnrev
         : # sources
-            svnrev.cpp
+            $(svnrev-path)/svnrev.cpp
             /ext/boost//filesystem
             /ext/boost//regex
             /ext/boost//date_time
