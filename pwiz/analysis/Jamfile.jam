@@ -68,5 +68,5 @@ svnrev.generate-version-header svnrev.hpp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
-    :   <location>.
+        <location>.
     ;

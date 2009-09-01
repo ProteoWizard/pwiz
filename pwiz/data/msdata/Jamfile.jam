@@ -224,5 +224,5 @@ svnrev.generate-version-header svnrev.hpp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/*.?pp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/Jamfile.jam
-    :   <location>.
+        <location>.
     ;

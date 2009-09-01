@@ -42,11 +42,11 @@ using svnrev : $(BOOST_SOURCE) : <location>build/svnrev ;
 
 svnrev.generate-version-header svnrev.hpp
     : # sources
-        $(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp
-        $(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp
-        $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp
-        # TODO: make versions for other namespaces?
     : # requirements
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp
+        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp
+        # TODO: make versions for other namespaces?
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//svnrev.hpp
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/analysis//svnrev.hpp
         <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//svnrev.hpp
