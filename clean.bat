@@ -21,7 +21,7 @@ IF EXIST libraries\libfftw3-3.dll del /q libraries\libfftw3-3.dll
 IF EXIST pwiz\svnrev.hpp del /q pwiz\svnrev.hpp; fi;
 IF EXIST pwiz\data/msdata\svnrev.hpp del /q pwiz\data\msdata\svnrev.hpp; fi;
 IF EXIST pwiz\analysis\svnrev.hpp del /q pwiz\analysis\svnrev.hpp; fi;
-IF EXIST pwiz\utility\proteome\svnrev.hpp del /q pwiz/utility/proteome/svnrev.hpp; fi;
+IF EXIST pwiz\utility\proteome\svnrev.hpp del /q pwiz\utility\proteome\svnrev.hpp; fi;
 
 IF EXIST pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
 IF EXIST pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data
