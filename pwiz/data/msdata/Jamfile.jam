@@ -194,7 +194,7 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
 # generate automatic version file "svnrev.hpp"
 # svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
 import svnrev ;
-using svnrev : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>build/svnrev ;
+using svnrev : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>$(PWIZ_BUILD_PATH)/svnrev ;
 
 svnrev.generate-version-header svnrev.hpp
     :

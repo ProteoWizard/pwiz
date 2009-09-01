@@ -4,7 +4,7 @@ pwiz_root=$(dirname $0)
 pushd $pwiz_root > /dev/null
 
 echo "Cleaning project..."
-if [ -d build ]; then rm -fdr build; fi;
+if [ -d build-*-* ]; then rm -fdr build-*-*; fi;
 if [ -d libraries/boost_1_36_0 ]; then rm -fdr libraries/boost_1_36_0; fi;
 if [ -d libraries/boost_1_39_0 ]; then rm -fdr libraries/boost_1_39_0; fi;
 if [ -d libraries/boost-build ]; then rm -fdr libraries/boost-build; fi;

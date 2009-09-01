@@ -8,7 +8,8 @@ set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
 echo Cleaning project...
-IF EXIST build rmdir /s /q build
+IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
+IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
 IF EXIST libraries\boost_1_36_0 rmdir /s /q libraries\boost_1_36_0
 IF EXIST libraries\boost_1_39_0 rmdir /s /q libraries\boost_1_39_0
 IF EXIST libraries\boost-build rmdir /s /q libraries\boost-build

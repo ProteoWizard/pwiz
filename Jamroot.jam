@@ -19,7 +19,13 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License.
 
+
+local os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+local platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+
 path-constant PWIZ_ROOT_PATH : . ;
+path-constant PWIZ_BUILD_PATH : build-$(os:L)-$(platform:L) ;
+
 
 local default_boost_src = "./libraries/boost_1_39_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
@@ -31,6 +37,8 @@ zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line 
 
 import testing ; # needed to enable unit-test rule
 import feature ; # needed for install rules
+
+
 
 ################################
 ## Targets and Related Options #
@@ -92,7 +100,7 @@ project pwiz
         # use of boost::thread requires multithreaded runtime
         <threading>multi
 
-    : build-dir build
+    : build-dir $(PWIZ_BUILD_PATH)
     : usage-requirements
         <include>.
     : default-build
@@ -215,7 +223,7 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    return <location>build/$(toolsets[1])-$(variants[1]) ;
+    return <location>$(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
 }
 
 rule install-vendor-api-dependencies ( properties * )
@@ -284,7 +292,7 @@ else
   using tar ;
 }
 
-.common-location = $(PWIZ_ROOT_PATH)/build ;
+.common-location = $(PWIZ_BUILD_PATH) ;
 
 rule binary-tarball-requirements ( properties * )
 {
@@ -390,8 +398,8 @@ This source tree is a subset of the full pwiz source tree.
   $(PWIZ_ROOT_PATH)/libraries/boost_aux
   [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
 
-  path-anchor:$(PWIZ_ROOT_PATH)/build
-  $(PWIZ_ROOT_PATH)/build/SUBSET
+  path-anchor:$(PWIZ_BUILD_PATH)
+  $(PWIZ_BUILD_PATH)/SUBSET
 
   # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
   path-anchor:$(BOOST_SUBSET_PATH)
