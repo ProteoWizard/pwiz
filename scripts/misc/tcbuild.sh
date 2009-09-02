@@ -13,13 +13,13 @@ function echo_error()
 }
 
 echo_info "Cleaning project..."
-if ! sh clean.sh
+if ! /bin/bash clean.sh
 then
 	echo_error "Error cleaning project!"
 fi
 
 echo_info "Running quickbuild.sh..."
-if ! sh quickbuild.sh $1 ci=teamcity
+if ! /bin/bash quickbuild.sh $1 ci=teamcity
 then
 	echo "Error running quickbuild!"
 	echo_error "Error running quickbuild! See full build log for more details."
