@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pwiz_root=$(dirname $0)
 pushd $pwiz_root > /dev/null
