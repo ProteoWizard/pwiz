@@ -15,6 +15,7 @@ bsdtar.exe -xkjf boost-build.tar.bz2
 :SKIP_BB
 
 copy /Y msvc.jam boost-build\tools
+copy /Y testing.jam boost-build\tools
 
 if "%1" == "" GOTO SKIP_POP
 popd

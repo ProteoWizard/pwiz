@@ -59,9 +59,9 @@ fi
 
 # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo "Building pwiz..."
-echo "cd $PWIZ_ROOT ; export BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build ; $PWIZ_BJAM $2 $3 $4 $5 toolset=$PWIZ_TOOLSET $PWIZ_ROOT"
+echo "cd $PWIZ_ROOT ; export BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build ; $PWIZ_BJAM $2 $3 $4 $5 toolset=$PWIZ_TOOLSET"
 cd $PWIZ_ROOT ; export BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build 
-if ! $PWIZ_BJAM $2 $3 $4 $5 "toolset=$PWIZ_TOOLSET" $PWIZ_ROOT
+if ! $PWIZ_BJAM $2 $3 $4 $5 "toolset=$PWIZ_TOOLSET"
 then
 	echo "BJAM build failed!"
 	exit 1

@@ -39,6 +39,29 @@ import testing ; # needed to enable unit-test rule
 import feature ; # needed for install rules
 
 
+# Sets build options according to the specified continuous integration environment
+feature.feature ci : none teamcity : propagated ;
+
+if [ modules.peek : NT ]
+{
+    TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
+    TEST_POSTCOMMAND =
+        "IF %status% EQU 0 (echo ##teamcity[testFinished name='%name%'])"
+        "ELSE (echo ##teamcity[testFailed name='%name%' message='%name% failed' details='%name% failed'])" ;
+    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+}
+else
+{
+    TEST_PRECOMMAND = "echo \"##teamcity[testStarted name='$name']\"" ;
+    TEST_POSTCOMMAND = 
+        "if test $status -eq 0 ; then"
+            "echo \"##teamcity[testFinished name='$name']\" ;"
+        "else"
+            "echo \"##teamcity[testFailed name='$name' message='$name failed' details='$name failed']\" ;"
+        "fi" ;
+    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+}
+
 
 ################################
 ## Targets and Related Options #
@@ -99,6 +122,9 @@ project pwiz
         
         # use of boost::thread requires multithreaded runtime
         <threading>multi
+
+        <ci>teamcity:<testing.precommand>$(TEST_PRECOMMAND)
+        <ci>teamcity:<testing.postcommand>$(TEST_POSTCOMMAND)
 
     : build-dir $(PWIZ_BUILD_PATH)
     : usage-requirements
