@@ -70,11 +70,11 @@ unit-test DigestionTest : DigestionTest.cpp pwiz_utility_proteome ;
 
 
 # generate automatic version file "svnrev.hpp"
-# svnrev finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
-import svnrev path ;
-using svnrev : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>$(PWIZ_BUILD_PATH)/svnrev ;
+# svnrev_max finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
+import svnrev_max path ;
+using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>$(PWIZ_BUILD_PATH)/svnrev_max ;
 
-svnrev.generate-version-header svnrev.hpp
+svnrev_max.generate-version-header svnrev.hpp
     :   [ glob *.?pp Jamfile.jam ]
     :   <location>.
     ;

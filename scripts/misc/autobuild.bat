@@ -15,6 +15,12 @@ echo ##teamcity[progressMessage 'Cleaning project...']
 call clean.bat
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 
+REM # call quickbuild to generate SVN revision info
+echo ##teamcity[message text='Generating revision info...']
+echo ##teamcity[progressMessage 'Generating revision info...']
+call quickbuild.bat -j4 pwiz//svnrev.hpp
+if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error generating revision info & goto error
+
 REM # call quickbuild to build only the bindings first
 echo ##teamcity[message text='Building bindings...']
 echo ##teamcity[progressMessage 'Building bindings...']

@@ -26,7 +26,6 @@ local platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 path-constant PWIZ_ROOT_PATH : . ;
 path-constant PWIZ_BUILD_PATH : build-$(os:L)-$(platform:L) ;
 
-
 local default_boost_src = "./libraries/boost_1_39_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
@@ -175,6 +174,27 @@ tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
 tmp += $(PWIZ_ROOT_PATH)/pwiz $(PWIZ_ROOT_PATH)/libraries ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
+
+# set version info (used for tarball filenames)
+constant PWIZ_MAJOR : 1 ;
+constant PWIZ_MINOR : 6 ;
+
+if [ path.exists pwiz/svnrev.jam ]
+{
+    import svnrev ;
+    constant PWIZ_SVNREV : [ svnrev.SVN_REV ] ;
+    constant PWIZ_SVNREVDATE : "(last modified " [ svnrev.SVN_REVDATE ] ")" ;
+}
+else
+{
+    constant PWIZ_SVNREV : x ;
+    constant PWIZ_SVNREVDATE : "" ;
+}
+
+
+local version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
+echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) ;
+
 if [ modules.peek : NT ]
 {
     if $(boost_src) = $(default_boost_src)
@@ -311,11 +331,11 @@ import tar ;
 
 if [ os.on-windows ]
 {
-  using tar : bsdtar.exe ;
+    using tar : bsdtar.exe ;
 }
 else
 {
-  using tar ;
+    using tar ;
 }
 
 .common-location = $(PWIZ_BUILD_PATH) ;
@@ -331,7 +351,7 @@ rule binary-tarball-requirements ( properties * )
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    local name = [ common.format-name <base> <property:target-os> <toolset> <threading> <runtime> -1.6
+    local name = [ common.format-name <base> <property:target-os> <toolset> <runtime> -$(version-tag:J=_)
                                       : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
     result += <name>$(name) ;
     return $(result) ;
@@ -432,7 +452,7 @@ This source tree is a subset of the full pwiz source tree.
   $(BOOST_SUBSET_PATH)/libraries
 ;
 
-tar.create pwiz-src.tar.bz2
+tar.create pwiz-src-$(version-tag:J=_).tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)
@@ -451,7 +471,7 @@ tar.create pwiz-src.tar.bz2
     <dependency>boost_1_39_0.tar.bz2
   ;
 
-tar.create pwiz-src-without-vendor-support.tar.bz2
+tar.create pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)

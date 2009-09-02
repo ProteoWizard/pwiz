@@ -8,16 +8,19 @@ import generators ;
 import sequence ;
 import "class" : new ;
 
-# Use this feature to pass filemasks to svnrev instead of existing files.
+# Use this feature to pass filemasks to svnrev_max instead of existing files.
 feature.feature filemask : : free ;
+
+# Use this feature to generate a jamfile with revision info.
+feature.feature jamfile : false true ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;
 
 # BUG: source-location should default to the current jamfile's directory,
 # but a bug in bjam appears to be making the default the CWD instead whenever
-# the project is initialized with a 'using' statement (i.e. "using svnrev ;")
-project svnrev ;
+# the project is initialized with a 'using' statement (i.e. "using svnrev_max ;")
+project svnrev_max ;
 
 rule init ( boost-root : svnrev-path : requirements * )
 {
@@ -30,9 +33,9 @@ rule init ( boost-root : svnrev-path : requirements * )
         path-constant BOOST_PATH : $(.boost-root) ;
         using ext-boost : 1.39.0 : $(BOOST_PATH) ;
 
-        exe svnrev
+        exe svnrev_max
         : # sources
-            $(svnrev-path)/svnrev.cpp
+            $(svnrev-path)/svnrev_max.cpp
             /ext/boost//filesystem
             /ext/boost//regex
             /ext/boost//date_time
@@ -49,14 +52,20 @@ rule init ( boost-root : svnrev-path : requirements * )
 # to specify the location of the tool, and the flags
 # statement below make the full path to the tool
 # available inside the action.
-feature.feature svnrev : : dependency free ;
-toolset.flags svnrev.svnrev COMMAND <svnrev> ;
+feature.feature svnrev_max : : dependency free ;
+toolset.flags svnrev_max.svnrev_max COMMAND <svnrev_max> ;
 
 type.register SVNREV : : HPP ;
+type.register SVNREV_AND_JAM : : HPP ;
 
-actions svnrev.generate-version-header-action bind COMMAND
+actions svnrev_max.generate-version-header-action bind COMMAND
 {
    $(COMMAND) -v -i -h$(<) $(>) $(ARGS)
+}
+
+actions svnrev_max.generate-version-header-and-jam-action bind COMMAND
+{
+   $(COMMAND) -v -i -h$(<) -j$(<:S=.jam) $(>) $(ARGS)
 }
 
 class svnrev-generator : generator
@@ -65,7 +74,7 @@ class svnrev-generator : generator
 
     rule svnrev-filter ( source )
     {
-        if ! [ MATCH "^(svnrev.*)" : [ $(source).name ] ] { return true ; }
+        if ! [ MATCH "^(svnrev_max.*)" : [ $(source).name ] ] { return true ; }
     }
 
     rule generated-targets ( sources + : property-set : project name ? )
@@ -74,17 +83,19 @@ class svnrev-generator : generator
         sources = [ sequence.filter svnrev-filter : $(sources) ] ;
         
         local properties = [ $(property-set).raw ] ;
-        local svnrev = [ property.select <svnrev> : $(properties) ] ;
+        local svnrev = [ property.select <svnrev_max> : $(properties) ] ;
         local t = [ generator.generated-targets $(sources) $(svnrev:G=)
                             : [ $(property-set).add-raw <source>svnrev.hpp ] : $(project) $(name) ] ;
         local actual-result = [ $(t).actualize ] ;
         # TODO: is ALWAYS appropriate? ALWAYS $(actual-result) ;
         ARGS on $(actual-result) = [ feature.get-values filemask : $(properties) ] ;
+        
         return $(t) ;
     }
 }
 
-generators.register [ new svnrev-generator svnrev.svnrev.generate-version-header-action true : : SVNREV ] ;
+generators.register [ new svnrev-generator svnrev_max.svnrev_max.generate-version-header-action true : : SVNREV ] ;
+generators.register [ new svnrev-generator svnrev_max.svnrev_max.generate-version-header-and-jam-action true : : SVNREV_AND_JAM ] ;
 
 .filename = svnrev.hpp ;
 
@@ -97,7 +108,15 @@ rule generate-version-header ( filename : sources-with-rcs-keywords * : requirem
 {
     .filename = $(filename) ;
     sources-with-rcs-keywords = [ sequence.filter recursion-filter : $(sources-with-rcs-keywords) ] ;
-    # HACK: /svnrev//svnrev is always added so that at least one source is passed
-    targets.create-typed-target SVNREV : [ project.current ] :
-        $(filename) : /svnrev//svnrev $(sources-with-rcs-keywords) : $(requirements) <svnrev>/svnrev//svnrev ;
+    # HACK: /svnrev_max//svnrev_max is always added so that at least one source is passed
+    if <jamfile>true in $(requirements)
+    {
+        targets.create-typed-target SVNREV_AND_JAM : [ project.current ] :
+        $(filename) : /svnrev_max//svnrev_max $(sources-with-rcs-keywords) : $(requirements) <svnrev_max>/svnrev_max//svnrev_max ;
+    }
+    else
+    {
+        targets.create-typed-target SVNREV : [ project.current ] :
+            $(filename) : /svnrev_max//svnrev_max $(sources-with-rcs-keywords) : $(requirements) <svnrev_max>/svnrev_max//svnrev_max ;
+    }
 }

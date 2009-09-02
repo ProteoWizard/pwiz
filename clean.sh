@@ -14,6 +14,7 @@ if [ -d libraries/fftw-3.1.2 ]; then rm -fdr libraries/fftw-3.1.2; fi;
 if [ -f libraries/libfftw3-3.def ]; then rm -f libraries/libfftw3-3.def; fi;
 if [ -f libraries/libfftw3-3.dll ]; then rm -f libraries/libfftw3-3.dll; fi;
 if [ -f pwiz/svnrev.hpp ]; then rm -f pwiz/svnrev.hpp; fi;
+if [ -f pwiz/svnrev.jam ]; then rm -f pwiz/svnrev.jam; fi;
 if [ -f pwiz/data/msdata/svnrev.hpp ]; then rm -f pwiz/data/msdata/svnrev.hpp; fi;
 if [ -f pwiz/analysis/svnrev.hpp ]; then rm -f pwiz/analysis/svnrev.hpp; fi;
 if [ -f pwiz/utility/proteome/svnrev.hpp ]; then rm -f pwiz/utility/proteome/svnrev.hpp; fi;
