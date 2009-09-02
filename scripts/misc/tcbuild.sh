@@ -19,7 +19,7 @@ then
 fi
 
 echo_info "Running quickbuild.sh..."
-if ! sh quickbuild.sh ci=teamcity $1
+if ! sh quickbuild.sh $1 ci=teamcity
 then
 	echo "Error running quickbuild!"
 	echo_error "Error running quickbuild! See full build log for more details."
