@@ -8,4 +8,4 @@ if [ ! -e boost-build/site-config.jam ]; then
 	tar -xkjf boost-build.tar.bz2
 fi;
 
-cp -fu testing.jam boost-build\tools
+cp -fu testing.jam boost-build/tools
