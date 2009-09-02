@@ -24,7 +24,7 @@ if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error building bindings & goto error
 REM # call quickbuild again to build the rest and run tests
 echo ##teamcity[message text='Running quickbuild...']
 echo ##teamcity[progressMessage 'Running quickbuild...']
-call quickbuild.bat -j4
+call quickbuild.bat -j4 ci=teamcity
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing quickbuild & goto error
 
 popd
