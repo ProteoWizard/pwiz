@@ -168,7 +168,7 @@ void copyProteinPilotDLLs()
     {
         // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
         char* programFilesPath = ::getenv("ProgramFiles");
-        bfs::path proteinPilotPath = bfs::path(programFilesPath) / "ProteinPilot";
+        bfs::path proteinPilotPath = bfs::path(programFilesPath) / "Applied Biosystems MDS Analytical Technologies/ProteinPilot";
         delete programFilesPath;
         if (bfs::exists(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
         {
