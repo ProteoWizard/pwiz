@@ -41,12 +41,7 @@ esac
 $PWIZ_ROOT/libraries/untar_boost.sh  $PWIZ_ROOT
 
 # Extract Boost.Build
-if [ ! -e $PWIZ_ROOT/libraries/boost-build/jam_src/build.sh ]
-then
-echo "extracting boost-build..."
-cd $PWIZ_ROOT/libraries ; tar -xkjf boost-build.tar.bz2
-fi
-cp $PWIZ_ROOT/libraries/msvc.jam $PWIZ_ROOT/libraries/boost-build/tools
+$PWIZ_ROOT/untar_boost-build.sh $PWIZ_ROOT
 
 PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/$BJAM_BIN/bjam
 
