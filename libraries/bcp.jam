@@ -141,15 +141,13 @@ class bcp-generator : generator
         local host-os = [ feature.get-values host-os : $(properties) ] ;
         local module_list_filename = [ path.native $(location:S=)_module_list.txt ] ;
 
-        local NL = "
-" ;
         local bcp = [ property.select <bcp> : [ $(property-set).raw ] ] ;
         local t = [ generator.generated-targets $(real-sources) $(bcp:G=)
                             : $(property-set) : $(project) $(name) ] ;
         local actual-result = [ $(t).actualize ] ;
         ALWAYS $(actual-result) ;
         MODULE_LIST_FILENAME on $(actual-result) = $(module_list_filename) ;
-        MODULE_LIST on $(actual-result) = $(modules:J=$(NL)) ;
+        MODULE_LIST on $(actual-result) = $(modules:J=\n) ;
         return $(t) ;
     }
 }

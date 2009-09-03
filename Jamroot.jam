@@ -20,11 +20,11 @@
 # limitations under the License.
 
 
-local os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
-local platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+.platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
 path-constant PWIZ_ROOT_PATH : . ;
-path-constant PWIZ_BUILD_PATH : build-$(os:L)-$(platform:L) ;
+path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
 
 local default_boost_src = "./libraries/boost_1_39_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
@@ -45,20 +45,22 @@ if [ modules.peek : NT ]
 {
     TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
     TEST_POSTCOMMAND =
-        "IF %status% EQU 0 (echo ##teamcity[testFinished name='%name%'])"
-        "ELSE (echo ##teamcity[testFailed name='%name%' message='%name% failed' details='%name% failed'])" ;
-    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+        "IF %status% EQU 0"
+            "echo ##teamcity[testFinished name='%name%']"
+        "ELSE"
+            "echo ##teamcity[testFailed name='%name%' message='%name% failed' details='%name% failed'] 1>&2" ;
+    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
 }
 else
 {
     TEST_PRECOMMAND = "echo \"##teamcity[testStarted name='$name']\"" ;
     TEST_POSTCOMMAND = 
         "if test $status -eq 0 ; then"
-            "echo \"##teamcity[testFinished name='$name']\" ;"
+            "echo \"##teamcity[testFinished name='$name']\""
         "else"
-            "echo \"##teamcity[testFailed name='$name' message='$name failed' details='$name failed']\" ;"
+            "echo \"##teamcity[testFailed name='$name' message='$name failed' details='$name failed']\" 1>&2"
         "fi" ;
-    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
 }
 
 
@@ -192,7 +194,7 @@ else
 }
 
 
-local version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
+version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
 echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) ;
 
 if [ modules.peek : NT ]
@@ -351,7 +353,8 @@ rule binary-tarball-requirements ( properties * )
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    local name = [ common.format-name <base> <property:target-os> <toolset> <runtime> -$(version-tag:J=_)
+    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
                                       : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
     result += <name>$(name) ;
     return $(result) ;
