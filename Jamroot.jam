@@ -46,10 +46,10 @@ if [ modules.peek : NT ]
     TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
     TEST_POSTCOMMAND =
         "IF %status% EQU 0"
-            "echo ##teamcity[testFinished name='%name%']"
+            "(echo ##teamcity[testFinished name='%name%'])"
         "ELSE"
-            "echo ##teamcity[testFailed name='%name%' message='%name% failed' details='%name% failed'] 1>&2" ;
-    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
+            "(echo ##teamcity[testFailed name='%name%' message='%name% failed' details='%name% failed'] 1>&2)" ;
+    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
 }
 else
 {
