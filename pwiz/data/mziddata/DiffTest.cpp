@@ -130,13 +130,8 @@ void testFragmentArray()
     unit_assert(diff);
 
     // the values of the diff are correct
-    // TODO fix the values testing
     unit_assert(diff.a_b.params.userParams.size() == 1);
     unit_assert(diff.b_a.params.userParams.size() == 1);
-    //unit_assert(diff.a_b.values.size() == 1);
-    //unit_assert(diff.a_b.values.size() == 1);
-    //unit_assert_equal(*diff.a_b.values.begin(), 2.1, epsilon);
-    //unit_assert_equal(*diff.b_a.values.begin(), 2.0, epsilon);
     unit_assert(diff.a_b.Measure_ref == "Measure_ref");
     unit_assert(diff.b_a.Measure_ref == "fer_erusaeM");
 
@@ -157,6 +152,7 @@ void testIonType()
 
     Diff<IonType> diff(a, b);
     unit_assert(!diff);
+    if (os_ && diff) *os_ << diff << endl;
 
     b.index.back() = 2; 
     b.charge = 2;
@@ -180,22 +176,24 @@ void testIonType()
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.b_a.fragmentArray.size() == 1);
     unit_assert(diff.b_a.fragmentArray.back()->Measure_ref == "Graduated_cylinder");
-
 }
 
 
 void testMaterial()
 {
+    if (os_) *os_ << "testMaterial()\n";
+
     Material a, b;
 
-    a.contactRole.Contact_ref = "Contact_ref";
+    a.contactRole.contactPtr = ContactPtr(new Person("contactPtr"));
     a.cvParams.set(MS_sample_number);
     b = a;
 
     Diff<Material> diff(a, b);
+    if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
-    b.contactRole.Contact_ref = "fer_rehto";
+    b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
     b.cvParams.set(MS_sample_name);
 
     diff(a, b);
@@ -205,10 +203,12 @@ void testMaterial()
     unit_assert(diff);
 
     // and correctly
-    unit_assert(diff.a_b.contactRole.Contact_ref == "Contact_ref");
-    unit_assert(diff.b_a.contactRole.Contact_ref == "fer_rehto");
     unit_assert(diff.a_b.cvParams.cvParams.size() == 0);
     unit_assert(diff.b_a.cvParams.cvParams.size() == 1);
+    unit_assert(diff.a_b.contactRole.contactPtr.get());
+    unit_assert(diff.b_a.contactRole.contactPtr.get());
+    unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
+    unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
     unit_assert(diff.b_a.cvParams.hasCVParam(MS_sample_name));
                 
 }
@@ -495,8 +495,8 @@ void testAnalysisData()
     b.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
     b.spectrumIdentificationList.back()->numSequencesSearched = 15;
 
-    a.proteinDetectionList.id = "rosemary";
-    b.proteinDetectionList.id = "sage";
+    a.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("rosemary"));
+    b.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("sage"));
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -509,8 +509,10 @@ void testAnalysisData()
     unit_assert(diff.b_a.spectrumIdentificationList.size() == 1);
     unit_assert_equal(diff.a_b.spectrumIdentificationList.back()->numSequencesSearched, 5, epsilon);
     unit_assert_equal(diff.b_a.spectrumIdentificationList.back()->numSequencesSearched, 15, epsilon);
-    unit_assert(diff.a_b.proteinDetectionList.id == "rosemary");
-    unit_assert(diff.b_a.proteinDetectionList.id == "sage");
+    unit_assert(diff.a_b.proteinDetectionListPtr.get());
+    unit_assert(diff.b_a.proteinDetectionListPtr.get());
+    unit_assert(diff.a_b.proteinDetectionListPtr->id == "rosemary");
+    unit_assert(diff.b_a.proteinDetectionListPtr->id == "sage");
         
 }
 
@@ -709,12 +711,13 @@ void testEnzyme()
     unit_assert(diff);
     
     // and correctly
-    //TODO Removed semiSpecific assertion - resolve difficulties with boost::tribool and Enzyme::empty()
     unit_assert(diff.a_b.id == "Donald Trump");
     unit_assert(diff.b_a.id == "Donald Duck");
     unit_assert(diff.a_b.nTermGain == "y");
     unit_assert(diff.b_a.nTermGain == "n");
     unit_assert(diff.a_b.cTermGain == "y");
+    unit_assert(diff.a_b.semiSpecific);
+    unit_assert(!diff.b_a.semiSpecific);
     unit_assert(diff.b_a.cTermGain == "n");
     unit_assert(diff.a_b.missedCleavages == 1);
     unit_assert(diff.b_a.missedCleavages == 5);
@@ -731,145 +734,402 @@ void testEnzyme()
 
 void testEnzymes()
 {
+    if (os_) *os_ << "testEnzymes()\n";
+
+    Enzymes a, b;
+    Diff<Enzymes> diff(a, b);
+    if (diff && os_) *os_ << diff << endl;
+    
+    a.independent = "indep";
+    b.enzymes.push_back(EnzymePtr(new Enzyme()));
 }
 
 
 void testMassTable()
 {
+    if (os_) *os_ << "testMassTable()\n";
+
+    MassTable a, b;
+
+    a.id = "id";
+    a.msLevel = "msLevel";
+
+    ResiduePtr c(new Residue());
+    a.residues.push_back(c);
+
+    AmbiguousResiduePtr d(new AmbiguousResidue());
+    a.ambiguousResidue.push_back(d);
+
+    b = a;
+    Diff<MassTable> diff(a, b);
+    unit_assert(!diff);
+
+    b.id = "b_id";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.id = "b_id";
+    b.msLevel = "b_msLevel";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.msLevel = "b_msLevel";
+    b.residues.clear();
+    diff(a, b);
+    unit_assert(diff);
+
+    a.residues.clear();
+    b.ambiguousResidue.clear();
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testResidue()
 {
+    if (os_) *os_ << "testResidue()\n";
+
+    Residue a, b;
+    
+    a.Code = "ON";
+    a.Mass = 1.0;
+    b = a;
+
+    Diff<Residue> diff(a, b);
+    unit_assert(!diff);
+
+    b.Code = "OFF";
+    b.Mass = 2.0;
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.Code == "ON");
+    unit_assert(diff.b_a.Code == "OFF");
+    unit_assert_equal(diff.a_b.Mass, 1.0, epsilon);
+    unit_assert_equal(diff.b_a.Mass, 1.0, epsilon);
 }
 
 
 void testAmbiguousResidue()
 {
+    if (os_) *os_ << "testAmbiguousResidue()\n";
+
+    AmbiguousResidue a, b;
+
+    a.Code = "Z";
+    a.params.set(MS_alternate_single_letter_codes);
+    b = a;
+
+    Diff<AmbiguousResidue> diff(a, b);
+    unit_assert(!diff);
+
+    b.Code = "B";
+    b.params.clear();
+    b.params.set(MS_ambiguous_residues);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.Code == "Z");
+    unit_assert(diff.b_a.Code == "B");
+
+    //unit_assert(diff.a_b.params.cvParams.size() == 1);
+    //unit_assert(diff.b_a.params.cvParams.size() == 1);
+    //unit_assert(diff.a_b.params.hasCVParam(MS_alternate_single_letter_codes));
+    //unit_assert(diff.a_b.params.hasCVParam(MS_ambiguous_residues));
 }
 
 void testFilter()
 {
+    if (os_) *os_ << "testFilter()\n";
+    
+    Filter a, b;
+
+    a.filterType.set(MS_DB_filter_taxonomy);
+    a.include.set(MS_DB_PI_filter);
+    a.exclude.set(MS_translation_table);
+    b = a;
+    
+    Diff<Filter> diff(a, b);
+    unit_assert(!diff);
+    
+    b.filterType.clear();
+    b.filterType.set(MS_database_filtering);
+    b.include.clear();
+    b.include.set(MS_DB_filter_on_accession_numbers);
+    b.exclude.clear();
+    b.exclude.set(MS_DB_MW_filter);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.filterType.hasCVParam(MS_DB_filter_taxonomy));
+    unit_assert(diff.b_a.filterType.hasCVParam(MS_database_filtering));
+    unit_assert(diff.a_b.include.hasCVParam(MS_DB_PI_filter));
+    unit_assert(diff.b_a.include.hasCVParam(MS_DB_filter_on_accession_numbers));
+    unit_assert(diff.a_b.exclude.hasCVParam(MS_translation_table));
+    unit_assert(diff.b_a.exclude.hasCVParam(MS_DB_MW_filter));
 }
+
 
 
 void testSpectrumIdentificationProtocol()
 {
+    if (os_) *os_ << "testSpectrumIdentificationProtocol()\n";
+
+
 }
 
 
 void testProteinDetectionProtocol()
 {
+    if (os_) *os_ << "testProteinDetectionProtocol()\n";
+
+
 }
 
 
 void testAnalysisProtocolCollection()
 {
+    if (os_) *os_ << "testAnalysisProtocolCollection()\n";
 }
 
 
 void testContact()
 {
+    if (os_) *os_ << "testContact()\n";
+
+    Contact a("a_id", "a_name"), b;
+
+    a.address = "address";
+    a.phone = "phone";
+    a.email = "email";
+    a.fax = "fax";
+    a.tollFreePhone = "tollFreePhone";
+
+    b = a;
+
+    Diff<Contact> diff(a, b);
+    unit_assert(!diff);
+
+    b.id = "b_id";
+    b.name = "b_name";
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    
+    unit_assert(diff);
+        
+    b.address = "b_address";
+    b.phone = "b_phone";
+    b.email = "b_email";
+    b.fax = "b_fax";
+    b.tollFreePhone = "b_tollFreePhone";
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+
+    unit_assert(diff);
+    
 }
 
 
 void testAffiliations()
 {
+    if (os_) *os_ << "testAffiliations()\n";
+
+    Affiliations a, b;
+
+    a.organizationPtr = OrganizationPtr(new Organization("id"));
+
+    b = a;
+    
+    Diff<Affiliations> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.organizationPtr = OrganizationPtr(new Organization("id2"));
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+
+    unit_assert(diff);
 }
 
 
 void testPerson()
 {
+    if (os_) *os_ << "testPerson()\n";
+
+    Person a, b;
+    
+    a.lastName = "last";
+    a.firstName = "first";
+    a.midInitials = "mi";
+
+    Affiliations c;
+    a.affiliations.push_back(c);
+
+    b = a;
+    Diff<Person> diff(a, b);
+    unit_assert(!diff);
+
+    b.lastName = "smith";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.lastName = "smith";
+    b.firstName = "john";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.firstName = "john";
+    b.midInitials = "j.j.";
+    diff(a, b);
+    unit_assert(diff);
+
+    a.midInitials = "j.j.";
+    b.affiliations.clear();
+    diff(a, b);
+    unit_assert(diff);
 }
 
 
 void testOrganization()
 {
+    if (os_) *os_ << "testOrganization()\n";
 }
 
 
 void testBibliographicReference()
 {
+    if (os_) *os_ << "testBibliographicReference()\n";
 }
 
 
 void testProteinDetection()
 {
+    if (os_) *os_ << "testProteinDetection()\n";
 }
 
 
 void testSpectrumIdentification()
 {
+    if (os_) *os_ << "testSpectrumIdentification()\n";
 }
 
 
 void testAnalysisCollection()
 {
+    if (os_) *os_ << "testAnalysisCollection()\n";
+
 }
 
 
 void testDBSequence()
 {
+    if (os_) *os_ << "testDBSequence()\n";
 }
 
 
 void testModification()
 {
+    if (os_) *os_ << "testModification()\n";
 }
 
 
 void testSubstitutionModification()
 {
+    if (os_) *os_ << "testSubstitutionModification()\n";
 }
 
 
 void testPeptide()
 {
+    if (os_) *os_ << "testPeptide()\n";
 }
 
 
 void testSequenceCollection()
 {
+    if (os_) *os_ << "testSequenceCollection()\n";
 }
 
 
 void testSampleComponent()
 {
+    if (os_) *os_ << "testSampleComponent()\n";
 }
 
 
 void testSample()
 {
+    if (os_) *os_ << "testSample()\n";
 }
 
 
 void testSearchModification()
 {
+    if (os_) *os_ << "testSearchModification()\n";
 }
 
 
 void testSpectrumIdentificationItem()
 {
+    if (os_) *os_ << "testSpectrumIdentificationItem()\n";
 }
 
 
 void testSpectrumIdentificationResult()
 {
+    if (os_) *os_ << "testSpectrumIdentificationResult()\n";
 }
 
 
 void testAnalysisSampleCollection()
 {
+    if (os_) *os_ << "testAnalysisSampleCollection()\n";
 }
 
 
 void testProvider()
 {
+    if (os_) *os_ << "testProvider()\n";
 }
 
 
 void testContactRole()
 {
+    if (os_) *os_ << "testContactRole()\n";
+
+    ContactRole a, b;
+
+    a.contactPtr = ContactPtr(new Person("cid"));
+    a.role.set(MS_software_vendor);
+
+    b = a;
+
+    Diff<ContactRole> diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.contactPtr = ContactPtr(new Organization("cid2"));
+
+    diff(a, b);
+
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+
+    unit_assert(diff.b_a.contactPtr.get());
+    unit_assert(diff.a_b.contactPtr.get());
+    // TODO finish this.
 }
 
 
@@ -946,7 +1206,7 @@ void testMzIdentML()
 
     unit_assert(diff);
 
-    unit_assert(diff.a_b.version == "0.9.0");
+    unit_assert(diff.a_b.version == "1.0.0");
     unit_assert(diff.b_a.version == "version");
 
     unit_assert(diff.a_b.cvs.size() == 1);
@@ -958,6 +1218,7 @@ void test()
     testString();
     testIdentifiableType();
     testParamContainer();
+    testContact();
     testContactRole();
     testFragmentArray();
     testIonType();
@@ -984,7 +1245,6 @@ void test()
     testSpectrumIdentificationProtocol();
     testProteinDetectionProtocol();
     testAnalysisProtocolCollection();
-    testContact();
     testAffiliations();
     testPerson();
     testOrganization();

@@ -120,9 +120,16 @@ PWIZ_API_DECL void read(std::istream& is, Filter& filter);
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocolPtr sip);
 PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocolPtr sip);
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocol& si);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocol& si);
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProtocolPtr pdp);
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocolPtr pdp);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProtocol& pdp);
+PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocol& pdp);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd);
@@ -247,6 +254,10 @@ PWIZ_API_DECL void read(std::istream& is, BibliographicReference& bibliographicR
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dataCollection);
 PWIZ_API_DECL void read(std::istream& is, DataCollection& dataCollection);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftwarePtr analysisSoftware);
+PWIZ_API_DECL void read(std::istream& is, AnalysisSoftwarePtr analysisSoftware);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& analysisSoftware);

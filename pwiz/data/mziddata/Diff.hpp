@@ -144,6 +144,13 @@ void diff(const DataCollection& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const SpectrumIdentificationListPtr a,
+          const SpectrumIdentificationListPtr b,
+          SpectrumIdentificationListPtr a_b,
+          SpectrumIdentificationListPtr b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const SpectrumIdentificationList& a,
           const SpectrumIdentificationList& b,
           SpectrumIdentificationList& a_b,
@@ -262,6 +269,15 @@ void diff(const Contact& a,
           Contact& b_a,
           const DiffConfig& config);
 
+
+PWIZ_API_DECL
+void diff(const ContactPtr a,
+          const ContactPtr b,
+          ContactPtr& a_b,
+          ContactPtr& b_a,
+          const DiffConfig& config);
+
+
 PWIZ_API_DECL
 void diff(const Affiliations& a,
           const Affiliations& b,
@@ -290,12 +306,14 @@ void diff(const Organization& a,
           Organization& b_a,
           const DiffConfig& config);
 
+/*
 PWIZ_API_DECL
 void diff(const OrganizationPtr a,
           const OrganizationPtr b,
           OrganizationPtr a_b,
           OrganizationPtr b_a,
           const DiffConfig& config);
+*/
 
 PWIZ_API_DECL
 void diff(const BibliographicReference& a,

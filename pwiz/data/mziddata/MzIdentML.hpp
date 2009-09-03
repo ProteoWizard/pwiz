@@ -47,7 +47,8 @@ using msdata::ParamContainer;
 struct PWIZ_API_DECL IdentifiableType
 {
     //    static const int INVALID_NATURAL = -1;
-    
+    IdentifiableType(const std::string& id_ = "",
+                     const std::string& name_ = "");
     virtual ~IdentifiableType() {}
     
     std::string id;
@@ -58,6 +59,9 @@ struct PWIZ_API_DECL IdentifiableType
 
 struct PWIZ_API_DECL ExternalData : public IdentifiableType
 {
+    ExternalData(const std::string id_ = "",
+                 const std::string name_ = "");
+    
     std::string location;
     
     bool empty() const;
@@ -82,16 +86,10 @@ struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
 
 typedef boost::shared_ptr<BibliographicReference> BibliographicReferencePtr;
 
-struct PWIZ_API_DECL ContactRole
-{
-    std::string Contact_ref;
-    ParamContainer role;
-
-    bool empty() const;
-};
-
 struct PWIZ_API_DECL Contact : public IdentifiableType
 {
+    Contact(const std::string& id_ = "",
+            const std::string& name_ = "");
     virtual ~Contact() {}
     
     std::string address;
@@ -100,20 +98,52 @@ struct PWIZ_API_DECL Contact : public IdentifiableType
     std::string fax;
     std::string tollFreePhone;
 
+    // For diff messages
+    ParamContainer params;
+    
     virtual bool empty() const;
 };
 
 typedef boost::shared_ptr<Contact> ContactPtr;
 
+//struct PWIZ_API_DECL Organization;
+
+struct PWIZ_API_DECL Organization : public Contact
+{
+    struct Parent
+    {
+        Parent();
+        
+        //std::string organization_ref;
+        //boost::shared_ptr<Organization> organizationPtr;
+        ContactPtr organizationPtr;
+    };
+
+    Organization(const std::string& id_ = "",
+                 const std::string& name_ = "");
+    Parent parent;
+
+    virtual bool empty() const;
+};
+
+typedef boost::shared_ptr<Organization> OrganizationPtr;
+
 struct PWIZ_API_DECL Affiliations 
 {
-    std::string organization_ref;
+    Affiliations(const std::string& id_ = "");
+    
+    //std::string organization_ref;
+    //OrganizationPtr organizationPtr;
+    ContactPtr organizationPtr;
 
     bool empty() const;
 };
 
 struct PWIZ_API_DECL Person : public Contact
 {
+    Person(const std::string& id_ = "",
+           const std::string& name_ = "");
+    
     std::string lastName;
     std::string firstName;
     std::string midInitials;
@@ -125,22 +155,22 @@ struct PWIZ_API_DECL Person : public Contact
 
 typedef boost::shared_ptr<Person> PersonPtr;
 
-struct PWIZ_API_DECL Organization : public Contact
+struct PWIZ_API_DECL ContactRole
 {
-    struct Parent
-    {
-        std::string organization_ref;
-    };
+    ContactRole();
+    
+    //std::string Contact_ref;
+    ContactPtr contactPtr;
+    ParamContainer role;
 
-    Parent parent;
-
-    virtual bool empty() const;
+    bool empty() const;
 };
-
-typedef boost::shared_ptr<Organization> OrganizationPtr;
 
 struct PWIZ_API_DECL Provider : public IdentifiableType // : public Contact
 {
+    Provider(const std::string id_ = "",
+             const std::string name_ = "");
+    
     ContactRole contactRole;
 
     bool empty() const;
@@ -150,21 +180,32 @@ typedef boost::shared_ptr<Provider> ProviderPtr;
 
 struct PWIZ_API_DECL Material : public IdentifiableType
 {
+    Material(const std::string& id_ = "",
+             const std::string& name_ = "");
+    
     ContactRole contactRole;
     ParamContainer cvParams;
 
     virtual bool empty() const;
 };
 
+struct PWIZ_API_DECL Sample;
+
 struct PWIZ_API_DECL Sample : public Material
 {
     // SampleType schema elements
     struct subSample{
-        std::string Sample_ref;
+        subSample(const std::string& id_ = "",
+                  const std::string& name_ = "");
+        
+        //std::string Sample_ref;
+        boost::shared_ptr<Sample> samplePtr;
 
         bool empty() const;
     };
 
+    Sample(const std::string& id_ = "",
+           const std::string& name_ = "");
     std::vector<subSample> subSamples;
 
     bool empty() const;
@@ -174,6 +215,9 @@ typedef boost::shared_ptr<Sample> SamplePtr;
 
 struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
 {
+    AnalysisSoftware(const std::string& id_ = "",
+                     const std::string& name_ = "");
+    
     // SoftwareType attributes
     std::string version;
     std::string URI;
@@ -198,13 +242,34 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 };
 
 
+struct PWIZ_API_DECL SearchDatabase : public ExternalData
+{
+    SearchDatabase(const std::string& id_ = "",
+                   const std::string& name_ = "");
+    
+    std::string version;
+    std::string releaseDate;
+    long numDatabaseSequences;
+    long numResidues;
+
+    ParamContainer fileFormat;
+    ParamContainer DatabaseName;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
+
+
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
 {
-    DBSequence();
+    DBSequence(const std::string id_ = "",
+               const std::string name_ = "");
     
     int length;
     std::string accession;
-    std::string SearchDatabase_ref;
+    //std::string SearchDatabase_ref;
+    SearchDatabasePtr searchDatabasePtr;
 
     std::string seq;
 
@@ -259,39 +324,6 @@ struct PWIZ_API_DECL SequenceCollection
 {
     std::vector<DBSequencePtr> dbSequences;
     std::vector<PeptidePtr> peptides;
-
-    bool empty() const;
-};
-
-struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
-{
-    std::string SpectrumIdentificationProtocol_ref;
-    std::string SpectrumIdentificationList_ref;
-    std::string activityDate;
-
-    std::vector<std::string> inputSpectra;
-    std::vector<std::string> searchDatabase;
-};
-
-typedef boost::shared_ptr<SpectrumIdentification> SpectrumIdentificationPtr;
-
-struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
-{
-    std::string ProteinDetectionProtocol_ref;
-    std::string ProteinDetectionList_ref;
-    std::string activityDate;
-
-    std::vector< std::string > inputSpectrumIdentifications;
-
-    virtual bool empty() const;
-};
-
-typedef boost::shared_ptr<ProteinDetection> ProteinDetectionPtr;
-
-struct PWIZ_API_DECL AnalysisCollection
-{
-    std::vector<SpectrumIdentificationPtr> spectrumIdentification;
-    ProteinDetection proteinDetection;
 
     bool empty() const;
 };
@@ -352,6 +384,7 @@ struct PWIZ_API_DECL Enzymes
     bool empty() const;
 };
 
+
 struct PWIZ_API_DECL Residue
 {
     Residue();
@@ -388,6 +421,7 @@ struct PWIZ_API_DECL MassTable
     bool empty() const;
 };
 
+
 struct PWIZ_API_DECL Filter
 {
     ParamContainer filterType;
@@ -399,9 +433,14 @@ struct PWIZ_API_DECL Filter
 
 typedef boost::shared_ptr<Filter> FilterPtr;
 
+
 struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
 {
-    std::string AnalysisSoftware_ref;
+    SpectrumIdentificationProtocol(const std::string& id_ = "",
+                                   const std::string& name_ = "");
+    
+    //std::string AnalysisSoftware_ref;
+    AnalysisSoftwarePtr analysisSoftwarePtr;
 
     ParamContainer searchType; // Only 1 element is allowed.
     ParamContainer additionalSearchParams;
@@ -412,91 +451,11 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
     ParamContainer parentTolerance;
     ParamContainer threshold;
     std::vector<FilterPtr> databaseFilters;
+    
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<SpectrumIdentificationProtocol>SpectrumIdentificationProtocolPtr;
-
-
-struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
-{
-    std::string AnalysisSoftware_ref;
-
-    ParamContainer analysisParams;
-    ParamContainer threshold;
-};
-
-typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
-
-
-struct PWIZ_API_DECL AnalysisProtocolCollection
-{
-    std::vector<SpectrumIdentificationProtocolPtr> spectrumIdentificationProtocol;
-    std::vector<ProteinDetectionProtocolPtr> proteinDetectionProtocol;
-
-    
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<AnalysisProtocolCollection> AnalysisProtocolCollectionPtr;
-
-
-struct PWIZ_API_DECL SpectraData : public IdentifiableType
-{
-    std::string location;
-
-    std::vector<std::string> externalFormatDocumentation;
-    ParamContainer fileFormat;
-
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
-
-struct PWIZ_API_DECL SearchDatabase : public ExternalData
-{
-    SearchDatabase();
-    
-    std::string version;
-    std::string releaseDate;
-    long numDatabaseSequences;
-    long numResidues;
-
-    ParamContainer fileFormat;
-    ParamContainer DatabaseName;
-
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
-
-
-struct PWIZ_API_DECL SourceFile : public IdentifiableType
-{
-    std::string location;
-    ParamContainer fileFormat;
-
-    std::vector<std::string> externalFormatDocumentation;
-
-    ParamContainer paramGroup;
-
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<SourceFile> SourceFilePtr;
-
-/// Input element. Contains 0+ of SourceFile, SearchDatabase,
-/// SpectraData
-struct PWIZ_API_DECL Inputs
-{
-    // Replace these 3 members w/ their types
-    std::vector<SourceFilePtr> sourceFile;
-    std::vector<SearchDatabasePtr> searchDatabase;
-    std::vector<SpectraDataPtr> spectraData;
-    
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<Inputs> InputsPtr;
 
 
 struct PWIZ_API_DECL Measure : public IdentifiableType
@@ -507,6 +466,7 @@ struct PWIZ_API_DECL Measure : public IdentifiableType
 };
 
 typedef boost::shared_ptr<Measure> MeasurePtr;
+
 
 struct PWIZ_API_DECL FragmentArray
 {
@@ -567,8 +527,6 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
 };
 
 typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
-
-
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 {
     SpectrumIdentificationItem();
@@ -606,6 +564,58 @@ struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
 
 typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationResultPtr;
 
+struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
+{
+    SpectrumIdentificationList(const std::string& id_ = "",
+                               const std::string& name_ = "");
+    
+    long numSequencesSearched;
+
+    std::vector<MeasurePtr> fragmentationTable;
+    std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
+
+
+struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
+{
+    SpectrumIdentification(const std::string& id_ = "",
+                           const std::string& name_ = "");
+    
+    //std::string SpectrumIdentificationProtocol_ref;
+    SpectrumIdentificationProtocolPtr spectrumIdentificationProtocolPtr;
+    //std::string SpectrumIdentificationList_ref;
+    SpectrumIdentificationListPtr spectrumIdentificationListPtr;
+    std::string activityDate;
+
+    std::vector<std::string> inputSpectra;
+    std::vector<std::string> searchDatabase;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<SpectrumIdentification> SpectrumIdentificationPtr;
+
+struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
+{
+    ProteinDetectionProtocol(const std::string& id_ = "",
+                             const std::string& name_ = "");
+    
+    //std::string AnalysisSoftware_ref;
+    AnalysisSoftwarePtr analysisSoftwarePtr;
+
+    ParamContainer analysisParams;
+    ParamContainer threshold;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
+
+
 struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
 {
     ProteinDetectionHypothesis();
@@ -634,23 +644,11 @@ struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
 
 typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
 
-struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
-{
-    SpectrumIdentificationList();
-    
-    long numSequencesSearched;
-
-    std::vector<MeasurePtr> fragmentationTable;
-    std::vector<SpectrumIdentificationResultPtr> spectrumIdentificationResult;
-
-    bool empty() const;
-};
-
-typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
-
-
 struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 {
+    ProteinDetectionList(const std::string& id_ = "",
+                         const std::string& name_ = "");
+    
     std::vector<ProteinAmbiguityGroupPtr> proteinAmbiguityGroup;
     ParamContainer paramGroup;
 
@@ -659,11 +657,95 @@ struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 
 typedef boost::shared_ptr<ProteinDetectionList> ProteinDetectionListPtr;
 
+
+struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
+{
+    ProteinDetection(const std::string id_ = "",
+                     const std::string name_ = "");
+    
+    //std::string ProteinDetectionProtocol_ref;
+    ProteinDetectionProtocolPtr proteinDetectionProtocolPtr;
+    //std::string ProteinDetectionList_ref;
+    ProteinDetectionListPtr proteinDetectionListPtr;
+    std::string activityDate;
+
+    std::vector<SpectrumIdentificationListPtr> inputSpectrumIdentifications;
+
+    virtual bool empty() const;
+};
+
+typedef boost::shared_ptr<ProteinDetection> ProteinDetectionPtr;
+
+struct PWIZ_API_DECL AnalysisCollection
+{
+    std::vector<SpectrumIdentificationPtr> spectrumIdentification;
+    ProteinDetection proteinDetection;
+
+    bool empty() const;
+};
+
+
+struct PWIZ_API_DECL AnalysisProtocolCollection
+{
+    std::vector<SpectrumIdentificationProtocolPtr> spectrumIdentificationProtocol;
+    std::vector<ProteinDetectionProtocolPtr> proteinDetectionProtocol;
+
+    
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<AnalysisProtocolCollection> AnalysisProtocolCollectionPtr;
+
+
+struct PWIZ_API_DECL SpectraData : public IdentifiableType
+{
+    std::string location;
+
+    std::vector<std::string> externalFormatDocumentation;
+    ParamContainer fileFormat;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
+
+struct PWIZ_API_DECL SourceFile : public IdentifiableType
+{
+    std::string location;
+    ParamContainer fileFormat;
+
+    std::vector<std::string> externalFormatDocumentation;
+
+    ParamContainer paramGroup;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<SourceFile> SourceFilePtr;
+
+/// Input element. Contains 0+ of SourceFile, SearchDatabase,
+/// SpectraData
+struct PWIZ_API_DECL Inputs
+{
+    // Replace these 3 members w/ their types
+    std::vector<SourceFilePtr> sourceFile;
+    std::vector<SearchDatabasePtr> searchDatabase;
+    std::vector<SpectraDataPtr> spectraData;
+    
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<Inputs> InputsPtr;
+
+
+
+
+
 /// AnalysisData element. 
 struct PWIZ_API_DECL AnalysisData
 {
     std::vector<SpectrumIdentificationListPtr> spectrumIdentificationList;
-    ProteinDetectionList proteinDetectionList;
+    ProteinDetectionListPtr proteinDetectionListPtr;
 
     bool empty() const;
 };
@@ -682,6 +764,10 @@ typedef boost::shared_ptr<DataCollection> DataCollectionPtr;
 
 struct PWIZ_API_DECL MzIdentML : public IdentifiableType
 {
+    MzIdentML(const std::string& id_ = "",
+              const std::string& version_ = "1.0.0",
+              const std::string& creationDate_ = "");
+    
     std::string version;
 
     // attributes included in the MzIdentML schema
@@ -714,6 +800,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
 };
 
 typedef boost::shared_ptr<MzIdentML> MzIdentMLPtr;
+
 
 } // namespace mziddata 
 } // namespace pwiz 

@@ -45,6 +45,7 @@ lib pwiz_data_mzid
         IO.cpp
         Serializer_mzid.cpp
         Pep2MzIdent.cpp
+        References.cpp
     : # requirements
         <library>../msdata//pwiz_data_msdata
         <library>../misc//pwiz_data_misc
@@ -71,10 +72,10 @@ lib pwiz_data_mzid_examples
 
 unit-test MzIdentMLTest : MzIdentMLTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; 
 unit-test DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; # Diff.cpp TraData.cpp cv.cpp ;
-#unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_tradata ; # References.cpp TraData.cpp cv.cpp ;
+unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
 unit-test IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-unit-test Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
+#unit-test Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
 #unit-test TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
 #unit-test ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
 

@@ -157,32 +157,42 @@ class PWIZ_API_DECL TextWriter
     
     TextWriter& operator()(const SpectrumIdentificationProtocolPtr& sip)
     {
+        if (sip.get())
+            (*this)(*sip);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const SpectrumIdentificationProtocol& si)
+    {
         (*this)("SpectrumIdentificationProtocol:");
-        (*this)((IdentifiableType)*sip);
-        if (!sip->AnalysisSoftware_ref.empty())
-            child()("AnalysisSoftware_ref: "+sip->AnalysisSoftware_ref);
-        if (!sip->searchType.empty())
-            child()("searchType", sip->searchType);
-        if (!sip->additionalSearchParams.empty())
-            child()("additionalSearchParams", sip->additionalSearchParams);
-        if (!sip->modificationParams.empty())
+        (*this)((IdentifiableType&)si);
+        if (si.analysisSoftwarePtr.get() &&
+            !si.analysisSoftwarePtr->empty())
+            child()("AnalysisSoftware_ref: "+si.analysisSoftwarePtr->id);
+        if (!si.searchType.empty())
+            child()("searchType", si.searchType);
+        if (!si.additionalSearchParams.empty())
+            child()("additionalSearchParams", si.additionalSearchParams);
+        if (!si.modificationParams.empty())
         {
             child()("modificationParams");
-            for_each(sip->modificationParams.begin(),
-                     sip->modificationParams.end(), child());
+            for_each(si.modificationParams.begin(),
+                     si.modificationParams.end(), child());
         }
-        if (!sip->enzymes.empty())
-            child()(sip->enzymes);
-        if (!sip->massTable.empty())
-            child()(sip->massTable);
-        if (!sip->fragmentTolerance.empty())
-            child()("fragmentTolerance", sip->fragmentTolerance);
-        if (!sip->parentTolerance.empty())
-            child()("parentTolerance", sip->parentTolerance);
-        if (!sip->threshold.empty())
-            child()("threshold", sip->threshold);
-        if (!sip->databaseFilters.empty())
-            child()("databaseFilters", sip->databaseFilters);
+        if (!si.enzymes.empty())
+            child()(si.enzymes);
+        if (!si.massTable.empty())
+            child()(si.massTable);
+        if (!si.fragmentTolerance.empty())
+            child()("fragmentTolerance", si.fragmentTolerance);
+        if (!si.parentTolerance.empty())
+            child()("parentTolerance", si.parentTolerance);
+        if (!si.threshold.empty())
+            child()("threshold", si.threshold);
+        if (!si.databaseFilters.empty())
+            child()("databaseFilters", si.databaseFilters);
 
         return *this;
     }
@@ -196,8 +206,8 @@ class PWIZ_API_DECL TextWriter
             child()("length"+boost::lexical_cast<std::string>(ds.length));
         if (!ds.accession.empty())
             child()("accession: "+ds.accession);
-        if (!ds.SearchDatabase_ref.empty())
-            child()("SearchDatabase_ref"+ds.SearchDatabase_ref);
+        if (ds.searchDatabasePtr.get() && !ds.searchDatabasePtr->empty())
+            child()("SearchDatabase_ref: "+ds.searchDatabasePtr->id);
         if (!ds.seq.empty())
             child()("seq: "+ds.seq);
         if (!ds.paramGroup.empty())
@@ -340,8 +350,9 @@ class PWIZ_API_DECL TextWriter
 
         if (!ad.spectrumIdentificationList.empty())
             child()("spectrumIdentificationList: ", ad.spectrumIdentificationList);
-        if (!ad.proteinDetectionList.empty())
-            child()(ad.proteinDetectionList);
+        if (ad.proteinDetectionListPtr.get() &&
+            !ad.proteinDetectionListPtr->empty())
+            child()(*ad.proteinDetectionListPtr);
         
         return *this;
     }
@@ -496,10 +507,18 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const ProteinDetection& pd)
     {
         (*this)("ProteinDetection: ");
-        if (!pd.ProteinDetectionProtocol_ref.empty())
-            child()("ProteinDetectionProtocol_ref: ", pd.ProteinDetectionProtocol_ref);
-        if (!pd.ProteinDetectionList_ref.empty())
-            child()("ProteinDetectionList_ref: "+pd.ProteinDetectionList_ref);
+        if (pd.proteinDetectionProtocolPtr.get() &&
+            !pd.proteinDetectionProtocolPtr->empty())
+        {
+            child()("ProteinDetectionProtocol_ref: ");
+            child()(*pd.proteinDetectionProtocolPtr);
+        }
+        if (pd.proteinDetectionListPtr.get() &&
+            !pd.proteinDetectionListPtr->empty())
+        {
+            child()("ProteinDetectionList_ref: ");
+            child()(*pd.proteinDetectionListPtr);
+        }
         if (!pd.activityDate.empty())
             child()("activityDate: "+pd.activityDate);
         child()("inputSpectrumIdentifications:");
@@ -512,15 +531,25 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SpectrumIdentification& si)
     {
         (*this)("SpectrumIdentification: ");
-        if (!si.SpectrumIdentificationProtocol_ref.empty())
-            child()("SpectrumIdentificationProtocol_ref: "+si.SpectrumIdentificationProtocol_ref);
-        if (!si.SpectrumIdentificationList_ref.empty())
-            child()("SpectrumIdentificationList_ref: "+si.SpectrumIdentificationList_ref);
+        if (si.spectrumIdentificationProtocolPtr.get() &&
+            !si.spectrumIdentificationProtocolPtr->empty())
+            child()("SpectrumIdentificationProtocol_ref: "+si.spectrumIdentificationProtocolPtr->id);
+        if (si.spectrumIdentificationListPtr.get() &&
+            !si.spectrumIdentificationListPtr->empty())
+            child()("SpectrumIdentificationList_ref: "+si.spectrumIdentificationListPtr->id);
         if (!si.activityDate.empty())
             child()("activityDate: "+si.activityDate);
-        
-        std::for_each(si.inputSpectra.begin(), si.inputSpectra.end(), child());
-        std::for_each(si.searchDatabase.begin(), si.searchDatabase.end(), child());
+
+        if (!si.inputSpectra.empty())
+        {
+            child()("inputSpectra: ");
+            std::for_each(si.inputSpectra.begin(), si.inputSpectra.end(), child());
+        }
+        if (!si.searchDatabase.empty())
+        {
+            child()("searchDatabase: ");
+            std::for_each(si.searchDatabase.begin(), si.searchDatabase.end(), child());
+        }
         
         return *this;
     }
@@ -557,9 +586,103 @@ class PWIZ_API_DECL TextWriter
     }
 
     
+    TextWriter& operator()(const Contact& cont)
+    {
+        (*this)((IdentifiableType&)cont);
+        if (!cont.address.empty())
+            child()("address: "+cont.address);
+        if (!cont.phone.empty())
+            child()("phone: "+cont.phone);
+        if (!cont.email.empty())
+            child()("email: "+cont.email);
+        if (!cont.fax.empty())
+            child()("fax: "+cont.fax);
+        if (!cont.tollFreePhone.empty())
+            child()("tollFreePhone: "+cont.tollFreePhone);
+
+        return *this;
+    }
+
+
+    TextWriter& operator()(const Affiliations& aff)
+    {
+        (*this)("Affiliations: ");
+
+        if (aff.organizationPtr.get())
+            child()("organizationPtr: "+aff.organizationPtr->id);
+        
+        return *this;
+    }
+
+    TextWriter& operator()(const Person& per)
+    {
+        (*this)("Person: ");
+        (*this)((const Contact&)per);
+        if (!per.lastName.empty())
+            child()("lastName: "+per.lastName);
+        if (!per.firstName.empty())
+            child()("firstName: "+per.firstName);
+        if (!per.midInitials.empty())
+            child()("midInitials: "+per.midInitials);
+
+        std::for_each(per.affiliations.begin(), per.affiliations.end(), child());
+        
+        return *this;
+    }
+    
+    TextWriter& operator()(const Organization& org)
+    {
+        (*this)("Organization: ");
+        (*this)((const Contact&)org);
+        if (org.parent.organizationPtr.get() && !org.parent.organizationPtr->empty())
+        {
+            child()("Parent::organizationPtr: ");
+            child()(*org.parent.organizationPtr);
+        }
+        
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const ContactPtr cont)
+    {
+        if (dynamic_cast<Person*>(cont.get()))
+            (*this)((const Person&)(*cont));
+        else if (dynamic_cast<Organization*>(cont.get()))
+            (*this)((const Organization&)(*cont));
+        else
+            (*this)(*cont);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const std::string& label, const ContactPtr cont)
+    {
+        (*this)(label);
+        (*this)(cont);
+
+        return *this;
+    }
+
+    
+    TextWriter& operator()(const ContactRole& cr)
+    {
+        (*this)("ContactRole: ");
+        if (cr.contactPtr.get() && !cr.contactPtr->empty())
+        {
+            child()("Contact_ref: ", cr.contactPtr);
+        }
+        if (!cr.role.empty())
+            child()("role: ", cr.role);
+        return (*this);
+    }
+
+    
     TextWriter& operator()(const Provider& provider)
     {
         (*this)("Provider: ");
+        (*this)((IdentifiableType&)provider);
         if (!provider.contactRole.empty())
             child()(provider.contactRole);
         return *this;
@@ -568,7 +691,8 @@ class PWIZ_API_DECL TextWriter
     
     TextWriter& operator()(const Sample::subSample& subSample)
     {
-        (*this)("Sample_ref: "+subSample.Sample_ref);
+        if (subSample.samplePtr.get());
+        (*this)("Sample_ref: "+subSample.samplePtr->id);
 
         return *this;
     }
@@ -608,60 +732,6 @@ class PWIZ_API_DECL TextWriter
         for_each(asc.samples.begin(), asc.samples.end(), *this);
 
         return *this;
-    }
-
-    
-    TextWriter& operator()(const Contact& cont)
-    {
-        if (!cont.address.empty())
-            child()("address: "+cont.address);
-        if (!cont.phone.empty())
-            child()("phone: "+cont.phone);
-        if (!cont.email.empty())
-            child()("email: "+cont.email);
-        if (!cont.fax.empty())
-            child()("fax: "+cont.fax);
-        if (!cont.tollFreePhone.empty())
-            child()("tollFreePhone: "+cont.tollFreePhone);
-
-        return *this;
-    }
-
-
-    TextWriter& operator()(const Affiliations& aff)
-    {
-        (*this)("Affiliations: ");
-
-        if (!aff.organization_ref.empty())
-            child()("organization_ref: "+aff.organization_ref);
-        
-        return *this;
-    }
-
-    TextWriter& operator()(const Person& per)
-    {
-        (*this)("Person: ");
-        (*this)((const Contact&)per);
-        if (!per.lastName.empty())
-            child()("lastName: "+per.lastName);
-        if (!per.firstName.empty())
-            child()("firstName: "+per.firstName);
-        if (!per.midInitials.empty())
-            child()("midInitials: "+per.midInitials);
-
-        std::for_each(per.affiliations.begin(), per.affiliations.end(), child());
-        
-        return *this;
-    }
-    
-    TextWriter& operator()(const ContactRole& cr)
-    {
-        (*this)("ContactRole: ");
-        if (!cr.Contact_ref.empty())
-            child()("Contact_ref: "+cr.Contact_ref);
-        if (!cr.role.empty())
-            child()("role: ", cr.role);
-        return (*this);
     }
 
     

@@ -23,8 +23,8 @@
 #define PWIZ_SOURCE
 
 #include "MzIdentML.hpp"
+#include "boost/date_time/gregorian/gregorian.hpp"
 #include <iterator>
-
 #include <iostream>
 
 namespace pwiz {
@@ -33,6 +33,7 @@ namespace mziddata {
 
 using namespace std;
 using namespace boost::logic;
+using namespace boost::gregorian;
 using msdata::CVParamIs;
 using msdata::CVParamIsChildOf;
 
@@ -41,7 +42,13 @@ using msdata::CVParamIsChildOf;
 // IdentifiableType
 //
 
-bool IdentifiableType::empty() const
+PWIZ_API_DECL IdentifiableType::IdentifiableType(const std::string& id_,
+                                   const std::string& name_)
+    : id(id_), name(name_)
+{
+}
+
+PWIZ_API_DECL bool IdentifiableType::empty() const
 {
     return id.empty() &&
         name.empty();
@@ -52,7 +59,14 @@ bool IdentifiableType::empty() const
 // ExternalData
 //
 
-bool ExternalData::empty() const
+PWIZ_API_DECL ExternalData::ExternalData(const std::string id_,
+                                         const std::string name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+
+PWIZ_API_DECL bool ExternalData::empty() const
 {
     return IdentifiableType::empty() &&
         location.empty();
@@ -85,9 +99,14 @@ PWIZ_API_DECL bool BibliographicReference::empty() const
 // ContactRole
 //
 
+PWIZ_API_DECL ContactRole::ContactRole()
+    : contactPtr(ContactPtr(new Contact()))
+{
+}
+
 PWIZ_API_DECL bool ContactRole::empty() const
 {
-    return Contact_ref.empty() &&
+    return (!contactPtr.get()  || contactPtr->empty()) &&
         role.empty();
 }
 
@@ -95,27 +114,48 @@ PWIZ_API_DECL bool ContactRole::empty() const
 // Contact
 //
 
+PWIZ_API_DECL Contact::Contact(const string& id_,
+                               const string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+
 PWIZ_API_DECL bool Contact::empty() const
 {
-    return address.empty() &&
+    return IdentifiableType::empty() &&
+        address.empty() &&
         phone.empty() &&
         email.empty() &&
         fax.empty() &&
-        tollFreePhone.empty();
+        tollFreePhone.empty() &&
+        params.empty();
 }
 
 //
 // Affiliations
 //
 
+PWIZ_API_DECL Affiliations::Affiliations(const string& id_)
+    : organizationPtr(OrganizationPtr(new Organization(id_)))
+{
+}
+
+
 PWIZ_API_DECL bool Affiliations::empty() const
 {
-    return organization_ref.empty();
+    return !organizationPtr.get() || organizationPtr->empty();
 }
 
 //
 // Person
 //
+
+PWIZ_API_DECL Person::Person(const std::string& id_,
+           const std::string& name_)
+    : Contact(id_, name_)
+{
+}
 
 PWIZ_API_DECL bool Person::empty() const
 {
@@ -130,12 +170,23 @@ PWIZ_API_DECL bool Person::empty() const
 // Organization
 //
 
+PWIZ_API_DECL Organization::Organization(const string& id_,
+                                         const string& name_)
+    : Contact(id_, name_)
+{
+}
+
+
 PWIZ_API_DECL bool Organization::empty() const
 {
     return Contact::empty() &&
-        parent.organization_ref.empty();
+        !parent.organizationPtr.get();
 }
 
+
+PWIZ_API_DECL Organization::Parent::Parent()
+{
+}
 
 //
 // Modification
@@ -245,12 +296,41 @@ PWIZ_API_DECL bool SpectrumIdentificationResult::empty() const
 
 
 //
+// SpectrumIdentification
+//
+
+PWIZ_API_DECL SpectrumIdentification::SpectrumIdentification(
+    const std::string& id_,const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+
+PWIZ_API_DECL bool SpectrumIdentification::empty() const
+{
+    return IdentifiableType::empty() &&
+        (!spectrumIdentificationProtocolPtr.get() || spectrumIdentificationProtocolPtr->empty()) &&
+        (!spectrumIdentificationListPtr.get() || spectrumIdentificationListPtr->empty()) &&
+        activityDate.empty() &&
+        inputSpectra.empty() &&
+        searchDatabase.empty();
+}
+
+//
 // ProteinDetectionList
 //
 
+PWIZ_API_DECL ProteinDetectionList::ProteinDetectionList(
+    const std::string& id_,const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+    
+
 PWIZ_API_DECL bool ProteinDetectionList::empty() const
 {
-    return proteinAmbiguityGroup.empty() &&
+    return IdentifiableType::empty() &&
+        proteinAmbiguityGroup.empty() &&
         paramGroup.empty();
 }
 
@@ -269,7 +349,8 @@ PWIZ_API_DECL bool ProteinDetectionHypothesis::empty() const
 //
 // ProteinAmbiguityGroup
 //
-bool ProteinAmbiguityGroup::empty() const
+
+PWIZ_API_DECL bool ProteinAmbiguityGroup::empty() const
 {
     return proteinDetectionHypothesis.empty() &&
         paramGroup.empty();
@@ -279,7 +360,15 @@ bool ProteinAmbiguityGroup::empty() const
 //
 // Provider
 //
-bool Provider::empty() const
+
+PWIZ_API_DECL Provider::Provider(const std::string id_,
+                                 const std::string name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+
+PWIZ_API_DECL bool Provider::empty() const
 {
     return IdentifiableType::empty() &&
         contactRole.empty();
@@ -290,16 +379,37 @@ bool Provider::empty() const
 // SpectrumIdentificationList
 //
 
-PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList() :
-    numSequencesSearched(0)
+PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList(
+    const string& id_, const string& name_)
+    : IdentifiableType(id_, name_), numSequencesSearched(0)
 {
 }
 
 PWIZ_API_DECL bool SpectrumIdentificationList::empty() const
 {
-    return numSequencesSearched == 0 &&
+    return IdentifiableType::empty() &&
+        numSequencesSearched == 0 &&
         fragmentationTable.empty() &&
         spectrumIdentificationResult.empty();
+}
+
+
+//
+// ProteinDetectionProtocol
+//
+
+PWIZ_API_DECL ProteinDetectionProtocol::ProteinDetectionProtocol(
+    const std::string& id_, const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+PWIZ_API_DECL bool ProteinDetectionProtocol::empty() const
+{
+    return IdentifiableType::empty() &&
+        (!analysisSoftwarePtr.get() || analysisSoftwarePtr->empty()) &&
+        analysisParams.empty() &&
+        threshold.empty();
 }
 
 //
@@ -435,7 +545,7 @@ PWIZ_API_DECL string FragmentArray::getValues() const
 // IonType
 //
 
-IonType& IonType::setIndex(const string& value)
+PWIZ_API_DECL IonType& IonType::setIndex(const string& value)
 {
     istringstream iss(value);
 
@@ -445,7 +555,7 @@ IonType& IonType::setIndex(const string& value)
     return *this;
 }
 
-IonType& IonType::setIndex(const vector<int>& value)
+PWIZ_API_DECL IonType& IonType::setIndex(const vector<int>& value)
 {
     index.clear();
     copy(value.begin(), value.end(), back_inserter(index));
@@ -453,7 +563,7 @@ IonType& IonType::setIndex(const vector<int>& value)
     return *this;
 }
 
-string IonType::getIndex() const
+PWIZ_API_DECL string IonType::getIndex() const
 {
     ostringstream oss;
     copy(index.begin(), index.end(), ostream_iterator<int>(oss, " "));
@@ -465,7 +575,13 @@ string IonType::getIndex() const
 // Material
 //
 
-bool Material::empty() const
+PWIZ_API_DECL Material::Material(const std::string& id_,
+                                 const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+PWIZ_API_DECL bool Material::empty() const
 {
     return contactRole.empty() &&
         cvParams.empty();
@@ -485,10 +601,30 @@ PWIZ_API_DECL bool Measure::empty() const
 // Sample
 //
 
-bool Sample::empty() const
+PWIZ_API_DECL Sample::Sample(const std::string& id_,
+                             const std::string& name_)
+    : Material(id_, name_)
+{
+}
+
+PWIZ_API_DECL bool Sample::empty() const
 {
     return Material::empty() &&
         subSamples.empty();
+}
+
+//
+// subSample
+//
+
+PWIZ_API_DECL Sample::subSample::subSample(const std::string& id_,
+                                           const std::string& name_)
+    : samplePtr(SamplePtr(new Sample(id_, name_)))
+{}
+
+PWIZ_API_DECL bool Sample::subSample::empty() const
+{
+    return !samplePtr.get();
 }
 
 
@@ -517,7 +653,7 @@ PWIZ_API_DECL bool SubstitutionModification::empty() const
 // SequenceCollection
 //
 
-bool SequenceCollection::empty() const
+PWIZ_API_DECL bool SequenceCollection::empty() const
 {
     return dbSequences.empty() &&
         peptides.empty();
@@ -528,7 +664,13 @@ bool SequenceCollection::empty() const
 // AnalysisSoftware
 //
 
-bool AnalysisSoftware::empty() const
+PWIZ_API_DECL AnalysisSoftware::AnalysisSoftware(const std::string& id_,
+                                                 const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+PWIZ_API_DECL bool AnalysisSoftware::empty() const
 {
     return IdentifiableType::empty() &&
         version.empty() &&
@@ -543,16 +685,18 @@ bool AnalysisSoftware::empty() const
 // DBSequence
 //
 
-DBSequence::DBSequence()
-    : length(0)
-{}
+PWIZ_API_DECL DBSequence::DBSequence(const std::string id_,
+                                     const std::string name_)
+    : IdentifiableType(id_, name_), length(0)
+{
+}
 
-bool DBSequence::empty() const
+PWIZ_API_DECL bool DBSequence::empty() const
 {
     return IdentifiableType::empty() &&
         length == 0 &&
         accession.empty() &&
-        SearchDatabase_ref.empty() &&
+        (!searchDatabasePtr.get() || searchDatabasePtr->empty()) &&
         seq.empty() &&
         paramGroup.empty();
 }
@@ -561,7 +705,7 @@ bool DBSequence::empty() const
 // Analysis
 //
 
-bool AnalysisCollection::empty() const
+PWIZ_API_DECL bool AnalysisCollection::empty() const
 {
     return spectrumIdentification.empty() &&
         proteinDetection.empty();
@@ -571,12 +715,12 @@ bool AnalysisCollection::empty() const
 // ModParam
 //
 
-ModParam::ModParam()
+PWIZ_API_DECL ModParam::ModParam()
     : massDelta(0)
 {
 }
 
-bool ModParam::empty() const
+PWIZ_API_DECL bool ModParam::empty() const
 {
     return massDelta == 0 &&
         residues.empty() &&
@@ -588,13 +732,13 @@ bool ModParam::empty() const
 // SearchModification
 //
 
-SearchModification::SearchModification()
+PWIZ_API_DECL SearchModification::SearchModification()
     : fixedMod(false)
 {
 }
 
 
-bool SearchModification::empty() const
+PWIZ_API_DECL bool SearchModification::empty() const
 {
     return modParam.empty() &&
         specificityRules.empty();
@@ -604,34 +748,64 @@ bool SearchModification::empty() const
 // ProteinDetection
 //
 
-bool ProteinDetection::empty() const
+PWIZ_API_DECL ProteinDetection::ProteinDetection(const std::string id_,
+                                                 const std::string name_)
+    : IdentifiableType(id_, name_)
 {
-    return ProteinDetectionProtocol_ref.empty() &&
-        ProteinDetectionList_ref.empty() &&
+}
+
+
+PWIZ_API_DECL bool ProteinDetection::empty() const
+{
+    return IdentifiableType::empty() &&
+        (!proteinDetectionProtocolPtr.get() || proteinDetectionProtocolPtr->empty()) &&
+        (!proteinDetectionListPtr.get() || proteinDetectionListPtr->empty()) &&
         activityDate.empty() &&
         inputSpectrumIdentifications.empty();
+}
+
+
+//
+// SpectrumIdentificationProtocol
+//
+
+PWIZ_API_DECL SpectrumIdentificationProtocol::SpectrumIdentificationProtocol(
+    const std::string& id_, const std::string& name_)
+    : IdentifiableType(id_, name_)
+{
+}
+
+
+PWIZ_API_DECL bool SpectrumIdentificationProtocol::empty() const
+{
+    return IdentifiableType::empty() &&
+        (!analysisSoftwarePtr.get() || analysisSoftwarePtr->empty()) &&
+        searchType.empty() &&
+        additionalSearchParams.empty() &&
+        modificationParams.empty() &&
+        enzymes.empty() &&
+        massTable.empty() &&
+        fragmentTolerance.empty() &&
+        parentTolerance.empty() &&
+        threshold.empty() &&
+        databaseFilters. empty();
 }
 
 //
 // AnalysisProtocol
 //
 
-bool AnalysisProtocolCollection::empty() const
+PWIZ_API_DECL bool AnalysisProtocolCollection::empty() const
 {
     return spectrumIdentificationProtocol.empty() &&
         proteinDetectionProtocol.empty();
-}
-
-bool Sample::subSample::empty() const
-{
-    return Sample_ref.empty();
 }
 
 //
 // AnalysisSampleCollection
 //
 
-bool AnalysisSampleCollection::empty() const
+PWIZ_API_DECL bool AnalysisSampleCollection::empty() const
 {
     return samples.empty();
 }
@@ -647,7 +821,7 @@ PWIZ_API_DECL bool SpectraData::empty() const
 // Inputs
 //
 
-bool Inputs::empty() const
+PWIZ_API_DECL bool Inputs::empty() const
 {
     return sourceFile.empty() &&
         searchDatabase.empty() &&
@@ -658,7 +832,9 @@ bool Inputs::empty() const
 // SearchDatabase
 //
 
-PWIZ_API_DECL SearchDatabase::SearchDatabase()
+PWIZ_API_DECL SearchDatabase::SearchDatabase(const std::string& id_,
+                                             const std::string& name_)
+    : ExternalData(id_, name_)
 {
     numDatabaseSequences = 0;
     numResidues = 0;
@@ -688,17 +864,17 @@ PWIZ_API_DECL bool SourceFile::empty() const
 // DataCollection
 //
 
-bool AnalysisData::empty() const
+PWIZ_API_DECL bool AnalysisData::empty() const
 {
     return spectrumIdentificationList.empty() &&
-        proteinDetectionList.empty();
+        (!proteinDetectionListPtr.get() || proteinDetectionListPtr->empty());
 }
 
 //
 // DataCollection
 //
 
-bool DataCollection::empty() const
+PWIZ_API_DECL bool DataCollection::empty() const
 {
     return inputs.empty() &&
         analysisData.empty();
@@ -707,7 +883,26 @@ bool DataCollection::empty() const
 //
 // MzIdentML
 //
-bool MzIdentML::empty() const
+
+PWIZ_API_DECL MzIdentML::MzIdentML(const std::string& id_,
+                                   const std::string& version_,
+                                   const std::string& creationDate_)
+    : IdentifiableType(id_), version(version_), creationDate(creationDate_)
+{
+    const char* format = "%Y-%m-%dT%T";
+    
+    if (creationDate.empty())
+    {
+        date d(day_clock::local_day());
+        date_facet* facet(new date_facet(format));
+        ostringstream out;
+        out.imbue(std::locale(out.getloc(), facet));
+        out << d;
+        creationDate = out.str();
+    }
+}
+
+PWIZ_API_DECL bool MzIdentML::empty() const
 {
     return IdentifiableType::empty() &&
         version.empty() &&

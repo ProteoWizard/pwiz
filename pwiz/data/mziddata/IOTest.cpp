@@ -131,7 +131,7 @@ void testPerson()
     a.midInitials = "yz";
 
     Affiliations b;
-    b.organization_ref="ref";
+    //b.organizationPtr=OrganizationPtr(new Organization("ref"));
     a.affiliations.push_back(b);
 
     testObject(a);
@@ -150,7 +150,7 @@ void testOrganization()
     a.fax = "lmnop";
     a.tollFreePhone = "qrs";
 
-    a.parent.organization_ref = "ref";
+    a.parent.organizationPtr = OrganizationPtr(new Organization("ref"));
 
     testObject(a);
 }
@@ -161,7 +161,7 @@ void testContactRole()
     if (os_) *os_ << "testContactRole\n" ;
     
     ContactRole a;
-    a.Contact_ref = "ref";
+    a.contactPtr = ContactPtr(new Contact("ref"));
     a.role.set(MS_software_vendor);
 
     testObject(a);
@@ -175,7 +175,7 @@ void testProvider()
     Provider a;
 
     // Reduced to a previously tested object.
-    a.contactRole.Contact_ref = "abc";
+    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
 
     testObject(a);
 }
@@ -186,7 +186,7 @@ void testMaterial()
     Material a;
 
     // Reduced to a previously tested object.
-    a.contactRole.Contact_ref = "abc";
+    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
     a.cvParams.set(MS_septum);
 
     testObject(a);
@@ -200,11 +200,11 @@ void testSample()
     Sample a;
 
     // Reduced to a previously tested object.
-    a.contactRole.Contact_ref = "abc";
+    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
     a.cvParams.set(MS_septum);
 
     Sample::subSample b;
-    b.Sample_ref = "subSample_ref";
+    b.samplePtr = SamplePtr(new Sample("subSample_ref"));
     a.subSamples.push_back(b);
 
     testObject(a);
@@ -219,7 +219,7 @@ void testAnalysisSoftware()
     a.version = "abcd";
     a.URI = "efg";
     a.customizations = "hijk";
-    a.contactRole.Contact_ref = "ref";
+    a.contactRole.contactPtr = ContactPtr(new Contact("ref"));
     a.contactRole.role.set(MS_software_vendor);
     a.softwareName.set(MS_Mascot);
 
@@ -246,7 +246,7 @@ void testDBSequence()
     a.name = "name";
     a.length = 3;
     a.accession = "abc";
-    a.SearchDatabase_ref = "def";
+    a.searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("def"));
     a.seq = "ghi";
     a.paramGroup.set(MS_protein_description, "blahbitty blah blah");
 
@@ -317,8 +317,10 @@ void testSpectrumIdentification()
     if (os_) *os_ << "testSpectrumIdentification\n" ;
 
     SpectrumIdentification a;
-    a.SpectrumIdentificationProtocol_ref = "sip";
-    a.SpectrumIdentificationList_ref = "sil";
+    a.spectrumIdentificationProtocolPtr =
+        SpectrumIdentificationProtocolPtr( new SpectrumIdentificationProtocol("sip"));
+    a.spectrumIdentificationListPtr =
+        SpectrumIdentificationListPtr(new SpectrumIdentificationList("sil"));
     a.activityDate = "123";
     a.inputSpectra.push_back("is_sd");
     a.searchDatabase.push_back("sd_sd");
@@ -335,8 +337,8 @@ void testProteinDetection()
 
     a.id = "id";
     a.name = "name";
-    a.ProteinDetectionProtocol_ref = "abc";
-    a.ProteinDetectionList_ref = "def";
+    a.proteinDetectionProtocolPtr = ProteinDetectionProtocolPtr(new ProteinDetectionProtocol("abc"));
+    a.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("def"));
     a.activityDate = "ghi";
 
     testObject(a);
@@ -483,7 +485,7 @@ void testSpectrumIdentificationProtocol()
 
     a.id = "id";
     
-    a.AnalysisSoftware_ref = "ref";
+    a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
 
     a.searchType.set(MS_ms_ms_search);
     a.additionalSearchParams.set(MS_parent_mass_type_mono);
@@ -508,7 +510,7 @@ void testProteinDetectionProtocol()
 
     a.id = "id";
     a.id="PDP_MascotParser_1";
-    a.AnalysisSoftware_ref = "ref";
+    a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
     a.analysisParams.set(MS_mascot_SigThreshold, "0.05");
     a.threshold.set(MS_mascot_SigThreshold, "0.05", CVID_Unknown);
 
@@ -521,11 +523,11 @@ void testAnalysisProtocolCollection()
     AnalysisProtocolCollection a;
 
     SpectrumIdentificationProtocolPtr b(new SpectrumIdentificationProtocol());
-    b->AnalysisSoftware_ref = "ref";
+    b->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
     a.spectrumIdentificationProtocol.push_back(b);
 
     ProteinDetectionProtocolPtr c(new ProteinDetectionProtocol());
-    c->AnalysisSoftware_ref = "ref";
+    c->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
     a.proteinDetectionProtocol.push_back(c);
     
     testObject(a);
@@ -789,8 +791,8 @@ void testAnalysisData()
     b->numSequencesSearched = 5;
     a.spectrumIdentificationList.push_back(b);
 
-    a.proteinDetectionList.id = "id2";
-    a.proteinDetectionList.paramGroup.set(MS_mascot_score, "164.4");
+    a.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("id2"));
+    a.proteinDetectionListPtr->paramGroup.set(MS_mascot_score, "164.4");
 
     testObject(a);
 }
@@ -798,6 +800,10 @@ void testAnalysisData()
 
 void testDataCollection()
 {
+    MzIdentML mz;
+    examples::initializeTiny(mz);
+    testObject(mz);
+
     DataCollection a;
 
     SourceFilePtr b(new SourceFile());
@@ -818,15 +824,12 @@ void testMzIdentML()
 
     examples::initializeTiny(a);
 
-    testObject(a.dataCollection.analysisData);
-    
-    //testObject(a);
+    testObject(a);
 }
 
 
 void test()
 {
-    /*
     testCV();
     testIdentifiableType();
     testBibliographicReference();
@@ -871,7 +874,6 @@ void test()
     testSpectrumIdentificationList();
     testProteinDetectionList();
     testDataCollection();
-    */
     testAnalysisData();
     testMzIdentML();
 }

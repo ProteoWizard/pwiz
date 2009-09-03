@@ -22,7 +22,10 @@
 
 #define PWIZ_SOURCE
 
+#include "References.hpp"
 #include "examples.hpp"
+
+#include <iostream>
 
 namespace pwiz {
 namespace mziddata {
@@ -47,7 +50,7 @@ const char* peptideList[] = {
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 {
     mzid.id="";
-    mzid.version="0.9.0";
+    mzid.version="1.0.0";
     // Look up Matt's recent commits for boost date class
     mzid.creationDate = "2009-06-23T11:04:10";
     
@@ -58,20 +61,25 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     analysisSoftwarePtr->name="Mascot Server";
     analysisSoftwarePtr->version="2.2.101";
     analysisSoftwarePtr->URI="http://www.matrixscience.com/search_form_select.html";
-    analysisSoftwarePtr->contactRole.Contact_ref="ORG_MSL";
+    analysisSoftwarePtr->contactRole.contactPtr=ContactPtr(new Contact("ORG_MSL"));
     analysisSoftwarePtr->contactRole.role.set(MS_software_vendor);
 
     analysisSoftwarePtr->softwareName.set(MS_Mascot);
     analysisSoftwarePtr->customizations ="No customizations";
     mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
 
+    analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
+    analysisSoftwarePtr->id = "AS_mascot_parser";
+    analysisSoftwarePtr->name = "Mascot Parser";
+    mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
+
     mzid.provider.id="PROVIDER";
-    mzid.provider.contactRole.Contact_ref="PERSON_DOC_OWNER";
+    mzid.provider.contactRole.contactPtr=ContactPtr(new Contact("PERSON_DOC_OWNER"));
     mzid.provider.contactRole.role.set(MS_researcher);
 
     PersonPtr person(new Person());
     Affiliations aff;
-    aff.organization_ref="ORG_MSL";
+    aff.organizationPtr=OrganizationPtr(new Organization("ORG_MSL"));
     person->affiliations.push_back(aff);
     mzid.auditCollection.push_back(person);
 
@@ -80,7 +88,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     person->firstName="";
     person->lastName="David Creasy";
     person->email="dcreasy@matrixscience.com";
-    aff.organization_ref="ORG_DOC_OWNER";
+    aff.organizationPtr=OrganizationPtr(new Organization("ORG_DOC_OWNER"));
     person->affiliations.push_back(aff);
     mzid.auditCollection.push_back(person);
 
@@ -95,6 +103,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     organization=OrganizationPtr(new Organization());
     organization->id="ORG_DOC_OWNER";
+    mzid.auditCollection.push_back(organization);
     
     //SamplePtr sample(new Sample());
     //mzid.analysisSampleCollection.samples.push_back(sample);
@@ -102,21 +111,22 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     DBSequencePtr dbSequence(new DBSequence());
     dbSequence->id="DBSeq_Bombessin";
     dbSequence->length=14;
-    dbSequence->SearchDatabase_ref="SDB_5peptideMix";
+    dbSequence->searchDatabasePtr=SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
     dbSequence->accession="Bombessin";
     dbSequence->seq=dbsequenceList[0];
     dbSequence->paramGroup.set(MS_protein_description, peptideList[0]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
+    
     dbSequence = DBSequencePtr(new DBSequence());
     dbSequence->id="DBSeq_Neurotensin";
     dbSequence->length=13;
-    dbSequence->SearchDatabase_ref="SDB_5peptideMix";
+    dbSequence->searchDatabasePtr=SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
     dbSequence->accession="Neurotensin";
     dbSequence->seq=dbsequenceList[1];
     dbSequence->paramGroup.set(MS_protein_description, peptideList[1]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
-
+    
     PeptidePtr peptide(new Peptide());
     peptide->id="peptide_1_1";
     peptide->peptideSequence="QLYENKPRRPYIL";
@@ -140,22 +150,26 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     SpectrumIdentificationPtr spectrumIdentificationPtr(
         new SpectrumIdentification());
     spectrumIdentificationPtr->id="SI";
-    spectrumIdentificationPtr->SpectrumIdentificationProtocol_ref="SIP";
-    spectrumIdentificationPtr->SpectrumIdentificationList_ref="SIL_1";
+    spectrumIdentificationPtr->spectrumIdentificationProtocolPtr=
+        SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
+    spectrumIdentificationPtr->spectrumIdentificationListPtr=
+        SpectrumIdentificationListPtr(new SpectrumIdentificationList("SIL_1"));
     spectrumIdentificationPtr->activityDate="2009-05-21T17:01:53";
     spectrumIdentificationPtr->inputSpectra.push_back("SD_1");;
     spectrumIdentificationPtr->searchDatabase.push_back("SDB_5peptideMix");
     mzid.analysisCollection.spectrumIdentification.push_back(spectrumIdentificationPtr);
 
     mzid.analysisCollection.proteinDetection.id="PD_1";
-    mzid.analysisCollection.proteinDetection.ProteinDetectionProtocol_ref="PDP_MascotParser_1";
-    mzid.analysisCollection.proteinDetection.ProteinDetectionList_ref="PDL_1";
+    mzid.analysisCollection.proteinDetection.proteinDetectionProtocolPtr=ProteinDetectionProtocolPtr(new ProteinDetectionProtocol("PDP_MascotParser_1"));
+    mzid.analysisCollection.proteinDetection.proteinDetectionListPtr=ProteinDetectionListPtr(new ProteinDetectionList("PDL_1"));
     mzid.analysisCollection.proteinDetection.activityDate="2009-06-30T15:36:35";
-    mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications.push_back("SIL_1");
+
+    SpectrumIdentificationListPtr silp(new SpectrumIdentificationList("SIL_1"));
+    mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications.push_back(silp);
 
     SpectrumIdentificationProtocolPtr sip(new SpectrumIdentificationProtocol());
     sip->id="SIP";
-    sip->AnalysisSoftware_ref="AS_mascot_server";
+    sip->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_mascot_server"));
     sip->searchType.set(MS_ms_ms_search);
     sip->additionalSearchParams.set(MS_parent_mass_type_mono);
     sip->additionalSearchParams.set(MS_param__a_ion);
@@ -211,7 +225,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol());
     pdp->id="PDP_MascotParser_1";
-    pdp->AnalysisSoftware_ref="AS_mascot_parser";
+    pdp->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_mascot_parser"));
     pdp->analysisParams.set(MS_mascot_SigThreshold, "0.05");
     pdp->analysisParams.set(MS_mascot_MaxProteinHits, "Auto");
     pdp->analysisParams.set(MS_mascot_ProteinScoringMethod, "MudPIT");
@@ -256,7 +270,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     
     // Fill in mzid.analysisData
     // Add SpectrumIdentificationListPtr
-    SpectrumIdentificationListPtr silp(new SpectrumIdentificationList());
+    silp = SpectrumIdentificationListPtr(new SpectrumIdentificationList());
     silp->id="SIL_1";
     silp->numSequencesSearched=5;
     
@@ -317,8 +331,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(silp);
 
     // Fill in proteinDetectionList
-    ProteinDetectionList& pdl = mzid.dataCollection.analysisData.proteinDetectionList;
-    pdl.id="PDL_1";
+    ProteinDetectionListPtr pdl(new ProteinDetectionList());
+    pdl->id="PDL_1";
     ProteinAmbiguityGroupPtr pagp(new ProteinAmbiguityGroup());
     pagp->id="PAG_hit_1";
     ProteinDetectionHypothesisPtr pdhp(new ProteinDetectionHypothesis());
@@ -348,7 +362,10 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->paramGroup.set(MS_manual_validation);
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
-    pdl.proteinAmbiguityGroup.push_back(pagp);
+    pdl->proteinAmbiguityGroup.push_back(pagp);
+    mzid.dataCollection.analysisData.proteinDetectionListPtr = pdl;
+
+    References::resolve(mzid); 
 }
 
 PWIZ_API_DECL vector<CV> defaultCVList()

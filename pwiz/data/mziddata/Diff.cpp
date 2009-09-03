@@ -577,6 +577,17 @@ void diff(const SpectrumIdentificationResult& a,
 }
 
 PWIZ_API_DECL
+void diff(const SpectrumIdentificationListPtr a,
+          const SpectrumIdentificationListPtr b,
+          SpectrumIdentificationListPtr a_b,
+          SpectrumIdentificationListPtr b_a,
+          const DiffConfig& config)
+{
+    ptr_diff(a, b, a_b, b_a, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const SpectrumIdentificationList& a,
           const SpectrumIdentificationList& b,
           SpectrumIdentificationList& a_b,
@@ -650,8 +661,8 @@ void diff(const AnalysisData& a,
                      b.spectrumIdentificationList,
                      a_b.spectrumIdentificationList,
                      b_a.spectrumIdentificationList, config);
-    diff(a.proteinDetectionList, b.proteinDetectionList,
-                     a_b.proteinDetectionList, b_a.proteinDetectionList,
+    ptr_diff(a.proteinDetectionListPtr, b.proteinDetectionListPtr,
+                     a_b.proteinDetectionListPtr, b_a.proteinDetectionListPtr,
                      config);
 }
 
@@ -809,8 +820,8 @@ void diff(const SpectrumIdentificationProtocol& a,
           SpectrumIdentificationProtocol& b_a,
           const DiffConfig& config)
 {
-    diff(a.AnalysisSoftware_ref, b.AnalysisSoftware_ref,
-         a_b.AnalysisSoftware_ref, b_a.AnalysisSoftware_ref,
+    ptr_diff(a.analysisSoftwarePtr, b.analysisSoftwarePtr,
+         a_b.analysisSoftwarePtr, b_a.analysisSoftwarePtr,
          config);
     diff(a.searchType, b.searchType, a_b.searchType, b_a.searchType, config);
     diff(a.additionalSearchParams, b.additionalSearchParams,
@@ -832,7 +843,7 @@ void diff(const ProteinDetectionProtocol& a,
           ProteinDetectionProtocol& b_a,
           const DiffConfig& config)
 {
-    diff(a.AnalysisSoftware_ref, b.AnalysisSoftware_ref, a_b.AnalysisSoftware_ref, b_a.AnalysisSoftware_ref, config);
+    ptr_diff(a.analysisSoftwarePtr, b.analysisSoftwarePtr, a_b.analysisSoftwarePtr, b_a.analysisSoftwarePtr, config);
     diff(a.analysisParams, b.analysisParams, a_b.analysisParams, b_a.analysisParams, config);
     diff(a.threshold, b.threshold, a_b.threshold, b_a.threshold, config);
 }
@@ -863,16 +874,64 @@ void diff(const Contact& a,
           Contact& b_a,
           const DiffConfig& config)
 {
+    diff((IdentifiableType&)a, (IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     diff(a.address, b.address, a_b.address, b_a.address, config);
     diff(a.phone, b.phone, a_b.phone, b_a.phone, config);
     diff(a.email, b.email, a_b.email, b_a.email, config);
     diff(a.fax, b.fax, a_b.fax, b_a.fax, config);
     diff(a.tollFreePhone, b.tollFreePhone, a_b.tollFreePhone,
          b_a.tollFreePhone, config);
-
 }
 
+
+const char* ContactPtr_diff_string_ = "Contact type different ";
+
 PWIZ_API_DECL
+void diff(const ContactPtr a,
+          const ContactPtr b,
+          ContactPtr& a_b,
+          ContactPtr& b_a,
+          const DiffConfig& config)
+{
+    Person* a_person = dynamic_cast<Person*>(a.get());
+    Person* b_person = dynamic_cast<Person*>(b.get());
+    
+    Organization* a_organization = dynamic_cast<Organization*>(a.get());
+    Organization* b_organization = dynamic_cast<Organization*>(b.get());
+    
+    if (a_person && b_person)
+    {
+        a_b = ContactPtr(new Person());
+        b_a = ContactPtr(new Person());
+        diff(*a_person, *b_person,
+                 (Person&)*a_b, (Person&)*b_a, config);
+    }
+    else if (a_organization && b_organization)
+    {
+        a_b = ContactPtr(new Organization());
+        b_a = ContactPtr(new Organization());
+        diff(*a_organization, *b_organization,
+                 (Organization&)*a_b, (Organization&)*b_a, config);
+    }
+    else
+    {
+        // TODO add a UserParam to indicate that we're using the
+        // generic diff
+        
+        //a_b = ContactPtr(new Contact());
+        //b_a = ContactPtr(new Contact());
+        ptr_diff(a, b, a_b, b_a, config);
+
+        string a_type = (a_person ? "Person" : (a_organization ? "Organization" : "Contact"));
+        string b_type = (b_person ? "Person" : (b_organization ? "Organization" : "Contact"));
+        //a_b->params.userParams.push_back(UserParam(ContactPtr_diff_string_
+        //                                           +a_type));
+        //b_a->params.userParams.push_back(UserParam(ContactPtr_diff_string_
+        //                                     +b_type));
+    }
+}
+
 PWIZ_API_DECL
 void diff(const Affiliations& a,
           const Affiliations& b,
@@ -880,8 +939,14 @@ void diff(const Affiliations& a,
           Affiliations& b_a,
           const DiffConfig& config)
 {
-    diff(a.organization_ref, b.organization_ref,
-         a_b.organization_ref, b_a.organization_ref, config);
+    if (a.organizationPtr.get() &&  b.organizationPtr.get())
+        diff(a.organizationPtr, b.organizationPtr,
+             a_b.organizationPtr, b_a.organizationPtr, config);
+    else
+    {
+        a_b.organizationPtr = a.organizationPtr;
+        b_a.organizationPtr = b.organizationPtr;
+    }
 }
 
 void diff(const Person& a,
@@ -918,21 +983,11 @@ void diff(const Organization& a,
 {
     diff((const Contact&)a, (const Contact&)b,
          (Contact&)a_b, (Contact&)b_a, config);
-    diff(a.parent.organization_ref, b.parent.organization_ref,
-         a_b.parent.organization_ref, b_a.parent.organization_ref,
+    ptr_diff(a.parent.organizationPtr, b.parent.organizationPtr,
+         a_b.parent.organizationPtr, b_a.parent.organizationPtr,
         config);
 }
 
-
-PWIZ_API_DECL
-void diff(const OrganizationPtr a,
-          const OrganizationPtr b,
-          OrganizationPtr a_b,
-          OrganizationPtr b_a,
-          const DiffConfig& config)
-{
-    diff(*a, *b, *a_b, *b_a, config);
-}
 
 PWIZ_API_DECL
 void diff(const BibliographicReference& a,
@@ -961,15 +1016,15 @@ void diff(const ProteinDetection& a,
           ProteinDetection& b_a,
           const DiffConfig& config)
 {
-    diff(a.ProteinDetectionProtocol_ref, b.ProteinDetectionProtocol_ref,
-         a_b.ProteinDetectionProtocol_ref, b_a.ProteinDetectionProtocol_ref,
+    ptr_diff(a.proteinDetectionProtocolPtr, b.proteinDetectionProtocolPtr,
+         a_b.proteinDetectionProtocolPtr, b_a.proteinDetectionProtocolPtr,
          config);
-    diff(a.ProteinDetectionProtocol_ref, b.ProteinDetectionProtocol_ref,
-         a_b.ProteinDetectionProtocol_ref, b_a.ProteinDetectionProtocol_ref,
+    ptr_diff(a.proteinDetectionListPtr, b.proteinDetectionListPtr,
+         a_b.proteinDetectionListPtr, b_a.proteinDetectionListPtr,
          config);
     diff(a.activityDate, b.activityDate, a_b.activityDate, b_a.activityDate,
          config);
-    vector_diff_diff(a.inputSpectrumIdentifications,
+    vector_diff_deep(a.inputSpectrumIdentifications,
                      b.inputSpectrumIdentifications,
                      a_b.inputSpectrumIdentifications,
                      b_a.inputSpectrumIdentifications,
@@ -983,14 +1038,14 @@ void diff(const SpectrumIdentification& a,
           SpectrumIdentification& b_a,
           const DiffConfig& config)
 {
-    diff(a.SpectrumIdentificationProtocol_ref,
-         b.SpectrumIdentificationProtocol_ref,
-         a_b.SpectrumIdentificationProtocol_ref,
-         b_a.SpectrumIdentificationProtocol_ref, config);
-    diff(a.SpectrumIdentificationList_ref,
-         b.SpectrumIdentificationList_ref,
-         a_b.SpectrumIdentificationList_ref,
-         b_a.SpectrumIdentificationList_ref, config);
+    ptr_diff(a.spectrumIdentificationProtocolPtr,
+         b.spectrumIdentificationProtocolPtr,
+         a_b.spectrumIdentificationProtocolPtr,
+         b_a.spectrumIdentificationProtocolPtr, config);
+    ptr_diff(a.spectrumIdentificationListPtr,
+         b.spectrumIdentificationListPtr,
+         a_b.spectrumIdentificationListPtr,
+         b_a.spectrumIdentificationListPtr, config);
     diff(a.activityDate, b.activityDate, a_b.activityDate,
          b_a.activityDate, config);
     vector_diff_diff(a.inputSpectra, b.inputSpectra, a_b.inputSpectra,
@@ -1022,8 +1077,8 @@ void diff(const DBSequence& a,
 {
     diff_numeric(a.length, b.length, a_b.length, b_a.length, config);
     diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
-    diff(a.SearchDatabase_ref, b.SearchDatabase_ref, a_b.SearchDatabase_ref,
-         b_a.SearchDatabase_ref, config);
+    ptr_diff(a.searchDatabasePtr, b.searchDatabasePtr, a_b.searchDatabasePtr,
+         b_a.searchDatabasePtr, config);
     diff(a.seq, b.seq, a_b.seq, b_a.seq, config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
@@ -1098,7 +1153,8 @@ void diff(const Sample::subSample& a,
           Sample::subSample& b_a,
           const DiffConfig& config)
 {
-    diff(a.Sample_ref, b.Sample_ref, a_b.Sample_ref, b_a.Sample_ref, config);
+    ptr_diff(a.samplePtr, b.samplePtr,
+         a_b.samplePtr, b_a.samplePtr, config);
 }
 
 PWIZ_API_DECL
@@ -1142,9 +1198,20 @@ void diff(const ContactRole& a,
           ContactRole& b_a,
           const DiffConfig& config)
 {
-    diff(a.Contact_ref, b.Contact_ref, a_b.Contact_ref, b_a.Contact_ref, config);
+    diff(a.contactPtr, b.contactPtr, a_b.contactPtr, b_a.contactPtr, config);
     diff(a.role, b.role, a_b.role, b_a.role, config);
 }
+
+PWIZ_API_DECL
+void diff(const AnalysisSoftwarePtr a,
+          const AnalysisSoftwarePtr b,
+          AnalysisSoftwarePtr a_b,
+          AnalysisSoftwarePtr b_a,
+          const DiffConfig& config)
+{
+    ptr_diff(a, b, a_b, b_a, config);
+}
+
 
 PWIZ_API_DECL
 void diff(const AnalysisSoftware& a,
