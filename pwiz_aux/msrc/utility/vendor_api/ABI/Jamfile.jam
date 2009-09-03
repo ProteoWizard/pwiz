@@ -30,11 +30,30 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
+if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
+    .hasDLLs = true ;
+}
+
+if ! $(.hasDLLs) && [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
+    .hasDLLs = true ;
+    local destination = [ path.native $(API_PATH) ] ;
+    echo "Copying WiffFileDataReader DLLs from \"$(ProteinPilot)\" to \"$(destination)\"" ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\Clearcore.dll\"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\rscoree.dll\" \"$(destination)\"" ] ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
+       $(.hasDLLs)
     {
         result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
         result += <assembly>$(API_PATH)/Clearcore.dll ;
@@ -48,7 +67,7 @@ rule vendor-api-requirements ( properties * )
     }
     return $(result) ;
 }
-        
+
 lib pwiz_vendor_api_abi
     : # sources
         WiffFile.cpp
@@ -83,19 +102,10 @@ exe WiffFileTest
 explicit WiffFileTest ;
 
 
-if [ path.exists $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ]
-{
 install install_pwiz_vendor_api_abi
-    : $(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll
-      $(API_PATH)/Clearcore.dll
-      $(API_PATH)/ClearCore.Storage.dll
-      $(API_PATH)/rscoree.dll
+    : [ path.glob $(API_PATH) : *.dll ]
     ;
-}
-else
-{
-install install_pwiz_vendor_api_abi ; # no-op
-}
+
 explicit install_pwiz_vendor_api_abi ;
 
 }

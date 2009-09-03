@@ -30,7 +30,20 @@ path-constant API_PATH : ./xdk ;
 
 if [ modules.peek : NT ]
 {
-    
+
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
+if ! [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] &&
+     [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+{
+    local destination = [ path.native $(API_PATH) ] ;
+    echo "Copying MSFileReader DLLs from \"$(MSFileReader)\" to \"$(destination)\"." ;
+    echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
+    echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;
