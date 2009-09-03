@@ -30,7 +30,7 @@ get_value()
 
 get_value Major major
 get_value Minor minor
-get_value Revision revision
+revision=$(awk '/SVN_REV / { print $3 }' pwiz/svnrev.hpp)
 
 version_string=$major.$minor.$revision
 
