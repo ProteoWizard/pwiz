@@ -8,7 +8,7 @@ REM # Get to the pwiz root directory
 set SCRIPTS_MISC_ROOT=%~dp0
 set SCRIPTS_MISC_ROOT=%SCRIPTS_MISC_ROOT:~0,-1%
 pushd %SCRIPTS_MISC_ROOT%\..\..
-del /q pwiz_tools\seems\*.dll
+
 REM # call clean
 echo ##teamcity[message text='Cleaning project...']
 echo ##teamcity[progressMessage 'Cleaning project...']
