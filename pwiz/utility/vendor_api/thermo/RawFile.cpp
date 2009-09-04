@@ -184,7 +184,10 @@ RawFileImpl::RawFileImpl(const string& filename)
 
     // get the filepath of the calling .exe using WinAPI
     TCHAR tmpFilepath[1024];
-    DWORD tmpFilepathLength = ::GetModuleFileName(NULL, (LPCH) tmpFilepath, 1024);
+    // check for pwiz_bindings_cli.dll first, so that unit tests run from
+    // vstesthost.exe run correctly.  if pwiz_bindings_cli.dll is not running,
+    // GetModuleHandle will return NULL, and the exe path will be returned.
+    DWORD tmpFilepathLength = ::GetModuleFileName(::GetModuleHandle("pwiz_bindings_cli.dll"), (LPCH) tmpFilepath, 1024);
     bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
 
     // make sure the necessary DLLs are available side-by-side or copy them if MSFileReader is installed
@@ -192,8 +195,22 @@ RawFileImpl::RawFileImpl(const string& filename)
     {
         // copy the MSFileReader DLLs if it is installed, else throw an exception informing the user to download it
         char* programFilesPath = ::getenv("ProgramFiles");
-        bfs::path msFileReaderPath = bfs::path(programFilesPath) / "Thermo/MSFileReader";
-        delete programFilesPath;
+        bfs::path msFileReaderPath;
+        if (!programFilesPath)
+        {
+            if (bfs::exists("C:/Program Files(x86)"))
+                msFileReaderPath = "C:/Program Files(x86)/Thermo/MSFileReader";
+            else if (bfs::exists("C:/Program Files"))
+                msFileReaderPath = "C:/Program Files/Thermo/MSFileReader";
+            else
+                throw runtime_error("[RawFile::ctor] When trying to find MSFileReader, the Program Files directory could not be found!");
+        }
+        else
+        {
+            msFileReaderPath = bfs::path(programFilesPath) / "Thermo/MSFileReader";
+            delete programFilesPath;
+        }
+
         if (bfs::exists(msFileReaderPath / "XRawfile2.dll"))
         {
             bfs::copy_file(msFileReaderPath / "XRawfile2.dll", callingExecutablePath / "MSFileReader.XRawfile2.dll");

@@ -168,8 +168,22 @@ void copyProteinPilotDLLs()
     {
         // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
         char* programFilesPath = ::getenv("ProgramFiles");
-        bfs::path proteinPilotPath = bfs::path(programFilesPath) / "Applied Biosystems MDS Analytical Technologies/ProteinPilot";
-        delete programFilesPath;
+        bfs::path proteinPilotPath;
+        if (!programFilesPath)
+        {
+            if (bfs::exists("C:/Program Files(x86)"))
+                proteinPilotPath = "C:/Program Files(x86)/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
+            else if (bfs::exists("C:/Program Files"))
+                proteinPilotPath = "C:/Program Files/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
+            else
+                throw runtime_error("[Reader_ABI::ctor] When trying to find Protein Pilot, the Program Files directory could not be found!");
+        }
+        else
+        {
+            proteinPilotPath = bfs::path(programFilesPath) / "Applied Biosystems MDS Analytical Technologies/ProteinPilot";
+            delete programFilesPath;
+        }
+
         if (bfs::exists(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
         {
             bfs::copy_file(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll", callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll");
@@ -181,7 +195,7 @@ void copyProteinPilotDLLs()
                 bfs::copy_file(proteinPilotPath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
         }
         else
-            throw std::runtime_error("[WiffFile::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 to be installed. A trial version is available for download at:\nhttps://licensing.appliedbiosystems.com/download/ProteinPilot/3.0");
+            throw std::runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 to be installed. A trial version is available for download at:\nhttps://licensing.appliedbiosystems.com/download/ProteinPilot/3.0");
     }
 }
 
