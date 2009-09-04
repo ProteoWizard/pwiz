@@ -350,6 +350,8 @@ struct PWIZ_API_DECL Match
     Match(const SpectrumQuery& _spectrumQuery, FeaturePtr _feature, double _score = 0) : score(_score), spectrumQuery(_spectrumQuery), feature(_feature) {}
    
     double score;
+    double calculatedMass;
+    double massDeviation; // ( feature mz - proton mass ) * charge - calculatedMass (not absolute val!)
 
     SpectrumQuery spectrumQuery;
     FeaturePtr feature;
