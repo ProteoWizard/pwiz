@@ -83,8 +83,8 @@ if [ modules.peek : NT ]
             @do_seems_build
         : # requirements
             <conditional>@build-location
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(SEEMS_PATH)
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(SEEMS_PATH)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(SEEMS_PATH)/obj
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(SEEMS_PATH)/obj
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
         ;
 }
