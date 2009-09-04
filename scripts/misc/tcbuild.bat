@@ -21,13 +21,7 @@ echo ##teamcity[progressMessage 'Generating revision info...']
 call quickbuild.bat -j4 pwiz//svnrev.hpp
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error generating revision info & goto error
 
-REM # call quickbuild to build only the bindings first
-echo ##teamcity[message text='Building bindings...']
-echo ##teamcity[progressMessage 'Building bindings...']
-call quickbuild.bat -j4 pwiz\utility\bindings\CLI//pwiz_bindings_cli
-if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error building bindings & goto error
-
-REM # call quickbuild again to build the rest and run tests
+REM # call quickbuild to build and run tests
 echo ##teamcity[message text='Running quickbuild...']
 echo ##teamcity[progressMessage 'Running quickbuild...']
 call quickbuild.bat -j4 ci=teamcity
