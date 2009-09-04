@@ -13,8 +13,6 @@ namespace{
 
 typedef pair<pair<double,double>, FeatureSequencedPtr> FeatBinPair;
 
-ofstream ofs("feature_coords.txt");
-
 void getCoordinates(const vector<FeaturePtr>& f, vector<FeatBinPair>& result)
 {   
     vector<FeaturePtr>::const_iterator f_it = f.begin();
@@ -25,7 +23,6 @@ void getCoordinates(const vector<FeaturePtr>& f, vector<FeatBinPair>& result)
 
             FeatBinPair fb(make_pair(make_pair((*f_it)->mz, (*f_it)->retentionTime),fs));
             result.push_back(fb);
-            ofs << fb.first.first << "\t" << fb.first.second << "\n";
 
         }
 

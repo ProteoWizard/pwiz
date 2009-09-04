@@ -19,7 +19,7 @@ AMTDatabase::AMTDatabase(const AMTContainer& amtContainer)
 
 }
 
-vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in, string outputDir)
+vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in, string outputDir, const int& roc, const double& threshold)
 {
     outputDir += "/amtdb_query";
     outputDir += boost::lexical_cast<string>(boost::lexical_cast<int>(nds._threshold * 100));
@@ -33,9 +33,10 @@ vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe
     exporter_pre.writeWigglePlot(ofs_prewig);
     
     // TODO pass tolerances in through config
+    nds.calculateTolerances(dfc);
     dfc->warpRT(wfe);
     PeptideMatcher pm(dfc->_pidf_a, dfc->_pidf_b);
-    Feature2PeptideMatcher f2pm(dfc->_fdf_a, dfc->_pidf_b, nds);
+    Feature2PeptideMatcher f2pm(dfc->_fdf_a, dfc->_pidf_b, nds, roc, threshold);
 
     cout << "[AMTDatabase] Number of matches accepted: " << f2pm.getMatches().size() << endl;
 
@@ -45,34 +46,11 @@ vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe
     ofstream ofs_anch((outputDir + "/anchors.txt").c_str());
     exporter.writeAnchors(ofs_anch);
 
-    ofstream ofs_pep((outputDir + "/peptides.txt").c_str());
-    ofstream ofs_feat0((outputDir + "/features.txt").c_str());
-    ofstream ofs_feat1((outputDir + "/calibratedFeatures.txt").c_str());
-    exporter.writeRTCalibrationData(ofs_pep, ofs_feat0, ofs_feat1);
-
-    ofstream comb((outputDir + "/combined.xml").c_str());
-    exporter.writeCombinedPepXML(mspa_in, comb);
-
-    ofstream ofs_pm((outputDir + "/pm.xml").c_str());
-    exporter.writePM(ofs_pm);
-
     ofstream ofs_wiggle((outputDir + "/wiggle.txt").c_str());
     exporter.writeWigglePlot(ofs_wiggle);
 
-    ofstream ofs_rt((outputDir + "/calibration.txt").c_str());
-    exporter.writeRTCalibrationPlot(ofs_rt);
-
-    ofstream ofs_funny((outputDir + "/funnyPeptides.txt").c_str());
-    exporter.writeFunnyPeptides(ofs_funny);
-
-    ofstream ofs_ok((outputDir + "/okPeptides.txt").c_str());
-    exporter.writeOKPeptides(ofs_ok);
-
     ofstream ofs_f2pm((outputDir + "/f2pm.xml").c_str());
     exporter.writeF2PM(ofs_f2pm);
-
-    ofstream ofs_roc((outputDir + "/roc.txt").c_str());
-    exporter.writeROCStats(ofs_roc);
 
     ofstream ofs_r((outputDir + "/r_input.txt").c_str());
     exporter.writeRInputFile(ofs_r);
@@ -104,13 +82,6 @@ vector<SpectrumQuery> AMTDatabase::query(DfcPtr dfc, const WarpFunctionEnum& wfe
 
     ofstream ofs_pepxml((outputDir + "/ms1_5.pep.xml").c_str());
     exporter.writePepXML(mspa_in, ofs_pepxml);
-    
-    ofstream ofs_missed((outputDir + "/mismatches.xml").c_str());
-    XMLWriter writer(ofs_missed);
-    vector<MatchPtr> mismatches = f2pm.getMismatches();
-    vector<MatchPtr>::iterator it2 = mismatches.begin();
-    for(; it2 != mismatches.end(); ++it2) (*it2)->write(writer);
-
 
     return result;
 }
@@ -144,26 +115,34 @@ boost::shared_ptr<IslandizedDatabase::Island> makeIsland(const pair<IslandMap::i
     IslandMap::iterator it = x.first;
     result->id = it->first;
 
+    double massCounter = 0;
+    double rtCounter = 0;
+
     for(; it != x.second; ++it)
         {
             result->spectrumQueries.push_back(it->second);
             const double& score = (*it->second).searchResult.searchHit.analysisResult.peptideProphetResult.probability;
 
-            //store mz and rt coordinates as mean for Island, and orders of mag weighted by score for stdev
+            //store mass and rt coordinates as mean for Island, and orders of mag weighted by score for stdev
             pair<double,double> means = make_pair((*it->second).precursorNeutralMass, (*it->second).retentionTimeSec);          
             pair<double,double> sigmas = make_pair(.005 * score, 100 * score);
             pair<pair<double,double>, pair<double,double> > params = make_pair(means,sigmas);
 
             result->gaussians.push_back(IslandizedDatabase::Gaussian(params));
-
+            massCounter += means.first;
+            rtCounter += means.second;
         }
+
+    result->massMean = massCounter / result->gaussians.size();
+    result->rtMean = rtCounter / result->gaussians.size();
 
     sort(result->spectrumQueries.begin(), result->spectrumQueries.end(), SortByMass());
 
     // make a box encapsulating (effectively) the distributions in the island  (3 stdevs above and below max and min mean)
 
     result->massMin = (*result->spectrumQueries.begin())->precursorNeutralMass - .003*(*result->spectrumQueries.begin())->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
-    result->massMax = (*result->spectrumQueries.back()).precursorNeutralMass + .003*(*result->spectrumQueries.back()).searchResult.searchHit.analysisResult.peptideProphetResult.probability;
+
+    result->massMax = (*result->spectrumQueries.back()).precursorNeutralMass - .003*(*result->spectrumQueries.begin())->searchResult.searchHit.analysisResult.peptideProphetResult.probability;
 
     // same for retention time
     sort(result->spectrumQueries.begin(), result->spectrumQueries.end(), SortByRT());
@@ -207,6 +186,9 @@ IslandizedDatabase::IslandizedDatabase(boost::shared_ptr<AMTContainer> amtContai
             islands.push_back(island);
 
         }
+
+    uniquePeptides = peptideNames; 
+
 }
 
 double p(const double& mu, const double& sigma, const double& x) 
@@ -230,12 +212,9 @@ vector<boost::shared_ptr<Island> > getIslandCandidates(const IslandizedDatabase&
     vector<Island>::const_iterator it = islands.begin();
     for(; it != islands.end(); ++it)
         {
-            //            cout << "massMin:" << it->massMin << "massMax: " << it->massMax << " mass:" <<mass << endl;
             if ((it->massMin <= mass) && (mass  <= it->massMax) && (it->rtMin <= rt) && (rt <= it->rtMax) )
                     result.push_back(boost::shared_ptr<Island>(new Island(*it)));
         }
-
-    cout << "number of island candidates: " << result.size() << endl;
 
     return result;
 }
@@ -281,7 +260,6 @@ double IslandizedDatabase::Island::calculatePVal(const double& mass, const doubl
     double rtResult = 0;
 
     const double normalizationFactor = gaussians.size();
-    //const double normalizationFactor = 1;
     vector<Gaussian>::const_iterator it = gaussians.begin();
 
     // iterate through gaussians and add p val to result
@@ -320,7 +298,7 @@ vector<SpectrumQuery> IslandizedDatabase::query(DfcPtr dfc, const WarpFunctionEn
     exporter_pre.writeWigglePlot(ofs_prewig);
 
     // TODO pass tolerances in through config
-    dfc->warpRT(wfe);
+
     PeptideMatcher pm(dfc->_pidf_a, dfc->_pidf_b);
     Feature2PeptideMatcher f2pm; // we will fill in the relevant attributes as we go.
 
@@ -330,8 +308,10 @@ vector<SpectrumQuery> IslandizedDatabase::query(DfcPtr dfc, const WarpFunctionEn
     vector<FeatureSequencedPtr>::iterator it = features.begin();
     for(; it != features.end(); ++it)        
         {
+            if ((*it)->ms2 == "") continue;
             if ((*it)->feature->charge ==0) continue;
-            // naive: calculate pval for every island in the database
+
+            // naive: calculate pval for every island in the database. Can be improved upon
             double maxPVal = 0;
             bool winner = false;
             string bestFS = "";
@@ -348,13 +328,17 @@ vector<SpectrumQuery> IslandizedDatabase::query(DfcPtr dfc, const WarpFunctionEn
             
             // getBestSpectrumQuery returns a score of -1 if no match
             if (maxPVal != -1) winner = true; 
-            
+
             if (winner) 
                 {
                     result.push_back(*best);
                     MatchPtr match(new Match(*best, (*it)->feature));
                     match->score = maxPVal;
+                    match->calculatedMass = (*it)->calculatedMass;
+                    match->massDeviation = (match->feature->mz - Ion::protonMass_) * match->feature->charge - match->calculatedMass;
+
                     f2pm._matches.push_back(match);
+                    f2pm._unknownPositives.push_back(match);
                     string sequence = (*it)->ms2;
 
                     if (sequence != "")
@@ -362,27 +346,33 @@ vector<SpectrumQuery> IslandizedDatabase::query(DfcPtr dfc, const WarpFunctionEn
                             if (sequence == best->searchResult.searchHit.peptide) 
                                 {
                                     f2pm._truePositives.push_back(match);
-                                    cout << "matching:" << sequence << endl;
+
                                 }
                             else 
                                 {
                                     f2pm._falsePositives.push_back(match);
-                                    cout << "mismatching: " << sequence << " and " << best->searchResult.searchHit.peptide << endl;
+
                                 }
                         }
+
 
                 }
 
             else
-                {
+                {                                        
+                    /// give up
+
                     MatchPtr match(new Match(*best, (*it)->feature));
                     match->score = 0; // not maxPVal - we know it's 0, -1 was just an indicator
+                    match->calculatedMass = (*it)->calculatedMass;
+                    match->massDeviation = (match->feature->mz - Ion::protonMass_) * match->feature->charge - match->calculatedMass;
+                    
                     f2pm._mismatches.push_back(match);
                     string sequence = (*it)->ms2;
 
                     if (sequence != "")
                         {
-                            if (sequence == best->searchResult.searchHit.peptide)
+                            if (find(uniquePeptides.begin(), uniquePeptides.end(), sequence) != uniquePeptides.end())
                                 {
                                     f2pm._falseNegatives.push_back(match);
 
@@ -414,13 +404,27 @@ vector<SpectrumQuery> IslandizedDatabase::query(DfcPtr dfc, const WarpFunctionEn
     ofstream ofs_fn((outputDir + "/fn.txt").c_str());
     exporterf.writeFalseNegatives(ofs_fn);
 
+    ofstream ofs_un((outputDir + "/un.txt").c_str());
+    exporterf.writeTrueNegatives(ofs_un);
+
+    ofstream ofs_up((outputDir + "/up.txt").c_str());
+    exporterf.writeFalseNegatives(ofs_up);
+
     ofstream ofs_ms1_5((outputDir + "/ms1_5.pep.xml").c_str());
     exporterf.writePepXML(mspa_in,ofs_ms1_5);
 
-    ofstream ofs_comb((outputDir + "/comb.pep.xml").c_str());
-    exporterf.writeCombinedPepXML(mspa_in,ofs_comb);
+    ofstream ofs_anch((outputDir + "/anchors.txt").c_str());
+    exporterf.writeAnchors(ofs_anch);
 
-    // report island and score
+    ofstream ofs_wiggle((outputDir + "/wiggle.txt").c_str());
+    exporterf.writeWigglePlot(ofs_wiggle);
+
+    ofstream ofs_f2pm((outputDir + "/f2pm.xml").c_str());
+    exporterf.writeF2PM(ofs_f2pm);
+
+    ofstream ofs_r((outputDir + "/r_input.txt").c_str());
+    exporterf.writeRInputFile(ofs_r);
+
     return result;
     
 }

@@ -20,7 +20,7 @@ class Feature2PeptideMatcher
 public:
 
     Feature2PeptideMatcher(){}
-    Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const NormalDistributionSearch& nds); 
+    Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const NormalDistributionSearch& nds, const int& rocStats=0, const double& threshold=0.75); 
 
     // accessors
     std::vector<MatchPtr> getMatches() const { return _matches;}

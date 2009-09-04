@@ -68,6 +68,7 @@ void AMTContainer::read(istream& is)
 {
     HandlerAMTContainer handlerAMTContainer(this);
     parse(is, handlerAMTContainer);
+    cout << "constructing pidf .. " << endl;
     PidfPtr pidf(new PeptideID_dataFetcher(_sqs));
     _pidf = pidf;
 

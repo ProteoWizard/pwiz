@@ -35,7 +35,7 @@ void normalizeMatches(vector<MatchPtr>& v, const double& maxScore)
 
 ofstream matches("matchSequences.txt");
 
-Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const NormalDistributionSearch& nds)
+Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const NormalDistributionSearch& nds, const int& rocStats, const double& threshold)
 {
     DatabaseQuery db(b);
 
@@ -56,8 +56,8 @@ Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const Normal
                 }
 
             else { counter++; known++;}
-            vector<MatchPtr> matches = db.query(*fs_it, nds, 50);
 
+            vector<MatchPtr> matches = db.query(*fs_it, nds, threshold);
             sort(matches.begin(), matches.end(), SortByScore());            
 
             const string& feature_ms2 = (*fs_it)->ms2;
@@ -74,38 +74,30 @@ Feature2PeptideMatcher::Feature2PeptideMatcher(FdfPtr a, PidfPtr b, const Normal
                     
                 }
 
-            else // look further
+            else  // look for the nearest thing if we are trying to generate ROC stats
                 {
-                    vector<MatchPtr> nextMatches = db.query(*fs_it, nds, .01);
-                    sort(nextMatches.begin(), nextMatches.end(), SortByScore());
-                    if (nextMatches.size() == 0 ) 
+                    if (rocStats)
                         {
-                            cerr << "Error: What the heck, .6 not big enough ... " << endl;             
-                            if (matches.size() == 0) cerr << "Error: matches also of size 0 ! " << endl;
+                            vector<MatchPtr> nextMatches = db.query(*fs_it, nds, 0);
+                            sort(nextMatches.begin(), nextMatches.end(), SortByScore());
+                            if (nextMatches.size() == 0 ) 
+                                {
+                                    cerr << "Error: What the heck, .6 not big enough ... " << endl;             
+                                    if (matches.size() == 0) cerr << "Error: matches also of size 0 ! " << endl;
+                                }
+
+                            else 
+                                {
+                                    _mismatches.push_back(*nextMatches.begin());
+                                    next_peptide_ms2 = _mismatches.back()->spectrumQuery.searchResult.searchHit.peptide;
+                            
+                                    if (feature_ms2 == next_peptide_ms2) _falseNegatives.push_back(*nextMatches.begin());
+                                    if (feature_ms2 != next_peptide_ms2) _trueNegatives.push_back(*nextMatches.begin());
+                                }             
                         }
-
-             else 
-                {
-                    _mismatches.push_back(*nextMatches.begin());
-                     next_peptide_ms2 = _mismatches.back()->spectrumQuery.searchResult.searchHit.peptide;
-                     
-                     if (feature_ms2 == next_peptide_ms2) _falseNegatives.push_back(*nextMatches.begin());
-                     if (feature_ms2 != next_peptide_ms2) _trueNegatives.push_back(*nextMatches.begin());
-                }             
+                }
         }
-        }
-    /*
-    // normalize matches - doesn't make much sense with arbitrarilyLarge in there, hmm.
-    sort(_matches.begin(), _matches.end(), SortByScore());
-    double maxScore = (*_matches.begin())->score;
-
-    normalizeMatches(_matches, maxScore);
-    normalizeMatches(_mismatches, maxScore);
-    normalizeMatches(_truePositives, maxScore);
-    normalizeMatches(_falsePositives, maxScore);
-    normalizeMatches(_trueNegatives, maxScore);
-    normalizeMatches(_falseNegatives, maxScore);
-    */
+   
 }
 
 bool Feature2PeptideMatcher::operator==(const Feature2PeptideMatcher& that)

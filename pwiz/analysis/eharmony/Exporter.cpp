@@ -36,12 +36,6 @@ void Exporter::writeWigglePlot(ostream& os)
 
 void Exporter::writeRTCalibrationPlot(ostream& os)
 {
-    /*  vector<SpectrumQuery>::iterator it = _dfc->_unchangedPeptides.begin();
-  vector<SpectrumQuery>::iterator jt = _dfc->_changedPeptides.begin();
-  for(; it != _dfc->_unchangedPeptides.end(); ++it, ++jt)
-    os << it->retentionTimeSec << "\t" << jt->retentionTimeSec << "\n";
-    */
-
 }
 
 void Exporter::writeFunnyPeptides(ostream& os)
@@ -148,14 +142,15 @@ void Exporter::writeTruePositives(ostream& os)
   vector<MatchPtr>::iterator it = matches.begin();
   for(; it != matches.end(); ++it)
     {
-        double mz = (*it)->feature->mz;
+
+        double mass = (*it)->spectrumQuery.precursorNeutralMass;
         double rt = (*it)->feature->retentionTime;
 
-      double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
-      double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
+        double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
+        double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-      os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
-      
+        os << mass << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score <<  "\n";
+            
     }
 
 }
@@ -167,13 +162,14 @@ void Exporter::writeFalsePositives(ostream& os)
   for(; it != matches.end(); ++it)
     {
 
-        double mz = (*it)->feature->mz;
+        double mass = (*it)->spectrumQuery.precursorNeutralMass;
         double rt = (*it)->feature->retentionTime;
 
-      double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
-      double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
+        double massDiff = mass - (*it)->calculatedMass;
+        double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-      os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
+        os << mass << "\t" << rt << "\t" << massDiff << "\t" << rtDiff << "\t" << (*it)->score <<"\n";
+ 
     }
 
 }
@@ -185,13 +181,13 @@ void Exporter::writeTrueNegatives(ostream& os)
   for(; it != matches.end(); ++it)
     {
 
-        double mz = (*it)->feature->mz;
+        double mass = (*it)->spectrumQuery.precursorNeutralMass;
         double rt = (*it)->feature->retentionTime;
 
-      double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
-      double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
+        double massDiff = mass - (*it)->calculatedMass;
+        double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-      os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
+        os << mass << "\t" << rt << "\t" << massDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n" ;        
 
     }
 
@@ -203,14 +199,14 @@ void Exporter::writeFalseNegatives(ostream& os)
   vector<MatchPtr>::iterator it = matches.begin();
   for(; it != matches.end(); ++it)
     {
-        double mz = (*it)->feature->mz;
+        double mass = (*it)->spectrumQuery.precursorNeutralMass;
         double rt = (*it)->feature->retentionTime;
 
-      double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
-      double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
+        double massDiff = mass - (*it)->calculatedMass;
+        double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-      os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
-
+        os << mass << "\t" << rt << "\t" << massDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
+     
     }
 
 }
@@ -221,13 +217,13 @@ void Exporter::writeUnknownPositives(ostream& os)
     vector<MatchPtr>::iterator it = matches.begin();
     for(; it != matches.end(); ++it)
         {
-            double mz = (*it)->feature->mz;
+            double mass = (*it)->spectrumQuery.precursorNeutralMass;
             double rt = (*it)->feature->retentionTime;
 
-            double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
+            double massDiff = mass - (*it)->calculatedMass;
             double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-            os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
+            os << mass << "\t" << rt << "\t" << massDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
 
         }
 
@@ -239,13 +235,13 @@ void Exporter::writeUnknownNegatives(ostream& os)
     vector<MatchPtr>::iterator it = matches.begin();
     for(; it != matches.end(); ++it)
         {
-            double mz = (*it)->feature->mz;
+            double mass = (*it)->spectrumQuery.precursorNeutralMass;
             double rt = (*it)->feature->retentionTime;
 
-            double mzDiff = ((*it)->feature->mz - Ion::mz((*it)->spectrumQuery.precursorNeutralMass, (*it)->spectrumQuery.assumedCharge));
+            double massDiff = mass - (*it)->calculatedMass;
             double rtDiff = ((*it)->feature->retentionTime - (*it)->spectrumQuery.retentionTimeSec);
 
-            os << mz << "\t" << rt << "\t" << mzDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
+            os << mass << "\t" << rt << "\t" << massDiff << "\t" << rtDiff << "\t" << (*it)->score << "\n";
 
         }
 
@@ -253,20 +249,8 @@ void Exporter::writeUnknownNegatives(ostream& os)
 
 
 void Exporter::writeRTCalibrationData(ostream& ospep, ostream& osf0, ostream& osf1)
-{/*
-  vector<SpectrumQuery>& pep = _dfc->_unchangedPeptides;
-  vector<FeatureSequenced>& f0 = _dfc->_unchangedFeatures;
-  vector<FeatureSequenced>& f1 = _dfc->_changedFeatures;
-
-  vector<SpectrumQuery>::iterator it = pep.begin();
-  for(; it != pep.end(); ++it ) ospep << Ion::mz(it->precursorNeutralMass, it->assumedCharge) << "\t" << it->retentionTimeSec << "\n";
-
-  vector<FeatureSequenced>::iterator it2 = f0.begin();
-  for(; it2 != f0.end(); ++it2) osf0 << it2->feature->mz << "\t" << it2->feature->retentionTime << "\n";
-
-  vector<FeatureSequenced>::iterator it3 = f1.begin();
-  for(; it3 != f1.end(); ++it3) osf1 << it3->feature->mz << "\t" << it3->feature->retentionTime << "\n";
- */
+{
+    return;
 }
 
 struct RTLess

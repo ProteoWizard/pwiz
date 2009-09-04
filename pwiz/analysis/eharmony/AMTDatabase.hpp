@@ -17,7 +17,7 @@ struct AMTDatabase
 {
     AMTDatabase(const AMTContainer& amtContainer);
 
-    virtual std::vector<SpectrumQuery> query(DfcPtr dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in, string outputDir="./amtdb_query");
+    virtual std::vector<SpectrumQuery> query(DfcPtr dfc, const WarpFunctionEnum& wfe, NormalDistributionSearch& nds, MSMSPipelineAnalysis& mspa_in, string outputDir="./amtdb_query",const int& roc=0, const double& threshold=0.75);
     
     PidfPtr _peptides;
     
@@ -49,8 +49,13 @@ struct IslandizedDatabase : public AMTDatabase
 
         double massMin;
         double massMax;
+        double massMedian;
+        double massMean;
+
         double rtMin;
         double rtMax;
+        double rtMedian;
+        double rtMean;
 
         double relativeArea;
 
@@ -62,6 +67,7 @@ struct IslandizedDatabase : public AMTDatabase
     };
 
     vector<Island> islands;
+    vector<string> uniquePeptides;
 
 };
 

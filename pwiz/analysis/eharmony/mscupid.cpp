@@ -43,11 +43,15 @@ namespace{
 struct Config
 {    
     double _threshold;
+    int _islandize;
+    int _roc;
     WarpFunctionEnum _warpFunction;
     vector<string> filenames;
 
     Config() : _threshold(.9420),
-               _warpFunction(Default)
+               _warpFunction(Default),
+               _islandize(0),
+               _roc(0)
     {}
 
 };
@@ -70,19 +74,53 @@ void go(const Config& config)
 
     boost::shared_ptr<AMTContainer> amt(new AMTContainer());
     amt->read(ifs_db);
-    //    AMTDatabase db(amt);;
-    IslandizedDatabase id(amt);
+
+    if (config._islandize)
+        {
+            cout << "[mscupid] Islandizing database ..." << endl;
+
+            IslandizedDatabase db(amt);
+
+            AMTContainer amt2;
+            amt2.read(ifs_db);
+
+            FdfPtr dummy(new Feature_dataFetcher());
+
+            DfcPtr dfc(new DataFetcherContainer(pidf_query, db._peptides, fdf_query, dummy));
+            dfc->adjustRT((pidf_query->getRtAdjustedFlag()+1)%2, false);
+            dfc->warpRT(config._warpFunction);
+
+            cout << "[mscupid] Querying database ... " << endl;
+            PeptideMatcher pm(pidf_query, db._peptides);
+
+            string outputDir = "./amtdb_query";
+            boost::filesystem::create_directory(outputDir);
+
+            NormalDistributionSearch nds;
+            nds._threshold = (config._threshold);
+            nds.calculateTolerances(dfc);
+
+            db.query(dfc,config._warpFunction,nds,mspa, outputDir);
+
+
+            return;
+        }
+
+    cout << "[mscupid] Using un-Islandized database ... "  << endl;
+
+    AMTDatabase db(*amt);
 
     AMTContainer amt2;
     amt2.read(ifs_db);
 
     FdfPtr dummy(new Feature_dataFetcher());
 
-    DfcPtr dfc(new DataFetcherContainer(pidf_query, id._peptides, fdf_query, dummy));
+    DfcPtr dfc(new DataFetcherContainer(pidf_query, db._peptides, fdf_query, dummy));
     dfc->adjustRT((pidf_query->getRtAdjustedFlag()+1)%2, false);
+    dfc->warpRT(config._warpFunction);
 
     cout << "[mscupid] Querying database ... " << endl;
-    PeptideMatcher pm(pidf_query, id._peptides);
+    PeptideMatcher pm(pidf_query, db._peptides);
 
     string outputDir = "./amtdb_query";
     boost::filesystem::create_directory(outputDir);
@@ -91,7 +129,7 @@ void go(const Config& config)
     nds._threshold = (config._threshold);
     nds.calculateTolerances(dfc);
 
-    id.query(dfc,config._warpFunction,nds,mspa, outputDir);
+    db.query(dfc,config._warpFunction,nds,mspa, outputDir);
 
     return;
 
@@ -113,7 +151,9 @@ Config parseCommandLine(int argc, const char* argv[])
     po::options_description od_config("Options");
     od_config.add_options()
         ("warpFunctionCalculator,w", po::value<string>(&warpFunctionCalculator), " : specify method of calculating the rt-calibrating warp function. \nOptions:\nlinear, piecewiseLinear\nDefault:\nno calibration")
-        ("threshold,t", po::value<double>(&config._threshold)->default_value(config._threshold)," : specify threshold for match acceptance.");
+        ("threshold,t", po::value<double>(&config._threshold)->default_value(config._threshold)," : specify threshold for match acceptance.")
+        ("generateROCStats,r", po::value<int>(&config._roc)->default_value(config._roc)," : calculate ROC curve statistics using MS2 identifications to determine true/false positives/negatives. 0 = false, 1 = true.")
+        ("islandize", po::value<int>(&config._islandize)->default_value(config._islandize), " : Postprocess AMT database with islandization. 0 = false, 1 = true.");
 
     // append options to usage string
     usage << od_config;
@@ -169,7 +209,7 @@ int main(int argc, const char* argv[])
    
     catch (...)
         {
-            cerr << "[cupid] Caught unknown exception." << endl;
+            cerr << "[mscupid] Caught unknown exception." << endl;
  
         }
  

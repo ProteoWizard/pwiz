@@ -30,13 +30,6 @@ pair<double,double> DatabaseQuery::calculateSearchRegion(const double& mu1, cons
 pair<double,double> DatabaseQuery::calculateNormalSearchRegion(const double& mu1, const double& mu2, double& sigma1, double& sigma2, const double& threshold)
 {
 
-    // recalculate for convolution
-    sigma1 = sqrt(sigma1 * sigma1 + .001 *.001);
-    sigma2 = sqrt(sigma2 * sigma2 + 100 * 100);
-
-    //    double mzDiameter = fabs((1 - 2*mu1/(sqrt(2*pi)*sigma1))/(threshold - 2/(sqrt(2*pi)*sigma1)));
-    //    double rtDiameter = fabs((1 - 2*mu2/(sqrt(2*pi)*sigma2))/(threshold - 2/(sqrt(2*pi)*sigma2)));
-
     // Non weighted
     double mzDiameter = fabs((threshold - 1) * (sqrt(pi)/2)*sqrt(2)*sigma1);
     double rtDiameter = fabs((threshold - 1) * (sqrt(pi)/2)*sqrt(2)*sigma2);
@@ -53,13 +46,13 @@ vector<MatchPtr> DatabaseQuery::query(FeatureSequencedPtr fs, NormalDistribution
 {
     Bin<SpectrumQuery> bin = _database->getBin();
     pair<double,double> tolerances = calculateNormalSearchRegion(nds._mu_mz, nds._mu_rt,  nds._sigma_mz, nds._sigma_rt, threshold);
+
     bin.rebin(tolerances.first, tolerances.second);
     
     vector<SpectrumQueryPtr> candidates;
     pair<double,double> fsCoords = make_pair(fs->feature->mz, fs->feature->retentionTime);
 
     bin.getAdjacentBinContents(fsCoords, candidates);
-
     vector<MatchPtr> resultingMatches;
 
     vector<SpectrumQueryPtr>::iterator it = candidates.begin();

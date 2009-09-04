@@ -22,10 +22,10 @@ vector<SQBinPair> getCoordinates(const vector<SpectrumQuery>& sq, const double& 
             if (sq_it->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= threshold) 
                 {
                     SpectrumQuery curr = *sq_it;
-                    //               const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
-                    const double mass = curr.precursorNeutralMass;
+                                   const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
+                                   //const double mass = curr.precursorNeutralMass;
                     const double rt = curr.retentionTimeSec;
-                    result.push_back(make_pair(make_pair(mass, rt), curr));
+                    result.push_back(make_pair(make_pair(mz, rt), curr));
                 }
         }
 
@@ -42,10 +42,10 @@ vector<SQBinPair> getCoordinates(const vector<boost::shared_ptr<SpectrumQuery> >
             if ((*sq_it)->searchResult.searchHit.analysisResult.peptideProphetResult.probability >= threshold) 
                 {
                     SpectrumQuery curr = **sq_it;
-                    //                    const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
-                    const double mass = curr.precursorNeutralMass;
+     const double mz = Ion::mz(curr.precursorNeutralMass, curr.assumedCharge);
+     //                    const double mass = curr.precursorNeutralMass;
                     const double rt = curr.retentionTimeSec;
-                    result.push_back(make_pair(make_pair(mass, rt), curr));
+                    result.push_back(make_pair(make_pair(mz, rt), curr));
                 }
 
         }
@@ -83,19 +83,19 @@ PeptideID_dataFetcher::PeptideID_dataFetcher(const MSMSPipelineAnalysis& mspa) :
 
 void PeptideID_dataFetcher::erase(const SpectrumQuery& sq)
 {
-    //    double mz = Ion::mz(sq.precursorNeutralMass,sq.assumedCharge);
-    double mass = sq.precursorNeutralMass;
+        double mz = Ion::mz(sq.precursorNeutralMass,sq.assumedCharge);
+    //    double mass = sq.precursorNeutralMass;
     double rt = sq.retentionTimeSec;
-    _bin.erase(sq, make_pair(mass,rt));
+    _bin.erase(sq, make_pair(mz,rt));
 
 }
 
 void PeptideID_dataFetcher::update(const SpectrumQuery& sq)
 {
-    //    double mz = Ion::mz(sq.precursorNeutralMass, sq.assumedCharge);
-    double mass = sq.precursorNeutralMass;
+        double mz = Ion::mz(sq.precursorNeutralMass, sq.assumedCharge);
+        //double mass = sq.precursorNeutralMass;
     double rt = sq.retentionTimeSec;
-    _bin.update(sq, make_pair(mass,rt));
+    _bin.update(sq, make_pair(mz,rt));
 
 }
 
