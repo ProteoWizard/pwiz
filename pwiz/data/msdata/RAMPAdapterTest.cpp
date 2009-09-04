@@ -248,8 +248,8 @@ static void test_mzML_1_0(const char *test_app_name) {
 	size_t pos = buildparent.find("build");
 	buildparent.resize(pos);
 	std::string example_data_dir = buildparent + "example_data/";
-	RAMPAdapter adapter_1_0(example_data_dir + "small.pwiz.1.0.mzML");
-	RAMPAdapter adapter_1_1(example_data_dir + "small.pwiz.1.1.mzML");
+	RAMPAdapter adapter_1_0(example_data_dir + "tiny.pwiz.1.0.mzML");
+	RAMPAdapter adapter_1_1(example_data_dir + "tiny.pwiz.1.1.mzML");
 
 	unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount());
 	for (int scan = 4;scan--;) {
