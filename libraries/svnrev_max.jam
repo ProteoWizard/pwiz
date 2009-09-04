@@ -12,7 +12,7 @@ import "class" : new ;
 feature.feature filemask : : free ;
 
 # Use this feature to generate a jamfile with revision info.
-feature.feature jamfile : false true ;
+feature.feature jamfile : false true : incidental ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;

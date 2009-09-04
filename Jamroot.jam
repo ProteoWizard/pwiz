@@ -289,12 +289,21 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
+rule seems-dependency ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    if <toolset>msvc in $(properties)
+    {
+        return <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
+    }
+}
 
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
       pwiz_tools/examples
     : <install-type>EXE
+      <conditional>@seems-dependency
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
     ;

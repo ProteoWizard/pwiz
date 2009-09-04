@@ -80,30 +80,29 @@ lib pwiz_bindings_cli
     ;
 
 
-actions do_update_embedded_manifest
-{
-    REM support both MSVC 8 and 9
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    REM echo $(>)
-    REM sn.exe /q /Ra $(>[0]) $(CLI_ROOT)/signature.snk
-}
-
-import notfile ;
-notfile update_embedded_manifest : @do_update_embedded_manifest : pwiz_bindings_cli ;
-#notfile update_embedded_manifest_test : @do_update_embedded_manifest : pwiz_bindings_cli/<location>$(CLI_ROOT)/test : <location>$(CLI_ROOT)/test ;
-
 # merge XDC files to create XML documentation alongside the output assembly
-actions do_merge_xdc_files
+rule merge_xdc_files ( targets + : sources * : properties * )
+{
+    local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
+    OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
+}
+
+actions merge_xdc_files
 {
     REM support both MSVC 8 and 9
     IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
     IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    xdcmake.exe /nologo $(CLI_ROOT)/*.xdc /out:$(>[0]:D)/pwiz_bindings_cli.xml
-    del $(CLI_ROOT)\\*.xdc
+    xdcmake.exe /nologo $(CLI_ROOT)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 
-notfile merge_xdc_files : @do_merge_xdc_files : pwiz_bindings_cli ;
+
+make pwiz_bindings_cli.xml
+    : # sources
+        pwiz_bindings_cli
+    : # action
+        @merge_xdc_files
+    : # requirements
+    ;
 
 
 #

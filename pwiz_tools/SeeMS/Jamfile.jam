@@ -19,28 +19,72 @@
 # limitations under the License.
 #
 
-actions do_seems_release_build
-{
-    REM support both MSVC 8 and 9
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    echo Building SeeMS in release configuration...
-    msbuild $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS/seems.sln /p:Configuration=Release /nologo /verbosity:minimal
-}
-
-actions do_seems_debug_build
-{
-    REM support both MSVC 8 and 9
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    echo Building SeeMS in debug configuration...
-    msbuild $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS/seems.sln /p:Configuration=Debug /nologo /verbosity:minimal
-}
 
 import modules ;
-import notfile ;
 if [ modules.peek : NT ]
 {
-    notfile seems_release_build : @do_seems_release_build : ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli : release ;
-    #notfile seems_debug_build : @do_seems_debug_build : ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli : debug ;
+    import path feature ;
+    path-constant SEEMS_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS ;
+
+
+    rule do_seems_build ( targets + : sources * : properties * )
+    {
+        if <variant>debug in $(properties) ||
+           <debug-symbols>on in $(properties)
+        {
+            CONFIGURATION on $(<[1]) = "Debug" ;
+        }
+        else
+        {
+            CONFIGURATION on $(<[1]) = "Release" ;
+        }
+
+        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    }
+
+    actions do_seems_build
+    {
+        REM support both MSVC 8 and 9
+        IF EXIST "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        echo Building SeeMS in $(CONFIGURATION:L) configuration...
+        msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    }
+
+
+    rule build-location ( properties * )
+    {
+        local result ;
+        # don't override the location when it's already set
+        if ! <location> in $(properties:G)
+        {
+            if <variant>debug in $(properties) ||
+               <debug-symbols>on in $(properties)
+            {
+                result = <location>$(SEEMS_PATH)/bin/x86/Debug ;
+            }
+            else
+            {
+                result = <location>$(SEEMS_PATH)/bin/x86/Release ;
+            }
+            return $(result) ;
+        }
+        else
+        {
+            return $(properties) ;
+        }
+    }
+
+
+    make seems.exe
+        : # sources
+        : # actions
+            @do_seems_build
+        : # requirements
+            <conditional>@build-location
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(SEEMS_PATH)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(SEEMS_PATH)
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
+        ;
 }
