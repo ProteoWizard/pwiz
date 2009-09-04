@@ -197,7 +197,7 @@ import svnrev_max ;
 using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>$(PWIZ_BUILD_PATH)/svnrev_max ;
 
 svnrev_max.generate-version-header svnrev.hpp
-    :
+    :   $(PWIZ_ROOT_PATH)/Jamroot.jam
     :   <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/*.?pp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/*.?pp

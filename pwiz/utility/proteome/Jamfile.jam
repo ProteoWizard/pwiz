@@ -75,6 +75,7 @@ import svnrev_max path ;
 using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_ROOT_PATH)/libraries : <location>$(PWIZ_BUILD_PATH)/svnrev_max ;
 
 svnrev_max.generate-version-header svnrev.hpp
-    :   [ glob *.?pp Jamfile.jam ]
+    :   $(PWIZ_ROOT_PATH)/Jamroot.jam
+        [ glob *.?pp Jamfile.jam ]
     :   <location>.
     ;
