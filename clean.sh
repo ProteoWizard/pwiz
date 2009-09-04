@@ -7,7 +7,6 @@ echo "Cleaning project..."
 if [ -d build-*-* ]; then rm -fdr build-*-*; fi;
 if [ -d libraries/boost_1_36_0 ]; then rm -fdr libraries/boost_1_36_0; fi;
 if [ -d libraries/boost_1_39_0 ]; then rm -fdr libraries/boost_1_39_0; fi;
-if [ -d libraries/boost-build ]; then rm -fdr libraries/boost-build; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fdr libraries/gd-2.0.33; fi;
 if [ -d libraries/zlib-1.2.3 ]; then rm -fdr libraries/zlib-1.2.3; fi;
 if [ -d libraries/fftw-3.1.2 ]; then rm -fdr libraries/fftw-3.1.2; fi;

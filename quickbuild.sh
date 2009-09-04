@@ -40,9 +40,6 @@ esac
 # Extract Boost distro
 $PWIZ_ROOT/libraries/untar_boost.sh  $PWIZ_ROOT
 
-# Extract Boost.Build
-$PWIZ_ROOT/libraries/untar_boost-build.sh $PWIZ_ROOT
-
 PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/$BJAM_BIN/bjam
 
 # Build local copy of bjam

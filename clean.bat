@@ -12,7 +12,6 @@ IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
 IF EXIST libraries\boost_1_36_0 rmdir /s /q libraries\boost_1_36_0
 IF EXIST libraries\boost_1_39_0 rmdir /s /q libraries\boost_1_39_0
-IF EXIST libraries\boost-build rmdir /s /q libraries\boost-build
 IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2

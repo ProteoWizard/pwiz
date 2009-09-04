@@ -426,7 +426,7 @@ tar.create boost_1_39_0.tar.bz2
   exclude:cvgen*.exe
   exclude:svnrev.*
   exclude:Reader_*_Test.data
-  exclude:small.* # large files in example_data
+  exclude:example_data/small* # large files in example_data
   exclude:bin exclude:obj # C#.NET intermediate directories
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
 ;
@@ -451,7 +451,7 @@ This source tree is a subset of the full pwiz source tree.
 
   $(PWIZ_ROOT_PATH)/doc
   $(PWIZ_ROOT_PATH)/example_data
-  $(PWIZ_ROOT_PATH)/libraries/boost-build.tar.bz2
+  $(PWIZ_ROOT_PATH)/libraries/boost-build
   $(PWIZ_ROOT_PATH)/libraries/boost_aux
   [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
 

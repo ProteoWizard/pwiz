@@ -9,9 +9,6 @@ set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 REM # Extract Boost distro
 call %PWIZ_ROOT%\libraries\untar_boost.bat %PWIZ_ROOT%
 
-REM # Extract Boost.Build (for VC9 support)
-call %PWIZ_ROOT%\libraries\untar_boost-build.bat %PWIZ_ROOT%
-
 set PWIZ_BJAM=%PWIZ_ROOT%\libraries\boost-build\jam_src\bin.ntx86\bjam.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%
@@ -22,6 +19,9 @@ IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam...
 pushd %PWIZ_ROOT%\libraries\boost-build\jam_src
 call build.bat
+@echo off
+setlocal
+@echo off
 popd
 :SKIP_BJAM
 
