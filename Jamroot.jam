@@ -427,7 +427,9 @@ tar.create boost_1_39_0.tar.bz2
   exclude:svnrev.*
   exclude:Reader_*_Test.data
   exclude:example_data/small* # large files in example_data
+  exclude:bootstrap exclude:bin.* # boost-build intermediate directories
   exclude:bin exclude:obj # C#.NET intermediate directories
+  exclude:*.xdc # .NET XML documentation sources
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
 ;
 
