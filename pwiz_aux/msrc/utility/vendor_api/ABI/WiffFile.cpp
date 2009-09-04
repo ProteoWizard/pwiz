@@ -156,6 +156,9 @@ struct ExperimentImpl : public Experiment
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
     vector<double> cycleStartTimes;
+    
+    typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
+    TransitionParametersMap transitionParametersMap;
 };
 
 typedef boost::shared_ptr<ExperimentImpl> ExperimentImplPtr;
@@ -314,16 +317,31 @@ ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
 : wifffile_(wifffile), sample(sample), period(period), experiment(experiment)
 {
-    CATCH_AND_FORWARD
-    (
-        wifffile_->setExperiment(sample, period, experiment);
-        msExperiment = wifffile_->reader->MSExperiment;
+    wifffile_->setExperiment(sample, period, experiment);
+    msExperiment = wifffile_->reader->MSExperiment;
 
-        array<RetentionTime>^ retentionTimes = msExperiment->GetRetentionTimes(0, Double::MaxValue);
-        cycleStartTimes.resize(retentionTimes->Length);
-        for (int i=0; i < retentionTimes->Length; ++i)
-            cycleStartTimes[i] = retentionTimes[i];
-    )
+    array<RetentionTime>^ retentionTimes = msExperiment->GetRetentionTimes(0, Double::MaxValue);
+    cycleStartTimes.resize(retentionTimes->Length);
+    for (int i=0; i < retentionTimes->Length; ++i)
+        cycleStartTimes[i] = retentionTimes[i];
+
+    for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
+    {
+        MRMTransition^ transition = msExperiment->MRMTransitions[i];
+        pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
+        e.first = i;
+        e.second = -1;
+    }
+
+    MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
+    for (int i=0; i < transitions->Count; ++i)
+    {
+        MRMTransition^ transition = transitions[i]->Transition;
+        pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
+        if (e.second != -1) // this Q1/Q3 wasn't added by the MRMTransitions loop
+            e.first = -1;
+        e.second = i;
+    }
 }
 
 double ExperimentImpl::getCycleStartTime(int cycle) const
@@ -338,21 +356,34 @@ size_t ExperimentImpl::getSRMSize() const
 
 void ExperimentImpl::getSRM(size_t index, Target& target) const
 {
+    if (index > (size_t) msExperiment->MRMTransitions->Count)
+        throw std::out_of_range("[Experiment::getSRM()] index out of range");
+
+    MRMTransition^ transition = msExperiment->MRMTransitions[index];
+    const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
+
     CATCH_AND_FORWARD
     (
-        if (index > (size_t) msExperiment->MRMTransitions->Count)
-            throw std::out_of_range("[Experiment::getSRM()] index out of range");
-
-        MRMTransition^ transition = msExperiment->MRMTransitions[index];
-        CompoundDependentParametersDictionary^ parameters = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition()[index]->Parameters;
         target.type = TargetType_SRM;
-        target.Q1 = transition->Q1Mass;
-        target.Q3 = transition->Q3Mass;
+        target.Q1 = transition->Q1Mass->MassAsDouble;
+        target.Q3 = transition->Q3Mass->MassAsDouble;
         target.dwellTime = transition->DwellTime;
-        target.collisionEnergy = (double) parameters["CE"];
-        target.declusteringPotential = (double) parameters["DP"];
         if (transition->CompoundID != nullptr)
             target.compoundID = ToStdString(transition->CompoundID);
+
+        if (e.second > -1)
+        {
+            MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
+            CompoundDependentParametersDictionary^ parameters = transitions[e.second]->Parameters;
+            target.collisionEnergy = (double) parameters["CE"];
+            target.declusteringPotential = (double) parameters["DP"];
+        }
+        else
+        {
+            // TODO: use NaN to indicate these values should be considered missing?
+            target.collisionEnergy = 0;
+            target.declusteringPotential = 0;
+        };
     )
 }
 
