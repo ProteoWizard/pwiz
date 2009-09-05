@@ -1078,7 +1078,7 @@ struct HandlerScanSettings : public HandlerParamContainer
         if (!scanSettings)
             throw runtime_error("[IO::HandlerScanSettings] Null scanSettings.");
 
-        if (version == 1 && name == "acquisitionSettings" /* mzML 1.0 */ ||
+        if ((version == 1 && name == "acquisitionSettings") /* mzML 1.0 */ ||
             name == "scanSettings")
         {
             decode_xml_id(getAttribute(attributes, "id", scanSettings->id));
@@ -1096,7 +1096,7 @@ struct HandlerScanSettings : public HandlerParamContainer
             if (!sourceFileRef.empty())
                 scanSettings->sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(sourceFileRef)));
             return Status::Ok;
-     }
+        }
         else if (name=="target")
         {
             scanSettings->targets.push_back(Target());
@@ -2432,6 +2432,19 @@ struct HandlerRun : public HandlerParamContainer
             run->chromatogramListPtr = temp;
             return Status(Status::Delegate, &handlerChromatogramListSimple_);
         }
+        else if (version == 1 && name == "sourceFileRefList")
+        {
+            return Status::Ok;
+        }
+        else if (version == 1 && name == "sourceFileRef")
+        {
+            // note: placeholder
+            string sourceFileRef;
+            decode_xml_id(getAttribute(attributes, "ref", sourceFileRef));
+            if (!sourceFileRef.empty())
+                run->defaultSourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+            return Status::Ok;
+        }
 
         HandlerParamContainer::paramContainer = run;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -2623,11 +2636,13 @@ struct HandlerMSData : public SAXParser::Handler
                  name == "scanSettings")
         {
             msd->scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings));
+            handlerScanSettings_.version = version;
             handlerScanSettings_.scanSettings = msd->scanSettingsPtrs.back().get();
             return Status(Status::Delegate, &handlerScanSettings_);
         }
         else if (name == "run")
         {
+            handlerRun_.version = version;
             handlerRun_.run = &msd->run;
             return Status(Status::Delegate, &handlerRun_);
         }
