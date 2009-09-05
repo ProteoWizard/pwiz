@@ -2570,7 +2570,7 @@ struct HandlerMSData : public SAXParser::Handler
                  name == "instrumentConfigurationList" || 
                  name == "softwareList" ||
                  name == "dataProcessingList" ||
-                 (version == 1 && name == "acquisitionList") /* mzML 1.0 */ ||
+                 (version == 1 && name == "acquisitionSettingsList") /* mzML 1.0 */ ||
                  name == "scanSettingsList")
         {
             // ignore these, unless we want to validate the count attribute
