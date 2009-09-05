@@ -309,7 +309,7 @@ int go(const Config& config)
     // the updated files are passed, we take the maximum of the svnrev.hpp build
     // and the updated files
     Revision maxRevision, existingHeaderRevision;
-    time_t maxLastWriteTime = 0, existingHeaderLastWriteTime;
+    time_t maxLastWriteTime = 0, existingHeaderLastWriteTime = 0;
     if (config.incremental && bfs::exists(config.headerFilepath))
     {
         maxRevision = existingHeaderRevision = getRevision(config.headerFilepath);
