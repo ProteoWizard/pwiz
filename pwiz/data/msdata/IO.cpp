@@ -1078,7 +1078,8 @@ struct HandlerScanSettings : public HandlerParamContainer
         if (!scanSettings)
             throw runtime_error("[IO::HandlerScanSettings] Null scanSettings.");
 
-        if (name == "scanSettings")
+        if (version == 1 && name == "acquisitionSettings" /* mzML 1.0 */ ||
+            name == "scanSettings")
         {
             decode_xml_id(getAttribute(attributes, "id", scanSettings->id));
             return Status::Ok;
@@ -2569,6 +2570,7 @@ struct HandlerMSData : public SAXParser::Handler
                  name == "instrumentConfigurationList" || 
                  name == "softwareList" ||
                  name == "dataProcessingList" ||
+                 (version == 1 && name == "acquisitionList") /* mzML 1.0 */ ||
                  name == "scanSettingsList")
         {
             // ignore these, unless we want to validate the count attribute
@@ -2617,7 +2619,8 @@ struct HandlerMSData : public SAXParser::Handler
             handlerDataProcessing_.dataProcessing = msd->dataProcessingPtrs.back().get();
             return Status(Status::Delegate, &handlerDataProcessing_);
         }
-        else if (name == "scanSettings")
+        else if (version == 1 && name == "acquisitionSettings" /* mzML 1.0 */ ||
+                 name == "scanSettings")
         {
             msd->scanSettingsPtrs.push_back(ScanSettingsPtr(new ScanSettings));
             handlerScanSettings_.scanSettings = msd->scanSettingsPtrs.back().get();
