@@ -43,21 +43,23 @@ feature.feature ci : none teamcity : propagated ;
 
 if [ modules.peek : NT ]
 {
-    TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
+    TEST_PRECOMMAND = "set pp=##\necho %pp%teamcity[testStarted name='%name%']" ;
     TEST_POSTCOMMAND =
+        "set pp=##\n"
         "IF %status% NEQ 0"
-            "(echo ##teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
-        "echo ##teamcity[testFinished name='%name%']" ;
+            "(echo %pp%teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
+        "echo %pp%teamcity[testFinished name='%name%']" ;
     TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
 }
 else
 {
-    TEST_PRECOMMAND = "echo \"##teamcity[testStarted name='$name']\"" ;
+    TEST_PRECOMMAND = "pp=##\necho $pp\"teamcity[testStarted name='$name']\"" ;
     TEST_POSTCOMMAND = 
+        "pp=##"
         "if test $status -ne 0 ; then"
-            "echo \"##teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
+            "echo $pp\"teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
         "fi"
-        "echo \"##teamcity[testFinished name='$name']\"" ;
+        "echo $pp\"teamcity[testFinished name='$name']\"" ;
     TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
 }
 
