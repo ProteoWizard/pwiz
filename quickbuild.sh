@@ -21,10 +21,14 @@ if [ ! -e $PWIZ_BJAM ]; then
     LOCATE_TARGET=bin sh build.sh
 fi
 
+if test $(uname -s) = "Darwin"; then
+    DEFAULT_TOOLSET=toolset=darwin
+fi
+    
 # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo "Building pwiz..."
 cd $PWIZ_ROOT
-if ! BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build $PWIZ_BJAM "$@"; then
+if ! BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build $PWIZ_BJAM $DEFAULT_TOOLSET "$@"; then
 	  echo "At least one pwiz target failed to build."
 	  exit 1
 fi
