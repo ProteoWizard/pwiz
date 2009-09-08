@@ -43,7 +43,7 @@ feature.feature ci : none teamcity : propagated ;
 
 if [ modules.peek : NT ]
 {
-    TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%' captureStandardOutput='true']" ;
+    TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
     TEST_POSTCOMMAND =
         "IF %status% NEQ 0"
             "(echo ##teamcity[testFailed name='%name%' message='Exit status: %status%'] ) &" # TODO: does testFailed go to stderr? 1>&2
@@ -52,9 +52,9 @@ if [ modules.peek : NT ]
 }
 else
 {
-    TEST_PRECOMMAND = "echo \"##teamcity[testStarted name='$name' captureStandardOutput='true']\"" ;
+    TEST_PRECOMMAND = "echo \"##teamcity[testStarted name='$name']\"" ;
     TEST_POSTCOMMAND = 
-        "if test $status -neq 0 ; then"
+        "if test $status -ne 0 ; then"
             "echo \"##teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
         "fi"
         "echo \"##teamcity[testFinished name='$name']\"" ;
