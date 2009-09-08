@@ -24,7 +24,6 @@
 
 #include "pwiz/data/mziddata/MzIdentMLFile.hpp"
 #include "pwiz/data/mziddata/examples.hpp"
-// include after creation
 #include "pwiz/data/mziddata/DefaultReaderList.hpp"
 #include <iostream>
 #include <fstream>

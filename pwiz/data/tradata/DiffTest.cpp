@@ -151,7 +151,7 @@ void testParamContainer()
     a.userParams.push_back(UserParam("different", "1"));
     b.userParams.push_back(UserParam("different", "2"));
     a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_intensity);
+    b.cvParams.push_back(MS_peak_intensity);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -165,7 +165,7 @@ void testParamContainer()
     unit_assert(diff.a_b.cvParams.size() == 1);
     unit_assert(diff.a_b.cvParams[0] == MS_charge_state); 
     unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_intensity);
+    unit_assert(diff.b_a.cvParams[0] == MS_peak_intensity);
 }
 
 
@@ -301,7 +301,7 @@ void testEvidence()
     Diff<Evidence> diff(a, b);
     unit_assert(!diff);
 
-    a.set(MS_intensity, 42);
+    a.set(MS_peak_intensity, 42);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -363,8 +363,8 @@ void testPeptide()
     b.userParams.push_back(UserParam("common"));
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
-    a.evidence.set(MS_intensity, 42);
-    b.evidence.set(MS_intensity, 42);
+    a.evidence.set(MS_peak_intensity, 42);
+    b.evidence.set(MS_peak_intensity, 42);
     a.retentionTime.localRetentionTime = 123;
     b.retentionTime.localRetentionTime = 123;
     a.id = b.id = "foo";

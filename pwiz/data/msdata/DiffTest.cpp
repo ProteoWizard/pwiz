@@ -159,7 +159,7 @@ void testParamContainer()
     a.userParams.push_back(UserParam("different", "1"));
     b.userParams.push_back(UserParam("different", "2"));
     a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_intensity);
+    b.cvParams.push_back(MS_peak_intensity);
     a.paramGroupPtrs.push_back(pgp2);
     b.paramGroupPtrs.push_back(pgp3);
 
@@ -175,7 +175,7 @@ void testParamContainer()
     unit_assert(diff.a_b.cvParams.size() == 1);
     unit_assert(diff.a_b.cvParams[0] == MS_charge_state); 
     unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_intensity); 
+    unit_assert(diff.b_a.cvParams[0] == MS_peak_intensity); 
 
     unit_assert(diff.a_b.paramGroupPtrs.size() == 1);
     unit_assert(diff.a_b.paramGroupPtrs[0]->id == "pg2"); 
@@ -317,7 +317,7 @@ void testSample()
     Diff<Sample> diff(a, b);
     unit_assert(!diff);
 
-    a.cvParams.push_back(MS_intensity); 
+    a.cvParams.push_back(MS_peak_intensity); 
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);

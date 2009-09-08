@@ -67,6 +67,16 @@ lib pwiz_data_mzid_examples
 
 
 #
+# testing tools
+#
+
+exe ExtendedReaderTest
+    : ExtendedReadTest.cpp
+      pwiz_data_mzid
+    : <include>../..
+    ;
+
+#
 # unit tests (ordered by dependency)
 #
 

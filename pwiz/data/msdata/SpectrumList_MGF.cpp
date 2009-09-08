@@ -205,7 +205,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 if (delim2 != string::npos)
                                 {
                                     selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value.substr(0, delim2)), MS_m_z);
-                                    selectedIon.set(MS_intensity, lexical_cast<double>(value.substr(delim2+1)));
+                                    selectedIon.set(MS_peak_intensity, lexical_cast<double>(value.substr(delim2+1)));
                                 }
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value), MS_m_z);

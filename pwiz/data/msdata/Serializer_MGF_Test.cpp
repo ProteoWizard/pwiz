@@ -70,7 +70,7 @@ void initializeTinyMGF(MSData& msd)
     Precursor& precursor = s20.precursors.front();
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
-    precursor.selectedIons[0].set(MS_intensity, 120053);
+    precursor.selectedIons[0].set(MS_peak_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
 
     s20.scanList.set(MS_no_combination);

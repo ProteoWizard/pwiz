@@ -123,7 +123,7 @@ class Reader_mzid : public Reader
         read(filename, head, *results.back());
     }
 
-	virtual const char *getType() const {return "MzIdentML";}
+	virtual const char *getType() const {return "mzIdentML";}
 
     private:
 
@@ -134,7 +134,7 @@ class Reader_mzid : public Reader
         try
         {
             string rootElement = GetXMLRootElement(is);
-            if (rootElement == "MzIdentML")
+            if (rootElement == "mzIdentML")
                 return Type_mzid;
         }
         catch (runtime_error&)

@@ -90,7 +90,7 @@ void testParamContainer()
     a.userParams.push_back(UserParam("different", "1"));
     b.userParams.push_back(UserParam("different", "2"));
     a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_intensity);
+    b.cvParams.push_back(MS_intensity_normalization);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -104,7 +104,7 @@ void testParamContainer()
     unit_assert(diff.a_b.cvParams.size() == 1);
     unit_assert(diff.a_b.cvParams[0] == MS_charge_state);
     unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_intensity);
+    unit_assert(diff.b_a.cvParams[0] == MS_intensity_normalization);
 }
 
 void testFragmentArray()

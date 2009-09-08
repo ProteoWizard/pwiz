@@ -674,7 +674,7 @@ PWIZ_API_DECL bool AnalysisSoftware::empty() const
 {
     return IdentifiableType::empty() &&
         version.empty() &&
-        contactRole.empty() &&
+        (!contactRolePtr.get() || contactRolePtr->empty())&&
         softwareName.empty() &&
         URI.empty() &&
         customizations.empty();
@@ -814,7 +814,8 @@ PWIZ_API_DECL bool SpectraData::empty() const
 {
     return location.empty() &&
         externalFormatDocumentation.empty() &&
-        fileFormat.empty();
+        fileFormat.empty() &&
+        spectrumIDFormat.empty();
 }
 
 //
@@ -842,10 +843,14 @@ PWIZ_API_DECL SearchDatabase::SearchDatabase(const std::string& id_,
 
 PWIZ_API_DECL bool SearchDatabase::empty() const
 {
-    return version.empty() &&
+    return ExternalData::empty() &&
+        version.empty() &&
         releaseDate.empty() &&
         numDatabaseSequences == 0 &&
-        numResidues == 0;
+        numResidues == 0 &&
+        fileFormat.empty() &&
+        DatabaseName.empty() &&
+        params.empty();
 }
 
 //

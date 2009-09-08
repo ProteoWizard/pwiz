@@ -61,8 +61,10 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     analysisSoftwarePtr->name="Mascot Server";
     analysisSoftwarePtr->version="2.2.101";
     analysisSoftwarePtr->URI="http://www.matrixscience.com/search_form_select.html";
-    analysisSoftwarePtr->contactRole.contactPtr=ContactPtr(new Contact("ORG_MSL"));
-    analysisSoftwarePtr->contactRole.role.set(MS_software_vendor);
+    ContactRolePtr aspCont = ContactRolePtr(new ContactRole());
+    aspCont->contactPtr=ContactPtr(new Contact("ORG_MSL"));
+    aspCont->role.set(MS_software_vendor);
+    analysisSoftwarePtr->contactRolePtr = aspCont;
 
     analysisSoftwarePtr->softwareName.set(MS_Mascot);
     analysisSoftwarePtr->customizations ="No customizations";
@@ -130,11 +132,11 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     PeptidePtr peptide(new Peptide());
     peptide->id="peptide_1_1";
     peptide->peptideSequence="QLYENKPRRPYIL";
-    peptide->modification.location=0;
-    peptide->modification.monoisotopicMassDelta=-17.026549;
-    // set UNIMOD:28 & value w/
-    // peptide->modification.paramGroup.set();
-    peptide->modification.paramGroup.set(UNIMOD_Gln__pyro_Glu);
+    ModificationPtr modification(new Modification());
+    modification->location=0;
+    modification->monoisotopicMassDelta=-17.026549;
+    modification->paramGroup.set(UNIMOD_Gln__pyro_Glu);
+    peptide->modification.push_back(modification);
     mzid.sequenceCollection.peptides.push_back(peptide);
 
     peptide=PeptidePtr(new Peptide());

@@ -166,7 +166,10 @@ struct PWIZ_API_DECL ContactRole
     bool empty() const;
 };
 
-struct PWIZ_API_DECL Provider : public IdentifiableType // : public Contact
+typedef boost::shared_ptr<ContactRole> ContactRolePtr;
+
+
+struct PWIZ_API_DECL Provider : public IdentifiableType
 {
     Provider(const std::string id_ = "",
              const std::string name_ = "");
@@ -224,7 +227,7 @@ struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
     std::string customizations;
 
     // SoftwareType elements
-    ContactRole contactRole;
+    ContactRolePtr contactRolePtr;
     ParamContainer softwareName;
 
     virtual bool empty() const;
@@ -254,6 +257,7 @@ struct PWIZ_API_DECL SearchDatabase : public ExternalData
 
     ParamContainer fileFormat;
     ParamContainer DatabaseName;
+    ParamContainer params;
 
     bool empty() const;
 };
@@ -294,6 +298,8 @@ struct PWIZ_API_DECL Modification
     bool empty() const;
 };
     
+typedef boost::shared_ptr<Modification> ModificationPtr;
+
 
 struct PWIZ_API_DECL SubstitutionModification
 {
@@ -312,7 +318,7 @@ struct PWIZ_API_DECL SubstitutionModification
 struct PWIZ_API_DECL Peptide : public IdentifiableType
 {
     std::string peptideSequence;
-    Modification modification;
+    std::vector<ModificationPtr> modification;
     SubstitutionModification substitutionModification;
 
     ParamContainer paramGroup;
@@ -703,6 +709,7 @@ struct PWIZ_API_DECL SpectraData : public IdentifiableType
 
     std::vector<std::string> externalFormatDocumentation;
     ParamContainer fileFormat;
+    ParamContainer spectrumIDFormat;
 
     bool empty() const;
 };

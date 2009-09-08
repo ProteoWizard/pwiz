@@ -26,8 +26,10 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
+#include <vector>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 namespace pwiz {
 namespace diff_std {
@@ -99,7 +101,6 @@ void diff_numeric(const T& a,
     }
 }
 
-
 template <>
 void diff_numeric(const double& a,
                   const double& b,
@@ -115,6 +116,29 @@ void diff_numeric(const double& a,
         a_b = fabs(a - b);
         b_a = fabs(a - b);
     }
+}
+
+// measure maximum relative difference between elements in the vectors
+double maxdiff(const std::vector<double>& a, const std::vector<double>& b)
+{
+    if (a.size() != b.size()) 
+        throw std::runtime_error("[Diff::maxdiff()] Sizes differ.");
+
+    std::vector<double>::const_iterator i = a.begin(); 
+    std::vector<double>::const_iterator j = b.begin(); 
+
+    double max = 0;
+
+    for (; i!=a.end(); ++i, ++j)
+    {
+        double denominator = std::min(*i, *j);
+        if (denominator == 0) denominator = 1;
+        double current = fabs(*i - *j)/denominator;
+        if (max < current) max = current;
+
+    }
+
+    return max;
 }
 
 

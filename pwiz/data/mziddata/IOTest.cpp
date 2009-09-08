@@ -219,8 +219,10 @@ void testAnalysisSoftware()
     a.version = "abcd";
     a.URI = "efg";
     a.customizations = "hijk";
-    a.contactRole.contactPtr = ContactPtr(new Contact("ref"));
-    a.contactRole.role.set(MS_software_vendor);
+    ContactRolePtr cont = ContactRolePtr(new ContactRole());
+    cont->contactPtr = ContactPtr(new Contact("ref"));
+    cont->role.set(MS_software_vendor);
+    a.contactRolePtr = cont;
     a.softwareName.set(MS_Mascot);
 
     testObject(a);
@@ -290,7 +292,9 @@ void testPeptide()
     a.id = "id";
     a.name = "name";
     a.peptideSequence = "abc";
-    a.modification.location = 1;
+    ModificationPtr mod(new Modification());
+    mod->location = 1;
+    a.modification.push_back(mod);
     a.substitutionModification.location = 2;
     
     a.paramGroup.set(MS_peptide);

@@ -92,7 +92,8 @@ PWIZ_API_DECL void resolve(ContactRole& cr, MzIdentML& mzid)
 
 PWIZ_API_DECL void resolve(AnalysisSoftwarePtr asp, MzIdentML& mzid)
 {
-    resolve(asp->contactRole, mzid);
+    if (asp->contactRolePtr.get() && !asp->contactRolePtr->empty())
+        resolve(*asp->contactRolePtr, mzid);
 }
 
 

@@ -76,6 +76,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Material& material);
 PWIZ_API_DECL void read(std::istream& writer, Material& material);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SamplePtr sample);
+PWIZ_API_DECL void read(std::istream& writer, SamplePtr sample);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample);
 PWIZ_API_DECL void read(std::istream& writer, Sample& sample);
 
@@ -286,6 +290,10 @@ PWIZ_API_DECL void read(std::istream& is, PeptideEvidencePtr pe);
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pe);
 PWIZ_API_DECL void read(std::istream& is, PeptideEvidence& pe);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ModificationPtr mod);
+PWIZ_API_DECL void read(std::istream& is, ModificationPtr mod);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod);

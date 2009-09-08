@@ -741,8 +741,8 @@ class PWIZ_API_DECL TextWriter
         (*this)((IdentifiableType)*asp);
         if (asp->version.empty())
             child()("version: "+asp->version);
-        if (asp->contactRole.empty())
-            child()(asp->contactRole);
+        if (asp->contactRolePtr.get() && asp->contactRolePtr->empty())
+            child()(*asp->contactRolePtr);
         if (asp->softwareName.empty())
             child()("softwareName: ", asp->softwareName);
         if (asp->URI.empty())

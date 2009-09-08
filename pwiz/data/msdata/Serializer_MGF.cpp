@@ -93,7 +93,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             os << "PEPMASS=" << si.cvParam(MS_selected_ion_m_z).value;
             
-            CVParam intensityParam = si.cvParam(MS_intensity);
+            CVParam intensityParam = si.cvParam(MS_peak_intensity);
             if (!intensityParam.empty())
                 os << " " << intensityParam.value;
             os << '\n';

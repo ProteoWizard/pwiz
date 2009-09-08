@@ -186,7 +186,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
                 result.precursorMZ = precursor.selectedIons[0].cvParam(MS_m_z).valueAs<double>();
             }
             result.precursorCharge = precursor.selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
-            result.precursorIntensity = precursor.selectedIons[0].cvParam(MS_intensity).valueAs<double>();
+            result.precursorIntensity = precursor.selectedIons[0].cvParam(MS_peak_intensity).valueAs<double>();
         }
     }
 

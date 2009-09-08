@@ -125,7 +125,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             precursor->selectedIons.push_back(SelectedIon());
 
             if (!precursorIntensity.empty())
-                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_intensity, precursorIntensity));
+                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_peak_intensity, precursorIntensity));
 
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, precursorCharge));

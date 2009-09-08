@@ -490,7 +490,7 @@ PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, double intensity, CVID intensityUnit)
 {
     set(MS_selected_ion_m_z, mz, MS_m_z);
-    set(MS_intensity, intensity, intensityUnit);
+    set(MS_peak_intensity, intensity, intensityUnit);
 }
 
 
@@ -506,7 +506,7 @@ PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, double intensity, int chargeState, CVID intensityUnit)
 {
     set(MS_selected_ion_m_z, mz, MS_m_z);
-    set(MS_intensity, intensity, intensityUnit);
+    set(MS_peak_intensity, intensity, intensityUnit);
     set(MS_charge_state, chargeState);
 }
 

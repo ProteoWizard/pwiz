@@ -106,7 +106,7 @@ void testSynonyms()
 void testIDTranslation()
 {
     unit_assert(cvTermInfo("MS:1000025").cvid == MS_B);
-    unit_assert(cvTermInfo("MS:1000042").cvid == MS_intensity);
+    unit_assert(cvTermInfo("MS:1000042").cvid == MS_peak_intensity);
     unit_assert(cvTermInfo("UO:0000231").cvid == UO_information_unit);
     unit_assert(cvTermInfo("XX:0000231").cvid == CVID_Unknown);
 }

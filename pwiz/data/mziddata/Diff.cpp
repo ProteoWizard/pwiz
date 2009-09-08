@@ -1092,8 +1092,8 @@ void diff(const Peptide& a,
 {
     diff(a.peptideSequence, b.peptideSequence, a_b.peptideSequence,
          b_a.peptideSequence, config);
-    diff(a.modification, b.modification, a_b.modification,
-         b_a.modification, config);
+    vector_diff_deep(a.modification, b.modification, a_b.modification,
+                     b_a.modification, config);
     diff(a.substitutionModification, b.substitutionModification,
          a_b.substitutionModification,b_a.substitutionModification, config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
@@ -1223,7 +1223,7 @@ void diff(const AnalysisSoftware& a,
     diff((const IdentifiableType&)a, (const IdentifiableType&)b,
          (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     diff(a.version, b.version, a_b.version, b_a.version, config);
-    diff(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
+    ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
     diff(a.softwareName, b.softwareName, a_b.softwareName, b_a.softwareName, config);
     diff(a.URI, b.URI, a_b.URI, b_a.URI, config);
     diff(a.customizations, b.customizations, a_b.customizations, b_a.customizations, config);

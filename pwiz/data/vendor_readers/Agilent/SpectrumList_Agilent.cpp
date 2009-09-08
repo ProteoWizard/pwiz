@@ -199,7 +199,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 
             double precursorIntensity;
             if (spectrumPtr->getPrecursorIntensity(precursorIntensity) && precursorIntensity > 0)
-                selectedIon.set(MS_intensity, precursorIntensity, MS_number_of_counts);
+                selectedIon.set(MS_peak_intensity, precursorIntensity, MS_number_of_counts);
 
             precursor.selectedIons.push_back(selectedIon);
         }

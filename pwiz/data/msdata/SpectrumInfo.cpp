@@ -92,7 +92,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
         {
             precursorInfo.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();
             precursorInfo.charge = it->selectedIons[0].cvParam(MS_charge_state).valueAs<int>();
-            precursorInfo.intensity = it->selectedIons[0].cvParam(MS_intensity).valueAs<double>();
+            precursorInfo.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).valueAs<double>();
         }
         precursors.push_back(precursorInfo);
     }

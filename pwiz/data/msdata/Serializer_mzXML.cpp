@@ -293,7 +293,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
         if (!it->selectedIons.empty())
         { 
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
-            info.intensity = it->selectedIons[0].cvParam(MS_intensity).value;
+            info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
         }
         info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
