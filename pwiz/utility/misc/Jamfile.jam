@@ -89,7 +89,8 @@ unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
 unit-test mru_list_test : mru_list_test.cpp ;
 
 
-unit-test FailTest : FailTest.cpp : <ci>none:<build>no ; # test that CI captures stdout and stderr
+unit-test FailTest : FailTest.cpp : <ci>none:<build>no ; # test that CI handles stdout and stderr
+explicit FailTest ;
 
 
 run TabReaderTest.cpp pwiz_utility_misc
