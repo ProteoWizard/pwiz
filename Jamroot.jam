@@ -64,10 +64,6 @@ else
 }
 
 
-# on Mac OSX, default toolset=darwin
-if $(.os) = MACOSX { .default-toolset = "<toolset>darwin" ; }
-
-
 ################################
 ## Targets and Related Options #
 ################################
@@ -141,7 +137,6 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
-        $(.default-toolset)
     ;
 
 
