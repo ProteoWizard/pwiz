@@ -27,11 +27,18 @@ then
 	echo_error "Error generating revision info! See full build log for more details."
 fi
 
-echo_info "Running quickbuild.sh..."
-if ! /bin/bash quickbuild.sh -p1 ci=teamcity -j4
+echo_info "Running quickbuild for release variant..."
+if ! /bin/bash quickbuild.sh -p1 ci=teamcity -j4 release
 then
-	echo "Error running quickbuild!"
-	echo_error "Error running quickbuild! See full build log for more details."
+	echo "Error running quickbuild for release variant!"
+	echo_error "Error running quickbuild for release variant! See full build log for more details."
+fi
+
+echo_info "Running quickbuild for debug variant..."
+if ! /bin/bash quickbuild.sh -p1 ci=teamcity -j4 debug
+then
+	echo "Error running quickbuild for debug variant!"
+	echo_error "Error running quickbuild for debug variant! See full build log for more details."
 fi
 
 # uncomment this to test that test failures and error output are handled properly

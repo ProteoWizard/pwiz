@@ -1,6 +1,4 @@
 @echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
-if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error setting up Visual C++ environment variables & goto error
 setlocal
 @echo off
 
@@ -23,11 +21,17 @@ echo ##teamcity[progressMessage 'Generating revision info...']
 call quickbuild.bat -j4 -p1 pwiz//svnrev.hpp
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error generating revision info & goto error
 
-REM # call quickbuild to build and run tests
-echo ##teamcity[message text='Running quickbuild...']
-echo ##teamcity[progressMessage 'Running quickbuild...']
-call quickbuild.bat -j4 -p1 ci=teamcity
-if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing quickbuild & goto error
+REM # call quickbuild to build and run tests with variant=release
+echo ##teamcity[message text='Running quickbuild for release variant...']
+echo ##teamcity[progressMessage 'Running quickbuild for release variant...']
+call quickbuild.bat -j4 -p1 ci=teamcity release
+if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error running quickbuild for release variant & goto error
+
+REM # call quickbuild to build and run tests with variant=debug
+echo ##teamcity[message text='Running quickbuild for debug variant...']
+echo ##teamcity[progressMessage 'Running quickbuild for debug variant...']
+call quickbuild.bat -j4 -p1 ci=teamcity debug
+if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error running quickbuild for debug variant & goto error
 
 REM # uncomment this to test that test failures and error output are handled properly
 REM call quickbuild.bat -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
