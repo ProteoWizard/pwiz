@@ -46,7 +46,7 @@ if [ modules.peek : NT ]
     TEST_PRECOMMAND = "echo ##teamcity[testStarted name='%name%']" ;
     TEST_POSTCOMMAND =
         "IF %status% NEQ 0"
-            "(echo ##teamcity[testFailed name='%name%' message='Exit status: %status%'] ) &" # TODO: does testFailed go to stderr? 1>&2
+            "(echo ##teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
         "echo ##teamcity[testFinished name='%name%']" ;
     TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
 }
@@ -382,7 +382,7 @@ if ! [ path.exists $(PWIZ_ROOT_PATH)/SUBSET ]
 {
 
 import bcp ;
-using bcp : $(BOOST_SOURCE) : <location>$(.common-location)/bcp ;
+using bcp : $(BOOST_SOURCE) : release <location>$(.common-location)/bcp ;
 
 path-constant BOOST_SUBSET_PATH : $(.common-location)/boost-subset ;
 
