@@ -35,6 +35,6 @@ then
 fi
 
 # uncomment this to test that test failures and error output are handled properly
-/bin/bash quickbuild.sh $1 -p1 ci=teamcity pwiz/utility/misc//FailTest
+/bin/bash quickbuild.sh $1 -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
 
 exit 0

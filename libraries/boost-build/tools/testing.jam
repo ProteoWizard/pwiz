@@ -528,7 +528,6 @@ actions capture-output bind INPUT_FILES output-file
     if $(.STATUS_0)
         $(.CP) "$(output-file)" "$(<)"
     $(.ENDIF)
-    $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
     $(.SHELL_SET)verbose=$(.VERBOSE_TEST)
     if $(.STATUS_NOT_0)
         $(.SHELL_SET)verbose=1
@@ -538,6 +537,7 @@ actions capture-output bind INPUT_FILES output-file
         $(.CATENATE) "$(output-file)"
         echo ====== END OUTPUT ======
     $(.ENDIF)
+    $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
     exit $(.STATUS)
 }
 
