@@ -30,7 +30,7 @@ call quickbuild.bat -j4 -p1 ci=teamcity
 if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing quickbuild & goto error
 
 REM # uncomment this to test that test failures and error output are handled properly
-call quickbuild.bat -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
+REM call quickbuild.bat -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
 
 popd
 goto :EOF

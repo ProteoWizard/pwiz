@@ -583,6 +583,7 @@ actions unit-test
       $(.MAKE_FILE) $(<)
     $(.ENDIF)
     $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
+    exit $(.STATUS)
 }
 
 
