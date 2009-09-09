@@ -120,6 +120,8 @@ namespace seems
         bool a, b, c, x, y, z, zRadical;
         bool showMisses;
         bool showLabels;
+        string topSeries, bottomSeries;
+        int ionSeriesChargeState;
 
         public PeptideFragmentationAnnotation()
         {
@@ -128,6 +130,9 @@ namespace seems
             max = 1;
             showMisses = false;
             showLabels = true;
+            topSeries = "";
+            bottomSeries = "";
+            ionSeriesChargeState = 1;
 
             annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
             annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
@@ -140,6 +145,16 @@ namespace seems
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+
+            // Set the handler for ion series selection
+            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
         }
 
         public PeptideFragmentationAnnotation( string sequence,
@@ -168,8 +183,105 @@ namespace seems
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            
+            // Set the handler for ion series selection
+            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
+
         }
 
+        public PeptideFragmentationAnnotation( string sequence,
+                                               int minCharge, int maxCharge,
+                                               bool a, bool b, bool c,
+                                               bool x, bool y, bool z, bool zRadical,
+                                               bool showMissedFragments,
+                                               bool showLabels, string topIonSeries, 
+                                               string bottomIonSeries, int iSeriesChargeState)
+        {
+            this.sequence = sequence;
+            this.min = minCharge;
+            this.max = maxCharge;
+            this.a = a; this.b = b; this.c = c;
+            this.x = x; this.y = y; this.z = z; this.zRadical = zRadical;
+            this.showMisses = showMissedFragments;
+            this.showLabels = showLabels;
+            this.topSeries = topIonSeries;
+            this.bottomSeries = bottomIonSeries;
+            this.ionSeriesChargeState = iSeriesChargeState;
+
+            annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
+            annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+
+            // Set the handler for ion series selection
+            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
+            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
+
+        }
+
+        void ionSeries_CheckChanged( object sender, EventArgs events )
+        {
+            if( panel.Tag == this )
+            {
+                // Get the top series selected.
+                if( annotationPanels.aSeries.Checked )
+                {
+                    topSeries = "a";
+                } else if( annotationPanels.bSeries.Checked )
+                {
+                    topSeries = "b";
+                } else if( annotationPanels.cSeries.Checked )
+                {
+                    topSeries = "c";
+                } else
+                {
+                    topSeries = "";
+                }
+
+                // Get the bottom series selected
+                if( annotationPanels.xSeries.Checked )
+                {
+                    bottomSeries = "x";
+                } else if( annotationPanels.ySeries.Checked )
+                {
+                    bottomSeries = "y";
+                } else if( annotationPanels.zSeries.Checked )
+                {
+                    bottomSeries = "z";
+                } else if( annotationPanels.zRadicalSeries.Checked )
+                {
+                    bottomSeries = "z*";
+                } else
+                {
+                    bottomSeries = "";
+                }
+
+                // Get the charge state of the ion series to display
+                ionSeriesChargeState = (int) annotationPanels.ionLadderChargeState.Value;
+
+                OnOptionsChanged( this, EventArgs.Empty );
+            }
+        }
         void sequenceTextBox_TextChanged( object sender, EventArgs e )
         {
             if( panel.Tag == this )
@@ -288,6 +400,300 @@ namespace seems
             }
         }
 
+        /* This function takes a left mz value and right mz value and returns true if both are
+         * found in the spectrum. The function uses a mass tolerance of 0.5. This has to be changed
+         * so that its value can be set from user preferences.
+         */
+        public bool aminoAcidHasFragmentEvidence( MSGraph.MSPointList points, double leftMZ, double rightMZ )
+        {
+            // Search index
+            int index = -1;
+            bool leftMZFound = false;
+            bool righMZFound = false;
+            if( points != null )
+            {
+                // Find the left mz value using a mass tolerance of 0.5 da.
+                index = points.LowerBound( leftMZ - 0.5 );
+                if( index != -1 && points.ScaledList[index].X <= ( leftMZ + 0.5 ) )
+                    leftMZFound = true;
+                // Find the right mz value using a mass tolerance of 0.5 da.
+                index = points.LowerBound( rightMZ - 0.5 );
+                if( index != -1 && points.ScaledList[index].X <= ( rightMZ + 0.5 ) )
+                    righMZFound = true;
+            }
+            // Return if both are found
+            return (leftMZFound & righMZFound);
+        }
+
+        /*   This function adds user requested ion series on top of the chart.
+         */
+        public void addIonSeries(Peptide interpretation, GraphObjList list, MSGraph.MSPointList points )
+        {
+            // Select the color for the ion series.
+            Color topSeriesColor;
+            Color bottomSeriesColor;
+            switch( topSeries )
+            {
+                default: topSeriesColor = Color.Gray; break;
+                case "a": topSeriesColor = Color.YellowGreen; break;
+                case "b": topSeriesColor = Color.BlueViolet; break;
+                case "c": topSeriesColor = Color.Orange; break;
+            }
+
+            switch( bottomSeries )
+            {
+                default: bottomSeriesColor = Color.Gray; break;
+                case "x": bottomSeriesColor = Color.Green; break;
+                case "y": bottomSeriesColor = Color.Blue; break;
+                case "z": bottomSeriesColor = Color.OrangeRed; break;
+                case "z*": bottomSeriesColor = Color.Crimson; break;
+            }
+            // Ion series offsets. These offsets control where on the chart a particular ion series
+            // get displayed
+            double topSeriesOffset = 0.025;
+            double bottomSeriesOffset = 0.1;
+            if( topSeries.Length == 0 )
+                bottomSeriesOffset = topSeriesOffset;
+            
+            Fragmentation fragmentation = interpretation.fragmentation(true,true);
+
+            double topSeriesLeftPoint = 0.0;
+            double bottomSeriesLeftPoint = 0.0;
+            // If the series is a, b, y, z, or z radical
+            if( topSeries == "a" || topSeries == "b" || bottomSeries == "y" || bottomSeries == "z" || bottomSeries == "z*" )
+            {
+                // Step through each fragmentation site
+                for( int i = 1; i <= interpretation.sequence.Length; ++i )
+                {
+                    // Paint the top series first
+                    double rightPoint = 0.0;
+                    // Figure out the right mz for this fragmentaion site
+                    switch( topSeries )
+                    {
+                        case "a": rightPoint = fragmentation.a( i, ionSeriesChargeState ); break;
+                        case "b": rightPoint = fragmentation.b( i, ionSeriesChargeState ); break;
+                        default: rightPoint = 0.0; break;
+                    }
+                    // If the left mz and right mz are different
+                    if( topSeriesLeftPoint != rightPoint )
+                    {
+                        LineObj line;
+                        // Use a dashed line format if there are fragment ions supporting this
+                        // amino acid
+                        if( !aminoAcidHasFragmentEvidence( points, topSeriesLeftPoint, rightPoint ) )
+                        {
+                            // Draw the line from previous mz to site to this mz in trasparent color.
+                            line = new LineObj( Color.FromArgb( 115,topSeriesColor), topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset );
+                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                        } else
+                        {
+                            // Draw the line from previous mz to site to this mz in solid color.
+                            line = new LineObj( topSeriesColor, topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset );
+                        }
+                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        line.Line.Width = 2;
+                        line.ZOrder = ZOrder.F_BehindGrid;
+                        line.IsClippedToChartRect = true;
+                        list.Add( line );
+                        // Add a tick demarking the fragmentation site.
+                        LineObj tick = new LineObj( topSeriesColor, rightPoint, (topSeriesOffset-0.015), rightPoint, (topSeriesOffset+0.015) );
+                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        tick.Line.Width = 2;
+                        tick.IsClippedToChartRect = true;
+                        list.Add( tick );
+                        // Add a text box in the middle of the left and right mz boundaries
+                        StringBuilder label = new StringBuilder(interpretation.sequence[i - 1].ToString());
+                        // Figure out if any mods are there on this amino acid
+                        double deltaMass = interpretation.modifications()[i-1].monoisotopicDeltaMass();
+                        // Round the mod mass and append it to the amino acid as a string
+                        if( deltaMass > 0.0 )
+                        {
+                            label.Append( "+" + Math.Round( deltaMass ) );
+                        } else if( deltaMass < 0.0 )
+                        {
+                            label.Append( Math.Round( deltaMass ) );
+                        }
+                        TextObj text = new TextObj( label.ToString(), ( topSeriesLeftPoint + rightPoint ) / 2.0,
+                            topSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
+                        text.ZOrder = ZOrder.A_InFront;
+                        text.FontSpec = new FontSpec( "Arial", 13, Color.Black, true, false, false );
+                        text.FontSpec.Border.IsVisible = false;
+                        text.FontSpec.Fill.Color = Color.White;
+                        text.IsClippedToChartRect = true;
+                        list.Add( text );
+                        topSeriesLeftPoint = rightPoint;
+                    }
+
+                    // Time to paint the bottom series
+                    // Get the right mz for this series
+                    switch( bottomSeries )
+                    {
+                        case "y": rightPoint = fragmentation.y( i, ionSeriesChargeState ); break;
+                        case "z": rightPoint = fragmentation.z( i, ionSeriesChargeState ); break;
+                        case "z*": rightPoint = fragmentation.zRadical( i, ionSeriesChargeState ); break;
+                        default: rightPoint = 0.0; break;
+                    }
+                    // If the left and right mz are different
+                    if( bottomSeriesLeftPoint != rightPoint )
+                    {
+                        LineObj line;
+                        // Use a dashed line format if there are fragment ions supporting this
+                        // amino acid
+                        if( !aminoAcidHasFragmentEvidence( points, bottomSeriesLeftPoint, rightPoint ) )
+                        {
+                            // Draw the line from previous mz to site to this mz in trasparent color.
+                            line = new LineObj( Color.FromArgb( 115,bottomSeriesColor ), bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset );
+                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                        } else
+                        {
+                            // Draw the line from previous mz to site to this mz in solid color.
+                            line = new LineObj( bottomSeriesColor, bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset );
+                        }
+                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        line.Line.Width = 2;
+                        line.ZOrder = ZOrder.F_BehindGrid;
+                        line.IsClippedToChartRect = true;
+                        list.Add( line );
+                        // Draw a tick mark demarking the fragmentation site
+                        LineObj tick = new LineObj( bottomSeriesColor, rightPoint, (bottomSeriesOffset-0.015), rightPoint, (bottomSeriesOffset+0.015) );
+                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        tick.Line.Width = 2;
+                        tick.IsClippedToChartRect = true;
+                        list.Add( tick );
+                        // Add the text label containing the amino acid
+                        StringBuilder label = new StringBuilder( interpretation.sequence[interpretation.sequence.Length - i].ToString() );
+                        // Figure out if any mods are there on this amino acid
+                        double deltaMass = interpretation.modifications()[interpretation.sequence.Length - i].monoisotopicDeltaMass();
+                        // Round the mod mass and append it to the amino acid as a string
+                        if( deltaMass > 0.0 )
+                        {
+                            label.Append( "+" + Math.Round( deltaMass ) );
+                        } else if( deltaMass < 0.0 )
+                        {
+                            label.Append( Math.Round( deltaMass ) );
+                        }
+                        TextObj text = new TextObj( label.ToString(),( bottomSeriesLeftPoint + rightPoint ) / 2.0,
+                            bottomSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center );
+                        text.ZOrder = ZOrder.A_InFront;
+                        text.FontSpec = new FontSpec( "Arial", 13, Color.Black, true, false, false );
+                        text.FontSpec.Border.IsVisible = false;
+                        text.FontSpec.Fill.Color = Color.White;
+                        text.IsClippedToChartRect = true;
+                        list.Add( text );
+                        bottomSeriesLeftPoint = rightPoint;
+                    }
+                }
+            }
+            // Handle the C and X series separately
+            if( topSeries == "c" || bottomSeries == "x" )
+            {
+                topSeriesLeftPoint = 0.0;
+                bottomSeriesLeftPoint = 0.0;
+                for( int i = 1; i < interpretation.sequence.Length; ++i )
+                {
+                    double rightPoint = fragmentation.c( i, ionSeriesChargeState );
+                    if( topSeriesLeftPoint != rightPoint && topSeries == "c")
+                    {
+                        LineObj line;
+                        // Use a dashed line format if there are fragment ions supporting this
+                        // amino acid
+                        if( !aminoAcidHasFragmentEvidence( points, topSeriesLeftPoint, rightPoint ) )
+                        {
+                            // Draw the line from previous mz to site to this mz in trasparent color.
+                            line = new LineObj( Color.FromArgb( 115, topSeriesColor ), topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset );
+                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                        } else
+                        {
+                            // Draw the line from previous mz to site to this mz in solid color.
+                            line = new LineObj( topSeriesColor, topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset );
+                        }
+                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        line.Line.Width = 2;
+                        line.ZOrder = ZOrder.F_BehindGrid;
+                        line.IsClippedToChartRect = true;
+                        list.Add( line );
+                        // Add a tick to mark the fragmentation site
+                        LineObj tick = new LineObj( topSeriesColor, rightPoint, (topSeriesOffset-0.015), rightPoint, (topSeriesOffset+0.015));
+                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        tick.Line.Width = 2;
+                        tick.IsClippedToChartRect = true;
+                        list.Add( tick );
+
+                        // Add a text box in the middle of the left and right mz boundaries
+                        StringBuilder label = new StringBuilder( interpretation.sequence[i - 1].ToString() );
+                        // Figure out if any mods are there on this amino acid
+                        double deltaMass = interpretation.modifications()[i - 1].monoisotopicDeltaMass();
+                        // Round the mod mass and append it to the amino acid as a string
+                        if( deltaMass > 0.0 )
+                        {
+                            label.Append( "+" + Math.Round( deltaMass ) );
+                        } else if( deltaMass < 0.0 )
+                        {
+                            label.Append( Math.Round( deltaMass ) );
+                        }
+                        TextObj text = new TextObj( label.ToString(),( topSeriesLeftPoint + rightPoint ) / 2.0, 
+                            topSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center );
+                        text.ZOrder = ZOrder.A_InFront;
+                        text.FontSpec = new FontSpec( "Arial", 13, Color.Black, true, false, false );
+                        text.FontSpec.Border.IsVisible = false;
+                        text.FontSpec.Fill.Color = Color.White;
+                        text.IsClippedToChartRect = true;
+                        list.Add( text );
+                        topSeriesLeftPoint = rightPoint;
+
+                    }
+                    rightPoint = fragmentation.x( i, ionSeriesChargeState );
+                    if( bottomSeriesLeftPoint != rightPoint && bottomSeries == "x")
+                    {
+                        LineObj line;
+                        // Use a dashed line format if there are fragment ions supporting this
+                        // amino acid
+                        if( !aminoAcidHasFragmentEvidence( points, bottomSeriesLeftPoint, rightPoint ) )
+                        {
+                            // Draw the line from previous mz to site to this mz in trasparent color.
+                            line = new LineObj( Color.FromArgb( 115, bottomSeriesColor ), bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset );
+                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                        } else
+                        {
+                            // Draw the line from previous mz to site to this mz in solid color.
+                            line = new LineObj( bottomSeriesColor, bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset );
+                        }
+                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        line.Line.Width = 2;
+                        line.ZOrder = ZOrder.F_BehindGrid;
+                        line.IsClippedToChartRect = true;
+                        list.Add( line );
+                        LineObj tick = new LineObj( bottomSeriesColor, rightPoint, (bottomSeriesOffset-0.015), rightPoint, (bottomSeriesOffset+0.015) );
+                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                        tick.Line.Width = 2;
+                        tick.IsClippedToChartRect = true;
+                        list.Add( tick );
+                        // Add the text label containing the amino acid
+                        StringBuilder label = new StringBuilder( interpretation.sequence[interpretation.sequence.Length - i].ToString() );
+                        // Figure out if any mods are there on this amino acid
+                        double deltaMass = interpretation.modifications()[interpretation.sequence.Length - i].monoisotopicDeltaMass();
+                        // Round the mod mass and append it to the amino acid as a string
+                        if( deltaMass > 0.0 )
+                        {
+                            label.Append( "+" + Math.Round( deltaMass ) );
+                        } else if( deltaMass < 0.0 )
+                        {
+                            label.Append( Math.Round( deltaMass ) );
+                        }
+                        TextObj text = new TextObj( label.ToString(),( bottomSeriesLeftPoint + rightPoint ) / 2.0, 
+                            bottomSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center );
+                        text.ZOrder = ZOrder.A_InFront;
+                        text.FontSpec = new FontSpec( "Arial", 13, Color.Black, true, false, false );
+                        text.FontSpec.Border.IsVisible = false;
+                        text.FontSpec.Fill.Color = Color.White;
+                        text.IsClippedToChartRect = true;
+                        list.Add( text );
+                        bottomSeriesLeftPoint = rightPoint;
+                    }
+                }
+            }
+        }
+
         public override void Update( MSGraph.MSPointList points, GraphObjList annotations )
         {
             if( !Enabled )
@@ -322,6 +728,7 @@ namespace seems
                     }
                 }
             }
+            addIonSeries( peptide, list, points );
         }
 
         public override Panel OptionsPanel
