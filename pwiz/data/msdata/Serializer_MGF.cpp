@@ -68,7 +68,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
         SpectrumPtr s = sl.spectrum(i, true);
-        Scan& scan = s->scanList.scans[0];
+        Scan* scan = !s->scanList.empty() ? &s->scanList.scans[0] : 0;
 
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1 &&
             !s->precursors.empty() &&
@@ -77,7 +77,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             os << "BEGIN IONS\n";
 
             const SelectedIon& si = s->precursors[0].selectedIons[0];
-            CVParam scanTimeParam = scan.cvParam(MS_scan_start_time);
+            CVParam scanTimeParam = scan ? scan->cvParam(MS_scan_start_time) : CVParam();
             CVParam chargeParam = si.cvParam(MS_charge_state);
 
             if (titleIsThermoDTA)
