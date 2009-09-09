@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using MSGraph;
@@ -315,7 +316,10 @@ namespace seems
                 }
 
                 if( paneList.Count > 0 && paneList[0].Count > 0 )
-                    this.Text = this.TabText = paneList[0][0].Id;
+                {
+                    this.Text = paneList[0][0].Id;
+                    this.TabText = Regex.Replace( this.Text, "\\S+=", "" ).Replace(' ', '.');
+                }
 
                 if( pane.XAxis.Scale.MaxAuto )
                     msGraphControl.RestoreScale( pane );
