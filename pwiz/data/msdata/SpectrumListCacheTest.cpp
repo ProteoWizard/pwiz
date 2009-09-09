@@ -375,6 +375,10 @@ int main(int argc, char* argv[])
     {
         cerr << e.what() << endl;
     }
-    
+    catch (...)
+    {
+        cerr << "Caught unknown exception." << endl;
+    }
+
     return 1;
 }
