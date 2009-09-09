@@ -9209,6 +9209,14 @@ is_a: MS:1001529 ! spectra data details
 is_a: MS:1000767 ! native spectrum identifier format
 
 [Term]
+id: MS:1001532
+name: spectrum from database nativeID format
+def: "databasekey=xsd:string" [PSI:MS]
+comment: A unique identifier of a spectrum stored in a database (e.g. a PRIMARY KEY identifier).
+is_a: MS:1001529 ! spectra data details
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
 id: MS:1001533
 name: Bruker Daltonics esquire series
 is_a: MS:1000122 ! Bruker Daltonics instrument model
