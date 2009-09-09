@@ -4743,6 +4743,9 @@ enum PWIZ_API_DECL CVID
     /// spectrum from ProteinScape database nativeID format: databasekey=xsd:long
     MS_spectrum_from_ProteinScape_database_nativeID_format = 1001531,
 
+    /// spectrum from database nativeID format: databasekey=xsd:string
+    MS_spectrum_from_database_nativeID_format_1001532 = 1001532,
+
     /// Bruker Daltonics esquire series: 
     MS_Bruker_Daltonics_esquire_series = 1001533,
 
