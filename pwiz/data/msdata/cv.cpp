@@ -1449,7 +1449,7 @@ const TermInfo termInfos_[] =
     {MS_spectra_data_details, "MS:1001529", "spectra data details", "Child-terms contain information to map the results back to spectra.", false},
     {MS_mzML_unique_identifier, "MS:1001530", "mzML unique identifier", "mzMLid=xsd:IDREF", false},
     {MS_spectrum_from_ProteinScape_database_nativeID_format, "MS:1001531", "spectrum from ProteinScape database nativeID format", "databasekey=xsd:long", false},
-    {MS_spectrum_from_database_nativeID_format, "MS:1001532", "spectrum from database nativeID format", "databasekey=xsd:string", false},
+    {MS_spectrum_from_database_nativeID_format_1001532, "MS:1001532", "spectrum from database nativeID format", "databasekey=xsd:string", false},
     {MS_Bruker_Daltonics_esquire_series, "MS:1001533", "Bruker Daltonics esquire series", "", false},
     {MS_Bruker_Daltonics_flex_series, "MS:1001534", "Bruker Daltonics flex series", "", false},
     {MS_Bruker_Daltonics_BioTOF_series, "MS:1001535", "Bruker Daltonics BioTOF series", "", false},
