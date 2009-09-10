@@ -287,9 +287,11 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
         string eName = enumName(*it);
+        string correctName = it->name;
         if (find(enumNames.begin(), enumNames.end(), eName) != enumNames.end())
         {
             eName += "_" + lexical_cast<string>(enumValue(*it, obo-obos.begin()));
+            correctName += "("+lexical_cast<string>(enumValue(*it, obo-obos.begin()))+")";
         }
         
         enumNames.push_back(eName);
@@ -297,7 +299,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
         os << "    {" << eName /*enumName(*it)*/ << ", "
            << "\"" << it->prefix << ":" << (it->prefix != "UNIMOD" ? setw(7) : setw(1) )  << setfill('0') << it->id << "\", "
-           << "\"" << it->name << "\", " 
+           << "\"" << correctName << "\", " 
            << "\"" << it->def << "\", "
            << (it->isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
