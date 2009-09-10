@@ -101,14 +101,14 @@
           <cvParam cvRef="MS" accession="MS:1000035" name="peak picking" value=""/>
         </processingMethod>
       </dataProcessing>
-      <dataProcessing id="pwiz_x0020_processing">
+      <dataProcessing id="pwiz_processing">
         <processingMethod order="2" softwareRef="pwiz">
           <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
         </processingMethod>
       </dataProcessing>
     </dataProcessingList>
     <run id="Experiment_x0020_1" defaultInstrumentConfigurationRef="LCQ_x0020_Deca" sampleRef="_x0032_0090101_x0020_-_x0020_Sample_x0020_1" startTimeStamp="2007-06-27T15:23:45.00035" defaultSourceFileRef="tiny1.yep">
-      <spectrumList count="4" defaultDataProcessingRef="pwiz processing">
+      <spectrumList count="4" defaultDataProcessingRef="pwiz_processing">
         <spectrum index="0" id="scan=19" defaultArrayLength="15">
           <referenceableParamGroupRef ref="CommonMS1SpectrumParams"/>
           <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
@@ -269,17 +269,17 @@
           </binaryDataArrayList>
         </spectrum>
       </spectrumList>
-      <chromatogramList count="2" defaultDataProcessingRef="pwiz processing">
+      <chromatogramList count="2" defaultDataProcessingRef="pwiz_processing">
         <chromatogram index="0" id="tic" defaultArrayLength="15" dataProcessingRef="CompassXtract_x0020_processing">
           <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
           <binaryDataArrayList count="2">
-            <binaryDataArray encodedLength="160" dataProcessingRef="pwiz_x0020_processing">
+            <binaryDataArray encodedLength="160" dataProcessingRef="pwiz_processing">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
               <cvParam cvRef="MS" accession="MS:1000576" name="no compression" value=""/>
               <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
               <binary>AAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAGEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIkAAAAAAAAAkQAAAAAAAACZAAAAAAAAAKEAAAAAAAAAqQAAAAAAAACxA</binary>
             </binaryDataArray>
-            <binaryDataArray encodedLength="160" dataProcessingRef="pwiz_x0020_processing">
+            <binaryDataArray encodedLength="160" dataProcessingRef="pwiz_processing">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
               <cvParam cvRef="MS" accession="MS:1000576" name="no compression" value=""/>
               <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of counts"/>
@@ -287,7 +287,7 @@
             </binaryDataArray>
           </binaryDataArrayList>
         </chromatogram>
-        <chromatogram index="1" id="sic" defaultArrayLength="10" dataProcessingRef="pwiz_x0020_processing">
+        <chromatogram index="1" id="sic" defaultArrayLength="10" dataProcessingRef="pwiz_processing">
           <cvParam cvRef="MS" accession="MS:1000627" name="selected ion current chromatogram" value=""/>
           <precursor>
             <isolationWindow>
@@ -303,13 +303,13 @@
             </isolationWindow>
           </product>
           <binaryDataArrayList count="2">
-            <binaryDataArray encodedLength="108" dataProcessingRef="pwiz_x0020_processing">
+            <binaryDataArray encodedLength="108" dataProcessingRef="pwiz_processing">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
               <cvParam cvRef="MS" accession="MS:1000576" name="no compression" value=""/>
               <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
               <binary>AAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAGEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIkA=</binary>
             </binaryDataArray>
-            <binaryDataArray encodedLength="108" dataProcessingRef="pwiz_x0020_processing">
+            <binaryDataArray encodedLength="108" dataProcessingRef="pwiz_processing">
               <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
               <cvParam cvRef="MS" accession="MS:1000576" name="no compression" value=""/>
               <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of counts"/>
@@ -322,16 +322,16 @@
   </mzML>
   <indexList count="2">
     <index name="spectrum">
-      <offset idRef="scan=19">6889</offset>
-      <offset idRef="scan=20">10430</offset>
-      <offset idRef="scan=21">15417</offset>
-      <offset idRef="sample=1 period=1 cycle=22 experiment=1" spotID="A1,42x42,4242x4242">16946</offset>
+      <offset idRef="scan=19">6883</offset>
+      <offset idRef="scan=20">10424</offset>
+      <offset idRef="scan=21">15411</offset>
+      <offset idRef="sample=1 period=1 cycle=22 experiment=1" spotID="A1,42x42,4242x4242">16940</offset>
     </index>
     <index name="chromatogram">
-      <offset idRef="tic">20660</offset>
-      <offset idRef="sic">22271</offset>
+      <offset idRef="tic">20654</offset>
+      <offset idRef="sic">22253</offset>
     </index>
   </indexList>
-  <indexListOffset>24534</indexListOffset>
-  <fileChecksum>dacf7aa839ef64becbbdd656874f70956784bc95</fileChecksum>
+  <indexListOffset>24498</indexListOffset>
+  <fileChecksum>8a908dc1c5c31c43adca79dbe1a5b72e76686cb4</fileChecksum>
 </indexedmzML>

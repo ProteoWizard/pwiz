@@ -149,7 +149,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
 
     dpCompassXtract->processingMethods.push_back(procCXT);
 
-    DataProcessingPtr dppwiz(new DataProcessing("pwiz processing"));
+    DataProcessingPtr dppwiz(new DataProcessing("pwiz_processing"));
 
     ProcessingMethod procpwiz;
     procpwiz.order = 2;

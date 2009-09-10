@@ -251,8 +251,10 @@ static void test_mzML_1_0(const char *test_app_name) {
 	RAMPAdapter adapter_1_0(example_data_dir + "tiny.pwiz.1.0.mzML");
 	RAMPAdapter adapter_1_1(example_data_dir + "tiny.pwiz.1.1.mzML");
 
-	unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount());
-	for (int scan = 4;scan--;) {
+    // 1.1 adapter excludes spectra with non-default source files;
+    // tiny example has 4 spectra, the last of which is excluded -- test scans 1,2,3 only
+	unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount()+1); 
+	for (int scan=3;scan--;) {
 		ScanHeaderStruct header1_0, header1_1;
 		adapter_1_0.getScanHeader(scan, header1_0);
 		adapter_1_1.getScanHeader(scan, header1_1);
