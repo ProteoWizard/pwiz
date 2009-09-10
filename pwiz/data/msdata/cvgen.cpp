@@ -257,6 +257,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     bfs::path filenameFullPath = outputDir / filename;
     bfs::ofstream os(filenameFullPath, ios::binary);
 
+    vector<string> enumNames;
+    
     writeCopyright(os, filename);
 
     os << "#define PWIZ_SOURCE\n\n"
@@ -283,12 +285,23 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\", false},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
-        os << "    {" << enumName(*it) << ", "
+    {
+        string eName = enumName(*it);
+        if (find(enumNames.begin(), enumNames.end(), eName) != enumNames.end())
+        {
+            eName += "_" + lexical_cast<string>(enumValue(*it, obo-obos.begin()));
+        }
+        
+        enumNames.push_back(eName);
+        
+
+        os << "    {" << eName /*enumName(*it)*/ << ", "
            << "\"" << it->prefix << ":" << (it->prefix != "UNIMOD" ? setw(7) : setw(1) )  << setfill('0') << it->id << "\", "
            << "\"" << it->name << "\", " 
            << "\"" << it->def << "\", "
            << (it->isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
+    }
     os << "}; // termInfos_\n\n\n";
 
     os << "const size_t termInfosSize_ = sizeof(termInfos_)/sizeof(TermInfo);\n\n\n";
