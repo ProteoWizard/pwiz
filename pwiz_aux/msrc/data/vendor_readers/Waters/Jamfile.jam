@@ -115,8 +115,9 @@ rule test-requirements ( properties * )
         {
             result += <define>PWIZ_READER_WATERS ;
         }
-        else
+        else if ! $(.warn-once)
         {
+            .warn-once = true ;
             echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing DACServer.dll: Reader_Waters_Test is only testing that Waters .raw directories can be identified, not read." ;
         }
     }

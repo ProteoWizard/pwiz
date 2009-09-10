@@ -33,6 +33,7 @@ if [ modules.peek : NT ]
 
 import os common ;
 local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
 local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
 if ! [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] &&
      [ path.exists $(MSFileReader)\\XRawfile2.dll ]
