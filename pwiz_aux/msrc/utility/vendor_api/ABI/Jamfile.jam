@@ -32,7 +32,7 @@ if [ modules.peek : NT ]
 
 import os common ;
 local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Prograsm Files" ;
+ProgramFiles ?= "C:\\Program Files" ;
 local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
 if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
 {
