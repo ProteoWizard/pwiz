@@ -141,7 +141,7 @@ actions do_cvgen
    "$(>[1]:P)/cvgen" $(>)
 }
 
-make cv.hpp : psi-ms.obo unit.obo unimod.obo : do_cvgen : <dependency>install_cvgen ;
+make cv.hpp : psi-ms.obo unit.obo unimod.obo BrendaTissueOBO.obo : do_cvgen : <dependency>install_cvgen ;
 explicit cv.hpp ;
 
 

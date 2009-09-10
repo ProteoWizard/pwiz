@@ -130,6 +130,8 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     bfs::path filenameFullPath = outputDir / filename;
     bfs::ofstream os(filenameFullPath, ios::binary);
 
+    vector<string> enumNames;
+    
     writeCopyright(os, filename);
 
     string includeGuard = includeGuardString(basename);
@@ -160,9 +162,17 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
+        string eName = enumName(*it);
+        if (find(enumNames.begin(), enumNames.end(), eName) != enumNames.end())
+        {
+            eName += "_" + lexical_cast<string>(enumValue(*it, obo-obos.begin()));
+        }
+        
+        enumNames.push_back(eName);
+        
         os << ",\n\n"
            << "    /// " << it->name << ": " << it->def << "\n"
-           << "    " << enumName(*it) << " = " << enumValue(*it, obo-obos.begin());
+           << "    " << eName /*enumName(*it)*/ << " = " << enumValue(*it, obo-obos.begin());
         
         if (obo->prefix == "MS") // add synonyms for PSI-MS only
         {
