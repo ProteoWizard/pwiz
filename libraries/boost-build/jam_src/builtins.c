@@ -141,6 +141,11 @@ void load_builtins()
       bind_builtin( "MATCH",
                     builtin_match, 0, 0 ) );
 
+    {
+        char * args[] = { "pattern", ":", "string" };
+        bind_builtin( "SPLIT", builtin_split, 0, 0 );
+    }
+
     duplicate_rule( "NoCare",
       bind_builtin( "NOCARE",
                     builtin_flags, T_FLAG_NOCARE, 0 ) );
@@ -845,6 +850,26 @@ LIST * builtin_match( PARSE * parse, FRAME * frame )
     return result;
 }
 
+LIST * builtin_split( PARSE * parse, FRAME * frame )
+{
+    LIST * l = lol_get( frame->args, 0 );
+    LIST * r = lol_get( frame->args, 1 );
+
+    LIST * result = 0;
+
+    char* delimiters = l->string;
+    char* s = r->string;
+    char* t;
+
+    t = strtok (s, delimiters);
+    while (t)
+    {
+        result = list_new(result, newstr(t));
+        t = strtok (NULL, delimiters);
+    }
+
+    return result;
+}
 
 LIST * builtin_hdrmacro( PARSE * parse, FRAME * frame )
 {

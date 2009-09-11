@@ -31,6 +31,7 @@ LIST *builtin_glob( PARSE *parse, FRAME *args );
 LIST *builtin_glob_recursive( PARSE   *parse, FRAME *frame );
 LIST *builtin_subst( PARSE  *parse, FRAME *args );
 LIST *builtin_match( PARSE *parse, FRAME *args );
+LIST *builtin_split( PARSE *parse, FRAME *args );
 LIST *builtin_hdrmacro( PARSE *parse, FRAME *args );
 LIST *builtin_rulenames( PARSE *parse, FRAME *args );
 LIST *builtin_varnames( PARSE *parse, FRAME *args );
