@@ -174,7 +174,7 @@ unit-test SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
 unit-test SpectrumListBaseTest : SpectrumListBaseTest.cpp pwiz_data_msdata ;
 unit-test ChromatogramListBaseTest : ChromatogramListBaseTest.cpp pwiz_data_msdata ;
 unit-test SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_data_msdata ;
-unit-test SpectrumListCacheTest : SpectrumListCacheTest.cpp pwiz_data_msdata : <toolset>msvc,<variant>debug:<build>no ;
+unit-test SpectrumListCacheTest : SpectrumListCacheTest.cpp pwiz_data_msdata ;
 
 
 # special run target for BinaryDataEncoderTest, which needs external data 
