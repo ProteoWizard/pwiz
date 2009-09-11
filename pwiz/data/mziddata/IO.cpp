@@ -1146,14 +1146,17 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
     if (!op.tollFreePhone.empty())
         attributes.push_back(make_pair("tollFreePhone", op.tollFreePhone));
 
-    writer.startElement("Organization", attributes);
+    XMLWriter::EmptyElementTag elementTag = op.parent.empty() ?
+        XMLWriter::EmptyElement : XMLWriter::NotEmptyElement;
+    writer.startElement("Organization", attributes, elementTag);
     if (op.parent.organizationPtr.get())
     {
         XMLWriter::Attributes opAttrs;
         opAttrs.push_back(make_pair("Organization_ref", op.parent.organizationPtr->id));
         writer.startElement("parent", opAttrs, XMLWriter::EmptyElement);
     }
-    writer.endElement();
+    if (!op.parent.empty())
+        writer.endElement();
 }
 
 
@@ -1579,14 +1582,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Material& mat)
     
     writer.startElement("Material", attributes);
     if (!mat.contactRole.empty())
-    {
-        cerr << "in write:Material, non-empty contactRole\n";
         write(writer, mat.contactRole);
-    }
-    else
-    {
-        cerr << "in write:Material, empty contactRole\n";
-    }
     writeParamContainer(writer, mat.cvParams);
     writer.endElement();
 }
@@ -4210,6 +4206,20 @@ PWIZ_API_DECL void read(std::istream& is, Provider& provider)
 // MzIdentML
 //
 
+/// Since the MS CV element write will allways have an "MS" id, we
+/// need to change the incoming PSI-MS element to match.
+void fixCVList(vector<CV>& cvs)
+{
+    for(vector<CV>::iterator it=cvs.begin(); it!=cvs.end(); it++)
+    {
+        if (it->id == "PSI-MS")
+        {
+            it->id = "MS";
+            break;
+        }
+    }
+}
+
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
 {
@@ -4229,16 +4239,15 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     writer.startElement("mzIdentML", attributes);
 
     writeList(writer, mzid.cvs, "cvList");
+
     if (!mzid.analysisSoftwareList.empty())
         writePtrList(writer, mzid.analysisSoftwareList, "AnalysisSoftwareList");
     if (!mzid.provider.empty())
         write(writer, mzid.provider);
-    if (!mzid.analysisSampleCollection.empty())
-        write(writer, mzid.analysisSampleCollection);
-
     if (!mzid.auditCollection.empty())
         writeList(writer, mzid.auditCollection, "AuditCollection");
-
+    if (!mzid.analysisSampleCollection.empty())
+        write(writer, mzid.analysisSampleCollection);
     if (!mzid.sequenceCollection.empty())
         write(writer, mzid.sequenceCollection);
     write(writer, mzid.analysisCollection);
@@ -4253,24 +4262,24 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
 
 struct HandlerMzIdentML : public HandlerIdentifiableType
 {
-    MzIdentML* mim;
-    HandlerMzIdentML(MzIdentML* _mim = 0) : mim(_mim)
+    MzIdentML* mzid;
+    HandlerMzIdentML(MzIdentML* _mzid = 0) : mzid(_mzid)
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!mim)
+        if (!mzid)
             throw runtime_error("[IO::HandlerMzIdentML] Null mzIdentML.");
 
         
         if (name == "mzIdentML")
         {
-            getAttribute(attributes, "creationDate", mim->creationDate);
-            getAttribute(attributes, "version", mim->version);
+            getAttribute(attributes, "creationDate", mzid->creationDate);
+            getAttribute(attributes, "version", mzid->version);
 
-            HandlerIdentifiableType::id = mim;
+            HandlerIdentifiableType::id = mzid;
             return HandlerIdentifiableType::startElement(name, attributes, position);
         }
 
@@ -4284,65 +4293,74 @@ struct HandlerMzIdentML : public HandlerIdentifiableType
         }
         else if (name == "cv")
         {
-            mim->cvs.push_back(CV());
-            handlerCV_.cv = &mim->cvs.back();
+            mzid->cvs.push_back(CV());
+            handlerCV_.cv = &mzid->cvs.back();
             return Status(Status::Delegate, &handlerCV_);
                     
         }
         else if (name == "AnalysisSoftware")
         {
-            mim->analysisSoftwareList.push_back(
+            mzid->analysisSoftwareList.push_back(
                 AnalysisSoftwarePtr(new AnalysisSoftware()));
-            handlerAnalysisSoftware_.anal = mim->analysisSoftwareList.back().get();
+            handlerAnalysisSoftware_.anal = mzid->analysisSoftwareList.back().get();
             return Status(Status::Delegate, &handlerAnalysisSoftware_);
         }
         else if (name == "Provider")
         {
-            handlerProvider_.p = &mim->provider;
+            handlerProvider_.p = &mzid->provider;
             return Status(Status::Delegate, &handlerProvider_);
         }
         else if (name == "AuditCollection")
         {
-            handlerContact_.c = &mim->auditCollection;
+            handlerContact_.c = &mzid->auditCollection;
             return Status(Status::Delegate, &handlerContact_);
         }
         else if (name == "AnalysisSampleCollection")
         {
-            handlerAnalysisSampleCollection_.asc = &mim->analysisSampleCollection;
+            handlerAnalysisSampleCollection_.asc = &mzid->analysisSampleCollection;
             return Status(Status::Delegate, &handlerAnalysisSampleCollection_);
         }
         else if (name == "SequenceCollection")
         {
-            handlerSequenceCollection_.sc = &mim->sequenceCollection;
+            handlerSequenceCollection_.sc = &mzid->sequenceCollection;
             return Status(Status::Delegate, &handlerSequenceCollection_);
         }
         else if (name == "AnalysisCollection")
         {
-            handlerAnalysisCollection_.anal = &mim->analysisCollection;
+            handlerAnalysisCollection_.anal = &mzid->analysisCollection;
             return Status(Status::Delegate, &handlerAnalysisCollection_);
         }
         else if (name == "AnalysisProtocolCollection")
         {
-            handlerAnalysisProtocolCollection_.anal = &mim->analysisProtocolCollection;
+            handlerAnalysisProtocolCollection_.anal = &mzid->analysisProtocolCollection;
             return Status(Status::Delegate, &handlerAnalysisProtocolCollection_);
         }
         else if (name == "DataCollection")
         {
-            handlerDataCollection_.dc = &mim->dataCollection;
+            handlerDataCollection_.dc = &mzid->dataCollection;
             return Status(Status::Delegate, &handlerDataCollection_);
             
         }
         else if (name == "BibliographicReference")
         {
-            mim->bibliographicReference.push_back(
+            mzid->bibliographicReference.push_back(
                 BibliographicReferencePtr(new BibliographicReference));
-            handlerBibliographicReference_.br = mim->bibliographicReference.back().get();
+            handlerBibliographicReference_.br = mzid->bibliographicReference.back().get();
             return Status(Status::Delegate, &handlerBibliographicReference_);
         }
         
         return Status::Ok;
     }
 
+    virtual Status endElement(const string& name, 
+                              stream_offset position)
+    {
+        if (name == "cvList")
+            fixCVList(mzid->cvs);
+
+            return Status::Ok;
+    }
+    
     private:
     HandlerCV handlerCV_;
     HandlerAnalysisSoftware handlerAnalysisSoftware_;
@@ -4360,6 +4378,11 @@ PWIZ_API_DECL void read(std::istream& is, MzIdentML& mzid)
 {
     HandlerMzIdentML handler(&mzid);
     SAXParser::parse(is, handler);
+    
+    // "Fix" the name of the PSI-MS cv since the write's will assume
+    // an id of MS
+    fixCVList(mzid.cvs);
+    
     References::resolve(mzid); 
 }
 

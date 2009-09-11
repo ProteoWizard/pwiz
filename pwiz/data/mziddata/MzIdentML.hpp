@@ -117,6 +117,8 @@ struct PWIZ_API_DECL Organization : public Contact
         //std::string organization_ref;
         //boost::shared_ptr<Organization> organizationPtr;
         ContactPtr organizationPtr;
+
+        bool empty() const;
     };
 
     Organization(const std::string& id_ = "",

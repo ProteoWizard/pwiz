@@ -188,6 +188,11 @@ PWIZ_API_DECL Organization::Parent::Parent()
 {
 }
 
+PWIZ_API_DECL bool Organization::Parent::empty() const
+{
+    return !organizationPtr.get() || organizationPtr->empty();
+}
+
 //
 // Modification
 //
