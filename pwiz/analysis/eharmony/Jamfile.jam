@@ -65,8 +65,32 @@ exe mscupid
       /ext/boost//filesystem
     ;
 
+exe PeptideHog
+    : PeptideHog.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+exe PeptideProfile
+    : PeptideProfile.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+exe PeptideVenn
+    : PeptideVenn.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
 install bin      
     : eharmony
       mscupid
+      PeptideHog
+      PeptideProfile
+      PeptideVenn
     : <location>.
     ;
