@@ -85,6 +85,18 @@ string unescape_copy(const string& str)
 }
 
 
+istream& getcleanline(istream& is, string& buffer)
+{
+    if (getline(is, buffer))
+    {
+        if (*(buffer.end()-1) == '\r')
+            buffer.erase(buffer.length()-1);
+    }
+
+    return is;
+}
+
+
 void parse_id(const string& line, Term& term)
 {
     static const boost::regex e("id: (\\w+):(\\d+)");
@@ -249,7 +261,7 @@ Term parseTerm(istream& is)
 {
     Term result;
 
-    for (string line; getline(is,line) && !line.empty();)
+    for (string line; getcleanline(is,line) && !line.empty();)
         parseTagValuePair(line, result);
 
     return result;
@@ -260,7 +272,7 @@ void parseStanza(istream& is, OBO& obo)
 {
     string stanzaType;
     while (is && stanzaType.empty())
-        getline(is, stanzaType);
+        getcleanline(is, stanzaType);
 
     if (stanzaType == "[Term]")
     {
@@ -285,7 +297,7 @@ void parseStanza(istream& is, OBO& obo)
     else
     {
         // ignore stanza 
-        for (string buffer; getline(is,buffer) && !buffer.empty(););
+        for (string buffer; getcleanline(is,buffer) && !buffer.empty(););
     }
 }
 
@@ -297,7 +309,7 @@ void parse(const string& filename, OBO& obo)
         throw runtime_error(("[obo] Unable to open file " + filename).c_str());
 
     // read header lines until blank line
-    for (string buffer; getline(is,buffer) && !buffer.empty();)
+    for (string buffer; getcleanline(is,buffer) && !buffer.empty();)
         obo.header.push_back(buffer);      
 
     // parse stanzas to end of file
