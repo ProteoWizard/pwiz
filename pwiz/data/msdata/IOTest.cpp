@@ -430,6 +430,38 @@ void testBinaryDataArray()
 }
 
 
+const char* bdaWithExternalMetadata = "\
+<binaryDataArray encodedLength=\"160\" arrayLength=\"15\"> \
+    <referenceableParamGroupRef ref=\"mz_params\"/> \
+    <binary>AAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAGEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIkAAAAAAAAAkQAAAAAAAACZAAAAAAAAAKEAAAAAAAAAqQAAAAAAAACxA</binary> \
+</binaryDataArray>";
+
+
+void testBinaryDataArrayExternalMetadata()
+{
+    // instantiate an MSData object with the binary array metadata held in a ParamGroup
+
+    MSData msd;
+    ParamGroupPtr pg(new ParamGroup);
+    pg->id = "mz_params";
+    pg->cvParams.push_back(MS_m_z_array);
+    pg->cvParams.push_back(MS_64_bit_float);
+    pg->cvParams.push_back(MS_no_compression);
+    msd.paramGroupPtrs.push_back(pg);
+
+    istringstream is(bdaWithExternalMetadata);
+    BinaryDataArray bda;
+
+    // test read with MSData reference
+
+    IO::read(is, bda, &msd);
+
+    unit_assert(bda.data.size() == 15);
+    for (size_t i=0; i<15; i++)
+        unit_assert(bda.data[i] == i);
+}
+
+
 void testSpectrum()
 {
     if (os_) *os_ << "testSpectrum():\n";
@@ -1225,6 +1257,7 @@ void test()
     testScan();
     testScanList();
     testBinaryDataArray();
+    testBinaryDataArrayExternalMetadata();
     testSpectrum();
     testChromatogram();
     testSpectrumList();

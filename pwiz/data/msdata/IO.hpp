@@ -143,7 +143,7 @@ PWIZ_API_DECL void read(std::istream& is, ScanList& scanList);
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
-PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray);
+PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, const MSData* msd = 0);
     
 
 enum PWIZ_API_DECL BinaryDataFlag {IgnoreBinaryData, ReadBinaryData};
@@ -155,7 +155,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
           BinaryDataFlag binaryDataFlag = IgnoreBinaryData,
-          int version = 0);
+          int version = 0, const MSData* msd = 0);
 
 
 PWIZ_API_DECL

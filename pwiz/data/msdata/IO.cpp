@@ -1652,11 +1652,13 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
 struct HandlerBinaryDataArray : public HandlerParamContainer
 {
     BinaryDataArray* binaryDataArray;
+    const MSData* msd;
     size_t defaultArrayLength;
     BinaryDataEncoder::Config config;
 
-    HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0)
+    HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0, const MSData* _msd = 0)
     :   binaryDataArray(_binaryDataArray),
+        msd(_msd),
         defaultArrayLength(0),
         arrayLength_(0),
         encodedLength_(0)
@@ -1686,6 +1688,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
         else if (name == "binary")
         {
+            if (msd) References::resolve(*binaryDataArray, *msd);
             config = getConfig();
             return Status::Ok;
         }
@@ -1724,19 +1727,19 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         vector<CVParam>::iterator it = find_if(params.begin(), params.end(), 
                                                CVParamIsChildOf(cvid));
 
-        CVID result;
-        if (it == params.end())
-        {
-            result = CVID_Unknown;
-            for (vector<ParamGroupPtr>::iterator pgItr = container.paramGroupPtrs.begin();
-                 pgItr != container.paramGroupPtrs.end() && result == CVID_Unknown;
-                 ++pgItr)
-                 result = extractCVParam(**pgItr, cvid);
+        CVID result = CVID_Unknown;
+
+        if (it != params.end())
+        {   
+            // found the cvid in container -- erase the CVParam
+            result = it->cvid;
+            params.erase(it);
         }
         else
         {
-            result = it->cvid;
-            params.erase(it);
+            // didn't find it -- search recursively, but don't erase anything
+            CVParam temp = container.cvParamChild(cvid);
+            result = temp.cvid;
         }
 
         return result;
@@ -1791,9 +1794,9 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray)
+PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, const MSData* msd)
 {
-    HandlerBinaryDataArray handler(&binaryDataArray);
+    HandlerBinaryDataArray handler(&binaryDataArray, msd);
     handler.autoUnescapeCharacters = false;
     SAXParser::parse(is, handler);
 }
@@ -1872,11 +1875,14 @@ struct HandlerSpectrum : public HandlerParamContainer
 {
     BinaryDataFlag binaryDataFlag;
     Spectrum* spectrum;
+    const MSData* msd;
 
     HandlerSpectrum(BinaryDataFlag _binaryDataFlag,
-                    Spectrum* _spectrum = 0)
+                    Spectrum* _spectrum = 0,
+                    const MSData* _msd = 0)
     :   binaryDataFlag(_binaryDataFlag),
-        spectrum(_spectrum)
+        spectrum(_spectrum),
+        msd(_msd)
     {}
 
     virtual Status startElement(const string& name, 
@@ -1962,6 +1968,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             spectrum->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
             handlerBinaryDataArray_.binaryDataArray = spectrum->binaryDataArrayPtrs.back().get();
             handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
+            handlerBinaryDataArray_.msd = msd;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
         }
         else if (name == "binaryDataArrayList")
@@ -1996,9 +2003,9 @@ struct HandlerSpectrum : public HandlerParamContainer
 
 PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
                         BinaryDataFlag binaryDataFlag,
-                        int version)
+                        int version, const MSData* msd)
 {
-    HandlerSpectrum handler(binaryDataFlag, &spectrum);
+    HandlerSpectrum handler(binaryDataFlag, &spectrum, msd);
     handler.version = version;
     SAXParser::parse(is, handler);
 }
