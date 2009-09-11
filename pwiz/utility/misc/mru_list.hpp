@@ -70,16 +70,24 @@ public:
 
   mru_list(std::size_t max_num_items_) : max_num_items(max_num_items_){}
 
-  void insert(const item_type& item)
+  bool insert(const item_type& item)
   {
     std::pair<iterator,bool> p=il.push_front(item);
 
     if(!p.second){                     /* duplicate item */
       il.relocate(il.begin(),p.first); /* put in front */
+      return false;                    /* item not inserted */
     }
     else if(il.size()>max_num_items){  /* keep the length <= max_num_items */
       il.pop_back();
     }
+    return true;                       /* new item inserted */
+  }
+
+  template<typename Modifier>
+  bool modify(iterator position, Modifier modifier)
+  {
+      return il.modify(position, modifier);
   }
 
   bool empty() const {return il.empty();}

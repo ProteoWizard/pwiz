@@ -55,6 +55,21 @@ void clearSpectrumMetadata(Spectrum& spectrum)
 }
 
 
+struct modifyCachedSpectrumPtr
+{
+    modifyCachedSpectrumPtr(const SpectrumPtr& newSpectrumPtr)
+        : newSpectrumPtr_(newSpectrumPtr) {}
+
+    void operator() (SpectrumListCache::CacheType::value_type& indexSpectrumPtrPair)
+    {
+        indexSpectrumPtrPair.second = newSpectrumPtr_;
+    }
+
+    private:
+    SpectrumPtr newSpectrumPtr_;
+};
+
+
 } // namespace
 
 
@@ -85,40 +100,31 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
                 return inner_->spectrum(index, true);
 
             case MemoryMRUCacheMode_MetaDataAndBinaryData:
-                // spectrum is added/relocated to mru
-                spectrumCache_.insert(make_pair(index, SpectrumPtr()));
-
-                // if mru's ptr is null, spectrum was not in cache
-                if (!spectrumCache_.mru().second.get())
-                    (const_cast<CacheType::value_type&>(spectrumCache_.mru())).second = inner_->spectrum(index, true);
+                // if insert returns true, spectrum was not in cache
+                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                    spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(inner_->spectrum(index, true)));
                 return spectrumCache_.mru().second;
 
             case MemoryMRUCacheMode_MetaDataOnly:
                 original = inner_->spectrum(index, true);
 
-                // spectrum is added/relocated to mru
-                spectrumCache_.insert(make_pair(index, SpectrumPtr()));
-
-                // if mru's ptr is null, spectrum was not in cache
-                if (!spectrumCache_.mru().second.get())
-                {    
+                // if insert returns true, spectrum was not in cache
+                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                {
                     copy.reset(new Spectrum(*original));
                     copy->binaryDataArrayPtrs.clear();
-                    (const_cast<CacheType::value_type&>(spectrumCache_.mru())).second = copy;
+                    spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(copy));
                 }
                 return original;
 
             case MemoryMRUCacheMode_BinaryDataOnly:
-                // spectrum is added/relocated to mru
-                spectrumCache_.insert(make_pair(index, SpectrumPtr()));
-
-                // if mru's ptr is null, spectrum was not in cache
-                if (!spectrumCache_.mru().second.get())
+                // if insert returns true, spectrum was not in cache
+                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
                 {
                     original = inner_->spectrum(index, true);
                     copy.reset(new Spectrum(*original));
                     clearSpectrumMetadata(*copy);
-                    (const_cast<CacheType::value_type&>(spectrumCache_.mru())).second = copy;
+                    spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(copy));
                     return original;
                 }
                 else
@@ -141,12 +147,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
                 return inner_->spectrum(index, false);
 
             case MemoryMRUCacheMode_MetaDataOnly:
-                // spectrum is added/relocated to mru
-                spectrumCache_.insert(make_pair(index, SpectrumPtr()));
-
-                // if mru's ptr is null, spectrum was not in cache
-                if (!spectrumCache_.mru().second.get())
-                    (const_cast<CacheType::value_type&>(spectrumCache_.mru())).second = inner_->spectrum(index, false);
+                // if insert returns true, spectrum was not in cache
+                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                    spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(inner_->spectrum(index, false)));
                 return spectrumCache_.mru().second;
         }
     }
