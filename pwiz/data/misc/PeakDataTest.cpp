@@ -31,6 +31,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
+using namespace pwiz::math;
 using namespace pwiz::data::peakdata;
 
 
@@ -171,6 +172,9 @@ void testPeak()
     peak.intensity = 2;
     peak.area = 3;
     peak.error = 4;
+
+    peak.data.push_back(OrderedPair(1,2));
+    peak.data.push_back(OrderedPair(3,4));
 
     peak.attributes[Peak::Attribute_Frequency] = 5;
     peak.attributes[Peak::Attribute_Phase] = 6;

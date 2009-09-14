@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include <vector>
 #include <iostream>
+#include <stdexcept>
 
 
 namespace pwiz {
@@ -49,6 +50,29 @@ inline PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OrderedPai
 {
     os << "(" << p.x << "," << p.y << ")";
     return os;
+}
+
+
+inline PWIZ_API_DECL std::istream& operator>>(std::istream& is, OrderedPair& p)
+{
+    char open='\0', comma='\0', close='\0';
+    is >>  open >> p.x >> comma >> p.y >> close;
+    if (!is) return is;
+    if (open!='(' || comma!=',' || close!=')')
+        throw std::runtime_error("[OrderedPair::operator>>] Unexpected input.");
+    return is;
+}
+
+
+inline PWIZ_API_DECL bool operator==(const OrderedPair& a, const OrderedPair& b)
+{
+    return a.x==b.x && a.y==b.y;
+}
+
+
+inline PWIZ_API_DECL bool operator!=(const OrderedPair& a, const OrderedPair& b)
+{
+    return !(a == b);
 }
 
 

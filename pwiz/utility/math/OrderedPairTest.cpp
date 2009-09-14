@@ -137,12 +137,47 @@ void testVectorCustomPair()
 }
 
 
+void testEquality()
+{
+    if (os_) *os_ << "testEquality()\n";
+    vector<OrderedPair> v;
+    v.push_back(OrderedPair(1,2));
+    v.push_back(OrderedPair(3,4));
+    v.push_back(OrderedPair(5,6));
+
+    vector<OrderedPair> w = v;
+   
+    unit_assert(v == w);
+    w.push_back(OrderedPair(7,8));
+    unit_assert(v != w);
+    v.push_back(OrderedPair(7,9));
+    unit_assert(v != w);
+    v.back().y = w.back().y;
+    unit_assert(v == w);
+}
+
+
+void testExtraction()
+{
+    vector<OrderedPair> v;
+    istringstream iss("(420,666)  (421,667)");
+    copy(istream_iterator<OrderedPair>(iss), istream_iterator<OrderedPair>(), back_inserter(v));
+    unit_assert(v.size() == 2);
+    unit_assert(v[0].x == 420);
+    unit_assert(v[0].y == 666);
+    unit_assert(v[1].x == 421);
+    unit_assert(v[1].y == 667);
+}
+
+
 void test()
 {
     testArray();
     testVectorDouble();
     testVectorOrderedPair();
     testVectorCustomPair();
+    testEquality();
+    testExtraction();
 }
 
 

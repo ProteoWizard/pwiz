@@ -62,13 +62,13 @@ double Peak::getAttribute(Attribute attribute) const
 
 bool Peak::operator==(const Peak& that) const
 {
-    bool result = (
-                   id == that.id &&
+    bool result = (id == that.id &&
                    mz == that.mz &&
                    retentionTime == that.retentionTime &&
                    intensity == that.intensity &&
                    area == that.area &&
-                   error == that.error);
+                   error == that.error &&
+                   data == that.data);
 
     if (!result) return false;
 
@@ -175,17 +175,20 @@ void Peak::write(minimxml::XMLWriter& writer) const
         xmlAttributes.push_back(make_pair(attributeToString(it->first), 
                                           lexical_cast<string>(it->second)));
 
-#if 1
-    writer.startElement("peak", xmlAttributes, XMLWriter::EmptyElement);
-#else
-    writer.startElement("peak", xmlAttributes);
-    writer.startElement("data");
-    ostringstream oss;
-    copy(data.begin(), data.end(), ostream_iterator<OrderedPair>(oss, " "));
-    writer.characters(oss.str());
-    writer.endElement();
-    writer.endElement();
-#endif
+    if (data.empty())
+    {
+        writer.startElement("peak", xmlAttributes, XMLWriter::EmptyElement);
+    }
+    else
+    {
+        writer.startElement("peak", xmlAttributes);
+        writer.startElement("data");
+        ostringstream oss;
+        copy(data.begin(), data.end(), ostream_iterator<OrderedPair>(oss, " "));
+        writer.characters(oss.str());
+        writer.endElement();
+        writer.endElement();
+    }
 }
 
 
@@ -193,24 +196,46 @@ SAXParser::Handler::Status HandlerPeak::startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
 {
-    if (name != "peak")
-        throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
+    if (!peak)
+        throw runtime_error("[PeakData::HandlerPeak::startElement()]  Null peak.");
 
-    for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
+    if (name == "peak")
     {
-        if (it->first == "id") peak->id = lexical_cast<int>(it->second);
-        else if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
-        else if (it->first == "retentionTime") peak->retentionTime = lexical_cast<double>(it->second);
-        else if (it->first == "intensity") peak->intensity = lexical_cast<double>(it->second);
-        else if (it->first == "area") peak->area = lexical_cast<double>(it->second);
-        else if (it->first == "error") peak->error = lexical_cast<double>(it->second);
-        else
+        for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
         {
-            Peak::Attribute a = stringToAttribute(it->first);
-            peak->attributes[a] = lexical_cast<double>(it->second);            
+            if (it->first == "id") peak->id = lexical_cast<int>(it->second);
+            else if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
+            else if (it->first == "retentionTime") peak->retentionTime = lexical_cast<double>(it->second);
+            else if (it->first == "intensity") peak->intensity = lexical_cast<double>(it->second);
+            else if (it->first == "area") peak->area = lexical_cast<double>(it->second);
+            else if (it->first == "error") peak->error = lexical_cast<double>(it->second);
+            else
+            {
+                Peak::Attribute a = stringToAttribute(it->first);
+                peak->attributes[a] = lexical_cast<double>(it->second);            
+            }
         }
+
+        return Status::Ok;
+    }
+    else if (name == "data")
+    {
+        return Status::Ok;
     }
 
+    throw runtime_error(("[HandlerPeak] Unexpected element name: " + name).c_str());
+}
+    
+
+SAXParser::Handler::Status HandlerPeak::characters(const std::string& text,
+                                                   stream_offset position)
+{
+    if (!peak)
+        throw runtime_error("[PeakData::HandlerPeak::characters()]  Null peak.");
+
+    peak->data.clear();
+    istringstream iss(text);
+    copy(istream_iterator<OrderedPair>(iss), istream_iterator<OrderedPair>(), back_inserter(peak->data));
     return Status::Ok;
 }
 
