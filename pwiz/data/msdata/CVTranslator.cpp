@@ -26,6 +26,7 @@
 
 #include "CVTranslator.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -39,7 +40,7 @@ namespace msdata {
 
 using namespace std;
 using boost::lexical_cast;
-
+using boost::algorithm::starts_with;
 
 //
 // default extra translations
@@ -188,6 +189,9 @@ void CVTranslator::Impl::insertCVTerms()
 
         if (info.isObsolete) continue;
 
+        if (!(starts_with(info.id, "MS") ||
+              starts_with(info.id, "UO"))) continue;
+        
         // insert name
         insert(info.name, *cvid);
 
