@@ -100,6 +100,12 @@ void PeakFitter_Parabola::fitPeak(const OrderedPairContainerRef& pairs,
     result.intensity = p(p.center());
     result.area = totalIntensity;
     result.error = sqrt(totalError2/(end-begin)); // rms error
+
+    const size_t dataRadius = 3; 
+    const OrderedPair* dataBegin = max(center-dataRadius, pairs.begin());
+    const OrderedPair* dataEnd = min(center+dataRadius+1, pairs.end());
+    result.data.clear();
+    copy(dataBegin, dataEnd, back_inserter(result.data));
 }
 
 

@@ -57,7 +57,12 @@ void testParabola()
 
     fitter.fitPeak(pairs, 2, peak);
 
-    if (os_) *os_ << peak << endl;
+    if (os_) 
+    {
+        *os_ << peak;
+        copy(peak.data.begin(), peak.data.end(), ostream_iterator<OrderedPair>(*os_, " "));
+        *os_ << endl;
+    }
 
     const double epsilon = 1e-6;
     unit_assert_equal(peak.mz, center, epsilon);
@@ -65,6 +70,7 @@ void testParabola()
     unit_assert_equal(peak.area, 12.97, epsilon);
     unit_assert_equal(peak.error, 0, epsilon);
     unit_assert_equal(peak.intensity, 5, epsilon);
+    unit_assert(!peak.data.empty());
 }
 
 
@@ -92,6 +98,16 @@ void testMultiplePeaks()
     vector<Peak> peaks;
 
     fitter.fitPeaks(pairs, indices, peaks);
+
+    if (os_) 
+    {
+        for (vector<Peak>::const_iterator it=peaks.begin(); it!=peaks.end(); ++it)
+        {
+            *os_ << *it;
+            copy(it->data.begin(), it->data.end(), ostream_iterator<OrderedPair>(*os_, " "));
+            *os_ << endl;
+        }
+    }
 
     const double epsilon = 1e-6;
     unit_assert(peaks.size() == 3);

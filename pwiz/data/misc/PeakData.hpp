@@ -24,11 +24,12 @@
 #define _PEAKDATA_HPP_
 
 
+#include "CalibrationParameters.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/MSIHandler.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include "CalibrationParameters.hpp"
+#include "pwiz/utility/math/OrderedPair.hpp"
 #include "boost/shared_ptr.hpp"
 #include <vector>
 #include <string>
@@ -58,6 +59,8 @@ struct PWIZ_API_DECL Peak
     double intensity;   // peak height
     double area;        // sum/total intensity
     double error;       // error in model fit
+
+    std::vector<pwiz::math::OrderedPair> data;
 
     // optional attributes
 

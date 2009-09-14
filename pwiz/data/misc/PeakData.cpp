@@ -36,6 +36,7 @@ namespace peakdata {
 
 using namespace std;
 using namespace pwiz::minimxml;
+using namespace pwiz::math;
 using namespace minimxml::SAXParser;
 using boost::lexical_cast;
 
@@ -174,7 +175,17 @@ void Peak::write(minimxml::XMLWriter& writer) const
         xmlAttributes.push_back(make_pair(attributeToString(it->first), 
                                           lexical_cast<string>(it->second)));
 
+#if 1
     writer.startElement("peak", xmlAttributes, XMLWriter::EmptyElement);
+#else
+    writer.startElement("peak", xmlAttributes);
+    writer.startElement("data");
+    ostringstream oss;
+    copy(data.begin(), data.end(), ostream_iterator<OrderedPair>(oss, " "));
+    writer.characters(oss.str());
+    writer.endElement();
+    writer.endElement();
+#endif
 }
 
 
