@@ -11,20 +11,12 @@
 #ifndef _MRU_LIST_HPP_
 #define _MRU_LIST_HPP_
 
+
 #if !defined(NDEBUG)
 #define BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING
 #define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE
-
-#define BOOST_ENABLE_ASSERT_HANDLER
-#include "unit.hpp"
-namespace boost
-{
-    inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined
-    {
-        throw std::runtime_error(pwiz::util::unit_assert_message(file, (int) line, expr));
-    }
-} // namespace boost
 #endif
+
 
 #include <boost/config.hpp> /* keep it first to prevent nasty warns in MSVC */
 #include <algorithm>

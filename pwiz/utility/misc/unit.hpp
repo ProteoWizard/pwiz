@@ -25,9 +25,9 @@
 #define _UNIT_HPP_
 
 
+#include "Exception.hpp"
 #include <string>
 #include <sstream>
-#include <stdexcept>
 #include <cmath>
 
 

@@ -24,7 +24,9 @@
 #ifndef _EXCEPTION_HPP_
 #define _EXCEPTION_HPP_
 
+
 #include <stdexcept>
+
 
 using std::exception;
 using std::runtime_error;
@@ -36,5 +38,58 @@ using std::logic_error;
 using std::overflow_error;
 using std::range_error;
 using std::underflow_error;
+
+
+// make debug assertions throw exceptions in MSVC
+#ifdef _DEBUG
+#include <crtdbg.h>
+#include <iostream>
+inline int CrtReportHook(int reportType, char *message, int *returnValue)
+{
+    std::cerr << message;
+    if (returnValue) *returnValue = 0;
+    return 1;
+}
+
+inline int CrtReportHookW(int reportType, wchar_t *message, int *returnValue)
+{
+    std::wcerr << message;
+    if (returnValue) *returnValue = 0;
+    return 1;
+}
+
+struct ReportHooker
+{
+    ReportHooker()
+    {
+        _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, &CrtReportHook);
+        _CrtSetReportHookW2(_CRT_RPTHOOK_INSTALL, &CrtReportHookW);
+    }
+
+    // TODO: redesign to support once-per-process (or once-per-thread?) initialization
+    //private:
+    //bool isReportHookSet;
+};
+
+static ReportHooker reportHooker;
+
+#endif // _DEBUG
+
+
+// handle Boost assertions with a message to stderr
+#if !defined(NDEBUG)
+#include <sstream>
+#define BOOST_ENABLE_ASSERT_HANDLER
+namespace boost
+{
+    inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined
+    {
+        std::ostringstream oss;
+        oss << "[" << file << ":" << line << "] Assertion failed: " << expr;
+        throw std::runtime_error(oss.str());
+    }
+} // namespace boost
+#endif // !defined(NDEBUG)
+
 
 #endif // _EXCEPTION_HPP_
