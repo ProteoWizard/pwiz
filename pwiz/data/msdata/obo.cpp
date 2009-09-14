@@ -89,8 +89,8 @@ istream& getcleanline(istream& is, string& buffer)
 {
     if (getline(is, buffer))
     {
-        if (*(buffer.end()-1) == '\r')
-            buffer.erase(buffer.length()-1);
+        if (buffer.size() > 0 && buffer.at(buffer.size()-1) == '\r')
+            buffer.erase(buffer.size()-1);
     }
 
     return is;
