@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<mzIdentML id="" creationDate="2009-06-23T11:04:10" version="0.9.0" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML1.0.0.xsd" xmlns="http://psidev.info/psi/pi/mzIdentML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<mzIdentML id="" creationDate="2009-06-23T11:04:10" version="1.0.0" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML1.0.0.xsd" xmlns="http://psidev.info/psi/pi/mzIdentML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cvList>
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.20.2" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.26.0" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
     <cv id="UNIMOD" fullName="" version="19:11:2008" URI=""/>
     <cv id="UO" fullName="Unit Ontology" version="14:07:2009" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
   </cvList>
@@ -17,6 +17,11 @@
       </SoftwareName>
       <Customizations>No customizations</Customizations>
     </AnalysisSoftware>
+    <AnalysisSoftware id="AS_mascot_parser" name="Mascot Parser">
+      <SoftwareName>
+        <cvParam cvRef="MS" accession="MS:1001478" name="Mascot Parser" value=""/>
+      </SoftwareName>
+    </AnalysisSoftware>
   </AnalysisSoftwareList>
   <Provider id="PROVIDER">
     <ContactRole Contact_ref="PERSON_DOC_OWNER">
@@ -26,10 +31,14 @@
     </ContactRole>
   </Provider>
   <AuditCollection>
-    <Person id="" lastName="" firstName="" midInitials=""/>
-    <Person id="PERSON_DOC_OWNER" email="dcreasy@matrixscience.com" lastName="David Creasy" firstName="" midInitials=""/>
-    <Organization id="ORG_MSL" name="Matrix Science Limited" address="64 Baker Street, London W1U 7GB, UK" phone="+44 (0)20 7486 1050" email="support@matrixscience.com" fax="+44 (0)20 7224 1344">
-    </Organization>
+    <Person id="" lastName="" firstName="" midInitials="">
+      <affiliations Organization_ref="ORG_MSL"/>
+    </Person>
+    <Person id="PERSON_DOC_OWNER" email="dcreasy@matrixscience.com" lastName="David Creasy" firstName="" midInitials="">
+      <affiliations Organization_ref="ORG_DOC_OWNER"/>
+    </Person>
+    <Organization id="ORG_MSL" name="Matrix Science Limited" address="64 Baker Street, London W1U 7GB, UK" phone="+44 (0)20 7486 1050" email="support@matrixscience.com" fax="+44 (0)20 7224 1344"/>
+    <Organization id="ORG_DOC_OWNER"/>
   </AuditCollection>
   <SequenceCollection>
     <DBSequence id="DBSeq_Bombessin" length="14" accession="Bombessin" SearchDatabase_ref="SDB_5peptideMix">
@@ -40,9 +49,15 @@
       <seq>QLYENKPRRPYIL</seq>
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="Neurotensin: N-6383 pGlu-Leu-Tyr-Glu-Asn-Lys-Pro-Arg-Arg-Pro-Tyr-Ile-Leu  (C78 H121 N21 O20) H+ Adducts: 1672.9170, 836.9621, 558.3105, 418.9847, 335.3892"/>
     </DBSequence>
+    <DBSequence id="DBSeq_HSP71_RAT" length="641" accession="HSP71_RAT" SearchDatabase_ref="SDB_SwissProt">
+      <seq>MAKKTAIGIDLGTTYSCVGVFQHGKVEIIANDQGNRTTPSYVAFTDTERLIGDAAKNQVALNPQNTVFDAKRLIGRKFGDPVVQSDMKHWPFQVVNDGDKPKVQVNYKGENRSFYPEEISSMVLTKMKEIAEAYLGHPVTNAVITVPAYFNDSQRQATKDAGVIAGLNVLRIINEPTAAAIAYGLDRTGKGERNVLIFDLGGGTFDVSILTIDDGIFEVKATAGDTHLGGEDFDNRLVSHFVEEFKRKHKKDISQNKRAVRRLRTACERAKRTLSSSTQASLEIDSLFEGIDFYTSITRARFEELCSDLFRGTLEPVEKALRDAKLDKAQIHDLVLVGGSTRIPKVQKLLQDFFNGRDLNKSINPDEAVAYGAAVQAAILMGDKSENVQDLLLLDVAPLSLGLETAGGVMTALIKRNSTIPTKQTQTFTTYSDNQPGVLIQVYEGERAMTRDNNLLGRFELSGIPPAPRGVPQIEVTFDIDANGILNVTATDKSTGKANKITITNDKGRLSKEEIERMVQEAERYKAEDEVQRERVAAKNALESYAFNMKSAVEDEGLKGKISEADKKKVLDKCQEVISWLDSNTLAEKEEFVHKREELERVCNPIISGLYQGAGAPGAGGFGAQAPKGGSGSGPTIEEVD</seq>
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="Heat shock 70 kDa protein 1A/1B (Heat shock 70 kDa protein 1/2) (HSP70.1/2) - Rattus norvegicus (Rat)"/>
+      <cvParam cvRef="MS" accession="MS:1001469" name="taxonomy: scientific name" value="Rattus norvegicus"/>
+      <cvParam cvRef="MS" accession="MS:1001467" name="taxonomy: NCBI TaxID" value="10116"/>
+    </DBSequence>
     <Peptide id="peptide_1_1">
       <peptideSequence>QLYENKPRRPYIL</peptideSequence>
-      <Modification location="0" residues="" avgMassDelta="0" monoisotopicMassDelta="-17.026548999999999">
+      <Modification>
         <cvParam cvRef="UNIMOD" accession="UNIMOD:28" name="Gln-&gt;pyro-Glu" value=""/>
       </Modification>
     </Peptide>
@@ -152,10 +167,22 @@
           <userParam name="5peptideMix_20090515.fasta"/>
         </DatabaseName>
       </SearchDatabase>
+      <SearchDatabase id="SDB_SwissProt" name="SwissProt" location="file:///C:/inetpub/mascot/sequence/SwissProt/current/SwissProt_51.6.fasta" version="SwissProt_51.6.fasta" releaseDate="SwissProt_51.6.fasta" numDatabaseSequences="5" numResidues="52">
+        <fileFormat>
+          <cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" value=""/>
+        </fileFormat>
+        <DatabaseName>
+          <userParam name="SwissProt_51.6.fasta"/>
+        </DatabaseName>
+        <cvParam cvRef="MS" accession="MS:1001073" name="database type amino acid" value=""/>
+      </SearchDatabase>
       <SpectraData id="SD_1" location="file:///small.pwiz.1.1.mzML">
         <fileFormat>
           <cvParam cvRef="MS" accession="MS:1000584" name="mzML file" value=""/>
         </fileFormat>
+        <spectrumIDFormat>
+          <cvParam cvRef="MS" accession="MS:1000774" name="multiple peak list nativeID format" value=""/>
+        </spectrumIDFormat>
       </SpectraData>
     </Inputs>
     <AnalysisData>
@@ -175,6 +202,12 @@
           <SpectrumIdentificationItem id="SII_1_1" chargeState="3" experimentalMassToCharge="558.75" calculatedMassToCharge="557.30321233333302" calculatedPI="0" Peptide_ref="peptide_1_1" rank="1" passThreshold="true">
             <PeptideEvidence id="PE_1_1_Neurotensin" DBSequence_Ref="DBSeq_Neurotensin" start="1" end="13" pre="-" post="-" isDecoy="false" missedCleavages="1">
             </PeptideEvidence>
+            <PeptideEvidence id="PE_19_1_Bombessin_0" DBSequence_Ref="DBSeq_Bombessin" start="1" end="14" pre="-" post="-" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <PeptideEvidence id="PE_20_1_Bombessin_0" DBSequence_Ref="DBSeq_Bombessin" start="1" end="14" pre="-" post="-" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <PeptideEvidence id="PE_2_1_HSP71_RAT_0" DBSequence_Ref="DBSeq_HSP71_RAT" start="37" end="49" pre="R" post="L" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
             <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="15.71"/>
             <cvParam cvRef="MS" accession="MS:1001172" name="mascot:expectation value" value="0.0268534444565851"/>
             <Fragmentation>
@@ -189,19 +222,14 @@
       <ProteinDetectionList id="PDL_1">
         <ProteinAmbiguityGroup id="PAG_hit_1">
           <ProteinDetectionHypothesis id="PDH_Bombessin" DBSequence_ref="DBSeq_Bombessin" passThreshold="true">
-            <PeptideHypothesis PeptideEvidence_Ref="PE_19_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_20_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_21_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_22_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_23_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_24_1_Bombessin"/>
-            <PeptideHypothesis PeptideEvidence_Ref="PE_25_1_Bombessin"/>
+            <PeptideHypothesis PeptideEvidence_Ref="PE_19_1_Bombessin_0"/>
+            <PeptideHypothesis PeptideEvidence_Ref="PE_20_1_Bombessin_0"/>
             <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="164.4"/>
             <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="100"/>
             <cvParam cvRef="MS" accession="MS:1001097" name="distinct peptide sequences" value="7"/>
           </ProteinDetectionHypothesis>
           <ProteinDetectionHypothesis id="PDH_HSP71_RAT" DBSequence_ref="DBSeq_HSP71_RAT" passThreshold="true">
-            <PeptideHypothesis PeptideEvidence_Ref="PE_2_1_HSP71_RAT"/>
+            <PeptideHypothesis PeptideEvidence_Ref="PE_2_1_HSP71_RAT_0"/>
             <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="40.95"/>
             <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="2"/>
             <cvParam cvRef="MS" accession="MS:1001097" name="distinct peptide sequences" value="1"/>
