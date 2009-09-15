@@ -39,7 +39,8 @@ using namespace std;
 
 const char* dbsequenceList[] = {
     "QQRLGNQWAVGHLM",
-    "QLYENKPRRPYIL"
+    "QLYENKPRRPYIL",
+    "MAKKTAIGIDLGTTYSCVGVFQHGKVEIIANDQGNRTTPSYVAFTDTERLIGDAAKNQVALNPQNTVFDAKRLIGRKFGDPVVQSDMKHWPFQVVNDGDKPKVQVNYKGENRSFYPEEISSMVLTKMKEIAEAYLGHPVTNAVITVPAYFNDSQRQATKDAGVIAGLNVLRIINEPTAAAIAYGLDRTGKGERNVLIFDLGGGTFDVSILTIDDGIFEVKATAGDTHLGGEDFDNRLVSHFVEEFKRKHKKDISQNKRAVRRLRTACERAKRTLSSSTQASLEIDSLFEGIDFYTSITRARFEELCSDLFRGTLEPVEKALRDAKLDKAQIHDLVLVGGSTRIPKVQKLLQDFFNGRDLNKSINPDEAVAYGAAVQAAILMGDKSENVQDLLLLDVAPLSLGLETAGGVMTALIKRNSTIPTKQTQTFTTYSDNQPGVLIQVYEGERAMTRDNNLLGRFELSGIPPAPRGVPQIEVTFDIDANGILNVTATDKSTGKANKITITNDKGRLSKEEIERMVQEAERYKAEDEVQRERVAAKNALESYAFNMKSAVEDEGLKGKISEADKKKVLDKCQEVISWLDSNTLAEKEEFVHKREELERVCNPIISGLYQGAGAPGAGGFGAQAPKGGSGSGPTIEEVD"
 };
 
 const char* peptideList[] = {
@@ -73,6 +74,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
     analysisSoftwarePtr->id = "AS_mascot_parser";
     analysisSoftwarePtr->name = "Mascot Parser";
+    analysisSoftwarePtr->softwareName.set(MS_Mascot_Parser);
     mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
 
     mzid.provider.id="PROVIDER";
@@ -127,6 +129,22 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     dbSequence->accession="Neurotensin";
     dbSequence->seq=dbsequenceList[1];
     dbSequence->paramGroup.set(MS_protein_description, peptideList[1]);
+    mzid.sequenceCollection.dbSequences.push_back(dbSequence);
+    
+    dbSequence = DBSequencePtr(new DBSequence());
+    dbSequence->id="DBSeq_HSP71_RAT";
+    dbSequence->length=641;
+    dbSequence->searchDatabasePtr=SearchDatabasePtr(new SearchDatabase("SDB_SwissProt"));
+    dbSequence->accession="HSP71_RAT";
+    dbSequence->seq=dbsequenceList[2];
+    dbSequence->paramGroup.set(MS_protein_description,
+                               "Heat shock 70 kDa protein 1A/1B (Heat "
+                               "shock 70 kDa protein 1/2) (HSP70.1/2) - "
+                               "Rattus norvegicus (Rat)");
+    dbSequence->paramGroup.set(MS_taxonomy__scientific_name,
+                               "Rattus norvegicus");
+    dbSequence->paramGroup.set(MS_taxonomy__NCBI_TaxID,
+                               "10116");
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
     
     PeptidePtr peptide(new Peptide());
@@ -263,11 +281,25 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     searchDb->DatabaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
     mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
 
+    searchDb = SearchDatabasePtr(new SearchDatabase());
+    searchDb->id="SDB_SwissProt";
+    searchDb->name="SwissProt";
+    searchDb->location="file:///C:/inetpub/mascot/sequence/SwissProt/current/SwissProt_51.6.fasta";
+    searchDb->numDatabaseSequences=5;
+    searchDb->numResidues=52;
+    searchDb->releaseDate="SwissProt_51.6.fasta";
+    searchDb->version="SwissProt_51.6.fasta";
+    searchDb->fileFormat.set(MS_FASTA_format);
+    searchDb->DatabaseName.userParams.push_back(UserParam("SwissProt_51.6.fasta"));
+    searchDb->params.set(MS_database_type_amino_acid);
+    mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
+
     // Add SpectraDataPtr
     SpectraDataPtr spectraData(new SpectraData());
     spectraData->id="SD_1";
     spectraData->location="file:///small.pwiz.1.1.mzML";
     spectraData->fileFormat.set(MS_mzML_file);
+    spectraData->spectrumIDFormat.set(MS_multiple_peak_list_nativeID_format);
     mzid.dataCollection.inputs.spectraData.push_back(spectraData);
     
     // Fill in mzid.analysisData
@@ -305,6 +337,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     siip->passThreshold=true;
     siip->paramGroup.set(MS_mascot_score, "15.71");
     siip->paramGroup.set(MS_mascot_expectation_value, "0.0268534444565851");
+
     PeptideEvidencePtr pep(new PeptideEvidence());
     pep->id="PE_1_1_Neurotensin";
     pep->start=1;
@@ -316,6 +349,43 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->isDecoy=false;
     pep->DBSequence_ref="DBSeq_Neurotensin";
     siip->peptideEvidence.push_back(pep);
+
+    pep = PeptideEvidencePtr(new PeptideEvidence());
+    pep->id="PE_19_1_Bombessin_0";
+    pep->start=1;
+    pep->end=14;
+    pep->pre="-";
+    pep->post="-" ;
+    pep->missedCleavages=1;
+    pep->frame=0;
+    pep->isDecoy=false;
+    pep->DBSequence_ref="DBSeq_Bombessin";
+    siip->peptideEvidence.push_back(pep);
+
+    pep = PeptideEvidencePtr(new PeptideEvidence());
+    pep->id="PE_20_1_Bombessin_0";
+    pep->start=1;
+    pep->end=14;
+    pep->pre="-";
+    pep->post="-" ;
+    pep->missedCleavages=1;
+    pep->frame=0;
+    pep->isDecoy=false;
+    pep->DBSequence_ref="DBSeq_Bombessin";
+    siip->peptideEvidence.push_back(pep);
+
+    pep = PeptideEvidencePtr(new PeptideEvidence());
+    pep->id="PE_2_1_HSP71_RAT_0";
+    pep->start=37;
+    pep->end=49;
+    pep->pre="R";
+    pep->post="L" ;
+    pep->missedCleavages=1;
+    pep->frame=0;
+    pep->isDecoy=false;
+    pep->DBSequence_ref="DBSeq_HSP71_RAT";
+    siip->peptideEvidence.push_back(pep);
+    
     siip->paramGroup.set(MS_mascot_score, "15.71");
     siip->paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
 
@@ -341,13 +411,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->id="PDH_Bombessin";
     pdhp->DBSequence_ref="DBSeq_Bombessin";
     pdhp->passThreshold=true;
-    pdhp->peptideHypothesis.push_back("PE_19_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_20_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_21_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_22_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_23_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_24_1_Bombessin");
-    pdhp->peptideHypothesis.push_back("PE_25_1_Bombessin");
+    pdhp->peptideHypothesis.push_back("PE_19_1_Bombessin_0");
+    pdhp->peptideHypothesis.push_back("PE_20_1_Bombessin_0");
     pdhp->paramGroup.set(MS_mascot_score, "164.4");
     pdhp->paramGroup.set(MS_sequence_coverage, "100");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "7");
@@ -357,7 +422,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->id="PDH_HSP71_RAT";
     pdhp->DBSequence_ref="DBSeq_HSP71_RAT";
     pdhp->passThreshold="false";
-    pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT");
+    pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT_0");
     pdhp->paramGroup.set(MS_mascot_score, "40.95");
     pdhp->paramGroup.set(MS_sequence_coverage, "2");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "1");
