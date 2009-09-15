@@ -388,7 +388,14 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
             }
             case '!':
             {
-                if (buffer.size()<5 || 
+                if (buffer.size() >= 10 &&
+                    buffer.substr(0,8) == "![CDATA[" &&
+                    buffer.substr(buffer.size()-2,buffer.size()-1) == "]]")
+                {
+                    Handler::Status status = wrangler.characters(buffer.substr(0,buffer.size()-2), position);
+                    if (status.flag == Handler::Status::Done) return;
+                }
+                else if (buffer.size()<5 ||
                     buffer.substr(0,3) != "!--" || 
                     buffer.substr(buffer.size()-2) != "--")
                     throw runtime_error(("[SAXParser::parse()] Illegal comment: " + buffer).c_str());
