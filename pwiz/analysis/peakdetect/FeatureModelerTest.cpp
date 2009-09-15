@@ -24,8 +24,10 @@
 #include "FeatureModeler.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
+#include <fstream>
 #include <cstring>
 #include <iterator>
+#include "boost/filesystem/path.hpp"
 
 
 using namespace std;
@@ -33,20 +35,30 @@ using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
 using boost::shared_ptr;
+namespace bfs = boost::filesystem;
 
 
 ostream* os_ = 0;
 
 
-void testGaussian()
+void testGaussian(const string& filename)
 {
 
 }
 
 
-void test()
+void test(const bfs::path& datadir)
 {
-    testGaussian();
+    string filename = (datadir / "Bombessin2.feature").string();
+    ifstream is(filename.c_str());
+    if (!is) throw runtime_error(("Unable to open file " + filename).c_str());
+
+    Feature bombessin;
+    is >> bombessin;
+
+    if (os_) *os_ << bombessin;
+
+    unit_assert(bombessin.peakels.size() == 5);
 }
 
 
@@ -54,14 +66,31 @@ int main(int argc, char* argv[])
 {
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        test();
+        bfs::path datadir = ".";
+
+        for (int i=1; i<argc; i++)
+        {
+            if (!strcmp(argv[i],"-v")) 
+                os_ = &cout;
+            else
+                // hack to allow running unit test from a different directory:
+                // Jamfile passes full path to specified input file.
+                // we want the path, so we can ignore filename
+                datadir = bfs::path(argv[i]).branch_path(); 
+        }   
+        
+        test(datadir);
         return 0;
     }
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+
+    return 1;
 }
 

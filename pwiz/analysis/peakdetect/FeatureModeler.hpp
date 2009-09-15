@@ -40,6 +40,8 @@ class PWIZ_API_DECL FeatureModeler
 {
     public:
 
+    typedef pwiz::data::peakdata::Feature Feature;
+
     // recalculates Feature metadata based on fit to data
     virtual void fitFeature(Feature& feature) const = 0;
 
