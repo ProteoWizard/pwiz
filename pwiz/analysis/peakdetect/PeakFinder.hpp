@@ -60,7 +60,7 @@ class PWIZ_API_DECL PeakFinder_SNR : public PeakFinder
         bool preprocessWithLogarithm;
         std::ostream* log;
         
-        Config(size_t _windowRadius = 1, 
+        Config(size_t _windowRadius = 2, 
                double _zValueThreshold = 3,
                bool _preprocessWithLogarithm = true,
                std::ostream* _log = 0)
