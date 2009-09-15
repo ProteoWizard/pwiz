@@ -41,9 +41,14 @@ namespace bfs = boost::filesystem;
 ostream* os_ = 0;
 
 
-void testGaussian(const string& filename)
+void testGaussian_Bombessin(Feature& bombessin2)
 {
+    if (os_) *os_ << "testGaussian_Bombessin()\n" << "before:\n" << bombessin2;
 
+    FeatureModeler_Gaussian fm;
+    fm.fitFeature(bombessin2);
+
+    if (os_) *os_ << "after:\n" << bombessin2;
 }
 
 
@@ -53,12 +58,11 @@ void test(const bfs::path& datadir)
     ifstream is(filename.c_str());
     if (!is) throw runtime_error(("Unable to open file " + filename).c_str());
 
-    Feature bombessin;
-    is >> bombessin;
+    Feature bombessin2;
+    is >> bombessin2;
+    unit_assert(bombessin2.peakels.size() == 5);
 
-    if (os_) *os_ << bombessin;
-
-    unit_assert(bombessin.peakels.size() == 5);
+    testGaussian_Bombessin(bombessin2);
 }
 
 

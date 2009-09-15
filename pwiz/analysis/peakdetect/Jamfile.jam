@@ -42,6 +42,7 @@ lib pwiz_analysis_peakdetect
         PeakelPicker.cpp
         FeatureDetectorPeakel.cpp
         FeatureDetectorSimple.cpp
+        FeatureModeler.cpp
 
     :   # requirements	
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
