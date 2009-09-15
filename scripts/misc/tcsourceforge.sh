@@ -14,6 +14,6 @@ function echo_error()
 
 
 echo_info "Copying *.tar.bz2 to Sourceforge..."
-if ! scp -qB *.tar.bz2 proteowizard,proteowizard@frs.sourceforge.net:/home/frs/project/p/pr/proteowizard/proteowizard/; then
+if ! scp -qB build/*.tar.bz2 proteowizard,proteowizard@frs.sourceforge.net:/home/frs/project/p/pr/proteowizard/proteowizard/; then
 	echo_error "Error copying files to Sourceforge! See build output for full details."
 fi
