@@ -64,16 +64,18 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects,
 
 template <typename object_type>
 void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtrs, 
-                  const string& label)
+                  const string& label = "")
 {
     if (!objectPtrs.empty())
     {
         XMLWriter::Attributes attributes;
         //attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
+        if (!label.empty())
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
             write(writer, **it);
-        writer.endElement();
+        if (!label.empty())
+            writer.endElement();
     }
 }
 
@@ -1604,7 +1606,8 @@ struct HandlerMaterial : public HandlerIdentifiableType
             handlerContactRole_.cr = &mat->contactRole;
             return Status(Status::Delegate, &handlerContactRole_);
         }
-        else if (name == "cvParam")
+        else if (name == "cvParam" ||
+            name == "userParam")
         {
             handlerParamContainer_.paramContainer = &mat->cvParams;
             return handlerParamContainer_.startElement(name, attributes, position);
@@ -1677,6 +1680,7 @@ struct HandlerSample : public HandlerMaterial
 
         if (name == "ContactRole" ||
             name == "cvParam" ||
+            name == "userParam" ||
             name == "Sample")
         {
             HandlerMaterial::mat = sample;
@@ -2377,6 +2381,156 @@ PWIZ_API_DECL void read(std::istream& is, Filter& filter)
 
 
 //
+// TranslationTable
+//
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTablePtr tt)
+{
+    if (!tt.get())
+        throw runtime_error("[IO::write] TranslationTablePtr has Null value.");
+
+    write(writer, *tt);
+}
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTable& tt)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(tt, attributes);
+    writer.startElement("TranslationTable", attributes);
+
+    if (!tt.params.empty())
+    {
+        writeParamContainer(writer, tt.params);
+    }
+
+    writer.endElement();
+}
+
+struct HandlerTranslationTable : public HandlerIdentifiableType
+{
+    TranslationTable* tt;
+    HandlerTranslationTable(TranslationTable* _tt = 0)
+        : tt(_tt)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "TranslationTable")
+        {
+            HandlerIdentifiableType::id = tt;
+            return HandlerIdentifiableType::startElement(name, attributes, position);
+        }
+        else if (name == "cvParam" ||
+            name == "userParam")
+        {
+            handlerParams_.paramContainer = &tt->params;
+            return handlerParams_.startElement(name, attributes, position);
+        }
+        else
+            throw runtime_error(("[IO::HandlerFilter] Unexpected element name: " + name).c_str());
+
+        return Status::Ok;
+    }
+    private:
+    HandlerParamContainer handlerParams_;
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, TranslationTablePtr tt)
+{
+    if (!tt.get())
+        throw runtime_error("[IO::read] TranslationTablePtr has Null value.");
+
+    read(is, *tt);
+}
+
+PWIZ_API_DECL void read(std::istream& is, TranslationTable& tt)
+{
+    HandlerTranslationTable handler(&tt);
+    SAXParser::parse(is, handler);
+}
+
+
+
+//
+// DatabaseTranslation
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslationPtr dt)
+{
+    if (!dt.get())
+        throw runtime_error("[IO::write] DatabaseTranslation has Null value.");
+
+    write(writer, *dt);
+}
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation& dt)
+{
+    XMLWriter::Attributes attributes;
+    if (!dt.frames.empty())
+        attributes.push_back(make_pair("frames", dt.getFrames()));
+
+    writer.startElement("DatabaseTranslation", attributes);
+
+    if (!dt.translationTable.empty())
+        writeList(writer, dt.translationTable);
+    
+    writer.endElement();
+}
+
+struct HandlerDatabaseTranslation : SAXParser::Handler
+{
+    DatabaseTranslation* dt;
+    HandlerDatabaseTranslation(DatabaseTranslation* _dt = 0)
+        : dt(_dt)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "DatabaseTranslation")
+        {
+            string values;
+            getAttribute(attributes, "frames", values);
+            if (!values.empty())
+                dt->setFrames(values);
+        }
+        else if (name == "TranslationTable")
+        {
+            dt->translationTable.push_back(TranslationTablePtr(new TranslationTable()));
+            handlerTranslationTable_.tt = dt->translationTable.back().get();
+            return Status(Status::Delegate, &handlerTranslationTable_);
+        }
+        else
+            throw runtime_error(("[IO::HandlerDatabaseTranslation] Unknown tag"+name).c_str());
+
+        return Status::Ok;
+    }
+    private:
+    HandlerTranslationTable handlerTranslationTable_;
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, DatabaseTranslationPtr dt)
+{
+    if (!dt.get())
+        throw runtime_error("[IO::read] DatabaseTranslationPtr has Null value.");
+
+    read(is, *dt);
+}
+
+PWIZ_API_DECL void read(std::istream& is, DatabaseTranslation& dt)
+{
+    HandlerDatabaseTranslation handler(&dt);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // SpectrumIdentificationProtocol
 //
 
@@ -2397,32 +2551,54 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 
     writer.startElement("SpectrumIdentificationProtocol", attributes);
 
-    writer.startElement("SearchType");
-    writeParamContainer(writer, si.searchType);
-    writer.endElement();
-
-    writer.startElement("AdditionalSearchParams");
-    writeParamContainer(writer, si.additionalSearchParams);
-    writer.endElement();
+    if (!si.searchType.empty())
+    {
+        writer.startElement("SearchType");
+        writeParamContainer(writer, si.searchType);
+        writer.endElement();
+    }
+    
+    if (!si.additionalSearchParams.empty())
+    {
+        writer.startElement("AdditionalSearchParams");
+        writeParamContainer(writer, si.additionalSearchParams);
+        writer.endElement();
+    }
     
     writePtrList(writer, si.modificationParams, "ModificationParams");
-    write(writer, si.enzymes);
+
+    if (!si.enzymes.empty())
+        write(writer, si.enzymes);
+    
     if (!si.massTable.empty())
         write(writer, si.massTable);
 
-    writer.startElement("FragmentTolerance");
-    writeParamContainer(writer, si.fragmentTolerance);
-    writer.endElement();
+    if (!si.fragmentTolerance.empty())
+    {
+        writer.startElement("FragmentTolerance");
+        writeParamContainer(writer, si.fragmentTolerance);
+        writer.endElement();
+    }
 
-    writer.startElement("ParentTolerance");
-    writeParamContainer(writer, si.parentTolerance);
-    writer.endElement();
+    if (!si.parentTolerance.empty())
+    {
+        writer.startElement("ParentTolerance");
+        writeParamContainer(writer, si.parentTolerance);
+        writer.endElement();
+    }
 
-    writer.startElement("Threshold");
-    writeParamContainer(writer, si.threshold);
-    writer.endElement();
-
+    if (!si.threshold.empty())
+    {
+        writer.startElement("Threshold");
+        writeParamContainer(writer, si.threshold);
+        writer.endElement();
+    }
+    
     writePtrList(writer, si.databaseFilters, "DatabaseFilters");
+
+    if (si.databaseTranslation.get() && !si.databaseTranslation->empty())
+        write(writer, si.databaseTranslation);
+    
     writer.endElement();
 }
 
@@ -2504,6 +2680,12 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiableType
             handlerFilter_.filter = sip->databaseFilters.back().get();
             return Status(Status::Delegate, &handlerFilter_);
         }
+        else if (name == "DatabaseTranslation")
+        {
+            sip->databaseTranslation = DatabaseTranslationPtr(new DatabaseTranslation());
+            handlerDatabaseTranslation_.dt = sip->databaseTranslation.get();
+            return Status(Status::Delegate, &handlerDatabaseTranslation_);
+        }
         else
             throw runtime_error(("[IO::HandlerSpectrumIdentificationProtocol] Unknown tag "+name).c_str());
         
@@ -2519,6 +2701,7 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiableType
     HandlerNamedParamContainer handlerParentTolerance_;
     HandlerNamedParamContainer handlerThreshold_;
     HandlerFilter handlerFilter_;
+    HandlerDatabaseTranslation handlerDatabaseTranslation_;
 };
 
 PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocolPtr sip)
@@ -4254,8 +4437,7 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     write(writer, mzid.analysisProtocolCollection);
     write(writer, mzid.dataCollection);
     if (!mzid.bibliographicReference.empty())
-        writePtrList(writer, mzid.bibliographicReference,
-                     "BibliographicReference");
+        writePtrList(writer, mzid.bibliographicReference);
 
     writer.endElement();
 }

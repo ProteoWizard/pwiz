@@ -121,6 +121,22 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Filter& filter);
 PWIZ_API_DECL void read(std::istream& is, Filter& filter);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTablePtr filter);
+PWIZ_API_DECL void read(std::istream& is, TranslationTablePtr filter);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTable& filter);
+PWIZ_API_DECL void read(std::istream& is, TranslationTable& filter);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslationPtr filter);
+PWIZ_API_DECL void read(std::istream& is, DatabaseTranslationPtr filter);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation& filter);
+PWIZ_API_DECL void read(std::istream& is, DatabaseTranslation& filter);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocolPtr sip);
 PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocolPtr sip);
 
