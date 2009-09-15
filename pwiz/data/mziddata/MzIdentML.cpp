@@ -466,6 +466,64 @@ PWIZ_API_DECL bool Filter::empty() const
         exclude.empty();
 }
 
+
+//
+// TranslationTable
+//
+
+PWIZ_API_DECL TranslationTable::TranslationTable(const std::string& id,
+                                                 const std::string& name)
+    : IdentifiableType(id, name)
+{
+}
+
+PWIZ_API_DECL bool TranslationTable::empty() const
+{
+    return IdentifiableType::empty() &&
+        params.empty();
+}
+
+
+//
+// DatabaseTranslation
+//
+
+PWIZ_API_DECL DatabaseTranslation& DatabaseTranslation::setFrames(const std::string& values)
+{
+    istringstream iss(values);
+
+    this->frames.clear();
+    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(this->frames));
+
+    return *this;
+}
+
+PWIZ_API_DECL DatabaseTranslation& DatabaseTranslation::setFrames(const std::vector<int>& values)
+{
+    this->frames.clear();
+    copy(values.begin(), values.end(), back_inserter(this->frames));
+    
+    return *this;
+}
+
+
+PWIZ_API_DECL string DatabaseTranslation::getFrames() const
+{
+    ostringstream oss;
+    copy(frames.begin(), frames.end(), ostream_iterator<double>(oss, " "));
+
+    return oss.str();
+
+}
+
+
+PWIZ_API_DECL bool DatabaseTranslation::empty() const
+{
+    return frames.empty() &&
+        translationTable.empty();
+}
+
+
 //
 // Residue
 //

@@ -441,6 +441,34 @@ struct PWIZ_API_DECL Filter
 
 typedef boost::shared_ptr<Filter> FilterPtr;
 
+struct PWIZ_API_DECL TranslationTable : public IdentifiableType
+{
+    TranslationTable(const std::string& id = "",
+                     const std::string& name = "");
+
+    ParamContainer params;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<TranslationTable> TranslationTablePtr;
+
+struct PWIZ_API_DECL DatabaseTranslation
+{
+    std::vector<int> frames;
+    
+    std::vector<TranslationTablePtr> translationTable;
+
+    DatabaseTranslation& setFrames(const std::string& values);
+    DatabaseTranslation& setFrames(const std::vector<int>& values);
+
+    std::string getFrames() const;
+
+    bool empty() const;
+};
+
+typedef boost::shared_ptr<DatabaseTranslation> DatabaseTranslationPtr;
+
 
 struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
 {
@@ -459,6 +487,7 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
     ParamContainer parentTolerance;
     ParamContainer threshold;
     std::vector<FilterPtr> databaseFilters;
+    DatabaseTranslationPtr databaseTranslation;
     
     bool empty() const;
 };
