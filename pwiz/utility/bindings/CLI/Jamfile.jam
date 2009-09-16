@@ -91,8 +91,8 @@ actions merge_xdc_files
 {
     REM support both MSVC 8 and 9
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     xdcmake.exe /nologo $(CLI_ROOT)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 

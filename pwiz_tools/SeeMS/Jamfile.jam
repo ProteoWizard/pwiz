@@ -47,8 +47,8 @@ if [ modules.peek : NT ]
     {
         REM support both MSVC 8 and 9
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building SeeMS in $(CONFIGURATION:L) configuration...
         msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }
