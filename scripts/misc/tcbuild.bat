@@ -40,7 +40,6 @@ REM # uncomment this to test that test failures and error output are handled pro
 REM call quickbuild.bat -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
 
 popd
-goto :EOF
 
 :error
 echo "##teamcity[message text='%ERROR_TEXT%' status='ERROR']"
