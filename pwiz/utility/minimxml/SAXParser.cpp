@@ -322,6 +322,38 @@ class HandlerWrangler : public SAXParser::Handler
 } // namespace
 
 
+struct char_match
+{
+    string list;
+    char_match(const string& chars = " \t\n\r") : list(chars) {}
+
+    bool operator()(const char a) const
+    {
+        return find(list.begin(), list.end(), a) != list.end();
+    }
+};
+
+bool unbalancedQuote(const string& buffer)
+{
+    char_match stop_cond("\"");
+    size_t quoteCount = 0;
+    string::const_iterator pos = buffer.begin();
+
+    while(pos != buffer.end())
+    {
+        pos = find_if(pos+1, buffer.end(), stop_cond);
+        
+        if (pos != buffer.end())
+        {
+            if (*(pos-1) != '\\')
+                quoteCount++;
+        }
+            
+    }
+    
+    return quoteCount%2;
+}
+
 //
 // parse() responsibilities: 
 // - stream parsing
@@ -364,7 +396,22 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         // read tag
 
-        if (!getline(is, buffer, '>')) break;
+        string temp_buffer;
+        bool complete = false;
+        buffer.clear();
+
+        // Check for unbalanced quotes, and fetch more until we have
+        // the complete tag.
+        do {
+            if (!getline(is, temp_buffer, '>')) break;
+            buffer += temp_buffer;
+            
+            if (unbalancedQuote(buffer))
+                buffer += ">";
+            else
+                complete = true;
+        } while(!complete);
+        
         stripws(buffer);
         if (buffer.empty())
             throw runtime_error("[SAXParser::parse()] Empty tag."); 

@@ -52,6 +52,9 @@ const char* sampleXML =
     "    <!--this is a comment-->\n"
     "    <empty_with_space />\n"
     "    </prefix:ThirdElement>\n"
+    "    <FifthElement leeloo=\">Leeloo > mul-ti-pass\">\n"
+    "        You're a monster, Zorg.>I know.\n"
+    "    </FifthElement>\n"
     "</RootElement>\n"
     "<AnotherRoot>The quick brown fox jumps over the lazy dog.</AnotherRoot>\n";
 
@@ -156,11 +159,19 @@ struct Second
 };
 
 
+struct Fifth
+{
+    string leeloo;
+    string mr_zorg;
+};
+
+
 struct Root
 {
     string param;
     First first;
     Second second;
+    Fifth fifth;
 };
 
 
@@ -247,6 +258,43 @@ class SecondHandler : public Handler
 };
 
 
+class FifthHandler : public Handler
+{
+    public:
+
+    FifthHandler(Fifth& object)
+    : object_(object)
+    {}
+
+    virtual Status startElement(const string& name,
+                                const Handler::Attributes& attributes, 
+                                stream_offset position)
+    {
+        if (name == "FifthElement")
+        {
+            getAttribute(attributes, "leeloo", object_.leeloo);
+        }
+           
+        return Status::Ok;
+    }
+
+    virtual Status characters(const string& text, stream_offset position)
+    {
+        object_.mr_zorg = text;
+        return Status::Ok;
+    }
+
+    virtual Status endElement(const string& name, stream_offset position)
+    {
+        unit_assert(position == 0x24c);
+        return Status::Ok;
+    }
+
+    private:
+    Fifth& object_;
+};
+
+
 class RootHandler : public Handler
 {
     public:
@@ -254,7 +302,8 @@ class RootHandler : public Handler
     RootHandler(Root& root)
     :   object_(root), 
         firstHandler_(object_.first),
-        secondHandler_(object_.second)
+        secondHandler_(object_.second),
+        fifthHandler_(object_.fifth)
     {}
 
     virtual Status startElement(const string& name,
@@ -277,6 +326,11 @@ class RootHandler : public Handler
             // delegate handling to a SecondHandler
             return Status(Status::Delegate, &secondHandler_);
         }
+        else if (name == "FifthElement")
+        {
+            // delegate handling to a FifthHandler
+            return Status(Status::Delegate, &fifthHandler_);
+        }
 
         return Status::Ok;
     }
@@ -285,6 +339,7 @@ class RootHandler : public Handler
     Root& object_;
     FirstHandler firstHandler_;
     SecondHandler secondHandler_;
+    FifthHandler fifthHandler_;
 };
 
 
@@ -306,7 +361,9 @@ void test()
              << "second.param3: " << root.second.param3 << endl
              << "second.text: ";
         copy(root.second.text.begin(), root.second.text.end(), ostream_iterator<string>(*os_,"|"));
-        *os_ << "\n\n"; 
+        *os_ << "\nfifth.leeloo: " << root.fifth.leeloo << endl
+             << "fifth.mr_zorg: " << root.fifth.mr_zorg << endl
+             << "\n"; 
     }
 
     unit_assert(root.param == "value");
@@ -318,6 +375,8 @@ void test()
     unit_assert(root.second.text[0] == "Pre-Text");
     unit_assert(root.second.text[1] == "Inlined text");
     unit_assert(root.second.text[2] == "Post-text.");
+    unit_assert(root.fifth.leeloo == ">Leeloo > mul-ti-pass");
+    unit_assert(root.fifth.mr_zorg == "You're a monster, Zorg.>I know.");
 }
 
 
@@ -366,7 +425,7 @@ class AnotherRootHandler : public Handler
     {
         if (name == "AnotherRoot")
         {
-            unit_assert(position == 0x1fd);
+            unit_assert(position == 0x26b);
             return Status::Done; 
         }
 
