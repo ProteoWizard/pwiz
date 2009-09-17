@@ -13,35 +13,53 @@ import property ;
 import project ;
 import feature ;
 import common ;
+import os ;
+import tar ;
 
 extension.declare zlib ;
 
 rule init ( version ? : location : options * )
 {
-    version ?= default ;
-    local requirements = [ extension.define zlib $(version) : $(location) : $(options) ] ;
-    
-    lib z
-        :   $(location)/adler32.c
-            $(location)/compress.c
-            $(location)/crc32.c
-            $(location)/deflate.c
-            $(location)/gzio.c
-            $(location)/inffast.c
-            $(location)/inflate.c
-            $(location)/inftrees.c
-            $(location)/trees.c
-            $(location)/uncompr.c
-            $(location)/zutil.c
-        :   $(requirements)
-            <zlib-version>$(version)
-            <zlib-location>$(location)
-            <include>$(location)
-            <location-prefix>zlib
-            <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
-            <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-            <link>shared:<define>ZLIB_DLL
-        :
-        :   <include>$(location)
-        ;
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        if [ os.on-windows ]
+        {
+            using tar : bsdtar.exe ;
+        }
+        else
+        {
+            using tar ;
+        }
+
+        tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+
+        version ?= default ;
+        local requirements = [ extension.define zlib $(version) : $(location) : $(options) ] ;
+
+        lib z
+            :   $(location)/adler32.c
+                $(location)/compress.c
+                $(location)/crc32.c
+                $(location)/deflate.c
+                $(location)/gzio.c
+                $(location)/inffast.c
+                $(location)/inflate.c
+                $(location)/inftrees.c
+                $(location)/uncompr.c
+                $(location)/trees.c
+                $(location)/zutil.c
+            :   $(requirements)
+                <zlib-version>$(version)
+                <zlib-location>$(location)
+                <include>$(location)
+                <location-prefix>zlib
+                <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+                <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+                <link>shared:<define>ZLIB_DLL
+            :
+            :   <include>$(location)
+            ;
+    }
 }

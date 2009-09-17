@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# script for getting bjam, boost and ProteoWizard up and running
+# script for getting bjam and ProteoWizard up and running
 #
 # Get the location of quickbuild.sh and drop trailing slash
 PWIZ_ROOT=$(pwd)
@@ -8,9 +8,6 @@ if [ ! -e $PWIZ_ROOT/quickbuild.sh ]; then
     echo "quickbuild.sh must be run from the directory it resides in - quitting"
     exit 1
 fi
-
-# Extract Boost distro
-$PWIZ_ROOT/libraries/untar_boost.sh $PWIZ_ROOT
 
 PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/bin/bjam
 

@@ -36,12 +36,13 @@ rule init ( boost-root : svnrev-path : requirements * )
         exe svnrev_max
         : # sources
             $(svnrev-path)/svnrev_max.cpp
-            /ext/boost//filesystem
-            /ext/boost//regex
-            /ext/boost//date_time
-            /ext/boost//program_options
         : # requirements
+            <library>/ext/boost//filesystem/<link>static
+            <library>/ext/boost//regex/<link>static
+            <library>/ext/boost//date_time/<link>static
+            <library>/ext/boost//program_options/<link>static
             $(requirements)
+            
         ;
     }
 }

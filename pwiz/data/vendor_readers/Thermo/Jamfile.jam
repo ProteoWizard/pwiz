@@ -46,8 +46,15 @@ path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo ;
 path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
 
 
-# decompress test data (on any platform)
-SHELL "$(UNTAR_TEST_DATA_SCRIPT) $(READER_PATH) $(PWIZ_ROOT_PATH) $(TEST_DATA_PATH)" : no-output ;
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
+if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] ||
+   [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+{
+    .hasDLLs = true ;
+}
 
 
 rule vendor-api-requirements ( properties * )
@@ -102,24 +109,35 @@ lib pwiz_reader_thermo
 
 rule test-requirements ( properties * )
 {
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
     local result ;
-    if ! <toolset>msvc in $(properties)
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[data/vendor_readers/Thermo] Missing Thermo RAW test data." ;
+        }
+        result += <build>no ;
+    }
+    else if ! <toolset>msvc in $(properties)
     {
         echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
         result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
     }
-
-    if ! [ path.exists $(API_PATH)/xdk/MSFileReader.XRawfile2.dll ]
+    else if ! $(.hasDLLs)
     {
         echo "[data/vendor_readers/Thermo] Missing xdk/MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
         result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
     }
-    
-    if ! [ path.exists $(TEST_DATA_PATH) ]
-    {
-        echo "[data/vendor_readers/Thermo] Missing Thermo RAW test data." ;
-        result += <build>no ;
-    }
+
     return $(result) ;
 }
 

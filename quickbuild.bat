@@ -6,9 +6,6 @@ REM # Get the location of quickbuild.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 
-REM # Extract Boost distro
-call %PWIZ_ROOT%\libraries\untar_boost.bat %PWIZ_ROOT%
-
 set PWIZ_BJAM=%PWIZ_ROOT%\libraries\boost-build\jam_src\bin.ntx86\bjam.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%

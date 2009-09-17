@@ -35,9 +35,14 @@ import os common ;
 local ProgramFiles = [ os.environ ProgramFiles ] ;
 ProgramFiles ?= "C:\\Program Files" ;
 local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
-if ! [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] &&
-     [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ]
 {
+    .hasDLLs = true ;
+}
+
+if ! $(.hasDLLs) && [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+{
+    .hasDLLs = true ;
     local destination = [ path.native $(API_PATH) ] ;
     echo "Copying MSFileReader DLLs from \"$(MSFileReader)\" to \"$(destination)\"." ;
     echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
