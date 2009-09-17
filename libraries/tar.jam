@@ -429,6 +429,7 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
         {
             ECHO "tar.extract $(tar-filepath:D=): $(include-patterns)" ;
             if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) $(target-location)" ; }
+            if $(tar-filepath:D=) = "tar" { include-patterns = "--wildcards $(include-patterns)" ; }
             #echo "cd $(target-location) $(CS) $(tar-binary-filepath) -xf $(tar-filepath) $(include-patterns)" ;
             SHELL "cd $(target-location) $(CS) $(tar-binary-filepath) -xf $(tar-filepath) $(include-patterns)" ;
             RESCAN ;
