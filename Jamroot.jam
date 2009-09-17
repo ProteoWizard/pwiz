@@ -210,7 +210,7 @@ else
 }
 
 
-tar.extract libraries/gd-2.0.33.tar.bz2 : *.h : <location>libraries ;
+tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
 
 
 path-constant BOOST_SOURCE : $(boost_src) ;
