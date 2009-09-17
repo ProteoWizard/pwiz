@@ -82,7 +82,7 @@ unit-test PeakelPickerTest : PeakelPickerTest.cpp pwiz_analysis_peakdetect ;
 
 run FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect 
     : # args
-    : FeatureDetectorTest.data/FeatureDetectorTest_Bombessin.mzML # input-files
+    : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
     : FeatureDetectorSimpleTest #target 
     : # default-build
@@ -90,7 +90,7 @@ run FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect
 
 run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect 
     : # args
-    : FeatureDetectorTest.data/FeatureDetectorTest_Bombessin.mzML # input-files
+    : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
     : FeatureDetectorTuningTest #target 
     : # default-build
@@ -98,7 +98,7 @@ run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect
 
 run FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect 
     : # args
-    : FeatureDetectorTest.data/FeatureDetectorTest_Bombessin.mzML # input-files
+    : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
     : FeatureDetectorPeakelTest #target 
     : # default-build
@@ -106,7 +106,7 @@ run FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect
 
 run FeatureModelerTest.cpp pwiz_analysis_peakdetect 
     : # args
-    : FeatureDetectorTest.data/Bombessin2.feature # input-files
+    : FeatureDetectorTest.data/Bombesin2.feature # input-files
     : # requirements
     : FeatureModelerTest #target 
     : # default-build

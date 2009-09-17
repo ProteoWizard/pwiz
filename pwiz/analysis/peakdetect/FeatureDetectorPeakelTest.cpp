@@ -40,34 +40,34 @@ using boost::shared_ptr;
 ostream* os_ = 0;
 
 
-void verifyBombessinFeatures(const FeatureField& featureField)
+void verifyBombesinFeatures(const FeatureField& featureField)
 {
     const double epsilon = .01;
 
     const double mz_bomb2 = 810.415;
-    vector<FeaturePtr> bombessin_2_found = featureField.find(mz_bomb2, epsilon, 
+    vector<FeaturePtr> bombesin_2_found = featureField.find(mz_bomb2, epsilon, 
         RTMatches_Contains<Feature>(1865));
-    unit_assert(bombessin_2_found.size() == 1);
-    const Feature& bombessin_2 = *bombessin_2_found[0];
-    unit_assert(bombessin_2.charge == 2);
-    unit_assert(bombessin_2.peakels.size() == 5);
-    unit_assert_equal(bombessin_2.peakels[0]->mz, mz_bomb2, epsilon);
-    unit_assert_equal(bombessin_2.peakels[1]->mz, mz_bomb2+.5, epsilon);
-    unit_assert_equal(bombessin_2.peakels[2]->mz, mz_bomb2+1, epsilon);
-    unit_assert_equal(bombessin_2.peakels[3]->mz, mz_bomb2+1.5, epsilon);
-    unit_assert_equal(bombessin_2.peakels[4]->mz, mz_bomb2+2, epsilon);
+    unit_assert(bombesin_2_found.size() == 1);
+    const Feature& bombesin_2 = *bombesin_2_found[0];
+    unit_assert(bombesin_2.charge == 2);
+    unit_assert(bombesin_2.peakels.size() == 5);
+    unit_assert_equal(bombesin_2.peakels[0]->mz, mz_bomb2, epsilon);
+    unit_assert_equal(bombesin_2.peakels[1]->mz, mz_bomb2+.5, epsilon);
+    unit_assert_equal(bombesin_2.peakels[2]->mz, mz_bomb2+1, epsilon);
+    unit_assert_equal(bombesin_2.peakels[3]->mz, mz_bomb2+1.5, epsilon);
+    unit_assert_equal(bombesin_2.peakels[4]->mz, mz_bomb2+2, epsilon);
     //TODO: verify feature metadata
 
     const double mz_bomb3 = 540.612;
-    vector<FeaturePtr> bombessin_3_found = featureField.find(mz_bomb3, epsilon, 
+    vector<FeaturePtr> bombesin_3_found = featureField.find(mz_bomb3, epsilon, 
         RTMatches_Contains<Feature>(1865));
-    unit_assert(bombessin_3_found.size() == 1);
-    const Feature& bombessin_3 = *bombessin_3_found[0];
-    unit_assert(bombessin_3.charge == 3);
-    unit_assert(bombessin_3.peakels.size() == 3);
-    unit_assert_equal(bombessin_3.peakels[0]->mz, mz_bomb3, epsilon);
-    unit_assert_equal(bombessin_3.peakels[1]->mz, mz_bomb3+1./3, epsilon);
-    unit_assert_equal(bombessin_3.peakels[2]->mz, mz_bomb3+2./3, epsilon);
+    unit_assert(bombesin_3_found.size() == 1);
+    const Feature& bombesin_3 = *bombesin_3_found[0];
+    unit_assert(bombesin_3.charge == 3);
+    unit_assert(bombesin_3.peakels.size() == 3);
+    unit_assert_equal(bombesin_3.peakels[0]->mz, mz_bomb3, epsilon);
+    unit_assert_equal(bombesin_3.peakels[1]->mz, mz_bomb3+1./3, epsilon);
+    unit_assert_equal(bombesin_3.peakels[2]->mz, mz_bomb3+2./3, epsilon);
     //TODO: verify feature metadata
 }
 
@@ -101,9 +101,9 @@ shared_ptr<FeatureDetectorPeakel> createFeatureDetectorPeakel()
 }
 
 
-void testBombessin(const string& filename)
+void testBombesin(const string& filename)
 {
-    if (os_) *os_ << "testBombessin()" << endl;
+    if (os_) *os_ << "testBombesin()" << endl;
 
     // open data file and check sanity
 
@@ -119,13 +119,13 @@ void testBombessin(const string& filename)
     featureDetectorPeakel->detect(msd, featureField);
     
     if (os_) *os_ << "featureField:\n" << featureField << endl;
-    verifyBombessinFeatures(featureField);
+    verifyBombesinFeatures(featureField);
 }
 
 
 void test(const bfs::path& datadir)
 {
-    testBombessin((datadir / "FeatureDetectorTest_Bombessin.mzML").string());
+    testBombesin((datadir / "FeatureDetectorTest_Bombesin.mzML").string());
 }
 
 

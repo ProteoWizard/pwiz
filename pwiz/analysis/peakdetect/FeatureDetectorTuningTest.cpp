@@ -115,41 +115,41 @@ void print(ostream& os, const string& label, vector<PeakelPtr> v)
 }
 
 
-void verifyBombessinPeakels(const PeakelField& peakelField)
+void verifyBombesinPeakels(const PeakelField& peakelField)
 {
     // TODO: assert # peaks/peakel, verify metadata
 
     // charge state 2
 
-    vector<PeakelPtr> bombessin_2_0 = peakelField.find(810.41, .01, RTMatches_Contains<Peakel>(1870));
-    if (os_) print(*os_, "bombessin_2_0", bombessin_2_0);
-    unit_assert(bombessin_2_0.size() == 1);
+    vector<PeakelPtr> bombesin_2_0 = peakelField.find(810.41, .01, RTMatches_Contains<Peakel>(1870));
+    if (os_) print(*os_, "bombesin_2_0", bombesin_2_0);
+    unit_assert(bombesin_2_0.size() == 1);
 
-    vector<PeakelPtr> bombessin_2_1 = peakelField.find(810.91, .01, RTMatches_Contains<Peakel>(1870));
-    if (os_) print(*os_, "bombessin_2_1", bombessin_2_1);
-    unit_assert(bombessin_2_1.size() == 1);
+    vector<PeakelPtr> bombesin_2_1 = peakelField.find(810.91, .01, RTMatches_Contains<Peakel>(1870));
+    if (os_) print(*os_, "bombesin_2_1", bombesin_2_1);
+    unit_assert(bombesin_2_1.size() == 1);
 
-    vector<PeakelPtr> bombessin_2_2 = peakelField.find(811.41, .01, RTMatches_Contains<Peakel>(1870));
-    if (os_) print(*os_, "bombessin_2_2", bombessin_2_2);
-    unit_assert(bombessin_2_2.size() == 1);
+    vector<PeakelPtr> bombesin_2_2 = peakelField.find(811.41, .01, RTMatches_Contains<Peakel>(1870));
+    if (os_) print(*os_, "bombesin_2_2", bombesin_2_2);
+    unit_assert(bombesin_2_2.size() == 1);
 
-    vector<PeakelPtr> bombessin_2_3 = peakelField.find(811.91, .01, RTMatches_Contains<Peakel>(1870,10));
-    if (os_) print(*os_, "bombessin_2_3", bombessin_2_3);
-    unit_assert(bombessin_2_3.size() == 1);
+    vector<PeakelPtr> bombesin_2_3 = peakelField.find(811.91, .01, RTMatches_Contains<Peakel>(1870,10));
+    if (os_) print(*os_, "bombesin_2_3", bombesin_2_3);
+    unit_assert(bombesin_2_3.size() == 1);
 
     // charge state 3
 
-    vector<PeakelPtr> bombessin_3_0 = peakelField.find(540.61, .01, RTMatches_Contains<Peakel>(1870));
-    if (os_) print(*os_, "bombessin_3_0", bombessin_3_0);
-    unit_assert(bombessin_3_0.size() == 1);
+    vector<PeakelPtr> bombesin_3_0 = peakelField.find(540.61, .01, RTMatches_Contains<Peakel>(1870));
+    if (os_) print(*os_, "bombesin_3_0", bombesin_3_0);
+    unit_assert(bombesin_3_0.size() == 1);
 
-    vector<PeakelPtr> bombessin_3_1 = peakelField.find(540.61 + 1./3., .02, RTMatches_Contains<Peakel>(1865));
-    if (os_) print(*os_, "bombessin_3_1", bombessin_3_1);
-    unit_assert(bombessin_3_1.size() == 1);
+    vector<PeakelPtr> bombesin_3_1 = peakelField.find(540.61 + 1./3., .02, RTMatches_Contains<Peakel>(1865));
+    if (os_) print(*os_, "bombesin_3_1", bombesin_3_1);
+    unit_assert(bombesin_3_1.size() == 1);
 
-    vector<PeakelPtr> bombessin_3_2 = peakelField.find(540.61 + 2./3., .02, RTMatches_Contains<Peakel>(1865,5));
-    if (os_) print(*os_, "bombessin_3_2", bombessin_3_2);
-    unit_assert(bombessin_3_2.size() == 1);
+    vector<PeakelPtr> bombesin_3_2 = peakelField.find(540.61 + 2./3., .02, RTMatches_Contains<Peakel>(1865,5));
+    if (os_) print(*os_, "bombesin_3_2", bombesin_3_2);
+    unit_assert(bombesin_3_2.size() == 1);
     // TODO: verify peaks.size() == 1
 }
 
@@ -164,41 +164,41 @@ shared_ptr<PeakelPicker> createPeakelPicker()
 }
 
 
-void verifyBombessinFeatures(const FeatureField& featureField)
+void verifyBombesinFeatures(const FeatureField& featureField)
 {
     const double epsilon = .01;
 
     const double mz_bomb2 = 810.415;
-    vector<FeaturePtr> bombessin_2_found = featureField.find(mz_bomb2, epsilon, 
+    vector<FeaturePtr> bombesin_2_found = featureField.find(mz_bomb2, epsilon, 
         RTMatches_Contains<Feature>(1865));
-    unit_assert(bombessin_2_found.size() == 1);
-    const Feature& bombessin_2 = *bombessin_2_found[0];
-    unit_assert(bombessin_2.charge == 2);
-    unit_assert(bombessin_2.peakels.size() == 5);
-    unit_assert_equal(bombessin_2.peakels[0]->mz, mz_bomb2, epsilon);
-    unit_assert_equal(bombessin_2.peakels[1]->mz, mz_bomb2+.5, epsilon);
-    unit_assert_equal(bombessin_2.peakels[2]->mz, mz_bomb2+1, epsilon);
-    unit_assert_equal(bombessin_2.peakels[3]->mz, mz_bomb2+1.5, epsilon);
-    unit_assert_equal(bombessin_2.peakels[4]->mz, mz_bomb2+2, epsilon);
+    unit_assert(bombesin_2_found.size() == 1);
+    const Feature& bombesin_2 = *bombesin_2_found[0];
+    unit_assert(bombesin_2.charge == 2);
+    unit_assert(bombesin_2.peakels.size() == 5);
+    unit_assert_equal(bombesin_2.peakels[0]->mz, mz_bomb2, epsilon);
+    unit_assert_equal(bombesin_2.peakels[1]->mz, mz_bomb2+.5, epsilon);
+    unit_assert_equal(bombesin_2.peakels[2]->mz, mz_bomb2+1, epsilon);
+    unit_assert_equal(bombesin_2.peakels[3]->mz, mz_bomb2+1.5, epsilon);
+    unit_assert_equal(bombesin_2.peakels[4]->mz, mz_bomb2+2, epsilon);
     //TODO: verify feature metadata
 
     const double mz_bomb3 = 540.612;
-    vector<FeaturePtr> bombessin_3_found = featureField.find(mz_bomb3, epsilon, 
+    vector<FeaturePtr> bombesin_3_found = featureField.find(mz_bomb3, epsilon, 
         RTMatches_Contains<Feature>(1865));
-    unit_assert(bombessin_3_found.size() == 1);
-    const Feature& bombessin_3 = *bombessin_3_found[0];
-    unit_assert(bombessin_3.charge == 3);
-    unit_assert(bombessin_3.peakels.size() == 3);
-    unit_assert_equal(bombessin_3.peakels[0]->mz, mz_bomb3, epsilon);
-    unit_assert_equal(bombessin_3.peakels[1]->mz, mz_bomb3+1./3, epsilon);
-    unit_assert_equal(bombessin_3.peakels[2]->mz, mz_bomb3+2./3, epsilon);
+    unit_assert(bombesin_3_found.size() == 1);
+    const Feature& bombesin_3 = *bombesin_3_found[0];
+    unit_assert(bombesin_3.charge == 3);
+    unit_assert(bombesin_3.peakels.size() == 3);
+    unit_assert_equal(bombesin_3.peakels[0]->mz, mz_bomb3, epsilon);
+    unit_assert_equal(bombesin_3.peakels[1]->mz, mz_bomb3+1./3, epsilon);
+    unit_assert_equal(bombesin_3.peakels[2]->mz, mz_bomb3+2./3, epsilon);
     //TODO: verify feature metadata
 }
 
 
-void testBombessin(const string& filename)
+void testBombesin(const string& filename)
 {
-    if (os_) *os_ << "testBombessin()" << endl;
+    if (os_) *os_ << "testBombesin()" << endl;
 
     // open data file and check sanity
 
@@ -218,7 +218,7 @@ void testBombessin(const string& filename)
     peakelGrower->sowPeaks(peakelField, peaks);
 
     if (os_) *os_ << "peakelField:\n" << peakelField << endl;
-    verifyBombessinPeakels(peakelField);
+    verifyBombesinPeakels(peakelField);
 
     // pick peakels
 
@@ -227,13 +227,13 @@ void testBombessin(const string& filename)
     peakelPicker->pick(peakelField, featureField);
 
     if (os_) *os_ << "featureField:\n" << featureField << endl;
-    verifyBombessinFeatures(featureField);
+    verifyBombesinFeatures(featureField);
 }
 
 
 void test(const bfs::path& datadir)
 {
-    testBombessin((datadir / "FeatureDetectorTest_Bombessin.mzML").string());
+    testBombesin((datadir / "FeatureDetectorTest_Bombesin.mzML").string());
 }
 
 

@@ -81,39 +81,39 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
    
     // instantiate MSData from test file
    
-    MSDataFile msd((datadir / "FeatureDetectorTest_Bombessin.mzML").string());
+    MSDataFile msd((datadir / "FeatureDetectorTest_Bombesin.mzML").string());
 
     FeatureField output_features;
     fds.detect(msd, output_features);
 
-    // instantiate the bombessin +2 feature that we know is correct, with calculated mzMonoisotopic and eyeballed retentionTime
+    // instantiate the bombesin +2 feature that we know is correct, with calculated mzMonoisotopic and eyeballed retentionTime
     
-    FeaturePtr bombessin2_truth(new Feature());
-    bombessin2_truth->mz = 810.4148;
-    bombessin2_truth->retentionTime = 1866;
+    FeaturePtr bombesin2_truth(new Feature());
+    bombesin2_truth->mz = 810.4148;
+    bombesin2_truth->retentionTime = 1866;
 
-    FeatureField::iterator bombessin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin2_truth));
+    FeatureField::iterator bombesin2_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombesin2_truth));
     
     // assert that it is found, correctly, in the data
-    unit_assert(bombessin2_hopeful != output_features.end());
+    unit_assert(bombesin2_hopeful != output_features.end());
 
 
-    if (os_) *os_ << "\n[FeatureDetectorSimple] Bombessin detected at charge state +2 ... " << endl << *bombessin2_hopeful << endl;
+    if (os_) *os_ << "\n[FeatureDetectorSimple] Bombesin detected at charge state +2 ... " << endl << *bombesin2_hopeful << endl;
 
     
     // do the same for the +3 feature
 
-    FeaturePtr bombessin3_truth(new Feature());
-    bombessin3_truth->mz = 540.6123;
-    bombessin3_truth->retentionTime = 1866;
+    FeaturePtr bombesin3_truth(new Feature());
+    bombesin3_truth->mz = 540.6123;
+    bombesin3_truth->retentionTime = 1866;
     
-    FeatureField::iterator bombessin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombessin3_truth));
+    FeatureField::iterator bombesin3_hopeful = find_if(output_features.begin(), output_features.end(), mzrtEqual(bombesin3_truth));
   
     // assert that it is found, correctly, in the data
-    unit_assert(bombessin3_hopeful != output_features.end());
+    unit_assert(bombesin3_hopeful != output_features.end());
 
    
-    if (os_) *os_ << "\n[FeatureDetectorSimple] Bombessin detected at charge state +3 ... " << endl << *bombessin3_hopeful << endl;
+    if (os_) *os_ << "\n[FeatureDetectorSimple] Bombesin detected at charge state +3 ... " << endl << *bombesin3_hopeful << endl;
 
     return;
 
