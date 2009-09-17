@@ -166,14 +166,14 @@ lib pthread
 
 lib jpeg png z : : <threading>multi ;
 lib gd : jpeg png z : <name>gd <threading>multi ;
-lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/gd-2.0.33 ;
+lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/gd-2.0.33 ;
 
-lib fftw3 : : <threading>multi <search>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/.libs : : <include>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/api ;
-lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_ROOT_PATH)/libraries : : <include>$(PWIZ_ROOT_PATH)/libraries/fftw-3.1.2/api ;
+lib fftw3 : : <threading>multi <search>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/.libs : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
+lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 
 local .boost-build-file = [ modules.peek : .boost-build-file ] ;
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += $(PWIZ_ROOT_PATH)/pwiz $(PWIZ_ROOT_PATH)/libraries ;
+tmp += $(PWIZ_ROOT_PATH)/pwiz $(PWIZ_LIBRARIES_PATH) ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 
@@ -380,7 +380,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/libraries/boost_aux : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
 
     # scan all targets and their dependencies
     $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
@@ -434,9 +434,9 @@ This source tree is a subset of the full pwiz source tree.
 
   $(PWIZ_ROOT_PATH)/doc
   $(PWIZ_ROOT_PATH)/example_data
-  $(PWIZ_ROOT_PATH)/libraries/boost-build
-  $(PWIZ_ROOT_PATH)/libraries/boost_aux
-  [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+  $(PWIZ_LIBRARIES_PATH)/boost-build
+  $(PWIZ_LIBRARIES_PATH)/boost_aux
+  [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
 
   path-anchor:$(PWIZ_BUILD_PATH)
   $(PWIZ_BUILD_PATH)/SUBSET
