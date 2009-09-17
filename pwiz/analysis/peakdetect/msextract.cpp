@@ -24,6 +24,7 @@
 #include "FeatureDetectorSimple.hpp"
 #include "FeatureDetectorPeakel.hpp"
 #include "PeakFamilyDetectorFT.hpp"
+#include "FeatureModeler.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
@@ -68,6 +69,8 @@ struct Config
     bool writeTSV;
     bool writeLog;
 
+    bool useFeatureModeler;
+
     FeatureDetectorPeakel::Config fdpConfig;
     int maxChargeState;
 
@@ -75,6 +78,7 @@ struct Config
     :   featureDetectorImplementation("Simple"), 
         outputPath("."),
         writeFeatureFile(true), writeTSV(true), writeLog(false), 
+        useFeatureModeler(false),
         maxChargeState(6)
     {}
 
@@ -88,6 +92,7 @@ void Config::write_program_options_config(ostream& os) const
     // write out configuration options in format parseable by program_options
 
     os << "featureDetectorImplementation=" << featureDetectorImplementation << endl;
+    os << "useFeatureModeler=" << useFeatureModeler << endl;
     os << "noiseCalculator_2Pass.zValueCutoff=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
     os << "peakFinder_SNR.windowRadius=" << fdpConfig.peakFinder_SNR.windowRadius << endl;
     os << "peakFinder_SNR.zValueThreshold=" << fdpConfig.peakFinder_SNR.zValueThreshold << endl;
@@ -149,6 +154,7 @@ Config parseCommandLine(int argc, char* argv[])
         ("defaults,d", po::value<bool>(&printDefaultConfig)->zero_tokens(), ": print configuration defaults")
         ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), ": specify output path")
         ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), ": specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
+        ("useFeatureModeler,m", po::value<bool>(&config.useFeatureModeler)->default_value(config.useFeatureModeler), ": post-process with feature modeler")
         ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), ": write xml representation of detected features (.features file) ")
         ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), ": write tab-separated file")
         ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), ": write log file (for debugging)")
@@ -309,9 +315,12 @@ void writeOutputFiles(const FeatureField& features, const string& filename, cons
     if (config.writeTSV)
     {
         ofstream ofs(config.outputFileName(filename, ".features.tsv").c_str());
-        ofs << "mzMonoisotopic\tretentionTime\tretentionTimeMin\tretentionTimeMax\ttotalIntensity\n";
+        ofs << "# mzMonoisotopic\tretentionTime\tretentionTimeMin\tretentionTimeMax\ttotalIntensity\tscore\terror\n";
         for (FeatureField::const_iterator it=features.begin(); it!=features.end(); ++it)
-            ofs << (*it)->mz << "\t" << (*it)->retentionTime  << "\t" << (*it)->retentionTimeMin() << "\t" << (*it)->retentionTimeMax() << "\t" << (*it)->totalIntensity << "\n";
+            ofs << (*it)->mz << "\t" << (*it)->retentionTime  << "\t" << (*it)->retentionTimeMin() << "\t" 
+                << (*it)->retentionTimeMax() << "\t" << (*it)->totalIntensity << "\t"
+                << (*it)->score << "\t" << (*it)->error
+                << "\n";
     }
 }
 
@@ -329,8 +338,18 @@ void processFile(const string& filename, const Config& config)
 
     FeatureField features;
     fd->detect(msd, features);
+    FeatureField* features_to_output = &features;
 
-    writeOutputFiles(features, filename, config);
+    FeatureField features_modeled;
+
+    if (config.useFeatureModeler)
+    {
+        FeatureModeler_Gaussian fm;
+        fm.fitFeatures(features, features_modeled);
+        features_to_output = &features_modeled;
+    }
+
+    writeOutputFiles(*features_to_output, filename, config);
 }
 
 

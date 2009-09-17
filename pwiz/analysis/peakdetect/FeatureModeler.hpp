@@ -42,9 +42,7 @@ class PWIZ_API_DECL FeatureModeler
 
     typedef pwiz::data::peakdata::Feature Feature;
 
-    // recalculates Feature metadata based on fitting a model to data
-    virtual Feature fitFeature(const Feature& feature) const = 0;
-
+    virtual void fitFeature(const Feature& in, Feature& out) const = 0;
     virtual void fitFeatures(const FeatureField& in, FeatureField& out) const;
 
     virtual ~FeatureModeler(){}
@@ -58,7 +56,7 @@ class PWIZ_API_DECL FeatureModeler_Gaussian : public FeatureModeler
 {
     public:
 
-    virtual Feature fitFeature(const Feature& feature) const;
+    virtual void fitFeature(const Feature& in, Feature& out) const;
 };
 
 

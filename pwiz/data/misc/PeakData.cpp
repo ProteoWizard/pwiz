@@ -1239,6 +1239,8 @@ void FeatureFile::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 
 {
     XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("count", boost::lexical_cast<string>(features.size())));
+
     xmlWriter.startElement("features",attributes);
     vector<FeaturePtr>::const_iterator feat_it = features.begin();
     for(; feat_it != features.end(); ++feat_it)

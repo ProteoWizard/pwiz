@@ -50,7 +50,23 @@ using boost::shared_ptr;
 
 void FeatureModeler::fitFeatures(const FeatureField& in, FeatureField& out) const
 {
-    throw runtime_error("[FeatureModeler::fitFeatures()] Not implemented.");
+    for (FeatureField::const_iterator it=in.begin(); it!=in.end(); ++it)
+    {
+        try
+        {
+            FeaturePtr temp(new Feature);
+            fitFeature(**it, *temp);
+            out.insert(temp);    
+        }
+        catch (exception& e)
+        {
+            cerr << "[FeatureModeler::fitFeatures()] Caught exception: " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << "[FeatureModeler::fitFeatures()] Caught unknown exception.\n";
+        }
+    }
 }
 
 
@@ -199,14 +215,14 @@ GaussianModel estimateParameters(const Feature& feature)
 }
 
 
-Feature calculateFit(const GaussianModel& model, const Feature& feature)
+void calculateFit(const GaussianModel& model, const Feature& in, Feature& out)
 {
-    double sumModelData = 0;
-    double sumModel2 = 0;
-    double sumData2 = 0;
-    size_t count = 0;
+    double sumModelData = 0; // dot product
+    double sumModel2 = 0; // normalization
+    double sumData2 = 0; // normalization
+    size_t count = 0; // number of terms in the sums
 
-    for (vector<PeakelPtr>::const_iterator peakel=feature.peakels.begin(); peakel!=feature.peakels.end(); ++peakel)
+    for (vector<PeakelPtr>::const_iterator peakel=in.peakels.begin(); peakel!=in.peakels.end(); ++peakel)
     {
         for (vector<Peak>::const_iterator peak=(*peakel)->peaks.begin(); peak!=(*peakel)->peaks.end(); ++peak)
         {
@@ -227,29 +243,27 @@ Feature calculateFit(const GaussianModel& model, const Feature& feature)
     }
 
     double scale = sumModelData/sumModel2; // scaling factor for model, from projection of data
-    double cosine = sumModelData/sqrt(sumData2)/sqrt(sumModel2);
+    double cosine = sumModelData/sqrt(sumData2)/sqrt(sumModel2); // cosine of angle between model and data
     double sumSquaredDifferences = sumData2 - 2*scale*sumModelData + scale*scale*sumModel2; // total squared error between data and scaled model
-    double rms = sqrt(sumSquaredDifferences/count);
+    double rms = sqrt(sumSquaredDifferences/count); // root mean squared error between model and data
 
-    Feature result = feature; // shallow copy
-    result.mz = model.mean_mz();
-    result.retentionTime = model.mean_rt();
-    result.totalIntensity = scale; // TODO: check this
-    result.rtVariance = model.sd_rt() * model.sd_rt();
-    result.score = cosine;
-    result.error = rms;
-
-    return result;
+    out = in; // shallow copy
+    out.mz = model.mean_mz();
+    out.retentionTime = model.mean_rt();
+    out.totalIntensity = scale; // TODO: revisit
+    out.rtVariance = model.sd_rt() * model.sd_rt();
+    out.score = cosine;
+    out.error = rms;
 }
 
 
 } // namespace
 
 
-Feature FeatureModeler_Gaussian::fitFeature(const Feature& feature) const
+void FeatureModeler_Gaussian::fitFeature(const Feature& in, Feature& out) const
 {
-    GaussianModel model = estimateParameters(feature);
-    return calculateFit(model, feature); 
+    GaussianModel model = estimateParameters(in);
+    calculateFit(model, in, out);
 }
 
 
