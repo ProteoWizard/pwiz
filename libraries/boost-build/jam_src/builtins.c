@@ -354,6 +354,12 @@ void load_builtins()
                         builtin_md5, 0, args ) ;
       }
 
+      {
+          char * args[] = { "directories", "*", 0 };
+          bind_builtin( "RESCAN",
+                        builtin_rescan, 0, args );
+      }
+
       /* Initialize builtin modules. */
       init_set();
       init_path();
@@ -1539,6 +1545,29 @@ LIST * builtin_md5( PARSE * parse, FRAME * frame )
         sprintf(hex_output + di * 2, "%02x", digest[di]);
 
     return list_new (0, newstr(hex_output));
+}
+
+
+LIST * builtin_rescan( PARSE * parse, FRAME * frame )
+{
+    LIST * directory = lol_get( frame->args, 0 );
+
+    if ( !directory )
+    {
+        /* clear file and timestamp hashes */
+        file_free_all();
+        time_free_all();
+    }
+    else
+    {
+        for ( ; directory; directory = list_next( directory ) )
+        {
+            file_free( directory->string, 0 );
+            time_free( directory->string );
+        }
+    }
+
+    return L0;
 }
 
 

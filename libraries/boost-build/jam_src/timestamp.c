@@ -216,6 +216,27 @@ static void time_enter( void * closure, char * target, int found, time_t time )
 }
 
 
+void time_free( char * target )
+{
+    BINDING b;
+
+    /* do nothing if hash is uninitialized */
+    if ( !bindhash )
+        return;
+
+    b.name = target;
+    b.time = b.flags = 0;
+    b.progress = BIND_INIT;
+    hash_free( bindhash, (HASHDATA*)&b );
+}
+
+void time_free_all()
+{
+    hashdone( bindhash );
+    bindhash = hashinit( sizeof( BINDING ), "bindings" );
+}
+
+
 /*
  * stamps_done() - free timestamp tables.
  */

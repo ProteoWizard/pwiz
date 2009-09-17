@@ -4,6 +4,7 @@
 # include "newstr.h"
 # include "filesys.h"
 # include "lists.h"
+# include "timestamp.h"
 
 void file_build1( PATHNAME * f, string * file )
 {
@@ -56,6 +57,43 @@ file_info_t * file_info(char * filename)
     }
 
     return finfo;
+}
+
+void file_free(char * filename, int is_recursive)
+{
+    file_info_t * ff;
+
+    /* do nothing if cache is uninitialized */
+    if ( !filecache_hash )
+        return;
+
+    ff = file_info( filename );
+    hash_free( filecache_hash, (HASHDATA*)ff );
+
+    /* freed directories must free all their files and subdirectories */
+    if ( ff->is_dir )
+    {
+        printf( "dir_free: %s\n", filename );
+        if ( !ff->files )
+            printf( "directory without files: %s\n", filename );
+        else
+        {
+            LIST * files = ff->files;
+            for ( ; files; files = list_next( files ) )
+                if ( is_recursive || file_is_file( files->string ) )
+                    file_free( files->string, is_recursive );
+        }
+    }
+    else
+    {
+        printf( "file_free: %s\n", filename );
+    }
+}
+
+void file_free_all()
+{
+    hashdone( filecache_hash );
+    filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
 }
 
 static LIST * files_to_remove = L0;

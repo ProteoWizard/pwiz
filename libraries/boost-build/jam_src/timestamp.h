@@ -9,4 +9,6 @@
  */
 
 void timestamp( char * target, time_t * time );
+void time_free( char * target );
+void time_free_all();
 void stamps_done();

@@ -56,6 +56,7 @@ LIST *builtin_check_if_file( PARSE *parse, FRAME *frame );
 LIST *builtin_python_import_rule( PARSE *parse, FRAME *frame );
 LIST *builtin_shell( PARSE *parse, FRAME *frame );
 LIST *builtin_md5( PARSE *parse, FRAME *frame );
+LIST *builtin_rescan( PARSE *parse, FRAME *frame );
 
 void backtrace( FRAME *frame );
 

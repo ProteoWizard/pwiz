@@ -48,6 +48,14 @@ struct file_info_t
  */
 file_info_t * file_info( char * filename );
 
+/* Frees the cached information for file 'filename' such that the next
+ * file_info request on 'filename' will initialize a new structure.
+ */
+void file_free( char * filename, int is_recursive );
+
+/* Frees cached information for all files. */
+void file_free_all();
+
 /* Returns information about a file, queries the OS if needed. */
 file_info_t * file_query( char * filename );
 
