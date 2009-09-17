@@ -5,6 +5,8 @@ pushd $pwiz_root > /dev/null
 
 echo "Cleaning project..."
 if [ -d build-*-* ]; then rm -fdr build-*-*; fi;
+if [ -d libraries/boost-build/jam_src/bin ]; then rm -fdr libraries/boost-build/jam_src/bin; fi;
+if [ -d libraries/boost-build/jam_src/bootstrap ]; then rm -fdr libraries/boost-build/jam_src/bootstrap; fi;
 if [ -d libraries/boost_1_36_0 ]; then rm -fdr libraries/boost_1_36_0; fi;
 if [ -d libraries/boost_1_39_0 ]; then rm -fdr libraries/boost_1_39_0; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fdr libraries/gd-2.0.33; fi;
