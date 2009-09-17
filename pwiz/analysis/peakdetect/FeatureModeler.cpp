@@ -48,7 +48,7 @@ using boost::shared_ptr;
 //
 
 
-void FeatureModeler::fitFeatures(FeatureField& featureField) const
+void FeatureModeler::fitFeatures(const FeatureField& in, FeatureField& out) const
 {
     throw runtime_error("[FeatureModeler::fitFeatures()] Not implemented.");
 }
@@ -78,6 +78,11 @@ class GaussianModel
         envelope_ = isotopeEnvelopeEstimator_->isotopeEnvelope(neutralMass_);
         if (envelope_.empty()) throw runtime_error("[FeatureModeler::GaussianModel()] Empty envelope.");
     }
+
+    double mean_mz() const {return normal_mz_.mean();}
+    double mean_rt() const {return normal_rt_.mean();}
+    double sd_mz() const {return normal_mz_.standard_deviation();}
+    double sd_rt() const {return normal_rt_.standard_deviation();}
 
     static void createIsotopeEnvelopeEstimator()
     {
@@ -132,8 +137,8 @@ class GaussianModel
 
     friend ostream& operator<<(ostream& os, const GaussianModel& model)
     {
-        os << "[mz(" << model.normal_mz_.mean() << "," << model.normal_mz_.standard_deviation() 
-            << "),rt(" << model.normal_rt_.mean() << "," << model.normal_rt_.standard_deviation() << "),+" 
+        os << "[mz(" << model.mean_mz() << "," << model.sd_mz() 
+            << "),rt(" << model.mean_rt() << "," << model.sd_rt() << "),+" 
             << model.charge_ << "]";
         return os;
     }
@@ -194,11 +199,12 @@ GaussianModel estimateParameters(const Feature& feature)
 }
 
 
-void quantifyFit(const GaussianModel& model, const Feature& feature)
+Feature calculateFit(const GaussianModel& model, const Feature& feature)
 {
     double sumModelData = 0;
     double sumModel2 = 0;
     double sumData2 = 0;
+    size_t count = 0;
 
     for (vector<PeakelPtr>::const_iterator peakel=feature.peakels.begin(); peakel!=feature.peakels.end(); ++peakel)
     {
@@ -212,64 +218,38 @@ void quantifyFit(const GaussianModel& model, const Feature& feature)
                 double value_data = it->y;
                 double value_model = model(mz, rt);
                     
-                // (mz,rt): data model
-                //cout << "(" << mz << "," << rt << ") " << value_data << " " << value_model << endl;
-
                 sumModelData += value_model * value_data;
                 sumModel2 += value_model * value_model;
                 sumData2 += value_data * value_data;
+                count++;
             }
         }
     }
 
-    double intensity = sumModelData/sqrt(sumModel2);
-    double cosine = intensity/sqrt(sumData2);
+    double scale = sumModelData/sumModel2; // scaling factor for model, from projection of data
+    double cosine = sumModelData/sqrt(sumData2)/sqrt(sumModel2);
+    double sumSquaredDifferences = sumData2 - 2*scale*sumModelData + scale*scale*sumModel2; // total squared error between data and scaled model
+    double rms = sqrt(sumSquaredDifferences/count);
 
-    cout << "intensity: " << intensity << endl;
-    cout << "cosine: " << cosine << endl;
-/*
+    Feature result = feature; // shallow copy
+    result.mz = model.mean_mz();
+    result.retentionTime = model.mean_rt();
+    result.totalIntensity = scale; // TODO: check this
+    result.rtVariance = model.sd_rt() * model.sd_rt();
+    result.score = cosine;
+    result.error = rms;
 
-    double sumSquaredDifferences = sumData2 - 2*intensity*sumModelData + intensity*intensity*sumModel2;
-    cout << "sumSquaredDifferences: " << sumSquaredDifferences << endl;
-
-    sumSquaredDifferences = sumData2 - 2*intensity*sumModelData/5 + intensity*intensity*sumModel2/25;
-    cout << "sumSquaredDifferences: " << sumSquaredDifferences << endl;
-
-
-    for (vector<PeakelPtr>::const_iterator peakel=feature.peakels.begin(); peakel!=feature.peakels.end(); ++peakel)
-    {
-        for (vector<Peak>::const_iterator peak=(*peakel)->peaks.begin(); peak!=(*peakel)->peaks.end(); ++peak)
-        {
-            double rt = peak->retentionTime;
-
-            for (vector<OrderedPair>::const_iterator it=peak->data.begin(); it!=peak->data.end(); ++it)
-            {
-                double mz = it->x;
-                double value_data = it->y;
-                double value_model = intensity * model(mz, rt);
-                    
-                // (mz,rt): data model
-                cout << "(" << mz << "," << rt << ") " << value_data << " " << value_model << endl;
-            }
-        }
-    }
-*/
+    return result;
 }
 
 
 } // namespace
 
 
-void FeatureModeler_Gaussian::fitFeature(Feature& feature) const
+Feature FeatureModeler_Gaussian::fitFeature(const Feature& feature) const
 {
-    cout << "we're here!\n";
-
     GaussianModel model = estimateParameters(feature);
-
-    cout.precision(10);
-    cout << "model: " << model << "\n\n";
-
-    quantifyFit(model, feature); 
+    return calculateFit(model, feature); 
 }
 
 

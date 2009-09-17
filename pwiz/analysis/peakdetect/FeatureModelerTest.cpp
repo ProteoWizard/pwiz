@@ -46,9 +46,9 @@ void testGaussian_Bombessin(Feature& bombessin2)
     if (os_) *os_ << "testGaussian_Bombessin()\n" << "before:\n" << bombessin2;
 
     FeatureModeler_Gaussian fm;
-    fm.fitFeature(bombessin2);
+    Feature after = fm.fitFeature(bombessin2);
 
-    if (os_) *os_ << "after:\n" << bombessin2;
+    if (os_) *os_ << "after:\n" << after;
 }
 
 

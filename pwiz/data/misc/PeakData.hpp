@@ -264,7 +264,9 @@ struct PWIZ_API_DECL Feature
     double retentionTime;
     int charge;
     double totalIntensity;
-    double rtVariance; // calculated from child Peakels?
+    double rtVariance;
+    double score;
+    double error;
     std::vector<PeakelPtr> peakels;
     
     void calculateMetadata();
@@ -279,11 +281,7 @@ struct PWIZ_API_DECL Feature
     bool operator==(const Feature& that) const;
     bool operator!=(const Feature& that) const;
 
-private:
-    
-    Feature(Feature&);
-    Feature operator=(Feature&);
-
+    // note: copy/assignment are shallow copy (same peakels)
 };
 
 

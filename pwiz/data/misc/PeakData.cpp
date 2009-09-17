@@ -1010,7 +1010,7 @@ SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const
 
 
 Feature::Feature()
-:   mz(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0)
+:   mz(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0), score(0), error(0)
 {}
 
 
@@ -1021,6 +1021,8 @@ void Feature::calculateMetadata()
     retentionTime = 0;
     rtVariance = 0;
     totalIntensity = 0;
+    score = 0;
+    error = 0;
 
     // calculate metadata of each peakel
     
@@ -1110,6 +1112,8 @@ void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
     attributes.push_back(make_pair("charge", boost::lexical_cast<string>(charge)));
     attributes.push_back(make_pair("totalIntensity", boost::lexical_cast<string>(totalIntensity)));
     attributes.push_back(make_pair("rtVariance", boost::lexical_cast<string>(rtVariance)));
+    attributes.push_back(make_pair("score", boost::lexical_cast<string>(score)));
+    attributes.push_back(make_pair("error", boost::lexical_cast<string>(error)));
 
     xmlWriter.startElement("feature",attributes);
 
@@ -1136,6 +1140,8 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
             getAttribute(attributes,"charge", feature->charge);
             getAttribute(attributes,"totalIntensity", feature->totalIntensity);
             getAttribute(attributes,"rtVariance", feature->rtVariance);
+            getAttribute(attributes,"score", feature->score);
+            getAttribute(attributes,"error", feature->error);
 
             return Handler::Status::Ok;
         }
@@ -1173,10 +1179,12 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
 Feature::Feature(const MSIHandler::Record& record) 
 {
     mz = record.mz;
-	retentionTime = record.time;
-	charge = record.charge;
-	totalIntensity = record.intensity;	
-	rtVariance = 0;
+    retentionTime = record.time;
+    charge = record.charge;
+    totalIntensity = record.intensity;	
+    rtVariance = 0;
+    score = 0;
+    error = 0;
 }
 
 void Feature::read(istream& is)
@@ -1193,7 +1201,9 @@ bool Feature::operator==(const Feature& that) const
       retentionTime == that.retentionTime &&
       charge == that.charge &&
       totalIntensity == that.totalIntensity &&
-      rtVariance == that.rtVariance);
+      rtVariance == that.rtVariance &&
+      score == that.score &&
+      error == that.error);
 
     if (!result) return false;
     if (peakels.size() != that.peakels.size()) return false;

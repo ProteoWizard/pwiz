@@ -373,6 +373,8 @@ void testFeature()
     feature.charge = 3;
     feature.totalIntensity = 1776.0704;
     feature.rtVariance = 1969.0720;
+    feature.score = 420.0;
+    feature.error = 666.0;
     
     PeakelPtr stateFair = initializePeakel();
     PeakelPtr deli = initializePeakel();
