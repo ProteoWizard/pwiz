@@ -238,6 +238,26 @@ bool SpectrumList_FilterPredicate_ScanTimeRange::done() const
 }
 
 
+//
+// SpectrumList_FilterPredicate_MSLevelSet 
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredicate_MSLevelSet(const IntegerSet& msLevelSet)
+:   msLevelSet_(msLevelSet)
+{}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata::Spectrum& spectrum) const
+{
+    CVParam param = spectrum.cvParam(MS_ms_level);
+    if (param.cvid == CVID_Unknown) return false;
+    int msLevel = lexical_cast<int>(param.value);
+    bool result = msLevelSet_.contains(msLevel);
+    return result;
+}
+
+
 } // namespace analysis
 } // namespace pwiz
 

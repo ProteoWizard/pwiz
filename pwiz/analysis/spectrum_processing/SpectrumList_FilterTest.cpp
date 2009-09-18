@@ -298,6 +298,48 @@ void testScanTimeRange(SpectrumListPtr sl)
     unit_assert(filter.spectrumIdentity(4).id == "scan=107");
 }
 
+
+void testMSLevelSet(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testMSLevelSet:\n";
+
+    IntegerSet msLevelSet;
+    msLevelSet.insert(1);
+
+    SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(msLevelSet));
+    
+    if (os_) 
+    {
+        printSpectrumList(filter, *os_);
+        *os_ << endl;
+    }
+
+    unit_assert(filter.size() == 4);
+    unit_assert(filter.spectrumIdentity(0).id == "scan=100");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=103");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=106");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=109");
+
+    IntegerSet msLevelSet2;
+    msLevelSet2.insert(2);
+
+    SpectrumList_Filter filter2(sl, SpectrumList_FilterPredicate_MSLevelSet(msLevelSet2));
+    
+    if (os_) 
+    {
+        printSpectrumList(filter2, *os_);
+        *os_ << endl;
+    }
+
+    unit_assert(filter2.size() == 6);
+    unit_assert(filter2.spectrumIdentity(0).id == "scan=101");
+    unit_assert(filter2.spectrumIdentity(1).id == "scan=102");
+    unit_assert(filter2.spectrumIdentity(2).id == "scan=104");
+    unit_assert(filter2.spectrumIdentity(3).id == "scan=105");
+    unit_assert(filter2.spectrumIdentity(4).id == "scan=107");
+    unit_assert(filter2.spectrumIdentity(5).id == "scan=108");
+}
+
  
 void test()
 {
@@ -309,6 +351,7 @@ void test()
     testScanNumberSet(sl);
     testScanEventSet(sl);
     testScanTimeRange(sl);
+    testMSLevelSet(sl);
 }
 
 
