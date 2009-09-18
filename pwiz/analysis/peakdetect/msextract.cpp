@@ -96,6 +96,7 @@ void Config::write_program_options_config(ostream& os) const
     os << "noiseCalculator_2Pass.zValueCutoff=" << fdpConfig.noiseCalculator_2Pass.zValueCutoff << endl;
     os << "peakFinder_SNR.windowRadius=" << fdpConfig.peakFinder_SNR.windowRadius << endl;
     os << "peakFinder_SNR.zValueThreshold=" << fdpConfig.peakFinder_SNR.zValueThreshold << endl;
+    os << "peakFinder_SNR.preprocessWithLogarithm=" << fdpConfig.peakFinder_SNR.preprocessWithLogarithm << endl;
     os << "peakFitter_Parabola.windowRadius=" << fdpConfig.peakFitter_Parabola.windowRadius << endl;
     os << "peakelGrower_Proximity.mzTolerance=" << fdpConfig.peakelGrower_Proximity.mzTolerance << endl;
     os << "peakelGrower_Proximity.rtTolerance=" << fdpConfig.peakelGrower_Proximity.rtTolerance << endl;
@@ -154,7 +155,7 @@ Config parseCommandLine(int argc, char* argv[])
         ("defaults,d", po::value<bool>(&printDefaultConfig)->zero_tokens(), ": print configuration defaults")
         ("outputPath,o", po::value<string>(&config.outputPath)->default_value(config.outputPath), ": specify output path")
         ("featureDetectorImplementation,f", po::value<string>(&config.featureDetectorImplementation)->default_value(config.featureDetectorImplementation), ": specify implementation of FeatureDetector to use.  Options: Simple, PeakelFarmer")
-        ("useFeatureModeler,m", po::value<bool>(&config.useFeatureModeler)->default_value(config.useFeatureModeler), ": post-process with feature modeler")
+        ("useFeatureModeler,m", po::value<bool>(&config.useFeatureModeler)->default_value(config.useFeatureModeler)->zero_tokens(), ": post-process with feature modeler")
         ("writeFeatureFile", po::value<bool>(&config.writeFeatureFile)->default_value(config.writeFeatureFile), ": write xml representation of detected features (.features file) ")
         ("writeTSV", po::value<bool>(&config.writeTSV)->default_value(config.writeTSV), ": write tab-separated file")
         ("writeLog", po::value<bool>(&config.writeLog)->default_value(config.writeLog), ": write log file (for debugging)")
@@ -163,25 +164,26 @@ Config parseCommandLine(int argc, char* argv[])
 
     po::options_description od_config_peakel("FeatureDetectorPeakel Options");
     od_config_peakel.add_options()
-        ("noiseCalculator_2Pass.zValueCutoff", po::value<double>(&config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)->default_value(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff), ": specify cutoff for NoiseCalculator_2Pass")
-        ("peakFinder_SNR.windowRadius", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), ": specify window radius for PeakFinder_SNR")
-        ("peakFinder_SNR.zValueThreshold", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold)->default_value(config.fdpConfig.peakFinder_SNR.zValueThreshold), ": specify z threshold for PeakFinder_SNR")
-        ("peakFitter_Parabola.windowRadius", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius)->default_value(config.fdpConfig.peakFitter_Parabola.windowRadius), ": specify window radius for PeakFitter_Parabola")
-        ("peakelGrower_Proximity.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelGrower_Proximity.mzTolerance), ": specify mz tolerance for PeakelGrower_Proximity")
-        ("peakelGrower_Proximity.rtTolerance", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance)->default_value(config.fdpConfig.peakelGrower_Proximity.rtTolerance), ": specify rt tolerance for PeakelGrower_Proximity")
-        ("peakelPicker_Basic.minCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge)->default_value(config.fdpConfig.peakelPicker_Basic.minCharge), ": specify min charge for PeakelPicker_Basic")
-        ("peakelPicker_Basic.maxCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge)->default_value(config.fdpConfig.peakelPicker_Basic.maxCharge), ": specify max charge for PeakelPicker_Basic")
-        ("peakelPicker_Basic.minMonoisotopicPeakelSize", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize)->default_value(config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), ": specify min monoisotopic peakel size for PeakelPicker_Basic")
-        ("peakelPicker_Basic.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelPicker_Basic.mzTolerance), ": specify mz tolerance for PeakelPicker_Basic")
-        ("peakelPicker_Basic.rtTolerance", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance)->default_value(config.fdpConfig.peakelPicker_Basic.rtTolerance), ": specify rt tolerance for PeakelPicker_Basic")
-        ("peakelPicker_Basic.minPeakelCount", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), ": specify min peakel count for PeakelPicker_Basic")
+        ("noiseCalculator_2Pass.zValueCutoff", po::value<double>(&config.fdpConfig.noiseCalculator_2Pass.zValueCutoff)->default_value(config.fdpConfig.noiseCalculator_2Pass.zValueCutoff), "")
+        ("peakFinder_SNR.windowRadius", po::value<size_t>(&config.fdpConfig.peakFinder_SNR.windowRadius)->default_value(config.fdpConfig.peakFinder_SNR.windowRadius), "")
+        ("peakFinder_SNR.zValueThreshold", po::value<double>(&config.fdpConfig.peakFinder_SNR.zValueThreshold)->default_value(config.fdpConfig.peakFinder_SNR.zValueThreshold), "")
+        ("peakFinder_SNR.preprocessWithLogarithm", po::value<bool>(&config.fdpConfig.peakFinder_SNR.preprocessWithLogarithm)->default_value(config.fdpConfig.peakFinder_SNR.preprocessWithLogarithm), "")
+        ("peakFitter_Parabola.windowRadius", po::value<size_t>(&config.fdpConfig.peakFitter_Parabola.windowRadius)->default_value(config.fdpConfig.peakFitter_Parabola.windowRadius), "")
+        ("peakelGrower_Proximity.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelGrower_Proximity.mzTolerance), "")
+        ("peakelGrower_Proximity.rtTolerance", po::value<double>(&config.fdpConfig.peakelGrower_Proximity.rtTolerance)->default_value(config.fdpConfig.peakelGrower_Proximity.rtTolerance), "")
+        ("peakelPicker_Basic.minCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minCharge)->default_value(config.fdpConfig.peakelPicker_Basic.minCharge), "")
+        ("peakelPicker_Basic.maxCharge", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.maxCharge)->default_value(config.fdpConfig.peakelPicker_Basic.maxCharge), "")
+        ("peakelPicker_Basic.minMonoisotopicPeakelSize", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize)->default_value(config.fdpConfig.peakelPicker_Basic.minMonoisotopicPeakelSize), "")
+        ("peakelPicker_Basic.mzTolerance", po::value<MZTolerance>(&config.fdpConfig.peakelPicker_Basic.mzTolerance), "")
+        ("peakelPicker_Basic.rtTolerance", po::value<double>(&config.fdpConfig.peakelPicker_Basic.rtTolerance)->default_value(config.fdpConfig.peakelPicker_Basic.rtTolerance), "")
+        ("peakelPicker_Basic.minPeakelCount", po::value<size_t>(&config.fdpConfig.peakelPicker_Basic.minPeakelCount)->default_value(config.fdpConfig.peakelPicker_Basic.minPeakelCount), "")
         ;    
     
     // append options to usage string
 
     usage << od_config << endl << od_config_peakel;
 
-    usage << "Examples:\n"
+    usage << "\n\nExamples:\n"
           << "\n"
           << "# print default configuration parameters to config.txt\n"
           << "msextract -d > config.txt\n"
