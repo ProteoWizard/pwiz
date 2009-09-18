@@ -27,6 +27,7 @@
 #include <vector>
 #include <iterator>
 #include <cstring>
+#include <limits>
 
 
 using namespace std;

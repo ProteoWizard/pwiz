@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <sstream>
 #include <vector>
+#include <limits>
 
 
 namespace pwiz {
