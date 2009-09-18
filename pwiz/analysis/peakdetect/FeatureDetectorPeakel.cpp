@@ -76,11 +76,17 @@ FeatureDetectorPeakel::FeatureDetectorPeakel(shared_ptr<PeakExtractor> peakExtra
 
 namespace {
 
-struct SetRetentionTime
+struct SetPeakMetadata
 {
-    double rt;
-    SetRetentionTime(double _rt) : rt(_rt) {}
-    void operator()(Peak& peak) {peak.retentionTime = rt;}
+    const SpectrumInfo& spectrumInfo;
+
+    SetPeakMetadata(const SpectrumInfo& _spectrumInfo) : spectrumInfo(_spectrumInfo) {}
+
+    void operator()(Peak& peak) 
+    {
+        peak.id = spectrumInfo.scanNumber;
+        peak.retentionTime = spectrumInfo.retentionTime;
+    }
 };
 
 
@@ -98,7 +104,7 @@ vector< vector<Peak> > extractPeaks(const MSData& msd, const PeakExtractor& peak
 
         vector<Peak>& peaks = result[index];
         peakExtractor.extractPeaks(spectrumInfo.data, peaks);
-        for_each(peaks.begin(), peaks.end(), SetRetentionTime(spectrumInfo.retentionTime));
+        for_each(peaks.begin(), peaks.end(), SetPeakMetadata(spectrumInfo));
 
         /* TODO: logging
         if (os_)
