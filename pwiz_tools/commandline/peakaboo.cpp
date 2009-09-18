@@ -4,8 +4,8 @@
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
 //
-// Copyright 2008 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2009 Center for Applied Molecular Medicine
+//   University of Southern California, Los Angeles, California
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -164,8 +164,8 @@ void processFile(const string& filename, const Config& config)
     peakData.sourceFilename = boost::filesystem::path(filename).leaf();
 
     peakData.software.name = "peakaboo";
-    peakData.software.version = "1.1";
-    peakData.software.source = "Spielberg Family Center for Applied Proteomics";
+    peakData.software.version = "1.2";
+    peakData.software.source = "Center for Applied Molecular Medicine, University of Southern California";
 
     peakData.software.parameters.push_back(peakdata::Software::Parameter("scanBegin", lexical_cast<string>(config.scanBegin)));
     peakData.software.parameters.push_back(peakdata::Software::Parameter("scanEnd", lexical_cast<string>(config.scanEnd)));
@@ -193,6 +193,9 @@ void processFile(const string& filename, const Config& config)
             const SpectrumInfo info = cache.spectrumInfo(i, true);
 
             // TODO: use general SpectrumList filtering
+
+            if (info.msLevel != 1) continue;
+
             if (info.massAnalyzerType != MS_FT_ICR && 
                 info.massAnalyzerType != MS_orbitrap)
             {
