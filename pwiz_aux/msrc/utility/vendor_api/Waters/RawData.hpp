@@ -37,17 +37,44 @@ namespace vendor_api {
 namespace Waters {
 
 
+/// function types copied from http://www.waters.com/webassets/cms/support/docs/71500123505ra.pdf
 PWIZ_API_DECL enum FunctionType
 {
     FunctionType_Unknown,
-    FunctionType_Survey,
-    FunctionType_Scan,
-    FunctionType_MALDI_TOF,
-    FunctionType_MS,
+    FunctionType_Scan,                  /// Standard MS scanning function
+    FunctionType_SIR,                   /// Selected ion recording
+    FunctionType_Delay,                 /// No longer supported
+    FunctionType_Concatenated,          /// No longer supported
+    FunctionType_Off,                   /// No longer supported
+    FunctionType_Parents,               /// MSMS Parent scan
+    FunctionType_Daughters,             /// MSMS Daughter scan
+    FunctionType_Neutral_Loss,          /// MSMS Neutral Loss
+    FunctionType_Neutral_Gain,          /// MSMS Neutral Gain
+    FunctionType_MRM,                   /// Multiple Reaction Monitoring
+    FunctionType_Q1F,                   /// Special function used on Quattro IIs for scanning MS1 (Q1) but uses the final detector
+    FunctionType_MS2,                   /// Special function used on triple quads for scanning MS2. Used for calibration experiments.
+    FunctionType_Diode_Array,           /// Diode array type function
+    FunctionType_TOF,                   /// TOF
+    FunctionType_TOF_PSD,               /// TOF Post Source Decay type function
+    FunctionType_TOF_Survey,            /// QTOF MS Survey scan
+    FunctionType_TOF_Daughter,          /// QTOF MSMS scan
+    FunctionType_MALDI_TOF,             /// Maldi-Tof function
+    FunctionType_TOF_MS,                /// QTOF MS scan
+    FunctionType_TOF_Parent,            /// QTOF Parent scan
+    FunctionType_Voltage_Scan,          /// AutoSpec Voltage Scan
+    FunctionType_Magnetic_Scan,         /// AutoSpec Magnet Scan
+    FunctionType_Voltage_SIR,           /// AutoSpec Voltage SIR
+    FunctionType_Magnetic_SIR,          /// AutoSpec Magnet SIR
+    FunctionType_Auto_Daughters,        /// Quad Automated daughter scanning
+    FunctionType_AutoSpec_B_E_Scan,     /// AutoSpec_B_E_Scan
+    FunctionType_AutoSpec_B2_E_Scan,    /// AutoSpec_B2_E_Scan
+    FunctionType_AutoSpec_CNL_Scan,     /// AutoSpec_CNL_Scan
+    FunctionType_AutoSpec_MIKES_Scan,   /// AutoSpec_MIKES_Scan
+    FunctionType_AutoSpec_MRM,          /// AutoSpec_MRM
+    FunctionType_AutoSpec_NRMS_Scan,    /// AutoSpec_NRMS_Scan
+    FunctionType_AutoSpec_Q_MRM_Quad,   /// AutoSpec_Q_MRM_Quad
     FunctionType_MSMS,
-    FunctionType_MSMSMS,
-    FunctionType_MRM,
-    FunctionType_Daughter
+    FunctionType_MSMSMS
 };
 
 

@@ -56,26 +56,67 @@ void translateFunctionType(FunctionType functionType,
             break;
 
         case FunctionType_MSMS:
+        case FunctionType_MS2:
+        case FunctionType_TOF_Daughter:
+        case FunctionType_Auto_Daughters:
             msLevel = 2;
             spectrumType = MS_MSn_spectrum;
             break;
 
+        case FunctionType_SIR:
+            msLevel = 1;
+            spectrumType = MS_SIM_spectrum;
+
         case FunctionType_MRM:
-        case FunctionType_Daughter:
+        case FunctionType_AutoSpec_MRM:
+        case FunctionType_AutoSpec_Q_MRM_Quad:
+        case FunctionType_AutoSpec_MIKES_Scan:
             msLevel = 2;
             spectrumType = MS_SRM_spectrum;
             break;
 
-        case FunctionType_MS:
+            
+        case FunctionType_Neutral_Loss:
+            msLevel = 2;
+            spectrumType = MS_constant_neutral_loss_spectrum;
+            break;
+
+        case FunctionType_Neutral_Gain:
+            msLevel = 2;
+            spectrumType = MS_constant_neutral_gain_spectrum;
+            break;
+
         case FunctionType_Scan:
-        case FunctionType_Survey:
+        case FunctionType_Q1F:
+        case FunctionType_TOF:
+        case FunctionType_TOF_Survey:
+        case FunctionType_TOF_Parent:
         case FunctionType_MALDI_TOF:
             msLevel = 1;
             spectrumType = MS_MS1_spectrum;
             break;
 
+        /* TODO: figure out what these function types translate to
+            FunctionType_Delay
+            FunctionType_Concatenated
+            FunctionType_Off
+            FunctionType_Parents
+            FunctionType_Daughters
+            FunctionType_Diode_Array
+            FunctionType_TOF_PSD
+            FunctionType_Voltage_Scan
+            FunctionType_Magnetic_Scan
+            FunctionType_Voltage_SIR
+            FunctionType_Magnetic_SIR
+            FunctionType_AutoSpec_B_E_Scan
+            FunctionType_AutoSpec_B2_E_Scan
+            FunctionType_AutoSpec_CNL_Scan
+            FunctionType_AutoSpec_MIKES_Scan
+            FunctionType_AutoSpec_NRMS_Scan
+        */
+
         default:
-            throw std::runtime_error("[translateFunctionType] Unknown function type.");
+            throw std::runtime_error("[translateFunctionType] Unable to translate function type.");
     }
 }
 

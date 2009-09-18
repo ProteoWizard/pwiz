@@ -128,14 +128,40 @@ namespace {
 
 FunctionType translateFunctionType(const string& funcType)
 {
-    if (funcType.find("MSMSMS") != string::npos)            return FunctionType_MSMSMS;
+    if (funcType == "Scan")                                 return FunctionType_Scan;
+    else if (funcType == "SIR")                             return FunctionType_SIR;
+    else if (funcType == "Delay")                           return FunctionType_Delay;
+    else if (funcType == "Concatenated")                    return FunctionType_Concatenated;
+    else if (funcType == "Off")                             return FunctionType_Off;
+    else if (funcType == "Parents")                         return FunctionType_Parents;  
+    else if (funcType == "Daughters")                       return FunctionType_Daughters;
+    else if (funcType == "Neutral Loss")                    return FunctionType_Neutral_Loss;
+    else if (funcType == "Neutral Gain")                    return FunctionType_Neutral_Gain;
+    else if (funcType == "MRM")                             return FunctionType_MRM;
+    else if (funcType == "Q1F")                             return FunctionType_Q1F;
+    else if (funcType == "MS2")                             return FunctionType_MS2;
+    else if (funcType == "Diode Array")                     return FunctionType_Diode_Array;
+    else if (funcType == "TOF")                             return FunctionType_TOF;
+    else if (funcType == "TOF PSD")                         return FunctionType_TOF_PSD;
+    else if (funcType == "TOF Survey")                      return FunctionType_TOF_Survey;
+    else if (funcType == "TOF Daughter")                    return FunctionType_TOF_Daughter;
+    else if (funcType == "Maldi TOF")                       return FunctionType_MALDI_TOF;
+    else if (funcType == "TOF MS")                          return FunctionType_TOF_MS;
+    else if (funcType == "TOF Parent")                      return FunctionType_TOF_Parent;
+    else if (funcType == "Voltage Scan")                    return FunctionType_Voltage_Scan;
+    else if (funcType == "Magnetic Scan")                   return FunctionType_Magnetic_Scan;
+    else if (funcType == "Voltage SIR")                     return FunctionType_Voltage_SIR;
+    else if (funcType == "Magnetic SIR")                    return FunctionType_Magnetic_SIR;
+    else if (funcType == "Auto Daughters")                  return FunctionType_Auto_Daughters;
+    else if (funcType == "AutoSpec B/E Scan")               return FunctionType_AutoSpec_B_E_Scan;
+    else if (funcType == "AutoSpec B^2/E Scan")             return FunctionType_AutoSpec_B2_E_Scan;
+    else if (funcType == "AutoSpec CNL Scan")               return FunctionType_AutoSpec_CNL_Scan;
+    else if (funcType == "AutoSpec MIKES Scan")             return FunctionType_AutoSpec_MIKES_Scan;
+    else if (funcType == "AutoSpec MRM")                    return FunctionType_AutoSpec_MRM;
+    else if (funcType == "AutoSpec NRMS Scan")              return FunctionType_AutoSpec_NRMS_Scan;
+    else if (funcType == "AutoSpec-Q MRM Quad")             return FunctionType_AutoSpec_Q_MRM_Quad;
+    else if (funcType.find("MSMSMS") != string::npos)       return FunctionType_MSMSMS;
     else if (funcType.find("MSMS") != string::npos)         return FunctionType_MSMS;
-    else if (funcType.find("MS") != string::npos)           return FunctionType_MS;
-    else if (funcType.find("MRM") != string::npos)          return FunctionType_MRM;
-    else if (funcType.find("Daughter") != string::npos)     return FunctionType_Daughter;
-    else if (funcType.find("Scan") != string::npos)         return FunctionType_Scan;
-    else if (funcType.find("Survey") != string::npos)       return FunctionType_Survey;
-    else if (funcType.find("Maldi TOF") != string::npos)    return FunctionType_MALDI_TOF;
     else
         throw runtime_error("[translateFunctionType] Unknown Waters function type.");
 }

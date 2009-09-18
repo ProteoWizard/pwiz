@@ -214,12 +214,16 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
     BOOST_FOREACH(const FunctionPtr& functionPtr, rawdata_->functions())
     {
-        FunctionType functionType = functionPtr->getFunctionType();
-        if (functionType == FunctionType_MRM)
-            continue;
+        int msLevel;
+        CVID spectrumType;
 
-        // Daughter can be either MSn or MRM; determine which by checking FunctionSetMass
-        if (functionType == FunctionType_Daughter && functionPtr->getSetMass() > 0)
+        try { translateFunctionType(functionPtr->getFunctionType(), msLevel, spectrumType); }
+        catch(...) { continue; } // unable to translate function type
+
+        if (spectrumType == MS_SRM_spectrum ||
+            spectrumType == MS_SIM_spectrum ||
+            spectrumType == MS_constant_neutral_loss_spectrum ||
+            spectrumType == MS_constant_neutral_gain_spectrum)
             continue;
 
         size_t scanCount = functionPtr->getScanCount();
