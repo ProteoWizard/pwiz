@@ -90,8 +90,8 @@ unit-test mru_list_test : mru_list_test.cpp ;
 
 
 # explicit tests to demonstrate how CI handles stdout and stderr
-unit-test FailUnitTest : FailTest.cpp : <ci>none:<build>no ;
-run FailTest.cpp : : : <ci>none:<build>no : FailRunTest ;
+unit-test FailUnitTest : FailTest.cpp ;
+run FailTest.cpp : : : : FailRunTest ;
 explicit FailUnitTest FailRunTest ;
 
 

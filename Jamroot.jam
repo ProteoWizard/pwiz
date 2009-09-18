@@ -46,29 +46,31 @@ import testing ; # needed to enable unit-test rule
 import feature ; # needed for install rules
 
 
-# Sets build options according to the specified continuous integration environment
-feature.feature ci : none teamcity : propagated ;
-
-if [ modules.peek : NT ]
+if --teamcity-test-decoration in [ modules.peek : ARGV ]
 {
-    TEST_PRECOMMAND = "set pp=##\necho %pp%teamcity[testStarted name='%name%']" ;
-    TEST_POSTCOMMAND =
-        "set pp=##\n"
-        "IF %status% NEQ 0"
-            "(echo %pp%teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
-        "echo %pp%teamcity[testFinished name='%name%']" ;
-    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
-}
-else
-{
-    TEST_PRECOMMAND = "pp=##\necho $pp\"teamcity[testStarted name='$name']\"" ;
-    TEST_POSTCOMMAND = 
-        "pp=##"
-        "if test $status -ne 0 ; then"
-            "echo $pp\"teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
-        "fi"
-        "echo $pp\"teamcity[testFinished name='$name']\"" ;
-    TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
+    if [ modules.peek : NT ]
+    {
+        TEST_PRECOMMAND = "set pp=##\necho %pp%teamcity[testStarted name='%name%']" ;
+        TEST_POSTCOMMAND =
+            "set pp=##\n"
+            "IF %status% NEQ 0"
+                "(echo %pp%teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
+            "echo %pp%teamcity[testFinished name='%name%']" ;
+        TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+    }
+    else
+    {
+        TEST_PRECOMMAND = "pp=##\necho $pp\"teamcity[testStarted name='$name']\"" ;
+        TEST_POSTCOMMAND = 
+            "pp=##"
+            "if test $status -ne 0 ; then"
+                "echo $pp\"teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
+            "fi"
+            "echo $pp\"teamcity[testFinished name='$name']\"" ;
+        TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
+    }
+    TEST_PRECOMMAND = <testing.precommand>$(TEST_PRECOMMAND) ;
+    TEST_POSTCOMMAND = <testing.postcommand>$(TEST_POSTCOMMAND) ;
 }
 
 
@@ -135,8 +137,8 @@ project pwiz
         # use of boost::thread requires multithreaded runtime
         <threading>multi
 
-        <ci>teamcity:<testing.precommand>$(TEST_PRECOMMAND)
-        <ci>teamcity:<testing.postcommand>$(TEST_POSTCOMMAND)
+        $(TEST_PRECOMMAND)
+        $(TEST_POSTCOMMAND)
 
     : build-dir $(PWIZ_BUILD_PATH)
     : usage-requirements

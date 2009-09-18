@@ -28,18 +28,18 @@ if ! /bin/bash quickbuild.sh -p1 pwiz//svnrev.hpp; then
 fi
 
 echo_info "Running quickbuild for release variant..."
-if ! /bin/bash quickbuild.sh -p1 ci=teamcity -j4 release; then
+if ! /bin/bash quickbuild.sh -p1 --teamcity-test-decoration -j4 release; then
 	  echo_error "Error running quickbuild for release variant! See full build log for more details."
 	  EXIT=1
 fi
 
 echo_info "Running quickbuild for debug variant..."
-if ! /bin/bash quickbuild.sh -p1 ci=teamcity -j4 debug; then
+if ! /bin/bash quickbuild.sh -p1 --teamcity-test-decoration -j4 debug; then
 	  echo_error "Error running quickbuild for debug variant! See full build log for more details."
 	  EXIT=1
 fi
 
 # uncomment this to test that test failures and error output are handled properly
-# /bin/bash quickbuild.sh -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
+# /bin/bash quickbuild.sh -p1 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
 
 exit $EXIT
