@@ -141,7 +141,7 @@ void testIntervalExtraction()
 {
     IntegerSet::Interval i;
 
-    istringstream iss(" \t [-2 , 5] ");
+    istringstream iss(" \t [-2,5] "); // whitespace okay around encoded interval, but not within it
     iss >> i;
 
     unit_assert(i.begin == -2);
@@ -149,11 +149,34 @@ void testIntervalExtraction()
 }
 
 
+void testIntervalExtraction2()
+{
+    IntegerSet::Interval i;
+
+    istringstream iss(" \t 420  "); // whitespace okay around encoded interval, but not within it
+    iss >> i;
+    unit_assert(i.begin == 420);
+    unit_assert(i.end == 420);
+
+    istringstream iss2(" \n 420- ");
+    iss2 >> i;
+    unit_assert(i.begin == 420);
+    unit_assert(i.end == numeric_limits<int>::max());
+
+    istringstream iss3(" \n 420-goober "); // goober is ignored, since it's not an int
+    iss3 >> i;
+    unit_assert(i.begin == 420);
+    unit_assert(i.end == numeric_limits<int>::max());
+
+    istringstream iss4(" \n 420-666");
+    iss4 >> i;
+    unit_assert(i.begin == 420);
+    unit_assert(i.end == 666);
+}
+
 
 void testIntExtraction()
 {
-    //std::locale::global(std::locale("C"));  // hack for msvc
-
     istringstream iss("1,100");
     iss.imbue(locale("C")); // hack for msvc
 
@@ -168,7 +191,10 @@ void testParse()
 {
     IntegerSet a;
 
-    a.parse(" [-3, 2] [5 ,5] [ 8 , 9 ] booger ");  // insert(-3,2); insert(5); insert(8,9);
+    a.parse(" [-3,2] [5,5] [8,9] booger ");  // insert(-3,2); insert(5); insert(8,9);
+
+    unit_assert(a.intervalCount() == 3);
+    unit_assert(a.size() == 9);
 
     vector<int> b;
     copy(a.begin(), a.end(), back_inserter(b));
@@ -185,6 +211,35 @@ void testParse()
 }
 
 
+void testParse2()
+{
+    IntegerSet a;
+
+    a.parse(" [-3,2] 5  8-9 10- ");  // insert(-3,2); insert(5); insert(8,9); insert(10,INT_MAX);
+
+    unit_assert(a.intervalCount() == 3);
+    unit_assert(a.size() == 9ul + numeric_limits<int>::max()-10+1);
+
+    vector<int> b;
+    IntegerSet::const_iterator it = a.begin();
+    for (int i=0; i<11; ++i, ++it) // don't copy to the end() unless you have lots of time and space ;)
+        b.push_back(*it);
+
+    unit_assert(b.size() == 11);
+    unit_assert(b[0] == -3);
+    unit_assert(b[1] == -2);
+    unit_assert(b[2] == -1);
+    unit_assert(b[3] == 0);
+    unit_assert(b[4] == 1);
+    unit_assert(b[5] == 2);
+    unit_assert(b[6] == 5);
+    unit_assert(b[7] == 8);
+    unit_assert(b[8] == 9);
+    unit_assert(b[9] == 10);
+    unit_assert(b[10] == 11);
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -195,8 +250,10 @@ int main(int argc, char* argv[])
         testContains();
         testUpperBound();
         testIntervalExtraction();
+        testIntervalExtraction2();
         testIntExtraction();
         testParse();
+        testParse2();
         return 0;
     }
     catch (exception& e)

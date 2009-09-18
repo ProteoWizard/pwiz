@@ -117,7 +117,7 @@ class PWIZ_API_DECL IntegerSet
 
     /// insert intervals by parsing a string representing a 
     /// whitespace-delimited list of closed intervals:
-    ///   parse(" [-3,2]  [5,5] [8,9] ");  // insert(-3,2); insert(5); insert(8,9);
+    ///   parse(" [-3,2]  5  8-9  10- ");  // insert(-3,2); insert(5); insert(8,9); insert(10,INT_MAX);
     void parse(const std::string& intervalList);
     //@}
 
@@ -137,7 +137,14 @@ class PWIZ_API_DECL IntegerSet
     /// true iff n is an upper bound for the IntegerSet 
     bool hasUpperBound(int n) const; 
 
+    /// returns the number of intervals in the set
+    size_t intervalCount() const;
+
+    /// returns the number of integers in the set
+    size_t size() const;
+
     private:
+
     Intervals intervals_; 
 
     friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IntegerSet& integerSet);

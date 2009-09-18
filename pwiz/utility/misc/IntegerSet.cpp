@@ -62,22 +62,40 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet::Interval& inter
 
 PWIZ_API_DECL istream& operator>>(istream& is, IntegerSet::Interval& interval)
 {
+    string buffer;
+    is >> buffer; // assumption: no whitespace within the encoded interval
+    if (!is) return is;
+
+    // first try to parse format [a,b]
+
+    istringstream iss(buffer);
+
     char open = 0, comma = 0, close = 0;
     int a = 0, b = 0; 
 
-    // hack for msvc (Dinkumware): by default barfs on comma when reading an int
-    locale old = is.imbue(locale("C")); 
-
-    is >> open >> a >> comma >> b >> close;
-
-    // hack for msvc: restore old locale in case someone else depends on it 
-    is.imbue(old);
+    iss.imbue(locale("C")); // hack for msvc (Dinkumware): by default barfs on comma when reading an int
+    iss >> open >> a >> comma >> b >> close;
     
-    if (!is || open!='[' || comma!=',' || close!=']')
-        return is; 
+    if (open=='[' && comma==',' && close==']')
+    {
+        interval.begin = a;
+        interval.end = b;
+        return is;
+    }
+    
+    // now try format a[-][b]
 
-    interval.begin = a;
-    interval.end = b;
+    char dash = 0;
+    a = 0; b = 0;
+
+    istringstream iss2(buffer);
+    iss2 >> a;
+    if (iss2) interval.begin = interval.end = a;
+    iss2 >> dash;
+    if (dash=='-') interval.end = numeric_limits<int>::max();
+    iss2 >> b;
+    if (iss2) interval.end = b;
+    
     return is;
 }
 
@@ -199,6 +217,21 @@ PWIZ_API_DECL bool IntegerSet::hasUpperBound(int n) const
     if (empty()) return true;
     int highest = intervals_.back().end;
     return highest <= n;
+}
+
+
+PWIZ_API_DECL size_t IntegerSet::intervalCount() const
+{
+    return intervals_.size();
+}
+
+
+PWIZ_API_DECL size_t IntegerSet::size() const
+{
+    size_t result = 0;
+    for (Intervals::const_iterator it=intervals_.begin(); it!=intervals_.end(); ++it)
+        result += (it->end - it->begin + 1);
+    return result;            
 }
 
 
