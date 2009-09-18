@@ -33,6 +33,7 @@ rule init ( boost-root : requirements * )
         : # sources
             svnrev_max.cpp
         : # requirements
+            <variant>release
             <library>/ext/boost//filesystem/<link>static
             <library>/ext/boost//regex/<link>static
             <library>/ext/boost//date_time/<link>static
