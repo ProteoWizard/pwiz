@@ -7,6 +7,7 @@
 
 <body>
     <h2>ProteoWizard Supported Data Formats</h2>
+    <hr/>
 
     <h3>Open Formats</h3>
     <ul>
@@ -15,22 +16,82 @@
         <li>MGF</li>
     </ul>
 
+    <hr/>
+
     <h3>Proprietary Formats</h3>
-    <ul>
-        <li>Agilent</li>
-        <li>Applied Biosystems</li>
-        <li>Bruker</li>
-        <li>Thermo Fisher</li>
-        <li>Waters</li>
-    </ul>
+
     <p>
-        <em>Note</em>:&nbsp; ProteoWizard supports proprietary formats on Windows only, via vendor-supplied software libraries.
+        ProteoWizard depends on vendor-supplied software libraries to access data 
+        in proprietary formats.
     </p>
 
+    <h4>Common requirements:</h4>
+    <ul>
+        <li>Windows XP or Vista</li>
+        <li><a href="http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en" target="_blank">MSVC 2008 SP1 x86 redistributable</a> installed</li>
+    </ul>
+
+    <h4>Vendor-specific requirements:</h4>
+    <table>
+        <tr>
+            <th>Vendor</th>
+            <th>Formats</th>
+            <th>Vendor Required Software</th>
+            <th>Required Runtime Libraries</th>
+        </tr>
+        <tr>
+            <td>Agilent</td>
+            <td>MassHunter .d</td>
+            <td>distributed with ProteoWizard</td>
+            <td>.NET 2.0 or higher</td.
+        </tr>
+        <tr>
+            <td>Applied Biosystems</td>
+            <td>WIFF</td>
+            <td><a href="https://products.appliedbiosystems.com/ab/en/US/adirect/ab?cmd=catNavigate2&catID=601524" target="_blank">Protein Pilot 3 free trial</a></td>
+            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en" target="_blank">.NET 3.5 SP1</a></td>
+        </tr>
+        <tr>
+            <td>Bruker</td>
+            <td>Compass .d, YEP, BAF, FID</td>
+            <td>distributed with ProteoWizard</td>
+            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en" target="_blank">MSVC 2005 SP1 x86 redistributable</a>; .NET 2.0 or higher</td>
+        </tr>
+        <tr>
+            <td>Thermo Fisher</td>
+            <td>RAW</td>
+            <td><a href="http://sjsupport.thermofinnigan.com/public/detail.asp?id=586" target="_blank">MSFileReader free download</a></td>
+            <td>none</td>
+        </tr>
+        <tr>
+            <td>Waters</td>
+            <td>MassLynx .raw</td>
+            <td><a href="http://www.waters.com/waters/nav.htm?locale=en_US&cid=513164" target="_blank">MassLynx</a></td>
+            <td>none</td>
+        </tr>
+    </table>
+
+    <br/>
     <hr/>
     <a href="../index.html">Technical documentation home</a>
 
-
 </body>
 </html>
+<!--
+Sure. All MSVC builds currently require the runtime redistributable for
+the version of MSVC that compiled the code: these days, that's usually
+2008 SP1. Installing .NET requires administrative privileges, but not if
+it's already been done. Same for the VC redistributables.
 
+ABI (WIFF) = install .NET 3.5 SP1 and Protein Pilot 3 trial
+
+Agilent (MassHunter .d) = install .NET 2.0 or higher
+
+Bruker (Compass .d, YEP, BAF, FID) = install MSVC 2005 SP1 x86
+redistributable, .NET 2.0 or higher (requires administrative privileges)
+
+Thermo (RAW) = install MSFileReader (requires administrative privileges)
+
+Waters (MassLynx .raw) = install MassLynx (requires administrative
+privileges)
+-->
