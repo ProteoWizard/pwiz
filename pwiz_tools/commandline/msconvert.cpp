@@ -212,6 +212,15 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# extract scan indices 5...10 and 20...25\n"
           << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
           << endl
+          << "# extract ms1 scans only\n"
+          << "msconvert data.RAW --filter \"msLevel 1\"\n"
+          << endl
+          << "# extract ms2 and ms3 scans only\n"
+          << "msconvert data.RAW --filter \"msLevel 2-3\"\n"
+          << endl
+          << "# extract ms^n scans for n>1\n"
+          << "msconvert data.RAW --filter \"msLevel 2-\"\n"
+          << endl
           << "# multiple filters: select scan numbers and recalculate precursors\n"
           << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
           << endl

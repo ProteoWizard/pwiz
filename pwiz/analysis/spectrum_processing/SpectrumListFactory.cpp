@@ -171,6 +171,17 @@ SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg)
 }
 
 
+SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
+{
+    IntegerSet msLevelSet;
+    msLevelSet.parse(arg);
+
+    return SpectrumListPtr(new 
+        SpectrumList_Filter(msd.run.spectrumListPtr, 
+                            SpectrumList_FilterPredicate_MSLevelSet(msLevelSet)));
+}
+
+
 struct JumpTableEntry
 {
     const char* command;
@@ -181,12 +192,13 @@ struct JumpTableEntry
 
 JumpTableEntry jumpTable_[] =
 {
-    {"index", "[indexBegin,indexEnd] ...", filterCreator_index},
+    {"index", "int_set", filterCreator_index},
+    {"msLevel", "int_set", filterCreator_msLevel},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
-    {"peakPicking", "prefer vendor peak picking: <true|false>   [msLevelsBegin,msLevelsEnd] ...", filterCreator_nativeCentroid},
+    {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
-    {"scanNumber", "[scanNumberBegin,scanNumberEnd] ...", filterCreator_scanNumber},
-    {"scanEvent", "[scanEventBegin,scanEventEnd] ...", filterCreator_scanEvent},
+    {"scanNumber", "int_set", filterCreator_scanNumber},
+    {"scanEvent", "int_set", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
 };
@@ -254,10 +266,14 @@ string SpectrumListFactory::usage()
 {
     ostringstream oss;
 
-    oss << "filter options:\n";
+    oss << "\nfilter options:\n\n";
 
     for (JumpTableEntry* it=jumpTable_; it!=jumpTableEnd_; ++it)
         oss << it->command << " " << it->usage << endl;
+
+    oss << endl;
+
+    oss << "\'int_set\' means that a set of integers must be specified, as a list of intervals of the form [a,b] or a[-][b]\n";
 
     oss << endl;
 

@@ -115,12 +115,30 @@ void testWrapMZWindow()
 }
 
 
+void testWrapMSLevel()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    SpectrumListPtr& sl = msd.run.spectrumListPtr;
+    unit_assert(sl.get());
+    unit_assert(sl->size() == 4);
+
+    ostringstream oss;
+    oss << "msLevel 2";
+    SpectrumListFactory::wrap(msd, oss.str());
+    unit_assert(sl->size() == 1);
+    unit_assert(sl->spectrumIdentity(0).id == "scan=20");
+}
+
+
 void test()
 {
     testUsage(); 
     testWrap();
     testWrapScanTimeRange();
     testWrapMZWindow();
+    testWrapMSLevel();
 }
 
 
