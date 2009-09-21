@@ -260,6 +260,7 @@ class PWIZ_API_DECL ScanInfo
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
+    virtual bool isEnhanced() const = 0;
 
     virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;

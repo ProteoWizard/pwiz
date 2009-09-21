@@ -717,6 +717,7 @@ class ScanInfoImpl : public ScanInfo
     virtual long msLevel() const {return msLevel_;}
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
+    virtual bool isEnhanced() const {return isEnhanced_;}
 
     virtual std::vector<PrecursorInfo> precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
@@ -766,6 +767,7 @@ class ScanInfoImpl : public ScanInfo
     long msLevel_;
     ScanType scanType_;
     PolarityType polarityType_;
+    bool isEnhanced_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
     bool isProfileScan_;
@@ -810,6 +812,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     msLevel_(1),
     scanType_(ScanType_Unknown),
     polarityType_(PolarityType_Unknown),
+    isEnhanced_(false),
     isProfileScan_(false),
     isCentroidScan_(false),
     packetCount_(0),
@@ -933,6 +936,7 @@ void ScanInfoImpl::parseFilterString()
     polarityType_ = filterParser.polarityType_;
     scanType_ = filterParser.scanType_;
     activationType_ = filterParser.activationType_;
+    isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;

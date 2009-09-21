@@ -64,6 +64,7 @@ class PWIZ_API_DECL ScanFilter
 	TriBool sourceCIDOn_;
 	TriBool detectorSet_;
 	TriBool turboScanOn_;
+    TriBool enhancedOn_; // enhanced resolution
 	TriBool dependentActive_; // t: data-dependent active; f: non active
     TriBool supplementalCIDOn_;
 	TriBool widebandOn_; // wideband activation

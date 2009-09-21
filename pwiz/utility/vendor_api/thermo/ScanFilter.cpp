@@ -346,6 +346,10 @@ ScanFilter::print()
 		cout << "turboscan: " << turboScanOn_ << endl;
 	}
 
+    if (enhancedOn_ != TriBool_Unknown) {
+        cout << "enhanced mode: " << enhancedOn_ << endl;
+    }
+
 	if (dependentActive_ != TriBool_Unknown) {
 		cout << "data dependent: " << dependentActive_ << endl;
 	}
@@ -394,6 +398,7 @@ ScanFilter::initialize()
     sourceCIDOn_ = TriBool_Unknown;
     detectorSet_ = TriBool_Unknown;
     turboScanOn_ = TriBool_Unknown;
+    enhancedOn_ = TriBool_Unknown;
     dependentActive_ = TriBool_Unknown;
     supplementalCIDOn_ = TriBool_Unknown;
     widebandOn_ = TriBool_Unknown;
@@ -538,6 +543,24 @@ ScanFilter::parse(string filterLine)
 	}
 	else if (w == "T") {
 		turboScanOn_ = TriBool_True;
+		advance = true;
+	}
+	if (advance) {
+		if (s.eof()) {
+			return true;
+		}
+		s >> w;
+		advance = false;
+	}
+
+
+    // enhanced mode
+	if (w == "!E") {
+		enhancedOn_ = TriBool_False;
+		advance = true;
+	}
+	else if (w == "E") {
+		enhancedOn_ = TriBool_True;
 		advance = true;
 	}
 	if (advance) {
