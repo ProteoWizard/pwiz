@@ -1,15 +1,32 @@
 <html>
 
 <head>
-    <title>ProteoWizard Technical Documentation: Data Formats</title>
+    <title>ProteoWizard Technical Documentation: Installation and Data Formats</title>
     <link rel="stylesheet" href="../main.css" type="text/css" media="screen" />
 </head>
 
 <body>
-    <h2>ProteoWizard Supported Data Formats</h2>
+    <a href="../index.html">Technical documentation home</a>
+
+    <h2>ProteoWizard Installation and Data Formats</h2>
+    <hr/>
+
+    <h3>Installation</h3>
+    <p>
+        To install the ProteoWizard tools, download the binary package for your platform, and unzip it into the
+        directory of your choice.
+    </p>
+    <p>
+        For convenience, adjust your "PATH" environment variable to include your ProteoWizard tools directory, so
+        that the command line tools may be run from any directory.
+    </p>
+
     <hr/>
 
     <h3>Open Formats</h3>
+    <p>
+        ProteoWizard supports the reading/writing of the following open formats on all platforms:
+    </p>
     <ul>
         <li><a href="mzml.html">mzML</a></li>
         <li><a href="mzxml.html">mzXML</a></li>
@@ -18,7 +35,7 @@
 
     <hr/>
 
-    <h3>Proprietary Formats</h3>
+    <h3>Proprietary Formats supported by ProteoWizard</h3>
 
     <p>
         ProteoWizard depends on vendor-supplied software libraries to access data 
@@ -28,10 +45,25 @@
     <h4>Common requirements:</h4>
     <ul>
         <li>Windows XP or Vista</li>
-        <li><a href="http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en" target="_blank">MSVC 2008 SP1 x86 redistributable</a> installed</li>
+        <li><a href="http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en" target="_blank">MSVC 2008 SP1 Redistributable Package (x86)</a> installed</li>
+        <li><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en" target="_blank">.NET Framework 3.5 SP1</a> installed</li>
     </ul>
 
+    <p>
+        You can check to see whether the required components are installed:
+        <ul>
+            <li>(Windows XP) Control Panel->Add/Remove Programs</li>
+            <li>(Windows Vista) Control Panel->Programs and Features</li>
+        </ul>
+    </p>
+    
+
     <h4>Vendor-specific requirements:</h4>
+
+    <p>
+        Accessing certain vendor-format data files requires a separate download/install, as indicated in the table below.
+    </p>
+
     <table>
         <tr>
             <th>Vendor</th>
@@ -43,19 +75,19 @@
             <td>Agilent</td>
             <td>MassHunter .d</td>
             <td>distributed with ProteoWizard</td>
-            <td>.NET 2.0 or higher</td.
+            <td>none</td>
         </tr>
         <tr>
             <td>Applied Biosystems</td>
             <td>WIFF</td>
             <td><a href="https://products.appliedbiosystems.com/ab/en/US/adirect/ab?cmd=catNavigate2&catID=601524" target="_blank">Protein Pilot 3 free trial</a></td>
-            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en" target="_blank">.NET 3.5 SP1</a></td>
+            <td>none</td>
         </tr>
         <tr>
             <td>Bruker</td>
             <td>Compass .d, YEP, BAF, FID</td>
             <td>distributed with ProteoWizard</td>
-            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en" target="_blank">MSVC 2005 SP1 x86 redistributable</a>; .NET 2.0 or higher</td>
+            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en" target="_blank">MSVC 2005 SP1 x86 redistributable</a></td>
         </tr>
         <tr>
             <td>Thermo Fisher</td>
@@ -77,21 +109,4 @@
 
 </body>
 </html>
-<!--
-Sure. All MSVC builds currently require the runtime redistributable for
-the version of MSVC that compiled the code: these days, that's usually
-2008 SP1. Installing .NET requires administrative privileges, but not if
-it's already been done. Same for the VC redistributables.
 
-ABI (WIFF) = install .NET 3.5 SP1 and Protein Pilot 3 trial
-
-Agilent (MassHunter .d) = install .NET 2.0 or higher
-
-Bruker (Compass .d, YEP, BAF, FID) = install MSVC 2005 SP1 x86
-redistributable, .NET 2.0 or higher (requires administrative privileges)
-
-Thermo (RAW) = install MSFileReader (requires administrative privileges)
-
-Waters (MassLynx .raw) = install MassLynx (requires administrative
-privileges)
--->
