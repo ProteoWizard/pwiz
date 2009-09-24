@@ -109,7 +109,8 @@ class RawFileImpl : public RawFile
                 long cutoffValue,
                 long maxPeakCount,
                 bool centroidResult,
-                WhichMassList which);
+                WhichMassList which,
+                const MassRangePtr massRange);
 
     virtual MassListPtr
     getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
@@ -261,8 +262,15 @@ RawFileImpl::RawFileImpl(const string& filename)
         rawInterfaceVersion_ = 4;
     }
 
-    if (raw_->Open(filename.c_str()))
-        throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
+    try
+    {
+        if (raw_->Open(filename.c_str()))
+            throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
+    }
+    catch (_com_error& e)
+    {
+        throw RawEgg("[RawFile::ctor] Unable to open file " + filename + ": " + e.ErrorMessage());
+    }
 }
 
 
@@ -588,7 +596,8 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
                                      long cutoffValue,
                                      long maxPeakCount,
                                      bool centroidResult,
-                                     WhichMassList which)
+                                     WhichMassList which,
+                                     const MassRangePtr massRange)
 {
     _bstr_t bstrFilter(filter.c_str());
     double centroidPeakWidth = 0;
@@ -598,34 +607,77 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
     VariantInit(&variantPeakFlags);
     long size = 0;
 
-    HRESULT (IXRawfile::*f)(long*, _bstr_t, long, long, long, long, double*, VARIANT*, VARIANT*, long*);
 
-    switch(which)
+    if (!massRange.get())
     {
-        case MassList_Current:
-            f = &IXRawfile::GetMassListFromScanNum;
-            break;
-        case MassList_Previous:
-            f = &IXRawfile::GetPrevMassListFromScanNum;
-            break;
-        case MassList_Next:
-            f = &IXRawfile::GetNextMassListFromScanNum;
-            break;
-        default:
-            throw RawEgg("RawFileImpl::getMassList(): bad WhichMassList.\n");
-            break;
-    }
+        HRESULT (IXRawfile::*f)(long*, _bstr_t, long, long, long, long, double*, VARIANT*, VARIANT*, long*);
+        switch(which)
+        {
+            case MassList_Current:
+                f = &IXRawfile::GetMassListFromScanNum;
+                break;
+            case MassList_Previous:
+                f = &IXRawfile::GetPrevMassListFromScanNum;
+                break;
+            case MassList_Next:
+                f = &IXRawfile::GetNextMassListFromScanNum;
+                break;
+            default:
+                throw RawEgg("RawFileImpl::getMassList(): bad WhichMassList.\n");
+                break;
+        }
 
-    checkResult((raw_->*f)(&scanNumber,
-                           bstrFilter,
-                           cutoffType,
-                           cutoffValue,
-                           maxPeakCount,
-                           centroidResult,
-                           &centroidPeakWidth,
-                           &variantMassList,
-                           &variantPeakFlags,
-                           &size));
+        checkResult((raw_->*f)(&scanNumber,
+                               bstrFilter,
+                               cutoffType,
+                               cutoffValue,
+                               maxPeakCount,
+                               centroidResult,
+                               &centroidPeakWidth,
+                               &variantMassList,
+                               &variantPeakFlags,
+                               &size),
+                               "[RawFileImpl::getMassList(), GetMassListFromScanNum()] ");
+    }
+    else
+    {
+        if (rawInterfaceVersion_ < 4)
+            throw RawEgg("[RawFileImpl::getMassList()] Retrieving list by mass ranges requires the IXRawfile4 interface.");
+
+        IXRawfile4Ptr raw4 = (IXRawfile2Ptr) raw_;
+
+        HRESULT (IXRawfile4::*f)(long*, _bstr_t, long, long, long, long, double*, VARIANT*, VARIANT*, LPWSTR, long*);
+        switch(which)
+        {
+            case MassList_Current:
+                f = &IXRawfile4::GetMassListRangeFromScanNum;
+                break;
+            case MassList_Previous:
+                f = &IXRawfile4::GetPrevMassListRangeFromScanNum;
+                break;
+            case MassList_Next:
+                f = &IXRawfile4::GetNextMassListRangeFromScanNum;
+                break;
+            default:
+                throw RawEgg("RawFileImpl::getMassList(): bad WhichMassList.\n");
+                break;
+        }
+
+        wostringstream woss;
+        woss << setprecision(7) << massRange->low << '-' << massRange->high;
+        checkResult((raw4->*f)(&scanNumber,
+                               bstrFilter,
+                               cutoffType,
+                               cutoffValue,
+                               maxPeakCount,
+                               centroidResult,
+                               &centroidPeakWidth,
+                               &variantMassList,
+                               &variantPeakFlags,
+                               const_cast<wchar_t*>(woss.str().c_str()),
+                               &size),
+                               "[RawFileImpl::getMassList(), GetMassListRangeFromScanNum()] ");
+    }
 
     return MassListPtr(new MassListImpl(scanNumber,
                                         variantMassList,
@@ -663,7 +715,8 @@ RawFileImpl::getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
                                          &centroidPeakWidth,
                                          &variantMassList,
                                          &variantPeakFlags,
-                                         &size));
+                                         &size),
+                                         "[RawFileImpl::getMassList(), GetAverageMassList()] ");
 
     return MassListPtr(new MassListImpl(0,
                                         variantMassList,
@@ -718,6 +771,7 @@ class ScanInfoImpl : public ScanInfo
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
     virtual bool isEnhanced() const {return isEnhanced_;}
+    virtual bool isDependent() const {return isDependent_;}
 
     virtual std::vector<PrecursorInfo> precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
@@ -768,6 +822,7 @@ class ScanInfoImpl : public ScanInfo
     ScanType scanType_;
     PolarityType polarityType_;
     bool isEnhanced_;
+    bool isDependent_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
     bool isProfileScan_;
@@ -813,6 +868,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     scanType_(ScanType_Unknown),
     polarityType_(PolarityType_Unknown),
     isEnhanced_(false),
+    isDependent_(false),
     isProfileScan_(false),
     isCentroidScan_(false),
     packetCount_(0),
@@ -937,6 +993,7 @@ void ScanInfoImpl::parseFilterString()
     scanType_ = filterParser.scanType_;
     activationType_ = filterParser.activationType_;
     isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
+    isDependent_ = filterParser.dependentActive_ == TriBool_True;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
@@ -1041,7 +1098,7 @@ MSOrder RawFileImpl::getMSOrder(long scanNumber)
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
     long result;
-    checkResult(raw4->GetMSOrderForScanNum(scanNumber, &result));
+    checkResult(raw4->GetMSOrderForScanNum(scanNumber, &result), "[RawFileImpl::getMSOrder()] ");
     return (MSOrder) result;
 }
 
@@ -1054,7 +1111,7 @@ double RawFileImpl::getPrecursorMass(long scanNumber)
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
     double result;
-    checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, MSOrder_Any, &result));
+    checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, MSOrder_Any, &result), "[RawFileImpl::GetPrecursorMassForScanNum()] ");
     return result;
 }
 
@@ -1067,7 +1124,7 @@ ScanType RawFileImpl::getScanType(long scanNumber)
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
     long result;
-    checkResult(raw4->GetScanTypeForScanNum(scanNumber, &result));
+    checkResult(raw4->GetScanTypeForScanNum(scanNumber, &result), "[RawFileImpl::GetScanTypeForScanNum()] ");
     return (ScanType) result;
 }
 
@@ -1080,7 +1137,7 @@ ScanFilterMassAnalyzerType RawFileImpl::getMassAnalyzerType(long scanNumber)
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
     long result;
-    checkResult(raw4->GetMassAnalyzerTypeForScanNum(scanNumber, &result));
+    checkResult(raw4->GetMassAnalyzerTypeForScanNum(scanNumber, &result), "[RawFileImpl::GetMassAnalyzerTypeForScanNum()] ");
     return (ScanFilterMassAnalyzerType) result;
 }
 
@@ -1093,7 +1150,7 @@ ActivationType RawFileImpl::getActivationType(long scanNumber)
     IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
     long result;
-    checkResult(raw4->GetActivationTypeForScanNum(scanNumber, MSOrder_Any, &result));
+    checkResult(raw4->GetActivationTypeForScanNum(scanNumber, MSOrder_Any, &result), "[RawFileImpl::GetActivationTypeForScanNum()] ");
     return (ActivationType) result;
 }
 
@@ -1102,7 +1159,7 @@ ErrorLogItem RawFileImpl::getErrorLogItem(long itemNumber)
 {
     ErrorLogItem result;
     _bstr_t bstr;
-    checkResult(raw_->GetErrorLogItem(itemNumber, &result.rt, bstr.GetAddress()));
+    checkResult(raw_->GetErrorLogItem(itemNumber, &result.rt, bstr.GetAddress()), "[RawFileImpl::GetErrorLogItem()] ");
     result.errorMessage = (const char*)(bstr);
     return result;
 }
@@ -1182,7 +1239,7 @@ auto_ptr<LabelValueArray> RawFileImpl::getTuneData(long segmentNumber)
     VariantInit(&variantLabels);
     long size = 0;
 
-    checkResult(raw_->GetTuneDataLabels(segmentNumber, &variantLabels, &size));
+    checkResult(raw_->GetTuneDataLabels(segmentNumber, &variantLabels, &size), "[RawFileImpl::GetTuneDataLabels()] ");
 
     auto_ptr<TuneDataLabelValueArray> a(
         new TuneDataLabelValueArray(variantLabels, size, raw_, segmentNumber));
@@ -1231,7 +1288,7 @@ auto_ptr<LabelValueArray> RawFileImpl::getInstrumentMethods()
     VariantInit(&variantLabels);
     long size = 0;
 
-    checkResult(raw_->GetInstMethodNames(&size, &variantLabels));
+    checkResult(raw_->GetInstMethodNames(&size, &variantLabels), "[RawFileImpl::GetInstMethodNames()] ");
 
     auto_ptr<InstrumentMethodLabelValueArray> a(
         new InstrumentMethodLabelValueArray(variantLabels, size, raw_));
@@ -1331,7 +1388,8 @@ RawFileImpl::getChromatogramData(ChromatogramType type1,
                                   bstrFilter, bstrMassRanges1, bstrMassRanges2,
                                   delay, &startTime, &endTime,
                                   smoothingType, smoothingValue,
-                                  &variantChromatogramData, &variantPeakFlags, &size));
+                                  &variantChromatogramData, &variantPeakFlags, &size),
+                                  "[RawFileImpl::GetChroData]");
 
     return ChromatogramDataPtr(new ChromatogramDataImpl(variantChromatogramData, size, startTime, endTime));
 }

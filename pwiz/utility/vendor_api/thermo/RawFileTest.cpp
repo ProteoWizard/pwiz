@@ -38,17 +38,21 @@ int main(int argc, char* argv[])
         
         const char* filename = argv[1]; 
 
-        RawFilePtr rawfile(filename);
+        RawFilePtr rawfile(RawFile::create(filename));
         rawfile->setCurrentController(Controller_MS, 1);
 
         cout << "name: " << rawfile->value(FileName) << endl;
         cout << "scanCount: " << rawfile->value(NumSpectra) << endl;
 
+        const MassRangePtr massRange = MassRangePtr(new MassRange());
+        massRange->low = 400; massRange->high = 500;
+        MassListPtr massListPtr = rawfile->getMassList(123, "", Cutoff_None, 0, 0, false, MassList_Current, massRange);
+        if (massListPtr->size() > 0)
+            cout << "massList: " << massListPtr->data()[0].mass << "-" << massListPtr->data()[massListPtr->size()-1].mass << endl;
+        else
+            cout << "massList empty" << endl;
+
         return 0;
-    }
-    catch (RawEgg& egg)
-    {
-        cout << "Caught RawEgg: " << egg.error() << endl;
     }
     catch (exception& e)
     {

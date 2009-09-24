@@ -237,6 +237,9 @@ struct PWIZ_API_DECL MassRange
 };
 
 
+typedef shared_ptr<MassRange> MassRangePtr;
+
+
 struct PWIZ_API_DECL PrecursorInfo
 {
     double monoisotopicMZ;
@@ -261,6 +264,7 @@ class PWIZ_API_DECL ScanInfo
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
     virtual bool isEnhanced() const = 0;
+    virtual bool isDependent() const = 0;
 
     virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
@@ -438,7 +442,8 @@ class PWIZ_API_DECL RawFile
                 long cutoffValue,
                 long maxPeakCount,
                 bool centroidResult,
-                WhichMassList which = MassList_Current) = 0;
+                WhichMassList which = MassList_Current,
+                const MassRangePtr massRange = MassRangePtr()) = 0;
 
     virtual MassListPtr
     getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,

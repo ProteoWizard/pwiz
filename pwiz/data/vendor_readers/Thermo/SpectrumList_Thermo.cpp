@@ -250,19 +250,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         ScanType scanType = scanInfo->scanType();
 
         scanMsLevelCache_[index] = msLevel;
-        if (msLevel == -1) // precursor ion scan
-            result->set(MS_precursor_ion_spectrum);
-        else
-        {
-            result->set(MS_ms_level, msLevel);
+        result->set(MS_ms_level, msLevel);
 
-            if (scanType!=ScanType_Unknown)
-            {
-                result->set(translateAsSpectrumType(scanType));
-                if (scanType!=ScanType_Full)
-                    result->set(translateAsScanningMethod(scanType));
-            }
+        switch (msLevel)
+        {
+            case -1:    result->set(MS_precursor_ion_spectrum); break;
+            case 1:     result->set(MS_MS1_spectrum); break;
+            default:    result->set(MS_MSn_spectrum); break;
         }
+
+        if (scanType == ScanType_Zoom || scanInfo->isEnhanced())
+            scan.set(MS_enhanced_resolution_scan);
 
         PolarityType polarityType = scanInfo->polarityType();
         if (polarityType!=PolarityType_Unknown) result->set(translate(polarityType));
@@ -299,8 +297,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             }
         }
 
-        for (long i=0, precursorCount=scanInfo->precursorCount(); i<precursorCount; i++)
+        long precursorCount = scanInfo->precursorCount();
+
+        // validate that dependent scans have as many precursors as their ms level minus one
+        if (msLevel != -1 &&
+            scanInfo->isDependent() &&
+            precursorCount != msLevel-1)
         {
+            throw runtime_error("[SpectrumList_Thermo::spectrum()] Precursor count does not match ms level.");
+        }
+
+        if (precursorCount > 0)
+        {
+            long i = precursorCount - 1; // the last precursor is the one for the current scan
+
             // Note: we report what RawFile gives us, which comes from the filter string;
             // we can look in the trailer extra values for better (but still unreliable) 
             // info.  Precursor recalculation should be done outside the Reader.
@@ -335,15 +345,54 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
 
-            // TODO: better test here for data dependent modes
-            if ((scanType==ScanType_Full || scanType==ScanType_Zoom) && msLevel > 1)
-                precursor.spectrumID = index_[findPrecursorSpectrumIndex(msLevel-1, index)].id;
+            if (scanInfo->isDependent())
+            {
+                // add selected ion m/z
+                selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
 
-            selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
-            long precursorCharge = scanInfo->precursorCharge();
-            if (precursorCharge > 0)
-                selectedIon.set(MS_charge_state, precursorCharge);
-            // TODO: determine precursor intensity? (parentEnergy is not precursor intensity!)
+                // add charge state if available
+                long precursorCharge = scanInfo->precursorCharge();
+                if (precursorCharge > 0)
+                    selectedIon.set(MS_charge_state, precursorCharge);
+
+                // add intensity if available
+                size_t precursorScanIndex = findPrecursorSpectrumIndex(msLevel-1, index);
+                if (precursorScanIndex < index_.size())
+                {
+                    precursor.spectrumID = index_[precursorScanIndex].id;
+
+                    // retrieve the points within the isolation window
+                    /* TODO: figure out why this fails with HRESULT=6 on some files
+                    MassRangePtr massRange = MassRangePtr(new MassRange());
+                    massRange->low = isolationMz-1.5; massRange->high = isolationMz+2.5;
+                    MassListPtr massList = rawfile_->getMassList(precursorScanIndex, "", Cutoff_None, 0, 0, true, MassList_Current, massRange);
+                    double peakIntensity = 0;
+                    if (massList->size() > 0)
+                    {
+                        for (int i=0; i < massList->size(); ++i)
+                            peakIntensity = max(peakIntensity, massList->data()[i].intensity);
+                    }
+                    if (peakIntensity > 0)
+                        selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_counts);
+                    */
+
+                    // retrieve the intensity of the base peak within the isolation window
+                    // TODO: determine correct window around precursor m/z
+                    ostringstream massRangeStream;
+                    massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
+                    double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
+                    ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak, Operator_None, Type_MassRange,
+                                                                          "",
+                                                                          massRangeStream.str(), "",
+                                                                          0,
+                                                                          precursorScanTime, precursorScanTime,
+                                                                          Smoothing_None, 0);
+                    if (c->size() == 0)
+                        throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
+
+                    selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
+                }
+            }
 
             ActivationType activationType = scanInfo->activationType();
             if (activationType == ActivationType_Unknown)
@@ -352,8 +401,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
                 precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
 
-            precursor.selectedIons.push_back(selectedIon);
+            if (msLevel != -1)
+                precursor.selectedIons.push_back(selectedIon);
+
             result->precursors.push_back(precursor);
+
             if (msLevel == -1)
                 result->products.push_back(product);
         }
@@ -388,9 +440,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         return result;
     }
-    catch (RawEgg&)
+    catch (RawEgg& e)
     {
-        throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\"");
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\": " + e.what());
     }
 }
 
