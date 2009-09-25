@@ -260,7 +260,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         }
 
         if (scanType == ScanType_Zoom || scanInfo->isEnhanced())
-            scan.set(MS_enhanced_resolution_scan);
+            result->set(MS_enhanced_resolution_scan);
 
         PolarityType polarityType = scanInfo->polarityType();
         if (polarityType!=PolarityType_Unknown) result->set(translate(polarityType));
