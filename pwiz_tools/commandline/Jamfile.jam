@@ -92,7 +92,15 @@ exe msistats
     ;
 
 
-alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo ;
+exe chainsaw
+    : chainsaw.cpp
+      ../../pwiz/utility/proteome//pwiz_utility_proteome
+      /ext/boost//program_options
+    : <include>../../..
+    ;
+
+
+alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
 
 
 # local install for testing
