@@ -67,9 +67,16 @@ exe txt2mzml
     ;
 
 
+exe msbenchmark
+    : msbenchmark.cpp
+      ../common
+    : <include>../..
+    ;
+
 
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
+
 
 #
 # tool for creating example files
@@ -89,11 +96,13 @@ exe write_traml_example_files
     : <include>../../..
     ;
 
+
 exe write_mzid_example_files
     : write_mzid_example_files.cpp
       ../../pwiz/data/mziddata
     : <include>../../..
     ;
+
 
 #
 # local install for testing
@@ -105,6 +114,7 @@ install bin
       hello_analyzer 
       hello_analyzer_2
       mscat
+      msbenchmark
       txt2mzml
       write_example_files
       write_traml_example_files
@@ -123,7 +133,7 @@ if [ modules.peek : NT ] {
 
 package.install install
     : $(install-requirements) release
-    : mstools
+    : hello_examples
     : # no libraries
     : # no headers
     ;
