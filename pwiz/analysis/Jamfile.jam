@@ -50,8 +50,6 @@ svnrev_max.generate-version-header svnrev.hpp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/common/*.?pp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/common/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/digestion/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/digestion/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/*.?pp
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/Jamfile.jam
         <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/frequency/*.?pp
