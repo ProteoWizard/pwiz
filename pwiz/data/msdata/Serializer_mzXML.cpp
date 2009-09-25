@@ -79,11 +79,11 @@ void start_mzXML(XMLWriter& xmlWriter)
 {
     XMLWriter::Attributes attributes; 
     attributes.push_back(make_pair("xmlns", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_2.0"));
+        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.1"));
     attributes.push_back(make_pair("xmlns:xsi", 
         "http://www.w3.org/2001/XMLSchema-instance"));
     attributes.push_back(make_pair("xsi:schemaLocation", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd"));
+        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.1 http://sashimi.sourceforge.net/schema_revision/mzXML_3.1/mzXML_idx_3.1.xsd"));
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("mzXML", attributes);
@@ -270,11 +270,12 @@ struct PrecursorInfo
     string intensity;
     string charge;
     string collisionEnergy;
+    string activation;
 
     bool empty() const 
     {
         return scanNum.empty() && mz.empty() && intensity.empty() && 
-               charge.empty() && collisionEnergy.empty();
+               charge.empty() && collisionEnergy.empty() && activation.empty();
     }
 };
 
@@ -296,7 +297,16 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
         }
-        info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
+        if (!it->activation.empty())
+        {
+            switch (it->activation.cvParamChild(MS_dissociation_method).cvid)
+            {
+                case MS_CID: info.activation = "CID"; break;
+                case MS_ETD: info.activation = "ETD"; break;
+                case MS_ECD: info.activation = "ECD"; break;
+            }
+            info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
+        }
         if (!info.empty()) result.push_back(info);
     }
 
@@ -428,8 +438,13 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     if (!polarity.empty())
         attributes.push_back(make_pair("polarity", polarity));
     attributes.push_back(make_pair("retentionTime", retentionTime));
-    if (!precursorInfo.empty() && !precursorInfo[0].collisionEnergy.empty())
-        attributes.push_back(make_pair("collisionEnergy", precursorInfo[0].collisionEnergy));
+    if (!precursorInfo.empty())
+    {
+        if(!precursorInfo[0].collisionEnergy.empty())
+            attributes.push_back(make_pair("collisionEnergy", precursorInfo[0].collisionEnergy));
+        if(!precursorInfo[0].activation.empty())
+            attributes.push_back(make_pair("activationMethod", precursorInfo[0].activation));
+    }
     if (!lowMz.empty())
         attributes.push_back(make_pair("lowMz", lowMz));
     if (!highMz.empty())
