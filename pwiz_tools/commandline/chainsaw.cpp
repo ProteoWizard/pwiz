@@ -145,8 +145,16 @@ void go(const Config& config)
 
             cout << "Finished reading database. Digesting " << db.records().size() << " proteins..." << endl;
             bpt::ptime digestStart = bpt::microsec_clock::local_time();
-            for(; it != db.end(); ++it)
+            for(size_t index = 0; it != db.end(); ++it, ++index)
                 {
+                    if (index > 0 && (index % 10) == 0)
+                    {
+                        bpt::ptime digestStop = bpt::microsec_clock::local_time();
+                        bpt::time_duration digestDuration = digestStop - digestStart;
+                        double digestedPerSecond = index / (double) digestDuration.total_seconds();
+                        cout << std::fixed << setprecision(5) << index << "(" << digestedPerSecond << " per second)\r" << flush;
+                    }
+
                     // digest
                     Peptide peptide(it->sequence);
                     shared_ptr<Digestion> digestion;
