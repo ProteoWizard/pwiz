@@ -105,10 +105,16 @@ MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
     return result;
 }
 
-MHDAC::IBDASpecFilter^ bdaSpecFilterForScanId(int scanId)
+MHDAC::IBDASpecFilter^ bdaSpecFilterForScanId(int scanId, bool preferProfileData = false )
 {
     MHDAC::IBDASpecFilter^ result = gcnew MHDAC::BDASpecFilter();
     result->ScanIds = gcnew cli::array<int> { scanId };
+    result->SpectrumType = MHDAC::SpecType::MassSpectrum;
+
+    // default is DesiredMSStorageType::PeakElseProfile
+    if (preferProfileData)
+        result->DesiredMSStorageType = MHDAC::DesiredMSStorageType::ProfileElsePeak;
+
     return result;
 }
 
@@ -419,7 +425,7 @@ SpectrumPtr MassHunterDataImpl::getPeakSpectrumByRow(int rowNumber, PeakFilterPt
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumById(int scanId) const
 {
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId), nullptr)[0]));
+    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId, true), nullptr)[0]));
 }
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const

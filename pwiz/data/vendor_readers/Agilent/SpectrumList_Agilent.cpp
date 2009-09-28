@@ -116,7 +116,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     result->index = index;
     result->id = ie.id;
 
-    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumByRow(ie.rowNumber);
+    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumById(ie.scanId);
     MSScanType scanType = spectrumPtr->getMSScanType();
     DeviceType deviceType = spectrumPtr->getDeviceType();
 
@@ -142,8 +142,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 
     bool doCentroid = msLevelsToCentroid.contains(msLevel);
     MSStorageMode storageMode = spectrumPtr->getMSStorageMode();
-    bool hasProfile = storageMode == MSStorageMode_ProfileSpectrum ||
-                      storageMode == MSStorageMode_Mixed;
+    bool hasProfile = storageMode == MSStorageMode_ProfileSpectrum;
 
     if (hasProfile && (!canCentroid || !doCentroid))
     {
@@ -218,11 +217,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
         result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass, MS_m_z);
     }*/
 
-    // if a centroided spectrum is desired, we make a new call
-    if (doCentroid)
-    {
+    // if a centroided spectrum is desired and we currently have profile, we make a new call
+    if (doCentroid && storageMode != MSStorageMode_PeakDetectedSpectrum)
         spectrumPtr = rawfile_->getPeakSpectrumByRow(ie.rowNumber);
-    }
 
     if (getBinaryData)
     {
@@ -230,16 +227,80 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
  
         automation_vector<double> xArray;
         spectrumPtr->getXArray(xArray);
-        result->getMZArray()->data.assign(xArray.begin(), xArray.end());
 
         automation_vector<float> yArray;
         spectrumPtr->getYArray(yArray);
-        result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
 
-        result->defaultArrayLength = xArray.size();
+        vector<double>& mzArray = result->getMZArray()->data;
+        vector<double>& intensityArray = result->getIntensityArray()->data;
+
+        if (doCentroid || xArray.size() < 3)
+        {
+            mzArray.assign(xArray.begin(), xArray.end());
+            intensityArray.assign(yArray.begin(), yArray.end());
+        }
+        else
+        {
+            // Agilent profile mode data returns all zero-intensity samples, so we filter out
+            // samples that aren't adjacent to a non-zero-intensity sample value.
+
+            // special case for the first sample
+            if (yArray[0] > 0 || yArray[1] > 0)
+            {
+                mzArray.push_back(xArray[0]);
+                intensityArray.push_back(yArray[0]);
+            }
+
+            size_t lastIndex = yArray.size() - 1;
+
+            for (size_t i=0; i < lastIndex; ++i)
+                if (yArray[i-1] > 0 || yArray[i] > 0 || yArray[i+1] > 0)
+                {
+                    mzArray.push_back(xArray[i]);
+                    intensityArray.push_back(yArray[i]);
+                }
+
+            // special case for the last sample
+            if (yArray[lastIndex-1] > 0 || yArray[lastIndex] > 0)
+            {
+                mzArray.push_back(xArray[lastIndex]);
+                intensityArray.push_back(yArray[lastIndex]);
+            }
+        }
+
+        result->defaultArrayLength = mzArray.size();
     }
     else
-        result->defaultArrayLength = (size_t) spectrumPtr->getTotalDataPoints();
+    {
+        automation_vector<float> yArray;
+        spectrumPtr->getYArray(yArray);
+
+        if (doCentroid || yArray.size() < 3)
+        {
+            result->defaultArrayLength = (size_t) yArray.size();
+        }
+        else
+        {
+            // Agilent profile mode data returns all zero-intensity samples, so we filter out
+            // samples that aren't adjacent to a non-zero-intensity sample value.
+
+            result->defaultArrayLength = 0;
+
+            // special case for the first sample
+            if (yArray[0] > 0 || yArray[1] > 0)
+                ++result->defaultArrayLength;
+
+            size_t lastIndex = yArray.size() - 1;
+
+            for (size_t i=0; i < lastIndex; ++i)
+                if (yArray[i-1] > 0 || yArray[i] > 0 || yArray[i+1] > 0)
+                    ++result->defaultArrayLength;
+
+            // special case for the last sample
+            if (yArray[lastIndex-1] > 0 || yArray[lastIndex] > 0)
+                ++result->defaultArrayLength;
+        }
+    }
 
     return result;
 }
