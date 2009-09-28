@@ -19,6 +19,7 @@
 }
 -->
 </style></head>
+
 <body onLoad="preloadImages();" style="background-color:#000000; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px;">
 <!-- ImageReady Slices (BaseTemplate.psd) -->
 
@@ -112,8 +113,14 @@
         ]
     </p>
     <p>
-        <a href="http://teamcity.labkey.org:8080/project.html?projectId=project4" target="_blank">Daily builds</a>
-        (hosted by LabKey, by platform, Artifacts tab)<br/>
+        Daily builds (hosted by LabKey):<br/>
+
+        <!-- 
+            TeamCity widget
+            http://www.jetbrains.net/confluence/display/TCD4/Enabling+the+Status+Widget+for+Build+Configurations 
+        -->
+        <script type="text/javascript" src="http://teamcity.labkey.org:8080/externalStatus.html?js=1&buildTypeId=bt19&buildTypeId=bt23&buildTypeId=bt22&buildTypeId=bt17">
+        </script>
     </p>
     
     <hr/>
@@ -121,9 +128,8 @@
     <p>
         Notes:
         <ul>
-          <li>Formats supported on all platforms: mzML (1.1 and 1.0), mzXML, MGF
-          <li>Formats supported on Windows with vendor libraries installed: Agilent, Applied Biosystems, Bruker, Thermo, Waters</li>
           <li>All binary executables are currently built for i386 architecture only (i.e. won't work on PowerPC)</li>
+          <li><a href="technical/formats/index.html" target="_blank">More information on installation and supported formats here</a>
         </ul>
     </p>
 
