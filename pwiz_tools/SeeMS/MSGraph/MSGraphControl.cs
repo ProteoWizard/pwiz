@@ -290,7 +290,6 @@ namespace MSGraph
             if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.Line )
             {
                 ( newCurve as LineItem ).Line.IsAntiAlias = true;
-                ( newCurve as LineItem ).Line.IsOptimizedDraw = true;
             }
 
             IMSGraphItemExtended extended = item as IMSGraphItemExtended;

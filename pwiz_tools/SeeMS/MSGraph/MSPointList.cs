@@ -110,7 +110,7 @@ namespace MSGraph
                     curBinExitIndex = i;
                     if( point.Y > fullPointList[curBinMaxIndex].Y )
                         scaledMaxIndex = curBinMaxIndex = i;
-                    else if( point.Y < fullPointList[curBinMaxIndex].Y )
+                    else if( point.Y < fullPointList[curBinMinIndex].Y )
                         curBinMinIndex = i;
                 }
             }

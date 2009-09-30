@@ -22,8 +22,6 @@ namespace MSGraph
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
 
-            Line.Default.IsOptimizedDraw = true;
-
             currentItemType_ = MSGraphItemType.Unknown;
             pointAnnotations_ = new GraphObjList();
         }
