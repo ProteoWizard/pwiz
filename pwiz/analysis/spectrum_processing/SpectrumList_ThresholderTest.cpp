@@ -63,83 +63,83 @@ struct TestThresholder
 TestThresholder testThresholders[] =
 {
     // absolute thresholding, keeping the most intense points
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2 1 1", "30 20 20 10 10", ThresholdingBy_AbsoluteIntensity, 5, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_AbsoluteIntensity, 10, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_AbsoluteIntensity, 15, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 30, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_AbsoluteIntensity, 5, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_AbsoluteIntensity, 10, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_AbsoluteIntensity, 15, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 30, Orientation_MostIntense },
 
     // absolute thresholding, keeping the least intense points
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 5, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 10, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_AbsoluteIntensity, 15, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_AbsoluteIntensity, 30, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2 3", "10 10 20 20 30", ThresholdingBy_AbsoluteIntensity, 50, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 5, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_AbsoluteIntensity, 10, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_AbsoluteIntensity, 15, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_AbsoluteIntensity, 30, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_AbsoluteIntensity, 50, Orientation_LeastIntense },
 
     // relative thresholding to the base peak, keeping the most intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2 1 1", "30 20 20 10 10", ThresholdingBy_FractionOfBasePeakIntensity, 0.1, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_FractionOfBasePeakIntensity, 0.34, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_FractionOfBasePeakIntensity, 0.65, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfBasePeakIntensity, 0.67, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 1.0, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_FractionOfBasePeakIntensity, 0.1, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_FractionOfBasePeakIntensity, 0.34, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_FractionOfBasePeakIntensity, 0.65, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfBasePeakIntensity, 0.67, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 1.0, Orientation_MostIntense },
 
     // relative thresholding to the base peak, keeping the least intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 0.1, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 0.32, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_FractionOfBasePeakIntensity, 0.34, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_FractionOfBasePeakIntensity, 0.67, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_FractionOfBasePeakIntensity, 1.0, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 0.1, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfBasePeakIntensity, 0.32, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_FractionOfBasePeakIntensity, 0.34, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_FractionOfBasePeakIntensity, 0.67, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_FractionOfBasePeakIntensity, 1.0, Orientation_LeastIntense },
 
     // relative thresholding to total intensity, keeping the most intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2 1 1", "30 20 20 10 10", ThresholdingBy_FractionOfTotalIntensity, 0.1, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_FractionOfTotalIntensity, 0.12, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_FractionOfTotalIntensity, 0.21, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensity, 0.23, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensity, 0.34, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_FractionOfTotalIntensity, 0.1, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_FractionOfTotalIntensity, 0.12, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_FractionOfTotalIntensity, 0.21, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensity, 0.23, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensity, 0.34, Orientation_MostIntense },
 
     // relative thresholding to total intensity, keeping the least intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensity, 0.1, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_FractionOfTotalIntensity, 0.12, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_FractionOfTotalIntensity, 0.21, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_FractionOfTotalIntensity, 0.23, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2 3", "10 10 20 20 30", ThresholdingBy_FractionOfTotalIntensity, 0.34, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensity, 0.1, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_FractionOfTotalIntensity, 0.12, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_FractionOfTotalIntensity, 0.21, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_FractionOfTotalIntensity, 0.23, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_FractionOfTotalIntensity, 0.34, Orientation_LeastIntense },
 
     // threshold against cumulative total intensity fraction, keeping the most intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.32, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.34, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.76, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.78, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2 1 1", "30 20 20 10 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.32, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.34, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.76, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.78, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, Orientation_MostIntense },
 
     // threshold against cumulative total intensity fraction, keeping the least intense peaks
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.21, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.23, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.65, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.67, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2 3", "10 10 20 20 30", ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.21, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.23, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.65, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 0.67, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, Orientation_LeastIntense },
 
     // keep the <threshold> most intense points, excluding ties
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_Count, 1, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_Count, 2, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_Count, 3, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_Count, 4, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_Count, 1, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_Count, 2, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_Count, 3, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_Count, 4, Orientation_MostIntense },
 
     // keep the <threshold> least intense points, excluding ties
-    { "1 2 3 2 1", "10 20 30 20 10", "", "", ThresholdingBy_Count, 1, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_Count, 2, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_Count, 3, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_Count, 4, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingBy_Count, 1, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_Count, 2, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_Count, 3, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_Count, 4, Orientation_LeastIntense },
 
     // keep the <threshold> most intense points, including ties
-    { "1 2 3 2 1", "10 20 30 20 10", "3", "30", ThresholdingBy_CountAfterTies, 1, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_CountAfterTies, 2, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2", "30 20 20", ThresholdingBy_CountAfterTies, 3, Orientation_MostIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "3 2 2 1 1", "30 20 20 10 10", ThresholdingBy_CountAfterTies, 4, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingBy_CountAfterTies, 1, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_CountAfterTies, 2, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingBy_CountAfterTies, 3, Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingBy_CountAfterTies, 4, Orientation_MostIntense },
 
     // keep the <threshold> least intense points, including ties
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_CountAfterTies, 1, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1", "10 10", ThresholdingBy_CountAfterTies, 2, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_CountAfterTies, 3, Orientation_LeastIntense },
-    { "1 2 3 2 1", "10 20 30 20 10", "1 1 2 2", "10 10 20 20", ThresholdingBy_CountAfterTies, 4, Orientation_LeastIntense }
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_CountAfterTies, 1, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingBy_CountAfterTies, 2, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_CountAfterTies, 3, Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingBy_CountAfterTies, 4, Orientation_LeastIntense }
 };
 
 const size_t testThresholdersSize = sizeof(testThresholders) / sizeof(TestThresholder);
