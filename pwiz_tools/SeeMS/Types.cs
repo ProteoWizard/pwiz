@@ -308,15 +308,7 @@ namespace seems
             {
                 using( pwiz.CLI.msdata.Chromatogram element = chromatogramList.chromatogram( index, true ) )
                 {
-                    Map<double, double> sortedFullPointList = new Map<double, double>();
-                    IList<double> timeList = element.binaryDataArrays[0].data;
-                    IList<double> intensityList = element.binaryDataArrays[1].data;
-                    int arrayLength = timeList.Count;
-                    for( int i = 0; i < arrayLength; ++i )
-                        sortedFullPointList[timeList[i]] = intensityList[i];
-                    return new ZedGraph.PointPairList(
-                        new List<double>( sortedFullPointList.Keys ).ToArray(),
-                        new List<double>( sortedFullPointList.Values ).ToArray() );
+                    return new ZedGraph.PointPairList( element.binaryDataArrays[0].data, element.binaryDataArrays[1].data );
                 }
             }
 		}
@@ -437,15 +429,7 @@ namespace seems
             {
                 using( Spectrum element = spectrumList.spectrum( index, true ) )
                 {
-                    Map<double, double> sortedFullPointList = new Map<double, double>();
-                    IList<double> mzList = element.binaryDataArrays[0].data;
-                    IList<double> intensityList = element.binaryDataArrays[1].data;
-                    int arrayLength = mzList.Count;
-                    for( int i = 0; i < arrayLength; ++i )
-                        sortedFullPointList[mzList[i]] = intensityList[i];
-                    return new ZedGraph.PointPairList(
-                        new List<double>( sortedFullPointList.Keys ).ToArray(),
-                        new List<double>( sortedFullPointList.Values ).ToArray() );
+                    return new ZedGraph.PointPairList( element.getMZArray().data, element.getIntensityArray().data );
                 }
             }
 		}
