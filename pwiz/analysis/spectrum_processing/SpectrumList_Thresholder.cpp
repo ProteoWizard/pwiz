@@ -44,6 +44,14 @@ namespace std
         return lhs.intensity > rhs.intensity;
     }
 
+    struct MZIntensityPairSortByMZ
+    {
+        bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs) const
+        {
+            return lhs.mz < rhs.mz;
+        }
+    };
+
     struct MZIntensityPairIntensitySum
     {
         double operator() (double lhs, const pwiz::msdata::MZIntensityPair& rhs)
@@ -257,6 +265,7 @@ namespace
                 throw runtime_error("[threshold()] invalid thresholding type");
         }
 
+        sort(mzIntensityPairs.begin(), thresholdItr, MZIntensityPairSortByMZ());
         s->setMZIntensityPairs(&mzIntensityPairs[0], thresholdItr - mzIntensityPairs.begin(),
             s->getIntensityArray()->cvParam(MS_intensity_array).units);
     }
