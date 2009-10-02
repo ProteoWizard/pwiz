@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestRunConfiguration name="Local Test Run" id="85bb6021-5a00-46b6-a1c5-2b287b4dc457" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2006">
+  <Description>This is a default test run configuration for a local test run.</Description>
+  <Deployment enabled="false">
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\ProteowizardWrapper\fileio.dll" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\ProteowizardWrapper\finSSClientLib.dll" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\Lib\pwiz\vendor_lib\ABI\" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\Lib\pwiz\vendor_lib\Agilent\" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\ProteowizardWrapper\fregistry.dll" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\Lib\pwiz\vendor_lib\Thermo\" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\Lib\pwiz\vendor_lib\Bruker\" />
+    <DeploymentItem filename="C:\Users\nicksh\svn3\skyquery\Shared\ProteowizardWrapper\Interop.EDAL.SxS.manifest" />
+  </Deployment>
+  <TestTypeSpecific />
+</TestRunConfiguration>

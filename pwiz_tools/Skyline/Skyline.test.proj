@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="MSTest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestResultsDir Condition="'$(TestResultsDir)'==''">$(SolutionDir)\TestResults</TestResultsDir>
+  </PropertyGroup>
+  <Target Name="MSTest">
+   
+    <MakeDir Directories="$(TestResultsDir)" />    
+    <Exec Command="&quot;$(VS90COMNTOOLS)..\IDE\mstest.exe&quot; /testcontainer:$(OutDir)$(TestProject).dll /runconfig:$(SolutionDir)\LocalTestRun.testrunconfig" />
+
+  </Target>
+  <Target Name="MSTest:Clean">
+   
+    <RemoveDir Directories="$(TestResultsDir)" />
+
+  </Target>
+</Project>

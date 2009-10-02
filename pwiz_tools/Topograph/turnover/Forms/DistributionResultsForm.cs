@@ -1,0 +1,129 @@
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
+using pwiz.Topograph.Model;
+using ZedGraph;
+
+namespace pwiz.Topograph.ui.Forms
+{
+    public partial class DistributionResultsForm : PeptideFileAnalysisForm
+    {
+        private WorkspaceVersion _workspaceVersion;
+        private DistributionResultsForm() : base(null)
+        {
+            
+        }
+        protected DistributionResultsForm(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
+        {
+            InitializeComponent();
+        }
+        
+        protected void DisplayDistributionResults(PeptideDistribution peptideDistribution, IList<double> observedIntensities, IList<IList<double>> predictedIntensities, IList<String> labels, DataGridView dataGridView, ZedGraphControl barGraphControl)
+        {
+            dataGridView.Rows.Clear();
+            barGraphControl.GraphPane.GraphObjList.Clear();
+            barGraphControl.GraphPane.CurveList.Clear();
+            if (peptideDistribution == null)
+            {
+                return;
+            }
+            int massCount = observedIntensities.Count;
+            PointPairList actualBarPoints = new PointPairList();
+            PointPairList excludedBarPoints = new PointPairList();
+            PointPairList predictedBarPoints = new PointPairList();
+            for (int iMass = 0; iMass < massCount; iMass++)
+            {
+                if (PeptideFileAnalysis.ExcludedMzs.IsMassExcludedForAllCharges(iMass))
+                {
+                    excludedBarPoints.Add(iMass, observedIntensities[iMass]);
+                }
+                else
+                {
+                    actualBarPoints.Add(iMass, observedIntensities[iMass]);
+                }
+                predictedBarPoints.Add(iMass + 1.0 / 3, 0);
+            }
+            barGraphControl.GraphPane.XAxis.Title.Text = "M/Z";
+            barGraphControl.GraphPane.YAxis.Title.Text = "Intensity";
+            barGraphControl.GraphPane.BarSettings.Type = BarType.Overlay;
+            barGraphControl.GraphPane.AddBar("Observed Peptide", actualBarPoints, Color.Black);
+            barGraphControl.GraphPane.AddBar(null, excludedBarPoints, Color.Gray);
+            var distributions = peptideDistribution.ListChildren();
+            int candidateCount = distributions.Count;
+            for (int iCandidate = 0; iCandidate < candidateCount; iCandidate++)
+            {
+                predictedBarPoints = new PointPairList(predictedBarPoints);
+                for (int iMass = 0; iMass < massCount; iMass ++)
+                {
+                    predictedBarPoints[iMass].Y += predictedIntensities[iCandidate][iMass];
+                }
+                
+                Color color;
+                if (candidateCount == 1)
+                {
+                    color = Color.FromArgb(0, 0, 255);
+                } 
+                else
+                {
+                    color = Color.FromArgb(0, 255*iCandidate/(candidateCount - 1),
+                                   255*(candidateCount - iCandidate - 1)/(candidateCount - 1));
+                }
+                var row = dataGridView.Rows[dataGridView.Rows.Add()];
+                row.Cells[0].Value = labels[iCandidate];
+                row.Cells[0].Style.BackColor = color;
+                row.Cells[1].Value = Math.Round(distributions[iCandidate].PercentAmount);
+                barGraphControl.GraphPane.AddBar(labels[iCandidate], predictedBarPoints, color);
+            }
+            barGraphControl.GraphPane.AxisChange();
+            barGraphControl.Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (Workspace != null)
+            {
+                _workspaceVersion = Workspace.WorkspaceVersion;
+                Recalculate();
+            }
+        }
+
+        public virtual void Recalculate()
+        {
+        }
+
+        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        {
+            if (!_workspaceVersion.Equals(Workspace.WorkspaceVersion) || args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.Chromatograms) || args.Contains(PeptideFileAnalysis.PeptideDistributions))
+            {
+                _workspaceVersion = Workspace.WorkspaceVersion;
+                Recalculate();
+            }
+        }
+    }
+}

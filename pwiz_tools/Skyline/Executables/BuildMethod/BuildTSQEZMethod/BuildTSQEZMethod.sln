@@ -1,0 +1,20 @@
+
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BuildTSQEZMethod", "BuildTSQEZMethod.vcproj", "{165936E3-E24C-46C7-9782-2EDC49D6C9C4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{165936E3-E24C-46C7-9782-2EDC49D6C9C4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{165936E3-E24C-46C7-9782-2EDC49D6C9C4}.Debug|Win32.Build.0 = Debug|Win32
+		{165936E3-E24C-46C7-9782-2EDC49D6C9C4}.Release|Win32.ActiveCfg = Release|Win32
+		{165936E3-E24C-46C7-9782-2EDC49D6C9C4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
