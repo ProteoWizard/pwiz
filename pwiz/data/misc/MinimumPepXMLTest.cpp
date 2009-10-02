@@ -6,6 +6,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 using namespace pwiz::data::pepxml;
@@ -19,6 +20,7 @@ Specificity makeSpecificity()
     specificity.cut = "theCake";
     specificity.noCut = "notTheCake";
     specificity.sense = "non";
+    specificity.minSpace = 2;
 
     return specificity;
 
@@ -28,6 +30,9 @@ SampleEnzyme makeSampleEnzyme()
 {
     SampleEnzyme sampleEnzyme;
     sampleEnzyme.name = "oxiclean";
+    sampleEnzyme.description = "makes your whites whiter.";
+    sampleEnzyme.fidelity = "scoundrel";
+    sampleEnzyme.independent = true;
    
     Specificity specificity = makeSpecificity();
     sampleEnzyme.specificity = specificity;
@@ -40,10 +45,13 @@ SearchDatabase makeSearchDatabase()
 {
     SearchDatabase searchDatabase;
     searchDatabase.localPath = "http://www.eharmony.com";
+    searchDatabase.databaseName = "yenta";
+    searchDatabase.databaseReleaseIdentifier = "village busy body";
+    searchDatabase.sizeInDbEntries = 2;
+    searchDatabase.sizeOfResidues = 3;
     searchDatabase.type = "online dating service";
 
     return searchDatabase;
-
 }
 
 Q3RatioResult makeQ3RatioResult()
@@ -203,7 +211,7 @@ SearchResult makeSearchResult()
 {
     SearchResult searchResult;
     SearchHit searchHit = makeSearchHit();
-    searchResult.searchHit = searchHit;
+    searchResult.searchHit.push_back(SearchHitPtr(new SearchHit(searchHit)));
 
     return searchResult;
 
@@ -221,7 +229,8 @@ SpectrumQuery makeSpectrumQuery()
     spectrumQuery.retentionTimeSec = 432000; 
     
     SearchResult searchResult = makeSearchResult();
-    spectrumQuery.searchResult = searchResult;
+    SearchResultPtr srp(new SearchResult(searchResult));
+    spectrumQuery.searchResult.push_back(srp);
 
     return spectrumQuery;
 
@@ -236,11 +245,11 @@ MSMSRunSummary makeMSMSRunSummary()
     msmsRunSummary.sampleEnzyme = makeSampleEnzyme();
 
     SearchSummary searchSummary = makeSearchSummary();
-    msmsRunSummary.searchSummary = searchSummary;
+    msmsRunSummary.searchSummary.push_back(SearchSummaryPtr(new SearchSummary(searchSummary)));
 
     SpectrumQuery spectrumQuery = makeSpectrumQuery();
-    msmsRunSummary.spectrumQueries.push_back(spectrumQuery);
-    msmsRunSummary.spectrumQueries.push_back(spectrumQuery);
+    msmsRunSummary.spectrumQueries.push_back(SpectrumQueryPtr(new SpectrumQuery(spectrumQuery)));
+    msmsRunSummary.spectrumQueries.push_back(SpectrumQueryPtr(new SpectrumQuery(spectrumQuery)));
 
     return msmsRunSummary;
 
@@ -562,10 +571,14 @@ void testSpectrumQuery()
     XMLWriter writer(oss);
     spectrumQuery.write(writer);
 
+    if(os_) *os_ << oss.str() << endl;
+
     SpectrumQuery readSpectrumQuery;
     istringstream iss(oss.str());
     readSpectrumQuery.read(iss);
 
+    readSpectrumQuery.write(writer);
+    if(os_) *os_ << oss.str() << endl;
     unit_assert(spectrumQuery == readSpectrumQuery);
 
     if(os_) *os_ << oss.str() << endl;

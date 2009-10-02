@@ -31,7 +31,6 @@
 #include <iostream>
 #include <stdexcept>
 
-using namespace std;
 using namespace pwiz::minimxml;
 using namespace pwiz::data::peakdata;
 
@@ -39,16 +38,32 @@ namespace pwiz{
 namespace data{
 namespace pepxml{
 
-void setLogStream(ostream& os);
+void setLogStream(std::ostream& os);
 
 struct PWIZ_API_DECL Specificity
 {
-    Specificity(){}
-    
+    Specificity() : minSpace(1) {}
+
+    /// One or more 1-letter residue codes. Enzyme cleaves on the
+    /// sense side of the residue(s) listed in cut unless one of the
+    /// residues listed in no_cut is adjacent to the potential
+    /// cleavage site.
     std::string cut;
+
+    /// Zero or more 1-letter residue codes. Enzyme cleaves on the
+    /// sense side of the residue(s) listed in cut unless one of the
+    /// residues listed in no_cut is adjacent to the potential
+    /// cleavage site.
     std::string noCut;
+
+    /// Defines whether cleavage occurs on the C-terminal or
+    /// N-terminal side of the residue(s) listed in cut (values "C" or
+    /// "N")
     std::string sense;
 
+    /// minimum separation between adjacent cleavages. default 1.
+    size_t minSpace;
+    
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
 
@@ -60,8 +75,29 @@ struct PWIZ_API_DECL Specificity
 struct PWIZ_API_DECL SampleEnzyme
 {
     SampleEnzyme(){}
-   
+
+    /// Controlled code name for the enzyme that can be referred to by
+    /// applications.
     std::string name;
+
+    /// Free text to describe alternative names, special conditions,
+    /// etc.
+    std::string description;
+
+    /// Semispecific means that at least one end of a pepide must
+    /// conform to the cleavage specificity, (unless the peptide was
+    /// at the terminus of the parent sequence). Nonspecific means
+    /// that neither end of a peptide must conform to the cleavage
+    /// specificity.
+    std::string fidelity;
+
+    /// If there are multiple specificities and independent is true,
+    /// then a single peptide cannot exhibit one specificity at one
+    /// terminus and a different specificity at the other. If
+    /// independent is false, then a single peptide can exhibit mixed
+    /// specificities.
+    bool independent;
+
     Specificity specificity;
 
     void write(XMLWriter& writer) const;
@@ -77,6 +113,10 @@ struct PWIZ_API_DECL SearchDatabase
     SearchDatabase(){}
 
     std::string localPath;
+    std::string databaseName;
+    std::string databaseReleaseIdentifier;
+    size_t sizeInDbEntries;
+    size_t sizeOfResidues;
     std::string type;
 
     void write(XMLWriter& writer) const;
@@ -104,7 +144,7 @@ struct PWIZ_API_DECL Q3RatioResult
     double decimalRatio;
 
     void write(XMLWriter& writer) const;
-    void read(istream& is);
+    void read(std::istream& is);
 
     bool operator==(const Q3RatioResult& that) const;
     bool operator!=(const Q3RatioResult& that) const;
@@ -117,6 +157,9 @@ struct PWIZ_API_DECL PeptideProphetResult
 
     double probability;
     std::vector<double> allNttProb;
+    std::string analysis;
+
+    // TODO add search_score_summary and its parameter (2+ occurances) 
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -218,11 +261,19 @@ struct PWIZ_API_DECL SearchHit
 
 };
 
+typedef boost::shared_ptr<SearchHit> SearchHitPtr;
+
+
+PWIZ_API_DECL bool operator==(const SearchHitPtr left, const SearchHitPtr right);
+
 struct PWIZ_API_DECL SearchResult
 {
-    SearchResult(){}
+    SearchResult(size_t searchId = 0) :searchId(searchId){}
 
-    SearchHit searchHit;
+    /// Unique identifier to search summary
+    size_t searchId;
+    
+    std::vector<SearchHitPtr> searchHit;
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -231,6 +282,11 @@ struct PWIZ_API_DECL SearchResult
     bool operator!=(const SearchResult& that) const;
     
 };
+
+typedef boost::shared_ptr<SearchResult> SearchResultPtr;
+
+PWIZ_API_DECL bool operator==(SearchResultPtr left, SearchResultPtr right);
+
 
 struct PWIZ_API_DECL EnzymaticSearchConstraint
 {
@@ -256,6 +312,9 @@ struct PWIZ_API_DECL AminoAcidModification
     double massDiff;
     double mass;
     std::string variable;
+    std::string peptideTerminus;
+    std::string binary;
+    std::string description;
     std::string symbol;
 
     void write(XMLWriter& writer) const;
@@ -266,16 +325,34 @@ struct PWIZ_API_DECL AminoAcidModification
 
 };
 
+/// Database search settings
 struct PWIZ_API_DECL SearchSummary
 {
     SearchSummary(){}
 
+    /// Full path location of mzXML file for this search run (without
+    /// the .mzXML extension)
     std::string baseName;
+    
+    /// SEQUEST, Mascot, COMET, etc
     std::string searchEngine;
+
+    /// average or monoisotopic
     std::string precursorMassType;
+
+    /// average or monoisotopic
     std::string fragmentMassType;
+
+    /// Format of file storing the runner up peptides (if not present
+    /// in pepXML)
     std::string searchID;
+
+    /// runner up search hit data type extension (e.g. .tgz)
     SearchDatabase searchDatabase;
+
+    /// matches id in search hit
+    size_t search_id;
+    
     EnzymaticSearchConstraint enzymaticSearchConstraint;
     std::vector<AminoAcidModification> aminoAcidModifications;
 
@@ -287,18 +364,52 @@ struct PWIZ_API_DECL SearchSummary
 
 };
 
+typedef boost::shared_ptr<SearchSummary> SearchSummaryPtr;
+
+PWIZ_API_DECL bool operator==(const SearchSummaryPtr left, const SearchSummaryPtr right);
+
+
+/// Reference for analysis applied to current run (time corresponds
+/// with analysis_summary/@time, id corresponds with
+/// analysis_result/@id)
+struct PWIZ_API_DECL AnalysisTimestamp
+{
+    /// Date of analysis
+    std::string time;
+
+    /// Analysis name
+    std::string analsysis;
+
+    /// Unique identifier for each type of analysis
+    size_t id;
+    
+    // Evil ##any data goes here
+};
+
+
 struct PWIZ_API_DECL SpectrumQuery
 {
     SpectrumQuery() : startScan(0), endScan(0), precursorNeutralMass(0), assumedCharge(0), index(0), retentionTimeSec(0) {}
 
     std::string spectrum;
+    /// first scan number integrated into MS/MS spectrum
     int startScan;
+
+    /// last scan number integrated into MS/MS spectrum
     int endScan;
+
     double precursorNeutralMass;
+
+    /// Precursor ion charge used for search
     int assumedCharge;
+
+    /// Search constraint applied specifically to this query
     int index;
+
+    /// Unique identifier
     double retentionTimeSec;
-    SearchResult searchResult;
+    
+    std::vector<SearchResultPtr> searchResult;
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -308,13 +419,26 @@ struct PWIZ_API_DECL SpectrumQuery
     
 };
 
+typedef boost::shared_ptr<SpectrumQuery> SpectrumQueryPtr;
+
+PWIZ_API_DECL bool operator==(const SpectrumQueryPtr left, const SpectrumQueryPtr right);
+
 struct PWIZ_API_DECL MSMSRunSummary
 {
     MSMSRunSummary(){}
 
+    std::string base_name;
+    std::string raw_data_type;
+    std::string raw_data;
+    std::string msManufacturer;
+    std::string msModel;
+    std::string msIonization;
+    std::string msMassAnalyzer;
+    std::string msDetector;
+    
     SampleEnzyme sampleEnzyme;
-    SearchSummary searchSummary;
-    std::vector<SpectrumQuery> spectrumQueries;
+    std::vector<SearchSummaryPtr> searchSummary;
+    std::vector<SpectrumQueryPtr> spectrumQueries;
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -323,6 +447,54 @@ struct PWIZ_API_DECL MSMSRunSummary
     bool operator!=(const MSMSRunSummary& that) const;
     
 };
+
+struct PWIZ_API_DECL AnalysisSummary
+{
+    /// Time analysis complete (unique id)
+    std::string time;
+
+    /// Name of analysis program
+    std::string analysis;
+
+    /// Release
+    std::string version;
+    
+    // All the unknown stuff goes here
+    
+    // TODO deal with the results of
+    // <xs:any namespace="##any" processContents="lax" minOccurs="0">
+};
+
+typedef boost::shared_ptr<AnalysisSummary> AnalysisSummaryPtr;
+
+
+struct PWIZ_API_DECL DataFilter
+{
+    size_t number;
+
+    /// File from which derived
+    std::string parent_file;
+    
+    std::string windows_parent;
+
+    /// filtering criteria applied to data
+    std::string description;
+};
+
+typedef boost::shared_ptr<DataFilter> DataFilterPtr;
+
+
+/// Source and filtering criteria used to generate dataset
+struct PWIZ_API_DECL DatasetDerivation
+{
+    /// number preceding filter generations
+    size_t generation_no;
+    
+    std::vector<DataFilterPtr> dataFilters;
+};
+
+typedef boost::shared_ptr<DatasetDerivation> DatasetDerivationPtr;
+
 
 struct PWIZ_API_DECL MSMSPipelineAnalysis
 {
@@ -333,7 +505,33 @@ struct PWIZ_API_DECL MSMSPipelineAnalysis
     std::string xmlns;
     std::string xmlnsXSI;
     std::string XSISchemaLocation;
+
+    /// full path file name of mzXML (minus the .mzXML)
+    std::string baseName;
+
+    /// raw data type extension (e.g. .mzXML)
+    std::string raw_data_type;
+
+    /// raw data type extension (e.g. .mzXML)
+    std::string raw_data;
+
+    /// Manufacturer of MS/MS instrument
+    std::string msManufacturer;
+
+    /// Instrument model (cf mzXML)
+    std::string msModel;
+
+    /// Instrument model (cf mzXML)
+    std::string msIonization;
+
+    /// Ion trap, etc (cf mzXML)
+    std::string msMassAnalyzer;
+
+    /// EMT, etc(cf mzXML)
+    std::string msDetector;
     
+    AnalysisSummaryPtr analysisSummary;
+    DatasetDerivationPtr datasetDerivation;
     MSMSRunSummary msmsRunSummary;
 
     void write(XMLWriter& writer) const;
@@ -369,6 +567,9 @@ private:
 };
 
 typedef boost::shared_ptr<Match> MatchPtr;
+
+PWIZ_API_DECL bool operator==(const MatchPtr left, const MatchPtr right);
+
 
 struct PWIZ_API_DECL MatchData
 {

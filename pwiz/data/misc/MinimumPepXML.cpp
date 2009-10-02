@@ -36,6 +36,7 @@ using namespace pwiz::data::pepxml;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
+using namespace boost;
 
 ostream* _log = 0;
 
@@ -48,65 +49,65 @@ void setLogStream(ostream& os)
 
 namespace{
 
-string stringCastVector(const vector<double>& v)
-{
-    if ( v.size() == 0 ) return "";
-    const char *delimiter = ",";
-    const pair<const char*, const char*> bookends = make_pair("(",")");
-    string result;
-    result += bookends.first;
+    string stringCastVector(const vector<double>& v)
+    {
+        if ( v.size() == 0 ) return "";
+        const char *delimiter = ",";
+        const pair<const char*, const char*> bookends = make_pair("(",")");
+        string result;
+        result += bookends.first;
 
-    vector<double>::const_iterator it = v.begin();
-    for(; it < v.end() - 1; ++it)
+        vector<double>::const_iterator it = v.begin();
+        for(; it < v.end() - 1; ++it)
         {
             result += boost::lexical_cast<string>(*it);
             result += delimiter;
 
         }
 
-    result += boost::lexical_cast<string>(*it);
-    result += bookends.second;
+        result += boost::lexical_cast<string>(*it);
+        result += bookends.second;
 
-    return result;
+        return result;
 
-}
+    }
 
-vector<double> vectorCastString(const string& s)
-{
-    const char* delimiter = ",";
-    const pair<const char*, const char*> bookends = make_pair("(\0",")\0");
+    vector<double> vectorCastString(const string& s)
+    {
+        const char* delimiter = ",";
+        const pair<const char*, const char*> bookends = make_pair("(\0",")\0");
 
-    vector<double> result;
-    string::const_iterator it = s.begin();
-    ++it; // skip first bookend
+        vector<double> result;
+        string::const_iterator it = s.begin();
+        ++it; // skip first bookend
 
-    while (it != s.end()) // switch to using string::find here
+        while (it != s.end()) // switch to using string::find here
         {
             string vectorEntry = "";
             while(strncmp(&(*it), delimiter, 1) && strncmp(&(*it), bookends.second, 1))
-                {
-                    vectorEntry += *it;
-                    ++it;
+            {
+                vectorEntry += *it;
+                ++it;
                     
-                }
+            }
             result.push_back(boost::lexical_cast<double>(vectorEntry));
             ++it; // skip the delimiter and eventually the second bookend
 
         }
 
-    return result;
+        return result;
 
-}
-bool operator==(const vector<MatchPtr>& a, const vector<MatchPtr>& b) 
+    }
+    bool operator==(const vector<MatchPtr>& a, const vector<MatchPtr>& b) 
     {
         if (a.size() != b.size()) return false;
         vector<MatchPtr>::const_iterator a_it = a.begin();
         vector<MatchPtr>::const_iterator b_it = b.begin();
         for( ; a_it != a.end(); ++a_it, ++b_it)
-            {
-                if (!(**a_it == **b_it)) return false;
+        {
+            if (!(**a_it == **b_it)) return false;
 
-            }
+        }
 
         return true;
 
@@ -123,6 +124,8 @@ PWIZ_API_DECL void Specificity::write(XMLWriter& writer) const
     attributes.push_back(make_pair("cut", cut));
     attributes.push_back(make_pair("no_cut", noCut));
     attributes.push_back(make_pair("sense", sense));
+    attributes.push_back(make_pair("min_spacing", boost::lexical_cast<string>(minSpace)));
+    
     writer.startElement("specificity", attributes, XMLWriter::EmptyElement);
 }
 
@@ -134,22 +137,27 @@ struct HandlerSpecificity : public SAXParser::Handler
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
 
     {
+        if (name == "specificity")
+        {
+            getAttribute(attributes, "cut", specificity->cut);
+            getAttribute(attributes, "no_cut", specificity->noCut);
+            getAttribute(attributes, "sense", specificity->sense);
 
-        if ( name == "specificity" )
-            {
-                getAttribute(attributes, "cut", specificity->cut);
-                getAttribute(attributes, "no_cut", specificity->noCut);
-                getAttribute(attributes, "sense", specificity->sense);
-                return Handler::Status::Ok;
+            string value;
+            getAttribute(attributes, "min_spacing", value);
+            if (!value.empty())
+                specificity->minSpace = lexical_cast<size_t>(value);
+            
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else
-            {
-                throw runtime_error(("[HandlerSpecificity] : Unexpected element name : " + name).c_str());
-                return Handler::Status::Done;
+        {
+            throw runtime_error(("[HandlerSpecificity] : Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
 
     }
@@ -182,6 +190,10 @@ PWIZ_API_DECL void SampleEnzyme::write(XMLWriter& writer) const
     XMLWriter::Attributes attributes;
 
     attributes.push_back(make_pair("name", name));
+    attributes.push_back(make_pair("description", description));
+    attributes.push_back(make_pair("fidelity", fidelity));
+    attributes.push_back(make_pair("independent", independent? "true" : "false"));
+
     writer.startElement("sample_enzyme", attributes);
     specificity.write(writer);
     writer.endElement();
@@ -197,31 +209,28 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
 
     {
         if ( name == "sample_enzyme" )
-            {
+        {
+            getAttribute(attributes, "name", sampleEnzyme->name);
+            getAttribute(attributes, "description", sampleEnzyme->description);
+            getAttribute(attributes, "fidelity", sampleEnzyme->fidelity);
 
-                getAttribute(attributes, "name", sampleEnzyme->name);
-                return Handler::Status::Ok;
+            string value;
+            getAttribute(attributes, "independent", value);
 
-
-            }
-
+            sampleEnzyme->independent = value=="true"? true : false;
+            
+            return Handler::Status::Ok;
+        }
         else if ( name == "specificity" )
-            {
-
-                _handlerSpecificity.specificity= &(sampleEnzyme->specificity);
-                return Handler::Status(Status::Delegate, &(_handlerSpecificity));
-
-            }
-
+        {
+            _handlerSpecificity.specificity= &(sampleEnzyme->specificity);
+            return Handler::Status(Status::Delegate, &(_handlerSpecificity));
+        }
         else
-            {
-
-                throw runtime_error(("[HandlerSampleEnzyme] : Unexpected element name : "+ name).c_str());
-                return Handler::Status::Done;
-
-            }
-
-
+        {
+            throw runtime_error(("[HandlerSampleEnzyme] : Unexpected element name : "+ name).c_str());
+            return Handler::Status::Done;
+        }
     }
 
 private:
@@ -254,6 +263,10 @@ PWIZ_API_DECL void SearchDatabase::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("local_path", localPath));
+    attributes.push_back(make_pair("database_name", databaseName));
+    attributes.push_back(make_pair("database_release_identifier", databaseReleaseIdentifier));
+    attributes.push_back(make_pair("size_in_db_entries", boost::lexical_cast<string>(sizeInDbEntries)));
+    attributes.push_back(make_pair("size_of_residues", boost::lexical_cast<string>(sizeOfResidues)));
     attributes.push_back(make_pair("type", type));
 
     writer.startElement("search_database", attributes, XMLWriter::EmptyElement);
@@ -268,23 +281,31 @@ struct HandlerSearchDatabase : public SAXParser::Handler
     virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
-
     {
         if (name == "search_database")
-            {
-                getAttribute(attributes, "local_path", searchDatabase->localPath);
-                getAttribute(attributes, "type", searchDatabase->type);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "local_path", searchDatabase->localPath);
+            getAttribute(attributes, "database_name", searchDatabase->databaseName);
+            getAttribute(attributes, "database_release_identifier", searchDatabase->databaseReleaseIdentifier);
 
-            }
-        
+            string value;
+            getAttribute(attributes, "size_in_db_entries", value);
+            if (!value.empty())
+                searchDatabase->sizeInDbEntries = lexical_cast<size_t>(value);
+
+            value.clear();
+            getAttribute(attributes, "size_of_residues", value);
+            if (!value.empty())
+                searchDatabase->sizeOfResidues = lexical_cast<size_t>(value);
+            
+            getAttribute(attributes, "type", searchDatabase->type);
+            return Handler::Status::Ok;
+        }
         else
-            {
-                throw runtime_error(("[HandlerSearchDatabase] Unexpected element name : " + name).c_str());
-                return Handler::Status::Done;
-
-            }
-
+        {
+            throw runtime_error(("[HandlerSearchDatabase] Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
+        }
     }
 
 };
@@ -334,33 +355,33 @@ struct HandlerQ3RatioResult : public SAXParser::Handler
     HandlerQ3RatioResult(Q3RatioResult* _q3RatioResult = 0) : q3RatioResult(_q3RatioResult) {}  
 
     virtual Status startElement(const string& name,
-                              const Attributes& attributes,
-                              stream_offset position)
+                                const Attributes& attributes,
+                                stream_offset position)
 
     {
         if (name == "q3ratio_result")
-            {
-                getAttribute(attributes, "light_firstscan", q3RatioResult->lightFirstScan);
-                getAttribute(attributes, "light_lastscan", q3RatioResult->lightLastScan);
-                getAttribute(attributes, "light_mass", q3RatioResult->lightMass);
-                getAttribute(attributes, "heavy_firstscan", q3RatioResult->heavyFirstScan);
-                getAttribute(attributes, "heavy_lastscan", q3RatioResult->heavyLastScan);
-                getAttribute(attributes, "heavy_mass", q3RatioResult->heavyMass);
-                getAttribute(attributes, "light_area", q3RatioResult->lightArea);
-                getAttribute(attributes, "heavy_area", q3RatioResult->heavyArea);
-                getAttribute(attributes, "q2_light_area", q3RatioResult->q2LightArea);
-                getAttribute(attributes, "q2_heavy_area", q3RatioResult->q2HeavyArea);
-                getAttribute(attributes, "decimal_ratio", q3RatioResult->decimalRatio);
+        {
+            getAttribute(attributes, "light_firstscan", q3RatioResult->lightFirstScan);
+            getAttribute(attributes, "light_lastscan", q3RatioResult->lightLastScan);
+            getAttribute(attributes, "light_mass", q3RatioResult->lightMass);
+            getAttribute(attributes, "heavy_firstscan", q3RatioResult->heavyFirstScan);
+            getAttribute(attributes, "heavy_lastscan", q3RatioResult->heavyLastScan);
+            getAttribute(attributes, "heavy_mass", q3RatioResult->heavyMass);
+            getAttribute(attributes, "light_area", q3RatioResult->lightArea);
+            getAttribute(attributes, "heavy_area", q3RatioResult->heavyArea);
+            getAttribute(attributes, "q2_light_area", q3RatioResult->q2LightArea);
+            getAttribute(attributes, "q2_heavy_area", q3RatioResult->q2HeavyArea);
+            getAttribute(attributes, "decimal_ratio", q3RatioResult->decimalRatio);
                 
-                return Handler::Status::Ok;
+            return Handler::Status::Ok;
 
-            }
+        }
         
         else
-            {
-                throw runtime_error(("[HandlerQ3RatioResult] Unexpected element name: " + name).c_str());
-                return Handler::Status::Done;
-            } 
+        {
+            throw runtime_error(("[HandlerQ3RatioResult] Unexpected element name: " + name).c_str());
+            return Handler::Status::Done;
+        } 
       
     }
 
@@ -376,16 +397,16 @@ PWIZ_API_DECL void Q3RatioResult::read(istream& is)
 PWIZ_API_DECL bool Q3RatioResult::operator==(const Q3RatioResult& that) const
 {
     return lightFirstScan == that.lightFirstScan &&
-      lightLastScan == that.lightLastScan &&
-      lightMass == that.lightMass &&
-      heavyFirstScan == that.heavyFirstScan &&
-      heavyLastScan == that.heavyLastScan &&
-      heavyMass == that.heavyMass &&
-      lightArea == that.lightArea &&
-      heavyArea == that.heavyArea &&
-      q2LightArea == that.q2LightArea &&
-      q2HeavyArea == that.q2HeavyArea &&
-      decimalRatio == that.decimalRatio;
+        lightLastScan == that.lightLastScan &&
+        lightMass == that.lightMass &&
+        heavyFirstScan == that.heavyFirstScan &&
+        heavyLastScan == that.heavyLastScan &&
+        heavyMass == that.heavyMass &&
+        lightArea == that.lightArea &&
+        heavyArea == that.heavyArea &&
+        q2LightArea == that.q2LightArea &&
+        q2HeavyArea == that.q2HeavyArea &&
+        decimalRatio == that.decimalRatio;
 
 }
 
@@ -403,7 +424,9 @@ PWIZ_API_DECL void PeptideProphetResult::write(XMLWriter& writer) const
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("probability", boost::lexical_cast<string>(probability)));
     attributes.push_back(make_pair("all_ntt_prob", allNttProbStr));
-    
+    if (!analysis.empty())
+        attributes.push_back(make_pair("analysis", analysis));
+        
     writer.startElement("peptideprophet_result", attributes);
     writer.endElement();
     
@@ -420,21 +443,22 @@ struct HandlerPeptideProphetResult : public SAXParser::Handler
 
     {
         if (name == "peptideprophet_result")
-            {
-                getAttribute(attributes, "probability", peptideProphetResult->probability);
-                getAttribute(attributes, "all_ntt_prob", _allNttProbStr);
-                peptideProphetResult->allNttProb = vectorCastString(_allNttProbStr);
+        {
+            getAttribute(attributes, "probability", peptideProphetResult->probability);
+            getAttribute(attributes, "all_ntt_prob", _allNttProbStr);
+            peptideProphetResult->allNttProb = vectorCastString(_allNttProbStr);
+            getAttribute(attributes, "analysis", peptideProphetResult->analysis);
                 
-                return Handler::Status::Ok;
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else
-            {
-                if (_log) *_log << ("[HandlerPeptideProphetResult] Ignoring non-essential element name : " + name).c_str() << endl;
-                return Handler::Status::Ok;
+        {
+            if (_log) *_log << ("[HandlerPeptideProphetResult] Ignoring non-essential element name : " + name).c_str() << endl;
+            return Handler::Status::Ok;
 
-            }
+        }
 
     }
 
@@ -488,32 +512,32 @@ struct HandlerAnalysisResult : public SAXParser::Handler
 
     {
         if ( name == "analysis_result" )
-            {
-                getAttribute(attributes, "analysis", analysisResult->analysis);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "analysis", analysisResult->analysis);
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else if (name == "peptideprophet_result")
-            {             
+        {             
 	        _handlerPeptideProphetResult.peptideProphetResult = &(analysisResult->peptideProphetResult);
-                 return Handler::Status(Status::Delegate, &_handlerPeptideProphetResult);
+            return Handler::Status(Status::Delegate, &_handlerPeptideProphetResult);
 
-            }
+        }
 
-       else if (name == "q3ratio_result")
-            {
+        else if (name == "q3ratio_result")
+        {
 	        _handlerQ3RatioResult.q3RatioResult = &(analysisResult->q3RatioResult);
-                 return Handler::Status(Status::Delegate, &_handlerQ3RatioResult);
+            return Handler::Status(Status::Delegate, &_handlerQ3RatioResult);
 
-            }
+        }
 
         else 
-            {
-                if (_log) *_log << ("[HandlerAnalysisResult] Ignoring non-essential element name : " + name).c_str() << endl;
-                return Handler::Status::Ok;
+        {
+            if (_log) *_log << ("[HandlerAnalysisResult] Ignoring non-essential element name : " + name).c_str() << endl;
+            return Handler::Status::Ok;
 
-            }
+        }
 
     }
 
@@ -562,27 +586,27 @@ struct HandlerAlternativeProtein : public SAXParser::Handler
 
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
 
+    {
+        if ( name == "alternative_protein" )
         {
-            if ( name == "alternative_protein" )
-                {
 
-                    getAttribute(attributes, "protein", alternativeProtein->protein);
-                    getAttribute(attributes, "protein_descr", alternativeProtein->proteinDescr);
-                    getAttribute(attributes, "num_tol_term", alternativeProtein->numTolTerm);
+            getAttribute(attributes, "protein", alternativeProtein->protein);
+            getAttribute(attributes, "protein_descr", alternativeProtein->proteinDescr);
+            getAttribute(attributes, "num_tol_term", alternativeProtein->numTolTerm);
 
-                    return Handler::Status::Ok;
-
-                }
-
-            else
-                {
-
-                    throw runtime_error(("[HandlerAlternativeProtein] Unexpected element name : " + name).c_str());
-                    return Handler::Status::Done;
-
-                }
+            return Handler::Status::Ok;
 
         }
+
+        else
+        {
+
+            throw runtime_error(("[HandlerAlternativeProtein] Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
+
+        }
+
+    }
 
 };
 
@@ -626,20 +650,20 @@ struct HandlerModAminoAcidMass : public SAXParser::Handler
 
     {
         if ( name == "mod_aminoacid_mass" )
-            {
-                getAttribute(attributes, "position", modAminoAcidMass->position);
-                getAttribute(attributes, "mass", modAminoAcidMass->mass);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "position", modAminoAcidMass->position);
+            getAttribute(attributes, "mass", modAminoAcidMass->mass);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else
-            {
-                throw runtime_error(("[HandlerModAminoAcidMass] : Unexpected element name : " + name).c_str());
-                return Handler::Status::Done;
+        {
+            throw runtime_error(("[HandlerModAminoAcidMass] : Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
     }
 
@@ -686,29 +710,29 @@ struct HandlerModificationInfo : public SAXParser::Handler
     {
 
         if ( name == "modification_info" )
-            {
+        {
 
-                getAttribute(attributes, "modified_peptide", modificationInfo->modifiedPeptide);
-                return Handler::Status::Ok;
+            getAttribute(attributes, "modified_peptide", modificationInfo->modifiedPeptide);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else if ( name == "mod_aminoacid_mass" )
-            {
+        {
 
-                _handlerModAminoAcidMass.modAminoAcidMass= &(modificationInfo->modAminoAcidMass);
-                return Handler::Status(Status::Delegate, &(_handlerModAminoAcidMass));
+            _handlerModAminoAcidMass.modAminoAcidMass= &(modificationInfo->modAminoAcidMass);
+            return Handler::Status(Status::Delegate, &(_handlerModAminoAcidMass));
 
-            }
+        }
 
         else
-            {
+        {
 
-                throw runtime_error(("[HandlerModificationInfo] Unexpected element name : " + name).c_str());
-                return Handler::Status::Done;
+            throw runtime_error(("[HandlerModificationInfo] Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
 
     }
@@ -762,10 +786,10 @@ PWIZ_API_DECL void SearchHit::write(XMLWriter& writer) const
     analysisResult.write(writer);
     vector<AlternativeProtein>::const_iterator it = alternativeProteins.begin();
     for(; it != alternativeProteins.end(); ++it)
-        {
-            it->write(writer);
+    {
+        it->write(writer);
 
-        }
+    }
     modificationInfo.write(writer);
     writer.endElement();
     
@@ -780,55 +804,55 @@ struct HandlerSearchHit : public SAXParser::Handler
     {
 
         if ( name == "search_hit" )
-            {
-                getAttribute(attributes, "hit_rank", searchHit->hitRank);
-                getAttribute(attributes, "peptide", searchHit->peptide);
-                getAttribute(attributes, "peptide_prev_aa", searchHit->peptidePrevAA);
-                getAttribute(attributes, "peptide_next_aa", searchHit->peptideNextAA);
-                getAttribute(attributes, "protein", searchHit->protein);
-                getAttribute(attributes, "protein_descr", searchHit->proteinDescr);
-                getAttribute(attributes, "num_tot_proteins", searchHit->numTotalProteins);
-                getAttribute(attributes, "num_matched_ions", searchHit->numMatchedIons);
-                getAttribute(attributes, "tot_num_ions", searchHit->totalNumIons);
-                getAttribute(attributes, "calc_neutral_pep_mass", searchHit->calcNeutralPepMass);
-                getAttribute(attributes, "massdiff", searchHit->massDiff);
-                getAttribute(attributes, "num_tol_term", searchHit->numTolTerm);
-                getAttribute(attributes, "num_missed_cleavages", searchHit->numMissedCleavages);
-                getAttribute(attributes, "is_rejected", searchHit->isRejected);
+        {
+            getAttribute(attributes, "hit_rank", searchHit->hitRank);
+            getAttribute(attributes, "peptide", searchHit->peptide);
+            getAttribute(attributes, "peptide_prev_aa", searchHit->peptidePrevAA);
+            getAttribute(attributes, "peptide_next_aa", searchHit->peptideNextAA);
+            getAttribute(attributes, "protein", searchHit->protein);
+            getAttribute(attributes, "protein_descr", searchHit->proteinDescr);
+            getAttribute(attributes, "num_tot_proteins", searchHit->numTotalProteins);
+            getAttribute(attributes, "num_matched_ions", searchHit->numMatchedIons);
+            getAttribute(attributes, "tot_num_ions", searchHit->totalNumIons);
+            getAttribute(attributes, "calc_neutral_pep_mass", searchHit->calcNeutralPepMass);
+            getAttribute(attributes, "massdiff", searchHit->massDiff);
+            getAttribute(attributes, "num_tol_term", searchHit->numTolTerm);
+            getAttribute(attributes, "num_missed_cleavages", searchHit->numMissedCleavages);
+            getAttribute(attributes, "is_rejected", searchHit->isRejected);
 
-                return Handler::Status::Ok;
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else if ( name == "analysis_result" )
-            {
-                _handlerAnalysisResult.analysisResult = &(searchHit->analysisResult);
-                return Handler::Status(Status::Delegate, &(_handlerAnalysisResult));
+        {
+            _handlerAnalysisResult.analysisResult = &(searchHit->analysisResult);
+            return Handler::Status(Status::Delegate, &(_handlerAnalysisResult));
 
-            }
+        }
         
         else if ( name == "alternative_protein" )
-            {
-                searchHit->alternativeProteins.push_back(AlternativeProtein());
-                _handlerAlternativeProtein.alternativeProtein = &(searchHit->alternativeProteins.back());
-                return Handler::Status(Status::Delegate, &(_handlerAlternativeProtein));
+        {
+            searchHit->alternativeProteins.push_back(AlternativeProtein());
+            _handlerAlternativeProtein.alternativeProtein = &(searchHit->alternativeProteins.back());
+            return Handler::Status(Status::Delegate, &(_handlerAlternativeProtein));
 
-            }
+        }
 
         else if ( name == "modification_info" )
-            {
-                _handlerModificationInfo.modificationInfo = &(searchHit->modificationInfo);
-                return Handler::Status(Status::Delegate, &(_handlerModificationInfo));
+        {
+            _handlerModificationInfo.modificationInfo = &(searchHit->modificationInfo);
+            return Handler::Status(Status::Delegate, &(_handlerModificationInfo));
 
-            }
+        }
 
         else
-            {
-                if (_log) *_log << ("[HandlerSearchHit] Ignoring non-essential element name : " + name).c_str() << endl;
-                return Handler::Status::Ok;
+        {
+            if (_log) *_log << ("[HandlerSearchHit] Ignoring non-essential element name : " + name).c_str() << endl;
+            return Handler::Status::Ok;
 
-            }
+        }
 
     }
 
@@ -877,8 +901,11 @@ PWIZ_API_DECL bool SearchHit::operator!=(const SearchHit& that) const
 
 PWIZ_API_DECL void SearchResult::write(XMLWriter& writer) const
 {
-    writer.startElement("search_result");
-    searchHit.write(writer);
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("search_id", boost::lexical_cast<string>(searchId)));
+    writer.startElement("search_result", attributes);
+    for (vector<SearchHitPtr>::const_iterator i=searchHit.begin(); i!=searchHit.end(); i++)
+        (*i)->write(writer);
     writer.endElement();
 
 }
@@ -891,27 +918,29 @@ struct HandlerSearchResult : public SAXParser::Handler
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
 
     {
-
         if ( name == "search_result" )
-            {
-                return Handler::Status::Ok;
+        {
+            string value;
 
-            }
-
+            getAttribute(attributes, "search_id", value);
+            if (!value.empty())
+                searchresult->searchId = boost::lexical_cast<size_t>(value);
+                
+            return Handler::Status::Ok;
+        }
         else if ( name == "search_hit" )
-            {
+        {
+            searchresult->searchHit.push_back(SearchHitPtr(new SearchHit()));
+            _handlerSearchHit.searchHit= searchresult->searchHit.back().get();
+            return Handler::Status(Status::Delegate, &(_handlerSearchHit));
 
-                _handlerSearchHit.searchHit= &(searchresult->searchHit);
-                return Handler::Status(Status::Delegate, &(_handlerSearchHit));
-
-            }
-
+        }
         else
-            {
-                throw runtime_error(("[HandlerSearchResult] Unexpected element name :" + name).c_str());
-                return Handler::Status::Done;
+        {
+            throw runtime_error(("[HandlerSearchResult] Unexpected element name :" + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
 
     }
@@ -931,7 +960,8 @@ PWIZ_API_DECL void SearchResult::read(istream& is)
 
 PWIZ_API_DECL bool SearchResult::operator==(const SearchResult& that) const
 {
-    return searchHit == that.searchHit;
+    return searchId == that.searchId &&
+        searchHit == that.searchHit;
 
 }
 
@@ -940,6 +970,68 @@ PWIZ_API_DECL bool SearchResult::operator!=(const SearchResult& that) const
     return !(*this == that);
 
 }
+
+namespace pwiz {
+namespace data {
+namespace pepxml {
+
+PWIZ_API_DECL bool operator==(const SearchSummaryPtr left, const SearchSummaryPtr right) 
+{
+    if (!left.get() && !right.get())
+        return true;
+    else if (!(left.get() && right.get()))
+        return false;
+    
+    return *left == *right;
+}
+
+
+PWIZ_API_DECL bool operator==(SearchHitPtr left, SearchHitPtr right)
+{
+    if (!left.get() && !right.get())
+        return true;
+    else if (!(left.get() && right.get()))
+        return false;
+    
+    return *left == *right;
+}
+
+PWIZ_API_DECL bool operator==(SearchResultPtr left, SearchResultPtr right)
+{
+    if (!left.get() && !right.get())
+        return true;
+    else if (!(left.get() && right.get()))
+        return false;
+    
+    return *left == *right;
+}
+
+
+PWIZ_API_DECL bool operator==(SpectrumQueryPtr left, SpectrumQueryPtr right)
+{
+    if (!left.get() && !right.get())
+        return true;
+    else if (!(left.get() && right.get()))
+        return false;
+    
+    return *left == *right;
+}
+
+
+PWIZ_API_DECL bool operator==(const MatchPtr left, const MatchPtr right)
+{
+    if (!left.get() && !right.get())
+        return true;
+    else if (!(left.get() && right.get()))
+        return false;
+    
+    return *left == *right;
+}
+
+} // namespace pepxml 
+} // namespace data
+} // namespace pwiz
+
 
 PWIZ_API_DECL void EnzymaticSearchConstraint::write(XMLWriter& writer) const
 {
@@ -962,23 +1054,23 @@ struct HandlerEnzymaticSearchConstraint : public SAXParser::Handler
     {
 
         if ( name == "enzymatic_search_constraint" )
-            {
+        {
 
-                getAttribute(attributes, "enzyme", enzymaticSearchConstraint->enzyme);
-                getAttribute(attributes, "max_num_internal_cleavages", enzymaticSearchConstraint->maxNumInternalCleavages);
-                getAttribute(attributes, "min_number_termini", enzymaticSearchConstraint->minNumTermini);
-                return Handler::Status::Ok;
+            getAttribute(attributes, "enzyme", enzymaticSearchConstraint->enzyme);
+            getAttribute(attributes, "max_num_internal_cleavages", enzymaticSearchConstraint->maxNumInternalCleavages);
+            getAttribute(attributes, "min_number_termini", enzymaticSearchConstraint->minNumTermini);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else
-            {
+        {
 
-                throw runtime_error(("[HandlerEnzymaticSearchConstraint] : Unexpected element name : " + name).c_str());
-                return Handler::Status::Done;
+            throw runtime_error(("[HandlerEnzymaticSearchConstraint] : Unexpected element name : " + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
 
     }
@@ -1014,6 +1106,9 @@ PWIZ_API_DECL void AminoAcidModification::write(XMLWriter& writer) const
     attributes.push_back(make_pair("massdiff", boost::lexical_cast<string>(massDiff)));
     attributes.push_back(make_pair("mass", boost::lexical_cast<string>(mass)));
     attributes.push_back(make_pair("variable", variable));
+    attributes.push_back(make_pair("peptide_terminus", peptideTerminus));
+    attributes.push_back(make_pair("binary", binary));
+    attributes.push_back(make_pair("description", description));
     attributes.push_back(make_pair("symbol", symbol));
     writer.startElement("aminoacid_modification", attributes, XMLWriter::EmptyElement);
 
@@ -1029,24 +1124,24 @@ struct HandlerAminoAcidModification : public SAXParser::Handler
     {
 
         if ( name == "aminoacid_modification" )
-            {
-                getAttribute(attributes, "aminoacid", aminoAcidModification->aminoAcid);
-                getAttribute(attributes, "massdiff", aminoAcidModification->massDiff);
-                getAttribute(attributes, "mass", aminoAcidModification->mass);
-                getAttribute(attributes, "variable", aminoAcidModification->variable);
-                getAttribute(attributes, "symbol", aminoAcidModification->symbol);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "aminoacid", aminoAcidModification->aminoAcid);
+            getAttribute(attributes, "massdiff", aminoAcidModification->massDiff);
+            getAttribute(attributes, "mass", aminoAcidModification->mass);
+            getAttribute(attributes, "variable", aminoAcidModification->variable);
+            getAttribute(attributes, "symbol", aminoAcidModification->symbol);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else
-            {
+        {
 
-                throw runtime_error(("[HandlerAminoAcidModification] : Unexpected element name : "+ name).c_str());
-                return Handler::Status::Done;
+            throw runtime_error(("[HandlerAminoAcidModification] : Unexpected element name : "+ name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
     }
 
@@ -1090,10 +1185,10 @@ PWIZ_API_DECL void SearchSummary::write(XMLWriter& writer) const
     enzymaticSearchConstraint.write(writer);
     vector<AminoAcidModification>::const_iterator it = aminoAcidModifications.begin();
     for(; it != aminoAcidModifications.end(); ++it)
-        {
-            it->write(writer);
+    {
+        it->write(writer);
 
-        }
+    }
     writer.endElement();
 
 }
@@ -1108,48 +1203,48 @@ struct HandlerSearchSummary : public SAXParser::Handler
     {
 
         if ( name == "search_summary" )
-            {
+        {
 
-                getAttribute(attributes, "base_name", searchsummary->baseName);
-                getAttribute(attributes, "search_engine", searchsummary->searchEngine);
-                getAttribute(attributes, "precursor_mass_type", searchsummary->precursorMassType);
-                getAttribute(attributes, "fragment_mass_type", searchsummary->fragmentMassType);
-                getAttribute(attributes, "search_id", searchsummary->searchID);
-                return Handler::Status::Ok;
+            getAttribute(attributes, "base_name", searchsummary->baseName);
+            getAttribute(attributes, "search_engine", searchsummary->searchEngine);
+            getAttribute(attributes, "precursor_mass_type", searchsummary->precursorMassType);
+            getAttribute(attributes, "fragment_mass_type", searchsummary->fragmentMassType);
+            getAttribute(attributes, "search_id", searchsummary->searchID);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else if ( name == "search_database" )
-            {
+        {
 
-                _handlerSearchDatabase.searchDatabase= &(searchsummary->searchDatabase);
-                return Handler::Status(Status::Delegate, &(_handlerSearchDatabase));
+            _handlerSearchDatabase.searchDatabase= &(searchsummary->searchDatabase);
+            return Handler::Status(Status::Delegate, &(_handlerSearchDatabase));
 
-            }
+        }
 
         else if ( name == "enzymatic_search_constraint" )
-            {
-                _handlerEnzymaticSearchConstraint.enzymaticSearchConstraint = &(searchsummary->enzymaticSearchConstraint);
-                return Handler::Status(Status::Delegate, &(_handlerEnzymaticSearchConstraint));
+        {
+            _handlerEnzymaticSearchConstraint.enzymaticSearchConstraint = &(searchsummary->enzymaticSearchConstraint);
+            return Handler::Status(Status::Delegate, &(_handlerEnzymaticSearchConstraint));
 
-            }
+        }
         
         else if ( name == "aminoacid_modification" )
-            {
-                searchsummary->aminoAcidModifications.push_back(AminoAcidModification());
-                _handlerAminoAcidModification.aminoAcidModification = &(searchsummary->aminoAcidModifications.back());
-                return Handler::Status(Status::Delegate, &(_handlerAminoAcidModification));
+        {
+            searchsummary->aminoAcidModifications.push_back(AminoAcidModification());
+            _handlerAminoAcidModification.aminoAcidModification = &(searchsummary->aminoAcidModifications.back());
+            return Handler::Status(Status::Delegate, &(_handlerAminoAcidModification));
 
-            }
+        }
 
         else
-            {
+        {
 
-                if (_log) *_log << ("[HandlerSearchSummary] Ignoring non-essential element name : " + name).c_str() << endl;
-                return Handler::Status::Ok;
+            if (_log) *_log << ("[HandlerSearchSummary] Ignoring non-essential element name : " + name).c_str() << endl;
+            return Handler::Status::Ok;
 
-            }
+        }
 
 
     }
@@ -1201,7 +1296,8 @@ PWIZ_API_DECL void SpectrumQuery::write(XMLWriter& writer) const
     attributes.push_back(make_pair("retention_time_sec", boost::lexical_cast<string>(retentionTimeSec)));
    
     writer.startElement("spectrum_query", attributes);
-    searchResult.write(writer);
+    for(vector<SearchResultPtr>::const_iterator it=searchResult.begin(); it!=searchResult.end(); it++)
+        (*it)->write(writer);
     writer.endElement();
     
 }
@@ -1216,33 +1312,36 @@ struct HandlerSpectrumQuery : public SAXParser::Handler
     {
 
         if ( name == "spectrum_query" )
-            {
+        {
+            string value;
+                
+            getAttribute(attributes, "spectrum", spectrumQuery->spectrum);
+            getAttribute(attributes, "start_scan", value);
+            spectrumQuery->startScan= boost::lexical_cast<size_t>(value);
+            getAttribute(attributes, "end_scan", spectrumQuery->endScan);
+            getAttribute(attributes, "precursor_neutral_mass", spectrumQuery->precursorNeutralMass);
+            getAttribute(attributes, "assumed_charge", spectrumQuery->assumedCharge);
+            getAttribute(attributes, "index", spectrumQuery->index);
+            getAttribute(attributes, "retention_time_sec", spectrumQuery->retentionTimeSec);
+            return Handler::Status::Ok;
 
-                getAttribute(attributes, "spectrum", spectrumQuery->spectrum);
-                getAttribute(attributes, "start_scan", spectrumQuery->startScan);
-                getAttribute(attributes, "end_scan", spectrumQuery->endScan);
-                getAttribute(attributes, "precursor_neutral_mass", spectrumQuery->precursorNeutralMass);
-                getAttribute(attributes, "assumed_charge", spectrumQuery->assumedCharge);
-                getAttribute(attributes, "index", spectrumQuery->index);
-                getAttribute(attributes, "retention_time_sec", spectrumQuery->retentionTimeSec);
-                return Handler::Status::Ok;
 
-
-            }
+        }
 
         else if ( name == "search_result" )
-            {
-                _handlerSearchResult.searchresult = &(spectrumQuery->searchResult);
-                return Handler::Status(Status::Delegate, &(_handlerSearchResult));
+        {
+            spectrumQuery->searchResult.push_back(SearchResultPtr(new SearchResult()));
+            _handlerSearchResult.searchresult = spectrumQuery->searchResult.back().get();
+            return Handler::Status(Status::Delegate, &(_handlerSearchResult));
 
-            }
+        }
 
         else
-            {
-                throw runtime_error(("[HandlerSpectrumQuery] Unexpected element name : " + name).c_str());
-                return Handler::Status::Ok;
+        {
+            throw runtime_error(("[HandlerSpectrumQuery] Unexpected element name : " + name).c_str());
+            return Handler::Status::Ok;
 
-            }
+        }
 
 
     }
@@ -1285,13 +1384,12 @@ PWIZ_API_DECL void MSMSRunSummary::write(XMLWriter& writer) const
 
     writer.startElement("msms_run_summary", attributes);    
     sampleEnzyme.write(writer);
-    searchSummary.write(writer);
-    vector<SpectrumQuery>::const_iterator it = spectrumQueries.begin();
+    for (vector<SearchSummaryPtr>::const_iterator it=searchSummary.begin();
+         it != searchSummary.end(); it++)
+        (*it)->write(writer);
+    vector<SpectrumQueryPtr>::const_iterator it = spectrumQueries.begin();
     for(; it != spectrumQueries.end(); ++it)
-        {
-            it->write(writer);
-         
-        }
+        (*it)->write(writer);
     writer.endElement();
 
 }
@@ -1304,41 +1402,42 @@ struct HandlerMSMSRunSummary : public SAXParser::Handler
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
     {
         if ( name == "msms_run_summary" )
-            {
+        {
 
-                return Handler::Status::Ok;
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else if ( name == "sample_enzyme" )
-            {
-                _handlerSampleEnzyme.sampleEnzyme= &(msmsrunsummary->sampleEnzyme);
-                return Handler::Status(Status::Delegate, &(_handlerSampleEnzyme));
+        {
+            _handlerSampleEnzyme.sampleEnzyme= &(msmsrunsummary->sampleEnzyme);
+            return Handler::Status(Status::Delegate, &(_handlerSampleEnzyme));
 
-            }
+        }
 
         else if ( name == "search_summary" )
-            {
-                _handlerSearchSummary.searchsummary= &(msmsrunsummary->searchSummary);
-                return Handler::Status(Status::Delegate, &(_handlerSearchSummary));
+        {
+            msmsrunsummary->searchSummary.push_back(SearchSummaryPtr(new SearchSummary()));
+            _handlerSearchSummary.searchsummary= msmsrunsummary->searchSummary.back().get();
+            return Handler::Status(Status::Delegate, &(_handlerSearchSummary));
 
-            }
+        }
 
         else if ( name == "spectrum_query" )
-            {
-                msmsrunsummary->spectrumQueries.push_back(SpectrumQuery());
-                _handlerSpectrumQuery.spectrumQuery= &(msmsrunsummary->spectrumQueries.back());
-                return Handler::Status(Status::Delegate, &(_handlerSpectrumQuery));
+        {
+            msmsrunsummary->spectrumQueries.push_back(SpectrumQueryPtr(new SpectrumQuery()));
+            _handlerSpectrumQuery.spectrumQuery= msmsrunsummary->spectrumQueries.back().get();
+            return Handler::Status(Status::Delegate, &(_handlerSpectrumQuery));
 
-            }
+        }
 
         else
-           {
-               if (_log) *_log << ("[HandlerMSMSRunSummary] Ignoring non-essential element : " + name).c_str() << endl;
-               return Handler::Status::Ok;
+        {
+            if (_log) *_log << ("[HandlerMSMSRunSummary] Ignoring non-essential element : " + name).c_str() << endl;
+            return Handler::Status::Ok;
 
-           }
+        }
 
     }
 
@@ -1398,33 +1497,33 @@ struct HandlerMSMSPipelineAnalysis : public SAXParser::Handler
 
     {
         if ( name == "msms_pipeline_analysis" )
-            {
-                getAttribute(attributes, "date", msmspipelineanalysis->date);
-                getAttribute(attributes, "summmary_xml", msmspipelineanalysis->summaryXML);
-                getAttribute(attributes, "xmlns", msmspipelineanalysis->xmlns);
-                getAttribute(attributes, "xmlns:xsi", msmspipelineanalysis->xmlnsXSI);
-                getAttribute(attributes, "xsi:schemaLocation", msmspipelineanalysis->XSISchemaLocation);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "date", msmspipelineanalysis->date);
+            getAttribute(attributes, "summmary_xml", msmspipelineanalysis->summaryXML);
+            getAttribute(attributes, "xmlns", msmspipelineanalysis->xmlns);
+            getAttribute(attributes, "xmlns:xsi", msmspipelineanalysis->xmlnsXSI);
+            getAttribute(attributes, "xsi:schemaLocation", msmspipelineanalysis->XSISchemaLocation);
+            return Handler::Status::Ok;
 
 
-            }
+        }
 
         else if ( name == "msms_run_summary" )
-            {
+        {
 
-                _handlerMSMSRunSummary.msmsrunsummary= &(msmspipelineanalysis->msmsRunSummary);
-                return Handler::Status(Status::Delegate, &(_handlerMSMSRunSummary));
+            _handlerMSMSRunSummary.msmsrunsummary= &(msmspipelineanalysis->msmsRunSummary);
+            return Handler::Status(Status::Delegate, &(_handlerMSMSRunSummary));
 
-            }
+        }
 
         else
-            {
+        {
 
-                if (_log) *_log << ("[HandlerMSMSPipelineAnalysis] Ignoring non-essential element : " + name).c_str() << endl;
-        //throw runtime_error(("[HandlerMSMSPipelineAnalysis] Unexpected element name : " + name).c_str());
-                return Handler::Status::Ok;
+            if (_log) *_log << ("[HandlerMSMSPipelineAnalysis] Ignoring non-essential element : " + name).c_str() << endl;
+            //throw runtime_error(("[HandlerMSMSPipelineAnalysis] Unexpected element name : " + name).c_str());
+            return Handler::Status::Ok;
 
-            }
+        }
 
 
     }
@@ -1482,33 +1581,33 @@ struct HandlerMatch : public SAXParser::Handler
                                 stream_offset position)
     {
         if(name == "match")
-            {
-                getAttribute(attributes, "score", match->score);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "score", match->score);
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else if (name == "spectrum_query")
-            {
+        {
 
-                _handlerSpectrumQuery.spectrumQuery = &(match->spectrumQuery);
-                return Handler::Status(Status::Delegate, &_handlerSpectrumQuery);
+            _handlerSpectrumQuery.spectrumQuery = &(match->spectrumQuery);
+            return Handler::Status(Status::Delegate, &_handlerSpectrumQuery);
 
-            }
+        }
 
         else if (name == "feature")
-            {
-                _handlerFeature.feature = (match->feature).get();
-                return Handler::Status(Status::Delegate, &_handlerFeature);
+        {
+            _handlerFeature.feature = (match->feature).get();
+            return Handler::Status(Status::Delegate, &_handlerFeature);
 
-            }
+        }
 
         else
-            {
-                throw runtime_error(("[HandlerMatch] Unexpected element name: " + name).c_str());
-                return Handler::Status::Done;
+        {
+            throw runtime_error(("[HandlerMatch] Unexpected element name: " + name).c_str());
+            return Handler::Status::Done;
 
-            }
+        }
 
     }
 
@@ -1558,10 +1657,10 @@ PWIZ_API_DECL void MatchData::write(minimxml::XMLWriter& writer) const
 
     vector<MatchPtr>::const_iterator match_it = matches.begin();
     for(; match_it != matches.end(); ++match_it)
-        {
-            (*match_it)->write(writer);
+    {
+        (*match_it)->write(writer);
 
-        }
+    }
 
     writer.endElement();
     writer.endElement();
@@ -1579,40 +1678,40 @@ struct HandlerMatchData : public SAXParser::Handler
                                 stream_offset position)
     {
         if(name == "matchData")
-            {
-                getAttribute(attributes, "warpFunctionCalculator", matchData->warpFunctionCalculator);
-                getAttribute(attributes, "searchNbhdCalculator", matchData->searchNbhdCalculator);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "warpFunctionCalculator", matchData->warpFunctionCalculator);
+            getAttribute(attributes, "searchNbhdCalculator", matchData->searchNbhdCalculator);
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else if (name == "matches")
-            {
-                getAttribute(attributes, "count", _count);
-                return Handler::Status::Ok;
+        {
+            getAttribute(attributes, "count", _count);
+            return Handler::Status::Ok;
 
-            }
+        }
 
         else
+        {
+            if (name != "match")
             {
-                if (name != "match")
-                    {
-                        throw runtime_error(("[HandlerMatchData] Unexpected element name : " + name).c_str());
-                        return Handler::Status::Done;
-                    }
-
-                matchData->matches.push_back(MatchPtr(new Match()));
-                _handlerMatch.match = matchData->matches.back().get();
-                return Handler::Status(Status::Delegate, &_handlerMatch);
-
+                throw runtime_error(("[HandlerMatchData] Unexpected element name : " + name).c_str());
+                return Handler::Status::Done;
             }
+
+            matchData->matches.push_back(MatchPtr(new Match()));
+            _handlerMatch.match = matchData->matches.back().get();
+            return Handler::Status(Status::Delegate, &_handlerMatch);
+
+        }
 
         if (_count != matchData->matches.size())
-            {
-                throw runtime_error("[HandlerMatchData] <matches count> != matchData._matches.size()");
-                return Handler::Status::Done;
+        {
+            throw runtime_error("[HandlerMatchData] <matches count> != matchData._matches.size()");
+            return Handler::Status::Done;
 
-            }
+        }
 
     }
 
