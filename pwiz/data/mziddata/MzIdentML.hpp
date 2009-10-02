@@ -319,11 +319,16 @@ struct PWIZ_API_DECL SubstitutionModification
 
 struct PWIZ_API_DECL Peptide : public IdentifiableType
 {
+    Peptide(const std::string& id="",
+            const std::string& name="");
+    
     std::string peptideSequence;
     std::vector<ModificationPtr> modification;
     SubstitutionModification substitutionModification;
 
     ParamContainer paramGroup;
+
+    bool empty() const;
 };
 
 typedef boost::shared_ptr<Peptide> PeptidePtr;
@@ -564,6 +569,8 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
 };
 
 typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
+
+
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 {
     SpectrumIdentificationItem();
@@ -572,7 +579,8 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
     double experimentalMassToCharge;
     double calculatedMassToCharge;
     double calculatedPI;
-    std::string Peptide_ref;
+    // std::string Peptide_ref;
+    PeptidePtr peptidePtr;
     int rank;
     bool passThreshold;
     std::string MassTable_ref;

@@ -530,8 +530,8 @@ void diff(const SpectrumIdentificationItem& a,
     diff_numeric(a.calculatedPI, b.calculatedPI,
                  a_b.calculatedPI, b_a.calculatedPI,
                  config);
-    diff(a.Peptide_ref, b.Peptide_ref,
-                 a_b.Peptide_ref, b_a.Peptide_ref,
+    ptr_diff(a.peptidePtr, b.peptidePtr,
+                 a_b.peptidePtr, b_a.peptidePtr,
                  config);
     diff_numeric(a.rank, b.rank, a_b.rank, b_a.rank, config);
 

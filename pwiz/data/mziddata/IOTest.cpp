@@ -683,7 +683,7 @@ void testSpectrumIdentificationItem()
     a.experimentalMassToCharge = 1.1;
     a.calculatedMassToCharge = 2.2;
     a.calculatedPI = 3.3;
-    a.Peptide_ref = "pep_ref";
+    a.peptidePtr = PeptidePtr(new Peptide("pep_ref"));
     a.rank = 4;
     a.passThreshold = true;
     a.MassTable_ref = "mt_ref";

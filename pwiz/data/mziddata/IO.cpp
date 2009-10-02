@@ -594,7 +594,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
         attributes.push_back(make_pair("residues", mod.residues));
     if (mod.avgMassDelta > 0)
         attributes.push_back(make_pair("avgMassDelta", lexical_cast<string>(mod.avgMassDelta)));
-    if (mod.monoisotopicMassDelta > 0)
+    //if (mod.monoisotopicMassDelta > 0)
     attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(mod.monoisotopicMassDelta)));
     
     writer.startElement("Modification", attributes);
@@ -3875,8 +3875,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     attributes.push_back(make_pair("experimentalMassToCharge", lexical_cast<string>(siip.experimentalMassToCharge)));
     attributes.push_back(make_pair("calculatedMassToCharge", lexical_cast<string>(siip.calculatedMassToCharge)));
     attributes.push_back(make_pair("calculatedPI", lexical_cast<string>(siip.calculatedPI)));
-    if (!siip.Peptide_ref.empty())
-        attributes.push_back(make_pair("Peptide_ref", siip.Peptide_ref));
+    if (siip.peptidePtr.get() && !siip.peptidePtr->empty())
+        attributes.push_back(make_pair("Peptide_ref", siip.peptidePtr->id));
     attributes.push_back(make_pair("rank", lexical_cast<string>(siip.rank)));
     attributes.push_back(make_pair("passThreshold", (siip.passThreshold ? "true" : "false")));
     if (!siip.MassTable_ref.empty())
@@ -3919,10 +3919,14 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableType
             getAttribute(attributes, "experimentalMassToCharge", siip->experimentalMassToCharge);
             getAttribute(attributes, "calculatedMassToCharge", siip->calculatedMassToCharge);
             getAttribute(attributes, "calculatedPI", siip->calculatedPI);
-            getAttribute(attributes, "Peptide_ref", siip->Peptide_ref);
-            getAttribute(attributes, "rank", siip->rank);
 
             string value;
+            getAttribute(attributes, "Peptide_ref", value);
+            siip->peptidePtr = PeptidePtr(new Peptide(value));
+            
+            getAttribute(attributes, "rank", siip->rank);
+
+            value.clear();
             getAttribute(attributes, "passThreshold", value);
             siip->passThreshold = (value=="true" ? true : false);
 

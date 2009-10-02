@@ -275,7 +275,7 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
         experimentalMassToCharge == 0 &&
         calculatedMassToCharge == 0 &&
         calculatedPI == 0 &&
-        Peptide_ref.empty() &&
+        (!peptidePtr.get() || peptidePtr->empty()) &&
         rank == 0 &&
         passThreshold == 0 &&
         MassTable_ref.empty() &&
@@ -710,6 +710,25 @@ PWIZ_API_DECL bool SubstitutionModification::empty() const
         location == 0 &&
         avgMassDelta == 0 &&
         monoisotopicMassDelta == 0;
+}
+
+//
+// Peptide
+//
+
+PWIZ_API_DECL Peptide::Peptide(const std::string& id, const std::string& name)
+    : IdentifiableType(id, name)
+{
+}
+
+
+PWIZ_API_DECL bool Peptide::empty() const
+{
+    return IdentifiableType::empty() &&
+        peptideSequence.empty() &&
+        modification.empty() &&
+        substitutionModification.empty() &&
+        paramGroup.empty();
 }
 
 //

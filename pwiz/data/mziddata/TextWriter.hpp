@@ -485,7 +485,7 @@ class PWIZ_API_DECL TextWriter
         if (!pdh.DBSequence_ref.empty())
             child()("DBSequence_ref: " + pdh.DBSequence_ref);
         // TODO: Resolve        if (!pdh.passThreshold.empty())
-        //  child()("passThreshold: " + boost::lexical_cast<string>(pdh.passThreshold));
+        //  child()("passThreshold: " + boost::lexical_cast<std::string>(pdh.passThreshold));
         if (!pdh.peptideHypothesis.empty())
             child()("peptideHypothesis: ", pdh.peptideHypothesis);
         if (!pdh.paramGroup.empty())
@@ -830,6 +830,34 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
+    TextWriter& operator()(const ModificationPtr modp)
+    {
+        if (!modp.get())
+            return *this;
+        
+        return (*this)(*modp);
+    }
+
+    
+    TextWriter& operator()(const Peptide& pep)
+    {
+        (*this)("Peptide: ");
+
+        (*this)((IdentifiableType)pep);
+        if (!pep.peptideSequence.empty())
+            child()("peptideSequence: "+pep.peptideSequence);
+        if (!pep.modification.empty())
+            child()("modification", pep.modification);
+        if (!pep.substitutionModification.empty())
+            child()(pep.substitutionModification);
+        if (!pep.paramGroup.empty())
+            child()(pep.paramGroup);
+        
+        return *this;
+    }
+
+    
     TextWriter& operator()(const PeptideEvidence& pe)
     {
         (*this)("PeptideEvidence: ");
@@ -870,8 +898,8 @@ class PWIZ_API_DECL TextWriter
             child()("calculatedMassToCharge: "+boost::lexical_cast<std::string>(sii.calculatedMassToCharge));
         if (!sii.empty())
             child()("calculatedPI: "+boost::lexical_cast<std::string>(sii.calculatedPI));
-        if (!sii.Peptide_ref.empty())
-            child()("Peptide_ref: "+sii.Peptide_ref);
+        if (!sii.peptidePtr.get() || sii.peptidePtr->empty())
+            child()("Peptide_ref: "+sii.peptidePtr->id);
         if (!sii.empty())
             child()("rank: "+boost::lexical_cast<std::string>(sii.rank));
         if (!sii.empty())

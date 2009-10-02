@@ -332,7 +332,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     siip->calculatedMassToCharge=557.303212333333;
     siip->chargeState=3;
     siip->experimentalMassToCharge=558.75;
-    siip->Peptide_ref="peptide_1_1";
+    siip->peptidePtr=PeptidePtr(new Peptide("peptide_1_1"));
     siip->rank=1;
     siip->passThreshold=true;
     siip->paramGroup.set(MS_mascot_score, "15.71");

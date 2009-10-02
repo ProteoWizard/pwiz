@@ -148,6 +148,18 @@ PWIZ_API_DECL void resolve(SequenceCollection& sc, MzIdentML& mzid)
     }
 }
 
+PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr si, MzIdentML& mzid)
+{
+    for (vector<SpectrumIdentificationResultPtr>::iterator rit=si->spectrumIdentificationResult.begin(); rit != si->spectrumIdentificationResult.end(); rit++)
+    {
+        for (vector<SpectrumIdentificationItemPtr>::iterator iit=(*rit)->spectrumIdentificationItem.begin(); iit!=(*rit)->spectrumIdentificationItem.end(); iit++)
+        {
+            if ((*iit)->peptidePtr.get())
+                resolve((*iit)->peptidePtr, mzid.sequenceCollection.peptides);
+        }
+    }
+}
+
 PWIZ_API_DECL void resolve(SpectrumIdentification& si, MzIdentML& mzid)
 {
     if (si.spectrumIdentificationProtocolPtr.get())
@@ -208,6 +220,15 @@ PWIZ_API_DECL void resolve(vector<ProteinDetectionProtocolPtr>& vpdp, MzIdentML&
     }    
 }
 
+
+PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
+{
+    for (vector<SpectrumIdentificationListPtr>::iterator it=dc.analysisData.spectrumIdentificationList.begin();
+         it != dc.analysisData.spectrumIdentificationList.end(); it++)
+    {
+        resolve(*it, mzid);
+    }
+}
 
 PWIZ_API_DECL void resolve(MzIdentML& mzid)
 {
