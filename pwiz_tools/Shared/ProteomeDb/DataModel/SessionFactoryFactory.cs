@@ -52,7 +52,7 @@ namespace pwiz.ProteomeDatabase.DataModel
         {
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             return configuration.AddInputStream(
-                assembly.GetManifestResourceStream("pwiz.ProteomeDatabase.DataModel.mapping.xml"));
+                assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
         }
     }
 }

@@ -66,6 +66,7 @@ namespace pwiz.SkylineTest.Reporting
                 }
             }
         }
+
         [TestMethod]
         public void TestReportSpecListXml()
         {
@@ -104,7 +105,7 @@ namespace pwiz.SkylineTest.Reporting
         public void TestIsotopeLabelPivot()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("Test.Reporting.silac_1_to_4.sky");
+            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
@@ -138,6 +139,7 @@ namespace pwiz.SkylineTest.Reporting
             Assert.IsTrue(resultSet.ColumnInfos[6].Caption.ToLower().StartsWith("heavy"));
             // TODO(nicksh): write asserts that the rows contain correct data.
         }
+
         /// <summary>
         /// Regression test for Issue#91.
         /// </summary>
@@ -145,7 +147,7 @@ namespace pwiz.SkylineTest.Reporting
         public void TestColumnsFromResultsTables()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("Test.Reporting.silac_1_to_4.sky");
+            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
@@ -171,6 +173,40 @@ namespace pwiz.SkylineTest.Reporting
             Assert.AreEqual(report.Columns.Count, columnInfos.Count);
             SimpleReport reportCompare = (SimpleReport) columnSet.GetReport(columnInfos, new List<PivotType>());
             Assert.IsTrue(ArrayUtil.EqualsDeep(report.Columns, reportCompare.Columns));
+        }
+
+        /// <summary>
+        /// Make sure CPTAC template in original .skyr format loads and works.
+        /// </summary>
+        [TestMethod]
+        public void TestLoadReportFile()
+        {
+            SrmDocument srmDocument;
+            Database database;
+
+            using (var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky"))
+            {
+                Assert.IsNotNull(stream);
+                Debug.Assert(stream != null); // Keep ReSharper from warning
+                var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+                srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
+                database = new Database();
+                database.AddSrmDocument(srmDocument);                
+            }
+
+            using (var streamR = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.Study9p_template_0721_2009_v3.skyr"))
+            {
+                Assert.IsNotNull(streamR);
+                Debug.Assert(streamR != null); // Keep ReSharper from warning
+                ReportSpecList reportSpecList = new ReportSpecList();
+                var xmlSerializer = new XmlSerializer(reportSpecList.SerialType);
+                reportSpecList = (ReportSpecList)xmlSerializer.Deserialize(streamR);
+                Report report = Report.Load(reportSpecList["Study 9p_0721_2009_v6"]);
+                ResultSet resultSet = report.Execute(database);
+                Assert.AreEqual(26, resultSet.ColumnInfos.Count);
+                // The file contains one transition that does not map to the imported results
+                Assert.AreEqual(srmDocument.TransitionCount/2 - 1, resultSet.RowCount);
+            }
         }
     }
 }

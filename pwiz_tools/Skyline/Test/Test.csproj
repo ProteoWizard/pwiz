@@ -7,7 +7,7 @@
     <ProjectGuid>{E0FA262A-744E-4D98-A43F-4723A4D95827}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test</RootNamespace>
+    <RootNamespace>pwiz.SkylineTest</RootNamespace>
     <AssemblyName>Test</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Proteome\high_ipi.Human.20060111.zip" />
+    <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />

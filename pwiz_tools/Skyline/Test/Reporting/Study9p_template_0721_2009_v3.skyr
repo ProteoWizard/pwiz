@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <report name="Study 9p_0721_2009_v6" table="Skyline.Model.Hibernate.DbTransitionResult">
+    <select>
+      <column>PrecursorResult.PeptideResult.ProteinResult.FileName</column>
+      <column>PrecursorResult.PeptideResult.ProteinResult.SampleName</column>
+      <column>Transition.Precursor.Peptide.Protein.Name</column>
+      <column>Transition.Precursor.Peptide.Sequence</column>
+      <column>PrecursorResult.PeptideResult.ProteinResult.ReplicateName</column>
+      <column>Transition.Precursor.Charge</column>
+      <column>Transition.FragmentIon</column>
+      <column>Transition.Precursor.Peptide.AverageMeasuredRetentionTime</column>
+      <column>PrecursorResult.PeptideResult.PeptideRetentionTime</column>
+      <column>PrecursorResult.PeptideResult.RatioToStandard</column>
+    </select>
+    <group_by>
+      <column>Transition.ProductCharge</column>
+      <column>Transition.FragmentIon</column>
+      <column>Transition.Precursor.Peptide</column>
+      <column>Transition.Precursor.Charge</column>
+      <column>ResultFile.Replicate.Replicate</column>
+    </group_by>
+    <cross_tab_headers>
+      <column>Transition.Precursor.IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column>Transition.Precursor.Mz</column>
+      <column>Transition.ProductMz</column>
+      <column>RetentionTime</column>
+      <column>Fwhm</column>
+      <column>Area</column>
+      <column>Height</column>
+      <column>Transition.Precursor.IsotopeLabelType</column>
+      <column>UserSetPeak</column>
+    </cross_tab_values>
+  </report>
+</ReportSpecList>

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Hibernate.Query;
 
@@ -92,7 +93,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            Table = Type.GetType(reader.GetAttribute(Attr.table));
+            
+            string tableName = reader.GetAttribute(Attr.table);
+            tableName = tableName.Substring(tableName.LastIndexOf('.') + 1);
+            tableName = typeof (DbProtein).Namespace + '.' + tableName;
+
+            Table = Type.GetType(tableName);
             reader.ReadStartElement();
             if (reader.IsStartElement(El.select))
             {
@@ -124,7 +130,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public override void WriteXml(XmlWriter writer)
         {
             base.WriteXml(writer);
-            writer.WriteAttribute(Attr.table, Table);
+            string tableName = Table.ToString();
+            tableName = tableName.Substring(tableName.IndexOf('.') + 1);
+            writer.WriteAttribute(Attr.table, tableName);
             writer.WriteStartElement(El.select);
             WriteColumns(writer, Select);
             writer.WriteEndElement();

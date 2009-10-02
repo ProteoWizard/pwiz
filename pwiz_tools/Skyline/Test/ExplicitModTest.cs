@@ -314,7 +314,7 @@ namespace pwiz.SkylineTest
         private static SrmDocument CreateStudy7Doc()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("Test.Study7.sky");
+            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Study7.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);

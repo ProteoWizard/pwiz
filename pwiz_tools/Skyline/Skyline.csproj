@@ -8,7 +8,7 @@
     <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Skyline</RootNamespace>
+    <RootNamespace>pwiz.Skyline</RootNamespace>
     <AssemblyName>Skyline</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

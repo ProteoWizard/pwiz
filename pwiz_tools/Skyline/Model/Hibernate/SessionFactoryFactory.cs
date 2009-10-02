@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            configuration.AddInputStream(assembly.GetManifestResourceStream("Skyline.Model.Hibernate.mapping.xml"));
+            configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
             return configuration;
         }
     }

@@ -7,7 +7,7 @@
     <ProjectGuid>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestFunctional</RootNamespace>
+    <RootNamespace>pwiz.SkylineTestFunctional</RootNamespace>
     <AssemblyName>TestFunctional</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
