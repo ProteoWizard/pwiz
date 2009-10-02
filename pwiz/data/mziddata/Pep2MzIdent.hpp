@@ -7,7 +7,11 @@
 
 #include "MzIdentML.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
+#include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/utility/misc/Export.hpp"
+
+#include <vector>
+
 
 namespace pwiz{
 namespace mziddata{
@@ -24,6 +28,11 @@ public:
     MzIdentMLPtr translate();
 
 private:
+
+    void translateRoot();
+    void translateEnzyme(const SampleEnzyme& sampleEnzyme, MzIdentMLPtr result);
+    void translateSearch(const std::vector<SearchSummaryPtr>& searchSummary, MzIdentMLPtr result);
+    void translateQueries(const std::vector<SpectrumQuery>& queries, MzIdentMLPtr result);
     
     void translateMetadata();
     void translateSpectrumQueries();
@@ -32,6 +41,7 @@ private:
     MzIdentMLPtr _result;
     bool _translated;
 
+    pwiz::msdata::CVTranslator translator;
 };
 
 } // namespace mziddata
