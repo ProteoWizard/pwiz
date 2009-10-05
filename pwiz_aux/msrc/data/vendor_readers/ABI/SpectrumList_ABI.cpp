@@ -90,7 +90,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 {
     boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
-    if (index>size_)
+    if (index >= size_)
         throw runtime_error(("[SpectrumList_ABI::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

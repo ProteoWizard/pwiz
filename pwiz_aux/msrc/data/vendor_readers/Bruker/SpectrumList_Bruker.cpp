@@ -130,7 +130,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
-    if (index > size_)
+    if (index >= size_)
         throw runtime_error(("[SpectrumList_Bruker::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
