@@ -312,6 +312,16 @@ install package_docs
     ;
 
 
+# convenient test target
+install msconvert
+    : pwiz_tools/commandline//msconvert
+    : <install-type>EXE
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+    ;
+explicit msconvert ;
+
+
 # predicate for use as a <conditional> requirement of targets that must only build with MSVC
 rule msvc-requirement ( properties * )
 {
@@ -371,7 +381,7 @@ if ! [ path.exists $(PWIZ_ROOT_PATH)/SUBSET ]
 {
 
 import bcp ;
-using bcp : $(BOOST_SOURCE) : release <location>$(.common-location)/bcp ;
+using bcp : $(BOOST_SOURCE) : $(.common-location)/bcp ;
 
 path-constant BOOST_SUBSET_PATH : $(.common-location)/boost-subset ;
 
@@ -448,7 +458,7 @@ This source tree is a subset of the full pwiz source tree.
   $(BOOST_SUBSET_PATH)/libraries
 ;
 
-tar.create pwiz-src-$(version-tag:J=_).tar.bz2
+tar.create pwiz-src.tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)
@@ -463,11 +473,12 @@ tar.create pwiz-src-$(version-tag:J=_).tar.bz2
     $(.common-sources)
 
   : # requirements
+    <name>pwiz-src-$(version-tag:J=_).tar.bz2
     <location>$(.common-location)
     <dependency>boost_1_39_0.tar.bz2
   ;
 
-tar.create pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
+tar.create pwiz-src-without-vendor-support.tar.bz2
   : # sources
 
     path-anchor:$(PWIZ_ROOT_PATH)
@@ -485,6 +496,7 @@ tar.create pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
     $(.common-sources)
 
   : # requirements
+    <name>pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
     <location>$(.common-location)
     <dependency>boost_1_39_0.tar.bz2
   ;
