@@ -140,8 +140,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     if (itr == cvParams.end())
         return s;
 
+    // make sure the spectrum has binary data
+    if (!s->getMZArray().get() || !s->getIntensityArray().get())
+        s = inner_->spectrum(index, true);
+
     // replace profile term with centroid term
-    *itr = MS_centroid_spectrum;
+    vector<CVParam>& cvParams2 = s->cvParams;
+    *(std::find(cvParams2.begin(), cvParams2.end(), MS_profile_spectrum)) = MS_centroid_spectrum;
 
     try
     {
