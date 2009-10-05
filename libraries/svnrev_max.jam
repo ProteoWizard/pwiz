@@ -16,15 +16,16 @@ feature.feature jamfile : false true : incidental ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;
-project svnrev_max ;
 
-rule init ( boost-root : requirements * )
+rule init ( boost-root : build-dir ? : requirements * )
 {
     if ! $(.initialized)
     {
         .initialized = true ;
 
         .boost-root = [ path.make $(boost-root) ] ;
+
+        project svnrev_max : build-dir $(build-dir:E=bin) ;
 
         path-constant BOOST_PATH : $(.boost-root) ;
         using ext-boost : 1.39.0 : $(BOOST_PATH) ;

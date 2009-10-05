@@ -15,7 +15,7 @@ import "class" : new ;
 # Make this module into a project.
 project.initialize $(__name__) ;
 
-rule init ( boost-root : build-dir : requirements * )
+rule init ( boost-root : build-dir ? : requirements * )
 {
     if ! $(.initialized)
     {
