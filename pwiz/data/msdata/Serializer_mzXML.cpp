@@ -207,9 +207,9 @@ void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& ins
     xmlWriter.startElement("msInstrument", attributes);
         writeCategoryValue(xmlWriter, "msManufacturer", adapter.manufacturer());
         writeCategoryValue(xmlWriter, "msModel", adapter.model());
-        writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation());
-        writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer());
-        writeCategoryValue(xmlWriter, "msDetector", adapter.detector());
+        try { writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation()); } catch (std::out_of_range&) {}
+        try { writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer()); } catch (std::out_of_range&) {}
+        try { writeCategoryValue(xmlWriter, "msDetector", adapter.detector()); } catch (std::out_of_range&) {}
     if (instrumentConfiguration.softwarePtr.get()) writeSoftware(xmlWriter, 
                                                     instrumentConfiguration.softwarePtr,
                                                     msd, cvTranslator);
