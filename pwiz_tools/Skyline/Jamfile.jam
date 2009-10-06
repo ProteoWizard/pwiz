@@ -54,7 +54,7 @@ if [ modules.peek : NT ]
     {
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:CleanAll /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
     }
     
@@ -82,6 +82,18 @@ if [ modules.peek : NT ]
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
+    }
+    
+    rule do_skyline_test_passed ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_passed
+    {
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
     }
     
     rule build-location ( properties * )
@@ -116,7 +128,7 @@ if [ modules.peek : NT ]
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(PWIZ_WAPPER_PATH)/obj/x86
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
         ;
         
     make Test.dll
@@ -135,5 +147,15 @@ if [ modules.peek : NT ]
         : # requirements
             <conditional>@build-location
             <dependency>Skyline.exe
+        ;
+        
+    make Skyline.passed
+        : # sources
+        : # actions
+            @do_skyline_test_passed
+        : # requirements
+            <conditional>@build-location
+            <dependency>Test.dll
+            <dependency>TestFunctional.dll
         ;
 }

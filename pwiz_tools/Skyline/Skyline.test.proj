@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TestResultsDir Condition="'$(TestResultsDir)'==''">$(SolutionDir)\TestResults</TestResultsDir>
   </PropertyGroup>
+  <ItemGroup>
+    <TestPassedFile Include="$(OutDir)\Skyline.passed" />
+    <TestResultsFiles Include="$(TestResultsDir)\*.trx" />
+  </ItemGroup>
   <Target Name="MSTest">
    
     <MakeDir Directories="$(TestResultsDir)" />    
@@ -10,6 +14,15 @@
 
   </Target>
   <Target Name="MSTest:Clean">
+
+    <ReadLinesFromFile File="%(TestResultsFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="lines"/>
+    </ReadLinesFromFile>
+    <WriteLinesToFile File="@(TestPassedFile)" Lines="@(Lines)" Overwrite="false" />
+    <RemoveDir Directories="$(TestResultsDir)" />
+
+  </Target>
+  <Target Name="MSTest:CleanAll">
    
     <RemoveDir Directories="$(TestResultsDir)" />
 
