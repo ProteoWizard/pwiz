@@ -206,7 +206,7 @@ if [ os.on-windows ]
 {
     using tar : bsdtar.exe ;
 }
-else if $(.os) = "MACOSX"
+else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
 {
     using tar : gnutar ;
 }
