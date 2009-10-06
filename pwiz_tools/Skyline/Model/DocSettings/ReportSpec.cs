@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.Hibernate;
@@ -95,10 +96,13 @@ namespace pwiz.Skyline.Model.DocSettings
             base.ReadXml(reader);
             
             string tableName = reader.GetAttribute(Attr.table);
-            tableName = tableName.Substring(tableName.LastIndexOf('.') + 1);
-            tableName = typeof (DbProtein).Namespace + '.' + tableName;
+            string tableTypeName = tableName.Substring(tableName.LastIndexOf('.') + 1);
+            tableTypeName = typeof (DbProtein).Namespace + '.' + tableTypeName;
 
-            Table = Type.GetType(tableName);
+            Table = Type.GetType(tableTypeName);
+            if (Table == null)
+                throw new InvalidDataException(string.Format("The name '{0}' is not a valid table name.", tableName));
+
             reader.ReadStartElement();
             if (reader.IsStartElement(El.select))
             {
