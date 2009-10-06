@@ -206,6 +206,10 @@ if [ os.on-windows ]
 {
     using tar : bsdtar.exe ;
 }
+else if $(.os) = "MACOSX"
+{
+    using tar : gnutar ;
+}
 else
 {
     using tar ;
