@@ -308,8 +308,8 @@ class PWIZ_API_DECL TextWriter
         (*this)((IdentifiableType)sir);
         if (!sir.spectrumID.empty())
             child()("spectrumID: "+sir.spectrumID);
-        if (!sir.SpectraData_ref.empty())
-            child()("SpectraData_ref: "+sir.SpectraData_ref);
+        if (sir.spectraDataPtr.get() && !sir.spectraDataPtr->empty())
+            child()("SpectraData_ref: "+sir.spectraDataPtr->id);
         if (!sir.spectrumIdentificationItem.empty())
             child()("spectrumIdentificationItem", sir.spectrumIdentificationItem);
         if (!sir.paramGroup.empty())
@@ -364,8 +364,8 @@ class PWIZ_API_DECL TextWriter
 
         if (!fa.values.empty())
             child()("values: ", fa.values);
-        if (!fa.Measure_ref.empty())
-            child()("Measure_ref: " + fa.Measure_ref);
+        if (fa.measurePtr.get() && !fa.measurePtr->empty())
+            child()("Measure_ref: " + fa.measurePtr->id);
         if (!fa.params.empty())
             child()("params", fa.params);
         
@@ -482,8 +482,8 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const ProteinDetectionHypothesis& pdh)
     {
         (*this)("ProteinDetectionHypothesis: ");
-        if (!pdh.DBSequence_ref.empty())
-            child()("DBSequence_ref: " + pdh.DBSequence_ref);
+        if (pdh.dbSequencePtr.get() && !pdh.dbSequencePtr->empty())
+            child()("DBSequence_ref: " + pdh.dbSequencePtr->id);
         // TODO: Resolve        if (!pdh.passThreshold.empty())
         //  child()("passThreshold: " + boost::lexical_cast<std::string>(pdh.passThreshold));
         if (!pdh.peptideHypothesis.empty())
@@ -861,8 +861,8 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const PeptideEvidence& pe)
     {
         (*this)("PeptideEvidence: ");
-        if (!pe.DBSequence_ref.empty())
-            child()("DBSequence_ref: "+pe.DBSequence_ref);
+        if (pe.dbSequencePtr.get() && !pe.dbSequencePtr->empty())
+            child()("DBSequence_ref: "+pe.dbSequencePtr->empty());
         if (pe.start != 0)
             child()("start: " + boost::lexical_cast<std::string>(pe.start));
         if (pe.end != 0)
@@ -871,8 +871,8 @@ class PWIZ_API_DECL TextWriter
             child()("pre: " + pe.pre);
         if (!pe.post.empty())
             child()("post: " + pe.post);
-        if (!pe.TranslationTable_ref.empty())
-            child()("TranslationTable_ref: "+pe.TranslationTable_ref);
+        if (pe.translationTablePtr.get() && !pe.translationTablePtr->empty())
+            child()("TranslationTable_ref: "+pe.translationTablePtr->id);
         if (pe.frame != 0)
             child()("frame: " + boost::lexical_cast<std::string>(pe.frame));
         child()(std::string("isDecoy: ")+(pe.isDecoy ? "true" : "false"));
@@ -904,10 +904,10 @@ class PWIZ_API_DECL TextWriter
             child()("rank: "+boost::lexical_cast<std::string>(sii.rank));
         if (!sii.empty())
             child()("passThreshold: "+boost::lexical_cast<std::string>(sii.passThreshold));
-        if (!sii.MassTable_ref.empty())
-            child()("MassTable_ref: "+sii.MassTable_ref);
-        if (!sii.Sample_ref.empty())
-            child()("Sample_ref: "+sii.Sample_ref);
+        if (sii.massTablePtr.get() && !sii.massTablePtr->empty())
+            child()("MassTable_ref: "+sii.massTablePtr->id);
+        if (sii.samplePtr.get() && !sii.samplePtr->empty())
+            child()("Sample_ref: "+sii.samplePtr->id);
 
     
         if (!sii.peptideEvidence.empty())

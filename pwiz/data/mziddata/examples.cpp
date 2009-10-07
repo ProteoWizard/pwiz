@@ -326,7 +326,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
     sirp->id="SIR_1";
     sirp->spectrumID="controllerType=0 controllerNumber=1 scan=33" ;
-    sirp->SpectraData_ref="SD_1";
+    sirp->spectraDataPtr=SpectraDataPtr(new SpectraData("SD_1"));
     SpectrumIdentificationItemPtr siip(new SpectrumIdentificationItem());
     siip->id="SII_1_1";
     siip->calculatedMassToCharge=557.303212333333;
@@ -347,7 +347,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->missedCleavages=1;
     pep->frame=0;
     pep->isDecoy=false;
-    pep->DBSequence_ref="DBSeq_Neurotensin";
+    pep->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_Neurotensin"));
     siip->peptideEvidence.push_back(pep);
 
     pep = PeptideEvidencePtr(new PeptideEvidence());
@@ -359,7 +359,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->missedCleavages=1;
     pep->frame=0;
     pep->isDecoy=false;
-    pep->DBSequence_ref="DBSeq_Bombessin";
+    pep->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
     siip->peptideEvidence.push_back(pep);
 
     pep = PeptideEvidencePtr(new PeptideEvidence());
@@ -371,7 +371,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->missedCleavages=1;
     pep->frame=0;
     pep->isDecoy=false;
-    pep->DBSequence_ref="DBSeq_Bombessin";
+    pep->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
     siip->peptideEvidence.push_back(pep);
 
     pep = PeptideEvidencePtr(new PeptideEvidence());
@@ -383,7 +383,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->missedCleavages=1;
     pep->frame=0;
     pep->isDecoy=false;
-    pep->DBSequence_ref="DBSeq_HSP71_RAT";
+    pep->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     siip->peptideEvidence.push_back(pep);
     
     siip->paramGroup.set(MS_mascot_score, "15.71");
@@ -395,7 +395,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     siip->fragmentation.push_back(ionType);
     FragmentArrayPtr fap(new FragmentArray());
     fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
-    fap->Measure_ref="m_mz";
+    fap->measurePtr=MeasurePtr(new Measure("m_mz"));
     ionType->fragmentArray.push_back(fap);
     sirp->spectrumIdentificationItem.push_back(siip);
     
@@ -409,7 +409,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pagp->id="PAG_hit_1";
     ProteinDetectionHypothesisPtr pdhp(new ProteinDetectionHypothesis());
     pdhp->id="PDH_Bombessin";
-    pdhp->DBSequence_ref="DBSeq_Bombessin";
+    pdhp->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
     pdhp->passThreshold=true;
     pdhp->peptideHypothesis.push_back("PE_19_1_Bombessin_0");
     pdhp->peptideHypothesis.push_back("PE_20_1_Bombessin_0");
@@ -420,7 +420,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     
     pdhp = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis());
     pdhp->id="PDH_HSP71_RAT";
-    pdhp->DBSequence_ref="DBSeq_HSP71_RAT";
+    pdhp->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     pdhp->passThreshold="false";
     pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT_0");
     pdhp->paramGroup.set(MS_mascot_score, "40.95");

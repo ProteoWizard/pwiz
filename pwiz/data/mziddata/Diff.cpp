@@ -398,7 +398,7 @@ void diff(const FragmentArray& a,
 					       "xsd:float"));
         }
     }
-    diff(a.Measure_ref, b.Measure_ref, a_b.Measure_ref, b_a.Measure_ref, config);
+    ptr_diff(a.measurePtr, b.measurePtr, a_b.measurePtr, b_a.measurePtr, config);
 }
 
 
@@ -409,6 +409,8 @@ void diff(const Measure& a,
           Measure& b_a,
           const DiffConfig& config)
 {
+    diff((IdentifiableType&)a, (IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 
@@ -491,13 +493,16 @@ void diff(const PeptideEvidence& a,
           PeptideEvidence& b_a,
           const DiffConfig& config)
 {
-    diff(a.DBSequence_ref, b.DBSequence_ref, a_b.DBSequence_ref, b_a.DBSequence_ref, config);
+    diff((IdentifiableType&)a, (IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
+    ptr_diff(a.dbSequencePtr, b.dbSequencePtr, a_b.dbSequencePtr,
+             b_a.dbSequencePtr, config);
     diff_numeric(a.start, b.start, a_b.start, b_a.start, config);
     diff_numeric(a.end, b.end, a_b.end, b_a.end, config);
     diff(a.pre, b.pre, a_b.pre, b_a.pre, config);
     diff(a.post, b.post, a_b.post, b_a.post, config);
-    diff(a.TranslationTable_ref, b.TranslationTable_ref,
-         a_b.TranslationTable_ref, b_a.TranslationTable_ref, config);
+    ptr_diff(a.translationTablePtr, b.translationTablePtr,
+         a_b.translationTablePtr, b_a.translationTablePtr, config);
     diff_numeric(a.frame, b.frame, a_b.frame, b_a.frame, config);
     if(a.isDecoy != b.isDecoy)
     {
@@ -541,11 +546,11 @@ void diff(const SpectrumIdentificationItem& a,
         b_a.passThreshold = b.passThreshold;
     }
 
-    diff(a.MassTable_ref, b.MassTable_ref,
-                 a_b.MassTable_ref, b_a.MassTable_ref, config);
+    ptr_diff(a.massTablePtr, b.massTablePtr,
+                 a_b.massTablePtr, b_a.massTablePtr, config);
     
-    diff(a.Sample_ref, b.Sample_ref,
-                 a_b.Sample_ref, b_a.Sample_ref, config);
+    ptr_diff(a.samplePtr, b.samplePtr,
+                 a_b.samplePtr, b_a.samplePtr, config);
 
     vector_diff_deep(a.peptideEvidence, b.peptideEvidence,
                      a_b.peptideEvidence, b_a.peptideEvidence, config);
@@ -566,8 +571,8 @@ void diff(const SpectrumIdentificationResult& a,
           const DiffConfig& config)
 {
     diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
-    diff(a.SpectraData_ref, b.SpectraData_ref,
-         a_b.SpectraData_ref, b_a.SpectraData_ref, config);
+    ptr_diff(a.spectraDataPtr, b.spectraDataPtr,
+         a_b.spectraDataPtr, b_a.spectraDataPtr, config);
 
     vector_diff_deep(a.spectrumIdentificationItem, b.spectrumIdentificationItem,
          a_b.spectrumIdentificationItem, b_a.spectrumIdentificationItem,
@@ -612,8 +617,8 @@ void diff(const ProteinDetectionHypothesis& a,
           ProteinDetectionHypothesis& b_a,
           const DiffConfig& config)
 {
-    diff(a.DBSequence_ref, b.DBSequence_ref,
-         a_b.DBSequence_ref, b_a.DBSequence_ref, config);
+    ptr_diff(a.dbSequencePtr, b.dbSequencePtr,
+         a_b.dbSequencePtr, b_a.dbSequencePtr, config);
     if (a.passThreshold != b.passThreshold)
     {
         a_b.passThreshold = a.passThreshold;
@@ -1075,6 +1080,8 @@ void diff(const DBSequence& a,
           DBSequence& b_a,
           const DiffConfig& config)
 {
+    diff((IdentifiableType&)a, (IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     diff_numeric(a.length, b.length, a_b.length, b_a.length, config);
     diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
     ptr_diff(a.searchDatabasePtr, b.searchDatabasePtr, a_b.searchDatabasePtr,

@@ -47,6 +47,17 @@ struct HasID
     }
 };
 
+struct HasMTID
+{
+    const string& id_;
+    HasMTID(const string& id) : id_(id) {}
+
+    bool operator()(const SpectrumIdentificationProtocolPtr& sip)
+    {
+        return sip.get() && sip->massTable.id == id_;
+    }
+};
+
 
 template <typename object_type>
 void resolve(shared_ptr<object_type>& reference, 
@@ -148,14 +159,45 @@ PWIZ_API_DECL void resolve(SequenceCollection& sc, MzIdentML& mzid)
     }
 }
 
+PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentificationProtocolPtr>& spectrumIdProts)
+{
+    if (!mt.get() || mt->id.empty())
+        return; 
+
+    vector<SpectrumIdentificationProtocolPtr>::const_iterator it = 
+        find_if(spectrumIdProts.begin(), spectrumIdProts.end(), HasMTID(mt->id));
+
+    if (it == spectrumIdProts.end())
+    {
+        ostringstream oss;
+        oss << "[References::resolve()] Failed to resolve reference.\n"
+            << "  object type: MassTable" << endl
+            << "  reference id: " << mt->id << endl
+            << "  referent list: " << spectrumIdProts.size() << endl;
+        for (vector<SpectrumIdentificationProtocolPtr>::const_iterator it=spectrumIdProts.begin();
+             it!=spectrumIdProts.end(); ++it)
+            oss << "    " << (*it)->id << endl;
+        throw runtime_error(oss.str().c_str());
+    }
+
+    mt = MassTablePtr(new MassTable((*it)->massTable));
+}
+
 PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr si, MzIdentML& mzid)
 {
     for (vector<SpectrumIdentificationResultPtr>::iterator rit=si->spectrumIdentificationResult.begin(); rit != si->spectrumIdentificationResult.end(); rit++)
     {
+        if ((*rit)->spectraDataPtr.get())
+            resolve((*rit)->spectraDataPtr, mzid.dataCollection.inputs.spectraData);
+        
         for (vector<SpectrumIdentificationItemPtr>::iterator iit=(*rit)->spectrumIdentificationItem.begin(); iit!=(*rit)->spectrumIdentificationItem.end(); iit++)
         {
             if ((*iit)->peptidePtr.get())
+            {
                 resolve((*iit)->peptidePtr, mzid.sequenceCollection.peptides);
+                resolve((*iit)->massTablePtr, mzid.analysisProtocolCollection.spectrumIdentificationProtocol);
+                resolve((*iit)->samplePtr, mzid.analysisSampleCollection.samples);
+            }
         }
     }
 }
@@ -228,6 +270,22 @@ PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
     {
         resolve(*it, mzid);
     }
+
+    // If there's no proteinDetectionListPtr, then we're done.
+    if (!dc.analysisData.proteinDetectionListPtr.get())
+        return;
+
+    ProteinDetectionListPtr pdl=dc.analysisData.proteinDetectionListPtr;
+    for (vector<ProteinAmbiguityGroupPtr>::iterator pg=pdl->proteinAmbiguityGroup.begin();
+         pg != pdl->proteinAmbiguityGroup.end(); pg++)
+    {
+        for (vector<ProteinDetectionHypothesisPtr>::iterator pdh=(*pg)->proteinDetectionHypothesis.begin();
+             pdh!=(*pg)->proteinDetectionHypothesis.begin(); pdh++)
+        {
+            resolve((*pdh)->dbSequencePtr,
+                    mzid.sequenceCollection.dbSequences);
+        }
+    }
 }
 
 PWIZ_API_DECL void resolve(MzIdentML& mzid)
@@ -241,6 +299,7 @@ PWIZ_API_DECL void resolve(MzIdentML& mzid)
     resolve(mzid.analysisProtocolCollection.spectrumIdentificationProtocol,
             mzid);
     resolve(mzid.analysisProtocolCollection.proteinDetectionProtocol, mzid);
+    resolve(mzid.dataCollection, mzid);
 }
 
 

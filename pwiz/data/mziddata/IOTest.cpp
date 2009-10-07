@@ -625,7 +625,7 @@ void testFragmentArray()
     a.values.push_back(2.);
     a.values.push_back(3.);
     a.values.push_back(4.);
-    a.Measure_ref = "ref";
+    a.measurePtr = MeasurePtr(new Measure("ref"));
 
     testObject(a);
 
@@ -657,12 +657,12 @@ void testPeptideEvidence()
     PeptideEvidence a;
 
     a.id = "id";
-    a.DBSequence_ref = "dbs_ref";
+    a.dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.start = 1;
     a.end = 2;
     a.pre = "PRE";
     a.post = "POST";
-    a.TranslationTable_ref = "tranny_ref";
+    a.translationTablePtr = TranslationTablePtr(new TranslationTable("tranny_ref"));
     a.frame = 3;
     a.isDecoy = true;
     a.missedCleavages = 4;
@@ -686,12 +686,12 @@ void testSpectrumIdentificationItem()
     a.peptidePtr = PeptidePtr(new Peptide("pep_ref"));
     a.rank = 4;
     a.passThreshold = true;
-    a.MassTable_ref = "mt_ref";
-    a.Sample_ref = "s_ref";
+    a.massTablePtr = MassTablePtr(new MassTable("mt_ref"));
+    a.samplePtr = SamplePtr(new Sample("s_ref"));
 
 
     PeptideEvidencePtr b(new PeptideEvidence());
-    b->DBSequence_ref = "db_ref";
+    b->dbSequencePtr = DBSequencePtr(new DBSequence("db_ref"));
     a.peptideEvidence.push_back(b);
 
     IonTypePtr c(new IonType());
@@ -711,7 +711,7 @@ void testSpectrumIdentificationResult()
     a.id = "id";
 
     a.spectrumID = "sid";
-    a.SpectraData_ref = "sd_ref";
+    a.spectraDataPtr = SpectraDataPtr(new SpectraData("sd_ref"));
 
     SpectrumIdentificationItemPtr b(new SpectrumIdentificationItem());
     b->chargeState = 1;
@@ -728,7 +728,7 @@ void testProteinDetectionHypothesis()
     ProteinDetectionHypothesis a;
 
     a.id = "id";
-    a.DBSequence_ref = "dbs_ref";
+    a.dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.passThreshold = "pt";
 
     a.peptideHypothesis.push_back("test");
@@ -744,7 +744,7 @@ void testProteinAmbiguityGroup()
 
     a.id = "id";
     ProteinDetectionHypothesisPtr b(new ProteinDetectionHypothesis());
-    b->DBSequence_ref = "dbs_ref";
+    b->dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.proteinDetectionHypothesis.push_back(b);
     a.paramGroup.set(MS_mascot_score, "164.4");
 

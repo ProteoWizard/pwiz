@@ -114,7 +114,7 @@ void testFragmentArray()
     FragmentArray a, b;
 
     a.values.push_back(1.0);
-    a.Measure_ref = "Measure_ref";
+    a.measurePtr = MeasurePtr(new Measure("Measure_ref"));
     b = a;
 
     Diff<FragmentArray> diff(a, b);
@@ -123,7 +123,7 @@ void testFragmentArray()
 
     a.values.push_back(2.1);
     b.values.push_back(2.0);
-    b.Measure_ref = "fer_erusaeM";
+    b.measurePtr = MeasurePtr(new Measure("fer_erusaeM"));
     diff(a, b);
 
     // a diff was found
@@ -132,8 +132,10 @@ void testFragmentArray()
     // the values of the diff are correct
     unit_assert(diff.a_b.params.userParams.size() == 1);
     unit_assert(diff.b_a.params.userParams.size() == 1);
-    unit_assert(diff.a_b.Measure_ref == "Measure_ref");
-    unit_assert(diff.b_a.Measure_ref == "fer_erusaeM");
+    unit_assert(diff.a_b.measurePtr.get());
+    unit_assert(diff.a_b.measurePtr->id == "Measure_ref");
+    unit_assert(diff.b_a.measurePtr.get());
+    unit_assert(diff.b_a.measurePtr->id == "fer_erusaeM");
 
     if (os_) *os_ << diff << endl;
 }
@@ -158,7 +160,7 @@ void testIonType()
     b.charge = 2;
     b.paramGroup.set(MS_frag__z_ion);
     b.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
-    b.fragmentArray.back()->Measure_ref = "Graduated_cylinder";
+    b.fragmentArray.back()->measurePtr = MeasurePtr(new Measure("Graduated_cylinder"));
     diff(a, b);
 
     // a diff was found
@@ -175,7 +177,8 @@ void testIonType()
     unit_assert(diff.a_b.paramGroup.empty());
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.b_a.fragmentArray.size() == 1);
-    unit_assert(diff.b_a.fragmentArray.back()->Measure_ref == "Graduated_cylinder");
+    unit_assert(diff.b_a.fragmentArray.back()->measurePtr.get());
+    unit_assert(diff.b_a.fragmentArray.back()->measurePtr->id == "Graduated_cylinder");
 }
 
 
@@ -284,12 +287,12 @@ void testPeptideEvidence()
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
-    a.DBSequence_ref = "DBSequence_ref";
+    a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
     a.start = 1;
     a.end = 6;
     a.pre = "-";
     a.post = "-";
-    a.TranslationTable_ref = "TranslationTable_ref";
+    a.translationTablePtr = TranslationTablePtr(new TranslationTable("TranslationTable_ref"));
     a.frame = 0;
     a.isDecoy = true;
     a.missedCleavages = 0;
@@ -299,12 +302,12 @@ void testPeptideEvidence()
     diff(a,b);
     unit_assert(!diff);
 
-    b.DBSequence_ref = "fer_ecneuqeSBD";       
+    b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     b.start = 2;
     b.end = 7;   
     b.pre = "A";
     b.post = "A";
-    b.TranslationTable_ref = "fer_elbaTnoitalsnarT";   
+    b.translationTablePtr = TranslationTablePtr(new TranslationTable("fer_elbaTnoitalsnarT"));
     b.frame = 1;
     b.isDecoy = false;
     b.missedCleavages = 1;
@@ -317,10 +320,14 @@ void testPeptideEvidence()
     unit_assert(diff);
 
     // and correctly
-    unit_assert(diff.a_b.DBSequence_ref == "DBSequence_ref");
-    unit_assert(diff.b_a.DBSequence_ref == "fer_ecneuqeSBD");
-    unit_assert(diff.a_b.TranslationTable_ref == "TranslationTable_ref");
-    unit_assert(diff.b_a.TranslationTable_ref == "fer_elbaTnoitalsnarT");
+    unit_assert(diff.a_b.dbSequencePtr.get());
+    unit_assert(diff.a_b.dbSequencePtr->id == "DBSequence_ref");
+    unit_assert(diff.b_a.dbSequencePtr.get());
+    unit_assert(diff.b_a.dbSequencePtr->id == "fer_ecneuqeSBD");
+    unit_assert(diff.a_b.translationTablePtr.get());
+    unit_assert(diff.a_b.translationTablePtr->id == "TranslationTable_ref");
+    unit_assert(diff.b_a.translationTablePtr.get());
+    unit_assert(diff.b_a.translationTablePtr->id == "fer_elbaTnoitalsnarT");
     unit_assert_equal(diff.a_b.start, 1, epsilon);
     unit_assert_equal(diff.b_a.start, 2, epsilon);
     unit_assert_equal(diff.a_b.end, 6, epsilon);
@@ -349,7 +356,7 @@ void testProteinAmbiguityGroup()
     ProteinAmbiguityGroup a, b;
 
     a.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
-    a.proteinDetectionHypothesis.back()->DBSequence_ref = "DBSequence_ref";
+    a.proteinDetectionHypothesis.back()->dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
     a.paramGroup.set(MS_mascot_score, 164.4);
     b = a;
 
@@ -368,7 +375,7 @@ void testProteinAmbiguityGroup()
     // and correctly
     unit_assert(diff.a_b.proteinDetectionHypothesis.size() == 1);
     unit_assert(diff.b_a.proteinDetectionHypothesis.size() == 0);
-    unit_assert(diff.a_b.proteinDetectionHypothesis.back()->DBSequence_ref == "DBSequence_ref");
+    unit_assert(diff.a_b.proteinDetectionHypothesis.back()->dbSequencePtr->id == "DBSequence_ref");
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_mascot_expectation_value)); // TODO check vals also?
@@ -384,8 +391,8 @@ void testProteinDetectionHypothesis()
     Diff<ProteinDetectionHypothesis> diff(a,b);
     unit_assert(!diff);
     
-    a.DBSequence_ref = "DBSequence_ref";
-    b.DBSequence_ref = "fer_ecneuqeSBD";
+    a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
+    b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     a.passThreshold = true;
     b.passThreshold = false;    
     a.peptideHypothesis.push_back("marjoram");
@@ -399,8 +406,10 @@ void testProteinDetectionHypothesis()
     unit_assert(diff);
     
     // and correctly
-    unit_assert(diff.a_b.DBSequence_ref == "DBSequence_ref");
-    unit_assert(diff.b_a.DBSequence_ref == "fer_ecneuqeSBD");
+    unit_assert(diff.a_b.dbSequencePtr.get());
+    unit_assert(diff.a_b.dbSequencePtr->id =="DBSequence_ref");
+    unit_assert(diff.b_a.dbSequencePtr.get());
+    unit_assert(diff.b_a.dbSequencePtr->id == "fer_ecneuqeSBD");
     unit_assert(diff.a_b.passThreshold == true);
     unit_assert(diff.b_a.passThreshold == false);               
     unit_assert(diff.a_b.peptideHypothesis.size() == 1);

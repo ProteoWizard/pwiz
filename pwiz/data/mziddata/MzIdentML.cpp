@@ -227,6 +227,11 @@ PWIZ_API_DECL bool Enzymes::empty() const
 // MassTable
 //
 
+PWIZ_API_DECL MassTable::MassTable(const string id)
+    : id(id)
+{
+}
+
 
 PWIZ_API_DECL bool MassTable::empty() const
 {
@@ -278,8 +283,8 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
         (!peptidePtr.get() || peptidePtr->empty()) &&
         rank == 0 &&
         passThreshold == 0 &&
-        MassTable_ref.empty() &&
-        Sample_ref.empty() &&
+        (!massTablePtr.get() || massTablePtr->empty()) &&
+        (!samplePtr.get() || samplePtr->empty()) &&
         peptideEvidence.empty() &&
         fragmentation.empty() &&
         paramGroup.empty();
@@ -294,7 +299,7 @@ PWIZ_API_DECL bool SpectrumIdentificationResult::empty() const
 {
     return IdentifiableType::empty() &&
         spectrumID.empty() &&
-        SpectraData_ref.empty() &&
+        (!spectraDataPtr.get() || spectraDataPtr->empty()) &&
         spectrumIdentificationItem.empty() &&
         paramGroup.empty();
 }
@@ -339,13 +344,17 @@ PWIZ_API_DECL bool ProteinDetectionList::empty() const
         paramGroup.empty();
 }
 
+//
+// ProteinDetectionHypothesis
+//
+
 PWIZ_API_DECL ProteinDetectionHypothesis::ProteinDetectionHypothesis() : passThreshold(0) 
 {
 }
 
 PWIZ_API_DECL bool ProteinDetectionHypothesis::empty() const
 {
-    return DBSequence_ref.empty() &&
+    return (!dbSequencePtr.get() || dbSequencePtr->empty()) &&
         passThreshold == 0 &&
         peptideHypothesis.empty() &&
         paramGroup.empty();
@@ -421,8 +430,10 @@ PWIZ_API_DECL bool ProteinDetectionProtocol::empty() const
 // PeptideEvidence
 //
 
-PWIZ_API_DECL PeptideEvidence::PeptideEvidence()
-    : start(0), end(0),
+PWIZ_API_DECL PeptideEvidence::PeptideEvidence(const string& id,
+                                               const string& name)
+    : IdentifiableType(id, name),
+      start(0), end(0),
       frame(0), isDecoy(false),
       missedCleavages(0)
 {
@@ -431,12 +442,13 @@ PWIZ_API_DECL PeptideEvidence::PeptideEvidence()
 
 PWIZ_API_DECL bool PeptideEvidence::empty() const
 {
-    return DBSequence_ref.empty() &&
+    return IdentifiableType::empty() &&
+        (!dbSequencePtr.get() || dbSequencePtr->empty()) &&
         start == 0 &&
         end == 0 &&
         pre.empty() &&
         post.empty() &&
-        TranslationTable_ref.empty() &&
+        (!translationTablePtr.get() || translationTablePtr->empty()) &&
         frame == 0 &&
         isDecoy == false &&
         missedCleavages == 0 &&
@@ -451,7 +463,7 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
 PWIZ_API_DECL bool FragmentArray::empty() const
 {
     return values.empty() &&
-        Measure_ref.empty() &&
+        (!measurePtr.get() || measurePtr->empty()) &&
         params.empty();
 }
 
@@ -654,9 +666,16 @@ PWIZ_API_DECL bool Material::empty() const
 // Measure
 //
 
+PWIZ_API_DECL Measure::Measure(const string id, const string name)
+    : IdentifiableType(id, name)
+{
+}
+    
+
 PWIZ_API_DECL bool Measure::empty() const
 {
-    return paramGroup.empty();
+    return IdentifiableType::empty() &&
+        paramGroup.empty();
 }
 
 
@@ -890,6 +909,14 @@ PWIZ_API_DECL bool AnalysisProtocolCollection::empty() const
 PWIZ_API_DECL bool AnalysisSampleCollection::empty() const
 {
     return samples.empty();
+}
+
+//
+// SpectraData
+//
+PWIZ_API_DECL SpectraData::SpectraData(const string id, const string name)
+    : IdentifiableType(id, name)
+{
 }
 
 PWIZ_API_DECL bool SpectraData::empty() const

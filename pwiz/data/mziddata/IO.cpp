@@ -3398,8 +3398,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(pdh, attributes);
-    if (!pdh.DBSequence_ref.empty())
-        attributes.push_back(make_pair("DBSequence_ref", pdh.DBSequence_ref));
+    if (pdh.dbSequencePtr.get() && !pdh.dbSequencePtr->empty())
+        attributes.push_back(make_pair("DBSequence_ref", pdh.dbSequencePtr->id));
     attributes.push_back(make_pair("passThreshold", pdh.passThreshold ? "true" : "false"));
 
     writer.startElement("ProteinDetectionHypothesis", attributes);
@@ -3431,8 +3431,12 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableType
 
         if (name == "ProteinDetectionHypothesis")
         {
-            getAttribute(attributes, "DBSequence_ref", pdh->DBSequence_ref);
             string value;
+            getAttribute(attributes, "DBSequence_ref", value);
+            if (!value.empty())
+                pdh->dbSequencePtr = DBSequencePtr(new DBSequence(value));
+
+            value.clear();
             getAttribute(attributes, "passThreshold", value);
             pdh->passThreshold = (value=="true" ? true : false);
 
@@ -3615,16 +3619,16 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(pep, attributes);
-    if (!pep.DBSequence_ref.empty())
-        attributes.push_back(make_pair("DBSequence_Ref", pep.DBSequence_ref));
+    if (pep.dbSequencePtr.get() && !pep.dbSequencePtr->empty())
+        attributes.push_back(make_pair("DBSequence_Ref", pep.dbSequencePtr->id));
     attributes.push_back(make_pair("start", lexical_cast<string>(pep.start)));
     attributes.push_back(make_pair("end", lexical_cast<string>(pep.end)));
     if (!pep.pre.empty())
         attributes.push_back(make_pair("pre", pep.pre));
     if (!pep.post.empty())
         attributes.push_back(make_pair("post", pep.post));
-    if (!pep.TranslationTable_ref.empty())
-        attributes.push_back(make_pair("TranslationTable_ref", pep.TranslationTable_ref));
+    if (pep.translationTablePtr.get() && !pep.translationTablePtr->empty())
+        attributes.push_back(make_pair("TranslationTable_ref", pep.translationTablePtr->id));
     if (pep.frame != 0)
         attributes.push_back(make_pair("frame", lexical_cast<string>(pep.frame)));
     attributes.push_back(make_pair("isDecoy", pep.isDecoy  ? "true" : "false"));
@@ -3647,11 +3651,17 @@ struct HandlerPeptideEvidence : public HandlerIdentifiableType
                                 const Attributes& attributes,
                                 stream_offset position)
     {
+        if (!pep)
+            throw runtime_error("[IO::HandlerPeptideEvidence] Null PeptideEvidence.");
+        
         if (name == "PeptideEvidence")
         {
-            getAttribute(attributes, "DBSequence_Ref", pep->DBSequence_ref);
-
             string value;
+            getAttribute(attributes, "DBSequence_Ref", value);
+            if (!value.empty())
+                pep->dbSequencePtr = DBSequencePtr(new DBSequence(value));
+
+            value.clear();
             getAttribute(attributes, "start", value);
             if (!value.empty())
                 pep->start = lexical_cast<int>(value);
@@ -3665,7 +3675,10 @@ struct HandlerPeptideEvidence : public HandlerIdentifiableType
 
             getAttribute(attributes, "post", pep->post);
 
-            getAttribute(attributes, "TranslationTable_ref", pep->TranslationTable_ref);
+            value.clear();
+            getAttribute(attributes, "TranslationTable_ref", value);
+            if (!value.empty())
+                pep->translationTablePtr = TranslationTablePtr(new TranslationTable(value));
 
             value.clear();
             getAttribute(attributes, "frame", value);
@@ -3693,6 +3706,7 @@ struct HandlerPeptideEvidence : public HandlerIdentifiableType
         }
         else
             throw runtime_error(("[IO::HandlerPeptideEvidence] Unexpected element name: " + name).c_str());
+
         return Status::Ok;
     }
     private:
@@ -3732,8 +3746,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArray& fa)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("values", fa.getValues()));
-    if (!fa.Measure_ref.empty())
-        attributes.push_back(make_pair("Measure_ref", fa.Measure_ref));
+    if (fa.measurePtr.get() && !fa.measurePtr->empty())
+        attributes.push_back(make_pair("Measure_ref", fa.measurePtr->id));
     
     writer.startElement("FragmentArray", attributes, XMLWriter::EmptyElement);
 }
@@ -3756,7 +3770,11 @@ struct HandlerFragmentArray : public SAXParser::Handler
             string values;
             getAttribute(attributes, "values", values);
             fa->setValues(values);
-            getAttribute(attributes, "Measure_ref", fa->Measure_ref);
+
+            values.clear();
+            getAttribute(attributes, "Measure_ref", values);
+            if (!values.empty())
+                fa->measurePtr = MeasurePtr(new Measure(values));
         }
         else
             throw runtime_error(("[IO::HandlerFragmentArray] Unexpected element name: " + name).c_str());
@@ -3879,10 +3897,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         attributes.push_back(make_pair("Peptide_ref", siip.peptidePtr->id));
     attributes.push_back(make_pair("rank", lexical_cast<string>(siip.rank)));
     attributes.push_back(make_pair("passThreshold", (siip.passThreshold ? "true" : "false")));
-    if (!siip.MassTable_ref.empty())
-        attributes.push_back(make_pair("MassTable_ref", siip.MassTable_ref));
-    if (!siip.Sample_ref.empty())
-        attributes.push_back(make_pair("Sample_ref", siip.Sample_ref));
+    if (siip.massTablePtr.get() && !siip.massTablePtr->empty())
+        attributes.push_back(make_pair("MassTable_ref", siip.massTablePtr->id));
+    if (siip.samplePtr.get() && !siip.samplePtr->empty())
+        attributes.push_back(make_pair("Sample_ref", siip.samplePtr->id));
 
 
     writer.startElement("SpectrumIdentificationItem", attributes);
@@ -3930,8 +3948,15 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableType
             getAttribute(attributes, "passThreshold", value);
             siip->passThreshold = (value=="true" ? true : false);
 
-            getAttribute(attributes, "MassTable_ref", siip->MassTable_ref);
-            getAttribute(attributes, "Sample_ref", siip->Sample_ref);
+            value.clear();
+            getAttribute(attributes, "MassTable_ref", value);
+            if (!value.empty())
+                siip->massTablePtr = MassTablePtr(new MassTable(value));
+
+            value.clear();
+            getAttribute(attributes, "Sample_ref", value);
+            if (!value.empty())
+                siip->samplePtr = SamplePtr(new Sample(value));
 
             HandlerIdentifiableType::id = siip;
             return HandlerIdentifiableType::startElement(name, attributes, position);
@@ -4003,7 +4028,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     XMLWriter::Attributes attributes;
     addIdAttributes(sirp, attributes);
     attributes.push_back(make_pair("spectrumID", sirp.spectrumID));
-    attributes.push_back(make_pair("SpectraData_ref", sirp.SpectraData_ref));
+    if (sirp.spectraDataPtr.get() && !sirp.spectraDataPtr->empty())
+        attributes.push_back(make_pair("SpectraData_ref", sirp.spectraDataPtr->id));
     
     writer.startElement("SpectrumIdentificationResult", attributes);
 
@@ -4030,7 +4056,11 @@ struct HandlerSpectrumIdentificationResult : public HandlerIdentifiableType
         if (name == "SpectrumIdentificationResult")
         {
             getAttribute(attributes, "spectrumID", sirp->spectrumID);
-            getAttribute(attributes, "SpectraData_ref", sirp->SpectraData_ref);
+
+            string value;
+            getAttribute(attributes, "SpectraData_ref", value);
+            if (!value.empty())
+                sirp->spectraDataPtr = SpectraDataPtr(new SpectraData(value));
 
             HandlerIdentifiableType::id = sirp;
             return HandlerIdentifiableType::startElement(name, attributes, position);
