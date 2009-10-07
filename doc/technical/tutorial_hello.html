@@ -1,0 +1,71 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: hello_pwiz tutorial</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+<h1>hello_pwiz Tutorial</h1>
+<p>
+    This tutorial will take you through the steps to create a new command-line tool using ProteoWizard.
+</p>
+
+<ol>
+    <li><p>
+    Download and <a href="building.html">build ProteoWizard</a>.  
+    In what follows, &lt;pwiz_root&gt; refers to the directory where you put ProteoWizard. 
+    </p></li>
+
+    <li><p>
+    Save the file <a href="hello_pwiz.cpp">hello_pwiz.cpp</a> and put it in &lt;pwiz_root&gt;/pwiz_tools/examples.
+    </p></li>
+
+    <li>
+    Edit &lt;pwiz_root&gt;/pwiz_tools/examples/Jamfile.jam, adding the following two code blocks:
+    <p><code>
+    exe hello_pwiz<br/>
+        : hello_pwiz.cpp<br/>
+          &nbsp;&nbsp;../../pwiz/data/msdata//pwiz_data_msdata<br/>
+        : &lt;include&gt;../..<br/>
+        ;<br/>
+    </code></p>
+
+    <p><code>
+    install hello_pwiz_install<br/>
+        : hello_pwiz<br/>
+        : &lt;location&gt;../..  # this puts the executable in &lt;pwiz_root&gt;<br/>
+        ;<br/>
+    </code></p>
+    </li>
+
+    <li><p>
+    Build hello_pwiz from &lt;pwiz_root&gt;:<br/>
+    <code>
+    $ quickbuild.sh pwiz_tools/examples//hello_pwiz_install
+    </code>
+    </p></li>
+
+    <li><p>
+    You should now have an executable "hello_pwiz" in &lt;pwiz_root&gt;  You can test it:<br/>
+    <code>
+    $ hello_pwiz example_data/tiny.pwiz.1.1.mzML
+    </code>
+    </li></p>
+
+</ol>
+
+<p>
+    Now that you're up and running, you'll probably want to change the location where the exectuable
+    is installed, put your source files in their own directory, and make adjustments for your personal
+    build environment.
+</p>
+
+
+</body>
+
+
+
+</html>
+
