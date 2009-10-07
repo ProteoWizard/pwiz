@@ -57,6 +57,7 @@ rule init ( version : location : options * )
     {
         .initialized = true ;
 
+        local .os = [ modules.peek : OS ] ;
         if [ os.on-windows ]
         {
             using tar : bsdtar.exe ;
