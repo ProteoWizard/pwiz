@@ -61,6 +61,10 @@ rule init ( version : location : options * )
         {
             using tar : bsdtar.exe ;
         }
+        else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
+        {
+            using tar : gnutar ;
+        }
         else
         {
             using tar ;
