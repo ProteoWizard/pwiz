@@ -367,6 +367,7 @@ void load_builtins()
       init_property_set();
       init_sequence();
       init_order();
+      init_svnrev();
 }
 
 

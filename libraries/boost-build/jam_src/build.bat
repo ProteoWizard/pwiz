@@ -445,6 +445,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c vari
 set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c md5.c pwd.c class.c w32_getreg.c native.c
 set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c modules/path.c modules/regex.c
 set BJAM_SOURCES=%BJAM_SOURCES% modules/property-set.c modules/sequence.c modules/order.c
+set BJAM_SOURCES=%BJAM_SOURCES% modules/svnrev.c
 
 set BJAM_UPDATE=
 :Check_Update

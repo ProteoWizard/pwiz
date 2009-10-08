@@ -242,7 +242,7 @@ BJAM_SOURCES="\
  rules.c scan.c search.c subst.c timestamp.c variable.c modules.c\
  strings.c filesys.c builtins.c pwd.c class.c native.c md5.c w32_getreg.c\
  modules/set.c modules/path.c modules/regex.c modules/property-set.c\
- modules/sequence.c modules/order.c"
+ modules/sequence.c modules/order.c modules/svnrev.c"
 case $BOOST_JAM_TOOLSET in
     mingw)
     BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c"

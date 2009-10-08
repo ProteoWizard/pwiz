@@ -474,7 +474,7 @@ jam.source =
     timestamp.c variable.c modules.c strings.c filesys.c
     builtins.c pwd.c class.c native.c md5.c modules/set.c
     modules/path.c modules/regex.c modules/property-set.c
-    modules/sequence.c modules/order.c
+    modules/sequence.c modules/order.c modules/svnrev.c
     ;
 if $(NT)
 {
@@ -855,6 +855,7 @@ dist.source = $(dist.source:D=)
     [ .path modules property-set.c ]
     [ .path modules sequence.c ]
     [ .path modules order.c ]
+    [ .path modules svnrev.c ]
     [ GLOB [ .path boehm_gc ] : * ]
     [ GLOB [ .path boehm_gc include ] : * ]
     [ GLOB [ .path boehm_gc include private ] : * ]
