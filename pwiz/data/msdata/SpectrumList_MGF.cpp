@@ -130,6 +130,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         // * a peak list (centroided)
         // * not deisotoped (even though it may actually be, there's no way to tell)
 
+        spectrum.id = "index=" + lexical_cast<string>(spectrum.index);
         spectrum.set(MS_MSn_spectrum);
         spectrum.set(MS_ms_level, 2);
         spectrum.set(MS_centroid_spectrum);
@@ -173,8 +174,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                          lexical_cast<string>(size_t(is_->tellg())-lineStr.length()-1) + "\n"));
 			    inBeginIons = false;
                 inPeakList = false;
-
-                //if (spectrum.id.empty()) spectrum.id = spectrum.nativeID; // TODO: check and remove
                 break;
             }
             else
@@ -193,11 +192,10 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                             string name = lineStr.substr(0, delim);
                             string value = lineStr.substr(delim+1);
                             if (name == "TITLE")
-		                    {
-                                // if a title is found, use it as the id instead of the index
-			                    spectrum.id = value;
-                                bal::trim(spectrum.id);
-		                    }
+                            {
+                                bal::trim(value);
+                                spectrum.set(MS_spectrum_title, value);
+                            }
                             else if (name == "PEPMASS")
 				            {
                                 bal::trim(value);
@@ -305,6 +303,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
 			    inBeginIons = true;
 		    }
+            /* TODO: put a spectrum title field in SpectrumIdentity?
             else if (lineStr.find("TITLE=") == 0)
 		    {
                 // if a title is found, use it as the id instead of the index
@@ -313,7 +312,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 idToIndex_.erase(curIdToIndexItr);
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
 			    
-		    }
+		    }*/
             else if (lineStr.find("END IONS") == 0)
 		    {
 			    if (!inBeginIons)
