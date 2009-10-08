@@ -51,10 +51,6 @@ lib pwiz_data_msdata_obo
     ;
 
 
-# only Version.cpp is out of date when svnrev.hpp is changed
-obj Version : Version.cpp : <dependency>svnrev.hpp ;
-
-
 lib pwiz_data_msdata
     : # sources
         pwiz_data_msdata_obo
@@ -82,7 +78,7 @@ lib pwiz_data_msdata
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
-        Version
+        Version.cpp
     : # requirements
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
@@ -187,42 +183,4 @@ run BinaryDataEncoderTest.cpp pwiz_data_msdata
     : # target name
         BinaryDataEncoderTest
     : # default-build
-    ;
-
-
-
-# generate automatic version file "svnrev.hpp"
-# svnrev_max finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
-import svnrev_max ;
-using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_BUILD_PATH)/svnrev_max ;
-
-svnrev_max.generate-version-header svnrev.hpp
-    :   $(PWIZ_ROOT_PATH)/Jamroot.jam
-    :   <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters/Jamfile.jam
-        <location>.
     ;

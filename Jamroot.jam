@@ -173,30 +173,72 @@ lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_LIBRARIES_PATH) : : <include>$
 lib fftw3 : : <threading>multi <search>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/.libs : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 
-local .boost-build-file = [ modules.peek : .boost-build-file ] ;
-tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += $(PWIZ_ROOT_PATH)/pwiz $(PWIZ_LIBRARIES_PATH) ;
-modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
 
 
-# set version info (used for tarball filenames)
+# get version info (used for tarball filenames)
+import svnrev sequence ;
+
+svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp :
+    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/msdata
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo
+                $(PWIZ_ROOT_PATH)/pwiz/utility/misc
+                $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
+                $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent
+                $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/ABI
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Bruker
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers/Waters
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
+       : *.?pp Jamfile.jam
+    ] ;
+
+svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp :
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/analysis
+                     $(PWIZ_ROOT_PATH)/pwiz/utility/math
+                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
+                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
+        : *.?pp Jamfile.jam
+    ] ;
+
+svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp :
+    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/utility/proteome : *.?pp Jamfile.jam ] ;
+
+local revision-info =
+    [ svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/svnrev.hpp :
+            $(PWIZ_ROOT_PATH)/Jamroot.jam
+            [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ]
+            [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz
+                             $(PWIZ_ROOT_PATH)/pwiz_aux/msrc
+                             $(PWIZ_ROOT_PATH)/pwiz_tools
+                : *.?pp *.jam
+            ]
+        : warn-on-missing
+        #: print-revision-info
+    ] ;
+
+# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
+
+local year = $(revision-info[2]) ;
+local month = $(revision-info[3]) ;
+local day = $(revision-info[4]) ;
+
 constant PWIZ_MAJOR : 1 ;
 constant PWIZ_MINOR : 6 ;
-
-if [ path.exists pwiz/svnrev.jam ]
-{
-    import svnrev ;
-    constant PWIZ_SVNREV : [ svnrev.SVN_REV ] ;
-    constant PWIZ_SVNREVDATE : "(last modified " [ svnrev.SVN_REVDATE ] ")" ;
-}
-else
-{
-    constant PWIZ_SVNREV : x ;
-    constant PWIZ_SVNREVDATE : "" ;
-}
-
+constant PWIZ_SVNREV : $(revision-info[1]) ;
+constant PWIZ_SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
 
 version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
+
+if $(revision-info[5]) > 0
+{
+    version-tag += "modified" ;
+    echo NOTICE: WORKING COPY HAS $(revision-info[5]) MODIFIED FILES. ;
+}
+
 echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) ;
 
 
@@ -217,7 +259,6 @@ else
 
 
 tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
-
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;

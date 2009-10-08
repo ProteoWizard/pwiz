@@ -15,13 +15,6 @@ if %ERRORLEVEL% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
 
-REM # call quickbuild to generate SVN revision info
-echo ##teamcity[message text='Generating revision info...']
-echo ##teamcity[progressMessage 'Generating revision info...']
-call quickbuild.bat -j4 -p1 pwiz//svnrev.hpp
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 set ERROR_TEXT=Error generating revision info & goto error
-
 REM # call quickbuild to build and run tests with variant=release
 echo ##teamcity[message text='Running quickbuild for release variant...']
 echo ##teamcity[progressMessage 'Running quickbuild for release variant...']

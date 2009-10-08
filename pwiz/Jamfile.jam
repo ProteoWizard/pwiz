@@ -30,26 +30,5 @@ lib pwiz_version
     : # sources
         Version.cpp
     : # requirements
-        <dependency>svnrev.hpp
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
 ;
-
-
-# generate automatic version file "svnrev.hpp"
-# svnrev_max finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
-import svnrev_max ;
-using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_BUILD_PATH)/svnrev_max ;
-
-svnrev_max.generate-version-header svnrev.hpp
-    : # sources
-    : # requirements
-        <jamfile>true
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/svnrev.hpp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp
-        # TODO: make versions for other namespaces?
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//svnrev.hpp
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/analysis//svnrev.hpp
-        <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//svnrev.hpp
-        <location>.
-    ;

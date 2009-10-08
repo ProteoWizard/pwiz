@@ -31,40 +31,6 @@ build-project-if-exists spectrum_processing ;
 lib pwiz_analysis_version 
     : # sources
         Version.cpp
-    : # requirements 
-        <dependency>svnrev.hpp
+    : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
 ;
-
-
-# generate automatic version file "svnrev.hpp"
-# svnrev_max finds the maximum SVN revision/date from a list of files and creates a header with #define'd revision info
-import svnrev_max ;
-using svnrev_max : $(BOOST_SOURCE) : $(PWIZ_BUILD_PATH)/svnrev_max ;
-
-svnrev_max.generate-version-header svnrev.hpp
-    :   $(PWIZ_ROOT_PATH)/Jamroot.jam
-    :   <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/calibration/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/calibration/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/common/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/common/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/eharmony/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/frequency/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/frequency/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/passive/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/passive/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/peakdetect/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/peakdetect/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/peptideid/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/peptideid/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/misc/Jamfile.jam
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/*.?pp
-        <filemask>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml/Jamfile.jam
-        <location>.
-    ;

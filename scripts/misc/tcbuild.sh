@@ -22,11 +22,6 @@ fi
 
 # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
 
-echo_info "Generating revision info..."
-if ! /bin/bash quickbuild.sh -p1 pwiz//svnrev.hpp; then
-	  echo_error "Error generating revision info! See full build log for more details."
-fi
-
 echo_info "Running quickbuild for release variant..."
 if ! /bin/bash quickbuild.sh -p1 --teamcity-test-decoration -j4 release; then
 	  echo_error "Error running quickbuild for release variant! See full build log for more details."
