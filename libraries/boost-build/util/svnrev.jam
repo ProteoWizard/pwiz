@@ -54,7 +54,8 @@ rule generate-version-header ( filepath ? : sources-with-rcs-keywords + : warn-o
 \#define SVN_REVDATE   \"$(revision-info[2])-$(revision-info[3])-$(revision-info[4])\"
 
 
-\#endif /* SVNREV_HPP */" ;
+\#endif /* SVNREV_HPP */
+" ;
 
         header-text = @($(filepath):E=$(header-text)) ;
     }
