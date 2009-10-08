@@ -91,4 +91,47 @@ if [ modules.peek : NT ]
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
         ;
+#Test
+    rule do_topograph_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_topograph_test
+    {
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
+        msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
+    }
+
+    rule do_topograph_test_passed ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_topograph_test_passed
+    {
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
+    }
+
+    make TopographTestProject.dll
+        : # sources
+        : # actions
+            @do_topograph_test
+        : # requirements
+            <conditional>@build-location
+            <dependency>Topograph.exe
+        ;
+    make Topograph.passed
+        : # sources
+        : # actions
+            @do_topograph_test_passed
+        : # requirements
+            <conditional>@build-location
+            <dependency>TopographTestProject.dll
+        ;
+
 }

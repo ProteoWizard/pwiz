@@ -50,7 +50,6 @@ namespace pwiz.Topograph.Test
         [TestMethod]
         public void TestChromatogramGenerator()
         {
-            //SetupForPwiz();
             String dbPath = Path.Combine(TestContext.TestDir, "test" + Guid.NewGuid() + ".tpg");
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, true))
             {
@@ -67,6 +66,7 @@ namespace pwiz.Topograph.Test
             }
             Workspace workspace = new Workspace(dbPath);
             workspace.SetEnrichment(EnrichmentDef.GetN15Enrichment());
+            workspace.Save();
             MsDataFile msDataFile;
             using (var session = workspace.OpenWriteSession())
             {
@@ -74,7 +74,7 @@ namespace pwiz.Topograph.Test
                 var dbMsDataFile = new DbMsDataFile()
                 {
                     Name = "20090724_HT3_0",
-                    Path = Path.Combine(GetDataDirectory(), "20090724_HT3_0.RAW"),
+                    Path = Path.Combine(GetDataDirectory(), "20090724_HT3_0.mzML"),
                     Workspace = workspace.LoadDbWorkspace(session),
                 };
                 session.Save(dbMsDataFile);
@@ -102,8 +102,8 @@ namespace pwiz.Topograph.Test
                     MsDataFile = session.Load<DbMsDataFile>(msDataFile.Id),
                     MinCharge = 3,
                     MaxCharge = 3,
-                    FirstDetectedScan = 20645,
-                    LastDetectedScan = 20645
+                    FirstDetectedScan = 2645,
+                    LastDetectedScan = 2645
                 };
                 session.Save(searchResult);
                 session.Transaction.Commit();
@@ -112,12 +112,11 @@ namespace pwiz.Topograph.Test
             var peptideAnalysis = peptide.EnsurePeptideAnalysis();
             var peptideFileAnalysis = PeptideFileAnalysis.EnsurePeptideFileAnalysis(peptideAnalysis, msDataFile);
             var chromatogramGenerator = new ChromatogramGenerator(workspace);
-//            chromatogramGenerator.AddPeptideAnalysis(peptideFileAnalysis);
-//            chromatogramGenerator.Start();
-//            while (!peptideFileAnalysis.HasChromatograms)
-//            {
-//                Thread.Sleep(100);
-//            }
+            chromatogramGenerator.Start();
+            while (peptideFileAnalysis.Chromatograms.ChildCount == 0)
+            {
+                Thread.Sleep(100);
+            }
             var chromatogramDatas = peptideFileAnalysis.GetChromatograms();
             Assert.IsFalse(chromatogramDatas.GetChildCount() == 0);
             chromatogramGenerator.Stop();
