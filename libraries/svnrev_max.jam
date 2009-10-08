@@ -54,8 +54,8 @@ rule init ( boost-root : build-dir ? : requirements * )
 feature.feature svnrev_max : : dependency free ;
 toolset.flags svnrev_max.svnrev_max COMMAND <svnrev_max> ;
 
-type.register SVNREV : : HPP ;
-type.register SVNREV_AND_JAM : : HPP ;
+type.register SVNREV_MAX : : HPP ;
+type.register SVNREV_MAX_AND_JAM : : HPP ;
 
 actions svnrev_max.generate-version-header-action bind COMMAND
 {
@@ -67,7 +67,7 @@ actions svnrev_max.generate-version-header-and-jam-action bind COMMAND
    $(COMMAND) -v -i -h$(<) -j$(<:S=.jam) $(>) $(ARGS)
 }
 
-class svnrev-generator : generator
+class svnrev-max-generator : generator
 {
     import path property-set sequence ;
 
@@ -93,8 +93,8 @@ class svnrev-generator : generator
     }
 }
 
-generators.register [ new svnrev-generator svnrev_max.svnrev_max.generate-version-header-action true : : SVNREV ] ;
-generators.register [ new svnrev-generator svnrev_max.svnrev_max.generate-version-header-and-jam-action true : : SVNREV_AND_JAM ] ;
+generators.register [ new svnrev-max-generator svnrev_max.svnrev_max.generate-version-header-action true : : SVNREV_MAX ] ;
+generators.register [ new svnrev-max-generator svnrev_max.svnrev_max.generate-version-header-and-jam-action true : : SVNREV_MAX_AND_JAM ] ;
 
 .filename = svnrev.hpp ;
 
@@ -110,12 +110,12 @@ rule generate-version-header ( filename : sources-with-rcs-keywords * : requirem
     # HACK: /svnrev_max//svnrev_max is always added so that at least one source is passed
     if <jamfile>true in $(requirements)
     {
-        targets.create-typed-target SVNREV_AND_JAM : [ project.current ] :
+        targets.create-typed-target SVNREV_MAX_AND_JAM : [ project.current ] :
         $(filename) : /svnrev_max//svnrev_max $(sources-with-rcs-keywords) : $(requirements) <svnrev_max>/svnrev_max//svnrev_max ;
     }
     else
     {
-        targets.create-typed-target SVNREV : [ project.current ] :
+        targets.create-typed-target SVNREV_MAX : [ project.current ] :
             $(filename) : /svnrev_max//svnrev_max $(sources-with-rcs-keywords) : $(requirements) <svnrev_max>/svnrev_max//svnrev_max ;
     }
 }
