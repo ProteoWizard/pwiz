@@ -74,9 +74,20 @@ namespace pwiz.Skyline.EditUI
                 _statementCompletionEditBox.TextBox.Text = statementCompletionItem.Peptide;
                 if (gridViewPeptides.CurrentRow != null)
                 {
-                    gridViewPeptides.CurrentRow.Cells[colPeptideProtein.Index].Value = statementCompletionItem.ProteinName;
+                    gridViewPeptides.CurrentRow.Cells[colPeptideProtein.Index].Value 
+                        = statementCompletionItem.ProteinName;
                 }
                 gridViewPeptides.EndEdit();    
+            }
+            else if (tabControl1.SelectedTab == tabPageTransitionList)
+            {
+                _statementCompletionEditBox.TextBox.Text = statementCompletionItem.Peptide;
+                if (gridViewTransitionList.CurrentRow != null)
+                {
+                    gridViewTransitionList.CurrentRow.Cells[colTransitionProteinName.Index].Value =
+                        statementCompletionItem.ProteinName;
+                }
+                gridViewTransitionList.EndEdit();
             }
         }
         public IDocumentUIContainer DocumentUiContainer { get; private set; }
@@ -147,6 +158,10 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
+            if ((document = AddTransitionList(document)) == null)
+            {
+                return null;
+            }
             return document;
         }
 
@@ -162,6 +177,13 @@ namespace pwiz.Skyline.EditUI
             tabControl1.SelectedTab = tabPagePeptideList;
             ShowError(pasteError);
             gridViewPeptides.CurrentCell = gridViewPeptides.Rows[pasteError.Line].Cells[pasteError.Column];
+        }
+
+        private void ShowTransitionError(PasteError pasteError)
+        {
+            tabControl1.SelectedTab = tabPageTransitionList;
+            ShowError(pasteError);
+            gridViewTransitionList.CurrentCell = gridViewTransitionList.Rows[pasteError.Line].Cells[pasteError.Column];
         }
 
         private SrmDocument AddPeptides(SrmDocument document)
@@ -223,7 +245,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 if (peptideGroupDocNode == null)
                 {
-                    if (proteinName == null)
+                    if (string.IsNullOrEmpty(proteinName))
                     {
                         peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), SkylineWindow.GetPeptideGroupId(document, true), null, new PeptideDocNode[0]);
                     }
@@ -396,6 +418,236 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
+        private SrmDocument AddTransitionList(SrmDocument document)
+        {
+            bool missingProteinName = false;
+            bool anyProteinName = false;
+            bool isHeavyAllowed = document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications;
+            var backgroundProteome = GetBackgroundProteome(document);
+            for (int i = 0; i < gridViewTransitionList.Rows.Count; i++)
+            {
+                var row = gridViewTransitionList.Rows[i];
+                var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
+                var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
+                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                {
+                    continue;
+                }
+                if (string.IsNullOrEmpty(peptideSequence))
+                {
+                    ShowTransitionError(new PasteError { Column = colTransitionPeptide.Index, Line = i, Message = "The peptide sequence cannot be blank." });
+                    return null;
+                }
+                if (!FastaSequence.IsExSequence(peptideSequence))
+                {
+                    ShowTransitionError(new PasteError { Column = colTransitionPeptide.Index, Line = i, Message = "This peptide sequence contains invalid characters." });
+                    return null;
+                }
+                double precursorMz;
+                try
+                {
+                    precursorMz = Convert.ToDouble(row.Cells[colTransitionPrecursorMz.Index].Value);
+                }
+                catch
+                {
+                    ShowTransitionError(new PasteError
+                                            {
+                                                Column = colTransitionPrecursorMz.Index,
+                                                Line = i,
+                                                Message = "This needs to be a number"
+                                            });
+                    return null;
+                }
+                double productMz;
+                try
+                {
+                    productMz = Convert.ToDouble(row.Cells[colTransitionProductMz.Index].Value);
+                }
+                catch
+                {
+                    ShowTransitionError(new PasteError
+                                            {
+                                                Column = colTransitionProductMz.Index,
+                                                Line = i,
+                                                Message = "This needs to be a number"
+                                            });
+                    return null;
+                }
+                PeptideGroupDocNode peptideGroupDocNode;
+                if (string.IsNullOrEmpty(proteinName))
+                {
+                    if (anyProteinName)
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionProteinName.Index,
+                            Line = i,
+                            Message = "This protein name is missing"
+                        });
+                        return null;
+                    }
+                    missingProteinName = true;
+                    peptideGroupDocNode = GetLastPeptideGroupDocNode(document);
+                    if (!IsPeptideListDocNode(peptideGroupDocNode))
+                    {
+                        peptideGroupDocNode = null;
+                    }
+                }
+                else
+                {
+                    if (missingProteinName)
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionProteinName.Index,
+                            Line = i,
+                            Message = "Earlier rows did not specify a protein name, but this row has a protein name."
+                        });
+                        return null;
+                    }
+                    anyProteinName = true;
+                    peptideGroupDocNode = FindPeptideGroupDocNode(document, proteinName);
+                }
+                PeptideGroupBuilder peptideGroupBuilder = new PeptideGroupBuilder(">>PasteDlg", true, document.Settings);
+                peptideGroupBuilder.AppendSequence(peptideSequence);
+
+                double precursorMassH = document.Settings.GetPrecursorMass(IsotopeLabelType.light, peptideSequence, null);
+                double mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                int precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, mzMatchTolerance);
+                IsotopeLabelType isotopeLabelType = IsotopeLabelType.light;
+                if (precursorCharge < 1 && isHeavyAllowed)
+                {
+                    isotopeLabelType = IsotopeLabelType.heavy;
+                    precursorMassH = document.Settings.GetPrecursorMass(IsotopeLabelType.heavy, peptideSequence, null);
+                    precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz,
+                                                                                             mzMatchTolerance);
+                }
+                if (precursorCharge < 1)
+                {
+                    ShowTransitionError(new PasteError
+                                            {
+                                                Column = colTransitionPrecursorMz.Index,
+                                                Line = i,
+                                                Message = "Unable to match this M/Z."
+                                            });
+                    return null;
+                }
+                var calc = document.Settings.GetFragmentCalc(isotopeLabelType, null);
+                double[,] productMasses = calc.GetFragmentIonMasses(peptideSequence);
+                IonType? ionType;
+                int? ordinal;
+                int productCharge = TransitionCalc.CalcProductCharge(productMasses, productMz, mzMatchTolerance, out ionType, out ordinal);
+                if (productCharge < 1)
+                {
+                    ShowTransitionError(new PasteError
+                                            {
+                                                Column = colTransitionProductMz.Index,
+                                                Line = i,
+                                                Message = "No matching product ion"
+                                            });
+                    return null;
+                }
+                if (peptideGroupDocNode == null)
+                {
+                    if (string.IsNullOrEmpty(proteinName))
+                    {
+                        peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), SkylineWindow.GetPeptideGroupId(document, true), null, new PeptideDocNode[0]);
+                    }
+                    else
+                    {
+                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName);
+                        if (peptideGroup == null)
+                        {
+                            peptideGroup = new PeptideGroup();
+                        }
+                        peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
+                    }
+                    document = (SrmDocument)document.Add(peptideGroupDocNode);
+                }
+                var children = new List<PeptideDocNode>();
+                bool transitionAdded = false;
+                foreach (PeptideDocNode peptideDocNode in peptideGroupDocNode.Children)
+                {
+                    if (peptideDocNode.Peptide.Sequence == peptideSequence)
+                    {
+                        children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType, productCharge,
+                                      ionType.Value, ordinal.Value));
+                        transitionAdded = true;
+                    }
+                    else
+                    {
+                        children.Add(peptideDocNode);
+                    }
+                }
+                if (!transitionAdded)
+                {
+                    PeptideDocNode peptideDocNode;
+                    var fastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
+                    int missedCleavages = document.Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
+                    if (fastaSequence != null)
+                    {
+                        peptideDocNode = fastaSequence.CreatePeptideDocNode(document.Settings, peptideSequence);
+                        if (peptideDocNode == null)
+                        {
+                            ShowTransitionError(new PasteError
+                            {
+                                Column = colTransitionPeptide.Index,
+                                Line = i,
+                                Message = "This peptide sequence was not found in the protein sequence"
+                            });
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
+                        peptideDocNode = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]);
+                    }
+                    children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType,
+                                                      productCharge, ionType.Value, ordinal.Value));
+                
+                }
+                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Note, 
+                    peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
+                document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
+            }
+            return document;
+        }
+
+        private PeptideDocNode AddTransition(SrmDocument document, PeptideDocNode peptideDocNode, int precursorCharge, 
+            IsotopeLabelType isotopeLabelType, int productCharge, IonType ionType, int ordinal)
+        {
+            TransitionGroupDocNode transitionGroupDocNode = null;
+            var transitionGroups = new List<DocNode>();
+            foreach (TransitionGroupDocNode node in peptideDocNode.Children)
+            {
+                if (node.TransitionGroup.PrecursorCharge == precursorCharge && node.TransitionGroup.LabelType == isotopeLabelType)
+                {
+                    transitionGroupDocNode = node;
+                }
+                else
+                {
+                    transitionGroups.Add(node);
+                }
+            }
+            if (transitionGroupDocNode == null)
+            {
+                transitionGroupDocNode =
+                    new TransitionGroupDocNode(
+                        new TransitionGroup(peptideDocNode.Peptide, precursorCharge, isotopeLabelType),
+                        document.Settings.GetPrecursorMass(isotopeLabelType, peptideDocNode.Peptide.Sequence, null), new TransitionDocNode[0]);
+                
+            }
+            int offset = Transition.OrdinalToOffset(ionType, ordinal, peptideDocNode.Peptide.Length);
+            var transitions = new List<DocNode>(transitionGroupDocNode.Children);
+            var transition = new Transition(transitionGroupDocNode.TransitionGroup, ionType, offset, productCharge);
+            transitions.Add(new TransitionDocNode(transition, 
+                document.Settings.GetFragmentMass(transition, null), null));
+            transitionGroupDocNode = (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(transitions);
+            transitionGroups.Add(transitionGroupDocNode);
+            return (PeptideDocNode) peptideDocNode.ChangeChildren(transitionGroups);
+        }
+
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
         {
             foreach (PeptideGroupDocNode peptideGroupDocNode in document.PeptideGroups)
@@ -468,6 +720,10 @@ namespace pwiz.Skyline.EditUI
             {
                 return PasteFormat.peptide_list;
             }
+            if (tabPage == tabPageTransitionList)
+            {
+                return PasteFormat.transition_list;
+            }
             return PasteFormat.none;
         }
         private TabPage GetTabPage(PasteFormat pasteFormat)
@@ -480,6 +736,8 @@ namespace pwiz.Skyline.EditUI
                     return tabPageProteinList;
                 case PasteFormat.peptide_list:
                     return tabPagePeptideList;
+                case PasteFormat.transition_list:
+                    return tabPageTransitionList;
             }
             return null;
         }
@@ -745,6 +1003,17 @@ namespace pwiz.Skyline.EditUI
         {
             _statementCompletionEditBox.HideStatementCompletionForm();
         }
+        private class MassListRow : IMassListRow
+        {
+            public string ProteinName { get; set; }
+            public string PeptideSequence { get; set; }
+            public int PrecursorCharge { get; set; }
+            public IsotopeLabelType LabelType { get; set; }
+            public IonType IonType { get; set; }
+            public int Ordinal { get; set; }
+            public int Offset { get; set; }
+            public int ProductCharge { get; set; }
+        }
     }
 
     public enum PasteFormat
@@ -753,5 +1022,6 @@ namespace pwiz.Skyline.EditUI
         fasta,
         protein_list,
         peptide_list,
+        transition_list,
     }
 }

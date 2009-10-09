@@ -1141,6 +1141,16 @@ namespace pwiz.Skyline
             pasteDlg.ShowDialog(this);
         }
 
+        private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
+        {
+            var pasteDlg = new PasteDlg(this)
+            {
+                PasteFormat = PasteFormat.transition_list
+            };
+            pasteDlg.ShowDialog(this);
+        }
+
+
         #endregion // Edit menu
 
         #region Context menu
@@ -2024,6 +2034,7 @@ namespace pwiz.Skyline
         {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
         }
+
     }
 }
 

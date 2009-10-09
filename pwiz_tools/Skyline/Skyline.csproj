@@ -389,6 +389,7 @@
     <Compile Include="Model\Results\MeasuredResults.cs" />
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\Transition.cs" />
+    <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionGroup.cs" />
     <Compile Include="Model\Undo.cs" />
     <Compile Include="Controls\UndoRedoButtons.cs" />

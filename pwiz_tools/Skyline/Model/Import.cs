@@ -430,72 +430,13 @@ namespace pwiz.Skyline.Model
 
             protected static int CalcPrecursorCharge(double precursorMassH, double precursorMz, double tolerance)
             {
-                return CalcCharge(precursorMassH, precursorMz, tolerance,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE);
-            }
-
-            private static int CalcProductCharge(double productMassH, double productMz, double tolerance)
-            {
-                return CalcCharge(productMassH, productMz, tolerance,
-                    Transition.MIN_PRODUCT_CHARGE,
-                    Transition.MAX_PRODUCT_CHARGE);
+                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
             }
 
             private static int CalcProductCharge(double[,] productMasses, double productMz, double tolerance,
                 out IonType? ionType, out int? ordinal)
             {
-                int len = productMasses.GetLength(1);
-                foreach (IonType type in Transition.ALL_TYPES)
-                {
-                    for (int offset = 0; offset < len; offset++)
-                    {
-                        int charge = CalcProductCharge(productMasses[(int) type, offset], productMz, tolerance);
-                        if (charge > 0)
-                        {
-                            ionType = type;
-                            // The peptide length is 1 longer than the mass array
-                            ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
-                            return charge;
-                        }
-                    }
-                }
-                ionType = null;
-                ordinal = null;
-                return 0;
-            }
-
-            /// <summary>
-            /// Calculates the matching charge within a tolerance for a mass.
-            /// </summary>
-            /// <param name="massH">The mass to calculate charge for</param>
-            /// <param name="mz">The desired m/z value the charge should produce</param>
-            /// <param name="tolerance">How far off the actual m/z is allowed to be</param>
-            /// <param name="min">Minimum charge to consider</param>
-            /// <param name="max">Maximum charge to consider</param>
-            /// <returns>A matching charge or the closest non-matching charge negated.</returns>
-            private static int CalcCharge(double massH, double mz, double tolerance, int min, int max)
-            {
-                Debug.Assert(min <= max);
-
-                int nearestCharge = 0;
-                double nearestDelta = double.MaxValue;
-
-                for (int i = min; i <= max; i++)
-                {
-                    double delta = Math.Abs(mz - SequenceMassCalc.GetMZ(massH, i));
-                    if (MatchMz(delta, tolerance))
-                        return i;
-                    if (delta < nearestDelta)
-                    {
-                        nearestDelta = delta;
-                        nearestCharge = i;
-                    }
-                }
-
-                Debug.Assert(nearestCharge != 0);   // Could only happen if min > max
-
-                return -nearestCharge;
+                return TransitionCalc.CalcProductCharge(productMasses, productMz, tolerance, out ionType, out ordinal);
             }
 
             private static bool MatchMz(double mz1, double mz2, double tolerance)
