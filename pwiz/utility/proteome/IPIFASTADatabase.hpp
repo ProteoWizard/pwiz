@@ -50,6 +50,7 @@ class PWIZ_API_DECL IPIFASTADatabase
     {
         int id;
         std::string faID;
+        std::string fullSeqDescription;
         std::string sequence;
         
         Record(int _id=0) : id(_id) {}

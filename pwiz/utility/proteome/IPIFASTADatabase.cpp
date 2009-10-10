@@ -78,12 +78,13 @@ void IPIFASTADatabase::Impl::readRecords(istream& is)
 
     for (string buffer; getline(is, buffer); )
     {
+      //      std::cout<<"||||"<<buffer<<"$$$$"<<std::endl;
         if (buffer.find(">IPI:IPI") == 0)
         {
             // start a new record, and set current pointer
             records_.push_back(Record(atoi(buffer.c_str()+8)));
             current = &records_.back(); 
-
+	    current->fullSeqDescription = buffer;
             // get protein ID (e.g. IPI number, or whatever precedes first pipe)
             // TODO: Increase flexibility (e.g. what if no pipe, get all ids between pipes as different 
             // variables, etc ... 
@@ -104,10 +105,37 @@ void IPIFASTADatabase::Impl::readRecords(istream& is)
 
         }
 
+	else if(buffer.find(">") == 0){  //there is likely a better way to handle these cases.
+	              // start a new record, and set current pointer
+            records_.push_back(Record(atoi(buffer.c_str())));
+            current = &records_.back(); 
+	    current->fullSeqDescription = buffer;
+            // get protein ID (e.g. IPI number, or whatever precedes first space)
+            // TODO: Increase flexibility (e.g. what if no pipe, get all ids between pipes as different 
+            // variables, etc ... 
+
+            const char* space = " ";
+            if (buffer.find(space) != string::npos)
+	      {
+		const size_t& spaceLocation = buffer.find(space);                    
+		char protein[50];
+		memset(protein, '\0', 50);
+		
+		buffer.copy(protein, spaceLocation - 1, 1);  // skip initial '>'
+		current->faID = protein;
+		
+	      }
+            
+            else current->faID ="unknown";
+	}
         else if (current)
         {
             // update current record with next line of the sequence
-            current->sequence += buffer;
+	   if(buffer.find("*") != string::npos){
+	     const size_t& stringLocation = buffer.find("*");                    
+	     buffer.erase(stringLocation);
+	   } 
+	   current->sequence += buffer;
         }
     }
 }

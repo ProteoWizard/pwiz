@@ -72,12 +72,34 @@ DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
 {
 }
 
+PWIZ_API_DECL
+DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
+                                 std::string::const_iterator end,
+                                 size_t offset,
+                                 size_t missedCleavages,
+                                 bool NTerminusIsSpecific,
+                                 bool CTerminusIsSpecific, 
+				 std::string nTermPrefix,
+				 std::string cTermSuffix )
+:   Peptide(begin, end),
+    offset_(offset),
+    missedCleavages_(missedCleavages),
+    NTerminusIsSpecific_(NTerminusIsSpecific),
+    CTerminusIsSpecific_(CTerminusIsSpecific),
+    nTermPrefix_(nTermPrefix),
+    cTermSuffix_(cTermSuffix)
+{
+}
+
+
 PWIZ_API_DECL DigestedPeptide::DigestedPeptide(const DigestedPeptide& other)
 :   Peptide(other),
     offset_(other.offset_),
     missedCleavages_(other.missedCleavages_),
     NTerminusIsSpecific_(other.NTerminusIsSpecific_),
-    CTerminusIsSpecific_(other.CTerminusIsSpecific_)
+    CTerminusIsSpecific_(other.CTerminusIsSpecific_),
+    nTermPrefix_(other.nTermPrefix_),
+    cTermSuffix_(other.cTermSuffix_)
 {
 }
 
@@ -88,6 +110,8 @@ PWIZ_API_DECL DigestedPeptide& DigestedPeptide::operator=(const DigestedPeptide&
     missedCleavages_ = rhs.missedCleavages_;
     NTerminusIsSpecific_ = rhs.NTerminusIsSpecific_;
     CTerminusIsSpecific_ = rhs.CTerminusIsSpecific_;
+    nTermPrefix_ = rhs.nTermPrefix_;
+    cTermSuffix_ = rhs.cTermSuffix_;
     return *this;
 }
 
@@ -119,6 +143,18 @@ PWIZ_API_DECL bool DigestedPeptide::CTerminusIsSpecific() const
 {
     return CTerminusIsSpecific_;
 }
+
+PWIZ_API_DECL std::string DigestedPeptide::nTermPrefix() const
+{
+    return nTermPrefix_;
+}
+
+PWIZ_API_DECL std::string DigestedPeptide::cTermSuffix() const
+{
+    return cTermSuffix_;
+}
+
+
 
 
 PWIZ_API_DECL
@@ -719,30 +755,51 @@ class Digestion::const_iterator::Impl
     {
         try
         {
+	  string prefix = "";
+	  string suffix = "";
             if (!peptide_.get())
             {
-                switch (config_.minimumSpecificity)
+	      switch (config_.minimumSpecificity)
                 {
                     default:
                     case FullySpecific:
-                        peptide_.reset(
+		      if((*begin_ >= 0) && (*begin_ < sequence_.length())){
+			prefix = sequence_.substr(*begin_,1); //this could be changed to be something other than 1 by a config option later
+		      }
+		      if(*end_ != sequence_.length()){
+			suffix = sequence_.substr(*end_+1,1);
+		      }
+		      peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(*begin_+1),
                                                 sequence_.begin()+(*end_+1),
                                                 *begin_+1,
                                                 int(end_ - begin_)-1,
                                                 true,
-                                                true));
-                        break;
+                                                true,
+						prefix, 
+						suffix
+						));
+			                    
+			break;
 
                     case SemiSpecific:
                     case NonSpecific:
+		      if((beginNonSpecific_ >= 0) && (beginNonSpecific_ < sequence_.length())){
+			prefix = sequence_.substr(beginNonSpecific_,1); //this could be changed to be something other than 1 by a config option later
+		      }
+		      if(endNonSpecific_ != sequence_.length()){
+			suffix = sequence_.substr(endNonSpecific_+1,1);
+		      }
                         peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(beginNonSpecific_+1),
                                                 sequence_.begin()+(endNonSpecific_+1),
                                                 beginNonSpecific_+1,
                                                 int(end_ - begin_)-1,
                                                 begin_ != sites_.end() && *begin_ == beginNonSpecific_,
-                                                end_ != sites_.end() && *end_ == endNonSpecific_));
+                                                end_ != sites_.end() && *end_ == endNonSpecific_,
+						prefix,
+						suffix
+						));
                         break;
                 }
             }

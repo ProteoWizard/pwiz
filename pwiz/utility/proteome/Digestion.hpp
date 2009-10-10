@@ -67,6 +67,15 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
                     bool NTerminusIsSpecific,
                     bool CTerminusIsSpecific);
 
+    DigestedPeptide(std::string::const_iterator begin,
+		    std::string::const_iterator end,
+		    size_t offset,
+		    size_t missedCleavages,
+		    bool NTerminusIsSpecific,
+		    bool CTerminusIsSpecific, 
+		    std::string nTermPrefix,
+		    std::string cTermSuffix );
+
     DigestedPeptide(const DigestedPeptide&);
     DigestedPeptide& operator=(const DigestedPeptide&);
     ~DigestedPeptide();
@@ -87,11 +96,21 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
     /// returns true iff the C terminus matched the digestion rules
     bool CTerminusIsSpecific() const;
 
+    /// returns residue preceding digestion site
+    std::string nTermPrefix() const;
+
+    /// returns residue following digestion site
+    std::string cTermSuffix() const;
+
+
+
     private:
     size_t offset_;
     size_t missedCleavages_;
     bool NTerminusIsSpecific_;
     bool CTerminusIsSpecific_;
+    std::string nTermPrefix_;
+    std::string cTermSuffix_;
 };
 
 
