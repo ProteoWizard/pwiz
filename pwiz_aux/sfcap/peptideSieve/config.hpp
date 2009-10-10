@@ -33,8 +33,17 @@
 #include "boost/filesystem/convenience.hpp"
 using namespace boost::program_options;
 
+#include "pwiz/utility/proteome/IPIFASTADatabase.hpp"
+#include "pwiz/utility/proteome/Digestion.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
+
 using namespace std;
 using std::string;
+using namespace std;
+using namespace pwiz;
+using namespace pwiz::proteome;
+using boost::shared_ptr;
+
 
 struct Config
 {
@@ -62,11 +71,11 @@ struct Config
        _maxSeqLength(40),
        _minMass(400),
        _maxMass(3000),
-       _numAllowedMisCleavages(1),
+       _numAllowedMisCleavages(0),
       //      _numPeptidesPerProt(3),
-      _experimentalDesign("ALL"),
+      _experimentalDesign("PAGE_MALDI.txt"),
       _savePropertiesFile(false),
-      _pValue(.8)
+      _pValue(.80)
   {};
   
   string outputFileName(const string & filename) const;

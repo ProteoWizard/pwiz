@@ -1,7 +1,7 @@
 //
 // Original Author: Parag Mallick
 //
-// Copyright 2009 Spielberg Family Center for Applied Proteomics 
+// Copyright 2009 Center for Applied Molecular Medicine 
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
@@ -21,8 +21,8 @@
 
 
 
- #include "fasta.h" // interface to fasta file handling
- using bioinfo::fasta;
+// #include "fasta.h" // interface to fasta file handling
+// using bioinfo::fasta;
 
  #include "classify.hpp"
  #include "config.hpp"
@@ -37,7 +37,7 @@
 
    map<char,vector<double> > propertyMap;
 
-   ProteotypicClassifier classificationBox(config);
+   ProteotypicClassifier classificationBox(config, config._experimentalDesign);
 
   classificationBox.readPropertyMap(propertyMap, config._propertyFile);
 
@@ -77,7 +77,7 @@ Config parseCommandLine(int argc, const char* argv[])
     ostringstream usage;
     usage << "Usage: peptideSieve [options] [files]\n"
           << "PeptideSieve: Identify Proteotypic Peptides from a FASTA or TXT file.\n"
-          << "Version - 0.51"<<endl;
+          << "Version - 0.6"<<endl;
 
     Config config;
     string filelistFilename;
@@ -86,52 +86,58 @@ Config parseCommandLine(int argc, const char* argv[])
     od_config.add_options()
       ("outputDirectory,O",
        po::value<string>(&config._outputPath)->default_value(config._outputPath),
-       ": set output directory")
+       "\n: set output directory")
       ("outputExtension,e",
        po::value<string>(&config._extension)->default_value(config._extension),
-       ": set extension for output files")
+       "\n: set extension for output files")
       ("outputFile,o",
        po::value<string>(&config._outputFile)->default_value(config._outputFile),
-       ": output file name if not input.extension")      
+       "\n: output file name if not input.extension")      
       ("propertyFile,P", //WCH: it was small p conflicting with pValue!!!
                          //     most users will want to change pValue then property file
        po::value<string>(&config._propertyFile)->default_value(config._propertyFile),
-       ": set property file")
+       "\n: set property file")
       ("inputFormat,f",
        po::value<string>(&config._inputFormat)->default_value(config._inputFormat),
-       ": FASTA or TXT, specifying input format")
+       "\n: FASTA or TXT, specifying input format")
       ("minSeqLength,l",
        po::value<int>(&config._minSeqLength)->default_value(config._minSeqLength),
-       ": minimum sequence length to consider")
+       "\n: minimum sequence length to consider")
       ("maxSeqLength,L",
        po::value<int>(&config._maxSeqLength)->default_value(config._maxSeqLength),
-       ": maximum sequence length to consider")
+       "\n: maximum sequence length to consider")
       ("minMass,m",
        po::value<double>(&config._minMass)->default_value(config._minMass),
-       ": minimum mass to consider")
+       "\n: minimum mass to consider")
       ("maxMass,M",
        po::value<double>(&config._maxMass)->default_value(config._maxMass),
-       ": maximum mass to consider")
+       "\n: maximum mass to consider")
       ("numAllowedMisCleavages,c",
        po::value<int>(&config._numAllowedMisCleavages)->default_value(config._numAllowedMisCleavages),
-       ": maximum number of miscleavages to consider")
+       "\n: maximum number of miscleavages to consider")
       //      ("numPeptidesPerProt,n",
       //       po::value<int>(&config._numPeptidesPerProt)->default_value(config._numPeptidesPerProt),
       //       ": maximum number of peptides to return")
       ("saveConvertedFile,s",
-       ": save the converted propertyFile")
+       "\n: save the converted propertyFile")
       ("help,h",
-       ": display usage information")
+       "\n: display usage information")
       ("experimentalDesign,d",
        po::value<string>(&config._experimentalDesign)->default_value(config._experimentalDesign),
-       ": which design to return, either NONE, ALL, PAGE_MALDI, ICAT_ESI, PAGE_ESI, or MUDPIT_ESI")
+       "\n: which design to return, any of the following, in quotes, comma separated \"PAGE_MALDI.txt,PAGE_ESI.txt,MUDPIT_ESI.txt,MUDPIT_ICAT.txt\"")
       ("pValue,p",
        po::value<double>(&config._pValue)->default_value(config._pValue),
-       ": only return peptides with p values greater than X");
+       "\n: only return peptides with p values greater than X");
 
     // append options description to usage string
 
     usage << od_config;
+    usage << endl;
+    usage << "example usages:" <<endl;
+    usage << "\t" << "Simple Run with Fasta : PeptideSieve shortExample.tfa"<<endl;
+    usage << "\t" << "Simple Run with txt: PeptideSieve -f TXT example.txt"<<endl;
+    usage << "\t" << "Specify Classifiers: PeptideSieve -d \"MUDPIT_ESI,PAGE_MALDI\" -f TXT example.txt"<<endl;
+    usage << "\t" << "Make Properties File and Quit: PeptideSieve -d "" -s -f TXT example.txt"<<endl;
 
     // handle positional arguments
 

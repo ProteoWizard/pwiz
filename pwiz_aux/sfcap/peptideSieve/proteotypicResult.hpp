@@ -28,18 +28,11 @@ struct ProteotypicResult
 {
   string _protein;
   string _peptide;
-  double _cz_esiResult;
-  double _cz_maldiResult;
-  double _isb_esiResult;
-  double _isb_icatResult;
+  map<string,double> _results;
 
   ProteotypicResult() 
     : _protein(""),
-      _peptide(""),
-      _cz_esiResult(0.00),
-      _cz_maldiResult(0.00),
-      _isb_esiResult(0.00),
-      _isb_icatResult(0.00)
+      _peptide("")
   {};
 
 };

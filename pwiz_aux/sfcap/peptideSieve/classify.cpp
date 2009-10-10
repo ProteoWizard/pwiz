@@ -1,8 +1,8 @@
 //
 // Original Author: Parag Mallick
 //
-// Copyright 2009 Spielberg Family Center for Applied Proteomics 
-//   Cedars Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2009 Center for Applied Molecular Medicine
+//   University of Southern California
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -20,6 +20,7 @@
 
 
 #include "classify.hpp"
+
 
   vector<double> ProteotypicClassifier::convertToProperties(const string &peptide,map<char,vector<double> > & propertyMap, double mass){
     map<char,int> composition;
@@ -45,97 +46,54 @@
   }
 
 
-  ProteotypicResult ProteotypicClassifier::classify(vector<double> propertyVector,string experimentalDesign){
-    double cz_esiResultA[2];
-    double cz_maldiResultA[2];
-    double isb_esiResultA[2];
-    double isb_icatResultA[2];
-    double arrayData[2+20+494+494];	
-    for(size_t i=0;i<propertyVector.size();i++){
-      arrayData[i]=propertyVector[i];
-      //	  cout<<i<<"\t"<<propertyVector[i]<<endl;
+void ProteotypicClassifier::classify(vector<double> propertyVector, ProteotypicResult & classifierResult){
+    //    double arrayData[2+20+494+494];	
+  for(vector<ClassifierEngine>::const_iterator i=classifiers_.begin();i!=classifiers_.end();i++){
+      double score = i->classify(propertyVector);
+      classifierResult._results[i->classifierName()] = score;
     }
-    //	cout<<endl;
-
-    ProteotypicResult classifierResult;
-
-    if(experimentalDesign == "ALL"){
-      classify_CZ_ESI(arrayData,cz_esiResultA);
-      classify_CZ_MALDI(arrayData,cz_maldiResultA);
-      classify_ISB_ESI(arrayData,isb_esiResultA);
-      classify_ISB_ICAT(arrayData,isb_icatResultA);
-      classifierResult._cz_esiResult = cz_esiResultA[0];
-      classifierResult._cz_maldiResult = cz_maldiResultA[0];
-      classifierResult._isb_esiResult = isb_esiResultA[0];
-      classifierResult._isb_icatResult = isb_icatResultA[0];
-    }
-    else if(experimentalDesign == "PAGE_MALDI"){
-      classify_CZ_MALDI(arrayData,cz_maldiResultA);
-      classifierResult._cz_maldiResult = cz_maldiResultA[0];
-    }
-    else if(experimentalDesign == "ICAT_ESI"){
-      classify_ISB_ICAT(arrayData,isb_icatResultA);
-      classifierResult._isb_icatResult = isb_icatResultA[0];
-    }
-    else if(experimentalDesign == "PAGE_ESI"){
-      classify_CZ_ESI(arrayData,cz_esiResultA);
-      classifierResult._cz_esiResult = cz_esiResultA[0];
-    }
-    else if(experimentalDesign == "MUDPIT_ESI"){
-      classify_ISB_ESI(arrayData,isb_esiResultA);
-      classifierResult._isb_esiResult = isb_esiResultA[0];
-    }
-    else if(experimentalDesign == "NONE"){
-      //do nothing because you aren't supposed to!
-    }
-    else{
-      throw runtime_error("Unknown classification protocol: options include ALL, PAGE_MALDI, ICAT_ESI, PAGE_ESI, MUDPIT_ESI, NONE");
-    }
-    return classifierResult;
-  }
+}
 
 
 
 void ProteotypicClassifier::processFASTAFile(const string& filename, map<char,vector<double> > & propertyMap){
 
     try{
+
       cout << "\nProcessing file: " << filename << endl; 
       string fasta_file = filename;
-      fasta<string> mf(fasta_file);
-      fasta<string>::const_iterator iter = mf.begin();
-      fasta<string>::const_iterator stop = mf.end();
+      IPIFASTADatabase db(filename);
+      IPIFASTADatabase::const_iterator it = db.begin();
+      cout << "Finished reading database. Digesting " << db.records().size() << " proteins..." << endl; //I don't like that this isn't lazy.
 
       getOutputStream(filename);
       getPropertyStream(filename);
+      ProteolyticEnzyme proteolyticEnzyme(ProteolyticEnzyme_Trypsin);
+      Digestion::Config digestionConfig(config_._numAllowedMisCleavages,config_._minSeqLength, config_._maxSeqLength);
 
-      while( iter != stop ) {
-	const fasta_seq<string>* fseq = *iter;
-	// fasta headers stored as strings
-	const string& header = fseq->get_header();
-	// sequence should behave like a basic_string
-	const string& str = fseq->get_seq();
-	//      cout<<header<<endl<<str<<endl;
-	Digest peptides(str,config_);
-	size_t gap = header.find_first_of(' ');
-	if(gap > 50){gap=50;}
-	string shortHeader = header.substr(0,gap);
+      bpt::ptime digestStart = bpt::microsec_clock::local_time();
+
+      for(size_t index = 0; it != db.end(); ++it, ++index){
+	Peptide peptide(it->sequence);
+	shared_ptr<Digestion> digestion;
+	digestion.reset(new Digestion(peptide, proteolyticEnzyme, digestionConfig));
+	vector<DigestedPeptide> digestedPeptides(digestion->begin(), digestion->end());
 	vector<ProteotypicResult> classificationResults;
-	
-	for(size_t pepNdx=0;pepNdx<peptides.numPeptides();pepNdx++){
-	  //	cout<<pepNdx<<endl;
-	  string peptide = peptides.currentPeptide();
-	  //	cout<<peptide<<endl;
-	  vector<double> propertyVector = convertToProperties(peptide,propertyMap,peptides.currentMass());
-	  printPropertyVector(shortHeader,peptide,propertyVector);
-	  ProteotypicResult p = classify(propertyVector, config_._experimentalDesign);
-	  p._peptide = peptide;
-	  p._protein = shortHeader;
-	  classificationResults.push_back(p);
-	  peptides.next();
-	}	
-  outputFASTAResult(classificationResults,config_._experimentalDesign, config_._pValue);
+	vector<DigestedPeptide>::iterator jt = digestedPeptides.begin();
+
+	for(; jt!= digestedPeptides.end(); ++jt){
+	  ProteotypicResult p;
+	  string peptide = jt->nTermPrefix() + jt->sequence() + jt->cTermSuffix();
+	  //	  cout<<"<"<<jt->nTermPrefix()<<"."<<peptide<<"."<<jt->cTermSuffix()<<">"<<endl;
+	  vector<double> propertyVector = convertToProperties(peptide,propertyMap,jt->monoisotopicMass(0,false));
+	  printPropertyVector(it->faID,peptide,propertyVector);	  
+	  classify(propertyVector,p);
+	  p._peptide = jt->nTermPrefix() + "." + jt->sequence() + "." + jt->cTermSuffix();;
+	  p._protein = it->faID; //may need to shorten this.
+	  classificationResults.push_back(p);      	
+	}
+	outputFASTAResult(classificationResults,config_._pValue);
 	classificationResults.clear();
-	++iter;
       }
 
       releaseOutputStream();
@@ -170,10 +128,11 @@ void ProteotypicClassifier::processTXTFile(const string& filename, map<char,vect
       double peptideMass = digestBox.computeMass(peptide);
       vector<double> propertyVector = convertToProperties(peptide,propertyMap,peptideMass);
       printPropertyVector(peptideName,peptide,propertyVector);
-      ProteotypicResult p = classify(propertyVector,config_._experimentalDesign);
-      p._peptide = peptide;
+      ProteotypicResult p;
       p._protein = peptideName;
-      outputTXTResult(p,config_._experimentalDesign, config_._pValue);
+      p._peptide = peptide;
+      classify(propertyVector,p);
+      outputTXTResult(p,config_._pValue);
     }
 
     releaseOutputStream();
@@ -196,7 +155,7 @@ void ProteotypicClassifier::readPropertyMap(map<char, vector<double> > & propert
     throw std::runtime_error("Unable to read propertyFile: " + _propertyFile);
   }
   char AA;
-  vector<double> properties(494,0);
+  vector<double> properties(494,0);  //Dangerous!!! Ick!!! - PM
   for(size_t i=0;i<20;i++){
     propertyMapFile >> AA;
     for(size_t j=0;j<494;j++){
@@ -206,6 +165,7 @@ void ProteotypicClassifier::readPropertyMap(map<char, vector<double> > & propert
   }  
 }
 
+#ifdef GOOGLE
 int ProteotypicClassifier::normalize_ISB_ICAT(double* inputs){
 
  int features[NINPUTS_ISB_ICAT] = {
@@ -448,7 +408,7 @@ int ProteotypicClassifier::classify_CZ_ESI (double* inputs, double* outputs){
   for(best = n = 0; n < NCLASSES_CZ_ESI; n++)
     if(outputs[best] < outputs[n]) best = n;
   return(best);
-}
+}}
 
 
 
@@ -835,3 +795,5 @@ int ProteotypicClassifier::classify_ISB_ESI (double* inputs, double* outputs){
   return(best);
 
 }
+
+#endif
