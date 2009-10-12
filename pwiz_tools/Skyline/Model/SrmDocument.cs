@@ -1589,6 +1589,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeIfString(ATTR.label_description, node.Description);                
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            // Write child elements
             WriteNote(writer, node);
 
             FastaSequence seq = node.PeptideGroup as FastaSequence;
@@ -1683,7 +1684,7 @@ namespace pwiz.Skyline.Model
                 double retentionTime = regression.GetRetentionTime(sequence);
                 writer.WriteAttribute(ATTR.predicted_retention_time, retentionTime);
             }
-
+            // Write child elements
             WriteNote(writer, node);
             WriteExplicitMods(writer, node);
 
@@ -1745,9 +1746,9 @@ namespace pwiz.Skyline.Model
             writer.WriteAttribute(ATTR.charge, group.PrecursorCharge);
             if (group.LabelType != IsotopeLabelType.light)
                 writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
-
-            WriteNote(writer, node);
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            // Write child elements
+            WriteNote(writer, node);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
