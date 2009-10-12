@@ -26,7 +26,7 @@ REM # call quickbuild to build and run tests with variant=debug
 echo ##teamcity[message text='Running quickbuild for debug variant...']
 echo ##teamcity[progressMessage 'Running quickbuild for debug variant...']
 call quickbuild.bat -j4 -p1 --teamcity-test-decoration debug
-if %EXIT% EQ 0 set EXIT=%ERRORLEVEL%
+if %EXIT% EQU 0 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 echo ##teamcity[message text='Error running quickbuild for debug variant! See full build log for more details.' status='ERROR']
 
 REM # uncomment this to test that test failures and error output are handled properly
