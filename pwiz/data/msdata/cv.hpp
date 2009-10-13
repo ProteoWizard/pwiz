@@ -4820,6 +4820,9 @@ enum PWIZ_API_DECL CVID
     /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
     MS_ProteinScape_ProfoundProbability = 1001597,
 
+	/// ECD/ETD MS2 preprocessing precursor mass removal
+	MS_ECD_ETD_Precursor_Mass_Filter = 1001598,
+
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
 

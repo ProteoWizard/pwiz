@@ -47,10 +47,12 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_Smoother.cpp
         SpectrumList_PeakPicker.cpp
-        SpectrumList_Thresholder.cpp
+        SpectrumList_PeakFilter.cpp
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_MZWindow.cpp
         PrecursorRecalculatorDefault.cpp
+        PrecursorMassFilter.cpp
+        ThresholdFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../peakdetect//pwiz_analysis_peakdetect
@@ -74,7 +76,7 @@ lib pwiz_analysis_spectrum_processing
 
 unit-test SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test SpectrumList_ThresholderTest : SpectrumList_ThresholderTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;

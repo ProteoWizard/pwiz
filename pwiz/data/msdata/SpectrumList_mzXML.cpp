@@ -31,6 +31,9 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
+#include "boost/foreach.hpp"
+#include "boost/algorithm/string/split.hpp"
+
 
 namespace pwiz {
 namespace msdata {
@@ -119,6 +122,8 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
+			string possibleCharges;
+            getAttribute(attributes, "possibleCharges", possibleCharges);
             
             precursor->spectrumID = "scan=" + precursorScanNum;
 
@@ -129,6 +134,17 @@ struct HandlerPrecursor : public SAXParser::Handler
 
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
+
+			if (!possibleCharges.empty())
+			{
+				vector<string> strCharges;
+				boost::algorithm::split(strCharges, possibleCharges, boost::is_any_of(","));
+
+				BOOST_FOREACH(string& charge, strCharges)
+				{
+					precursor->selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
+				}
+			}
 
             return Status::Ok;
         }

@@ -110,6 +110,11 @@ bool PWIZ_API_DECL isWithinTolerance(double a, double b, const MZTolerance& tole
     return (a > b-tolerance) && (a < b+tolerance);
 }
 
+bool PWIZ_API_DECL lessThanTolerance(double a, double b, const MZTolerance& tolerance)
+{
+	return (a < b-tolerance);
+}
+
 
 } // namespace analysis
 } // namespace pwiz

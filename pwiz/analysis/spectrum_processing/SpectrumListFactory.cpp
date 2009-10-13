@@ -25,10 +25,11 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
+#include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <iostream>
 
@@ -126,6 +127,50 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
                                 msLevelsToCentroid));
 }
 
+SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+
+    string removeMS1;
+    parser >> removeMS1;
+    bool bRemoveMS1 = removeMS1 == "false" ? false : true;
+    string removePrecursor;
+    parser >> removePrecursor;
+    bool bRemPrecursor = removePrecursor == "false" ? false : true;
+    string removeChargeReduced;
+    parser >> removeChargeReduced;
+    bool bRemChgRed = removeChargeReduced == "false" ? false : true;
+    string removeNeutralLoss;
+    parser >> removeNeutralLoss;
+    bool bRemNeutralLoss = removeNeutralLoss == "false" ? false : true;
+    string selectiveRemoval;
+    parser >> selectiveRemoval;
+    bool bSelectiveRemoval = selectiveRemoval == "false" ? false : true;
+	string useBlanketFiltering;
+	parser >> useBlanketFiltering;
+	bool bUseBlanketFiltering = useBlanketFiltering == "false" ? false : true;
+
+    MZTolerance mzt;
+    parser >> mzt;
+
+    PrecursorMassFilter::Config params(mzt, bRemPrecursor, bRemChgRed, bRemNeutralLoss, bSelectiveRemoval, bUseBlanketFiltering);
+    PrecursorMassFilter* filter = new PrecursorMassFilter(params);
+
+    if (bRemoveMS1 == false)
+    {
+        return SpectrumListPtr(new 
+            SpectrumList_PeakFilter(msd.run.spectrumListPtr,
+                                    filter));
+    }
+    else
+    {
+        return SpectrumListPtr(new 
+            SpectrumList_PeakFilter( 
+            SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
+                                SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(2)))),
+                                    filter));
+    }
+}
 
 struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
 {
@@ -196,6 +241,7 @@ JumpTableEntry jumpTable_[] =
     {"msLevel", "int_set", filterCreator_msLevel},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
     {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},
+    {"ETDFilter", "removeMS2:<true|false> removePrecursor:<true|false> removeChargeReduced:<true|false> removeNeutralLoss:<true|false> mostIntenseInWindow:<true|false> blanketRemoval<true|false> MatchingTolerance:(val <PPM|MZ>)", filterCreator_ETDFilter},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
     {"scanNumber", "int_set", filterCreator_scanNumber},
     {"scanEvent", "int_set", filterCreator_scanEvent},

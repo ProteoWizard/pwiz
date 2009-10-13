@@ -60,6 +60,8 @@ double PWIZ_API_DECL operator-(double d, const MZTolerance& tolerance);
 
 /// returns true iff a is in (b-tolerance, b+tolerance)
 bool PWIZ_API_DECL isWithinTolerance(double a, double b, const MZTolerance& tolerance);
+/// returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)
+bool PWIZ_API_DECL lessThanTolerance(double a, double b, const MZTolerance& tolerance);
 
 
 } // namespace analysis
