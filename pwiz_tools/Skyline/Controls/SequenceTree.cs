@@ -826,6 +826,8 @@ namespace pwiz.Skyline.Controls
 
         private void EditBox_SelectionMade(StatementCompletionItem statementCompletionItem)
         {
+            if (_editTextBox == null)
+                return;
             _editTextBox.TextBox.Text = statementCompletionItem.ToString();
             CommitEditBox(false);
         }
@@ -836,9 +838,10 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
-            String label = _editTextBox.TextBox.Text;
-            _editTextBox.TextBox.Parent.Controls.Remove(_editTextBox.TextBox);
+            var editTextBox = _editTextBox;
             _editTextBox = null;
+            String label = editTextBox.TextBox.Text;
+            editTextBox.Detach();
             NodeLabelEditEventArgs nodeLabelEditEventArgs =
                 new NodeLabelEditEventArgs(SelectedNode, label) {CancelEdit = wasCancelled};
             OnAfterNodeEdit(nodeLabelEditEventArgs);

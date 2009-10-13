@@ -364,7 +364,16 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    ProteomeDb proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text);
+                    var longWaitDlg = new LongWaitDlg
+                    {
+                        Text = "Loading Proteome File",
+                        Message = string.Format("Loading protein information from {0}", textPath.Text)
+                    };
+                    ProteomeDb proteomeDb = null;
+                    longWaitDlg.PerformWork(this, 1000, c => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
+                    if (proteomeDb == null)
+                        throw new Exception();
+
                     int proteinCount = proteomeDb.GetProteinCount();
                     var digestions = proteomeDb.ListDigestions();
                     tbxStatus.Text = string.Format("The proteome file contains {0} proteins.", proteinCount);

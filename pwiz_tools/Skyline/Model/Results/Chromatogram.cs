@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.Results
                 string path = msDataFilePaths[i] = _msDataFilePaths[i];
                 if (cachedPaths.Contains(path))
                     fileCacheFlags[i] = true;
-                else if (!cachedFileNames.Contains(SampleHelp.GetFileName(path)))
+                else if (cachedFileNames != null && !cachedFileNames.Contains(SampleHelp.GetFileName(path)))
                     cached = false;
                 else
                 {

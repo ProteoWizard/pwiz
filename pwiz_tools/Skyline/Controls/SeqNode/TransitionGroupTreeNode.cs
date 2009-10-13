@@ -103,12 +103,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     return -1;
 
                 int index = SequenceTree.ResultsIndex;
-                if (!DocSettings.MeasuredResults.IsChromatogramSetLoaded(index))
-                    return -1;
 
                 float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
                 if (ratio == null)
-                    return (int) SequenceTree.StateImageId.peak_blank;
+                {
+                    return DocSettings.MeasuredResults.IsChromatogramSetLoaded(index) ?
+                        (int)SequenceTree.StateImageId.peak_blank : -1;
+                }
                 else if (ratio < 0.5)
                     return (int)SequenceTree.StateImageId.no_peak;
                 else if (ratio < 1.0)

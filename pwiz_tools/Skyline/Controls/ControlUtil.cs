@@ -85,6 +85,18 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
+        public bool ValidateDecimalTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+            TextBox control, double min, double max, out double val)
+        {
+            bool valid = ValidateDecimalTextBox(e, control, min, max, out val);
+            if (!valid && tabControl.SelectedIndex != tabIndex)
+            {
+                tabControl.SelectedIndex = tabIndex;
+                control.Focus();
+            }
+            return valid;
+        }
+
         /// <summary>
         /// Validates a TextBox that should containe an integer value.
         /// </summary>
@@ -117,6 +129,18 @@ namespace pwiz.Skyline.Controls
                 ShowTextBoxError(control, "{0} must contain an integer.");
             }
             e.Cancel = !valid;
+            return valid;
+        }
+
+        public bool ValidateNumberTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+            TextBox control, int min, int max, out int val)
+        {
+            bool valid = ValidateNumberTextBox(e, control, min, max, out val);
+            if (!valid && tabControl.SelectedIndex != tabIndex)
+            {
+                tabControl.SelectedIndex = tabIndex;
+                control.Focus();                
+            }
             return valid;
         }
 

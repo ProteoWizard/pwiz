@@ -19,6 +19,9 @@ namespace pwiz.Skyline.Controls
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly ImageList _imageList = new ImageList();
 
+        // Don't let the name take more than half the space for item display
+        private const int MAX_NAME_LENGTH = 40;
+
         public StatementCompletionTextBox(IDocumentUIContainer documentUiContainer)
         {
             MatchTypes = ProteinMatchType.all;
@@ -59,6 +62,7 @@ namespace pwiz.Skyline.Controls
             TextBox.GotFocus -= TextBox_GotFocus;
             TextBox.LostFocus -= TextBox_LostFocus;
             TextBox.LocationChanged -= TextBox_LocationChanged;
+            TextBox.Parent.Controls.Remove(TextBox);            
             TextBox = null;
         }
 
@@ -66,7 +70,7 @@ namespace pwiz.Skyline.Controls
 
         void HideStatementCompletionFormIfLostFocus()
         {
-            if (TextBox.Focused)
+            if (TextBox == null || TextBox.Focused)
             {
                 return;
             }
@@ -262,14 +266,16 @@ namespace pwiz.Skyline.Controls
         public void ListView_MouseDown(object sender, MouseEventArgs e)
         {
             // The list view doesn't believe items extend all across the ListView, so we use
-            // 0 as the x-coordinate
-            var item = StatementCompletionForm.ListView.GetItemAt(0, e.Location.Y);
+            // 17 as the x-coordinate, since Windows XP doesn't count the icon as part of
+            // the item either.
+            var item = StatementCompletionForm.ListView.GetItemAt(17, e.Location.Y);
             if (item == null)
             {
                 return;
             }
             OnSelectionMade((StatementCompletionItem) item.Tag);
         }
+
         /// <summary>
         /// When the text in the editTextBox changes, fire off the query to populate the statement completion popup.
         /// </summary>
@@ -453,9 +459,12 @@ namespace pwiz.Skyline.Controls
                 if (0 != (match.MatchType & ProteinMatchType.description))
                 {
                     AlternativeName mainName = match.AlternativeDescription;
+                    string matchName = match.Protein.Name;
+                    if (matchName.Length > MAX_NAME_LENGTH)
+                        matchName = matchName.Substring(0, MAX_NAME_LENGTH) + "...";
                     var proteinName = new AlternativeName
                                                       {
-                                                          Name = match.Protein.Name,
+                                                          Name = matchName,
                                                           Description = match.Protein.Description
                                                       };
                     var alternativeNames = new List<AlternativeName>();
