@@ -46,6 +46,10 @@ using namespace std;
 using namespace pwiz::peptideid;
 using namespace boost::filesystem;
 
+// String constants
+const char* WARNING_SINGLE_FILE_PROCESSED = "Warning: Only the first "
+    "input file will be processed: ";
+
 struct Config
 {
     vector<string> filenames;
@@ -55,8 +59,9 @@ struct Config
     string peptideFilename;
     vector<string> commands;
     Pseudo2DGel::Config pseudo2dConfig;
+    bool verbose;
 
-    Config() : outputDirectory(".") {}
+    Config() : outputDirectory("."), verbose(false) {}
 };
 
 template <typename analyzer_type>
@@ -162,6 +167,7 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("flat,f",
             po::value<string>(&config.peptideFilename),
             ": peptide file location (nativeID rt mz score seq)")
+        ("verbose,v", ": prints extra information.")
         ("help,h",
             ": print this helpful message.")
         ;
@@ -206,6 +212,9 @@ Config parseCommandArgs(int argc, const char* argv[])
     
     if (vm.count("ms2locs"))
         config.pseudo2dConfig.ms2 = true;
+
+    if (vm.count("verbose"))
+        config.verbose = true;
     
     // remember filenames from command line
 
@@ -274,6 +283,15 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
             analyzers.push_back(anal);
 }
 
+struct testOut
+{
+    ostream& operator()(const string s)
+    {
+        cout << s << endl;
+        return cout;
+    }
+};
+
 int main(int argc, const char* argv[])
 {
     size_t tick1 = clock();
@@ -285,23 +303,26 @@ int main(int argc, const char* argv[])
 
         if (config.filenames.empty())
             throw runtime_error(usage(config).c_str());
+        else if (config.verbose && config.filenames.size() > 1)
+            cerr << WARNING_SINGLE_FILE_PROCESSED
+                 << config.filenames.at(0)
+                 << endl;
 
         if (!config.filenames.empty())
             bfs::create_directories(config.outputDirectory);
         
         // Construct the Pseudo2DGel object with an MSDataCache object
-        shared_ptr<Pseudo2DGel> analyzer;
-        
+
         MSDataAnalyzerContainer analyzers;
         initializeAnalyzers(analyzers, config);
         
         // Only take the first file for now.
         ExtendedReaderList readers;
 
-        MSDataFile msd(config.filenames[0], &readers);
+        MSDataFile msd(config.filenames.at(0), &readers);
         MSDataAnalyzer::DataInfo dataInfo(msd);
         
-        dataInfo.sourceFilename = path(config.filenames[0]).leaf();
+        dataInfo.sourceFilename = path(config.filenames.at(0)).leaf();
         dataInfo.outputDirectory = config.outputDirectory;
         dataInfo.log = NULL;
 
@@ -311,11 +332,12 @@ int main(int argc, const char* argv[])
         
         size_t tick2 = clock();
 
-        /*
-        cout << " *** run time:" << 1.*tick2/CLOCKS_PER_SEC
-             << " - " << 1.*tick1/CLOCKS_PER_SEC << " = "
-             << 1.*(tick2 - tick1)/CLOCKS_PER_SEC << endl;
-        */
+        if (config.verbose)
+        {
+            cout << " *** run time:" << 1.*tick2/CLOCKS_PER_SEC
+                 << " - " << 1.*tick1/CLOCKS_PER_SEC << " = "
+                 << 1.*(tick2 - tick1)/CLOCKS_PER_SEC << endl;
+        }
         
         return 0;
     }
