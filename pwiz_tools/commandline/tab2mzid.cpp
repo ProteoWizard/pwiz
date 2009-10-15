@@ -261,7 +261,7 @@ void copyProteins(const vector<record>& records,
 
 void setSourceFile(const string& filename, MzIdentML& mzid)
 {
-    SourceFilePtr sourceFile(new SourceFile());
+    pwiz::mziddata::SourceFilePtr sourceFile(new pwiz::mziddata::SourceFile());
     sourceFile->location = filename;
     sourceFile->fileFormat.set(MS_tab_delimited_text_file);
     mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
