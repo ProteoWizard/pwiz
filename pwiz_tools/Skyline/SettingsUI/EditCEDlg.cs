@@ -282,8 +282,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     int charge = nodeGroup.TransitionGroup.PrecursorCharge;
                     if (arrayData[charge] == null)
-                        arrayData[charge] = new CERegressionData(regression);
-                    arrayData[charge].Add(nodeGroup, i);
+                        arrayData[charge] = new CERegressionData();
+                    arrayData[charge].Add(regression, nodeGroup, i);
                 }
             }
 
@@ -319,58 +319,64 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private sealed class CERegressionData
+        private sealed class CERegressionData : RegressionData<CollisionEnergyRegression>
         {
-            private readonly CollisionEnergyRegression _regression;
-            private readonly List<double> _bestCEValues = new List<double>();
-            private readonly List<double> _precursorMzValues = new List<double>();
-
-            public CERegressionData(CollisionEnergyRegression regression)
+            protected override double GetValue(CollisionEnergyRegression regression,
+                TransitionGroupDocNode nodeGroup, int step)
             {
-                _regression = regression;
+                return regression.GetCollisionEnergy(nodeGroup.TransitionGroup.PrecursorCharge,
+                                                      nodeGroup.PrecursorMz, step);
             }
+        }
+    }
 
-            public RegressionLine RegressionLine
+    internal abstract class RegressionData<T>
+        where T : OptimizableRegression
+    {
+        private readonly List<double> _bestValues = new List<double>();
+        private readonly List<double> _precursorMzValues = new List<double>();
+
+        public RegressionLine RegressionLine
+        {
+            get
             {
-                get
-                {
-                    if (_bestCEValues.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
-                        return null;
-                    Statistics statCE = new Statistics(_bestCEValues.ToArray());
-                    Statistics statMz = new Statistics(_precursorMzValues.ToArray());
-                    return new RegressionLine(statCE.Slope(statMz), statCE.Intercept(statMz));
-                }
-            }
-
-            public void Add(TransitionGroupDocNode nodeGroup, int iResult)
-            {
-                var chromInfo = GetMaxChromInfo(nodeGroup.Results[iResult]);
-                if (chromInfo == null)
-                    return;
-
-                _precursorMzValues.Add(nodeGroup.PrecursorMz);
-                _bestCEValues.Add(_regression.GetCollisionEnergy(nodeGroup.TransitionGroup.PrecursorCharge,
-                                                                 nodeGroup.PrecursorMz,
-                                                                 chromInfo.OptimizationStep));
-            }
-
-            private static TransitionGroupChromInfo GetMaxChromInfo(IEnumerable<TransitionGroupChromInfo> result)
-            {
-                if (result == null)
+                if (_bestValues.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
                     return null;
-
-                double maxArea = 0;
-                TransitionGroupChromInfo maxChromInfo = null;
-                foreach (var chromInfo in result)
-                {
-                    if (chromInfo.PeakCountRatio >= 0.5 && chromInfo.Area.HasValue && maxArea < chromInfo.Area)
-                    {
-                        maxArea = chromInfo.Area.Value;
-                        maxChromInfo = chromInfo;
-                    }
-                }
-                return maxChromInfo;
+                Statistics statCE = new Statistics(_bestValues.ToArray());
+                Statistics statMz = new Statistics(_precursorMzValues.ToArray());
+                return new RegressionLine(statCE.Slope(statMz), statCE.Intercept(statMz));
             }
+        }
+
+
+        public void Add(T regression, TransitionGroupDocNode nodeGroup, int iResult)
+        {
+            var chromInfo = GetMaxChromInfo(nodeGroup.Results[iResult]);
+            if (chromInfo == null)
+                return;
+
+            _precursorMzValues.Add(nodeGroup.PrecursorMz);
+            _bestValues.Add(GetValue(regression, nodeGroup, chromInfo.OptimizationStep));
+        }
+
+        protected abstract double GetValue(T regression, TransitionGroupDocNode nodeGroup, int step);
+
+        private static TransitionGroupChromInfo GetMaxChromInfo(IEnumerable<TransitionGroupChromInfo> result)
+        {
+            if (result == null)
+                return null;
+
+            double maxArea = 0;
+            TransitionGroupChromInfo maxChromInfo = null;
+            foreach (var chromInfo in result)
+            {
+                if (chromInfo.PeakCountRatio == 1.0 && chromInfo.Area.HasValue && maxArea < chromInfo.Area)
+                {
+                    maxArea = chromInfo.Area.Value;
+                    maxChromInfo = chromInfo;
+                }
+            }
+            return maxChromInfo;
         }
     }
 }
