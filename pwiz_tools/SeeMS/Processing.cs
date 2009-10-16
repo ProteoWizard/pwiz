@@ -280,14 +280,14 @@ namespace seems
     public class ThresholdingProcessor : ProcessingBase
     {
         Panel panel = processingPanels.thresholderPanel;
-        private ThresholdingBy_Type type;
-        private ThresholdingOrientation orientation;
+        private ThresholdFilter.ThresholdingBy_Type type;
+        private ThresholdFilter.ThresholdingOrientation orientation;
         private double threshold;
 
         public ThresholdingProcessor()
         {
-            type = ThresholdingBy_Type.ThresholdingBy_Count;
-            orientation = ThresholdingOrientation.Orientation_MostIntense;
+            type = ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count;
+            orientation = ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense;
 
             processingPanels.thresholderValueTextBox.TextChanged += new EventHandler( optionsChanged );
             processingPanels.thresholderOrientationComboBox.TextChanged += new EventHandler( optionsChanged );
@@ -303,11 +303,11 @@ namespace seems
 
             param = method.userParam( "type" );
             if( param.type == "SeeMS" )
-                type = (ThresholdingBy_Type) (int) param.value;
+                type = (ThresholdFilter.ThresholdingBy_Type) (int) param.value;
 
             param = method.userParam( "orientation" );
             if( param.type == "SeeMS" )
-                orientation = (ThresholdingOrientation) (int) param.value;
+                orientation = (ThresholdFilter.ThresholdingOrientation) (int) param.value;
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -318,8 +318,8 @@ namespace seems
             if( !Double.TryParse( processingPanels.thresholderValueTextBox.Text, out threshold ) )
                 threshold = 0;
 
-            type = (ThresholdingBy_Type) processingPanels.thresholderTypeComboBox.SelectedIndex;
-            orientation = (ThresholdingOrientation) processingPanels.thresholderOrientationComboBox.SelectedIndex;
+            type = (ThresholdFilter.ThresholdingBy_Type) processingPanels.thresholderTypeComboBox.SelectedIndex;
+            orientation = (ThresholdFilter.ThresholdingOrientation) processingPanels.thresholderOrientationComboBox.SelectedIndex;
             OnOptionsChanged( sender, e );
         }
 
@@ -328,31 +328,31 @@ namespace seems
             switch( type )
             {
                 default:
-                case ThresholdingBy_Type.ThresholdingBy_Count:
-                case ThresholdingBy_Type.ThresholdingBy_CountAfterTies:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_CountAfterTies:
                     return String.Format( "Thresholder (keeping {0} {1} points)",
                                           threshold,
-                                          orientation == ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
+                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
 
-                case ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0})",
                                           threshold,
-                                          orientation == ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0}% of BPI)",
                                           threshold * 100,
-                                          orientation == ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0}% of TIC)",
                                           threshold * 100,
-                                          orientation == ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff:
                     return String.Format( "Thresholder (keeping points that make up the {1} {0}% of TIC)",
                                           threshold * 100,
-                                          orientation == ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
+                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
             }
         }
 
@@ -370,7 +370,7 @@ namespace seems
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
             if( innerList is SpectrumList )
-                return new SpectrumList_Thresholder( innerList as SpectrumList, type, threshold, orientation ) as ProcessableListType;
+                return new SpectrumList_PeakFilter( innerList as SpectrumList, new ThresholdFilter(type, threshold, orientation) ) as ProcessableListType;
             else //if( innerList is ChromatogramList )
                 return innerList;
         }

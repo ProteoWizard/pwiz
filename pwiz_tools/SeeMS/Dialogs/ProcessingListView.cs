@@ -471,8 +471,8 @@ namespace seems
 
         private void initializeComponents()
         {
-            KeyValuePair<string, ThresholdingBy_Type> nameTypePair;
-            KeyValuePair<string, ThresholdingOrientation> nameOrientationPair;
+            KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type> nameTypePair;
+            KeyValuePair<string, ThresholdFilter.ThresholdingOrientation> nameOrientationPair;
 
             thresholdingTypeComboBox = new ComboBox();
             thresholdingTypeComboBox.DisplayMember = "Key";
@@ -488,22 +488,22 @@ namespace seems
             thresholdTextBox.TextChanged += new EventHandler( OnOptionsChangedHandler );
 
             // apply the threshold with this method
-            nameTypePair = new KeyValuePair<string, ThresholdingBy_Type>( "Count", ThresholdingBy_Type.ThresholdingBy_Count );
+            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Count", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdingBy_Type>( "Absolute Intensity", ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Absolute Intensity", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdingBy_Type>( "Fraction of TIC", ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction of TIC", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdingBy_Type>( "Fraction of BPI", ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction of BPI", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdingBy_Type>( "Fraction cutoff of TIC", ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff );
+            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction cutoff of TIC", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
             thresholdingTypeComboBox.SelectedIndex = 0;
 
             // apply the threshold according to this orientation
-            nameOrientationPair = new KeyValuePair<string, ThresholdingOrientation>( "Most Intense", ThresholdingOrientation.Orientation_MostIntense );
+            nameOrientationPair = new KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>( "Most Intense", ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense );
             thresholdingOrientationComboBox.Items.Add( nameOrientationPair );
-            nameOrientationPair = new KeyValuePair<string, ThresholdingOrientation>( "Least Intense", ThresholdingOrientation.Orientation_LeastIntense );
+            nameOrientationPair = new KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>( "Least Intense", ThresholdFilter.ThresholdingOrientation.Orientation_LeastIntense );
             thresholdingOrientationComboBox.Items.Add( nameOrientationPair );
             thresholdingOrientationComboBox.SelectedIndex = 0;
 
@@ -534,11 +534,11 @@ namespace seems
             if( !Double.TryParse( thresholdTextBox.Text, out threshold ) )
                 threshold = 0;
 
-            return new SpectrumList_Thresholder(
-                list,
-                ( (KeyValuePair<string, ThresholdingBy_Type>) thresholdingTypeComboBox.SelectedItem ).Value,
+            return new SpectrumList_PeakFilter(
+                list, new ThresholdFilter(
+                ( (KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>) thresholdingTypeComboBox.SelectedItem ).Value,
                 threshold,
-                ( (KeyValuePair<string, ThresholdingOrientation>) thresholdingOrientationComboBox.SelectedItem ).Value );
+                ( (KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>) thresholdingOrientationComboBox.SelectedItem ).Value ) );
         }
     }
 
