@@ -76,6 +76,8 @@ public ref class SpectrumList_PeakFilter : public msdata::SpectrumList
 
 public ref class ThresholdFilter : public SpectrumDataFilter
 {
+    public:
+
     /// <summary>
     /// determines the method of thresholding and the meaning of the threshold value
     /// </summary>
@@ -151,6 +153,7 @@ public ref class ThresholdFilter : public SpectrumDataFilter
                      (pwiz::analysis::ThresholdFilter::ThresholdingOrientation) orientation_));
     }
 };
+
 
 } // namespace analysis 
 } // namespace CLI
