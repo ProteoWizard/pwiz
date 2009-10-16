@@ -41,6 +41,7 @@ if [ modules.peek : NT ]
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     }
 
     actions do_seems_build
