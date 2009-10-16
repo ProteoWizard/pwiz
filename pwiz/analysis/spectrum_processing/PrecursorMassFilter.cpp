@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.cpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Chris Paulse <cpaulse <a.t> systemsbiology.org>
@@ -21,7 +21,6 @@
 
 
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/IDataFilter.hpp"
 #include "PrecursorMassFilter.hpp"
 #include "pwiz/utility/misc/String.hpp"
 

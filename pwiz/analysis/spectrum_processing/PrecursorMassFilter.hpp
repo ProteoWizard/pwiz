@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Chris Paulse <cpaulse <a.t> systemsbiology.org>
@@ -23,6 +23,8 @@
 #ifndef _PRECURSORMASSFILTER_HPP_ 
 #define _PRECURSORMASSFILTER_HPP_ 
 
+
+#include "pwiz/analysis/common/DataFilter.hpp"
 #include "pwiz/analysis/peakdetect/MZTolerance.hpp"
 #include "pwiz/utility/proteome/Chemistry.hpp"
 
@@ -83,7 +85,7 @@ struct ReferenceMassByMass
     }
 };
 
-struct PrecursorMassFilter : public ISpectrumDataFilter
+struct PrecursorMassFilter : public SpectrumDataFilter
 {
      /// PrecursorMassFilter's parameters
     struct Config

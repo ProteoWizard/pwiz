@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Chris Paulse <cpaulse <a.t> systemsbiology.org>
@@ -24,22 +24,31 @@
 #define _IDATAFILTER_HPP_ 
 
 
+#include "boost/shared_ptr.hpp"
+
+
 namespace pwiz {
 namespace analysis {
 
-struct ISpectrumDataFilter
+struct SpectrumDataFilter
 {
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;
-    virtual ~ISpectrumDataFilter() {}
+    virtual ~SpectrumDataFilter() {}
 };
 
-struct IChromatogramDataFilter
+typedef boost::shared_ptr<SpectrumDataFilter> SpectrumDataFilterPtr;
+
+
+struct ChromatogramDataFilter
 {
     virtual void operator () (const pwiz::msdata::ChromatogramPtr) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;
-    virtual ~IChromatogramDataFilter() {}
+    virtual ~ChromatogramDataFilter() {}
 };
+
+typedef boost::shared_ptr<ChromatogramDataFilter> ChromatogramDataFilterPtr;
+
 
 } // namespace analysis 
 } // namespace pwiz

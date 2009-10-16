@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.cpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -23,7 +23,6 @@
 #define PWIZ_SOURCE
 
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/IDataFilter.hpp"
 #include "SpectrumList_PeakFilter.hpp"
 
 namespace pwiz {
@@ -35,8 +34,8 @@ using namespace msdata;
 
 
 PWIZ_API_DECL
-    SpectrumList_PeakFilter::SpectrumList_PeakFilter(const SpectrumListPtr& inner,
-    ISpectrumDataFilter* filterFunctor)
+SpectrumList_PeakFilter::SpectrumList_PeakFilter(const SpectrumListPtr& inner,
+                                                 SpectrumDataFilterPtr filterFunctor)
     :   SpectrumListWrapper(inner),
         filterFunctor_(filterFunctor)
 {

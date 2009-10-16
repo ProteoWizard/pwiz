@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -26,29 +26,30 @@
 
 #include <boost/scoped_ptr.hpp>
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include "pwiz/analysis/common/IDataFilter.hpp"
+#include "pwiz/analysis/common/DataFilter.hpp"
+
 
 namespace pwiz {
-	namespace analysis {
+namespace analysis {
 
-		/// SpectrumList implementation that returns spectra with the specified ISpectrumDataFilter operation applied
-		class PWIZ_API_DECL SpectrumList_PeakFilter : public msdata::SpectrumListWrapper
-		{
-		public:
+/// SpectrumList implementation that returns spectra with the specified SpectrumDataFilter operation applied
+class PWIZ_API_DECL SpectrumList_PeakFilter : public msdata::SpectrumListWrapper
+{
+    public:
 
-			SpectrumList_PeakFilter(const msdata::SpectrumListPtr&	inner,
-									ISpectrumDataFilter*				filterFunctor);
+    SpectrumList_PeakFilter(const msdata::SpectrumListPtr& inner,
+                            SpectrumDataFilterPtr filterFunctor);
 
-			/// thresholding works on any SpectrumList
-			static bool accept(const msdata::SpectrumListPtr& inner) {return true;}
+    /// peak filters work on any SpectrumList
+    static bool accept(const msdata::SpectrumListPtr& inner) {return true;}
 
-			virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
+    virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
-		private:
-			const boost::scoped_ptr<ISpectrumDataFilter> filterFunctor_;
-		};
+    private:
+	SpectrumDataFilterPtr filterFunctor_;
+};
 
-	} // namespace analysis 
+} // namespace analysis 
 } // namespace pwiz
 
 

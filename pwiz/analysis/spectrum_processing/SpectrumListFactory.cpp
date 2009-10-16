@@ -154,7 +154,7 @@ SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
     parser >> mzt;
 
     PrecursorMassFilter::Config params(mzt, bRemPrecursor, bRemChgRed, bRemNeutralLoss, bSelectiveRemoval, bUseBlanketFiltering);
-    PrecursorMassFilter* filter = new PrecursorMassFilter(params);
+    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new PrecursorMassFilter(params));
 
     if (bRemoveMS1 == false)
     {

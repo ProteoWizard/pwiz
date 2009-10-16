@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -24,17 +24,15 @@
 #define _THRESHOLDFILTER_HPP_ 
 
 
-#include <boost/scoped_ptr.hpp>
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
-#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include "pwiz/analysis/peakdetect/MZTolerance.hpp"
+#include "pwiz/analysis/common/DataFilter.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
-struct ThresholdingParams
+
+struct ThresholdFilter : public SpectrumDataFilter
 {
     /// determines the method of thresholding and the meaning of the threshold value
     enum ThresholdingBy_Type
@@ -81,30 +79,20 @@ struct ThresholdingParams
         Orientation_LeastIntense /// thresholder removes the most intense data points
     };
 
-    ThresholdingParams
-        (const ThresholdingParams::ThresholdingBy_Type& byType_ = ThresholdingParams::ThresholdingBy_Count, 
-        const double threshold_ = 1.0, 
-        const ThresholdingParams::ThresholdingOrientation orientation_ = ThresholdingParams::Orientation_MostIntense);
-
-    const ThresholdingBy_Type        byType; 
-    double                            threshold;
-    const ThresholdingOrientation    orientation;
-
-    static const char* byTypeMostIntenseName[];
-
-    static const char* byTypeLeastIntenseName[];
-
-};
-
-
-struct ThresholdingFilter : public ISpectrumDataFilter
-{
-    ThresholdingFilter(const ThresholdingParams& params_) : params(params_) {}
+    ThresholdFilter(ThresholdingBy_Type byType_ = ThresholdingBy_Count, 
+                    double threshold_ = 1.0, 
+                    ThresholdingOrientation orientation_ = Orientation_MostIntense);
 
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
-    const ThresholdingParams params;
+    const ThresholdingBy_Type byType;
+    const double threshold;
+    const ThresholdingOrientation orientation;
+
+    private:
+    static const char* byTypeMostIntenseName[];
+    static const char* byTypeLeastIntenseName[];
 };
 
 } // namespace analysis 

@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.cpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -25,7 +25,6 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/IDataFilter.hpp"
 #include "ThresholdFilter.hpp"
 #include <numeric>
 
@@ -97,56 +96,49 @@ namespace analysis {
 
 using namespace std;
 using namespace msdata;
-using namespace pwiz::util;
 
 // Filter params class initialization
 
-const char* ThresholdingParams::byTypeMostIntenseName[] = {"most intense count (excluding ties at the threshold)",
+const char* ThresholdFilter::byTypeMostIntenseName[] = {"most intense count (excluding ties at the threshold)",
     "most intense count (including ties at the threshold)",
     "absolute intensity greater than",
     "with greater intensity relative to BPI",
     "with greater intensity relative to TIC",
     "most intense TIC cutoff"};
 
-const char* ThresholdingParams::byTypeLeastIntenseName[] = {"least intense count (excluding ties at the threshold)",
+const char* ThresholdFilter::byTypeLeastIntenseName[] = {"least intense count (excluding ties at the threshold)",
     "least intense count (including ties at the threshold)",
     "absolute intensity less than",
     "with less intensity relative to BPI",
     "with less intensity relative to TIC",
     "least intense TIC cutoff"};
 
-ThresholdingParams::ThresholdingParams
-    (const ThresholdingParams::ThresholdingBy_Type& byType_ /* = ThresholdingParams::ThresholdingBy_Count */, 
-    const double threshold_ /* = 1.0 */, 
-    const ThresholdingParams::ThresholdingOrientation orientation_ /* = ThresholdingParams::Orientation_MostIntense */)
-    : 
-    byType(byType_), 
-    threshold(threshold_), 
-    orientation(orientation_) 
+ThresholdFilter::ThresholdFilter(ThresholdingBy_Type byType_ /* = ThresholdingBy_Count */, 
+                                 double threshold_ /* = 1.0 */, 
+                                 ThresholdingOrientation orientation_ /* = Orientation_MostIntense */)
+    :
+    byType(byType_),
+    threshold(byType == ThresholdingBy_Count || byType == ThresholdingBy_CountAfterTies ? round(threshold_) : threshold_),
+    orientation(orientation_)
+{
+}
+
+void ThresholdFilter::describe(ProcessingMethod& method) const
+{
+    string name = orientation == Orientation_MostIntense ? byTypeMostIntenseName[byType] 
+                                                         : byTypeLeastIntenseName[byType];
+    method.userParams.push_back(UserParam(name, lexical_cast<string>(threshold)));
+}
+
+void ThresholdFilter::operator () (const SpectrumPtr s) const
 {
     if (byType == ThresholdingBy_Count ||
         byType == ThresholdingBy_CountAfterTies)
     {
-        threshold = round(threshold);
-    }
-}
-
-void ThresholdingFilter::describe(ProcessingMethod& method) const
-{
-    string name = params.orientation == ThresholdingParams::Orientation_MostIntense ? ThresholdingParams::byTypeMostIntenseName[params.byType]
-    : ThresholdingParams::byTypeLeastIntenseName[params.byType];
-    method.userParams.push_back(UserParam(name, lexical_cast<string>(params.threshold)));
-}
-
-void ThresholdingFilter::operator () (const SpectrumPtr s) const
-{
-    if (params.byType == ThresholdingParams::ThresholdingBy_Count ||
-        params.byType == ThresholdingParams::ThresholdingBy_CountAfterTies)
-    {
         // if count threshold is greater than number of data points, return as is
-        if (s->defaultArrayLength <= params.threshold)
+        if (s->defaultArrayLength <= threshold)
             return;
-        else if (params.threshold == 0)
+        else if (threshold == 0)
         {
             s->getMZArray()->data.clear();
             s->getIntensityArray()->data.clear();
@@ -161,23 +153,23 @@ void ThresholdingFilter::operator () (const SpectrumPtr s) const
     greater<MZIntensityPair> orientationMore_Predicate;
     less<MZIntensityPair> orientationLess_Predicate;
 
-    if (params.orientation == ThresholdingParams::Orientation_MostIntense)
+    if (orientation == Orientation_MostIntense)
         sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), orientationMore_Predicate);
-    else if (params.orientation == ThresholdingParams::Orientation_LeastIntense)
+    else if (orientation == Orientation_LeastIntense)
         sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), orientationLess_Predicate);
     else
         throw runtime_error("[threshold()] invalid orientation type");
 
     double tic = accumulate(mzIntensityPairs.begin(), mzIntensityPairs.end(), 0.0, MZIntensityPairIntensitySum());
-    double bpi = params.orientation == ThresholdingParams::Orientation_MostIntense ? mzIntensityPairs.front().intensity
+    double bpi = orientation == Orientation_MostIntense ? mzIntensityPairs.front().intensity
         : mzIntensityPairs.back().intensity;
 
     vector<MZIntensityPair>::iterator thresholdItr;
-    switch (params.byType)
+    switch (byType)
     {
-    case ThresholdingParams::ThresholdingBy_Count:
+    case ThresholdingBy_Count:
         // no need to check bounds on thresholdItr because it gets checked above
-        thresholdItr = mzIntensityPairs.begin() + (size_t) params.threshold;
+        thresholdItr = mzIntensityPairs.begin() + (size_t) threshold;
 
         // iterate backward until a non-tie is found
         while (true)
@@ -193,9 +185,9 @@ void ThresholdingFilter::operator () (const SpectrumPtr s) const
         }
         break;
 
-    case ThresholdingParams::ThresholdingBy_CountAfterTies:
+    case ThresholdingBy_CountAfterTies:
         // no need to check bounds on thresholdItr because it gets checked above
-        thresholdItr = mzIntensityPairs.begin() + ((size_t) params.threshold)-1;
+        thresholdItr = mzIntensityPairs.begin() + ((size_t) threshold)-1;
 
         // iterate forward until a non-tie is found
         while (true)
@@ -207,52 +199,52 @@ void ThresholdingFilter::operator () (const SpectrumPtr s) const
         }
         break;
 
-    case ThresholdingParams::ThresholdingBy_AbsoluteIntensity:
-        if (params.orientation == ThresholdingParams::Orientation_MostIntense)
+    case ThresholdingBy_AbsoluteIntensity:
+        if (orientation == Orientation_MostIntense)
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold),
+            MZIntensityPair(0, threshold),
             orientationMore_Predicate);
         else
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold),
+            MZIntensityPair(0, threshold),
             orientationLess_Predicate);
         break;
 
-    case ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity:
-        if (params.orientation == ThresholdingParams::Orientation_MostIntense)
+    case ThresholdingBy_FractionOfBasePeakIntensity:
+        if (orientation == Orientation_MostIntense)
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold*bpi),
+            MZIntensityPair(0, threshold*bpi),
             MZIntensityPairIntensityFractionGreaterThan(bpi));
         else
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold*bpi),
+            MZIntensityPair(0, threshold*bpi),
             MZIntensityPairIntensityFractionLessThan(bpi));
         break;
 
-    case ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity:
-        if (params.orientation == ThresholdingParams::Orientation_MostIntense)
+    case ThresholdingBy_FractionOfTotalIntensity:
+        if (orientation == Orientation_MostIntense)
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold*tic),
+            MZIntensityPair(0, threshold*tic),
             MZIntensityPairIntensityFractionGreaterThan(tic));
         else
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
             mzIntensityPairs.end(),
-            MZIntensityPair(0, params.threshold*tic),
+            MZIntensityPair(0, threshold*tic),
             MZIntensityPairIntensityFractionLessThan(tic));
         break;
 
-    case ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff:
+    case ThresholdingBy_FractionOfTotalIntensityCutoff:
         {
             // starting at the (most/least intense point)/TIC fraction,
             // calculate the running sum
             vector<double> cumulativeIntensityFraction(1, mzIntensityPairs[0].intensity / tic);
             size_t i=0;
-            while (cumulativeIntensityFraction.back() <= params.threshold &&
+            while (cumulativeIntensityFraction.back() <= threshold &&
                 ++i < mzIntensityPairs.size())
             {
                 cumulativeIntensityFraction.push_back(

@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_ThresholderTest.cpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -20,7 +20,6 @@
 //
 
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/IDataFilter.hpp"
 #include "PrecursorMassFilter.hpp"
 #include "ThresholdFilter.hpp"
 #include "SpectrumList_PeakFilter.hpp"
@@ -167,19 +166,18 @@ void testMassRemoval()
         s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
 
         MZTolerance tol(t.matchingTolerance, t.usePPM ? MZTolerance::PPM : MZTolerance::MZ);
-        PrecursorMassFilter* filter = 0;
+        SpectrumDataFilterPtr filter;
         if (t.removeNeutralLossPrecursors)
         {
             PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, true, t.selectiveRemovalofPrecursors, t.blanketRemovalofNeutralLoss);
-            filter = new PrecursorMassFilter(params);
+            filter.reset(new PrecursorMassFilter(params));
         }
         else
         {
             PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, true, t.selectiveRemovalofPrecursors, t.blanketRemovalofNeutralLoss, 0);
-            filter = new PrecursorMassFilter(params);
+            filter.reset(new PrecursorMassFilter(params));
         }
-        SpectrumListPtr peakFilter(
-            new SpectrumList_PeakFilter(originalList, filter));
+        SpectrumListPtr peakFilter(new SpectrumList_PeakFilter(originalList, filter));
 
         SpectrumPtr pFiltered = peakFilter->spectrum(0, true);
 
@@ -204,91 +202,91 @@ struct TestThresholder
     const char* outputMZArray;
     const char* outputIntensityArray;
 
-    ThresholdingParams::ThresholdingBy_Type byType;
+    ThresholdFilter::ThresholdingBy_Type byType;
     double threshold;
-    ThresholdingParams::ThresholdingOrientation orientation;
+    ThresholdFilter::ThresholdingOrientation orientation;
 };
 
 TestThresholder testThresholders[] =
 {
     // absolute thresholding, keeping the most intense points
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 5, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 10, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 15, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 30, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 5, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 10, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 15, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 30, ThresholdFilter::Orientation_MostIntense },
 
     // absolute thresholding, keeping the least intense points
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 5, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 10, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 15, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 30, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_AbsoluteIntensity, 50, ThresholdingParams::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 5, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 10, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 15, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 30, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 50, ThresholdFilter::Orientation_LeastIntense },
 
     // relative thresholding to the base peak, keeping the most intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.65, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.65, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdFilter::Orientation_MostIntense },
 
     // relative thresholding to the base peak, keeping the least intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.32, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdingParams::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.32, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdFilter::Orientation_LeastIntense },
 
     // relative thresholding to total intensity, keeping the most intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdFilter::Orientation_MostIntense },
 
     // relative thresholding to total intensity, keeping the least intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdingParams::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdFilter::Orientation_LeastIntense },
 
     // threshold against cumulative total intensity fraction, keeping the most intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.32, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.34, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.76, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.78, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.32, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.34, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.76, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.78, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdFilter::Orientation_MostIntense },
 
     // threshold against cumulative total intensity fraction, keeping the least intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.21, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.23, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.65, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.67, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdingParams::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.21, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.23, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.65, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.67, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdFilter::Orientation_LeastIntense },
 
     // keep the <threshold> most intense points, excluding ties
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_Count, 1, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_Count, 2, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_Count, 3, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_Count, 4, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_Count, 1, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_Count, 2, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_Count, 3, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_Count, 4, ThresholdFilter::Orientation_MostIntense },
 
     // keep the <threshold> least intense points, excluding ties
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdingParams::ThresholdingBy_Count, 1, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_Count, 2, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_Count, 3, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_Count, 4, ThresholdingParams::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_Count, 1, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_Count, 2, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_Count, 3, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_Count, 4, ThresholdFilter::Orientation_LeastIntense },
 
     // keep the <threshold> most intense points, including ties
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdingParams::ThresholdingBy_CountAfterTies, 1, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_CountAfterTies, 2, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdingParams::ThresholdingBy_CountAfterTies, 3, ThresholdingParams::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdingParams::ThresholdingBy_CountAfterTies, 4, ThresholdingParams::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_CountAfterTies, 1, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_CountAfterTies, 2, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_CountAfterTies, 3, ThresholdFilter::Orientation_MostIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 4, ThresholdFilter::Orientation_MostIntense },
 
     // keep the <threshold> least intense points, including ties
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_CountAfterTies, 1, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdingParams::ThresholdingBy_CountAfterTies, 2, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_CountAfterTies, 3, ThresholdingParams::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdingParams::ThresholdingBy_CountAfterTies, 4, ThresholdingParams::Orientation_LeastIntense }
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 1, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 2, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 3, ThresholdFilter::Orientation_LeastIntense },
+    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 4, ThresholdFilter::Orientation_LeastIntense }
 };
 
 const size_t testThresholdersSize = sizeof(testThresholders) / sizeof(TestThresholder);
@@ -309,9 +307,8 @@ void testIntensityThresholding()
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
         s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
 
-        ThresholdingFilter* pFilter = new ThresholdingFilter(ThresholdingParams(t.byType, t.threshold, t.orientation));
-        SpectrumListPtr thresholder(
-            new SpectrumList_PeakFilter(originalList, pFilter));
+        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation));
+        SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
 
         vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
         vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);

@@ -28,12 +28,12 @@
 #pragma warning( disable : 4635 )
 //#include "SpectrumListWrapper.hpp"
 #include "SharedCLI.hpp"
+#include "SpectrumList_PeakFilter.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_Thresholder.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/shared_ptr.hpp>
@@ -350,114 +350,6 @@ public ref class SpectrumList_PeakPicker : public msdata::SpectrumList
 
     static bool accept(msdata::SpectrumList^ inner)
     {return pwiz::analysis::SpectrumList_PeakPicker::accept(*inner->base_);}
-};
-
-
-/// <summary>
-/// determines the method of thresholding and the meaning of the threshold value
-/// </summary>
-public enum class ThresholdingBy_Type
-{
-    /// <summary>
-    /// keep the {threshold} [most|least] intense data points
-    /// - {threshold} is rounded to the nearest integer
-    /// - if the {threshold} falls within equally intense data points, all data points with that intensity are removed
-    /// </summary>
-    ThresholdingBy_Count,
-
-    /// <summary>
-    /// keep the {threshold} [most|least] intense data points
-    /// - {threshold} is rounded to the nearest integer
-    /// - if the {threshold} falls within equally intense data points, all data points with that intensity are kept
-    /// </summary>
-    ThresholdingBy_CountAfterTies,
-
-    /// keep data points ranked [better|worse] than {threshold}
-    /// - {threshold} is rounded to the nearest integer
-    /// - rank 1 is the most intense
-    // TODO: By_CompetitionRank,
-
-    /// keep data points ranked [better|worse] than {threshold}
-    /// - rank 1 is the most intense
-    // TODO: By_FractionalRank,
-
-    /// <summary>
-    /// keep data points [more|less] absolutely intense than {threshold}
-    /// </summary>
-    ThresholdingBy_AbsoluteIntensity,
-
-    /// <summary>
-    /// keep data points [more|less] relatively intense than {threshold}
-    /// - {threshold} is each data point's fraction of the base peak intensity (in the range [0,1])
-    /// </summary>
-    ThresholdingBy_FractionOfBasePeakIntensity,
-
-    /// <summary>
-    /// keep data points [more|less] relatively intense than {threshold}
-    /// - {threshold} is each data point's fraction of the total intensity, aka total ion current (in the range [0,1])
-    /// </summary>
-    ThresholdingBy_FractionOfTotalIntensity,
-
-    /// <summary>
-    /// keep data points that are part of the {threshold} [most|least] intense fraction
-    /// - {threshold} is the fraction of TIC to keep, i.e. the TIC of the kept data points is {threshold} * original TIC
-    /// </summary>
-    ThresholdingBy_FractionOfTotalIntensityCutoff
-};
-
-
-/// <summary>
-/// determines the orientation of the thresholding
-/// </summary>
-public enum class ThresholdingOrientation
-{
-    Orientation_MostIntense, /// <summary>thresholder removes the least intense data points</summary>
-    Orientation_LeastIntense /// <summary>thresholder removes the most intense data points</summary>
-};
-
-
-/// <summary>
-/// SpectrumList implementation that returns spectra with low or high intensity data points removed (depending on the configuration)
-/// </summary>
-public ref class SpectrumList_Thresholder : public msdata::SpectrumList
-{
-    internal: virtual ~SpectrumList_Thresholder()
-              {
-                  // base class destructor will delete the shared pointer
-              }
-              pwiz::analysis::SpectrumList_Thresholder* base_;
-
-    public:
-
-    SpectrumList_Thresholder(msdata::SpectrumList^ inner,
-                             ThresholdingBy_Type byType,
-                             double threshold)
-    : msdata::SpectrumList(0)
-    {
-        base_ = new pwiz::analysis::SpectrumList_Thresholder(
-                    *inner->base_, 
-                    (pwiz::analysis::ThresholdingBy_Type) byType,
-                    threshold);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    }
-
-    SpectrumList_Thresholder(msdata::SpectrumList^ inner,
-                             ThresholdingBy_Type byType,
-                             double threshold,
-                             ThresholdingOrientation orientation)
-    : msdata::SpectrumList(0)
-    {
-        base_ = new pwiz::analysis::SpectrumList_Thresholder(
-                    *inner->base_,
-                    (pwiz::analysis::ThresholdingBy_Type) byType,
-                    threshold,
-                    (pwiz::analysis::ThresholdingOrientation) orientation);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    }
-
-    /// thresholding works on any SpectrumList
-    static bool accept(msdata::SpectrumList^ inner)
-    {return pwiz::analysis::SpectrumList_Thresholder::accept(*inner->base_);}
 };
 
 
