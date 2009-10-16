@@ -386,6 +386,9 @@ namespace pwiz.Skyline.Model
 
                 foreach (var info in listInfo)
                 {
+                    if (info.OptimizationStep != 0)
+                        continue;
+
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                     {
@@ -404,6 +407,9 @@ namespace pwiz.Skyline.Model
 
                 foreach (var info in listInfo)
                 {
+                    if (info.OptimizationStep != 0)
+                        continue;
+
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                     {

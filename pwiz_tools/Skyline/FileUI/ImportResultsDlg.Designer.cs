@@ -43,6 +43,8 @@
             this.radioCreateMultiple = new System.Windows.Forms.RadioButton();
             this.radioCreateMultipleMulti = new System.Windows.Forms.RadioButton();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.comboOptimizing = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // radioCreateNew
@@ -63,7 +65,7 @@
             this.radioAddExisting.Location = new System.Drawing.Point(16, 149);
             this.radioAddExisting.Name = "radioAddExisting";
             this.radioAddExisting.Size = new System.Drawing.Size(173, 17);
-            this.radioAddExisting.TabIndex = 6;
+            this.radioAddExisting.TabIndex = 5;
             this.radioAddExisting.Text = "Add files to an &existing replicate";
             this.helpTip.SetToolTip(this.radioAddExisting, "Add injections from files to an existing replicate, collected\r\nas a multi-injecti" +
                     "on replicate but not imported in multiple\r\noperations, as the injection results " +
@@ -97,7 +99,7 @@
             this.labelNameAdd.Location = new System.Drawing.Point(31, 169);
             this.labelNameAdd.Name = "labelNameAdd";
             this.labelNameAdd.Size = new System.Drawing.Size(38, 13);
-            this.labelNameAdd.TabIndex = 7;
+            this.labelNameAdd.TabIndex = 6;
             this.labelNameAdd.Text = "&Name:";
             // 
             // comboName
@@ -108,16 +110,15 @@
             this.comboName.Location = new System.Drawing.Point(31, 186);
             this.comboName.Name = "comboName";
             this.comboName.Size = new System.Drawing.Size(210, 21);
-            this.comboName.TabIndex = 8;
+            this.comboName.TabIndex = 7;
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Location = new System.Drawing.Point(260, 10);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 11;
+            this.btnOk.TabIndex = 12;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -129,26 +130,26 @@
             this.btnCancel.Location = new System.Drawing.Point(260, 40);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 12;
+            this.btnCancel.TabIndex = 13;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 242);
+            this.label3.Location = new System.Drawing.Point(16, 306);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(50, 13);
-            this.label3.TabIndex = 9;
+            this.label3.TabIndex = 10;
             this.label3.Text = "File path:";
             // 
             // textFilePath
             // 
             this.textFilePath.AutoSize = true;
-            this.textFilePath.Location = new System.Drawing.Point(16, 259);
+            this.textFilePath.Location = new System.Drawing.Point(16, 323);
             this.textFilePath.Name = "textFilePath";
             this.textFilePath.Size = new System.Drawing.Size(74, 13);
-            this.textFilePath.TabIndex = 10;
+            this.textFilePath.TabIndex = 11;
             this.textFilePath.Text = "<placeholder>";
             // 
             // radioCreateMultiple
@@ -184,13 +185,33 @@
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 
+            // comboOptimizing
+            // 
+            this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizing.FormattingEnabled = true;
+            this.comboOptimizing.Location = new System.Drawing.Point(16, 255);
+            this.comboOptimizing.Name = "comboOptimizing";
+            this.comboOptimizing.Size = new System.Drawing.Size(131, 21);
+            this.comboOptimizing.TabIndex = 9;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(16, 239);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(58, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Optimi&zing:";
+            // 
             // ImportResultsDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(347, 296);
+            this.ClientSize = new System.Drawing.Size(347, 356);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.radioCreateMultipleMulti);
             this.Controls.Add(this.radioCreateMultiple);
             this.Controls.Add(this.textFilePath);
@@ -230,5 +251,7 @@
         private System.Windows.Forms.RadioButton radioCreateMultiple;
         private System.Windows.Forms.RadioButton radioCreateMultipleMulti;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.ComboBox comboOptimizing;
+        private System.Windows.Forms.Label label1;
     }
 }

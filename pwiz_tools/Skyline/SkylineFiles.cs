@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -30,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -590,7 +590,7 @@ namespace pwiz.Skyline
                     description = string.Format("Import {0}", namedResults[0].Key);
 
                 ModifyDocument(description,
-                    doc => ImportResults(doc, namedResults));
+                    doc => ImportResults(doc, namedResults, dlg.OptimizationName));
 
                 // Select the first replicate to which results were added.
                 if (toolBarResults.Visible)
@@ -598,10 +598,22 @@ namespace pwiz.Skyline
             }
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults)
+        private SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults, string optimize)
         {
+            OptimizableRegression optimizationFunction = null;
+            var prediction = doc.Settings.TransitionSettings.Prediction;
+            if (Equals(optimize, ExportOptimize.CE))
+                optimizationFunction = prediction.CollisionEnergy;
+            else if (Equals(optimize, ExportOptimize.DP))
+            {
+                if (prediction.DeclusteringPotential == null)
+                    throw new InvalidDataException("A regression for declustering potention must be selected in the Prediction tab of the Transition Settings in order to import optimization data for decluserting potential.");
+
+                optimizationFunction = prediction.DeclusteringPotential;
+            }
+
             if (namedResults.Length == 1)
-                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value);
+                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
             else
             {
                 // Add all chosen files as separate result sets.
@@ -621,7 +633,7 @@ namespace pwiz.Skyline
                     // Delete caches that will be overwritten
                     File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
 
-                    listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value));
+                    listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, optimizationFunction));
                 }
 
                 var arrayChrom = listChrom.ToArray();
@@ -630,7 +642,8 @@ namespace pwiz.Skyline
             }
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<string> dataSources)
+        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<string> dataSources,
+            OptimizableRegression optimizationFunction)
         {
             var results = doc.Settings.MeasuredResults;
             var chrom = GetChromatogramByName(nameResult, results);
@@ -639,7 +652,7 @@ namespace pwiz.Skyline
                 // If the chromatogram, is not in the current set, then delete the cache
                 // file to make sure it is not on disk before starting.
                 File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
-                chrom = new ChromatogramSet(nameResult, dataSources);
+                chrom = new ChromatogramSet(nameResult, dataSources, optimizationFunction);
 
                 if (results == null)
                     results = new MeasuredResults(new[] {chrom});

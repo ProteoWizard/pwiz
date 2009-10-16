@@ -780,6 +780,7 @@ namespace pwiz.Skyline.Model
             // Results
             replicate,
             file,
+            step,
             retention_time,
             start_time,
             end_time,
@@ -1255,6 +1256,7 @@ namespace pwiz.Skyline.Model
 
         private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, int indexFile)
         {
+            int optimizationStep = reader.GetIntAttribute(ATTR.step);
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
@@ -1270,6 +1272,7 @@ namespace pwiz.Skyline.Model
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const bool userSet = false;
             return new TransitionGroupChromInfo(indexFile,
+                                                optimizationStep,
                                                 peakCountRatio,
                                                 retentionTime,
                                                 startTime,
@@ -1475,6 +1478,7 @@ namespace pwiz.Skyline.Model
 
             private static TransitionChromInfo ReadTransitionPeak(XmlReader reader, int indexFile)
             {
+                int optimizationStep = reader.GetIntAttribute(ATTR.step);
                 float retentionTime = reader.GetFloatAttribute(ATTR.retention_time);
                 float startRetentionTime = reader.GetFloatAttribute(ATTR.start_time);
                 float endRetentionTime = reader.GetFloatAttribute(ATTR.end_time);
@@ -1490,7 +1494,7 @@ namespace pwiz.Skyline.Model
                 if (ratio.HasValue)
                     ratio = Math.Max(0, ratio.Value);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
-                return new TransitionChromInfo(indexFile, retentionTime, startRetentionTime, endRetentionTime,
+                return new TransitionChromInfo(indexFile, optimizationStep, retentionTime, startRetentionTime, endRetentionTime,
                                                area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, userSet);
             }
         }
@@ -1771,6 +1775,8 @@ namespace pwiz.Skyline.Model
 
         private static void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
         {
+            if (chromInfo.OptimizationStep != 0)
+                writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
             writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
@@ -1835,6 +1841,8 @@ namespace pwiz.Skyline.Model
         {
             if (!chromInfo.IsEmpty)
             {
+                if (chromInfo.OptimizationStep != 0)
+                    writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);

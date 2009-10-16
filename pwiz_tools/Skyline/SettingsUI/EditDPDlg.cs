@@ -19,10 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -30,9 +30,6 @@ namespace pwiz.Skyline.SettingsUI
     {
         private DeclusteringPotentialRegression _regression;
         private readonly IEnumerable<DeclusteringPotentialRegression> _existing;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public EditDPDlg(IEnumerable<DeclusteringPotentialRegression> existing)
         {
@@ -40,7 +37,10 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            _helper = new MessageBoxHelper(this);
+            var document = Program.ActiveDocumentUI;
+            btnUseCurrent.Enabled = document.Settings.HasResults &&
+                                    document.Settings.MeasuredResults.Chromatograms.Contains(
+                                        chrom => chrom.OptimizationFunction is DeclusteringPotentialRegression);
         }
 
         public DeclusteringPotentialRegression Regression
@@ -53,53 +53,74 @@ namespace pwiz.Skyline.SettingsUI
                 if (_regression == null)
                 {
                     textName.Text = "";
+                    textSlope.Text = "";
+                    textIntercept.Text = "";
+                    textStepSize.Text = "";
+                    textStepCount.Text = "";
                 }
                 else
                 {
                     textName.Text = _regression.Name;
                     textSlope.Text = _regression.Slope.ToString();
                     textIntercept.Text = _regression.Intercept.ToString();
+                    textStepSize.Text = _regression.StepSize.ToString();
+                    textStepCount.Text = _regression.StepCount.ToString();
                 }                
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            if (_regression == null && _existing.Contains(r => Equals(name, r.Name)))
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                double slope;
-                if (!_helper.ValidateDecimalTextBox(e, textSlope, out slope))
-                    return;
-
-                double intercept;
-                if (!_helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
-                    return;
-
-                DeclusteringPotentialRegression regression =
-                    new DeclusteringPotentialRegression(name, slope, intercept);
-
-                if (_regression == null && _existing.Contains(regression))
-                {
-                    _helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                _regression = regression;
+                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
+                return;
             }
 
-            base.OnClosing(e);
+            double slope;
+            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
+                return;
+
+            double intercept;
+            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
+                return;
+
+            double stepSize;
+            if (!helper.ValidateDecimalTextBox(e, textStepSize,
+                    DeclusteringPotentialRegression.MIN_STEP_SIZE,
+                    DeclusteringPotentialRegression.MAX_STEP_SIZE,
+                    out stepSize))
+                return;
+
+            int stepCount;
+            if (!helper.ValidateNumberTextBox(e, textStepCount,
+                    OptimizableRegression.MIN_OPT_STEP_COUNT,
+                    OptimizableRegression.MAX_OPT_STEP_COUNT,
+                    out stepCount))
+                return;
+
+            _regression = new DeclusteringPotentialRegression(name, slope, intercept, stepSize, stepCount);
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
+        }
+
+        private void btnUseCurrent_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

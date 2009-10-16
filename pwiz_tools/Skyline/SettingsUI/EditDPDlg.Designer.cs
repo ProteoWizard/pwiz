@@ -36,6 +36,13 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textSlope = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnUseCurrent = new System.Windows.Forms.Button();
+            this.textStepCount = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textStepSize = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textName
@@ -63,18 +70,17 @@
             this.btnCancel.Location = new System.Drawing.Point(286, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 7;
+            this.btnCancel.TabIndex = 14;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Location = new System.Drawing.Point(286, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 6;
+            this.btnOk.TabIndex = 13;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -111,15 +117,82 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "&Slope:";
             // 
+            // btnUseCurrent
+            // 
+            this.btnUseCurrent.Enabled = false;
+            this.btnUseCurrent.Location = new System.Drawing.Point(101, 223);
+            this.btnUseCurrent.Name = "btnUseCurrent";
+            this.btnUseCurrent.Size = new System.Drawing.Size(75, 23);
+            this.btnUseCurrent.TabIndex = 12;
+            this.btnUseCurrent.Text = "&Use results";
+            this.btnUseCurrent.UseVisualStyleBackColor = true;
+            this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
+            // 
+            // textStepCount
+            // 
+            this.textStepCount.Location = new System.Drawing.Point(161, 183);
+            this.textStepCount.Name = "textStepCount";
+            this.textStepCount.Size = new System.Drawing.Size(100, 20);
+            this.textStepCount.TabIndex = 11;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(158, 166);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(62, 13);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Step &count:";
+            // 
+            // textStepSize
+            // 
+            this.textStepSize.Location = new System.Drawing.Point(16, 183);
+            this.textStepSize.Name = "textStepSize";
+            this.textStepSize.Size = new System.Drawing.Size(100, 20);
+            this.textStepSize.TabIndex = 9;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(13, 166);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(53, 13);
+            this.label5.TabIndex = 8;
+            this.label5.Text = "Step si&ze:";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Location = new System.Drawing.Point(86, 132);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(175, 10);
+            this.groupBox1.TabIndex = 7;
+            this.groupBox1.TabStop = false;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(13, 132);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(67, 13);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "Optimization:";
+            // 
             // EditDPDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(375, 123);
+            this.ClientSize = new System.Drawing.Size(375, 258);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.btnUseCurrent);
+            this.Controls.Add(this.textStepCount);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.textIntercept);
+            this.Controls.Add(this.textStepSize);
             this.Controls.Add(this.label2);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.textSlope);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textName);
@@ -148,5 +221,12 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textSlope;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnUseCurrent;
+        private System.Windows.Forms.TextBox textStepCount;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textStepSize;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label6;
     }
 }

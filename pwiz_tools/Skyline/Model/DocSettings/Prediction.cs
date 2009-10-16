@@ -33,183 +33,6 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetY(double x);
     }
 
-    /// <summary>
-    /// Describes slopes and intercepts for use in converting
-    /// from a given m/z value to a collision energy for use in
-    /// SRM experiments.
-    /// </summary>
-    [XmlRoot("predict_collision_energy")]
-    public sealed class CollisionEnergyRegression : XmlNamedElement
-    {
-        private ChargeRegressionLine[] _conversions;
-
-        public CollisionEnergyRegression(string name,
-                                         IEnumerable<ChargeRegressionLine> conversions)
-            : base(name)
-        {
-            Conversions = conversions.ToArray();
-
-            Validate();
-        }
-
-        public CollisionEnergyRegression(CollisionEnergyRegression source)
-            : base(source)
-        {
-            _conversions = source._conversions;
-
-            Validate();
-        }
-
-        public ChargeRegressionLine[] Conversions
-        {
-            get { return _conversions; }
-            set
-            {
-                _conversions = value;
-                Array.Sort(_conversions);
-            }
-        }
-
-        public double GetCollisionEnergy(int charge, double mz)
-        {
-            ChargeRegressionLine rl = null;
-            int delta = int.MaxValue;
-
-            // These should be very short lists (maximum 5 elements).
-            // An array with linear-time look-up is used over a map
-            // for ease of persistence to XML.
-            foreach (ChargeRegressionLine conversion in Conversions)
-            {
-                int deltaConv = Math.Abs(charge - conversion.Charge);
-                if (deltaConv < delta ||
-                    // For equal deltas, choose the larger charge (abitrary decision)
-                    (deltaConv == delta && charge < conversion.Charge))
-                {
-                    rl = conversion;
-                    delta = deltaConv;
-                    if (delta == 0)
-                        break;
-                }
-            }
-            return (rl == null ? 0 : Math.Round(rl.GetY(mz), 6));
-        }
-
-        #region Implementation of IXmlSerializable
-
-        /// <summary>
-        /// For serialization
-        /// </summary>
-        private CollisionEnergyRegression()
-        {
-        }
-
-        private enum EL
-        {
-            regression_ce,
-            // v0.1 value
-            regressions
-        }
-
-        private void Validate()
-        {
-            if (_conversions == null || _conversions.Length == 0)
-                throw new InvalidDataException("Collision energy regressions require at least one regression function.");
-
-            HashSet<int> seen = new HashSet<int>();
-            foreach (ChargeRegressionLine regressionLine in _conversions)
-            {
-                int charge = regressionLine.Charge;
-                if (seen.Contains(charge))
-                    throw new InvalidDataException(string.Format("Collision energy regression contains multiple coefficients for charge {0}.", charge));
-                seen.Add(charge);
-            }
-        }
-
-        public static CollisionEnergyRegression Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new CollisionEnergyRegression());
-        }
-
-        public override void ReadXml(XmlReader reader)
-        {
-            // Read name attribute
-            base.ReadXml(reader);
-
-            if (reader.IsEmptyElement)
-                reader.Read();
-            else
-            {
-                // Consume start tag
-                reader.ReadStartElement();
-                if (!reader.IsStartElement(EL.regressions))
-                    ReadXmlConversions(reader);
-                else
-                {
-                    // Support for v0.1 format
-                    reader.ReadStartElement();
-                    ReadXmlConversions(reader);
-                    reader.ReadEndElement();
-                }
-                // Consume end tag
-                reader.ReadEndElement();                
-            }
-
-            Validate();
-        }
-
-        private void ReadXmlConversions(XmlReader reader)
-        {
-            var list = new List<ChargeRegressionLine>();
-            while (reader.IsStartElement(EL.regression_ce))
-                list.Add(ChargeRegressionLine.Deserialize(reader));
-            Conversions = list.ToArray();
-        }
-
-        public override void WriteXml(XmlWriter writer)
-        {
-            // Write name attribute
-            base.WriteXml(writer);
-
-            // Write conversion inner tags
-            foreach (ChargeRegressionLine line in Conversions)
-            {
-                writer.WriteStartElement(EL.regression_ce);
-                line.WriteXml(writer);
-                writer.WriteEndElement();
-            }
-        }
-
-        #endregion
-
-        #region object overrides
-
-        public bool Equals(CollisionEnergyRegression obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj._conversions, _conversions);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as CollisionEnergyRegression);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                {
-                    return (base.GetHashCode()*397) ^ _conversions.GetHashCodeDeep();
-                }
-            }
-        }
-
-        #endregion
-    }
-
     public interface IRetentionScoreCalculator
     {
         string Name { get; }
@@ -888,21 +711,84 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
-    /// Regression calculation for declustering potential, defined separately
-    /// from <see cref="NamedRegressionLine"/> to allow an element name to
-    /// be associated with it.
+    /// Describes slopes and intercepts for use in converting
+    /// from a given m/z value to a collision energy for use in
+    /// SRM experiments.
     /// </summary>
-    [XmlRoot("predict_declustering_potential")]    
-    public sealed class DeclusteringPotentialRegression : NamedRegressionLine
+    [XmlRoot("predict_collision_energy")]
+    public sealed class CollisionEnergyRegression : OptimizableRegression
     {
-        public DeclusteringPotentialRegression(string name, double slope, double intercept)
-            : base(name, slope, intercept)
+        public const double DEFAULT_STEP_SIZE = 1.0;
+        public const int DEFAULT_STEP_COUNT = 5;
+        public const double MIN_STEP_SIZE = 0.0001;
+        public const double MAX_STEP_SIZE = 100;
+
+        private ChargeRegressionLine[] _conversions;
+
+        public CollisionEnergyRegression(string name,
+                                         IEnumerable<ChargeRegressionLine> conversions)
+            : this(name, conversions, DEFAULT_STEP_SIZE, DEFAULT_STEP_COUNT)
         {
+            
+        }
+        public CollisionEnergyRegression(string name,
+                                         IEnumerable<ChargeRegressionLine> conversions,
+                                         double stepSize,
+                                         int stepCount)
+            : base(name, stepSize, stepCount)
+        {
+            Conversions = conversions.ToArray();
+
+            Validate();
         }
 
-        public double GetDeclustringPotential(double mz)
+        public ChargeRegressionLine[] Conversions
         {
-            return Math.Round(GetY(mz), 6);
+            get { return _conversions; }
+            set
+            {
+                _conversions = value;
+                Array.Sort(_conversions);
+            }
+        }
+
+        protected override double DefaultStepSize
+        {
+            get { return DEFAULT_STEP_SIZE; }
+        }
+
+        protected override int DefaultStepCount
+        {
+            get { return DEFAULT_STEP_COUNT; }
+        }
+
+        public double GetCollisionEnergy(int charge, double mz, int step)
+        {
+            return GetCollisionEnergy(charge, mz) + (step*StepSize);
+        }
+
+        public double GetCollisionEnergy(int charge, double mz)
+        {
+            ChargeRegressionLine rl = null;
+            int delta = int.MaxValue;
+
+            // These should be very short lists (maximum 5 elements).
+            // An array with linear-time look-up is used over a map
+            // for ease of persistence to XML.
+            foreach (ChargeRegressionLine conversion in Conversions)
+            {
+                int deltaConv = Math.Abs(charge - conversion.Charge);
+                if (deltaConv < delta ||
+                    // For equal deltas, choose the larger charge (abitrary decision)
+                    (deltaConv == delta && charge < conversion.Charge))
+                {
+                    rl = conversion;
+                    delta = deltaConv;
+                    if (delta == 0)
+                        break;
+                }
+            }
+            return (rl == null ? 0 : Math.Round(rl.GetY(mz), 6));
         }
 
         #region Implementation of IXmlSerializable
@@ -910,82 +796,102 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private DeclusteringPotentialRegression()
+        private CollisionEnergyRegression()
         {
         }
 
-        public static DeclusteringPotentialRegression Deserialize(XmlReader reader)
+        private enum EL
         {
-            return reader.Deserialize(new DeclusteringPotentialRegression());
+            regression_ce,
+            // v0.1 value
+            regressions
         }
 
-        #endregion
-    }
-
-    /// <summary>
-    /// A regression line with an associated name for use in cases
-    /// where only a single set of regression coefficients is necessary.
-    /// </summary>
-    public class NamedRegressionLine : XmlNamedElement, IRegressionFunction
-    {
-        private RegressionLine _regressionLine;
-
-        public NamedRegressionLine(string name, double slope, double intercept)
-            : base(name)
+        private void Validate()
         {
-            _regressionLine = new RegressionLine(slope, intercept);
+            if (_conversions == null || _conversions.Length == 0)
+                throw new InvalidDataException("Collision energy regressions require at least one regression function.");
+
+            HashSet<int> seen = new HashSet<int>();
+            foreach (ChargeRegressionLine regressionLine in _conversions)
+            {
+                int charge = regressionLine.Charge;
+                if (seen.Contains(charge))
+                    throw new InvalidDataException(string.Format("Collision energy regression contains multiple coefficients for charge {0}.", charge));
+                seen.Add(charge);
+            }
         }
 
-        public double Slope { get { return _regressionLine.Slope; } }
-
-        public double Intercept { get { return _regressionLine.Intercept; } }
-
-        public double GetY(double x)
+        public static CollisionEnergyRegression Deserialize(XmlReader reader)
         {
-            return _regressionLine.GetY(x);
-        }
-
-        #region Implementation of IXmlSerializable
-
-        /// <summary>
-        /// For serialization
-        /// </summary>
-        protected NamedRegressionLine()
-        {
+            return reader.Deserialize(new CollisionEnergyRegression());
         }
 
         public override void ReadXml(XmlReader reader)
         {
-            // Read tag attributes
+            // Read name attribute
             base.ReadXml(reader);
-            _regressionLine = RegressionLine.Deserialize(reader);
-            // Consume tag
-            reader.Read();
+
+            if (reader.IsEmptyElement)
+                reader.Read();
+            else
+            {
+                // Consume start tag
+                reader.ReadStartElement();
+                if (!reader.IsStartElement(EL.regressions))
+                    ReadXmlConversions(reader);
+                else
+                {
+                    // Support for v0.1 format
+                    reader.ReadStartElement();
+                    ReadXmlConversions(reader);
+                    reader.ReadEndElement();
+                }
+                // Consume end tag
+                reader.ReadEndElement();
+            }
+
+            Validate();
+        }
+
+        private void ReadXmlConversions(XmlReader reader)
+        {
+            var list = new List<ChargeRegressionLine>();
+            while (reader.IsStartElement(EL.regression_ce))
+                list.Add(ChargeRegressionLine.Deserialize(reader));
+            Conversions = list.ToArray();
         }
 
         public override void WriteXml(XmlWriter writer)
         {
-            // Write tag attributes
+            // Write name attribute
             base.WriteXml(writer);
-            _regressionLine.WriteXmlAttributes(writer);
+
+            // Write conversion inner tags
+            foreach (ChargeRegressionLine line in Conversions)
+            {
+                writer.WriteStartElement(EL.regression_ce);
+                line.WriteXml(writer);
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
 
         #region object overrides
 
-        public bool Equals(NamedRegressionLine obj)
+        public bool Equals(CollisionEnergyRegression obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj._regressionLine, _regressionLine);
+            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj._conversions, _conversions);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as NamedRegressionLine);
+            return Equals(obj as CollisionEnergyRegression);
         }
 
         public override int GetHashCode()
@@ -993,7 +899,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 {
-                    return (base.GetHashCode()*397) ^ _regressionLine.GetHashCode();
+                    return (base.GetHashCode() * 397) ^ _conversions.GetHashCodeDeep();
                 }
             }
         }
@@ -1086,15 +992,253 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (ChargeRegressionLine)) return false;
-            return Equals((ChargeRegressionLine) obj);
+            if (obj.GetType() != typeof(ChargeRegressionLine)) return false;
+            return Equals((ChargeRegressionLine)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (_regressionLine.GetHashCode()*397) ^ Charge;
+                return (_regressionLine.GetHashCode() * 397) ^ Charge;
+            }
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Regression calculation for declustering potential, defined separately
+    /// from <see cref="NamedRegressionLine"/> to allow an element name to
+    /// be associated with it.
+    /// </summary>
+    [XmlRoot("predict_declustering_potential")]    
+    public sealed class DeclusteringPotentialRegression : NamedRegressionLine
+    {
+        public const double DEFAULT_STEP_SIZE = 1.0;
+        public const int DEFAULT_STEP_COUNT = 5;
+        public const double MIN_STEP_SIZE = 0.0001;
+        public const double MAX_STEP_SIZE = 100;
+
+        public DeclusteringPotentialRegression(string name, double slope, double intercept)
+            : this (name, slope, intercept, DEFAULT_STEP_SIZE, DEFAULT_STEP_COUNT)
+        {            
+        }
+
+        public DeclusteringPotentialRegression(string name, double slope, double intercept, double stepSize, int stepCount)
+            : base(name, slope, intercept, stepSize, stepCount)
+        {
+        }
+
+        public double GetDeclustringPotential(double mz, int step)
+        {
+            return GetDeclustringPotential(mz) + (step*StepSize);
+        }
+
+        public double GetDeclustringPotential(double mz)
+        {
+            return Math.Round(GetY(mz), 6);
+        }
+
+        protected override double DefaultStepSize
+        {
+            get { return DEFAULT_STEP_SIZE; }
+        }
+
+        protected override int DefaultStepCount
+        {
+            get { return DEFAULT_STEP_COUNT; }
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private DeclusteringPotentialRegression()
+        {
+        }
+
+        public static DeclusteringPotentialRegression Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new DeclusteringPotentialRegression());
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// A regression line with an associated name for use in cases
+    /// where only a single set of regression coefficients is necessary.
+    /// </summary>
+    public abstract class NamedRegressionLine : OptimizableRegression, IRegressionFunction
+    {
+        private RegressionLine _regressionLine;
+
+        protected NamedRegressionLine(string name, double slope, double intercept, double stepSize, int stepCount)
+            : base(name, stepSize, stepCount)
+        {
+            _regressionLine = new RegressionLine(slope, intercept);
+        }
+
+        public double Slope { get { return _regressionLine.Slope; } }
+
+        public double Intercept { get { return _regressionLine.Intercept; } }
+
+        public double GetY(double x)
+        {
+            return _regressionLine.GetY(x);
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        protected NamedRegressionLine()
+        {
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            base.ReadXml(reader);
+            _regressionLine = RegressionLine.Deserialize(reader);
+            // Consume tag
+            reader.Read();
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            base.WriteXml(writer);
+            _regressionLine.WriteXmlAttributes(writer);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(NamedRegressionLine obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return base.Equals(obj) && Equals(obj._regressionLine, _regressionLine);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as NamedRegressionLine);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                {
+                    return (base.GetHashCode()*397) ^ _regressionLine.GetHashCode();
+                }
+            }
+        }
+
+        #endregion
+    }
+
+    public abstract class OptimizableRegression : XmlNamedElement
+    {
+        public const int MIN_RECALC_REGRESSION_VALUES = 8;
+        public const int MIN_OPT_STEP_COUNT = 1;
+        public const int MAX_OPT_STEP_COUNT = 10;
+
+        protected OptimizableRegression(string name, double stepSize, int stepCount)
+            : base(name)
+        {
+            StepSize = stepSize;
+            StepCount = stepCount;
+        }
+
+        public double StepSize { get; private set; }
+
+        public int StepCount { get; private set; }
+
+        protected abstract double DefaultStepSize { get; }
+
+        protected abstract int DefaultStepCount { get; }
+
+        #region Implementation of IXmlSerializable
+
+        enum ATTR
+        {
+            step_size,
+            step_count
+        }
+
+        private void Validate()
+        {
+            if (StepSize <= 0)
+                throw new InvalidDataException(string.Format("The optimization step size {0} is not greater than zero.", StepSize));
+            if (MIN_OPT_STEP_COUNT > StepCount || StepCount > MAX_OPT_STEP_COUNT)
+                throw new InvalidDataException(string.Format("The number of optimization steps {0} is not between {1} and {2}.",
+                    StepCount, MIN_OPT_STEP_COUNT, MAX_OPT_STEP_COUNT));
+        }
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        protected OptimizableRegression()
+        {
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            base.ReadXml(reader);
+
+            StepSize = reader.GetDoubleAttribute(ATTR.step_size, DefaultStepSize);
+            StepCount = reader.GetIntAttribute(ATTR.step_count, DefaultStepCount);
+
+            Validate();
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            base.WriteXml(writer);
+
+            writer.WriteAttribute(ATTR.step_size, StepSize);
+            writer.WriteAttribute(ATTR.step_count, StepCount);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(OptimizableRegression other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                other.StepSize == StepSize &&
+                other.StepCount == StepCount;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as OptimizableRegression);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode();
+                result = (result*397) ^ StepSize.GetHashCode();
+                result = (result*397) ^ StepCount;
+                return result;
             }
         }
 

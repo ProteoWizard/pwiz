@@ -202,9 +202,9 @@ namespace pwiz.Skyline.Model
                         double timeWindow;
                         double? retentionTime = predict.PredictRetentionTime(nodeTranGroup, singleWindow, out timeWindow);
                         if (retentionTime.HasValue)
-                            listSchedules.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow));
+                            listSchedules.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow, OptimizeStepCount));
                         else
-                            listUnscheduled.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, 0, 0));
+                            listUnscheduled.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, 0, 0, OptimizeStepCount));
                     }
                 }
             }
@@ -244,15 +244,25 @@ namespace pwiz.Skyline.Model
                     continue;
 
                 foreach (TransitionDocNode transition in nodeGroup.Children)
-                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, 0);
+                {
+                    if (OptimizeType == null)
+                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, 0);
+                    else
+                    {
+                        // -step through step
+                        for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
+                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, i);
+                    }
+                }
             }
         }
 
         private sealed class PrecursorSchedule : PrecursorScheduleBase
         {
             public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-                    TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow)
-                : base(nodeTranGroup, retentionTime, timeWindow)
+                    TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow,
+                    int optimizeStepCount)
+                : base(nodeTranGroup, retentionTime, timeWindow, optimizeStepCount)
             {
                 PeptideGroup = nodePepGroup;
                 Peptide = nodePep;
@@ -466,17 +476,20 @@ namespace pwiz.Skyline.Model
 
     internal class PrecursorScheduleBase
     {
-        public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup, double retentionTime, double timeWindow)
+        public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup, double retentionTime,
+            double timeWindow, int optimizeStepCount)
         {
             TransitionGroup = nodeGroup;
             StartTime = retentionTime - (timeWindow / 2);
             EndTime = StartTime + timeWindow;
+            OptimizeStepCount = optimizeStepCount;
         }
 
         public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public int TransitionCount { get { return TransitionGroup.TransitionCount; } }
+        public int TransitionCount { get { return TransitionGroup.TransitionCount * (OptimizeStepCount*2 + 1); } }
         public double StartTime { get; set; }
         public double EndTime { get; set; }
+        public int OptimizeStepCount { get; set; }
 
         public bool ContainsTime(double time)
         {

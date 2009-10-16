@@ -618,13 +618,51 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (ChromKey.CompareTolerant(productMz, _allTransitions[i].Product, tolerance) == 0)
                 {
+                    // If there is optimization data, return only the middle value, which
+                    // was the regression value.
+                    int iBegin = i;
+                    while (i < endTran - 1 && _allTransitions[i+1].Product - _allTransitions[i].Product <
+                            ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                    {
+                        i++;
+                    }
+
+                    i = iBegin + (i - iBegin)/2;
+
                     return new ChromatogramInfo(_groupHeaderInfo, i - startTran,
                         _allFiles, _allTransitions, _allPeaks, Times, IntensityArray);
                 }
             }
             return null;
         }
-        
+
+        public ChromatogramInfo[] GetAllTransitionInfo(float productMz, float tolerance)
+        {
+            var listInfo = new List<ChromatogramInfo>();
+
+            int startTran = _groupHeaderInfo.StartTransitionIndex;
+            int endTran = startTran + _groupHeaderInfo.NumTransitions;
+            for (int i = startTran; i < endTran; i++)
+            {
+                if (ChromKey.CompareTolerant(productMz, _allTransitions[i].Product, tolerance) == 0)
+                {
+                    // If there is optimization data, add it to the list
+                    while (i < endTran - 1 && _allTransitions[i + 1].Product - _allTransitions[i].Product <
+                            ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                    {
+                        listInfo.Add(new ChromatogramInfo(_groupHeaderInfo, i - startTran,
+                            _allFiles, _allTransitions, _allPeaks, Times, IntensityArray));
+                        i++;
+                    }
+                    // Add the last value, which may be the only value
+                    listInfo.Add(new ChromatogramInfo(_groupHeaderInfo, i - startTran,
+                        _allFiles, _allTransitions, _allPeaks, Times, IntensityArray));
+                }
+            }
+
+            return listInfo.ToArray();
+        }
+
         public int IndexOfNearestTime(float time)
         {
             int iTime = Array.BinarySearch(Times, time);
@@ -693,6 +731,8 @@ namespace pwiz.Skyline.Model.Results
 
     public class ChromatogramInfo : ChromatogramGroupInfo
     {
+        public const double OPTIMIZE_SHIFT_THRESHOLD = 0.015;
+
         protected readonly int _transitionIndex;
 
         public ChromatogramInfo(ChromGroupHeaderInfo groupHeaderInfo, int transitionIndex,

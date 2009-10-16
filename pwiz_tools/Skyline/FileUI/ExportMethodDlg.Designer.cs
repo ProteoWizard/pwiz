@@ -50,7 +50,8 @@
             this.cbIgnoreProteins = new System.Windows.Forms.CheckBox();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.cbEnergyRamp = new System.Windows.Forms.CheckBox();
-            this.btnOptimize = new System.Windows.Forms.Button();
+            this.comboOptimizing = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -137,7 +138,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 227);
+            this.label2.Location = new System.Drawing.Point(13, 292);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 13);
             this.label2.TabIndex = 10;
@@ -150,7 +151,7 @@
             this.comboTargetType.Items.AddRange(new object[] {
             "Standard",
             "Scheduled"});
-            this.comboTargetType.Location = new System.Drawing.Point(16, 243);
+            this.comboTargetType.Location = new System.Drawing.Point(16, 308);
             this.comboTargetType.Name = "comboTargetType";
             this.comboTargetType.Size = new System.Drawing.Size(124, 21);
             this.comboTargetType.TabIndex = 11;
@@ -158,7 +159,7 @@
             // 
             // textRunLength
             // 
-            this.textRunLength.Location = new System.Drawing.Point(167, 243);
+            this.textRunLength.Location = new System.Drawing.Point(164, 308);
             this.textRunLength.Name = "textRunLength";
             this.textRunLength.Size = new System.Drawing.Size(100, 20);
             this.textRunLength.TabIndex = 10;
@@ -166,7 +167,7 @@
             // 
             // textDwellTime
             // 
-            this.textDwellTime.Location = new System.Drawing.Point(167, 243);
+            this.textDwellTime.Location = new System.Drawing.Point(164, 308);
             this.textDwellTime.Name = "textDwellTime";
             this.textDwellTime.Size = new System.Drawing.Size(100, 20);
             this.textDwellTime.TabIndex = 13;
@@ -175,7 +176,7 @@
             // labelDwellTime
             // 
             this.labelDwellTime.AutoSize = true;
-            this.labelDwellTime.Location = new System.Drawing.Point(167, 224);
+            this.labelDwellTime.Location = new System.Drawing.Point(164, 289);
             this.labelDwellTime.Name = "labelDwellTime";
             this.labelDwellTime.Size = new System.Drawing.Size(80, 13);
             this.labelDwellTime.TabIndex = 12;
@@ -210,7 +211,7 @@
             // labelTemplateFile
             // 
             this.labelTemplateFile.AutoSize = true;
-            this.labelTemplateFile.Location = new System.Drawing.Point(13, 296);
+            this.labelTemplateFile.Location = new System.Drawing.Point(13, 359);
             this.labelTemplateFile.Name = "labelTemplateFile";
             this.labelTemplateFile.Size = new System.Drawing.Size(70, 13);
             this.labelTemplateFile.TabIndex = 15;
@@ -218,14 +219,14 @@
             // 
             // textTemplateFile
             // 
-            this.textTemplateFile.Location = new System.Drawing.Point(16, 312);
+            this.textTemplateFile.Location = new System.Drawing.Point(16, 377);
             this.textTemplateFile.Name = "textTemplateFile";
             this.textTemplateFile.Size = new System.Drawing.Size(175, 20);
             this.textTemplateFile.TabIndex = 16;
             // 
             // btnBrowseTemplate
             // 
-            this.btnBrowseTemplate.Location = new System.Drawing.Point(200, 310);
+            this.btnBrowseTemplate.Location = new System.Drawing.Point(197, 375);
             this.btnBrowseTemplate.Name = "btnBrowseTemplate";
             this.btnBrowseTemplate.Size = new System.Drawing.Size(75, 23);
             this.btnBrowseTemplate.TabIndex = 17;
@@ -254,7 +255,7 @@
             // cbEnergyRamp
             // 
             this.cbEnergyRamp.AutoSize = true;
-            this.cbEnergyRamp.Location = new System.Drawing.Point(167, 269);
+            this.cbEnergyRamp.Location = new System.Drawing.Point(164, 334);
             this.cbEnergyRamp.Name = "cbEnergyRamp";
             this.cbEnergyRamp.Size = new System.Drawing.Size(106, 17);
             this.cbEnergyRamp.TabIndex = 14;
@@ -262,15 +263,23 @@
             this.cbEnergyRamp.UseVisualStyleBackColor = true;
             this.cbEnergyRamp.Visible = false;
             // 
-            // btnOptimize
+            // comboOptimizing
             // 
-            this.btnOptimize.Location = new System.Drawing.Point(200, 170);
-            this.btnOptimize.Name = "btnOptimize";
-            this.btnOptimize.Size = new System.Drawing.Size(75, 23);
-            this.btnOptimize.TabIndex = 20;
-            this.btnOptimize.Text = "Optimi&ze...";
-            this.btnOptimize.UseVisualStyleBackColor = true;
-            this.btnOptimize.Click += new System.EventHandler(this.btnOptimize_Click);
+            this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizing.FormattingEnabled = true;
+            this.comboOptimizing.Location = new System.Drawing.Point(16, 239);
+            this.comboOptimizing.Name = "comboOptimizing";
+            this.comboOptimizing.Size = new System.Drawing.Size(121, 21);
+            this.comboOptimizing.TabIndex = 9;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(13, 225);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(58, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Optimi&zing:";
             // 
             // ExportMethodDlg
             // 
@@ -278,8 +287,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(287, 360);
-            this.Controls.Add(this.btnOptimize);
+            this.ClientSize = new System.Drawing.Size(287, 409);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.cbEnergyRamp);
             this.Controls.Add(this.cbIgnoreProteins);
             this.Controls.Add(this.btnBrowseTemplate);
@@ -334,6 +344,7 @@
         private System.Windows.Forms.CheckBox cbIgnoreProteins;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.CheckBox cbEnergyRamp;
-        private System.Windows.Forms.Button btnOptimize;
+        private System.Windows.Forms.ComboBox comboOptimizing;
+        private System.Windows.Forms.Label label1;
     }
 }

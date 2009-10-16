@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls
                 double? retentioTime = predict.PredictRetentionTime(nodeGroup, singleWindow, out timeWindow);
                 if (retentioTime.HasValue)
                 {
-                    var schedule = new PrecursorScheduleBase(nodeGroup, retentioTime.Value, timeWindow);
+                    var schedule = new PrecursorScheduleBase(nodeGroup, retentioTime.Value, timeWindow, 0);
                     xMin = Math.Min(xMin, schedule.StartTime);
                     xMax = Math.Max(xMax, schedule.EndTime);
                     listSchedules.Add(schedule);

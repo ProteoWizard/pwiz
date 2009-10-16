@@ -89,36 +89,51 @@ namespace pwiz.Skyline.Model
             return (HasResults && Results.Count > i ? Results[i] : null);
         }
 
-        public float? GetPeakCountRatio(int i)
+        private TransitionGroupChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
-            if (result == null)
-                return null;
+            // CONSIDER: Also specify the file index and/or optimization step?
+            if (result != null)
+            {
+                foreach (var chromInfo in result)
+                {
+                    if (chromInfo.OptimizationStep == 0)
+                        return chromInfo;
+                }
+            }
+            return null;
+        }
+
+        public float? GetPeakCountRatio(int i)
+        {
             // CONSIDER: Also specify the file index?
-            return result[0].PeakCountRatio;
+            var chromInfo = GetChromInfoEntry(i);
+            if (chromInfo == null)
+                return null;
+            return chromInfo.PeakCountRatio;
         }
 
         public float? GetPeakAreaRatio(int i, out float? stdev)
         {
-            var chromInfo = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
             {
                 stdev = null;
                 return null;                
             }
 
-            // CONSIDER: Also specify the file index?
-            stdev = chromInfo[0].RatioStdev;
-            return chromInfo[0].Ratio;
+            stdev = chromInfo.RatioStdev;
+            return chromInfo.Ratio;
         }
 
         public float? GetLibraryDotProduct(int i)
         {
-            var result = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index?
+            var result = GetChromInfoEntry(i);
             if (result == null)
                 return null;
-            // CONSIDER: Also specify the file index?
-            return result[0].LibraryDotProduct;
+            return result.LibraryDotProduct;
         }
 
         public float? AveragePeakCenterTime
@@ -136,7 +151,7 @@ namespace pwiz.Skyline.Model
                         if (result == null)
                             continue;
                         var chromInfo = result[0];
-                        if (chromInfo == null || chromInfo.PeakCountRatio < 0.5)
+                        if (chromInfo == null || chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5)
                             continue;
 
                         rtTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
@@ -350,7 +365,6 @@ namespace pwiz.Skyline.Model
 
                     if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, false, out arrayChromInfo))
                     {
-                        // If there is more than one info object, this is a mistake in the
                         // Find the file indexes once
                         int countFiles = arrayChromInfo.Length;
                         int[] fileIndexes = new int[countFiles];
@@ -369,24 +383,31 @@ namespace pwiz.Skyline.Model
                             var listTranInfo = new List<TransitionChromInfo>();
                             for (int j = 0; j < countFiles; j++)
                             {
+                                // Get all transition chromatogram info for this file.
                                 ChromatogramGroupInfo chromGroupInfo = arrayChromInfo[j];
-                                ChromatogramInfo info = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
-                                if (info != null && info.BestPeakIndex != -1)
+                                ChromatogramInfo[] infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                                int numSteps = infos.Length/2;
+                                for (int i = 0; i < infos.Length; i++)
                                 {
+                                    var info = infos[i];
+                                    if (info.BestPeakIndex == -1)
+                                        continue;
+
                                     // Check for existing info that was set by the user.
-                                    var chromInfo = (results != null && results.Count > j ? results[j] : null);
+                                    int fileIndex = fileIndexes[j];
+                                    int step = i - numSteps;
+                                    var chromInfo = FindChromInfo(results, fileIndex, step);
                                     if (chromInfo == null || !chromInfo.UserSet)
                                     {
                                         ChromPeak peak = info.GetPeak(info.BestPeakIndex);
-                                        int fileIndex = fileIndexes[j];
                                         // Avoid creating new info objects that represent the same data
                                         // in use before.
-                                        if (chromInfo == null || !chromInfo.Equivalent(fileIndex, peak))
+                                        if (chromInfo == null || !chromInfo.Equivalent(fileIndex, step, peak))
                                         {
                                             // Use the old ratio for now, and it will be corrected by the peptide,
                                             // if it is incorrect.
                                             float? ratio = (chromInfo != null ? chromInfo.Ratio : null);
-                                            chromInfo = new TransitionChromInfo(fileIndex, peak, ratio, false);
+                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratio, false);
                                         }
                                     }
 
@@ -408,6 +429,19 @@ namespace pwiz.Skyline.Model
 
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        private static TransitionChromInfo FindChromInfo(IEnumerable<TransitionChromInfo> results, int fileIndex, int step)
+        {
+            if (results != null)
+            {
+                foreach (var chromInfo in results)
+                {
+                    if (fileIndex == chromInfo.FileIndex && step == chromInfo.OptimizationStep)
+                        return chromInfo;
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -469,6 +503,7 @@ namespace pwiz.Skyline.Model
                 int iNext = listInfo.Count;
                 listInfo.Add(info);
 
+                // Make sure the list of group result calculators has iNext entries
                 while (_listResultCalcs.Count <= iNext)
                 {
                     int iResult = _arrayChromInfoSets.Length;
@@ -477,7 +512,7 @@ namespace pwiz.Skyline.Model
                         listChromInfo = _nodeGroup.Results[iResult];
                     _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(iResult, listChromInfo));
                 }
-
+                // Add the iNext entry
                 _listResultCalcs[iNext].AddChromInfoList(info);
             }
 
@@ -618,7 +653,8 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     int fileIndex = chromInfo.FileIndex;
-                    int i = IndexOfFile(fileIndex);
+                    int step = chromInfo.OptimizationStep;
+                    int i = IndexOfFile(fileIndex, step);
                     if (i >= 0)
                         Calculators[i].AddChromInfo(chromInfo);
                     else
@@ -630,7 +666,7 @@ namespace pwiz.Skyline.Model
                             if (iFile != -1)
                                 chromInfoGroup = _listChromInfo[iFile];
                         }
-                        var calc = new TransitionGroupChromInfoCalculator(fileIndex, TransitionCount, chromInfoGroup);
+                        var calc = new TransitionGroupChromInfoCalculator(fileIndex, step, TransitionCount, chromInfoGroup);
                         calc.AddChromInfo(chromInfo);
                         Calculators.Insert(~i, calc);
                     }
@@ -648,13 +684,29 @@ namespace pwiz.Skyline.Model
                 Calculators[iFile].SetLibInfo(peakAreas, libIntensities);
             }
 
-            private int IndexOfFile(int fileIndex)
+            /// <summary>
+            /// Returns the index in the list of calculators of the calculator
+            /// representing a particular file and optimization step.  If no calculator
+            /// yet exists for the file and optimization step, then (like binary search)
+            /// the bitwise complement of the first calculator with a higher index is
+            /// returned.
+            /// </summary>
+            /// <param name="fileIndex">The file index</param>
+            /// <param name="optimizationStep">The optimization step</param>
+            /// <returns>Index of specified calculator, or bitwise complement of the first
+            /// entry with greater index value</returns>
+            private int IndexOfFile(int fileIndex, int optimizationStep)
             {
                 int i = 0;
                 foreach (var calc in Calculators)
                 {
                     if (calc.FileIndex == fileIndex)
-                        return i;
+                    {
+                        if (calc.OptimizationStep == optimizationStep)
+                            return i;
+                        else if (calc.OptimizationStep > optimizationStep)
+                            return ~i;
+                    }
                     else if (calc.FileIndex > fileIndex)
                         return ~i;
                     i++;
@@ -665,9 +717,10 @@ namespace pwiz.Skyline.Model
 
         private sealed class TransitionGroupChromInfoCalculator
         {
-            public TransitionGroupChromInfoCalculator(int fileIndex, int transitionCount, TransitionGroupChromInfo chromInfo)
+            public TransitionGroupChromInfoCalculator(int fileIndex, int optimizationStep, int transitionCount, TransitionGroupChromInfo chromInfo)
             {
                 FileIndex = fileIndex;
+                OptimizationStep = optimizationStep;
                 TransitionCount = transitionCount;
 
                 // Use existing ratio until it can be recalculated
@@ -679,6 +732,7 @@ namespace pwiz.Skyline.Model
             }
 
             public int FileIndex { get; private set; }
+            public int OptimizationStep { get; private set; }
             private int TransitionCount { get; set; }
             private int PeakCount { get; set; }
             private int ResultsCount { get; set; }
@@ -743,6 +797,7 @@ namespace pwiz.Skyline.Model
                 if (ResultsCount == 0)
                     return null;
                 return new TransitionGroupChromInfo(FileIndex,
+                                                    OptimizationStep,
                                                     PeakCountRatio,
                                                     RetentionTime,
                                                     StartTime,

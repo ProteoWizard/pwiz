@@ -70,34 +70,46 @@ namespace pwiz.Skyline.Model
             return (HasResults && Results.Count > i ? Results[i] : null);
         }
 
+        private TransitionChromInfo GetChromInfoEntry(int i)
+        {
+            var result = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index and/or optimization step?
+            if (result != null)
+            {
+                foreach (var chromInfo in result)
+                {
+                    if (chromInfo.OptimizationStep == 0)
+                        return chromInfo;
+                }
+            }
+            return null;
+        }
+
         public float? GetPeakCountRatio(int i)
         {
-            var chromInfo = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-
-            // CONSIDER: Also specify the file index?
-            return chromInfo[0].Area > 0 ? 1 : 0;
+            return chromInfo.Area > 0 ? 1 : 0;
         }
 
         public int? GetPeakRank(int i)
         {
-            var chromInfo = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-
-            // CONSIDER: Also specify the file index?
-            return chromInfo[0].Rank;            
+            return chromInfo.Rank;            
         }
 
         public float? GetPeakAreaRatio(int i)
         {
-            var chromInfo = GetSafeChromInfo(i);
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-
-            // CONSIDER: Also specify the file index?
-            return chromInfo[0].Ratio;
+            return chromInfo.Ratio;
         }
 
         #region Property change methods
@@ -116,7 +128,8 @@ namespace pwiz.Skyline.Model
         {
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
-            var chromInfoNew = new TransitionChromInfo(indexFile, peak, null, true);
+            // TODO: Fix this to deal with optimization steps
+            var chromInfoNew = new TransitionChromInfo(indexFile, 0, peak, null, true);
             if (listChromInfo == null)
                 listChromInfoNew.Add(chromInfoNew);
             else

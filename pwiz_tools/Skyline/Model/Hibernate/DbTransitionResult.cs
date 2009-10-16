@@ -50,5 +50,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? Height { get; set; }
         public virtual int? PeakRank { get; set; }
         public virtual bool UserSetPeak { get; set; }
+        public virtual int OptStep { get; set; }
     }
 }

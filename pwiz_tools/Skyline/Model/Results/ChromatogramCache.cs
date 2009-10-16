@@ -1076,7 +1076,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 if (chromMap.Count == 0)
-                    throw new InvalidDataException(String.Format("No chromatogram data found in {0}.",
+                    throw new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
                         SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex])));
 
                 foreach (var collector in chromMap.Values)
@@ -1494,8 +1494,14 @@ namespace pwiz.Skyline.Model.Results
 
                 public void PickChromatogramPeaks()
                 {
+                    // Make sure chromatograms are in sorted order
+                    _listChromData.Sort((c1, c2) => c1.Key.CompareTo(c2.Key));
+
                     // Make sure times are evenly spaced before doing any peak detection.
                     EvenlySpaceTimes();
+
+                    // Mark all optimization chromatograms
+                    MarkOptimizationData();
 
 //                    if (Math.Round(_listChromData[0].Key.Precursor) == 1143)
 //                        Console.WriteLine("Issue");
@@ -1666,6 +1672,32 @@ namespace pwiz.Skyline.Model.Results
                             return true;
                     }
                     return false;
+                }
+
+                private void MarkOptimizationData()
+                {
+                    int iFirst = 0;
+                    for (int i = 0; i < _listChromData.Count; i++)
+                    {
+                        if (i < _listChromData.Count - 1 &&
+                            _listChromData[i+1].Key.Product - _listChromData[i].Key.Product < ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                        {
+                            Debug.Assert(_listChromData[i + 1].Key.Product > _listChromData[i].Key.Product, "Incorrectly sorted chromatograms");
+                            _listChromData[i].IsOptimizationData = true;
+                        }
+                        else
+                        {
+                            if (iFirst != i)
+                            {
+                                _listChromData[i].IsOptimizationData = true;
+                                // The middle element in the run is the regression value.
+                                // Mark it as not optimization data.
+                                _listChromData[(i - iFirst)/2 + iFirst].IsOptimizationData = false;
+                            }
+                            // Start a new run with the next value
+                            iFirst = i + 1;
+                        }
+                    }
                 }
 
                 private void EvenlySpaceTimes()
@@ -2003,6 +2035,7 @@ namespace pwiz.Skyline.Model.Results
                 public float[] Intensities { get; set; }
                 public IList<ChromPeak> Peaks { get; private set; }
                 public int MaxPeakIndex { get; set; }
+                public bool IsOptimizationData { get; set; }
             }
 
             private sealed class ChromDataPeak
@@ -2047,7 +2080,8 @@ namespace pwiz.Skyline.Model.Results
 
                 private void AddPeak(ChromDataPeak dataPeak)
                 {
-                    if (dataPeak.Peak != null)
+                    // Avoid using optimization data in scoring
+                    if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
                     {
                         double area = dataPeak.Peak.Area;
                         if (PeakCount == 0)
@@ -2062,7 +2096,8 @@ namespace pwiz.Skyline.Model.Results
 
                 private void SubtractPeak(ChromDataPeak dataPeak)
                 {
-                    if (dataPeak.Peak != null)
+                    // Avoid using optimization data in scoring
+                    if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
                     {
                         double area = dataPeak.Peak.Area;
                         PeakCount--;

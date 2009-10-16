@@ -331,7 +331,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (id.Length == 0)
                     textPath.Text = outputPath;
                 else if (!string.IsNullOrEmpty(outputPath))
-                    textPath.Text = Path.Combine(outputPath, id + ".blib");
+                    textPath.Text = Path.Combine(outputPath, id + ProteomeDb.EXT_PROTDB);
             }
         }
 

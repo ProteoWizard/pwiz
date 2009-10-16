@@ -48,8 +48,6 @@ namespace pwiz.Skyline.FileUI
         private bool _ignoreProteins;
         private bool _addEnergyRamp;    // Thermo scheduled only
 
-        private readonly MessageBoxHelper _helper;
-
         private static readonly string[] METHOD_TYPES =
             {
                 ExportInstrumentType.Thermo_TSQ,
@@ -144,7 +142,12 @@ namespace pwiz.Skyline.FileUI
             // Reposition from design layout
             cbEnergyRamp.Top = textDwellTime.Top + (textDwellTime.Height - cbEnergyRamp.Height)/2;
 
-            _helper = new MessageBoxHelper(this);
+            // Add optimizable regressions
+            comboOptimizing.Items.Add(ExportOptimize.NONE);
+            comboOptimizing.Items.Add(ExportOptimize.CE);
+            if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
+                comboOptimizing.Items.Add(ExportOptimize.DP);
+            comboOptimizing.SelectedIndex = 0;
         }
 
         public string InstrumentType
@@ -325,6 +328,8 @@ namespace pwiz.Skyline.FileUI
         {
             // TODO: Remove this
             var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
             // Use variable for document to export, since code below may modify to document.
@@ -407,13 +412,30 @@ namespace pwiz.Skyline.FileUI
             _ignoreProteins = cbIgnoreProteins.Checked;
             _addEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
 
+            _optimizeType = comboOptimizing.SelectedItem.ToString();
+            var prediction = _document.Settings.TransitionSettings.Prediction;
+            if (Equals(_optimizeType, ExportOptimize.NONE))
+                _optimizeType = null;
+            else if (Equals(_optimizeType, ExportOptimize.CE))
+            {
+                var regression = prediction.CollisionEnergy;
+                _optimizeStepSize = regression.StepSize;
+                _optimizeStepCount = regression.StepCount;
+            }
+            else if (Equals(_optimizeType, ExportOptimize.DP))
+            {
+                var regression = prediction.DeclusteringPotential;
+                _optimizeStepSize = regression.StepSize;
+                _optimizeStepCount = regression.StepCount;
+            }
+
             string maxTran = textMaxTransitions.Text;
             if (string.IsNullOrEmpty(maxTran))
                 _maxTransitions = null;
             else
             {
                 int maxVal;
-                if (!_helper.ValidateNumberTextBox(e, textMaxTransitions, 10, int.MaxValue, out maxVal))
+                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, 10, int.MaxValue, out maxVal))
                     return;
                 // Make sure all the precursors can fit into a single document
                 if (!ValidatePrecursorFit(documentExport, maxVal))
@@ -426,12 +448,12 @@ namespace pwiz.Skyline.FileUI
 
             if (textDwellTime.Visible)
             {
-                if (!_helper.ValidateNumberTextBox(e, textDwellTime, 1, 1000, out _dwellTime))
+                if (!helper.ValidateNumberTextBox(e, textDwellTime, 1, 1000, out _dwellTime))
                     return;
             }
             if (textRunLength.Visible)
             {
-                if (!_helper.ValidateDecimalTextBox(e, textRunLength, 5, 500, out _runLength))
+                if (!helper.ValidateDecimalTextBox(e, textRunLength, 5, 500, out _runLength))
                     return;
             }
 
@@ -587,27 +609,6 @@ namespace pwiz.Skyline.FileUI
                 predict => predict.ChangeCollisionEnergy(ce).ChangeDeclusteringPotential(dp)));
         }
 
-        private void btnOptimize_Click(object sender, EventArgs e)
-        {
-            var parameterValues = new List<string> {ExportOptimize.CE};
-            if (Equals(InstrumentType, ExportInstrumentType.ABI))
-                parameterValues.Add(ExportOptimize.DP);
-
-            var dlg = new ExportOptimizeDlg { OptimizeParameterValues = parameterValues };
-            if (_optimizeStepCount != 0 && _optimizeStepSize != 0)
-            {
-                dlg.StepCount = _optimizeStepCount;
-                dlg.StepSize = _optimizeStepSize;
-            }
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                _optimizeType = dlg.OptimizeParameter;
-                _optimizeStepSize = dlg.StepSize;
-                _optimizeStepCount = dlg.StepCount;
-            }
-        }
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog(null);
@@ -703,7 +704,7 @@ namespace pwiz.Skyline.FileUI
                 comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
             comboTargetType.Enabled = CanScheduleInstrument;
 
-            btnOptimize.Enabled = !Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ);
+            comboOptimizing.Enabled = !Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ);
 
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);

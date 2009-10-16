@@ -136,10 +136,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         private static void SaveResults(ISession session, DocInfo docInfo)
         {
-            if (docInfo.MeasuredResult == null)
+            if (docInfo.MeasuredResults == null)
                 return;
 
-            foreach (ChromatogramSet chromatogramSet in docInfo.MeasuredResult.Chromatograms)
+            foreach (ChromatogramSet chromatogramSet in docInfo.MeasuredResults.Chromatograms)
             {
                 DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name};
                 session.Save(dbReplicate);
@@ -276,16 +276,19 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             
             session.Save(dbPrecursor);
-            var precursorResults = new Dictionary<DbResultFile, DbPrecursorResult>();
+            var precursorResults = new Dictionary<ResultKey, DbPrecursorResult>();
             docInfo.PrecursorResults.Add(dbPrecursor, precursorResults);
             var peptideResults = docInfo.PeptideResults[dbPeptide];
 
             if (nodeGroup.HasResults)
             {
                 var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
-                foreach (var results in nodeGroup.Results)
+                for (int i = 0; i < nodeGroup.Results.Count; i++)
                 {
-                    bool success = enumReplicates.MoveNext();   // synch with foreach
+                    var results = nodeGroup.Results[i];
+                    var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
+
+                    bool success = enumReplicates.MoveNext();   // synch with loop
                     Debug.Assert(success);
 
                     if (results == null)
@@ -317,8 +320,26 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             UserSetTotal = chromInfo.UserSet,
                             PeptideResult = peptideResults[resultFile],
                         };
+                        // Set the optimization step no matter what, so that replicates without
+                        // optimization data will join with those with it.
+                        precursorResult.OptStep = chromInfo.OptimizationStep;
+                        if (optFunction != null)
+                        {
+                            if (optFunction is CollisionEnergyRegression)
+                            {
+                                precursorResult.OptCollisionEnergy =
+                                    ((CollisionEnergyRegression)optFunction).GetCollisionEnergy(
+                                        dbPrecursor.Charge, dbPrecursor.Mz, chromInfo.OptimizationStep);
+                            }
+                            if (optFunction is DeclusteringPotentialRegression)
+                            {
+                                precursorResult.OptDeclusteringPotential =
+                                    ((DeclusteringPotentialRegression)optFunction).GetDeclustringPotential(
+                                        dbPrecursor.Mz, chromInfo.OptimizationStep);
+                            }
+                        }
                         session.Save(precursorResult);
-                        precursorResults.Add(resultFile, precursorResult);
+                        precursorResults.Add(new ResultKey(resultFile, chromInfo.OptimizationStep), precursorResult);
                     }
                 }                
             }
@@ -381,9 +402,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             Transition = dbTransition,
                             ResultFile = resultFile,
+                            OptStep = chromInfo.OptimizationStep,
                             AreaRatio = chromInfo.Ratio,
                             UserSetPeak = chromInfo.UserSet,
-                            PrecursorResult = precursorResults[resultFile],
+                            PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
                         };
                         if (!chromInfo.IsEmpty)
                         {
@@ -406,11 +428,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             session.Clear();
         }
 
-        private static double SignalToNoise(float area, float background)
-        {
-            // TODO: Figure out the real equation for this
-            return 20 * Math.Log10(background != 0 ? area / background : 1000000);
-        }
+//        private static double SignalToNoise(float area, float background)
+//        {
+//            // TODO: Figure out the real equation for this
+//            return 20 * Math.Log10(background != 0 ? area / background : 1000000);
+//        }
 
         /// <summary>
         /// Holds information about the entire document that is passed around while
@@ -422,20 +444,30 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 var settings = srmDocument.Settings;
                 PeptidePrediction = settings.PeptideSettings.Prediction;
-                MeasuredResult = settings.MeasuredResults;
+                MeasuredResults = settings.MeasuredResults;
 
                 ReplicateResultFiles = new List<List<DbResultFile>>();
-                PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
-                PrecursorResults = new Dictionary<DbPrecursor, Dictionary<DbResultFile, DbPrecursorResult>>();
                 ProteinResults = new Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>>();
+                PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
+                PrecursorResults = new Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>>();
             }
             public PeptidePrediction PeptidePrediction { get; private set; }
-            public MeasuredResults MeasuredResult { get; private set; }
+            public MeasuredResults MeasuredResults { get; private set; }
             public List<List<DbResultFile>> ReplicateResultFiles { get; private set; }
-            public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set;}
-            public Dictionary<DbPrecursor, Dictionary<DbResultFile, DbPrecursorResult>> PrecursorResults { get; private set; }
             public Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>> ProteinResults { get; private set; }
+            public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set; }
+            public Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>> PrecursorResults { get; private set; }
         }
 
+    }
+    struct ResultKey
+    {
+        public readonly DbResultFile ResultFile;
+        public readonly int OptimizationStep;
+        public ResultKey(DbResultFile resultFile, int optimizationStep)
+        {
+            ResultFile = resultFile;
+            OptimizationStep = optimizationStep;
+        }
     }
 }

@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
         public TransitionGroupChromInfo(int fileIndex,
+                                        int optimizationStep,
                                         float peakCountRatio,
                                         float? retentionTime,
                                         float? startTime,
@@ -96,6 +97,7 @@ namespace pwiz.Skyline.Model.Results
                                         bool userSet)
             : base(fileIndex)
         {
+            OptimizationStep = optimizationStep;
             PeakCountRatio = peakCountRatio;
             RetentionTime = retentionTime;
             StartRetentionTime = startTime;
@@ -108,6 +110,8 @@ namespace pwiz.Skyline.Model.Results
             LibraryDotProduct = libraryDotProduct;
             UserSet = userSet;
         }
+
+        public int OptimizationStep { get; private set; }
 
         public float PeakCountRatio { get; private set; }
         public float? RetentionTime { get; private set; }
@@ -187,19 +191,21 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        public TransitionChromInfo(int fileIndex, ChromPeak peak, float? ratio, bool userSet)
-            : this(fileIndex, peak.RetentionTime, peak.StartTime, peak.EndTime,
+        public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak, float? ratio, bool userSet)
+            : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, ratio, userSet)
         {            
         }
 
-        public TransitionChromInfo(int fileIndex, float retentionTime,
+        public TransitionChromInfo(int fileIndex, int optimizationStep, float retentionTime,
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
-                                   float fwhm, bool fwhmDegenerate, float? ratio, bool userSet)
+                                   float fwhm, bool fwhmDegenerate, float? ratio,
+                                   bool userSet)
             : base(fileIndex)
         {
+            OptimizationStep = optimizationStep;
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
@@ -211,6 +217,13 @@ namespace pwiz.Skyline.Model.Results
             Ratio = ratio;
             UserSet = userSet;
         }
+
+        /// <summary>
+        /// Set to the number of steps from the regression value for a
+        /// transition attribute which can be optimized or calculated using
+        /// a linear regression (e.g. CE, DP, CV)
+        /// </summary>
+        public int OptimizationStep { get; private set; }
 
         public float RetentionTime { get; private set; }
         public float StartRetentionTime { get; private set; }
@@ -234,9 +247,10 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
 
-        public bool Equivalent(int fileIndex, ChromPeak peak)
+        public bool Equivalent(int fileIndex, int step, ChromPeak peak)
         {
             return fileIndex == FileIndex &&
+                   step == OptimizationStep &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
                    peak.EndTime == EndRetentionTime &&
@@ -278,6 +292,7 @@ namespace pwiz.Skyline.Model.Results
                    other.IsFwhmDegenerate.Equals(IsFwhmDegenerate) &&
                    other.Rank == Rank &&
                    other.Ratio.Equals(Ratio) &&
+                   other.OptimizationStep.Equals(OptimizationStep) &&
                    other.UserSet.Equals(UserSet);
         }
 
@@ -303,6 +318,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IsFwhmDegenerate.GetHashCode();
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
+                result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
             }

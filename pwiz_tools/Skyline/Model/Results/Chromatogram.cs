@@ -159,6 +159,12 @@ namespace pwiz.Skyline.Model.Results
         private bool[] _fileCacheFlags;
 
         public ChromatogramSet(string name, IEnumerable<string> msDataFileNames)
+            : this(name, msDataFileNames, null)
+        {            
+        }
+
+        public ChromatogramSet(string name, IEnumerable<string> msDataFileNames,
+                OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             // Make sure data file names are stored in a consistent order.
@@ -166,12 +172,16 @@ namespace pwiz.Skyline.Model.Results
             Array.Sort(_msDataFilePaths);
             // New cach flags with everything set as not cached.
             _fileCacheFlags = new bool[_msDataFilePaths.Length];
+
+            OptimizationFunction = optimizationFunction;
         }
 
         public IList<string> MSDataFilePaths { get { return _msDataFilePaths; } }
 
         public IList<bool> FileCachFlags { get { return _fileCacheFlags; } }
         public bool IsLoaded { get { return _fileCacheFlags == null; } }
+
+        public OptimizableRegression OptimizationFunction { get; private set; }
 
         public int IndexOfFile(ChromatogramGroupInfo info)
         {
@@ -320,6 +330,12 @@ namespace pwiz.Skyline.Model.Results
             file_path
         }
 
+        private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
+        {
+            new XmlElementHelperSuper<CollisionEnergyRegression, OptimizableRegression>(),                 
+            new XmlElementHelperSuper<DeclusteringPotentialRegression, OptimizableRegression>(),                 
+        };
+
         public override void ReadXml(XmlReader reader)
         {
             // Read tag attributes
@@ -327,6 +343,13 @@ namespace pwiz.Skyline.Model.Results
 
             // Consume tag
             reader.Read();
+
+            // Check if there is an optimization function element, and read
+            // if if there is.
+            IXmlElementHelper<OptimizableRegression> helper =
+                reader.FindHelper(OPTIMIZATION_HELPERS);
+            if (helper != null)
+                OptimizationFunction = helper.Deserialize(reader);
 
             var msDataFilePaths = new List<string>();
             var fileLoadIds = new List<string>();
@@ -352,6 +375,16 @@ namespace pwiz.Skyline.Model.Results
         {
             // Write tag attributes
             base.WriteXml(writer);
+
+            // Write optimization element, if present
+            if (OptimizationFunction != null)
+            {
+                IXmlElementHelper<OptimizableRegression> helper = XmlUtil.FindHelper(
+                    OptimizationFunction, OPTIMIZATION_HELPERS);
+                if (helper == null)
+                    throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                writer.WriteElement(helper.ElementNames[0], OptimizationFunction);                
+            }
 
             int i = 0, countFiles = MSDataFilePaths.Count;
             foreach (var path in MSDataFilePaths)

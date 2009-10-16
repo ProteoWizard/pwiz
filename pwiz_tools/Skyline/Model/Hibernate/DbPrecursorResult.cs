@@ -52,5 +52,9 @@ namespace pwiz.Skyline.Model.Hibernate
 //        [QueryColumn(Format = Formats.PEAK_AREA)]
 //        public virtual double TotalSignalToNoise { get; set; }
         public virtual bool UserSetTotal { get; set; }
+        public virtual int OptStep { get; set; }
+        public virtual double? OptCollisionEnergy { get; set; }
+        public virtual double? OptDeclusteringPotential { get; set; }
+
     }
 }

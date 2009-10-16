@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Controls
         private readonly int[] _arrayLabelIndexes;
         private readonly double[] _libraryDotProducts;
         private readonly double _bestProduct;
+        private readonly int _step;
 
         private int _bestPeakTimeIndex = -1;
         private PeakBoundsDragInfo _dragInfo;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Controls
                                 bool[] annotatePeaks,
                                 double[] libraryDotProducts,
                                 double bestProduct,
+                                int step,
                                 Color color,
                                 float fontSize,
                                 int width)
@@ -82,6 +84,7 @@ namespace pwiz.Skyline.Controls
             Chromatogram = chromatogram;
             TransitionChromInfo = tranPeakInfo;
 
+            _step = step;
             _color = color;
             _fontSpec = CreateFontSpec(color, fontSize);
             _width = width;
@@ -185,10 +188,13 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                if (TransitionNode == null)
-                    return GetTitle(TransitionGroupNode);
-                else
-                    return GetTitle(TransitionNode);
+                if (_step != 0)
+                    return string.Format("Step {0}", _step);
+
+                return (TransitionNode == null?
+                        GetTitle(TransitionGroupNode)
+                    :
+                        GetTitle(TransitionNode));
             }
         }
 

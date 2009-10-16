@@ -382,6 +382,14 @@ namespace pwiz.Skyline.Controls
                         DisplayTotals(chromatograms, mzMatchTolerance,
                             listChromGraphs, ref bestStartTime, ref bestEndTime);
                     }
+                    // Single group with optimization data, not a transition selected,
+                    // and single display mode
+                    else if (chromatograms.OptimizationFunction != null &&
+                        nodeTranTree == null && DisplayType == DisplayTypeChrom.single)
+                    {
+                        DisplayOptimizationTotals(chromatograms, mzMatchTolerance,
+                            listChromGraphs, ref bestStartTime, ref bestEndTime);
+                    }
                     else
                     {
                         var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
@@ -451,16 +459,40 @@ namespace pwiz.Skyline.Controls
             int fileIndex = chromatograms.IndexOfFile(chromGroupInfo);
 
             // Get points for all transitions, and pick maximum peaks.
+            ChromatogramInfo[] arrayChromInfo;
             var graphTrans = nodeGroup.Children;
+            int numTrans = graphTrans.Count;
+            int numSteps = 0;
+
             if (DisplayType == DisplayTypeChrom.single && nodeTranSelected != null)
             {
-                if (graphTrans.Contains(nodeTranSelected))
-                    graphTrans = new[] { nodeTranSelected };
+                if (!graphTrans.Contains(nodeTranSelected))
+                {
+                    arrayChromInfo = new ChromatogramInfo[0];
+                    graphTrans = new DocNode[0];                    
+                }
                 else
-                    graphTrans = new DocNode[0];
+                {
+                    arrayChromInfo = chromGroupInfo.GetAllTransitionInfo(
+                        (float)nodeTranSelected.Mz, mzMatchTolerance);
+                    graphTrans = new DocNode[arrayChromInfo.Length];
+                    for (int i = 0; i < arrayChromInfo.Length; i++)
+                        graphTrans[i] = nodeTranSelected;
+                }
+                numTrans = graphTrans.Count;
+                numSteps = numTrans/2;
             }
-            int numTrans = graphTrans.Count;
-            var arrayChromInfo = new ChromatogramInfo[numTrans];
+            else
+            {
+                arrayChromInfo = new ChromatogramInfo[numTrans];
+                for (int i = 0; i < graphTrans.Count; i++)
+                {
+                    var nodeTran = (TransitionDocNode) graphTrans[i];
+                    // Get chromatogram info for this transition
+                    arrayChromInfo[i] =
+                        chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                }
+            }
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
             float maxPeakHeight = 0;
@@ -486,15 +518,13 @@ namespace pwiz.Skyline.Controls
                 if (libIntensities != null)
                     libIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
 
-                // Get chromatogram info for this transition
-                var info = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
-                arrayChromInfo[i] = info;
-                if (info == null)
-                    continue;
+                var info = arrayChromInfo[i];
+
                 // Apply any active transform
                 info.Transform(transform);
 
-                var transitionChromInfo = GetTransitionChromInfo(nodeTran, fileIndex, _chromIndex);
+                int step = (numSteps > 0 ? i - numSteps : 0);
+                var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, step);
 
                 for (int j = 0; j < numPeaks; j++)
                 {
@@ -510,7 +540,7 @@ namespace pwiz.Skyline.Controls
                     if (peakAreas != null)
                         peakAreas[j][i] = peak.Area;
 
-                    // Keep track of which transition has the max heigh for each peak
+                    // Keep track of which transition has the max height for each peak
                     if (maxPeakHeights[j] < peak.Height)
                     {
                         maxPeakHeights[j] = peak.Height;
@@ -520,10 +550,10 @@ namespace pwiz.Skyline.Controls
 
                 if (transitionChromInfo == null)
                     continue;
-                if (transitionChromInfo.Height > maxPeakHeight)
+                if (maxPeakHeight < transitionChromInfo.Height)
                 {
-                    bestPeakTran = i;
                     maxPeakHeight = transitionChromInfo.Height;
+                    bestPeakTran = i;
                     tranPeakInfo = transitionChromInfo;
                 }
                 AddBestPeakTimes(transitionChromInfo, ref bestStartTime, ref bestEndTime);
@@ -572,20 +602,21 @@ namespace pwiz.Skyline.Controls
                     continue;
 
                 var nodeTran = (TransitionDocNode) graphTrans[i];
+                int step = numSteps != 0 ? i - numSteps : 0;
 
                 Color color;
                 int width = lineWidth;
-                if (ReferenceEquals(nodeTran, nodeTranSelected))
+                if ((numSteps == 0 && ReferenceEquals(nodeTran, nodeTranSelected) ||
+                        (numSteps > 0 && step == 0)))
                 {
                     color = ChromGraphItem.ColorSelected;
                     width++;
-                    iColor++;
                 }
                 else if (nodeGroup.HasLibInfo)
-                    color = COLORS_LIBRARY[iColor++ % COLORS_LIBRARY.Length];
+                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
                 else
-                    color = COLORS_LIBRARY[iColor++ % COLORS_LIBRARY.Length];
-//                                color = COLORS_HEURISTIC[iColor++ % _colorsHeuristic.Length];
+                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+//                    color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
 
                 TransitionChromInfo tranPeakInfoGraph = null;
                 if (bestPeakTran == i)
@@ -597,11 +628,201 @@ namespace pwiz.Skyline.Controls
                                                    GetAnnotationFlags(i, maxPeakTrans, maxPeakHeights),
                                                    libraryDotProducts,
                                                    bestProduct,
+                                                   step,
                                                    color,
                                                    fontSize,
                                                    width);
                 listChromGraphs.Add(graphItem);
                 graphControl.AddGraphItem(graphPane, graphItem, false);
+                iColor++;
+            }
+        }
+
+        private void DisplayOptimizationTotals(ChromatogramSet chromatograms, float mzMatchTolerance,
+            ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+        {
+            // As with display of transitions, only the most intense peak for
+            // each peak group will be shown, but each peak group is shown
+            // regardless of whether it overlaps the curve.
+            GraphPane.AllowCurveOverlap = true;
+
+            // Construct and add graph items for all relevant transition groups.
+            float fontSize = FontSize;
+            int lineWidth = LineWidth;
+            int iColor = 0;
+
+            // Get the one and only group
+            var nodeGroup = _nodeGroups[0];
+            var chromGroupInfo = ChromGroupInfos[0];
+            int fileIndex = chromatograms.IndexOfFile(chromGroupInfo);
+
+            int numPeaks = chromGroupInfo.NumPeaks;
+
+            // Collect the chromatogram info for the transition children
+            // of this transition group.
+            var listChromInfoSets = new List<ChromatogramInfo[]>();
+            var listTranisitionChromInfoSets = new List<TransitionChromInfo[]>();
+            int totalOptCount = 0;
+            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+            {
+                var infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                if (infos.Length == 0)
+                    continue;
+
+                if (totalOptCount == 0)
+                    totalOptCount = infos.Length;
+                else if (totalOptCount != infos.Length)
+                    throw new InvalidDataException("Optimization information for each transition must have the same number of steps to be summed.");
+
+                listChromInfoSets.Add(infos);
+                var transitionChromInfos = new TransitionChromInfo[infos.Length];
+                int steps = infos.Length/2;
+                for (int i = 0; i < infos.Length; i++)
+                {
+                    transitionChromInfos[i] = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, i - steps);
+                }
+                listTranisitionChromInfoSets.Add(transitionChromInfos);
+            }
+
+            if (listChromInfoSets.Count == 0 || totalOptCount == 0)
+                throw new InvalidDataException("No optimization data available.");
+
+            var listGraphData = new List<OptimizationGraphData>();
+            for (int i = 0; i < listChromInfoSets.Count; i++)
+            {
+                var chromInfos = listChromInfoSets[i];
+                var transitionChromInfos = listTranisitionChromInfoSets[i];
+
+                for (int j = 0; j < chromInfos.Length; j++)
+                {
+                    if (listGraphData.Count <= j)
+                        listGraphData.Add(new OptimizationGraphData(numPeaks));
+                    listGraphData[j].Add(chromInfos[j], transitionChromInfos[j]);
+                }
+            }
+
+            // Total and transform the data, and compute which optimization
+            // set has the most intense peak for each peak group.
+            int bestPeakData = -1;
+            TransitionChromInfo tranPeakInfo = null;
+            float maxPeakHeight = 0;
+            var maxPeakData = new int[numPeaks];
+            var maxPeakHeights = new float[numPeaks];
+            var transform = Transform;
+            for (int i = 0; i < listGraphData.Count; i++)
+            {
+                var graphData = listGraphData[i];
+                var infoPrimary = graphData.InfoPrimary;
+
+                // Sum intensities of all transitions in this
+                // optimization bucket
+                infoPrimary.SumIntensities(graphData.ChromInfos);
+
+                // Apply any transform the user has chosen
+                infoPrimary.Transform(transform);
+
+                for (int j = 0; j < numPeaks; j++)
+                {
+                    float height = graphData.PeakHeights[j];
+                    if (height > maxPeakHeights[j])
+                    {
+                        maxPeakHeights[j] = height;
+                        maxPeakData[j] = i;
+                    }
+                }
+
+                if (maxPeakHeight < graphData.TotalHeight)
+                {
+                    maxPeakHeight = graphData.TotalHeight;
+                    bestPeakData = i;
+                    tranPeakInfo = graphData.TransitionInfoPrimary;
+                }
+                AddBestPeakTimes(graphData.TransitionInfoPrimary, ref bestStartTime, ref bestEndTime);
+            }
+
+            int totalSteps = totalOptCount/2;
+            for (int i = 0; i < listGraphData.Count; i++)
+            {
+                var graphData = listGraphData[i];
+
+                int step = i - totalSteps;
+                int width = lineWidth;
+                Color color;
+                if (step == 0)
+                {
+                    color = ChromGraphItem.ColorSelected;
+                    width++;
+                }
+                else if (nodeGroup.HasLibInfo)
+                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                else
+                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                //                                color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
+
+                TransitionChromInfo tranPeakInfoGraph = null;
+                if (bestPeakData == i)
+                    tranPeakInfoGraph = tranPeakInfo;
+                var graphItem = new ChromGraphItem(nodeGroup,
+                                                   null,
+                                                   graphData.InfoPrimary,
+                                                   tranPeakInfoGraph,
+                                                   GetAnnotationFlags(i, maxPeakData, maxPeakHeights),
+                                                   null,
+                                                   0,
+                                                   step,
+                                                   color,
+                                                   fontSize,
+                                                   width);
+                listChromGraphs.Add(graphItem);
+                graphControl.AddGraphItem(GraphPane, graphItem, false);
+
+                iColor++;
+            }
+        }
+
+        private sealed class OptimizationGraphData
+        {
+            public OptimizationGraphData(int numPeaks)
+            {
+                ChromInfos = new List<ChromatogramInfo>();
+                PeakHeights = new float[numPeaks];
+            }
+
+            public List<ChromatogramInfo> ChromInfos { get; private set; }
+            public float TotalHeight { get; private set; }
+            private float MaxHeight { get; set; }
+            public ChromatogramInfo InfoPrimary { get; private set; }
+            public TransitionChromInfo TransitionInfoPrimary { get; private set; }
+            public float[] PeakHeights { get; private set; }
+
+            public void Add(ChromatogramInfo chromInfo, TransitionChromInfo transitionChromInfo)
+            {
+                ChromInfos.Add(chromInfo);
+                if (transitionChromInfo != null)
+                {
+                    float height = transitionChromInfo.Height;
+                    TotalHeight += height;
+                    if (height > MaxHeight || InfoPrimary == null)
+                    {
+                        MaxHeight = height;
+                        InfoPrimary = chromInfo;
+                        TransitionInfoPrimary = transitionChromInfo;
+                    }                    
+                }
+
+                // Sum peak heights.  This may not be strictly valid, but should
+                // work as a good approximation for deciding which peaks to label.
+                int i = 0;
+                foreach (var peak in chromInfo.Peaks)
+                {
+                    // Exclude any peaks between the boundaries of the chosen peak.
+                    if (transitionChromInfo != null &&
+                        transitionChromInfo.StartRetentionTime < peak.RetentionTime &&
+                        peak.RetentionTime < transitionChromInfo.EndRetentionTime)
+                        continue;
+
+                    PeakHeights[i++] += peak.Height;
+                }
             }
         }
 
@@ -635,7 +856,7 @@ namespace pwiz.Skyline.Controls
                 var listChromInfo = new List<ChromatogramInfo>();
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    var info = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
+                    var info = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
                     if (info == null)
                         continue;
 
@@ -643,7 +864,7 @@ namespace pwiz.Skyline.Controls
 
                     // Keep track of which chromatogram owns the tallest member of
                     // the peak on the document tree.
-                    var transitionChromInfo = GetTransitionChromInfo(nodeTran, fileIndex, _chromIndex);
+                    var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, 0);
                     if (transitionChromInfo == null)
                         continue;
 
@@ -681,7 +902,7 @@ namespace pwiz.Skyline.Controls
                             tranPeakInfo.StartRetentionTime < peak.RetentionTime &&
                             peak.RetentionTime < tranPeakInfo.EndRetentionTime)
                             continue;
-                        annotateAll[j] = true;                                    
+                        annotateAll[j] = true;
                     }
                     var graphItem = new ChromGraphItem(nodeGroup,
                                                        null,
@@ -689,6 +910,7 @@ namespace pwiz.Skyline.Controls
                                                        tranPeakInfo,
                                                        annotateAll,
                                                        null,
+                                                       0,
                                                        0,
                                                        color,
                                                        fontSize,
@@ -762,7 +984,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran,
-            int fileIndex, int indexChrom)
+            int indexChrom, int fileIndex, int step)
         {
             if (!nodeTran.HasResults)            
                 return null;
@@ -771,7 +993,7 @@ namespace pwiz.Skyline.Controls
                 return null;
             foreach (var tranChromInfo in tranChromInfoList)
             {
-                if (tranChromInfo.FileIndex == fileIndex)
+                if (tranChromInfo.FileIndex == fileIndex && tranChromInfo.OptimizationStep == step)
                     return tranChromInfo;
             }
             return null;

@@ -96,6 +96,9 @@
     <property name="LibraryDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->
     <property name="UserSetTotal" />
+    <property name="OptStep" />
+    <property name="OptCollisionEnergy" />
+    <property name="OptDeclusteringPotential" />
   </class>
   <class name="DbTransition">
     <id name="Id">

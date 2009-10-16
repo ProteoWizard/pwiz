@@ -19,10 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -30,9 +33,6 @@ namespace pwiz.Skyline.SettingsUI
     {
         private CollisionEnergyRegression _regression;
         private readonly IEnumerable<CollisionEnergyRegression> _existing;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public EditCEDlg(IEnumerable<CollisionEnergyRegression> existing)
         {
@@ -40,7 +40,10 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            _helper = new MessageBoxHelper(this);
+            var document = Program.ActiveDocumentUI;
+            btnUseCurrent.Enabled = document.Settings.HasResults &&
+                                    document.Settings.MeasuredResults.Chromatograms.Contains(
+                                        chrom => chrom.OptimizationFunction is CollisionEnergyRegression);
         }
 
         public CollisionEnergyRegression Regression
@@ -53,6 +56,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (_regression == null)
                 {
                     textName.Text = "";
+                    gridRegression.Rows.Clear();
+                    textStepSize.Text = "";
+                    textStepCount.Text = "";
                 }
                 else
                 {
@@ -62,57 +68,69 @@ namespace pwiz.Skyline.SettingsUI
                         gridRegression.Rows.Add(r.Charge.ToString(),
                             r.Slope.ToString(), r.Intercept.ToString());
                     }
+                    textStepSize.Text = _regression.StepSize.ToString();
+                    textStepCount.Text = _regression.StepCount.ToString();
                 }
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            if (_regression == null && _existing.Contains(r => Equals(name, r.Name)))
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                List<ChargeRegressionLine> conversions =
-                    new List<ChargeRegressionLine>();
-
-                foreach (DataGridViewRow row in gridRegression.Rows)
-                {
-                    if (row.IsNewRow)
-                        continue;
-
-                    int charge;
-                    if (!ValidateCharge(e, row.Cells[0], out charge))
-                        return;
-
-                    double slope;
-                    if (!ValidateSlope(e, row.Cells[1], out slope))
-                        return;
-
-                    double intercept;
-                    if (!ValidateIntercept(e, row.Cells[2], out intercept))
-                        return;
-
-                    conversions.Add(new ChargeRegressionLine(charge, slope, intercept));
-                }
-
-                CollisionEnergyRegression regression =
-                    new CollisionEnergyRegression(name, conversions);
-
-                if (_regression == null && _existing.Contains(regression))
-                {
-                    _helper.ShowTextBoxError(textName, "The collision energy regression '{0}' already exists.", name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                _regression = regression;
+                helper.ShowTextBoxError(textName, "The collision energy regression '{0}' already exists.", name);
+                return;
             }
 
-            base.OnClosing(e);
+            List<ChargeRegressionLine> conversions =
+                new List<ChargeRegressionLine>();
+
+            foreach (DataGridViewRow row in gridRegression.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                int charge;
+                if (!ValidateCharge(e, row.Cells[0], out charge))
+                    return;
+
+                double slope;
+                if (!ValidateSlope(e, row.Cells[1], out slope))
+                    return;
+
+                double intercept;
+                if (!ValidateIntercept(e, row.Cells[2], out intercept))
+                    return;
+
+                conversions.Add(new ChargeRegressionLine(charge, slope, intercept));
+            }
+
+            double stepSize;
+            if (!helper.ValidateDecimalTextBox(e, textStepSize,
+                    CollisionEnergyRegression.MIN_STEP_SIZE,
+                    CollisionEnergyRegression.MAX_STEP_SIZE,
+                    out stepSize))
+                return;
+
+            int stepCount;
+            if (!helper.ValidateNumberTextBox(e, textStepCount,
+                    OptimizableRegression.MIN_OPT_STEP_COUNT,
+                    OptimizableRegression.MAX_OPT_STEP_COUNT,
+                    out stepCount))
+                return;
+
+            _regression = new CollisionEnergyRegression(name, conversions, stepSize, stepCount);
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out int charge)
@@ -183,7 +201,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
 
         private void gridRegression_KeyDown(object sender, KeyEventArgs e)
@@ -238,6 +256,121 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
             return true;
+        }
+
+        private void btnUseCurrent_Click(object sender, EventArgs e)
+        {
+            var document = Program.ActiveDocumentUI;
+            if (!document.Settings.HasResults)
+                return; // This shouldn't be possible, but just to be safe.
+            if (!document.Settings.MeasuredResults.IsLoaded)
+            {
+                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
+                return;
+            }
+
+            var arrayData = new CERegressionData[TransitionGroup.MAX_PRECURSOR_CHARGE + 1];
+            var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+            for (int i = 0; i < chromatograms.Count; i++)
+            {
+                var chromSet = chromatograms[i];
+                var regression = chromSet.OptimizationFunction as CollisionEnergyRegression;
+                if (regression == null)
+                    continue;
+
+                foreach (var nodeGroup in document.TransitionGroups)
+                {
+                    int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    if (arrayData[charge] == null)
+                        arrayData[charge] = new CERegressionData(regression);
+                    arrayData[charge].Add(nodeGroup, i);
+                }
+            }
+
+            bool hasRegressionLines = false;
+            var regressionLines = new RegressionLine[arrayData.Length];
+            for (int i = 0; i < arrayData.Length; i++)
+            {
+                if (arrayData[i] == null)
+                    continue;
+                regressionLines[i] = arrayData[i].RegressionLine;
+                if (regressionLines[i] != null)
+                    hasRegressionLines = true;
+            }
+
+            if (!hasRegressionLines)
+            {
+                MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
+                return;
+            }
+
+            gridRegression.Rows.Clear();
+            for (int i = 0; i < regressionLines.Length; i++)
+            {
+                var regressionLine = regressionLines[i];
+                if (regressionLine == null)
+                    continue;
+                gridRegression.Rows.Add(new[]
+                    {
+                        i.ToString(),
+                        string.Format("{0:F04}", regressionLine.Slope),
+                        string.Format("{0:F04}", regressionLine.Intercept)
+                    });
+            }
+        }
+
+        private sealed class CERegressionData
+        {
+            private readonly CollisionEnergyRegression _regression;
+            private readonly List<double> _bestCEValues = new List<double>();
+            private readonly List<double> _precursorMzValues = new List<double>();
+
+            public CERegressionData(CollisionEnergyRegression regression)
+            {
+                _regression = regression;
+            }
+
+            public RegressionLine RegressionLine
+            {
+                get
+                {
+                    if (_bestCEValues.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
+                        return null;
+                    Statistics statCE = new Statistics(_bestCEValues.ToArray());
+                    Statistics statMz = new Statistics(_precursorMzValues.ToArray());
+                    return new RegressionLine(statCE.Slope(statMz), statCE.Intercept(statMz));
+                }
+            }
+
+            public void Add(TransitionGroupDocNode nodeGroup, int iResult)
+            {
+                var chromInfo = GetMaxChromInfo(nodeGroup.Results[iResult]);
+                if (chromInfo == null)
+                    return;
+
+                _precursorMzValues.Add(nodeGroup.PrecursorMz);
+                _bestCEValues.Add(_regression.GetCollisionEnergy(nodeGroup.TransitionGroup.PrecursorCharge,
+                                                                 nodeGroup.PrecursorMz,
+                                                                 chromInfo.OptimizationStep));
+            }
+
+            private static TransitionGroupChromInfo GetMaxChromInfo(IEnumerable<TransitionGroupChromInfo> result)
+            {
+                if (result == null)
+                    return null;
+
+                double maxArea = 0;
+                TransitionGroupChromInfo maxChromInfo = null;
+                foreach (var chromInfo in result)
+                {
+                    if (chromInfo.PeakCountRatio >= 0.5 && chromInfo.Area.HasValue && maxArea < chromInfo.Area)
+                    {
+                        maxArea = chromInfo.Area.Value;
+                        maxChromInfo = chromInfo;
+                    }
+                }
+                return maxChromInfo;
+            }
         }
     }
 }

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -35,17 +36,12 @@ namespace pwiz.Skyline.FileUI
         private const string DEFAULT_NAME = "Chromatograms";
 
         private readonly string _documentSavedPath;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
 
             InitializeComponent();
-
-            _helper = new MessageBoxHelper(this);
 
             var results = document.Settings.MeasuredResults;
             if (results == null || results.Chromatograms.Count == 0)
@@ -59,6 +55,13 @@ namespace pwiz.Skyline.FileUI
                 foreach (var set in results.Chromatograms)
                     comboName.Items.Add(set.Name);
             }
+
+            // Add optimizable regressions
+            comboOptimizing.Items.Add(ExportOptimize.NONE);
+            comboOptimizing.Items.Add(ExportOptimize.CE);
+            if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
+                comboOptimizing.Items.Add(ExportOptimize.DP);
+            comboOptimizing.SelectedIndex = 0;
         }
 
         private string DefaultNewName
@@ -100,129 +103,131 @@ namespace pwiz.Skyline.FileUI
 
         public KeyValuePair<string, string[]>[] NamedPathSets { get; private set; }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        public string OptimizationName { get { return comboOptimizing.SelectedItem.ToString(); } }
+
+        public void OkDialog()
         {
-            if (_clickedOk)
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            var listExist = new List<string>();
+
+            if (radioAddExisting.Checked)
             {
-                _clickedOk = false;
-
-                string name;
-                var listExist = new List<string>();
-
-                if (radioAddExisting.Checked)
+                if (comboName.SelectedIndex == -1)
                 {
-                    if (comboName.SelectedIndex == -1)
-                    {
-                        MessageBox.Show(this, "You must select an existing set of results to which to append new data.", Program.Name);
-                        e.Cancel = true;
-                        comboName.Focus();
-                        return;
-                    }
-                    NamedPathSets = GetDataSourcePathsFile(comboName.SelectedItem.ToString());
-                }
-                else if (radioCreateMultiple.Checked)
-                {
-                        NamedPathSets = GetDataSourcePathsFile(null);
-                }
-                else if (radioCreateMultipleMulti.Checked)
-                {
-                    NamedPathSets = GetDataSourcePathsDir();                    
-                }
-                else
-                {
-                    if (!_helper.ValidateNameTextBox(e, textName, out name))
-                        return;
-                    else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
-                    {
-                        _helper.ShowTextBoxError(e, textName, "A result name may not contain the any of the characters '{0}'.", Path.GetInvalidFileNameChars());
-                        return;
-                    }
-                    else if (ResultsExist(name))
-                    {
-                        _helper.ShowTextBoxError(e, textName, "The specified name already exists for this document.");
-                        return;
-                    }                        
-
-                    NamedPathSets = GetDataSourcePathsFile(name);
-                }
-
-                if (NamedPathSets == null)
-                {
+                    MessageBox.Show(this, "You must select an existing set of results to which to append new data.", Program.Name);
                     e.Cancel = true;
+                    comboName.Focus();
                     return;
                 }
-
-                if (NamedPathSets.Length > 1)
+                NamedPathSets = GetDataSourcePathsFile(comboName.SelectedItem.ToString());
+            }
+            else if (radioCreateMultiple.Checked)
+            {
+                    NamedPathSets = GetDataSourcePathsFile(null);
+            }
+            else if (radioCreateMultipleMulti.Checked)
+            {
+                NamedPathSets = GetDataSourcePathsDir();                    
+            }
+            else
+            {
+                if (!helper.ValidateNameTextBox(e, textName, out name))
+                    return;
+                else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                 {
-                    string prefix = GetCommonPrefix(Array.ConvertAll(NamedPathSets, ns => ns.Key));
-                    if (prefix.Length > 2)
-                    {
-                        var dlgName = new ImportResultsNameDlg(prefix);
-                        var result = dlgName.ShowDialog(this);
-                        if (result == DialogResult.Cancel)
-                        {
-                            e.Cancel = true;
-                            return;
-                        }
-                        else if (result == DialogResult.Yes)
-                        {
-                            // Rename all the replicates to remove the specified prefix.
-                            for (int i = 0; i < NamedPathSets.Length; i++)
-                            {
-                                var namedSet = NamedPathSets[i];
-                                NamedPathSets[i] = new KeyValuePair<string, string[]>(
-                                    namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
-                            }
-                        }
-                    }
+                    helper.ShowTextBoxError(e, textName, "A result name may not contain the any of the characters '{0}'.", Path.GetInvalidFileNameChars());
+                    return;
                 }
-
-                // Always make sure multiple replicates have unique names.  For single
-                // replicate, the user will get an error.
-                if (IsMultiple)
-                    EnsureUniqueNames();
-                
-                if (!radioAddExisting.Checked)
+                else if (ResultsExist(name))
                 {
-                    // Check cache paths for existence
-                    foreach (var namedPathSet in NamedPathSets)
-                    {
-                        string pathCache = ChromatogramCache.FinalPathForName(_documentSavedPath, namedPathSet.Key);
-                        if (File.Exists(pathCache))
-                            listExist.Add(pathCache);
-                    }                    
-                }
+                    helper.ShowTextBoxError(e, textName, "The specified name already exists for this document.");
+                    return;
+                }                        
 
-                // Make sure the user okays deletion of any existing files.
-                if (listExist.Count == 1)
+                NamedPathSets = GetDataSourcePathsFile(name);
+            }
+
+            if (NamedPathSets == null)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            if (NamedPathSets.Length > 1)
+            {
+                string prefix = GetCommonPrefix(Array.ConvertAll(NamedPathSets, ns => ns.Key));
+                if (prefix.Length > 2)
                 {
-                    if (MessageBox.Show(
-                        string.Format("The file {0} already exists.  Do you want to replace it?", listExist[0]),
-                        Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    var dlgName = new ImportResultsNameDlg(prefix);
+                    var result = dlgName.ShowDialog(this);
+                    if (result == DialogResult.Cancel)
                     {
-                        if (textName.Enabled)
-                            textName.Focus();
                         e.Cancel = true;
                         return;
                     }
-                }
-                else if (listExist.Count > 1)
-                {
-                    var sb = new StringBuilder();
-                    foreach (var path in listExist)
-                        sb.Append(Path.GetFileName(path)).Append('\n');
-
-                    if (MessageBox.Show(
-                        string.Format("The following files already exist:\n\n{0}\nDo you want to replace them?", sb),
-                        Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    else if (result == DialogResult.Yes)
                     {
-                        e.Cancel = true;
-                        return;
+                        // Rename all the replicates to remove the specified prefix.
+                        for (int i = 0; i < NamedPathSets.Length; i++)
+                        {
+                            var namedSet = NamedPathSets[i];
+                            NamedPathSets[i] = new KeyValuePair<string, string[]>(
+                                namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
+                        }
                     }
                 }
             }
 
-            base.OnClosing(e);
+            // Always make sure multiple replicates have unique names.  For single
+            // replicate, the user will get an error.
+            if (IsMultiple)
+                EnsureUniqueNames();
+            
+            if (!radioAddExisting.Checked)
+            {
+                // Check cache paths for existence
+                foreach (var namedPathSet in NamedPathSets)
+                {
+                    string pathCache = ChromatogramCache.FinalPathForName(_documentSavedPath, namedPathSet.Key);
+                    if (File.Exists(pathCache))
+                        listExist.Add(pathCache);
+                }                    
+            }
+
+            // Make sure the user okays deletion of any existing files.
+            if (listExist.Count == 1)
+            {
+                if (MessageBox.Show(
+                    string.Format("The file {0} already exists.  Do you want to replace it?", listExist[0]),
+                    Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                {
+                    if (textName.Enabled)
+                        textName.Focus();
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            else if (listExist.Count > 1)
+            {
+                var sb = new StringBuilder();
+                foreach (var path in listExist)
+                    sb.Append(Path.GetFileName(path)).Append('\n');
+
+                if (MessageBox.Show(
+                    string.Format("The following files already exist:\n\n{0}\nDo you want to replace them?", sb),
+                    Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
@@ -544,7 +549,7 @@ namespace pwiz.Skyline.FileUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
     }
 }
