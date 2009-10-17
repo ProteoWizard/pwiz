@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
@@ -30,8 +31,8 @@ namespace pwiz.Topograph.Enrichment
     {
         private const double PROTON_MASS = 1.00727649;
         private const string ENRICHED_ELEMENT = "Tracer";
-        private Dictionary<double, double> normalMasses;
-        private Dictionary<double, double> enrichedMasses;
+        private MassDistribution normalMasses;
+        private MassDistribution enrichedMasses;
 
         public String TracerSymbol { get; private set; }
         public double DeltaMass { get; private set; }
@@ -73,16 +74,16 @@ namespace pwiz.Topograph.Enrichment
 
         public Workspace Workspace { get; private set; }
 
-        private ResidueComposition GetUnenrichedResidueComposition()
+        private AminoAcidFormulas GetUnenrichedResidueComposition()
         {
             var res = Workspace.GetResidueComposition();
             char aminoAcid;
-            if (ResidueComposition.LongNames.TryGetValue(TracerSymbol, out aminoAcid))
+            if (AminoAcidFormulas.LongNames.TryGetValue(TracerSymbol, out aminoAcid))
             {
-                res.IsotopeAbundances.addAbundances(TracerSymbol, normalMasses);
-                res.ResidueFormulas["" + aminoAcid] = TracerSymbol;
+                res = res.SetIsotopeAbundances(res.IsotopeAbundances.SetAbundances(TracerSymbol, normalMasses));
+                res = res.SetFormula(aminoAcid, TracerSymbol);
             }
-            res.IsotopeAbundances.addAbundances(ENRICHED_ELEMENT, enrichedMasses);
+            res = res.SetIsotopeAbundances(res.IsotopeAbundances.SetAbundances(ENRICHED_ELEMENT, enrichedMasses));
             return res;
         }
 
@@ -90,51 +91,44 @@ namespace pwiz.Topograph.Enrichment
         {
             var res = Workspace.GetResidueComposition();
             char aminoAcid;
-            if (!ResidueComposition.LongNames.TryGetValue(TracerSymbol, out aminoAcid))
+            if (!AminoAcidFormulas.LongNames.TryGetValue(TracerSymbol, out aminoAcid))
             {
-                normalMasses = GetZeroChargeMasses(res, TracerSymbol);
+                normalMasses = res.GetMassDistribution(Molecule.Parse(TracerSymbol), 0);
                 double enrichedMass = normalMasses.Keys.Min() + DeltaMass;
-                enrichedMasses = new Dictionary<double, double> { { enrichedMass, 1 } };
+                enrichedMasses = MassDistribution.NewInstance(new Dictionary<double, double> {{enrichedMass, 1.0}}, 0, 0);
                 return;
             }
-            Dictionary<double, double> enrichMasses = new Dictionary<double, double>();
+            var enrichMasses = new Dictionary<double, double>();
             enrichMasses.Add(0, 1 - AtomPercentEnrichment / 100);
             enrichMasses.Add(DeltaMass / AtomCount, AtomPercentEnrichment / 100);
-            res.IsotopeAbundances.addAbundances("Enrich", new Dictionary<double, double>
-                                                              {
-                                                                  {0, 1-AtomPercentEnrichment/100},
-                                                                  {DeltaMass/AtomCount,AtomPercentEnrichment/100}
-                                                              });
-            String formula = res.MolecularFormula(aminoAcid);
-            String enrichFormula = formula + "Enrich" + AtomCount;
-
-            normalMasses = GetZeroChargeMasses(res, formula);
-            enrichedMasses = GetZeroChargeMasses(res, enrichFormula);
+            var isotopeAbundances = res.IsotopeAbundances.SetAbundances("Enrich",
+                                                                        MassDistribution.NewInstance(
+                                                                            new Dictionary<double, double>
+                                                                                {
+                                                                                    {0, 1 - AtomPercentEnrichment/100},
+                                                                                    {
+                                                                                        DeltaMass/AtomCount,
+                                                                                        AtomPercentEnrichment/100
+                                                                                        }
+                                                                                }, 0, 0));
+            res = res.SetIsotopeAbundances(isotopeAbundances);
+            var formula = Molecule.Parse(res.Formulas[aminoAcid]);
+            var enrichFormula = Molecule.Parse(formula + "Enrich" + AtomCount);
+            normalMasses = res.GetMassDistribution(formula, 0);
+            enrichedMasses = res.GetMassDistribution(enrichFormula, 0);
         }
 
-        private static Dictionary<double, double> GetZeroChargeMasses(ResidueComposition residueComposition, String formula)
-        {
-            Dictionary<double, double> massesPlusOne = residueComposition.GetIsotopeMasses(formula, 1);
-            Dictionary<double, double> result = new Dictionary<double, double>();
-            foreach (var entry in massesPlusOne)
-            {
-                result.Add(entry.Key - PROTON_MASS, entry.Value);
-            }
-            return result;
-        }
-
-        public ResidueComposition GetResidueComposition(double ape)
+        public AminoAcidFormulas GetResidueComposition(double ape)
         {
             var res = GetUnenrichedResidueComposition();
-            res.IsotopeAbundances.getAbundances()[TracerSymbol] = GetMassAbundances(ape);
-            return res;
+            return res.SetIsotopeAbundances(res.IsotopeAbundances.SetAbundances(TracerSymbol, GetMassAbundances(ape)));
         }
-        private Dictionary<double, double> GetMassAbundances(double ape)
+        private MassDistribution GetMassAbundances(double ape)
         {
-            return Dictionaries.Sum(
+            return MassDistribution.NewInstance(Dictionaries.Sum(
                 Dictionaries.Scale(normalMasses, 1 - ape / 100),
                 Dictionaries.Scale(enrichedMasses, ape / 100)
-                );
+                ), 0, 0);
         }
         public override String ToString()
         {
@@ -144,7 +138,7 @@ namespace pwiz.Topograph.Enrichment
         public List<double> GetMzs(ChargedPeptide chargedPeptide)
         {
             var res = GetUnenrichedResidueComposition();
-            double pepBaseMass = res.GetMonoisotopicMz(chargedPeptide);
+            double pepBaseMass = chargedPeptide.GetMonoisotopicMass(res);
             List<double> result = new List<double>();
             int symbolCount = GetMaximumTracerCount(chargedPeptide);
             for (int i = 0; i <= symbolCount; i++)
@@ -174,35 +168,33 @@ namespace pwiz.Topograph.Enrichment
         public int GetMaximumTracerCount(ChargedPeptide chargedPeptide)
         {
             var res = GetUnenrichedResidueComposition();
-            Dictionary<String, int> formula = res.FormulaToDictionary(res.MolecularFormula(chargedPeptide.Sequence));
+            var formula = res.GetFormula(chargedPeptide.Sequence);
             int symbolCount;
             formula.TryGetValue(TracerSymbol, out symbolCount);
             return symbolCount;
         }
-        public Dictionary<double, double> GetSpectrum(double ape, ChargedPeptide chargedPeptide)
+        public MassDistribution GetSpectrum(double ape, ChargedPeptide chargedPeptide)
         {
-            return GetResidueComposition(ape).GetIsotopeMasses(chargedPeptide);
+            return chargedPeptide.GetMassDistribution(GetResidueComposition(ape));
         }
-        public Dictionary<double, double> GetEnrichedSpectrum(ChargedPeptide chargedPeptide, int enrichmentCount)
+        public MassDistribution GetEnrichedSpectrum(ChargedPeptide chargedPeptide, int enrichmentCount)
         {
             var res = GetUnenrichedResidueComposition();
-            Dictionary<String, int> formula = res.FormulaToDictionary(res.MolecularFormula(chargedPeptide.Sequence));
+            var formula = res.GetFormula(chargedPeptide.Sequence);
             int symbolCount;
             formula.TryGetValue(TracerSymbol, out symbolCount);
             if (symbolCount < enrichmentCount)
             {
                 return null;
             }
-            formula[TracerSymbol] = symbolCount - enrichmentCount;
             if (enrichmentCount != 0)
             {
-                formula.Add(ENRICHED_ELEMENT, enrichmentCount);
+                formula = formula.SetAtomCount(TracerSymbol, symbolCount - enrichmentCount);
+                formula = formula.SetAtomCount(ENRICHED_ELEMENT, enrichmentCount);
             }
 
-            Dictionary<double, double> dict = res.GetIsotopeMasses(res.DictionaryToFormula(formula),
-                                                                   chargedPeptide.Charge);
-            dict = Dictionaries.OffsetKeys(dict, res.GetMzDelta(chargedPeptide));
-            return dict;
+            var result = res.GetMassDistribution(formula, chargedPeptide.Charge);
+            return result.OffsetAndDivide(res.GetMassShift(chargedPeptide.Sequence), 1);
         }
 
         public static DbEnrichment GetN15Enrichment()

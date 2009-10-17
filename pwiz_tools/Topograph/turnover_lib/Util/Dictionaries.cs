@@ -25,14 +25,14 @@ namespace pwiz.Topograph.Util
 {
     class Dictionaries
     {
-        public static Dictionary<T, double> Normalize<T>(Dictionary<T, double> dict, double target)
+        public static Dictionary<T, double> Normalize<T>(IDictionary<T, double> dict, double target)
         {
             double sum = dict.Values.Sum();
             double factor = sum == 0 ? 1 : target/sum;
             return Scale(dict, factor);
         }
 
-        public static Dictionary<T, double> Scale<T>(Dictionary<T, double> dict, double factor)
+        public static Dictionary<T, double> Scale<T>(IDictionary<T, double> dict, double factor)
         {
             Dictionary<T, double> result = new Dictionary<T, double>();
             foreach (var pair in dict)
@@ -41,7 +41,7 @@ namespace pwiz.Topograph.Util
             }
             return result;
         }
-        public static Dictionary<T,double> Sum<T>(Dictionary<T,double> dict1, Dictionary<T,double> dict2)
+        public static Dictionary<T,double> Sum<T>(IDictionary<T,double> dict1, Dictionary<T,double> dict2)
         {
             Dictionary<T,double> result = new Dictionary<T, double>(dict1);
             foreach (var entry in dict2)
@@ -68,7 +68,7 @@ namespace pwiz.Topograph.Util
             }
             return key;
         }
-        public static Dictionary<double,T> OffsetKeys<T>(Dictionary<double,T> dict, double offset)
+        public static Dictionary<double,T> OffsetKeys<T>(IDictionary<double,T> dict, double offset)
         {
             var result = new Dictionary<double, T>();
             foreach (var entry in dict)

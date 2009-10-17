@@ -249,13 +249,13 @@ namespace pwiz.Topograph.Enrichment
                 }
                 var res = Enrichment.GetResidueComposition(ape);
                 var chargedPeptide = new ChargedPeptide(Sequence, 1);
-                Dictionary<double, double> dict = res.GetIsotopeMasses(chargedPeptide);
+                var dict = chargedPeptide.GetMassDistribution(res);
                 result = IntensityDictionaryToVector(dict, GetMzs(1));
                 _apeToIntensities.Add(ape, result);
                 return result;
             }
         }
-        internal Vector IntensityDictionaryToVector(Dictionary<double, double> dict, IList<double> mzs)
+        internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<double> mzs)
         {
             var result = new Vector(mzs.Count);
             for (int iMz = 0; iMz < mzs.Count; iMz++)
@@ -283,7 +283,7 @@ namespace pwiz.Topograph.Enrichment
                     return result;
                 }
                 var chargedPeptide = new ChargedPeptide(Sequence, 1);
-                Dictionary<double, double> dict = Enrichment.GetEnrichedSpectrum(chargedPeptide, tracerCount);
+                var dict = Enrichment.GetEnrichedSpectrum(chargedPeptide, tracerCount);
                 result = IntensityDictionaryToVector(dict, GetMzs(1));
                 _tracerCountToIntensities.Add(tracerCount, result);
                 return result;

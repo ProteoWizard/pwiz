@@ -27,6 +27,7 @@ using System.Threading;
 using log4net;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Search;
@@ -42,6 +43,7 @@ namespace pwiz.Topograph.Model
         private readonly ResultCalculator _resultCalculator;
         private readonly Modifications _modifications;
         private readonly WorkspaceSettings _settings;
+        private AminoAcidFormulas _aminoAcidFormulas;
         private EntitiesChangedEventArgs _entitiesChangedEventArgs;
         private readonly HashSet<PeptideAnalysis> _dirtyPeptideAnalyses = new HashSet<PeptideAnalysis>();
         private EnrichmentDef _enrichmentDef;
@@ -109,14 +111,21 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public ResidueComposition GetResidueComposition()
+        public AminoAcidFormulas GetResidueComposition()
         {
-            ResidueComposition residueComposition = new ResidueComposition();
-            foreach (var modification in Modifications)
+            lock(Lock)
             {
-                residueComposition.SetMassDelta(modification.Key, modification.Value);
+                if (_aminoAcidFormulas != null)
+                {
+                    return _aminoAcidFormulas;
+                }
+                var massShifts = new Dictionary<char, double>();
+                foreach (var modification in Modifications)
+                {
+                    massShifts[modification.Key[0]] = modification.Value;
+                }
+                return _aminoAcidFormulas = AminoAcidFormulas.Default.SetMassShifts(massShifts);
             }
-            return residueComposition;
         }
 
         public IDictionary<String, double> Modifications
@@ -134,6 +143,7 @@ namespace pwiz.Topograph.Model
             {
                 lock(Lock)
                 {
+                    _aminoAcidFormulas = null;
                     _modifications.Clear();
                     foreach (var modification in value)
                     {

@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using mercury;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Topograph.Enrichment
 {
@@ -78,6 +78,14 @@ namespace pwiz.Topograph.Enrichment
             result.Append("+");
             result.Append(Charge);
             return result.ToString();
+        }
+        public double GetMonoisotopicMass(AminoAcidFormulas aminoAcidFormulas)
+        {
+            return AminoAcidFormulas.ProtonMass + aminoAcidFormulas.GetMonoisotopicMass(Sequence) / Charge;
+        }
+        public MassDistribution GetMassDistribution(AminoAcidFormulas aminoAcidFormulas)
+        {
+            return aminoAcidFormulas.GetMassDistribution(Sequence, Charge);
         }
     }
 }

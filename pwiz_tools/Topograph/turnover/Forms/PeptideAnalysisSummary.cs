@@ -180,10 +180,9 @@ namespace pwiz.Topograph.ui.Forms
         protected void OnPeptideAnalysisChanged()
         {
             var res = Workspace.GetResidueComposition();
-            tbxFormula.Text = res.DictionaryToFormula(
-                res.FormulaToDictionary(res.MolecularFormula(Peptide.Sequence)));
-            tbxMonoMass.Text = res.GetMonoisotopicMz(Peptide.GetChargedPeptide(1)).ToString("0.####");
-            tbxAvgMass.Text = res.GetAverageMz(Peptide.GetChargedPeptide(1)).ToString("0.####");
+            tbxFormula.Text = res.GetFormula(Peptide.Sequence).ToString();
+            tbxMonoMass.Text = Peptide.GetChargedPeptide(1).GetMonoisotopicMass(res).ToString("0.####");
+            tbxAvgMass.Text = Peptide.GetChargedPeptide(1).GetMassDistribution(res).AverageMass.ToString("0.####");
             tbxMinCharge.Text = PeptideAnalysis.MinCharge.ToString();
             tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString();
             tbxInitialEnrichment.Text = PeptideAnalysis.InitialEnrichment.ToString();

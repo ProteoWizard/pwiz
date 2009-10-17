@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -88,15 +89,14 @@ namespace pwiz.Topograph.ui.Forms
         private void tbxEnrichedSymbol_Leave(object sender, EventArgs e)
         {
             String symbol = tbxTracerSymbol.Text;
-            if (ResidueComposition.LongNames.ContainsKey(symbol))
+            if (AminoAcidFormulas.LongNames.ContainsKey(symbol))
             {
                 tbxAtomCount.Enabled = true;
                 tbxAtomicPercentEnrichment.Enabled = true;
             }
             else
             {
-                ResidueComposition res = new ResidueComposition();
-                if (res.IsotopeAbundances.getAbundances().ContainsKey(symbol))
+                if (IsotopeAbundances.Default.ContainsKey(symbol))
                 {
                     tbxAtomCount.Enabled = false;
                     tbxAtomicPercentEnrichment.Enabled = false;

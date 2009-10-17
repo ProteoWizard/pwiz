@@ -138,10 +138,8 @@
     <Compile Include="Model\PeptideSearchResults.cs" />
     <Compile Include="Model\Workspace.cs" />
     <Compile Include="Enrichment\Enrichment.cs" />
-    <Compile Include="Enrichment\IsotopeAbundances.cs" />
     <Compile Include="Enrichment\ChargedPeptide.cs" />
     <Compile Include="Enrichment\PeakFinder.cs" />
-    <Compile Include="Enrichment\ResidueComposition.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -161,9 +159,9 @@
     <Compile Include="Util\WeakDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Mercury\mercury.vcproj">
-      <Project>{E2C04709-CE7C-4363-ADAA-C5483B21F132}</Project>
-      <Name>mercury</Name>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -176,9 +174,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Data\mapping.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Enrichment\ISOTOPE.DAT" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
