@@ -160,17 +160,23 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+// ReSharper disable InconsistentNaming
+    public enum OptimizedMethodType { None, Precursor, Transition }
+// ReSharper restore InconsistentNaming
+
     [XmlRoot("transition_prediction")]
     public class TransitionPrediction : Immutable, IValidating, IXmlSerializable
     {
         public TransitionPrediction(MassType precursorMassType, MassType fragmentMassType,
                                     CollisionEnergyRegression collisionEnergy,
-                                    DeclusteringPotentialRegression declusteringPotential)
+                                    DeclusteringPotentialRegression declusteringPotential,
+                                    OptimizedMethodType optimizedMethodType)
         {
             PrecursorMassType = precursorMassType;
             FragmentMassType = fragmentMassType;
             CollisionEnergy = collisionEnergy;
             DeclusteringPotential = declusteringPotential;
+            OptimizedMethodType = optimizedMethodType;
 
             DoValidate();
         }
@@ -179,7 +185,8 @@ namespace pwiz.Skyline.Model.DocSettings
             : this(copy.PrecursorMassType,
                    copy.FragmentMassType,
                    copy.CollisionEnergy,
-                   copy.DeclusteringPotential)
+                   copy.DeclusteringPotential,
+                   copy.OptimizedMethodType)
         {
         }
 
@@ -190,6 +197,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
+
+        public OptimizedMethodType OptimizedMethodType { get; private set; }
 
         /// <summary>
         /// This element is here for backward compatibility with the
@@ -221,6 +230,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), (im, v) => im.DeclusteringPotential = v, prop);
         }
 
+        public TransitionPrediction ChangeOptimizedMethodType(OptimizedMethodType prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.OptimizedMethodType = v, prop);
+        }
+        
         public TransitionPrediction ChangeRetentionTime(RetentionTimeRegression prop)
         {
             return ChangeProp(ImClone(this), (im, v) => im.RetentionTime = v, prop);
@@ -240,7 +254,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             precursor_mass_type,
-            fragment_mass_type
+            fragment_mass_type,
+            optimize_by
         }
 
         void IValidating.Validate()
@@ -269,6 +284,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read start tag attributes
             PrecursorMassType = reader.GetEnumAttribute(ATTR.precursor_mass_type, MassType.Monoisotopic);
             FragmentMassType = reader.GetEnumAttribute(ATTR.fragment_mass_type, MassType.Monoisotopic);
+            OptimizedMethodType = reader.GetEnumAttribute(ATTR.optimize_by, OptimizedMethodType.None);
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -293,6 +309,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attributes
             writer.WriteAttribute(ATTR.precursor_mass_type, PrecursorMassType);
             writer.WriteAttribute(ATTR.fragment_mass_type, FragmentMassType);
+            writer.WriteAttribute(ATTR.optimize_by, OptimizedMethodType);
             // Write child elements
             writer.WriteElement(CollisionEnergy);
             if (DeclusteringPotential != null)
@@ -310,7 +327,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return Equals(obj.PrecursorMassType, PrecursorMassType) &&
                    Equals(obj.FragmentMassType, FragmentMassType) &&
                    Equals(obj.CollisionEnergy, CollisionEnergy) &&
-                   Equals(obj.DeclusteringPotential, DeclusteringPotential);
+                   Equals(obj.DeclusteringPotential, DeclusteringPotential) &&
+                   Equals(obj.OptimizedMethodType, OptimizedMethodType);
         }
 
         public override bool Equals(object obj)
@@ -329,6 +347,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ FragmentMassType.GetHashCode();
                 result = (result*397) ^ (CollisionEnergy != null ? CollisionEnergy.GetHashCode() : 0);
                 result = (result*397) ^ (DeclusteringPotential != null ? DeclusteringPotential.GetHashCode() : 0);
+                result = (result*397) ^ OptimizedMethodType.GetHashCode();
                 return result;
             }
         }

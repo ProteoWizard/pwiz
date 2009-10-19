@@ -32,6 +32,9 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.labelOptimizeType = new System.Windows.Forms.Label();
+            this.comboOptimizeType = new System.Windows.Forms.ComboBox();
+            this.cbUseOptimized = new System.Windows.Forms.CheckBox();
             this.comboDeclusterPotential = new System.Windows.Forms.ComboBox();
             this.label12 = new System.Windows.Forms.Label();
             this.comboCollisionEnergy = new System.Windows.Forms.ComboBox();
@@ -120,6 +123,9 @@
             // 
             // tabGeneral
             // 
+            this.tabGeneral.Controls.Add(this.labelOptimizeType);
+            this.tabGeneral.Controls.Add(this.comboOptimizeType);
+            this.tabGeneral.Controls.Add(this.cbUseOptimized);
             this.tabGeneral.Controls.Add(this.comboDeclusterPotential);
             this.tabGeneral.Controls.Add(this.label12);
             this.tabGeneral.Controls.Add(this.comboCollisionEnergy);
@@ -135,6 +141,40 @@
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "Prediction";
             this.tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // labelOptimizeType
+            // 
+            this.labelOptimizeType.AutoSize = true;
+            this.labelOptimizeType.Location = new System.Drawing.Point(23, 187);
+            this.labelOptimizeType.Name = "labelOptimizeType";
+            this.labelOptimizeType.Size = new System.Drawing.Size(64, 13);
+            this.labelOptimizeType.TabIndex = 9;
+            this.labelOptimizeType.Text = "&Optimize by:";
+            this.labelOptimizeType.Visible = false;
+            // 
+            // comboOptimizeType
+            // 
+            this.comboOptimizeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizeType.FormattingEnabled = true;
+            this.comboOptimizeType.Items.AddRange(new object[] {
+            "Precursor",
+            "Transition"});
+            this.comboOptimizeType.Location = new System.Drawing.Point(23, 206);
+            this.comboOptimizeType.Name = "comboOptimizeType";
+            this.comboOptimizeType.Size = new System.Drawing.Size(121, 21);
+            this.comboOptimizeType.TabIndex = 10;
+            this.comboOptimizeType.Visible = false;
+            // 
+            // cbUseOptimized
+            // 
+            this.cbUseOptimized.AutoSize = true;
+            this.cbUseOptimized.Location = new System.Drawing.Point(23, 157);
+            this.cbUseOptimized.Name = "cbUseOptimized";
+            this.cbUseOptimized.Size = new System.Drawing.Size(204, 17);
+            this.cbUseOptimized.TabIndex = 8;
+            this.cbUseOptimized.Text = "&Use optimization values when present";
+            this.cbUseOptimized.UseVisualStyleBackColor = true;
+            this.cbUseOptimized.CheckedChanged += new System.EventHandler(this.cbUseOptimized_CheckedChanged);
             // 
             // comboDeclusterPotential
             // 
@@ -618,5 +658,8 @@
         private System.Windows.Forms.Panel panelPick;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.TextBox textMzMatchTolerance;
+        private System.Windows.Forms.ComboBox comboOptimizeType;
+        private System.Windows.Forms.CheckBox cbUseOptimized;
+        private System.Windows.Forms.Label labelOptimizeType;
     }
 }

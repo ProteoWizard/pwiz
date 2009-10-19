@@ -300,24 +300,244 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step);
 
-        protected double GetCollisionEnergy(int charge, double mz, int step)
+        protected double GetProductMz(double productMz, int step)
         {
-            var regressionCE = Document.Settings.TransitionSettings.Prediction.CollisionEnergy;
-            double ce = regressionCE.GetCollisionEnergy(charge, mz);
-            if (Equals(OptimizeType, ExportOptimize.CE))
-                ce += OptimizeStepSize * step;
-            return ce;
+            return productMz + 0.01*step;
         }
 
-        protected double GetDeclusteringPotential(double mz, int step)
+        protected double GetCollisionEnergy(PeptideDocNode nodePep,
+                                            TransitionGroupDocNode nodeGroup,
+                                            TransitionDocNode nodeTran,
+                                            int step)
         {
-            var regressionDP = Document.Settings.TransitionSettings.Prediction.DeclusteringPotential;
-            if (regressionDP == null)
+            var prediction = Document.Settings.TransitionSettings.Prediction;
+            var methodType = prediction.OptimizedMethodType;
+            var regression = prediction.CollisionEnergy;
+
+            // If exporting optimization methods, or optimization data should be ignored,
+            // use the regression setting to calculate CE
+            if (OptimizeType != null || methodType == OptimizedMethodType.None)
+            {
+                if (!Equals(OptimizeType, ExportOptimize.CE))
+                    step = 0;
+                return GetCollisionEnergy(Document, nodePep, nodeGroup, regression, step);
+            }
+
+            return OptimizationStep<CollisionEnergyRegression>.FindOptimizedValue(Document,
+                nodePep, nodeGroup, nodeTran, methodType, regression, GetCollisionEnergy);
+        }
+
+        protected static double GetCollisionEnergy(SrmDocument document, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
+        {
+            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+            double mz = GetRegressionMz(document, nodePep, nodeGroup);
+            return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step;
+        }
+
+        protected double GetDeclusteringPotential(PeptideDocNode nodePep,
+                                                  TransitionGroupDocNode nodeGroup,
+                                                  TransitionDocNode nodeTran,
+                                                  int step)
+        {
+            var prediction = Document.Settings.TransitionSettings.Prediction;
+            var methodType = prediction.OptimizedMethodType;
+            var regression = prediction.DeclusteringPotential;
+
+            // If exporting optimization methods, or optimization data should be ignored,
+            // use the regression setting to calculate CE
+            if (OptimizeType != null || prediction.OptimizedMethodType == OptimizedMethodType.None)
+            {
+                if (!Equals(OptimizeType, ExportOptimize.DP))
+                    step = 0;
+                return GetDeclusteringPotential(Document, nodePep, nodeGroup, regression, step);
+            }
+
+            return OptimizationStep<DeclusteringPotentialRegression>.FindOptimizedValue(Document,
+                nodePep, nodeGroup, nodeTran, methodType, regression, GetDeclusteringPotential);
+        }
+
+        private static double GetDeclusteringPotential(SrmDocument document, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, DeclusteringPotentialRegression regression, int step)
+        {
+            if (regression == null)
                 return 0;
-            double dp = regressionDP.GetDeclustringPotential(mz);
-            if (Equals(OptimizeType, ExportOptimize.DP))
-                dp += OptimizeStepSize * step;
-            return dp;
+            double mz = GetRegressionMz(document, nodePep, nodeGroup);
+            return regression.GetDeclustringPotential(mz) + regression.StepSize * step;
+        }
+
+        private static double GetRegressionMz(SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        {
+            double mz = nodeGroup.PrecursorMz;
+            // Always use the light m/z value to ensure CEs are consistent between light and heavy
+            if (nodeGroup.TransitionGroup.LabelType != IsotopeLabelType.light)
+            {
+                double massH = document.Settings.GetPrecursorMass(IsotopeLabelType.light,
+                    nodeGroup.TransitionGroup.Peptide.Sequence, nodePep.ExplicitMods);
+                mz = SequenceMassCalc.GetMZ(massH, nodeGroup.TransitionGroup.PrecursorCharge);
+            }
+            return mz;
+        }
+
+        private sealed class OptimizationStep<T>
+            where T : OptimizableRegression
+        {
+            private OptimizationStep(T regression, int step, double maxArea)
+            {
+                Regression = regression;
+                Step = step;
+                MaxArea = maxArea;
+            }
+
+            private T Regression { get; set; }
+            private int Step { get; set; }
+            private double MaxArea { get; set; }
+
+            public delegate double GetRegressionValue(SrmDocument document, PeptideDocNode nodePep,
+                                                      TransitionGroupDocNode nodeGroup, T regression, int step);
+
+            public static double FindOptimizedValue(SrmDocument document,
+                                                 PeptideDocNode nodePep,
+                                                 TransitionGroupDocNode nodeGroup,
+                                                 TransitionDocNode nodeTran,
+                                                 OptimizedMethodType methodType,
+                                                 T regressionDocument,
+                                                 GetRegressionValue getRegressionValue)
+            {
+                var listBestOptSteps = new List<OptimizationStep<T>>();
+                if (document.Settings.HasResults)
+                {
+                    var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+                    for (int i = 0; i < chromatograms.Count; i++)
+                    {
+                        var chromSet = chromatograms[i];
+                        var regression = chromSet.OptimizationFunction as T;
+                        if (regression == null)
+                            continue;
+                        if (methodType == OptimizedMethodType.Precursor)
+                        {
+                            TransitionGroupDocNode[] listGroups = FindCandidateGroups(nodePep, nodeGroup);
+                            foreach (var nodeGroupCandidate in listGroups)
+                            {
+                                var optimizationStep = FindBestOptimizationStep(nodeGroupCandidate, i, regression);
+                                if (optimizationStep != null)
+                                    listBestOptSteps.Add(optimizationStep);
+                            }
+                        }
+                        else if (methodType == OptimizedMethodType.Transition)
+                        {
+                            TransitionDocNode[] listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
+                            foreach (var nodeTranCandidate in listTransitions)
+                            {
+                                var optimizationStep = FindBestOptimizationStep(nodeTranCandidate, i, regression);
+                                if (optimizationStep != null)
+                                    listBestOptSteps.Add(optimizationStep);
+                            }
+                        }
+                    }
+                }
+                // If no candidate values were found, use the document regressor.
+                if (listBestOptSteps.Count == 0)
+                    return getRegressionValue(document, nodePep, nodeGroup, regressionDocument, 0);
+                // Calculate the mean of the best values found
+                double[] bestValues = new double[listBestOptSteps.Count];
+                double[] bestAreas = new double[listBestOptSteps.Count];
+                double maxArea = 0;
+                int maxAreaIndex = 0;
+                for (int i = 0; i < listBestOptSteps.Count; i++)
+                {
+                    var optStep = listBestOptSteps[i];
+                    bestValues[i] = getRegressionValue(document, nodePep, nodeGroup, optStep.Regression, optStep.Step);
+                    bestAreas[i] = optStep.MaxArea;
+                    if (maxArea < optStep.MaxArea)
+                    {
+                        maxArea = optStep.MaxArea;
+                        maxAreaIndex = i;
+                    }
+                }
+                // Use CE for candidate with the largest area
+                return bestValues[maxAreaIndex];
+                // Use mean weighted by area as the CE
+//                Statistics statBestValues = new Statistics(bestValues);
+//                Statistics statBestAreas = new Statistics(bestAreas);
+//                return statBestValues.Mean(statBestAreas);
+            }
+
+            private static TransitionGroupDocNode[] FindCandidateGroups(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+            {
+                if (nodePep.Children.Count == 1)
+                    return new[] { nodeGroup };
+                // Add all precursors with the same charge as the one passed in
+                var listCandidates = new List<TransitionGroupDocNode> { nodeGroup };
+                foreach (TransitionGroupDocNode nodeGroupCandidate in nodePep.Children)
+                {
+                    if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupCandidate.TransitionGroup.PrecursorCharge &&
+                            !ReferenceEquals(nodeGroup, nodeGroupCandidate))
+                        listCandidates.Add(nodeGroupCandidate);
+                }
+                return listCandidates.ToArray();
+            }
+
+            private static TransitionDocNode[] FindCandidateTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+            {
+                var candidateGroups = FindCandidateGroups(nodePep, nodeGroup);
+                if (candidateGroups.Length < 2)
+                    return new[] { nodeTran };
+                Debug.Assert(ReferenceEquals(nodeGroup, candidateGroups[0]));
+                var listCandidates = new List<TransitionDocNode> { nodeTran };
+                var transition = nodeTran.Transition;
+                for (int i = 1; i < candidateGroups.Length; i++)
+                {
+                    foreach (TransitionDocNode nodeTranCandidate in candidateGroups[i].Children)
+                    {
+                        var transitionCandidate = nodeTranCandidate.Transition;
+                        if (transition.Charge == transitionCandidate.Charge &&
+                            transition.Ordinal == transitionCandidate.Ordinal &&
+                            transition.IonType == transitionCandidate.IonType)
+                        {
+                            listCandidates.Add(nodeTranCandidate);
+                            break;
+                        }
+                    }
+                }
+                return listCandidates.ToArray();
+            }
+
+            private static OptimizationStep<T> FindBestOptimizationStep(TransitionGroupDocNode nodeGroup, int iResult, T regression)
+            {
+                var results = (nodeGroup.HasResults ? nodeGroup.Results[iResult] : null);
+                if (results == null)
+                    return null;
+                float maxArea = 0;
+                int maxStep = -1;
+                foreach (var chromInfo in results)
+                {
+                    if (chromInfo.Area.HasValue && maxArea < chromInfo.Area)
+                    {
+                        maxArea = chromInfo.Area.Value;
+                        maxStep = chromInfo.OptimizationStep;
+                    }
+                }
+                return (maxStep != -1 ? new OptimizationStep<T>(regression, maxStep, maxArea) : null);
+            }
+
+            private static OptimizationStep<T> FindBestOptimizationStep(TransitionDocNode nodeTran, int iResult, T regression)
+            {
+                var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : null);
+                if (results == null)
+                    return null;
+                float maxArea = 0;
+                int maxStep = -1;
+                foreach (var chromInfo in results)
+                {
+                    if (maxArea < chromInfo.Area)
+                    {
+                        maxArea = chromInfo.Area;
+                        maxStep = chromInfo.OptimizationStep;
+                    }
+                }
+                return (maxStep != -1 ? new OptimizationStep<T>(regression, maxStep, maxArea) : null);
+            }
         }
 
         private bool ExceedsMax(int count)
@@ -554,9 +774,9 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTran.Mz) + 0.01*step);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodeTranGroup.TransitionGroup.PrecursorCharge, nodeTranGroup.PrecursorMz, step));
+            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Scheduled)
             {
@@ -744,7 +964,7 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTran.Mz) + 0.01*step);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Standard)
                 writer.Write(Math.Round(DwellTime, 2));
@@ -770,9 +990,9 @@ namespace pwiz.Skyline.Model
             writer.Write(nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light ? "light" : "heavy");
             writer.Write(FieldSeparator);
 
-            writer.Write(GetDeclusteringPotential(nodeTranGroup.PrecursorMz, step));
+            writer.Write(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step));
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodeTranGroup.TransitionGroup.PrecursorCharge, nodeTranGroup.PrecursorMz, step));
+            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
             writer.WriteLine();
         }
     }
@@ -854,7 +1074,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write("Unit");
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTran.Mz) + 0.01*step);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
             writer.Write("Unit");
             writer.Write(FieldSeparator);
@@ -868,7 +1088,7 @@ namespace pwiz.Skyline.Model
 
             writer.Write(Fragmentor);
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodeTranGroup.TransitionGroup.PrecursorCharge, nodeTranGroup.PrecursorMz, step));
+            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
             writer.Write(FieldSeparator);
 
             if (MethodType != ExportMethodType.Standard)
@@ -984,10 +1204,10 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
 
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTran.Mz) + 0.01*step);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
 
-            writer.Write(GetCollisionEnergy(nodeTranGroup.TransitionGroup.PrecursorCharge, nodeTranGroup.PrecursorMz, step));
+            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
             writer.Write(FieldSeparator);
 
             writer.Write(ConeVoltage);

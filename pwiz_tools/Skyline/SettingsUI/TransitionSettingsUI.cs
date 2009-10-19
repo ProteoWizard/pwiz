@@ -68,6 +68,14 @@ namespace pwiz.Skyline.SettingsUI
             sel = (Prediction.DeclusteringPotential == null ? null : Prediction.DeclusteringPotential.Name);
             _driverDP.LoadList(sel);
 
+            if (Prediction.OptimizedMethodType == OptimizedMethodType.None)
+                comboOptimizeType.SelectedIndex = 0;
+            else
+            {
+                cbUseOptimized.Checked = true;
+                comboOptimizeType.SelectedItem = Prediction.OptimizedMethodType.ToString();
+            }
+
             // Initialize filter settings
             textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", ");
             textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", ");
@@ -120,9 +128,16 @@ namespace pwiz.Skyline.SettingsUI
             string nameDP = comboDeclusterPotential.SelectedItem.ToString();
             DeclusteringPotentialRegression declusteringPotential =
                 Settings.Default.GetDeclusterPotentialByName(nameDP);
+            OptimizedMethodType optimizedMethodType = OptimizedMethodType.None;
+            if (cbUseOptimized.Checked)
+            {
+                optimizedMethodType = (OptimizedMethodType) Enum.Parse(typeof(OptimizedMethodType),
+                    comboOptimizeType.SelectedItem.ToString());
+            }
             TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
                                                                        fragmentMassType, collisionEnergy,
-                                                                       declusteringPotential);
+                                                                       declusteringPotential,
+                                                                       optimizedMethodType);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and store filter settings
@@ -255,6 +270,11 @@ namespace pwiz.Skyline.SettingsUI
         private void comboDeclusterPotential_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverDP.SelectedIndexChangedEvent(sender, e);
+        }
+
+        private void cbUseOptimized_CheckedChanged(object sender, EventArgs e)
+        {
+            labelOptimizeType.Visible = comboOptimizeType.Visible = cbUseOptimized.Checked;
         }
 
         private void btnOk_Click(object sender, EventArgs e)

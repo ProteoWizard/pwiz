@@ -832,7 +832,8 @@ namespace pwiz.Skyline.Properties
                         MassType.Monoisotopic, // PrecursorMassType
                         MassType.Monoisotopic, // FragmentMassType
                         CollisionEnergyList.GetDefault(),
-                        null
+                        null,
+                        OptimizedMethodType.None
                     ),
                     new TransitionFilter
                     (
