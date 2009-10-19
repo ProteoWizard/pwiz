@@ -1,9 +1,8 @@
-
 //
 // $Id$
 //
 //
-// Original author: Robert Burke <robetr.burke@proteowizard.org>
+// Original author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033

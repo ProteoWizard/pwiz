@@ -2,7 +2,7 @@
 // $Id$
 //
 //
-// Original author: Robert Burke <robetr.burke@proteowizard.org>
+// Original author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
@@ -4467,9 +4467,12 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
         write(writer, mzid.analysisSampleCollection);
     if (!mzid.sequenceCollection.empty())
         write(writer, mzid.sequenceCollection);
-    write(writer, mzid.analysisCollection);
-    write(writer, mzid.analysisProtocolCollection);
-    write(writer, mzid.dataCollection);
+    if (!mzid.analysisCollection.empty())
+        write(writer, mzid.analysisCollection);
+    if (!mzid.analysisProtocolCollection.empty())
+        write(writer, mzid.analysisProtocolCollection);
+    if (!mzid.dataCollection.empty())
+        write(writer, mzid.dataCollection);
     if (!mzid.bibliographicReference.empty())
         writePtrList(writer, mzid.bibliographicReference);
 
