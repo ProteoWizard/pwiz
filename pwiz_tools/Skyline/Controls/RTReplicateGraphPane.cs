@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Controls
         private void ScaleAxisLabels()
         {
             int dyAvailable = (int) Rect.Height/4;
-            int dxAvailable = (int) Rect.Width/XAxis.Scale.TextLabels.Count();
+            int dxAvailable = (int) Rect.Width/Math.Min(1, XAxis.Scale.TextLabels.Count());
             int dpAvailable;
             if (dyAvailable > dxAvailable)
             {

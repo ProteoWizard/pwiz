@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.file_name_hint, FileNameHint);
+            writer.WriteAttributeIfString(ATTR.file_name_hint, FileNameHint);
         }
 
         #endregion
