@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
@@ -29,16 +30,23 @@ using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class UniquePeptidesDlg : Form
+    /// <summary>
+    /// Dialog box which shows the user which of their peptides match more than one protein in the database,
+    /// and allows them to selectively remove peptides from the document.
+    /// </summary>
+    public partial class UniquePeptidesDlg : DockableForm
     {
         private List<ProteinColumn> _proteinColumns;
         private List<PeptideDocNode> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
-        public UniquePeptidesDlg()
+        public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
+            DocumentUIContainer = documentUiContainer;
             dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged;
         }
+
+        public IDocumentUIContainer DocumentUIContainer { get; private set; }
 
         void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
         {
@@ -111,20 +119,33 @@ namespace pwiz.Skyline.EditUI
                     _peptideDocNodes.Add((PeptideDocNode) child);
                 }
             }
-            HashSet<Protein> proteinSet = new HashSet<Protein>();
-            Digestion digestion = null;
-            if (BackgroundProteome != null)
+            if (BackgroundProteome == null)
             {
-                digestion = BackgroundProteome.GetDigestion(SrmDocument.Settings.PeptideSettings.Enzyme,
-                                                            SrmDocument.Settings.PeptideSettings.DigestSettings);
+                MessageBox.Show(this, "You need to specify a background proteome in the Peptide Settings dialog.", Program.Name);
+                Close();
+                return;
             }
             _peptideProteins = null;
+            var peptideSettings = DocumentUIContainer.DocumentUI.Settings.PeptideSettings;
+            var digestion = BackgroundProteome.GetDigestion(peptideSettings);
+            if (digestion == null)
+            {
+                MessageBox.Show(this, "The background proteome database has not yet finished being digested with " + peptideSettings.Enzyme.Name, Program.Name);
+                Close();
+                return;
+            }
+            LaunchPeptideProteinsQuery();
+        }
+
+        private void LaunchPeptideProteinsQuery()
+        {
+            HashSet<Protein> proteinSet = new HashSet<Protein>();
             LongWaitDlg longWaitDlg = new LongWaitDlg
-                                          {
-                                              Text = "Querying Background Proteome Database",
-                                              Message =
-                                                  "Looking for proteins with matching peptide sequences"
-                                          };
+            {
+                Text = "Querying Background Proteome Database",
+                Message =
+                    "Looking for proteins with matching peptide sequences"
+            };
             longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
             if (_peptideProteins == null)
             {
@@ -143,14 +164,14 @@ namespace pwiz.Skyline.EditUI
                 ProteinColumn proteinColumn = new ProteinColumn(_proteinColumns.Count, protein);
                 _proteinColumns.Add(proteinColumn);
                 DataGridViewCheckBoxColumn column = new DataGridViewCheckBoxColumn
-                                                        {
-                                                            Name = proteinColumn.Name,
-                                                            HeaderText = protein.Name,
-                                                            ReadOnly = true,
-                                                            ToolTipText = protein.Description,
-                                                            SortMode = DataGridViewColumnSortMode.Automatic,
-                                                            Tag = proteinColumn,
-                                                        };
+                {
+                    Name = proteinColumn.Name,
+                    HeaderText = protein.Name,
+                    ReadOnly = true,
+                    ToolTipText = protein.Description,
+                    SortMode = DataGridViewColumnSortMode.Automatic,
+                    Tag = proteinColumn,
+                };
                 dataGridView1.Columns.Add(column);
             }
             for (int i = 0; i < _peptideDocNodes.Count; i++)
@@ -293,6 +314,5 @@ namespace pwiz.Skyline.EditUI
                 children.ToArray(),
                 false);
         }
-        
     }
 }

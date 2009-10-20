@@ -724,7 +724,6 @@ namespace pwiz.Skyline
             this.manageUniquePeptidesMenuItem.Name = "manageUniquePeptidesMenuItem";
             this.manageUniquePeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
             this.manageUniquePeptidesMenuItem.Text = "&Unique Peptides...";
-            this.manageUniquePeptidesMenuItem.Visible = false;
             this.manageUniquePeptidesMenuItem.Click += new System.EventHandler(this.manageUniquePeptidesToolStripMenuItem_Click);
             // 
             // toolStripSeparator30

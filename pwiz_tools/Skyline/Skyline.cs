@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg
+            UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
             {
                 PeptideGroupTreeNode = peptideGroupTreeNode
             };
