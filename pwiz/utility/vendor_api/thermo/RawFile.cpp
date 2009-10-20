@@ -908,7 +908,7 @@ void ScanInfoImpl::initialize()
     }
 
     long isUniformTime = 0;
-    checkResult(raw_->GetScanHeaderInfoForScanNum(scanNumber_,
+    HRESULT hr = raw_->GetScanHeaderInfoForScanNum(scanNumber_,
                                                   &packetCount_,
                                                   &startTime_,
                                                   &lowMass_,
@@ -918,8 +918,11 @@ void ScanInfoImpl::initialize()
                                                   &basePeakIntensity_,
                                                   &channelCount_,
                                                   &isUniformTime,
-                                                  &frequency_),
-                                                  "[ScanInfoImpl::initialize(), GetScanHeaderInfoForScanNum()] ");
+                                                  &frequency_);
+    if (hr != 0) 
+    {
+        checkResult(raw_->GetStartTime(&startTime_), "[ScanInfoImpl::initialize(), GetStartTime()]");
+    }
     isUniformTime_ = (isUniformTime!=0);
 }
 
