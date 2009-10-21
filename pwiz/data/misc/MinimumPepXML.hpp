@@ -325,6 +325,21 @@ struct PWIZ_API_DECL AminoAcidModification
 
 };
 
+struct PWIZ_API_DECL Parameter
+{
+    std::string name;
+    std::string value;
+
+    void write(XMLWriter& writer) const;
+    void read(std::istream& is);
+
+    bool operator==(const Parameter& that) const;
+    bool operator!=(const Parameter& that) const;
+};
+
+typedef boost::shared_ptr<Parameter> ParameterPtr;
+
+
 /// Database search settings
 struct PWIZ_API_DECL SearchSummary
 {
@@ -355,6 +370,8 @@ struct PWIZ_API_DECL SearchSummary
     
     EnzymaticSearchConstraint enzymaticSearchConstraint;
     std::vector<AminoAcidModification> aminoAcidModifications;
+
+    std::vector<ParameterPtr> parameters;
 
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
@@ -392,6 +409,7 @@ struct PWIZ_API_DECL SpectrumQuery
     SpectrumQuery() : startScan(0), endScan(0), precursorNeutralMass(0), assumedCharge(0), index(0), retentionTimeSec(0) {}
 
     std::string spectrum;
+
     /// first scan number integrated into MS/MS spectrum
     int startScan;
 

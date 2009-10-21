@@ -1170,6 +1170,46 @@ PWIZ_API_DECL bool AminoAcidModification::operator!=(const AminoAcidModification
 
 }
 
+//
+// Parameter
+//
+
+PWIZ_API_DECL void Parameter::write(XMLWriter& writer) const
+{
+}
+
+struct HandlerParameter : public SAXParser::Handler
+{
+    Parameter* param;
+    HandlerParameter(Parameter* _param = 0) : param(_param) {}
+    
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!param)
+            throw runtime_error("[HandlerParameter] Null Parameter");
+
+        if (name == "Parameter")
+        {
+            getAttribute(attributes, "name", param->name);
+            getAttribute(attributes, "value", param->value);
+        }
+        else
+            throw runtime_error(("[HandlerParameter] unknown tag "+name).c_str());
+        
+        return Handler::Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void Parameter::read(istream& is)
+{
+    HandlerParameter handler(this);
+    parse(is, handler);
+
+}
+
 PWIZ_API_DECL void SearchSummary::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
@@ -1237,7 +1277,12 @@ struct HandlerSearchSummary : public SAXParser::Handler
             return Handler::Status(Status::Delegate, &(_handlerAminoAcidModification));
 
         }
-
+        else if (name == "parameter")
+        {
+            searchsummary->parameters.push_back(ParameterPtr(new Parameter()));
+            _handlerParameter.param = searchsummary->parameters.back().get();
+            return Handler::Status(Status::Delegate, &_handlerParameter);
+        }
         else
         {
 
@@ -1254,6 +1299,7 @@ private:
     HandlerSearchDatabase _handlerSearchDatabase;
     HandlerEnzymaticSearchConstraint _handlerEnzymaticSearchConstraint;
     HandlerAminoAcidModification _handlerAminoAcidModification;
+    HandlerParameter _handlerParameter;
 
 };
 
