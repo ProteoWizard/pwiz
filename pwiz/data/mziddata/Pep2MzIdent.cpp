@@ -34,14 +34,11 @@ using namespace pwiz::proteome;
 using namespace boost;
 using namespace std;
 
-Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr result) : _mspa(mspa), _result(result) 
+Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr result)
+  : _mspa(mspa), _result(result),
+    precursorMonoisotopic(false), fragmentMonoisotopic(false)
 {
     translateRoot();
-    // add one SpectrumIdentificationResultPtr for the pep xml spectrumQueries object
-    //_result->dataCollection.analysisData.spectrumIdentificationList.push_back(SpectrumIdentificationListPtr(new SpectrumIdentificationList()));
-    //(*_result->dataCollection.analysisData.spectrumIdentificationList.begin())->spectrumIdentificationResult.push_back(SpectrumIdentificationResultPtr(new SpectrumIdentificationResult()));
-
-
 }
 
 /// Translates pepXML data needed for the mzIdentML tag.
@@ -102,6 +99,15 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary, MzIdentMLPtr r
 
     result->dataCollection.inputs.sourceFile.push_back(sourceFile);
 
+    AnalysisSoftwarePtr as(new AnalysisSoftware());
+    result->analysisSoftwareList.push_back(as);
+    result->analysisSoftwareList.back()->softwareName.set(
+        translator.translate(summary->searchEngine));
+
+    // handle precursorMassType/fragmentMassType
+    precursorMonoisotopic = summary->precursorMassType == "monoisotopic";
+    fragmentMonoisotopic = summary->fragmentMassType == "monoisotopic";
+    
     SearchDatabasePtr searchDatabase(new SearchDatabase());
     searchDatabase->id = "SD_1";
     searchDatabase->location = summary->searchDatabase.localPath;
@@ -117,7 +123,6 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary, MzIdentMLPtr r
     else if (summary->searchDatabase.type == "NA")
         searchDatabase->params.set(MS_database_type_nucleotide);
 
-    // TODO handle precursorMassType/fragmentMassType
     
     // TODO figure out if this is correct
     searchDatabase->DatabaseName.set(translator.translate(summary->searchDatabase.databaseName));
@@ -128,12 +133,64 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary, MzIdentMLPtr r
          it != summary->aminoAcidModifications.end(); it++)
     {
         ModificationPtr mod(new Modification());
-        
-        mod->avgMassDelta = it->massDiff;
+
+        if(precursorMonoisotopic)
+            mod->monoisotopicMassDelta = it->massDiff;
+        else
+            mod->avgMassDelta = it->massDiff;
         mod->residues = it->aminoAcid;
 
-        // TODO put this somewhere more descriptive
-        mod->paramGroup.userParams.push_back(UserParam("mass", lexical_cast<string>(it->mass)));
+        // TODO save terminus somewhere
+        
+        // TODO should this be put somewhere?
+        //mod->paramGroup.userParams.push_back(UserParam("mass", lexical_cast<string>(it->mass)));
+    }
+}
+
+
+void Pep2MzIdent::addModifications(
+    const vector<AminoAcidModification>& aminoAcidModifications,
+    PeptidePtr peptide, MzIdentMLPtr result)
+{
+    typedef vector<AminoAcidModification>::const_iterator aam_iterator;
+    
+    for (aam_iterator it=aminoAcidModifications.begin();
+         it != aminoAcidModifications.end(); it++)
+    {
+        if (find(peptide->peptideSequence.begin(),
+                 peptide->peptideSequence.end(), it->aminoAcid.at(0)) ==
+            peptide->peptideSequence.end())
+            continue;
+        
+        ModificationPtr mod(new Modification());
+
+        if(precursorMonoisotopic)
+            mod->monoisotopicMassDelta = it->massDiff;
+        else
+            mod->avgMassDelta = it->massDiff;
+        mod->residues = it->aminoAcid;
+
+        // TODO save terminus somewhere
+        if (it->peptideTerminus == "c")
+        {
+            mod->location = peptide->peptideSequence.size();
+        }
+        else if (it->peptideTerminus == "n")
+        {
+            mod->location = 0;
+        }
+        else if (it->peptideTerminus == "cn")
+        {
+            mod->location = 0;
+
+            // TODO is this right?
+            ModificationPtr mod2(new Modification());
+            mod2 = mod;
+            mod2->location = peptide->peptideSequence.size();
+            peptide->modification.push_back(mod2);
+        }
+        
+        peptide->modification.push_back(mod);
     }
 }
 

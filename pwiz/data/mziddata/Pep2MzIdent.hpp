@@ -53,10 +53,16 @@ private:
     
     void translateMetadata();
     void translateSpectrumQueries();
-    
+
+    void addModifications(const std::vector<AminoAcidModification>& mods,
+                          PeptidePtr peptide, MzIdentMLPtr result);
+
     MSMSPipelineAnalysis _mspa;
     MzIdentMLPtr _result;
     bool _translated;
+
+    bool precursorMonoisotopic;
+    bool fragmentMonoisotopic;
 
     pwiz::msdata::CVTranslator translator;
 };
