@@ -262,13 +262,15 @@ void copyProteins(const Config& config,
         sii->chargeState = peptideInfo.monoisotopicMass() /
             sii->experimentalMassToCharge;
         sii->calculatedMassToCharge = lexical_cast<double>(it->mz);
+        
+        sii->paramGroup.set(MS_confidence_score, it->score);
+        //sii->paramGroup.set(MS_search_engine_specific_score, it->score);
 
         sii->peptidePtr = it->peptidePtr;
 
         PeptideEvidencePtr pe(new PeptideEvidence());
         pe->id = "PE_"+lexical_cast<string>(peIdx++);
         pe->dbSequencePtr = dbs;
-        pe->paramGroup.set(MS_search_engine_specific_score, it->score);
 
         sii->peptideEvidence.push_back(pe);
         
