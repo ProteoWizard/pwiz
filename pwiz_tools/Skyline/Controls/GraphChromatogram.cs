@@ -464,7 +464,8 @@ namespace pwiz.Skyline.Controls
             int numTrans = graphTrans.Count;
             int numSteps = 0;
 
-            if (DisplayType == DisplayTypeChrom.single && nodeTranSelected != null)
+            if (DisplayType == DisplayTypeChrom.single &&
+                    nodeTranSelected != null)
             {
                 if (!graphTrans.Contains(nodeTranSelected))
                 {
@@ -473,8 +474,9 @@ namespace pwiz.Skyline.Controls
                 }
                 else
                 {
-                    arrayChromInfo = chromGroupInfo.GetAllTransitionInfo(
-                        (float)nodeTranSelected.Mz, mzMatchTolerance);
+                    arrayChromInfo = chromGroupInfo.GetAllTransitionInfo((float)nodeTranSelected.Mz,
+                        mzMatchTolerance, chromatograms.OptimizationFunction);
+
                     graphTrans = new DocNode[arrayChromInfo.Length];
                     for (int i = 0; i < arrayChromInfo.Length; i++)
                         graphTrans[i] = nodeTranSelected;
@@ -665,7 +667,8 @@ namespace pwiz.Skyline.Controls
             int totalOptCount = 0;
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                var infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                var infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance,
+                    chromatograms.OptimizationFunction);
                 if (infos.Length == 0)
                     continue;
 

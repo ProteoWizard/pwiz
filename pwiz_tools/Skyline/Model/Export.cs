@@ -18,9 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -191,48 +193,110 @@ namespace pwiz.Skyline.Model
             bool singleWindow = IsSingleWindowInstrumentType(InstrumentType);
 
             var predict = Document.Settings.PeptideSettings.Prediction;
-            var listSchedules = new List<PrecursorSchedule>();
-            var listUnscheduled = new List<PrecursorSchedule>();
+            var listSchedules = new List<PeptideSchedule>();
+            var listUnscheduled = new List<PeptideSchedule>();
             foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
             {
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
+                    var peptideSchedule = new PeptideSchedule();
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                     {
                         double timeWindow;
                         double? retentionTime = predict.PredictRetentionTime(nodeTranGroup, singleWindow, out timeWindow);
                         if (retentionTime.HasValue)
-                            listSchedules.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow, OptimizeStepCount));
+                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow, OptimizeStepCount));
                         else
-                            listUnscheduled.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, 0, 0, OptimizeStepCount));
+                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, 0, 0, OptimizeStepCount));
+                    }
+                    if (peptideSchedule.CanSchedule)
+                        listSchedules.Add(peptideSchedule);
+                    else
+                        listUnscheduled.Add(peptideSchedule);
+                }
+            }
+
+            int totalScheduled = 0;
+            var listScheduleBuckets = new List<PeptideScheduleBucket>();
+            while (!PeptideSchedule.IsListScheduled(listSchedules))
+            {
+                var listScheduleNext = new PeptideScheduleBucket();
+                foreach (var schedule in listSchedules)
+                    schedule.Schedule(listScheduleNext, MaxTransitions.Value);
+                listScheduleBuckets.Add(listScheduleNext);
+                totalScheduled += listScheduleNext.TransitionCount;
+            }
+
+            int countScheduleGroups = listScheduleBuckets.Count;
+            if (countScheduleGroups > 1)
+            {
+                // Balance the scheduling buckets to counteract the tendancy for each
+                // successive bucket to have fewer transitions than the previous.
+                // CONSIDER: O(n^2) but number of groups should never get that large
+                int balanceCount = totalScheduled / countScheduleGroups;
+
+                for (int i = 0; i < countScheduleGroups; i++)
+                {
+                    var bucketUnder = listScheduleBuckets[i];
+                    if (bucketUnder.TransitionCount >= balanceCount)
+                        continue;
+
+                    // It should not be possible to borrow from scheduling lists
+                    // after the current list, since the reason they are there is
+                    // that they had too much overlap to be included in any of the
+                    // preceding buckets.
+                    for (int j = 0; j < i; j++)
+                    {
+                        var bucketOver = listScheduleBuckets[j];
+                        if (bucketOver.TransitionCount <= balanceCount)
+                            continue;
+                        BorrowTransitions(bucketUnder, bucketOver, balanceCount);
+                        // If the under bucket ever goes over balance, then quit.
+                        if (bucketUnder.Count > balanceCount)
+                            break;
                     }
                 }
             }
 
-            var listScheduleGroups = new List<List<PrecursorSchedule>>();
-            while (!PrecursorSchedule.IsListScheduled(listSchedules))
-            {
-                var listScheduleNext = new List<PrecursorSchedule>();
-                foreach (var schedule in listSchedules)
-                    schedule.Schedule(listScheduleNext, MaxTransitions.Value);
-                listScheduleGroups.Add(listScheduleNext);
-            }
-
-            // TODO: Balance groups
-
-            foreach (var listScheduleNext in listScheduleGroups)
+            foreach (var listScheduleNext in listScheduleBuckets)
                 WriteScheduledList(fileIterator, listScheduleNext);
             WriteScheduledList(fileIterator, listUnscheduled);
         }
 
+        private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
+        {
+            foreach (var schedule in bucketOver.ToArray().RandomOrder())
+            {
+                int newOverCount = bucketOver.TransitionCount - schedule.TransitionCount;
+                int newUnderCount = bucketUnder.TransitionCount + schedule.TransitionCount;
+                // If borrowing would not change the balance
+                if ((newOverCount > balanceCount && balanceCount > newUnderCount) ||
+                        // Or the transfer gets us closer to being balanced
+                        Math.Abs(newOverCount - balanceCount) + Math.Abs(newUnderCount - balanceCount) <
+                        Math.Abs(bucketOver.Count - balanceCount) + Math.Abs(bucketUnder.Count - balanceCount))
+                {
+                    // Make sure this doesn't exceed the maximum concurrent transition limit.
+                    if (schedule.CanAddToBucket(bucketUnder, MaxTransitions.Value))
+                    {
+                        bucketOver.Remove(schedule);
+                        bucketUnder.Add(schedule);
+                    }
+                }
+
+                // If the over bucket goes below the balance, then quit.
+                if (bucketOver.TransitionCount < balanceCount)
+                    break;
+            }
+        }
+
         private void WriteScheduledList(FileIterator fileIterator,
-            ICollection<PrecursorSchedule> listSchedules)
+            ICollection<PeptideSchedule> listSchedules)
         {
             if (listSchedules.Count == 0)
                 return;
 
             fileIterator.NextFile();
-            foreach (var schedule in listSchedules)
+            foreach (var schedule in PeptideSchedule.GetPrecursorSchedules(listSchedules))
             {
                 var nodePepGroup = schedule.PeptideGroup;
                 var nodePep = schedule.Peptide;
@@ -257,6 +321,105 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
+        {
+            public int TransitionCount { get; private set; }
+
+            protected override void ClearItems()
+            {
+                TransitionCount = 0;
+                base.ClearItems();
+            }
+
+            protected override void InsertItem(int index, PeptideSchedule item)
+            {
+                TransitionCount += item.TransitionCount;
+                base.InsertItem(index, item);
+            }
+
+            protected override void RemoveItem(int index)
+            {
+                TransitionCount -= this[index].TransitionCount;
+                base.RemoveItem(index);
+            }
+
+            protected override void SetItem(int index, PeptideSchedule item)
+            {
+                TransitionCount += item.TransitionCount - this[index].TransitionCount;
+                base.SetItem(index, item);
+            }
+        }
+
+        private sealed class PeptideSchedule
+        {
+            private readonly List<PrecursorSchedule> _precursorSchedules = new List<PrecursorSchedule>();
+
+            private bool IsScheduled { get; set; }
+
+            public bool CanSchedule
+            {
+                get { return !_precursorSchedules.Contains(s => s.EndTime == 0); }
+            }
+
+            public int TransitionCount { get; private set; }
+
+            public void Add(PrecursorSchedule schedule)
+            {
+                TransitionCount += schedule.TransitionCount;
+                _precursorSchedules.Add(schedule);
+            }
+
+            public bool CanAddToBucket(IEnumerable<PeptideSchedule> schedules, int maxTransitions)
+            {
+                return GetOverlapCount(schedules) + TransitionCount <= maxTransitions;
+            }
+
+            /// <summary>
+            /// Attempts to add this <see cref="PrecursorSchedule"/> to a scheduling list
+            /// without exceeding the maximum current transitions allowed.
+            /// </summary>
+            /// <param name="schedules">Scheduling list</param>
+            /// <param name="maxTransitions">Maximum number of concurrent transitions allowed</param>
+            public void Schedule(ICollection<PeptideSchedule> schedules, int maxTransitions)
+            {
+                if (!IsScheduled && CanAddToBucket(schedules, maxTransitions))
+                {
+                    schedules.Add(this);
+                    IsScheduled = true;
+                }
+            }
+
+            private int GetOverlapCount(IEnumerable<PeptideSchedule> peptideSchedules)
+            {
+                // While this may be less completely correct the less the precursors in a
+                // peptide overlap, wildly different precursor peaks are not all that interesting.
+                int maxOverlap = 0;
+                foreach (var precursorSchedule in _precursorSchedules)
+                {
+                    maxOverlap = Math.Max(maxOverlap,
+                        precursorSchedule.GetOverlapCount(GetPrecursorSchedules(peptideSchedules)));
+                }
+                return maxOverlap;
+            }
+
+            public static IEnumerable<PrecursorSchedule> GetPrecursorSchedules(IEnumerable<PeptideSchedule> peptideSchedules)
+            {
+                foreach (var schedule in peptideSchedules)
+                {
+                    foreach (var precursorSchedule in schedule._precursorSchedules)
+                        yield return precursorSchedule;
+                }
+            }
+
+            /// <summary>
+            /// Returns true, if all elements in the given scheduling list have been scheduled.
+            /// </summary>
+            public static bool IsListScheduled(IEnumerable<PeptideSchedule> schedules)
+            {
+                return !schedules.Contains(s => !s.IsScheduled);
+            }
+        }
+
         private sealed class PrecursorSchedule : PrecursorScheduleBase
         {
             public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
@@ -270,23 +433,6 @@ namespace pwiz.Skyline.Model
 
             public PeptideGroupDocNode PeptideGroup { get; private set; }
             public PeptideDocNode Peptide { get; private set; }
-            private bool IsScheduled { get; set; }
-
-            public void Schedule(ICollection<PrecursorSchedule> schedules, int maxTransitions)
-            {
-                if (IsScheduled)
-                    return;
-                int overlapping = GetOverlapCount(schedules);
-                if (overlapping + TransitionCount > maxTransitions)
-                    return;
-                schedules.Add(this);
-                IsScheduled = true;
-            }
-
-            public static bool IsListScheduled(IList<PrecursorSchedule> schedules)
-            {
-                return schedules.IndexOf(s => !s.IsScheduled) == -1;
-            }
         }
 
         protected abstract string InstrumentType { get; }
@@ -331,7 +477,7 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
         {
             int charge = nodeGroup.TransitionGroup.PrecursorCharge;
-            double mz = GetRegressionMz(document, nodePep, nodeGroup);
+            double mz = document.Settings.GetRegressionMz(nodePep, nodeGroup);
             return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step;
         }
 
@@ -362,21 +508,8 @@ namespace pwiz.Skyline.Model
         {
             if (regression == null)
                 return 0;
-            double mz = GetRegressionMz(document, nodePep, nodeGroup);
+            double mz = document.Settings.GetRegressionMz(nodePep, nodeGroup);
             return regression.GetDeclustringPotential(mz) + regression.StepSize * step;
-        }
-
-        private static double GetRegressionMz(SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
-        {
-            double mz = nodeGroup.PrecursorMz;
-            // Always use the light m/z value to ensure CEs are consistent between light and heavy
-            if (nodeGroup.TransitionGroup.LabelType != IsotopeLabelType.light)
-            {
-                double massH = document.Settings.GetPrecursorMass(IsotopeLabelType.light,
-                    nodeGroup.TransitionGroup.Peptide.Sequence, nodePep.ExplicitMods);
-                mz = SequenceMassCalc.GetMZ(massH, nodeGroup.TransitionGroup.PrecursorCharge);
-            }
-            return mz;
         }
 
         private sealed class OptimizationStep<T>
@@ -716,7 +849,7 @@ namespace pwiz.Skyline.Model
             return StartTime <= time && time <= EndTime;
         }
 
-        public int GetOverlapCount<T>(ICollection<T> schedules)
+        public int GetOverlapCount<T>(IEnumerable<T> schedules)
             where T : PrecursorScheduleBase
         {
             // Check for maximum overlap count at start and end times of this
@@ -737,7 +870,10 @@ namespace pwiz.Skyline.Model
             return overlapMax;            
         }
 
-        public static int GetOverlapCount<T>(ICollection<T> schedules, double time)
+        /// <summary>
+        /// Returns the number of transitions in a list of schedules that contain a given time.
+        /// </summary>
+        public static int GetOverlapCount<T>(IEnumerable<T> schedules, double time)
             where T : PrecursorScheduleBase
         {
             int overlapping = 0;

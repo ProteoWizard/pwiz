@@ -136,21 +136,23 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public override ICollection<Identifier> GetGroupByColumns(Type table)
         {
             List<Identifier> result = new List<Identifier>();
-            if (table == typeof(DbPeptideResult))
+            if (table == typeof(DbProteinResult))
+            {
+                result.Add(new Identifier("Protein"));
+            }
+            else if (table == typeof(DbPeptideResult))
             {
                 result.Add(new Identifier("Peptide"));
             } 
             else if (table == typeof(DbPrecursorResult))
             {
                 result.Add(new Identifier("Precursor"));
-            }
-            else if (table == typeof(DbProteinResult))
-            {
-                result.Add(new Identifier("Protein"));
+                result.Add(new Identifier("OptStep"));
             }
             else if (table == typeof(DbTransitionResult))
             {
                 result.Add(new Identifier("Transition"));
+                result.Add(new Identifier("PrecursorResult", "OptStep"));
             }
             return result;
         }
@@ -208,12 +210,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 result.AddRange(AddPrefix(
                     GetGroupByColumns(typeof(DbPrecursor)), new Identifier("Precursor")));
                 result.Add(REPLICATE_NAME_COLUMN);
+                result.Add(new Identifier("OptStep"));
             } 
             else if (table == typeof(DbTransitionResult))
             {
                 result.AddRange(AddPrefix(
                     GetGroupByColumns(typeof(DbTransition)), new Identifier("Transition")));
                 result.Add(REPLICATE_NAME_COLUMN);
+                result.Add(new Identifier("PrecursorResult", "OptStep"));
             }
             return result;
         }

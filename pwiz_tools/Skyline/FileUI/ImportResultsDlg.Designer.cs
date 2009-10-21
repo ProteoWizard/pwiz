@@ -38,13 +38,11 @@
             this.comboName = new System.Windows.Forms.ComboBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.textFilePath = new System.Windows.Forms.Label();
             this.radioCreateMultiple = new System.Windows.Forms.RadioButton();
             this.radioCreateMultipleMulti = new System.Windows.Forms.RadioButton();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelOptimizing = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // radioCreateNew
@@ -62,7 +60,7 @@
             // radioAddExisting
             // 
             this.radioAddExisting.AutoSize = true;
-            this.radioAddExisting.Location = new System.Drawing.Point(16, 149);
+            this.radioAddExisting.Location = new System.Drawing.Point(15, 212);
             this.radioAddExisting.Name = "radioAddExisting";
             this.radioAddExisting.Size = new System.Drawing.Size(173, 17);
             this.radioAddExisting.TabIndex = 5;
@@ -90,13 +88,12 @@
             this.textName.Name = "textName";
             this.textName.Size = new System.Drawing.Size(209, 20);
             this.textName.TabIndex = 4;
-            this.textName.TextChanged += new System.EventHandler(this.textName_TextChanged);
             // 
             // labelNameAdd
             // 
             this.labelNameAdd.AutoSize = true;
             this.labelNameAdd.Enabled = false;
-            this.labelNameAdd.Location = new System.Drawing.Point(31, 169);
+            this.labelNameAdd.Location = new System.Drawing.Point(30, 232);
             this.labelNameAdd.Name = "labelNameAdd";
             this.labelNameAdd.Size = new System.Drawing.Size(38, 13);
             this.labelNameAdd.TabIndex = 6;
@@ -107,9 +104,9 @@
             this.comboName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboName.Enabled = false;
             this.comboName.FormattingEnabled = true;
-            this.comboName.Location = new System.Drawing.Point(31, 186);
+            this.comboName.Location = new System.Drawing.Point(30, 249);
             this.comboName.Name = "comboName";
-            this.comboName.Size = new System.Drawing.Size(210, 21);
+            this.comboName.Size = new System.Drawing.Size(209, 21);
             this.comboName.TabIndex = 7;
             // 
             // btnOk
@@ -133,24 +130,6 @@
             this.btnCancel.TabIndex = 13;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 306);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(50, 13);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "File path:";
-            // 
-            // textFilePath
-            // 
-            this.textFilePath.AutoSize = true;
-            this.textFilePath.Location = new System.Drawing.Point(16, 323);
-            this.textFilePath.Name = "textFilePath";
-            this.textFilePath.Size = new System.Drawing.Size(74, 13);
-            this.textFilePath.TabIndex = 11;
-            this.textFilePath.Text = "<placeholder>";
             // 
             // radioCreateMultiple
             // 
@@ -188,20 +167,22 @@
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizing.Enabled = false;
             this.comboOptimizing.FormattingEnabled = true;
-            this.comboOptimizing.Location = new System.Drawing.Point(16, 255);
+            this.comboOptimizing.Location = new System.Drawing.Point(31, 165);
             this.comboOptimizing.Name = "comboOptimizing";
             this.comboOptimizing.Size = new System.Drawing.Size(131, 21);
             this.comboOptimizing.TabIndex = 9;
             // 
-            // label1
+            // labelOptimizing
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 239);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(58, 13);
-            this.label1.TabIndex = 8;
-            this.label1.Text = "Optimi&zing:";
+            this.labelOptimizing.AutoSize = true;
+            this.labelOptimizing.Enabled = false;
+            this.labelOptimizing.Location = new System.Drawing.Point(31, 149);
+            this.labelOptimizing.Name = "labelOptimizing";
+            this.labelOptimizing.Size = new System.Drawing.Size(58, 13);
+            this.labelOptimizing.TabIndex = 8;
+            this.labelOptimizing.Text = "Optimi&zing:";
             // 
             // ImportResultsDlg
             // 
@@ -209,13 +190,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(347, 356);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(347, 291);
+            this.Controls.Add(this.labelOptimizing);
             this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.radioCreateMultipleMulti);
             this.Controls.Add(this.radioCreateMultiple);
-            this.Controls.Add(this.textFilePath);
-            this.Controls.Add(this.label3);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.comboName);
@@ -246,12 +225,10 @@
         private System.Windows.Forms.ComboBox comboName;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label textFilePath;
         private System.Windows.Forms.RadioButton radioCreateMultiple;
         private System.Windows.Forms.RadioButton radioCreateMultipleMulti;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.ComboBox comboOptimizing;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelOptimizing;
     }
 }

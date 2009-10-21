@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             session.Clear();
             foreach (TransitionGroupDocNode nodeGroup in nodePeptide.Children)
             {
-                SavePrecursor(session, docInfo, dbPeptide, nodeGroup);
+                SavePrecursor(session, docInfo, dbPeptide, nodePeptide, nodeGroup);
             }
         }
 
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Inserts rows for the precursor and all of its results and children.
         /// </summary>
         private static void SavePrecursor(ISession session, DocInfo docInfo,
-            DbPeptide dbPeptide, TransitionGroupDocNode nodeGroup)
+            DbPeptide dbPeptide, PeptideDocNode nodePeptide, TransitionGroupDocNode nodeGroup)
         {
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
             DbPrecursor dbPrecursor = new DbPrecursor
@@ -325,17 +325,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         precursorResult.OptStep = chromInfo.OptimizationStep;
                         if (optFunction != null)
                         {
+                            double precursorMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
                             if (optFunction is CollisionEnergyRegression)
                             {
                                 precursorResult.OptCollisionEnergy =
                                     ((CollisionEnergyRegression)optFunction).GetCollisionEnergy(
-                                        dbPrecursor.Charge, dbPrecursor.Mz, chromInfo.OptimizationStep);
+                                        dbPrecursor.Charge, precursorMz, chromInfo.OptimizationStep);
                             }
                             if (optFunction is DeclusteringPotentialRegression)
                             {
                                 precursorResult.OptDeclusteringPotential =
                                     ((DeclusteringPotentialRegression)optFunction).GetDeclustringPotential(
-                                        dbPrecursor.Mz, chromInfo.OptimizationStep);
+                                        precursorMz, chromInfo.OptimizationStep);
                             }
                         }
                         session.Save(precursorResult);
@@ -442,17 +443,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             public DocInfo(SrmDocument srmDocument)
             {
-                var settings = srmDocument.Settings;
-                PeptidePrediction = settings.PeptideSettings.Prediction;
-                MeasuredResults = settings.MeasuredResults;
+                Settings = srmDocument.Settings;
 
                 ReplicateResultFiles = new List<List<DbResultFile>>();
                 ProteinResults = new Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>>();
                 PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
                 PrecursorResults = new Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>>();
             }
-            public PeptidePrediction PeptidePrediction { get; private set; }
-            public MeasuredResults MeasuredResults { get; private set; }
+            public SrmSettings Settings { get; private set; }
+            public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
+            public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
             public List<List<DbResultFile>> ReplicateResultFiles { get; private set; }
             public Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>> ProteinResults { get; private set; }
             public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set; }

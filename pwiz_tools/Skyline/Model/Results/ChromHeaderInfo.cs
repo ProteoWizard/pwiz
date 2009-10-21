@@ -25,6 +25,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Crawdad;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -636,8 +637,14 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(float productMz, float tolerance)
+        public ChromatogramInfo[] GetAllTransitionInfo(float productMz, float tolerance, OptimizableRegression regression)
         {
+            if (regression == null)
+            {
+                var info = GetTransitionInfo(productMz, tolerance);
+                return info != null ? new[] { info } : new ChromatogramInfo[0];                
+            }
+
             var listInfo = new List<ChromatogramInfo>();
 
             int startTran = _groupHeaderInfo.StartTransitionIndex;

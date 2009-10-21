@@ -195,18 +195,6 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
-        public ChromatogramSet ChangeFileCacheFlags(ICollection<string> cachedPaths,
-            ICollection<string> cachedFileNames, string cachePath)
-        {
-            var set = ImClone(this);
-            set.CalcCachedFlags(cachedPaths, cachedFileNames, cachePath);
-            if (ReferenceEquals(_fileCacheFlags, set._fileCacheFlags) &&
-                    ReferenceEquals(_msDataFilePaths, set._msDataFilePaths))
-                return this;
-
-            return set;
-        }        
-
         public ChromatogramSet ChangeMSDataFilePaths(IList<string> prop)
         {
             var set = ChangeProp(ImClone(this), (im, v) => im._msDataFilePaths = v.ToArray(), prop);
@@ -221,6 +209,18 @@ namespace pwiz.Skyline.Model.Results
 
             set.CalcCachedFlags(cachedPaths, null, null);
             
+            return set;
+        }
+
+        public ChromatogramSet ChangeFileCacheFlags(ICollection<string> cachedPaths,
+            ICollection<string> cachedFileNames, string cachePath)
+        {
+            var set = ImClone(this);
+            set.CalcCachedFlags(cachedPaths, cachedFileNames, cachePath);
+            if (ReferenceEquals(_fileCacheFlags, set._fileCacheFlags) &&
+                    ReferenceEquals(_msDataFilePaths, set._msDataFilePaths))
+                return this;
+
             return set;
         }
 
@@ -275,6 +275,11 @@ namespace pwiz.Skyline.Model.Results
             if (!ArrayUtil.EqualsDeep(_msDataFilePaths, msDataFilePaths))
                 _msDataFilePaths = msDataFilePaths;
         }
+
+        public ChromatogramSet ChangeOptimizationFunction(OptimizableRegression prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.OptimizationFunction = v, prop);
+        }        
 
         #endregion
 

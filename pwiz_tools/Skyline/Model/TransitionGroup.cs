@@ -385,7 +385,8 @@ namespace pwiz.Skyline.Model
                             {
                                 // Get all transition chromatogram info for this file.
                                 ChromatogramGroupInfo chromGroupInfo = arrayChromInfo[j];
-                                ChromatogramInfo[] infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                                ChromatogramInfo[] infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz,
+                                    mzMatchTolerance, chromatograms.OptimizationFunction);
                                 int numSteps = infos.Length/2;
                                 for (int i = 0; i < infos.Length; i++)
                                 {

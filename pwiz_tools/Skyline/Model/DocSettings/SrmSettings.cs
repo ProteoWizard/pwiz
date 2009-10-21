@@ -147,6 +147,19 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public static SequenceMassCalc AverageMassCalc { get { return AVERAGE_MASS_CALC; } }
 
+        public double GetRegressionMz(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        {
+            double mz = nodeGroup.PrecursorMz;
+            // Always use the light m/z value to ensure regression values are consistent between light and heavy
+            if (nodeGroup.TransitionGroup.LabelType != IsotopeLabelType.light)
+            {
+                double massH = GetPrecursorMass(IsotopeLabelType.light,
+                    nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                mz = SequenceMassCalc.GetMZ(massH, nodeGroup.TransitionGroup.PrecursorCharge);
+            }
+            return mz;
+        }
+
         #region Property change methods
 
         public SrmSettings ChangePeptideSettings(PeptideSettings prop)

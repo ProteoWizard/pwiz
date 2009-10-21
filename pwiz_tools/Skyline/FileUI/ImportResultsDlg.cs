@@ -20,14 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -61,7 +59,6 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.Items.Add(ExportOptimize.CE);
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
-            comboOptimizing.SelectedIndex = 0;
         }
 
         private string DefaultNewName
@@ -82,28 +79,21 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public string FilePathResult
-        {
-            get
-            {
-                string dir = Path.GetDirectoryName(_documentSavedPath);
-                string baseName = Path.GetFileNameWithoutExtension(_documentSavedPath);
-                string setName = textName.Text;
-                if (radioAddExisting.Checked)
-                    setName = (comboName.SelectedIndex != -1 ? comboName.SelectedItem.ToString() : "");
-                else if (IsMultiple)
-                    setName = "*";
-
-                return Path.Combine(dir, string.Format("{0}_{1}{2}",
-                    baseName, setName, ChromatogramCache.EXT));                
-            }
-        }
-
         bool IsMultiple { get { return radioCreateMultiple.Checked || radioCreateMultipleMulti.Checked; } }
 
         public KeyValuePair<string, string[]>[] NamedPathSets { get; private set; }
 
-        public string OptimizationName { get { return comboOptimizing.SelectedItem.ToString(); } }
+        public string OptimizationName
+        {
+            get
+            {
+                return comboOptimizing.SelectedIndex != -1
+                           ?
+                               comboOptimizing.SelectedItem.ToString()
+                           :
+                               ExportOptimize.NONE;
+            }
+        }
 
         public void OkDialog()
         {
@@ -112,7 +102,6 @@ namespace pwiz.Skyline.FileUI
             var helper = new MessageBoxHelper(this);
 
             string name;
-            var listExist = new List<string>();
 
             if (radioAddExisting.Checked)
             {
@@ -187,45 +176,6 @@ namespace pwiz.Skyline.FileUI
             if (IsMultiple)
                 EnsureUniqueNames();
             
-            if (!radioAddExisting.Checked)
-            {
-                // Check cache paths for existence
-                foreach (var namedPathSet in NamedPathSets)
-                {
-                    string pathCache = ChromatogramCache.FinalPathForName(_documentSavedPath, namedPathSet.Key);
-                    if (File.Exists(pathCache))
-                        listExist.Add(pathCache);
-                }                    
-            }
-
-            // Make sure the user okays deletion of any existing files.
-            if (listExist.Count == 1)
-            {
-                if (MessageBox.Show(
-                    string.Format("The file {0} already exists.  Do you want to replace it?", listExist[0]),
-                    Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                {
-                    if (textName.Enabled)
-                        textName.Focus();
-                    e.Cancel = true;
-                    return;
-                }
-            }
-            else if (listExist.Count > 1)
-            {
-                var sb = new StringBuilder();
-                foreach (var path in listExist)
-                    sb.Append(Path.GetFileName(path)).Append('\n');
-
-                if (MessageBox.Show(
-                    string.Format("The following files already exist:\n\n{0}\nDo you want to replace them?", sb),
-                    Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-            }
-
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -486,18 +436,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void textName_TextChanged(object sender, EventArgs e)
-        {
-            UpdatePathText();
-        }
-
-        private void UpdatePathText()
-        {
-            textFilePath.Text = FilePathResult;
-            while (textFilePath.Right > ClientRectangle.Right - 10)
-                textFilePath.Text = PathEx.ShortenPathForDisplay(textFilePath.Text);
-        }
-
         private void radioCreateMultiple_CheckedChanged(object sender, EventArgs e)
         {
             if (radioCreateMultiple.Checked)
@@ -544,7 +482,17 @@ namespace pwiz.Skyline.FileUI
                 else
                     textName.Text = DefaultNewName;
             }
-            UpdatePathText();
+
+            if (radioCreateNew.Checked)
+            {
+                comboOptimizing.Enabled = labelOptimizing.Enabled = true;
+                comboOptimizing.SelectedIndex = 0;
+            }
+            else
+            {
+                comboOptimizing.Enabled = labelOptimizing.Enabled = false;
+                comboOptimizing.SelectedIndex = -1;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
