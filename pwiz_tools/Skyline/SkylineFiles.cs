@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -310,6 +311,8 @@ namespace pwiz.Skyline
                         "All Files (*.*)|*.*"
                     })
             };
+            if (!string.IsNullOrEmpty(DocumentFilePath))
+                dlg.FileName = Path.GetFileName(DocumentFilePath);
 
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -630,8 +633,15 @@ namespace pwiz.Skyline
                     if (GetChromatogramByName(nameResult, results) != null)
                         continue;
 
-                    // Delete caches that will be overwritten
-                    File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
+                    try
+                    {
+                        // Delete caches that will be overwritten
+                        File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
+                    }
+                    catch (Exception)
+                    {
+                        Debug.Assert(true); // Ignore
+                    }
 
                     listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, optimizationFunction));
                 }

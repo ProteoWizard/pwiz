@@ -120,6 +120,8 @@ namespace pwiz.Skyline.FileUI
                         "All Files (*.*)|*.*"
                     })
                 };
+                if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
+                    dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";
 
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                 {
