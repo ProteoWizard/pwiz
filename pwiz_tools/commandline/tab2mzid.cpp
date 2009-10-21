@@ -25,6 +25,7 @@
 #include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/data/msdata/cv.hpp"
 #include "pwiz/Version.hpp"
+#include "pwiz/utility/proteome/Peptide.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -44,6 +45,9 @@ using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace boost::filesystem;
 
+// String constants
+const char* DEFAULT_SEARCH_DATABASE_ID = "SDB_1";
+
 // protein_id peptide mz scan#(nativeid) score
 struct record
 {
@@ -61,7 +65,32 @@ struct record
     string mz;
     string scan;
     string score;
+
+    PeptidePtr peptidePtr;
+    SpectrumIdentificationItemPtr sii;
 };
+
+struct Config
+{
+    Config(const string& id = DEFAULT_SEARCH_DATABASE_ID)
+        : searchDatabaseId(id),
+          searchDatabasePtr(SearchDatabasePtr(
+                                new SearchDatabase(searchDatabaseId)))
+    {
+        searchDatabasePtr->location = "nofile";
+        searchDatabasePtr->DatabaseName.userParams.push_back(
+            UserParam("unknown"));
+    }
+    
+    string inFile;
+    string outFile;
+    string searchDatabaseId;
+
+    SearchDatabasePtr searchDatabasePtr;
+    vector< pair<string, string> > peptideIdPairs;
+    vector<record> records;
+};
+
 
 ostream& operator<<(ostream& os, const record& r)
 {
@@ -76,24 +105,11 @@ ostream& operator<<(ostream& os, const record& r)
     return os;
 }
 
-/*
-vector<CV> defaultCVList()
-{
-    vector<CV> result;
-    result.resize(3);
-
-    result[0] = cv("MS");
-    result[1] = cv("UNIMOD");
-    result[2] = cv("UO");
-    
-    return result;
-}
-*/
-bool loadFile(const string& filename, vector<record>& records)
+bool loadFile(Config& config)
 {
     bool success = true;
     
-    ifstream in(filename.c_str());
+    ifstream in(config.inFile.c_str());
 
     if (in.bad())
         success = false;
@@ -105,9 +121,9 @@ bool loadFile(const string& filename, vector<record>& records)
         {
             record rec;
             boost::char_separator<char> sep("\t");
-            tokenizer<boost::char_separator<char> > tok(line, sep);
+            tokenizer< boost::char_separator<char> > tok(line, sep);
 
-            tokenizer<boost::char_separator<char> >::const_iterator t=tok.begin();
+            tokenizer< boost::char_separator<char> >::const_iterator t=tok.begin();
             
             rec.protein_id = *t++;
             rec.peptide = *t++;
@@ -115,12 +131,16 @@ bool loadFile(const string& filename, vector<record>& records)
             rec.scan = *t++;
             rec.score = *t++;
 
-            records.push_back(rec);
+            config.records.push_back(rec);
         }
     }
 
     return success;
 }
+
+//
+// predicates for the find_if functionoid.
+//
 
 struct peptide_predicate
 {
@@ -148,81 +168,79 @@ struct first_predicate
 };
 
 
-void sortPeptides(const vector<record>& records,
-                  vector< pair<string, string> >& peps)
+/// creates a peptide with a protein description, location, and score
+/// in the param group
+void copyPeptide(record& rec,
+                 pair<string, string>& pep,
+                 MzIdentML& mzid)
 {
-    typedef vector<record>::const_iterator const_record_it;
+    PeptidePtr peptide(new Peptide(pep.first));
+    peptide->peptideSequence = pep.second;
+    rec.peptidePtr = peptide;
+    mzid.sequenceCollection.peptides.push_back(peptide);
+}
+
+
+void sortPeptides(Config& config,
+                  MzIdentML& mzid)
+{
+    typedef vector<record>::iterator record_it;
     typedef vector< pair<string, string> >::const_iterator const_spair_it;
     size_t pep_idx = 0;
 
-    for(const_record_it r=records.begin(); r!=records.end(); r++)
+    for(record_it r=config.records.begin(); r!=config.records.end(); r++)
     {
-        const_spair_it previous = find_if(peps.begin(), peps.end(),
+        const_spair_it previous = find_if(config.peptideIdPairs.begin(),
+                                          config.peptideIdPairs.end(),
                                           peptide_predicate(r->peptide));
-        if (previous == peps.end())
+        if (previous == config.peptideIdPairs.end())
         {
-            peps.push_back(make_pair("peptide_"+lexical_cast<string>(pep_idx++),
-                                     r->peptide));
+            config.peptideIdPairs.push_back(
+                make_pair("peptide_"+lexical_cast<string>(pep_idx++),
+                          r->peptide));
+            copyPeptide(*r, config.peptideIdPairs.back (), mzid);
         }
     }
 }
 
-void copyPeptides(const vector< pair<string, string> >& peps,
+
+void copyProteins(const Config& config,
                   MzIdentML& mzid)
 {
-    typedef vector< pair<string, string> >::const_iterator const_iterator;
-
-    for (const_iterator it=peps.begin(); it!=peps.end(); it++)
-    {
-        PeptidePtr peptide(new Peptide(it->first));
-        peptide->peptideSequence = it->second;
-        mzid.sequenceCollection.peptides.push_back(peptide);
-    }
-}
-
-/// creates a peptide with a protein description, location, and score
-/// in the param group
-void copyPeptides(const vector<record>& records,
-                  const vector< pair<string, string> >& peps,
-                  MzIdentML& mzid)
-{
-    typedef vector<record>::const_iterator const_record_it;
-
-    size_t idx = 0;
+    namespace prot = pwiz::proteome;
     
-    for(const_record_it r=records.begin(); r!=records.end(); r++)
-    {
-        PeptidePtr peptide(new Peptide("peptide_"+lexical_cast<string>(idx++)));
-        peptide->peptideSequence = r->peptide;
-        peptide->paramGroup.set(MS_protein_description, r->protein_id);
-        peptide->paramGroup.set(MS_scan, r->scan);
-        peptide->paramGroup.set(MS_m_z, r->mz);
-        peptide->paramGroup.set(MS_search_engine_specific_score,
-                                r->score);
-        mzid.sequenceCollection.peptides.push_back(peptide);
-
-        
-    }
-}
-
-
-void copyProteins(const vector<record>& records,
-                  const vector< pair<string, string> >& peps,
-                  MzIdentML& mzid)
-{
     typedef vector<record>::const_iterator const_iterator;
     typedef vector< pair<string, string> >::const_iterator const_spair_it;
 
     size_t siiIdx = 0;
+    size_t sirIdx = 0;
+    size_t dbsIdx = 0;
+    size_t peIdx = 0;
 
     CVTranslator translator;
 
     SpectrumIdentificationListPtr sil(new SpectrumIdentificationList());
+    sil->id = "SIL_0";
 
     vector< pair<string, SpectrumIdentificationResultPtr> > sir_pairs;
     typedef vector< pair<string, SpectrumIdentificationResultPtr> >::iterator Sir_It;
-    for(const_iterator it=records.begin(); it!=records.end(); it++)
+
+    for(const_iterator it=config.records.begin();
+        it!=config.records.end(); it++)
     {
+        prot::Peptide peptideInfo(it->peptide);
+        
+        // Adding a DBSequence element
+        DBSequencePtr dbs(new DBSequence());
+        dbs->id = "dbsequence_"+lexical_cast<string>(dbsIdx++);
+        dbs->length = it->peptide.size();
+        dbs->seq = it->peptide;
+        dbs->paramGroup.set(MS_protein_description, it->protein_id);
+        dbs->accession = it->protein_id;
+        dbs->searchDatabasePtr = config.searchDatabasePtr;
+        mzid.sequenceCollection.dbSequences.push_back(dbs);
+
+        // Create a SpectrumIdentificationResult for each scan
         SpectrumIdentificationResultPtr sir(new SpectrumIdentificationResult());
 
         first_predicate p(it->scan);
@@ -232,46 +250,51 @@ void copyProteins(const vector<record>& records,
             sir = sir_it->second;
         else
         {
+            sir->id = "SIR_"+lexical_cast<string>(sirIdx++);
             sir->spectrumID = "scan="+it->scan;
             sir_pairs.push_back(make_pair(it->scan, sir));
         }
-        
+
+        // Create a SpectrumIdentificationItem for the m/z value.
         SpectrumIdentificationItemPtr sii(new SpectrumIdentificationItem());
         sii->id = "SII_"+lexical_cast<string>(siiIdx);
         sii->experimentalMassToCharge = lexical_cast<double>(it->mz);
+        sii->chargeState = peptideInfo.monoisotopicMass() /
+            sii->experimentalMassToCharge;
+        sii->calculatedMassToCharge = lexical_cast<double>(it->mz);
 
-        peptide_predicate pp(it->peptide);
-        const_spair_it ppair = find_if(peps.begin(), peps.end(), pp);
+        sii->peptidePtr = it->peptidePtr;
 
-        sii->peptidePtr = PeptidePtr(new Peptide(ppair->first));
+        PeptideEvidencePtr pe(new PeptideEvidence());
+        pe->id = "PE_"+lexical_cast<string>(peIdx++);
+        pe->dbSequencePtr = dbs;
+        pe->paramGroup.set(MS_search_engine_specific_score, it->score);
+
+        sii->peptideEvidence.push_back(pe);
+        
+        
         sir->spectrumIdentificationItem.push_back(sii);
         sil->spectrumIdentificationResult.push_back(sir);
-            /*
-        DBSequencePtr dbs(new DBSequence());
-        dbs->id = "dbsequence_"+lexical_cast<string>(idx++);
-        dbs->length = it->peptide.size();
-        dbs->seq = it->peptide;
-        dbs->accession = it->protein_id;
-        mzid.sequenceCollection.dbSequences.push_back(dbs);
-            */
     }
     mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(sil);
 }
 
 
-void setSourceFile(const string& filename, MzIdentML& mzid)
+void setInputFiles(const Config& config, MzIdentML& mzid)
 {
     pwiz::mziddata::SourceFilePtr sourceFile(new pwiz::mziddata::SourceFile());
-    sourceFile->location = filename;
+    sourceFile->location = config.inFile;
     sourceFile->fileFormat.set(MS_tab_delimited_text_file);
     mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
+
+    mzid.dataCollection.inputs.searchDatabase.push_back(
+        config.searchDatabasePtr);
 }
 
 
 int main(int argc, char* argv[])
 {
-    string inFile, outFile;
-    vector<record> records;
+    Config config;
     
     if (argc<3)
     {
@@ -281,26 +304,28 @@ int main(int argc, char* argv[])
         throw runtime_error(usage.c_str());
     }
 
-    inFile = argv[1];
-    outFile = argv[2];
+    config.inFile = argv[1];
+    config.outFile = argv[2];
 
-    bool success =  loadFile(inFile, records);
+    bool success =  loadFile(config);
 
     if (success)
     {
+        MzIdentML mzid;
+
+        setInputFiles(config, mzid);
+        
         // Make a list of id's/peptides
-        vector< pair<string, string> > peps;
-        sortPeptides(records, peps);
+        sortPeptides(config, mzid);
         
         // copy data into mzIdentML
-        MzIdentML mzid;
         mzid.cvs = defaultCVList();
         
-        copyPeptides(records, peps, mzid);
-        //copyProteins(records, peps, mzid);
+        //copyPeptides(records, peps, mzid);
+        copyProteins(config, mzid);
 
         // Write the file out
-        MzIdentMLFile::write(mzid, outFile);
+        MzIdentMLFile::write(mzid, config.outFile);
     }
     
     return 0;
