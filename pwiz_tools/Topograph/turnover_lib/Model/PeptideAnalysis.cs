@@ -32,8 +32,6 @@ namespace pwiz.Topograph.Model
     {
         private int _minCharge;
         private int _maxCharge;
-        private double _initialEnrichment;
-        private double _finalEnrichment;
         private int _intermediateLevels;
         private TurnoverCalculator _turnoverCalculator;
         private int _chromatogramRefCount;
@@ -55,8 +53,6 @@ namespace pwiz.Topograph.Model
             Peptide = Workspace.Peptides.GetPeptide(entity.Peptide);
             MinCharge = entity.MinCharge;
             MaxCharge = entity.MaxCharge;
-            InitialEnrichment = entity.InitialEnrichment;
-            FinalEnrichment = entity.FinalEnrichment;
             IntermediateLevels = entity.IntermediateEnrichmentLevels;
             ExcludedMzs = new ExcludedMzs(this);
             ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
@@ -77,8 +73,6 @@ namespace pwiz.Topograph.Model
             var entity = base.UpdateDbEntity(session);
             entity.MinCharge = MinCharge;
             entity.MaxCharge = MaxCharge;
-            entity.InitialEnrichment = InitialEnrichment;
-            entity.FinalEnrichment = FinalEnrichment;
             entity.IntermediateEnrichmentLevels = IntermediateLevels;
             entity.ExcludedMzs = ExcludedMzs.ToByteArray();
             if (PeptideRates.IsDirty)
@@ -156,28 +150,6 @@ namespace pwiz.Topograph.Model
             return GetTurnoverCalculator().MassCount;
         }
 
-        public double InitialEnrichment
-        {
-            get
-            {
-                return _initialEnrichment;
-            }
-            set
-            {
-                SetIfChanged(ref _initialEnrichment, value);
-            }
-        }
-        public double FinalEnrichment
-        {
-            get
-            {
-                return _finalEnrichment;
-            }
-            set
-            {
-                SetIfChanged(ref _finalEnrichment, value);
-            }
-        }
         public int IntermediateLevels
         {
             get
@@ -193,11 +165,11 @@ namespace pwiz.Topograph.Model
 
         public TurnoverCalculator GetTurnoverCalculator()
         {
-            lock (this)
+            lock (Lock)
             {
                 if (_turnoverCalculator == null)
                 {
-                    _turnoverCalculator = new TurnoverCalculator(Workspace.GetEnrichmentDef(), Peptide.Sequence);
+                    _turnoverCalculator = new TurnoverCalculator(Workspace, Peptide.Sequence);
                 }
                 return _turnoverCalculator;
             }
@@ -238,13 +210,8 @@ namespace pwiz.Topograph.Model
             {
                 PeptideRates.Clear();
             }
-            if (newWorkspaceVersion.EnrichmentVersion != _workspaceVersion.EnrichmentVersion)
-            {
-                InitialEnrichment = Workspace.GetEnrichmentDef().InitialApe;
-                FinalEnrichment = Workspace.GetEnrichmentDef().FinalApe;
-            }
             _workspaceVersion = newWorkspaceVersion;
-            lock(this)
+            lock(Lock)
             {
                 _turnoverCalculator = null;
             }

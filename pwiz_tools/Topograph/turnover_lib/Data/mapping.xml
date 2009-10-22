@@ -52,7 +52,6 @@
     <property name="FullSequence" />
     <property name="Protein" />
     <property name="ProteinDescription" length="1000" />
-    <property name="MaxTracerCount" />
   </class>
   <class name="DbPeptideSearchResult">
     <id name="Id">
@@ -72,12 +71,14 @@
     <property name="FirstTracerCount" />
     <property name="LastTracerCount" />
   </class>
-  <class name="DbEnrichment">
+  <class name="DbTracerDef">
     <id name="Id">
       <column name="Id" not-null="true"/>
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
+    <many-to-one name="Workspace" not-null="true" unique-key="TracerDef"/>
+    <property name="Name" not-null="true" unique-key="TracerDef"/>
     <property name="TracerSymbol" />
     <property name="DeltaMass" />
     <property name="AtomCount" />
@@ -123,7 +124,11 @@
       <one-to-many class="DbSetting"/>
     </bag>
     <property name="SettingCount" />
-    <many-to-one name="Enrichment"/>
+
+    <bag name="TracerDefs">
+      <key column="Workspace"/>
+      <one-to-many class="DbTracerDef" />
+    </bag>
   </class>
   <class name="DbModification">
     <id name="Id">
@@ -195,7 +200,9 @@
     <property name="FirstDetectedScan" />
     <property name="LastDetectedScan" />
     <property name="PeakStart" />
+    <property name="PeakStartTime" />
     <property name="PeakEnd" />
+    <property name="PeakEndTime" />
     <property name="TimesBytes" length="1000000" type="BinaryBlob"/>
     <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
     <property name="ExcludedMzs" type="BinaryBlob" />
@@ -214,8 +221,6 @@
     <property name="MinCharge" />
     <property name="MaxCharge" />
     <property name="ExcludedMzs" type="BinaryBlob" />
-    <property name="InitialEnrichment" />
-    <property name="FinalEnrichment" />
     <property name="IntermediateEnrichmentLevels" />
     
     <bag name="FileAnalyses" cascade="delete" inverse="true">
@@ -238,7 +243,7 @@
     <many-to-one name="PeptideFileAnalysis" not-null="true" unique-key="PeptideDistribution" />
     <property name="PeptideQuantity" not-null="true" unique-key="PeptideDistribution" />
     <property name="Score" />
-    <property name="AggregateValue" />
+    <property name="TracerPercent" />
     <bag name="PeptideAmounts" cascade="delete" inverse="true">
       <key column="PeptideDistribution" />
       <one-to-many class="DbPeptideAmount"/>
@@ -252,9 +257,9 @@
     </id>
     <version name="Version" generated="never"/>
     <many-to-one name="PeptideDistribution" not-null="true" unique-key="PeptideAmount" />
-    <property name="EnrichmentIndex" not-null="true" unique-key="PeptideAmount" />
-    <property name="EnrichmentValue" />
+    <property name="TracerFormula" not-null="true" unique-key="PeptideAmount" />
     <property name="PercentAmount" />
+    <property name="TracerPercent" />
   </class>
   <class name="DbPeptideRate">
     <id name="Id">
@@ -265,6 +270,7 @@
     <many-to-one name="PeptideAnalysis" not-null="true" unique-key="PeptideRate" />
     <property name="PeptideQuantity" not-null="true" unique-key="PeptideRate" />
     <property name="Cohort" not-null="true" unique-key="PeptideRate" />
+    <property name="Tracer" not-null="true" unique-key="PeptideRate" />
     <property name="HalfLife" />
     <property name="InitialTurnover" />
     <property name="LimitValue" />

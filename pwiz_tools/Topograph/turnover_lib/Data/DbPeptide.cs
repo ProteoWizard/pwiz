@@ -47,10 +47,6 @@ namespace pwiz.Topograph.Data
         {
             get; set;
         }
-        public virtual int MaxTracerCount
-        {
-            get; set;
-        }
         public virtual ICollection<DbPeptideSearchResult> SearchResults { get; set; }
         public virtual int SearchResultCount { get; set; }
         public override string ToString()

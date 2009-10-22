@@ -59,7 +59,7 @@ namespace pwiz.Topograph.Model
 
         public PeptideDistribution EnsureChild(PeptideQuantity peptideQuantity)
         {
-            lock(this)
+            lock(Lock)
             {
                 var result = GetChild(peptideQuantity);
                 if (result != null)

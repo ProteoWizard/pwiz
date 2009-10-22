@@ -43,10 +43,7 @@ namespace pwiz.Topograph.Model
             {
                 child.SetId(entity.Id.Value);
             }
-            if (child.IsDirty)
-            {
-                child.Save(session);
-            }
+            child.Save(session);
         }
     }
 }

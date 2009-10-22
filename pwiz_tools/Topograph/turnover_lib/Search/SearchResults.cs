@@ -69,9 +69,10 @@ namespace pwiz.Topograph.Search
                         index = 1;
                     }
                     String strSpectrumLocator = values[index++];
+                    double XCorr;
                     try
                     {
-                        double XCorr = double.Parse(values[index++]);
+                        XCorr = double.Parse(values[index++]);
                     }
                     catch (FormatException)
                     {
@@ -96,6 +97,7 @@ namespace pwiz.Topograph.Search
                                                   ProteinDescription = currentProteinDescription,
                                                   ScanIndex = spectrumLocator.StartScan,
                                                   Unique = isUnique,
+                                                  XCorr = XCorr,
                                               };
                     results.Add(result);
                 }
@@ -132,6 +134,7 @@ namespace pwiz.Topograph.Search
                                                         Filename = filename,
                                                         Protein = "Unknown",
                                                         ScanIndex = startScan,
+                                                        XCorr = double.Parse(parts[5]),
                                                     };
                     results.Add(searchResult);
                     startScan = endScan = 0;
@@ -158,5 +161,6 @@ namespace pwiz.Topograph.Search
         public int TracerCount { get; set; }
         public int Charge { get; set; }
         public bool Unique { get; set; }
+        public double XCorr { get; set; }
     }
 }

@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
+    <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />

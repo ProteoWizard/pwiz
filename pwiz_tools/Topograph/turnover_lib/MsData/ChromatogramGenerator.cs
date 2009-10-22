@@ -119,17 +119,11 @@ namespace pwiz.Topograph.MsData
                     else
                     {
                         var initedMsDataFileIds = ListInitedMsDataFileIds();
-                        IList<PeptideAnalysis> peptideAnalyses;
                         lock (_workspace.Lock)
                         {
                             workspaceVersion = _workspace.WorkspaceVersion;
-                            peptideAnalyses = _workspace.PeptideAnalyses.ListChildren();
-                            foreach (var peptideAnalysis in peptideAnalyses)
+                            foreach (var peptideAnalysis in _workspace.PeptideAnalyses.ListOpenPeptideAnalyses())
                             {
-                                if (peptideAnalysis.GetChromatogramRefCount() == 0)
-                                {
-                                    continue;
-                                }
                                 foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListChildren())
                                 {
                                     if (!initedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
@@ -329,7 +323,7 @@ namespace pwiz.Topograph.MsData
                         analyses.Remove(analysis);
                     }
                     double[] mzArray, intensityArray;
-                    pwizMsDataFileImpl.GetSpectrum(iScan, out mzArray, out intensityArray);
+                    pwizMsDataFileImpl.GetCentroidedSpectrum(iScan, out mzArray, out intensityArray);
                     foreach (var analysis in activeAnalyses)
                     {
                         var points = new List<MsDataFileUtil.ChromatogramPoint>();
@@ -494,10 +488,10 @@ namespace pwiz.Topograph.MsData
         public void Init(Workspace workspace)
         {
             Chromatograms = new List<ChromatogramGenerator.Chromatogram>();
-            var enrichment = workspace.GetEnrichmentDef();
+            var turnoverCalculator = new TurnoverCalculator(workspace, Sequence);
             for (int charge = MinCharge; charge <= MaxCharge; charge++)
             {
-                var mzs = enrichment.GetMzs(new ChargedPeptide(Sequence, charge));
+                var mzs = turnoverCalculator.GetMzs(charge);
                 for (int massIndex = 0; massIndex < mzs.Count; massIndex++)
                 {
                     Chromatograms.Add(new ChromatogramGenerator.Chromatogram(new MzKey(charge, massIndex), mzs[massIndex]));

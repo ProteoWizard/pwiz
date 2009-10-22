@@ -172,5 +172,23 @@ namespace pwiz.Topograph.ui.Forms
             Workspace.SetExcludeAas(excludeAas);
             Requery();
         }
+
+        private void btnAnalyzePeptides_Click(object sender, EventArgs e)
+        {
+            var oldCount = Workspace.PeptideAnalyses.ChildCount;
+            new AnalyzePeptidesForm(Workspace).ShowDialog(this);
+            if (oldCount == Workspace.PeptideAnalyses.ChildCount)
+            {
+                return;
+            }
+            var peptideAnalysesForm = Program.FindOpenForm<PeptideAnalysesForm>();
+            if (peptideAnalysesForm != null)
+            {
+                peptideAnalysesForm.Activate();
+                return;
+            }
+            peptideAnalysesForm = new PeptideAnalysesForm(Workspace);
+            peptideAnalysesForm.Show(DockPanel, DockState.Document);
+        }
     }
 }

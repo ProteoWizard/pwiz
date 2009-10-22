@@ -43,10 +43,12 @@
             this.peptideAnalysesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -137,7 +139,8 @@
             this.dataFilesToolStripMenuItem,
             this.peptideAnalysesToolStripMenuItem,
             this.statusToolStripMenuItem,
-            this.queryToolStripMenuItem});
+            this.queryToolStripMenuItem,
+            this.mercuryToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -146,7 +149,7 @@
             // 
             this.peptidesToolStripMenuItem.Enabled = false;
             this.peptidesToolStripMenuItem.Name = "peptidesToolStripMenuItem";
-            this.peptidesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.peptidesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.peptidesToolStripMenuItem.Text = "Peptides";
             this.peptidesToolStripMenuItem.Click += new System.EventHandler(this.peptidesToolStripMenuItem_Click);
             // 
@@ -154,7 +157,7 @@
             // 
             this.dataFilesToolStripMenuItem.Enabled = false;
             this.dataFilesToolStripMenuItem.Name = "dataFilesToolStripMenuItem";
-            this.dataFilesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.dataFilesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.dataFilesToolStripMenuItem.Text = "Data Files";
             this.dataFilesToolStripMenuItem.Click += new System.EventHandler(this.dataFilesToolStripMenuItem_Click);
             // 
@@ -162,7 +165,7 @@
             // 
             this.peptideAnalysesToolStripMenuItem.Enabled = false;
             this.peptideAnalysesToolStripMenuItem.Name = "peptideAnalysesToolStripMenuItem";
-            this.peptideAnalysesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.peptideAnalysesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.peptideAnalysesToolStripMenuItem.Text = "Peptide Analyses";
             this.peptideAnalysesToolStripMenuItem.Click += new System.EventHandler(this.peptideAnalysesToolStripMenuItem_Click);
             // 
@@ -170,24 +173,33 @@
             // 
             this.statusToolStripMenuItem.Enabled = false;
             this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
-            this.statusToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.statusToolStripMenuItem.Text = "Status";
+            this.statusToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.statusToolStripMenuItem.Text = "Running Jobs";
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
             // queryToolStripMenuItem
             // 
             this.queryToolStripMenuItem.Enabled = false;
             this.queryToolStripMenuItem.Name = "queryToolStripMenuItem";
-            this.queryToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.queryToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.queryToolStripMenuItem.Text = "Queries";
             this.queryToolStripMenuItem.Click += new System.EventHandler(this.queriesToolStripMenuItem_Click);
+            // 
+            // mercuryToolStripMenuItem
+            // 
+            this.mercuryToolStripMenuItem.Enabled = false;
+            this.mercuryToolStripMenuItem.Name = "mercuryToolStripMenuItem";
+            this.mercuryToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.mercuryToolStripMenuItem.Text = "Isotope Distribution Graph";
+            this.mercuryToolStripMenuItem.Click += new System.EventHandler(this.mercuryToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.enrichmentToolStripMenuItem,
             this.modificationsToolStripMenuItem,
-            this.updateProteinNamesToolStripMenuItem});
+            this.updateProteinNamesToolStripMenuItem,
+            this.machineSettingsToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "Settings";
@@ -197,7 +209,7 @@
             this.enrichmentToolStripMenuItem.Enabled = false;
             this.enrichmentToolStripMenuItem.Name = "enrichmentToolStripMenuItem";
             this.enrichmentToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
-            this.enrichmentToolStripMenuItem.Text = "Enrichment...";
+            this.enrichmentToolStripMenuItem.Text = "Tracers...";
             this.enrichmentToolStripMenuItem.Click += new System.EventHandler(this.enrichmentToolStripMenuItem_Click);
             // 
             // modificationsToolStripMenuItem
@@ -215,6 +227,14 @@
             this.updateProteinNamesToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
             this.updateProteinNamesToolStripMenuItem.Text = "Update Protein Names...";
             this.updateProteinNamesToolStripMenuItem.Click += new System.EventHandler(this.updateProteinNamesToolStripMenuItem_Click);
+            // 
+            // machineSettingsToolStripMenuItem
+            // 
+            this.machineSettingsToolStripMenuItem.Enabled = false;
+            this.machineSettingsToolStripMenuItem.Name = "machineSettingsToolStripMenuItem";
+            this.machineSettingsToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+            this.machineSettingsToolStripMenuItem.Text = "Machine Settings...";
+            this.machineSettingsToolStripMenuItem.Click += new System.EventHandler(this.machineSettingsToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -254,5 +274,7 @@
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateProteinNamesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem queryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem machineSettingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mercuryToolStripMenuItem;
     }
 }

@@ -69,18 +69,40 @@ namespace pwiz.Topograph.ui.Forms
         {
             double[] mzArray;
             double[] intensityArray;
-            using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
-            {
-                msDataFileImpl.GetSpectrum(scanIndex, out mzArray, out intensityArray);
-            }
             msGraphControl.GraphPane.GraphObjList.Clear();
             msGraphControl.GraphPane.CurveList.Clear();
-            var graphItem = new SpectrumGraphItem()
+            using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
             {
-                Points = new PointPairList(mzArray, intensityArray)
-            };
-            msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
+                tbxMsLevel.Text = msDataFileImpl.GetMsLevel(scanIndex).ToString();
+                if (!msDataFileImpl.IsCentroided(scanIndex))
+                {
+                    msDataFileImpl.GetSpectrum(scanIndex, out mzArray, out intensityArray);
+                    msGraphControl.AddGraphItem(msGraphControl.GraphPane, new SpectrumGraphItem()
+                                                                              {
+                                                                                  Points =
+                                                                                      new PointPairList(mzArray,
+                                                                                                        intensityArray),
+                                                                                                        GraphItemDrawMethod = MSGraphItemDrawMethod.Line,
+
+                    Color = Color.Blue,
+                                                                              });
+                }
+                msDataFileImpl.GetCentroidedSpectrum(scanIndex, out mzArray, out intensityArray);
+                msGraphControl.AddGraphItem(msGraphControl.GraphPane,
+                                            new SpectrumGraphItem()
+                                                {
+                                                    Points = new PointPairList(mzArray, intensityArray),
+                                                    GraphItemDrawMethod = MSGraphItemDrawMethod.Stick,
+                                                    Color = Color.Black
+                                                });
+            }
             msGraphControl.AxisChange();
+            msGraphControl.Invalidate();
+        }
+        public void Zoom(double minMz, double maxMz)
+        {
+            msGraphControl.GraphPane.XAxis.Scale.Min = minMz;
+            msGraphControl.GraphPane.XAxis.Scale.Max = maxMz;
             msGraphControl.Invalidate();
         }
     }
@@ -99,6 +121,10 @@ namespace pwiz.Topograph.ui.Forms
 
         public PointAnnotation AnnotatePoint(PointPair point)
         {
+            if (GraphItemDrawMethod == MSGraphItemDrawMethod.Stick)
+            {
+                return new PointAnnotation(Math.Round(point.X, 4).ToString());
+            }
             return new PointAnnotation();
         }
 
@@ -113,7 +139,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return MSGraphItemDrawMethod.Line; }
+            get; set;
         }
 
         public void CustomizeXAxis(Axis axis)

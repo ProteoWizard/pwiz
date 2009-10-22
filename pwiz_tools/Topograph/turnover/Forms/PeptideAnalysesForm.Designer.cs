@@ -36,14 +36,14 @@ namespace pwiz.Topograph.ui.Forms
             this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
-            this.colPeptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colHalfLifePrecursorEnrichment = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colHalfLifeTracerCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colHalfLifePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colHalfLifeTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -71,6 +71,7 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.TabIndex = 0;
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
+            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
             // 
             // contextMenuStrip1
             // 
@@ -116,6 +117,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeptide.HeaderText = "Peptide";
             this.colPeptide.Name = "colPeptide";
             this.colPeptide.ReadOnly = true;
+            this.colPeptide.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.colPeptide.Width = 160;
             // 
             // colStatus
@@ -155,12 +158,16 @@ namespace pwiz.Topograph.ui.Forms
             this.colHalfLifePrecursorEnrichment.HeaderText = "Half Life (% Enrichment)";
             this.colHalfLifePrecursorEnrichment.Name = "colHalfLifePrecursorEnrichment";
             this.colHalfLifePrecursorEnrichment.ReadOnly = true;
+            this.colHalfLifePrecursorEnrichment.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colHalfLifePrecursorEnrichment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // colHalfLifeTracerCount
             // 
             this.colHalfLifeTracerCount.HeaderText = "Half Life (# Tracers)";
             this.colHalfLifeTracerCount.Name = "colHalfLifeTracerCount";
             this.colHalfLifeTracerCount.ReadOnly = true;
+            this.colHalfLifeTracerCount.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colHalfLifeTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // PeptideAnalysesForm
             // 
@@ -186,13 +193,13 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem deleteMenuItem;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colPeptide;
+        private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private ValidationStatusColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNote;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProtein;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colHalfLifePrecursorEnrichment;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colHalfLifeTracerCount;
+        private System.Windows.Forms.DataGridViewLinkColumn colHalfLifePrecursorEnrichment;
+        private System.Windows.Forms.DataGridViewLinkColumn colHalfLifeTracerCount;
     }
 }

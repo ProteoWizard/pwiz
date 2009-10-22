@@ -32,12 +32,13 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.comboGraph = new System.Windows.Forms.ComboBox();
-            this.cbxByCohort = new System.Windows.Forms.CheckBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colHalfLife = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colInitialTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label3 = new System.Windows.Forms.Label();
+            this.comboTracer = new System.Windows.Forms.ComboBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -65,8 +66,9 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.comboGraph, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.cbxByCohort, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.comboTracer, 1, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -90,26 +92,14 @@
             // 
             // comboGraph
             // 
+            this.comboGraph.Dock = System.Windows.Forms.DockStyle.Fill;
             this.comboGraph.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboGraph.FormattingEnabled = true;
             this.comboGraph.Location = new System.Drawing.Point(209, 3);
             this.comboGraph.Name = "comboGraph";
-            this.comboGraph.Size = new System.Drawing.Size(108, 21);
+            this.comboGraph.Size = new System.Drawing.Size(200, 21);
             this.comboGraph.TabIndex = 1;
             this.comboGraph.SelectedIndexChanged += new System.EventHandler(this.comboGraph_SelectedIndexChanged);
-            // 
-            // cbxByCohort
-            // 
-            this.cbxByCohort.AutoSize = true;
-            this.cbxByCohort.Checked = true;
-            this.cbxByCohort.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxByCohort.Location = new System.Drawing.Point(3, 28);
-            this.cbxByCohort.Name = "cbxByCohort";
-            this.cbxByCohort.Size = new System.Drawing.Size(72, 17);
-            this.cbxByCohort.TabIndex = 2;
-            this.cbxByCohort.Text = "By Cohort";
-            this.cbxByCohort.UseVisualStyleBackColor = true;
-            this.cbxByCohort.CheckedChanged += new System.EventHandler(this.cbxByCohort_CheckedChanged);
             // 
             // dataGridView1
             // 
@@ -154,6 +144,26 @@
             this.colScore.Name = "colScore";
             this.colScore.ReadOnly = true;
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(3, 50);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(38, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "Tracer";
+            // 
+            // comboTracer
+            // 
+            this.comboTracer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboTracer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTracer.FormattingEnabled = true;
+            this.comboTracer.Location = new System.Drawing.Point(209, 53);
+            this.comboTracer.Name = "comboTracer";
+            this.comboTracer.Size = new System.Drawing.Size(200, 21);
+            this.comboTracer.TabIndex = 7;
+            this.comboTracer.SelectedIndexChanged += new System.EventHandler(this.comboTracer_SelectedIndexChanged);
+            // 
             // GraphForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -178,8 +188,9 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboGraph;
-        private System.Windows.Forms.CheckBox cbxByCohort;
         private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox comboTracer;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
         private System.Windows.Forms.DataGridViewTextBoxColumn colHalfLife;
         private System.Windows.Forms.DataGridViewTextBoxColumn colInitialTurnover;

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.CLI;
+using pwiz.CLI.analysis;
 using pwiz.CLI.msdata;
 
 namespace pwiz.ProteowizardWrapper
@@ -29,6 +30,7 @@ namespace pwiz.ProteowizardWrapper
         // Cached disposable objects
         private MSData _msDataFile;
         private SpectrumList _spectrumList;
+        private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
 
         private static double[] ToArray(IList<double> list)
@@ -165,6 +167,18 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        private static bool _preferVendorPeakPicking = true;
+        private SpectrumList SpectrumListCentroided
+        {
+            get
+            {
+                return _spectrumListCentroided 
+                    = _spectrumListCentroided 
+                    ?? new SpectrumList_PeakPicker(
+                        SpectrumList, new LocalMaximumPeakDetector(3), _preferVendorPeakPicking, new[] {1, 2});
+            }
+        }
+
         public int ChromatogramCount
         {
             get { return ChromatogramList != null ? ChromatogramList.size() : 0; }
@@ -222,6 +236,36 @@ namespace pwiz.ProteowizardWrapper
             {
                 mzArray = ToArray(spectrum.getMZArray().data);
                 intensityArray = ToArray(spectrum.getIntensityArray().data);
+            }
+        }
+
+        public bool IsCentroided(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                return spectrum.hasCVParam(CVID.MS_centroid_spectrum);
+            }
+        }
+
+        public void GetCentroidedSpectrum(int scanIndex, out double[] mzArray, out double[] intensityArray)
+        {
+            using (var spectrum = SpectrumListCentroided.spectrum(scanIndex, true))
+            {
+                var mzData = spectrum.getMZArray().data;
+                var intensityData = spectrum.getIntensityArray().data;
+                var mzs = new List<double>();
+                var intensities = new List<double>();
+                for (int i = 0; i < mzData.Count(); i++)
+                {
+                    if (intensityData[i] == 0)
+                    {
+                        continue;
+                    }
+                    mzs.Add(mzData[i]);
+                    intensities.Add(intensityData[i]);
+                }
+                mzArray = mzs.ToArray();
+                intensityArray = intensities.ToArray();
             }
         }
 
@@ -310,6 +354,9 @@ namespace pwiz.ProteowizardWrapper
             if (_spectrumList != null)
                 _spectrumList.Dispose();
             _spectrumList = null;
+            if (_spectrumListCentroided != null)
+                _spectrumListCentroided.Dispose();
+            _spectrumListCentroided = null;
             if (_chromatogramList != null)
                 _chromatogramList.Dispose();
             _chromatogramList = null;

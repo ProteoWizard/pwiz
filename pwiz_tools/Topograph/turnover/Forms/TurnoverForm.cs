@@ -38,10 +38,10 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class TurnoverForm : Form
     {
-        public const string WORKSPACE_FILTER = "Topograph Workspaces(*.tpg)|*.tpg"
+        public const string WorkspaceFilter = "Topograph Workspaces(*.tpg)|*.tpg"
                                                + "|All Files (*.*)|*.*";
 
-        private Workspace workspace;
+        private Workspace _workspace;
 
         public TurnoverForm()
         {
@@ -66,6 +66,8 @@ namespace pwiz.Topograph.ui.Forms
                         saveWorkspaceToolStripMenuItem,
                         statusToolStripMenuItem,
                         updateProteinNamesToolStripMenuItem,
+                        machineSettingsToolStripMenuItem,
+                        mercuryToolStripMenuItem,
                 };
             }
         }
@@ -76,7 +78,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             get
             {
-                return workspace;
+                return _workspace;
             }
             set
             {
@@ -95,36 +97,36 @@ namespace pwiz.Topograph.ui.Forms
                         workspaceForm.Close();
                     }
                 }
-                if (workspace != null)
+                if (_workspace != null)
                 {
-                    workspace.SetActionInvoker(null);
-                    workspace.EntitiesChange -= Workspace_EntitiesChange;
-                    workspace.WorkspaceDirty -= Workspace_WorkspaceDirty;
+                    _workspace.SetActionInvoker(null);
+                    _workspace.EntitiesChange -= Workspace_EntitiesChange;
+                    _workspace.WorkspaceDirty -= Workspace_WorkspaceDirty;
                 }
-                workspace = value;
-                if (workspace != null)
+                _workspace = value;
+                if (_workspace != null)
                 {
-                    workspace.SetActionInvoker(ActionInvoker);
+                    _workspace.SetActionInvoker(ActionInvoker);
                     int count;
-                    using (var session = workspace.OpenSession())
+                    using (var session = _workspace.OpenSession())
                     {
                         var query = session.CreateQuery("SELECT COUNT(*) FROM " + typeof (DbPeptideAnalysis));
                         count = Convert.ToInt32(query.UniqueResult());
                     }
                     if (count == 0)
                     {
-                        new PeptidesForm(workspace).Show(dockPanel, DockState.Document);
+                        new PeptidesForm(_workspace).Show(dockPanel, DockState.Document);
                     }
                     else
                     {
-                        new PeptideAnalysesForm(workspace).Show(dockPanel, DockState.Document);
+                        new PeptideAnalysesForm(_workspace).Show(dockPanel, DockState.Document);
                     }
                     foreach (var menuItem in WorkspaceMenuItems)
                     {
                         menuItem.Enabled = true;
                     }
-                    workspace.EntitiesChange += Workspace_EntitiesChange;
-                    workspace.WorkspaceDirty += Workspace_WorkspaceDirty;
+                    _workspace.EntitiesChange += Workspace_EntitiesChange;
+                    _workspace.WorkspaceDirty += Workspace_WorkspaceDirty;
                 }
                 else
                 {
@@ -150,8 +152,8 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                Text = Path.GetFileName(workspace.DatabasePath) + 
-                    (workspace.IsDirty ? "(changed)" : "") +
+                Text = Path.GetFileName(_workspace.DatabasePath) + 
+                    (_workspace.IsDirty ? "(changed)" : "") +
                     " - " + Program.AppName;
             }
         }
@@ -169,7 +171,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             var fileDialog = new SaveFileDialog()
                                  {
-                                     Filter = WORKSPACE_FILTER,
+                                     Filter = WorkspaceFilter,
                                      InitialDirectory = Settings.Default.WorkspaceDirectory
                                  };
             
@@ -187,21 +189,22 @@ namespace pwiz.Topograph.ui.Forms
             {
                 ISession session = sessionFactory.OpenSession();
                 var transaction = session.BeginTransaction();
-                DbEnrichment dbEnrichment = EnrichmentDef.GetD3LeuEnrichment();
-                session.Save(dbEnrichment);
                 var dbWorkspace = new DbWorkspace
                                       {
-                                          Enrichment = dbEnrichment,
                                           ModificationCount = 1,
+                                          TracerDefCount = 1,
                                       };
                 session.Save(dbWorkspace);
+                DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
+                dbTracerDef.Workspace = dbWorkspace;
+                dbTracerDef.Name = "Tracer";
+                session.Save(dbTracerDef);
 
                 var modification = new DbModification
                                        {
-                                           DeltaMass = 57,
+                                           DeltaMass = 57.02,
                                            Symbol = "C",
                                            Workspace = dbWorkspace
-
                                        };
                 session.Save(modification);
                 transaction.Commit();
@@ -218,7 +221,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             var fileDialog = new OpenFileDialog
                                  {
-                                     Filter = WORKSPACE_FILTER,
+                                     Filter = WorkspaceFilter,
                                      InitialDirectory = Settings.Default.WorkspaceDirectory
                                  };
             if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
@@ -232,19 +235,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void addSearchResultsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-                                                {
-                                                    Filter =
-                                                        "Search files (*.txt,*.sqt)|*.txt;*.sqt|All Files|*.*",
-                                                    Multiselect = true,
-                                                    InitialDirectory = Settings.Default.SearchResultsDirectory
-                                                };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
-            }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            new AddSearchResultsForm(Workspace, openFileDialog.FileNames).ShowDialog();
+            new AddSearchResultsForm(Workspace).ShowDialog();
         }
 
         private void enrichmentToolStripMenuItem_Click(object sender, EventArgs e)
@@ -468,6 +459,16 @@ namespace pwiz.Topograph.ui.Forms
             }
             form = new QueriesForm(Workspace);
             form.Show(dockPanel, DockState.Document);
+        }
+
+        private void machineSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new MachineSettingsForm(Workspace).ShowDialog(this);
+        }
+
+        private void mercuryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new MercuryForm(Workspace).Show(this);
         }
     }
 }

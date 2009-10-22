@@ -11,10 +11,12 @@ namespace pwiz.Common.Collections
     {
         public ImmutableDictionary(IDictionary<K,V> dict) : base(dict)
         {
-            Dictionary = dict;
+        }
+        protected ImmutableDictionary()
+        {
         }
 
-        private IDictionary<K, V> Dictionary { get; set; }
+        protected IDictionary<K, V> Dictionary { get { return (IDictionary<K, V>) Collection;} set { Collection = value;} }
 
         IEnumerator IEnumerable.GetEnumerator()
         {

@@ -33,39 +33,57 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Search;
+using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class AddSearchResultsForm : WorkspaceForm
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof (AddSearchResultsForm));
-        private readonly IList<String> filenames;
+        private IList<String> filenames;
         private bool _isRunning;
         private bool _isCancelled;
         private String _message;
         private int _progress;
-        public AddSearchResultsForm(Workspace workspace, IList<String> filenames)
+        private double _minXCorr1 = 1.8;
+        private double _minXCorr2 = 2.0;
+        private double _minXCorr3 = 2.4;
+        private bool _useMinXCorr = true;
+        private bool _onlyExistingPeptides = false;
+        public AddSearchResultsForm(Workspace workspace)
             : base(workspace)
         {
             InitializeComponent();
-            this.filenames = filenames;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            new Action(WorkBackground).BeginInvoke(null, null);
+            tbxMinXCorr1.Text = _minXCorr1.ToString();
+            tbxMinXCorr2.Text = _minXCorr2.ToString();
+            tbxMinXCorr3.Text = _minXCorr3.ToString();
+            cbxMinimumXCorr.Checked = _useMinXCorr;
+            cbxMinimumXCorr_CheckedChanged(cbxMinimumXCorr, new EventArgs());
+            cbxOnlyExistingPeptides.Checked = _onlyExistingPeptides;
         }
 
         private void WorkBackground()
         {
             try
             {
-                IsRunning = true;
                 if (IsCancelled)
                 {
                     return;
                 }
+                var peptides = new Dictionary<String, DbPeptide>();
+                var dataFiles = new Dictionary<String, DbMsDataFile>();
+                using (var session = Workspace.OpenSession())
+                {
+                    foreach (DbPeptide peptide in session.CreateCriteria(typeof(DbPeptide)).List())
+                    {
+                        peptides.Add(peptide.Sequence, peptide);
+                    }
+                    foreach (DbMsDataFile msDataFile in session.CreateCriteria(typeof(DbMsDataFile)).List())
+                    {
+                        dataFiles.Add(msDataFile.Name, msDataFile);
+                    }
+                }
+
                 for (int i = 0; i < filenames.Count; i++)
                 {
                     String message = "Processing file ";
@@ -75,7 +93,7 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     message += Path.GetFileName(filenames[i]);
                     UpdateProgress(message, 0);
-                    AddSearchResults(filenames[i]);
+                    AddSearchResults(filenames[i], peptides, dataFiles);
                 }
                 if (!IsCancelled)
                 {
@@ -120,24 +138,24 @@ namespace pwiz.Topograph.ui.Forms
                                 });
         }
 
-        private void AddSearchResults(String file)
+        private void AddSearchResults(String file, Dictionary<string,DbPeptide> peptides, Dictionary<string, DbMsDataFile> dataFiles)
         {
             String extension = Path.GetExtension(file);
             List<SearchResult> searchResults;
-            bool requirePeptideAlreadyBeThere = false;
             String msDataFileName;
+            bool useMinXCorr = _useMinXCorr;
             using (var stream = File.OpenRead(file))
             {
                 if (extension == ".sqt")
                 {
                     msDataFileName = Path.GetFileNameWithoutExtension(file);
                     searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
-                    requirePeptideAlreadyBeThere = true;
                 }
                 else
                 {
                     msDataFileName = null;
                     searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
+                    useMinXCorr = false;
                 }
             }
             if (searchResults == null)
@@ -145,22 +163,8 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             var dbPeptideSearchResults = GetSearchResults(msDataFileName);
-            var peptides = new Dictionary<String, DbPeptide>();
             var modifiedPeptides = new HashSet<DbPeptide>();
-            var dataFiles = new Dictionary<String, DbMsDataFile>();
-            using (var session = Workspace.OpenSession())
-            {
-                foreach (DbPeptide peptide in session.CreateCriteria(typeof(DbPeptide)).List())
-                {
-                    peptides.Add(peptide.Sequence, peptide);
-                }
-                foreach (DbMsDataFile msDataFile in session.CreateCriteria(typeof(DbMsDataFile)).List())
-                {
-                    dataFiles.Add(msDataFile.Name, msDataFile);
-                }
-            }
 
-            var enrichment = Workspace.GetEnrichmentDef();
             using (var session = Workspace.OpenWriteSession())
             {
                 var dbWorkspace = Workspace.LoadDbWorkspace(session);
@@ -172,11 +176,31 @@ namespace pwiz.Topograph.ui.Forms
                         return;
                     }
                     var searchResult = searchResults[i];
+                    if (useMinXCorr)
+                    {
+                        double minXCorr;
+                        switch(searchResult.Charge)
+                        {
+                            case 1:
+                                minXCorr = _minXCorr1;
+                                break;
+                            case 2:
+                                minXCorr = _minXCorr2;
+                                break;
+                            default:
+                                minXCorr = _minXCorr3;
+                                break;
+                        }
+                        if (searchResult.XCorr < minXCorr)
+                        {
+                            continue;
+                        }
+                    }
                     String trimmedSequence = Peptide.TrimSequence(searchResult.Sequence);
                     DbPeptide dbPeptide;
                     if (!peptides.TryGetValue(trimmedSequence, out dbPeptide))
                     {
-                        if (requirePeptideAlreadyBeThere)
+                        if (_onlyExistingPeptides)
                         {
                             continue;
                         }
@@ -187,9 +211,6 @@ namespace pwiz.Topograph.ui.Forms
                             ProteinDescription = searchResult.ProteinDescription,
                             Sequence = trimmedSequence,
                             FullSequence = searchResult.Sequence,
-                            MaxTracerCount =
-                                enrichment.GetMaximumTracerCount(
-                                new ChargedPeptide(searchResult.Sequence, 1)),
                         };
                         session.Save(dbPeptide);
                         peptides.Add(trimmedSequence, dbPeptide);
@@ -383,6 +404,62 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
             return result;
+        }
+
+        private void cbxMinimumXCorr_CheckedChanged(object sender, EventArgs e)
+        {
+            _useMinXCorr = cbxMinimumXCorr.Checked;
+            
+            tbxMinXCorr1.Enabled = _useMinXCorr;
+            tbxMinXCorr2.Enabled = _useMinXCorr;
+            tbxMinXCorr3.Enabled = _useMinXCorr;
+        }
+
+        private void cbxOnlyExistingPeptides_CheckedChanged(object sender, EventArgs e)
+        {
+            _onlyExistingPeptides = cbxOnlyExistingPeptides.Checked;
+        }
+
+        private void AddSearchResults(IList<String> filenames)
+        {
+            this.filenames = filenames;
+            btnChooseSqtFiles.Enabled = false;
+            btnChooseDTASelect.Enabled = false;
+            IsRunning = true;
+            new Action(WorkBackground).BeginInvoke(null, null);
+        }
+
+        private void btnChooseFiles_Click(object sender, EventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter =
+                    "Sequest search results (*.sqt)|*.sqt|All Files|*.*",
+                Multiselect = true,
+                InitialDirectory = Settings.Default.SearchResultsDirectory
+            };
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            AddSearchResults(openFileDialog.FileNames);
+        }
+
+        private void btnChooseDTASelect_Click(object sender, EventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         Filter = "DTASelect Filter Files (*filter*.txt|*filter*.txt|All Files|*.*",
+                                         Multiselect = true,
+                                         InitialDirectory = Settings.Default.SearchResultsDirectory
+                                     };
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            AddSearchResults(openFileDialog.FileNames);
         }
     }
 }

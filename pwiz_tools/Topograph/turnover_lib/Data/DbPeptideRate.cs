@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Data
 {
@@ -27,6 +28,7 @@ namespace pwiz.Topograph.Data
     {
         public virtual DbPeptideAnalysis PeptideAnalysis { get; set; }
         public virtual PeptideQuantity PeptideQuantity { get; set; }
+        public virtual String Tracer { get; set; }
         public virtual String Cohort { get; set; }
         public virtual double HalfLife { get; set; }
         public virtual double InitialTurnover { get; set; }
@@ -36,28 +38,31 @@ namespace pwiz.Topograph.Data
         public virtual RateKey RateKey {
             get
             {
-                return new RateKey(PeptideQuantity,Cohort);
+                return new RateKey(Tracer, PeptideQuantity,Cohort);
             }
             set 
             { 
                 PeptideQuantity = value.PeptideQuantity;
                 Cohort = value.Cohort;
+                Tracer = value.TracerName;
             }
         }
     }
     public class RateKey
     {
-        public RateKey(PeptideQuantity peptideQuantity, String cohort)
+        public RateKey(String tracerName, PeptideQuantity peptideQuantity, String cohort)
         {
+            TracerName = tracerName;
             PeptideQuantity = peptideQuantity;
             Cohort = cohort ?? "";
         }
 
         public PeptideQuantity PeptideQuantity { get; private set; }
         public String Cohort { get; private set; }
+        public String TracerName { get; private set; }
         public override int GetHashCode()
         {
-            return PeptideQuantity.GetHashCode()*31 + Cohort.GetHashCode();
+            return TracerName.GetHashCode() * 31 * 31 + PeptideQuantity.GetHashCode()*31 + Cohort.GetHashCode();
         }
         public override bool Equals(Object o)
         {
@@ -70,7 +75,8 @@ namespace pwiz.Topograph.Data
             {
                 return false;
             }
-            return Equals(PeptideQuantity, that.PeptideQuantity)
+            return Equals(TracerName, that.TracerName) &&
+                Equals(PeptideQuantity, that.PeptideQuantity)
                    && Equals(Cohort, that.Cohort);
         }
     }

@@ -33,8 +33,8 @@ namespace pwiz.Topograph.Data
         public virtual PeptideQuantity PeptideQuantity { get; set; }
         public virtual ICollection<DbPeptideAmount> PeptideAmounts { get; set; }
         public virtual int PeptideAmountCount { get; set; }
+        public virtual double TracerPercent { get; set; }
         public virtual double Score { get; set; }
-        public virtual double AggregateValue { get; set; }
     }
 
     public enum PeptideQuantity

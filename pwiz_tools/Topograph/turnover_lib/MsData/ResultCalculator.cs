@@ -74,7 +74,7 @@ namespace pwiz.Topograph.MsData
         {
             StatusMessage = "Looking for next peptide";
             var openPeptideAnalysisIds = new HashSet<long>();
-            foreach (var peptideAnalysis in _workspace.PeptideAnalyses.ListChildren())
+            foreach (var peptideAnalysis in _workspace.PeptideAnalyses.ListOpenPeptideAnalyses())
             {
                 openPeptideAnalysisIds.Add(peptideAnalysis.Id.Value);
                 if (peptideAnalysis.FileAnalyses.GetChildCount() == 0)
@@ -102,24 +102,32 @@ namespace pwiz.Topograph.MsData
             {
                 return null;
             }
-            lock(_workspace.Lock)
+            long? peptideAnalysisId = null;
+            using (var session = _workspace.OpenSession())
+            {
+                var query = session.CreateQuery("FROM " + typeof(DbPeptideFileAnalysis) + " F"
+                    + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
+                foreach (DbPeptideFileAnalysis dbPeptideFileAnalysis in query.Enumerable())
+                {
+                    var id = dbPeptideFileAnalysis.PeptideAnalysis.Id.Value;
+                    if (openPeptideAnalysisIds.Contains(id))
+                    {
+                        continue;
+                    }
+                    peptideAnalysisId = id;
+                }
+            }
+            if (peptideAnalysisId == null)
+            {
+                return null;
+            }
+            lock (_workspace.Lock)
             {
                 using (var session = _workspace.OpenSession())
                 {
-                    var query = session.CreateQuery("FROM " + typeof(DbPeptideFileAnalysis) + " F"
-                        + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
-                    foreach (DbPeptideFileAnalysis dbPeptideFileAnalysis in query.Enumerable())
-                    {
-                        var id = dbPeptideFileAnalysis.PeptideAnalysis.Id.Value;
-                        if (openPeptideAnalysisIds.Contains(id))
-                        {
-                            continue;
-                        }
-                        return _workspace.PeptideAnalyses.GetChild(id, session);
-                    }
+                    return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
                 }
             }
-            return null;
         }
         
         public void Stop()

@@ -63,5 +63,17 @@ namespace pwiz.Topograph.Model
         {
             return GetChild(dbPeptideAnalysis.Id.Value);
         }
+        public List<PeptideAnalysis> ListOpenPeptideAnalyses()
+        {
+            var result = new List<PeptideAnalysis>();
+            foreach (var peptideAnalysis in ListChildren())
+            {
+                if (peptideAnalysis.GetChromatogramRefCount() > 0)
+                {
+                    result.Add(peptideAnalysis);
+                }
+            }
+            return result;
+        }
     }
 }

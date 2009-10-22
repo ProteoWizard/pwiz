@@ -85,6 +85,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
+    <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
     <Compile Include="Fasta\FastaUpdater.cs" />
     <Compile Include="Model\Chromatograms.cs" />
     <Compile Include="Model\EntityModelCollection.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="Model\Peaks.cs" />
     <Compile Include="Model\PeptideDistribution.cs" />
     <Compile Include="Model\SimpleChildCollection.cs" />
+    <Compile Include="Model\TracerDefs.cs" />
     <Compile Include="Model\WeakEntityModelCollection.cs" />
     <Compile Include="Model\WorkspaceSetting.cs" />
     <Compile Include="Model\WorkspaceSettings.cs" />
@@ -103,7 +106,7 @@
     <Compile Include="Data\DbPeptideAmount.cs" />
     <Compile Include="Data\DbAnnotatedEntity.cs" />
     <Compile Include="Data\DbChromatogram.cs" />
-    <Compile Include="Data\DbEnrichment.cs" />
+    <Compile Include="Data\DbTracerDef.cs" />
     <Compile Include="Data\DbEntity.cs" />
     <Compile Include="Data\DbModification.cs" />
     <Compile Include="Data\DbMsDataFile.cs" />
@@ -115,7 +118,6 @@
     <Compile Include="Data\DbSetting.cs" />
     <Compile Include="Data\DbWorkspace.cs" />
     <Compile Include="Data\SessionFactoryFactory.cs" />
-    <Compile Include="Data\SettingDef.cs" />
     <Compile Include="Data\ValidationStatus.cs" />
     <Compile Include="Model\AnnotatedEntityModel.cs" />
     <Compile Include="Model\ChromatogramData.cs" />
@@ -137,7 +139,7 @@
     <Compile Include="Model\Peptides.cs" />
     <Compile Include="Model\PeptideSearchResults.cs" />
     <Compile Include="Model\Workspace.cs" />
-    <Compile Include="Enrichment\Enrichment.cs" />
+    <Compile Include="Enrichment\TracerDef.cs" />
     <Compile Include="Enrichment\ChargedPeptide.cs" />
     <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />

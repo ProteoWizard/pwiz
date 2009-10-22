@@ -26,6 +26,7 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using MSGraph;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using ZedGraph;
@@ -44,20 +45,19 @@ namespace pwiz.Topograph.ui.Forms
                                   };
             splitContainer1.Panel2.Controls.Add(barGraphControl);
 
-            tbxInitialPrecursorEnrichment.Leave +=
-                (o, e) => PeptideAnalysis.InitialEnrichment = Convert.ToDouble(tbxInitialPrecursorEnrichment.Text);
-            tbxFinalPrecursorEnrichment.Leave +=
-                (o, e) => PeptideAnalysis.FinalEnrichment = Convert.ToDouble(tbxFinalPrecursorEnrichment.Text);
             tbxIntermediateLevelCount.Leave +=
                 (o, e) => PeptideAnalysis.IntermediateLevels = Convert.ToInt32(tbxIntermediateLevelCount.Text);
             Text = "Precursor Enrichments";
+            colTracerPercent.DefaultCellStyle.Format = "0.##%";
+            colTracerFormulaPercent.DefaultCellStyle.Format = "0.##%";
         }
 
 
         public override void Recalculate()
         {
+            tbxIntermediateLevelCount.Text = PeptideAnalysis.IntermediateLevels.ToString();
             IList<double> observedIntensities;
-            IList<IList<double>> predictedIntensities;
+            IDictionary<TracerPercentFormula,IList<double>> predictedIntensities;
             var precursorEnrichments =
                 PeptideFileAnalysis.ComputePrecursorEnrichments(out observedIntensities, out predictedIntensities);
             if (precursorEnrichments == null)
@@ -65,13 +65,11 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             List<String> labels = new List<string>();
-            for (int i = 0; i < predictedIntensities.Count; i++)
+            foreach (var entry in predictedIntensities)
             {
-                var ape = precursorEnrichments.GetChild(i).EnrichmentValue;
-                labels.Add(Math.Round(ape) + "%");
+                labels.Add(entry.Key.ToString());
             }
-            DisplayDistributionResults(precursorEnrichments, observedIntensities, predictedIntensities, 
-                labels, dataGridView, barGraphControl);
+            DisplayDistributionResults(precursorEnrichments, observedIntensities, predictedIntensities, barGraphControl);
             if (precursorEnrichments != null)
             {
                 tbxScore.Text = precursorEnrichments.Score.ToString();
@@ -82,12 +80,14 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        protected override void PeptideFileAnalysisChanged()
+        protected override DataGridView GridViewFormulas
         {
-            base.PeptideFileAnalysisChanged();
-            tbxInitialPrecursorEnrichment.Text = PeptideFileAnalysis.PeptideAnalysis.InitialEnrichment.ToString();
-            tbxFinalPrecursorEnrichment.Text = PeptideFileAnalysis.PeptideAnalysis.FinalEnrichment.ToString();
-            tbxIntermediateLevelCount.Text = PeptideFileAnalysis.PeptideAnalysis.IntermediateLevels.ToString();
+            get { return gridViewFormulas; }
+        }
+
+        protected override DataGridView GridViewTracerPercents
+        {
+            get { return gridViewTracerPercents; }
         }
     }
 }

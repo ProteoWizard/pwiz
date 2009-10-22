@@ -47,36 +47,6 @@ namespace pwiz.Topograph.ui.Controls
             AllowUserToDeleteRows = false;
         }
 
-//        private String GetTooltipText(DataGridViewCell cell)
-//        {
-//            var column = Columns[e.ColumnIndex];
-//            if (!(column.Tag is int))
-//            {
-//                return;
-//            }
-//
-//            var row = Rows[e.RowIndex];
-//            var mzKey = new MzKey((int)column.Tag, (int)row.Tag);
-//            var mz = PeptideAnalysis.TurnoverCalculator.GetMzs(mzKey.Charge)[mzKey.MassIndex];
-//            String tooltipText;
-//            if (PeptideFileAnalysis != null)
-//            {
-//                var intensity =
-//                    PeptideFileAnalysis.GetIntensities(mzKey.Charge, IntensityScaleMode.relative_total)[mzKey.MassIndex];
-//                tooltipText = "M/Z:" + mz + "\n" + "Intensity:" + intensity;
-//            }
-//            else
-//            {
-//                tooltipText = "M/Z:" + mz;
-//            }
-//        }
-
-//        protected override void OnCellMouseEnter(DataGridViewCellEventArgs e)
-//        {
-//            UpdateTooltip(e);
-//            base.OnCellMouseEnter(e);
-//        }
-//
         public DataGridViewTextBoxColumn MassColumn { get; private set; }
         public DataGridViewTextBoxColumn IntensityColumn { get; private set; }
 
@@ -213,6 +183,9 @@ namespace pwiz.Topograph.ui.Controls
         }
         public void UpdateGrid()
         {
+            double monoisotopicMass =
+                Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(PeptideAnalysis.Peptide.Sequence);
+            var masses = PeptideAnalysis.GetTurnoverCalculator().GetMzs(0);
             if (MassColumn == null)
             {
                 MassColumn = new DataGridViewTextBoxColumn
@@ -233,6 +206,7 @@ namespace pwiz.Topograph.ui.Controls
                     Width = 50,
                     ReadOnly = true
                 };
+                IntensityColumn.DefaultCellStyle.Format = "0.#";
                 Columns.Add(IntensityColumn);
             }
             foreach (var entry in _excludedMzColumns.ToArray())
@@ -279,14 +253,15 @@ namespace pwiz.Topograph.ui.Controls
                 if (!_intensityColumns.ContainsKey(charge))
                 {
                     var column = new DataGridViewTextBoxColumn
-                    {
-                        HeaderText = "Int+" + charge,
-                        Name = "colIntensity" + charge,
-                        Width = 40,
-                        SortMode = DataGridViewColumnSortMode.NotSortable,
-                        ReadOnly = true,
-                        Tag = charge,
-                    };
+                                     {
+                                         HeaderText = "Int+" + charge,
+                                         Name = "colIntensity" + charge,
+                                         Width = 40,
+                                         SortMode = DataGridViewColumnSortMode.NotSortable,
+                                         ReadOnly = true,
+                                         Tag = charge,
+                                         DefaultCellStyle = {Format = "0.#"},
+                                     };
                     DataGridViewCheckBoxColumn nextColumn;
                     if (_excludedMzColumns.TryGetValue(charge + 1, out nextColumn))
                     {
@@ -355,12 +330,12 @@ namespace pwiz.Topograph.ui.Controls
                 }
                 foreach (var entry in _intensityColumns)
                 {
-                    var cell = row.Cells[entry.Value.Name];
+                    var cell = row.Cells[entry.Value.Index];
                     var mzKey = new MzKey(entry.Key, iMass);
                     if (scaledIntensities != null)
                     {
                         entry.Value.Visible = true;
-                        cell.Value = Math.Round(scaledIntensities[mzKey.Charge][mzKey.MassIndex], 1);
+                        cell.Value = scaledIntensities[mzKey.Charge][mzKey.MassIndex];
                     }
                     else
                     {
@@ -368,7 +343,16 @@ namespace pwiz.Topograph.ui.Controls
                     }
                     cell.Style.BackColor = GetColor(mzKey);
                 }
-                row.Cells[MassColumn.Name].Value = "M+" + iMass;
+                double massDifference = masses[iMass] - monoisotopicMass;
+
+                var label = massDifference.ToString("0.#");
+                if (label[0] != '-')
+                {
+                    label = "+" + label;
+                }
+                label = "M" + label;
+                row.Cells[MassColumn.Name].Value = label;
+                row.Cells[MassColumn.Index].ToolTipText = "Mass:" + masses[iMass];
                 double totalIntensity = 0;
                 int intensityCount = 0;
                 foreach (var intensities in intensitiesList)
@@ -386,7 +370,7 @@ namespace pwiz.Topograph.ui.Controls
                 }
                 else
                 {
-                    row.Cells[IntensityColumn.Name].Value = Math.Round(totalIntensity/intensityCount, 1);
+                    row.Cells[IntensityColumn.Name].Value = totalIntensity/intensityCount;
                 }
             }
         }

@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -43,44 +44,52 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
         
-        protected void DisplayDistributionResults(PeptideDistribution peptideDistribution, IList<double> observedIntensities, IList<IList<double>> predictedIntensities, IList<String> labels, DataGridView dataGridView, ZedGraphControl barGraphControl)
+        protected void DisplayDistributionResults<T>(PeptideDistribution peptideDistribution, IList<double> observedIntensities, IDictionary<T,IList<double>> predictedIntensities, ZedGraphControl barGraphControl) 
+            where T:Formula<T>, new()
         {
-            dataGridView.Rows.Clear();
+            GridViewTracerPercents.Rows.Clear();
+            GridViewFormulas.Rows.Clear();
             barGraphControl.GraphPane.GraphObjList.Clear();
             barGraphControl.GraphPane.CurveList.Clear();
             if (peptideDistribution == null)
             {
                 return;
             }
+            var entries = predictedIntensities.ToArray();
             int massCount = observedIntensities.Count;
+            double monoIsotopicMass =
+                Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(PeptideAnalysis.Peptide.Sequence);
+            var masses = PeptideAnalysis.GetTurnoverCalculator().GetMzs(0);
             PointPairList actualBarPoints = new PointPairList();
             PointPairList excludedBarPoints = new PointPairList();
             PointPairList predictedBarPoints = new PointPairList();
             for (int iMass = 0; iMass < massCount; iMass++)
             {
+                double mass = masses[iMass] - monoIsotopicMass;
                 if (PeptideFileAnalysis.ExcludedMzs.IsMassExcludedForAllCharges(iMass))
                 {
-                    excludedBarPoints.Add(iMass, observedIntensities[iMass]);
+                    excludedBarPoints.Add(mass, observedIntensities[iMass]);
                 }
                 else
                 {
-                    actualBarPoints.Add(iMass, observedIntensities[iMass]);
+                    actualBarPoints.Add(mass, observedIntensities[iMass]);
                 }
-                predictedBarPoints.Add(iMass + 1.0 / 3, 0);
+                predictedBarPoints.Add(mass + 1.0 / 3, 0);
             }
-            barGraphControl.GraphPane.XAxis.Title.Text = "M/Z";
+            barGraphControl.GraphPane.XAxis.Title.Text = "Mass";
             barGraphControl.GraphPane.YAxis.Title.Text = "Intensity";
             barGraphControl.GraphPane.BarSettings.Type = BarType.Overlay;
             barGraphControl.GraphPane.AddBar("Observed Peptide", actualBarPoints, Color.Black);
             barGraphControl.GraphPane.AddBar(null, excludedBarPoints, Color.Gray);
             var distributions = peptideDistribution.ListChildren();
             int candidateCount = distributions.Count;
+
             for (int iCandidate = 0; iCandidate < candidateCount; iCandidate++)
             {
                 predictedBarPoints = new PointPairList(predictedBarPoints);
                 for (int iMass = 0; iMass < massCount; iMass ++)
                 {
-                    predictedBarPoints[iMass].Y += predictedIntensities[iCandidate][iMass];
+                    predictedBarPoints[iMass].Y += entries[iCandidate].Value[iMass];
                 }
                 
                 Color color;
@@ -93,14 +102,20 @@ namespace pwiz.Topograph.ui.Forms
                     color = Color.FromArgb(0, 255*iCandidate/(candidateCount - 1),
                                    255*(candidateCount - iCandidate - 1)/(candidateCount - 1));
                 }
-                var row = dataGridView.Rows[dataGridView.Rows.Add()];
-                row.Cells[0].Value = labels[iCandidate];
+                var row = GridViewFormulas.Rows[GridViewFormulas.Rows.Add()];
+                row.Cells[0].Value = entries[iCandidate].Key.ToString();
                 row.Cells[0].Style.BackColor = color;
-                row.Cells[1].Value = Math.Round(distributions[iCandidate].PercentAmount);
-                barGraphControl.GraphPane.AddBar(labels[iCandidate], predictedBarPoints, color);
+                row.Cells[1].Value = distributions[iCandidate].PercentAmount / 100;
+                barGraphControl.GraphPane.AddBar(entries[iCandidate].Key.ToString(), predictedBarPoints, color);
             }
             barGraphControl.GraphPane.AxisChange();
             barGraphControl.Invalidate();
+            foreach (var tracerDef in Workspace.GetTracerDefs())
+            {
+                var row = GridViewTracerPercents.Rows[GridViewTracerPercents.Rows.Add()];
+                row.Cells[0].Value = tracerDef.Name;
+                row.Cells[1].Value = peptideDistribution.GetTracerPercent(tracerDef) / 100;
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -117,9 +132,16 @@ namespace pwiz.Topograph.ui.Forms
         {
         }
 
+        protected virtual DataGridView GridViewFormulas {get { return null;}}
+        protected virtual DataGridView GridViewTracerPercents { get { return null;} }
+
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
-            if (!_workspaceVersion.Equals(Workspace.WorkspaceVersion) || args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.Chromatograms) || args.Contains(PeptideFileAnalysis.PeptideDistributions))
+            if (!_workspaceVersion.Equals(Workspace.WorkspaceVersion) 
+                || args.Contains(PeptideFileAnalysis) 
+                || args.Contains(PeptideFileAnalysis.Chromatograms) 
+                || args.Contains(PeptideFileAnalysis.PeptideDistributions) 
+                || args.Contains(PeptideAnalysis))
             {
                 _workspaceVersion = Workspace.WorkspaceVersion;
                 Recalculate();

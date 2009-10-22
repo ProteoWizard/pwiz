@@ -201,6 +201,31 @@ namespace pwiz.Topograph.ui.Forms
                 ScanIndex = scanIndex,
             };
             spectrumForm.Show(this);
+            double minMz = 2000;
+            double maxMz = 0;
+            var selectedCharges = gridIntensities.GetSelectedCharges();
+            var selectedMasses = gridIntensities.GetSelectedMasses();
+            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
+            {
+                if (selectedCharges.Count > 0 && !selectedCharges.Contains(charge))
+                {
+                    continue;
+                }
+                for (int iMass = 0; iMass < PeptideAnalysis.GetMassCount(); iMass++)
+                {
+                    if (selectedMasses.Count > 0 && !selectedMasses.Contains(iMass))
+                    {
+                        continue;
+                    }
+                    double mz = PeptideAnalysis.GetMzs()[charge][iMass];
+                    minMz = Math.Min(minMz, mz);
+                    maxMz = Math.Max(maxMz, mz);
+                }
+            }
+            if (minMz <= maxMz)
+            {
+                spectrumForm.Zoom(minMz - 1, maxMz + 1);
+            }
             return true;
         }
 
@@ -262,29 +287,10 @@ namespace pwiz.Topograph.ui.Forms
                     var graphItem = new ChromatogramGraphItem();
                     graphItem.Color = GetColor(mzKey);
 
-                    PointPairList points = new PointPairList(chromatogram.Times, chromatogram.Intensities);
+                    PointPairList points = new PointPairList(chromatogram.Times, chromatogram.GetAccurateIntensities().ToArray());
                     graphItem.Points = points;
                     msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
-                    if (selectedCharges.Count == 1 && selectedMasses.Count == 1)
-                    {
-                        PointPairList mzErrorPoints = new PointPairList();
-                        for (int i = 0; i < chromatogram.Times.Length; i++)
-                        {
-                            double error = chromatogram.GetMzError(i);
-                            error = Math.Pow(Math.Abs(error), PeptideFileAnalysis.PeakEnd.Value - PeptideFileAnalysis.PeakStart.Value);
-                            if (Math.Abs(error) < .5)
-                            {
-                                continue;
-                            }
-                            mzErrorPoints.Add(chromatogram.Times[i], chromatogram.Intensities[i] * error);
-                        }
-                        if (mzErrorPoints.Count > 0)
-                        {
-                            msGraphControl.GraphPane.AddStick(null, mzErrorPoints, Color.Red);
-                        }
-                    }
                 }
-
             }
         }
 

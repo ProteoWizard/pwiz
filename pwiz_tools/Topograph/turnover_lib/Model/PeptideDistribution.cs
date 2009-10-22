@@ -18,11 +18,13 @@
  */
 using System.Collections.Generic;
 using NHibernate;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
 {
-    public class PeptideDistribution : SimpleChildCollection<DbPeptideDistribution, int, DbPeptideAmount>
+    public class PeptideDistribution : SimpleChildCollection<DbPeptideDistribution, string, DbPeptideAmount>
     {
         private long peptideFileAnalysisId;
         public PeptideDistribution(Workspace workspace, DbPeptideDistribution peptideDistribution) : base(workspace, peptideDistribution)
@@ -55,11 +57,11 @@ namespace pwiz.Topograph.Model
             parent.PeptideAmountCount = childCount;
         }
 
-        protected override IEnumerable<KeyValuePair<int, DbPeptideAmount>> GetChildren(DbPeptideDistribution parent)
+        protected override IEnumerable<KeyValuePair<string, DbPeptideAmount>> GetChildren(DbPeptideDistribution parent)
         {
             foreach (var peptideAmount in parent.PeptideAmounts)
             {
-                yield return new KeyValuePair<int, DbPeptideAmount>(peptideAmount.EnrichmentIndex, peptideAmount);
+                yield return new KeyValuePair<string, DbPeptideAmount>(peptideAmount.TracerFormula, peptideAmount);
             }
         }
 
@@ -79,7 +81,7 @@ namespace pwiz.Topograph.Model
         {
             var result = base.UpdateDbEntity(session);
             result.Score = Score;
-            result.AggregateValue = AverageEnrichmentValue;
+            result.TracerPercent = TracerPercent;
             return result;
         }
 
@@ -105,7 +107,27 @@ namespace pwiz.Topograph.Model
                 return total;
             }
         }
-        public double AverageEnrichmentValue
+        public double GetTracerPercent(TracerDef tracerDef)
+        {
+            int maxTracerCount = tracerDef.GetMaximumTracerCount(PeptideFileAnalysis.Peptide.Sequence);
+            if (maxTracerCount == 0)
+            {
+                return 0;
+            }
+            double result = 0;
+            foreach (var peptideAmount in ListChildren())
+            {
+                var tracerFormula = Molecule.Parse(peptideAmount.TracerFormula);
+                double percent = tracerFormula.GetElementCount(tracerDef.Name);
+                if (PeptideQuantity == PeptideQuantity.tracer_count)
+                {
+                    percent = percent * 100 / maxTracerCount;
+                }
+                result += percent * peptideAmount.PercentAmount / 100;
+            }
+            return result;
+        }
+        public double TracerPercent
         {
             get
             {
@@ -114,7 +136,7 @@ namespace pwiz.Topograph.Model
                 foreach (var child in ListChildren())
                 {
                     totalAmount += child.PercentAmount;
-                    totalValue += child.EnrichmentValue*child.PercentAmount;
+                    totalValue += child.TracerPercent * child.PercentAmount;
                 }
                 return totalValue/totalAmount;
             }
@@ -123,7 +145,7 @@ namespace pwiz.Topograph.Model
         {
             get
             {
-                return 100*(1 - GetChild(0).PercentAmount/TotalAmount);
+                return 100*(1 - GetChild("").PercentAmount/TotalAmount);
             }
         }
         public PeptideQuantity PeptideQuantity { get; private set; }

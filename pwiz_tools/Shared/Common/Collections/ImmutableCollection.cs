@@ -8,12 +8,26 @@ namespace pwiz.Common.Collections
 {
     public class ImmutableCollection<T> : ICollection<T>
     {
+        private ICollection<T> _collection;
         public ImmutableCollection(ICollection<T> collection)
         {
             Collection = collection;
         }
+        protected ImmutableCollection()
+        {
+        }
 
-        private ICollection<T> Collection { get; set; }
+        protected ICollection<T> Collection
+        {
+            get { return _collection;} 
+            set { 
+                if (_collection != null)
+                {
+                    throw new InvalidOperationException();
+                }
+                _collection = value;
+            }
+        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {

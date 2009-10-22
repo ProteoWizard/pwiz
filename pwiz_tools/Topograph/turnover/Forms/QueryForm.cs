@@ -20,8 +20,6 @@ namespace pwiz.Topograph.ui.Forms
     public partial class QueryForm : EntityModelForm
     {
         private Schema _schema;
-        private ParsedQuery _query;
-        private String _originalHql;
         public QueryForm(WorkspaceSetting setting) : base(setting)
         {
             InitializeComponent();
@@ -42,8 +40,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     var xmlSerializer = new XmlSerializer(typeof(QueryDef));
                     var queryDef = (QueryDef)xmlSerializer.Deserialize(new StringReader(setting.Value));
-                    _originalHql = queryDef.Hql;
-                    _query = new ParsedQuery(_originalHql);
+                    tbxSource.Text = queryDef.Hql;
                 }
                 catch(Exception)
                 {
@@ -52,17 +49,6 @@ namespace pwiz.Topograph.ui.Forms
             }
             PopulateDesignView(false);
             UpdateFormTitle();
-        }
-
-        private Column ConstructColumn(Identifier identifier)
-        {
-            return new Column
-                                {
-                                    Identifier = identifier,
-                                    Label = _query.TableAlias == identifier.Parts[0] ?
-                                        identifier.RemovePrefix(1).ToString() : identifier.ToString()
-                                };
-
         }
 
         private void comboTableName_SelectedIndexChanged(object sender, EventArgs e)
@@ -79,7 +65,12 @@ namespace pwiz.Topograph.ui.Forms
                 node.Nodes.AddRange(CreateNodes(column.Identifier, column.Type).ToArray());
                 treeView1.Nodes.Add(node);
             }
-            _query = new ParsedQuery(table);
+            var parsedQuery = new ParsedQuery(tbxSource.Text);
+            if (parsedQuery.TableName != table.Name)
+            {
+                listBox1.Items.Clear();
+                tbxSource.Text = new ParsedQuery(table).GetSourceHql();
+            }
         }
         class Table
         {
@@ -177,46 +168,36 @@ namespace pwiz.Topograph.ui.Forms
             }
             var column = (Column) node.Tag;
             var rawIdentifier = column.Identifier;
-            var identifier = new Identifier(_query.TableAlias, rawIdentifier);
-            foreach (Column selectedColumn in listBox1.Items)
+            var query = new ParsedQuery(tbxSource.Text);
+            var identifier = new Identifier(query.TableAlias, rawIdentifier);
+            foreach (ParsedQuery.SelectColumn selectedColumn in listBox1.Items)
             {
-                if (selectedColumn.Identifier.Equals(identifier))
+                if (selectedColumn.Expression == identifier.ToString())
                 {
                     return;
                 }
             }
-            listBox1.Items.Add(ConstructColumn(identifier));
-            var identifiers = new List<Identifier>();
-            foreach (Column selectedColumn in listBox1.Items)
+            listBox1.Items.Add(new ParsedQuery.SelectColumn(query) { Expression = identifier.ToString()});
+            var identifiers = new List<ParsedQuery.SelectColumn>();
+            foreach (ParsedQuery.SelectColumn selectedColumn in listBox1.Items)
             {
-                identifiers.Add(selectedColumn.Identifier);
+                identifiers.Add(selectedColumn);
             }
-            _query.SetColumns(identifiers);
+            query.SetColumns(identifiers);
+            tbxSource.Text = query.GetSourceHql();
         }
  
-        private String GetHql()
-        {
-            return _query.Hql;
-        }
-
         private void ExecuteQuery(ParsedQuery parsedQuery, out IList<object[]> rows, out IList<String> columnNames)
         {
             columnNames = new List<string>();
             rows = new List<object[]>();
             using (var session = Workspace.OpenSession())
             {
-                var query = session.CreateQuery(parsedQuery.Hql);
+                var query = session.CreateQuery(parsedQuery.GetExecuteHql());
                 var results = query.List();
-                foreach (var identifier in parsedQuery.Columns)
+                foreach (var selectColumn in parsedQuery.Columns)
                 {
-                    if (identifier.Parts[0] == parsedQuery.TableAlias)
-                    {
-                        columnNames.Add(identifier.RemovePrefix(1).ToString());
-                    }
-                    else
-                    {
-                        columnNames.Add(identifier.ToString());
-                    }
+                    columnNames.Add(selectColumn.GetColumnName());
                 }
                 for (int iRow = 0; iRow < results.Count; iRow++)
                 {
@@ -236,15 +217,12 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnExecuteQuery_Click(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedTab == pageSource)
-            {
-                _query = new ParsedQuery(tbxSource.Text);
-            }
             try
             {
                 IList<object[]> rows;
                 IList<String> columnNames;
-                ExecuteQuery(_query, out rows, out columnNames);
+                var query = new ParsedQuery(tbxSource.Text);
+                ExecuteQuery(query, out rows, out columnNames);
                 dataGridView1.Columns.Clear();
                 dataGridView1.Rows.Clear();
                 foreach (var columnName in columnNames)
@@ -274,6 +252,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void dataGridView1_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
             var cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
             var value = cell.Value;
             using (var session = Workspace.OpenSession())
@@ -343,11 +325,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private bool PopulateDesignView(bool showMessage)
         {
-            if (_query == null)
+            if (tbxSource.Text.Trim() == "")
             {
+                listBox1.Items.Clear();
+                comboTableName.SelectedIndex = -1;
                 return true;
             }
-            if (_query.TableName == null)
+            var query = new ParsedQuery(tbxSource.Text);
+            if (query.TableName == null)
             {
                 if (showMessage)
                 {
@@ -357,30 +342,28 @@ namespace pwiz.Topograph.ui.Forms
                 return false;
             }
             bool tableFound = false;
-            var query = _query;
             foreach (Table table in comboTableName.Items)
             {
-                if (table.Type.ToString() == _query.TableName)
+                if (table.Type.Name == query.TableName)
                 {
                     comboTableName.SelectedItem = table;
                     tableFound = true;
                     break;
                 }
             }
-            _query = query;
             if (!tableFound)
             {
                 if (showMessage)
                 {
-                    MessageBox.Show(this, "The table '" + _query.TableName + "' is not recognized.");
+                    MessageBox.Show(this, "The table '" + query.TableName + "' is not recognized.");
                 }
                 tabControl1.SelectedTab = pageSource;
                 return false;
             }
             listBox1.Items.Clear();
-            foreach (var column in _query.Columns)
+            foreach (var column in query.Columns)
             {
-                listBox1.Items.Add(ConstructColumn(column));
+                listBox1.Items.Add(column);
             }
             return true;
         }
@@ -389,15 +372,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             if (tabControl1.SelectedTab == pageDesign)
             {
-                _query.Hql = tbxSource.Text;
                 PopulateDesignView(true);
-            }
-            else if (tabControl1.SelectedTab == pageSource)
-            {
-                if (_query != null)
-                {
-                    tbxSource.Text = _query == null ? "" : _query.Hql;
-                }
             }
         }
 
@@ -408,52 +383,77 @@ namespace pwiz.Topograph.ui.Forms
             SaveQuery();
         }
 
-        private bool IsDirty()
+        private bool CheckSave()
         {
-            if (_query == null)
+            String hql = tbxSource.Text;
+            try
+            {
+                var xmlSerializer = new XmlSerializer(typeof(QueryDef));
+                var queryDef = (QueryDef)xmlSerializer.Deserialize(new StringReader(Query.Value));
+                if (queryDef.Hql == hql)
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+            var result = MessageBox.Show(this, "Do you want to save changes to this query definition?", 
+                Program.AppName, MessageBoxButtons.YesNoCancel);
+            if (result == DialogResult.Cancel)
             {
                 return false;
             }
-            return _query.Hql != _originalHql;
+            if (result == DialogResult.No)
+            {
+                return true;
+            }
+            return SaveQuery();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (!CheckSave())
+            {
+                e.Cancel = true;
+                return;
+            }
+            base.OnClosing(e);
         }
 
         private bool SaveQuery()
         {
-            if (tabControl1.SelectedTab == pageSource)
+            String settingName = Query.Name;
+            if (settingName == null)
             {
-                _query = new ParsedQuery(tbxSource.Text);
-            }
-            if (_query == null || _query.Hql == null)
-            {
-                MessageBox.Show("Nothing to save.", Program.AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            String name = tbxQueryName.Text;
-            if (string.IsNullOrEmpty(name))
-            {
-                MessageBox.Show(this, "Query name cannot be blank", Program.AppName, MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
-                tbxQueryName.Focus();
-                return false;
-            }
-            String settingName = WorkspaceSetting.QueryPrefix + name;
-            foreach (var setting in Workspace.Settings.ListChildren())
-            {
-                if (settingName != setting.Name)
+                String name = tbxQueryName.Text;
+                if (string.IsNullOrEmpty(name))
                 {
-                    continue;
+                    MessageBox.Show(this, "Query name cannot be blank", Program.AppName, MessageBoxButtons.OK,
+                                    MessageBoxIcon.Error);
+                    tbxQueryName.Focus();
+                    return false;
                 }
-                if (setting.Equals(Query))
+                settingName = WorkspaceSetting.QueryPrefix + name;
+                foreach (var setting in Workspace.Settings.ListChildren())
                 {
-                    continue;
+                    if (settingName != setting.Name)
+                    {
+                        continue;
+                    }
+                    if (setting.Equals(Query))
+                    {
+                        continue;
+                    }
+                    MessageBox.Show("There is already a query named '" + name + "'", Program.AppName, MessageBoxButtons.OK,
+                                    MessageBoxIcon.Error);
+                    tbxQueryName.Focus();
+                    return false;
                 }
-                MessageBox.Show("There is already a query named '" + name + "'", Program.AppName, MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
-                tbxQueryName.Focus();
-                return false;
             }
             var queryDef = new QueryDef();
-            queryDef.Hql = _query.Hql;
+            queryDef.Hql = tbxSource.Text;
             var xmlSerializer = new XmlSerializer(typeof (QueryDef));
             var stringWriter = new StringWriter();
             xmlSerializer.Serialize(stringWriter, queryDef);
@@ -481,7 +481,6 @@ namespace pwiz.Topograph.ui.Forms
                     session.Update(dbWorkspace);
                 }
                 session.Transaction.Commit();
-                _originalHql = queryDef.Hql;
                 Query.Name = setting.Name;
                 if (Query.Parent == null)
                 {
@@ -521,7 +520,8 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
             IList<object[]> rows;
             IList<String> columnNames;
-            ExecuteQuery(_query, out rows, out columnNames);
+            var query = new ParsedQuery(tbxSource.Text);
+            ExecuteQuery(query, out rows, out columnNames);
             using (var stream = File.OpenWrite(filename))
             {
                 var writer = new StreamWriter(stream);
@@ -533,9 +533,9 @@ namespace pwiz.Topograph.ui.Forms
                     writer.Write(columnName);
                 }
                 writer.WriteLine();
-                tab = "";
                 foreach (var row in rows)
                 {
+                    tab = "";
                     foreach (var cell in row)
                     {
                         writer.Write(tab);

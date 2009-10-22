@@ -74,7 +74,7 @@ namespace pwiz.Topograph.Model
         public int MaxTracerCount { 
             get
             {
-                return Workspace.GetEnrichmentDef().GetMaximumTracerCount(GetChargedPeptide(1));
+                return Workspace.GetMaxTracerCount(Sequence);
             }
         }
 
@@ -93,7 +93,6 @@ namespace pwiz.Topograph.Model
             }
             minCharge = Convert.ToInt32(minMaxCharge[0]);
             maxCharge = Convert.ToInt32(minMaxCharge[1]);
-            var enrichmentDef = Workspace.GetEnrichmentDef();
             var dbWorkspace = Workspace.LoadDbWorkspace(session);
             return new DbPeptideAnalysis
             {
@@ -101,8 +100,6 @@ namespace pwiz.Topograph.Model
                 Workspace = dbWorkspace,
                 MinCharge = minCharge,
                 MaxCharge = maxCharge,
-                InitialEnrichment = enrichmentDef.InitialApe,
-                FinalEnrichment = enrichmentDef.FinalApe,
                 IntermediateEnrichmentLevels = 0,
             };
         }

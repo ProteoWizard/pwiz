@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
@@ -49,30 +51,19 @@ namespace pwiz.Topograph.Model
         public bool Calculate()
         {
             var peptideRateDict = new Dictionary<RateKey, DbPeptideRate>();
-            foreach (var cohort in GetCohorts().Keys)
+            foreach (var tracerName in GetTracerNames())
             {
-                foreach (PeptideQuantity peptideQuantity in Enum.GetValues(typeof(PeptideQuantity)))
+                foreach (var cohort in GetCohorts().Keys)
                 {
-                    bool isComplete;
-                    var rateKey = new RateKey(peptideQuantity, cohort);
-                    var points = GetPoints(rateKey, out isComplete);
-                    if (points.Count <= 1)
+                    foreach (PeptideQuantity peptideQuantity in Enum.GetValues(typeof(PeptideQuantity)))
                     {
-                    //    Thread.Sleep(1000);
-                    //    var rateKey2 =
-                    //        new RateKey(peptideQuantity == PeptideQuantity.tracer_count
-                    //                        ? PeptideQuantity.precursor_enrichment
-                    //                        : PeptideQuantity.tracer_count, rateKey.Cohort);
-                    //    var points2 = GetPoints(fileAnalyses, rateKey2);
-                    //    if (points2.Count > 1)
-                    //    {
-                    //        Console.Out.WriteLine(PeptideAnalysis.Peptide.FullSequence);
-                    //    }
-                        continue;
+                        bool isComplete;
+                        var rateKey = new RateKey(tracerName, peptideQuantity, cohort);
+                        var points = GetPoints(rateKey, out isComplete);
+                        var peptideRate = GetPeptideRate(rateKey, points);
+                        peptideRate.IsComplete = isComplete;
+                        peptideRateDict.Add(rateKey, peptideRate);
                     }
-                    var peptideRate = GetPeptideRate(rateKey, points);
-                    peptideRate.IsComplete = isComplete;
-                    peptideRateDict.Add(rateKey, peptideRate);
                 }
             }
             lock(Lock)
@@ -90,32 +81,30 @@ namespace pwiz.Topograph.Model
             return true;
         }
 
-        private DbPeptideRate GetPeptideRate(RateKey rateKey, IDictionary<double,double> points)
+        private DbPeptideRate GetPeptideRate(RateKey rateKey, ICollection<KeyValuePair<double,double>> points)
         {
+            var xValues = new List<double>();
             var yValues = new List<double>();
-            var initialEnrichment = PeptideAnalysis.InitialEnrichment;
-            var finalEnrichment = PeptideAnalysis.FinalEnrichment;
-            foreach (var value in points.Values)
+            var tracerDef = GetTracerDef(rateKey.TracerName);
+            double initialEnrichment = tracerDef.InitialApe;
+            double finalEnrichment = tracerDef.FinalApe;
+            foreach (var entry in points)
             {
-                double logValue = Math.Log((value - finalEnrichment)/(initialEnrichment - finalEnrichment));
+                double logValue = Math.Log((entry.Value - finalEnrichment)/(initialEnrichment - finalEnrichment));
                 yValues.Add(logValue);
+                xValues.Add(entry.Key);
             }
-            var statisticsX = new Statistics(points.Keys.ToArray());
+            var statisticsX = new Statistics(xValues.ToArray());
             var statisticsY = new Statistics(yValues.ToArray());
             double rateConstant = statisticsY.Slope(statisticsX);
             double yIntercept = statisticsY.Intercept(statisticsX);
-            var predicted = new Dictionary<double,double>();
-            foreach (var point in points)
-            {
-                predicted.Add(point.Key, Math.Exp(yIntercept) * Math.Exp(point.Key * rateConstant));
-            }
             double actualSquared = 0;
             double predictedSquared = 0;
             double dotProduct = 0;
 
             foreach (var point in points)
             {
-                var predictedValue = predicted[point.Key];
+                var predictedValue = Math.Exp(yIntercept)*Math.Exp(point.Key*rateConstant);
                 dotProduct += predictedValue*point.Value;
                 actualSquared += point.Value*point.Value;
                 predictedSquared += predictedValue*predictedValue;
@@ -141,9 +130,31 @@ namespace pwiz.Topograph.Model
             return value;
         }
 
+        private TracerDef GetTracerDef(String name)
+        {
+            foreach (var tracerDef in Workspace.GetTracerDefs())
+            {
+                if (name == tracerDef.Name)
+                {
+                    return tracerDef;
+                }
+            }
+            return null;
+        }
+
         public IDictionary<String,String> GetCohorts()
         {
             return GetCohorts(PeptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true));
+        }
+
+        public IList<String> GetTracerNames()
+        {
+            var result = new List<String>();
+            foreach (var tracerDef in Workspace.GetTracerDefs())
+            {
+                result.Add(tracerDef.Name);
+            }
+            return result;
         }
 
         private IDictionary<String,String> GetCohorts(ICollection<PeptideFileAnalysis> fileAnalyses)
@@ -161,17 +172,22 @@ namespace pwiz.Topograph.Model
             return cohorts;
         }
 
-        public IDictionary<double,double> GetPoints(RateKey rateKey)
+        public ICollection<KeyValuePair<double,double>> GetPoints(RateKey rateKey)
         {
             bool isComplete;
             return GetPoints(rateKey, out isComplete);
         }
         
-        private IDictionary<double, double> GetPoints(RateKey rateKey, out bool isComplete)
+        private ICollection<KeyValuePair<double, double>> GetPoints(RateKey rateKey, out bool isComplete)
         {
+            var result = new List<KeyValuePair<double, double>>();
+            var tracerDef = GetTracerDef(rateKey.TracerName);
+            if (tracerDef == null)
+            {
+                isComplete = false;
+                return result;
+            }
             isComplete = true;
-            var totals = new Dictionary<double, double>();
-            var counts = new Dictionary<double, int>();
             foreach (var fileAnalysis in PeptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
             {
                 if (!String.IsNullOrEmpty(rateKey.Cohort) && rateKey.Cohort != fileAnalysis.MsDataFile.Cohort)
@@ -189,24 +205,12 @@ namespace pwiz.Topograph.Model
                 {
                     continue;
                 }
-                double value = peptideDistribution.AverageEnrichmentValue;
+                double value = peptideDistribution.GetTracerPercent(tracerDef);
                 if (double.IsNaN(value))
                 {
                     continue;
                 }
-                double total;
-                totals.TryGetValue(timePoint.Value, out total);
-                total += value;
-                totals[timePoint.Value] = total;
-                int count;
-                counts.TryGetValue(timePoint.Value, out count);
-                count++;
-                counts[timePoint.Value] = count;
-            }
-            var result = new SortedDictionary<double, double>();
-            foreach (var entry in totals)
-            {
-                result.Add(entry.Key, entry.Value/counts[entry.Key]);
+                result.Add(new KeyValuePair<double, double>(timePoint.Value, value));
             }
             return result;
         }

@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -134,11 +152,6 @@ namespace pwiz.Common.Chemistry
                 {"Md",new []{258.0,1.0,}},
                 {"No",new []{259.0,1.0,}},
                 {"Lr",new []{260.0,1.0,}},
-                {"Hx",new []{1.0078246,0.999855,2.0141021,0.000145,}},
-                {"Cx",new []{12.0,0.98916,13.0033554,0.01084,}},
-                {"Nx",new []{14.0030732,0.99633,15.0001088,0.00366,}},
-                {"Ox",new []{15.9949141,0.997576009706,16.9991322,0.000378998479,17.9991616,0.002044991815,}},
-                {"Sx",new []{31.97207,0.95021,32.971456,0.00745,33.967866,0.04221,35.96708,0.00013,}},
             };
             var dict = new Dictionary<String, MassDistribution>();
             foreach (var entry in defaults)

@@ -35,7 +35,6 @@ namespace pwiz.Topograph.ui.Forms
     public partial class GraphForm : EntityModelForm
     {
         private ZedGraphControl zedGraphControl;
-        private bool _byCohort = true;
         private PeptideQuantity _peptideQuantity;
         public GraphForm(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
@@ -50,6 +49,11 @@ namespace pwiz.Topograph.ui.Forms
                 comboGraph.Items.Add(graphValue);
             }
             comboGraph.SelectedIndex = 0;
+            foreach (var tracerDef in Workspace.GetTracerDefs())
+            {
+                comboTracer.Items.Add(tracerDef.Name);
+            }
+            comboTracer.SelectedIndex = 0;
         }
 
         public void UpdateGraph()
@@ -69,7 +73,11 @@ namespace pwiz.Topograph.ui.Forms
             for (int iCohort = 0; iCohort < cohorts.Count(); iCohort ++)
             {
                 var cohort = cohorts[iCohort];
-                var points = GetPoints(new RateKey(GraphValue, cohort.Key));
+                if (cohorts.Count() > 1 && string.IsNullOrEmpty(cohort.Key))
+                {
+                    continue;
+                }
+                var points = GetPoints(new RateKey(Convert.ToString(comboTracer.SelectedItem), GraphValue, cohort.Key));
 
                 Color color;
                 if (cohorts.Count() > 1)
@@ -82,7 +90,8 @@ namespace pwiz.Topograph.ui.Forms
                     color = Color.Blue;
                 }
                 var symbolType = symbolTypes[iCohort%symbolTypes.Length];
-                zedGraphControl.GraphPane.AddCurve(cohort.Value, points, color, symbolType);
+                var curve = zedGraphControl.GraphPane.AddCurve(cohort.Value, points, color, symbolType);
+                curve.Line.IsVisible = false;
             }
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.Invalidate();
@@ -92,6 +101,7 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateGrid()
         {
             var cohorts = PeptideRates.GetCohorts().ToArray();
+            var tracer = Convert.ToString(comboTracer.SelectedItem);
             if (dataGridView1.Rows.Count != cohorts.Count())
             {
                 dataGridView1.Rows.Clear();
@@ -102,7 +112,7 @@ namespace pwiz.Topograph.ui.Forms
                 var cohort = cohorts[i].Key;
                 var row = dataGridView1.Rows[i];
                 row.Cells[colCohort.Index].Value = cohort ?? "<All>";
-                var rate = PeptideRates.GetChild(new RateKey(GraphValue, cohort));
+                var rate = PeptideRates.GetChild(new RateKey(tracer, GraphValue, cohort));
                 if (rate == null)
                 {
                     row.Cells[colHalfLife.Index].Value = null;
@@ -141,8 +151,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private PointPairList GetPoints(RateKey rateKey)
         {
-            var pointDict = PeptideRates.GetPoints(rateKey);
-            return new PointPairList(pointDict.Keys.ToArray(), pointDict.Values.ToArray());
+            var xValues = new List<double>();
+            var yValues = new List<double>();
+            foreach (var entry in PeptideRates.GetPoints(rateKey))
+            {
+                xValues.Add(entry.Key);
+                yValues.Add(entry.Value);
+            }
+            return new PointPairList(xValues.ToArray(), yValues.ToArray());
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
@@ -171,31 +187,14 @@ namespace pwiz.Topograph.ui.Forms
                 UpdateGraph();
             }
         }
-        public bool ByCohort
-        {
-            get
-            {
-                return _byCohort;
-            }
-            set
-            {
-                if (_byCohort == value)
-                {
-                    return;
-                }
-                cbxByCohort.Checked = _byCohort = value;
-                UpdateGraph();
-            }
-        }
-
         private void comboGraph_SelectedIndexChanged(object sender, EventArgs e)
         {
             GraphValue = (PeptideQuantity) comboGraph.SelectedItem;
         }
 
-        private void cbxByCohort_CheckedChanged(object sender, EventArgs e)
+        private void comboTracer_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ByCohort = cbxByCohort.Checked;
+            UpdateGraph();
         }
     }
 }

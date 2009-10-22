@@ -32,6 +32,7 @@ namespace pwiz.Topograph.Data
             PeptideAnalyses = new List<DbPeptideAnalysis>();
             Modifications = new List<DbModification>();
             Settings = new List<DbSetting>();
+            TracerDefs = new List<DbTracerDef>();
             
         }
         public virtual ICollection<DbMsDataFile> MsDataFiles { get; set; }
@@ -55,6 +56,7 @@ namespace pwiz.Topograph.Data
             }
             return null;
         }
-        public virtual DbEnrichment Enrichment { get; set; }
+        public virtual ICollection<DbTracerDef> TracerDefs { get; set; }
+        public virtual int TracerDefCount { get; set; }
     }
 }

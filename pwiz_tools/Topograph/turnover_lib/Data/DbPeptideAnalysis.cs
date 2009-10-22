@@ -40,8 +40,6 @@ namespace pwiz.Topograph.Data
         public virtual int MinCharge { get; set; }
         public virtual int MaxCharge { get; set; }
         public virtual byte[] ExcludedMzs { get; set; }
-        public virtual double InitialEnrichment { get; set; }
-        public virtual double FinalEnrichment { get; set; }
         public virtual int IntermediateEnrichmentLevels { get; set; }
         public override String ToString()
         {

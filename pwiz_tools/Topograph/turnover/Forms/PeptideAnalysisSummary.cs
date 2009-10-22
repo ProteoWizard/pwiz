@@ -38,6 +38,11 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysisSummary(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
             InitializeComponent();
+            colPeakStart.DefaultCellStyle.Format = "0.##";
+            colPeakEnd.DefaultCellStyle.Format = "0.##";
+            colTurnover.DefaultCellStyle.Format = "0.##%";
+            colScore.DefaultCellStyle.Format = "0.####";
+            colTracerPercent.DefaultCellStyle.Format = "0.##%";
             gridViewExcludedMzs.PeptideAnalysis = peptideAnalysis;
             tbxSequence.Text = peptideAnalysis.Peptide.Sequence;
             TabText = "Summary";
@@ -113,10 +118,10 @@ namespace pwiz.Topograph.ui.Forms
                 peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.precursor_enrichment);
             if (precursorEnrichments != null)
             {
-                var firstChild = precursorEnrichments.GetChild(0);
+                var firstChild = precursorEnrichments.GetChild("");
                 if (firstChild != null)
                 {
-                    row.Cells[colTurnover.Index].Value = 100.0 - firstChild.PercentAmount;
+                    row.Cells[colTurnover.Index].Value = (100.0 - firstChild.PercentAmount)/100;
                 }
                 else
                 {
@@ -130,12 +135,12 @@ namespace pwiz.Topograph.ui.Forms
             var tracerAmounts = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
             if (tracerAmounts != null)
             {
-                row.Cells[colAPE.Index].Value  = tracerAmounts.AverageEnrichmentValue;
+                row.Cells[colTracerPercent.Index].Value  = tracerAmounts.TracerPercent / 100;
                 row.Cells[colScore.Index].Value = tracerAmounts.Score;
             }
             else
             {
-                row.Cells[colAPE.Index].Value = null;
+                row.Cells[colTracerPercent.Index].Value = null;
                 row.Cells[colScore.Index].Value = null;
             }
         }
@@ -179,14 +184,12 @@ namespace pwiz.Topograph.ui.Forms
 
         protected void OnPeptideAnalysisChanged()
         {
-            var res = Workspace.GetResidueComposition();
+            var res = Workspace.GetAminoAcidFormulas();
             tbxFormula.Text = res.GetFormula(Peptide.Sequence).ToString();
             tbxMonoMass.Text = Peptide.GetChargedPeptide(1).GetMonoisotopicMass(res).ToString("0.####");
             tbxAvgMass.Text = Peptide.GetChargedPeptide(1).GetMassDistribution(res).AverageMass.ToString("0.####");
             tbxMinCharge.Text = PeptideAnalysis.MinCharge.ToString();
             tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString();
-            tbxInitialEnrichment.Text = PeptideAnalysis.InitialEnrichment.ToString();
-            tbxFinalEnrichment.Text = PeptideAnalysis.FinalEnrichment.ToString();
             tbxIntermediateLevels.Text = PeptideAnalysis.IntermediateLevels.ToString();
             tbxProtein.Text = Peptide.ProteinName + " " + Peptide.ProteinDescription;
             UpdateMassGrid();
@@ -233,26 +236,31 @@ namespace pwiz.Topograph.ui.Forms
             }
     }
 
-        private void tbxInitialEnrichment_Leave(object sender, EventArgs e)
-        {
-            PeptideAnalysis.InitialEnrichment = Convert.ToDouble(tbxInitialEnrichment.Text);
-        }
-
-        private void tbxFinalEnrichment_Leave(object sender, EventArgs e)
-        {
-            PeptideAnalysis.FinalEnrichment = Convert.ToDouble(tbxFinalEnrichment.Text);
-        }
-
         private void tbxIntermediateLevels_Leave(object sender, EventArgs e)
         {
             PeptideAnalysis.IntermediateLevels = Convert.ToInt32(tbxIntermediateLevels.Text);
         }
 
-        private void dataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void UpdateMassGrid()
         {
+            gridViewExcludedMzs.UpdateGrid();
+        }
+
+        private void btnShowGraph_Click(object sender, EventArgs e)
+        {
+            var graphForm = new GraphForm(PeptideAnalysis);
+            graphForm.Show(DockPanel, DockState);
+        }
+
+        private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+            {
+                return;
+            }
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = (PeptideFileAnalysis) row.Tag;
-            DataGridViewColumn column = null;
+            var peptideAnalysis = (PeptideFileAnalysis)row.Tag;
+            var column = dataGridView.Columns[e.ColumnIndex];
             if (e.ColumnIndex >= 0)
             {
                 column = dataGridView.Columns[e.ColumnIndex];
@@ -265,20 +273,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(this, peptideAnalysis);
             }
-            else if (column == colAPE || column == colScore)
+            else if (column == colTracerPercent || column == colScore)
             {
                 PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(this, peptideAnalysis);
             }
-        }
-        private void UpdateMassGrid()
-        {
-            gridViewExcludedMzs.UpdateGrid();
-        }
-
-        private void btnShowGraph_Click(object sender, EventArgs e)
-        {
-            var graphForm = new GraphForm(PeptideAnalysis);
-            graphForm.Show(DockPanel, DockState);
         }
     }
 }

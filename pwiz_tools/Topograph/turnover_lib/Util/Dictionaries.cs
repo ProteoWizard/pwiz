@@ -97,5 +97,31 @@ namespace pwiz.Topograph.Util
             }
             return true;
         }
+        public static Dictionary<double, double> SetResolution(Dictionary<double, double> dict, double resolution, double threshhold)
+        {
+            var sortedDict = new SortedDictionary<double, double>(dict);
+            var result = new Dictionary<double, double>();
+            double currentKey = 0;
+            double currentValue = 0;
+            foreach (var entry in sortedDict)
+            {
+                if (entry.Key - currentKey > resolution)
+                {
+                    if (currentValue > threshhold)
+                    {
+                        result.Add(currentKey, currentValue);
+                    }
+                    currentKey = 0;
+                    currentValue = 0;
+                }
+                currentKey = (currentKey*currentValue + entry.Key*entry.Value)/(currentValue + entry.Value);
+                currentValue += entry.Value;
+            }
+            if (currentValue > threshhold)
+            {
+                result.Add(currentKey, currentValue);
+            }
+            return result;
+        }
     }
 }

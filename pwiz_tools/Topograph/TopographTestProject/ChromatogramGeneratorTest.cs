@@ -54,18 +54,21 @@ namespace pwiz.Topograph.Test
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, true))
             {
                 using (var session = sessionFactory.OpenSession())
-               { 
-                    DbEnrichment dbEnrichment = EnrichmentDef.GetD3LeuEnrichment();
-                    session.Save(dbEnrichment);
+                { 
                     DbWorkspace dbWorkspace = new DbWorkspace
                     {
-                        Enrichment = dbEnrichment
+                        TracerDefCount = 1,
                     };
                     session.Save(dbWorkspace);
+                    DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
+                    dbTracerDef.Workspace = dbWorkspace;
+                    dbTracerDef.Name = "Tracer";
+
+                    session.Save(dbTracerDef);
                 }
             }
             Workspace workspace = new Workspace(dbPath);
-            workspace.SetEnrichment(EnrichmentDef.GetN15Enrichment());
+            workspace.SetTracerDefs(new List<DbTracerDef>{TracerDef.GetN15Enrichment()});
             workspace.Save();
             MsDataFile msDataFile;
             using (var session = workspace.OpenWriteSession())
@@ -90,7 +93,6 @@ namespace pwiz.Topograph.Test
                 dbPeptide = new DbPeptide
                 {
                     Protein = "TestProtein",
-                    MaxTracerCount = 4,
                     Sequence = "YLAAYLLLVQGGNAAPSAADIK",
                     FullSequence = "K.YLAAYLLLVQGGNAAPSAADIK.A",
                     Workspace = workspace.LoadDbWorkspace(session),

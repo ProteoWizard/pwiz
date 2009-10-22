@@ -29,8 +29,6 @@ namespace pwiz.Topograph.MsData
 {
     public static class MsDataFileUtil
     {
-        public const double MACHINE_RESOLUTION = 50000;
-        public const double MASS_ACCURACY = 200000;
         public static ChromatogramPoint GetIntensity(double mz, double[] mzs, double[] intensities)
         {
             int imid = Array.BinarySearch(mzs, mz);
@@ -38,58 +36,15 @@ namespace pwiz.Topograph.MsData
             {
                 imid = ~imid;
             }
-            imid = Math.Max(imid, 2);
-            imid = Math.Min(imid, mzs.Length - 2);
-            if (intensities[imid - 1] > intensities[imid])
+            if (imid >= mzs.Length)
             {
                 imid--;
             }
-            if (intensities[imid - 1] > intensities[imid] || intensities[imid + 1] > intensities[imid])
+            if (imid > 0 && mz - mzs[imid - 1] < mzs[imid] - mz)
             {
-                if (intensities[imid - 1] > intensities[imid + 1])
-                {
-                    while (imid > 0 && intensities[imid - 1] > intensities[imid])
-                    {
-                        imid--;
-                    }
-                }
-                else
-                {
-                    while (imid < intensities.Length-1 && intensities[imid + 1] > intensities[imid])
-                    {
-                        imid++;
-                    }
-                }
-                return new ChromatogramPoint
-                {
-                    PeakMz = mzs[imid],
-                    Intensity = intensities[imid]
-                };
+                imid--;
             }
-            int iNext;
-            if (intensities[imid - 1] > intensities[imid + 1])
-            {
-                iNext = imid - 1;
-            }
-            else
-            {
-                iNext = imid + 1;
-            }
-            double gaussConst = 8*Math.Log(2);
-            double fwhm = GetFullWidthHalfMax(mz);
-            double mzPeak = fwhm*fwhm*Math.Log(intensities[imid]/intensities[iNext]);
-            mzPeak /= gaussConst*(mzs[imid] - mzs[iNext]);
-            mzPeak += (mzs[imid] + mzs[iNext])/2;
-            double intensity = intensities[imid]/Math.Exp(-Math.Pow((mzs[imid] - mzPeak)/fwhm, 2)*gaussConst);
-            if (double.IsNaN(intensity) || Math.Abs(intensity - intensities[imid]) > intensities[imid] / 10)
-            {
-                intensity = intensities[imid];
-            }
-            return new ChromatogramPoint
-                       {
-                           Intensity = intensity,
-                           PeakMz = mzPeak
-                       };
+            return new ChromatogramPoint {Intensity = intensities[imid], PeakMz = mzs[imid]};
         }
 
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)

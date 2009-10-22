@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
@@ -46,8 +47,10 @@ namespace pwiz.Topograph.Model
         private AminoAcidFormulas _aminoAcidFormulas;
         private EntitiesChangedEventArgs _entitiesChangedEventArgs;
         private readonly HashSet<PeptideAnalysis> _dirtyPeptideAnalyses = new HashSet<PeptideAnalysis>();
-        private EnrichmentDef _enrichmentDef;
-        private ActionInvoker actionInvoker;
+        private readonly HashSet<Peptide> _dirtyPeptides = new HashSet<Peptide>();
+        private TracerDefs _tracerDefs;
+        private IList<TracerDef> _tracerDefList;
+        private ActionInvoker _actionInvoker;
         public Workspace(String path)
         {
             DatabasePath = path;
@@ -63,6 +66,7 @@ namespace pwiz.Topograph.Model
                 var dbWorkspace = LoadDbWorkspace(session);
                 _modifications = new Modifications(this, dbWorkspace);
                 _settings = new WorkspaceSettings(this, dbWorkspace);
+                _tracerDefs = new TracerDefs(this, dbWorkspace);
                 PeptideAnalyses = new PeptideAnalyses(this, dbWorkspace);
                 MsDataFiles = new MsDataFiles(this, dbWorkspace);
                 Peptides = new Peptides(this, dbWorkspace);
@@ -111,7 +115,7 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public AminoAcidFormulas GetResidueComposition()
+        public AminoAcidFormulas GetAminoAcidFormulas()
         {
             lock(Lock)
             {
@@ -126,6 +130,19 @@ namespace pwiz.Topograph.Model
                 }
                 return _aminoAcidFormulas = AminoAcidFormulas.Default.SetMassShifts(massShifts);
             }
+        }
+
+        /// <summary>
+        /// Returns the AminoAcidFormulas with elements added for each of the tracers.
+        /// </summary>
+        public AminoAcidFormulas GetAminoAcidFormulasWithTracers()
+        {
+            var aminoAcidFormulas = GetAminoAcidFormulas();
+            foreach (var tracerDef in GetTracerDefs())
+            {
+                aminoAcidFormulas = tracerDef.AddTracerToAminoAcidFormulas(aminoAcidFormulas);
+            }
+            return aminoAcidFormulas;
         }
 
         public IDictionary<String, double> Modifications
@@ -186,6 +203,21 @@ namespace pwiz.Topograph.Model
             _settings.SetSetting(SettingEnum.exclude_aas, excludeAas);
         }
 
+        public double GetMassAccuracy()
+        {
+            return _settings.GetSetting(SettingEnum.mass_accuracy, 200000.0);
+        }
+
+        public void SetMassAccuracy(double massAccuracy)
+        {
+            if (massAccuracy == GetMassAccuracy())
+            {
+                return;
+            }
+            _settings.SetSetting(SettingEnum.mass_accuracy, massAccuracy);
+            SetWorkspaceVersion(WorkspaceVersion.IncChromatogramPeakVersion());
+        }
+
         public bool IsExcluded(Peptide peptide)
         {
             return !FilterPeptides(new[] {peptide})
@@ -227,43 +259,72 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public void SetEnrichment(DbEnrichment enrichment)
+        public void SetTracerDefs(IList<DbTracerDef> tracerDefs)
         {
-            var newWorkspaceVersion = WorkspaceVersion;
-            var oldEnrichment = GetEnrichmentDef();
-            if (oldEnrichment.TracerSymbol != enrichment.TracerSymbol || oldEnrichment.DeltaMass != enrichment.DeltaMass)
+            lock (Lock)
             {
-                newWorkspaceVersion = newWorkspaceVersion.IncMassVersion();
+                var oldTracers = new Dictionary<KeyValuePair<String, double>, TracerDef>();
+                foreach (var tracerDef in GetTracerDefs())
+                {
+                    oldTracers[new KeyValuePair<string, double>(tracerDef.TraceeSymbol, tracerDef.DeltaMass)] =
+                        tracerDef;
+                }
+                var newWorkspaceVersion = WorkspaceVersion;
+                if (tracerDefs.Count != oldTracers.Count)
+                {
+                    newWorkspaceVersion = newWorkspaceVersion.IncMassVersion();
+                }
+                else
+                {
+                    foreach (var dbTracerDef in tracerDefs)
+                    {
+                        TracerDef oldTracerDef;
+                        if (!oldTracers.TryGetValue(
+                                 new KeyValuePair<string, double>(dbTracerDef.TracerSymbol, dbTracerDef.DeltaMass),
+                                 out oldTracerDef))
+                        {
+                            newWorkspaceVersion = newWorkspaceVersion.IncMassVersion();
+                            break;
+                        }
+                        if (oldTracerDef.IsotopesEluteEarlier != dbTracerDef.IsotopesEluteEarlier
+                            || oldTracerDef.IsotopesEluteLater != dbTracerDef.IsotopesEluteLater)
+                        {
+                            newWorkspaceVersion = newWorkspaceVersion.IncChromatogramPeakVersion();
+                        }
+                        if (oldTracerDef.Name != dbTracerDef.Name
+                            || oldTracerDef.InitialApe != dbTracerDef.InitialEnrichment
+                            || oldTracerDef.FinalApe != dbTracerDef.FinalEnrichment
+                            || oldTracerDef.AtomCount != dbTracerDef.AtomCount
+                            || oldTracerDef.AtomPercentEnrichment != dbTracerDef.AtomPercentEnrichment)
+                        {
+                            newWorkspaceVersion = newWorkspaceVersion.IncEnrichmentVersion();
+                        }
+                    }
+                }
+                _tracerDefs.Clear();
+                _tracerDefList = null;
+                foreach (var dbTracerDef in tracerDefs)
+                {
+                    _tracerDefs.AddChild(dbTracerDef.Name, dbTracerDef);
+                }
+                SetWorkspaceVersion(newWorkspaceVersion);
             }
-            else if (oldEnrichment.IsotopesEluteEarlier != enrichment.IsotopesEluteEarlier
-                || oldEnrichment.IsotopesEluteLater != enrichment.IsotopesEluteLater)
-            {
-                newWorkspaceVersion = newWorkspaceVersion.IncChromatogramPeakVersion();
-            }
-            else if (oldEnrichment.InitialApe != enrichment.InitialEnrichment
-                || oldEnrichment.FinalApe != enrichment.FinalEnrichment)
-            {
-                newWorkspaceVersion = newWorkspaceVersion.IncEnrichmentVersion();
-            }
-            else if (oldEnrichment.AtomCount != enrichment.AtomCount
-                || oldEnrichment.AtomPercentEnrichment != enrichment.AtomPercentEnrichment)
-            {
-                newWorkspaceVersion = newWorkspaceVersion.IncEnrichmentVersion();
-            }
-            _enrichmentDef = new EnrichmentDef(this, enrichment);
-            SetWorkspaceVersion(newWorkspaceVersion);
         }
-        public EnrichmentDef GetEnrichmentDef()
+        public IList<TracerDef> GetTracerDefs()
         {
-            if (_enrichmentDef != null)
+            lock(Lock)
             {
-                return _enrichmentDef;
-            }
-            using (ISession session = OpenSession())
-            {
-                DbWorkspace workspace = (DbWorkspace)session.CreateCriteria(typeof(DbWorkspace)).UniqueResult();
-                _enrichmentDef = new EnrichmentDef(this, workspace.Enrichment);
-                return _enrichmentDef;
+                if (_tracerDefList != null)
+                {
+                    return _tracerDefList;
+                }
+                var tracerDefs = new List<TracerDef>();
+                foreach (var dbTracerDef in _tracerDefs.ListChildren())
+                {
+                    tracerDefs.Add(new TracerDef(this, dbTracerDef));
+                }
+                _tracerDefList = new ReadOnlyCollection<TracerDef>(tracerDefs);
+                return _tracerDefList;
             }
         }
         private EntitiesChangedEventArgs EnsureEntitiesChangedEventArgs()
@@ -271,9 +332,9 @@ namespace pwiz.Topograph.Model
             if (_entitiesChangedEventArgs == null)
             {
                 _entitiesChangedEventArgs = new EntitiesChangedEventArgs();
-                if (actionInvoker != null)
+                if (_actionInvoker != null)
                 {
-                    actionInvoker.Invoke(DispatchChangeEvent);
+                    _actionInvoker.Invoke(DispatchChangeEvent);
                 }
             }
             return _entitiesChangedEventArgs;
@@ -339,13 +400,17 @@ namespace pwiz.Topograph.Model
                 {
                     _dirtyPeptideAnalyses.Add(((PeptideFileAnalysis) key).PeptideAnalysis);
                 }
+                else if (key is Peptide)
+                {
+                    _dirtyPeptides.Add((Peptide) key);
+                }
                 if (!IsDirty)
                 {
-                    if (key is MsDataFile || key is Peptide)
+                    if (key is MsDataFile)
                     {
                         IsDirty = true;
                     }
-                    else if (_dirtyPeptideAnalyses.Count > 0)
+                    else if (_dirtyPeptideAnalyses.Count > 0 || _dirtyPeptides.Count > 0)
                     {
                         IsDirty = true;
                     }
@@ -372,8 +437,10 @@ namespace pwiz.Topograph.Model
                     }
                     if (!SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
                     {
+                        session.CreateSQLQuery("DELETE FROM DbPeak").ExecuteUpdate();
+                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeakCount = 0");
                         session.CreateSQLQuery(
-                            "UPDATE DbPeptideFileAnalysis SET PeakCount = 0 WHERE DbPeptideFileAnalysis.AutoFindPeak")
+                            "UPDATE DbPeptideFileAnalysis SET PeakStart = NULL, PeakEnd = NULL WHERE DbPeptideFileAnalysis.AutoFindPeak")
                             .ExecuteUpdate();
                     }
                     if (!SavedWorkspaceVersion.DistributionsValid(WorkspaceVersion))
@@ -388,15 +455,14 @@ namespace pwiz.Topograph.Model
                             .ExecuteUpdate();
                         session.CreateSQLQuery("UPDATE DbPeptideAnalysis SET PeptideRateCount = 0");
                     }
-                    var dbWorkspace = LoadDbWorkspace(session);
-                    if (_enrichmentDef != null)
-                    {
-                        _enrichmentDef.Update(dbWorkspace.Enrichment);
-                        session.Update(dbWorkspace.Enrichment);
-                    }
+                    _tracerDefs.Save(session);
                     _modifications.Save(session);
+                    _settings.Save(session);
                     MsDataFiles.Save(session);
-                    Peptides.Save(session);
+                    foreach (var peptide in _dirtyPeptides)
+                    {
+                        peptide.Save(session);
+                    }
                     foreach (var peptideAnalysis in PeptideAnalyses.ListChildren())
                     {
                         peptideAnalysis.SaveDeep(session);
@@ -404,6 +470,7 @@ namespace pwiz.Topograph.Model
                     session.Transaction.Commit();
                     SavedWorkspaceVersion = WorkspaceVersion;
                     _dirtyPeptideAnalyses.Clear();
+                    _dirtyPeptides.Clear();
                     IsDirty = false;
                 }
             }
@@ -417,7 +484,7 @@ namespace pwiz.Topograph.Model
         {
             lock(this)
             {
-                this.actionInvoker = actionInvoker;
+                _actionInvoker = actionInvoker;
                 if (actionInvoker != null)
                 {
                     actionInvoker.Invoke(DispatchChangeEvent);
@@ -479,12 +546,6 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        private void SetDirty(bool dirty)
-        {
-            lock(Lock)
-            {
-            }
-        }
         private void DispatchDirtyEvent()
         {
             var action = WorkspaceDirty;
@@ -510,9 +571,9 @@ namespace pwiz.Topograph.Model
                         return;
                     }
                     _isDirty = value;
-                    if (actionInvoker != null)
+                    if (_actionInvoker != null)
                     {
-                        actionInvoker.Invoke(DispatchDirtyEvent);
+                        _actionInvoker.Invoke(DispatchDirtyEvent);
                     }
                 }
             } 
@@ -524,6 +585,35 @@ namespace pwiz.Topograph.Model
         {
             return _settings;
         } }
+
+        public int GetMaxTracerCount(String sequence)
+        {
+            int result = 0;
+            var elements = new HashSet<String>();
+            foreach (var tracerDef in GetTracerDefs())
+            {
+                if (tracerDef.AminoAcidSymbol.HasValue)
+                {
+                    var newSequence = sequence.Replace("" + tracerDef.AminoAcidSymbol, "");
+                    result += sequence.Length - newSequence.Length;
+                    sequence = newSequence;
+                }
+                else
+                {
+                    elements.Add(tracerDef.TraceeSymbol);
+                }
+            }
+            if (elements.Count == 0)
+            {
+                return result;
+            }
+            var formula = GetAminoAcidFormulas().GetFormula(sequence);
+            foreach (var element in elements)
+            {
+                result += formula.GetElementCount(element);
+            }
+            return result;
+        }
     }
 
     public delegate void EntitiesChangeListener(EntitiesChangedEventArgs entitiesChangedEventArgs);

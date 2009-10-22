@@ -23,12 +23,14 @@ using System.Text;
 
 namespace pwiz.Topograph.Data
 {
-    public class DbEnrichment : DbEntity<DbEnrichment>
+    public class DbTracerDef : DbEntity<DbTracerDef>
     {
-        public DbEnrichment()
+        public DbTracerDef()
         {
             FinalEnrichment = 100;
         }
+        public virtual DbWorkspace Workspace { get; set; }
+        public virtual String Name { get; set; }
         public virtual String TracerSymbol { get; set; }
         public virtual double DeltaMass
         {

@@ -24,6 +24,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
+using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using ZedGraph;
 
@@ -42,30 +44,35 @@ namespace pwiz.Topograph.ui.Forms
                                   };
             splitContainer1.Panel2.Controls.Add(barGraphControl);
             Text = "Tracer Amounts";
+            colTracerPercent.DefaultCellStyle.Format = "0.##%";
+            colTracerFormulaPercent.DefaultCellStyle.Format = "0.##%";
         }
 
         public override void Recalculate()
         {
-            List<String> labels = new List<string>();
-            for (int i = 0; i <= PeptideFileAnalysis.TracerCount; i++)
-            {
-                labels.Add(i.ToString());
-            }
             IList<double> observedIntensities;
-            IList<IList<double>> predictedIntensities;
+            IDictionary<TracerFormula,IList<double>> predictedIntensities;
             var tracerAmounts = PeptideFileAnalysis.ComputeTracerAmounts(out observedIntensities, out predictedIntensities);
             
-            DisplayDistributionResults(tracerAmounts, observedIntensities, predictedIntensities, labels, dataGridView1, barGraphControl);
+            DisplayDistributionResults(tracerAmounts, observedIntensities, predictedIntensities, barGraphControl);
             if (tracerAmounts != null)
             {
                 tbxScore.Text = tracerAmounts.Score.ToString();
-                tbxAPE.Text = tracerAmounts.AverageEnrichmentValue.ToString();
             }
             else
             {
                 tbxScore.Text = "";
-                tbxAPE.Text = "";
             }
+        }
+
+        protected override DataGridView GridViewFormulas
+        {
+            get { return dataGridViewTracerFormulas; }
+        }
+
+        protected override DataGridView GridViewTracerPercents
+        {
+            get { return dataGridViewTracerPercentages; }
         }
     }
 }

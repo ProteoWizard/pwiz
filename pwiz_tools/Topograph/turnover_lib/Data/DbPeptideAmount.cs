@@ -26,8 +26,8 @@ namespace pwiz.Topograph.Data
     public class DbPeptideAmount : DbEntity<DbPeptideAmount>
     {
         public virtual DbPeptideDistribution PeptideDistribution { get; set; }
-        public virtual int EnrichmentIndex { get; set; }
-        public virtual double EnrichmentValue { get; set; }
+        public virtual String TracerFormula { get; set; }
+        public virtual double TracerPercent { get; set; }
         public virtual double PercentAmount { get; set; }
     }
 }

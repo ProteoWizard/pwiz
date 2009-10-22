@@ -36,7 +36,6 @@ namespace pwiz.Topograph.Model
             Mz = chromatogram.Mz;
             Intensities = ArrayConverter.ToDoubles(chromatogram.Intensities.ToArray());
             PeakMzs = ArrayConverter.ToDoubles(chromatogram.PeakMzs.ToArray());
-            MassAccuracy = 100000;
         }
         protected override void Load(DbChromatogram entity)
         {
@@ -45,27 +44,30 @@ namespace pwiz.Topograph.Model
             Mz = entity.Mz;
             Intensities = entity.Intensities;
             PeakMzs = entity.PeakMzs;
-            MassAccuracy = 100000;
         }
         public MzKey MzKey { get; private set; }
         public int MassIndex { get { return MzKey.MassIndex; } }
         public int Charge { get { return MzKey.Charge; } }
-        public double MassAccuracy { get; private set; }
         public double Mz { get; private set; }
         public double[] Intensities { get; private set; }
-        public double[] PeakMzs { get; private set; }
-        public bool IsMzAccurate(int iScan)
+        public IList<double> GetAccurateIntensities()
         {
-            return Math.Abs(PeakMzs[iScan] - Mz) * MassAccuracy < Mz;
-        }
-        public double GetMzError(int iScan)
-        {
-            if (Intensities[iScan] == 0)
+            var intensities = new List<double>();
+            double massAccuracy = Workspace.GetMassAccuracy();
+            for (int i = 0; i < PeakMzs.Count(); i ++)
             {
-                return 0;
+                if (Math.Abs((PeakMzs[i] - Mz) * massAccuracy) > Mz)
+                {
+                    intensities.Add(0);
+                }
+                else
+                {
+                    intensities.Add(Intensities[i]);
+                }
             }
-            return MathNet.Numerics.Fn.Erf((PeakMzs[iScan] - Mz) * MassAccuracy / Mz);
+            return intensities;
         }
+        public double[] PeakMzs { get; private set; }
         public PeptideFileAnalysis PeptideFileAnalysis { get { return ((Chromatograms) Parent).PeptideFileAnalysis; } }
         public int[] ScanIndexes { get { return PeptideFileAnalysis.ScanIndexesArray; } }
         public double[] Times { get { return PeptideFileAnalysis.TimesArray; } }

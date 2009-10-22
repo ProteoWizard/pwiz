@@ -47,7 +47,9 @@ namespace pwiz.Topograph.Data
         public virtual int FirstDetectedScan { get; set; }
         public virtual int LastDetectedScan { get; set; }
         public virtual int? PeakStart { get; set; }
+        public virtual double? PeakStartTime { get; set; }
         public virtual int? PeakEnd { get; set; }
+        public virtual double? PeakEndTime { get; set; }
         public virtual byte[] TimesBytes { get; set; }
         public virtual byte[] ScanIndexesBytes { get; set; }
         public virtual byte[] ExcludedMzs { get; set; }

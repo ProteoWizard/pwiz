@@ -8,44 +8,66 @@ namespace pwiz.Topograph.Query
 {
     public class ParsedQuery
     {
-        private String _hql;
         private ParsedQuery()
         {
-            Columns = new List<Identifier>();
+            Columns = new List<SelectColumn>();
         }
         public ParsedQuery(String hql) : this()
         {
-            Hql = hql;
+            Parse(hql);
         }
         public ParsedQuery(Type table) : this()
         {
-            From = "FROM " + table + " T";
-            TableName = table.ToString();
+            From = "FROM " + table.Name + " T";
+            TableName = table.Name;
             TableAlias = "T";
         }
-        public String Hql
+        public String GetSourceHql()
         {
-            get
-            {
-                return _hql;
-            }
-            set
-            {
-                _hql = value;
-                Parse();
-            }
+            return GetHql(false);
         }
-        private const string patColumn = "[^',]*('(''|[^'])*')*[^',]*";
+
+        public String GetExecuteHql()
+        {
+            return GetHql(true);
+        }
+
+        private String GetHql(bool toExecute)
+        {
+            var result = new StringBuilder("SELECT ");
+            String strComma = "";
+            foreach (var column in Columns)
+            {
+                result.Append(strComma);
+                strComma = ",\r\n\t";
+                result.Append(column.Expression);
+                if (!toExecute && column.Alias != null)
+                {
+                    result.Append(" AS ");
+                    result.Append(column.Alias);
+                }
+            }
+            result.Append("\r\n");
+            result.Append(From);
+            return result.ToString();
+        }
+        public void SetHql(String hql)
+        {
+            Parse(hql);
+        }
+        private const string patColumn = @"[^',]*('(''|[^'])*')*[^',]*";
+        private const string patAlias = @"(.*[^\w])AS\s+([\w]+)\s*";
 
         private static readonly Regex regexSelect = new Regex(
             @"\s*SELECT\s+(" + patColumn + "(," + patColumn + @")*)\s*(FROM\s+(\w+(\.\w+)*)\s+(\w*))", RegexOptions.IgnoreCase);
-        private static readonly Regex regexColumn = new Regex(patColumn);
-        private void Parse()
+        private static readonly Regex regexColumn = new Regex(patColumn, RegexOptions.IgnoreCase);
+        private static readonly Regex regexAlias = new Regex(patAlias, RegexOptions.IgnoreCase);
+        private void Parse(String hql)
         {
-            Columns = new List<Identifier>();
+            Columns = new List<SelectColumn>();
             TableName = null;
             TableAlias = null;
-            var matchSelect = regexSelect.Match(_hql);
+            var matchSelect = regexSelect.Match(hql);
             if (!matchSelect.Success)
             {
                 return;
@@ -53,7 +75,7 @@ namespace pwiz.Topograph.Query
             String strColumns = matchSelect.Groups[1].ToString();
             TableName = matchSelect.Groups[8].ToString();
             TableAlias = matchSelect.Groups[10].ToString();
-            From = _hql.Substring(matchSelect.Groups[7].Index);
+            From = hql.Substring(matchSelect.Groups[7].Index);
             Match match;
             while ((match = regexColumn.Match(strColumns)).Success)
             {
@@ -61,8 +83,19 @@ namespace pwiz.Topograph.Query
                 {
                     break;
                 }
-                String strColumn = match.ToString().Trim();
-                Columns.Add(Identifier.Parse(strColumn));
+                String strExpression, strAlias;
+                Match matchAlias = regexAlias.Match(match.Groups[0].ToString());
+                if (matchAlias.Success)
+                {
+                    strExpression = matchAlias.Groups[1].ToString().Trim();
+                    strAlias = matchAlias.Groups[2].ToString();
+                }
+                else
+                {
+                    strExpression = match.Groups[0].ToString().Trim();
+                    strAlias = null;
+                }
+                Columns.Add(new SelectColumn(this){Expression = strExpression, Alias = strAlias});
                 strColumns = strColumns.Substring(match.Length);
                 if (!strColumns.StartsWith(","))
                 {
@@ -74,11 +107,11 @@ namespace pwiz.Topograph.Query
         public String From { get; private set; }
         public String TableName { get; private set; }
         public String TableAlias { get; private set; }
-        public IList<Identifier> Columns
+        public IList<SelectColumn> Columns
         {
             get; private set;
         }
-        public void SetColumns(IList<Identifier> columns)
+        public void SetColumns(IList<SelectColumn> columns)
         {
             var hql = new StringBuilder("SELECT ");
             var comma = "";
@@ -86,12 +119,46 @@ namespace pwiz.Topograph.Query
             {
                 hql.Append(comma);
                 comma = ",\r\n\t";
-                hql.Append(column);
+                hql.Append(column.ToHql());
             }
             hql.Append("\r\n");
             hql.Append(From);
-            Hql = hql.ToString();
-            Columns = new List<Identifier>(columns);
+            Parse(hql.ToString());
+        }
+        public class SelectColumn
+        {
+            public SelectColumn(ParsedQuery parsedQuery)
+            {
+                ParsedQuery = parsedQuery;
+            }
+            public ParsedQuery ParsedQuery { get; private set; }
+            public String Expression { get; set; }
+            public String Alias { get; set; }
+            public override String ToString()
+            {
+                if (Alias != null)
+                {
+                    return Alias;
+                }
+                Identifier id = Identifier.Parse(Expression);
+                if (id.Parts[0] == ParsedQuery.TableAlias)
+                {
+                    return id.RemovePrefix(1).ToString();
+                }
+                return id.ToString();
+            }
+            public String ToHql()
+            {
+                if (Alias == null)
+                {
+                    return Expression;
+                }
+                return Expression + " AS " + Alias;
+            }
+            public String GetColumnName()
+            {
+                return ToString();
+            }
         }
     }
 }

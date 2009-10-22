@@ -46,41 +46,68 @@ namespace pwiz.Topograph.ui.Forms
 
         void _deleteAnalysesMenuItem_Click(object sender, EventArgs e)
         {
-            var peptideAnalyses = new List<PeptideAnalysis>();
+            var peptideAnalysisIds = new List<long>();
             foreach (DataGridViewRow row in dataGridView.SelectedRows)
             {
-                peptideAnalyses.Add((PeptideAnalysis)row.Tag);
+                peptideAnalysisIds.Add((long)row.Tag);
             }
-            if (peptideAnalyses.Count == 0)
+            if (peptideAnalysisIds.Count == 0)
             {
                 if (dataGridView.CurrentRow != null)
                 {
-                    peptideAnalyses.Add((PeptideAnalysis)dataGridView.CurrentRow.Tag);
+                    peptideAnalysisIds.Add((long)dataGridView.CurrentRow.Tag);
                 }
             }
-            if (peptideAnalyses.Count == 0)
+            if (peptideAnalysisIds.Count == 0)
             {
                 MessageBox.Show("No peptide analyses are selected", Program.AppName, MessageBoxButtons.OK,
                                 MessageBoxIcon.Error);
                 return;
             }
             String message;
-            if (peptideAnalyses.Count == 1)
+            if (peptideAnalysisIds.Count == 1)
             {
-                message = "Are you sure you want to delete the analysis of the peptide '" +
-                          peptideAnalyses[0].Peptide.Sequence + "'?";
+                using (var session = Workspace.OpenSession())
+                {
+                    var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisIds[0], session);
+                    message = "Are you sure you want to delete the analysis of the peptide '" +
+                              peptideAnalysis.Peptide.Sequence + "'?";
+                }
             }
             else
             {
-                message = "Are you sure you want to delete these " + peptideAnalyses.Count + " peptide analyses?";
+                message = "Are you sure you want to delete these " + peptideAnalysisIds.Count + " peptide analyses?";
             }
             if (MessageBox.Show(message, Program.AppName, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
             {
                 return;
             }
-            foreach (var peptideAnalysis in peptideAnalyses)
+            using (var session = Workspace.OpenWriteSession())
             {
-                Workspace.PeptideAnalyses.RemoveChild(peptideAnalysis.Id.Value);
+                session.BeginTransaction();
+                foreach (var id in peptideAnalysisIds)
+                {
+                    session.Delete(session.Load<DbPeptideAnalysis>(id));
+                }
+                session.Transaction.Commit();
+            }
+            foreach (var id in peptideAnalysisIds)
+            {
+                var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(id);
+                if (peptideAnalysis != null)
+                {
+                    var frame = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
+                    if (frame != null)
+                    {
+                        frame.Close();
+                    }
+                }
+            }
+            foreach (var id in peptideAnalysisIds)
+            {
+                Workspace.PeptideAnalyses.RemoveChild(id);
+                dataGridView.Rows.Remove(_peptideAnalysisRows[id]);
+                _peptideAnalysisRows.Remove(id);
             }
         }
 
@@ -106,7 +133,7 @@ namespace pwiz.Topograph.ui.Forms
             _peptideAnalysisRows.Clear();
             using (var session = Workspace.OpenSession())
             {
-                String hql = "SELECT pa.Id, pa.Peptide.Protein, pa.Peptide.FullSequence, pa.Peptide.ValidationStatus, pa.Note, pa.Peptide.ProteinDescription, pa.Peptide.MaxTracerCount "
+                String hql = "SELECT pa.Id, pa.Peptide.Protein, pa.Peptide.FullSequence, pa.Peptide.ValidationStatus, pa.Note, pa.Peptide.ProteinDescription "
                              + "\nFROM " + typeof (DbPeptideAnalysis) + " pa";
                 var query = session.CreateQuery(hql);
                 var rowDatas = query.List();
@@ -126,7 +153,7 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colStatus.Index].Value = Convert.ChangeType(rowData[3], typeof(ValidationStatus));
                     row.Cells[colNote.Index].Value = rowData[4];
                     row.Cells[colProteinDescription.Index].Value = rowData[5];
-                    row.Cells[colMaxTracers.Index].Value = rowData[6];
+                    row.Cells[colMaxTracers.Index].Value = Workspace.GetMaxTracerCount(Peptide.TrimSequence(rowData[2].ToString()));
                 }
                 var query2 =
                     session.CreateQuery("SELECT pr.PeptideAnalysis.Id, pr.PeptideQuantity, pr.HalfLife, pr.IsComplete FROM " +
@@ -158,7 +185,13 @@ namespace pwiz.Topograph.ui.Forms
 
         private void DisplayHalfLife(DataGridViewRow row, PeptideQuantity peptideQuantity, PeptideAnalysis peptideAnalysis)
         {
-            var rate = peptideAnalysis.PeptideRates.GetChild(new RateKey(peptideQuantity, null));
+            String tracerName = "";
+            var tracerDefs = Workspace.GetTracerDefs();
+            if (tracerDefs.Count > 0)
+            {
+                tracerName = tracerDefs[0].Name;
+            }
+            var rate = peptideAnalysis.PeptideRates.GetChild(new RateKey(tracerName, peptideQuantity, null));
             if (rate == null)
             {
                 DisplayHalfLife(row, peptideQuantity, null, true);
@@ -239,36 +272,79 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void OpenPeptideAnalysis(PeptideAnalysis peptideAnalysis)
+        private PeptideAnalysisFrame OpenPeptideAnalysis(PeptideAnalysis peptideAnalysis)
         {
             var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
             if (form != null)
             {
                 form.Activate();
-                return;
+                return form;
             }
-            new PeptideAnalysisFrame(peptideAnalysis).Show(DockPanel, DockState);
+            form = new PeptideAnalysisFrame(peptideAnalysis);
+            form.Show(DockPanel, DockState);
+            return form;
         }
 
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var column = dataGridView.Columns[e.ColumnIndex];
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = (PeptideAnalysis) row.Tag;
             var cell = row.Cells[e.ColumnIndex];
-            if (column == colNote)
+            var peptideAnalysisId = (long)row.Tag;
+            using (var session = Workspace.OpenSession())
             {
-                peptideAnalysis.Note = Convert.ToString(cell.Value);
-            }
-            else if (column == colStatus)
-            {
-                peptideAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisId, session);
+                if (column == colNote)
+                {
+                    peptideAnalysis.Note = Convert.ToString(cell.Value);
+                }
+                else if (column == colStatus)
+                {
+                    peptideAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                }
             }
         }
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)
         {
             new AnalyzePeptidesForm(Workspace).ShowDialog(this);
+        }
+
+        private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            var column = dataGridView.Columns[e.ColumnIndex];
+            var row = dataGridView.Rows[e.RowIndex];
+            PeptideAnalysis peptideAnalysis;
+            using (var session = Workspace.OpenSession())
+            {
+                peptideAnalysis = Workspace.PeptideAnalyses.GetChild((long) row.Tag, session);
+            }
+            if (column != colPeptide && column != colHalfLifeTracerCount && column != colHalfLifePrecursorEnrichment)
+            {
+                return;
+            }
+            var form = OpenPeptideAnalysis(peptideAnalysis);
+            if (column != colHalfLifeTracerCount && column != colHalfLifePrecursorEnrichment)
+            {
+                return;
+            }
+            var graphForm = Program.FindOpenEntityForm<GraphForm>(peptideAnalysis);
+            if (graphForm == null)
+            {
+                graphForm = new GraphForm(peptideAnalysis);
+                graphForm.Show(form.PeptideAnalysisSummary.DockPanel, DigitalRune.Windows.Docking.DockState.Document);
+            }
+            else
+            {
+                graphForm.Activate();
+            }
+            graphForm.GraphValue = column == colHalfLifeTracerCount
+                                       ? PeptideQuantity.tracer_count
+                                       : PeptideQuantity.precursor_enrichment;
         }
     }
 }
