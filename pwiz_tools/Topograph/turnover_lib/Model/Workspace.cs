@@ -530,7 +530,7 @@ namespace pwiz.Topograph.Model
         public object Lock {get { return DatabaseLock;}}
         public bool SaveIfNotDirty(PeptideAnalysis peptideAnalysis)
         {
-            lock(this)
+            lock(Lock)
             {
                 if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
                 {
@@ -539,14 +539,19 @@ namespace pwiz.Topograph.Model
             }
             using (var session = OpenWriteSession())
             {
-                lock(this) 
+                lock(Lock) 
                 {
                     if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
                     {
                         return false;
                     }
                     session.BeginTransaction();
-                    peptideAnalysis.SaveDeep(session);
+                    peptideAnalysis.PeptideRates.Save(session);
+                    foreach (var peptideFileAnalysis in peptideAnalysis.GetFileAnalyses(false))
+                    {
+                        peptideFileAnalysis.Peaks.Save(session);
+                        peptideFileAnalysis.PeptideDistributions.Save(session);
+                    }
                     session.Transaction.Commit();
                 }
                 return true;

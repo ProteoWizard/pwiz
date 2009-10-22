@@ -96,9 +96,6 @@ namespace pwiz.Topograph.Model
 
         protected override DbPeptideFileAnalysis UpdateDbEntity(ISession session)
         {
-            Peaks.Save(session);
-            PeptideDistributions.Save(session);
-            Chromatograms.Save(session);
             var dbPeptideFileAnalysis = base.UpdateDbEntity(session);
             dbPeptideFileAnalysis.OverrideExcludedMzs = OverrideExcludedMzs;
             dbPeptideFileAnalysis.AutoFindPeak = AutoFindPeak;

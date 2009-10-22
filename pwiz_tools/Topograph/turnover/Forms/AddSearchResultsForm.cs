@@ -48,8 +48,8 @@ namespace pwiz.Topograph.ui.Forms
         private double _minXCorr1 = 1.8;
         private double _minXCorr2 = 2.0;
         private double _minXCorr3 = 2.4;
-        private bool _useMinXCorr = true;
-        private bool _onlyExistingPeptides = false;
+        private bool _useMinXCorr = false;
+        private bool _onlyExistingPeptides = true;
         public AddSearchResultsForm(Workspace workspace)
             : base(workspace)
         {
@@ -144,6 +144,7 @@ namespace pwiz.Topograph.ui.Forms
             List<SearchResult> searchResults;
             String msDataFileName;
             bool useMinXCorr = _useMinXCorr;
+            bool onlyExistingPeptides = _onlyExistingPeptides;
             using (var stream = File.OpenRead(file))
             {
                 if (extension == ".sqt")
@@ -156,6 +157,7 @@ namespace pwiz.Topograph.ui.Forms
                     msDataFileName = null;
                     searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
                     useMinXCorr = false;
+                    onlyExistingPeptides = false;
                 }
             }
             if (searchResults == null)
@@ -200,7 +202,7 @@ namespace pwiz.Topograph.ui.Forms
                     DbPeptide dbPeptide;
                     if (!peptides.TryGetValue(trimmedSequence, out dbPeptide))
                     {
-                        if (_onlyExistingPeptides)
+                        if (onlyExistingPeptides)
                         {
                             continue;
                         }

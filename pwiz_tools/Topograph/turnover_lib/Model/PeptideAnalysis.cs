@@ -85,7 +85,6 @@ namespace pwiz.Topograph.Model
         public void SaveDeep(ISession session)
         {
             Save(session);
-            PeptideRates.Save(session);
             foreach (var fileAnalysis in FileAnalyses.ListChildren())
             {
                 fileAnalysis.Save(session);
