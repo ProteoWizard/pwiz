@@ -42,6 +42,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinScore = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMaxScore = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colHalfLifePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colHalfLifeTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
@@ -61,13 +63,15 @@ namespace pwiz.Topograph.ui.Forms
             this.colProtein,
             this.colProteinDescription,
             this.colMaxTracers,
+            this.colMinScore,
+            this.colMaxScore,
             this.colHalfLifePrecursorEnrichment,
             this.colHalfLifeTracerCount});
             this.dataGridView.ContextMenuStrip = this.contextMenuStrip1;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 29);
             this.dataGridView.Name = "dataGridView";
-            this.dataGridView.Size = new System.Drawing.Size(676, 235);
+            this.dataGridView.Size = new System.Drawing.Size(949, 235);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
@@ -99,7 +103,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(676, 29);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(949, 29);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
             // btnAnalyzePeptides
@@ -153,6 +157,20 @@ namespace pwiz.Topograph.ui.Forms
             this.colMaxTracers.Name = "colMaxTracers";
             this.colMaxTracers.ReadOnly = true;
             // 
+            // colMinScore
+            // 
+            this.colMinScore.HeaderText = "Min Score";
+            this.colMinScore.Name = "colMinScore";
+            this.colMinScore.ReadOnly = true;
+            this.colMinScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colMaxScore
+            // 
+            this.colMaxScore.HeaderText = "Max Score";
+            this.colMaxScore.Name = "colMaxScore";
+            this.colMaxScore.ReadOnly = true;
+            this.colMaxScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
             // colHalfLifePrecursorEnrichment
             // 
             this.colHalfLifePrecursorEnrichment.HeaderText = "Half Life (% Enrichment)";
@@ -173,7 +191,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(676, 264);
+            this.ClientSize = new System.Drawing.Size(949, 264);
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "PeptideAnalysesForm";
@@ -199,6 +217,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colProtein;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
+        private System.Windows.Forms.DataGridViewLinkColumn colMinScore;
+        private System.Windows.Forms.DataGridViewLinkColumn colMaxScore;
         private System.Windows.Forms.DataGridViewLinkColumn colHalfLifePrecursorEnrichment;
         private System.Windows.Forms.DataGridViewLinkColumn colHalfLifeTracerCount;
     }

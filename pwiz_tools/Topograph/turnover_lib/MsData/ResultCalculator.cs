@@ -115,6 +115,7 @@ namespace pwiz.Topograph.MsData
                         continue;
                     }
                     peptideAnalysisId = id;
+                    break;
                 }
             }
             if (peptideAnalysisId == null)

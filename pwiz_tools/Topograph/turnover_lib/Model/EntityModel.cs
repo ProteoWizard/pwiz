@@ -38,12 +38,8 @@ namespace pwiz.Topograph.Model
         public Workspace Workspace { get; private set; }
         public long? Id { get; private set; }
         public virtual Type ModelType { get { return GetType(); } }
-        public virtual void SetId(long id)
+        public virtual void SetId(long? id)
         {
-            if (Id != null)
-            {
-                throw new InvalidOperationException();
-            }
             Id = id;
         }
         
@@ -158,11 +154,18 @@ namespace pwiz.Topograph.Model
 
         protected virtual T UpdateDbEntity(ISession session)
         {
+            T result;
             if (Id.HasValue)
             {
-                return session.Get<T>(Id);
+                result = session.Get<T>(Id);
+                if (result != null)
+                {
+                    return result;
+                }
             }
-            return ConstructEntity(session);
+            result = ConstructEntity(session);
+            SetId(null);
+            return result;
         }
     }
 

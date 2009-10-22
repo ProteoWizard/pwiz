@@ -168,6 +168,19 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     DisplayHalfLife(row, (PeptideQuantity) rowData[1], (double?) rowData[2], (bool) rowData[3]);
                 }
+                var query3 =
+                    session.CreateQuery("SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, Min(pd.Score), Max(pd.Score) "
+                        +"\nfrom " + typeof(DbPeptideDistribution) + " pd GROUP BY pd.PeptideFileAnalysis.PeptideAnalysis.Id");
+                foreach (object[] rowData in query3.List())
+                {
+                    DataGridViewRow row;
+                    if (!_peptideAnalysisRows.TryGetValue((long) rowData[0], out row))
+                    {
+                        continue;
+                    }
+                    row.Cells[colMinScore.Index].Value = rowData[1];
+                    row.Cells[colMaxScore.Index].Value = rowData[2];
+                }
             }
         }
 
@@ -181,6 +194,24 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colMaxTracers.Index].Value = peptideAnalysis.Peptide.MaxTracerCount;
             DisplayHalfLife(row, PeptideQuantity.precursor_enrichment, peptideAnalysis);
             DisplayHalfLife(row, PeptideQuantity.tracer_count, peptideAnalysis);
+            double? minScore = null;
+            double? maxScore = null;
+            foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
+            {
+                foreach (var peptideDistribution in peptideFileAnalysis.PeptideDistributions.ListChildren())
+                {
+                    if (minScore == null || minScore > peptideDistribution.Score)
+                    {
+                        minScore = peptideDistribution.Score;
+                    }
+                    if (maxScore == null || maxScore < peptideDistribution.Score)
+                    {
+                        maxScore = peptideDistribution.Score;
+                    }
+                }
+            }
+            row.Cells[colMinScore.Index].Value = minScore;
+            row.Cells[colMaxScore.Index].Value = maxScore;
         }
 
         private void DisplayHalfLife(DataGridViewRow row, PeptideQuantity peptideQuantity, PeptideAnalysis peptideAnalysis)
@@ -323,11 +354,56 @@ namespace pwiz.Topograph.ui.Forms
             {
                 peptideAnalysis = Workspace.PeptideAnalyses.GetChild((long) row.Tag, session);
             }
-            if (column != colPeptide && column != colHalfLifeTracerCount && column != colHalfLifePrecursorEnrichment)
+            if (column != colPeptide && column != colHalfLifeTracerCount 
+                && column != colHalfLifePrecursorEnrichment 
+                && column != colMinScore 
+                && column != colMaxScore)
             {
                 return;
             }
             var form = OpenPeptideAnalysis(peptideAnalysis);
+            if (column == colMinScore || column == colMaxScore)
+            {
+                bool max = column == colMaxScore;
+                PeptideDistribution peptideDistribution = null;
+                foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
+                {
+                    foreach (var pd in peptideFileAnalysis.PeptideDistributions.ListChildren())
+                    {
+                        if (peptideDistribution == null)
+                        {
+                            peptideDistribution = pd;
+                        }
+                        else if (max)
+                        {
+                            if (pd.Score > peptideDistribution.Score)
+                            {
+                                peptideDistribution = pd;
+                            }
+                        }
+                        else
+                        {
+                            if (pd.Score < peptideDistribution.Score)
+                            {
+                                peptideDistribution = pd;
+                            }
+                        }
+                    }
+                }
+                if (peptideDistribution == null)
+                {
+                    return;
+                }
+                if (peptideDistribution.PeptideQuantity == PeptideQuantity.tracer_count)
+                {
+                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(form.PeptideAnalysisSummary, peptideDistribution.PeptideFileAnalysis);
+                }
+                else
+                {
+                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(form.PeptideAnalysisSummary, peptideDistribution.PeptideFileAnalysis);
+                }
+                return;
+            }
             if (column != colHalfLifeTracerCount && column != colHalfLifePrecursorEnrichment)
             {
                 return;

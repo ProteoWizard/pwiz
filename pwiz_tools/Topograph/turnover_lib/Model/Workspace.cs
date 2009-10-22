@@ -432,13 +432,17 @@ namespace pwiz.Topograph.Model
                     {
                         session.CreateSQLQuery("DELETE FROM DbChromatogram")
                             .ExecuteUpdate();
-                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0")
+                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0, PeakCount = 0, PeptideDistributionCount = 0")
                             .ExecuteUpdate();
                     }
                     if (!SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
                     {
                         session.CreateSQLQuery("DELETE FROM DbPeak").ExecuteUpdate();
-                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeakCount = 0");
+                        if (SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
+                        {
+                            session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeakCount = 0, PeptideDistributionCount = 0")
+                                .ExecuteUpdate();
+                        }
                         session.CreateSQLQuery(
                             "UPDATE DbPeptideFileAnalysis SET PeakStart = NULL, PeakEnd = NULL WHERE DbPeptideFileAnalysis.AutoFindPeak")
                             .ExecuteUpdate();
@@ -451,8 +455,11 @@ namespace pwiz.Topograph.Model
                             .ExecuteUpdate();
                         session.CreateSQLQuery("DELETE FROM DbPeptideRate")
                             .ExecuteUpdate();
-                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeptideDistributionCount = 0")
-                            .ExecuteUpdate();
+                        if (SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
+                        {
+                            session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeptideDistributionCount = 0")
+                                .ExecuteUpdate();
+                        }
                         session.CreateSQLQuery("UPDATE DbPeptideAnalysis SET PeptideRateCount = 0");
                     }
                     _tracerDefs.Save(session);
@@ -581,10 +588,13 @@ namespace pwiz.Topograph.Model
 
         public ResultCalculator ResultCalculator { get { return _resultCalculator; } }
         public ChromatogramGenerator ChromatogramGenerator { get { return _chromatogramGenerator; } }
-        public WorkspaceSettings Settings { get
-        {
-            return _settings;
-        } }
+        public WorkspaceSettings Settings 
+        { 
+            get
+            {
+                return _settings;
+            } 
+        }
 
         public int GetMaxTracerCount(String sequence)
         {
