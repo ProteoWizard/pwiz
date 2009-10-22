@@ -69,6 +69,7 @@ namespace pwiz.Topograph.Enrichment
             {
                 MassDistribution massDistribution = _aminoAcidFormulas.GetMassDistribution(
                     MoleculeFromTracerFormula(tracerFormulaEnumerator.Current), 0);
+                massDistribution = massDistribution.OffsetAndDivide(_aminoAcidFormulas.GetMassShift(Sequence), 1);
                 foreach (var entry in massDistribution)
                 {
                     if (entry.Value < MinAbundance)
@@ -333,8 +334,10 @@ namespace pwiz.Topograph.Enrichment
             var tracerFormulas = ListTracerFormulas();
             foreach (var tracerFormula in tracerFormulas)
             {
-                var molecule = this.MoleculeFromTracerFormula(tracerFormula);
-                vectors.Add(IntensityDictionaryToVector(_aminoAcidFormulas.GetMassDistribution(molecule, 0), _masses));
+                var molecule = MoleculeFromTracerFormula(tracerFormula);
+                var massDistribution = _aminoAcidFormulas.GetMassDistribution(molecule, 0);
+                massDistribution = massDistribution.OffsetAndDivide(_aminoAcidFormulas.GetMassShift(Sequence), 1);
+                vectors.Add(IntensityDictionaryToVector(massDistribution, _masses));
             }
             Vector amounts = FindBestCombinationFilterNegatives(observedVector, vectors, excludeFunc);
             if (amounts == null)

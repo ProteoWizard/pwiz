@@ -108,6 +108,12 @@ namespace pwiz.Topograph.ui.Forms
                         var tracerFormula = TracerFormula.Parse(tbxTracerFormula.Text);
                         spectrum = aminoAcidFormulas.GetMassDistribution(
                             turnoverCalculator.MoleculeFromTracerFormula(tracerFormula), charge);
+                        double massShift = aminoAcidFormulas.GetMassShift(sequence);
+                        if (charge > 0)
+                        {
+                            massShift /= charge;
+                        }
+                        spectrum = spectrum.OffsetAndDivide(massShift, 1);
                     }
                     tbxTracerFormula.BackColor = Color.White;
                 }
