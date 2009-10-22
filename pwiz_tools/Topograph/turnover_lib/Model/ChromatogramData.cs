@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using pwiz.Topograph.Data;
@@ -50,22 +51,33 @@ namespace pwiz.Topograph.Model
         public int Charge { get { return MzKey.Charge; } }
         public double Mz { get; private set; }
         public double[] Intensities { get; private set; }
+        private IList<double> _accurateIntensities;
+        private double _accurateIntensitiesMassAccuracy;
         public IList<double> GetAccurateIntensities()
         {
-            var intensities = new List<double>();
             double massAccuracy = Workspace.GetMassAccuracy();
-            for (int i = 0; i < PeakMzs.Count(); i ++)
+            lock(this)
             {
-                if (Math.Abs((PeakMzs[i] - Mz) * massAccuracy) > Mz)
+                if (_accurateIntensities != null && _accurateIntensitiesMassAccuracy == massAccuracy)
                 {
-                    intensities.Add(0);
+                    return _accurateIntensities;
                 }
-                else
+                var intensities = new List<double>();
+                for (int i = 0; i < PeakMzs.Count(); i++)
                 {
-                    intensities.Add(Intensities[i]);
+                    if (Math.Abs((PeakMzs[i] - Mz) * massAccuracy) > Mz)
+                    {
+                        intensities.Add(0);
+                    }
+                    else
+                    {
+                        intensities.Add(Intensities[i]);
+                    }
                 }
+                _accurateIntensities = new ReadOnlyCollection<double>(intensities);
+                _accurateIntensitiesMassAccuracy = massAccuracy;
+                return _accurateIntensities;
             }
-            return intensities;
         }
         public double[] PeakMzs { get; private set; }
         public PeptideFileAnalysis PeptideFileAnalysis { get { return ((Chromatograms) Parent).PeptideFileAnalysis; } }
