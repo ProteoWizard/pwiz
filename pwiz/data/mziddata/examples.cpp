@@ -175,8 +175,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     spectrumIdentificationPtr->spectrumIdentificationListPtr=
         SpectrumIdentificationListPtr(new SpectrumIdentificationList("SIL_1"));
     spectrumIdentificationPtr->activityDate="2009-05-21T17:01:53";
-    spectrumIdentificationPtr->inputSpectra.push_back("SD_1");;
-    spectrumIdentificationPtr->searchDatabase.push_back("SDB_5peptideMix");
+    spectrumIdentificationPtr->inputSpectra.push_back(SpectraDataPtr(new SpectraData("SD_1")));;
+    spectrumIdentificationPtr->searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix")));
     mzid.analysisCollection.spectrumIdentification.push_back(spectrumIdentificationPtr);
 
     mzid.analysisCollection.proteinDetection.id="PD_1";

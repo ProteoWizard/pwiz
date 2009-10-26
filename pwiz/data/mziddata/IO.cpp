@@ -596,10 +596,16 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
         attributes.push_back(make_pair("avgMassDelta", lexical_cast<string>(mod.avgMassDelta)));
     //if (mod.monoisotopicMassDelta > 0)
     attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(mod.monoisotopicMassDelta)));
-    
-    writer.startElement("Modification", attributes);
-    writeParamContainer(writer, mod.paramGroup);
-    writer.endElement();
+
+
+    XMLWriter::EmptyElementTag elementTag = mod.paramGroup.empty() ?
+        XMLWriter::EmptyElement : XMLWriter::NotEmptyElement;
+    writer.startElement("Modification", attributes, elementTag);
+    if (!mod.paramGroup.empty())
+    {
+        writeParamContainer(writer, mod.paramGroup);
+        writer.endElement();
+    }
 }
 
 
@@ -898,8 +904,12 @@ PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc)
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
 {
+    if (!cp.get())
+        throw runtime_error("[IO::write] Null valued ContactPtr.");
+    
     XMLWriter::Attributes attributes;
     addIdAttributes(*cp, attributes);
+
     if (!cp->address.empty())
         attributes.push_back(make_pair("address", cp->address));
     if (!cp->phone.empty())
@@ -1419,19 +1429,23 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 
     writer.startElement("SpectrumIdentification", attributes);
 
-    for (vector<string>::const_iterator it=sip.inputSpectra.begin();
+    for (vector<SpectraDataPtr>::const_iterator it=sip.inputSpectra.begin();
          it != sip.inputSpectra.end(); it++)
     {
+        if (!(*it).get()) continue;
+
         attributes.clear();
-        attributes.push_back(make_pair("SpectraData_ref", *it));
+        attributes.push_back(make_pair("SpectraData_ref", (*it)->id));
         writer.startElement("InputSpectra", attributes, XMLWriter::EmptyElement);
     }
 
-    for (vector<string>::const_iterator it=sip.searchDatabase.begin();
+    for (vector<SearchDatabasePtr>::const_iterator it=sip.searchDatabase.begin();
          it != sip.searchDatabase.end(); it++)
     {
+        if (!(*it).get()) continue;
+        
         attributes.clear();
-        attributes.push_back(make_pair("SearchDatabase_ref", *it));
+        attributes.push_back(make_pair("SearchDatabase_ref", (*it)->id));
         writer.startElement("SearchDatabase", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1469,13 +1483,15 @@ struct HandlerSpectrumIdentification : public HandlerIdentifiableType
         {
             string value;
             getAttribute(attributes, "SpectraData_ref", value);
-            spectrumId->inputSpectra.push_back(value);
+            spectrumId->inputSpectra.push_back(
+                SpectraDataPtr(new SpectraData(value)));
         }
         else if (name == "SearchDatabase")
         {
             string value;
             getAttribute(attributes, "SearchDatabase_ref", value);
-            spectrumId->searchDatabase.push_back(value);
+            spectrumId->searchDatabase.push_back(
+                SearchDatabasePtr(new SearchDatabase(value)));
         }
         
         return Status::Ok;

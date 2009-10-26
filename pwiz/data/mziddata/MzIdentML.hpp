@@ -35,6 +35,7 @@
 #include <string>
 #include <map>
 
+#include <iostream>
 
 namespace pwiz {
 namespace mziddata {
@@ -370,7 +371,7 @@ typedef boost::shared_ptr<SearchModification> SearchModificationPtr;
 
 struct PWIZ_API_DECL Enzyme
 {
-    Enzyme();
+    Enzyme(const std::string id = "");
     
     std::string id;
     std::string nTermGain;
@@ -584,7 +585,8 @@ typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
 
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 {
-    SpectrumIdentificationItem();
+    SpectrumIdentificationItem(const std::string& id = "",
+                               const std::string& name = "");
 
     int chargeState;
     double experimentalMassToCharge;
@@ -667,8 +669,8 @@ struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
     SpectrumIdentificationListPtr spectrumIdentificationListPtr;
     std::string activityDate;
 
-    std::vector<std::string> inputSpectra;
-    std::vector<std::string> searchDatabase;
+    std::vector<SpectraDataPtr> inputSpectra;
+    std::vector<SearchDatabasePtr> searchDatabase;
 
     bool empty() const;
 };

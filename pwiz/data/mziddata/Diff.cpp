@@ -1053,9 +1053,9 @@ void diff(const SpectrumIdentification& a,
          b_a.spectrumIdentificationListPtr, config);
     diff(a.activityDate, b.activityDate, a_b.activityDate,
          b_a.activityDate, config);
-    vector_diff_diff(a.inputSpectra, b.inputSpectra, a_b.inputSpectra,
+    vector_diff_deep(a.inputSpectra, b.inputSpectra, a_b.inputSpectra,
          b_a.inputSpectra, config);
-    vector_diff_diff(a.searchDatabase, b.searchDatabase, a_b.searchDatabase,
+    vector_diff_deep(a.searchDatabase, b.searchDatabase, a_b.searchDatabase,
          b_a.searchDatabase, config);
 }
 

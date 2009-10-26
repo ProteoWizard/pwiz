@@ -326,8 +326,8 @@ void testSpectrumIdentification()
     a.spectrumIdentificationListPtr =
         SpectrumIdentificationListPtr(new SpectrumIdentificationList("sil"));
     a.activityDate = "123";
-    a.inputSpectra.push_back("is_sd");
-    a.searchDatabase.push_back("sd_sd");
+    a.inputSpectra.push_back(SpectraDataPtr(new SpectraData("is_sd")));
+    a.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase("sd_sd")));
 
     testObject(a);
 }

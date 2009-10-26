@@ -41,9 +41,15 @@ class PWIZ_API_DECL Pep2MzIdent
 
 public:
 
-    Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr result = MzIdentMLPtr(new MzIdentML()));    
+    Pep2MzIdent(const MSMSPipelineAnalysis& mspa,
+                MzIdentMLPtr result = MzIdentMLPtr(new MzIdentML()));    
     MzIdentMLPtr translate();
 
+    MzIdentMLPtr getMzIdentML() const
+    {
+        return mzid;
+    }
+    
 private:
 
     void translateRoot();
@@ -52,19 +58,34 @@ private:
     void translateQueries(const SpectrumQueryPtr query, MzIdentMLPtr result);
     
     void translateMetadata();
-    void translateSpectrumQueries();
+    void translateSpectrumQuery(SpectrumIdentificationListPtr result,
+                                const SpectrumQueryPtr sq);
 
+    void processParameter(ParameterPtr param, MzIdentMLPtr mzid);
+    
     void addModifications(const std::vector<AminoAcidModification>& mods,
                           PeptidePtr peptide, MzIdentMLPtr result);
 
+    void addPeptide(const SpectrumQueryPtr sq, MzIdentMLPtr& x);
+
+    void addFinalElements();
+
     MSMSPipelineAnalysis _mspa;
-    MzIdentMLPtr _result;
+    MzIdentMLPtr mzid;
     bool _translated;
 
     bool precursorMonoisotopic;
     bool fragmentMonoisotopic;
 
+    // Handy state variables 
+    struct Indices;
+    boost::shared_ptr<Indices> indices;
+
+    std::vector< std::pair<std::string, PeptidePtr> > seqPeptidePairs;
+    
     pwiz::msdata::CVTranslator translator;
+
+    const std::vector<AminoAcidModification>* aminoAcidModifications;
 };
 
 } // namespace mziddata

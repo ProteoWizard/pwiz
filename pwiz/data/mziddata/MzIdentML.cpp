@@ -263,13 +263,15 @@ PWIZ_API_DECL bool IonType::empty() const
 // SpectrumIdentificationItem
 //
 
-PWIZ_API_DECL SpectrumIdentificationItem::SpectrumIdentificationItem()
-    : chargeState(0),
-    experimentalMassToCharge(0),
-    calculatedMassToCharge(0),
-    calculatedPI(0),
-    rank(0),
-    passThreshold(0) 
+PWIZ_API_DECL SpectrumIdentificationItem::SpectrumIdentificationItem(
+    const string& id, const string& name)
+    : IdentifiableType(id, name),
+      chargeState(0),
+      experimentalMassToCharge(0),
+      calculatedMassToCharge(0),
+      calculatedPI(0),
+      rank(0),
+      passThreshold(0) 
 {
 }
 
@@ -566,8 +568,9 @@ PWIZ_API_DECL bool AmbiguousResidue::empty() const
 // Enzyme
 //
 
-PWIZ_API_DECL Enzyme::Enzyme()
-    : semiSpecific(indeterminate), missedCleavages(0), minDistance(0)
+PWIZ_API_DECL Enzyme::Enzyme(const string id)
+    : id(id), semiSpecific(indeterminate), missedCleavages(0),
+      minDistance(0)
 
 {
 }
