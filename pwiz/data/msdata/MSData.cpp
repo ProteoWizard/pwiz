@@ -759,6 +759,29 @@ PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const st
     }
 }
 
+string abbreviate(const string& id, char delimiter /*= '.'*/)
+{
+    string result;
+    size_t indexEquals, indexSpace = 0;
+    do
+    {
+        if (!result.empty())
+            result += delimiter;
+
+        indexEquals = id.find('=', indexSpace);
+        if (indexEquals == string::npos)
+            throw runtime_error("[MSData::id::abbreviate] Bad format: " + id);
+
+        indexSpace = id.find(' ', indexEquals+1);
+        if (indexSpace == string::npos)
+            result += id.substr(indexEquals+1);
+        else
+            result += id.substr(indexEquals+1, indexSpace-indexEquals-1);
+    } while (indexSpace != string::npos);
+
+    return result;
+}
+
 
 } // namespace id
 

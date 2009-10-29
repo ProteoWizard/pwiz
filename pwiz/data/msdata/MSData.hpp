@@ -1032,6 +1032,9 @@ PWIZ_API_DECL std::string translateScanNumberToNativeID(CVID nativeIDFormat, con
 /// currently supported formats: Thermo, Bruker/Agilent YEP, Bruker BAF, mzXML, MGF, and mzData
 PWIZ_API_DECL std::string translateNativeIDToScanNumber(CVID nativeIDFormat, const std::string& id);
 
+/// abbreviates a nativeID ("name1=value1 name2=value2" translates to "value1.value2")
+PWIZ_API_DECL std::string abbreviate(const std::string& id, char delimiter = '.');
+
 } // namespace id
 
 
