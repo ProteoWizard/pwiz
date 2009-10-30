@@ -226,15 +226,24 @@ namespace seems
 
             for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
             {
-                SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceDirectories[i], false );
-                if( sourceInfo == null ||
-                    sourceInfo.Length == 0 ||
-                    ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
-                     sourceInfo[0].type != "File Folder" &&
-                     sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
-                    continue;
-                directoriesPassingFilter.Add( workerArgs.SourceDirectories[i] );
-                worker.ReportProgress( 0, (object) sourceInfo );
+                try
+                {
+                    DirectoryInfo directory = workerArgs.SourceDirectories[i];
+                    FileInfo[] files = directory.GetFiles(); // trigger unauthorized access
+
+                    SourceInfo[] sourceInfo = getSourceInfo( directory, false );
+                    if( sourceInfo == null ||
+                        sourceInfo.Length == 0 ||
+                        ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
+                         sourceInfo[0].type != "File Folder" &&
+                         sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
+                        continue;
+                    directoriesPassingFilter.Add( directory );
+                    worker.ReportProgress( 0, (object) sourceInfo );
+                } catch
+                {
+                    // ignore directories we don't have permission for
+                }
             }
 
             for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
