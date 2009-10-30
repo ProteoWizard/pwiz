@@ -856,6 +856,11 @@ class ScanInfoImpl : public ScanInfo
     void initTrailerExtra() const;
     void initTrailerExtraHelper() const;
     void parseFilterString();
+
+    // Function to locate the corresponding zoom scan of the MSn (n>2).
+    // Important for triple play data.
+    virtual ScanInfoPtr findZoomScan() const;
+
 };
 
 ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
@@ -1018,11 +1023,70 @@ vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
     return precursorInfo;
 }
 
+/*
+    This function tries to find any preceeding zoom scans that may be
+    present for the current scan. This function is useful in getting 
+    the precursor monoisotopic m/z and charge state information from
+    the zoom scans, when the instrument is run in a triple-play mode.
+*/
+ScanInfoPtr ScanInfoImpl::findZoomScan() const
+{
+
+    ScanInfoPtr zoomScan_;    
+    try
+    {  
+        // Get the previous scan number
+        long prevScanNum = scanNumber_-1;
+        // Get the previous msLevel
+        int prevMSLevel = msLevel_-1;
+        // precursor mz of the current scan
+        double currentScanPrecursorMass = precursorMZs_.back();
+        // March down the scans till you either find a zoom scan for this MSn or
+        // another MSn-1 that's not a zoom scan.
+        while(prevScanNum > 0)
+        {
+            // Get the scan level and type
+            long zoomScanLevel = rawfile_->getMSOrder(prevScanNum);
+            ScanType zoomScanType = rawfile_->getScanType(prevScanNum);
+            // Check to see if we are at a zoom scan
+            if(zoomScanLevel == prevMSLevel) 
+            {
+                if(zoomScanType == ScanType_Zoom) 
+                {
+                    // Get the scan info and check if the precursor mass of this
+                    // MSn scan is with in the window of the zoom scan
+                    ScanInfoPtr prevScanInfo = rawfile_->getScanInfo(prevScanNum);
+                    if(prevScanInfo->lowMass() <= currentScanPrecursorMass && 
+                        prevScanInfo->highMass() >= currentScanPrecursorMass)
+                    {
+                        zoomScan_ = prevScanInfo;
+                        break;
+                    }
+                } else
+                    break;
+            }
+            --prevScanNum;
+        }
+        return zoomScan_;
+
+    } catch (RawEgg&) 
+    {
+        return zoomScan_;
+    }
+}
 long ScanInfoImpl::precursorCharge() const
 {
     try
     {
-        return trailerExtraValueLong("Charge State:");
+        long charge = trailerExtraValueLong("Charge State:");
+        // Look for preceeding zoom scans, if present, and use the
+        // the charge state information present in it.
+        // TODO: Parse out the scan event details in the raw file and look for
+        // zoom scans if and only if there are zoom scans present in the raw file.
+        ScanInfoPtr zoomScan_ = findZoomScan();
+        if(charge <= 0 && zoomScan_.get() != 0)
+            charge = zoomScan_->trailerExtraValueLong("Charge State:"); 
+        return charge;
     }
     catch (RawEgg&)
     {
@@ -1038,6 +1102,13 @@ double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
         try
         {
             double mz = trailerExtraValueDouble("Monoisotopic M/Z:");
+            // Look for preceeding zoom scans, if present, and use the
+            // monoisotopic m/z information present in it.
+            // TODO: Parse out the scan event details in the raw file and look for
+            // zoom scans if and only if there are zoom scans present in the raw file.
+            ScanInfoPtr zoomScan_ = findZoomScan();
+            if( mz <= 0.0 && zoomScan_.get() != 0 ) 
+                mz = zoomScan_->trailerExtraValueDouble("Monoisotopic M/Z:");
             if (mz > 0)
                 return mz;
         }
