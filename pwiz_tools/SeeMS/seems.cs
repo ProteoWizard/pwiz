@@ -125,6 +125,9 @@ namespace seems
 
 		private void seems_FormClosing( object sender, FormClosingEventArgs e )
 		{
+            Properties.Settings.Default.MainFormLocation = this.Location;
+            Properties.Settings.Default.MainFormSize = this.Size;
+            Properties.Settings.Default.MainFormWindowState = this.WindowState;
 			Properties.Settings.Default.Save();
 
 			/*foreach( DataSourceMap.MapPair sourceItr in dataSources )
