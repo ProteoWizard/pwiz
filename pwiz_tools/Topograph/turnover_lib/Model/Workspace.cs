@@ -220,6 +220,21 @@ namespace pwiz.Topograph.Model
             SetWorkspaceVersion(WorkspaceVersion.IncChromatogramPeakVersion());
         }
 
+        public PeptideQuantity GetDefaultPeptideQuantity()
+        {
+            return _settings.GetSetting(SettingEnum.default_peptide_quantity, PeptideQuantity.tracer_count);
+        }
+
+        public void SetDefaultPeptideQuantity(PeptideQuantity peptideQuantity)
+        {
+            if (peptideQuantity == GetDefaultPeptideQuantity())
+            {
+                return;
+            }
+            _settings.SetSetting(SettingEnum.default_peptide_quantity, peptideQuantity);
+            SetWorkspaceVersion(WorkspaceVersion.IncEnrichmentVersion());
+        }
+
         public bool IsExcluded(Peptide peptide)
         {
             return !FilterPeptides(new[] {peptide})

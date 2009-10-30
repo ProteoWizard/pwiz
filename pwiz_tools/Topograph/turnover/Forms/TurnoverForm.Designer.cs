@@ -233,7 +233,7 @@
             this.machineSettingsToolStripMenuItem.Enabled = false;
             this.machineSettingsToolStripMenuItem.Name = "machineSettingsToolStripMenuItem";
             this.machineSettingsToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
-            this.machineSettingsToolStripMenuItem.Text = "Machine Settings...";
+            this.machineSettingsToolStripMenuItem.Text = "Miscellaneous...";
             this.machineSettingsToolStripMenuItem.Click += new System.EventHandler(this.machineSettingsToolStripMenuItem_Click);
             // 
             // TurnoverForm

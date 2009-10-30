@@ -54,11 +54,16 @@ namespace pwiz.Topograph.Model
         public void SetSetting<T>(SettingEnum settingEnum, T value)
         {
             RemoveChild(settingEnum.ToString());
-            AddChild(settingEnum.ToString(), new WorkspaceSetting(Workspace, new DbSetting
-                                      {
-                                          Name = settingEnum.ToString(),
-                                          Value = Equals(value, default(T)) ? null : value.ToString()
-                                      }));
+            var setting = new WorkspaceSetting(Workspace, new DbSetting
+                                                              {
+                                                                  Name = settingEnum.ToString(),
+                                                                  Value =
+                                                                      Equals(value, default(T))
+                                                                          ? null
+                                                                          : value.ToString()
+                                                              });
+            AddChild(settingEnum.ToString(), setting);
+            Workspace.EntityChanged(setting);
         }
 
         protected override int GetChildCount(DbWorkspace parent)

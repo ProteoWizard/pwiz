@@ -117,4 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Specify the mass accuracy of the mass spectrometer.  This value is used to determine whether a spectrum peak belongs to the peptide of interest.  Setting the value too high will result in chromatograms that have zeroes in them.  Setting it too low will result in chromatograms that continue beyond where the peptide was eluting.</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>In SILAC experiments where there is no partial labeling of peptides, and in 15N experiments where each peptide has so many tracers, the precursor enrichments form is more useful.  In D3 Leucine turnover experiments where it is possible to measure the exact enrichment of individual peptides the tracer amounts form is more useful.</value>
+  </data>
 </root>

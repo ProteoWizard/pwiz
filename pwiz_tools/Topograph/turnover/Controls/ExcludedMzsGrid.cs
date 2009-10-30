@@ -192,7 +192,7 @@ namespace pwiz.Topograph.ui.Controls
                 {
                     HeaderText = "Mass",
                     Name = "colMass",
-                    Width = 40,
+                    Width = 60,
                     ReadOnly = true,
                 };
                 Columns.Add(MassColumn);

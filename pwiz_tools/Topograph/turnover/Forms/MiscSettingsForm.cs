@@ -11,17 +11,21 @@ using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
 {
-    public partial class MachineSettingsForm : WorkspaceForm
+    public partial class MiscSettingsForm : WorkspaceForm
     {
-        public MachineSettingsForm(Workspace workspace) : base(workspace)
+        public MiscSettingsForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
             tbxMassAccuracy.Text = workspace.GetMassAccuracy().ToString();
+            comboTracerCountType.Items.Add("Tracer Amounts");
+            comboTracerCountType.Items.Add("Precursor Enrichments");
+            comboTracerCountType.SelectedIndex = (int) Workspace.GetDefaultPeptideQuantity();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
             Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
+            Workspace.SetDefaultPeptideQuantity((PeptideQuantity) comboTracerCountType.SelectedIndex);
             Close();
         }
 

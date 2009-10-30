@@ -58,7 +58,6 @@ namespace pwiz.Topograph.ui.Forms
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeakStart = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colPeakEnd = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colTurnover = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colTracerPercent = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colScore = new System.Windows.Forms.DataGridViewLinkColumn();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -83,7 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridView);
-            this.splitContainer1.Size = new System.Drawing.Size(978, 412);
+            this.splitContainer1.Size = new System.Drawing.Size(1245, 412);
             this.splitContainer1.SplitterDistance = 259;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -338,13 +337,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colTimePoint,
             this.colPeakStart,
             this.colPeakEnd,
-            this.colTurnover,
             this.colTracerPercent,
             this.colScore});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
-            this.dataGridView.Size = new System.Drawing.Size(715, 412);
+            this.dataGridView.Size = new System.Drawing.Size(982, 412);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
@@ -389,14 +387,6 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakEnd.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colPeakEnd.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
-            // colTurnover
-            // 
-            this.colTurnover.HeaderText = "Turnover";
-            this.colTurnover.Name = "colTurnover";
-            this.colTurnover.ReadOnly = true;
-            this.colTurnover.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colTurnover.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
             // colTracerPercent
             // 
             this.colTracerPercent.HeaderText = "Tracer %";
@@ -417,7 +407,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(978, 412);
+            this.ClientSize = new System.Drawing.Size(1245, 412);
             this.Controls.Add(this.splitContainer1);
             this.Name = "PeptideAnalysisSummary";
             this.TabText = "PeptideComparisonForm";
@@ -463,7 +453,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
         private System.Windows.Forms.DataGridViewLinkColumn colPeakStart;
         private System.Windows.Forms.DataGridViewLinkColumn colPeakEnd;
-        private System.Windows.Forms.DataGridViewLinkColumn colTurnover;
         private System.Windows.Forms.DataGridViewLinkColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewLinkColumn colScore;
     }

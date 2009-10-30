@@ -201,7 +201,7 @@ namespace pwiz.Topograph.MsData
                     }
                     var peaks = peptideFileAnalysis.Peaks;
                     PeptideDistributions peptideDistributions;
-                    if (peaks.ChildCount == 0)
+                    if (peaks.ChildCount == 0 || peptideFileAnalysis.PeptideDistributions.GetChildCount() == 0)
                     {
                         peaks = new Peaks(peptideFileAnalysis);
                         peaks.CalcIntensities();

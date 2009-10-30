@@ -463,7 +463,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void machineSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new MachineSettingsForm(Workspace).ShowDialog(this);
+            new MiscSettingsForm(Workspace).ShowDialog(this);
         }
 
         private void mercuryToolStripMenuItem_Click(object sender, EventArgs e)

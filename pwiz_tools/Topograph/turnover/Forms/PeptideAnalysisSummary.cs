@@ -40,7 +40,6 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
             colPeakStart.DefaultCellStyle.Format = "0.##";
             colPeakEnd.DefaultCellStyle.Format = "0.##";
-            colTurnover.DefaultCellStyle.Format = "0.##%";
             colScore.DefaultCellStyle.Format = "0.####";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
             gridViewExcludedMzs.PeptideAnalysis = peptideAnalysis;
@@ -114,29 +113,12 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colDataFileLabel.Name].Value = peptideFileAnalysis.MsDataFile.Label;
             row.Cells[colPeakStart.Name].Value = peptideFileAnalysis.PeakStartTime;
             row.Cells[colPeakEnd.Name].Value = peptideFileAnalysis.PeakEndTime;
-            var precursorEnrichments =
-                peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.precursor_enrichment);
-            if (precursorEnrichments != null)
+            var peptideDistribution =
+                peptideFileAnalysis.PeptideDistributions.GetChild(Workspace.GetDefaultPeptideQuantity());
+            if (peptideDistribution != null)
             {
-                var firstChild = precursorEnrichments.GetChild("");
-                if (firstChild != null)
-                {
-                    row.Cells[colTurnover.Index].Value = (100.0 - firstChild.PercentAmount)/100;
-                }
-                else
-                {
-                    row.Cells[colTurnover.Index].Value = null;
-                }
-            }
-            else
-            {
-                row.Cells[colTurnover.Index].Value = null;
-            }
-            var tracerAmounts = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-            if (tracerAmounts != null)
-            {
-                row.Cells[colTracerPercent.Index].Value  = tracerAmounts.TracerPercent / 100;
-                row.Cells[colScore.Index].Value = tracerAmounts.Score;
+                row.Cells[colTracerPercent.Index].Value = peptideDistribution.TracerPercent / 100;
+                row.Cells[colScore.Index].Value = peptideDistribution.Score;
             }
             else
             {
@@ -269,13 +251,16 @@ namespace pwiz.Topograph.ui.Forms
             {
                 PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(this, peptideAnalysis);
             }
-            else if (column == colTurnover)
-            {
-                PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(this, peptideAnalysis);
-            }
             else if (column == colTracerPercent || column == colScore)
             {
-                PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(this, peptideAnalysis);
+                if (Workspace.GetDefaultPeptideQuantity() == PeptideQuantity.tracer_count)
+                {
+                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(this, peptideAnalysis);
+                }
+                else
+                {
+                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(this, peptideAnalysis);
+                }
             }
         }
     }

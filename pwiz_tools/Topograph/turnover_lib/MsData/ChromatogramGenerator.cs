@@ -356,7 +356,10 @@ namespace pwiz.Topograph.MsData
 
         private void SaveChromatograms(WorkspaceVersion workspaceVersion, ICollection<AnalysisChromatograms> analyses)
         {
-            var chromatogramsToSkip = new HashSet<AnalysisChromatograms>();
+            if (analyses.Count == 0)
+            {
+                return;
+            }
             using (ISession session = _workspace.OpenWriteSession())
             {
                 if (!workspaceVersion.Equals(_workspace.WorkspaceVersion))
@@ -377,7 +380,6 @@ namespace pwiz.Topograph.MsData
                         continue;
                     }
                     peptideFileAnalysis.SetChromatograms(workspaceVersion, analysisChromatograms);
-
                 }
                 if (workspaceVersion.MassVersion != _workspace.SavedWorkspaceVersion.MassVersion)
                 {

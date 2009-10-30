@@ -74,6 +74,14 @@ namespace pwiz.Topograph.ui.Forms
             using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
             {
                 tbxMsLevel.Text = msDataFileImpl.GetMsLevel(scanIndex).ToString();
+                try
+                {
+                    tbxTime.Text = msDataFileImpl.GetScanTimes()[scanIndex].ToString();
+                }
+                catch
+                {
+                    tbxTime.Text = "#Error#";
+                }
                 if (!msDataFileImpl.IsCentroided(scanIndex))
                 {
                     msDataFileImpl.GetSpectrum(scanIndex, out mzArray, out intensityArray);

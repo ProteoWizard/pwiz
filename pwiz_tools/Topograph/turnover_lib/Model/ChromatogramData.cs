@@ -65,7 +65,7 @@ namespace pwiz.Topograph.Model
                 var intensities = new List<double>();
                 for (int i = 0; i < PeakMzs.Count(); i++)
                 {
-                    if (MzRange.ContainsWithMassAccuracy(PeakMzs[i], massAccuracy))
+                    if (!MzRange.ContainsWithMassAccuracy(PeakMzs[i], massAccuracy))
                     {
                         intensities.Add(0);
                     }

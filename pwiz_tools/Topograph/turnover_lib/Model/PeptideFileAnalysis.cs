@@ -553,6 +553,7 @@ namespace pwiz.Topograph.Model
             if (!_workspaceVersion.ChromatogramsValid(newWorkspaceVersion))
             {
                 Chromatograms = new Chromatograms(this);
+                Peaks = new Peaks(this);
             }
             if (!_workspaceVersion.PeaksValid(newWorkspaceVersion))
             {

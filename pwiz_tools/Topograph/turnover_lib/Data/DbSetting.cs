@@ -35,5 +35,6 @@ namespace pwiz.Topograph.Data
         min_tracer_count,
         exclude_aas,
         mass_accuracy,
+        default_peptide_quantity,
     }
 }

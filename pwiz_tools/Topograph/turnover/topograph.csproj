@@ -178,11 +178,11 @@
     <Compile Include="Forms\GraphForm.Designer.cs">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\MachineSettingsForm.cs">
+    <Compile Include="Forms\MiscSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MachineSettingsForm.Designer.cs">
-      <DependentUpon>MachineSettingsForm.cs</DependentUpon>
+    <Compile Include="Forms\MiscSettingsForm.Designer.cs">
+      <DependentUpon>MiscSettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\MercuryForm.cs">
       <SubType>Form</SubType>
@@ -306,8 +306,8 @@
     <EmbeddedResource Include="Forms\GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MachineSettingsForm.resx">
-      <DependentUpon>MachineSettingsForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\MiscSettingsForm.resx">
+      <DependentUpon>MiscSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MercuryForm.resx">
       <DependentUpon>MercuryForm.cs</DependentUpon>
