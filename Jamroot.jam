@@ -391,7 +391,6 @@ rule binary-tarball-requirements ( properties * )
     local location = $(.common-location)/$(toolsets[1])-$(variants[1]) ;
 
     local non-redistributables =
-        *MSFileReader.XRawfile2.dll *fregistry.dll *fileio.dll                          # Thermo API
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
 
