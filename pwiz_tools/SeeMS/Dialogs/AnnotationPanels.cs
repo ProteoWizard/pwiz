@@ -13,8 +13,6 @@ namespace seems
         public AnnotationPanels()
         {
             InitializeComponent();
-            this.noTopSeries.Select();
-            this.noBottomSeries.Select();
         }
 
         private void maxChargeUpDown_ValueChanged( object sender, EventArgs e )

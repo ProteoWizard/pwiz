@@ -883,6 +883,7 @@ namespace seems
                                              spectrumAnnotationForm.Height );
                 spectrumAnnotationForm.FloatAt( r );*/
                 spectrumAnnotationForm.Show( mainForm.DockPanel, DockState.DockTop );
+                mainForm.DockPanel.DockTopPortion = 0.3;
             }
         }
 

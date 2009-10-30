@@ -18,10 +18,10 @@ namespace seems
 
         /// <summary>
         /// Updates the list of ZedGraph graph objects to display the annotation;
-        /// the update can use the pointList argument and any existing annotations
-        /// to modify how this annotation is presented
+        /// the update can use the graph item, the pointList argument and/or
+        /// any existing annotations to modify how this annotation is presented
         /// </summary>
-        void Update( MSGraph.MSPointList pointList, GraphObjList annotations );
+        void Update( GraphItem item, MSGraph.MSPointList pointList, GraphObjList annotations );
 
         /// <summary>
         /// Gets or sets whether the annotation is currently active
@@ -74,7 +74,7 @@ namespace seems
                             case "z": z = true; break;
                             case "z*": zRadical = true; break;
                         }
-                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, zRadical, false, true );
+                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, zRadical, true, false, true );
                 }
 
                 return null;
@@ -102,7 +102,7 @@ namespace seems
             enabled = true;
         }
 
-        public virtual void Update( MSGraph.MSPointList pointList, GraphObjList annotations )
+        public virtual void Update( GraphItem item, MSGraph.MSPointList pointList, GraphObjList annotations )
         {
             throw new NotImplementedException();
         }
@@ -117,26 +117,32 @@ namespace seems
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
         int min, max;
+        int precursorMassType; // 0=mono, 1=avg
+        int fragmentMassType; // 0=mono, 1=avg
         bool a, b, c, x, y, z, zRadical;
+        bool showLadders;
         bool showMisses;
         bool showLabels;
-        string topSeries, bottomSeries;
-        int ionSeriesChargeState;
 
         public PeptideFragmentationAnnotation()
         {
             sequence = "PEPTIDE";
             min = 1;
             max = 1;
+            precursorMassType = 0;
+            fragmentMassType = 0;
+            showLadders = true;
             showMisses = false;
             showLabels = true;
-            topSeries = "";
-            bottomSeries = "";
-            ionSeriesChargeState = 1;
+
+            annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
+            annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
 
             annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
             annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.precursorMassTypeComboBox.SelectedIndexChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.fragmentMassTypeComboBox.SelectedIndexChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
@@ -144,23 +150,15 @@ namespace seems
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showFragmentationLaddersCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-
-            // Set the handler for ion series selection
-            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
         }
 
         public PeptideFragmentationAnnotation( string sequence,
                                                int minCharge, int maxCharge,
                                                bool a, bool b, bool c,
                                                bool x, bool y, bool z, bool zRadical,
+                                               bool showFragmentationLadders,
                                                bool showMissedFragments,
                                                bool showLabels )
         {
@@ -169,12 +167,18 @@ namespace seems
             this.max = maxCharge;
             this.a = a; this.b = b; this.c = c;
             this.x = x; this.y = y; this.z = z; this.zRadical = zRadical;
+            this.showLadders = showFragmentationLadders;
             this.showMisses = showMissedFragments;
             this.showLabels = showLabels;
+
+            annotationPanels.precursorMassTypeComboBox.SelectedIndex = 0;
+            annotationPanels.fragmentMassTypeComboBox.SelectedIndex = 0;
 
             annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
             annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.precursorMassTypeComboBox.SelectedIndexChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.fragmentMassTypeComboBox.SelectedIndexChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
@@ -182,106 +186,12 @@ namespace seems
             annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            
-            // Set the handler for ion series selection
-            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
-
-        }
-
-        public PeptideFragmentationAnnotation( string sequence,
-                                               int minCharge, int maxCharge,
-                                               bool a, bool b, bool c,
-                                               bool x, bool y, bool z, bool zRadical,
-                                               bool showMissedFragments,
-                                               bool showLabels, string topIonSeries, 
-                                               string bottomIonSeries, int iSeriesChargeState)
-        {
-            this.sequence = sequence;
-            this.min = minCharge;
-            this.max = maxCharge;
-            this.a = a; this.b = b; this.c = c;
-            this.x = x; this.y = y; this.z = z; this.zRadical = zRadical;
-            this.showMisses = showMissedFragments;
-            this.showLabels = showLabels;
-            this.topSeries = topIonSeries;
-            this.bottomSeries = bottomIonSeries;
-            this.ionSeriesChargeState = iSeriesChargeState;
-
-            annotationPanels.sequenceTextBox.TextChanged += new EventHandler( sequenceTextBox_TextChanged );
-            annotationPanels.minChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.maxChargeUpDown.ValueChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.aCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.bCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.cCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.xCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.yCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.zCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
-            annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showFragmentationLaddersCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
 
-            // Set the handler for ion series selection
-            annotationPanels.aSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.bSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.cSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.xSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ySeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zRadicalSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.zSeries.CheckedChanged += new EventHandler( ionSeries_CheckChanged );
-            annotationPanels.ionLadderChargeState.ValueChanged += new EventHandler( ionSeries_CheckChanged );
-
+            annotationPanels.fragmentInfoGridView.Columns.Clear();
         }
 
-        void ionSeries_CheckChanged( object sender, EventArgs events )
-        {
-            if( panel.Tag == this )
-            {
-                // Get the top series selected.
-                if( annotationPanels.aSeries.Checked )
-                {
-                    topSeries = "a";
-                } else if( annotationPanels.bSeries.Checked )
-                {
-                    topSeries = "b";
-                } else if( annotationPanels.cSeries.Checked )
-                {
-                    topSeries = "c";
-                } else
-                {
-                    topSeries = "";
-                }
-
-                // Get the bottom series selected
-                if( annotationPanels.xSeries.Checked )
-                {
-                    bottomSeries = "x";
-                } else if( annotationPanels.ySeries.Checked )
-                {
-                    bottomSeries = "y";
-                } else if( annotationPanels.zSeries.Checked )
-                {
-                    bottomSeries = "z";
-                } else if( annotationPanels.zRadicalSeries.Checked )
-                {
-                    bottomSeries = "z*";
-                } else
-                {
-                    bottomSeries = "";
-                }
-
-                // Get the charge state of the ion series to display
-                ionSeriesChargeState = (int) annotationPanels.ionLadderChargeState.Value;
-
-                OnOptionsChanged( this, EventArgs.Empty );
-            }
-        }
         void sequenceTextBox_TextChanged( object sender, EventArgs e )
         {
             if( panel.Tag == this )
@@ -297,6 +207,55 @@ namespace seems
             {
                 min = (int) annotationPanels.minChargeUpDown.Value;
                 max = (int) annotationPanels.maxChargeUpDown.Value;
+
+                precursorMassType = annotationPanels.precursorMassTypeComboBox.SelectedIndex;
+                fragmentMassType = annotationPanels.fragmentMassTypeComboBox.SelectedIndex;
+
+                showLadders = annotationPanels.showFragmentationLaddersCheckBox.Checked;
+
+                // any control which affects the columns displayed for fragments clears the column list;
+                // it gets repopulated on the next call to Update()
+                if(!ReferenceEquals(sender, annotationPanels.showMissesCheckBox))
+                    annotationPanels.fragmentInfoGridView.Columns.Clear();
+
+                // when showLadders is checked, the ion series checkboxes act like radio buttons:
+                // series from the same terminus are grouped together
+                if( showLadders && sender is CheckBox )
+                {
+                    panel.Tag = null;
+                    if( ReferenceEquals( sender, annotationPanels.showFragmentationLaddersCheckBox ) )
+                    {
+                        // uncheck all but the first checked checkbox
+                        annotationPanels.bCheckBox.Checked = !annotationPanels.aCheckBox.Checked;
+                        annotationPanels.cCheckBox.Checked = !annotationPanels.aCheckBox.Checked && !annotationPanels.bCheckBox.Checked;
+                        annotationPanels.yCheckBox.Checked = !annotationPanels.xCheckBox.Checked;
+                        annotationPanels.zCheckBox.Checked = !annotationPanels.xCheckBox.Checked && !annotationPanels.yCheckBox.Checked;
+                        annotationPanels.zRadicalCheckBox.Checked = !annotationPanels.xCheckBox.Checked && !annotationPanels.yCheckBox.Checked && !annotationPanels.zCheckBox.Checked;
+                    }
+                    else if( ReferenceEquals( sender, annotationPanels.aCheckBox ) )
+                        annotationPanels.bCheckBox.Checked = annotationPanels.cCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.bCheckBox ) )
+                        annotationPanels.aCheckBox.Checked = annotationPanels.cCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.cCheckBox ) )
+                        annotationPanels.aCheckBox.Checked = annotationPanels.bCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.xCheckBox ) )
+                        annotationPanels.yCheckBox.Checked = annotationPanels.zCheckBox.Checked = annotationPanels.zRadicalCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.yCheckBox ) )
+                        annotationPanels.xCheckBox.Checked = annotationPanels.zCheckBox.Checked = annotationPanels.zRadicalCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.zCheckBox ) )
+                        annotationPanels.xCheckBox.Checked = annotationPanels.yCheckBox.Checked = annotationPanels.zRadicalCheckBox.Checked = false;
+
+                    else if( ReferenceEquals( sender, annotationPanels.zRadicalCheckBox ) )
+                        annotationPanels.xCheckBox.Checked = annotationPanels.yCheckBox.Checked = annotationPanels.zCheckBox.Checked = false;
+
+                    panel.Tag = this;
+                }
+
                 a = annotationPanels.aCheckBox.Checked;
                 b = annotationPanels.bCheckBox.Checked;
                 c = annotationPanels.cCheckBox.Checked;
@@ -400,11 +359,11 @@ namespace seems
             }
         }
 
-        /* This function takes a left mz value and right mz value and returns true if both are
-         * found in the spectrum. The function uses a mass tolerance of 0.5. This has to be changed
-         * so that its value can be set from user preferences.
-         */
-        public bool aminoAcidHasFragmentEvidence( MSGraph.MSPointList points, double leftMZ, double rightMZ )
+        ///<summary>
+        /// Takes a left mz value and right mz value and returns true if both are found in the spectrum.
+        /// TODO: make mass tolerance user-configurable (currently hard-coded to 0.5 m/z)
+        ///</summary>
+        private bool aminoAcidHasFragmentEvidence( MSGraph.MSPointList points, double leftMZ, double rightMZ )
         {
             // Search index
             int index = -1;
@@ -425,10 +384,13 @@ namespace seems
             return (leftMZFound & righMZFound);
         }
 
-        /*   This function adds user requested ion series on top of the chart.
-         */
-        public void addIonSeries(Peptide interpretation, GraphObjList list, MSGraph.MSPointList points )
+        ///<summary>Adds user requested ion series on top of the chart.</summary>
+        private void addIonSeries( GraphObjList list, MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
+            int ionSeriesChargeState = min;
+            string sequence = peptide.sequence;
+            ModificationMap modifications = peptide.modifications();
+
             // Select the color for the ion series.
             Color topSeriesColor;
             Color bottomSeriesColor;
@@ -454,8 +416,6 @@ namespace seems
             double bottomSeriesOffset = 0.1;
             if( topSeries.Length == 0 )
                 bottomSeriesOffset = topSeriesOffset;
-            
-            Fragmentation fragmentation = interpretation.fragmentation(true,true);
 
             double topSeriesLeftPoint = 0.0;
             double bottomSeriesLeftPoint = 0.0;
@@ -463,7 +423,7 @@ namespace seems
             if( topSeries == "a" || topSeries == "b" || bottomSeries == "y" || bottomSeries == "z" || bottomSeries == "z*" )
             {
                 // Step through each fragmentation site
-                for( int i = 1; i <= interpretation.sequence.Length; ++i )
+                for( int i = 1; i <= sequence.Length; ++i )
                 {
                     // Paint the top series first
                     double rightPoint = 0.0;
@@ -502,9 +462,9 @@ namespace seems
                         tick.IsClippedToChartRect = true;
                         list.Add( tick );
                         // Add a text box in the middle of the left and right mz boundaries
-                        StringBuilder label = new StringBuilder(interpretation.sequence[i - 1].ToString());
+                        StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
                         // Figure out if any mods are there on this amino acid
-                        double deltaMass = interpretation.modifications()[i-1].monoisotopicDeltaMass();
+                        double deltaMass = modifications[i-1].monoisotopicDeltaMass();
                         // Round the mod mass and append it to the amino acid as a string
                         if( deltaMass > 0.0 )
                         {
@@ -561,9 +521,9 @@ namespace seems
                         tick.IsClippedToChartRect = true;
                         list.Add( tick );
                         // Add the text label containing the amino acid
-                        StringBuilder label = new StringBuilder( interpretation.sequence[interpretation.sequence.Length - i].ToString() );
+                        StringBuilder label = new StringBuilder( sequence[sequence.Length - i].ToString() );
                         // Figure out if any mods are there on this amino acid
-                        double deltaMass = interpretation.modifications()[interpretation.sequence.Length - i].monoisotopicDeltaMass();
+                        double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
                         // Round the mod mass and append it to the amino acid as a string
                         if( deltaMass > 0.0 )
                         {
@@ -589,7 +549,7 @@ namespace seems
             {
                 topSeriesLeftPoint = 0.0;
                 bottomSeriesLeftPoint = 0.0;
-                for( int i = 1; i < interpretation.sequence.Length; ++i )
+                for( int i = 1; i < sequence.Length; ++i )
                 {
                     double rightPoint = fragmentation.c( i, ionSeriesChargeState );
                     if( topSeriesLeftPoint != rightPoint && topSeries == "c")
@@ -620,9 +580,9 @@ namespace seems
                         list.Add( tick );
 
                         // Add a text box in the middle of the left and right mz boundaries
-                        StringBuilder label = new StringBuilder( interpretation.sequence[i - 1].ToString() );
+                        StringBuilder label = new StringBuilder( sequence[i - 1].ToString() );
                         // Figure out if any mods are there on this amino acid
-                        double deltaMass = interpretation.modifications()[i - 1].monoisotopicDeltaMass();
+                        double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
                         // Round the mod mass and append it to the amino acid as a string
                         if( deltaMass > 0.0 )
                         {
@@ -669,9 +629,9 @@ namespace seems
                         tick.IsClippedToChartRect = true;
                         list.Add( tick );
                         // Add the text label containing the amino acid
-                        StringBuilder label = new StringBuilder( interpretation.sequence[interpretation.sequence.Length - i].ToString() );
+                        StringBuilder label = new StringBuilder( sequence[sequence.Length - i].ToString() );
                         // Figure out if any mods are there on this amino acid
-                        double deltaMass = interpretation.modifications()[interpretation.sequence.Length - i].monoisotopicDeltaMass();
+                        double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
                         // Round the mod mass and append it to the amino acid as a string
                         if( deltaMass > 0.0 )
                         {
@@ -694,26 +654,34 @@ namespace seems
             }
         }
 
-        public override void Update( MSGraph.MSPointList points, GraphObjList annotations )
+        public override void Update( GraphItem item, MSGraph.MSPointList points, GraphObjList annotations )
         {
             if( !Enabled )
                 return;
 
+            if( !( item is MassSpectrum ) )
+                return; // throw exception?
+
             GraphObjList list = annotations;
             Peptide peptide;
+
             try
             {
                 peptide = new Peptide( sequence,
-                    pwiz.CLI.proteome.ModificationParsing.ModificationParsing_ByMass,
+                    pwiz.CLI.proteome.ModificationParsing.ModificationParsing_Auto,
                     pwiz.CLI.proteome.ModificationDelimiter.ModificationDelimiter_Brackets );
             } catch( Exception )
             {
                 return;
             }
-            Fragmentation fragmentation = peptide.fragmentation( true, true );
+
+            string unmodifiedSequence = peptide.sequence;
+            int sequenceLength = unmodifiedSequence.Length;
+            Fragmentation fragmentation = peptide.fragmentation( fragmentMassType == 0 ? true : false, true );
+
             for( int charge = min; charge <= max; ++charge )
             {
-                for( int i = 1; i <= peptide.sequence.Length; ++i )
+                for( int i = 1; i <= sequenceLength; ++i )
                 {
                     if( a ) addFragment( list, points, "a", i, charge, fragmentation.a( i, charge ) );
                     if( b ) addFragment( list, points, "b", i, charge, fragmentation.b( i, charge ) );
@@ -721,24 +689,189 @@ namespace seems
                     if( z ) addFragment( list, points, "z", i, charge, fragmentation.z( i, charge ) );
                     if( zRadical ) addFragment( list, points, "z*", i, charge, fragmentation.zRadical( i, charge ) );
 
-                    if( i < peptide.sequence.Length )
+                    if( i < sequenceLength )
                     {
                         if( c ) addFragment( list, points, "c", i, charge, fragmentation.c( i, charge ) );
                         if( x ) addFragment( list, points, "x", i, charge, fragmentation.x( i, charge ) );
                     }
                 }
             }
-            addIonSeries( peptide, list, points );
+
+            if( showLadders )
+            {
+                string topSeries = a ? "a" : b ? "b" : c ? "c" : "";
+                string bottomSeries = x ? "x" : y ? "y" : z ? "z" : zRadical ? "z*" : "";
+                addIonSeries( list, points, peptide, fragmentation, topSeries, bottomSeries );
+            }
+
+            // fill peptide info table
+            annotationPanels.peptideInfoGridView.Rows.Clear();
+
+            var spectrum = ( item as MassSpectrum ).Element;
+            if( spectrum.precursors.Count > 0 &&
+                spectrum.precursors[0].selectedIons.Count > 0 &&
+                spectrum.precursors[0].selectedIons[0].hasCVParam( pwiz.CLI.CVID.MS_selected_ion_m_z ) &&
+                spectrum.precursors[0].selectedIons[0].hasCVParam( pwiz.CLI.CVID.MS_charge_state ) )
+            {
+                double selectedMz = (double) spectrum.precursors[0].selectedIons[0].cvParam( pwiz.CLI.CVID.MS_selected_ion_m_z ).value;
+                int chargeState = (int) spectrum.precursors[0].selectedIons[0].cvParam( pwiz.CLI.CVID.MS_charge_state ).value;
+                double calculatedMass = ( precursorMassType == 0 ? peptide.monoisotopicMass( chargeState ) : peptide.molecularWeight( chargeState ) ) * chargeState;
+                double observedMass = selectedMz * chargeState;
+                annotationPanels.peptideInfoGridView.Rows.Add( "Calculated mass:", calculatedMass, "Mass error (daltons):", observedMass - calculatedMass );
+                annotationPanels.peptideInfoGridView.Rows.Add( "Observed mass:", observedMass, "Mass error (ppm):", ( ( observedMass - calculatedMass ) / calculatedMass ) * 1e6 );
+            } else
+                annotationPanels.peptideInfoGridView.Rows.Add( "Calculated neutral mass:", precursorMassType == 0 ? peptide.monoisotopicMass() : peptide.molecularWeight() );
+
+            annotationPanels.peptideInfoGridView.Columns[1].DefaultCellStyle.Format = "F4";
+            foreach( DataGridViewRow row in annotationPanels.peptideInfoGridView.Rows )
+                row.Height = row.InheritedStyle.Font.Height + 2;
+
+            annotationPanels.fragmentInfoGridView.SuspendLayout();
+            if( a || b || c || x || y || z || zRadical )
+            {
+                if( annotationPanels.fragmentInfoGridView.Columns.Count == 0 )
+                {
+                    #region Add columns for fragment types
+                    if( a )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "a" + charge.ToString(),
+                                "a" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                    if( b )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "b" + charge.ToString(),
+                                "b" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                    if( c )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "c" + charge.ToString(),
+                                "c" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+
+                    annotationPanels.fragmentInfoGridView.Columns.Add( "N", "" );
+                    annotationPanels.fragmentInfoGridView.Columns.Add( "Sequence", "" );
+                    annotationPanels.fragmentInfoGridView.Columns.Add( "C", "" );
+
+                    if( x )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "x" + charge.ToString(),
+                                "x" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                    if( y )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "y" + charge.ToString(),
+                                "y" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                    if( z )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "z" + charge.ToString(),
+                                "z" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                    if( zRadical )
+                        for( int charge = min; charge <= max; ++charge )
+                            annotationPanels.fragmentInfoGridView.Columns.Add(
+                                "z*" + charge.ToString(),
+                                "z*" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
+                #endregion
+
+                    foreach( DataGridViewColumn column in annotationPanels.fragmentInfoGridView.Columns )
+                    {
+                        column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                        if( column.Name != "N" && column.Name != "C" && column.Name != "Sequence" )
+                            column.DefaultCellStyle.Format = "F3";
+                    }
+                }
+
+                while( annotationPanels.fragmentInfoGridView.Rows.Count > sequenceLength )
+                    annotationPanels.fragmentInfoGridView.Rows.RemoveAt( annotationPanels.fragmentInfoGridView.Rows.Count - 1 );
+                if( sequenceLength - annotationPanels.fragmentInfoGridView.Rows.Count > 0 )
+                    annotationPanels.fragmentInfoGridView.Rows.Add( sequenceLength - annotationPanels.fragmentInfoGridView.Rows.Count );
+                for( int i = 1; i <= sequenceLength; ++i )
+                {
+                    int cTerminalLength = sequenceLength - i + 1;
+                    var row = annotationPanels.fragmentInfoGridView.Rows[i - 1];
+                    var values = new List<object>( 10 );
+                    //var row = annotationPanels.fragmentInfoGridView.Rows.Add()];
+
+                    if( a )
+                        for( int charge = min; charge <= max; ++charge )
+                            values.Add( fragmentation.a( i, charge ) );
+                    if( b )
+                        for( int charge = min; charge <= max; ++charge )
+                            values.Add( fragmentation.b( i, charge ) );
+                    if( c )
+                        for( int charge = min; charge <= max; ++charge )
+                            if( i < sequenceLength )
+                                values.Add( fragmentation.c( i, charge ) );
+                            else
+                                values.Add( "" );
+
+                    values.Add( i );
+                    values.Add( unmodifiedSequence[i - 1] );
+                    values.Add( cTerminalLength );
+
+                    if( x )
+                        for( int charge = min; charge <= max; ++charge )
+                            if( i > 1 )
+                                values.Add( fragmentation.x( cTerminalLength, charge ) );
+                            else
+                                values.Add( "" );
+                    if( y )
+                        for( int charge = min; charge <= max; ++charge )
+                            values.Add( fragmentation.y( cTerminalLength, charge ) );
+                    if( z )
+                        for( int charge = min; charge <= max; ++charge )
+                            values.Add( fragmentation.z( cTerminalLength, charge ) );
+                    if( zRadical )
+                        for( int charge = min; charge <= max; ++charge )
+                            values.Add( fragmentation.zRadical( cTerminalLength, charge ) );
+                    row.SetValues( values.ToArray() );
+                }
+
+                foreach( DataGridViewRow row in annotationPanels.fragmentInfoGridView.Rows )
+                {
+                    row.Height = row.InheritedStyle.Font.Height + 2;
+
+                    foreach( DataGridViewCell cell in row.Cells )
+                    {
+                        if( !( cell.Value is double ) )
+                            continue;
+
+                        double mz = (double) cell.Value;
+
+                        int index = -1;
+                        if( points != null )
+                            index = points.LowerBound( mz - 0.5 );
+
+                        if( index == -1 || points.ScaledList[index].X > ( mz + 0.5 ) )
+                            continue;
+                        cell.Style.Font = new Font( annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold );
+                    }
+                }
+            }
+            else
+                annotationPanels.fragmentInfoGridView.Rows.Clear();
+
+            annotationPanels.fragmentInfoGridView.ResumeLayout();
         }
 
         public override Panel OptionsPanel
         {
             get
             {
+                // disable update handlers
                 panel.Tag = null;
+
+                // toggle docking to fix docking glitches
+                annotationPanels.peptideFragmentationPanel.Dock = DockStyle.None;
+                annotationPanels.peptideFragmentationPanel.Dock = DockStyle.Fill;
+
+                // set form controls based on model values
                 annotationPanels.sequenceTextBox.Text = sequence;
                 annotationPanels.minChargeUpDown.Value = min;
                 annotationPanels.maxChargeUpDown.Value = max;
+                annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
+                annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
                 annotationPanels.aCheckBox.Checked = a;
                 annotationPanels.bCheckBox.Checked = b;
                 annotationPanels.cCheckBox.Checked = c;
@@ -746,7 +879,10 @@ namespace seems
                 annotationPanels.yCheckBox.Checked = y;
                 annotationPanels.zCheckBox.Checked = z;
                 annotationPanels.zRadicalCheckBox.Checked = zRadical;
+                annotationPanels.showFragmentationLaddersCheckBox.Checked = showLadders;
                 annotationPanels.showMissesCheckBox.Checked = showMisses;
+
+                // enable update handlers
                 panel.Tag = this;
 
                 return panel;

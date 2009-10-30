@@ -237,7 +237,7 @@ namespace seems
         {
             PointMap points = new PointMap( Points );
             foreach( IAnnotation annotation in annotationList )
-                annotation.Update( pointList, annotations );
+                annotation.Update( this, pointList, annotations );
         }
 
         public virtual ZedGraph.IPointList Points { get { return null; } }

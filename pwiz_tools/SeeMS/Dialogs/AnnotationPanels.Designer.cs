@@ -28,23 +28,23 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.annotationPanelsTabControl = new System.Windows.Forms.TabControl();
             this.peptideFragmentationTabPage = new System.Windows.Forms.TabPage();
             this.peptideFragmentationPanel = new System.Windows.Forms.Panel();
-            this.FragmentIonLadderGroup = new System.Windows.Forms.GroupBox();
-            this.ionLadderZLabel = new System.Windows.Forms.Label();
-            this.ionLadderChargeState = new System.Windows.Forms.NumericUpDown();
-            this.XYorZZStarSeries = new System.Windows.Forms.Panel();
-            this.noBottomSeries = new System.Windows.Forms.RadioButton();
-            this.zRadicalSeries = new System.Windows.Forms.RadioButton();
-            this.zSeries = new System.Windows.Forms.RadioButton();
-            this.ySeries = new System.Windows.Forms.RadioButton();
-            this.xSeries = new System.Windows.Forms.RadioButton();
-            this.ABorCSeries = new System.Windows.Forms.Panel();
-            this.noTopSeries = new System.Windows.Forms.RadioButton();
-            this.cSeries = new System.Windows.Forms.RadioButton();
-            this.bSeries = new System.Windows.Forms.RadioButton();
-            this.aSeries = new System.Windows.Forms.RadioButton();
+            this.fragmentMassTypeComboBox = new System.Windows.Forms.ComboBox();
+            this.precursorMassTypeComboBox = new System.Windows.Forms.ComboBox();
+            this.fragmentInfoGridView = new System.Windows.Forms.DataGridView();
+            this.b = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.y = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.peptideInfoGridView = new System.Windows.Forms.DataGridView();
+            this.MassType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Mass = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MassErrorType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MassError = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.showFragmentationLaddersCheckBox = new System.Windows.Forms.CheckBox();
             this.showMissesCheckBox = new System.Windows.Forms.CheckBox();
             this.maxChargeUpDown = new System.Windows.Forms.NumericUpDown();
             this.minChargeUpDown = new System.Windows.Forms.NumericUpDown();
@@ -65,10 +65,8 @@
             this.annotationPanelsTabControl.SuspendLayout();
             this.peptideFragmentationTabPage.SuspendLayout();
             this.peptideFragmentationPanel.SuspendLayout();
-            this.FragmentIonLadderGroup.SuspendLayout();
-            ( (System.ComponentModel.ISupportInitialize) ( this.ionLadderChargeState ) ).BeginInit();
-            this.XYorZZStarSeries.SuspendLayout();
-            this.ABorCSeries.SuspendLayout();
+            ( (System.ComponentModel.ISupportInitialize) ( this.fragmentInfoGridView ) ).BeginInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.peptideInfoGridView ) ).BeginInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).BeginInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).BeginInit();
             this.ionSeriesGroupBox.SuspendLayout();
@@ -80,28 +78,30 @@
             this.annotationPanelsTabControl.Controls.Add( this.tabPage2 );
             this.annotationPanelsTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.annotationPanelsTabControl.Location = new System.Drawing.Point( 0, 0 );
-            this.annotationPanelsTabControl.Margin = new System.Windows.Forms.Padding( 4 );
             this.annotationPanelsTabControl.Name = "annotationPanelsTabControl";
             this.annotationPanelsTabControl.SelectedIndex = 0;
-            this.annotationPanelsTabControl.Size = new System.Drawing.Size( 955, 926 );
+            this.annotationPanelsTabControl.Size = new System.Drawing.Size( 716, 752 );
             this.annotationPanelsTabControl.TabIndex = 0;
             // 
             // peptideFragmentationTabPage
             // 
             this.peptideFragmentationTabPage.BackColor = System.Drawing.Color.DimGray;
             this.peptideFragmentationTabPage.Controls.Add( this.peptideFragmentationPanel );
-            this.peptideFragmentationTabPage.Location = new System.Drawing.Point( 4, 25 );
-            this.peptideFragmentationTabPage.Margin = new System.Windows.Forms.Padding( 4 );
+            this.peptideFragmentationTabPage.Location = new System.Drawing.Point( 4, 22 );
             this.peptideFragmentationTabPage.Name = "peptideFragmentationTabPage";
-            this.peptideFragmentationTabPage.Padding = new System.Windows.Forms.Padding( 4 );
-            this.peptideFragmentationTabPage.Size = new System.Drawing.Size( 947, 897 );
+            this.peptideFragmentationTabPage.Padding = new System.Windows.Forms.Padding( 3 );
+            this.peptideFragmentationTabPage.Size = new System.Drawing.Size( 708, 726 );
             this.peptideFragmentationTabPage.TabIndex = 0;
             this.peptideFragmentationTabPage.Text = "Peptide Fragmentation";
             // 
             // peptideFragmentationPanel
             // 
             this.peptideFragmentationPanel.BackColor = System.Drawing.SystemColors.Control;
-            this.peptideFragmentationPanel.Controls.Add( this.FragmentIonLadderGroup );
+            this.peptideFragmentationPanel.Controls.Add( this.fragmentMassTypeComboBox );
+            this.peptideFragmentationPanel.Controls.Add( this.precursorMassTypeComboBox );
+            this.peptideFragmentationPanel.Controls.Add( this.fragmentInfoGridView );
+            this.peptideFragmentationPanel.Controls.Add( this.peptideInfoGridView );
+            this.peptideFragmentationPanel.Controls.Add( this.showFragmentationLaddersCheckBox );
             this.peptideFragmentationPanel.Controls.Add( this.showMissesCheckBox );
             this.peptideFragmentationPanel.Controls.Add( this.maxChargeUpDown );
             this.peptideFragmentationPanel.Controls.Add( this.minChargeUpDown );
@@ -111,195 +111,191 @@
             this.peptideFragmentationPanel.Controls.Add( this.label1 );
             this.peptideFragmentationPanel.Controls.Add( this.sequenceTextBox );
             this.peptideFragmentationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.peptideFragmentationPanel.Location = new System.Drawing.Point( 4, 4 );
-            this.peptideFragmentationPanel.Margin = new System.Windows.Forms.Padding( 4 );
+            this.peptideFragmentationPanel.Location = new System.Drawing.Point( 3, 3 );
             this.peptideFragmentationPanel.Name = "peptideFragmentationPanel";
-            this.peptideFragmentationPanel.Size = new System.Drawing.Size( 939, 889 );
+            this.peptideFragmentationPanel.Size = new System.Drawing.Size( 702, 720 );
             this.peptideFragmentationPanel.TabIndex = 0;
             // 
-            // FragmentIonLadderGroup
+            // fragmentMassTypeComboBox
             // 
-            this.FragmentIonLadderGroup.Controls.Add( this.ionLadderZLabel );
-            this.FragmentIonLadderGroup.Controls.Add( this.ionLadderChargeState );
-            this.FragmentIonLadderGroup.Controls.Add( this.XYorZZStarSeries );
-            this.FragmentIonLadderGroup.Controls.Add( this.ABorCSeries );
-            this.FragmentIonLadderGroup.Location = new System.Drawing.Point( 246, 75 );
-            this.FragmentIonLadderGroup.Name = "FragmentIonLadderGroup";
-            this.FragmentIonLadderGroup.Size = new System.Drawing.Size( 261, 84 );
-            this.FragmentIonLadderGroup.TabIndex = 9;
-            this.FragmentIonLadderGroup.TabStop = false;
-            this.FragmentIonLadderGroup.Text = "Fragment Ion Ladder";
+            this.fragmentMassTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.fragmentMassTypeComboBox.FormattingEnabled = true;
+            this.fragmentMassTypeComboBox.Items.AddRange( new object[] {
+            "Monoisotopic fragment masses",
+            "Average fragment masses"} );
+            this.fragmentMassTypeComboBox.Location = new System.Drawing.Point( 362, 37 );
+            this.fragmentMassTypeComboBox.MaxDropDownItems = 2;
+            this.fragmentMassTypeComboBox.Name = "fragmentMassTypeComboBox";
+            this.fragmentMassTypeComboBox.Size = new System.Drawing.Size( 180, 21 );
+            this.fragmentMassTypeComboBox.TabIndex = 14;
             // 
-            // ionLadderZLabel
+            // precursorMassTypeComboBox
             // 
-            this.ionLadderZLabel.AutoSize = true;
-            this.ionLadderZLabel.Location = new System.Drawing.Point( 195, 21 );
-            this.ionLadderZLabel.Name = "ionLadderZLabel";
-            this.ionLadderZLabel.Size = new System.Drawing.Size( 19, 17 );
-            this.ionLadderZLabel.TabIndex = 3;
-            this.ionLadderZLabel.Text = "z:";
+            this.precursorMassTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.precursorMassTypeComboBox.FormattingEnabled = true;
+            this.precursorMassTypeComboBox.Items.AddRange( new object[] {
+            "Monoisotopic precursor mass",
+            "Average precursor mass"} );
+            this.precursorMassTypeComboBox.Location = new System.Drawing.Point( 176, 37 );
+            this.precursorMassTypeComboBox.MaxDropDownItems = 2;
+            this.precursorMassTypeComboBox.Name = "precursorMassTypeComboBox";
+            this.precursorMassTypeComboBox.Size = new System.Drawing.Size( 180, 21 );
+            this.precursorMassTypeComboBox.TabIndex = 13;
             // 
-            // ionLadderChargeState
+            // fragmentInfoGridView
             // 
-            this.ionLadderChargeState.Location = new System.Drawing.Point( 220, 21 );
-            this.ionLadderChargeState.Minimum = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
-            this.ionLadderChargeState.Name = "ionLadderChargeState";
-            this.ionLadderChargeState.Size = new System.Drawing.Size( 35, 22 );
-            this.ionLadderChargeState.TabIndex = 2;
-            this.ionLadderChargeState.Value = new decimal( new int[] {
-            1,
-            0,
-            0,
-            0} );
+            this.fragmentInfoGridView.AllowUserToAddRows = false;
+            this.fragmentInfoGridView.AllowUserToDeleteRows = false;
+            this.fragmentInfoGridView.AllowUserToResizeColumns = false;
+            this.fragmentInfoGridView.AllowUserToResizeRows = false;
+            this.fragmentInfoGridView.Anchor = ( (System.Windows.Forms.AnchorStyles) ( ( ( ( System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom )
+                        | System.Windows.Forms.AnchorStyles.Left )
+                        | System.Windows.Forms.AnchorStyles.Right ) ) );
+            this.fragmentInfoGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader;
+            this.fragmentInfoGridView.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.fragmentInfoGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.fragmentInfoGridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.fragmentInfoGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            this.fragmentInfoGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font( "Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ( (byte) ( 0 ) ) );
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.fragmentInfoGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            this.fragmentInfoGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.fragmentInfoGridView.Columns.AddRange( new System.Windows.Forms.DataGridViewColumn[] {
+            this.b,
+            this.y} );
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font( "Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ( (byte) ( 0 ) ) );
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.fragmentInfoGridView.DefaultCellStyle = dataGridViewCellStyle5;
+            this.fragmentInfoGridView.Location = new System.Drawing.Point( 176, 104 );
+            this.fragmentInfoGridView.MaximumSize = new System.Drawing.Size( 515, 613 );
+            this.fragmentInfoGridView.Name = "fragmentInfoGridView";
+            this.fragmentInfoGridView.ReadOnly = true;
+            this.fragmentInfoGridView.RowHeadersVisible = false;
+            this.fragmentInfoGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.fragmentInfoGridView.Size = new System.Drawing.Size( 515, 603 );
+            this.fragmentInfoGridView.TabIndex = 12;
             // 
-            // XYorZZStarSeries
+            // b
             // 
-            this.XYorZZStarSeries.Controls.Add( this.noBottomSeries );
-            this.XYorZZStarSeries.Controls.Add( this.zRadicalSeries );
-            this.XYorZZStarSeries.Controls.Add( this.zSeries );
-            this.XYorZZStarSeries.Controls.Add( this.ySeries );
-            this.XYorZZStarSeries.Controls.Add( this.xSeries );
-            this.XYorZZStarSeries.Location = new System.Drawing.Point( 9, 51 );
-            this.XYorZZStarSeries.Name = "XYorZZStarSeries";
-            this.XYorZZStarSeries.Size = new System.Drawing.Size( 227, 29 );
-            this.XYorZZStarSeries.TabIndex = 1;
+            this.b.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.b.HeaderText = "b";
+            this.b.Name = "b";
+            this.b.ReadOnly = true;
+            this.b.Width = 38;
             // 
-            // noBottomSeries
+            // y
             // 
-            this.noBottomSeries.AutoSize = true;
-            this.noBottomSeries.Location = new System.Drawing.Point( 167, 3 );
-            this.noBottomSeries.Name = "noBottomSeries";
-            this.noBottomSeries.Size = new System.Drawing.Size( 58, 21 );
-            this.noBottomSeries.TabIndex = 4;
-            this.noBottomSeries.TabStop = true;
-            this.noBottomSeries.Text = "none";
-            this.noBottomSeries.UseVisualStyleBackColor = true;
+            this.y.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.y.HeaderText = "y";
+            this.y.Name = "y";
+            this.y.ReadOnly = true;
+            this.y.Width = 37;
             // 
-            // zRadicalSeries
+            // peptideInfoGridView
             // 
-            this.zRadicalSeries.AutoSize = true;
-            this.zRadicalSeries.Location = new System.Drawing.Point( 122, 3 );
-            this.zRadicalSeries.Name = "zRadicalSeries";
-            this.zRadicalSeries.Size = new System.Drawing.Size( 38, 21 );
-            this.zRadicalSeries.TabIndex = 3;
-            this.zRadicalSeries.TabStop = true;
-            this.zRadicalSeries.Text = "z*";
-            this.zRadicalSeries.UseVisualStyleBackColor = true;
+            this.peptideInfoGridView.AllowUserToAddRows = false;
+            this.peptideInfoGridView.AllowUserToDeleteRows = false;
+            this.peptideInfoGridView.AllowUserToResizeColumns = false;
+            this.peptideInfoGridView.AllowUserToResizeRows = false;
+            this.peptideInfoGridView.Anchor = ( (System.Windows.Forms.AnchorStyles) ( ( ( System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left )
+                        | System.Windows.Forms.AnchorStyles.Right ) ) );
+            this.peptideInfoGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader;
+            this.peptideInfoGridView.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.peptideInfoGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.peptideInfoGridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.peptideInfoGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            this.peptideInfoGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.peptideInfoGridView.ColumnHeadersVisible = false;
+            this.peptideInfoGridView.Columns.AddRange( new System.Windows.Forms.DataGridViewColumn[] {
+            this.MassType,
+            this.Mass,
+            this.MassErrorType,
+            this.MassError} );
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font( "Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ( (byte) ( 0 ) ) );
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.peptideInfoGridView.DefaultCellStyle = dataGridViewCellStyle6;
+            this.peptideInfoGridView.Location = new System.Drawing.Point( 176, 63 );
+            this.peptideInfoGridView.Name = "peptideInfoGridView";
+            this.peptideInfoGridView.ReadOnly = true;
+            this.peptideInfoGridView.RowHeadersVisible = false;
+            this.peptideInfoGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.peptideInfoGridView.Size = new System.Drawing.Size( 515, 35 );
+            this.peptideInfoGridView.TabIndex = 11;
             // 
-            // zSeries
+            // MassType
             // 
-            this.zSeries.AutoSize = true;
-            this.zSeries.Location = new System.Drawing.Point( 82, 3 );
-            this.zSeries.Name = "zSeries";
-            this.zSeries.Size = new System.Drawing.Size( 33, 21 );
-            this.zSeries.TabIndex = 2;
-            this.zSeries.TabStop = true;
-            this.zSeries.Text = "z";
-            this.zSeries.UseVisualStyleBackColor = true;
+            this.MassType.HeaderText = "";
+            this.MassType.Name = "MassType";
+            this.MassType.ReadOnly = true;
+            this.MassType.Width = 5;
             // 
-            // ySeries
+            // Mass
             // 
-            this.ySeries.AutoSize = true;
-            this.ySeries.Location = new System.Drawing.Point( 42, 3 );
-            this.ySeries.Name = "ySeries";
-            this.ySeries.Size = new System.Drawing.Size( 33, 21 );
-            this.ySeries.TabIndex = 1;
-            this.ySeries.TabStop = true;
-            this.ySeries.Text = "y";
-            this.ySeries.UseVisualStyleBackColor = true;
+            this.Mass.HeaderText = "";
+            this.Mass.Name = "Mass";
+            this.Mass.ReadOnly = true;
+            this.Mass.Width = 5;
             // 
-            // xSeries
+            // MassErrorType
             // 
-            this.xSeries.AutoSize = true;
-            this.xSeries.Location = new System.Drawing.Point( 3, 3 );
-            this.xSeries.Name = "xSeries";
-            this.xSeries.Size = new System.Drawing.Size( 32, 21 );
-            this.xSeries.TabIndex = 0;
-            this.xSeries.TabStop = true;
-            this.xSeries.Text = "x";
-            this.xSeries.UseVisualStyleBackColor = true;
+            this.MassErrorType.HeaderText = "";
+            this.MassErrorType.Name = "MassErrorType";
+            this.MassErrorType.ReadOnly = true;
+            this.MassErrorType.Width = 5;
             // 
-            // ABorCSeries
+            // MassError
             // 
-            this.ABorCSeries.Controls.Add( this.noTopSeries );
-            this.ABorCSeries.Controls.Add( this.cSeries );
-            this.ABorCSeries.Controls.Add( this.bSeries );
-            this.ABorCSeries.Controls.Add( this.aSeries );
-            this.ABorCSeries.Location = new System.Drawing.Point( 9, 21 );
-            this.ABorCSeries.Name = "ABorCSeries";
-            this.ABorCSeries.Size = new System.Drawing.Size( 185, 25 );
-            this.ABorCSeries.TabIndex = 0;
+            this.MassError.HeaderText = "";
+            this.MassError.Name = "MassError";
+            this.MassError.ReadOnly = true;
+            this.MassError.Width = 5;
             // 
-            // noTopSeries
+            // showFragmentationLaddersCheckBox
             // 
-            this.noTopSeries.AutoSize = true;
-            this.noTopSeries.Location = new System.Drawing.Point( 123, 3 );
-            this.noTopSeries.Name = "noTopSeries";
-            this.noTopSeries.Size = new System.Drawing.Size( 58, 21 );
-            this.noTopSeries.TabIndex = 3;
-            this.noTopSeries.TabStop = true;
-            this.noTopSeries.Text = "none";
-            this.noTopSeries.UseVisualStyleBackColor = true;
-            // 
-            // cSeries
-            // 
-            this.cSeries.AutoSize = true;
-            this.cSeries.Location = new System.Drawing.Point( 84, 3 );
-            this.cSeries.Name = "cSeries";
-            this.cSeries.Size = new System.Drawing.Size( 33, 21 );
-            this.cSeries.TabIndex = 2;
-            this.cSeries.TabStop = true;
-            this.cSeries.Text = "c";
-            this.cSeries.UseVisualStyleBackColor = true;
-            // 
-            // bSeries
-            // 
-            this.bSeries.AutoSize = true;
-            this.bSeries.Location = new System.Drawing.Point( 43, 3 );
-            this.bSeries.Name = "bSeries";
-            this.bSeries.Size = new System.Drawing.Size( 34, 21 );
-            this.bSeries.TabIndex = 1;
-            this.bSeries.TabStop = true;
-            this.bSeries.Text = "b";
-            this.bSeries.UseVisualStyleBackColor = true;
-            // 
-            // aSeries
-            // 
-            this.aSeries.AutoSize = true;
-            this.aSeries.Location = new System.Drawing.Point( 3, 3 );
-            this.aSeries.Name = "aSeries";
-            this.aSeries.Size = new System.Drawing.Size( 34, 21 );
-            this.aSeries.TabIndex = 0;
-            this.aSeries.TabStop = true;
-            this.aSeries.Text = "a";
-            this.aSeries.UseVisualStyleBackColor = true;
+            this.showFragmentationLaddersCheckBox.AutoSize = true;
+            this.showFragmentationLaddersCheckBox.Location = new System.Drawing.Point( 7, 163 );
+            this.showFragmentationLaddersCheckBox.Name = "showFragmentationLaddersCheckBox";
+            this.showFragmentationLaddersCheckBox.Size = new System.Drawing.Size( 157, 17 );
+            this.showFragmentationLaddersCheckBox.TabIndex = 9;
+            this.showFragmentationLaddersCheckBox.Text = "Show fragmentation ladders";
+            this.showFragmentationLaddersCheckBox.UseVisualStyleBackColor = true;
             // 
             // showMissesCheckBox
             // 
             this.showMissesCheckBox.AutoSize = true;
-            this.showMissesCheckBox.Location = new System.Drawing.Point( 9, 166 );
-            this.showMissesCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.showMissesCheckBox.Location = new System.Drawing.Point( 7, 182 );
             this.showMissesCheckBox.Name = "showMissesCheckBox";
-            this.showMissesCheckBox.Size = new System.Drawing.Size( 179, 21 );
+            this.showMissesCheckBox.Size = new System.Drawing.Size( 139, 17 );
             this.showMissesCheckBox.TabIndex = 6;
             this.showMissesCheckBox.Text = "Show missing fragments";
             this.showMissesCheckBox.UseVisualStyleBackColor = true;
             // 
             // maxChargeUpDown
             // 
-            this.maxChargeUpDown.Location = new System.Drawing.Point( 378, 46 );
-            this.maxChargeUpDown.Margin = new System.Windows.Forms.Padding( 4 );
+            this.maxChargeUpDown.Location = new System.Drawing.Point( 120, 63 );
             this.maxChargeUpDown.Minimum = new decimal( new int[] {
             1,
             0,
             0,
             0} );
             this.maxChargeUpDown.Name = "maxChargeUpDown";
-            this.maxChargeUpDown.Size = new System.Drawing.Size( 53, 22 );
+            this.maxChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
             this.maxChargeUpDown.TabIndex = 8;
             this.maxChargeUpDown.Value = new decimal( new int[] {
             1,
@@ -310,15 +306,14 @@
             // 
             // minChargeUpDown
             // 
-            this.minChargeUpDown.Location = new System.Drawing.Point( 160, 46 );
-            this.minChargeUpDown.Margin = new System.Windows.Forms.Padding( 4 );
+            this.minChargeUpDown.Location = new System.Drawing.Point( 120, 37 );
             this.minChargeUpDown.Minimum = new decimal( new int[] {
             1,
             0,
             0,
             0} );
             this.minChargeUpDown.Name = "minChargeUpDown";
-            this.minChargeUpDown.Size = new System.Drawing.Size( 53, 22 );
+            this.minChargeUpDown.Size = new System.Drawing.Size( 41, 20 );
             this.minChargeUpDown.TabIndex = 7;
             this.minChargeUpDown.Value = new decimal( new int[] {
             1,
@@ -330,20 +325,18 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point( 223, 47 );
-            this.label3.Margin = new System.Windows.Forms.Padding( 4, 0, 4, 0 );
+            this.label3.Location = new System.Drawing.Point( 4, 64 );
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size( 149, 17 );
+            this.label3.Size = new System.Drawing.Size( 113, 13 );
             this.label3.TabIndex = 6;
             this.label3.Text = "Max. fragment charge:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point( 5, 48 );
-            this.label2.Margin = new System.Windows.Forms.Padding( 4, 0, 4, 0 );
+            this.label2.Location = new System.Drawing.Point( 4, 39 );
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size( 146, 17 );
+            this.label2.Size = new System.Drawing.Size( 110, 13 );
             this.label2.TabIndex = 4;
             this.label2.Text = "Min. fragment charge:";
             // 
@@ -357,11 +350,9 @@
             this.ionSeriesGroupBox.Controls.Add( this.cCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.bCheckBox );
             this.ionSeriesGroupBox.Controls.Add( this.aCheckBox );
-            this.ionSeriesGroupBox.Location = new System.Drawing.Point( 8, 75 );
-            this.ionSeriesGroupBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.ionSeriesGroupBox.Location = new System.Drawing.Point( 6, 89 );
             this.ionSeriesGroupBox.Name = "ionSeriesGroupBox";
-            this.ionSeriesGroupBox.Padding = new System.Windows.Forms.Padding( 4 );
-            this.ionSeriesGroupBox.Size = new System.Drawing.Size( 219, 84 );
+            this.ionSeriesGroupBox.Size = new System.Drawing.Size( 164, 68 );
             this.ionSeriesGroupBox.TabIndex = 3;
             this.ionSeriesGroupBox.TabStop = false;
             this.ionSeriesGroupBox.Text = "Fragment Ion Series";
@@ -369,10 +360,9 @@
             // zRadicalCheckBox
             // 
             this.zRadicalCheckBox.AutoSize = true;
-            this.zRadicalCheckBox.Location = new System.Drawing.Point( 165, 52 );
-            this.zRadicalCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.zRadicalCheckBox.Location = new System.Drawing.Point( 124, 42 );
             this.zRadicalCheckBox.Name = "zRadicalCheckBox";
-            this.zRadicalCheckBox.Size = new System.Drawing.Size( 39, 21 );
+            this.zRadicalCheckBox.Size = new System.Drawing.Size( 35, 17 );
             this.zRadicalCheckBox.TabIndex = 7;
             this.zRadicalCheckBox.Text = "z*";
             this.zRadicalCheckBox.UseVisualStyleBackColor = true;
@@ -380,10 +370,9 @@
             // c2CheckBox
             // 
             this.c2CheckBox.AutoSize = true;
-            this.c2CheckBox.Location = new System.Drawing.Point( 167, 23 );
-            this.c2CheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.c2CheckBox.Location = new System.Drawing.Point( 125, 19 );
             this.c2CheckBox.Name = "c2CheckBox";
-            this.c2CheckBox.Size = new System.Drawing.Size( 34, 21 );
+            this.c2CheckBox.Size = new System.Drawing.Size( 32, 17 );
             this.c2CheckBox.TabIndex = 6;
             this.c2CheckBox.Text = "c";
             this.c2CheckBox.UseVisualStyleBackColor = true;
@@ -392,10 +381,9 @@
             // zCheckBox
             // 
             this.zCheckBox.AutoSize = true;
-            this.zCheckBox.Location = new System.Drawing.Point( 116, 52 );
-            this.zCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.zCheckBox.Location = new System.Drawing.Point( 87, 42 );
             this.zCheckBox.Name = "zCheckBox";
-            this.zCheckBox.Size = new System.Drawing.Size( 34, 21 );
+            this.zCheckBox.Size = new System.Drawing.Size( 31, 17 );
             this.zCheckBox.TabIndex = 5;
             this.zCheckBox.Text = "z";
             this.zCheckBox.UseVisualStyleBackColor = true;
@@ -403,10 +391,9 @@
             // yCheckBox
             // 
             this.yCheckBox.AutoSize = true;
-            this.yCheckBox.Location = new System.Drawing.Point( 65, 52 );
-            this.yCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.yCheckBox.Location = new System.Drawing.Point( 49, 42 );
             this.yCheckBox.Name = "yCheckBox";
-            this.yCheckBox.Size = new System.Drawing.Size( 34, 21 );
+            this.yCheckBox.Size = new System.Drawing.Size( 31, 17 );
             this.yCheckBox.TabIndex = 4;
             this.yCheckBox.Text = "y";
             this.yCheckBox.UseVisualStyleBackColor = true;
@@ -414,10 +401,9 @@
             // xCheckBox
             // 
             this.xCheckBox.AutoSize = true;
-            this.xCheckBox.Location = new System.Drawing.Point( 15, 52 );
-            this.xCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.xCheckBox.Location = new System.Drawing.Point( 11, 42 );
             this.xCheckBox.Name = "xCheckBox";
-            this.xCheckBox.Size = new System.Drawing.Size( 33, 21 );
+            this.xCheckBox.Size = new System.Drawing.Size( 31, 17 );
             this.xCheckBox.TabIndex = 3;
             this.xCheckBox.Text = "x";
             this.xCheckBox.UseVisualStyleBackColor = true;
@@ -425,10 +411,9 @@
             // cCheckBox
             // 
             this.cCheckBox.AutoSize = true;
-            this.cCheckBox.Location = new System.Drawing.Point( 116, 23 );
-            this.cCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.cCheckBox.Location = new System.Drawing.Point( 87, 19 );
             this.cCheckBox.Name = "cCheckBox";
-            this.cCheckBox.Size = new System.Drawing.Size( 34, 21 );
+            this.cCheckBox.Size = new System.Drawing.Size( 32, 17 );
             this.cCheckBox.TabIndex = 2;
             this.cCheckBox.Text = "c";
             this.cCheckBox.UseVisualStyleBackColor = true;
@@ -436,10 +421,9 @@
             // bCheckBox
             // 
             this.bCheckBox.AutoSize = true;
-            this.bCheckBox.Location = new System.Drawing.Point( 65, 23 );
-            this.bCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.bCheckBox.Location = new System.Drawing.Point( 49, 19 );
             this.bCheckBox.Name = "bCheckBox";
-            this.bCheckBox.Size = new System.Drawing.Size( 35, 21 );
+            this.bCheckBox.Size = new System.Drawing.Size( 32, 17 );
             this.bCheckBox.TabIndex = 1;
             this.bCheckBox.Text = "b";
             this.bCheckBox.UseVisualStyleBackColor = true;
@@ -447,10 +431,9 @@
             // aCheckBox
             // 
             this.aCheckBox.AutoSize = true;
-            this.aCheckBox.Location = new System.Drawing.Point( 15, 23 );
-            this.aCheckBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.aCheckBox.Location = new System.Drawing.Point( 11, 19 );
             this.aCheckBox.Name = "aCheckBox";
-            this.aCheckBox.Size = new System.Drawing.Size( 35, 21 );
+            this.aCheckBox.Size = new System.Drawing.Size( 32, 17 );
             this.aCheckBox.TabIndex = 0;
             this.aCheckBox.Text = "a";
             this.aCheckBox.UseVisualStyleBackColor = true;
@@ -458,10 +441,9 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point( 4, 17 );
-            this.label1.Margin = new System.Windows.Forms.Padding( 4, 0, 4, 0 );
+            this.label1.Location = new System.Drawing.Point( 3, 14 );
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size( 60, 17 );
+            this.label1.Size = new System.Drawing.Size( 46, 13 );
             this.label1.TabIndex = 2;
             this.label1.Text = "Peptide:";
             // 
@@ -470,43 +452,35 @@
             this.sequenceTextBox.Anchor = ( (System.Windows.Forms.AnchorStyles) ( ( ( System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left )
                         | System.Windows.Forms.AnchorStyles.Right ) ) );
             this.sequenceTextBox.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.sequenceTextBox.Location = new System.Drawing.Point( 73, 14 );
-            this.sequenceTextBox.Margin = new System.Windows.Forms.Padding( 4 );
+            this.sequenceTextBox.Location = new System.Drawing.Point( 55, 11 );
             this.sequenceTextBox.Name = "sequenceTextBox";
-            this.sequenceTextBox.Size = new System.Drawing.Size( 850, 22 );
+            this.sequenceTextBox.Size = new System.Drawing.Size( 636, 20 );
             this.sequenceTextBox.TabIndex = 1;
             this.sequenceTextBox.Text = "PEPTIDE";
             // 
             // tabPage2
             // 
-            this.tabPage2.Location = new System.Drawing.Point( 4, 25 );
-            this.tabPage2.Margin = new System.Windows.Forms.Padding( 4 );
+            this.tabPage2.Location = new System.Drawing.Point( 4, 22 );
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding( 4 );
-            this.tabPage2.Size = new System.Drawing.Size( 947, 897 );
+            this.tabPage2.Padding = new System.Windows.Forms.Padding( 3 );
+            this.tabPage2.Size = new System.Drawing.Size( 708, 726 );
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // AnnotationPanels
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF( 8F, 16F );
+            this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add( this.annotationPanelsTabControl );
-            this.Margin = new System.Windows.Forms.Padding( 4 );
             this.Name = "AnnotationPanels";
-            this.Size = new System.Drawing.Size( 955, 926 );
+            this.Size = new System.Drawing.Size( 716, 752 );
             this.annotationPanelsTabControl.ResumeLayout( false );
             this.peptideFragmentationTabPage.ResumeLayout( false );
             this.peptideFragmentationPanel.ResumeLayout( false );
             this.peptideFragmentationPanel.PerformLayout();
-            this.FragmentIonLadderGroup.ResumeLayout( false );
-            this.FragmentIonLadderGroup.PerformLayout();
-            ( (System.ComponentModel.ISupportInitialize) ( this.ionLadderChargeState ) ).EndInit();
-            this.XYorZZStarSeries.ResumeLayout( false );
-            this.XYorZZStarSeries.PerformLayout();
-            this.ABorCSeries.ResumeLayout( false );
-            this.ABorCSeries.PerformLayout();
+            ( (System.ComponentModel.ISupportInitialize) ( this.fragmentInfoGridView ) ).EndInit();
+            ( (System.ComponentModel.ISupportInitialize) ( this.peptideInfoGridView ) ).EndInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.maxChargeUpDown ) ).EndInit();
             ( (System.ComponentModel.ISupportInitialize) ( this.minChargeUpDown ) ).EndInit();
             this.ionSeriesGroupBox.ResumeLayout( false );
@@ -537,19 +511,16 @@
         public System.Windows.Forms.CheckBox showMissesCheckBox;
         public System.Windows.Forms.CheckBox zRadicalCheckBox;
         public System.Windows.Forms.CheckBox c2CheckBox;
-        private System.Windows.Forms.GroupBox FragmentIonLadderGroup;
-        private System.Windows.Forms.Panel ABorCSeries;
-        private System.Windows.Forms.Panel XYorZZStarSeries;
-        private System.Windows.Forms.Label ionLadderZLabel;
-        public System.Windows.Forms.RadioButton bSeries;
-        public System.Windows.Forms.RadioButton aSeries;
-        public System.Windows.Forms.RadioButton zSeries;
-        public System.Windows.Forms.RadioButton ySeries;
-        public System.Windows.Forms.RadioButton xSeries;
-        public System.Windows.Forms.RadioButton noTopSeries;
-        public System.Windows.Forms.RadioButton cSeries;
-        public System.Windows.Forms.RadioButton noBottomSeries;
-        public System.Windows.Forms.RadioButton zRadicalSeries;
-        public System.Windows.Forms.NumericUpDown ionLadderChargeState;
+        public System.Windows.Forms.CheckBox showFragmentationLaddersCheckBox;
+        public System.Windows.Forms.DataGridView peptideInfoGridView;
+        public System.Windows.Forms.DataGridView fragmentInfoGridView;
+        private System.Windows.Forms.DataGridViewTextBoxColumn b;
+        private System.Windows.Forms.DataGridViewTextBoxColumn y;
+        public System.Windows.Forms.ComboBox precursorMassTypeComboBox;
+        public System.Windows.Forms.ComboBox fragmentMassTypeComboBox;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MassType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Mass;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MassErrorType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MassError;
     }
 }
