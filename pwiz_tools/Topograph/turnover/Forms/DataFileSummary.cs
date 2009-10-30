@@ -98,16 +98,22 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colSequence.Index].Value = peptideFileAnalysis.Sequence;
             row.Cells[colPeakStart.Index].Value = peptideFileAnalysis.PeakStart;
             row.Cells[colPeakEnd.Index].Value = peptideFileAnalysis.PeakEnd;
-            if (peptideFileAnalysis.EnsureCalculated())
+            var precursorEnrichments = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.precursor_enrichment);
+            var tracerAmounts = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
+            if (precursorEnrichments != null)
             {
-                var precursorEnrichments = peptideFileAnalysis.GetPeptideDistribution(PeptideQuantity.precursor_enrichment);
-                var tracerAmounts = peptideFileAnalysis.GetPeptideDistribution(PeptideQuantity.tracer_count);
-                row.Cells[colTurnover.Name].Value = 100.0 - precursorEnrichments.GetChild("").PercentAmount;
-                row.Cells[colApe.Name].Value = tracerAmounts.TracerPercent;
+                row.Cells[colTurnover.Index].Value = 100.0 - precursorEnrichments.GetChild("").PercentAmount;
             }
             else
             {
                 row.Cells[colTurnover.Index].Value = null;
+            }
+            if (tracerAmounts != null)
+            {
+                row.Cells[colApe.Index].Value = tracerAmounts.TracerPercent; 
+            }
+            else
+            {
                 row.Cells[colApe.Index].Value = null;
             }
         }

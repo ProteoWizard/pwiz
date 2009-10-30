@@ -18,9 +18,29 @@ namespace pwiz.Topograph.Model
             PeptideAnalysis = peptideAnalysis;
         }
 
-        public PeptideFileAnalyses FileAnalyses
+        public PeptideRates(PeptideAnalysis peptideAnalysis) : base (peptideAnalysis.Workspace)
         {
-            get { return PeptideAnalysis.FileAnalyses; }
+            PeptideAnalysis = peptideAnalysis;
+            SetId(peptideAnalysis.Id.Value);
+        }
+
+        public bool Calculate(ICollection<PeptideDistributions> peptideDistributionsList, bool isComplete)
+        {
+            foreach (var tracerName in GetTracerNames())
+            {
+                foreach (var cohort in GetCohorts(peptideDistributionsList).Keys)
+                {
+                    foreach (PeptideQuantity peptideQuantity in Enum.GetValues(typeof(PeptideQuantity)))
+                    {
+                        var rateKey = new RateKey(tracerName, peptideQuantity, cohort);
+                        var points = GetPoints(peptideDistributionsList, rateKey);
+                        var peptideRate = GetPeptideRate(rateKey, points);
+                        peptideRate.IsComplete = isComplete;
+                        AddChild(rateKey, peptideRate);
+                    }
+                }
+            }
+            return true;
         }
 
         protected override int GetChildCount(DbPeptideAnalysis parent)
@@ -47,39 +67,6 @@ namespace pwiz.Topograph.Model
         }
 
         public PeptideAnalysis PeptideAnalysis { get; private set; }
-
-        public bool Calculate()
-        {
-            var peptideRateDict = new Dictionary<RateKey, DbPeptideRate>();
-            foreach (var tracerName in GetTracerNames())
-            {
-                foreach (var cohort in GetCohorts().Keys)
-                {
-                    foreach (PeptideQuantity peptideQuantity in Enum.GetValues(typeof(PeptideQuantity)))
-                    {
-                        bool isComplete;
-                        var rateKey = new RateKey(tracerName, peptideQuantity, cohort);
-                        var points = GetPoints(rateKey, out isComplete);
-                        var peptideRate = GetPeptideRate(rateKey, points);
-                        peptideRate.IsComplete = isComplete;
-                        peptideRateDict.Add(rateKey, peptideRate);
-                    }
-                }
-            }
-            lock(Lock)
-            {
-                Clear();
-                foreach (var entry in peptideRateDict)
-                {
-                    AddChild(entry.Key, entry.Value);
-                }
-                if (ChildCount % 2 != 0)
-                {
-                    Console.Out.WriteLine(PeptideAnalysis.Peptide.FullSequence + ChildCount);
-                }
-            }
-            return true;
-        }
 
         private DbPeptideRate GetPeptideRate(RateKey rateKey, ICollection<KeyValuePair<double,double>> points)
         {
@@ -142,11 +129,6 @@ namespace pwiz.Topograph.Model
             return null;
         }
 
-        public IDictionary<String,String> GetCohorts()
-        {
-            return GetCohorts(PeptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true));
-        }
-
         public IList<String> GetTracerNames()
         {
             var result = new List<String>();
@@ -157,12 +139,25 @@ namespace pwiz.Topograph.Model
             return result;
         }
 
-        private IDictionary<String,String> GetCohorts(ICollection<PeptideFileAnalysis> fileAnalyses)
+        public IDictionary<String,String> GetCohorts()
+        {
+            var result = new SortedDictionary<String, String> {{"", "<All>"}};
+            foreach (var peptideRate in ListChildren())
+            {
+                if (!String.IsNullOrEmpty(peptideRate.Cohort))
+                {
+                    result.Add(peptideRate.Cohort, peptideRate.Cohort);
+                }
+            }
+            return result;
+        }
+
+        private static IDictionary<String,String> GetCohorts(ICollection<PeptideDistributions> peptideDistributions)
         {
             var cohorts = new SortedDictionary<String, String> { { "", "<All>" } };
-            foreach (var fileAnalysis in fileAnalyses)
+            foreach (var peptideDistribution in peptideDistributions)
             {
-                var cohort = fileAnalysis.MsDataFile.Cohort;
+                var cohort = peptideDistribution.PeptideFileAnalysis.MsDataFile.Cohort;
                 if (String.IsNullOrEmpty(cohort))
                 {
                     continue;
@@ -171,33 +166,20 @@ namespace pwiz.Topograph.Model
             }
             return cohorts;
         }
-
-        public ICollection<KeyValuePair<double,double>> GetPoints(RateKey rateKey)
-        {
-            bool isComplete;
-            return GetPoints(rateKey, out isComplete);
-        }
         
-        private ICollection<KeyValuePair<double, double>> GetPoints(RateKey rateKey, out bool isComplete)
+        private ICollection<KeyValuePair<double, double>> GetPoints(ICollection<PeptideDistributions> peptideDistributionsList, RateKey rateKey)
         {
             var result = new List<KeyValuePair<double, double>>();
             var tracerDef = GetTracerDef(rateKey.TracerName);
             if (tracerDef == null)
             {
-                isComplete = false;
                 return result;
             }
-            isComplete = true;
-            foreach (var fileAnalysis in PeptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
+            foreach (var peptideDistributions in peptideDistributionsList)
             {
+                var fileAnalysis = peptideDistributions.PeptideFileAnalysis;
                 if (!String.IsNullOrEmpty(rateKey.Cohort) && rateKey.Cohort != fileAnalysis.MsDataFile.Cohort)
                 {
-                    continue;
-                }
-                var peptideDistribution = fileAnalysis.GetPeptideDistribution(rateKey.PeptideQuantity);
-                if (peptideDistribution == null)
-                {
-                    isComplete = false;
                     continue;
                 }
                 double? timePoint = fileAnalysis.MsDataFile.TimePoint;
@@ -205,6 +187,7 @@ namespace pwiz.Topograph.Model
                 {
                     continue;
                 }
+                var peptideDistribution = peptideDistributions.GetChild(rateKey.PeptideQuantity);
                 double value = peptideDistribution.GetTracerPercent(tracerDef);
                 if (double.IsNaN(value))
                 {

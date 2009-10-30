@@ -284,7 +284,6 @@ namespace pwiz.Topograph.Enrichment
                 vectors[i] = IntensityDictionaryToVector(massDistribution, _masses);
             }
             Vector amounts = FindBestCombinationFilterNegatives(observedVector, vectors, excludeFunc);
-            precursorEnrichments.Clear();
             predictedIntensities = new Dictionary<TracerPercentFormula, IList<double>>();
             if (amounts == null)
             {
@@ -344,7 +343,6 @@ namespace pwiz.Topograph.Enrichment
             {
                 amounts = new Vector(vectors.Count());
             }
-            tracerAmounts.Clear();
             predictedIntensities = new Dictionary<TracerFormula, IList<double>>();
             Vector totalPrediction = new Vector(observedIntensities.Count);
             for (int i = 0; i < tracerFormulas.Count; i ++)

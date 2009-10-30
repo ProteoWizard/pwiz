@@ -169,12 +169,6 @@ namespace pwiz.Topograph.ui.Forms
             }
             PeptideFileAnalysis.AutoFindPeak = false;
             PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), chromatograms);
-            using (ISession session = PeptideFileAnalysis.Workspace.OpenWriteSession())
-            {
-                ITransaction transaction = session.BeginTransaction();
-                PeptideFileAnalysis.Save(session);
-                transaction.Commit();
-            }
             selectionDragging = SelectionDragging.none;
             Recalc();
             return true;
@@ -301,36 +295,39 @@ namespace pwiz.Topograph.ui.Forms
                 // TODO(nicksh): listeners should have been detached.
                 return;
             }
-            cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
-            cbxOverrideExcludedMzs.Checked = PeptideFileAnalysis.OverrideExcludedMzs;
-            if (!PeptideFileAnalysis.EnsureCalculated())
+            using (PeptideFileAnalysis.GetReadLock())
             {
-                return;
-            }
-            ShowChromatograms();
-            double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
-            double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
-            double selectionBoxHeight = msGraphControl.GraphPane.YAxis.Scale.Max*.8;
-            selectionBoxObj = new BoxObj(selStart, selectionBoxHeight,
-                                             selEnd - selStart,
-                                             selectionBoxHeight, Color.Goldenrod,
-                                             Color.Goldenrod)
-                                      {
-                                          IsClippedToChartRect = true,
-                                          ZOrder = ZOrder.F_BehindGrid
-                                      };
-            msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
-            var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
-            msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
-            double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
-            double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan);
-            msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
-            if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
-            {
-                time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan);
+                cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
+                cbxOverrideExcludedMzs.Checked = PeptideFileAnalysis.OverrideExcludedMzs;
+                if (PeptideFileAnalysis.Peaks.ChildCount == 0)
+                {
+                    return;
+                }
+                ShowChromatograms();
+                double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
+                double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
+                double selectionBoxHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .8;
+                selectionBoxObj = new BoxObj(selStart, selectionBoxHeight,
+                                                 selEnd - selStart,
+                                                 selectionBoxHeight, Color.Goldenrod,
+                                                 Color.Goldenrod)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.F_BehindGrid
+                };
+                msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
+                var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
+                msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
+                double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
+                double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan);
                 msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
+                if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
+                {
+                    time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan);
+                    msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
+                }
+                msGraphControl.Invalidate();
             }
-            msGraphControl.Invalidate();
         }
 
 //        public static ChromatogramForm Show(DockableForm sibling, Workspace workspace, long peptideDataId)

@@ -58,25 +58,17 @@ namespace pwiz.Topograph.ui.Forms
             tbxIntermediateLevelCount.Text = PeptideAnalysis.IntermediateLevels.ToString();
             IList<double> observedIntensities;
             IDictionary<TracerPercentFormula,IList<double>> predictedIntensities;
-            var precursorEnrichments =
-                PeptideFileAnalysis.ComputePrecursorEnrichments(out observedIntensities, out predictedIntensities);
+            var precursorEnrichments = PeptideFileAnalysis.PeptideDistributions.ComputePrecursorEnrichments(
+                PeptideFileAnalysis.Peaks,
+                out observedIntensities, out predictedIntensities);
+            DisplayDistributionResults(precursorEnrichments, observedIntensities, predictedIntensities, barGraphControl);
             if (precursorEnrichments == null)
             {
-                return;
-            }
-            List<String> labels = new List<string>();
-            foreach (var entry in predictedIntensities)
-            {
-                labels.Add(entry.Key.ToString());
-            }
-            DisplayDistributionResults(precursorEnrichments, observedIntensities, predictedIntensities, barGraphControl);
-            if (precursorEnrichments != null)
-            {
-                tbxScore.Text = precursorEnrichments.Score.ToString();
+                tbxScore.Text = "";
             }
             else
             {
-                tbxScore.Text = "";
+                tbxScore.Text = precursorEnrichments.Score.ToString();
             }
         }
 

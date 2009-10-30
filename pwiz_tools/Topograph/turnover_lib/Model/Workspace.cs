@@ -42,8 +42,8 @@ namespace pwiz.Topograph.Model
         private static readonly ILog _log = LogManager.GetLogger(typeof (Workspace));
         private readonly ChromatogramGenerator _chromatogramGenerator;
         private readonly ResultCalculator _resultCalculator;
-        private readonly Modifications _modifications;
-        private readonly WorkspaceSettings _settings;
+        private Modifications _modifications;
+        private WorkspaceSettings _settings;
         private AminoAcidFormulas _aminoAcidFormulas;
         private EntitiesChangedEventArgs _entitiesChangedEventArgs;
         private readonly HashSet<PeptideAnalysis> _dirtyPeptideAnalyses = new HashSet<PeptideAnalysis>();
@@ -54,7 +54,8 @@ namespace pwiz.Topograph.Model
         public Workspace(String path)
         {
             DatabasePath = path;
-            DatabaseLock = new ReaderWriterLock();
+            DatabaseLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+            WorkspaceLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             WorkspaceVersion = new WorkspaceVersion();
             SavedWorkspaceVersion = new WorkspaceVersion();
             SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
@@ -99,10 +100,11 @@ namespace pwiz.Topograph.Model
             get; private set;
         }
 
-        public ReaderWriterLock DatabaseLock
+        public ReaderWriterLockSlim DatabaseLock
         {
             get; private set;
         }
+        public ReaderWriterLockSlim WorkspaceLock { get; private set; }
 
         public String ConnectionString
         {
@@ -117,7 +119,7 @@ namespace pwiz.Topograph.Model
 
         public AminoAcidFormulas GetAminoAcidFormulas()
         {
-            lock(Lock)
+            using(GetReadLock())
             {
                 if (_aminoAcidFormulas != null)
                 {
@@ -158,10 +160,10 @@ namespace pwiz.Topograph.Model
             }
             set
             {
-                lock(Lock)
+                using(GetWriteLock())
                 {
                     _aminoAcidFormulas = null;
-                    _modifications.Clear();
+                    _modifications = new Modifications(this);
                     foreach (var modification in value)
                     {
                         _modifications.AddChild(modification.Key, new DbModification
@@ -261,7 +263,7 @@ namespace pwiz.Topograph.Model
 
         public void SetTracerDefs(IList<DbTracerDef> tracerDefs)
         {
-            lock (Lock)
+            using(GetWriteLock())
             {
                 var oldTracers = new Dictionary<KeyValuePair<String, double>, TracerDef>();
                 foreach (var tracerDef in GetTracerDefs())
@@ -301,7 +303,7 @@ namespace pwiz.Topograph.Model
                         }
                     }
                 }
-                _tracerDefs.Clear();
+                _tracerDefs = new TracerDefs(this);
                 _tracerDefList = null;
                 foreach (var dbTracerDef in tracerDefs)
                 {
@@ -312,7 +314,7 @@ namespace pwiz.Topograph.Model
         }
         public IList<TracerDef> GetTracerDefs()
         {
-            lock(Lock)
+            using(GetReadLock())
             {
                 if (_tracerDefList != null)
                 {
@@ -344,7 +346,7 @@ namespace pwiz.Topograph.Model
         {
             EntitiesChangeListener entitiesChangedEvent;
             EntitiesChangedEventArgs entitiesChangedEventArgs;
-            lock (Lock)
+            lock(this)
             {
                 entitiesChangedEvent = EntitiesChange;
                 entitiesChangedEventArgs = _entitiesChangedEventArgs;
@@ -371,7 +373,7 @@ namespace pwiz.Topograph.Model
         }
         public void RemoveEntityModel(EntityModel key)
         {
-            lock(Lock)
+            lock(this)
             {
                 EnsureEntitiesChangedEventArgs().RemoveEntity(key);
             }
@@ -382,14 +384,14 @@ namespace pwiz.Topograph.Model
         }
         public void AddEntityModel(EntityModel key)
         {
-            lock(Lock)
+            lock(this)
             {
                 EnsureEntitiesChangedEventArgs().AddNewEntity(key);
             }
         }
         public void EntityChanged(EntityModel key)
         {
-            lock(Lock)
+            lock(this)
             {
                 EnsureEntitiesChangedEventArgs().AddChangedEntity(key);
                 if (key is PeptideAnalysis)
@@ -423,9 +425,9 @@ namespace pwiz.Topograph.Model
         }
         public void Save()
         {
-            using (var session = OpenWriteSession())
+            using (GetReadLock())
             {
-                lock (this)
+                using (var session = OpenWriteSession())
                 {
                     session.BeginTransaction();
                     if (!SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
@@ -460,7 +462,8 @@ namespace pwiz.Topograph.Model
                             session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeptideDistributionCount = 0")
                                 .ExecuteUpdate();
                         }
-                        session.CreateSQLQuery("UPDATE DbPeptideAnalysis SET PeptideRateCount = 0");
+                        session.CreateSQLQuery("UPDATE DbPeptideAnalysis SET PeptideRateCount = 0")
+                            .ExecuteUpdate();
                     }
                     _tracerDefs.Save(session);
                     _modifications.Save(session);
@@ -527,23 +530,23 @@ namespace pwiz.Topograph.Model
             }
             IsDirty = true;
         }
-        public object Lock {get { return DatabaseLock;}}
         public bool SaveIfNotDirty(PeptideAnalysis peptideAnalysis)
         {
-            lock(Lock)
+            using (GetReadLock())
             {
-                if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
+                using (var session = OpenWriteSession())
                 {
-                    return false;
-                }
-            }
-            using (var session = OpenWriteSession())
-            {
-                lock(Lock) 
-                {
-                    if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
+                    lock (this)
                     {
-                        return false;
+                        EnsureEntitiesChangedEventArgs().AddChangedEntity(peptideAnalysis);
+                        if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
+                        {
+                            return false;
+                        }
+                        if (_dirtyPeptideAnalyses.Contains(peptideAnalysis) || !Equals(SavedWorkspaceVersion, WorkspaceVersion))
+                        {
+                            return false;
+                        }
                     }
                     session.BeginTransaction();
                     peptideAnalysis.PeptideRates.Save(session);
@@ -553,8 +556,8 @@ namespace pwiz.Topograph.Model
                         peptideFileAnalysis.PeptideDistributions.Save(session);
                     }
                     session.Transaction.Commit();
+                    return true;
                 }
-                return true;
             }
         }
 
@@ -576,7 +579,7 @@ namespace pwiz.Topograph.Model
             } 
             private set
             {
-                lock(Lock)
+                lock(this)
                 {
                     if (_isDirty == value)
                     {
@@ -628,6 +631,15 @@ namespace pwiz.Topograph.Model
                 result += formula.GetElementCount(element);
             }
             return result;
+        }
+
+        public AutoLock GetReadLock()
+        {
+            return new AutoLock(WorkspaceLock, false);
+        }
+        public AutoLock GetWriteLock()
+        {
+            return new AutoLock(WorkspaceLock, true);
         }
     }
 

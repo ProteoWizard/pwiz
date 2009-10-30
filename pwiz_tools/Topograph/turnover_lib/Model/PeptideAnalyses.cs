@@ -65,15 +65,18 @@ namespace pwiz.Topograph.Model
         }
         public List<PeptideAnalysis> ListOpenPeptideAnalyses()
         {
-            var result = new List<PeptideAnalysis>();
-            foreach (var peptideAnalysis in ListChildren())
+            using (GetReadLock())
             {
-                if (peptideAnalysis.GetChromatogramRefCount() > 0)
+                var result = new List<PeptideAnalysis>();
+                foreach (var peptideAnalysis in ListChildren())
                 {
-                    result.Add(peptideAnalysis);
+                    if (peptideAnalysis.GetChromatogramRefCount() > 0)
+                    {
+                        result.Add(peptideAnalysis);
+                    }
                 }
+                return result;
             }
-            return result;
         }
     }
 }

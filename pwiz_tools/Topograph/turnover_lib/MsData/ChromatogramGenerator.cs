@@ -119,7 +119,7 @@ namespace pwiz.Topograph.MsData
                     else
                     {
                         var initedMsDataFileIds = ListInitedMsDataFileIds();
-                        lock (_workspace.Lock)
+                        using(_workspace.GetReadLock())
                         {
                             workspaceVersion = _workspace.WorkspaceVersion;
                             foreach (var peptideAnalysis in _workspace.PeptideAnalyses.ListOpenPeptideAnalyses())
@@ -357,7 +357,7 @@ namespace pwiz.Topograph.MsData
         private void SaveChromatograms(WorkspaceVersion workspaceVersion, ICollection<AnalysisChromatograms> analyses)
         {
             var chromatogramsToSkip = new HashSet<AnalysisChromatograms>();
-            lock(_workspace.Lock)
+            using (ISession session = _workspace.OpenWriteSession())
             {
                 if (!workspaceVersion.Equals(_workspace.WorkspaceVersion))
                 {
@@ -379,9 +379,6 @@ namespace pwiz.Topograph.MsData
                     peptideFileAnalysis.SetChromatograms(workspaceVersion, analysisChromatograms);
 
                 }
-            }
-            using (ISession session = _workspace.OpenWriteSession())
-            {
                 if (workspaceVersion.MassVersion != _workspace.SavedWorkspaceVersion.MassVersion)
                 {
                     return;

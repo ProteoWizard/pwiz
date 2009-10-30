@@ -129,6 +129,7 @@
       <key column="Workspace"/>
       <one-to-many class="DbTracerDef" />
     </bag>
+    <property name="TracerDefCount" />
   </class>
   <class name="DbModification">
     <id name="Id">

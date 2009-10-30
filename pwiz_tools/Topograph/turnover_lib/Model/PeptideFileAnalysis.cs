@@ -74,8 +74,6 @@ namespace pwiz.Topograph.Model
             LastTime = dbPeptideFileAnalysis.ChromatogramEndTime;
             FirstDetectedScan = dbPeptideFileAnalysis.FirstDetectedScan;
             LastDetectedScan = dbPeptideFileAnalysis.LastDetectedScan;
-            PeakStart = dbPeptideFileAnalysis.PeakStart;
-            PeakEnd = dbPeptideFileAnalysis.PeakEnd;
             if (dbPeptideFileAnalysis.TimesBytes != null)
             {
                 _times = dbPeptideFileAnalysis.Times;
@@ -127,7 +125,7 @@ namespace pwiz.Topograph.Model
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
         public int? PeakStart
         {
-            get; private set;
+            get { return Peaks.PeakStart; }
         }
         public double? PeakStartTime
         {
@@ -135,7 +133,7 @@ namespace pwiz.Topograph.Model
         }
         public int? PeakEnd
         {
-            get; private set;
+            get { return Peaks.PeakEnd; }
         }
         public double? PeakEndTime
         {
@@ -208,20 +206,6 @@ namespace pwiz.Topograph.Model
                 return peptideAnalysis.FileAnalyses.EnsurePeptideFileAnalysis(dbPeptideFileAnalysis);
             }
         }
-        public bool EnsureCalculated()
-        {
-            if (IsMzKeySetComplete(Peaks.GetKeys()))
-            {
-                return true;
-            }
-            var chromatograms = GetChromatograms();
-            if (!IsMzKeySetComplete(chromatograms.GetKeys()))
-            {
-                return false;
-            }
-            CalcIntensities(chromatograms);
-            return true;
-        }
 
         public bool AutoFindPeak
         {
@@ -241,6 +225,17 @@ namespace pwiz.Topograph.Model
                     ClearPeak();
                 }
                 OnChange();
+            }
+        }
+
+        private void ClearPeak()
+        {
+            Peaks = new Peaks(this);
+            PeptideDistributions = new PeptideDistributions(this);
+            if (Chromatograms.ChildCount > 0)
+            {
+                Peaks.CalcIntensities();
+                PeptideDistributions.Calculate(Peaks);
             }
         }
 
@@ -292,8 +287,8 @@ namespace pwiz.Topograph.Model
         }
         public void InvalidateChromatograms()
         {
-            Chromatograms.Clear();
-            Peaks.Clear();
+            Chromatograms = new Chromatograms(this);
+            ClearPeak();
         }
         private void ExcludedMzs_Changed(ExcludedMzs excludedMzs)
         {
@@ -343,15 +338,6 @@ namespace pwiz.Topograph.Model
                 return PeptideAnalysis.GetTurnoverCalculator();
             }
         }
-        public void ClearPeak()
-        {
-            lock(this)
-            {
-                PeakStart = PeakEnd = null;
-                Peaks.Clear();
-            }
-            
-        }
         public Chromatograms GetChromatograms()
         {
             return Chromatograms;
@@ -371,158 +357,6 @@ namespace pwiz.Topograph.Model
             return true;
         }
 
-        public void CalcIntensities(Chromatograms chromatograms)
-        {
-            Background = 0;
-            if (PeakStart == null || PeakEnd == null)
-            {
-                FindPeak(chromatograms);
-                Debug.Assert(PeakStart != null);
-                Debug.Assert(PeakEnd != null);
-            }
-            lock(Lock)
-            {
-                Peaks.Clear();
-                PeptideDistributions.Clear();
-                for (int charge = MinCharge; charge <= MaxCharge; charge++)
-                {
-                    for (int massIndex = 0; massIndex < PeptideAnalysis.GetMassCount(); massIndex++)
-                    {
-                        var mzKey = new MzKey(charge, massIndex);
-                        double mz = TurnoverCalculator.GetMzs(charge)[massIndex];
-                        var peak = new DbPeak
-                        {
-                            MzKey = mzKey,
-                            Mz = mz,
-                            PeakStart = PeakStart.Value,
-                            PeakEnd = PeakEnd.Value
-                        };
-                        Peaks.AddChild(peak.MzKey, peak);
-                        var chromatogram = chromatograms.GetChild(mzKey);
-                        PeakFinder.ComputePeak(chromatogram, peak, Background);
-                    }
-                }
-            }
-        }
-
-        public PeptideDistribution ComputePrecursorEnrichments(out IList<double> observedIntensities, out IDictionary<TracerPercentFormula,IList<double>> predictedIntensities)
-        {
-            if (!EnsureCalculated())
-            {
-                observedIntensities = null;
-                predictedIntensities = null;
-                return null;
-            }
-            observedIntensities = GetAverageIntensities();
-            var result = PeptideDistributions.EnsureChild(PeptideQuantity.precursor_enrichment);
-            TurnoverCalculator.GetEnrichmentAmounts(result, observedIntensities, PeptideAnalysis.IntermediateLevels, out predictedIntensities);
-            return result;
-        }
-
-        private PeptideDistribution GetPrecursorEnrichments()
-        {
-            PeptideDistribution result = PeptideDistributions.GetChild(PeptideQuantity.precursor_enrichment);
-            if (result != null)
-            {
-                lock(result)
-                {
-                    if (result.GetChildCount() > 0)
-                    {
-                        return result;
-                    }
-                }
-            }
-
-            IList<double> observedIntensities;
-            IDictionary<TracerPercentFormula,IList<double>> predictedIntensities;
-            return ComputePrecursorEnrichments(out observedIntensities, out predictedIntensities);
-        }
-
-        public PeptideDistribution GetPeptideDistribution(PeptideQuantity peptideQuantity)
-        {
-            lock(PeptideDistributions.Lock)
-            {
-                if (peptideQuantity == PeptideQuantity.precursor_enrichment)
-                {
-                    return GetPrecursorEnrichments();
-                }
-                if (peptideQuantity == PeptideQuantity.tracer_count)
-                {
-                    return GetTracerAmounts();
-                }
-            }
-            throw new InvalidOperationException("Invalid peptide quantity " + peptideQuantity);
-        }
-
-        public PeptideDistribution ComputeTracerAmounts(out IList<double> observedIntensities, out IDictionary<TracerFormula,IList<double>> predictedIntensities)
-        {
-            if (!EnsureCalculated())
-            {
-                predictedIntensities = null;
-                observedIntensities = null;
-                return null;
-            }
-            observedIntensities = GetAverageIntensities();
-            var result = PeptideDistributions.EnsureChild(PeptideQuantity.tracer_count);
-            TurnoverCalculator.GetTracerAmounts(result, observedIntensities, out predictedIntensities);
-            return result;
-        }
-
-        private PeptideDistribution GetTracerAmounts()
-        {
-            PeptideDistribution result = PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-            if (result != null && result.GetChildCount() > 0)
-            {
-                return result;
-            }
-            IList<double> observedIntensities;
-            IDictionary<TracerFormula,IList<double>> predictedIntensities;
-            return ComputeTracerAmounts(out observedIntensities, out predictedIntensities);
-        }
-
-        public void FindPeak(Chromatograms chromatograms)
-        {
-            int firstDetectedScan = Array.BinarySearch(_scanIndexes, FirstDetectedScan);
-            if (firstDetectedScan < 0)
-            {
-                firstDetectedScan = ~firstDetectedScan;
-            }
-            firstDetectedScan = Math.Min(firstDetectedScan, _scanIndexes.Length - 1);
-            int lastDetectedScan = Array.BinarySearch(_scanIndexes,
-                                                      LastDetectedScan);
-            if (lastDetectedScan < 0)
-            {
-                lastDetectedScan = ~lastDetectedScan;
-            }
-            lastDetectedScan = Math.Min(lastDetectedScan, _scanIndexes.Length - 1);
-
-            var peakFinder = new PeakFinder
-            {
-                Chromatograms = FilterChromatograms(chromatograms.ListChildren()),
-                //TODO
-                IsotopesEluteEarlier = true,
-                IsotopesEluteLater = true,
-                FirstDetectedScan = firstDetectedScan,
-                LastDetectedScan = lastDetectedScan,
-            };
-            int peakStart, peakEnd;
-            peakFinder.FindPeak(out peakStart, out peakEnd);
-            SetPeakStartEnd(ScanIndexes[peakStart], ScanIndexes[peakEnd], chromatograms);
-        }
-
-        private IList<ChromatogramData> FilterChromatograms(IEnumerable<ChromatogramData> chromatogramDatas)
-        {
-            var result = new List<ChromatogramData>();
-            foreach (var chromatogram in chromatogramDatas)
-            {
-                if (ExcludedMzs.IsExcluded(chromatogram.MzKey))
-                {
-                    continue;
-                }
-                result.Add(chromatogram);
-            }
-            return result;
-        }
         public int MinCharge 
         {
             get { return PeptideAnalysis.MinCharge; }
@@ -546,13 +380,18 @@ namespace pwiz.Topograph.Model
 
         public void SetPeakStartEnd(int peakStart, int peakEnd, Chromatograms chromatograms)
         {
-            PeakStart = peakStart;
-            PeakEnd = peakEnd;
-            CalcIntensities(chromatograms);
-            if (!AutoFindPeak)
+            Peaks = new Peaks(this)
+                        {
+                            PeakStart = peakStart,
+                            PeakEnd = peakEnd
+                        };
+            PeptideDistributions = new PeptideDistributions(this);
+            if (Chromatograms.ChildCount > 0)
             {
-                OnChange();
+                Peaks.CalcIntensities();
+                PeptideDistributions.Calculate(Peaks);
             }
+            OnChange();
         }
         public double GetScalingFactor(int charge)
         {
@@ -581,7 +420,7 @@ namespace pwiz.Topograph.Model
         public IList<double> GetAverageIntensities()
         {
             IList<double> averageIntensities;
-            this.GetTotalScalingFactor(GetRelativeIntensities(), out averageIntensities);
+            GetTotalScalingFactor(GetRelativeIntensities(), out averageIntensities);
             return averageIntensities;
         }
 
@@ -717,18 +556,22 @@ namespace pwiz.Topograph.Model
         {
             if (!_workspaceVersion.ChromatogramsValid(newWorkspaceVersion))
             {
-                Chromatograms.Clear();
+                Chromatograms = new Chromatograms(this);
             }
             if (!_workspaceVersion.PeaksValid(newWorkspaceVersion))
             {
                 if (AutoFindPeak)
                 {
-                    Peaks.Clear();
+                    Peaks = new Peaks(this)
+                                {
+                                    PeakStart = null, 
+                                    PeakEnd = null
+                                };
                 }
             }
             if (!_workspaceVersion.DistributionsValid(newWorkspaceVersion))
             {
-                PeptideDistributions.Clear();
+                PeptideDistributions = new PeptideDistributions(this);
             }
             _workspaceVersion = newWorkspaceVersion;
         }
@@ -743,13 +586,20 @@ namespace pwiz.Topograph.Model
             _times = analysisChromatograms.Times.ToArray();
             _scanIndexes = analysisChromatograms.ScanIndexes.ToArray();
             _workspaceVersion = workspaceVersion;
-            Chromatograms.Clear();
+            Chromatograms = new Chromatograms(this);
             foreach (var chromatogram in analysisChromatograms.Chromatograms)
             {
                 var chromatogramData = new ChromatogramData(this, chromatogram);
                 Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
             }
+            ClearPeak();
             return true;
+        }
+
+        public void SetDistributions(Peaks peaks, PeptideDistributions peptideDistributions)
+        {
+            Peaks = peaks;
+            PeptideDistributions = peptideDistributions;
         }
     }
 }

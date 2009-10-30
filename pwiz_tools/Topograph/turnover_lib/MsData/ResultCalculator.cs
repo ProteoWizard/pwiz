@@ -122,12 +122,9 @@ namespace pwiz.Topograph.MsData
             {
                 return null;
             }
-            lock (_workspace.Lock)
+            using (var session = _workspace.OpenSession())
             {
-                using (var session = _workspace.OpenSession())
-                {
-                    return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
-                }
+                return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
             }
         }
         
@@ -186,7 +183,55 @@ namespace pwiz.Topograph.MsData
         void CalculateAnalysisResults(PeptideAnalysis peptideAnalysis)
         {
             StatusMessage = "Processing " + peptideAnalysis.Peptide.FullSequence;
-            peptideAnalysis.PeptideRates.Calculate();
+            var peaksList = new List<Peaks>();
+            var peptideDistributionsList = new List<PeptideDistributions>();
+            var filteredPeptideDistributions = new List<PeptideDistributions>();
+            bool isComplete = true;
+            using (_workspace.GetReadLock())
+            {
+                foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListChildren())
+                {
+                    if (peptideFileAnalysis.Chromatograms.ChildCount == 0)
+                    {
+                        if (peptideFileAnalysis.ValidationStatus != ValidationStatus.reject)
+                        {
+                            isComplete = false;
+                        }
+                        continue;
+                    }
+                    var peaks = peptideFileAnalysis.Peaks;
+                    PeptideDistributions peptideDistributions;
+                    if (peaks.ChildCount == 0)
+                    {
+                        peaks = new Peaks(peptideFileAnalysis);
+                        peaks.CalcIntensities();
+                        peptideDistributions = new PeptideDistributions(peptideFileAnalysis);
+                        peptideDistributions.Calculate(peaks);
+                    }
+                    else
+                    {
+                        peptideDistributions = peptideFileAnalysis.PeptideDistributions;
+                    }
+                    peaksList.Add(peaks);
+                    peptideDistributionsList.Add(peptideDistributions);
+                    if (peptideFileAnalysis.ValidationStatus != ValidationStatus.reject)
+                    {
+                        filteredPeptideDistributions.Add(peptideDistributions);
+                    }
+                }
+            }
+            var peptideRates = new PeptideRates(peptideAnalysis);
+            peptideRates.Calculate(filteredPeptideDistributions, isComplete);
+            using (_workspace.GetWriteLock())
+            {
+                for (int i = 0; i < peaksList.Count(); i++)
+                {
+                    var peaks = peaksList[i];
+                    var peptideDistributions = peptideDistributionsList[i];
+                    peaks.PeptideFileAnalysis.SetDistributions(peaks, peptideDistributions);
+                }
+                peptideAnalysis.SetPeptideRates(peptideRates);
+            }
             _workspace.SaveIfNotDirty(peptideAnalysis);
         }
         public String StatusMessage { get; private set; }

@@ -153,11 +153,12 @@ namespace pwiz.Topograph.ui.Forms
         {
             var xValues = new List<double>();
             var yValues = new List<double>();
-            foreach (var entry in PeptideRates.GetPoints(rateKey))
-            {
-                xValues.Add(entry.Key);
-                yValues.Add(entry.Value);
-            }
+            // TODO
+            //foreach (var entry in PeptideRates.GetPoints(rateKey))
+            //{
+            //    xValues.Add(entry.Key);
+            //    yValues.Add(entry.Value);
+            //}
             return new PointPairList(xValues.ToArray(), yValues.ToArray());
         }
 

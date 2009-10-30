@@ -52,7 +52,9 @@ namespace pwiz.Topograph.ui.Forms
         {
             IList<double> observedIntensities;
             IDictionary<TracerFormula,IList<double>> predictedIntensities;
-            var tracerAmounts = PeptideFileAnalysis.ComputeTracerAmounts(out observedIntensities, out predictedIntensities);
+
+            var tracerAmounts = PeptideFileAnalysis.PeptideDistributions.ComputeTracerAmounts(
+                PeptideFileAnalysis.Peaks, out observedIntensities, out predictedIntensities);
             
             DisplayDistributionResults(tracerAmounts, observedIntensities, predictedIntensities, barGraphControl);
             if (tracerAmounts != null)

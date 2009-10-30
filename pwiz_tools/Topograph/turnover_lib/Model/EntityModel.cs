@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading;
 using NHibernate;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
@@ -113,7 +114,14 @@ namespace pwiz.Topograph.Model
                 IsDirty = false;
             }
         }
-        public object Lock {get { return Workspace.Lock;}}
+        public AutoLock GetReadLock()
+        {
+            return Workspace.GetReadLock();
+        }
+        public AutoLock GetWriteLock()
+        {
+            return Workspace.GetWriteLock();
+        }
     }
     
     public abstract class EntityModel<T> : EntityModel where T : DbEntity<T>

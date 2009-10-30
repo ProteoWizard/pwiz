@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using NHibernate;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
 {
@@ -31,6 +32,55 @@ namespace pwiz.Topograph.Model
             : base(peptideFileAnalysis.Workspace, dbPeptideFileAnalysis)
         {
             Parent = peptideFileAnalysis;
+        }
+
+        public PeptideDistributions(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis.Workspace)
+        {
+            Parent = peptideFileAnalysis;
+            SetId(peptideFileAnalysis.Id);
+        }
+
+        public void Calculate(Peaks peaks)
+        {
+            IList<double> observedIntensities;
+            IDictionary<TracerPercentFormula, IList<double>> tracerPercentPredictedIntensities;
+            AddChild(PeptideQuantity.precursor_enrichment, 
+                ComputePrecursorEnrichments(peaks, out observedIntensities, out tracerPercentPredictedIntensities));
+            IDictionary<TracerFormula, IList<double>> tracerPredictedIntensities;
+            AddChild(PeptideQuantity.tracer_count,
+                ComputeTracerAmounts(peaks, out observedIntensities, out tracerPredictedIntensities));
+        }
+
+        public PeptideDistribution ComputePrecursorEnrichments(
+            Peaks peaks, out IList<double> observedIntensities, 
+            out IDictionary<TracerPercentFormula, IList<double>> predictedIntensities)
+        {
+            if (peaks.ChildCount == 0)
+            {
+                observedIntensities = null;
+                predictedIntensities = null;
+                return null;
+            }
+            observedIntensities = peaks.GetAverageIntensities();
+            var result = new PeptideDistribution(this, PeptideQuantity.precursor_enrichment);
+            PeptideFileAnalysis.TurnoverCalculator.GetEnrichmentAmounts(result, observedIntensities, 
+                PeptideFileAnalysis.PeptideAnalysis.IntermediateLevels, out predictedIntensities);
+            return result;
+        }
+
+        public PeptideDistribution ComputeTracerAmounts(Peaks peaks, out IList<double> observedIntensities, 
+            out IDictionary<TracerFormula, IList<double>> predictedIntensities)
+        {
+            if (peaks.GetChildCount() == 0)
+            {
+                observedIntensities = null;
+                predictedIntensities = null;
+                return null;
+            }
+            observedIntensities = peaks.GetAverageIntensities();
+            var result = new PeptideDistribution(this, PeptideQuantity.tracer_count);
+            PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(result, observedIntensities, out predictedIntensities);
+            return result;
         }
 
         public PeptideFileAnalysis PeptideFileAnalysis { get { return (PeptideFileAnalysis) Parent;}}
@@ -55,27 +105,6 @@ namespace pwiz.Topograph.Model
         public override PeptideDistribution WrapChild(DbPeptideDistribution entity)
         {
             return new PeptideDistribution(Workspace, entity);
-        }
-
-        public PeptideDistribution EnsureChild(PeptideQuantity peptideQuantity)
-        {
-            lock(Lock)
-            {
-                var result = GetChild(peptideQuantity);
-                if (result != null)
-                {
-                    return result;
-                }
-                result = new PeptideDistribution(this, peptideQuantity);
-                AddChild(peptideQuantity, result);
-                return result;
-            }
-        }
-
-        protected override void OnChange()
-        {
-            PeptideFileAnalysis.PeptideAnalysis.PeptideRates.Clear();
-            base.OnChange();
         }
     }
 }

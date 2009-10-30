@@ -457,37 +457,41 @@ namespace pwiz.Topograph.ui.Forms
             var xmlSerializer = new XmlSerializer(typeof (QueryDef));
             var stringWriter = new StringWriter();
             xmlSerializer.Serialize(stringWriter, queryDef);
-            using (var session = Workspace.OpenWriteSession())
+            using (Workspace.GetWriteLock())
             {
-                DbSetting setting;
-                session.BeginTransaction();
-                if (Query.Parent != null)
+                using (var session = Workspace.OpenWriteSession())
                 {
-                    setting = session.Get<DbSetting>(Query.Id);
-                    setting.Value = stringWriter.ToString();
-                    session.Update(setting);
+                    DbSetting setting;
+                    session.BeginTransaction();
+                    if (Query.Parent != null)
+                    {
+                        setting = session.Get<DbSetting>(Query.Id);
+                        setting.Value = stringWriter.ToString();
+                        session.Update(setting);
+                    }
+                    else
+                    {
+                        setting = new DbSetting
+                        {
+                            Name = settingName,
+                            Value = stringWriter.ToString(),
+                            Workspace = Workspace.LoadDbWorkspace(session)
+                        };
+                        session.Save(setting);
+                        var dbWorkspace = Workspace.LoadDbWorkspace(session);
+                        dbWorkspace.SettingCount++;
+                        session.Update(dbWorkspace);
+                    }
+                    session.Transaction.Commit();
+                    Query.Name = setting.Name;
+                    if (Query.Parent == null)
+                    {
+                        Query.SetId(setting.Id.Value);
+                        Workspace.Settings.AddChild(Query.Name, Query);
+                    }
+                    Query.Value = setting.Value;
+                    Workspace.EntityChanged(Query);
                 }
-                else
-                {
-                    setting = new DbSetting
-                                  {
-                                      Name = settingName,
-                                      Value = stringWriter.ToString(),
-                                      Workspace = Workspace.LoadDbWorkspace(session)
-                                  };
-                    session.Save(setting);
-                    var dbWorkspace = Workspace.LoadDbWorkspace(session);
-                    dbWorkspace.SettingCount++;
-                    session.Update(dbWorkspace);
-                }
-                session.Transaction.Commit();
-                Query.Name = setting.Name;
-                if (Query.Parent == null)
-                {
-                    Query.SetId(setting.Id.Value);
-                    Workspace.Settings.AddChild(Query.Name, Query);
-                }
-                Query.Value = setting.Value;
                 UpdateFormTitle();
             }
             return true;

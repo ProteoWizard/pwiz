@@ -32,6 +32,11 @@ namespace pwiz.Topograph.Model
             Parent = peptideFileAnalysis;
         }
 
+        public Chromatograms(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis.Workspace)
+        {
+            Parent = peptideFileAnalysis;
+        }
+
         public PeptideFileAnalysis PeptideFileAnalysis { get { return (PeptideFileAnalysis) Parent; } }
         protected override IEnumerable<KeyValuePair<MzKey, DbChromatogram>> GetChildren(DbPeptideFileAnalysis parent)
         {
@@ -56,9 +61,18 @@ namespace pwiz.Topograph.Model
             parent.ChromatogramCount = childCount;
         }
 
-        protected override void OnChange()
+        public IList<ChromatogramData> GetFilteredChromatograms()
         {
-            PeptideFileAnalysis.Peaks.Clear();
+            var result = new List<ChromatogramData>();
+            foreach (var chromatogram in ListChildren())
+            {
+                if (PeptideFileAnalysis.ExcludedMzs.IsExcluded(chromatogram.MzKey))
+                {
+                    continue;
+                }
+                result.Add(chromatogram);
+            }
+            return result;
         }
     }
 }

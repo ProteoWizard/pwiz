@@ -164,13 +164,15 @@ namespace pwiz.Topograph.Model
 
         public TurnoverCalculator GetTurnoverCalculator()
         {
-            lock (Lock)
+            using(GetReadLock())
             {
-                if (_turnoverCalculator == null)
+                var turnoverCalculator = _turnoverCalculator;
+                if (turnoverCalculator != null)
                 {
-                    _turnoverCalculator = new TurnoverCalculator(Workspace, Peptide.Sequence);
+                    return turnoverCalculator;
                 }
-                return _turnoverCalculator;
+                _turnoverCalculator = turnoverCalculator = new TurnoverCalculator(Workspace, Peptide.Sequence);
+                return turnoverCalculator;
             }
         }
 
@@ -207,17 +209,18 @@ namespace pwiz.Topograph.Model
         {
             if (!_workspaceVersion.PeptideRatesValid(newWorkspaceVersion))
             {
-                PeptideRates.Clear();
+                PeptideRates = new PeptideRates(this);
             }
             _workspaceVersion = newWorkspaceVersion;
-            lock(Lock)
-            {
-                _turnoverCalculator = null;
-            }
+            _turnoverCalculator = null;
             foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
             {
                 peptideFileAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
             }
+        }
+        public void SetPeptideRates(PeptideRates peptideRates)
+        {
+            PeptideRates = peptideRates;
         }
     }
     public enum IntensityScaleMode

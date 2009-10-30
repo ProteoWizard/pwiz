@@ -154,6 +154,7 @@
     <Compile Include="MsData\ResultCalculator.cs" />
     <Compile Include="Search\DTASelect.cs" />
     <Compile Include="Search\SearchResults.cs" />
+    <Compile Include="Util\AutoLock.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\Lists.cs" />
     <Compile Include="Util\SessionWithLock.cs" />

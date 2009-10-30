@@ -13,6 +13,11 @@ namespace pwiz.Topograph.Model
         {
         }
 
+        public TracerDefs(Workspace workspace) : base(workspace)
+        {
+            SetId(workspace.DbWorkspaceId);
+        }
+
         protected override IEnumerable<KeyValuePair<String, DbTracerDef>> GetChildren(DbWorkspace parent)
         {
             foreach (var tracerDef in parent.TracerDefs)

@@ -37,63 +37,32 @@ namespace pwiz.Topograph.Util
         normal,
         write
     }
-    public class SessionWithLock : ISession
+    public class SessionWithLock : AutoLock, ISession
     {
         static readonly ILog _log = LogManager.GetLogger(typeof (SessionWithLock));
         ISession _session;
-        ReaderWriterLock _lock;
-        SessionLockType _lockType;
-        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, SessionLockType lockType)
+        public SessionWithLock(ISession session, ReaderWriterLockSlim readerWriterLock, SessionLockType lockType) : base(readerWriterLock, lockType == SessionLockType.write)
         {
             _session = session;
-            _lock = readerWriterLock;
-            _lockType = lockType;
-
-            if (lockType == SessionLockType.write)
-            {
-                if (_lock.IsReaderLockHeld)
-                {
-                    throw new InvalidOperationException(
-                        "Can't acquire write lock while holding read lock.");
-                }
-            }
-            if (lockType != SessionLockType.unlocked)
-            {
-                Monitor.Enter(_lock);
-            }
-            if (lockType == SessionLockType.write)
-            {
-                _lock.AcquireWriterLock(int.MaxValue);
-            }
-            else
-            {
-                _lock.AcquireReaderLock(int.MaxValue);
-            }
         }
 
         private void EnsureWriteLock()
         {
-            if (_lockType != SessionLockType.write)
+            if (!IsWriterLock)
             {
                 throw new InvalidOperationException("Must have write lock");
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _session.Dispose();
-            if (_lockType == SessionLockType.write)
-            {
-                _lock.ReleaseWriterLock();
-            }
-            else
-            {
-                _lock.ReleaseReaderLock();
-            }
-            if (_lockType != SessionLockType.unlocked)
-            {
-                Monitor.Exit(_lock);
-            }
+            base.Dispose();
+        }
+
+        void IDisposable.Dispose()
+        {
+            Dispose();
         }
 
         public void Flush()

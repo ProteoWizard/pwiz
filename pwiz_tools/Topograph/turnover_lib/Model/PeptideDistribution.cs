@@ -35,7 +35,6 @@ namespace pwiz.Topograph.Model
         {
             peptideFileAnalysisId = peptideDistributions.Id.Value;
             PeptideQuantity = peptideQuantity;
-            ChildCount = 0;
         }
 
         public PeptideDistributions PeptideDistributions { get

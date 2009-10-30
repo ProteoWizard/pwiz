@@ -27,7 +27,9 @@ namespace pwiz.Topograph.Model
         public Modifications(Workspace workspace, DbWorkspace dbWorkspace)
             : base(workspace, dbWorkspace)
         {
-            
+        }
+        public Modifications(Workspace workspace) : base(workspace)
+        {
         }
         protected override IEnumerable<KeyValuePair<string, DbModification>> GetChildren(DbWorkspace parent)
         {

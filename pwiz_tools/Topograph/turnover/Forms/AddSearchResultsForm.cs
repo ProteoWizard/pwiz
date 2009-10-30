@@ -280,23 +280,28 @@ namespace pwiz.Topograph.ui.Forms
                 dbWorkspace.MsDataFileCount = dataFiles.Count;
                 session.Update(dbWorkspace);
                 session.Transaction.Commit();
-                foreach (var dbPeptide in modifiedPeptides)
+                using (Workspace.GetWriteLock())
                 {
-                    var peptide = Workspace.Peptides.GetPeptide(dbPeptide);
-                    if (peptide == null)
+                    foreach (var dbPeptide in modifiedPeptides)
                     {
-                        peptide = new Peptide(Workspace, dbPeptide);
-                        Workspace.Peptides.AddChild(dbPeptide.Id.Value, peptide);
+                        var peptide = Workspace.Peptides.GetPeptide(dbPeptide);
+                        if (peptide == null)
+                        {
+                            peptide = new Peptide(Workspace, dbPeptide);
+                            Workspace.Peptides.AddChild(dbPeptide.Id.Value, peptide);
+                            Workspace.AddEntityModel(peptide);
+                        }
+                        peptide.SearchResultCount = dbPeptide.SearchResultCount;
                     }
-                    peptide.SearchResultCount = dbPeptide.SearchResultCount;
-                }
-                foreach (var dbMsDataFile in dataFiles.Values)
-                {
-                    var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbMsDataFile);
-                    if (msDataFile == null)
+                    foreach (var dbMsDataFile in dataFiles.Values)
                     {
-                        msDataFile = new MsDataFile(Workspace, dbMsDataFile);
-                        Workspace.MsDataFiles.AddChild(msDataFile.Id.Value, msDataFile);
+                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbMsDataFile);
+                        if (msDataFile == null)
+                        {
+                            msDataFile = new MsDataFile(Workspace, dbMsDataFile);
+                            Workspace.MsDataFiles.AddChild(msDataFile.Id.Value, msDataFile);
+                            Workspace.AddEntityModel(msDataFile);
+                        }
                     }
                 }
             }

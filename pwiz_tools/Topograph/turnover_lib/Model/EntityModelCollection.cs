@@ -35,7 +35,6 @@ namespace pwiz.Topograph.Model
         protected override void AfterAddChild(C child)
         {
             child.Parent = this;
-            Workspace.AddEntityModel(child);
         }
         public override void SaveEntity(ISession session, C child, P parent, E entity)
         {

@@ -169,10 +169,14 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     session.Update(dbPeptideAnalysis);
                     session.Transaction.Commit();
+                }
+                using (Workspace.GetWriteLock())
+                {
                     foreach (var dbPeptideFileAnalysis in newFileAnalyses)
                     {
-                        peptideAnalysis.FileAnalyses.AddChild(dbPeptideFileAnalysis.Id.Value, 
+                        peptideAnalysis.FileAnalyses.AddChild(dbPeptideFileAnalysis.Id.Value,
                             new PeptideFileAnalysis(peptideAnalysis, dbPeptideFileAnalysis));
+                        Workspace.AddEntityModel(peptideAnalysis);
                     }
                 }
             }
