@@ -316,15 +316,15 @@ namespace pwiz.Topograph.ui.Controls
                     var mzKey = new MzKey(entry.Key, iMass);
                     cell.Value 
                         = ExcludedMzs.IsExcluded(mzKey);
-                    double mz = mzs[mzKey.Charge][mzKey.MassIndex];
+                    var mzRange = mzs[mzKey.Charge][mzKey.MassIndex];
                     if (scaledIntensities != null)
                     {
-                        cell.ToolTipText = "M/Z:" + mz + "\nIntensity:" +
+                        cell.ToolTipText = "M/Z:" + mzRange + "\nIntensity:" +
                                            scaledIntensities[mzKey.Charge][mzKey.MassIndex];
                     }
                     else
                     {
-                        cell.ToolTipText = "M/Z:" + mz;
+                        cell.ToolTipText = "M/Z:" + mzRange;
                     }
                     cell.Style.BackColor = GetColor(mzKey);
                 }
@@ -343,7 +343,7 @@ namespace pwiz.Topograph.ui.Controls
                     }
                     cell.Style.BackColor = GetColor(mzKey);
                 }
-                double massDifference = masses[iMass] - monoisotopicMass;
+                double massDifference = masses[iMass].Center - monoisotopicMass;
 
                 var label = massDifference.ToString("0.#");
                 if (label[0] != '-')

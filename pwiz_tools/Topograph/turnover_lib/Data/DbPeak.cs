@@ -29,7 +29,8 @@ namespace pwiz.Topograph.Data
         public virtual DbPeptideFileAnalysis PeptideFileAnalysis { get; set; }
         public virtual int Charge { get; set; }
         public virtual int MassIndex { get; set; }
-        public virtual double Mz { get; set; }
+        public virtual double MzMin { get; set; }
+        public virtual double MzMax { get; set; }
         public virtual double TotalArea { get; set; }
         public virtual double TotalError { get; set; }
         public virtual double Area { get { return Math.Max(0, TotalArea - Background); } }
@@ -44,6 +45,18 @@ namespace pwiz.Topograph.Data
             {
                 Charge = value.Charge;
                 MassIndex = value.MassIndex;
+            }
+        }
+        public virtual MzRange MzRange 
+        { 
+            get
+            {
+                return new MzRange(MzMin, MzMax);
+            } 
+            set 
+            { 
+                MzMin = value.Min;
+                MzMax = value.Max;
             }
         }
         public virtual double GetError()

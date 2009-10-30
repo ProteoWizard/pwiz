@@ -34,7 +34,7 @@ namespace pwiz.Topograph.Model
         public ChromatogramData(PeptideFileAnalysis peptideFileAnalysis, ChromatogramGenerator.Chromatogram chromatogram) : base(peptideFileAnalysis.Workspace)
         {
             MzKey = chromatogram.MzKey;
-            Mz = chromatogram.Mz;
+            MzRange = chromatogram.MzRange;
             Intensities = ArrayConverter.ToDoubles(chromatogram.Intensities.ToArray());
             PeakMzs = ArrayConverter.ToDoubles(chromatogram.PeakMzs.ToArray());
         }
@@ -42,14 +42,14 @@ namespace pwiz.Topograph.Model
         {
             base.Load(entity);
             MzKey = entity.MzKey;
-            Mz = entity.Mz;
+            MzRange = entity.MzRange;
             Intensities = entity.Intensities;
             PeakMzs = entity.PeakMzs;
         }
         public MzKey MzKey { get; private set; }
         public int MassIndex { get { return MzKey.MassIndex; } }
         public int Charge { get { return MzKey.Charge; } }
-        public double Mz { get; private set; }
+        public MzRange MzRange { get; private set; }
         public double[] Intensities { get; private set; }
         private IList<double> _accurateIntensities;
         private double _accurateIntensitiesMassAccuracy;
@@ -65,7 +65,7 @@ namespace pwiz.Topograph.Model
                 var intensities = new List<double>();
                 for (int i = 0; i < PeakMzs.Count(); i++)
                 {
-                    if (Math.Abs((PeakMzs[i] - Mz) * massAccuracy) > Mz)
+                    if (MzRange.ContainsWithMassAccuracy(PeakMzs[i], massAccuracy))
                     {
                         intensities.Add(0);
                     }

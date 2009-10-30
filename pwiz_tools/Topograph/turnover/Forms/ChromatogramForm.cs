@@ -211,9 +211,9 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         continue;
                     }
-                    double mz = PeptideAnalysis.GetMzs()[charge][iMass];
-                    minMz = Math.Min(minMz, mz);
-                    maxMz = Math.Max(maxMz, mz);
+                    var mzRange = PeptideAnalysis.GetMzs()[charge][iMass];
+                    minMz = Math.Min(minMz, mzRange.Min);
+                    maxMz = Math.Max(maxMz, mzRange.Max);
                 }
             }
             if (minMz <= maxMz)

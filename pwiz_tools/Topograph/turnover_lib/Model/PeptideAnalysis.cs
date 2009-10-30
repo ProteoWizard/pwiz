@@ -91,9 +91,9 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public Dictionary<int,IList<double>> GetMzs()
+        public Dictionary<int,IList<MzRange>> GetMzs()
         {
-            var result = new Dictionary<int, IList<double>>();
+            var result = new Dictionary<int, IList<MzRange>>();
             for (int charge = MinCharge; charge <= MaxCharge; charge ++)
             {
                 result.Add(charge, GetTurnoverCalculator().GetMzs(charge));

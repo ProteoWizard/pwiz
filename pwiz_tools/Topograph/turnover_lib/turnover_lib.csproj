@@ -91,6 +91,7 @@
     <Compile Include="Model\Chromatograms.cs" />
     <Compile Include="Model\EntityModelCollection.cs" />
     <Compile Include="Model\Modifications.cs" />
+    <Compile Include="Model\MzRange.cs" />
     <Compile Include="Model\Peaks.cs" />
     <Compile Include="Model\PeptideDistribution.cs" />
     <Compile Include="Model\SimpleChildCollection.cs" />

@@ -29,22 +29,36 @@ namespace pwiz.Topograph.MsData
 {
     public static class MsDataFileUtil
     {
-        public static ChromatogramPoint GetIntensity(double mz, double[] mzs, double[] intensities)
+        public static ChromatogramPoint GetIntensity(MzRange mzRange, double[] mzs, double[] intensities)
         {
-            int imid = Array.BinarySearch(mzs, mz);
-            if (imid < 0)
+            int imin = ClosestIndex(mzRange.Min, mzs);
+            int imax = ClosestIndex(mzRange.Max, mzs);
+            double intensity = 0;
+            double peakMz = 0;
+            for (int index = imin; index <= imax; index++)
             {
-                imid = ~imid;
+                var newIntensity = intensity + intensities[index];
+                peakMz = (mzs[index]*intensities[index] + peakMz*intensity)/newIntensity;
+                intensity = newIntensity;
             }
-            if (imid >= mzs.Length)
+            return new ChromatogramPoint {Intensity = intensity, PeakMz = peakMz};
+        }
+        private static int ClosestIndex(double mz, double[] mzs)
+        {
+            int index = Array.BinarySearch(mzs, mz);
+            if (index < 0)
             {
-                imid--;
+                index = ~index;
             }
-            if (imid > 0 && mz - mzs[imid - 1] < mzs[imid] - mz)
+            if (index >= mzs.Length)
             {
-                imid--;
+                index--;
             }
-            return new ChromatogramPoint {Intensity = intensities[imid], PeakMz = mzs[imid]};
+            if (index > 0 && mz - mzs[index - 1] < mzs[index] - mz)
+            {
+                index--;
+            }
+            return index;
         }
 
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)

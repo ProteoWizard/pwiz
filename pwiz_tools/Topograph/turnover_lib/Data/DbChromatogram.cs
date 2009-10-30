@@ -29,7 +29,8 @@ namespace pwiz.Topograph.Data
         public virtual DbPeptideFileAnalysis PeptideFileAnalysis { get; set; }
         public virtual int MassIndex { get; set; }
         public virtual int Charge { get; set; }
-        public virtual double Mz { get; set; }
+        public virtual double MzMin { get; set; }
+        public virtual double MzMax { get; set; }
         public virtual byte[] IntensitiesBytes { get; set; }
         public virtual byte[] PeakMzsBytes { get; set; }
 
@@ -43,19 +44,6 @@ namespace pwiz.Topograph.Data
             {
                 IntensitiesBytes = ArrayConverter.ToBytes(ArrayConverter.ToFloats(value));
             }
-        }
-        public virtual double[] GetIntensities(double halfResolution)
-        {
-            double[] intensities = Intensities;
-            double[] peakMzs = PeakMzs;
-            for (int i = 0; i < intensities.Length; i++)
-            {
-                if (Math.Abs(Mz - peakMzs[i]) * halfResolution > Mz)
-                {
-                    intensities[i] = 0;
-                }
-            }
-            return intensities;
         }
         public virtual double[] PeakMzs
         { 
@@ -103,6 +91,18 @@ namespace pwiz.Topograph.Data
             {
                 Charge = value.Charge;
                 MassIndex = value.MassIndex;
+            }
+        }
+        public virtual MzRange MzRange
+        {
+            get
+            {
+                return new MzRange(MzMin, MzMax);
+            }
+            set 
+            { 
+                MzMin = value.Min;
+                MzMax = value.Max; 
             }
         }
     }

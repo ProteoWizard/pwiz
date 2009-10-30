@@ -44,11 +44,18 @@ namespace pwiz.Topograph.Model
         {
             IList<double> observedIntensities;
             IDictionary<TracerPercentFormula, IList<double>> tracerPercentPredictedIntensities;
-            AddChild(PeptideQuantity.precursor_enrichment, 
-                ComputePrecursorEnrichments(peaks, out observedIntensities, out tracerPercentPredictedIntensities));
+            var precursorEnrichment = ComputePrecursorEnrichments(peaks, out observedIntensities,
+                                                                  out tracerPercentPredictedIntensities);
+            if (precursorEnrichment != null)
+            {
+                AddChild(PeptideQuantity.precursor_enrichment, precursorEnrichment);
+            }
             IDictionary<TracerFormula, IList<double>> tracerPredictedIntensities;
-            AddChild(PeptideQuantity.tracer_count,
-                ComputeTracerAmounts(peaks, out observedIntensities, out tracerPredictedIntensities));
+            var tracerCount = ComputeTracerAmounts(peaks, out observedIntensities, out tracerPredictedIntensities);
+            if (tracerCount != null)
+            {
+                AddChild(PeptideQuantity.tracer_count, tracerCount);
+            }
         }
 
         public PeptideDistribution ComputePrecursorEnrichments(
@@ -62,7 +69,7 @@ namespace pwiz.Topograph.Model
                 return null;
             }
             observedIntensities = peaks.GetAverageIntensities();
-            var result = new PeptideDistribution(this, PeptideQuantity.precursor_enrichment);
+            var result = new PeptideDistribution(this, PeptideQuantity.precursor_enrichment) { Parent = this};
             PeptideFileAnalysis.TurnoverCalculator.GetEnrichmentAmounts(result, observedIntensities, 
                 PeptideFileAnalysis.PeptideAnalysis.IntermediateLevels, out predictedIntensities);
             return result;
@@ -78,7 +85,7 @@ namespace pwiz.Topograph.Model
                 return null;
             }
             observedIntensities = peaks.GetAverageIntensities();
-            var result = new PeptideDistribution(this, PeptideQuantity.tracer_count);
+            var result = new PeptideDistribution(this, PeptideQuantity.tracer_count) { Parent = this };
             PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(result, observedIntensities, out predictedIntensities);
             return result;
         }

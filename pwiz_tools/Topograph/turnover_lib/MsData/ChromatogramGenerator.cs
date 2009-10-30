@@ -329,7 +329,7 @@ namespace pwiz.Topograph.MsData
                         var points = new List<MsDataFileUtil.ChromatogramPoint>();
                         foreach (var chromatogram in analysis.Chromatograms)
                         {
-                            points.Add(MsDataFileUtil.GetIntensity(chromatogram.Mz, mzArray, intensityArray));
+                            points.Add(MsDataFileUtil.GetIntensity(chromatogram.MzRange, mzArray, intensityArray));
                         }
                         analysis.AddPoints(iScan, time, points);
                     }
@@ -414,7 +414,7 @@ namespace pwiz.Topograph.MsData
                         }
                         dbChromatogram.IntensitiesBytes = ArrayConverter.ToBytes(chromatogram.Intensities.ToArray());
                         dbChromatogram.PeakMzsBytes = ArrayConverter.ToBytes(chromatogram.PeakMzs.ToArray());
-                        dbChromatogram.Mz = chromatogram.Mz;
+                        dbChromatogram.MzRange = chromatogram.MzRange;
                         session.SaveOrUpdate(dbChromatogram);
                     }
                 }
@@ -435,15 +435,15 @@ namespace pwiz.Topograph.MsData
 
         public class Chromatogram
         {
-            public Chromatogram (MzKey mzKey, double mz)
+            public Chromatogram (MzKey mzKey, MzRange mzRange)
             {
                 MzKey = mzKey;
-                Mz = mz;
+                MzRange = mzRange;
                 Intensities = new List<float>();
                 PeakMzs = new List<float>();
             }
             public MzKey MzKey { get; private set; }
-            public double Mz { get; private set; }
+            public MzRange MzRange { get; private set; }
             public List<float> Intensities { get; private set; }
             public List<float> PeakMzs { get; private set; }
         }

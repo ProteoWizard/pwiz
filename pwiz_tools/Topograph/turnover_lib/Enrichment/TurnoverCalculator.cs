@@ -34,7 +34,7 @@ namespace pwiz.Topograph.Enrichment
     {
         private const double MassResolution = .1;
         private const double MinAbundance = .01;
-        private readonly IList<double> _masses;
+        private readonly IList<MzRange> _masses;
         private readonly Dictionary<String, TracerDef> _tracerDefs;
         private readonly ICollection<String> _traceeSymbols;
         private readonly int _maxTracerCount;
@@ -58,10 +58,10 @@ namespace pwiz.Topograph.Enrichment
                 _tracerDefs.Add(tracerDef.Name, tracerDef);
             }
             _maxTracerCount = workspace.GetMaxTracerCount(sequence);
-            _masses = new ReadOnlyCollection<double>(GetMasses());
+            _masses = new ReadOnlyCollection<MzRange>(GetMasses());
         }
 
-        private List<double> GetMasses()
+        private List<MzRange> GetMasses()
         {
             var massesAndFrequency = new Dictionary<double, double>();
             var tracerFormulaEnumerator = new TracerFormulaEnumerator(Sequence, _tracerDefs.Values);
@@ -87,26 +87,21 @@ namespace pwiz.Topograph.Enrichment
             }
             var allMasses = new List<double>(massesAndFrequency.Keys);
             allMasses.Sort();
-            var result = new List<double>();
+            var result = new List<MzRange>();
             foreach (var mass in allMasses)
             {
                 if (result.Count == 0)
                 {
-                    result.Add(mass);
+                    result.Add(new MzRange(mass));
                     continue;
                 }
-                double lastMass = result[result.Count - 1];
-                if (mass - lastMass > MassResolution)
+                var lastMass = result[result.Count - 1];
+                if (lastMass.Distance(mass) > MassResolution)
                 {
-                    result.Add(mass);
+                    result.Add(new MzRange(mass));
                     continue;
                 }
-                double lastAbundance = massesAndFrequency[lastMass];
-                double abundance = massesAndFrequency[mass];
-                if (abundance > lastAbundance)
-                {
-                    result[result.Count - 1] = mass;
-                }
+                result[result.Count - 1] = lastMass.Union(mass);
             }
             return result;
         }
@@ -139,16 +134,17 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        public IList<double> GetMzs(int charge)
+        public IList<MzRange> GetMzs(int charge)
         {
             if (charge == 0)
             {
                 return _masses;
             }
-            var result = new List<double>();
+            var result = new List<MzRange>();
             foreach (var mass in _masses)
             {
-                result.Add(AminoAcidFormulas.ProtonMass + mass / charge);
+                result.Add(new MzRange(mass.Min/charge + AminoAcidFormulas.ProtonMass,
+                            mass.Max/charge + AminoAcidFormulas.ProtonMass));
             }
             return result;
         }
@@ -362,16 +358,16 @@ namespace pwiz.Topograph.Enrichment
             tracerAmounts.Score = Score(observedVector, totalPrediction, excludeFunc);
         }
 
-        internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<double> mzs)
+        internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<MzRange> mzs)
         {
             var result = new Vector(mzs.Count);
             for (int iMz = 0; iMz < mzs.Count; iMz++)
             {
-                double mz = mzs[iMz];
+                var mzRange = mzs[iMz];
                 double total = 0;
                 foreach (var entry in dict)
                 {
-                    if (Math.Abs(entry.Key - mz) < MassResolution)
+                    if (mzRange.Distance(entry.Key) < MassResolution)
                     {
                         total += entry.Value;
                     }

@@ -131,11 +131,11 @@ namespace pwiz.Topograph.Model
                 for (int massIndex = 0; massIndex < PeptideFileAnalysis.PeptideAnalysis.GetMassCount(); massIndex++)
                 {
                     var mzKey = new MzKey(charge, massIndex);
-                    double mz = PeptideFileAnalysis.TurnoverCalculator.GetMzs(charge)[massIndex];
+                    var mzRange = PeptideFileAnalysis.TurnoverCalculator.GetMzs(charge)[massIndex];
                     var peak = new DbPeak
                     {
                         MzKey = mzKey,
-                        Mz = mz,
+                        MzRange = mzRange,
                         PeakStart = PeakStart.Value,
                         PeakEnd = PeakEnd.Value
                     };

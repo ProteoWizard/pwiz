@@ -11,7 +11,8 @@
     <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisMz" not-null="true"/>
     <property name="Charge" unique-key="PeptideFileAnalysisMz" not-null="true" />
     <property name="MassIndex" unique-key="PeptideFileAnalysisMz" not-null="true"/>
-    <property name="Mz" />
+    <property name="MzMin" />
+    <property name="MzMax" />
     <property name="IntensitiesBytes" length="1000000" type="BinaryBlob" />
     <property name="PeakMzsBytes" length="1000000" type="BinaryBlob" />
   </class>
@@ -161,7 +162,8 @@
     <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisMz" not-null="true"/>
     <property name="Charge" unique-key="PeptideFileAnalysisMz" not-null="true" />
     <property name="MassIndex" unique-key="PeptideFileAnalysisMz" not-null="true"/>
-    <property name="Mz" />
+    <property name="MzMin" />
+    <property name="MzMax" />
     <property name="TotalArea" />
     <property name="TotalError" />
     <property name="Background" />

@@ -188,6 +188,10 @@ namespace pwiz.Topograph.Model
                     continue;
                 }
                 var peptideDistribution = peptideDistributions.GetChild(rateKey.PeptideQuantity);
+                if (peptideDistribution == null)
+                {
+                    continue;
+                }
                 double value = peptideDistribution.GetTracerPercent(tracerDef);
                 if (double.IsNaN(value))
                 {

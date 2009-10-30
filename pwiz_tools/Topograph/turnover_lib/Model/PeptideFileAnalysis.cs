@@ -230,12 +230,16 @@ namespace pwiz.Topograph.Model
 
         private void ClearPeak()
         {
-            Peaks = new Peaks(this);
-            PeptideDistributions = new PeptideDistributions(this);
-            if (Chromatograms.ChildCount > 0)
+            using (GetWriteLock())
             {
-                Peaks.CalcIntensities();
-                PeptideDistributions.Calculate(Peaks);
+                var peaks = new Peaks(this);
+                var peptideDistributions = new PeptideDistributions(this);
+                if (Chromatograms.ChildCount > 0)
+                {
+                    peaks.CalcIntensities();
+                    peptideDistributions.Calculate(Peaks);
+                }
+                SetDistributions(peaks, peptideDistributions);
             }
         }
 
@@ -275,15 +279,7 @@ namespace pwiz.Topograph.Model
         }
         public void OnExcludedMzsChanged()
         {
-            if (AutoFindPeak)
-            {
-                ClearPeak();
-            }
-            var excludedMzsChangedEvent = ExcludedMzsChangedEvent;
-            if (excludedMzsChangedEvent != null)
-            {
-                excludedMzsChangedEvent.Invoke(this);
-            }
+            ClearPeak();
         }
         public void InvalidateChromatograms()
         {
@@ -579,27 +575,33 @@ namespace pwiz.Topograph.Model
         public int[] ScanIndexesArray { get { return _scanIndexes; } }
         public bool SetChromatograms(WorkspaceVersion workspaceVersion, AnalysisChromatograms analysisChromatograms)
         {
-            if (analysisChromatograms.MinCharge != MinCharge || analysisChromatograms.MaxCharge != MaxCharge)
+            using (GetWriteLock())
             {
-                return false;
+                if (analysisChromatograms.MinCharge != MinCharge || analysisChromatograms.MaxCharge != MaxCharge)
+                {
+                    return false;
+                }
+                _times = analysisChromatograms.Times.ToArray();
+                _scanIndexes = analysisChromatograms.ScanIndexes.ToArray();
+                _workspaceVersion = workspaceVersion;
+                Chromatograms = new Chromatograms(this);
+                foreach (var chromatogram in analysisChromatograms.Chromatograms)
+                {
+                    var chromatogramData = new ChromatogramData(this, chromatogram);
+                    Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
+                }
+                ClearPeak();
+                return true;
             }
-            _times = analysisChromatograms.Times.ToArray();
-            _scanIndexes = analysisChromatograms.ScanIndexes.ToArray();
-            _workspaceVersion = workspaceVersion;
-            Chromatograms = new Chromatograms(this);
-            foreach (var chromatogram in analysisChromatograms.Chromatograms)
-            {
-                var chromatogramData = new ChromatogramData(this, chromatogram);
-                Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
-            }
-            ClearPeak();
-            return true;
         }
 
         public void SetDistributions(Peaks peaks, PeptideDistributions peptideDistributions)
         {
-            Peaks = peaks;
-            PeptideDistributions = peptideDistributions;
+            using (GetWriteLock())
+            {
+                Peaks = peaks;
+                PeptideDistributions = peptideDistributions;
+            }
         }
     }
 }

@@ -65,7 +65,7 @@ namespace pwiz.Topograph.ui.Forms
             PointPairList predictedBarPoints = new PointPairList();
             for (int iMass = 0; iMass < massCount; iMass++)
             {
-                double mass = masses[iMass] - monoIsotopicMass;
+                double mass = masses[iMass].Center - monoIsotopicMass;
                 if (PeptideFileAnalysis.ExcludedMzs.IsMassExcludedForAllCharges(iMass))
                 {
                     excludedBarPoints.Add(mass, observedIntensities[iMass]);
