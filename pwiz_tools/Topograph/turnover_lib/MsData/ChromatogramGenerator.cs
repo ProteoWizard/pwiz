@@ -33,7 +33,7 @@ namespace pwiz.Topograph.MsData
 {
     public class ChromatogramGenerator
     {
-        private const int maxConcurrentAnalyses = 200;
+        private int maxConcurrentAnalyses = 200;
         private readonly Workspace _workspace;
         private Thread _chromatogramGeneratorThread;
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.ManualReset);
@@ -216,7 +216,15 @@ namespace pwiz.Topograph.MsData
                 {
                     analysis.Init(_workspace);
                 }
-                GenerateChromatograms(msDataFile, analysisChromatograms, workspaceVersion);
+                try
+                {
+                    GenerateChromatograms(msDataFile, analysisChromatograms, workspaceVersion);
+                }
+                catch (OutOfMemoryException)
+                {
+                    maxConcurrentAnalyses /= 2;
+                    maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
+                }
             }
         }
 
@@ -323,13 +331,18 @@ namespace pwiz.Topograph.MsData
                         analyses.Remove(analysis);
                     }
                     double[] mzArray, intensityArray;
-                    pwizMsDataFileImpl.GetCentroidedSpectrum(iScan, out mzArray, out intensityArray);
+                    pwizMsDataFileImpl.GetSpectrum(iScan, out mzArray, out intensityArray);
+                    if (!pwizMsDataFileImpl.IsCentroided(iScan))
+                    {
+                        var centroider = new Centroider(mzArray, intensityArray);
+                        centroider.GetCentroidedData(out mzArray, out intensityArray);
+                    }
                     foreach (var analysis in activeAnalyses)
                     {
-                        var points = new List<MsDataFileUtil.ChromatogramPoint>();
+                        var points = new List<ChromatogramPoint>();
                         foreach (var chromatogram in analysis.Chromatograms)
                         {
-                            points.Add(MsDataFileUtil.GetIntensity(chromatogram.MzRange, mzArray, intensityArray));
+                            points.Add(MsDataFileUtil.GetPoint(chromatogram.MzRange, mzArray, intensityArray));
                         }
                         analysis.AddPoints(iScan, time, points);
                     }
@@ -360,7 +373,7 @@ namespace pwiz.Topograph.MsData
             {
                 return;
             }
-            using (ISession session = _workspace.OpenWriteSession())
+            using (_workspace.GetWriteLock())
             {
                 if (!workspaceVersion.Equals(_workspace.WorkspaceVersion))
                 {
@@ -381,6 +394,9 @@ namespace pwiz.Topograph.MsData
                     }
                     peptideFileAnalysis.SetChromatograms(workspaceVersion, analysisChromatograms);
                 }
+            }
+            using (ISession session = _workspace.OpenWriteSession())
+            {
                 if (workspaceVersion.MassVersion != _workspace.SavedWorkspaceVersion.MassVersion)
                 {
                     return;
@@ -414,8 +430,7 @@ namespace pwiz.Topograph.MsData
                                                      MzKey = chromatogram.MzKey,
                                                  };
                         }
-                        dbChromatogram.IntensitiesBytes = ArrayConverter.ToBytes(chromatogram.Intensities.ToArray());
-                        dbChromatogram.PeakMzsBytes = ArrayConverter.ToBytes(chromatogram.PeakMzs.ToArray());
+                        dbChromatogram.PointsBytes = ChromatogramPoint.ToByteArray(chromatogram.Points);
                         dbChromatogram.MzRange = chromatogram.MzRange;
                         session.SaveOrUpdate(dbChromatogram);
                     }
@@ -441,13 +456,11 @@ namespace pwiz.Topograph.MsData
             {
                 MzKey = mzKey;
                 MzRange = mzRange;
-                Intensities = new List<float>();
-                PeakMzs = new List<float>();
+                Points = new List<ChromatogramPoint>();
             }
             public MzKey MzKey { get; private set; }
             public MzRange MzRange { get; private set; }
-            public List<float> Intensities { get; private set; }
-            public List<float> PeakMzs { get; private set; }
+            public List<ChromatogramPoint> Points { get; private set; }
         }
         public int PendingAnalysisCount { get; private set; }
         public bool IsSuspended
@@ -520,7 +533,7 @@ namespace pwiz.Topograph.MsData
         public List<double> Times { get; private set;}
         public int MinCharge { get; private set; }
         public int MaxCharge { get; private set; }
-        public void AddPoints(int scanIndex, double time, List<MsDataFileUtil.ChromatogramPoint> points)
+        public void AddPoints(int scanIndex, double time, List<ChromatogramPoint> points)
         {
             if (ScanIndexes.Count > 0)
             {
@@ -532,9 +545,7 @@ namespace pwiz.Topograph.MsData
             for (int i = 0; i < Chromatograms.Count; i ++)
             {
                 var chromatogram = Chromatograms[i];
-                var point = points[i];
-                chromatogram.Intensities.Add((float) point.Intensity);
-                chromatogram.PeakMzs.Add((float) point.PeakMz);
+                chromatogram.Points.Add(points[i]);
             }
         }
     }

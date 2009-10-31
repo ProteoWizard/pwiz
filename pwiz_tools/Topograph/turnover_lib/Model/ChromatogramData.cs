@@ -35,53 +35,69 @@ namespace pwiz.Topograph.Model
         {
             MzKey = chromatogram.MzKey;
             MzRange = chromatogram.MzRange;
-            Intensities = ArrayConverter.ToDoubles(chromatogram.Intensities.ToArray());
-            PeakMzs = ArrayConverter.ToDoubles(chromatogram.PeakMzs.ToArray());
+            Points = chromatogram.Points;
         }
         protected override void Load(DbChromatogram entity)
         {
             base.Load(entity);
             MzKey = entity.MzKey;
             MzRange = entity.MzRange;
-            Intensities = entity.Intensities;
-            PeakMzs = entity.PeakMzs;
+            Points = ChromatogramPoint.FromByteArray(entity.PointsBytes);
         }
         public MzKey MzKey { get; private set; }
         public int MassIndex { get { return MzKey.MassIndex; } }
         public int Charge { get { return MzKey.Charge; } }
         public MzRange MzRange { get; private set; }
-        public double[] Intensities { get; private set; }
-        private IList<double> _accurateIntensities;
-        private double _accurateIntensitiesMassAccuracy;
-        public IList<double> GetAccurateIntensities()
-        {
-            double massAccuracy = Workspace.GetMassAccuracy();
-            lock(this)
-            {
-                if (_accurateIntensities != null && _accurateIntensitiesMassAccuracy == massAccuracy)
-                {
-                    return _accurateIntensities;
-                }
-                var intensities = new List<double>();
-                for (int i = 0; i < PeakMzs.Count(); i++)
-                {
-                    if (!MzRange.ContainsWithMassAccuracy(PeakMzs[i], massAccuracy))
-                    {
-                        intensities.Add(0);
-                    }
-                    else
-                    {
-                        intensities.Add(Intensities[i]);
-                    }
-                }
-                _accurateIntensities = new ReadOnlyCollection<double>(intensities);
-                _accurateIntensitiesMassAccuracy = massAccuracy;
-                return _accurateIntensities;
-            }
-        }
-        public double[] PeakMzs { get; private set; }
+        public IList<ChromatogramPoint> Points { get; private set; }
         public PeptideFileAnalysis PeptideFileAnalysis { get { return ((Chromatograms) Parent).PeptideFileAnalysis; } }
         public int[] ScanIndexes { get { return PeptideFileAnalysis.ScanIndexesArray; } }
         public double[] Times { get { return PeptideFileAnalysis.TimesArray; } }
+        private IList<double> _intensities;
+        private double _massAccuarcy;
+        public IList<double> GetIntensities()
+        {
+            lock(this)
+            {
+                var massAccuracy = Workspace.GetMassAccuracy();
+                if (_intensities != null && massAccuracy == _massAccuarcy)
+                {
+                    return _intensities;
+                }
+                var intensities = new double[Points.Count];
+                for (int i = 0; i < Points.Count; i++)
+                {
+                    intensities[i] = Points[i].GetIntensity(MzRange, massAccuracy);
+                }
+                _massAccuarcy = massAccuracy;
+                _intensities = new ReadOnlyCollection<double>(intensities);
+                return _intensities;
+            }
+        }
+        public static double[] SavitzkyGolaySmooth(IList<double> intRaw)
+        {
+            if (intRaw.Count < 9)
+            {
+                return intRaw.ToArray();
+            }
+            double[] intSmooth = new double[intRaw.Count];
+            for (int i = 0; i < 4; i ++)
+            {
+                intSmooth[i] = intRaw[i];
+            }
+            for (int i = 4; i < intSmooth.Length - 4; i++)
+            {
+                double sum = 59 * intRaw[i] +
+                    54 * (intRaw[i - 1] + intRaw[i + 1]) +
+                    39 * (intRaw[i - 2] + intRaw[i + 2]) +
+                    14 * (intRaw[i - 3] + intRaw[i + 3]) -
+                    21 * (intRaw[i - 4] + intRaw[i + 4]);
+                intSmooth[i] = (float)(sum / 231);
+            }
+            for (int i = intSmooth.Length - 4; i < intSmooth.Length; i++ )
+            {
+                intSmooth[i] = intRaw[i];
+            }
+            return intSmooth;
+        }
     }
 }

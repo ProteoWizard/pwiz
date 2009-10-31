@@ -45,7 +45,8 @@ namespace pwiz.Topograph.ui.Forms
             colMaxScoreTracerCount.DefaultCellStyle.Format = "0.####";
             colMinScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
             colMaxScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
-
+            colHalfLifeTracerCount.DefaultCellStyle.Format = "0.##";
+            colHalfLifePrecursorEnrichment.DefaultCellStyle.Format = "0.##";
         }
 
         void _deleteAnalysesMenuItem_Click(object sender, EventArgs e)
@@ -329,6 +330,10 @@ namespace pwiz.Topograph.ui.Forms
             foreach (var entity in args.GetEntities<PeptideRates>())
             {
                 peptideAnalyses.Add(entity.PeptideAnalysis);
+            }
+            foreach (var entity in args.GetEntities<PeptideDistributions>())
+            {
+                peptideAnalyses.Add(entity.PeptideFileAnalysis.PeptideAnalysis);
             }
             foreach (var peptideAnalysis in peptideAnalyses)
             {

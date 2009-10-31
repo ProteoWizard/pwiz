@@ -88,7 +88,10 @@ namespace pwiz.Topograph.Model
             foreach (var fileAnalysis in FileAnalyses.ListChildren())
             {
                 fileAnalysis.Save(session);
+                fileAnalysis.Peaks.Save(session);
+                fileAnalysis.PeptideDistributions.Save(session);
             }
+            PeptideRates.Save(session);
         }
 
         public Dictionary<int,IList<MzRange>> GetMzs()

@@ -602,6 +602,7 @@ namespace pwiz.Topograph.Model
             {
                 Peaks = peaks;
                 PeptideDistributions = peptideDistributions;
+                Workspace.EntityChanged(peptideDistributions);
             }
         }
     }

@@ -49,13 +49,21 @@ namespace pwiz.Topograph.Model
         {
             if (value < Min)
             {
-                return (Min - value)*massAccuracy < Min;
+                return (Min - value)*massAccuracy < Center;
             }
             if (value > Max)
             {
-                return (value - Max)*massAccuracy < Max;
+                return (value - Max)*massAccuracy < Center;
             }
             return true;
+        }
+        public double MinWithMassAccuracy(double massAccuracy)
+        {
+            return Min - Center/massAccuracy;
+        }
+        public double MaxWithMassAccuracy(double massAccuracy)
+        {
+            return Max + Center/massAccuracy;
         }
         public double Distance(double value)
         {

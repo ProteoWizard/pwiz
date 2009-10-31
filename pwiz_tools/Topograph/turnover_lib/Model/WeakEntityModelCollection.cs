@@ -49,17 +49,20 @@ namespace pwiz.Topograph.Model
         }
         protected virtual C TryAddChild(C child)
         {
-            lock(this)
+            using (Workspace.GetReadLock())
             {
-                C existing = GetChild(child.Id.Value);
-                if (existing != null)
+                lock (this)
                 {
-                    return existing;
+                    C existing = GetChild(child.Id.Value);
+                    if (existing != null)
+                    {
+                        return existing;
+                    }
+                    _childDict.Remove(child.Id.Value);
+                    _childDict.Add(child.Id.Value, child);
+                    child.Parent = this;
+                    return child;
                 }
-                _childDict.Remove(child.Id.Value);
-                _childDict.Add(child.Id.Value, child);
-                child.Parent = this;
-                return child;
             }
         }
 

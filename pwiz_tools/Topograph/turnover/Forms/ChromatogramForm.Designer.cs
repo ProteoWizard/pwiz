@@ -37,10 +37,14 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxOverrideExcludedMzs = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemSmooth = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemShowSpectrum = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridIntensities)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -115,6 +119,30 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer1.SplitterDistance = 259;
             this.splitContainer1.TabIndex = 2;
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemSmooth,
+            this.toolStripMenuItemShowSpectrum});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.ShowCheckMargin = true;
+            this.contextMenuStrip1.Size = new System.Drawing.Size(180, 70);
+            // 
+            // toolStripMenuItemSmooth
+            // 
+            this.toolStripMenuItemSmooth.CheckOnClick = true;
+            this.toolStripMenuItemSmooth.Name = "toolStripMenuItemSmooth";
+            this.toolStripMenuItemSmooth.Size = new System.Drawing.Size(179, 22);
+            this.toolStripMenuItemSmooth.Text = "Smooth";
+            this.toolStripMenuItemSmooth.Click += new System.EventHandler(this.toolStripMenuItemSmooth_Click);
+            // 
+            // toolStripMenuItemShowSpectrum
+            // 
+            this.toolStripMenuItemShowSpectrum.Name = "toolStripMenuItemShowSpectrum";
+            this.toolStripMenuItemShowSpectrum.Size = new System.Drawing.Size(179, 22);
+            this.toolStripMenuItemShowSpectrum.Text = "Show Spectrum";
+            this.toolStripMenuItemShowSpectrum.Click += new System.EventHandler(this.toolStripMenuItemShowSpectrum_Click);
+            // 
             // ChromatogramForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -129,6 +157,7 @@ namespace pwiz.Topograph.ui.Forms
             ((System.ComponentModel.ISupportInitialize)(this.gridIntensities)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -141,5 +170,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.CheckBox cbxOverrideExcludedMzs;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSmooth;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemShowSpectrum;
     }
 }

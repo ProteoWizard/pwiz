@@ -29,36 +29,40 @@ namespace pwiz.Topograph.MsData
 {
     public static class MsDataFileUtil
     {
-        public static ChromatogramPoint GetIntensity(MzRange mzRange, double[] mzs, double[] intensities)
+        public static ChromatogramPoint GetPoint(MzRange mzRange, double[] mzs, double[] intensities)
         {
-            int imin = ClosestIndex(mzRange.Min, mzs);
-            int imax = ClosestIndex(mzRange.Max, mzs);
-            double intensity = 0;
-            double peakMz = 0;
-            for (int index = imin; index <= imax; index++)
+            int imin = Array.BinarySearch(mzs, mzRange.Min);
+            if (imin < 0)
             {
-                var newIntensity = intensity + intensities[index];
-                peakMz = (mzs[index]*intensities[index] + peakMz*intensity)/newIntensity;
-                intensity = newIntensity;
+                imin = ~imin;
             }
-            return new ChromatogramPoint {Intensity = intensity, PeakMz = peakMz};
-        }
-        private static int ClosestIndex(double mz, double[] mzs)
-        {
-            int index = Array.BinarySearch(mzs, mz);
-            if (index < 0)
+            if (imin >= mzs.Length)
             {
-                index = ~index;
+                return new ChromatogramPoint();
             }
-            if (index >= mzs.Length)
+            if (imin > 0 && mzs[imin] > mzRange.Min)
             {
-                index--;
+                imin--;
             }
-            if (index > 0 && mz - mzs[index - 1] < mzs[index] - mz)
+            int imax = Array.BinarySearch(mzs, mzRange.Max);
+            if (imax < 0)
             {
-                index--;
+                imax = ~imax;
             }
-            return index;
+            if (imax >= mzs.Length)
+            {
+                imax--;
+            }
+            if (imax < mzs.Length - 1 && mzs[imax] <= mzRange.Max)
+            {
+                imax++;
+            }
+            var values = new List<KeyValuePair<float, float>>();
+            for (int i = imin; i <= imax; i++)
+            {
+                values.Add(new KeyValuePair<float, float>((float)mzs[i], (float)intensities[i]));
+            }
+            return new ChromatogramPoint(values.ToArray());
         }
 
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)
@@ -112,10 +116,87 @@ namespace pwiz.Topograph.MsData
         {
             return mz * mz / 400 /50000;
         }
-        public class ChromatogramPoint
+    }
+
+    public class ChromatogramPoint
+    {
+        public ChromatogramPoint()
         {
-            public double Intensity { get; set; }
-            public double PeakMz { get; set; }
+            Values = new KeyValuePair<float, float>[0];
+        }
+        public ChromatogramPoint(KeyValuePair<float,float>[] values)
+        {
+            Values = values;
+        }
+        public IList<KeyValuePair<float,float>> Values { get; private set;}
+        public double GetIntensity(MzRange mzRange, double massAccuracy)
+        {
+            double result = 0;
+            foreach (var entry in Values)
+            {
+                if (mzRange.ContainsWithMassAccuracy(entry.Key, massAccuracy))
+                {
+                    result += entry.Value;
+                }
+            }
+            return result;
+        }
+        private static void Write<T>(Stream stream, T value)
+        {
+            var array = new[] {value};
+            var bytes = new byte[Buffer.ByteLength(array)];
+            Buffer.BlockCopy(array, 0, bytes, 0, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+        private static T Read<T>(Stream stream)
+        {
+            var array = new T[1];
+            var bytes = new byte[Buffer.ByteLength(array)];
+            stream.Read(bytes, 0, bytes.Length);
+            Buffer.BlockCopy(bytes, 0, array, 0, bytes.Length);
+            return array[0];
+        }
+            
+        public void Write(Stream stream)
+        {
+            Write(stream, Values.Count);
+            foreach (var value in Values)
+            {
+                Write(stream, value.Key);
+                Write(stream, value.Value);
+            }
+        }
+        public static ChromatogramPoint Read(Stream stream)
+        {
+            int count = Read<int>(stream);
+            var values = new KeyValuePair<float,float>[count];
+            for (int i = 0; i < count; i++)
+            {
+                var key = Read<float>(stream);
+                var value = Read<float>(stream);
+                values[i] = new KeyValuePair<float, float>(key, value);
+            }
+            return new ChromatogramPoint(values);
+        }
+
+        public static byte[] ToByteArray(IList<ChromatogramPoint> points)
+        {
+            var stream = new MemoryStream();
+            foreach (var point in points)
+            {
+                point.Write(stream);
+            }
+            return stream.ToArray();
+        }
+        public static IList<ChromatogramPoint> FromByteArray(byte[] bytes)
+        {
+            var stream = new MemoryStream(bytes);
+            var result = new List<ChromatogramPoint>();
+            while (stream.Position < stream.Length)
+            {
+                result.Add(Read(stream));
+            }
+            return result;
         }
     }
 }

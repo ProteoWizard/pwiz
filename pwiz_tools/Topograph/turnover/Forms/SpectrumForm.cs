@@ -26,38 +26,42 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using MSGraph;
+using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.MsData;
 using ZedGraph;
+using Label=System.Windows.Forms.Label;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class SpectrumForm : WorkspaceForm
     {
-        private int scanIndex;
-        private MSGraphControl msGraphControl;
+        private int _scanIndex;
+        private readonly MSGraphControl _msGraphControl;
+        private PeptideAnalysis _peptideAnalysis;
         public SpectrumForm(MsDataFile msDataFile) : base(msDataFile.Workspace)
         {
             InitializeComponent();
             MsDataFile = msDataFile;
             tbxScanIndex.Leave += (o, e) => ScanIndex = int.Parse(tbxScanIndex.Text);
-            msGraphControl = new MSGraphControl()
+            _msGraphControl = new MSGraphControl()
                                  {
                                      Dock = DockStyle.Fill,
                                  };
-            Controls.Add(msGraphControl);
+            Controls.Add(_msGraphControl);
         }
         public int ScanIndex
         {
             get
             {
-                return scanIndex;
+                return _scanIndex;
             }
             set
             {
-                scanIndex = value;
-                tbxScanIndex.Text = scanIndex.ToString();
+                _scanIndex = value;
+                tbxScanIndex.Text = _scanIndex.ToString();
                 Redisplay();
             }
         }
@@ -65,59 +69,129 @@ namespace pwiz.Topograph.ui.Forms
         {
             get;private set;
         }
+        public PeptideAnalysis PeptideAnalysis
+        {
+            get
+            {
+                return _peptideAnalysis;
+            }
+            set
+            {
+                _peptideAnalysis = value;
+                Redisplay();
+            }
+        }
+        
         public void Redisplay()
         {
+            cbxShowPeptideMzs.Visible = PeptideAnalysis != null;
             double[] mzArray;
             double[] intensityArray;
-            msGraphControl.GraphPane.GraphObjList.Clear();
-            msGraphControl.GraphPane.CurveList.Clear();
+            _msGraphControl.GraphPane.GraphObjList.Clear();
+            _msGraphControl.GraphPane.CurveList.Clear();
+
             using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
             {
-                tbxMsLevel.Text = msDataFileImpl.GetMsLevel(scanIndex).ToString();
+                tbxMsLevel.Text = msDataFileImpl.GetMsLevel(_scanIndex).ToString();
                 try
                 {
-                    tbxTime.Text = msDataFileImpl.GetScanTimes()[scanIndex].ToString();
+                    tbxTime.Text = msDataFileImpl.GetScanTimes()[_scanIndex].ToString();
                 }
                 catch
                 {
                     tbxTime.Text = "#Error#";
                 }
-                if (!msDataFileImpl.IsCentroided(scanIndex))
+                msDataFileImpl.GetSpectrum(_scanIndex, out mzArray, out intensityArray);
+                if (!msDataFileImpl.IsCentroided(_scanIndex))
                 {
-                    msDataFileImpl.GetSpectrum(scanIndex, out mzArray, out intensityArray);
-                    msGraphControl.AddGraphItem(msGraphControl.GraphPane, new SpectrumGraphItem()
-                                                                              {
-                                                                                  Points =
-                                                                                      new PointPairList(mzArray,
-                                                                                                        intensityArray),
-                                                                                                        GraphItemDrawMethod = MSGraphItemDrawMethod.Line,
 
-                    Color = Color.Blue,
-                                                                              });
+                    _msGraphControl.AddGraphItem(_msGraphControl.GraphPane, new SpectrumGraphItem()
+                    {
+                        Points =
+                            new PointPairList(mzArray,
+                                              intensityArray),
+                        GraphItemDrawMethod = MSGraphItemDrawMethod.Line,
+
+                        Color = Color.Blue,
+                    });
+                    var centroider = new Centroider(mzArray, intensityArray);
+                    centroider.GetCentroidedData(out mzArray, out intensityArray);
                 }
-                msDataFileImpl.GetCentroidedSpectrum(scanIndex, out mzArray, out intensityArray);
-                msGraphControl.AddGraphItem(msGraphControl.GraphPane,
-                                            new SpectrumGraphItem()
-                                                {
-                                                    Points = new PointPairList(mzArray, intensityArray),
-                                                    GraphItemDrawMethod = MSGraphItemDrawMethod.Stick,
-                                                    Color = Color.Black
-                                                });
+
+                var spectrum = new SpectrumGraphItem
+                                   {
+                                       Points = new PointPairList(mzArray, intensityArray),
+                                       GraphItemDrawMethod = MSGraphItemDrawMethod.Stick,
+                                       Color = Color.Black
+                                   };
+                if (PeptideAnalysis != null)
+                {
+                    var mzRanges = new Dictionary<MzRange, String>();
+                    double monoisotopicMass = Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(PeptideAnalysis.Peptide.Sequence);
+                    for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge ++)
+                    {
+                        foreach (var mzRange in PeptideAnalysis.GetMzs()[charge])
+                        {
+                            double mass = (mzRange.Center - AminoAcidFormulas.ProtonMass)* charge;
+                            double massDifference = mass - monoisotopicMass;
+                            var label = massDifference.ToString("0.#");
+                            if (label[0] != '-')
+                            {
+                                label = "+" + label;
+                            }
+                            label = "M" + label;
+                            label += new string('+', charge);
+                            mzRanges.Add(mzRange, label);
+                        }
+                    }
+                    spectrum.MassAccuracy = Workspace.GetMassAccuracy();
+                    spectrum.MzRanges = mzRanges;
+                }
+                _msGraphControl.AddGraphItem(_msGraphControl.GraphPane, spectrum);
+
             }
-            msGraphControl.AxisChange();
-            msGraphControl.Invalidate();
+            if (PeptideAnalysis != null && cbxShowPeptideMzs.Checked)
+            {
+                double massAccuracy = Workspace.GetMassAccuracy();
+                for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
+                {
+                    var mzs = PeptideAnalysis.GetMzs()[charge];
+                    var height = int.MaxValue;
+                    foreach (var mzRange in mzs)
+                    {
+                        double min = mzRange.MinWithMassAccuracy(massAccuracy);
+                        double max = mzRange.MaxWithMassAccuracy(massAccuracy);
+
+                        _msGraphControl.GraphPane.GraphObjList.Add(new BoxObj(min, height, max - min, height, Color.Goldenrod, Color.Goldenrod)
+                                                                    {
+                                                                        IsClippedToChartRect = true,
+                                                                        ZOrder = ZOrder.F_BehindGrid  
+                                                                    });
+                    }
+                }
+            }
+            //msGraphControl.AxisChange();
+            _msGraphControl.Invalidate();
         }
         public void Zoom(double minMz, double maxMz)
         {
-            msGraphControl.GraphPane.XAxis.Scale.Min = minMz;
-            msGraphControl.GraphPane.XAxis.Scale.Max = maxMz;
-            msGraphControl.Invalidate();
+            _msGraphControl.GraphPane.XAxis.Scale.Min = minMz;
+            _msGraphControl.GraphPane.XAxis.Scale.Max = maxMz;
+            _msGraphControl.Invalidate();
+        }
+
+        private void cbxShowPeptideMzs_CheckedChanged(object sender, EventArgs e)
+        {
+            Redisplay();
         }
     }
     public class SpectrumGraphItem : IMSGraphItemInfo
     {
         public string Title { get; set; }
         public Color Color { get; set; }
+        
+        public Dictionary<MzRange, String> MzRanges { get; set; }
+        public double MassAccuracy { get; set; }
 
         public void CustomizeAxis(Axis axis)
         {
@@ -131,7 +205,20 @@ namespace pwiz.Topograph.ui.Forms
         {
             if (GraphItemDrawMethod == MSGraphItemDrawMethod.Stick)
             {
-                return new PointAnnotation(Math.Round(point.X, 4).ToString());
+                var text = point.X.ToString("0.####");
+                if (MzRanges != null)
+                {
+                    foreach (var entry in MzRanges)
+                    {
+                        if (entry.Key.ContainsWithMassAccuracy(point.X, MassAccuracy))
+                        {
+                            text = text + "\n" + entry.Value;
+                            break;
+                        }
+                    }
+                }
+                
+                return new PointAnnotation(text);
             }
             return new PointAnnotation();
         }

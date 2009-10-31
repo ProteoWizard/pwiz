@@ -13,8 +13,7 @@
     <property name="MassIndex" unique-key="PeptideFileAnalysisMz" not-null="true"/>
     <property name="MzMin" />
     <property name="MzMax" />
-    <property name="IntensitiesBytes" length="1000000" type="BinaryBlob" />
-    <property name="PeakMzsBytes" length="1000000" type="BinaryBlob" />
+    <property name="PointsBytes" length="1000000" type="BinaryBlob" />
   </class>
   <class name="DbMsDataFile">
     <id name="Id">

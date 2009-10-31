@@ -31,40 +31,7 @@ namespace pwiz.Topograph.Data
         public virtual int Charge { get; set; }
         public virtual double MzMin { get; set; }
         public virtual double MzMax { get; set; }
-        public virtual byte[] IntensitiesBytes { get; set; }
-        public virtual byte[] PeakMzsBytes { get; set; }
-
-        public virtual double[] Intensities
-        { 
-            get
-            {
-                return ArrayConverter.ToDoubles(ArrayConverter.FromBytes<float>(IntensitiesBytes));
-            }
-            set
-            {
-                IntensitiesBytes = ArrayConverter.ToBytes(ArrayConverter.ToFloats(value));
-            }
-        }
-        public virtual double[] PeakMzs
-        { 
-            get
-            {
-                return ArrayConverter.ToDoubles(ArrayConverter.FromBytes<float>(PeakMzsBytes));
-            }
-            set
-            {
-                PeakMzsBytes = ArrayConverter.ToBytes(ArrayConverter.ToFloats(value));
-            }
-        }
-
-        public virtual void SetIntensities(float[] intensities)
-        {
-            IntensitiesBytes = ArrayConverter.ToBytes(intensities);
-        }
-        public virtual void SetPeakMzs(float[] peakMzs)
-        {
-            PeakMzsBytes = ArrayConverter.ToBytes(peakMzs);
-        }
+        public virtual byte[] PointsBytes { get; set; }
         
         public virtual int[] ScanIndexes
         {

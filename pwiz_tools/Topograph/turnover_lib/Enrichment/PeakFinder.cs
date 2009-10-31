@@ -75,7 +75,7 @@ namespace pwiz.Topograph.Enrichment
         static void FindPeak(ChromatogramData chromatogramData, int firstDetectedScan, int lastDetectedScan, 
             out int peakStart, out int peakEnd)
         {
-            var intensities = chromatogramData.GetAccurateIntensities();
+            var intensities = chromatogramData.GetIntensities();
             int maxIndex = MaxInRange(intensities, firstDetectedScan, lastDetectedScan);
             double baseline = 0;
             for (peakStart = maxIndex; peakStart > 0; peakStart--)
@@ -85,7 +85,7 @@ namespace pwiz.Topograph.Enrichment
                     break;
                 }
             }
-            for (peakEnd = maxIndex; peakEnd < intensities.Count - 1; peakEnd++)
+            for (peakEnd = maxIndex; peakEnd < intensities.Count() - 1; peakEnd++)
             {
                 if (intensities[peakEnd] <= baseline)
                 {
@@ -130,7 +130,7 @@ namespace pwiz.Topograph.Enrichment
             for (int iScan = startIndex; iScan <= endIndex; iScan++)
             {
                 double[] times = chromatogram.Times;
-                var intensities = chromatogram.GetAccurateIntensities();
+                var intensities = chromatogram.GetIntensities();
                 int prevScan = Math.Max(0, iScan - 1);
                 int nextScan = Math.Min(times.Length - 1, iScan + 1);
                 double width = (times[nextScan] - times[prevScan]) / (nextScan - prevScan);

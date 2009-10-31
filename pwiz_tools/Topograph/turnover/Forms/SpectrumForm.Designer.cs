@@ -35,6 +35,7 @@
             this.tbxMsLevel = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.tbxTime = new System.Windows.Forms.TextBox();
+            this.cbxShowPeptideMzs = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -54,6 +55,7 @@
             this.tableLayoutPanel1.Controls.Add(this.tbxMsLevel, 3, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxTime, 5, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cbxShowPeptideMzs, 6, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -121,6 +123,18 @@
             this.tbxTime.Size = new System.Drawing.Size(74, 20);
             this.tbxTime.TabIndex = 5;
             // 
+            // cbxShowPeptideMzs
+            // 
+            this.cbxShowPeptideMzs.AutoSize = true;
+            this.cbxShowPeptideMzs.Location = new System.Drawing.Point(483, 3);
+            this.cbxShowPeptideMzs.Name = "cbxShowPeptideMzs";
+            this.cbxShowPeptideMzs.Size = new System.Drawing.Size(121, 17);
+            this.cbxShowPeptideMzs.TabIndex = 6;
+            this.cbxShowPeptideMzs.Text = "Show Peptide M/Zs";
+            this.cbxShowPeptideMzs.UseVisualStyleBackColor = true;
+            this.cbxShowPeptideMzs.Visible = false;
+            this.cbxShowPeptideMzs.CheckedChanged += new System.EventHandler(this.cbxShowPeptideMzs_CheckedChanged);
+            // 
             // SpectrumForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -145,5 +159,6 @@
         private System.Windows.Forms.TextBox tbxMsLevel;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbxTime;
+        private System.Windows.Forms.CheckBox cbxShowPeptideMzs;
     }
 }

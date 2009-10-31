@@ -543,6 +543,7 @@ namespace pwiz.Topograph.Model
             {
                 peptideAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
             }
+            EnsureEntitiesChangedEventArgs();
             IsDirty = true;
         }
         public bool SaveIfNotDirty(PeptideAnalysis peptideAnalysis)
