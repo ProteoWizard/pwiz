@@ -52,6 +52,7 @@ namespace pwiz.Topograph.ui.Forms
                                  };
             Controls.Add(_msGraphControl);
         }
+
         public int ScanIndex
         {
             get

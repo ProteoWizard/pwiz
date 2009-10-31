@@ -57,9 +57,16 @@ namespace pwiz.Topograph.ui.Forms
             msGraphControl.MouseMoveEvent += msGraphControl_MouseMoveEvent;
             msGraphControl.MouseDownEvent += msGraphControl_MouseDownEvent;
             msGraphControl.MouseUpEvent += msGraphControl_MouseUpEvent;
-            msGraphControl.ContextMenuStrip = contextMenuStrip1;
+            msGraphControl.ContextMenuBuilder += msGraphControl_ContextMenuBuilder;
             splitContainer1.Panel2.Controls.Add(msGraphControl);
             Text = "Chromatograms";
+        }
+
+        void msGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            menuStrip.Items.Insert(0, new ToolStripSeparator());
+            menuStrip.Items.Insert(0, toolStripMenuItemShowSpectrum);
+            menuStrip.Items.Insert(0, toolStripMenuItemSmooth);
         }
 
         protected override void OnHandleCreated(EventArgs e)
