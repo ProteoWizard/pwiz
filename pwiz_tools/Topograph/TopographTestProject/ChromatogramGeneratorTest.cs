@@ -60,7 +60,7 @@ namespace pwiz.Topograph.Test
                         TracerDefCount = 1,
                     };
                     session.Save(dbWorkspace);
-                    DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
+                    DbTracerDef dbTracerDef = TracerDef.GetN15Enrichment();
                     dbTracerDef.Workspace = dbWorkspace;
                     dbTracerDef.Name = "Tracer";
 
@@ -68,8 +68,6 @@ namespace pwiz.Topograph.Test
                 }
             }
             Workspace workspace = new Workspace(dbPath);
-            workspace.SetTracerDefs(new List<DbTracerDef>{TracerDef.GetN15Enrichment()});
-            workspace.Save();
             MsDataFile msDataFile;
             using (var session = workspace.OpenWriteSession())
             {

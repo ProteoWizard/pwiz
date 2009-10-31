@@ -56,7 +56,6 @@
             this.comboTracers = new System.Windows.Forms.ComboBox();
             this.label14 = new System.Windows.Forms.Label();
             this.tbxTracerName = new System.Windows.Forms.TextBox();
-            this.btnDelete = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -91,7 +90,7 @@
             this.tbxMassDifference.Location = new System.Drawing.Point(185, 144);
             this.tbxMassDifference.Name = "tbxMassDifference";
             this.tbxMassDifference.Size = new System.Drawing.Size(100, 20);
-            this.tbxMassDifference.TabIndex = 3;
+            this.tbxMassDifference.TabIndex = 2;
             // 
             // cbxEluteEarlier
             // 
@@ -99,7 +98,7 @@
             this.cbxEluteEarlier.Location = new System.Drawing.Point(405, 106);
             this.cbxEluteEarlier.Name = "cbxEluteEarlier";
             this.cbxEluteEarlier.Size = new System.Drawing.Size(119, 17);
-            this.cbxEluteEarlier.TabIndex = 4;
+            this.cbxEluteEarlier.TabIndex = 5;
             this.cbxEluteEarlier.Text = "Tracers elute earlier";
             this.cbxEluteEarlier.UseVisualStyleBackColor = true;
             // 
@@ -109,7 +108,7 @@
             this.cbxEluteLater.Location = new System.Drawing.Point(405, 129);
             this.cbxEluteLater.Name = "cbxEluteLater";
             this.cbxEluteLater.Size = new System.Drawing.Size(111, 17);
-            this.cbxEluteLater.TabIndex = 5;
+            this.cbxEluteLater.TabIndex = 6;
             this.cbxEluteLater.Text = "Tracers elute later";
             this.cbxEluteLater.UseVisualStyleBackColor = true;
             // 
@@ -118,7 +117,7 @@
             this.btn15N.Location = new System.Drawing.Point(10, 361);
             this.btn15N.Name = "btn15N";
             this.btn15N.Size = new System.Drawing.Size(75, 23);
-            this.btn15N.TabIndex = 6;
+            this.btn15N.TabIndex = 11;
             this.btn15N.Text = "15N";
             this.btn15N.UseVisualStyleBackColor = true;
             this.btn15N.Click += new System.EventHandler(this.btn15N_Click);
@@ -128,7 +127,7 @@
             this.btnD3Leu.Location = new System.Drawing.Point(122, 361);
             this.btnD3Leu.Name = "btnD3Leu";
             this.btnD3Leu.Size = new System.Drawing.Size(75, 23);
-            this.btnD3Leu.TabIndex = 7;
+            this.btnD3Leu.TabIndex = 12;
             this.btnD3Leu.Text = "D3 Leu";
             this.btnD3Leu.UseVisualStyleBackColor = true;
             this.btnD3Leu.Click += new System.EventHandler(this.btnD3Leu_Click);
@@ -138,7 +137,7 @@
             this.btnSaveAndClose.Location = new System.Drawing.Point(472, 358);
             this.btnSaveAndClose.Name = "btnSaveAndClose";
             this.btnSaveAndClose.Size = new System.Drawing.Size(68, 23);
-            this.btnSaveAndClose.TabIndex = 8;
+            this.btnSaveAndClose.TabIndex = 9;
             this.btnSaveAndClose.Text = "OK";
             this.btnSaveAndClose.UseVisualStyleBackColor = true;
             this.btnSaveAndClose.Click += new System.EventHandler(this.btnSaveAndClose_Click);
@@ -157,7 +156,7 @@
             this.tbxInitialApe.Location = new System.Drawing.Point(532, 232);
             this.tbxInitialApe.Name = "tbxInitialApe";
             this.tbxInitialApe.Size = new System.Drawing.Size(100, 20);
-            this.tbxInitialApe.TabIndex = 10;
+            this.tbxInitialApe.TabIndex = 7;
             this.tbxInitialApe.Text = "0";
             // 
             // tbxFinalApe
@@ -165,7 +164,7 @@
             this.tbxFinalApe.Location = new System.Drawing.Point(532, 301);
             this.tbxFinalApe.Name = "tbxFinalApe";
             this.tbxFinalApe.Size = new System.Drawing.Size(100, 20);
-            this.tbxFinalApe.TabIndex = 12;
+            this.tbxFinalApe.TabIndex = 8;
             this.tbxFinalApe.Text = "100";
             // 
             // label4
@@ -182,14 +181,14 @@
             this.tbxAtomCount.Location = new System.Drawing.Point(149, 257);
             this.tbxAtomCount.Name = "tbxAtomCount";
             this.tbxAtomCount.Size = new System.Drawing.Size(100, 20);
-            this.tbxAtomCount.TabIndex = 13;
+            this.tbxAtomCount.TabIndex = 3;
             // 
             // tbxAtomicPercentEnrichment
             // 
             this.tbxAtomicPercentEnrichment.Location = new System.Drawing.Point(150, 284);
             this.tbxAtomicPercentEnrichment.Name = "tbxAtomicPercentEnrichment";
             this.tbxAtomicPercentEnrichment.Size = new System.Drawing.Size(100, 20);
-            this.tbxAtomicPercentEnrichment.TabIndex = 14;
+            this.tbxAtomicPercentEnrichment.TabIndex = 4;
             // 
             // label5
             // 
@@ -278,7 +277,7 @@
             this.comboTracers.Location = new System.Drawing.Point(121, 3);
             this.comboTracers.Name = "comboTracers";
             this.comboTracers.Size = new System.Drawing.Size(122, 21);
-            this.comboTracers.TabIndex = 24;
+            this.comboTracers.TabIndex = 13;
             this.comboTracers.SelectedIndexChanged += new System.EventHandler(this.comboTracers_SelectedIndexChanged);
             // 
             // label14
@@ -295,23 +294,14 @@
             this.tbxTracerName.Location = new System.Drawing.Point(121, 32);
             this.tbxTracerName.Name = "tbxTracerName";
             this.tbxTracerName.Size = new System.Drawing.Size(122, 20);
-            this.tbxTracerName.TabIndex = 26;
-            // 
-            // btnDelete
-            // 
-            this.btnDelete.Location = new System.Drawing.Point(287, 361);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(75, 23);
-            this.btnDelete.TabIndex = 27;
-            this.btnDelete.Text = "Delete";
-            this.btnDelete.UseVisualStyleBackColor = true;
+            this.tbxTracerName.TabIndex = 0;
             // 
             // btnCancel
             // 
             this.btnCancel.Location = new System.Drawing.Point(557, 358);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 28;
+            this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -323,7 +313,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(650, 393);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.tbxTracerName);
             this.Controls.Add(this.label14);
             this.Controls.Add(this.comboTracers);
@@ -388,7 +377,6 @@
         private System.Windows.Forms.ComboBox comboTracers;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.TextBox tbxTracerName;
-        private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnCancel;
 
     }
