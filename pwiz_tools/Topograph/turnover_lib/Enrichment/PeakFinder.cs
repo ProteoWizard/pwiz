@@ -50,7 +50,14 @@ namespace pwiz.Topograph.Enrichment
         public void FindPeak(out int peakStart, out int peakEnd)
         {
             peakStart = FirstDetectedScan;
-            peakEnd = FirstDetectedScan;
+            if (LastDetectedScan > FirstDetectedScan + 2000)
+            {
+                peakEnd = FirstDetectedScan;
+            }
+            else
+            {
+                peakEnd = LastDetectedScan;
+            }
             int nextPeakStart = peakStart;
             int nextPeakEnd = peakEnd;
             for (int i = 0; i < Chromatograms.Count; i++)
