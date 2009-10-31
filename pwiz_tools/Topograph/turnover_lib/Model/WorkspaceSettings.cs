@@ -48,6 +48,10 @@ namespace pwiz.Topograph.Model
             {
                 return defaultValue;
             }
+            if (typeof(T).IsEnum)
+            {
+                return (T) Enum.Parse(typeof (T), setting.Value);
+            }
             return (T)Convert.ChangeType(setting.Value, typeof(T));
         }
 
