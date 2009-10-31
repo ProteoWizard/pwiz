@@ -72,7 +72,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tabControl1.Location = new System.Drawing.Point(0, 19);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(653, 172);
+            this.tabControl1.Size = new System.Drawing.Size(653, 199);
             this.tabControl1.TabIndex = 0;
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
@@ -83,7 +83,7 @@ namespace pwiz.Topograph.ui.Forms
             this.pageDesign.Location = new System.Drawing.Point(4, 22);
             this.pageDesign.Name = "pageDesign";
             this.pageDesign.Padding = new System.Windows.Forms.Padding(3);
-            this.pageDesign.Size = new System.Drawing.Size(645, 146);
+            this.pageDesign.Size = new System.Drawing.Size(645, 173);
             this.pageDesign.TabIndex = 0;
             this.pageDesign.Text = "Design";
             this.pageDesign.UseVisualStyleBackColor = true;
@@ -102,7 +102,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.splitContainer2.Panel2.Controls.Add(this.listBox1);
             this.splitContainer2.Panel2.Controls.Add(this.panel3);
-            this.splitContainer2.Size = new System.Drawing.Size(639, 117);
+            this.splitContainer2.Size = new System.Drawing.Size(639, 144);
             this.splitContainer2.SplitterDistance = 213;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -111,7 +111,7 @@ namespace pwiz.Topograph.ui.Forms
             this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(213, 117);
+            this.treeView1.Size = new System.Drawing.Size(213, 144);
             this.treeView1.TabIndex = 0;
             this.treeView1.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView1_BeforeExpand);
             this.treeView1.DoubleClick += new System.EventHandler(this.treeView1_DoubleClick);
@@ -122,7 +122,7 @@ namespace pwiz.Topograph.ui.Forms
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(19, 0);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(403, 108);
+            this.listBox1.Size = new System.Drawing.Size(403, 134);
             this.listBox1.TabIndex = 1;
             // 
             // panel3
@@ -131,7 +131,7 @@ namespace pwiz.Topograph.ui.Forms
             this.panel3.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel3.Location = new System.Drawing.Point(0, 0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(19, 117);
+            this.panel3.Size = new System.Drawing.Size(19, 144);
             this.panel3.TabIndex = 0;
             // 
             // btnAddColumn
@@ -197,11 +197,11 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.splitContainer1.Panel1.Controls.Add(this.tabControl1);
             this.splitContainer1.Panel1.Controls.Add(this.panelName);
-            this.splitContainer1.Panel1.Controls.Add(this.panel1);
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer1.Panel2.Controls.Add(this.panel1);
             this.splitContainer1.Size = new System.Drawing.Size(653, 416);
             this.splitContainer1.SplitterDistance = 218;
             this.splitContainer1.TabIndex = 1;
@@ -237,8 +237,8 @@ namespace pwiz.Topograph.ui.Forms
             this.panel1.Controls.Add(this.btnExport);
             this.panel1.Controls.Add(this.btnSaveQuery);
             this.panel1.Controls.Add(this.btnExecuteQuery);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 191);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(653, 27);
             this.panel1.TabIndex = 0;
@@ -280,12 +280,13 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.AllowUserToOrderColumns = true;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 27);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(653, 194);
+            this.dataGridView1.Size = new System.Drawing.Size(653, 167);
             this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentDoubleClick);
+            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
+            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
             // QueryForm
             // 

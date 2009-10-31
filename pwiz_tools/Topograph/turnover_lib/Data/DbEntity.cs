@@ -32,7 +32,8 @@ namespace pwiz.Topograph.Data
         where T : DbEntity<T>
     {
         public virtual long? Id 
-        { get; set;
+        { 
+            get; set;
         }
         public override int GetHashCode()
         {

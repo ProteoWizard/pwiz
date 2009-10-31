@@ -42,7 +42,7 @@ namespace pwiz.Topograph.ui.Forms
                     var queryDef = (QueryDef)xmlSerializer.Deserialize(new StringReader(setting.Value));
                     tbxSource.Text = queryDef.Hql;
                 }
-                catch(Exception)
+                catch
                 {
                     
                 }
@@ -51,6 +51,15 @@ namespace pwiz.Topograph.ui.Forms
             UpdateFormTitle();
         }
 
+        public void SetPreviewMode()
+        {
+            if (ExecuteQuery())
+            {
+                splitContainer1.Panel1Collapsed = true;
+                btnSaveQuery.Visible = false;
+                btnExecuteQuery.Text = "Refresh";
+            }
+        }
         private void comboTableName_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetTable(((Table) comboTableName.SelectedItem).Type);
@@ -146,10 +155,7 @@ namespace pwiz.Topograph.ui.Forms
                     Identifier = new Identifier(parent, property), 
                     Type = columnInfo.ColumnType
                 };
-                var node = new TreeNode(columnInfo.Caption)
-                               {
-                                   Tag = column
-                               };
+                var node = new TreeNode(columnInfo.Caption) { Tag = column };
                 nodes.Add(node);
             }
             return nodes;
@@ -186,13 +192,15 @@ namespace pwiz.Topograph.ui.Forms
             query.SetColumns(identifiers);
             tbxSource.Text = query.GetSourceHql();
         }
- 
+
         private void ExecuteQuery(ParsedQuery parsedQuery, out IList<object[]> rows, out IList<String> columnNames)
         {
             columnNames = new List<string>();
             rows = new List<object[]>();
             using (var session = Workspace.OpenSession())
             {
+                var entities = new List<IDbEntity>();
+                var entityTypesToQuery = new HashSet<String>();
                 var query = session.CreateQuery(parsedQuery.GetExecuteHql());
                 var results = query.List();
                 foreach (var selectColumn in parsedQuery.Columns)
@@ -203,19 +211,44 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     var o = results[iRow];
                     var row = o is object[] ? (object[]) o : new[] {o};
-                    foreach (var cell in row)
+                    for (int i = 0; i < row.Length; i++ )
                     {
-                        if (cell != null)
+                        var entity = row[i] as IDbEntity;
+                        if (entity != null)
                         {
-                            cell.ToString();
+                            entities.Add(entity);
+                            entityTypesToQuery.Add(session.GetEntityName(entity));
                         }
                     }
                     rows.Add(row);
                 }
+                if (entityTypesToQuery.Contains(typeof(DbPeptideFileAnalysis).Name))
+                {
+                    entityTypesToQuery.Add(typeof (DbPeptideAnalysis).Name);
+                    entityTypesToQuery.Add(typeof (DbMsDataFile).Name);
+                    session.CreateCriteria(typeof (DbPeptideFileAnalysis)).List();
+                }
+                if (entityTypesToQuery.Contains(typeof(DbPeptideAnalysis).Name))
+                {
+                    entityTypesToQuery.Add(typeof (DbPeptide).Name);
+                    session.CreateCriteria(typeof (DbPeptideAnalysis)).List();
+                }
+                if (entityTypesToQuery.Contains(typeof(DbPeptide).Name))
+                {
+                    session.CreateCriteria(typeof (DbPeptide)).List();
+                }
+                if (entityTypesToQuery.Contains(typeof(DbMsDataFile).Name))
+                {
+                    session.CreateCriteria(typeof (DbMsDataFile)).List();
+                }
+                foreach (var entity in entities)
+                {
+                    entity.ToString();
+                }
             }
         }
 
-        private void btnExecuteQuery_Click(object sender, EventArgs e)
+        private bool ExecuteQuery()
         {
             try
             {
@@ -227,8 +260,10 @@ namespace pwiz.Topograph.ui.Forms
                 dataGridView1.Rows.Clear();
                 foreach (var columnName in columnNames)
                 {
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn {HeaderText = columnName});
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = columnName });
                 }
+                var underlineFont = new Font(dataGridView1.Font, FontStyle.Underline);
+
                 if (rows.Count > 0)
                 {
                     dataGridView1.Rows.Add(rows.Count);
@@ -238,19 +273,34 @@ namespace pwiz.Topograph.ui.Forms
                         var row = dataGridView1.Rows[iRow];
                         for (int i = 0; i < dataGridView1.Columns.Count && i < values.Length; i++)
                         {
-                            row.Cells[i].Value = values[i];
+                            var value = values[i];
+                            var cell = row.Cells[i];
+                            cell.Value = values[i];
+                            if (value is IDbEntity)
+                            {
+                                cell.Style.ForeColor = Color.Blue;
+                                cell.Style.Font = underlineFont;
+                            }
                         }
                     }
-                    
                 }
+
+                return true;
             }
             catch (Exception exception)
             {
                 MessageBox.Show(this, "An exception occurred:" + exception, Program.AppName);
+                return false;
             }
+            
         }
 
-        private void dataGridView1_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void btnExecuteQuery_Click(object sender, EventArgs e)
+        {
+            ExecuteQuery();
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {
@@ -258,6 +308,10 @@ namespace pwiz.Topograph.ui.Forms
             }
             var cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
             var value = cell.Value;
+            if (!(value is IDbEntity))
+            {
+                return;
+            }
             using (var session = Workspace.OpenSession())
             {
                 DbPeptideFileAnalysis dbPeptideFileAnalysis = null;
@@ -309,7 +363,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(form.PeptideAnalysisSummary,
                                                                                        peptideAnalysis.GetFileAnalysis(
-                                                                                           dbPeptideAnalysis.Id.Value));
+                                                                                           dbPeptideFileAnalysis.Id.Value));
                 }
             }
         }
@@ -549,6 +603,17 @@ namespace pwiz.Topograph.ui.Forms
                     writer.WriteLine();
                 }
             }
+        }
+
+        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            bool isHyperlink = false;
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                isHyperlink = cell.Value is IDbEntity;
+            }
+            dataGridView1.Cursor = isHyperlink ? Cursors.Hand : Cursors.Default;
         }
     }    
 }

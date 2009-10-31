@@ -46,10 +46,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            OpenSelectedQuery();
+            OpenSelectedQuery(true);
         }
 
-        private void OpenSelectedQuery()
+        private void OpenSelectedQuery(bool execute)
         {
             var queryName = (String)listBox1.SelectedItem;
             var setting = Workspace.Settings.GetChild(WorkspaceSetting.QueryPrefix + queryName);
@@ -65,6 +65,10 @@ namespace pwiz.Topograph.ui.Forms
             }
             queryForm = new QueryForm(setting);
             queryForm.Show(DockPanel, DigitalRune.Windows.Docking.DockState.Document);
+            if (execute)
+            {
+                queryForm.SetPreviewMode();
+            }
         }
 
         private void btnNewQuery_Click(object sender, EventArgs e)
@@ -76,7 +80,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            btnOpen.Enabled = btnDelete.Enabled = listBox1.SelectedItems.Count > 0;
+            btnRunQuery.Enabled = btnOpen.Enabled = btnDelete.Enabled = listBox1.SelectedItems.Count > 0;
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -107,7 +111,12 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
-            OpenSelectedQuery();
+            OpenSelectedQuery(false);
+        }
+
+        private void btnRunQuery_Click(object sender, EventArgs e)
+        {
+            OpenSelectedQuery(true);
         }
     }
 }

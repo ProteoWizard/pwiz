@@ -471,19 +471,22 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var graphForm = Program.FindOpenEntityForm<GraphForm>(peptideAnalysis);
-            if (graphForm == null)
+            if (false)
             {
-                graphForm = new GraphForm(peptideAnalysis);
-                graphForm.Show(form.PeptideAnalysisSummary.DockPanel, DigitalRune.Windows.Docking.DockState.Document);
+                var graphForm = Program.FindOpenEntityForm<GraphForm>(peptideAnalysis);
+                if (graphForm == null)
+                {
+                    graphForm = new GraphForm(peptideAnalysis);
+                    graphForm.Show(form.PeptideAnalysisSummary.DockPanel, DigitalRune.Windows.Docking.DockState.Document);
+                }
+                else
+                {
+                    graphForm.Activate();
+                }
+                graphForm.GraphValue = column == colHalfLifeTracerCount
+                                           ? PeptideQuantity.tracer_count
+                                           : PeptideQuantity.precursor_enrichment;
             }
-            else
-            {
-                graphForm.Activate();
-            }
-            graphForm.GraphValue = column == colHalfLifeTracerCount
-                                       ? PeptideQuantity.tracer_count
-                                       : PeptideQuantity.precursor_enrichment;
         }
     }
 }

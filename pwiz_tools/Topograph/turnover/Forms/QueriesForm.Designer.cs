@@ -32,6 +32,7 @@
             this.btnNewQuery = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.btnRunQuery = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // listBox1
@@ -49,18 +50,18 @@
             // 
             // btnNewQuery
             // 
-            this.btnNewQuery.Location = new System.Drawing.Point(12, 10);
+            this.btnNewQuery.Location = new System.Drawing.Point(174, 10);
             this.btnNewQuery.Name = "btnNewQuery";
             this.btnNewQuery.Size = new System.Drawing.Size(75, 23);
             this.btnNewQuery.TabIndex = 1;
-            this.btnNewQuery.Text = "New Query";
+            this.btnNewQuery.Text = "New";
             this.btnNewQuery.UseVisualStyleBackColor = true;
             this.btnNewQuery.Click += new System.EventHandler(this.btnNewQuery_Click);
             // 
             // btnDelete
             // 
             this.btnDelete.Enabled = false;
-            this.btnDelete.Location = new System.Drawing.Point(174, 10);
+            this.btnDelete.Location = new System.Drawing.Point(255, 10);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(100, 23);
             this.btnDelete.TabIndex = 2;
@@ -75,15 +76,27 @@
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(75, 23);
             this.btnOpen.TabIndex = 3;
-            this.btnOpen.Text = "Open";
+            this.btnOpen.Text = "Design";
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
+            // 
+            // btnRunQuery
+            // 
+            this.btnRunQuery.Enabled = false;
+            this.btnRunQuery.Location = new System.Drawing.Point(12, 10);
+            this.btnRunQuery.Name = "btnRunQuery";
+            this.btnRunQuery.Size = new System.Drawing.Size(75, 23);
+            this.btnRunQuery.TabIndex = 4;
+            this.btnRunQuery.Text = "Execute";
+            this.btnRunQuery.UseVisualStyleBackColor = true;
+            this.btnRunQuery.Click += new System.EventHandler(this.btnRunQuery_Click);
             // 
             // QueriesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(517, 354);
+            this.Controls.Add(this.btnRunQuery);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnNewQuery);
@@ -101,5 +114,6 @@
         private System.Windows.Forms.Button btnNewQuery;
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnRunQuery;
     }
 }

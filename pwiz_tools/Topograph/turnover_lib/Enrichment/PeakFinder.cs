@@ -50,7 +50,7 @@ namespace pwiz.Topograph.Enrichment
         public void FindPeak(out int peakStart, out int peakEnd)
         {
             peakStart = FirstDetectedScan;
-            if (LastDetectedScan > FirstDetectedScan + 2000)
+            if (LastDetectedScan > FirstDetectedScan + 100)
             {
                 peakEnd = FirstDetectedScan;
             }
