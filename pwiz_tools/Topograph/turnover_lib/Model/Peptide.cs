@@ -106,15 +106,14 @@ namespace pwiz.Topograph.Model
 
         public PeptideAnalysis EnsurePeptideAnalysis()
         {
-            using (Workspace.GetWriteLock())
-            {
-                using (var session = Workspace.OpenWriteSession())
+            PeptideAnalysis peptideAnalysis;
+            using (var session = Workspace.OpenWriteSession())
                 {
                     var dbPeptide = session.Load<DbPeptide>(Id);
-                    var criteria = session.CreateCriteria(typeof(DbPeptideAnalysis))
+                    var criteria = session.CreateCriteria(typeof (DbPeptideAnalysis))
                         .Add(Restrictions.Eq("Peptide", dbPeptide))
                         .Add(Restrictions.Eq("Workspace", Workspace.LoadDbWorkspace(session)));
-                    var dbPeptideAnalysis = (DbPeptideAnalysis)criteria.UniqueResult();
+                    var dbPeptideAnalysis = (DbPeptideAnalysis) criteria.UniqueResult();
                     if (dbPeptideAnalysis != null)
                     {
                         return Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
@@ -127,11 +126,13 @@ namespace pwiz.Topograph.Model
                     session.BeginTransaction();
                     session.Save(dbPeptideAnalysis);
                     session.Transaction.Commit();
-                    var peptideAnalysis = new PeptideAnalysis(Workspace, dbPeptideAnalysis);
-                    Workspace.PeptideAnalyses.AddChild(peptideAnalysis.Id.Value, peptideAnalysis);
-                    Workspace.AddEntityModel(peptideAnalysis);
-                    return peptideAnalysis;
+                    peptideAnalysis = new PeptideAnalysis(Workspace, dbPeptideAnalysis);
                 }
+            using (Workspace.GetWriteLock()) 
+            {
+                Workspace.PeptideAnalyses.AddChild(peptideAnalysis.Id.Value, peptideAnalysis);
+                Workspace.AddEntityModel(peptideAnalysis);
+                return peptideAnalysis;
             }
         }
         public int SearchResultCount
