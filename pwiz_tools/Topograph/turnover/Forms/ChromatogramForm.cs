@@ -205,6 +205,10 @@ namespace pwiz.Topograph.ui.Forms
         }
         void DisplaySpectrum(int scanIndex)
         {
+            if (!TurnoverForm.Instance.EnsureMsDataFile(PeptideFileAnalysis.MsDataFile, true))
+            {
+                return;
+            }
             SpectrumForm spectrumForm;
             spectrumForm = new SpectrumForm(PeptideFileAnalysis.MsDataFile)
             {
@@ -284,7 +288,7 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     else
                     {
-                        if (ExcludedMzs.IsExcluded(mzKey))
+                        if (ExcludedMzs.IsExcluded(mzKey.MassIndex))
                         {
                             continue;
                         }

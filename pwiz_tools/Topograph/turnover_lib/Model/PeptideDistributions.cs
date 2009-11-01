@@ -70,7 +70,7 @@ namespace pwiz.Topograph.Model
             }
             observedIntensities = peaks.GetAverageIntensities();
             var result = new PeptideDistribution(this, PeptideQuantity.precursor_enrichment) { Parent = this};
-            PeptideFileAnalysis.TurnoverCalculator.GetEnrichmentAmounts(result, observedIntensities, 
+            PeptideFileAnalysis.TurnoverCalculator.GetEnrichmentAmounts(result, peaks.GetAverageIntensitiesExcludedAsNaN(), 
                 PeptideFileAnalysis.PeptideAnalysis.IntermediateLevels, out predictedIntensities);
             return result;
         }
@@ -86,7 +86,7 @@ namespace pwiz.Topograph.Model
             }
             observedIntensities = peaks.GetAverageIntensities();
             var result = new PeptideDistribution(this, PeptideQuantity.tracer_count) { Parent = this };
-            PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(result, observedIntensities, out predictedIntensities);
+            PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(result, peaks.GetAverageIntensitiesExcludedAsNaN(), out predictedIntensities);
             return result;
         }
 

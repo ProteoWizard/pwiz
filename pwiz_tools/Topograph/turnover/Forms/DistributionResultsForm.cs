@@ -60,13 +60,13 @@ namespace pwiz.Topograph.ui.Forms
             double monoIsotopicMass =
                 Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(PeptideAnalysis.Peptide.Sequence);
             var masses = PeptideAnalysis.GetTurnoverCalculator().GetMzs(0);
-            PointPairList actualBarPoints = new PointPairList();
-            PointPairList excludedBarPoints = new PointPairList();
-            PointPairList predictedBarPoints = new PointPairList();
+            var actualBarPoints = new PointPairList();
+            var excludedBarPoints = new PointPairList();
+            var predictedBarPoints = new PointPairList();
             for (int iMass = 0; iMass < massCount; iMass++)
             {
                 double mass = masses[iMass].Center - monoIsotopicMass;
-                if (PeptideFileAnalysis.ExcludedMzs.IsMassExcludedForAllCharges(iMass))
+                if (PeptideFileAnalysis.ExcludedMzs.IsMassExcluded(iMass))
                 {
                     excludedBarPoints.Add(mass, observedIntensities[iMass]);
                 }
@@ -80,7 +80,7 @@ namespace pwiz.Topograph.ui.Forms
             barGraphControl.GraphPane.YAxis.Title.Text = "Intensity";
             barGraphControl.GraphPane.BarSettings.Type = BarType.Overlay;
             barGraphControl.GraphPane.AddBar("Observed Peptide", actualBarPoints, Color.Black);
-            barGraphControl.GraphPane.AddBar(null, excludedBarPoints, Color.Gray);
+            barGraphControl.GraphPane.AddBar(null, excludedBarPoints, Color.White);
             var distributions = peptideDistribution.ListChildren();
             int candidateCount = distributions.Count;
 

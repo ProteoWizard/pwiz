@@ -295,8 +295,13 @@ namespace pwiz.Topograph.ui.Forms
 
         public bool EnsureMsDataFile(MsDataFile msDataFile)
         {
+            return EnsureMsDataFile(msDataFile, false);
+        }
+        
+        public bool EnsureMsDataFile(MsDataFile msDataFile, bool alwaysPrompt)
+        {
             String errorMessage;
-            if (msDataFile.ValidationStatus == ValidationStatus.reject)
+            if (!alwaysPrompt && msDataFile.ValidationStatus == ValidationStatus.reject)
             {
                 return false;
             }

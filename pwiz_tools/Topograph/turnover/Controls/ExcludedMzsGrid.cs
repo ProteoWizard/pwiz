@@ -32,9 +32,6 @@ namespace pwiz.Topograph.ui.Controls
         private PeptideAnalysis _peptideAnalysis;
         private PeptideFileAnalysis _peptideFileAnalysis;
 
-        private readonly Dictionary<int,DataGridViewCheckBoxColumn> _excludedMzColumns  
-            = new Dictionary<int, DataGridViewCheckBoxColumn>();
-
         private readonly Dictionary<int, DataGridViewTextBoxColumn> _intensityColumns
             = new Dictionary<int, DataGridViewTextBoxColumn>();
 
@@ -49,6 +46,7 @@ namespace pwiz.Topograph.ui.Controls
 
         public DataGridViewTextBoxColumn MassColumn { get; private set; }
         public DataGridViewTextBoxColumn IntensityColumn { get; private set; }
+        public DataGridViewCheckBoxColumn ExcludedColumn { get; private set; }
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -101,9 +99,8 @@ namespace pwiz.Topograph.ui.Controls
         {
             base.OnCellEndEdit(e);
             var row = Rows[e.RowIndex];
-            var column = Columns[e.ColumnIndex];
             var cell = row.Cells[e.ColumnIndex];
-            ExcludedMzs.SetExcluded(new MzKey((int) column.Tag, (int) row.Tag), (bool) cell.Value);
+            ExcludedMzs.SetExcluded((int) row.Tag, (bool) cell.Value);
         }
 
         protected override void OnCellValueChanged(DataGridViewCellEventArgs e)
@@ -209,14 +206,16 @@ namespace pwiz.Topograph.ui.Controls
                 IntensityColumn.DefaultCellStyle.Format = "0.#";
                 Columns.Add(IntensityColumn);
             }
-            foreach (var entry in _excludedMzColumns.ToArray())
+            if (ExcludedColumn == null)
             {
-                if (entry.Key >= PeptideAnalysis.MinCharge && entry.Key <= PeptideAnalysis.MaxCharge)
-                {
-                    continue;
-                }
-                Columns.Remove(entry.Value);
-                _excludedMzColumns.Remove(entry.Key);
+                ExcludedColumn = new DataGridViewCheckBoxColumn
+                                     {
+                                         HeaderText = "Excluded",
+                                         Name = "colExcluded",
+                                         Width = 50,
+                                         SortMode = DataGridViewColumnSortMode.NotSortable,
+                                     };
+                Columns.Add(ExcludedColumn);
             }
             foreach (var entry in _intensityColumns.ToArray())
             {
@@ -229,27 +228,6 @@ namespace pwiz.Topograph.ui.Controls
             }
             for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge ++)
             {
-                if (!_excludedMzColumns.ContainsKey(charge))
-                {
-                    var column = new DataGridViewCheckBoxColumn
-                                     {
-                                         HeaderText = "Exc+" + charge,
-                                         Name = "colExcludeCharge" + charge,
-                                         Width = 40,
-                                         SortMode = DataGridViewColumnSortMode.NotSortable,
-                                         Tag = charge,
-                                     };
-                    DataGridViewCheckBoxColumn nextColumn;
-                    if (_excludedMzColumns.TryGetValue(charge + 1, out nextColumn))
-                    {
-                        Columns.Insert(nextColumn.Index, column);
-                    }
-                    else
-                    {
-                        Columns.Add(column);
-                    }
-                    _excludedMzColumns.Add(charge, column);
-                }
                 if (!_intensityColumns.ContainsKey(charge))
                 {
                     var column = new DataGridViewTextBoxColumn
@@ -262,8 +240,8 @@ namespace pwiz.Topograph.ui.Controls
                                          Tag = charge,
                                          DefaultCellStyle = {Format = "0.#"},
                                      };
-                    DataGridViewCheckBoxColumn nextColumn;
-                    if (_excludedMzColumns.TryGetValue(charge + 1, out nextColumn))
+                    DataGridViewTextBoxColumn nextColumn;
+                    if (_intensityColumns.TryGetValue(charge + 1, out nextColumn))
                     {
                         Columns.Insert(nextColumn.Index, column);
                     }
@@ -301,41 +279,28 @@ namespace pwiz.Topograph.ui.Controls
             }
             var mzs = PeptideAnalysis.GetMzs();
             Dictionary<int, IList<double>> scaledIntensities = null;
+            IList<double> averageIntensities = null;
             if (PeptideFileAnalysis != null)
             {
                 scaledIntensities = PeptideFileAnalysis.GetScaledIntensities();
+                averageIntensities = PeptideFileAnalysis.GetAverageIntensities();
             }
 
             for (int iRow = 0; iRow < Rows.Count; iRow++)
             {
                 var row = Rows[iRow];
                 var iMass = (int) row.Tag;
-                foreach (var entry in _excludedMzColumns)
-                {
-                    var cell = row.Cells[entry.Value.Name];
-                    var mzKey = new MzKey(entry.Key, iMass);
-                    cell.Value 
-                        = ExcludedMzs.IsExcluded(mzKey);
-                    var mzRange = mzs[mzKey.Charge][mzKey.MassIndex];
-                    if (scaledIntensities != null)
-                    {
-                        cell.ToolTipText = "M/Z:" + mzRange + "\nIntensity:" +
-                                           scaledIntensities[mzKey.Charge][mzKey.MassIndex];
-                    }
-                    else
-                    {
-                        cell.ToolTipText = "M/Z:" + mzRange;
-                    }
-                    cell.Style.BackColor = GetColor(mzKey);
-                }
                 foreach (var entry in _intensityColumns)
                 {
                     var cell = row.Cells[entry.Value.Index];
                     var mzKey = new MzKey(entry.Key, iMass);
                     if (scaledIntensities != null)
                     {
+                        var mzRange = mzs[mzKey.Charge][mzKey.MassIndex];
                         entry.Value.Visible = true;
                         cell.Value = scaledIntensities[mzKey.Charge][mzKey.MassIndex];
+                        cell.ToolTipText = "M/Z:" + mzRange + "\nIntensity:" +
+                                           scaledIntensities[mzKey.Charge][mzKey.MassIndex];
                     }
                     else
                     {
@@ -351,10 +316,11 @@ namespace pwiz.Topograph.ui.Controls
                     label = "+" + label;
                 }
                 label = "M" + label;
-                row.Cells[MassColumn.Name].Value = label;
+                row.Cells[MassColumn.Index].Value = label;
                 row.Cells[MassColumn.Index].ToolTipText = "Mass:" + masses[iMass];
+                row.Cells[ExcludedColumn.Index].Value = ExcludedMzs.IsMassExcluded(iMass);
                 double totalIntensity = 0;
-                int intensityCount = 0;
+                var intensityCount = 0;
                 foreach (var intensities in intensitiesList)
                 {
                     if (double.IsNaN(intensities[iMass]))
@@ -364,13 +330,14 @@ namespace pwiz.Topograph.ui.Controls
                     totalIntensity += intensities[iMass];
                     intensityCount++;
                 }
+
                 if (intensityCount == 0)
                 {
-                    row.Cells[IntensityColumn.Name].Value = null;
+                    row.Cells[IntensityColumn.Index].Value = null;
                 }
                 else
                 {
-                    row.Cells[IntensityColumn.Name].Value = totalIntensity/intensityCount;
+                    row.Cells[IntensityColumn.Index].Value = totalIntensity / intensityCount;
                 }
             }
         }

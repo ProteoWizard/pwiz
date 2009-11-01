@@ -29,40 +29,36 @@ namespace pwiz.Topograph.MsData
 {
     public static class MsDataFileUtil
     {
+        /// <summary>
+        /// Returns the ChromatogramPoint which has the intensities of the points
+        /// closest to the specified MzRange.  The intensities are assumed to be
+        /// from a centroided spectrum, and the mzRange is much smaller than the
+        /// machine resolution.
+        /// </summary>
         public static ChromatogramPoint GetPoint(MzRange mzRange, double[] mzs, double[] intensities)
         {
-            int imin = Array.BinarySearch(mzs, mzRange.Min);
-            if (imin < 0)
-            {
-                imin = ~imin;
-            }
-            if (imin >= mzs.Length)
-            {
-                return new ChromatogramPoint();
-            }
-            if (imin > 0 && mzs[imin] > mzRange.Min)
-            {
-                imin--;
-            }
-            int imax = Array.BinarySearch(mzs, mzRange.Max);
-            if (imax < 0)
-            {
-                imax = ~imax;
-            }
-            if (imax >= mzs.Length)
-            {
-                imax--;
-            }
-            if (imax < mzs.Length - 1 && mzs[imax] <= mzRange.Max)
-            {
-                imax++;
-            }
+            int imin = ClosestIndex(mzRange.Min, mzs);
+            int imax = ClosestIndex(mzRange.Max, mzs);
             var values = new List<KeyValuePair<float, float>>();
             for (int i = imin; i <= imax; i++)
             {
                 values.Add(new KeyValuePair<float, float>((float)mzs[i], (float)intensities[i]));
             }
             return new ChromatogramPoint(values.ToArray());
+        }
+
+        private static int ClosestIndex(double key, double[] array)
+        {
+            var index = Array.BinarySearch(array, key);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            if (index > 0 && key - array[index - 1] < array[index] - key)
+            {
+                index--;
+            }
+            return index;
         }
 
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)
@@ -111,10 +107,6 @@ namespace pwiz.Topograph.MsData
                     "An exception occurred while trying to open the file.  Either the file is corrupted, or the necessary libraries to read this file type have not been installed.";
                 return false;
             }
-        }
-        public static double GetFullWidthHalfMax(double mz)
-        {
-            return mz * mz / 400 /50000;
         }
     }
 

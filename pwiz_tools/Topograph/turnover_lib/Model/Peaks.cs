@@ -154,16 +154,63 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public IList<double> GetIntensities(int charge, IntensityScaleMode scaleMode)
+        public PeptideAnalysis PeptideAnalysis { get { return PeptideFileAnalysis.PeptideAnalysis; } }
+
+
+        public ExcludedMzs ExcludedMzs { get { return PeptideFileAnalysis.ExcludedMzs; } }
+
+        public IList<double> GetAverageIntensitiesExcludedAsNaN()
         {
-            if (scaleMode == IntensityScaleMode.relative_total)
+            var averageIntensities = GetAverageIntensities();
+            var result = new double[averageIntensities.Count];
+            for (int i = 0; i < result.Length; i++)
             {
-                var relativeIntensities = GetRelativeIntensities();
-                IList<double> averageIntensities;
-                double scalingFactor = GetTotalScalingFactor(relativeIntensities, out averageIntensities);
-                return Scale(relativeIntensities[charge], scalingFactor);
+                if (ExcludedMzs.IsExcluded(i))
+                {
+                    result[i] = double.NaN;
+                }
+                else
+                {
+                    result[i] = averageIntensities[i];
+                }
             }
-            int massCount = MassCount;
+            return result;
+        }
+        
+        /// <summary>
+        /// Returns the intensities summed across the charges and scaled 
+        /// so that their total is 100.
+        /// </summary>
+        public IList<double> GetAverageIntensities()
+        {
+            int massCount = PeptideAnalysis.GetMassCount();
+            var rawTotals = new double[massCount];
+            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
+            {
+                var rawIntensities = GetRawIntensities(charge);
+                for (int i = 0; i < massCount; i++)
+                {
+                    rawTotals[i] += rawIntensities[i];
+                }
+            }
+            double total = 0;
+            for (int i = 0; i < massCount; i++)
+            {
+                if (!ExcludedMzs.IsMassExcluded(i))
+                {
+                    total += rawTotals[i];
+                }
+            }
+            if (total == 0)
+            {
+                return rawTotals;
+            }
+            return Scale(rawTotals, 100 / total);
+        }
+
+        public IList<double> GetRawIntensities(int charge)
+        {
+            int massCount = PeptideAnalysis.GetMassCount();
             var intensities = new double[massCount];
             for (int iMass = 0; iMass < massCount; iMass++)
             {
@@ -178,77 +225,43 @@ namespace pwiz.Topograph.Model
                     intensities[iMass] = peak.TotalArea;
                 }
             }
-            if (scaleMode == IntensityScaleMode.none)
-            {
-                return intensities;
-            }
-            if (scaleMode == IntensityScaleMode.relative_include_all)
-            {
-                return Scale(intensities, 100.0 / GetSum(intensities));
-            }
-            if (scaleMode == IntensityScaleMode.relative_exclude_any_charge)
-            {
-                double total = 0;
-                for (int iMass = 0; iMass < massCount; iMass++)
-                {
-                    if (ExcludedMzs.IsMassExcludedForAnyCharge(iMass))
-                    {
-                        continue;
-                    }
-                    total += intensities[iMass];
-                }
-                return Scale(intensities, 100.0 / total);
-            }
-            throw new InvalidOperationException("Unknown scale mode " + scaleMode);
+            return intensities;
         }
 
-        public ExcludedMzs ExcludedMzs { get { return PeptideFileAnalysis.ExcludedMzs; } }
-
-        private double GetTotalScalingFactor(Dictionary<int, IList<double>> relativeIntensities, out IList<double> averageIntensities)
+        /// <summary>
+        /// Returns the intensities scaled so that the sum of non-excluded
+        /// intensities is 100.
+        /// These are the values displayed in the grid.
+        /// </summary>
+        public IList<double> GetScaledIntensities(int charge)
         {
-            int massCount = PeptideFileAnalysis.PeptideAnalysis.GetMassCount();
-            var unscaledAverageIntensities = new double[massCount];
-            for (int massIndex = 0; massIndex < massCount; massIndex++)
-            {
-                int count = 0;
-                double total = 0;
-                foreach (var entry in relativeIntensities)
-                {
-                    var mzKey = new MzKey(entry.Key, massIndex);
-                    if (PeptideFileAnalysis.ExcludedMzs.IsExcluded(mzKey))
-                    {
-                        continue;
-                    }
-                    total += entry.Value[massIndex];
-                    count++;
-                }
-                if (count == 0)
-                {
-                    unscaledAverageIntensities[massIndex] = double.NaN;
-                }
-                else
-                {
-                    unscaledAverageIntensities[massIndex] = total / count;
-                }
-            }
-            double scalingFactor = 100.0 / GetSum(unscaledAverageIntensities);
-            averageIntensities = Scale(unscaledAverageIntensities, scalingFactor);
-            return scalingFactor;
-        }
-
-        private static double GetSum(IList<double> values)
-        {
+            var rawIntensities = GetRawIntensities(charge);
             double total = 0;
-            foreach (var value in values)
+            for (int i = 0; i < rawIntensities.Count; i++)
             {
-                if (double.IsNaN(value))
+                if (ExcludedMzs.IsMassExcluded(i))
                 {
                     continue;
                 }
-                total += value;
+                total += rawIntensities[i];
             }
-            return total;
+            if (total == 0)
+            {
+                return rawIntensities;
+            }
+            return Scale(rawIntensities, 100 / total);
         }
+
+        public Dictionary<int, IList<double>> GetScaledIntensities()
+        {
+            var result = new Dictionary<int, IList<double>>();
+            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
+            {
+                result.Add(charge, GetScaledIntensities(charge));
+            }
+            return result;
+        }
+
 
         private static IList<double> Scale(IList<double> values, double factor)
         {
@@ -256,24 +269,6 @@ namespace pwiz.Topograph.Model
             for (int i = 0; i < result.Length; i++)
             {
                 result[i] = values[i] * factor;
-            }
-            return result;
-        }
-
-        public IList<double> GetAverageIntensities()
-        {
-            IList<double> averageIntensities;
-            GetTotalScalingFactor(GetRelativeIntensities(), out averageIntensities);
-            return averageIntensities;
-        }
-
-        private Dictionary<int, IList<double>> GetRelativeIntensities()
-        {
-            var result = new Dictionary<int, IList<double>>();
-            for (int charge = PeptideFileAnalysis.PeptideAnalysis.MinCharge; 
-                charge <= PeptideFileAnalysis.PeptideAnalysis.MaxCharge; charge++)
-            {
-                result.Add(charge, GetIntensities(charge, IntensityScaleMode.relative_exclude_any_charge));
             }
             return result;
         }

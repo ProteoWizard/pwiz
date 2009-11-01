@@ -25,7 +25,7 @@ namespace pwiz.Topograph.Model
 {
     public class ExcludedMzs
     {
-        private Dictionary<int, HashSet<int>> _excludedMzs = new Dictionary<int, HashSet<int>>();
+        private HashSet<int> _excludedMasses = new HashSet<int>();
 
         public ExcludedMzs(PeptideAnalysis peptideAnalysis)
         {
@@ -33,42 +33,28 @@ namespace pwiz.Topograph.Model
         }
         public ExcludedMzs(ExcludedMzs that) : this(that.PeptideAnalysis)
         {
-            foreach (var entry in that._excludedMzs)
-            {
-                _excludedMzs.Add(entry.Key, new HashSet<int>(entry.Value));
-            }
+            _excludedMasses = new HashSet<int>(that._excludedMasses);
         }
 
         public PeptideAnalysis PeptideAnalysis { get; private set; }
 
-        public bool IsExcluded(MzKey mzKey)
+        public bool IsExcluded(int massIndex)
         {
-            HashSet<int> set;
-            if (!_excludedMzs.TryGetValue(mzKey.Charge, out set))
-            {
-                return false;
-            }
-            return set.Contains(mzKey.MassIndex);
+            return _excludedMasses.Contains(massIndex);
         }
-        public void SetExcluded(MzKey mzKey, bool excluded)
+        public void SetExcluded(int massIndex, bool excluded)
         {
-            if (excluded == IsExcluded(mzKey))
+            if (excluded == IsExcluded(massIndex))
             {
                 return;
             }
-            HashSet<int> set;
-            if (!_excludedMzs.TryGetValue(mzKey.Charge, out set))
-            {
-                set = new HashSet<int>();
-                _excludedMzs.Add(mzKey.Charge, set);
-            }
             if (excluded)
             {
-                set.Add(mzKey.MassIndex);
+                _excludedMasses.Add(massIndex);
             }
             else
             {
-                set.Remove(mzKey.MassIndex);
+                _excludedMasses.Remove(massIndex);
             }
             var changedEvent = ChangedEvent;
             if (changedEvent != null)
@@ -79,17 +65,10 @@ namespace pwiz.Topograph.Model
         public byte[] ToByteArray()
         {
             var excludedArray =
-                new bool[PeptideAnalysis.MaxCharge - PeptideAnalysis.MinCharge + 1, PeptideAnalysis.GetMassCount()];
-            foreach (var entry in _excludedMzs)
+                new bool[PeptideAnalysis.GetMassCount()];
+            for (int i = 0; i < PeptideAnalysis.GetMassCount(); i++)
             {
-                if (entry.Key < PeptideAnalysis.MinCharge || entry.Key > PeptideAnalysis.MaxCharge)
-                {
-                    continue;
-                }
-                for (int i = 0; i < PeptideAnalysis.GetMassCount(); i++)
-                {
-                    excludedArray[entry.Key - PeptideAnalysis.MinCharge, i] = entry.Value.Contains(i);
-                }
+                excludedArray[i] = _excludedMasses.Contains(i);
             }
             var bytes = new byte[Buffer.ByteLength(excludedArray)];
             Buffer.BlockCopy(excludedArray, 0, bytes, 0, bytes.Length);
@@ -97,50 +76,25 @@ namespace pwiz.Topograph.Model
         }
         public void SetByteArray(byte[] bytes)
         {
-            var excludedArray =
-                new bool[PeptideAnalysis.MaxCharge - PeptideAnalysis.MinCharge + 1, PeptideAnalysis.GetMassCount()];
+            var excludedArray = new bool[PeptideAnalysis.GetMassCount()];
             if (bytes.Length != excludedArray.Length)
             {
                 return;
             }
-            _excludedMzs.Clear();
+            _excludedMasses.Clear();
             Buffer.BlockCopy(bytes, 0, excludedArray, 0, bytes.Length);
-            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge ++)
+            for (int massIndex = 0; massIndex < PeptideAnalysis.GetMassCount(); massIndex++)
             {
-                var set = new HashSet<int>();
-                _excludedMzs.Add(charge, set);
-                for (int massIndex = 0; massIndex < PeptideAnalysis.GetMassCount(); massIndex++)
+                if (excludedArray[massIndex])
                 {
-                    if (excludedArray[charge - PeptideAnalysis.MinCharge, massIndex])
-                    {
-                        set.Add(massIndex);
-                    }
+                    _excludedMasses.Add(massIndex);
                 }
             }
         }
-        public bool IsMassExcludedForAnyCharge(int massIndex)
+        public bool IsMassExcluded(int massIndex)
         {
-            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
-            {
-                if (IsExcluded(new MzKey(charge, massIndex)))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return _excludedMasses.Contains(massIndex);
         }
-        public bool IsMassExcludedForAllCharges(int massIndex)
-        {
-            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
-            {
-                if (!IsExcluded(new MzKey(charge, massIndex)))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         public event Action<ExcludedMzs> ChangedEvent;
     }
 }

@@ -66,7 +66,7 @@ namespace pwiz.Topograph.Model
             var result = new List<ChromatogramData>();
             foreach (var chromatogram in ListChildren())
             {
-                if (PeptideFileAnalysis.ExcludedMzs.IsExcluded(chromatogram.MzKey))
+                if (PeptideFileAnalysis.ExcludedMzs.IsExcluded(chromatogram.MzKey.MassIndex))
                 {
                     continue;
                 }

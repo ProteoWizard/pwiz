@@ -389,163 +389,16 @@ namespace pwiz.Topograph.Model
             }
             OnChange();
         }
-        public double GetScalingFactor(int charge)
-        {
-            double total = 0;
-            for (int massIndex = 0; massIndex < PeptideAnalysis.GetMassCount(); massIndex ++)
-            {
-                if (ExcludedMzs.IsMassExcludedForAnyCharge(massIndex))
-                {
-                    continue;
-                }
-                var mzKey = new MzKey(charge, massIndex);
-                var peak = Peaks.GetChild(mzKey);
-                if (peak == null)
-                {
-                    continue;
-                }
-                total += peak.Area;
-            }
-            if (total <= 0)
-            {
-                return 0;
-            }
-            return 100/total;
-        }
 
         public IList<double> GetAverageIntensities()
         {
-            IList<double> averageIntensities;
-            GetTotalScalingFactor(GetRelativeIntensities(), out averageIntensities);
-            return averageIntensities;
+            return Peaks.GetAverageIntensities();
+        }
+        public Dictionary<int, IList<double>> GetScaledIntensities()
+        {
+            return Peaks.GetScaledIntensities();
         }
 
-        private Dictionary<int, IList<double>> GetRelativeIntensities()
-        {
-            var result = new Dictionary<int, IList<double>>();
-            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
-            {
-                result.Add(charge, GetIntensities(charge, IntensityScaleMode.relative_exclude_any_charge));
-            }
-            return result;
-        } 
-
-        public IList<double> GetIntensities(int charge, IntensityScaleMode scaleMode)
-        {
-            if (scaleMode == IntensityScaleMode.relative_total)
-            {
-                var relativeIntensities = GetRelativeIntensities();
-                IList<double> averageIntensities;
-                double scalingFactor = GetTotalScalingFactor(relativeIntensities, out averageIntensities);
-                return Scale(relativeIntensities[charge], scalingFactor);
-            }
-            int massCount = PeptideAnalysis.GetMassCount();
-            var intensities = new double[massCount];
-            for (int iMass = 0; iMass < massCount; iMass++)
-            {
-                var mzKey = new MzKey(charge, iMass);
-                var peak = Peaks.GetChild(mzKey);
-                if (peak == null)
-                {
-                    intensities[iMass] = double.NaN;
-                }
-                else
-                {
-                    intensities[iMass] = peak.TotalArea;
-                }
-            }
-            if (scaleMode == IntensityScaleMode.none)
-            {
-                return intensities;
-            }
-            if (scaleMode == IntensityScaleMode.relative_include_all)
-            {
-                return Scale(intensities, 100.0/GetSum(intensities));
-            }
-            if (scaleMode == IntensityScaleMode.relative_exclude_any_charge)
-            {
-                double total = 0;
-                for (int iMass = 0; iMass < massCount; iMass++)
-                {
-                    if (ExcludedMzs.IsMassExcludedForAnyCharge(iMass))
-                    {
-                        continue;
-                    }
-                    total += intensities[iMass];
-                }
-                return Scale(intensities, 100.0/total);
-            }
-            throw new InvalidOperationException("Unknown scale mode " + scaleMode);
-        }
-
-        public Dictionary<int,IList<double>> GetScaledIntensities()
-        {
-            var result = new Dictionary<int, IList<double>>();
-            var relativeIntensities = GetRelativeIntensities();
-            IList<double> averageIntensities;
-            double scalingFactor = GetTotalScalingFactor(relativeIntensities, out averageIntensities);
-            foreach (var entry in relativeIntensities)
-            {
-                result.Add(entry.Key, Scale(entry.Value, scalingFactor));
-            }
-            return result;
-        }
-
-        private double GetTotalScalingFactor(Dictionary<int,IList<double>> relativeIntensities, out IList<double> averageIntensities)
-        {
-            int massCount = PeptideAnalysis.GetMassCount();
-            var unscaledAverageIntensities = new double[massCount];
-            for (int massIndex = 0; massIndex < massCount; massIndex++)
-            {
-                int count = 0;
-                double total = 0;
-                foreach (var entry in relativeIntensities)
-                {
-                    var mzKey = new MzKey(entry.Key, massIndex);
-                    if (ExcludedMzs.IsExcluded(mzKey))
-                    {
-                        continue;
-                    }
-                    total += entry.Value[massIndex];
-                    count++;
-                }
-                if (count == 0)
-                {
-                    unscaledAverageIntensities[massIndex] = double.NaN;
-                }
-                else
-                {
-                    unscaledAverageIntensities[massIndex] = total/count;
-                }
-            }
-            double scalingFactor = 100.0/GetSum(unscaledAverageIntensities);
-            averageIntensities = Scale(unscaledAverageIntensities, scalingFactor);
-            return scalingFactor;
-        }
-
-        private static double GetSum(IList<double> values)
-        {
-            double total = 0;
-            foreach (var value in values)
-            {
-                if (double.IsNaN(value))
-                {
-                    continue;
-                }
-                total += value;
-            }
-            return total;
-        }
-
-        private static IList<double> Scale(IList<double> values, double factor)
-        {
-            var result = new double[values.Count];
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i] = values[i]*factor;
-            }
-            return result;
-        }
         public IList<int> ScanIndexes { get { return new ReadOnlyCollection<int>(_scanIndexes); } }
         public event Action<EntityModel> ExcludedMzsChangedEvent;
         public void SetWorkspaceVersion(WorkspaceVersion newWorkspaceVersion)
