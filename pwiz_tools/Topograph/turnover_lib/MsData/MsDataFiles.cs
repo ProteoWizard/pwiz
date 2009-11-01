@@ -54,6 +54,10 @@ namespace pwiz.Topograph.MsData
             {
                 index = ~index;
             }
+            if (index >= array.Length)
+            {
+                index--;
+            }
             if (index > 0 && key - array[index - 1] < array[index] - key)
             {
                 index--;
