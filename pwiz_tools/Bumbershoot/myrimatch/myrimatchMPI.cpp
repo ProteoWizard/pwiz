@@ -1,3 +1,25 @@
+//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the MyriMatch search engine.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #define BOOST_LIB_DIAGNOSTIC
 #include "stdafx.h"
 #include "myrimatch.h"
@@ -686,12 +708,10 @@ namespace myrimatch
 					rootSpectrum->processingTime += childSpectrum->processingTime;
 					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr )
 						rootSpectrum->resultSet.add( *itr );
-					//#ifdef DELTA_SCORES
-					//for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
-					//	rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;
-					//for(map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
-					//	rootSpectrum->mzFidelityDistribution[(*itr).first] += (*itr).second;
-					//#endif
+					for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
+						rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;
+					for(map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
+						rootSpectrum->mzFidelityDistribution[(*itr).first] += (*itr).second;
 					rootSpectrum->scoreHistogram += childSpectrum->scoreHistogram;
 					delete childSpectrum;
 				}

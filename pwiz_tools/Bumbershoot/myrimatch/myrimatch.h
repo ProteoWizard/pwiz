@@ -1,3 +1,25 @@
+//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the MyriMatch search engine.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #ifndef _MYRIMATCH_H
 #define _MYRIMATCH_H
 
@@ -7,13 +29,6 @@
 #include "myrimatchSpectrum.h"
 #include <boost/cstdint.hpp>
 
-#define MYRIMATCH_MAJOR				1.
-#define MYRIMATCH_MINOR				6.
-#define MYRIMATCH_BUILD				33
-
-#define MYRIMATCH_VERSION			BOOST_PP_CAT( MYRIMATCH_MAJOR, BOOST_PP_CAT( MYRIMATCH_MINOR, MYRIMATCH_BUILD ) )
-#define MYRIMATCH_VERSION_STRING	BOOST_PP_STRINGIZE( MYRIMATCH_VERSION )
-#define MYRIMATCH_BUILD_DATE		"7/23/2009"
 
 #define MYRIMATCH_LICENSE			COMMON_LICENSE
 
@@ -28,6 +43,15 @@ namespace freicore
 
 namespace myrimatch
 {
+    struct Version
+    {
+        static int Major();
+        static int Minor();
+        static int Revision();
+        static std::string str();
+        static std::string LastModified();
+    };
+
 	struct PrecursorMassChargeKey
 	{
 		PrecursorMassChargeKey( double m, int z ) : mass(m), charge(z) {}

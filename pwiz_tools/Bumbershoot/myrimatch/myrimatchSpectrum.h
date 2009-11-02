@@ -1,3 +1,25 @@
+//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the MyriMatch search engine.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #ifndef _MYRIMATCHSPECTRUM_H
 #define _MYRIMATCHSPECTRUM_H
 
@@ -44,25 +66,18 @@ namespace myrimatch
 		// Mean absolute error
 		double mzMAE;
 		
-		//#ifdef DELTA_SCORES
-		/*double deltaMVHAvgBased;
-		double deltaMVHModeBased;
+		double deltaMVHAvg;
+		double deltaMVHMode;
 		double deltaMVHSeqType;
 		double deltaMVHSmartSeqType;
-		double deltaMVHAvgBasedNoNorm;
-		double deltaMVHSeqTypeNoNorm;
-		double deltaMVHSmartSeqTypeNoNorm;
 		
-		double deltaMZFidelityAvgBased;
-		double deltaMZFidelityModeBased;
+		double deltaMZFidelityAvg;
+		double deltaMZFidelityMode;
 		double deltaMZFidelitySeqType;
 		double deltaMZFidelitySmartSeqType;
 
 		double mvhMode;
 		double mzFidelityMode;
-		double deltaMVHModeBasedNoNorm;
-		double deltaMZFidelityModeBasedNoNorm;*/
-		//#endif
 
         vector<double> matchedIons;
 
@@ -86,27 +101,19 @@ namespace myrimatch
 				scoreList.push_back( SearchScoreInfo( "expect", expect ) );
 			}
 			
-			//#ifdef DELTA_SCORES
-			/*scoreList.push_back( SearchScoreInfo( "deltaMVHModeBased", deltaMVHModeBased ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHAvgBased", deltaMVHAvgBased ) );
+			scoreList.push_back( SearchScoreInfo( "deltaMVHMode", deltaMVHMode ) );
+			scoreList.push_back( SearchScoreInfo( "deltaMVHAvg", deltaMVHAvg ) );
 			scoreList.push_back( SearchScoreInfo( "deltaMVHSeqType", deltaMVHSeqType ) );
 			scoreList.push_back( SearchScoreInfo( "deltaMVHSmartSeqType", deltaMVHSmartSeqType ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHAvgBasedNoNorm", deltaMVHAvgBasedNoNorm ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHSeqTypeNoNorm", deltaMVHSeqTypeNoNorm ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHSmartSeqTypeNoNorm", deltaMVHSmartSeqTypeNoNorm ) );
-
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityModeBased", deltaMZFidelityModeBased ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityAvgBased", deltaMZFidelityAvgBased ) );
+			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityMode", deltaMZFidelityMode ) );
+			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityAvg", deltaMZFidelityAvg ) );
 			scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySeqType", deltaMZFidelitySeqType ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySmartSeqType", deltaMZFidelitySmartSeqType ) );*/
+			scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySmartSeqType", deltaMZFidelitySmartSeqType ) );
 
 			//scoreList.push_back( SearchScoreInfo( "mvhMode", mvhMode) );
 			//scoreList.push_back( SearchScoreInfo( "mzFidelityMode", mzFidelityMode) );
-			//scoreList.push_back( SearchScoreInfo( "deltaMVHModeBasedNoNorm", deltaMVHModeBasedNoNorm ) );
-			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelityModeBasedNoNorm", deltaMZFidelityModeBasedNoNorm ) );
-			//#endif
-
 			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelity", deltaMZFidelity) );
+
 			return scoreList;
 		}
 
@@ -145,11 +152,9 @@ namespace myrimatch
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
 			ar & mvh & massError & mzSSE & mzFidelity & newMZFidelity & mzMAE;
-			//#ifdef DELTA_SCORES
-			//ar & deltaMVHAvgBased & deltaMVHModeBased & deltaMVHSeqType & deltaMVHSmartSeqType;
-			//ar & deltaMZFidelityModeBased & deltaMZFidelityAvgBased & deltaMZFidelitySeqType & deltaMZFidelitySmartSeqType;
-			//ar & mvhMode & mzFidelityMode & deltaMZFidelityModeBasedNoNorm & deltaMVHModeBasedNoNorm;
-			//#endif
+			ar & deltaMVHAvg & deltaMVHMode & deltaMVHSeqType & deltaMVHSmartSeqType;
+			ar & deltaMZFidelityMode & deltaMZFidelityAvg & deltaMZFidelitySeqType & deltaMZFidelitySmartSeqType;
+			ar & mvhMode & mzFidelityMode;
 			if( g_rtConfig->CalculateRelativeScores )
 				ar & pvalue & expect;
 		}
@@ -354,10 +359,8 @@ namespace myrimatch
 			if( g_rtConfig->MakeScoreHistograms )
 				ar & scoreHistogram;
 
-			//#ifdef DELTA_SCORES
-			//ar & mvhScoreDistribution;
-			//ar & mzFidelityDistribution;
-			//#endif
+			ar & mvhScoreDistribution;
+			ar & mzFidelityDistribution;
 		}
 
 		vector< int >		intenClassCounts;
@@ -476,9 +479,9 @@ namespace myrimatch
 		Histogram< double >	scoreHistogram;
 		map< double, int > scores;
 
-		//#ifdef DELTA_SCORES
+		
 		// Keep track of the score distributions
-		/*map<int, int> mvhScoreDistribution;
+		map<int, int> mvhScoreDistribution;
 		map<int, int> mzFidelityDistribution;
 		
 		void computeSecondaryScores() {
@@ -532,22 +535,19 @@ namespace myrimatch
 					break;
 				}
 			}
-
-			double massTol = min(0.1,g_rtConfig->PrecursorMassTolerance[id.charge]);
+			double massError = 2.5;
 			// For each search result
-			for( SearchResultSetType::iterator rItr = resultSet.begin(); rItr != resultSet.end(); ++rItr )
+			for( SearchResultSetType::const_reverse_iterator rItr = resultSet.rbegin(); rItr != resultSet.rend(); ++rItr )
 			{
 				// Init the default values for all delta scores.
 				const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = 0.0;
 				const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = 0.0;
-				const_cast< SearchResult& >( *rItr ).deltaMVHModeBased = -1.0;
+				const_cast< SearchResult& >( *rItr ).deltaMVHMode = -1.0;
 				const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = 0.0;
 				const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = 0.0;
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelityModeBased = -1.0;
-				const_cast< SearchResult& >( *rItr ).deltaMVHAvgBased = -1.0;
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvgBased = -1.0;
-				const_cast< SearchResult& >( *rItr ).deltaMVHAvgBasedNoNorm = -1.0;
-				const_cast< SearchResult& >( *rItr ).deltaMVHModeBasedNoNorm = -1.0;
+				const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = -1.0;
+				const_cast< SearchResult& >( *rItr ).deltaMVHAvg = -1.0;
+				const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = -1.0;
 				const_cast < SearchResult& >(*rItr ).mvhMode = 0.0;
 				const_cast < SearchResult& >(*rItr ).mzFidelityMode = 0.0;
 
@@ -558,19 +558,14 @@ namespace myrimatch
 				// If the mvh score is valid then compute the deltaMVH using the (thisMVH-averageMVH)/thisMVH
 				// Also compute the deltaMVH using (thisMVH-modeMVH)/thisMVH.
 				if(validMVHScore) {			
-					const_cast< SearchResult& >( *rItr ).deltaMVHAvgBased = (rItr->mvh-averageMVHValue)/rItr->mvh;
-					const_cast< SearchResult& >( *rItr ).deltaMVHModeBased = (rItr->mvh-mvhMode)/rItr->mvh;
-					const_cast< SearchResult& >( *rItr ).deltaMVHAvgBasedNoNorm = (rItr->mvh-averageMVHValue);
-					const_cast< SearchResult& >( *rItr ).deltaMVHModeBasedNoNorm = (rItr->mvh-mvhMode);
+					const_cast< SearchResult& >( *rItr ).deltaMVHAvg = (rItr->mvh-averageMVHValue);
+					const_cast< SearchResult& >( *rItr ).deltaMVHMode = (rItr->mvh-mvhMode);
 					const_cast < SearchResult& >(*rItr ).mvhMode = mvhMode;
 				}
 				// Compute the deltaMZFidelity values just like the deltaMVH values described above.
 				if(validMZFidelityScore) {
-					const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvgBased = (rItr->mzFidelity-averageMZFidelity)/rItr->mzFidelity;
-					const_cast< SearchResult& >( *rItr ).deltaMZFidelityModeBased = (rItr->mzFidelity-mzFidelityMode)/rItr->mzFidelity;
-					const_cast< SearchResult& >( *rItr ).deltaMZFidelityModeBasedNoNorm = (rItr->mzFidelity-mzFidelityMode);
-					const_cast < SearchResult& >(*rItr ).mzFidelityMode = mzFidelityMode;
-
+					const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = (rItr->mzFidelity-averageMZFidelity);
+					const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = (rItr->mzFidelity-mzFidelityMode);
 				}
 				
 				
@@ -579,19 +574,18 @@ namespace myrimatch
 				// note that this treats the peptide sequences that match with same MVH score as
 				// same. It also treats a peptide sequence with ambiguous interpretations
 				// as same.
-				SearchResultSetType::iterator reverIter = rItr;
+				SearchResultSetType::const_reverse_iterator reverIter = rItr;
 				// Get the current sequence
 				string currentPep = rItr->sequence();
 				// Go down the list of results and locate the next best result that doesn't have the
 				// same MVH score and the same peptide sequence.
 				//while(validMVHScore && reverIter!=resultSet.begin() && (currentPep.compare(reverIter->sequence())==0 || rItr->mvh==reverIter->mvh)) {
-				while(validMVHScore && reverIter!=resultSet.begin() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massTol)==0 || rItr->mvh==reverIter->mvh)) {
-					--reverIter;
+				while(validMVHScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mvh==reverIter->mvh)) {
+					++reverIter;
 				}
 				// Compute the deltaMVH using the located result
-				if(validMVHScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mvh!=reverIter->mvh) && reverIter->mvh > 0.0) {
-					const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = (rItr->mvh-reverIter->mvh)/rItr->mvh;
-					const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqTypeNoNorm = (rItr->mvh-reverIter->mvh);
+				if(reverIter!=resultSet.rend() && validMVHScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mvh!=reverIter->mvh) && reverIter->mvh > 0.0) {
+					const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = (rItr->mvh-reverIter->mvh);
 				}
 
 				// Compute the sequest type deltaMVH as (thisMVH-nextBestMVH)/thisMVH.
@@ -600,13 +594,12 @@ namespace myrimatch
 				// modification interpretations as different entities.
 				reverIter = rItr;
 				// Locate the next result with the lowest score
-				while(validMVHScore && reverIter!=resultSet.begin() && rItr->mvh==reverIter->mvh) {
-					--reverIter;
+				while(validMVHScore && reverIter!=resultSet.rend() && rItr->mvh==reverIter->mvh) {
+					++reverIter;
 				}
 				// Compute the deltaMVH
-				if(validMVHScore && rItr->mvh!=reverIter->mvh && reverIter->mvh > 0.0) {
-					const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = (rItr->mvh-reverIter->mvh)/rItr->mvh;
-					const_cast< SearchResult& >( *rItr ).deltaMVHSeqTypeNoNorm = (rItr->mvh-reverIter->mvh);
+				if(reverIter!=resultSet.rend() && validMVHScore && rItr->mvh!=reverIter->mvh && reverIter->mvh > 0.0) {
+					const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = (rItr->mvh-reverIter->mvh);
 				}
 
 				// Compute the smart sequest type deltaMZFidelity value as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity
@@ -617,12 +610,12 @@ namespace myrimatch
 				reverIter = rItr;
 				// Go down the list of results and locate the next best result that doesn't have the
 				// same MVH score and the same peptide sequence.
-				while(validMZFidelityScore && reverIter!=resultSet.begin() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massTol)==0 || rItr->mzFidelity==reverIter->mzFidelity)) {
-					--reverIter;
+				while(validMZFidelityScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mzFidelity==reverIter->mzFidelity)) {
+					++reverIter;
 				}
 				// Compute the deltaMVH using the located result
-				if(validMZFidelityScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mzFidelity!=reverIter->mzFidelity) && reverIter->mzFidelity > 0.0) {
-					const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = (rItr->mzFidelity-reverIter->mzFidelity)/rItr->mzFidelity;
+				if(reverIter!=resultSet.rend() && validMZFidelityScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mzFidelity!=reverIter->mzFidelity) && reverIter->mzFidelity > 0.0) {
+					const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = (rItr->mzFidelity-reverIter->mzFidelity);
 				}
 
 				// Compute the sequest type deltaMZFidelity as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity.
@@ -631,16 +624,16 @@ namespace myrimatch
 				// modification interpretations as different entities.
 				reverIter = rItr;
 				// Locate the next result with the lowest score
-				while(validMZFidelityScore && reverIter!=resultSet.begin() && rItr->mzFidelity==reverIter->mzFidelity) {
-					--reverIter;
+				while(validMZFidelityScore && reverIter!=resultSet.rend() && rItr->mzFidelity==reverIter->mzFidelity) {
+					++reverIter;
 				}
 				// Compute the deltaMZFidelity
-				if(validMZFidelityScore && rItr->mzFidelity!=reverIter->mzFidelity && reverIter->mzFidelity > 0.0) {
-					const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = (rItr->mzFidelity-reverIter->mzFidelity)/rItr->mzFidelity;
+				if(reverIter!=resultSet.rend() && validMZFidelityScore && rItr->mzFidelity!=reverIter->mzFidelity && reverIter->mzFidelity > 0.0) {
+					const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = (rItr->mzFidelity-reverIter->mzFidelity);
 				}
 			}
 		}
-		//#endif*/
+		
 
 		simplethread_mutex_t mutex;
 	};

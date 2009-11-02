@@ -1,11 +1,31 @@
-// myrimatch.cpp : Defines the entry point for the console application.
+//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the MyriMatch search engine.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
 //
 
 #include "stdafx.h"
 #include "myrimatch.h"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/proteome/Version.hpp"
-
+#include "PTMVariantList.h"
+#include "svnrev.hpp"
 
 namespace freicore
 {
@@ -24,15 +44,26 @@ namespace myrimatch
 
 	RunTimeConfig*					g_rtConfig;
 
+    int Version::Major()                {return 1;}
+    int Version::Minor()                {return 6;}
+    int Version::Revision()             {return SVN_REV;}
+    string Version::LastModified()      {return SVN_REVDATE;}
+    string Version::str()               
+    {
+    	std::ostringstream v;
+    	v << Major() << "." << Minor() << "." << Revision();
+    	return v.str();
+    }
 
 	int InitProcess( argList_t& args )
 	{
 		//cout << g_hostString << " is initializing." << endl;
 		if( g_pid == 0 )
 		{
-			cout << "MyriMatch " << MYRIMATCH_VERSION_STRING << " (" << MYRIMATCH_BUILD_DATE << ")\n" <<
-                    "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                    "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
+          cout << "MyriMatch " << Version::str() << " (" << Version::LastModified() << ")\n" <<
+                  "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
+                  "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
+                  "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
 					MYRIMATCH_LICENSE << endl;
 		}
 
@@ -345,9 +376,9 @@ namespace myrimatch
 
 			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
 
-		//#ifdef DELTA_SCORES
-			//s->computeSecondaryScores();
-		//#endif
+		
+			s->computeSecondaryScores();
+
 			s->resultSet.calculateRanks();
 			s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
 
@@ -413,7 +444,7 @@ namespace myrimatch
 		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
 			fileParams[ string("Config: ") + itr->first ] = itr->second;
 		fileParams["SearchEngine: Name"] = "MyriMatch";
-		fileParams["SearchEngine: Version"] = MYRIMATCH_VERSION_STRING;
+		fileParams["SearchEngine: Version"] = Version::str();
 		fileParams["SearchTime: Started"] = startTime + " on " + startDate;
 		fileParams["SearchTime: Stopped"] = GetTimeString() + " on " + GetDateString();
 		fileParams["SearchTime: Duration"] = lexical_cast<string>( totalSearchTime ) + " seconds";
@@ -511,10 +542,11 @@ namespace myrimatch
 
 		if( g_numChildren == 0 )
 		{
-			cout << g_hostString << " is trimming spectra with less than " << 10 << " peaks." << endl;
+			cout << g_hostString << " is trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
 		}
 
-		int preTrimCount = spectra.filterByPeakCount( 10 );
+		int preTrimCount = spectra.filterByPeakCount ( g_rtConfig->minIntensityClassCount );
+		//int preTrimCount = spectra.filterByPeakCount( 10 );
 		numSpectra = (int) spectra.size();
 
 		if( g_numChildren == 0 )
@@ -713,11 +745,10 @@ namespace myrimatch
 						++ spectrum->scores[ result.mvh ];
 						spectrum->scoreHistogram.add( result.mvh );
 					}
-					//#ifdef DELTA_SCORES
+					
 					// Accumulate score distributions for the spectrum
-					//++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
-					//++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
-					//#endif
+					++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+					++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
 					spectrum->resultSet.add( result );
 				}
 				if( g_rtConfig->UseMultipleProcessors )
@@ -819,13 +850,35 @@ namespace myrimatch
                         digestedPeptides.clear();
                         START_PROFILER(12);
 						
-                        //MakePtmVariantsOld( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods);
-                        if(MakePtmVariants( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants )) {
+						PTMVariantList variantIterator( (*itr), g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants);
+						// Search each variant
+						do {
+							++ threadInfo->stats.numCandidatesGenerated;
+							// Match the variant against the spectra
+							START_PROFILER(1);
+							boost::int64_t queryComparisonCount = QuerySequence( variantIterator.ptmVariant, i, g_rtConfig->EstimateSearchTimeOnly );
+							STOP_PROFILER(1);
+							// Update the comparison statistics
+							if( queryComparisonCount > 0 )
+							{
+								threadInfo->stats.numComparisonsDone += queryComparisonCount;
+								++threadInfo->stats.numCandidatesQueried;
+								//cout << "QC>0" << queryComparisonCount << endl;
+							}
+							// Get the next variant
+						} while(variantIterator.next());
+
+						if(variantIterator.isSkipped) {
+							// Count the peptide as skipped.
+							++ threadInfo->stats.numCandidatesSkipped;
+						}
+                        STOP_PROFILER(12);
+
+                        /*if(MakePtmVariants( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants )) {
                             ++ threadInfo->stats.numCandidatesSkipped;
                         }
                         STOP_PROFILER(12);
                         threadInfo->stats.numCandidatesGenerated += digestedPeptides.size();
-                        
                         for( size_t j=0; j < digestedPeptides.size(); ++j )
                         {
                             //++ threadInfo->stats.numCandidatesGenerated;
@@ -838,7 +891,7 @@ namespace myrimatch
                                 ++threadInfo->stats.numCandidatesQueried;
                                 //cout << "QC>0" << queryComparisonCount << endl;
                             }
-                        }
+                        }*/
                         START_PROFILER(11);
                         ++itr;
                         STOP_PROFILER(11);
@@ -864,7 +917,7 @@ namespace myrimatch
 
 					    simplethread_lock_mutex( &resourceMutex );
 					    cout << threadInfo->workerHostString << " has searched " << threadInfo->stats.numProteinsDigested << " of " << numProteins <<
-							    " proteins; " << round(proteinsPerSec, 1) << " per second, " << round(totalSearchTime, 0) << " elapsed, " << round(estimatedTimeRemaining, 0) << " remaining." << endl;
+							    " proteins; " << proteinsPerSec << " per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
 
 					    PRINT_PROFILERS(cout, threadInfo->workerHostString + " profiling")
 
@@ -1217,7 +1270,10 @@ namespace myrimatch
                             {
                                 cout << g_hostString << " is estimating the count of sequence comparisons to be done." << endl;
                                 sumSearchStats = ExecuteSearch();
-                                cout << g_hostString << " will make an estimated " << sumSearchStats.numComparisonsDone << " sequence comparisons." << endl;
+                                double estimatedComparisonsPerProtein = sumSearchStats.numComparisonsDone / (double) sumSearchStats.numProteinsDigested;
+                                boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerProtein * proteins.size());
+                                cout << g_hostString << " will make an estimated total of " << estimatedTotalComparisons << " sequence comparisons." << endl;
+                                //cout << g_hostString << " will make an estimated " << estimatedComparisonsPerProtein << " sequence comparisons per protein." << endl;
 								skip = 1;
                             }
 						}
