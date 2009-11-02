@@ -93,6 +93,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\directagMPI.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\directagSpectrum.cpp"
 				>
 			</File>

@@ -1,3 +1,25 @@
+//
+// $Id: directag.h 11 2009-10-12 17:22:20Z chambm $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the DirecTag peptide sequence tagger.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #ifndef _DIRECTAG_H
 #define _DIRECTAG_H
 
@@ -8,26 +30,27 @@
 #include "simplethreads.h"
 #include "tagsFile.h"
 
-#define DIRECTAG_MAJOR				1.
-#define DIRECTAG_MINOR				2.
-#define DIRECTAG_BUILD				3
-
-#define DIRECTAG_VERSION				BOOST_PP_CAT( DIRECTAG_MAJOR, BOOST_PP_CAT( DIRECTAG_MINOR, DIRECTAG_BUILD ) )
-#define DIRECTAG_VERSION_STRING			BOOST_PP_STRINGIZE( DIRECTAG_VERSION )
-#define DIRECTAG_BUILD_DATE				"6/17/2008"
-
 #define DIRECTAG_LICENSE				COMMON_LICENSE
 
 using namespace freicore;
 
 namespace freicore
 {
+    #ifdef USE_MPI
+        extern MPI_Status st;
+        extern void* g_mpiBuffer;
+    #endif
+
 namespace directag
 {
-	#ifdef USE_MPI
-	void TransmitConfigsToChildProcesses();
-	void ReceiveConfigsFromRootProcess();
-	#endif
+    struct Version
+    {
+        static int Major();
+        static int Minor();
+        static int Revision();
+        static std::string str();
+        static std::string LastModified();
+    };
 
 	extern double lnCombin( int a, int b );
 	extern float GetMassOfResidues( const string& a, bool b = false );
@@ -68,13 +91,27 @@ namespace directag
 		WorkerInfo( int num, int start, int end ) : BaseWorkerInfo( num, start, end ) {}
 		taggingStats stats;
 	};
+    
+    #ifdef USE_MPI
+        void TransmitConfigsToChildProcesses();
+		void ReceiveConfigsFromRootProcess();
+		int ReceivePreparedSpectraFromChildProcesses();
+		int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
+		int ReceiveUnpreparedSpectraBatchFromRootProcess();
+		int TransmitUnpreparedSpectraToChildProcesses();
 
-	SpectraList					spectra;
-	map< char, float >			compositionInfo;
+        int TransmitUntaggedSpectraToChildProcesses();
+		int ReceiveUntaggedSpectraBatchFromRootProcess();
+		int ReceiveTaggedSpectraFromChildProcesses();
+		int TransmitTaggedSpectraToRootProcess( SpectraList& preparedSpectra );
+    #endif
 
-	RunTimeConfig*				g_rtConfig;
+	extern SpectraList					spectra;
+	extern map< char, float >			compositionInfo;
 
-	simplethread_mutex_t		resourceMutex;
+	extern RunTimeConfig*				g_rtConfig;
+
+	extern simplethread_mutex_t		resourceMutex;
 
 	int						InitProcess( argList_t& args );
 	int						ProcessHandler( int argc, char* argv[] );
