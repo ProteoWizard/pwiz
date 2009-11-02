@@ -1,3 +1,25 @@
+//
+// $Id: tagreconConfig.h 17 2009-10-22 21:35:51Z chambm $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumbershoot core library.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #ifndef _TAGRECONCONFIG_H
 #define _TAGRECONCONFIG_H
 
@@ -6,6 +28,7 @@
 #include "BaseRunTimeConfig.h"
 
 using namespace freicore;
+using namespace pwiz;
 
 // Program parameters
 
@@ -13,8 +36,8 @@ using namespace freicore;
     COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
     RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
     RTCONFIG_VARIABLE( string,          ProteinDatabase,            ""              ) \
-    RTCONFIG_VARIABLE( string,          UnimodXML,		            ""              ) \
-    RTCONFIG_VARIABLE( string,          Blosum,						""              ) \
+    RTCONFIG_VARIABLE( string,          UnimodXML,		            "unimod.xml"    ) \
+    RTCONFIG_VARIABLE( string,          Blosum,						"blosum62.fas"  ) \
     RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
     RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,      true            ) \
     RTCONFIG_VARIABLE( int,				MaxResults,					5				) \
@@ -38,11 +61,9 @@ using namespace freicore;
     RTCONFIG_VARIABLE( int,				DeisotopingMode,			0				) \
     RTCONFIG_VARIABLE( int,				ProteinSamplingTime,		15				) \
     RTCONFIG_VARIABLE( bool,			EstimateSearchTimeOnly,		false			) \
-    RTCONFIG_VARIABLE( int,				ProteinSampleSize,			100				) \
     RTCONFIG_VARIABLE( int,				StartProteinIndex,			0				) \
     RTCONFIG_VARIABLE( int,				EndProteinIndex,			-1				) \
-    RTCONFIG_VARIABLE( string,			CleavageRules,				"[|K|R . . ]"	) \
-    RTCONFIG_VARIABLE( string,          DigestionRules,             "[KR]|"         ) \
+    RTCONFIG_VARIABLE( string,			CleavageRules,				"trypsin/p"	    ) \
     RTCONFIG_VARIABLE( int,				NumMinTerminiCleavages,		2				) \
     RTCONFIG_VARIABLE( int,				NumMaxMissedCleavages,		-1				) \
     RTCONFIG_VARIABLE( int,				MinCandidateLength,			5				) \
@@ -65,28 +86,30 @@ using namespace freicore;
     RTCONFIG_VARIABLE( double,			MaxTagMassDeviation,		300.0			) \
 	RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
     RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
-	RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) 
+	RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
+    RTCONFIG_VARIABLE( bool,            MassReconMode,              false           )
     
 
 
 namespace freicore
 {
-    namespace tagrecon
+namespace tagrecon
+{
+
+    struct RunTimeConfig : public BaseRunTimeConfig
     {
+    public:
+        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
 
-        struct TagreconRunTimeConfig : public BaseRunTimeConfig
-        {
-        public:
-            RTCONFIG_DEFINE_MEMBERS( TagreconRunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
+        path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
 
-                CleavageRuleSet	_CleavageRules;
-            vector<Digestion::Motif> digestionMotifs;
-            Digestion::Config digestionConfig;
+        boost::regex cleavageAgentRegex;
+        Digestion::Config digestionConfig;
 
-            FragmentTypesBitset defaultFragmentTypes;
+        FragmentTypesBitset defaultFragmentTypes;
 
-            int				SpectraBatchSize;
-            int				ProteinBatchSize;
+        int				SpectraBatchSize;
+        int				ProteinBatchSize;
             int				ProteinIndexOffset;
             float			curMinSequenceMass;
             float			curMaxSequenceMass;
@@ -98,25 +121,68 @@ namespace freicore
             vector<float>   NTerminalMassTolerance;
             vector<float>   CTerminalMassTolerance;
             bool			tagMutexesInitialized;
+            int             maxChargeStateFromSpectra;
 
         private:
             void finalize()
             {
                 tagMutexesInitialized = false;
 
-                //cout << "ProteinDatabase:" << ProteinDatabase << "\n";
+            path pathToUnimodXML(UnimodXML);
+            if( !pathToUnimodXML.has_parent_path() )
+                UnimodXML = (executableFilepath.parent_path() / pathToUnimodXML).string();
+            if( !exists(UnimodXML) )
+                throw runtime_error("unable to find Unimod XML \"" + UnimodXML + "\"");
 
-                stringstream CleavageRulesStream( CleavageRules );
-                _CleavageRules.clear();
-                CleavageRulesStream >> _CleavageRules;
+            path pathToBlosum(Blosum);
+            if( !pathToBlosum.has_parent_path() )
+                Blosum = (executableFilepath.parent_path() / pathToBlosum).string();
+            if( !exists(Blosum) )
+                throw runtime_error("unable to find Blosum matrix \"" + Blosum + "\"");
 
-                vector<string> motifs;
-                boost::split(motifs, DigestionRules, boost::is_space());
-                digestionMotifs.clear();
-                digestionMotifs.insert(digestionMotifs.end(), motifs.begin(), motifs.end());
+            //cout << "ProteinDatabase:" << ProteinDatabase << "\n";
+
+            trim(CleavageRules); // trim flanking whitespace
+            if( CleavageRules.find(' ') == string::npos )
+            {
+                // a single token must be either a cleavage agent name or regex
+
+                // first try to parse the token as the name of an agent
+                CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
+                if( cleavageAgent == CVID_Unknown )
+                {
+                    // next try to parse the token as a Perl regex
+                    try
+                    {
+                        // regex must be zero width, so it must use at least one parenthesis;
+                        // this will catch most bad cleavage agent names (e.g. "tripsen")
+                        if( CleavageRules.find('(') == string::npos )
+                            throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
+                        cleavageAgentRegex = boost::regex(CleavageRules);
+                    }
+                    catch (boost::bad_expression&)
+                    {
+                        // a bad regex or agent name is fatal
+                        throw runtime_error("invalid cleavage agent name or regex: " + CleavageRules);
+                    }
+                }
+                else
+                {
+                    // use regex for predefined cleavage agent
+                    cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
+                }
+            }
+            else
+            {
+                // multiple tokens must be a CleavageRuleSet
+                CleavageRuleSet tmpRuleSet;
+		        stringstream CleavageRulesStream( CleavageRules );
+		        CleavageRulesStream >> tmpRuleSet;
+                cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
+            }
 
 
-                int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
+            int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
                 Digestion::Specificity specificity = (Digestion::Specificity) NumMinTerminiCleavages;
                 // maxLength of a peptide is the max_sequence_mass/mass_of_averagine_molecule
                 int maxLength = (int) (MaxSequenceMass/111.1254f);
@@ -206,18 +272,8 @@ namespace freicore
                     g_residueMap->setStaticMods( StaticMods );
                 }
 
-                //Set the mass tolerances according to the charge state.
-                vector<float>& precursorMassTolerance = PrecursorMassTolerance;
-                vector<float>& nterminalMassTolerance = NTerminalMassTolerance;
-                vector<float>& cterminalMassTolerance = CTerminalMassTolerance;
-                precursorMassTolerance.clear();
-                nterminalMassTolerance.clear();
-                cterminalMassTolerance.clear();
-                for( int z=1; z <= NumChargeStates; ++z ) {
-                    precursorMassTolerance.push_back( PrecursorMzTolerance * z );
-                    nterminalMassTolerance.push_back( NTerminusMzTolerance * z );
-                    cterminalMassTolerance.push_back( CTerminusMzTolerance * z );
-                }
+                maxChargeStateFromSpectra = 1;
+                PrecursorMassTolerance.push_back(PrecursorMzTolerance);
 
                 if( ClassSizeMultiplier > 1 )
                 {
@@ -231,8 +287,8 @@ namespace freicore
             }
         };
 
-        extern TagreconRunTimeConfig* g_rtConfig;
-    }
+    extern RunTimeConfig* g_rtConfig;
+}
 }
 
 #endif

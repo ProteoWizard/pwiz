@@ -1,3 +1,25 @@
+//
+// $Id: DeltaMasses.h 17 2009-10-22 21:35:51Z chambm $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumbershoot core library.
+//
+// The Initial Developer of the Original Code is Surendra Dasaris.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s):
+//
+
 #ifndef _DELTAMASSES_H
 #define _DELTAMASSES_H
 
@@ -50,20 +72,13 @@ namespace freicore {
 				mass. Two modifications that can go on the same amino acid having masses with in
 				a specified mass tolerance are treated as same.
 			*/
-			bool operator() (const pair<float, string>& lhs, const pair<float, string>& rhs) const {
+			bool operator() (const pair<float, string>& lhs, const pair<float, string>& rhs) const
+            {
 				float deltaMass = lhs.first - rhs.first;
-				if(fabs(deltaMass) > deltaMassTolerance) {
+				if(fabs(deltaMass) > deltaMassTolerance)
 					return lhs.first < rhs.first;
-				} else {
+				else
 					return lhs.second < rhs.second;
-					/*if(lhs.second < rhs.second) {
-						return lhs.second < rhs.second;
-					} else if(lhs.second > rhs.second) {
-						return lhs.second > rhs.second;
-					} else {
-						return false;
-					}*/
-				}
 			}
 		};
 
@@ -150,8 +165,6 @@ namespace freicore {
 			void printMassToAminoAcidMap();
 			void printInterpretationMap();
 		};
-
-		extern TagreconRunTimeConfig* g_rtConfig;
 	}
 }
 #endif

@@ -1,3 +1,25 @@
+//
+// $Id: tagreconSpectrum.cpp 17 2009-10-22 21:35:51Z chambm $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumbershoot core library.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2009 Vanderbilt University
+//
+// Contributor(s): Surendra Dasaris
+//
+
 #include "stdafx.h"
 #include "tagreconSpectrum.h"
 
@@ -61,10 +83,10 @@ namespace tagrecon
 		// Locate water loss ions of the precursor ion
 		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
 		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-		if( precursorDoubleWaterLossItr != precursorWaterLossItr && precursorWaterLossItr != peakPreData.end() )
-			peakPreData.erase( precursorWaterLossItr );
-		if( precursorDoubleWaterLossItr != peakPreData.end() )
-			peakPreData.erase( precursorDoubleWaterLossItr );
+        bool eraseWaterLoss = precursorWaterLossItr != peakPreData.end();
+        bool eraseDoubleWaterLoss = precursorDoubleWaterLossItr != peakPreData.end() && precursorWaterLossItr != precursorDoubleWaterLossItr;
+		if( eraseWaterLoss ) peakPreData.erase( precursorWaterLossItr );
+		if( eraseDoubleWaterLoss ) peakPreData.erase( precursorDoubleWaterLossItr );
 
 		if( g_rtConfig->MakeSpectrumGraphs )
 			writeToSvgFile( "-filtered" + g_rtConfig->OutputSuffix );
