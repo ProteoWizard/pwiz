@@ -42,7 +42,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMessage.Name = "tbxMessage";
             this.tbxMessage.ReadOnly = true;
             this.tbxMessage.Size = new System.Drawing.Size(281, 69);
-            this.tbxMessage.TabIndex = 0;
+            this.tbxMessage.TabIndex = 1;
             // 
             // progressBar1
             // 
@@ -52,6 +52,7 @@ namespace pwiz.Topograph.ui.Forms
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(280, 23);
             this.progressBar1.TabIndex = 1;
+            this.progressBar1.Visible = false;
             // 
             // btnCancel
             // 
@@ -59,9 +60,10 @@ namespace pwiz.Topograph.ui.Forms
             this.btnCancel.Location = new System.Drawing.Point(211, 137);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 0;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // LongWaitDialog
             // 

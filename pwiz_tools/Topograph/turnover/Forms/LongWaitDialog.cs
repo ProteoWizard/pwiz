@@ -12,10 +12,11 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class LongWaitDialog : Form, ILongOperationUi
     {
-        public LongWaitDialog(IWin32Window parentWindow)
+        public LongWaitDialog(IWin32Window parentWindow, String title)
         {
             InitializeComponent();
             ParentWindow = parentWindow;
+            Text = title;
         }
 
         public LongOperationBroker LongOperationBroker
@@ -76,6 +77,11 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             LongOperationBroker.WaitUntilFinished();            
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }

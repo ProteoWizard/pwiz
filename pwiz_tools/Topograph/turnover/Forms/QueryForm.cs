@@ -14,6 +14,7 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Query;
 using pwiz.Topograph.ui.Properties;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -193,7 +194,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxSource.Text = query.GetSourceHql();
         }
 
-        private void ExecuteQuery(ParsedQuery parsedQuery, out IList<object[]> rows, out IList<String> columnNames)
+        private bool ExecuteQuery(ParsedQuery parsedQuery, out IList<object[]> rows, out IList<String> columnNames)
         {
             columnNames = new List<string>();
             rows = new List<object[]>();
@@ -202,7 +203,13 @@ namespace pwiz.Topograph.ui.Forms
                 var entities = new List<IDbEntity>();
                 var entityTypesToQuery = new HashSet<String>();
                 var query = session.CreateQuery(parsedQuery.GetExecuteHql());
-                var results = query.List();
+                var queryExecuter = new QueryExecuter(session, query, new List<object>());
+                var broker = new LongOperationBroker(queryExecuter, new LongWaitDialog(this, "Executing Query"));
+                if (!broker.LaunchJob())
+                {
+                    return false;
+                }
+                var results = queryExecuter.Results;
                 foreach (var selectColumn in parsedQuery.Columns)
                 {
                     columnNames.Add(selectColumn.GetColumnName());
@@ -245,6 +252,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     entity.ToString();
                 }
+                return true;
             }
         }
 
@@ -255,7 +263,10 @@ namespace pwiz.Topograph.ui.Forms
                 IList<object[]> rows;
                 IList<String> columnNames;
                 var query = new ParsedQuery(tbxSource.Text);
-                ExecuteQuery(query, out rows, out columnNames);
+                if (!ExecuteQuery(query, out rows, out columnNames))
+                {
+                    return false;
+                }
                 dataGridView1.Columns.Clear();
                 dataGridView1.Rows.Clear();
                 foreach (var columnName in columnNames)
@@ -579,7 +590,10 @@ namespace pwiz.Topograph.ui.Forms
             IList<object[]> rows;
             IList<String> columnNames;
             var query = new ParsedQuery(tbxSource.Text);
-            ExecuteQuery(query, out rows, out columnNames);
+            if (!ExecuteQuery(query, out rows, out columnNames))
+            {
+                return;
+            }
             using (var stream = File.OpenWrite(filename))
             {
                 var writer = new StreamWriter(stream);

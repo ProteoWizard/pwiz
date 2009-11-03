@@ -238,7 +238,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return null;
                 }
-                if (!new LongOperationBroker(upgrader, new LongWaitDialog(this)).LaunchJob())
+                if (!new LongOperationBroker(upgrader, new LongWaitDialog(this, "Upgrading Workspace")).LaunchJob())
                 {
                     return null;
                 }
@@ -323,7 +323,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private bool SaveWorkspace()
         {
-            return Workspace.Save(new LongWaitDialog(this));
+            return Workspace.Save(new LongWaitDialog(this, "Saving Workspace"));
         }
 
         private void closeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)

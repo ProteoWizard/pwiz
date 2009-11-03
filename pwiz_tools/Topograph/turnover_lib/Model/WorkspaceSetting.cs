@@ -24,8 +24,8 @@ namespace pwiz.Topograph.Model
 
         protected override void Load(DbSetting entity)
         {
-            Name = entity.Name;
-            Value = entity.Value;
+            _name = entity.Name;
+            _value = entity.Value;
         }
 
         protected override DbSetting UpdateDbEntity(ISession session)
