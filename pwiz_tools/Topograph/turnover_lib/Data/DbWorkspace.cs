@@ -58,5 +58,7 @@ namespace pwiz.Topograph.Data
         }
         public virtual ICollection<DbTracerDef> TracerDefs { get; set; }
         public virtual int TracerDefCount { get; set; }
+
+        public virtual int SchemaVersion { get; set; }
     }
 }

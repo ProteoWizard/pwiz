@@ -222,22 +222,22 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     rows.Add(row);
                 }
-                if (entityTypesToQuery.Contains(typeof(DbPeptideFileAnalysis).Name))
+                if (entityTypesToQuery.Contains(typeof(DbPeptideFileAnalysis).ToString()))
                 {
-                    entityTypesToQuery.Add(typeof (DbPeptideAnalysis).Name);
-                    entityTypesToQuery.Add(typeof (DbMsDataFile).Name);
+                    entityTypesToQuery.Add(typeof (DbPeptideAnalysis).ToString());
+                    entityTypesToQuery.Add(typeof (DbMsDataFile).ToString());
                     session.CreateCriteria(typeof (DbPeptideFileAnalysis)).List();
                 }
-                if (entityTypesToQuery.Contains(typeof(DbPeptideAnalysis).Name))
+                if (entityTypesToQuery.Contains(typeof(DbPeptideAnalysis).ToString()))
                 {
-                    entityTypesToQuery.Add(typeof (DbPeptide).Name);
+                    entityTypesToQuery.Add(typeof (DbPeptide).ToString());
                     session.CreateCriteria(typeof (DbPeptideAnalysis)).List();
                 }
-                if (entityTypesToQuery.Contains(typeof(DbPeptide).Name))
+                if (entityTypesToQuery.Contains(typeof(DbPeptide).ToString()))
                 {
                     session.CreateCriteria(typeof (DbPeptide)).List();
                 }
-                if (entityTypesToQuery.Contains(typeof(DbMsDataFile).Name))
+                if (entityTypesToQuery.Contains(typeof(DbMsDataFile).ToString()))
                 {
                     session.CreateCriteria(typeof (DbMsDataFile)).List();
                 }

@@ -56,9 +56,9 @@ namespace pwiz.Topograph.Model
             IntermediateLevels = entity.IntermediateEnrichmentLevels;
             ExcludedMzs = new ExcludedMzs(this);
             ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
-            if (entity.ExcludedMzs != null)
+            if (entity.ExcludedMasses != null)
             {
-                ExcludedMzs.SetByteArray(entity.ExcludedMzs);
+                ExcludedMzs.SetByteArray(entity.ExcludedMasses);
             }
             _workspaceVersion = Workspace.SavedWorkspaceVersion;
         }
@@ -74,7 +74,7 @@ namespace pwiz.Topograph.Model
             entity.MinCharge = MinCharge;
             entity.MaxCharge = MaxCharge;
             entity.IntermediateEnrichmentLevels = IntermediateLevels;
-            entity.ExcludedMzs = ExcludedMzs.ToByteArray();
+            entity.ExcludedMasses = ExcludedMzs.ToByteArray();
             if (PeptideRates.IsDirty)
             {
                 entity.PeptideRateCount = 0;

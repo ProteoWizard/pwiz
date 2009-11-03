@@ -41,7 +41,7 @@ namespace pwiz.Topograph.Data
         public virtual ICollection<DbPeptideDistribution> PeptideDistributions { get; set; }
         public virtual int PeptideDistributionCount { get; set; }
         public virtual bool AutoFindPeak { get; set; }
-        public virtual bool OverrideExcludedMzs { get; set; }
+        public virtual bool OverrideExcludedMasses { get; set; }
         public virtual double ChromatogramStartTime { get; set; }
         public virtual double ChromatogramEndTime { get; set; }
         public virtual int FirstDetectedScan { get; set; }
@@ -52,7 +52,7 @@ namespace pwiz.Topograph.Data
         public virtual double? PeakEndTime { get; set; }
         public virtual byte[] TimesBytes { get; set; }
         public virtual byte[] ScanIndexesBytes { get; set; }
-        public virtual byte[] ExcludedMzs { get; set; }
+        public virtual byte[] ExcludedMasses { get; set; }
         public virtual double[] Times 
         { 
             get

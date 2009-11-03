@@ -59,12 +59,12 @@ namespace pwiz.Topograph.Model
 
         protected override void Load(DbPeptideFileAnalysis dbPeptideFileAnalysis)
         {
-            OverrideExcludedMzs = dbPeptideFileAnalysis.OverrideExcludedMzs;
+            OverrideExcludedMzs = dbPeptideFileAnalysis.OverrideExcludedMasses;
             if (OverrideExcludedMzs)
             {
-                if (dbPeptideFileAnalysis.ExcludedMzs != null)
+                if (dbPeptideFileAnalysis.ExcludedMasses != null)
                 {
-                    _excludedMzs.SetByteArray(dbPeptideFileAnalysis.ExcludedMzs);
+                    _excludedMzs.SetByteArray(dbPeptideFileAnalysis.ExcludedMasses);
                 }
             }
             _autoFindPeak = dbPeptideFileAnalysis.AutoFindPeak;
@@ -95,15 +95,15 @@ namespace pwiz.Topograph.Model
         protected override DbPeptideFileAnalysis UpdateDbEntity(ISession session)
         {
             var dbPeptideFileAnalysis = base.UpdateDbEntity(session);
-            dbPeptideFileAnalysis.OverrideExcludedMzs = OverrideExcludedMzs;
+            dbPeptideFileAnalysis.OverrideExcludedMasses = OverrideExcludedMzs;
             dbPeptideFileAnalysis.AutoFindPeak = AutoFindPeak;
             if (OverrideExcludedMzs && _excludedMzs != null)
             {
-                dbPeptideFileAnalysis.ExcludedMzs = _excludedMzs.ToByteArray();
+                dbPeptideFileAnalysis.ExcludedMasses = _excludedMzs.ToByteArray();
             }
             else
             {
-                dbPeptideFileAnalysis.ExcludedMzs = null;
+                dbPeptideFileAnalysis.ExcludedMasses = null;
             }
             dbPeptideFileAnalysis.PeakStart = PeakStart;
             dbPeptideFileAnalysis.PeakStartTime = PeakStartTime;

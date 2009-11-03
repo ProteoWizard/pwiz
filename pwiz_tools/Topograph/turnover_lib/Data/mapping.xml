@@ -130,6 +130,8 @@
       <one-to-many class="DbTracerDef" />
     </bag>
     <property name="TracerDefCount" />
+
+    <property name="SchemaVersion" />
   </class>
   <class name="DbModification">
     <id name="Id">
@@ -196,7 +198,7 @@
     </bag>
     <property name="PeptideDistributionCount"/>
     <property name="AutoFindPeak" />
-    <property name="OverrideExcludedMzs" />
+    <property name="OverrideExcludedMasses" />
     <property name="ChromatogramStartTime" />
     <property name="ChromatogramEndTime" />
     <property name="FirstDetectedScan" />
@@ -207,7 +209,7 @@
     <property name="PeakEndTime" />
     <property name="TimesBytes" length="1000000" type="BinaryBlob"/>
     <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
-    <property name="ExcludedMzs" type="BinaryBlob" />
+    <property name="ExcludedMasses" type="BinaryBlob" />
   </class>
   <class name="DbPeptideAnalysis">
     <id name="Id">
@@ -222,7 +224,7 @@
     <many-to-one name="Peptide" not-null="true" unique-key="PeptideAnalysis" />
     <property name="MinCharge" />
     <property name="MaxCharge" />
-    <property name="ExcludedMzs" type="BinaryBlob" />
+    <property name="ExcludedMasses" type="BinaryBlob" />
     <property name="IntermediateEnrichmentLevels" />
     
     <bag name="FileAnalyses" cascade="delete" inverse="true">

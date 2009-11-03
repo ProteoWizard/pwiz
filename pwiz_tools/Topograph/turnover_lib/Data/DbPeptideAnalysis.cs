@@ -39,7 +39,7 @@ namespace pwiz.Topograph.Data
         public virtual DbWorkspace Workspace { get; set; }
         public virtual int MinCharge { get; set; }
         public virtual int MaxCharge { get; set; }
-        public virtual byte[] ExcludedMzs { get; set; }
+        public virtual byte[] ExcludedMasses { get; set; }
         public virtual int IntermediateEnrichmentLevels { get; set; }
         public override String ToString()
         {

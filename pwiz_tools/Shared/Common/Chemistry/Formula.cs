@@ -67,7 +67,7 @@ namespace pwiz.Common.Chemistry
         }
         public T SetElementCount(String element, int count)
         {
-            var dict = new Dictionary<String, int>(this);
+            var dict = new SortedDictionary<String, int>(this);
             if (count == 0)
             {
                 dict.Remove(element);

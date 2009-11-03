@@ -214,7 +214,6 @@ namespace pwiz.Topograph.Model
                     _childDict.Add(key, child);
                     _childCount = _childDict.Count;
                     AfterAddChild(child);
-                    OnChange();
                 }
             }
         }

@@ -33,6 +33,7 @@ using pwiz.Topograph.MsData;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Properties;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -193,6 +194,7 @@ namespace pwiz.Topograph.ui.Forms
                                       {
                                           ModificationCount = 1,
                                           TracerDefCount = 1,
+                                          SchemaVersion = WorkspaceUpgrader.CurrentVersion,
                                       };
                 session.Save(dbWorkspace);
                 DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
@@ -213,6 +215,37 @@ namespace pwiz.Topograph.ui.Forms
             enrichmentToolStripMenuItem_Click(sender, e);
         }
 
+        public Workspace OpenWorkspace(String path)
+        {
+            var upgrader = new WorkspaceUpgrader(path);
+            int version;
+            using (var connection = upgrader.OpenConnection())
+            {
+                version = upgrader.ReadSchemaVersion(connection);
+            }
+            if (version > WorkspaceUpgrader.CurrentVersion || version < WorkspaceUpgrader.MinUpgradeableVersion)
+            {
+                MessageBox.Show("This workspace cannot be opened by this version of Topograph", Program.AppName);
+                return null;
+            }
+            if (version < WorkspaceUpgrader.CurrentVersion)
+            {
+                var result =
+                    MessageBox.Show(
+                        "This workspace needs to be upgraded to this version of Topograph.  Do you want to do that now?", 
+                        Program.AppName, MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                {
+                    return null;
+                }
+                if (!new LongOperationBroker(upgrader, new LongWaitDialog(this)).LaunchJob())
+                {
+                    return null;
+                }
+            }
+            return new Workspace(path);
+        }
+
         private void openWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!PromptToSaveWorkspace())
@@ -230,7 +263,11 @@ namespace pwiz.Topograph.ui.Forms
             }
             String filename = fileDialog.FileName;
             Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
-            Workspace = new Workspace(filename);
+            var workspace = OpenWorkspace(filename);
+            if (workspace != null)
+            {
+                Workspace = workspace;
+            }
         }
 
         private void addSearchResultsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -278,10 +315,15 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 if (dialogResult == DialogResult.Yes)
                 {
-                    Workspace.Save();
+                    return SaveWorkspace();
                 }
             }
             return true;
+        }
+
+        private bool SaveWorkspace()
+        {
+            return Workspace.Save(new LongWaitDialog(this));
         }
 
         private void closeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -419,7 +461,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void saveWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Workspace.Save();
+            SaveWorkspace();
         }
 
         private void statusToolStripMenuItem_Click(object sender, EventArgs e)
