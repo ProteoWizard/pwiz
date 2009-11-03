@@ -1,5 +1,5 @@
 //
-// $Id: DeltaMasses.cpp 11 2009-10-09 20:38:14Z chambm $
+// $Id$
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in

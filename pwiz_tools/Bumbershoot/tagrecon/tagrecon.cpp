@@ -1,5 +1,5 @@
 //
-// $Id: tagrecon.cpp 19 2009-10-28 20:38:27Z chambm $
+// $Id$
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
