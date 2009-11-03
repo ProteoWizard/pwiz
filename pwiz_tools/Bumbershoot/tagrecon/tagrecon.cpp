@@ -443,8 +443,8 @@ namespace tagrecon
 				--i;
 			}
 
-			//Check to make sure the user has given a DB and a set of tags (or spectra).
-			if( args.size() < 4 )
+			// Make sure the user gave at least one input file (tags or spectra)
+			if( args.size() < 2 )
 			{
 				cerr << "Not enough arguments.\nUsage: " << args[0] << " [-ProteinDatabase <FASTA protein database filepath>] <input filemask 1> [input filemask 2] ..." << endl;
 				return 1;
