@@ -179,6 +179,12 @@
     <Compile Include="Forms\GraphForm.Designer.cs">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\LongWaitDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LongWaitDialog.Designer.cs">
+      <DependentUpon>LongWaitDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\MiscSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -281,6 +287,12 @@
     <Compile Include="Forms\UpdateProteinNames.Designer.cs">
       <DependentUpon>UpdateProteinNames.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\UpgradeWorkspaceForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\UpgradeWorkspaceForm.Designer.cs">
+      <DependentUpon>UpgradeWorkspaceForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\WorkspaceForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -306,6 +318,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LongWaitDialog.resx">
+      <DependentUpon>LongWaitDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MiscSettingsForm.resx">
       <DependentUpon>MiscSettingsForm.cs</DependentUpon>
@@ -386,6 +401,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Util\LongWaitAction.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
@@ -540,9 +556,6 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Util\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

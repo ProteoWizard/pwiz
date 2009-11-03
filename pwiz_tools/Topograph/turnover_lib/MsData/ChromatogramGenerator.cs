@@ -33,7 +33,7 @@ namespace pwiz.Topograph.MsData
 {
     public class ChromatogramGenerator
     {
-        private int maxConcurrentAnalyses = 200;
+        private int maxConcurrentAnalyses = 100;
         private readonly Workspace _workspace;
         private Thread _chromatogramGeneratorThread;
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.ManualReset);

@@ -85,6 +85,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\WorkspaceUpgrader.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
     <Compile Include="Fasta\FastaUpdater.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="Util\AutoLock.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\Lists.cs" />
+    <Compile Include="Util\LongOperation.cs" />
     <Compile Include="Util\SessionWithLock.cs" />
     <Compile Include="Util\Statistics.cs" />
     <Compile Include="Util\WeakDictionary.cs" />
