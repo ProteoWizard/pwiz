@@ -241,11 +241,8 @@ namespace pwiz.Skyline.SettingsUI
             BackgroundProteome backgroundProteome = null;
             if (backgroundProteomeSpec != null)
             {
-                try
-                {
-                    backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
-                }
-                catch (Exception)
+                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
+                if (backgroundProteome.DatabaseInvalid)
                 {
                     MessageDlg.Show(this, string.Format("Failed to load background proteome {0}.\nThe file {1} may not be a valid proteome file.",
                         backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath));

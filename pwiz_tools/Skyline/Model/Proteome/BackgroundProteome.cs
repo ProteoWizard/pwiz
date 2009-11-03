@@ -35,24 +35,34 @@ namespace pwiz.Skyline.Model.Proteome
     public class BackgroundProteome : BackgroundProteomeSpec
     {
         private HashSet<Digestion> Digestions { get; set; }
-        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) 
-            : base(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath)
+        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
         {
-            Validate();
         }
 
-        private void Validate()
+        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec, bool queryDigestions)
+            : base(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath)
         {
             Digestions = new HashSet<Digestion>();
-            if (IsNone)
+            if (queryDigestions)
             {
-                return;
+                if (!IsNone)
+                {
+                    try
+                    {
+                        Digestions.UnionWith(OpenProteomeDb().ListDigestions());
+                    }
+                    catch (Exception)
+                    {
+                        DatabaseInvalid = true;
+                    }
+                }
+                DatabaseValidated = true;
             }
-            Digestions.UnionWith(OpenProteomeDb().ListDigestions());
         }
 
         private BackgroundProteome()
         {
+            Digestions = new HashSet<Digestion>();
         }
 
         public Digestion GetDigestion(Enzyme enzyme, DigestSettings digestSettings)
@@ -72,6 +82,15 @@ namespace pwiz.Skyline.Model.Proteome
             return GetDigestion(peptideSettings.Enzyme, peptideSettings.DigestSettings);
         }
 
+        /// <summary>
+        /// True if the database file does not exist
+        /// </summary>
+        public bool DatabaseInvalid { get; private set; }
+        /// <summary>
+        /// True if we have checked whether the database file exists
+        /// </summary>
+        public bool DatabaseValidated { get; private set; }
+
         public BackgroundProteomeSpec BackgroundProteomeSpec
         {
             get { return this;}
@@ -79,9 +98,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public new static BackgroundProteome Deserialize(XmlReader reader)
         {
-            BackgroundProteome backgroundProteome = reader.Deserialize(new BackgroundProteome());
-            backgroundProteome.Validate();
-            return backgroundProteome;
+            return reader.Deserialize(new BackgroundProteome());
         }
 
         public override int GetHashCode()
@@ -101,6 +118,11 @@ namespace pwiz.Skyline.Model.Proteome
             }
             BackgroundProteome that = other as BackgroundProteome;
             if (that == null)
+            {
+                return false;
+            }
+            if (DatabaseInvalid != that.DatabaseInvalid 
+                || DatabaseValidated != that.DatabaseValidated)
             {
                 return false;
             }

@@ -222,7 +222,9 @@ namespace pwiz.SkylineTestFunctional
             for (String directory = testContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory))
             {
                 if (Equals(Path.GetFileName(directory), "TestResults"))
+                {
                     return Path.Combine(Path.GetDirectoryName(directory), relativePath);
+                }
             }
             return null;
         }

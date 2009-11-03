@@ -841,6 +841,7 @@ namespace pwiz.Skyline.Controls
             var editTextBox = _editTextBox;
             _editTextBox = null;
             String label = editTextBox.TextBox.Text;
+            editTextBox.TextBox.Parent.Controls.Remove(editTextBox.TextBox);
             editTextBox.Detach();
             NodeLabelEditEventArgs nodeLabelEditEventArgs =
                 new NodeLabelEditEventArgs(SelectedNode, label) {CancelEdit = wasCancelled};

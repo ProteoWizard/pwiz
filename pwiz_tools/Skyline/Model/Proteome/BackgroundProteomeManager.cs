@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.ProteomeDatabase.API;
@@ -45,8 +46,20 @@ namespace pwiz.Skyline.Model.Proteome
 
         protected override bool IsLoaded(SrmDocument document)
         {
-            var backgroundProteome = GetBackgroundProteome(document);
+            return IsLoaded(document, GetBackgroundProteome(document));
+        }
+
+        private bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome)
+        {
             if (backgroundProteome.IsNone)
+            {
+                return true;
+            }
+            if (!backgroundProteome.DatabaseValidated)
+            {
+                return false;
+            }
+            if (backgroundProteome.DatabaseInvalid)
             {
                 return true;
             }
@@ -54,7 +67,7 @@ namespace pwiz.Skyline.Model.Proteome
             var digestSettings = document.Settings.PeptideSettings.DigestSettings;
             return backgroundProteome.GetDigestion(enzyme, digestSettings) != null;
         }
-
+        
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
         {
             return document.Settings.PeptideSettings.BackgroundProteome;
@@ -74,9 +87,22 @@ namespace pwiz.Skyline.Model.Proteome
             return false;
         }
 
+        private SrmDocument ChangeBackgroundProteome(SrmDocument document, BackgroundProteome backgroundProteome)
+        {
+            return document.ChangeSettings(
+                document.Settings.ChangePeptideSettings(
+                    document.Settings.PeptideSettings.ChangeBackgroundProteome(backgroundProteome)));
+        }
+
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
             BackgroundProteome originalBackgroundProteome = GetBackgroundProteome(docCurrent);
+            // Check to see whether the Digestion already exists but has not been queried yet.
+            BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
+            if (IsLoaded(docCurrent, backgroundProteomeWithDigestions))
+            {
+                return CompleteProcessing(container, ChangeBackgroundProteome(docCurrent, backgroundProteomeWithDigestions), docCurrent);
+            }
             using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
             {
                 File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
@@ -87,10 +113,11 @@ namespace pwiz.Skyline.Model.Proteome
                 string nameEnzyme = enzyme.Name;
                 ProgressStatus progressStatus = new ProgressStatus(
                     string.Format("Digesting {0} proteome with {1}", name, nameEnzyme));
-                var digestion = proteomeDb.Digest(protease,(s, i) => { 
-                        UpdateProgress(progressStatus.ChangePercentComplete(i));
-                        return true;
-                    });
+                var digestion = proteomeDb.Digest(protease, (s, i) =>
+                {
+                    UpdateProgress(progressStatus.ChangePercentComplete(i));
+                    return true;
+                });
                 if (digestion != null)
                 {
                     if (!fs.Commit())
@@ -98,9 +125,9 @@ namespace pwiz.Skyline.Model.Proteome
                         return false;
                     }
                 }
-                SrmDocument docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
-                                        docCurrent.Settings.PeptideSettings.ChangeBackgroundProteome(new BackgroundProteome(originalBackgroundProteome))));
-                return CompleteProcessing(container, docNew, docCurrent);
+                return CompleteProcessing(container, 
+                    ChangeBackgroundProteome(docCurrent, new BackgroundProteome(originalBackgroundProteome, true)), 
+                    docCurrent);
             }
         }
     }

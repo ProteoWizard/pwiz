@@ -52,9 +52,6 @@ namespace pwiz.Skyline.EditUI
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.panelError = new System.Windows.Forms.Panel();
-            this.tbxError = new System.Windows.Forms.TextBox();
-            this.panelButtons = new System.Windows.Forms.Panel();
             this.tabPageTransitionList = new System.Windows.Forms.TabPage();
             this.gridViewTransitionList = new System.Windows.Forms.DataGridView();
             this.colTransitionPeptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -62,16 +59,19 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panelError = new System.Windows.Forms.Panel();
+            this.tbxError = new System.Windows.Forms.TextBox();
+            this.panelButtons = new System.Windows.Forms.Panel();
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).BeginInit();
             this.tabPagePeptideList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).BeginInit();
-            this.panelError.SuspendLayout();
-            this.panelButtons.SuspendLayout();
             this.tabPageTransitionList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).BeginInit();
+            this.panelError.SuspendLayout();
+            this.panelButtons.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.EditUI
             this.tbxFasta.MaxLength = 2147483647;
             this.tbxFasta.Multiline = true;
             this.tbxFasta.Name = "tbxFasta";
-            this.tbxFasta.Size = new System.Drawing.Size(551, 381);
+            this.tbxFasta.Size = new System.Drawing.Size(791, 381);
             this.tbxFasta.TabIndex = 0;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
             // 
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPageFasta.Location = new System.Drawing.Point(4, 25);
             this.tabPageFasta.Name = "tabPageFasta";
             this.tabPageFasta.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageFasta.Size = new System.Drawing.Size(557, 400);
+            this.tabPageFasta.Size = new System.Drawing.Size(797, 400);
             this.tabPageFasta.TabIndex = 0;
             this.tabPageFasta.Text = "Fasta";
             this.tabPageFasta.UseVisualStyleBackColor = true;
@@ -283,37 +283,6 @@ namespace pwiz.Skyline.EditUI
             this.colPeptideProteinDescription.Name = "colPeptideProteinDescription";
             this.colPeptideProteinDescription.ReadOnly = true;
             // 
-            // panelError
-            // 
-            this.panelError.Controls.Add(this.tbxError);
-            this.panelError.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelError.Location = new System.Drawing.Point(0, 0);
-            this.panelError.Name = "panelError";
-            this.panelError.Size = new System.Drawing.Size(805, 45);
-            this.panelError.TabIndex = 9;
-            this.panelError.Visible = false;
-            // 
-            // tbxError
-            // 
-            this.tbxError.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxError.Location = new System.Drawing.Point(0, 0);
-            this.tbxError.Multiline = true;
-            this.tbxError.Name = "tbxError";
-            this.tbxError.ReadOnly = true;
-            this.tbxError.Size = new System.Drawing.Size(805, 45);
-            this.tbxError.TabIndex = 0;
-            // 
-            // panelButtons
-            // 
-            this.panelButtons.Controls.Add(this.btnValidate);
-            this.panelButtons.Controls.Add(this.btnInsert);
-            this.panelButtons.Controls.Add(this.btnCancel);
-            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelButtons.Location = new System.Drawing.Point(0, 474);
-            this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(805, 44);
-            this.panelButtons.TabIndex = 10;
-            // 
             // tabPageTransitionList
             // 
             this.tabPageTransitionList.Controls.Add(this.gridViewTransitionList);
@@ -368,6 +337,37 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProteinDescription.Name = "colTransitionProteinDescription";
             this.colTransitionProteinDescription.ReadOnly = true;
             // 
+            // panelError
+            // 
+            this.panelError.Controls.Add(this.tbxError);
+            this.panelError.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelError.Location = new System.Drawing.Point(0, 0);
+            this.panelError.Name = "panelError";
+            this.panelError.Size = new System.Drawing.Size(805, 45);
+            this.panelError.TabIndex = 9;
+            this.panelError.Visible = false;
+            // 
+            // tbxError
+            // 
+            this.tbxError.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxError.Location = new System.Drawing.Point(0, 0);
+            this.tbxError.Multiline = true;
+            this.tbxError.Name = "tbxError";
+            this.tbxError.ReadOnly = true;
+            this.tbxError.Size = new System.Drawing.Size(805, 45);
+            this.tbxError.TabIndex = 0;
+            // 
+            // panelButtons
+            // 
+            this.panelButtons.Controls.Add(this.btnValidate);
+            this.panelButtons.Controls.Add(this.btnInsert);
+            this.panelButtons.Controls.Add(this.btnCancel);
+            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelButtons.Location = new System.Drawing.Point(0, 474);
+            this.panelButtons.Name = "panelButtons";
+            this.panelButtons.Size = new System.Drawing.Size(805, 44);
+            this.panelButtons.TabIndex = 10;
+            // 
             // PasteDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -392,11 +392,11 @@ namespace pwiz.Skyline.EditUI
             ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).EndInit();
             this.tabPagePeptideList.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).EndInit();
+            this.tabPageTransitionList.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).EndInit();
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.panelButtons.ResumeLayout(false);
-            this.tabPageTransitionList.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).EndInit();
             this.ResumeLayout(false);
 
         }

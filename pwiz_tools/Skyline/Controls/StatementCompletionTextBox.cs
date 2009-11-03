@@ -62,7 +62,6 @@ namespace pwiz.Skyline.Controls
             TextBox.GotFocus -= TextBox_GotFocus;
             TextBox.LostFocus -= TextBox_LostFocus;
             TextBox.LocationChanged -= TextBox_LocationChanged;
-            TextBox.Parent.Controls.Remove(TextBox);            
             TextBox = null;
         }
 
