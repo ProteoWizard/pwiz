@@ -534,6 +534,7 @@ namespace pwiz.Skyline.FileUI
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
             Settings.Default.ExportMethodStrategy = _exportStrategy.ToString();
+            Settings.Default.ExportIgnoreProteins = _ignoreProteins;
             Settings.Default.ExportMethodMaxTran = (_maxTransitions != null ?
                 _maxTransitions.ToString() : null);
             Settings.Default.ExportMethodType = _methodType.ToString();
