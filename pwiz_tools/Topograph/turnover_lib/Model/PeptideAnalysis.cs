@@ -51,9 +51,9 @@ namespace pwiz.Topograph.Model
         {
             base.Load(entity);
             Peptide = Workspace.Peptides.GetPeptide(entity.Peptide);
-            MinCharge = entity.MinCharge;
-            MaxCharge = entity.MaxCharge;
-            IntermediateLevels = entity.IntermediateEnrichmentLevels;
+            _minCharge = entity.MinCharge;
+            _maxCharge = entity.MaxCharge;
+            _intermediateLevels = entity.IntermediateEnrichmentLevels;
             ExcludedMzs = new ExcludedMzs(this);
             ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
             if (entity.ExcludedMasses != null)
