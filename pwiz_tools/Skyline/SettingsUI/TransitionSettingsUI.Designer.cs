@@ -76,6 +76,8 @@
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -438,7 +440,7 @@
             this.panelPick.Location = new System.Drawing.Point(3, 117);
             this.panelPick.Name = "panelPick";
             this.panelPick.Size = new System.Drawing.Size(357, 117);
-            this.panelPick.TabIndex = 1;
+            this.panelPick.TabIndex = 4;
             // 
             // radioFiltered
             // 
@@ -446,9 +448,9 @@
             this.radioFiltered.Location = new System.Drawing.Point(17, 91);
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.Size = new System.Drawing.Size(143, 17);
-            this.radioFiltered.TabIndex = 7;
+            this.radioFiltered.TabIndex = 4;
             this.radioFiltered.TabStop = true;
-            this.radioFiltered.Text = "From filtered product ions";
+            this.radioFiltered.Text = "From filtered pro&duct ions";
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -457,9 +459,9 @@
             this.radioAll.Location = new System.Drawing.Point(17, 68);
             this.radioAll.Name = "radioAll";
             this.radioAll.Size = new System.Drawing.Size(189, 17);
-            this.radioAll.TabIndex = 6;
+            this.radioAll.TabIndex = 3;
             this.radioAll.TabStop = true;
-            this.radioAll.Text = "From filtered ion charges and types";
+            this.radioAll.Text = "From filtered ion &charges and types";
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
@@ -468,7 +470,7 @@
             this.label14.Location = new System.Drawing.Point(14, 9);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(31, 13);
-            this.label14.TabIndex = 3;
+            this.label14.TabIndex = 0;
             this.label14.Text = "&Pick:";
             // 
             // label15
@@ -477,7 +479,7 @@
             this.label15.Location = new System.Drawing.Point(90, 28);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(65, 13);
-            this.label15.TabIndex = 5;
+            this.label15.TabIndex = 2;
             this.label15.Text = "product ions";
             // 
             // textIonCount
@@ -485,7 +487,7 @@
             this.textIonCount.Location = new System.Drawing.Point(17, 25);
             this.textIonCount.Name = "textIonCount";
             this.textIonCount.Size = new System.Drawing.Size(67, 20);
-            this.textIonCount.TabIndex = 4;
+            this.textIonCount.TabIndex = 1;
             // 
             // textTolerance
             // 
@@ -500,8 +502,8 @@
             this.cbLibraryPick.Location = new System.Drawing.Point(20, 94);
             this.cbLibraryPick.Name = "cbLibraryPick";
             this.cbLibraryPick.Size = new System.Drawing.Size(295, 17);
-            this.cbLibraryPick.TabIndex = 0;
-            this.cbLibraryPick.Text = "If a library spectrum is available, pick its most intense ions";
+            this.cbLibraryPick.TabIndex = 3;
+            this.cbLibraryPick.Text = "If a library &spectrum is available, pick its most intense ions";
             this.cbLibraryPick.UseVisualStyleBackColor = true;
             this.cbLibraryPick.CheckedChanged += new System.EventHandler(this.cbLibraryPick_CheckedChanged);
             // 
@@ -516,6 +518,8 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.textMaxTrans);
+            this.tabInstrument.Controls.Add(this.label17);
             this.tabInstrument.Controls.Add(this.textMzMatchTolerance);
             this.tabInstrument.Controls.Add(this.label16);
             this.tabInstrument.Controls.Add(this.label10);
@@ -531,7 +535,7 @@
             // 
             // textMzMatchTolerance
             // 
-            this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 100);
+            this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 99);
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
             this.textMzMatchTolerance.Size = new System.Drawing.Size(68, 20);
             this.textMzMatchTolerance.TabIndex = 5;
@@ -539,7 +543,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(27, 83);
+            this.label16.Location = new System.Drawing.Point(24, 83);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(110, 13);
             this.label16.TabIndex = 4;
@@ -576,6 +580,22 @@
             this.textMinMz.Name = "textMinMz";
             this.textMinMz.Size = new System.Drawing.Size(68, 20);
             this.textMinMz.TabIndex = 1;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(24, 144);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(80, 13);
+            this.label17.TabIndex = 6;
+            this.label17.Text = "M&ax transitions:";
+            // 
+            // textMaxTrans
+            // 
+            this.textMaxTrans.Location = new System.Drawing.Point(27, 160);
+            this.textMaxTrans.Name = "textMaxTrans";
+            this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
+            this.textMaxTrans.TabIndex = 7;
             // 
             // TransitionSettingsUI
             // 
@@ -661,5 +681,7 @@
         private System.Windows.Forms.ComboBox comboOptimizeType;
         private System.Windows.Forms.CheckBox cbUseOptimized;
         private System.Windows.Forms.Label labelOptimizeType;
+        private System.Windows.Forms.TextBox textMaxTrans;
+        private System.Windows.Forms.Label label17;
     }
 }

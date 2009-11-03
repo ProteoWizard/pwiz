@@ -117,8 +117,10 @@ namespace pwiz.Skyline.SettingsUI
                     librarySpec = new BiblioSpecLibSpec(name, path);
                 else if (Equals(ext, XHunterLibSpec.EXT))
                     librarySpec = new XHunterLibSpec(name, path);
-                else // if (Equals(ext, NistLibSpec.EXT))
+                else if (Equals(ext, NistLibSpec.EXT))
                     librarySpec = new NistLibSpec(name, path);
+                else // if (Equals(ext, SpectrastSpec.EXT))
+                    librarySpec = new SpectrastSpec(name, path);
 
 //                if (librarySpec == null)
 //                {
@@ -164,8 +166,8 @@ namespace pwiz.Skyline.SettingsUI
                 DefaultExt = BiblioSpecLibSpec.EXT,
                 Filter = string.Join("|", new[]
                     {
-                        "Spectral Libraries (*" + BiblioSpecLiteSpec.EXT + ",*" + XHunterLibSpec.EXT + ",*" + NistLibSpec.EXT + ")|*" +
-                            BiblioSpecLiteSpec.EXT + ";*" + XHunterLibSpec.EXT + ";*" + NistLibSpec.EXT,
+                        "Spectral Libraries (*" + BiblioSpecLiteSpec.EXT + ",*" + XHunterLibSpec.EXT + ",*" + NistLibSpec.EXT + ",*" + SpectrastSpec.EXT + ")|*" +
+                            BiblioSpecLiteSpec.EXT + ";*" + XHunterLibSpec.EXT + ";*" + NistLibSpec.EXT + ";*" + SpectrastSpec.EXT,
                         "Legacy Libraries (*" + BiblioSpecLibSpec.EXT + ")|*" + BiblioSpecLibSpec.EXT,
                         "All Files (*.*)|*.*"
                     })

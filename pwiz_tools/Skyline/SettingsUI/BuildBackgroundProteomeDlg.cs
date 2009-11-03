@@ -39,7 +39,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<BackgroundProteomeSpec> _existing;
         private String _databasePath;
         private String _name;
-        private bool _buildNew = true;  // Design mode as build
+        private bool _buildNew = true;  // Design mode with build UI showing
         private LongWaitDlg _longWaitDlg;
         private BackgroundProteomeSpec _backgroundProteomeSpec;
         private readonly MessageBoxHelper _messageBoxHelper;

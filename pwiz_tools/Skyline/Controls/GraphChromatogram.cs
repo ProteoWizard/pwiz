@@ -521,6 +521,8 @@ namespace pwiz.Skyline.Controls
                     libIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
 
                 var info = arrayChromInfo[i];
+                if (info == null)
+                    continue;
 
                 // Apply any active transform
                 info.Transform(transform);

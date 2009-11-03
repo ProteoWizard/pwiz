@@ -856,7 +856,8 @@ namespace pwiz.Skyline.Properties
                     (
                         50,   // MinMz
                         1500, // MaxMz
-                        TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE // MzMatchTolerance
+                        TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, // MzMatchTolerance
+                        null  // MaxTransitions
                     )
                 )
             );

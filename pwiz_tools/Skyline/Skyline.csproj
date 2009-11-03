@@ -371,6 +371,7 @@
     <Compile Include="Model\Lib\BiblioSpecLite.cs" />
     <Compile Include="Model\Lib\BiblioSpecLiteBuilder.cs" />
     <Compile Include="Model\Lib\NistLibSpec.cs" />
+    <Compile Include="Model\Lib\SpectrastSpec.cs" />
     <Compile Include="Model\Lib\XHunterSpec.cs" />
     <Compile Include="Model\Lib\Library.cs" />
     <Compile Include="Model\Lib\BiblioSpec.cs" />

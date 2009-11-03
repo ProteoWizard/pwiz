@@ -435,7 +435,10 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, 10, int.MaxValue, out maxVal))
+                // CONSIDER: Better error message when instrument limitation encountered?
+                int maxInstrumentTrans = documentExport.Settings.TransitionSettings.Instrument.MaxTransitions ??
+                                         TransitionInstrument.MAX_TRANSITION_MAX;
+                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, 10, maxInstrumentTrans, out maxVal))
                     return;
                 // Make sure all the precursors can fit into a single document
                 if (!ValidatePrecursorFit(documentExport, maxVal))

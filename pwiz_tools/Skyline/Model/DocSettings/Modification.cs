@@ -43,8 +43,8 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
 
     /// <summary>
-    /// Represents a document-wide static modification that applies
-    /// to all amino acids of a specific type, or all peptides in the
+    /// Represents a document-wide  or explicit static modification that applies
+    /// to all amino acids of a specific type or a single amino acid, or all peptides in the
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
@@ -62,6 +62,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, char? aa, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
+            : this(name, aa, term, formula, labelAtoms, monoMass, avgMass, null, null, null)
+        {
+            
+        }
+
+        public StaticMod(string name, char? aa, ModTerminus? term,
+            string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass,
+            string formulaLoss, double? monoLoss, double? avgLoss)
             : base(name)
         {
             AA = aa;
@@ -76,6 +84,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 AverageMass = avgMass;                
             }
 
+            FormulaLoss = formulaLoss;
+
+            // Only allow masses, if formula is not specified.
+            if (string.IsNullOrEmpty(formulaLoss))
+            {
+                MonoisotopicLoss = monoLoss;
+                AverageLoss = avgLoss;
+            }
+
             Validate();
         }
 
@@ -84,6 +101,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public ModTerminus? Terminus { get; private set; }
 
         public string Formula { get; private set; }
+        public string FormulaLoss { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
@@ -92,8 +110,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
 
         public double? MonoisotopicMass { get; private set; }
+        public double? MonoisotopicLoss { get; private set; }
 
         public double? AverageMass { get; private set; }
+        public double? AverageLoss { get; private set; }
 
         /// <summary>
         /// True if the modification must be declared on a peptide to have
@@ -120,6 +140,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
+        public bool IsLoss
+        {
+            get { return FormulaLoss != null || MonoisotopicLoss.HasValue; }
+        }
+
         #region Property change methods
 
         public StaticMod ChangeExplicit(bool prop)
@@ -143,6 +168,7 @@ namespace pwiz.Skyline.Model.DocSettings
             aminoacid,
             terminus,
             formula,
+            formula_loss,
 // ReSharper disable InconsistentNaming
             label_13C,
             label_15N,
@@ -150,7 +176,9 @@ namespace pwiz.Skyline.Model.DocSettings
             label_2H,
 // ReSharper restore InconsistentNaming
             massdiff_monoisotopic,
+            massloss_monoisotopic,
             massdiff_average,
+            massloss_average,
             explicit_decl
         }
 
@@ -184,6 +212,22 @@ namespace pwiz.Skyline.Model.DocSettings
                 // No explicit masses with formula or label atoms
                 if (MonoisotopicMass != null || AverageMass != null)
                     throw new InvalidDataException("Modification with a formula may not specify modification masses.");
+            }
+            if (FormulaLoss == null)
+            {
+                // Most both be not null or both null
+                if ((MonoisotopicLoss == null || AverageLoss == null) &&
+                        (MonoisotopicLoss != null || AverageLoss != null))
+                    throw new InvalidDataException("Modification without a loss formula, must specify both monoisotopic and average losses or neither.");
+            }
+            else
+            {
+                // Throws an exception, if given an invalid formula.
+                SequenceMassCalc.ParseModMass(VALIDATION_MASS_CALC, FormulaLoss);
+
+                // No explicit loss masses with formula
+                if (MonoisotopicLoss != null || AverageLoss != null)
+                    throw new InvalidDataException("Modification with a loss formula may not also specify loss masses.");
             }
         }
 
@@ -222,6 +266,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             Terminus = reader.GetAttribute<ModTerminus>(ATTR.terminus, ToModTerminus);
             Formula = reader.GetAttribute(ATTR.formula);
+            FormulaLoss = reader.GetAttribute(ATTR.formula_loss);
             if (reader.GetBoolAttribute(ATTR.label_13C))
                 LabelAtoms |= LabelAtoms.C13;
             if (reader.GetBoolAttribute(ATTR.label_15N))
@@ -234,7 +279,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Allow specific masses always, but they will generate an error,
             // in Validate() if there is already a formula.
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic);
+            MonoisotopicLoss = reader.GetNullableDoubleAttribute(ATTR.massloss_monoisotopic);
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average);
+            AverageLoss = reader.GetNullableDoubleAttribute(ATTR.massloss_average);
 
             IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
 
@@ -251,12 +298,15 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.aminoacid, AA);
             writer.WriteAttributeNullable(ATTR.terminus, Terminus);
             writer.WriteAttributeIfString(ATTR.formula, Formula);
+            writer.WriteAttributeIfString(ATTR.formula_loss, FormulaLoss);
             writer.WriteAttribute(ATTR.label_13C, Label13C);
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
             writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+            writer.WriteAttributeNullable(ATTR.massloss_monoisotopic, MonoisotopicLoss);
             writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
+            writer.WriteAttributeNullable(ATTR.massloss_average, AverageLoss);
             writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
         }
 
@@ -273,9 +323,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) && obj.AA.Equals(AA) &&
                 obj.AverageMass.Equals(AverageMass) &&
+                obj.AverageLoss.Equals(AverageLoss) &&
                 Equals(obj.Formula, Formula) &&
+                Equals(obj.FormulaLoss, FormulaLoss) &&
                 Equals(obj.LabelAtoms, LabelAtoms) &&
                 obj.MonoisotopicMass.Equals(MonoisotopicMass) &&
+                obj.MonoisotopicLoss.Equals(MonoisotopicLoss) &&
                 obj.Terminus.Equals(Terminus);
         }
 
@@ -301,10 +354,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result*397) ^ (AA.HasValue ? AA.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AverageLoss.HasValue ? AverageLoss.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Formula != null ? Formula.GetHashCode() : 0);
+                result = (result*397) ^ (FormulaLoss != null ? FormulaLoss.GetHashCode() : 0);
                 result = (result*397) ^ IsExplicit.GetHashCode();
                 result = (result*397) ^ LabelAtoms.GetHashCode();
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (MonoisotopicLoss.HasValue ? MonoisotopicLoss.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
                 return result;
             }
@@ -424,7 +480,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (labelType == IsotopeLabelType.light)
                     return _staticModMassesAvg;
                 else
-                    return _heavyModMassesAvg;                
+                    return _heavyModMassesAvg;
             }
         }
 

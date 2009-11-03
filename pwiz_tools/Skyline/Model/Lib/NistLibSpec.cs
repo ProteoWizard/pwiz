@@ -31,14 +31,9 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Lib
 {
     [XmlRoot("nist_lib_spec")]
-    public sealed class NistLibSpec : LibrarySpec
+    public sealed class NistLibSpec : NistLibSpecBase
     {
         public const string EXT = ".msp";
-
-        public static readonly PeptideRankId PEP_RANK_TFRATIO = new PeptideRankId("TFRatio");
-
-        private static readonly PeptideRankId[] RANK_IDS = new[]
-            { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 
         public NistLibSpec(string name, string path)
             : base(name, path)
@@ -48,11 +43,6 @@ namespace pwiz.Skyline.Model.Lib
         public override Library LoadLibrary(ILoadMonitor loader)
         {
             return NistLibrary.Load(this, loader);
-        }
-
-        public override IEnumerable<PeptideRankId> PeptideRankIds
-        {
-            get { return RANK_IDS; }
         }
 
         #region Implementation of IXmlSerializable
@@ -70,12 +60,86 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+
+        #region object overrides
+
+        public bool Equals(NistLibSpec other)
+        {
+            return base.Equals(other);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as NistLibSpec);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        #endregion
+    }
+
+    public abstract class NistLibSpecBase : LibrarySpec
+    {
+        public static readonly PeptideRankId PEP_RANK_TFRATIO = new PeptideRankId("TFRatio");
+
+        private static readonly PeptideRankId[] RANK_IDS = new[]
+            { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
+
+        protected NistLibSpecBase(string name, string path)
+            : base(name, path)
+        {
+        }
+
+        public override IEnumerable<PeptideRankId> PeptideRankIds
+        {
+            get { return RANK_IDS; }
+        }
+
+        #region Implementation of IXmlSerializable
+        
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        protected NistLibSpecBase()
+        {
+        }
+
+        #endregion
     }
 
     [XmlRoot("nist_spectrum_info")]
-    public sealed class NistSpectrumHeaderInfo : SpectrumHeaderInfo
+    public sealed class NistSpectrumHeaderInfo : NistSpectrumHeaderInfoBase
     {
         public NistSpectrumHeaderInfo(string libraryName, float tfRatio, float totalIntensity, int spectrumCount)
+            : base(libraryName, tfRatio, totalIntensity, spectrumCount)
+        {
+        }
+
+        #region Implementation of IXmlSerializable
+        
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private NistSpectrumHeaderInfo()
+        {
+        }
+
+        public static NistSpectrumHeaderInfo Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new NistSpectrumHeaderInfo());
+        }
+
+        #endregion
+    }
+
+    public class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
+    {
+        public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, float totalIntensity, int spectrumCount)
             : base(libraryName)
         {
             TFRatio = tfRatio;
@@ -85,11 +149,13 @@ namespace pwiz.Skyline.Model.Lib
 
         public int SpectrumCount { get; private set; }
         public float TotalIntensity { get; private set; }
+// ReSharper disable InconsistentNaming
         public float TFRatio { get; private set; }
+// ReSharper restore InconsistentNaming
 
         public override float GetRankValue(PeptideRankId rankId)
         {
-            if (ReferenceEquals(rankId, NistLibSpec.PEP_RANK_TFRATIO))
+            if (ReferenceEquals(rankId, NistLibSpecBase.PEP_RANK_TFRATIO))
                 return TFRatio;
             else if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_TOTAL_INTENSITY))
                 return TotalIntensity;
@@ -103,7 +169,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                yield return new KeyValuePair<PeptideRankId, string>(NistLibSpec.PEP_RANK_TFRATIO,
+                yield return new KeyValuePair<PeptideRankId, string>(NistLibSpecBase.PEP_RANK_TFRATIO,
                     TFRatio.ToString());
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_TOTAL_INTENSITY,
                     string.Format("{0:F0}", TotalIntensity));
@@ -117,7 +183,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// For XML serialization
         /// </summary>
-        private NistSpectrumHeaderInfo()
+        protected NistSpectrumHeaderInfoBase()
         {
         }
 
@@ -126,11 +192,6 @@ namespace pwiz.Skyline.Model.Lib
             count_measured,
             total_intensity,
             tfratio
-        }
-
-        public static NistSpectrumHeaderInfo Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new NistSpectrumHeaderInfo());
         }
 
         public override void ReadXml(XmlReader reader)
@@ -157,7 +218,7 @@ namespace pwiz.Skyline.Model.Lib
 
         #region object overrides
 
-        public bool Equals(NistSpectrumHeaderInfo obj)
+        public bool Equals(NistSpectrumHeaderInfoBase obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -168,7 +229,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as NistSpectrumHeaderInfo);
+            return Equals(obj as NistSpectrumHeaderInfoBase);
         }
 
         public override int GetHashCode()
@@ -187,10 +248,75 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     [XmlRoot("nist_library")]
-    public sealed class NistLibrary : Library
+    public sealed class NistLibrary : NistLibraryBase
     {
         public const string EXT_CACHE = ".slc";
 
+        public static NistLibrary Load(LibrarySpec spec, ILoadMonitor loader)
+        {
+            return (NistLibrary) Load(spec, new NistLibrary(spec), loader);            
+        }
+
+        /// <summary>
+        /// Controlled access to this <see cref="Immutable"/> class, which should be
+        /// created through <see cref="Load(LibrarySpec,ILoadMonitor)"/>.
+        /// </summary>
+        private NistLibrary(LibrarySpec spec)
+            : base(spec, EXT_CACHE)
+        {
+        }
+
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
+            float tfRatio, float totalIntensity, int spectrumCount)
+        {
+            return new NistSpectrumHeaderInfo(libraryName, tfRatio, totalIntensity, spectrumCount);
+        }
+
+        public override LibrarySpec CreateSpec(string path)
+        {
+            return new NistLibSpec(Name, path);
+        }
+
+        #region Implementation of IXmlSerializable
+        
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private NistLibrary()
+        {
+        }
+
+        public static NistLibrary Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new NistLibrary());
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(NistLibrary other)
+        {
+            return base.Equals(other);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as NistLibrary);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        #endregion
+    }
+
+    public abstract class NistLibraryBase : Library
+    {
         private const int FORMAT_VERSION_CACHE = 1;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)");
@@ -219,20 +345,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private IPooledStream _readStream;
 
-        public static NistLibrary Load(NistLibSpec spec, ILoadMonitor loader)
+        protected static Library Load(LibrarySpec spec, NistLibraryBase library, ILoadMonitor loader)
         {
-            var library = new NistLibrary(spec) { FilePath = spec.FilePath };
-
-            string baseName = Path.GetFileNameWithoutExtension(spec.FilePath);
-            library.CachePath = Path.Combine(Path.GetDirectoryName(spec.FilePath), baseName + EXT_CACHE);
-
-            Match match = REGEX_BASENAME.Match(baseName);
-            if (match.Success)
-            {
-                library.Id = match.Groups[1].Value;
-                library.Revision = match.Groups[3].Value;
-            }
-
             if (library.Load(loader))
                 return library;
             return null;            
@@ -240,17 +354,26 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// Controlled access to this <see cref="Immutable"/> class, which should be
-        /// created through <see cref="Load(NistLibSpec,ILoadMonitor)"/>.
+        /// created through <see cref="Load(LibrarySpec,NistLibraryBase,ILoadMonitor)"/>.
         /// </summary>
-        private NistLibrary(LibrarySpec spec)
+        protected NistLibraryBase(LibrarySpec spec, string extCache)
             : base(spec)
         {
+            FilePath = spec.FilePath;
+
+            string baseName = Path.GetFileNameWithoutExtension(FilePath);
+            CachePath = Path.Combine(Path.GetDirectoryName(FilePath), baseName + extCache);
+
+            Match match = REGEX_BASENAME.Match(baseName);
+            if (match.Success)
+            {
+                Id = match.Groups[1].Value;
+                Revision = match.Groups[3].Value;
+            }
         }
 
-        public override LibrarySpec CreateSpec(string path)
-        {
-            return new NistLibSpec(Name, path);
-        }
+        protected abstract SpectrumHeaderInfo CreateSpectrumHeaderInfo(string name,
+            float tfRatio, float intensity, int copies);
 
         /// <summary>
         /// A date string (yyyy-mm-dd) associate with the library.
@@ -475,8 +598,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()]+)/(\d)");
-        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num peaks: (\d+)");
+        private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16]
+        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
@@ -637,7 +760,7 @@ namespace pwiz.Skyline.Model.Lib
         private static string Modify(string sequence, string mod)
         {
             // If no modifications, just return the input sequence
-            bool clean = (sequence.IndexOf('(') == -1);
+            bool clean = (sequence.IndexOfAny(new[] {'(', '['}) == -1);
             if (clean && Equals(mod, "0"))
                 return sequence;
 
@@ -656,11 +779,11 @@ namespace pwiz.Skyline.Model.Lib
                 // At least for Oxidation the sequence already contains
                 // inserted identifiers that look like M(O) for Methyonine
                 // with oxidation.  So, these are removed.
-                if (c == '(')
+                if (c == '(' || c == '[')
                     inMod = true;
                 else if (inMod)
                 {
-                    if (c == ')')
+                    if (c == ')' || c == ']')
                         inMod = false;
                 }
                 else
@@ -727,7 +850,7 @@ namespace pwiz.Skyline.Model.Lib
             if (i != -1)
             {
                 var entry = _libraryEntries[i];
-                libInfo = new NistSpectrumHeaderInfo(Name, entry.TFRatio, entry.TotalIntensity , entry.Copies);
+                libInfo = CreateSpectrumHeaderInfo(Name, entry.TFRatio, entry.TotalIntensity , entry.Copies);
                 return true;
             }
             libInfo = null;
@@ -817,7 +940,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// For serialization
         /// </summary>
-        private NistLibrary()
+        protected NistLibraryBase()
         {
         }
 
@@ -825,11 +948,6 @@ namespace pwiz.Skyline.Model.Lib
         {
             id,
             revision
-        }
-
-        public static NistLibrary Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new NistLibrary());
         }
 
         public override void ReadXml(XmlReader reader)
@@ -909,7 +1027,9 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public LibKey Key { get { return _key; } }
+// ReSharper disable InconsistentNaming
         public float TFRatio { get { return _tfRatio; } }
+// ReSharper restore InconsistentNaming
         public float TotalIntensity { get { return _totalIntensity; } }
         public int Copies { get { return _copies; } }
         public int NumPeaks { get { return _numPeaks; } }

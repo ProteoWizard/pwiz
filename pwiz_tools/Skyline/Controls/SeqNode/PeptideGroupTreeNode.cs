@@ -435,12 +435,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                 sb.Append(">").Append(Model.Id).Append(" ");
                 foreach (string desc in Descriptions)
                     sb.Append(desc).Append((char)1);
-                string aa = fastaSeq.Sequence;
 
+                string aa = fastaSeq.Sequence;
                 for (int i = 0; i < aa.Length; i++)
                 {
                     if (i % 60 == 0)
-                        sb.Append('\n');
+                        sb.AppendLine();
                     sb.Append(aa[i]);
                 }
                 data.SetData(DataFormats.Text, sb.ToString());
@@ -459,20 +459,20 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 IEnumerator<object> peptides = GetChoices(true).GetEnumerator();
                 HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
-                Peptide peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-                bool chosen = peptidesChosen.Contains(peptide);
+                PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+                bool chosen = peptidesChosen.Contains(nodePep);
 
                 bool inPeptide = false;
                 for (int i = 0; i < aa.Length; i++)
                 {
-                    if (peptide != null)
+                    if (nodePep != null)
                     {
-                        while (peptide != null && i >= peptide.End)
+                        while (nodePep != null && i >= nodePep.Peptide.End)
                         {
-                            peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-                            chosen = peptidesChosen.Contains(peptide);
+                            nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+                            chosen = peptidesChosen.Contains(nodePep);
                         }
-                        if (peptide != null && i >= peptide.Begin)
+                        if (nodePep != null && i >= nodePep.Peptide.Begin)
                         {
                             if (!inPeptide)
                             {

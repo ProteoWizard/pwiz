@@ -62,9 +62,19 @@
             this.cb15N = new System.Windows.Forms.CheckBox();
             this.cb13C = new System.Windows.Forms.CheckBox();
             this.cbChemicalFormula = new System.Windows.Forms.CheckBox();
+            this.btnLoss = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textLossFormula = new System.Windows.Forms.TextBox();
+            this.panelLossFormula = new System.Windows.Forms.Panel();
+            this.btnLossFormulaPopup = new System.Windows.Forms.Button();
+            this.textLossAverageMass = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.textLossMonoMass = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.contextFormula.SuspendLayout();
             this.panelFormula.SuspendLayout();
             this.panelAtoms.SuspendLayout();
+            this.panelLossFormula.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -73,7 +83,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.textName.Location = new System.Drawing.Point(9, 29);
             this.textName.Name = "textName";
-            this.textName.Size = new System.Drawing.Size(188, 20);
+            this.textName.Size = new System.Drawing.Size(238, 20);
             this.textName.TabIndex = 1;
             // 
             // label4
@@ -89,7 +99,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(218, 42);
+            this.btnCancel.Location = new System.Drawing.Point(268, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 15;
@@ -99,8 +109,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(218, 12);
+            this.btnOk.Location = new System.Drawing.Point(268, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 14;
@@ -131,31 +140,31 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(6, 193);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(101, 13);
+            this.label2.Size = new System.Drawing.Size(100, 13);
             this.label2.TabIndex = 10;
-            this.label2.Text = "&Monoisotopic Mass:";
+            this.label2.Text = "&Monoisotopic mass:";
             // 
             // textMonoMass
             // 
             this.textMonoMass.Location = new System.Drawing.Point(9, 209);
             this.textMonoMass.Name = "textMonoMass";
-            this.textMonoMass.Size = new System.Drawing.Size(108, 20);
+            this.textMonoMass.Size = new System.Drawing.Size(98, 20);
             this.textMonoMass.TabIndex = 11;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 253);
+            this.label3.Location = new System.Drawing.Point(133, 193);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(78, 13);
+            this.label3.Size = new System.Drawing.Size(77, 13);
             this.label3.TabIndex = 12;
-            this.label3.Text = "A&verage Mass:";
+            this.label3.Text = "A&verage mass:";
             // 
             // textAverageMass
             // 
-            this.textAverageMass.Location = new System.Drawing.Point(9, 269);
+            this.textAverageMass.Location = new System.Drawing.Point(136, 209);
             this.textAverageMass.Name = "textAverageMass";
-            this.textAverageMass.Size = new System.Drawing.Size(108, 20);
+            this.textAverageMass.Size = new System.Drawing.Size(98, 20);
             this.textAverageMass.TabIndex = 13;
             // 
             // label5
@@ -395,15 +404,104 @@
             this.cbChemicalFormula.Visible = false;
             this.cbChemicalFormula.CheckedChanged += new System.EventHandler(this.cbChemicalFormula_CheckedChanged);
             // 
+            // btnLoss
+            // 
+            this.btnLoss.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLoss.Location = new System.Drawing.Point(268, 207);
+            this.btnLoss.Name = "btnLoss";
+            this.btnLoss.Size = new System.Drawing.Size(75, 23);
+            this.btnLoss.TabIndex = 16;
+            this.btnLoss.Text = "&Loss <<";
+            this.btnLoss.UseVisualStyleBackColor = true;
+            this.btnLoss.Click += new System.EventHandler(this.btnLoss_Click);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 259);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(147, 13);
+            this.label1.TabIndex = 17;
+            this.label1.Text = "Ne&utral loss chemical formula:";
+            // 
+            // textLossFormula
+            // 
+            this.textLossFormula.Location = new System.Drawing.Point(5, 5);
+            this.textLossFormula.Name = "textLossFormula";
+            this.textLossFormula.Size = new System.Drawing.Size(160, 20);
+            this.textLossFormula.TabIndex = 0;
+            this.textLossFormula.TextChanged += new System.EventHandler(this.textLossFormula_TextChanged);
+            this.textLossFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textLossFormula_KeyPress);
+            // 
+            // panelLossFormula
+            // 
+            this.panelLossFormula.Controls.Add(this.btnLossFormulaPopup);
+            this.panelLossFormula.Controls.Add(this.textLossFormula);
+            this.panelLossFormula.Location = new System.Drawing.Point(4, 272);
+            this.panelLossFormula.Name = "panelLossFormula";
+            this.panelLossFormula.Size = new System.Drawing.Size(288, 31);
+            this.panelLossFormula.TabIndex = 18;
+            this.panelLossFormula.Visible = false;
+            // 
+            // btnLossFormulaPopup
+            // 
+            this.btnLossFormulaPopup.Location = new System.Drawing.Point(170, 3);
+            this.btnLossFormulaPopup.Name = "btnLossFormulaPopup";
+            this.btnLossFormulaPopup.Size = new System.Drawing.Size(24, 23);
+            this.btnLossFormulaPopup.TabIndex = 1;
+            this.btnLossFormulaPopup.UseVisualStyleBackColor = true;
+            this.btnLossFormulaPopup.Click += new System.EventHandler(this.btnLossFormulaPopup_Click);
+            // 
+            // textLossAverageMass
+            // 
+            this.textLossAverageMass.Location = new System.Drawing.Point(136, 331);
+            this.textLossAverageMass.Name = "textLossAverageMass";
+            this.textLossAverageMass.Size = new System.Drawing.Size(98, 20);
+            this.textLossAverageMass.TabIndex = 22;
+            this.textLossAverageMass.TextChanged += new System.EventHandler(this.textLossAverageMass_TextChanged);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(133, 315);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(71, 13);
+            this.label7.TabIndex = 21;
+            this.label7.Text = "Av&erage loss:";
+            // 
+            // textLossMonoMass
+            // 
+            this.textLossMonoMass.Location = new System.Drawing.Point(9, 331);
+            this.textLossMonoMass.Name = "textLossMonoMass";
+            this.textLossMonoMass.Size = new System.Drawing.Size(98, 20);
+            this.textLossMonoMass.TabIndex = 20;
+            this.textLossMonoMass.TextChanged += new System.EventHandler(this.textLossMonoMass_TextChanged);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 315);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(94, 13);
+            this.label8.TabIndex = 19;
+            this.label8.Text = "M&onoisotopic loss:";
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(303, 307);
+            this.ClientSize = new System.Drawing.Size(353, 368);
             this.Controls.Add(this.panelFormula);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.panelLossFormula);
+            this.Controls.Add(this.textLossMonoMass);
+            this.Controls.Add(this.textLossAverageMass);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label8);
             this.Controls.Add(this.label6);
+            this.Controls.Add(this.btnLoss);
             this.Controls.Add(this.comboTerm);
             this.Controls.Add(this.labelChemicalFormula);
             this.Controls.Add(this.comboAA);
@@ -430,6 +528,8 @@
             this.panelFormula.PerformLayout();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
+            this.panelLossFormula.ResumeLayout(false);
+            this.panelLossFormula.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -470,5 +570,14 @@
         private System.Windows.Forms.CheckBox cb18O;
         private System.Windows.Forms.CheckBox cb15N;
         private System.Windows.Forms.CheckBox cbChemicalFormula;
+        private System.Windows.Forms.Button btnLoss;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox textLossFormula;
+        private System.Windows.Forms.Panel panelLossFormula;
+        private System.Windows.Forms.Button btnLossFormulaPopup;
+        private System.Windows.Forms.TextBox textLossAverageMass;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textLossMonoMass;
+        private System.Windows.Forms.Label label8;
     }
 }

@@ -173,6 +173,7 @@ namespace pwiz.Skyline
             {
                 // CONSIDER: Reload last document?
                 SrmSettings settingsDefault = Settings.Default.SrmSettingsList[0];
+                settingsDefault.UpdateLists();
                 SrmDocument documentNew = new SrmDocument(settingsDefault);
                 SetDocument(documentNew, null);
             }
@@ -1292,7 +1293,7 @@ namespace pwiz.Skyline
 
                     SelectSettingsHandler handler = new SelectSettingsHandler(this, settings);
                     item = new ToolStripMenuItem(settings.Name, null,
-                        handler.toolStripMenuItem_Click);
+                        handler.ToolStripMenuItemClick);
                     menu.DropDownItems.Insert(i, item);
                 }
 
@@ -1339,7 +1340,7 @@ namespace pwiz.Skyline
                 _settings = settings;
             }
 
-            public void toolStripMenuItem_Click(object sender, EventArgs e)
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
             {
                 // If the current settings are not in a saved set, then ask to save
                 // before overriting them.

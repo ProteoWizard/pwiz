@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (LibrarySpec spec in libraries.LibrarySpecsUnloaded)
                 {
+                    if (spec == null)
+                        continue;
                     var library = LoadLibrary(container, spec);
                     if (library == null)
                     {
@@ -97,6 +99,8 @@ namespace pwiz.Skyline.Model.Lib
                     var list = new List<Library>();
                     foreach (LibrarySpec spec in libraries.LibrarySpecs)
                     {
+                        if (spec == null)
+                            continue;
                         Library libraryExisting = libraries.GetLibrary(spec.Name);
                         Library libraryLoaded;
                         if ((libraryExisting != null && libraryExisting.IsLoaded) ||
@@ -713,7 +717,8 @@ namespace pwiz.Skyline.Model.Lib
             // If no library filtering will happen, return all rankings for view in the UI
             if (!useFilter || rp.pick == TransitionLibraryPick.none)
             {
-                rp.pick = TransitionLibraryPick.all;
+                if (rp.pick == TransitionLibraryPick.none)
+                    rp.pick = TransitionLibraryPick.all;
                 ionMatchCount = -1;
             }
 
@@ -1018,46 +1023,46 @@ namespace pwiz.Skyline.Model.Lib
                 if (!rp.matchAll && ionMz > rp.maxMz)
                     return false;
                 // Check filter properties, if apropriate
-                if (!filter || (start <= offset && offset <= end) ||
-                        (rp.pro && TransitionGroup.IsPro(rp.sequence, offset)) ||
-                        (rp.gluasp && TransitionGroup.IsGluAsp(rp.sequence, offset)))
+                if ((rp.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - ObservedMz) < rp.tolerance)
                 {
-                    if ((rp.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - ObservedMz) < rp.tolerance)
+                    // Make sure each m/z value is only used for the most intense peak
+                    // that is within the tolerance range.
+                    if (rp.IsSeen(ionMz))
+                        return true; // Keep looking
+                    rp.Seen(ionMz);
+
+                    int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
+                    // If this m/z aready matched a different ion, just remember the second ion.
+                    if (Ordinal > 0)
                     {
-                        // Make sure each m/z value is only used for the most intense peak
-                        // that is within the tolerance range.
-                        if (rp.IsSeen(ionMz))
-                            return true; // Keep looking
-                        rp.Seen(ionMz);
+                        IonType2 = type;
+                        Charge2 = charge;
+                        Ordinal2 = ordinal;
+                        rp.matched = true;
+                        return false;
+                    }
+                    else
+                    {
+                        // Avoid using the same predicted m/z on two different peaks
+                        double predictedMz = SequenceMassCalc.GetMZ(rp.massesPredict[(int)type, offset], charge);
+                        if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
+                        {
+                            rp.Seen(predictedMz);
 
-                        int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
-                        // If this m/z aready matched a different ion, just remember the second ion.
-                        if (Ordinal > 0)
-                        {
-                            IonType2 = type;
-                            Charge2 = charge;
-                            Ordinal2 = ordinal;
-                            rp.matched = true;
-                            return false;
-                        }
-                        else
-                        {
-                            // Avoid using the same predicted m/z on two different peaks
-                            double predictedMz = SequenceMassCalc.GetMZ(rp.massesPredict[(int)type, offset], charge);
-                            if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
+                            if (!filter || (start <= offset && offset <= end) ||
+                                (rp.pro && TransitionGroup.IsPro(rp.sequence, offset)) ||
+                                (rp.gluasp && TransitionGroup.IsGluAsp(rp.sequence, offset)))
                             {
-                                rp.Seen(predictedMz);
-
                                 if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                                      rp.rankTypes.Contains(type) && rp.rankCharges.Contains(charge)))
-                                    Rank = rp.RankNext();
-                                IonType = type;
-                                Charge = charge;
-                                Ordinal = ordinal;
-                                PredictedMz = predictedMz;
-                                    rp.matched = (!rp.matchAll);
-                                return rp.matchAll;
+                                    Rank = rp.RankNext();                                
                             }
+                            IonType = type;
+                            Charge = charge;
+                            Ordinal = ordinal;
+                            PredictedMz = predictedMz;
+                                rp.matched = (!rp.matchAll);
+                            return rp.matchAll;
                         }
                     }
                 }

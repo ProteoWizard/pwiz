@@ -203,6 +203,7 @@ namespace pwiz.SkylineTest
 
             // Change valine explicit only modification
             listHeavyMods[2] = new StaticMod("13C V", 'V', null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
+            listHeavyMods[2] = listHeavyMods[2].ChangeExplicit(true);
             settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(listHeavyMods));
             var docHeavyV = docHeavyK.ChangeSettings(settings);
             peptidesOld = docHeavyK.Peptides.ToArray();

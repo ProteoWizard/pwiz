@@ -98,6 +98,8 @@ namespace pwiz.Skyline.SettingsUI
             textMinMz.Text = Instrument.MinMz.ToString();
             textMaxMz.Text = Instrument.MaxMz.ToString();
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
+            if (Instrument.MaxTransitions.HasValue)
+                textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
@@ -216,7 +218,18 @@ namespace pwiz.Skyline.SettingsUI
             maxTol = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             if (!_helper.ValidateDecimalTextBox(e, textMzMatchTolerance, minTol, maxTol, out mzMatchTolerance))
                 return;
-            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, mzMatchTolerance);
+            int? maxTrans = null;
+            if (!string.IsNullOrEmpty(textMaxTrans.Text))
+            {
+                int maxTransTemp;
+                min = TransitionInstrument.MIN_TRANSITION_MAX;
+                max = TransitionInstrument.MAX_TRANSITION_MAX;
+                if (!_helper.ValidateNumberTextBox(e, textMaxTrans, min, max, out maxTransTemp))
+                    return;
+                maxTrans = maxTransTemp;
+            }
+
+            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, mzMatchTolerance, maxTrans);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             TransitionSettings settings = new TransitionSettings(prediction, filter, libraries, instrument);

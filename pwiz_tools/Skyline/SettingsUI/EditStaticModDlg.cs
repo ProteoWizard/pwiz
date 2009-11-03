@@ -33,12 +33,12 @@ namespace pwiz.Skyline.SettingsUI
     {
         private StaticMod _modification;
         private readonly IEnumerable<StaticMod> _existing;
-        private bool _clickedOk;
 
         private readonly BioMassCalc _monoMassCalc = new BioMassCalc(MassType.Monoisotopic);
         private readonly BioMassCalc _averageMassCalc = new BioMassCalc(MassType.Average);
 
-        private readonly MessageBoxHelper _helper;
+        private bool _showLoss = true; // Design mode with loss UI showing
+        private TextBox _textFormulaActive;
 
         public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy)
         {
@@ -53,8 +53,12 @@ namespace pwiz.Skyline.SettingsUI
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnFormulaPopup.Image = bm;
+            btnLossFormulaPopup.Image = bm;
 
-            _helper = new MessageBoxHelper(this);
+            ShowLoss = false;
+            // TODO: Implement handling of modifications with neutral loss
+//            if (heavy)
+                btnLoss.Visible = false;
         }
 
         public StaticMod Modification
@@ -75,6 +79,9 @@ namespace pwiz.Skyline.SettingsUI
                     cb15N.Checked = false;
                     cb18O.Checked = false;
                     cb2H.Checked = false;
+                    textLossFormula.Text = "";
+                    textLossMonoMass.Text = "";
+                    textLossAverageMass.Text = "";
                 }
                 else
                 {
@@ -104,10 +111,29 @@ namespace pwiz.Skyline.SettingsUI
                         if (_modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
                     }
+
                     cb13C.Checked = _modification.Label13C;
                     cb15N.Checked = _modification.Label15N;
                     cb18O.Checked = _modification.Label18O;
                     cb2H.Checked = _modification.Label2H;
+
+                    if (_modification.FormulaLoss != null)
+                    {
+                        textLossFormula.Text = _modification.FormulaLoss;
+                    }
+                    else
+                    {
+                        textLossFormula.Text = "";
+                        textLossMonoMass.Text = (_modification.MonoisotopicLoss == null ?
+                            "" : _modification.MonoisotopicLoss.ToString());
+                        textLossAverageMass.Text = (_modification.AverageLoss == null ?
+                            "" : _modification.AverageLoss.ToString());
+                    }
+                    // Make sure loss values are showing, if they are present
+                    if (!string.IsNullOrEmpty(textLossFormula.Text) ||
+                            !string.IsNullOrEmpty(textLossMonoMass.Text) ||
+                            !string.IsNullOrEmpty(textLossAverageMass.Text))
+                        ShowLoss = true;
                 }                
             }
         }
@@ -129,96 +155,157 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public bool ShowLoss
         {
-            // If the user is accepting these settings, then validate
-            // and hold them in dialog member variables.
-            if (_clickedOk)
+            get { return _showLoss; }
+            set
             {
-                _clickedOk = false; // Reset in case of failure
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
+                if (_showLoss == value)
                     return;
 
-                // Allow updating the original modification
-                if (Modification == null || !Equals(name, Modification.Name))
+                _showLoss = value;
+
+                // Update UI
+                panelLossFormula.Visible =
+                    textLossMonoMass.Visible =
+                    textLossAverageMass.Visible = _showLoss;
+
+                string btnText = btnLoss.Text;
+                btnLoss.Text = btnText.Substring(0, btnText.Length - 2) +
+                    (_showLoss ? "<<" : ">>");
+
+                ResizeForLoss();
+            }
+        }
+
+        private void ResizeForLoss()
+        {
+            int delta = textLossMonoMass.Bottom - btnLoss.Bottom;
+            Height += (ShowLoss ? delta : -delta);
+        }
+
+        public void OkDialog()
+        {
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            // Allow updating the original modification
+            if (Modification == null || !Equals(name, Modification.Name))
+            {
+                // But not any other existing modification
+                foreach (StaticMod mod in _existing)
                 {
-                    // But not any other existing modification
-                    foreach (StaticMod mod in _existing)
+                    if (Equals(name, mod.Name))
                     {
-                        if (Equals(name, mod.Name))
-                        {
-                            _helper.ShowTextBoxError(textName, "The modification '{0}' already exists.", name);
-                            e.Cancel = true;
-                            return;
-                        }
-                    }
-                }
-
-                string aaString = comboAA.SelectedItem.ToString();
-                char? aa = null;
-                if (!string.IsNullOrEmpty(aaString))
-                    aa = aaString[0];
-
-                string termString = comboTerm.SelectedItem.ToString();
-                ModTerminus? term = null;
-                if (!string.IsNullOrEmpty(termString))
-                    term = (ModTerminus) Enum.Parse(typeof (ModTerminus), termString);
-
-                string formula = null;
-                double? monoMass = null;
-                double? avgMass = null;
-                LabelAtoms labelAtoms = LabelAtoms.None;
-                if (cbChemicalFormula.Checked)
-                    formula = textFormula.Text;
-                else
-                    labelAtoms = LabelAtoms;
-
-                if (!string.IsNullOrEmpty(formula))
-                {
-                    try
-                    {
-                        SequenceMassCalc.ParseModMass(_monoMassCalc, formula);
-                    }
-                    catch (ArgumentException x)
-                    {
-                        _helper.ShowTextBoxError(textFormula, x.Message);
+                        helper.ShowTextBoxError(textName, "The modification '{0}' already exists.", name);
                         e.Cancel = true;
                         return;
                     }
                 }
-                else if (labelAtoms == LabelAtoms.None)
+            }
+
+            string aaString = comboAA.SelectedItem.ToString();
+            char? aa = null;
+            if (!string.IsNullOrEmpty(aaString))
+                aa = aaString[0];
+
+            string termString = comboTerm.SelectedItem.ToString();
+            ModTerminus? term = null;
+            if (!string.IsNullOrEmpty(termString))
+                term = (ModTerminus) Enum.Parse(typeof (ModTerminus), termString);
+
+            string formula = null;
+            double? monoMass = null;
+            double? avgMass = null;
+            LabelAtoms labelAtoms = LabelAtoms.None;
+            if (cbChemicalFormula.Checked)
+                formula = textFormula.Text;
+            else
+                labelAtoms = LabelAtoms;
+
+            if (!string.IsNullOrEmpty(formula))
+            {
+                try
                 {
-                    formula = null;
-                    double mass;
-                    if (!_helper.ValidateDecimalTextBox(e, textMonoMass, 0, 1500, out mass))
-                        return;
-                    monoMass = mass;
-                    if (!_helper.ValidateDecimalTextBox(e, textAverageMass, 0, 1500, out mass))
-                        return;
-                    avgMass = mass;
+                    SequenceMassCalc.ParseModMass(_monoMassCalc, formula);
                 }
-                else if (!aa.HasValue && term.HasValue)
+                catch (ArgumentException x)
                 {
-                    MessageBox.Show(this, "Labeled atoms on terminal modification are not valid.", Program.Name);
+                    helper.ShowTextBoxError(textFormula, x.Message);
                     e.Cancel = true;
                     return;
                 }
-
-                Modification = new StaticMod(name, aa, term, formula, labelAtoms, monoMass, avgMass);
-
-                // Store state of the chemical formula checkbox for next use.
-                if (cbChemicalFormula.Visible)
-                    Settings.Default.ShowHeavyFormula = panelFormula.Visible;
+            }
+            else if (labelAtoms == LabelAtoms.None)
+            {
+                formula = null;
+                double mass;
+                if (!helper.ValidateDecimalTextBox(e, textMonoMass, 0, 1500, out mass))
+                    return;
+                monoMass = mass;
+                if (!helper.ValidateDecimalTextBox(e, textAverageMass, 0, 1500, out mass))
+                    return;
+                avgMass = mass;
+            }
+            else if (!aa.HasValue && term.HasValue)
+            {
+                MessageBox.Show(this, "Labeled atoms on terminal modification are not valid.", Program.Name);
+                e.Cancel = true;
+                return;
             }
 
-            base.OnClosing(e);
+            string formulaLoss = null;
+            double? monoLoss = null;
+            double? avgLoss = null;
+            if (textLossFormula.Visible)
+            {
+                formulaLoss = textLossFormula.Text;
+                if (!string.IsNullOrEmpty(formulaLoss))
+                {
+                    try
+                    {
+                        SequenceMassCalc.ParseModMass(_monoMassCalc, formulaLoss);
+                    }
+                    catch (ArgumentException x)
+                    {
+                        helper.ShowTextBoxError(textLossFormula, x.Message);
+                        e.Cancel = true;
+                        return;
+                    }                    
+                }
+                else if (!string.IsNullOrEmpty(textLossMonoMass.Text) ||
+                        !string.IsNullOrEmpty(textLossAverageMass.Text))
+                {
+                    formulaLoss = null;
+                    double mass;
+                    if (!helper.ValidateDecimalTextBox(e, textLossMonoMass, -200, 0, out mass))
+                        return;
+                    monoLoss = mass;
+                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -200, 0, out mass))
+                        return;
+                    avgLoss = mass;
+                }
+            }
+
+            Modification = new StaticMod(name, aa, term, formula, labelAtoms, monoMass, avgMass,
+                formulaLoss, monoLoss, avgLoss);
+
+            // Store state of the chemical formula checkbox for next use.
+            if (cbChemicalFormula.Visible)
+                Settings.Default.ShowHeavyFormula = panelFormula.Visible;
+
+            DialogResult = DialogResult.OK;
+            Close();            
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
 
         private void textFormula_TextChanged(object sender, EventArgs e)
@@ -300,18 +387,69 @@ namespace pwiz.Skyline.SettingsUI
             e.KeyChar = char.ToUpper(e.KeyChar);
         }
 
+        private void btnLoss_Click(object sender, EventArgs e)
+        {
+            ShowLoss = !ShowLoss;
+        }
+
+        private void textLossFormula_TextChanged(object sender, EventArgs e)
+        {
+            UpdateLosses();
+        }
+
+        private void UpdateLosses()
+        {
+            string formula = textLossFormula.Text;
+            if (string.IsNullOrEmpty(formula))
+            {
+                textLossMonoMass.Text = textLossAverageMass.Text = "";
+                textLossMonoMass.Enabled = textLossAverageMass.Enabled = true;
+            }
+            else
+            {
+                textLossMonoMass.Enabled = textLossAverageMass.Enabled = false;
+                try
+                {
+                    textLossMonoMass.Text = "-" + SequenceMassCalc.ParseModMass(_monoMassCalc, formula);
+                    textLossAverageMass.Text = "-" + SequenceMassCalc.ParseModMass(_averageMassCalc, formula);
+                    textLossFormula.ForeColor = Color.Black;
+                }
+                catch (ArgumentException)
+                {
+                    textLossFormula.ForeColor = Color.Red;
+                    textLossMonoMass.Text = textLossAverageMass.Text = "";
+                }
+            }
+        }
+
+        private void textLossFormula_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Force uppercase in this control.
+            e.KeyChar = char.ToUpper(e.KeyChar);
+        }
+
         private void btnFormulaPopup_Click(object sender, EventArgs e)
         {
+            _textFormulaActive = textFormula;
             contextFormula.Show(this, panelFormula.Left + btnFormulaPopup.Right + 1,
                 panelFormula.Top + btnFormulaPopup.Top);
         }
 
+        private void btnLossFormulaPopup_Click(object sender, EventArgs e)
+        {
+            _textFormulaActive = textLossFormula;
+            contextFormula.Show(this, panelLossFormula.Left + btnLossFormulaPopup.Right + 1,
+                panelLossFormula.Top + btnLossFormulaPopup.Top);
+        }
+
         private void AddFormulaSymbol(string symbol)
         {
-            textFormula.Text += symbol;
-            textFormula.Focus();
-            textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = textFormula.Text.Length;
+            if (_textFormulaActive == null)
+                return;
+            _textFormulaActive.Text += symbol;
+            _textFormulaActive.Focus();
+            _textFormulaActive.SelectionLength = 0;
+            _textFormulaActive.SelectionStart = textFormula.Text.Length;
         }
 
         private void hContextMenuItem_Click(object sender, EventArgs e)
@@ -362,6 +500,23 @@ namespace pwiz.Skyline.SettingsUI
         private void sContextMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.S);
+        }
+
+        private void textLossMonoMass_TextChanged(object sender, EventArgs e)
+        {
+            ForceNegativeValue(textLossMonoMass);
+        }
+
+        private void textLossAverageMass_TextChanged(object sender, EventArgs e)
+        {
+            ForceNegativeValue(textLossAverageMass);
+        }
+
+        private static void ForceNegativeValue(Control textMassValue)
+        {
+            string massText = textMassValue.Text;
+            if (!string.IsNullOrEmpty(massText) && massText[0] != '-')
+                textMassValue.Text = "-" + massText;            
         }
     }
 }

@@ -193,13 +193,14 @@ namespace pwiz.Skyline.Model
             bool singleWindow = IsSingleWindowInstrumentType(InstrumentType);
 
             var predict = Document.Settings.PeptideSettings.Prediction;
+            int? maxInstrumentTrans = Document.Settings.TransitionSettings.Instrument.MaxTransitions;
             var listSchedules = new List<PeptideSchedule>();
             var listUnscheduled = new List<PeptideSchedule>();
             foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
             {
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
-                    var peptideSchedule = new PeptideSchedule();
+                    var peptideSchedule = new PeptideSchedule(maxInstrumentTrans);
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                     {
                         double timeWindow;
@@ -354,6 +355,11 @@ namespace pwiz.Skyline.Model
         {
             private readonly List<PrecursorSchedule> _precursorSchedules = new List<PrecursorSchedule>();
 
+            public PeptideSchedule(int? maxInstrumentTrans)
+            {
+                MaxInstrumentTrans = maxInstrumentTrans;
+            }
+
             private bool IsScheduled { get; set; }
 
             public bool CanSchedule
@@ -363,15 +369,21 @@ namespace pwiz.Skyline.Model
 
             public int TransitionCount { get; private set; }
 
+            private int? MaxInstrumentTrans { get; set; }
+
             public void Add(PrecursorSchedule schedule)
             {
                 TransitionCount += schedule.TransitionCount;
                 _precursorSchedules.Add(schedule);
             }
 
-            public bool CanAddToBucket(IEnumerable<PeptideSchedule> schedules, int maxTransitions)
+            public bool CanAddToBucket(PeptideScheduleBucket schedules, int maxTransitions)
             {
-                return GetOverlapCount(schedules) + TransitionCount <= maxTransitions;
+                int transitionCount = TransitionCount;
+                if (MaxInstrumentTrans.HasValue && schedules.TransitionCount + transitionCount > MaxInstrumentTrans)
+                    return false;
+
+                return GetOverlapCount(schedules) + transitionCount <= maxTransitions;
             }
 
             /// <summary>
@@ -380,7 +392,7 @@ namespace pwiz.Skyline.Model
             /// </summary>
             /// <param name="schedules">Scheduling list</param>
             /// <param name="maxTransitions">Maximum number of concurrent transitions allowed</param>
-            public void Schedule(ICollection<PeptideSchedule> schedules, int maxTransitions)
+            public void Schedule(PeptideScheduleBucket schedules, int maxTransitions)
             {
                 if (!IsScheduled && CanAddToBucket(schedules, maxTransitions))
                 {

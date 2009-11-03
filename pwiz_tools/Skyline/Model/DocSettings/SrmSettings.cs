@@ -665,6 +665,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public class SrmSettingsDiff
     {
+// ReSharper disable InconsistentNaming
         public static SrmSettingsDiff ALL
         {
             get { return new SrmSettingsDiff(); }
@@ -678,6 +679,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 { DiffPeptides = false, DiffTransitionGroups = false, DiffTransitions = false };
             }
         }
+// ReSharper restore InconsistentNaming
 
         /// <summary>
         /// For use in creating new nodes, where everything should be created
@@ -779,8 +781,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Calculate changes in global implicit modifications
             var oldMods = oldPep.Modifications;
             var newMods = newPep.Modifications;
-            bool diffStaticMods = !StaticMod.EquivalentImplicitMods(newMods.HeavyModifications,
-                                           oldMods.HeavyModifications);
+            bool diffStaticMods = !StaticMod.EquivalentImplicitMods(newMods.StaticModifications,
+                                           oldMods.StaticModifications);
             bool diffHeavyMods = !StaticMod.EquivalentImplicitMods(newMods.HeavyModifications,
                                            oldMods.HeavyModifications);
             // Set explicit differences, if no differences in the global implicit modifications,

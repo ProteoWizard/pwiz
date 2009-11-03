@@ -1038,12 +1038,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_MZ_MATCH_TOLERANCE = 0.0001;
         public const double MAX_MZ_MATCH_TOLERANCE = 0.5;
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
+        public const int MIN_TRANSITION_MAX = 50;
+        public const int MAX_TRANSITION_MAX = 10000;
 
-        public TransitionInstrument(int minMz, int maxMz, double mzMatchTolerance)
+        public TransitionInstrument(int minMz, int maxMz, double mzMatchTolerance, int? maxTransitions)
         {
             MinMz = minMz;
             MaxMz = maxMz;
             MzMatchTolerance = mzMatchTolerance;
+            MaxTransitions = maxTransitions;
 
             DoValidate();
         }
@@ -1064,6 +1067,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Abs(mz1 - mz1) <= MzMatchTolerance;
         }
 
+        public int? MaxTransitions { get; private set; }
+
         #region Property change methods
 
         public TransitionInstrument ChangeMinMz(int prop)
@@ -1081,6 +1086,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), (im, v) => im.MzMatchTolerance = v, prop);
         }
 
+        public TransitionInstrument ChangeMaxTransitions(int? prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.MaxTransitions = v, prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1096,7 +1106,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             min_mz,
             max_mz,
-            mz_match_tolerance
+            mz_match_tolerance,
+            max_transitions
         }
 
         void IValidating.Validate()
@@ -1126,6 +1137,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format("The m/z match tolerance {0} must be between {1} and {2}.",
                     MzMatchTolerance, MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE));
             }
+            if (MIN_TRANSITION_MAX > MaxTransitions || MaxTransitions > MAX_TRANSITION_MAX)
+            {
+                throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
+                    MaxTransitions, MIN_TRANSITION_MAX, MAX_TRANSITION_MAX));
+            }
         }
 
         public static TransitionInstrument Deserialize(XmlReader reader)
@@ -1144,6 +1160,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MinMz = reader.GetIntAttribute(ATTR.min_mz);
             MaxMz = reader.GetIntAttribute(ATTR.max_mz);
             MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
+            MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
 
             // Consume tag
             reader.Read();
@@ -1157,6 +1174,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.min_mz, MinMz);
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
+            writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
         }
 
         #endregion
@@ -1169,7 +1187,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, other)) return true;
             return other.MinMz == MinMz &&
                 other.MaxMz == MaxMz &&
-                other.MzMatchTolerance == MzMatchTolerance;
+                other.MzMatchTolerance == MzMatchTolerance &&
+                other.MaxTransitions.Equals(MaxTransitions);
         }
 
         public override bool Equals(object obj)
@@ -1187,6 +1206,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = MinMz;
                 result = (result*397) ^ MaxMz;
                 result = (result*397) ^ MzMatchTolerance.GetHashCode();
+                result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
                 return result;
             }
         }

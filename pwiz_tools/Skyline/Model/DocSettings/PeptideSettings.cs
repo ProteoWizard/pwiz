@@ -1230,6 +1230,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<BiblioSpecLiteLibrary, Library>(),                 
             new XmlElementHelperSuper<XHunterLibrary, Library>(),                 
             new XmlElementHelperSuper<NistLibrary, Library>(),
+            new XmlElementHelperSuper<SpectrastLibrary, Library>(),
         };
 
         private static readonly IXmlElementHelper<LibrarySpec>[] LIBRARY_SPEC_HELPERS =
@@ -1238,6 +1239,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<BiblioSpecLiteSpec, LibrarySpec>(),                 
             new XmlElementHelperSuper<XHunterLibSpec, LibrarySpec>(),                 
             new XmlElementHelperSuper<NistLibSpec, LibrarySpec>(),                 
+            new XmlElementHelperSuper<SpectrastSpec, LibrarySpec>(),                 
         };
 
         public static IXmlElementHelper<LibrarySpec>[] LibrarySpecXmlHelpers
@@ -1250,6 +1252,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<BiblioSpecSpectrumHeaderInfo, SpectrumHeaderInfo>(),
             new XmlElementHelperSuper<XHunterSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
             new XmlElementHelperSuper<NistSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
+            new XmlElementHelperSuper<SpectrastSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
         };
 
         public static IXmlElementHelper<SpectrumHeaderInfo>[] SpectrumHeaderXmlHelpers

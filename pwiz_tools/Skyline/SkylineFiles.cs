@@ -58,7 +58,7 @@ namespace pwiz.Skyline
             {
                 MruChosenHandler handler = new MruChosenHandler(this, mruList[i]);
                 ToolStripMenuItem item = new ToolStripMenuItem(GetMruName(i, mruList[i], curDir), null,
-                    handler.toolStripMenuItem_Click);
+                    handler.ToolStripMenuItemClick);
                 menu.DropDownItems.Insert(start + i, item);
             }
             mruAfterToolStripSeparator.Visible = (mruList.Count > 0);
@@ -738,7 +738,7 @@ namespace pwiz.Skyline
                 _path = path;
             }
 
-            public void toolStripMenuItem_Click(object sender, EventArgs e)
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
             {
                 if (!_skyline.CheckSaveDocument())
                     return;
