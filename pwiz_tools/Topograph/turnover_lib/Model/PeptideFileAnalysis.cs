@@ -219,12 +219,15 @@ namespace pwiz.Topograph.Model
                 {
                     return;
                 }
-                _autoFindPeak = value;
-                if (AutoFindPeak)
+                using (GetWriteLock())
                 {
-                    ClearPeak();
+                    _autoFindPeak = value;
+                    if (AutoFindPeak)
+                    {
+                        ClearPeak();
+                    }
+                    OnChange();
                 }
-                OnChange();
             }
         }
 
@@ -376,18 +379,21 @@ namespace pwiz.Topograph.Model
 
         public void SetPeakStartEnd(int peakStart, int peakEnd, Chromatograms chromatograms)
         {
-            Peaks = new Peaks(this)
-                        {
-                            PeakStart = peakStart,
-                            PeakEnd = peakEnd
-                        };
-            PeptideDistributions = new PeptideDistributions(this);
-            if (Chromatograms.ChildCount > 0)
+            using (GetWriteLock())
             {
-                Peaks.CalcIntensities();
-                PeptideDistributions.Calculate(Peaks);
+                Peaks = new Peaks(this)
+                {
+                    PeakStart = peakStart,
+                    PeakEnd = peakEnd
+                };
+                PeptideDistributions = new PeptideDistributions(this);
+                if (Chromatograms.ChildCount > 0)
+                {
+                    Peaks.CalcIntensities();
+                    PeptideDistributions.Calculate(Peaks);
+                }
+                OnChange();
             }
-            OnChange();
         }
 
         public IList<double> GetAverageIntensities()

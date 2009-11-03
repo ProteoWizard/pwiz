@@ -388,7 +388,10 @@ namespace pwiz.Topograph.Model
             {
                 if (entitiesChangedEventArgs.IsChanged(msDataFile))
                 {
-                    SetWorkspaceVersion(WorkspaceVersion.IncCohortVersion());
+                    using (GetWriteLock())
+                    {
+                        SetWorkspaceVersion(WorkspaceVersion.IncCohortVersion());
+                    }
                     break;
                 }
             }

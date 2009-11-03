@@ -46,7 +46,7 @@ namespace pwiz.Topograph.Model
             ProteinDescription = entity.ProteinDescription;
             Sequence = entity.Sequence;
             FullSequence = entity.FullSequence;
-            SearchResultCount = entity.SearchResultCount;
+            _searchResultCount = entity.SearchResultCount;
         }
 
         protected override DbPeptide UpdateDbEntity(ISession session)

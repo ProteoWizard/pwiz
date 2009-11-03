@@ -37,15 +37,20 @@ namespace pwiz.Topograph.Model
         protected override void Load(DbMsDataFile entity)
         {
             base.Load(entity);
-            Path = entity.Path;
+            _path = entity.Path;
             _times = entity.Times;
             _msLevels = entity.MsLevels;
         }
         public MsDataFile MsDataFile { get; private set; }
-        public String Path {get
-        {
-            return _path;
-        } set { SetIfChanged(ref _path, value);}}
+        public String Path {
+            get
+            {
+                return _path;
+            } 
+            set
+            {
+                SetIfChanged(ref _path, value);
+            }}
         public void Init(String path, MsDataFileImpl msDataFileImpl)
         {
             Path = path;

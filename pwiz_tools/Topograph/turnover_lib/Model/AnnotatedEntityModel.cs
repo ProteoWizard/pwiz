@@ -27,39 +27,39 @@ namespace pwiz.Topograph.Model
 {
     public abstract class AnnotatedEntityModel<T> : EntityModel<T> where T : DbAnnotatedEntity<T>
     {
-        private ValidationStatus validationStatus;
-        private String note;
+        private ValidationStatus _validationStatus;
+        private String _note;
         protected AnnotatedEntityModel(Workspace workspace, T entity) : base(workspace, entity)
         {
         }
         protected override void Load(T entity)
         {
             base.Load(entity);
-            validationStatus = entity.ValidationStatus;
-            note = entity.Note;
+            _validationStatus = entity.ValidationStatus;
+            _note = entity.Note;
         }
 
         protected override T UpdateDbEntity(ISession session)
         {
             T result = base.UpdateDbEntity(session);
-            result.ValidationStatus = validationStatus;
-            result.Note = note;
+            result.ValidationStatus = _validationStatus;
+            result.Note = _note;
             return result;
         }
 
         public ValidationStatus ValidationStatus
         {
-            get { return validationStatus;}
+            get { return _validationStatus;}
             set { 
-                SetIfChanged(ref validationStatus, value);
+                SetIfChanged(ref _validationStatus, value);
             }
         }
         public String Note
         {
-            get { return note;}
+            get { return _note;}
             set
             {
-                SetIfChanged(ref note, value);
+                SetIfChanged(ref _note, value);
             }
         }
     }

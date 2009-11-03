@@ -31,8 +31,8 @@ namespace pwiz.Topograph.Model
     public class MsDataFile : AnnotatedEntityModel<DbMsDataFile>
     {
         private String _label;
-        private String cohort;
-        private double? timePoint;
+        private String _cohort;
+        private double? _timePoint;
         public MsDataFile(Workspace workspace, DbMsDataFile msDataFile) : base(workspace, msDataFile)
         {
             MsDataFileData = new MsDataFileData(this, msDataFile);
@@ -48,17 +48,17 @@ namespace pwiz.Topograph.Model
         {
             base.Load(entity);
             Name = entity.Name;
-            Label = entity.Label;
-            Cohort = entity.Cohort;
-            TimePoint = entity.TimePoint;
+            _label = entity.Label;
+            _cohort = entity.Cohort;
+            _timePoint = entity.TimePoint;
         }
 
         protected override DbMsDataFile UpdateDbEntity(ISession session)
         {
             var msDataFile = base.UpdateDbEntity(session);
             msDataFile.Label = Label;
-            msDataFile.Cohort = cohort;
-            msDataFile.TimePoint = timePoint;
+            msDataFile.Cohort = _cohort;
+            msDataFile.TimePoint = _timePoint;
             return msDataFile;
         }
 
@@ -73,21 +73,21 @@ namespace pwiz.Topograph.Model
             set {SetIfChanged(ref _label, value);}}
         public String Cohort
         {
-            get { return cohort;} 
+            get { return _cohort;} 
             set
             {
-                SetIfChanged(ref cohort, value);
+                SetIfChanged(ref _cohort, value);
             }
         }
         public double? TimePoint
         {
             get
             {
-                return timePoint;
+                return _timePoint;
             }
             set
             {
-                SetIfChanged(ref timePoint, value);
+                SetIfChanged(ref _timePoint, value);
             }
         }
         

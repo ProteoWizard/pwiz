@@ -76,14 +76,17 @@ namespace pwiz.Topograph.Model
 
         protected void SetIfChanged<T>(ref T currentValue, T newValue)
         {
-            lock(this)
+            using(GetWriteLock())
             {
-                if (Equals(currentValue, newValue))
+                lock (this)
                 {
-                    return;
+                    if (Equals(currentValue, newValue))
+                    {
+                        return;
+                    }
+                    currentValue = newValue;
+                    OnChange();
                 }
-                currentValue = newValue;
-                OnChange();
             }
         }
 
