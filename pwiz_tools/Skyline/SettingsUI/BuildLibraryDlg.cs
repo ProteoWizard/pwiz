@@ -35,9 +35,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 BiblioSpecLiteBuilder.EXT_PEP_XML,
                 BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT,
+                BiblioSpecLiteBuilder.EXT_XTAN_XML,
+                BiblioSpecLiteBuilder.EXT_DAT,
                 BiblioSpecLiteBuilder.EXT_IDP_XML,
-                BiblioSpecLiteBuilder.EXT_SQT,
-                BiblioSpecLiteBuilder.EXT_DAT
+                BiblioSpecLiteBuilder.EXT_SQT
             };
 
         private BiblioSpecLiteBuilder _builder;
