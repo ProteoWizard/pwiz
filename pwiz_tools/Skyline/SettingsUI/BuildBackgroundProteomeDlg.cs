@@ -347,6 +347,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (textPath.Text.Length == 0 ||
                     textPath.Text != Path.GetFullPath(textPath.Text) ||
+                    Directory.Exists(textPath.Text) ||
                     !Directory.Exists(Path.GetDirectoryName(textPath.Text)))
                 {
                     tbxStatus.Text = "Click the 'Browse' button to choose a path for a new proteome file.";
