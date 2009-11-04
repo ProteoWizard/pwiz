@@ -1081,7 +1081,7 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var collector in chromMap.Values)
                 {
-                    var chromDataSet = new ChromDataSet();
+                    var chromDataSet = new ChromDataSet(true);
                     foreach (var pair in collector.ProductIntensityMap)
                     {
                         var key = new ChromKey(collector.PrecursorMz, pair.Key);
@@ -1125,7 +1125,7 @@ namespace pwiz.Skyline.Model.Results
                 //       And different time sets for scheduled methods
 
                 string lastChromId = null;
-                var chromDataSet = new ChromDataSet();
+                var chromDataSet = new ChromDataSet(false);
 //                for (int i = 0; i < len; i++)
                 int iKey = 0;
                 foreach (var keyIndex in arrayKeyIndex)
@@ -1364,9 +1364,11 @@ namespace pwiz.Skyline.Model.Results
             private sealed class ChromDataSet
             {
                 private readonly List<ChromData> _listChromData = new List<ChromData>();
+                private readonly bool _isProcessedScans;
 
-                public ChromDataSet()
+                public ChromDataSet(bool isProcessedScans)
                 {
+                    _isProcessedScans = isProcessedScans;
                 }
 
                 public ChromDataSet(params ChromData[] arrayChromData)
@@ -1769,7 +1771,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     bool inferZeros = false;
-                    if (statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
+                    if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
                         inferZeros = true;  // Verbose expression for easy breakpoint placement
 
                     // Create the single set of time intervals that all points for
