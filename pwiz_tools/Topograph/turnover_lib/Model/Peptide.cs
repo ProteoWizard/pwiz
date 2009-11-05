@@ -67,9 +67,12 @@ namespace pwiz.Topograph.Model
         public String ProteinDescription { get; private set; }
         public void UpdateProtein(String name, String description)
         {
-            ProteinName = name;
-            ProteinDescription = description;
-            OnChange();
+            using (GetWriteLock())
+            {
+                ProteinName = name;
+                ProteinDescription = description;
+                OnChange();
+            }
         }
         public int MaxTracerCount { 
             get

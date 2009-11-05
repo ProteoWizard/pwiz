@@ -61,7 +61,10 @@ namespace pwiz.Topograph.Model
                     {
                         return;
                     }
-                    using (var session = Workspace.OpenSession())
+                }
+                using (var session = Workspace.OpenSession())
+                {
+                    lock(this)
                     {
                         _childDict = ConstructChildDict();
                         try
@@ -208,9 +211,9 @@ namespace pwiz.Topograph.Model
         {
             using (GetReadLock())
             {
+                EnsureChildrenLoaded();
                 lock (this)
                 {
-                    EnsureChildrenLoaded();
                     _childDict.Add(key, child);
                     _childCount = _childDict.Count;
                     AfterAddChild(child);
