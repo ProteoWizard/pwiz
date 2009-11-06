@@ -43,6 +43,7 @@ if [ modules.peek : NT ]
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     }
     
     rule do_topograph_build ( targets + : sources * : properties * )
@@ -52,6 +53,7 @@ if [ modules.peek : NT ]
 
     actions do_topograph_build
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Topograph in $(CONFIGURATION:L) configuration...
         msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Topograph /nologo /verbosity:minimal
@@ -80,12 +82,22 @@ if [ modules.peek : NT ]
         }
     }
 
+    rule no-msvc-express ( properties * )
+    {
+        if 9.0express in $(properties:G=) ||
+           8.0express in $(properties:G=)
+        {
+            return <build>no ;
+        }
+    }
+
 
     make Topograph.exe
         : # sources
         : # actions
             @do_topograph_build
         : # requirements
+            <conditional>@no-msvc-express
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
@@ -99,6 +111,7 @@ if [ modules.peek : NT ]
 
     actions do_topograph_test
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
         msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
@@ -112,6 +125,7 @@ if [ modules.peek : NT ]
 
     actions do_topograph_test_passed
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
         msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
@@ -122,6 +136,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_topograph_test
         : # requirements
+            <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Topograph.exe
         ;
@@ -130,6 +145,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_topograph_test_passed
         : # requirements
+            <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>TopographTestProject.dll
         ;

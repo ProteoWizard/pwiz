@@ -43,6 +43,7 @@ if [ modules.peek : NT ]
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     }
     
     rule do_skyline_build ( targets + : sources * : properties * )
@@ -52,6 +53,7 @@ if [ modules.peek : NT ]
 
     actions do_skyline_build
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:CleanAll /nologo /verbosity:minimal
@@ -65,6 +67,7 @@ if [ modules.peek : NT ]
 
     actions do_skyline_test
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
@@ -78,6 +81,7 @@ if [ modules.peek : NT ]
 
     actions do_skyline_test_functional
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
@@ -91,6 +95,7 @@ if [ modules.peek : NT ]
 
     actions do_skyline_test_passed
     {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
@@ -119,12 +124,22 @@ if [ modules.peek : NT ]
         }
     }
 
+    rule no-msvc-express ( properties * )
+    {
+        if 9.0express in $(properties:G=) ||
+           8.0express in $(properties:G=)
+        {
+            return <build>no ;
+        }
+    }
+
 
     make Skyline.exe
         : # sources
         : # actions
             @do_skyline_build
         : # requirements
+            <conditional>@no-msvc-express
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
@@ -136,6 +151,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test
         : # requirements
+            <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
@@ -145,6 +161,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_functional
         : # requirements
+            <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
@@ -154,6 +171,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_passed
         : # requirements
+            <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Test.dll
             <dependency>TestFunctional.dll
