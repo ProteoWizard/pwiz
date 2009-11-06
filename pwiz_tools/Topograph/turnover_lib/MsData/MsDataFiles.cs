@@ -37,6 +37,10 @@ namespace pwiz.Topograph.MsData
         /// </summary>
         public static ChromatogramPoint GetPoint(MzRange mzRange, double[] mzs, double[] intensities)
         {
+            if (mzs.Length == 0)
+            {
+                return new ChromatogramPoint();
+            }
             int imin = ClosestIndex(mzRange.Min, mzs);
             int imax = ClosestIndex(mzRange.Max, mzs);
             var values = new List<KeyValuePair<float, float>>();

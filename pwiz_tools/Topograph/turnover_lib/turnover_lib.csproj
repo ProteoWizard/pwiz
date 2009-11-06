@@ -149,6 +149,7 @@
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\BuiltInQuery.cs" />
     <Compile Include="Query\ColumnInfo.cs" />
     <Compile Include="Query\Identifier.cs" />
     <Compile Include="Query\ParsedQuery.cs" />

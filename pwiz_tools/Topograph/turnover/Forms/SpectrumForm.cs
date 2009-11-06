@@ -93,10 +93,10 @@ namespace pwiz.Topograph.ui.Forms
 
             using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
             {
-                tbxMsLevel.Text = msDataFileImpl.GetMsLevel(_scanIndex).ToString();
+                tbxMsLevel.Text = MsDataFile.GetMsLevel(_scanIndex, msDataFileImpl).ToString();
                 try
                 {
-                    tbxTime.Text = msDataFileImpl.GetScanTimes()[_scanIndex].ToString();
+                    tbxTime.Text = MsDataFile.GetTime(_scanIndex).ToString();
                 }
                 catch
                 {

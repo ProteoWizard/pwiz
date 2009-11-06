@@ -289,13 +289,23 @@ namespace pwiz.Topograph.ui.Forms
 
         private void UpdateColumnVisibility()
         {
+            bool showHalfLife = false;
+            foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
+            {
+                if (msDataFile.TimePoint.HasValue)
+                {
+                    showHalfLife = true;
+                    break;
+                }
+            }
+            
             var defTracerCount = Workspace.GetDefaultPeptideQuantity() == PeptideQuantity.tracer_count;
             colMinScoreTracerCount.Visible = defTracerCount;
             colMaxScoreTracerCount.Visible = defTracerCount;
-            colHalfLifeTracerCount.Visible = defTracerCount;
+            colHalfLifeTracerCount.Visible = defTracerCount && showHalfLife;
             colMinScorePrecursorEnrichment.Visible = !defTracerCount;
             colMaxScorePrecursorEnrichment.Visible = !defTracerCount;
-            colHalfLifePrecursorEnrichment.Visible = !defTracerCount;
+            colHalfLifePrecursorEnrichment.Visible = !defTracerCount && showHalfLife;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)

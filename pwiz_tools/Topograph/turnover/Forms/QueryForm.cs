@@ -24,6 +24,7 @@ namespace pwiz.Topograph.ui.Forms
         public QueryForm(WorkspaceSetting setting) : base(setting)
         {
             InitializeComponent();
+            dataGridView1.Workspace = setting.Workspace;
             _schema = new Schema(Workspace.SessionFactory);
             comboTableName.Items.AddRange(
                 new object[]
@@ -194,189 +195,14 @@ namespace pwiz.Topograph.ui.Forms
             tbxSource.Text = query.GetSourceHql();
         }
 
-        private bool ExecuteQuery(ParsedQuery parsedQuery, out IList<object[]> rows, out IList<String> columnNames)
-        {
-            columnNames = new List<string>();
-            rows = new List<object[]>();
-            using (var session = Workspace.OpenSession())
-            {
-                var entities = new List<IDbEntity>();
-                var entityTypesToQuery = new HashSet<String>();
-                var query = session.CreateQuery(parsedQuery.GetExecuteHql());
-                var queryExecuter = new QueryExecuter(session, query, new List<object>());
-                var broker = new LongOperationBroker(queryExecuter, new LongWaitDialog(this, "Executing Query"));
-                if (!broker.LaunchJob())
-                {
-                    return false;
-                }
-                var results = queryExecuter.Results;
-                foreach (var selectColumn in parsedQuery.Columns)
-                {
-                    columnNames.Add(selectColumn.GetColumnName());
-                }
-                for (int iRow = 0; iRow < results.Count; iRow++)
-                {
-                    var o = results[iRow];
-                    var row = o is object[] ? (object[]) o : new[] {o};
-                    for (int i = 0; i < row.Length; i++ )
-                    {
-                        var entity = row[i] as IDbEntity;
-                        if (entity != null)
-                        {
-                            entities.Add(entity);
-                            entityTypesToQuery.Add(session.GetEntityName(entity));
-                        }
-                    }
-                    rows.Add(row);
-                }
-                if (entityTypesToQuery.Contains(typeof(DbPeptideFileAnalysis).ToString()))
-                {
-                    entityTypesToQuery.Add(typeof (DbPeptideAnalysis).ToString());
-                    entityTypesToQuery.Add(typeof (DbMsDataFile).ToString());
-                    session.CreateCriteria(typeof (DbPeptideFileAnalysis)).List();
-                }
-                if (entityTypesToQuery.Contains(typeof(DbPeptideAnalysis).ToString()))
-                {
-                    entityTypesToQuery.Add(typeof (DbPeptide).ToString());
-                    session.CreateCriteria(typeof (DbPeptideAnalysis)).List();
-                }
-                if (entityTypesToQuery.Contains(typeof(DbPeptide).ToString()))
-                {
-                    session.CreateCriteria(typeof (DbPeptide)).List();
-                }
-                if (entityTypesToQuery.Contains(typeof(DbMsDataFile).ToString()))
-                {
-                    session.CreateCriteria(typeof (DbMsDataFile)).List();
-                }
-                foreach (var entity in entities)
-                {
-                    entity.ToString();
-                }
-                return true;
-            }
-        }
-
         private bool ExecuteQuery()
         {
-            try
-            {
-                IList<object[]> rows;
-                IList<String> columnNames;
-                var query = new ParsedQuery(tbxSource.Text);
-                if (!ExecuteQuery(query, out rows, out columnNames))
-                {
-                    return false;
-                }
-                dataGridView1.Columns.Clear();
-                dataGridView1.Rows.Clear();
-                foreach (var columnName in columnNames)
-                {
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = columnName });
-                }
-                var underlineFont = new Font(dataGridView1.Font, FontStyle.Underline);
-
-                if (rows.Count > 0)
-                {
-                    dataGridView1.Rows.Add(rows.Count);
-                    for (int iRow = 0; iRow < rows.Count; iRow++)
-                    {
-                        var values = rows[iRow];
-                        var row = dataGridView1.Rows[iRow];
-                        for (int i = 0; i < dataGridView1.Columns.Count && i < values.Length; i++)
-                        {
-                            var value = values[i];
-                            var cell = row.Cells[i];
-                            cell.Value = values[i];
-                            if (value is IDbEntity)
-                            {
-                                cell.Style.ForeColor = Color.Blue;
-                                cell.Style.Font = underlineFont;
-                            }
-                        }
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(this, "An exception occurred:" + exception, Program.AppName);
-                return false;
-            }
-            
+            return dataGridView1.ExecuteQuery(new ParsedQuery(tbxSource.Text));
         }
 
         private void btnExecuteQuery_Click(object sender, EventArgs e)
         {
             ExecuteQuery();
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0)
-            {
-                return;
-            }
-            var cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
-            var value = cell.Value;
-            if (!(value is IDbEntity))
-            {
-                return;
-            }
-            using (var session = Workspace.OpenSession())
-            {
-                DbPeptideFileAnalysis dbPeptideFileAnalysis = null;
-                if (value is DbPeptideDistribution)
-                {
-                    dbPeptideFileAnalysis =
-                        session.Get<DbPeptideDistribution>(((DbPeptideDistribution) value).Id).PeptideFileAnalysis;
-                }
-                else if (value is DbPeak)
-                {
-                    dbPeptideFileAnalysis = session.Get<DbPeak>(((DbPeak) value).Id).PeptideFileAnalysis;
-                }
-                else if (value is DbPeptideFileAnalysis)
-                {
-                    dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(((DbPeptideFileAnalysis) value).Id);
-                }
-                DbPeptideAnalysis dbPeptideAnalysis = null;
-                if (dbPeptideFileAnalysis != null)
-                {
-                    dbPeptideAnalysis = dbPeptideFileAnalysis.PeptideAnalysis;
-                }
-                else
-                {
-                    if (value is DbPeptideAnalysis)
-                    {
-                        dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(((DbPeptideAnalysis) value).Id);
-                    }
-                    else if (value is DbPeptideRate)
-                    {
-                        dbPeptideAnalysis = session.Get<DbPeptideRate>(((DbPeptideRate) value).Id).PeptideAnalysis;
-                    }
-                }
-                if (dbPeptideAnalysis == null)
-                {
-                    return;
-                }
-                var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
-                var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
-                if (form != null)
-                {
-                    form.Activate();
-                }
-                else
-                {
-                    form = new PeptideAnalysisFrame(peptideAnalysis);
-                    form.Show(DockPanel, DockState);
-                }
-                if (dbPeptideFileAnalysis != null)
-                {
-                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(form.PeptideAnalysisSummary,
-                                                                                       peptideAnalysis.GetFileAnalysis(
-                                                                                           dbPeptideFileAnalysis.Id.Value));
-                }
-            }
         }
 
         private void treeView1_DoubleClick(object sender, EventArgs e)
@@ -572,62 +398,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog()
-                             {
-                                 Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
-                                 InitialDirectory = Settings.Default.ExportResultsDirectory,
-                             };
-            if (Query.Name != null)
-            {
-                dialog.FileName = Query.Name.Substring(WorkspaceSetting.QueryPrefix.Length) + ".tsv";
-            }
-            if (dialog.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
-            }
-            String filename = dialog.FileName;
-            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
-            IList<object[]> rows;
-            IList<String> columnNames;
-            var query = new ParsedQuery(tbxSource.Text);
-            if (!ExecuteQuery(query, out rows, out columnNames))
-            {
-                return;
-            }
-            using (var stream = File.OpenWrite(filename))
-            {
-                var writer = new StreamWriter(stream);
-                var tab = "";
-                foreach (var columnName in columnNames)
-                {
-                    writer.Write(tab);
-                    tab = "\t";
-                    writer.Write(columnName);
-                }
-                writer.WriteLine();
-                foreach (var row in rows)
-                {
-                    tab = "";
-                    foreach (var cell in row)
-                    {
-                        writer.Write(tab);
-                        tab = "\t";
-                        writer.Write(cell);
-                    }
-                    writer.WriteLine();
-                }
-            }
-        }
-
-        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
-        {
-            bool isHyperlink = false;
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {
-                var cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                isHyperlink = cell.Value is IDbEntity;
-            }
-            dataGridView1.Cursor = isHyperlink ? Cursors.Hand : Cursors.Default;
+            var name = Query.Name == null ? null : Query.Name.Substring(WorkspaceSetting.QueryPrefix.Length);
+            dataGridView1.ExportResults(new ParsedQuery(tbxSource.Text), name);
         }
     }    
 }

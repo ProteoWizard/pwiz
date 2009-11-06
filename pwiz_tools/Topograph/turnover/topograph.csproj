@@ -118,12 +118,21 @@
     <Compile Include="Controls\ExcludedMzsGrid.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\QueryGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\ValidationStatusColumn.cs" />
     <Compile Include="Forms\AnalyzePeptidesForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\AnalyzePeptidesForm.Designer.cs">
       <DependentUpon>AnalyzePeptidesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\BuiltInQueryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\BuiltInQueryForm.Designer.cs">
+      <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ChromatogramForm.cs">
       <SubType>Form</SubType>
@@ -303,6 +312,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\AnalyzePeptidesForm.resx">
       <DependentUpon>AnalyzePeptidesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\BuiltInQueryForm.resx">
+      <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ChromatogramForm.resx">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>

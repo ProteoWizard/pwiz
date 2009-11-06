@@ -170,6 +170,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            Settings.Default.Reload();
             var fileDialog = new SaveFileDialog()
                                  {
                                      Filter = WorkspaceFilter,
@@ -182,6 +183,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             String filename = fileDialog.FileName;
             Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
+            Settings.Default.Save();
             if (File.Exists(filename))
             {
                 File.Delete(filename);
@@ -252,6 +254,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            Settings.Default.Reload();
             var fileDialog = new OpenFileDialog
                                  {
                                      Filter = WorkspaceFilter,
@@ -263,6 +266,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             String filename = fileDialog.FileName;
             Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
+            Settings.Default.Save();
             var workspace = OpenWorkspace(filename);
             if (workspace != null)
             {
@@ -352,6 +356,7 @@ namespace pwiz.Topograph.ui.Forms
                 return true;
             }
             String name;
+            Settings.Default.Reload();
             if (String.IsNullOrEmpty(msDataFile.Path))
             {
                 String pathToTry = Path.Combine(Settings.Default.RawFilesDirectory, msDataFile.Name + ".RAW");
@@ -390,6 +395,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
 
                 Settings.Default.RawFilesDirectory = Path.GetDirectoryName(fileDialog.FileName);
+                Settings.Default.Save();
                 if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, fileDialog.FileName, out errorMessage))
                 {
                     return true;
@@ -426,7 +432,6 @@ namespace pwiz.Topograph.ui.Forms
                 e.Cancel = true;
                 return;
             }
-            Settings.Default.Save();
             base.OnClosing(e);
         }
 

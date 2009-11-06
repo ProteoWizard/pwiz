@@ -1,3 +1,5 @@
+using pwiz.Topograph.ui.Controls;
+
 namespace pwiz.Topograph.ui.Forms
 {
     partial class QueryForm
@@ -43,7 +45,7 @@ namespace pwiz.Topograph.ui.Forms
             this.panelName = new System.Windows.Forms.Panel();
             this.tbxQueryName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dataGridView1 = new pwiz.Topograph.ui.Controls.QueryGrid();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnExport = new System.Windows.Forms.Button();
             this.btnSaveQuery = new System.Windows.Forms.Button();
@@ -244,8 +246,7 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.Size = new System.Drawing.Size(653, 167);
             this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.dataGridView1.Workspace = null;
             // 
             // panel1
             // 
@@ -323,7 +324,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.TabPage pageDesign;
         private System.Windows.Forms.TabPage pageSource;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private QueryGrid dataGridView1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.ComboBox comboTableName;

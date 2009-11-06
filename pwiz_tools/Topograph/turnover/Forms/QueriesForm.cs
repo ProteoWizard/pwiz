@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Query;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -16,6 +17,10 @@ namespace pwiz.Topograph.ui.Forms
         public QueriesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
+            foreach (var query in BuiltInQueries.List)
+            {
+                lbxBuiltInQueries.Items.Add(query);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -26,12 +31,12 @@ namespace pwiz.Topograph.ui.Forms
 
         public void Repopulate()
         {
-            listBox1.Items.Clear();
+            lbxCustomQueries.Items.Clear();
             foreach (var setting in Workspace.Settings.ListChildren())
             {
                 if (setting.Name.StartsWith(WorkspaceSetting.QueryPrefix))
                 {
-                    listBox1.Items.Add(setting.Name.Substring(WorkspaceSetting.QueryPrefix.Length));
+                    lbxCustomQueries.Items.Add(setting.Name.Substring(WorkspaceSetting.QueryPrefix.Length));
                 }
             }
         }
@@ -51,7 +56,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void OpenSelectedQuery(bool execute)
         {
-            var queryName = (String)listBox1.SelectedItem;
+            var queryName = (String)lbxCustomQueries.SelectedItem;
             var setting = Workspace.Settings.GetChild(WorkspaceSetting.QueryPrefix + queryName);
             if (setting == null)
             {
@@ -80,12 +85,12 @@ namespace pwiz.Topograph.ui.Forms
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            btnRunQuery.Enabled = btnOpen.Enabled = btnDelete.Enabled = listBox1.SelectedItems.Count > 0;
+            btnRunQuery.Enabled = btnOpen.Enabled = btnDelete.Enabled = lbxCustomQueries.SelectedItems.Count > 0;
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            var queryName = (String) listBox1.SelectedItem;
+            var queryName = (String) lbxCustomQueries.SelectedItem;
             if (queryName == null)
             {
                 return;
@@ -117,6 +122,38 @@ namespace pwiz.Topograph.ui.Forms
         private void btnRunQuery_Click(object sender, EventArgs e)
         {
             OpenSelectedQuery(true);
+        }
+
+        private void lbxBuiltInQueries_DoubleClick(object sender, EventArgs e)
+        {
+            ExecuteBuiltInQuery();
+        }
+
+        private void ExecuteBuiltInQuery()
+        {
+            var builtInQuery = lbxBuiltInQueries.SelectedItem as BuiltInQuery;
+            if (builtInQuery == null)
+            {
+                return;
+            }
+            var form = BuiltInQueryForm.FindForm(builtInQuery);
+            if (form != null)
+            {
+                form.Activate();
+                return;
+            }
+            form = new BuiltInQueryForm(Workspace, builtInQuery);
+            form.Show(DockPanel, DockState);
+        }
+
+        private void btnExecuteBuiltIn_Click(object sender, EventArgs e)
+        {
+            ExecuteBuiltInQuery();
+        }
+
+        private void lbxBuiltInQueries_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            btnExecuteBuiltIn.Enabled = lbxBuiltInQueries.SelectedItem != null;
         }
     }
 }

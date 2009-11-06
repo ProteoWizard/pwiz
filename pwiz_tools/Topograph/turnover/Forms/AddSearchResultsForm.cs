@@ -438,6 +438,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnChooseFiles_Click(object sender, EventArgs e)
         {
+            Settings.Default.Reload();
             var openFileDialog = new OpenFileDialog
             {
                 Filter =
@@ -450,11 +451,13 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            Settings.Default.Save();
             AddSearchResults(openFileDialog.FileNames);
         }
 
         private void btnChooseDTASelect_Click(object sender, EventArgs e)
         {
+            Settings.Default.Reload();
             var openFileDialog = new OpenFileDialog
                                      {
                                          Filter = "DTASelect Filter Files (*filter*.txt|*filter*.txt|All Files|*.*",
@@ -466,6 +469,7 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            Settings.Default.Save();
             AddSearchResults(openFileDialog.FileNames);
         }
     }
