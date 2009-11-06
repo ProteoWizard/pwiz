@@ -361,6 +361,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 peptideAnalyses.Add(entity.PeptideFileAnalysis.PeptideAnalysis);
             }
+            foreach (var entity in args.GetEntities<PeptideFileAnalysis>())
+            {
+                peptideAnalyses.Add(entity.PeptideAnalysis);
+            }
             foreach (var peptideAnalysis in peptideAnalyses)
             {
                 DataGridViewRow row;

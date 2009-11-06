@@ -407,12 +407,7 @@ namespace pwiz.Topograph.Model
                     PeakStart = peakStart,
                     PeakEnd = peakEnd
                 };
-                PeptideDistributions = new PeptideDistributions(this);
-                if (Chromatograms.ChildCount > 0)
-                {
-                    Peaks.CalcIntensities();
-                    PeptideDistributions.Calculate(Peaks);
-                }
+                Recalculate();
                 OnChange();
             }
         }
