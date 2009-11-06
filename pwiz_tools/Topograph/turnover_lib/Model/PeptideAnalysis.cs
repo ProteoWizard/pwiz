@@ -225,6 +225,24 @@ namespace pwiz.Topograph.Model
         {
             PeptideRates = peptideRates;
         }
+        public void RecalculateRates()
+        {
+            var peptideRates = new PeptideRates(this);
+            var peptideDistributionsList = new List<PeptideDistributions>();
+            bool isComplete = true;
+            foreach (var peptideFileAnalysis in FileAnalyses.ListPeptideFileAnalyses(true))
+            {
+                var peptideDistributions = peptideFileAnalysis.PeptideDistributions;
+                if (peptideDistributions.ChildCount == 0)
+                {
+                    isComplete = false;
+                    continue;
+                }
+                peptideDistributionsList.Add(peptideDistributions);
+            }
+            peptideRates.Calculate(peptideDistributionsList, isComplete);
+            PeptideRates = peptideRates;
+        }
     }
     public enum IntensityScaleMode
     {

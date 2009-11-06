@@ -100,7 +100,10 @@ namespace pwiz.Topograph.ui.Controls
             base.OnCellEndEdit(e);
             var row = Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
-            ExcludedMzs.SetExcluded((int) row.Tag, (bool) cell.Value);
+            using (Workspace.GetWriteLock())
+            {
+                ExcludedMzs.SetExcluded((int)row.Tag, (bool)cell.Value);
+            }
         }
 
         protected override void OnCellValueChanged(DataGridViewCellEventArgs e)

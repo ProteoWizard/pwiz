@@ -224,25 +224,46 @@ namespace pwiz.Topograph.Model
                     _autoFindPeak = value;
                     if (AutoFindPeak)
                     {
-                        ClearPeak();
+                        Recalculate();
                     }
                     OnChange();
                 }
             }
         }
 
-        private void ClearPeak()
+        private void Recalculate()
         {
             using (GetWriteLock())
             {
-                var peaks = new Peaks(this);
-                var peptideDistributions = new PeptideDistributions(this);
+                bool recalcRates = Chromatograms.ChildCount > 0 || PeptideDistributions.ChildCount > 0;
+                Peaks = new Peaks(this);
+                PeptideDistributions = new PeptideDistributions(this);
                 if (Chromatograms.ChildCount > 0)
                 {
-                    peaks.CalcIntensities();
-                    peptideDistributions.Calculate(Peaks);
+                    Peaks.CalcIntensities();
+                    PeptideDistributions.Calculate(Peaks);
                 }
-                SetDistributions(peaks, peptideDistributions);
+                if (recalcRates)
+                {
+                    PeptideAnalysis.RecalculateRates();
+                }
+            }
+        }
+
+        public override ValidationStatus ValidationStatus
+        {
+            get { return base.ValidationStatus; }
+            set 
+            { 
+                using (GetWriteLock())
+                {
+                    if (ValidationStatus == value)
+                    {
+                        return;
+                    }
+                    base.ValidationStatus = value;
+                    PeptideAnalysis.RecalculateRates();
+                }
             }
         }
 
@@ -282,12 +303,12 @@ namespace pwiz.Topograph.Model
         }
         public void OnExcludedMzsChanged()
         {
-            ClearPeak();
+            Recalculate();
         }
         public void InvalidateChromatograms()
         {
             Chromatograms = new Chromatograms(this);
-            ClearPeak();
+            Recalculate();
         }
         private void ExcludedMzs_Changed(ExcludedMzs excludedMzs)
         {
@@ -450,7 +471,7 @@ namespace pwiz.Topograph.Model
                     var chromatogramData = new ChromatogramData(this, chromatogram);
                     Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
                 }
-                ClearPeak();
+                Recalculate();
                 return true;
             }
         }

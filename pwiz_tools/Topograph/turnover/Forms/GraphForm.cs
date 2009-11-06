@@ -153,12 +153,27 @@ namespace pwiz.Topograph.ui.Forms
         {
             var xValues = new List<double>();
             var yValues = new List<double>();
-            //TODO
-            //foreach (var entry in PeptideRates.GetPoints(rateKey))
-            //{
-            //    xValues.Add(entry.Key);
-            //    yValues.Add(entry.Value);
-            //}
+            using (Workspace.GetReadLock())
+            {
+                foreach (var peptideFileAnalysis in PeptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
+                {
+                    if (!string.IsNullOrEmpty(rateKey.Cohort) && !Equals(rateKey.Cohort, peptideFileAnalysis.MsDataFile.Cohort))
+                    {
+                        continue;
+                    }
+                    if (!peptideFileAnalysis.MsDataFile.TimePoint.HasValue)
+                    {
+                        continue;
+                    }
+                    var peptideDistribution = peptideFileAnalysis.PeptideDistributions.GetChild(rateKey.PeptideQuantity);
+                    if (peptideDistribution == null)
+                    {
+                        continue;
+                    }
+                    xValues.Add(peptideFileAnalysis.MsDataFile.TimePoint.Value);
+                    yValues.Add(peptideDistribution.TracerPercent);
+                }
+            }
             return new PointPairList(xValues.ToArray(), yValues.ToArray());
         }
 

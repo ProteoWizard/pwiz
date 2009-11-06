@@ -47,7 +47,7 @@ namespace pwiz.Topograph.Model
             return result;
         }
 
-        public ValidationStatus ValidationStatus
+        public virtual ValidationStatus ValidationStatus
         {
             get { return _validationStatus;}
             set { 
