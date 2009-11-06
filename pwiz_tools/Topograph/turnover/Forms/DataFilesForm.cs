@@ -157,6 +157,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 msDataFile.TimePoint = ToDouble(cell.Value);
             }
+            else if (column == colLabel)
+            {
+                msDataFile.Label = Convert.ToString(cell.Value);
+            }
         }
 
         private void gridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
