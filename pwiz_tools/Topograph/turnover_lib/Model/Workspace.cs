@@ -497,7 +497,7 @@ namespace pwiz.Topograph.Model
                     }
                     if (!SavedWorkspaceVersion.DistributionsValid(WorkspaceVersion))
                     {
-                        longOperationBroker.UpdateStatusMessage("Delting results");
+                        longOperationBroker.UpdateStatusMessage("Deleting results");
                         session.CreateSQLQuery("DELETE FROM DbPeptideAmount")
                             .ExecuteUpdate();
                         session.CreateSQLQuery("DELETE FROM DbPeptideDistribution")
