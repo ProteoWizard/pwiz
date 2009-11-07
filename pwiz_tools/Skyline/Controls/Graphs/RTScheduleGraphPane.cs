@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     internal class RTScheduleGraphPane : RTGraphPane
     {
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Controls
                 points.Add(x, PrecursorScheduleBase.GetOverlapCount(listSchedules, x));
 
             string label = string.Format("{0} Minute Window",
-                document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
+                                         document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
             var curve = AddCurve(label, points, color);
             curve.Line.IsAntiAlias = true;
             curve.Line.IsOptimizedDraw = true;

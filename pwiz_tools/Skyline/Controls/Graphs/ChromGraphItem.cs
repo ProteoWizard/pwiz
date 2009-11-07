@@ -26,7 +26,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     internal class ChromGraphItem : AbstractChromGraphItem
     {
@@ -68,16 +68,16 @@ namespace pwiz.Skyline.Controls
         private PeakBoundsDragInfo _dragInfo;
 
         public ChromGraphItem(TransitionGroupDocNode transitionGroupNode,
-                                TransitionDocNode transition,
-                                ChromatogramInfo chromatogram,
-                                TransitionChromInfo tranPeakInfo,
-                                bool[] annotatePeaks,
-                                double[] libraryDotProducts,
-                                double bestProduct,
-                                int step,
-                                Color color,
-                                float fontSize,
-                                int width)
+                              TransitionDocNode transition,
+                              ChromatogramInfo chromatogram,
+                              TransitionChromInfo tranPeakInfo,
+                              bool[] annotatePeaks,
+                              double[] libraryDotProducts,
+                              double bestProduct,
+                              int step,
+                              Color color,
+                              float fontSize,
+                              int width)
         {
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
@@ -173,15 +173,15 @@ namespace pwiz.Skyline.Controls
         {
             var tran = nodeTran.Transition;
             return string.Format("{0}{1} - {2:F04}{3}", tran.IonType.ToString().ToLower(),
-                tran.Ordinal, nodeTran.Mz, Transition.GetChargeIndicator(tran.Charge));            
+                                 tran.Ordinal, nodeTran.Mz, Transition.GetChargeIndicator(tran.Charge));            
         }
 
         public static string GetTitle(TransitionGroupDocNode nodeGroup)
         {
             var seq = nodeGroup.TransitionGroup.Peptide.Sequence;
             return string.Format("{0} - {1:F04}{2}{3}", seq, nodeGroup.PrecursorMz,
-                Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
-                nodeGroup.TransitionGroup.LabelTypeText);            
+                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                                 nodeGroup.TransitionGroup.LabelTypeText);            
         }
 
         public override string Title
@@ -192,9 +192,9 @@ namespace pwiz.Skyline.Controls
                     return string.Format("Step {0}", _step);
 
                 return (TransitionNode == null?
-                        GetTitle(TransitionGroupNode)
-                    :
-                        GetTitle(TransitionNode));
+                                                  GetTitle(TransitionGroupNode)
+                            :
+                                GetTitle(TransitionNode));
             }
         }
 
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Controls
         }
 
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
-            MSPointList pointList, GraphObjList annotations)
+                                            MSPointList pointList, GraphObjList annotations)
         {
             // Draw retention time indicator, if set
             if (RetentionPrediction.HasValue)
@@ -227,12 +227,12 @@ namespace pwiz.Skyline.Controls
                 graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
 
                 LineObj stick = new LineObj(COLOR_RETENTION_TIME, time, intensity, time, 0)
-                    {
-                        IsClippedToChartRect = true,
-                        Location = {CoordinateFrame = CoordType.AxisXYScale},
-                        ZOrder = ZOrder.B_BehindLegend,
-                        Line = { Width = 1}
-                    };
+                                    {
+                                        IsClippedToChartRect = true,
+                                        Location = {CoordinateFrame = CoordType.AxisXYScale},
+                                        ZOrder = ZOrder.B_BehindLegend,
+                                        Line = { Width = 1}
+                                    };
                 annotations.Add(stick);
 
                 if (GraphChromatogram.ShowRT != ShowRTChrom.none)
@@ -241,11 +241,11 @@ namespace pwiz.Skyline.Controls
                     graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
                     TextObj text = new TextObj(label, time, intensity,
                                                CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-                        {
-                            IsClippedToChartRect = true,
-                            ZOrder = ZOrder.B_BehindLegend,
-                            FontSpec = CreateFontSpec(COLOR_RETENTION_TIME, _fontSpec.Size),
-                        };
+                                       {
+                                           IsClippedToChartRect = true,
+                                           ZOrder = ZOrder.B_BehindLegend,
+                                           FontSpec = CreateFontSpec(COLOR_RETENTION_TIME, _fontSpec.Size),
+                                       };
                     annotations.Add(text);
                 }
 
@@ -254,11 +254,11 @@ namespace pwiz.Skyline.Controls
                 {
                     double boxHeight = yMax;
                     BoxObj box = new BoxObj(time - RetentionWindow / 2, boxHeight, RetentionWindow, boxHeight,
-                        COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
-                        {
-                            IsClippedToChartRect = true,
-                            ZOrder = ZOrder.F_BehindGrid
-                        };
+                                            COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
+                                     {
+                                         IsClippedToChartRect = true,
+                                         ZOrder = ZOrder.F_BehindGrid
+                                     };
                     annotations.Add(box);
                 }
             }
@@ -280,12 +280,12 @@ namespace pwiz.Skyline.Controls
                         double intensityLabel = graphPane.YAxis.Scale.ReverseTransform(yBest - 5);
                         string label = FormatTimeLabel(timeBest, _libraryDotProducts != null ? _bestProduct : 0);
                         TextObj text = new TextObj(label, timeBest, intensityLabel,
-                                                    CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-                        {
-                            ZOrder = ZOrder.A_InFront,
-                            IsClippedToChartRect = true,
-                            FontSpec = FontSpec
-                        };
+                                                   CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+                                           {
+                                               ZOrder = ZOrder.A_InFront,
+                                               IsClippedToChartRect = true,
+                                               FontSpec = FontSpec
+                                           };
                         annotations.Add(text);
                     }
 
@@ -294,13 +294,13 @@ namespace pwiz.Skyline.Controls
                     double intensityArrow = graphPane.YAxis.Scale.ReverseTransform(yBest - 2);
 
                     ArrowObj arrow = new ArrowObj(COLOR_BEST_PEAK, 12f,
-                            timeArrow, intensityArrow, timeArrow, intensityArrow)
-                    {
-                        Location = { CoordinateFrame = CoordType.AxisXYScale },
-                        IsArrowHead = true,
-                        IsClippedToChartRect = true,
-                        ZOrder = ZOrder.A_InFront
-                    };
+                                                  timeArrow, intensityArrow, timeArrow, intensityArrow)
+                                         {
+                                             Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                             IsArrowHead = true,
+                                             IsClippedToChartRect = true,
+                                             ZOrder = ZOrder.A_InFront
+                                         };
                     annotations.Add(arrow);                    
                 }
 
@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Controls
                     endTime = tranPeakInfo.EndRetentionTime;                    
                 }
                 AddPeakBoundaries(graphPane, annotations, true,
-                    startTime, endTime, intensityBest);
+                                  startTime, endTime, intensityBest);
             }
 
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Controls
 
                 // Show peak extent indicators, if they are far enough apart
                 AddPeakBoundaries(graphPane, annotations, false,
-                    peak.StartTime, peak.EndTime, maxIntensity);
+                                  peak.StartTime, peak.EndTime, maxIntensity);
             }
         }
 
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private void AddPeakBoundaries(GraphPane graphPane, ICollection<GraphObj> annotations,
-            bool best, double startTime, double endTime, double maxIntensity)
+                                       bool best, double startTime, double endTime, double maxIntensity)
         {
             // Only show boundaries for dragging when boundaries turned off
             if (!Settings.Default.ShowPeakBoundaries && (!best || DragInfo == null))
@@ -394,20 +394,20 @@ namespace pwiz.Skyline.Controls
             // Make sure to get maximum intensity within the peak range,
             // as this is not guaranteed to be the center of the peak
             LineObj stickStart = new LineObj(colorBoundaries, startTime, maxIntensity, startTime, 0)
-                {
-                    IsClippedToChartRect = true,
-                    Location = { CoordinateFrame = CoordType.AxisXYScale },
-                    ZOrder = ZOrder.B_BehindLegend,
-                    Line = { Width = 1, Style = DashStyle.Dash }
-                };
+                                     {
+                                         IsClippedToChartRect = true,
+                                         Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                         ZOrder = ZOrder.B_BehindLegend,
+                                         Line = { Width = 1, Style = DashStyle.Dash }
+                                     };
             annotations.Add(stickStart);
             LineObj stickEnd = new LineObj(colorBoundaries, endTime, maxIntensity, endTime, 0)
-                {
-                    IsClippedToChartRect = true,
-                    Location = { CoordinateFrame = CoordType.AxisXYScale },
-                    ZOrder = ZOrder.B_BehindLegend,
-                    Line = { Width = 1, Style = DashStyle.Dash }
-                };
+                                   {
+                                       IsClippedToChartRect = true,
+                                       Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                       ZOrder = ZOrder.B_BehindLegend,
+                                       Line = { Width = 1, Style = DashStyle.Dash }
+                                   };
             annotations.Add(stickEnd);
         }
 
@@ -416,11 +416,11 @@ namespace pwiz.Skyline.Controls
             int indexPeak;
             var showRT = GraphChromatogram.ShowRT;
             if ((showRT == ShowRTChrom.all ||
-                (showRT == ShowRTChrom.threshold && Settings.Default.ShowRetentionTimesThreshold <= point.Y))
+                 (showRT == ShowRTChrom.threshold && Settings.Default.ShowRetentionTimesThreshold <= point.Y))
                 && _annotatedTimes.TryGetValue(point.X, out indexPeak))
             {
                 string label = FormatTimeLabel(point.X, _libraryDotProducts != null ?
-                    _libraryDotProducts[indexPeak] : 0);
+                                                                                        _libraryDotProducts[indexPeak] : 0);
                 return new PointAnnotation(label, FontSpec);
             }
 
@@ -550,7 +550,7 @@ namespace pwiz.Skyline.Controls
         public abstract string Title { get; }
         public abstract PointAnnotation AnnotatePoint(PointPair point);
         public abstract void AddAnnotations(MSGraphPane graphPane, Graphics g,
-            MSPointList pointList, GraphObjList annotations);
+                                            MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 
         public virtual Color Color

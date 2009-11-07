@@ -31,7 +31,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     public enum ShowRTChrom { none, all, best, threshold }
 
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Controls
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = documentUIContainer as IStateProvider ??
-                new DefaultStateProvider();
+                             new DefaultStateProvider();
         }
 
         public string NameSet { get { return _nameChromatogramSet; } }
@@ -205,8 +205,8 @@ namespace pwiz.Skyline.Controls
         {
             // Changes to the settings are handled elsewhere
             if (e.DocumentPrevious != null &&
-                    ReferenceEquals(_documentContainer.DocumentUI.Settings.MeasuredResults,
-                        e.DocumentPrevious.Settings.MeasuredResults))
+                ReferenceEquals(_documentContainer.DocumentUI.Settings.MeasuredResults,
+                                e.DocumentPrevious.Settings.MeasuredResults))
             {
                 // Update the graph if it is no longer current, due to changes
                 // within the document node tree.
@@ -227,13 +227,13 @@ namespace pwiz.Skyline.Controls
                 {
                     var nodeGroup = _nodeGroups[i];
                     var nodeGroupCurrent = (TransitionGroupDocNode)
-                        _documentContainer.DocumentUI.FindNode(_groupPaths[i]);
+                                           _documentContainer.DocumentUI.FindNode(_groupPaths[i]);
                     if (!ReferenceEquals(nodeGroup, nodeGroupCurrent))
                     {
                         // Make sure the actual results for this graph have changed
                         if (nodeGroup == null || nodeGroupCurrent == null ||
-                                nodeGroup.Results == null || nodeGroupCurrent.Results == null ||
-                                nodeGroup.Children.Count != nodeGroupCurrent.Children.Count)
+                            nodeGroup.Results == null || nodeGroupCurrent.Results == null ||
+                            nodeGroup.Children.Count != nodeGroupCurrent.Children.Count)
                             return false;
 
                         // Need to compare the transition results, because it is possible
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Controls
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
                 if (nodeGroups != null &&
                     EnsureChromInfo(results, chromatograms, nodeGroups, groupPaths, mzMatchTolerance,
-                        out changedGroups, out changedGroupIds))
+                                    out changedGroups, out changedGroupIds))
                 {
                     // Update the file choice toolbar, if the set of groups has changed
                     if (changedGroups)
@@ -380,21 +380,21 @@ namespace pwiz.Skyline.Controls
                     if (nodeGroups.Length > 1 || DisplayType == DisplayTypeChrom.total)
                     {
                         DisplayTotals(chromatograms, mzMatchTolerance,
-                            listChromGraphs, ref bestStartTime, ref bestEndTime);
+                                      listChromGraphs, ref bestStartTime, ref bestEndTime);
                     }
-                    // Single group with optimization data, not a transition selected,
-                    // and single display mode
+                        // Single group with optimization data, not a transition selected,
+                        // and single display mode
                     else if (chromatograms.OptimizationFunction != null &&
-                        nodeTranTree == null && DisplayType == DisplayTypeChrom.single)
+                             nodeTranTree == null && DisplayType == DisplayTypeChrom.single)
                     {
                         DisplayOptimizationTotals(chromatograms, mzMatchTolerance,
-                            listChromGraphs, ref bestStartTime, ref bestEndTime);
+                                                  listChromGraphs, ref bestStartTime, ref bestEndTime);
                     }
                     else
                     {
                         var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
                         DisplayTransitions(nodeTranSelected, chromatograms, mzMatchTolerance,
-                            listChromGraphs, ref bestStartTime, ref bestEndTime);
+                                           listChromGraphs, ref bestStartTime, ref bestEndTime);
                     }
 
                     // Set predicted retention time on the first graph item to make
@@ -439,12 +439,12 @@ namespace pwiz.Skyline.Controls
             graphPane.SetScale(graphControl.CreateGraphics());
 
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
-                !Settings.Default.LockYChrom;
+                                        !Settings.Default.LockYChrom;
             graphControl.Refresh();
         }
 
         private void DisplayTransitions(TransitionDocNode nodeTranSelected, ChromatogramSet chromatograms, float mzMatchTolerance,
-            ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+                                        ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
         {
             // All curves are for transitions of a single precursor.  Turn off
             // curve-overlap to avoid showing multiple retention time labels for
@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Controls
             int numSteps = 0;
 
             if (DisplayType == DisplayTypeChrom.single &&
-                    nodeTranSelected != null)
+                nodeTranSelected != null)
             {
                 if (!graphTrans.Contains(nodeTranSelected))
                 {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Controls
                 else
                 {
                     arrayChromInfo = chromGroupInfo.GetAllTransitionInfo((float)nodeTranSelected.Mz,
-                        mzMatchTolerance, chromatograms.OptimizationFunction);
+                                                                         mzMatchTolerance, chromatograms.OptimizationFunction);
 
                     graphTrans = new DocNode[arrayChromInfo.Length];
                     for (int i = 0; i < arrayChromInfo.Length; i++)
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Controls
                 Color color;
                 int width = lineWidth;
                 if ((numSteps == 0 && ReferenceEquals(nodeTran, nodeTranSelected) ||
-                        (numSteps > 0 && step == 0)))
+                     (numSteps > 0 && step == 0)))
                 {
                     color = ChromGraphItem.ColorSelected;
                     width++;
@@ -643,7 +643,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private void DisplayOptimizationTotals(ChromatogramSet chromatograms, float mzMatchTolerance,
-            ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+                                               ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
         {
             // As with display of transitions, only the most intense peak for
             // each peak group will be shown, but each peak group is shown
@@ -670,7 +670,7 @@ namespace pwiz.Skyline.Controls
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
                 var infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance,
-                    chromatograms.OptimizationFunction);
+                                                                chromatograms.OptimizationFunction);
                 if (infos.Length == 0)
                     continue;
 
@@ -832,7 +832,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private void DisplayTotals(ChromatogramSet chromatograms, float mzMatchTolerance,
-            ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+                                   ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
         {
             // Turn on curve overlap, so that the retention time labels
             // for smaller peaks of one group will show up beneath larger
@@ -927,7 +927,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private void ZoomGraph(GraphPane graphPane, double bestStartTime, double bestEndTime,
-            IList<ChromGraphItem> listChromGraphs, AutoZoomChrom zoom)
+                               IList<ChromGraphItem> listChromGraphs, AutoZoomChrom zoom)
         {
             if (_zoomLocked)
                 return;
@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran,
-            int indexChrom, int fileIndex, int step)
+                                                                  int indexChrom, int fileIndex, int step)
         {
             if (!nodeTran.HasResults)            
                 return null;
@@ -1005,7 +1005,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup,
-            int fileIndex, int indexChrom)
+                                                                            int fileIndex, int indexChrom)
         {
             if (!nodeGroup.HasResults)
                 return null;
@@ -1093,8 +1093,8 @@ namespace pwiz.Skyline.Controls
         }
 
         private bool EnsureChromInfo(MeasuredResults results, ChromatogramSet chromatograms,
-            TransitionGroupDocNode[] nodeGroups, IdentityPath[] groupPaths,
-            float mzMatchTolerance, out bool changedGroups, out bool changedGroupIds)
+                                     TransitionGroupDocNode[] nodeGroups, IdentityPath[] groupPaths,
+                                     float mzMatchTolerance, out bool changedGroups, out bool changedGroupIds)
         {
             changedGroups = false;
             changedGroupIds = false;
@@ -1200,7 +1200,7 @@ namespace pwiz.Skyline.Controls
         #region Editing support
 
         private double FindAnnotatedPeakRetentionTime(TextObj label,
-            out TransitionGroupDocNode nodeGroup, out TransitionDocNode nodeTran)
+                                                      out TransitionGroupDocNode nodeGroup, out TransitionDocNode nodeTran)
         {
             foreach (var curve in GraphPane.CurveList)
             {
@@ -1327,7 +1327,7 @@ namespace pwiz.Skyline.Controls
                     TransitionGroupDocNode nodeGroup;
                     TransitionDocNode nodeTran;
                     if (nearest is TextObj &&
-                            FindAnnotatedPeakRetentionTime((TextObj)nearest, out nodeGroup, out nodeTran) != 0)
+                        FindAnnotatedPeakRetentionTime((TextObj)nearest, out nodeGroup, out nodeTran) != 0)
                     {
                         Cursor = Cursors.Hand;
                         return true;
@@ -1474,10 +1474,10 @@ namespace pwiz.Skyline.Controls
             var dragType = (draggingEnd ? PeakBoundsChangeType.end : PeakBoundsChangeType.start);
             var changeType = bothBoundaries ? PeakBoundsChangeType.both : dragType;
             var peakBoundDragInfo = new PeakBoundsDragInfo(graphItem, pt, dragType, changeType)
-            {
-                AnchorTime = anchorTime,
-                CaretTime = caretTime
-            };
+                                        {
+                                            AnchorTime = anchorTime,
+                                            CaretTime = caretTime
+                                        };
             return (graphItem.DragInfo = peakBoundDragInfo);
         }
 
@@ -1513,7 +1513,7 @@ namespace pwiz.Skyline.Controls
         #endregion
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
-            ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+                                                     ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildChromatogramMenu(menuStrip);
         }
@@ -1571,7 +1571,7 @@ namespace pwiz.Skyline.Controls
     internal sealed class PeakBoundsDragInfo
     {
         public PeakBoundsDragInfo(ChromGraphItem graphItem, PointF startPoint,
-            PeakBoundsChangeType dragType, PeakBoundsChangeType changeType)
+                                  PeakBoundsChangeType dragType, PeakBoundsChangeType changeType)
         {
             GraphItem = GraphItemBest = graphItem;
             GraphItemBest.HideBest = true;
@@ -1598,12 +1598,12 @@ namespace pwiz.Skyline.Controls
         private const int MOVE_THRESHOLD = 3;
 
         public bool MoveTo(PointF pt, double time, bool multiGroup,
-            Func<double, double, ChromGraphItem> findMaxPeakItem)
+                           Func<double, double, ChromGraphItem> findMaxPeakItem)
         {
             // Make sure the mouse moves a minimum distance before starting
             // the drag.
             if (!Moved && Math.Abs(pt.X - StartPoint.X) < MOVE_THRESHOLD &&
-                    Math.Abs(pt.Y - StartPoint.Y) < MOVE_THRESHOLD)
+                Math.Abs(pt.Y - StartPoint.Y) < MOVE_THRESHOLD)
             {
                 return false;
             }
@@ -1651,7 +1651,7 @@ namespace pwiz.Skyline.Controls
     public sealed class PickedPeakEventArgs : PeakEventArgs
     {
         public PickedPeakEventArgs(IdentityPath groupPath, Identity transitionId,
-            string nameSet, string filePath, double retentionTime)
+                                   string nameSet, string filePath, double retentionTime)
             : base(groupPath, nameSet, filePath)
         {
             TransitionId = transitionId;
@@ -1665,8 +1665,8 @@ namespace pwiz.Skyline.Controls
     public sealed class ChangedPeakBoundsEventArgs : PeakEventArgs
     {
         public ChangedPeakBoundsEventArgs(IdentityPath groupPath, Transition transition,
-            string nameSet, string filePath, double startTime, double endTime,
-            PeakBoundsChangeType changeType)
+                                          string nameSet, string filePath, double startTime, double endTime,
+                                          PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
             Transition = transition;

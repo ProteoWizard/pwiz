@@ -29,7 +29,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// Interface for any window that contains a graph, to allow non-blocking
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Controls
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = documentUIContainer as IStateProvider ??
-                new DefaultStateProvider();
+                             new DefaultStateProvider();
 
             if (DocumentUI != null)
                 ZoomSpectrumToSettings();
@@ -98,9 +98,9 @@ namespace pwiz.Skyline.Controls
         {
             // If document changed, update spectrum x scale to instrument
             if (e.DocumentPrevious == null ||
-                    !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) ||
-                    !ReferenceEquals(DocumentUI.Settings.PeptideSettings.Libraries.Libraries,
-                        e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
+                !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) ||
+                !ReferenceEquals(DocumentUI.Settings.PeptideSettings.Libraries.Libraries,
+                                 e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
                 UpdateGraph();
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls
                     IsotopeLabelType typeInfo;
                     if (libraries.HasLibraries && libraries.IsLoaded &&
                         settings.TryLoadSpectrum(group.Peptide.Sequence, group.PrecursorCharge, mods,
-                            out typeInfo, out spectrumInfo))
+                                                 out typeInfo, out spectrumInfo))
                     {
                         var types = _stateProvider.ShowIonTypes;
                         var charges = _stateProvider.ShowIonCharges;
@@ -202,16 +202,16 @@ namespace pwiz.Skyline.Controls
                                                                           rankTypes);
 
                         var graphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR)
-                        {
-                            ShowTypes = types,
-                            ShowCharges = charges,
-                            ShowRanks = Settings.Default.ShowRanks,
-                            ShowDuplicates = Settings.Default.ShowDuplicateIons,
-                            FontSize = Settings.Default.SpectrumFontSize,
-                            LineWidth = Settings.Default.SpectrumLineWidth
-                        };
+                                            {
+                                                ShowTypes = types,
+                                                ShowCharges = charges,
+                                                ShowRanks = Settings.Default.ShowRanks,
+                                                ShowDuplicates = Settings.Default.ShowDuplicateIons,
+                                                FontSize = Settings.Default.SpectrumFontSize,
+                                                LineWidth = Settings.Default.SpectrumLineWidth
+                                            };
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
-                            !Settings.Default.LockYAxis;
+                                                    !Settings.Default.LockYAxis;
                         AddGraphItem(graphPane, graphItem);
                         available = true;
                     }
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
-            ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+                                                     ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(menuStrip);
         }

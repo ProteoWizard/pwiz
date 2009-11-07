@@ -22,7 +22,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// Base class for GraphPanes that are shown on the RetentionTime graph

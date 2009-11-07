@@ -25,7 +25,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     public class SpectrumGraphItem : AbstractMSGraphItem
     {
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
 
         public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
-            LibraryRankedSpectrumInfo spectrumInfo)
+                                 LibraryRankedSpectrumInfo spectrumInfo)
         {
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls
             get
             {
                 return new PointPairList(SpectrumInfo.MZs.ToArray(),
-                    SpectrumInfo.Intensities.ToArray());
+                                         SpectrumInfo.Intensities.ToArray());
             }
         }
 
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls
                     continue;
 
                 IonType type = IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge) ?
-                    rmi.IonType : rmi.IonType2;
+                                                                                      rmi.IonType : rmi.IonType2;
 
                 Color color;
                 switch (type)
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Controls
         public abstract string Title { get; }
         public abstract PointAnnotation AnnotatePoint(PointPair point);
         public abstract void AddAnnotations(MSGraphPane graphPane, Graphics g,
-            MSPointList pointList, GraphObjList annotations);
+                                            MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 
         public Color Color

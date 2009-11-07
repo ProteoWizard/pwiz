@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls.Graphs
 {
     internal sealed class RTLinearRegressionGraphPane : RTGraphPane
     {
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls
             if (peptideIndex != null)
             {
                 var pathSelect = GraphRetentionTime.DocumentUIContainer.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides,
-                    peptideIndex.IndexDoc);
+                                                                                             peptideIndex.IndexDoc);
                 GraphRetentionTime.StateProvider.SelectedPath = pathSelect;
                 return true;
             }
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Controls
                     resultsAvailable = results.IsLoaded;
                 else
                     resultsAvailable = results.Chromatograms.Count > resultIndex &&
-                        results.IsChromatogramSetLoaded(resultIndex);
+                                       results.IsChromatogramSetLoaded(resultIndex);
             }
 
             if (!resultsAvailable)
@@ -317,9 +317,9 @@ namespace pwiz.Skyline.Controls
                 }
 
                 _scoreCache = RetentionTimeRegression.CreateScoreCache(_peptidesTimes,
-                    dataPrevious != null ? dataPrevious._scoreCache : null);
+                                                                       dataPrevious != null ? dataPrevious._scoreCache : null);
                 _regressionAll = RetentionTimeRegression.CalcRegression("graph", null,
-                    _peptidesTimes, _scoreCache, out _statisticsAll);
+                                                                        _peptidesTimes, _scoreCache, out _statisticsAll);
                 if (_regressionAll != null)
                 {
                     _scoresRefined = _statisticsAll.ListHydroScores.ToArray();
@@ -347,8 +347,8 @@ namespace pwiz.Skyline.Controls
             public bool IsValidFor(SrmDocument document, int resultIndex, double threshold, bool refine)
             {
                 return IsValidFor(document) && _resultIndex == resultIndex && _threshold == threshold &&
-                    // Valid if refine is true, and this data requires no further refining
-                    (_refine == refine || (refine && IsRefined()));
+                       // Valid if refine is true, and this data requires no further refining
+                       (_refine == refine || (refine && IsRefined()));
             }
 
             public RetentionTimeRegression RegressionRefined
@@ -388,15 +388,15 @@ namespace pwiz.Skyline.Controls
                 }
 
                 _regressionRefined = (_regressionAll == null ? null :
-                    _regressionAll.FindThreshold(threshold,
-                                                  2,
-                                                  _peptidesTimes.Count,
-                                                  _peptidesTimes,
-                                                  _statisticsAll,
-                                                  _scoreCache,
-                                                  isCanceled,
-                                                  ref _statisticsRefined,
-                                                  ref _outlierIndexes));
+                                                                        _regressionAll.FindThreshold(threshold,
+                                                                                                     2,
+                                                                                                     _peptidesTimes.Count,
+                                                                                                     _peptidesTimes,
+                                                                                                     _statisticsAll,
+                                                                                                     _scoreCache,
+                                                                                                     isCanceled,
+                                                                                                     ref _statisticsRefined,
+                                                                                                     ref _outlierIndexes));
 
                 if (ReferenceEquals(_regressionRefined, _regressionAll))
                     return null;
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Controls
                 {
                     Color colorSelected = GraphRetentionTime.ColorSelected;
                     var curveOut = graphPane.AddCurve(null, new[] { scoreSelected }, new[] { timeSelected },
-                        colorSelected, SymbolType.Diamond);
+                                                      colorSelected, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
                     curveOut.Symbol.Fill = new Fill(colorSelected);
                     curveOut.Symbol.Size = 8f;
@@ -534,7 +534,7 @@ namespace pwiz.Skyline.Controls
                 }
 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
-                    Color.Black, SymbolType.Diamond);
+                                               Color.Black, SymbolType.Diamond);
                 curve.Line.IsVisible = false;
                 curve.Symbol.Border.IsVisible = false;
                 curve.Symbol.Fill = new Fill(GraphRetentionTime.COLOR_REFINED);
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Controls
                 if (_scoresOutliers != null)
                 {
                     var curveOut = graphPane.AddCurve("Outliers", _scoresOutliers, _timesOutliers,
-                        Color.Black, SymbolType.Diamond);
+                                                      Color.Black, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
                     curveOut.Symbol.Border.IsVisible = false;
                     curveOut.Symbol.Fill = new Fill(GraphRetentionTime.COLOR_OUTLIERS);
@@ -550,7 +550,7 @@ namespace pwiz.Skyline.Controls
             }
 
             private static void GraphRegression(GraphPane graphPane,
-                RetentionTimeStatistics statistics, string name, Color color)
+                                                RetentionTimeStatistics statistics, string name, Color color)
             {
                 double[] lineScores, lineTimes;
                 if (statistics == null)
@@ -603,27 +603,27 @@ namespace pwiz.Skyline.Controls
                 if (!_refine)
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                        _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_REFINED);
+                                                _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_REFINED);
                 }
                 else
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                        _regressionRefined, _statisticsRefined, GraphRetentionTime.COLOR_LINE_REFINED);
+                                                _regressionRefined, _statisticsRefined, GraphRetentionTime.COLOR_LINE_REFINED);
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                        _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_ALL);
+                                                _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                        _regressionPredict, _statisticsPredict, GraphRetentionTime.COLOR_LINE_PREDICT);
+                                       _regressionPredict, _statisticsPredict, GraphRetentionTime.COLOR_LINE_PREDICT);
                 }
             }
 
             private static float AddRegressionLabel(PaneBase graphPane, Graphics g, double score, double time,
-                RetentionTimeRegression regression, RetentionTimeStatistics statistics, Color color)
+                                                    RetentionTimeRegression regression, RetentionTimeStatistics statistics, Color color)
             {
                 string label;
                 if (regression == null || statistics == null)
@@ -635,21 +635,21 @@ namespace pwiz.Skyline.Controls
                 else
                 {
                     label = string.Format("slope = {0:F02}, intercept = {1:F02}\n" +
-                        "window = {2:F01}\n" +
-                        "r = {3:F02}",
-                        regression.Conversion.Slope,
-                        regression.Conversion.Intercept,
-                        regression.TimeWindow,
-                        statistics.R);
+                                          "window = {2:F01}\n" +
+                                          "r = {3:F02}",
+                                          regression.Conversion.Slope,
+                                          regression.Conversion.Intercept,
+                                          regression.TimeWindow,
+                                          statistics.R);
                 }
 
                 TextObj text = new TextObj(label, score, time,
-                    CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphRetentionTime.CreateFontSpec(color),
-                };
+                                           CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
+                                   {
+                                       IsClippedToChartRect = true,
+                                       ZOrder = ZOrder.E_BehindCurves,
+                                       FontSpec = GraphRetentionTime.CreateFontSpec(color),
+                                   };
                 graphPane.GraphObjList.Add(text);
 
                 // Measure the text just added, and return its height
