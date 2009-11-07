@@ -21,40 +21,33 @@ using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls
 {
-    public enum GraphTypeRT { regression, replicate, schedule }
+    public enum GraphTypeArea { replicate, peptide }
 
-    public partial class GraphRetentionTime : DockableForm, IGraphContainer
+    public partial class GraphPeakArea : DockableForm, IGraphContainer
     {
-        public static GraphTypeRT GraphType
+        public static GraphTypeArea GraphType
         {
             get
             {
                 try
                 {
-                    return (GraphTypeRT)Enum.Parse(typeof(GraphTypeRT),
-                        Settings.Default.RTGraphType);
+                    return (GraphTypeArea)Enum.Parse(typeof(GraphTypeArea),
+                        Settings.Default.AreaGraphType);
                 }
                 catch (Exception)
                 {
-                    return GraphTypeRT.regression;
+                    return GraphTypeArea.replicate;
                 }
             }
         }
 
         private const string FONT_FACE = "Arial";
         private const int FONT_SIZE = 10;
-
-        public static readonly Color COLOR_REFINED = Color.DarkBlue;
-        public static readonly Color COLOR_LINE_REFINED = Color.Black;
-        public static readonly Color COLOR_LINE_PREDICT = Color.DarkGray;
-        public static readonly Color COLOR_OUTLIERS = Color.BlueViolet;
-        public static readonly Color COLOR_LINE_ALL = Color.BlueViolet;
 
         public static Color ColorSelected { get { return Color.Red; } }
 
@@ -75,31 +68,29 @@ namespace pwiz.Skyline.Controls
 
             int SelectedResultsIndex { get; set; }
 
-            void BuildRTGraphMenu(ContextMenuStrip menuStrip, bool showDelete, bool showDeleteOutliers);
+            void BuildAreaGraphMenu(ContextMenuStrip menuStrip);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
             public TreeNode SelectedNode { get { return null; } }
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set {} }
-            public void BuildRTGraphMenu(ContextMenuStrip menuStrip, bool show1, bool show2) { }
+            public void BuildAreaGraphMenu(ContextMenuStrip menuStrip) { }
             public int SelectedResultsIndex { get; set; }
         }
-
-        public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; }}
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
 
         private int _resultsIndex;
 
-        public GraphRetentionTime(IDocumentUIContainer documentUIContainer)
+        public GraphPeakArea(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
 
-            graphControl.MasterPane[0] = new RTLinearRegressionGraphPane
+            graphControl.MasterPane[0] = new AreaReplicateGraphPane
                                              {
-                                                 GraphRetentionTime = this
+                                                 GraphPeakArea = this
                                              };
             graphControl.MasterPane.Border.IsVisible = false;
 
@@ -118,41 +109,25 @@ namespace pwiz.Skyline.Controls
                 {
                     _resultsIndex = value;
 
-                    if (GraphPane is RTReplicateGraphPane || !Settings.Default.RTAverageReplicates)
+                    if (GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)
                         UpdateGraph();
                 }
             }
         }
 
-        public PeptideDocNode[] Outliers
-        {
-            get
-            {
-                return GraphPane.Outliers;
-            }
-        }
-
         public IDocumentUIContainer DocumentUIContainer { get { return _documentContainer; }}
-
-        public RetentionTimeRegression RegressionRefined
-        {
-            get
-            {
-                return GraphPane.RegressionRefined;
-            }
-        }
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
             UpdateGraph();
         }
 
-        private void GraphRetentionTime_VisibleChanged(object sender, EventArgs e)
+        private void GraphPeakArea_VisibleChanged(object sender, EventArgs e)
         {
             UpdateGraph();
         }
 
-        private void GraphRetentionTime_KeyDown(object sender, KeyEventArgs e)
+        private void GraphPeakArea_KeyDown(object sender, KeyEventArgs e)
         {
             if (GraphPane.HandleKeyDownEvent(sender, e))
                 return;
@@ -166,22 +141,20 @@ namespace pwiz.Skyline.Controls
                     if (e.Alt)
                         Hide();
                     break;
-                case Keys.F8:
+                case Keys.F7:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
-                        if (e.Shift)
-                            Settings.Default.RTGraphType = GraphTypeRT.regression.ToString();
-                        else if (e.Control)
-                            Settings.Default.RTGraphType = GraphTypeRT.schedule.ToString();
+                        if (e.Control)
+                            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
                         else
-                            Settings.Default.RTGraphType = GraphTypeRT.replicate.ToString();
+                            Settings.Default.AreaGraphType = GraphTypeArea.replicate.ToString();
                         UpdateGraph();
                     }
                     break;
             }
         }
 
-        internal RTGraphPane GraphPane { get { return graphControl.MasterPane[0] as RTGraphPane; } }
+        internal AreaGraphPane GraphPane { get { return graphControl.MasterPane[0] as AreaGraphPane; } }
 
         public void UpdateGraph()
         {
@@ -207,9 +180,7 @@ namespace pwiz.Skyline.Controls
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            bool showDelete = GraphPane.AllowDeletePoint(new PointF(mousePt.X, mousePt.Y));
-            bool showDeleteOutliers = GraphPane.HasOutliers;
-            _stateProvider.BuildRTGraphMenu(menuStrip, showDelete, showDeleteOutliers);
+            _stateProvider.BuildAreaGraphMenu(menuStrip);
         }
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -222,26 +193,20 @@ namespace pwiz.Skyline.Controls
             return GraphPane.HandleMouseDownEvent(sender, e);
         }
 
-
-
         public IStateProvider StateProvider { get { return _stateProvider; } }
 
-        public void SetGraphType(GraphTypeRT type)
+        public void SetGraphType(GraphTypeArea type)
         {
             switch (type)
             {
-                case GraphTypeRT.regression:
-                    if (!(GraphPane is RTLinearRegressionGraphPane))
-                        graphControl.MasterPane[0] = new RTLinearRegressionGraphPane { GraphRetentionTime = this };
+                case GraphTypeArea.replicate:
+                    if (!(GraphPane is AreaReplicateGraphPane))
+                        graphControl.MasterPane[0] = new AreaReplicateGraphPane { GraphPeakArea = this };
                     break;
-                case GraphTypeRT.replicate:
-                    if (!(GraphPane is RTReplicateGraphPane))
-                        graphControl.MasterPane[0] = new RTReplicateGraphPane { GraphRetentionTime = this };
-                    break;
-                case GraphTypeRT.schedule:
-                    if (!(GraphPane is RTScheduleGraphPane))
-                        graphControl.MasterPane[0] = new RTScheduleGraphPane { GraphRetentionTime = this };
-                    break;
+//                case GraphTypeArea.peptide:
+//                    if (!(GraphPane is AreaPeptideGraphPane))
+//                        graphControl.MasterPane[0] = new AreaPeptideGraphPane { GraphPeakArea = this };
+//                    break;
             }
 
             using (Graphics g = CreateGraphics())
@@ -259,7 +224,7 @@ namespace pwiz.Skyline.Controls
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
         }
 
-        private void GraphRetentionTime_Resize(object sender, EventArgs e)
+        private void GraphPeakArea_Resize(object sender, EventArgs e)
         {
             // Apparently on Windows 7, a resize event may occur during InitializeComponent
             if (GraphPane != null)

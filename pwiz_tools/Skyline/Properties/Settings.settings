@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Skyline.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="pwiz.Skyline.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="PeptideSettingsTab" Type="System.Int32" Scope="User">
@@ -226,6 +226,15 @@
     </Setting>
     <Setting Name="ShowRetentionTimesEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">all</Value>
+    </Setting>
+    <Setting Name="AreaGraphType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">replicate</Value>
+    </Setting>
+    <Setting Name="ShowPeakAreaGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AreaPercentView" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

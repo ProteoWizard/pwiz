@@ -1805,6 +1805,8 @@ namespace pwiz.Skyline
                 // Update the retention time graph if necessary.
                 if (_graphRetentionTime != null)
                     _graphRetentionTime.ResultsIndex = comboResults.SelectedIndex;
+                if (_graphPeakArea != null)
+                    _graphPeakArea.ResultsIndex = comboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null)
@@ -2035,7 +2037,6 @@ namespace pwiz.Skyline
         {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
         }
-
     }
 }
 

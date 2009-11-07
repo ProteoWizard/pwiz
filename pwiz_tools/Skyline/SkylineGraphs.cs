@@ -39,10 +39,12 @@ namespace pwiz.Skyline
     public partial class SkylineWindow :
         GraphSpectrum.IStateProvider,
         GraphChromatogram.IStateProvider,
-        GraphRetentionTime.IStateProvider
+        GraphRetentionTime.IStateProvider,
+        GraphPeakArea.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
         private GraphRetentionTime _graphRetentionTime;
+        private GraphPeakArea _graphPeakArea;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
 
@@ -371,9 +373,14 @@ namespace pwiz.Skyline
             if (ReferenceEquals(settingsNew, settingsOld))
             {
                 // Just about any change could potentially change the list
-                // or retention times.
-                if (_graphRetentionTime != null && settingsNew.HasResults)
-                    UpdateGraphPanes(new List<IGraphContainer> {_graphRetentionTime});
+                // or retention times or peak areas.
+                if (settingsNew.HasResults)
+                {
+                    // UpdateGraphPanes can handle null values in the list, but
+                    // only call it when at least one of the graphs is present.
+                    if (_graphRetentionTime != null || _graphPeakArea != null)
+                        UpdateGraphPanes(new List<IGraphContainer> {_graphRetentionTime, _graphPeakArea});
+                }
                 return;                
             }
 
@@ -410,6 +417,7 @@ namespace pwiz.Skyline
                     // deserialization has problems using existing windows.
                     DestroyGraphSpectrum();
                     DestroyGraphRetentionTime();
+                    DestroyGraphPeakArea();
                     foreach (GraphChromatogram graphChrom in _listGraphChrom)
                         DestroyGraphChrom(graphChrom);
                     _listGraphChrom.Clear();
@@ -442,6 +450,16 @@ namespace pwiz.Skyline
 
                     layoutLock.EnsureLocked();
                     ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
+                }
+                if (peakAreasMenuItem.Enabled != enable)
+                {
+                    peakAreasMenuItem.Enabled = enable;
+                    areaGraphMenuItem.Enabled = enable;
+                    areaReplicateComparisonMenuItem.Enabled = enable;
+                    areaPeptideComparisonMenuItem.Enabled = enable;
+
+                    layoutLock.EnsureLocked();
+                    ShowGraphPeakArea(enable && Settings.Default.ShowPeakAreaGraph);                    
                 }
 
                 if (!ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults))
@@ -548,9 +566,14 @@ namespace pwiz.Skyline
             } // layoutLock.Dispose()
 
             // Just about any change could potentially change the list
-            // or retention times.
-            if (_graphRetentionTime != null && settingsNew.HasResults)
-                listUpdateGraphs.Add(_graphRetentionTime);
+            // of retention times or peak areas.
+            if (settingsNew.HasResults)
+            {
+                if (_graphRetentionTime != null)
+                    listUpdateGraphs.Add(_graphRetentionTime);
+                if (_graphPeakArea != null)
+                    listUpdateGraphs.Add(_graphPeakArea);                
+            }
 
             UpdateGraphPanes(listUpdateGraphs);
         }
@@ -561,6 +584,8 @@ namespace pwiz.Skyline
                 return _graphSpectrum ?? CreateGraphSpectrum();
             else if (Equals(persistentString, typeof(GraphRetentionTime).ToString()))
                 return _graphRetentionTime ?? CreateGraphRetentionTime();
+            else if (Equals(persistentString, typeof(GraphPeakArea).ToString()))
+                return _graphPeakArea ?? CreateGraphPeakArea();
             else if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 string name = GraphChromatogram.GetTabText(persistentString);
@@ -593,6 +618,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_graphSpectrum);
             if (_graphRetentionTime != null && _graphRetentionTime.Visible)
                 listUpdateGraphs.Add(_graphRetentionTime);
+            if (_graphPeakArea != null && _graphPeakArea.Visible)
+                listUpdateGraphs.Add(_graphPeakArea);
 
             UpdateGraphPanes(listUpdateGraphs);
         }
@@ -618,6 +645,10 @@ namespace pwiz.Skyline
             int count = 0;
             if (listGraphPanes != null && listGraphPanes.Count > 0)
             {
+                // Allow nulls in the list
+                while (listGraphPanes[0] == null)
+                    listGraphPanes.RemoveAt(0);
+
                 listGraphPanes[0].UpdateGraph();
                 listGraphPanes.RemoveAt(0);
                 count = listGraphPanes.Count;
@@ -629,6 +660,8 @@ namespace pwiz.Skyline
                 _timerGraphs.Start();
             }
         }
+
+        #region Spectrum graph
 
         private void ShowGraphSpectrum(bool show)
         {
@@ -798,6 +831,10 @@ namespace pwiz.Skyline
                 case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
             }
         }
+
+        #endregion
+
+        #region Chromatogram graphs
 
         TreeNode GraphChromatogram.IStateProvider.SelectedNode
         {
@@ -1122,18 +1159,21 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.single.ToString();
             UpdateChromGraphs();
+            UpdatePeakAreaGraph();
         }
 
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.all.ToString();
             UpdateChromGraphs();
+            UpdatePeakAreaGraph();
         }
 
         private void totalTranMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.total.ToString();
             UpdateChromGraphs();
+            UpdatePeakAreaGraph();
         }
 
         private void transformChromMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -1450,6 +1490,10 @@ namespace pwiz.Skyline
                 graphChrom.UpdateGraph();
         }
 
+        #endregion
+
+        #region Retention time graph
+
         private void retentionTimesMenuItem_Click(object sender, EventArgs e)
         {
             ShowGraphRetentionTime(Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked);
@@ -1515,7 +1559,8 @@ namespace pwiz.Skyline
 
         private void graphRetentionTime_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked = _graphRetentionTime.Visible;
+            Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked =
+                (_graphRetentionTime != null && _graphRetentionTime.Visible);
             splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
@@ -1746,6 +1791,193 @@ namespace pwiz.Skyline
                 _graphRetentionTime.UpdateGraph();
         }
 
+        #endregion
+
+        #region Peak area graph
+
+        private void peakAreasMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowGraphPeakArea(Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked);
+        }
+
+        private void ShowGraphPeakArea(bool show)
+        {
+            if (show)
+            {
+                if (_graphPeakArea != null)
+                {
+                    _graphPeakArea.Show();
+                }
+                else
+                {
+                    _graphPeakArea = CreateGraphPeakArea();
+
+                    // Choose a position to float the window
+                    var rectFloat = dockPanel.Bounds;
+                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
+                    rectFloat.X += rectFloat.Width / 4;
+                    rectFloat.Y += rectFloat.Height / 3;
+                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
+                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
+                    // Make sure it is on the screen.
+                    var screen = Screen.FromControl(dockPanel);
+                    var rectScreen = screen.WorkingArea;
+                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+
+                    _graphPeakArea.Show(dockPanel, rectFloat);
+                }
+            }
+            else if (_graphPeakArea != null)
+            {
+                // Save current setting for showing spectra
+                show = Settings.Default.ShowPeakAreaGraph;
+                // Close the spectrum graph window
+                _graphPeakArea.Hide();
+                // Restore setting and menuitem from saved value
+                Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked = show;
+            }
+        }
+
+        private GraphPeakArea CreateGraphPeakArea()
+        {
+            _graphPeakArea = new GraphPeakArea(this);
+            _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
+            _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
+            return _graphPeakArea;
+        }
+
+        private void DestroyGraphPeakArea()
+        {
+            if (_graphPeakArea != null)
+            {
+                _graphPeakArea.FormClosed -= graphPeakArea_FormClosed;
+                _graphPeakArea.VisibleChanged -= graphPeakArea_VisibleChanged;
+                _graphPeakArea.Close();
+                _graphPeakArea = null;
+            }
+        }
+
+        private void graphPeakArea_VisibleChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked =
+                (_graphPeakArea != null && _graphPeakArea.Visible);
+            splitMain.Panel2Collapsed = !VisibleDockContent;
+        }
+
+        private void graphPeakArea_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Update settings and menu check
+            Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked = false;
+
+            // Hide the dock panel, if this is its last graph pane.
+            if (dockPanel.Contents.Count == 0 ||
+                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _graphPeakArea))
+                splitMain.Panel2Collapsed = true;
+            _graphPeakArea = null;
+        }
+
+        TreeNode GraphPeakArea.IStateProvider.SelectedNode
+        {
+            get { return sequenceTree.SelectedNode; }
+        }
+
+        IdentityPath GraphPeakArea.IStateProvider.SelectedPath
+        {
+            get { return sequenceTree.SelectedPath; }
+            set { sequenceTree.SelectedPath = value; }
+        }
+
+        void GraphPeakArea.IStateProvider.BuildAreaGraphMenu(ContextMenuStrip menuStrip)
+        {
+            // Store original menuitems in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == "unzoom")
+                    iUnzoom = i;
+            }
+
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25); // TODO: Use another separator?
+
+            // Insert skyline specific menus
+            var set = Settings.Default;
+            int iInsert = 0;
+            menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
+
+            GraphTypeArea graphType = GraphPeakArea.GraphType;
+            if (graphType == GraphTypeArea.replicate)
+            {
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
+                menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
+                // Sometimes child menuitems are stripped from the parent
+                if (transitionsContextMenuItem.DropDownItems.Count == 0)
+                {
+                    transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                    {
+                        singleTranContextMenuItem,
+                        allTranContextMenuItem,
+                        totalTranContextMenuItem
+                    });
+                }
+                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);                
+            }
+
+            menuStrip.Items.Insert(iInsert, toolStripSeparator24);
+
+            // Remove some ZedGraph menu items not of interest
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                string tag = (string)item.Tag;
+                if (tag == "set_default" || tag == "show_val")
+                    menuStrip.Items.Remove(item);
+            }
+        }
+
+        private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            GraphTypeArea graphType = GraphPeakArea.GraphType;
+            areaReplicateComparisonMenuItem.Checked = areaReplicateComparisonContextMenuItem.Checked =
+                (graphType == GraphTypeArea.replicate);
+            areaPeptideComparisonMenuItem.Checked = areaPeptideComparisonContextMenuItem.Checked =
+                (graphType == GraphTypeArea.peptide);
+        }
+
+        private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaGraphType = GraphTypeArea.replicate.ToString();
+            ShowGraphPeakArea(true);
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
+            ShowGraphPeakArea(true);
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaPercentView = areaPercentViewContextMenuItem.Checked;
+            UpdatePeakAreaGraph();
+        }
+
+        private void UpdatePeakAreaGraph()
+        {
+            if (_graphPeakArea != null)
+                _graphPeakArea.UpdateGraph();
+        }
+
+        #endregion
+
+        #region Graph layout
+
         private const double MAX_TILED_ASPECT_RATIO = 2;
 
         private void arrangeTiledMenuItem_Click(object sender, EventArgs e)
@@ -1957,5 +2189,7 @@ namespace pwiz.Skyline
             }
             return listGraphs;
         }
+
+        #endregion
     }
 }

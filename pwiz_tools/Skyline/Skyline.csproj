@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1388</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1388</ApplicationVersion>
+    <ApplicationRevision>1479</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1479</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -161,6 +161,14 @@
     </Compile>
     <Compile Include="Alerts\PasteTypeDlg.Designer.cs">
       <DependentUpon>PasteTypeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\AreaGraphPane.cs" />
+    <Compile Include="Controls\AreaReplicateGraphPane.cs" />
+    <Compile Include="Controls\GraphPeakArea.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GraphPeakArea.Designer.cs">
+      <DependentUpon>GraphPeakArea.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\DataGridViewEx.cs">
       <SubType>Component</SubType>
@@ -716,6 +724,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GraphPeakArea.resx">
+      <DependentUpon>GraphPeakArea.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GraphChromatogram.resx">

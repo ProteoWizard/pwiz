@@ -1742,11 +1742,6 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    // If time deltas are sufficiently evenly spaced, then no further processing
-                    // is necessary.
-                    if (!foundVariation)
-                        return;
-
                     // Handle a bug where the ProteoWizard Reader_Thermo returns chromatograms
                     // with alternating zero intensity scans with real data
                     if (ThermoZerosFix())
@@ -1754,6 +1749,11 @@ namespace pwiz.Skyline.Model.Results
                         EvenlySpaceTimes();
                         return;
                     }
+
+                    // If time deltas are sufficiently evenly spaced, then no further processing
+                    // is necessary.
+                    if (!foundVariation)
+                        return;
 
                     // Interpolate the existing points onto time intervals evently spaced
                     // by the minimum interval observed in the measuered data.
