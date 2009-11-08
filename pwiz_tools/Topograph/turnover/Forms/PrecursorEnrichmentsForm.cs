@@ -41,8 +41,9 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
             barGraphControl = new ZedGraphControl
                                   {
-                                      Dock = DockStyle.Fill
+                                      Dock = DockStyle.Fill,
                                   };
+            barGraphControl.GraphPane.Title.Text = null;
             splitContainer1.Panel2.Controls.Add(barGraphControl);
 
             tbxIntermediateLevelCount.Leave +=

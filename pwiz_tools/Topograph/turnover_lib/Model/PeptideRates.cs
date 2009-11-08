@@ -146,7 +146,7 @@ namespace pwiz.Topograph.Model
             {
                 if (!String.IsNullOrEmpty(peptideRate.Cohort))
                 {
-                    result.Add(peptideRate.Cohort, peptideRate.Cohort);
+                    result[peptideRate.Cohort] = peptideRate.Cohort;
                 }
             }
             return result;

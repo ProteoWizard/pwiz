@@ -77,7 +77,7 @@ namespace pwiz.Topograph.ui.Forms
                 predictedBarPoints.Add(mass + 1.0 / 3, 0);
             }
             barGraphControl.GraphPane.XAxis.Title.Text = "Mass";
-            barGraphControl.GraphPane.YAxis.Title.Text = "Intensity";
+            barGraphControl.GraphPane.YAxis.Title.Text = "Fractional Abundance";
             barGraphControl.GraphPane.BarSettings.Type = BarType.Overlay;
             barGraphControl.GraphPane.AddBar("Observed Peptide", actualBarPoints, Color.Black);
             barGraphControl.GraphPane.AddBar(null, excludedBarPoints, Color.White);
