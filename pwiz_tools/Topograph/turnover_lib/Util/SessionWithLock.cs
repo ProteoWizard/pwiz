@@ -29,19 +29,14 @@ using NHibernate.Engine;
 using NHibernate.Stat;
 using NHibernate.Type;
 
+#pragma warning disable 612,618
 namespace pwiz.Topograph.Util
 {
-    public enum SessionLockType
-    {
-        unlocked,
-        normal,
-        write
-    }
     public class SessionWithLock : AutoLock, ISession
     {
         static readonly ILog _log = LogManager.GetLogger(typeof (SessionWithLock));
         ISession _session;
-        public SessionWithLock(ISession session, ReaderWriterLockSlim readerWriterLock, SessionLockType lockType) : base(readerWriterLock, lockType == SessionLockType.write)
+        public SessionWithLock(ISession session, ReaderWriterLockSlim readerWriterLock, bool writeLock) : base(readerWriterLock, writeLock)
         {
             _session = session;
         }

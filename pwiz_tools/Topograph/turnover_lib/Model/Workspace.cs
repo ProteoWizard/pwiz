@@ -83,17 +83,13 @@ namespace pwiz.Topograph.Model
         public MsDataFiles MsDataFiles { get; private set; }
         public Peptides Peptides { get; private set; }
         public String DatabasePath { get; private set; }
-        public ISession OpenSessionWithoutLock()
-        {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, SessionLockType.unlocked);
-        }
         public ISession OpenSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, SessionLockType.normal);
+            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
         }
         public ISession OpenWriteSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, SessionLockType.write);
+            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
         }
         public ISessionFactory SessionFactory
         {

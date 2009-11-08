@@ -154,7 +154,7 @@ namespace pwiz.Topograph.MsData
                         {
                             if (workspaceVersion.MassVersion == _workspace.SavedWorkspaceVersion.MassVersion)
                             {
-                                using (var session = _workspace.OpenSessionWithoutLock())
+                                using (var session = _workspace.OpenSession())
                                 {
                                     var criteria = session.CreateCriteria(typeof (DbPeptideFileAnalysis))
                                         .Add(Restrictions.Eq("ChromatogramCount", 0));

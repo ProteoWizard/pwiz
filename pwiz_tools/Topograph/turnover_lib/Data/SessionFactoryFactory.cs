@@ -33,7 +33,7 @@ namespace pwiz.Topograph.Data
         public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
         {
             Configuration configuration = new Configuration()
-                //.SetProperty("show_sql", "true")
+                .SetProperty("show_sql", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
                     {

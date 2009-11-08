@@ -61,6 +61,10 @@ namespace pwiz.Topograph.ui.Forms
                 _statusText = "Reading FASTA file";
                 fastaImporter.ReadFasta(File.OpenText(FastaFilePath));
                 fastaImporter.Update(Workspace, UpdateProgress);
+                if (!IsDisposed)
+                {
+                    BeginInvoke(new Action(Close));
+                }
             }
             finally
             {
