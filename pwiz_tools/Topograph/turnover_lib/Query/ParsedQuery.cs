@@ -58,8 +58,8 @@ namespace pwiz.Topograph.Query
         private const string patColumn = @"[^',]*('(''|[^'])*')*[^',]*";
         private const string patAlias = @"(.*[^\w])AS\s+([\w]+)\s*";
 
-        private static readonly Regex regexSelect = new Regex(
-            @"\s*SELECT\s+(" + patColumn + "(," + patColumn + @")*)\s*(FROM\s+(\w+(\.\w+)*)\s+(\w*))", RegexOptions.IgnoreCase);
+        private static readonly Regex regexFrom = new Regex(@"\W(FROM)\W", RegexOptions.IgnoreCase);
+        private static readonly Regex regexTableAlias = new Regex(@"(\w+(\.\w+)*)\s+(\w+)");
         private static readonly Regex regexColumn = new Regex(patColumn, RegexOptions.IgnoreCase);
         private static readonly Regex regexAlias = new Regex(patAlias, RegexOptions.IgnoreCase);
         private void Parse(String hql)
@@ -67,15 +67,27 @@ namespace pwiz.Topograph.Query
             Columns = new List<SelectColumn>();
             TableName = null;
             TableAlias = null;
-            var matchSelect = regexSelect.Match(hql);
-            if (!matchSelect.Success)
+            var matchFrom = regexFrom.Match(hql);
+            if (!matchFrom.Success)
             {
                 return;
             }
-            String strColumns = matchSelect.Groups[1].ToString();
-            TableName = matchSelect.Groups[8].ToString();
-            TableAlias = matchSelect.Groups[10].ToString();
-            From = hql.Substring(matchSelect.Groups[7].Index);
+            String strColumns = hql.Substring(0, matchFrom.Groups[1].Index);
+            strColumns = strColumns.Trim();
+            if (!strColumns.ToLower().StartsWith("select"))
+            {
+                return;
+            }
+            strColumns = strColumns.Substring(6);
+            From = hql.Substring(matchFrom.Groups[1].Index);
+            var matchTableName = regexTableAlias.Match(From.Substring(4));
+            if (!matchTableName.Success)
+            {
+                return;
+            }
+            
+            TableName = matchTableName.Groups[1].ToString();
+            TableAlias = matchTableName.Groups[3].ToString();
             Match match;
             while ((match = regexColumn.Match(strColumns)).Success)
             {
