@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var children = ((DocNodeParent) selectedNode).Children;
                 if (children.Count == 1 && displayType != DisplayTypeChrom.total)
                 {
-                    parentNode = children[0];
+                    selectedNode = parentNode = children[0];
                     identityPath = new IdentityPath(identityPath, parentNode.Id);
                 }
                 else
