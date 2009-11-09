@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -40,14 +41,21 @@ namespace pwiz.Skyline
     public partial class SkylineWindow :
         GraphSpectrum.IStateProvider,
         GraphChromatogram.IStateProvider,
-        GraphRetentionTime.IStateProvider,
-        GraphPeakArea.IStateProvider
+        GraphSummary.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
-        private GraphRetentionTime _graphRetentionTime;
-        private GraphPeakArea _graphPeakArea;
+        private GraphSummary _graphRetentionTime;
+        private GraphSummary _graphPeakArea;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
+
+        private RTGraphController RTGraphController
+        {
+            get
+            {
+                return (_graphRetentionTime != null ? (RTGraphController) _graphRetentionTime.Controller : null);
+            }
+        }
 
         private bool VisibleDockContent
         {
@@ -582,11 +590,21 @@ namespace pwiz.Skyline
         private IDockableForm DeserializeForm(string persistentString)
         {
             if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
-                return _graphSpectrum ?? CreateGraphSpectrum();
-            else if (Equals(persistentString, typeof(GraphRetentionTime).ToString()))
-                return _graphRetentionTime ?? CreateGraphRetentionTime();
-            else if (Equals(persistentString, typeof(GraphPeakArea).ToString()))
-                return _graphPeakArea ?? CreateGraphPeakArea();
+            {
+                return _graphSpectrum ?? CreateGraphSpectrum();                
+            }
+            else if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Backward compatibility
+                    (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
+                    persistentString.EndsWith(typeof(RTGraphController).Name)))
+            {
+                return _graphRetentionTime ?? CreateGraphRetentionTime();                
+            }
+            else if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") ||  // Backward compatibility
+                    (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
+                    persistentString.EndsWith(typeof(AreaGraphController).Name)))
+            {
+                return _graphPeakArea ?? CreateGraphPeakArea();                
+            }
             else if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 string name = GraphChromatogram.GetTabText(persistentString);
@@ -1160,6 +1178,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.single.ToString();
             UpdateChromGraphs();
+            UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
         }
 
@@ -1167,6 +1186,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.all.ToString();
             UpdateChromGraphs();
+            UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
         }
 
@@ -1174,6 +1194,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.total.ToString();
             UpdateChromGraphs();
+            UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
         }
 
@@ -1539,9 +1560,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private GraphRetentionTime CreateGraphRetentionTime()
+        private GraphSummary CreateGraphRetentionTime()
         {
-            _graphRetentionTime = new GraphRetentionTime(this);
+            _graphRetentionTime = new GraphSummary(this, new RTGraphController()) {TabText = "Retention Times"};
             _graphRetentionTime.FormClosed += graphRetentinTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
             return _graphRetentionTime;
@@ -1577,15 +1598,24 @@ namespace pwiz.Skyline
             _graphRetentionTime = null;
         }
 
-        TreeNode GraphRetentionTime.IStateProvider.SelectedNode
+        TreeNode GraphSummary.IStateProvider.SelectedNode
         {
             get { return sequenceTree.SelectedNode; }
         }
 
-        IdentityPath GraphRetentionTime.IStateProvider.SelectedPath
+        IdentityPath GraphSummary.IStateProvider.SelectedPath
         {
             get { return sequenceTree.SelectedPath; }
             set { sequenceTree.SelectedPath = value; }
+        }
+
+        void GraphSummary.IStateProvider.BuildGraphMenu(ContextMenuStrip menuStrip, Point mousePt,
+            GraphSummary.IController controller)
+        {
+            if (controller is RTGraphController)
+                BuildRTGraphMenu(menuStrip, mousePt, (RTGraphController) controller);
+            else if (controller is AreaGraphController)
+                BuildAreaGraphMenu(menuStrip);
         }
 
         public int SelectedResultsIndex
@@ -1603,8 +1633,8 @@ namespace pwiz.Skyline
             }
         }
 
-        void GraphRetentionTime.IStateProvider.BuildRTGraphMenu(ContextMenuStrip menuStrip,
-            bool showDelete, bool showDeleteOutliers)
+        private void BuildRTGraphMenu(ToolStrip menuStrip, Point mousePt,
+            RTGraphController controller)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1625,7 +1655,7 @@ namespace pwiz.Skyline
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
 
-            GraphTypeRT graphType = GraphRetentionTime.GraphType;
+            GraphTypeRT graphType = RTGraphController.GraphType;
             if (graphType == GraphTypeRT.regression)
             {
                 refineRTContextMenuItem.Checked = set.RTRefinePeptides;
@@ -1641,6 +1671,8 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
                 menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
+                bool showDelete = controller.ShowDelete(mousePt);
+                bool showDeleteOutliers = controller.ShowDeleteOutliers;
                 if (showDelete || showDeleteOutliers)
                 {
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator23);
@@ -1680,7 +1712,7 @@ namespace pwiz.Skyline
 
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            GraphTypeRT graphType = GraphRetentionTime.GraphType;
+            GraphTypeRT graphType = RTGraphController.GraphType;
             linearRegressionMenuItem.Checked = linearRegressionContextMenuItem.Checked =
                 (graphType == GraphTypeRT.regression);
             replicateComparisonMenuItem.Checked =  replicateComparisonContextMenuItem.Checked =
@@ -1744,7 +1776,7 @@ namespace pwiz.Skyline
                 return;
 
             var listRegression = Settings.Default.RetentionTimeList;
-            var regression = _graphRetentionTime.RegressionRefined;
+            var regression = RTGraphController.RegressionRefined;
             string name = Path.GetFileNameWithoutExtension(DocumentFilePath);
             if (listRegression.ContainsKey(name))
             {
@@ -1772,7 +1804,7 @@ namespace pwiz.Skyline
             if (_graphRetentionTime == null)
                 return;
 
-            var outliers = _graphRetentionTime.Outliers;
+            var outliers = RTGraphController.Outliers;
             var outlierIds = new HashSet<int>();
             foreach (var outlier in outliers)
                 outlierIds.Add(outlier.Id.GlobalIndex);
@@ -1840,9 +1872,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private GraphPeakArea CreateGraphPeakArea()
+        private GraphSummary CreateGraphPeakArea()
         {
-            _graphPeakArea = new GraphPeakArea(this);
+            _graphPeakArea = new GraphSummary(this, new AreaGraphController()) {TabText = "Peak Areas"};
             _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
             _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
             return _graphPeakArea;
@@ -1878,18 +1910,7 @@ namespace pwiz.Skyline
             _graphPeakArea = null;
         }
 
-        TreeNode GraphPeakArea.IStateProvider.SelectedNode
-        {
-            get { return sequenceTree.SelectedNode; }
-        }
-
-        IdentityPath GraphPeakArea.IStateProvider.SelectedPath
-        {
-            get { return sequenceTree.SelectedPath; }
-            set { sequenceTree.SelectedPath = value; }
-        }
-
-        void GraphPeakArea.IStateProvider.BuildAreaGraphMenu(ContextMenuStrip menuStrip)
+        private void BuildAreaGraphMenu(ToolStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1910,7 +1931,7 @@ namespace pwiz.Skyline
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
 
-            GraphTypeArea graphType = GraphPeakArea.GraphType;
+            GraphTypeArea graphType = AreaGraphController.GraphType;
             if (graphType == GraphTypeArea.replicate)
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
@@ -1942,7 +1963,7 @@ namespace pwiz.Skyline
 
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            GraphTypeArea graphType = GraphPeakArea.GraphType;
+            GraphTypeArea graphType = AreaGraphController.GraphType;
             areaReplicateComparisonMenuItem.Checked = areaReplicateComparisonContextMenuItem.Checked =
                 (graphType == GraphTypeArea.replicate);
             areaPeptideComparisonMenuItem.Checked = areaPeptideComparisonContextMenuItem.Checked =
@@ -1958,9 +1979,11 @@ namespace pwiz.Skyline
 
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
-            ShowGraphPeakArea(true);
-            UpdatePeakAreaGraph();
+            MessageBox.Show("Not yet implemented");
+
+//            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
+//            ShowGraphPeakArea(true);
+//            UpdatePeakAreaGraph();
         }
 
         private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)

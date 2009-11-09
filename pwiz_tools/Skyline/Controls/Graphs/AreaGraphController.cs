@@ -1,0 +1,77 @@
+﻿using System;
+using System.Windows.Forms;
+using pwiz.Skyline.Properties;
+
+namespace pwiz.Skyline.Controls.Graphs
+{
+    public enum GraphTypeArea { replicate, peptide }
+
+    public sealed class AreaGraphController : GraphSummary.IController
+    {
+        public static GraphTypeArea GraphType
+        {
+            get
+            {
+                try
+                {
+                    return (GraphTypeArea)Enum.Parse(typeof(GraphTypeArea),
+                                                   Settings.Default.AreaGraphType);
+                }
+                catch (Exception)
+                {
+                    return GraphTypeArea.replicate;
+                }
+            }
+
+            set
+            {
+                Settings.Default.AreaGraphType = value.ToString();
+            }
+        }
+
+        public GraphSummary GraphSummary { get; set; }
+
+        public void OnResultsIndexChanged()
+        {
+            if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)
+                GraphSummary.UpdateGraph();
+        }
+
+        public void OnUpdateGraph()
+        {
+            switch (GraphType)
+            {
+                case GraphTypeArea.replicate:
+                    if (!(GraphSummary.GraphPane is AreaReplicateGraphPane))
+                        GraphSummary.GraphPane = new AreaReplicateGraphPane(GraphSummary);
+                    break;
+//                case GraphTypeArea.peptide:
+//                    if (!(GraphPane is AreaPeptideGraphPane))
+//                        graphControl.MasterPane[0] = new AreaPeptideGraphPane { GraphPeakArea = this };
+//                    break;
+            }
+        }
+
+        public bool HandleKeyDownEvent(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.D3:
+                    if (e.Alt)
+                        GraphSummary.Hide();
+                    break;
+                case Keys.F7:
+                    if (!e.Alt && !(e.Shift && e.Control))
+                    {
+                        if (e.Control)
+                            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
+                        else
+                            Settings.Default.AreaGraphType = GraphTypeArea.replicate.ToString();
+                        GraphSummary.UpdateGraph();
+                    }
+                    break;
+            }
+            return false;
+        }
+    }
+}

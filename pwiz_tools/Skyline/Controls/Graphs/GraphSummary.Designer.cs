@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Controls.Graphs
 {
-    partial class GraphRetentionTime
+    partial class GraphSummary
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphRetentionTime));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSummary));
             this.graphControl = new ZedGraph.ZedGraphControl();
             this.SuspendLayout();
             // 
@@ -53,7 +53,7 @@
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
-            // GraphRetentionTime
+            // GraphSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -64,13 +64,12 @@
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "GraphRetentionTime";
+            this.Name = "GraphSummary";
             this.ShowInTaskbar = false;
-            this.TabText = "Retention Times";
-            this.Text = "GraphRetentionTime";
-            this.VisibleChanged += new System.EventHandler(this.GraphRetentionTime_VisibleChanged);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphRetentionTime_KeyDown);
-            this.Resize += new System.EventHandler(this.GraphRetentionTime_Resize);
+            this.Text = "GraphSummary";
+            this.VisibleChanged += new System.EventHandler(this.GraphSummary_VisibleChanged);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSummary_KeyDown);
+            this.Resize += new System.EventHandler(this.GraphSummary_Resize);
             this.ResumeLayout(false);
 
         }

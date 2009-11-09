@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
@@ -16,10 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -27,10 +24,12 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Base class for GraphPanes that are shown on the RetentionTime graph
     /// </summary>
-    internal abstract class RTGraphPane : GraphPane
+    internal abstract class SummaryGraphPane : GraphPane
     {
-        protected RTGraphPane()
+        protected SummaryGraphPane(GraphSummary graphSummary)
         {
+            GraphSummary = graphSummary;
+
             Border.IsVisible = false;
             Title.IsVisible = true;
 
@@ -46,11 +45,9 @@ namespace pwiz.Skyline.Controls.Graphs
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
         }
-        /// <summary>
-        /// The retention time graph that owns this graph pane.  Gets set 
-        /// shortly after construction.
-        /// </summary>
-        public virtual GraphRetentionTime GraphRetentionTime { get; set; }
+
+        public GraphSummary GraphSummary { get; private set; }
+
         /// <summary>
         /// Update the graph pane.
         /// </summary>
@@ -70,35 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
         public virtual void HandleResizeEvent()
-        {
-            
-        }
-
-        // TODO(nicksh) the following methods are very specific to 
-        // RTLinearRegressionGraphPane and should probably be moved
-        // down into that class.
-        public virtual bool AllowDeletePoint(PointF point)
-        {
-            return false;
-        }
-        public virtual PeptideDocNode[] Outliers { 
-            get
-            {
-                return null;
-            }
-        }
-        public virtual RetentionTimeRegression RegressionRefined
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public virtual bool HasOutliers { 
-            get
-            {
-                return false;
-            } 
+        {            
         }
     }
 }

@@ -26,7 +26,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class RTScheduleGraphPane : RTGraphPane
+    internal class RTScheduleGraphPane : SummaryGraphPane
     {
         private static readonly Color[] COLORS_WINDOW = GraphChromatogram.COLORS_LIBRARY;
 
@@ -46,7 +46,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public RTScheduleGraphPane()
+        public RTScheduleGraphPane(GraphSummary graphSummary)
+            : base(graphSummary)
         {
             XAxis.Title.Text = "Scheduled Time";
             YAxis.Title.Text = "Transitions";
@@ -56,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool checkData)
         {
-            SrmDocument document = GraphRetentionTime.DocumentUIContainer.DocumentUI;
+            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
 
             CurveList.Clear();
 

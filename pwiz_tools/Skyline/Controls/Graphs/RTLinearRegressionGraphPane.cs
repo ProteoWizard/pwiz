@@ -29,11 +29,18 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal sealed class RTLinearRegressionGraphPane : RTGraphPane
+    internal sealed class RTLinearRegressionGraphPane : SummaryGraphPane
     {
+        public static readonly Color COLOR_REFINED = Color.DarkBlue;
+        public static readonly Color COLOR_LINE_REFINED = Color.Black;
+        public static readonly Color COLOR_LINE_PREDICT = Color.DarkGray;
+        public static readonly Color COLOR_OUTLIERS = Color.BlueViolet;
+        public static readonly Color COLOR_LINE_ALL = Color.BlueViolet;
+
         private GraphData _data;
 
-        public RTLinearRegressionGraphPane()
+        public RTLinearRegressionGraphPane(GraphSummary graphSummary)
+            : base(graphSummary)
         {
             XAxis.Title.Text = "Score";
             YAxis.Title.Text = "Measured Time";
@@ -44,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (PeptideIndexFromPoint(new PointF(e.X, e.Y)) != null)
             {
-                GraphRetentionTime.Cursor = Cursors.Hand;
+                GraphSummary.Cursor = Cursors.Hand;
                 return true;
             }
             return false;
@@ -55,15 +62,15 @@ namespace pwiz.Skyline.Controls.Graphs
             var peptideIndex = PeptideIndexFromPoint(new PointF(e.X, e.Y));
             if (peptideIndex != null)
             {
-                var pathSelect = GraphRetentionTime.DocumentUIContainer.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides,
+                var pathSelect = GraphSummary.DocumentUIContainer.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides,
                                                                                              peptideIndex.IndexDoc);
-                GraphRetentionTime.StateProvider.SelectedPath = pathSelect;
+                GraphSummary.StateProvider.SelectedPath = pathSelect;
                 return true;
             }
             return false;
         }
 
-        public override bool AllowDeletePoint(PointF point)
+        public bool AllowDeletePoint(PointF point)
         {
             return PeptideIndexFromPoint(point) != null;
         }
@@ -80,7 +87,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override PeptideDocNode[] Outliers
+        public PeptideDocNode[] Outliers
         {
             get { 
                 GraphData data = Data;
@@ -88,7 +95,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override RetentionTimeRegression RegressionRefined
+        public RetentionTimeRegression RegressionRefined
         {
             get { 
                 GraphData data = Data;
@@ -150,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return ReferenceEquals(dataPrevious, dataCurrent);
         }
 
-        public override bool HasOutliers
+        public bool HasOutliers
         {
             get
             {
@@ -195,9 +202,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool checkData)
         {
-            SrmDocument document = GraphRetentionTime.DocumentUIContainer.DocumentUI;
+            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             PeptideDocNode nodeSelected = null;
-            int resultIndex = (Settings.Default.RTAverageReplicates ? -1 : GraphRetentionTime.ResultsIndex);
+            int resultIndex = (Settings.Default.RTAverageReplicates ? -1 : GraphSummary.ResultsIndex);
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
             if (resultsAvailable)
@@ -215,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                var nodeTree = GraphRetentionTime.StateProvider.SelectedNode as SrmTreeNode;
+                var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
                 var nodePeptide = nodeTree as PeptideTreeNode;
                 while (nodePeptide == null && nodeTree != null)
                 {
@@ -227,7 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (checkData)
                 {
-                    double threshold = GraphRetentionTime.OutThreshold;
+                    double threshold = RTGraphController.OutThreshold;
                     bool refine = Settings.Default.RTRefinePeptides;
 
                     if (!IsValidFor(document, resultIndex, threshold, refine))
@@ -246,7 +253,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             AxisChange();
-            GraphRetentionTime.Invalidate();
+            GraphSummary.Invalidate();
         }
 
         /// <summary>
@@ -257,11 +264,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             try
             {
-                if (Refine(() => !IsValidFor(GraphRetentionTime.DocumentUIContainer.Document)))
+                if (Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document)))
                 {
                     // Update the graph on the UI thread.
                     Action<bool> update = UpdateGraph;
-                    GraphRetentionTime.BeginInvoke(update, false);
+                    GraphSummary.BeginInvoke(update, false);
                 }
             }
             catch (OperationCanceledException)
@@ -508,7 +515,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 double scoreSelected, timeSelected;
                 if (PointFromPeptide(nodeSelected, out scoreSelected, out timeSelected))
                 {
-                    Color colorSelected = GraphRetentionTime.ColorSelected;
+                    Color colorSelected = GraphSummary.ColorSelected;
                     var curveOut = graphPane.AddCurve(null, new[] { scoreSelected }, new[] { timeSelected },
                                                       colorSelected, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
@@ -519,25 +526,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 string labelPoints = "Peptides";
                 if (!_refine)
                 {
-                    GraphRegression(graphPane, _statisticsAll, "Regression", GraphRetentionTime.COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, "Regression", COLOR_LINE_REFINED);
                 }
                 else
                 {
                     labelPoints = "Peptides Refined";
-                    GraphRegression(graphPane, _statisticsRefined, "Regression Refined", GraphRetentionTime.COLOR_LINE_REFINED);
-                    GraphRegression(graphPane, _statisticsAll, "Regression", GraphRetentionTime.COLOR_LINE_ALL);
+                    GraphRegression(graphPane, _statisticsRefined, "Regression Refined", COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, "Regression", COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
-                    GraphRegression(graphPane, _statisticsPredict, "Predictor", GraphRetentionTime.COLOR_LINE_PREDICT);
+                    GraphRegression(graphPane, _statisticsPredict, "Predictor", COLOR_LINE_PREDICT);
                 }
 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
                                                Color.Black, SymbolType.Diamond);
                 curve.Line.IsVisible = false;
                 curve.Symbol.Border.IsVisible = false;
-                curve.Symbol.Fill = new Fill(GraphRetentionTime.COLOR_REFINED);
+                curve.Symbol.Fill = new Fill(COLOR_REFINED);
 
                 if (_scoresOutliers != null)
                 {
@@ -545,7 +552,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                       Color.Black, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
                     curveOut.Symbol.Border.IsVisible = false;
-                    curveOut.Symbol.Fill = new Fill(GraphRetentionTime.COLOR_OUTLIERS);
+                    curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
                 }
             }
 
@@ -603,22 +610,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!_refine)
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                                                _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_REFINED);
+                                                _regressionAll, _statisticsAll, COLOR_LINE_REFINED);
                 }
                 else
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                                                _regressionRefined, _statisticsRefined, GraphRetentionTime.COLOR_LINE_REFINED);
+                                                _regressionRefined, _statisticsRefined, COLOR_LINE_REFINED);
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                                                _regressionAll, _statisticsAll, GraphRetentionTime.COLOR_LINE_ALL);
+                                                _regressionAll, _statisticsAll, COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
-                                       _regressionPredict, _statisticsPredict, GraphRetentionTime.COLOR_LINE_PREDICT);
+                                       _regressionPredict, _statisticsPredict, COLOR_LINE_PREDICT);
                 }
             }
 
@@ -648,7 +655,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                    {
                                        IsClippedToChartRect = true,
                                        ZOrder = ZOrder.E_BehindCurves,
-                                       FontSpec = GraphRetentionTime.CreateFontSpec(color),
+                                       FontSpec = GraphSummary.CreateFontSpec(color),
                                    };
                 graphPane.GraphObjList.Add(text);
 
