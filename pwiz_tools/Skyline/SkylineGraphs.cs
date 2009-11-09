@@ -665,11 +665,14 @@ namespace pwiz.Skyline
             if (listGraphPanes != null && listGraphPanes.Count > 0)
             {
                 // Allow nulls in the list
-                while (listGraphPanes[0] == null)
+                while (listGraphPanes.Count > 0 && listGraphPanes[0] == null)
                     listGraphPanes.RemoveAt(0);
 
-                listGraphPanes[0].UpdateGraph();
-                listGraphPanes.RemoveAt(0);
+                if (listGraphPanes.Count > 0)
+                {
+                    listGraphPanes[0].UpdateGraph();
+                    listGraphPanes.RemoveAt(0);                    
+                }
                 count = listGraphPanes.Count;
             }
             if (count != 0)
