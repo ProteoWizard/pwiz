@@ -122,9 +122,12 @@ namespace pwiz.Topograph.MsData
             {
                 return null;
             }
-            using (var session = _workspace.OpenSession())
+            using (_workspace.GetReadLock())
             {
-                return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
+                using (var session = _workspace.OpenSession())
+                {
+                    return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
+                }
             }
         }
         

@@ -149,26 +149,29 @@ namespace pwiz.Topograph.ui.Forms
                         }
                     }
                 }
-                using (var session = Workspace.OpenWriteSession())
+                using (Workspace.GetReadLock())
                 {
-                    var dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(peptideAnalysis.Id);
-                    session.BeginTransaction();
-                    foreach (var peptideSearchResult in searchResults)
+                    using (var session = Workspace.OpenWriteSession())
                     {
-                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
-                        if (!msDataFile.HasTimes())
+                        var dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(peptideAnalysis.Id);
+                        session.BeginTransaction();
+                        foreach (var peptideSearchResult in searchResults)
                         {
-                            continue;
+                            var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
+                            if (!msDataFile.HasTimes())
+                            {
+                                continue;
+                            }
+                            var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile,
+                                                                                                      dbPeptideAnalysis,
+                                                                                                      peptideSearchResult);
+                            dbPeptideAnalysis.FileAnalysisCount++;
+                            session.Save(dbPeptideFileAnalysis);
+                            newFileAnalyses.Add(dbPeptideFileAnalysis);
                         }
-                        var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile,
-                                                                                                  dbPeptideAnalysis,
-                                                                                                  peptideSearchResult);
-                        dbPeptideAnalysis.FileAnalysisCount++;
-                        session.Save(dbPeptideFileAnalysis);
-                        newFileAnalyses.Add(dbPeptideFileAnalysis);
+                        session.Update(dbPeptideAnalysis);
+                        session.Transaction.Commit();
                     }
-                    session.Update(dbPeptideAnalysis);
-                    session.Transaction.Commit();
                 }
                 using (Workspace.GetWriteLock())
                 {

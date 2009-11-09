@@ -110,7 +110,9 @@ namespace pwiz.Topograph.Model
         public PeptideAnalysis EnsurePeptideAnalysis()
         {
             PeptideAnalysis peptideAnalysis;
-            using (var session = Workspace.OpenWriteSession())
+            using (Workspace.GetReadLock())
+            {
+                using (var session = Workspace.OpenWriteSession())
                 {
                     var dbPeptide = session.Load<DbPeptide>(Id);
                     var criteria = session.CreateCriteria(typeof (DbPeptideAnalysis))
@@ -131,6 +133,7 @@ namespace pwiz.Topograph.Model
                     session.Transaction.Commit();
                     peptideAnalysis = new PeptideAnalysis(Workspace, dbPeptideAnalysis);
                 }
+            }
             using (Workspace.GetWriteLock()) 
             {
                 Workspace.PeptideAnalyses.AddChild(peptideAnalysis.Id.Value, peptideAnalysis);
