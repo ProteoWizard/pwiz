@@ -826,7 +826,8 @@ namespace pwiz.Skyline.Model
         }
 
         public DocNode ChangePeak(ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance,
-            int indexSet, int indexFile, Identity tranId, double retentionTime)
+            int indexSet, int indexFile, OptimizableRegression regression, Identity tranId,
+            double retentionTime)
         {
             // Find the index of the peak group referenced by this retention time.
             int indexPeakBest = -1;
@@ -870,35 +871,49 @@ namespace pwiz.Skyline.Model
             var listChildrenNew = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfo = chromInfoGroup.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
+                var chromInfoArray = chromInfoGroup.GetAllTransitionInfo(
+                    (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
                 // Shouldn't need to update a transition with no chrom info
-                if (chromInfo == null)
+                if (chromInfoArray.Length == 0)
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, indexFile));
                 else
                 {
-                    ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
-                    // If the peak is empty, but the old peak has sufficient overlap with
-                    // the peaks being added, then keep it.
-                    if (peakNew.IsEmpty)
+                    // CONSIDER: Do this more efficiently?  Only when there is opimization
+                    //           data will the loop execute more than once.
+                    int numSteps = chromInfoArray.Length/2;
+                    var nodeTranNew = nodeTran;
+                    for (int i = 0; i < chromInfoArray.Length; i++)
                     {
-                        var tranInfoList = nodeTran.Results[indexSet];
-                        int iFile = tranInfoList.IndexOf(info => info.FileIndex == indexFile);
-                        var tranInfoOld = tranInfoList[iFile];
-                        if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
-                            Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                        var chromInfo = chromInfoArray[i];
+                        int step = i - numSteps;
+
+                        ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
+                        // If the peak is empty, but the old peak has sufficient overlap with
+                        // the peaks being added, then keep it.
+                        if (peakNew.IsEmpty)
                         {
-                            listChildrenNew.Add(nodeTran);
-                            continue;
+                            var tranInfoList = nodeTran.Results[indexSet];
+                            int iTran = tranInfoList.IndexOf(info =>
+                                info.FileIndex == indexFile && info.OptimizationStep == step);
+                            var tranInfoOld = tranInfoList[iTran];
+                            if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
+                                Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                            {
+                                continue;
+                            }
                         }
+                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
+                            indexSet, indexFile, step, peakNew);
                     }
-                    listChildrenNew.Add(nodeTran.ChangePeak(indexSet, indexFile, peakNew));                    
+                    listChildrenNew.Add(nodeTranNew);
                 }
             }
             return ChangeChildrenChecked(listChildrenNew);
         }
 
         public DocNode ChangePeak(ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance,
-            int indexSet, int indexFile, Transition transition, double startTime, double endTime)
+            int indexSet, int indexFile, OptimizableRegression regression, Transition transition,
+            double startTime, double endTime)
         {
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();
@@ -910,13 +925,27 @@ namespace pwiz.Skyline.Model
                     listChildrenNew.Add(nodeTran);
                 else
                 {
-                    var chromInfo = chromInfoGroup.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
+                    var chromInfoArray = chromInfoGroup.GetAllTransitionInfo(
+                        (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
+
                     // Shouldn't need to update a transition with no chrom info
-                    if (chromInfo == null)
+                    if (chromInfoArray.Length == 0)
                         listChildrenNew.Add(nodeTran.RemovePeak(indexSet, indexFile));
                     else
-                        listChildrenNew.Add(nodeTran.ChangePeak(indexSet, indexFile,
-                            chromInfo.CalcPeak(startIndex, endIndex)));                    
+                    {
+                        // CONSIDER: Do this more efficiently?  Only when there is opimization
+                        //           data will the loop execute more than once.
+                        int numSteps = chromInfoArray.Length/2;
+                        var nodeTranNew = nodeTran;
+                        for (int i = 0; i < chromInfoArray.Length; i++)
+                        {
+                            var chromInfo = chromInfoArray[i];
+                            int step = i - numSteps;
+                            nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
+                                indexSet, indexFile, step, chromInfo.CalcPeak(startIndex, endIndex));
+                        }
+                        listChildrenNew.Add(nodeTranNew);
+                    }
                 }
             }
             return ChangeChildrenChecked(listChildrenNew);

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -124,24 +125,37 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
         }
 
-        public DocNode ChangePeak(int indexSet, int indexFile, ChromPeak peak)
+        public DocNode ChangePeak(int indexSet, int indexFile, int step, ChromPeak peak)
         {
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
-            // TODO: Fix this to deal with optimization steps
-            var chromInfoNew = new TransitionChromInfo(indexFile, 0, peak, null, true);
+            var chromInfoNew = new TransitionChromInfo(indexFile, step, peak, null, true);
             if (listChromInfo == null)
                 listChromInfoNew.Add(chromInfoNew);
             else
             {
                 foreach (var chromInfo in listChromInfo)
                 {
-                    if (chromInfo.FileIndex == indexFile)
+                    // Replace an existing entry with same index values
+                    if (chromInfo.FileIndex == indexFile && chromInfo.OptimizationStep == step)
+                    {
+                        // Something is wrong, if the value has already been added
+                        Debug.Assert(chromInfoNew != null);
+
                         listChromInfoNew.Add(chromInfoNew);
+                        chromInfoNew = null;    // Only add once
+                    }
                     else
                     {
-                        if (chromInfo.FileIndex > indexFile)
+                        // Entries should be ordered, so if the new entry has not been added
+                        // when an entry past it is seen, then add the new entry.
+                        if (chromInfoNew != null &&
+                            chromInfo.FileIndex >= indexFile &&
+                            chromInfo.OptimizationStep > step)
+                        {
                             listChromInfoNew.Add(chromInfoNew);
+                            chromInfoNew = null;    // Only add once                            
+                        }
                         listChromInfoNew.Add(chromInfo);
                     }
                 }                

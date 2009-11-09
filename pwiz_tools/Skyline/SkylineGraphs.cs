@@ -1684,18 +1684,18 @@ namespace pwiz.Skyline
             }
             else if (graphType == GraphTypeRT.replicate)
             {
-//                menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
-//                menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
-//                // Sometimes child menuitems are stripped from the parent
-//                if (transitionsContextMenuItem.DropDownItems.Count == 0)
-//                {
-//                    transitionsContextMenuItem.DropDownItems.AddRange(new[]
-//                    {
-//                        singleTranContextMenuItem,
-//                        allTranContextMenuItem,
-//                        totalTranContextMenuItem
-//                    });
-//                }
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
+                menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
+                // Sometimes child menuitems are stripped from the parent
+                if (transitionsContextMenuItem.DropDownItems.Count == 0)
+                {
+                    transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                    {
+                        singleTranContextMenuItem,
+                        allTranContextMenuItem,
+                        totalTranContextMenuItem
+                    });
+                }
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);

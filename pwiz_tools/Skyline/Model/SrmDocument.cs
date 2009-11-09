@@ -627,20 +627,21 @@ namespace pwiz.Skyline.Model
             Identity tranId, double retentionTime)
         {
             return ChangePeak(groupPath, nameSet, filePath, false,
-                (node, info, tol, iSet, iFile) =>
-                    node.ChangePeak(info, tol, iSet, iFile, tranId, retentionTime));
+                (node, info, tol, iSet, iFile, reg) =>
+                    node.ChangePeak(info, tol, iSet, iFile, reg, tranId, retentionTime));
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
             Transition transition, double startTime, double endTime)
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
-                (node, info, tol, iSet, iFile) =>
-                    node.ChangePeak(info, tol, iSet, iFile, transition, startTime, endTime));
+                (node, info, tol, iSet, iFile, reg) =>
+                    node.ChangePeak(info, tol, iSet, iFile, reg, transition, startTime, endTime));
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,
-            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet, int indexFile);
+            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet, int indexFile,
+            OptimizableRegression regression);
 
         private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath, bool loadPoints,
             ChangeNodePeak change)
@@ -667,7 +668,8 @@ namespace pwiz.Skyline.Model
             if (indexInfo == -1)
                 throw new ArgumentOutOfRangeException(string.Format("No results found for the precursor {0} in the file {1}", this, filePath));
             var chromInfoGroup = arrayChromInfo[indexInfo];
-            var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, indexFile);
+            var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, indexFile,
+                chromatograms.OptimizationFunction);
             if (ReferenceEquals(nodeGroup, nodeGroupNew))
                 return this;
             return (SrmDocument)ReplaceChild(groupPath.Parent, nodeGroupNew);
