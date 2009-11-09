@@ -264,6 +264,11 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
             }
+            catch (InvalidDataException x)
+            {
+                loader.UpdateProgress(status.ChangeErrorException(x));
+                return false;
+            }
             catch (IOException x)
             {
                 loader.UpdateProgress(status.ChangeErrorException(x));

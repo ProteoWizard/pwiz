@@ -86,16 +86,21 @@ namespace pwiz.Skyline.Controls.Graphs
             List<PrecursorScheduleBase> listSchedules = new List<PrecursorScheduleBase>();
             double xMax = double.MinValue, xMin = double.MaxValue;
 
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodePep in document.Peptides)
             {
-                double timeWindow;
-                double? retentioTime = predict.PredictRetentionTime(nodeGroup, singleWindow, out timeWindow);
-                if (retentioTime.HasValue)
+                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    var schedule = new PrecursorScheduleBase(nodeGroup, retentioTime.Value, timeWindow, 0);
-                    xMin = Math.Min(xMin, schedule.StartTime);
-                    xMax = Math.Max(xMax, schedule.EndTime);
-                    listSchedules.Add(schedule);
+                    double timeWindow;
+                    double? retentionTime = predict.PredictRetentionTime(nodePep, nodeGroup,
+                        singleWindow, out timeWindow);
+                    if (retentionTime.HasValue)
+                    {
+                        var schedule = new PrecursorScheduleBase(nodeGroup, retentionTime.Value, timeWindow, 0);
+                        xMin = Math.Min(xMin, schedule.StartTime);
+                        xMax = Math.Max(xMax, schedule.EndTime);
+                        listSchedules.Add(schedule);
+                    }
+                    
                 }
             }
 

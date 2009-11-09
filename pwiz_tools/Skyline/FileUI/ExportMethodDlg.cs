@@ -431,7 +431,14 @@ namespace pwiz.Skyline.FileUI
 
             string maxTran = textMaxTransitions.Text;
             if (string.IsNullOrEmpty(maxTran))
-                _maxTransitions = null;
+            {
+                if (_exportStrategy == ExportStrategy.Buckets)
+                {
+                    helper.ShowTextBoxError(textMaxTransitions, "{0} must contain a value.");
+                    return;
+                }
+                _maxTransitions = null;                
+            }
             else
             {
                 int maxVal;

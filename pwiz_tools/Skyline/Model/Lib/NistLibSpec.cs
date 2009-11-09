@@ -570,6 +570,12 @@ namespace pwiz.Skyline.Model.Lib
                 loader.UpdateProgress(status.Complete());
                 return true;
             }
+            catch (InvalidDataException x)
+            {
+                if (!cached)
+                    loader.UpdateProgress(status.ChangeErrorException(x));
+                return false;
+            }
             catch (IOException x)
             {
                 if (!cached)

@@ -231,7 +231,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? MeasuredRTWindow { get; private set; }
 
-        public double? PredictRetentionTime(TransitionGroupDocNode nodeGroup, bool singleWindow, out double windowRT)
+        public double? PredictRetentionTime(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            bool singleWindow, out double windowRT)
         {
             // Safe defaults
             double? predictedRT = null;
@@ -243,6 +244,23 @@ namespace pwiz.Skyline.Model.DocSettings
                 predictedRT = nodeGroup.AveragePeakCenterTime;
                 if (predictedRT.HasValue)
                     windowRT = MeasuredRTWindow.Value;
+                else if (nodePep.Children.Count > 1)
+                {
+                    // If their are other children of this peptide, look for one
+                    // with results that can be used to predict the retention time.
+                    foreach (TransitionGroupDocNode nodeGroupOther in nodePep.Children)
+                    {
+                        if (!ReferenceEquals(nodeGroup, nodeGroupOther))
+                        {
+                            predictedRT = nodeGroupOther.AveragePeakCenterTime;
+                            if (predictedRT.HasValue)
+                            {
+                                windowRT = MeasuredRTWindow.Value;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             // If no retention time yet, and there is a predictor, use the predictor
             if (!predictedRT.HasValue && RetentionTime != null)
@@ -285,11 +303,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Otherwise, if every precursor has enough result information
             // to predict a retention time, then this document can be scheduled.
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodePep in document.Peptides)
             {
-                double windowRT;
-                if (!PredictRetentionTime(nodeGroup, singleWindow, out windowRT).HasValue)
-                    return false;
+                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                {
+                    double windowRT;
+                    if (!PredictRetentionTime(nodePep, nodeGroup, singleWindow, out windowRT).HasValue)
+                        return false;
+                }
             }
             return true;
         }
