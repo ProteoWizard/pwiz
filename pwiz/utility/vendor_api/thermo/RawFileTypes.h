@@ -299,6 +299,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_LTQ_Velos:
             if (scanFilterType == ScanFilterMassAnalyzerType_FTMS)
                 return MassAnalyzerType_Orbitrap;
             else 
