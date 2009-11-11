@@ -57,23 +57,34 @@ private:
     void translateSearch(const SearchSummaryPtr searchSummary, MzIdentMLPtr result);
     void translateQueries(const SpectrumQueryPtr query, MzIdentMLPtr result);
     
-    void translateMetadata();
+    void translateEarlyMetadata();
+    void translateLateMetadata();
+
     void translateSpectrumQuery(SpectrumIdentificationListPtr result,
                                 const SpectrumQueryPtr sq);
 
-    void processParameter(ParameterPtr param, MzIdentMLPtr mzid);
+    void processEarlyParameter(ParameterPtr param, MzIdentMLPtr mzid);
+    void processLateParameter(ParameterPtr param, MzIdentMLPtr mzid);
     
     void addModifications(const std::vector<AminoAcidModification>& mods,
                           PeptidePtr peptide, MzIdentMLPtr result);
 
-    void addPeptide(const SpectrumQueryPtr sq, MzIdentMLPtr& x);
+    const std::string addPeptide(const SearchHitPtr sq, MzIdentMLPtr& x);
 
     void addFinalElements();
 
+    CVID getCVID(const std::string& name);
+    CVParam translateSearchScore(const std::string& name,const std::vector<SearchScorePtr>& searchScore);
+
+    CVParam getParamForSearchScore(const SearchScorePtr searchScore);
+    CVID cvidFromSearchScore(const std::string& name);
+
+    // old member variables
     MSMSPipelineAnalysis _mspa;
     MzIdentMLPtr mzid;
     bool _translated;
 
+    // recursor flags.
     bool precursorMonoisotopic;
     bool fragmentMonoisotopic;
 

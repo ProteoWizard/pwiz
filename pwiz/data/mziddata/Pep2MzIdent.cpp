@@ -25,6 +25,7 @@
 #include "pwiz/utility/proteome/Ion.hpp"
 #include "pwiz/data/msdata/cv.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/algorithm/string.hpp"
 
 using namespace pwiz;
@@ -45,7 +46,8 @@ struct Pep2MzIdent::Indices
 {
     Indices()
         : dbseq(0), enzyme(0), sip(0), peptide(0),
-          peptideEvidence(0), sd(0), sir(0), sii(0), sil(0)
+          peptideEvidence(0), sd(0), sir(0), sii(0), sil(0),
+          pdp(0)
     {
     }
 
@@ -58,6 +60,7 @@ struct Pep2MzIdent::Indices
     size_t sir;
     size_t sii;
     size_t sil;
+    size_t pdp;
 };
 
 struct sequence_p
@@ -96,6 +99,164 @@ shared_ptr<T> find_id(vector< shared_ptr<T> >& list, const string& id)
 }
 
 
+CVID Pep2MzIdent::getCVID(const string& name)
+{
+    CVID id = translator.translate(name);
+
+    if (id == CVID_Unknown)
+    {
+        if (iequals(name, "mascot"))
+        {
+            id = MS_Mascot;
+        }
+        else if (iequals(name, "sequest"))
+        {
+            id = MS_Sequest;
+        }
+        else if (iequals(name, "phenyx"))
+        {
+            id = MS_Phenyx;
+        }
+        else if (iequals(name, "da"))
+        {
+            id = UO_dalton;
+        }
+    }
+    
+    return id;
+}
+
+struct search_score_p
+{
+    const string name;
+
+    search_score_p(const string& name) : name(name) {}
+
+    bool operator()(SearchScorePtr ss)
+    {
+        return iequals(name, ss->name);
+    }
+};
+
+void resizeSoftware(vector<AnalysisSoftwarePtr>& v, size_t new_size)
+{
+    size_t start = v.size();
+    for (size_t i=start; i<new_size; i++)
+        v.push_back(AnalysisSoftwarePtr(new AnalysisSoftware()));
+    
+}
+
+struct software_p
+{
+    CVID id;
+    
+    software_p(const CVID id) : id(id) {}
+
+    bool operator()(const AnalysisSoftwarePtr p)
+    {
+        bool result = false;
+
+        if (p.get())
+            result = p->softwareName.hasCVParam(id);
+
+        return result;
+    }
+};
+
+
+AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
+    CVID cvid)
+{
+    AnalysisSoftwarePtr as((AnalysisSoftware*)NULL);
+    
+    vector<AnalysisSoftwarePtr>::const_iterator i =
+        find_if(software.begin(), software.end(), software_p(cvid));
+    
+    if (i != software.end())
+        as = *i;
+    
+    return  as;
+}
+
+CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
+{
+    static const CVID cvids[] = {MS_Mascot, MS_Sequest,
+                                 MS_Phenyx, CVID_Unknown};
+    CVParam cvparam;
+
+    for (size_t idx = 0; cvids[idx] != CVID_Unknown; idx++)
+    {
+        cerr << "checking cvid " << cvids[idx] << endl;
+        AnalysisSoftwarePtr as = findSoftware(software, cvids[idx]);
+        
+        if (!as.get())
+        {
+            cerr << "FINALLY! We found " << cvids[idx] << endl;
+            cvparam = CVParam(cvids[idx], "0.5");
+            break;
+        }
+    }
+
+    // TODO put a reasonable default here and a reasonable way to set it.
+    if (cvparam.cvid == CVID_Unknown)
+    {
+        cvparam.cvid = MS_Mascot;
+        cvparam.value = "0.05";
+    }
+    
+    return cvparam;
+}
+
+
+CVParam Pep2MzIdent::translateSearchScore(const string& name, const vector<SearchScorePtr>& searchScore)
+{
+    typedef vector<SearchScorePtr>::const_iterator CIt;
+    
+    CIt cit = find_if(searchScore.begin(), searchScore.end(),
+                      search_score_p(name));
+
+    CVParam cvp;
+    if (cit != searchScore.end())
+    {
+        cvp = getParamForSearchScore(*cit);
+    }
+
+    return cvp;
+}
+
+CVParam Pep2MzIdent::getParamForSearchScore(const SearchScorePtr searchScore)
+{
+    CVID id = cvidFromSearchScore(searchScore->name);
+
+    CVParam cvParam(id, searchScore->value);
+
+    return cvParam;
+}
+
+CVID Pep2MzIdent::cvidFromSearchScore(const string& name)
+{
+    CVID id = translator.translate(name);
+
+    if (id == CVID_Unknown)
+    {
+        if (iequals(name, "ionscore"))
+        {
+            id = MS_mascot_score;
+        }
+        else if (iequals(name, "identityscore"))
+        {
+            id = MS_mascot_identity_threshold;
+        }
+        else if (iequals(name, "expect"))
+        {
+            id = MS_mascot_expectation_value;
+        }
+    }
+
+    return id;
+}
+
+
 //
 // Pep2MzIdent
 //
@@ -106,6 +267,7 @@ Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr _mzid)
       indices(new Indices())
 {
     mzid->cvs.push_back(cv("MS"));
+    mzid->cvs.push_back(cv("UO"));
     translateRoot();
 }
 
@@ -114,9 +276,10 @@ void Pep2MzIdent::translateRoot()
 {
     mzid->creationDate = _mspa.date;
 
-    translateMetadata();
-
     translateEnzyme(_mspa.msmsRunSummary.sampleEnzyme, mzid);
+
+    translateEarlyMetadata();
+
     for (vector<SearchSummaryPtr>::const_iterator ss=_mspa.msmsRunSummary.searchSummary.begin();
          ss != _mspa.msmsRunSummary.searchSummary.end(); ss++)
     {
@@ -143,12 +306,12 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS"));
     //sip->analysisSoftwarePtr = result->analysisSoftwareList.back();
     sip->searchType.set(MS_ms_ms_search);
-    
+    sip->threshold.cvParams.push_back(guessThreshold(mzid->analysisSoftwareList));
     EnzymePtr enzyme(new Enzyme("E_"+lexical_cast<string>(indices->enzyme++)));
 
     // Cross fingers and pray that the name enzyme matches a cv name.
     // TODO create a more flexable conversion.
-    enzyme->enzymeName.set(translator.translate(sampleEnzyme.name));
+    enzyme->enzymeName.set(getCVID(sampleEnzyme.name));
     enzyme->enzymeName.userParams.
         push_back(UserParam("description", sampleEnzyme.description));
 
@@ -173,6 +336,8 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
 void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
                                   MzIdentMLPtr result)
 {
+    namespace fs = boost::filesystem;
+
     // push SourceFilePtr onto sourceFile
     // in Inputs in DataCollection
     SourceFilePtr sourceFile(new SourceFile());
@@ -183,9 +348,9 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
     result->dataCollection.inputs.sourceFile.push_back(sourceFile);
 
     AnalysisSoftwarePtr as(new AnalysisSoftware());
+    as->id = "AS";
+    as->softwareName.set(getCVID(summary->searchEngine));
     result->analysisSoftwareList.push_back(as);
-    result->analysisSoftwareList.back()->softwareName.set(
-        translator.translate(summary->searchEngine));
 
     // handle precursorMassType/fragmentMassType
     precursorMonoisotopic = summary->precursorMassType == "monoisotopic";
@@ -193,14 +358,13 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
     
     SearchDatabasePtr searchDatabase(new SearchDatabase());
     searchDatabase->id = "SD_1";
+    searchDatabase->name = summary->searchDatabase.databaseName;
     searchDatabase->location = summary->searchDatabase.localPath;
     searchDatabase->version = summary->searchDatabase.databaseReleaseIdentifier;
     searchDatabase->numDatabaseSequences = summary->searchDatabase.sizeInDbEntries;
     searchDatabase->numResidues = summary->searchDatabase.sizeOfResidues;
 
-    // Another case of crossing fingers and translating
-    searchDatabase->DatabaseName.set(translator.translate(summary->searchEngine));
-
+    // Select which type of database is indeicated.
     if (summary->searchDatabase.type == "AA")
         searchDatabase->params.set(MS_database_type_amino_acid);
     else if (summary->searchDatabase.type == "NA")
@@ -208,11 +372,26 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
 
     
     // TODO figure out if this is correct
-    searchDatabase->DatabaseName.set(translator.translate(
-                                         summary->searchDatabase.databaseName));
-    searchDatabase->fileFormat.set(translator.translate(
-                                       summary->searchDatabase.type));
+    CVID dbName = getCVID(summary->searchDatabase.databaseName);
+    if (dbName != CVID_Unknown)
+        searchDatabase->DatabaseName.set(dbName);
+    else
+    {
+        fs::path localPath(summary->searchDatabase.localPath);
+        searchDatabase->DatabaseName.userParams.push_back(UserParam(localPath.filename()));
+    }
 
+    // TODO make this more elegant
+    if (iends_with(summary->baseName, ".dat") &&
+        iequals(summary->searchEngine, "mascot"))
+        searchDatabase->fileFormat.set(MS_Mascot_DAT_file);
+    else if (iequals(summary->searchEngine, "sequest"))
+        searchDatabase->fileFormat.set(MS_Sequest_out_file);
+    else if (iequals(summary->searchEngine, "xtandem"))
+        searchDatabase->fileFormat.set(MS_xtandem_xml_file);
+
+    mzid->dataCollection.inputs.searchDatabase.push_back(searchDatabase);
+    
     // Save for later.
     aminoAcidModifications = &summary->aminoAcidModifications;
 }
@@ -281,24 +460,27 @@ void Pep2MzIdent::addModifications(
 void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                                    MzIdentMLPtr result)
 {
-    addPeptide(query, result);
-
     for(vector<SearchResultPtr>::iterator srit=query->searchResult.begin();
         srit != query->searchResult.end(); srit++)
     {
         for (vector<SearchHitPtr>::iterator shit=(*srit)->searchHit.begin();
              shit != (*srit)->searchHit.end(); shit++)
         {
+            const string pid = addPeptide(*shit, result);
+            
             DBSequencePtr dbs(new DBSequence("DBS_"+lexical_cast<string>(indices->dbseq++)));
             dbs->length = (*shit)->peptide.length();
-            //dbs->searchDatabasePtr =
-            //mzid->dataCollection.inputs.searchDatabase.back();
+            dbs->seq = (*shit)->peptide;
+            dbs->accession = (*shit)->protein;
+            dbs->paramGroup.set(MS_protein_description, (*shit)->proteinDescr);
             if (mzid->dataCollection.inputs.searchDatabase.size()>0)
                 dbs->searchDatabasePtr = mzid->dataCollection.inputs.
                     searchDatabase.at(0);
             else
                 dbs->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SD_1"));
 
+            mzid->sequenceCollection.dbSequences.push_back(dbs);
+            
             PeptideEvidencePtr pepEv(new PeptideEvidence(
                                          "PEPEV_"+lexical_cast<string>(
                                              indices->peptideEvidence++)));
@@ -316,26 +498,38 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
 
             // TODO find out if this is right.
             sii->chargeState = query->assumedCharge;
-    
+
+            // TODO get search_score
+            CVParam cvp = translateSearchScore("ionscore", (*shit)->searchScore);
+
+            if (cvp.cvid != CVID_Unknown)
+                sii->paramGroup.set(cvp.cvid, cvp.value);
+            cvp = translateSearchScore("expect", (*shit)->searchScore);
+            if (cvp.cvid != CVID_Unknown)
+                sii->paramGroup.set(cvp.cvid, cvp.value);
+            
             sii->peptideEvidence.push_back(pepEv);
 
             // TODO handle precursorNeutralMass
             // TODO handle index/retentionTimeSec fields
     
-            SpectrumIdentificationResultPtr sip(new SpectrumIdentificationResult());
-            sip->id = "SIR_"+lexical_cast<string>(indices->sir++);
-            sip->spectrumID = query->spectrum;
-            sip->spectrumIdentificationItem.push_back(sii);
+            SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
+            sirp->id = "SIR_"+lexical_cast<string>(indices->sir++);
+
+            cvp = translateSearchScore("identityscore", (*shit)->searchScore);
+            sirp->paramGroup.set(cvp.cvid, cvp.value);
+
+            sirp->spectrumID = query->spectrum;
+            sirp->spectrumIdentificationItem.push_back(sii);
             if (mzid->dataCollection.inputs.spectraData.size()>0)
-                sip->spectraDataPtr = mzid->dataCollection.inputs.spectraData.at(0);
+                sirp->spectraDataPtr = mzid->dataCollection.inputs.spectraData.at(0);
             else
                 throw runtime_error("[Pep2MzIdent::translateQueries] no SpectraData");
     
             SpectrumIdentificationListPtr sil;
-            if (result->dataCollection.analysisData.spectrumIdentificationList.
-                size() > 0)
+            if (mzid->dataCollection.analysisData.spectrumIdentificationList.size() > 0)
             {
-                sil = result->dataCollection.analysisData.
+                sil = mzid->dataCollection.analysisData.
                     spectrumIdentificationList.back();
             }
             else
@@ -343,26 +537,32 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                 sil = SpectrumIdentificationListPtr(
                     new SpectrumIdentificationList("SIL_"+lexical_cast<string>(
                                                        indices->sil++)));
-                result->dataCollection.analysisData.spectrumIdentificationList.
+                mzid->dataCollection.analysisData.spectrumIdentificationList.
                     push_back(sil);
             }
 
+            if (!sil->empty())
+                sil->spectrumIdentificationResult.push_back(sirp);
+            
+            /*
             if (sil->spectrumIdentificationResult.empty())
             {
                 sil = SpectrumIdentificationListPtr(
                     new SpectrumIdentificationList("SIL_"+lexical_cast<string>(
                                                        indices->sil++)));
-                result->dataCollection.analysisData.spectrumIdentificationList.
+                mzid->dataCollection.analysisData.spectrumIdentificationList.
                     push_back(sil);
             }
             else
             {
-                sil = result->dataCollection.analysisData.
+                sil = mzid->dataCollection.analysisData.
                     spectrumIdentificationList.back();
             }
 
             if (!sil->empty())
                 sil->spectrumIdentificationResult.push_back(sip);
+            */
+
         }
     }
 }
@@ -378,7 +578,8 @@ MzIdentMLPtr Pep2MzIdent::translate()
     return mzid;
 }
 
-void Pep2MzIdent::processParameter(ParameterPtr parameter, MzIdentMLPtr mzid)
+void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
+                                        MzIdentMLPtr mzid)
 {
     if (parameter->name == "USERNAME")
     {
@@ -423,7 +624,6 @@ void Pep2MzIdent::processParameter(ParameterPtr parameter, MzIdentMLPtr mzid)
                               "SD_"+lexical_cast<string>(indices->sd++)));
         sd->location = parameter->value;
 
-        cerr << "Found FILE parameter of " << parameter->value << endl;
         if (iends_with(sd->location, ".mzML"))
         {
             sd->fileFormat.set(MS_mzML_file);
@@ -439,13 +639,222 @@ void Pep2MzIdent::processParameter(ParameterPtr parameter, MzIdentMLPtr mzid)
         
         mzid->dataCollection.inputs.spectraData.push_back(sd);
     }
-    else if (parameter->name == "")
+    else if (parameter->name == "TOL")
     {
+        if (mzid->analysisProtocolCollection.
+            spectrumIdentificationProtocol.size()>0)
+        {
+            SpectrumIdentificationProtocolPtr sip =
+                mzid->analysisProtocolCollection.
+                spectrumIdentificationProtocol.at(0);
+
+            CVParam cvp = sip->fragmentTolerance.
+                cvParam(MS_search_tolerance_plus_value);
+
+            sip->fragmentTolerance.set(MS_search_tolerance_plus_value,
+                                       parameter->value,
+                                       cvp.units);
+            
+            cvp = sip->fragmentTolerance.
+                cvParam(MS_search_tolerance_minus_value);
+            
+            sip->fragmentTolerance.set(MS_search_tolerance_minus_value,
+                                       parameter->value,
+                                       cvp.units);
+        }
+    }
+    else if (parameter->name == "TOLU")
+    {
+        if (mzid->analysisProtocolCollection.
+            spectrumIdentificationProtocol.size()>0)
+        {
+            SpectrumIdentificationProtocolPtr sip =
+                mzid->analysisProtocolCollection.
+                spectrumIdentificationProtocol.at(0);
+
+            CVParam cvp = sip->fragmentTolerance.
+                cvParam(MS_search_tolerance_plus_value);
+            
+            sip->fragmentTolerance.set(MS_search_tolerance_plus_value,
+                                       cvp.value,
+                                       getCVID(parameter->value));
+
+            cvp = sip->fragmentTolerance.
+                cvParam(MS_search_tolerance_minus_value);
+            
+            sip->fragmentTolerance.set(MS_search_tolerance_minus_value,
+                                       cvp.value,
+                                       getCVID(parameter->value));
+        }
+    }
+    else if (parameter->name == "ITOL")
+    {
+        if (mzid->analysisProtocolCollection.
+            spectrumIdentificationProtocol.size()>0)
+        {
+            SpectrumIdentificationProtocolPtr sip =
+                mzid->analysisProtocolCollection.
+                spectrumIdentificationProtocol.at(0);
+
+            CVParam cvp = sip->parentTolerance.
+                cvParam(MS_search_tolerance_plus_value);
+
+            sip->parentTolerance.set(MS_search_tolerance_plus_value,
+                                       parameter->value,
+                                       cvp.units);
+            
+            cvp = sip->parentTolerance.
+                cvParam(MS_search_tolerance_minus_value);
+            
+            sip->parentTolerance.set(MS_search_tolerance_minus_value,
+                                       parameter->value,
+                                       cvp.units);
+        }
+    }
+    else if (parameter->name == "ITOLU")
+    {
+        if (mzid->analysisProtocolCollection.
+            spectrumIdentificationProtocol.size()>0)
+        {
+            SpectrumIdentificationProtocolPtr sip =
+                mzid->analysisProtocolCollection.
+                spectrumIdentificationProtocol.at(0);
+
+            CVParam cvp = sip->parentTolerance.
+                cvParam(MS_search_tolerance_plus_value);
+            
+            sip->parentTolerance.set(MS_search_tolerance_plus_value,
+                                       cvp.value,
+                                       getCVID(parameter->value));
+
+            cvp = sip->parentTolerance.
+                cvParam(MS_search_tolerance_minus_value);
+            
+            sip->parentTolerance.set(MS_search_tolerance_minus_value,
+                                       cvp.value,
+                                     getCVID(parameter->value));
+        }
+    }
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.01.accession")
+    {
+        istringstream oss(parameter->value.substr(
+                              parameter->value.find_first_of(":")));
+        size_t cvid;
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.02.accession")
+    {
+        istringstream oss(parameter->value.substr(
+                              parameter->value.find_first_of(":")));
+        size_t cvid;
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.03.accession")
+    { 
+        istringstream oss(parameter->value.substr(
+                              parameter->value.find_first_of(":")));
+        size_t cvid;
+        
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.03.value")
+    {
+    }
+    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.01.accession")
+    {
+        size_t idx = parameter->value.find_first_of(":");
+
+        if (idx == string::npos)
+            return;
+        
+        istringstream oss(parameter->value.substr(idx));
+        size_t cvid;
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.02.accession")
+    {
+        size_t idx = parameter->value.find_first_of(":");
+
+        if (idx == string::npos)
+            return;
+        
+        istringstream oss(parameter->value.substr(idx));
+        size_t cvid;
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.02.value")
+    {
+    }
+    else if (starts_with(parameter->name, "_mzML.softwareList.") &&
+             starts_with(parameter->name, ".count"))
+    {
+        size_t idx = parameter->value.find_first_of(":");
+
+        if (idx == string::npos)
+            return;
+        
+        istringstream oss(parameter->value.substr(idx));
+        size_t id;
+        oss >> id;
+
+        size_t start = mzid->analysisSoftwareList.size();
+        for (size_t i=start; i<id; i++)
+            mzid->analysisSoftwareList.push_back(
+                AnalysisSoftwarePtr(new AnalysisSoftware()));
+    }
+    else if (starts_with(parameter->name, "_mzML.softwareList.software."))
+    {
+        if (parameter->name.size() < 31)
+            return;
+        string number = parameter->name.substr(28, 2);
+
+        istringstream oss(number);
+        size_t idx;
+        oss >> idx;
+
+        if (idx < 1)
+            return;
+        else if (mzid->analysisSoftwareList.size() < idx)
+            resizeSoftware(mzid->analysisSoftwareList, idx);
+        
+        if (ends_with(parameter->name, "id"))
+        {
+            mzid->analysisSoftwareList[idx-1]->id = parameter->value;
+            CVID cvid = getCVID(parameter->value);
+            if (cvid != CVID_Unknown)
+                mzid->analysisSoftwareList[idx-1]->softwareName.set(cvid);
+        }
+        else if (ends_with(parameter->name, "version"))
+        {
+            mzid->analysisSoftwareList[idx-1]->version = parameter->value;
+        }
     }
 }
 
+void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
+                                       MzIdentMLPtr mzid)
+{
+    if (parameter->name == "PEAK")
+    {
+        if (mzid->analysisProtocolCollection.proteinDetectionProtocol.size()==0)
+            mzid->analysisProtocolCollection.proteinDetectionProtocol.
+                push_back(ProteinDetectionProtocolPtr(
+                              new ProteinDetectionProtocol(
+                                  "PDP_"+lexical_cast<string>(
+                                      indices->pdp++))));
+        
+        ProteinDetectionProtocolPtr pdp = mzid->analysisProtocolCollection.
+            proteinDetectionProtocol.back();
 
-void Pep2MzIdent::translateMetadata()
+        CVParam cvparam = guessThreshold(mzid->analysisSoftwareList);
+        pdp->threshold.cvParams.push_back(cvparam);
+        pdp->analysisSoftwarePtr = findSoftware(mzid->analysisSoftwareList,
+                                                cvparam.cvid);
+        pdp->analysisParams.set(MS_mascot_MaxProteinHits, parameter->value);
+    }
+}
+
+void Pep2MzIdent::translateEarlyMetadata()
 {
     vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
     for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
@@ -455,38 +864,47 @@ void Pep2MzIdent::translateMetadata()
         for (vector<ParameterPtr>::const_iterator pit=pp.begin();
              pit != pp.end(); pit++)
         {
-            processParameter(*pit, mzid);
+            processEarlyParameter(*pit, mzid);
         }
     }
 }
 
-void Pep2MzIdent::addPeptide(const SpectrumQueryPtr sq, MzIdentMLPtr& mzid)
+void Pep2MzIdent::translateLateMetadata()
 {
-    for (vector<SearchResultPtr>::const_iterator sr=sq->searchResult.begin();
-         sr != sq->searchResult.end(); sr++)
+    vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
+    for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
+         sit != ss.end(); sit++)
     {
-        for (vector<SearchHitPtr>::const_iterator sh=(*sr)->searchHit.begin();
-             sh != (*sr)->searchHit.end(); sh++)
+        vector<ParameterPtr>& pp = (*sit)->parameters;
+        for (vector<ParameterPtr>::const_iterator pit=pp.begin();
+             pit != pp.end(); pit++)
         {
-            // If we've already seen this sequence, continue on.
-            if (find_if(mzid->sequenceCollection.peptides.begin(),
-                        mzid->sequenceCollection.peptides.end(),
-                        sequence_p((*sh)->peptide)) !=
-                mzid->sequenceCollection.peptides.end())
-                continue;
-            
-            PeptidePtr pp(new Peptide("PEP_"+lexical_cast<string>(indices->peptide++)));
-            pp->id = (*sh)->peptide;
-            pp->peptideSequence = (*sh)->peptide;
-
-            mzid->sequenceCollection.peptides.push_back(pp);
-
-            addModifications(*aminoAcidModifications, pp, mzid);
+            processLateParameter(*pit, mzid);
         }
     }
-    // TODO: Add modification info
 }
 
+const string Pep2MzIdent::addPeptide(const SearchHitPtr sh, MzIdentMLPtr& mzid)
+{
+    // If we've already seen this sequence, continue on.
+    if (find_if(mzid->sequenceCollection.peptides.begin(),
+                mzid->sequenceCollection.peptides.end(),
+                sequence_p(sh->peptide)) !=
+        mzid->sequenceCollection.peptides.end())
+        return "";
+    
+    PeptidePtr pp(new Peptide("PEP_"+lexical_cast<string>(indices->peptide++)));
+    pp->id = sh->peptide;
+    pp->peptideSequence = sh->peptide;
+    
+    mzid->sequenceCollection.peptides.push_back(pp);
+    
+    addModifications(*aminoAcidModifications, pp, mzid);
+
+    return pp->id;
+}
+
+/*
 void Pep2MzIdent::translateSpectrumQuery(SpectrumIdentificationListPtr result,
                                          const SpectrumQueryPtr sq)
 {
@@ -517,7 +935,7 @@ void Pep2MzIdent::translateSpectrumQuery(SpectrumIdentificationListPtr result,
 
     result->spectrumIdentificationResult.push_back(sir);
 }
-
+*/
 void Pep2MzIdent::addFinalElements()
 {
     SpectrumIdentificationPtr sip(new SpectrumIdentification("SI"));
@@ -543,6 +961,15 @@ void Pep2MzIdent::addFinalElements()
     }
 
     mzid->analysisCollection.spectrumIdentification.push_back(sip);
+
+    /*
+    if (mzid->analysisProtocolCollection.
+        spectrumIdentificationProtocol.size() > 0)
+    {
+        mzid->analysisProtocolCollection.spectrumIdentificationProtocol.at(0)
+            ->threshold.userParams.push_back(UserParam("unknown"));
+    }
+    */
 }
 
 
