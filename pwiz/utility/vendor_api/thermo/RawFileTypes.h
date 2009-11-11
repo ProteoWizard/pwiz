@@ -206,6 +206,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_Exactive:
+        case InstrumentModelType_LTQ_Velos:
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -433,6 +434,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
+        case InstrumentModelType_LTQ_Velos:
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
 
@@ -525,6 +527,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_DFS:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_LTQ_Velos:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
