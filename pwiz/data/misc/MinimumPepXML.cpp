@@ -763,6 +763,55 @@ PWIZ_API_DECL bool ModificationInfo::operator!=(const ModificationInfo& that) co
 
 }
 
+//
+// SearchScore
+//
+
+PWIZ_API_DECL void SearchScore::write(XMLWriter& writer) const
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("name", name));
+    attributes.push_back(make_pair("value", value));
+
+    writer.startElement("search_score", attributes, XMLWriter::EmptyElement);
+}
+
+struct HandlerSearchScore : public SAXParser::Handler
+{
+    SearchScore* ss;
+    HandlerSearchScore(SearchScore* ss_ = 0) : ss(ss_) {}
+        
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (ss == NULL)
+            throw runtime_error("[HandlerSearchScore::startElement] Null SearchScore");
+
+        if (name == "search_score")
+        {
+            getAttribute(attributes, "name", ss->name);
+            getAttribute(attributes, "value", ss->value);
+            
+            return Status::Ok;
+        }
+        else
+            throw runtime_error(("[HandlerSearchScore::startElement] Unknown name "+name).c_str());
+        
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void SearchScore::read(istream& is)
+{
+    HandlerSearchScore handler(this);
+    parse(is, handler);
+}
+
+//
+// SearchHit
+//
+
 PWIZ_API_DECL void SearchHit::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
@@ -784,11 +833,16 @@ PWIZ_API_DECL void SearchHit::write(XMLWriter& writer) const
 
     writer.startElement("search_hit", attributes);
     analysisResult.write(writer);
-    vector<AlternativeProtein>::const_iterator it = alternativeProteins.begin();
-    for(; it != alternativeProteins.end(); ++it)
+    for (vector<AlternativeProtein>::const_iterator it = alternativeProteins.begin();
+         it != alternativeProteins.end(); ++it)
     {
         it->write(writer);
 
+    }
+
+    for (vector<SearchScorePtr>::const_iterator it=searchScore.begin(); it != searchScore.end(); it++)
+    {
+        (*it)->write(writer);
     }
     modificationInfo.write(writer);
     writer.endElement();
@@ -846,7 +900,13 @@ struct HandlerSearchHit : public SAXParser::Handler
             return Handler::Status(Status::Delegate, &(_handlerModificationInfo));
 
         }
-
+        else if (name == "search_score")
+        {
+            // TODO handle SearchScore
+            searchHit->searchScore.push_back(SearchScorePtr(new SearchScore()));
+            handlerSearchScore.ss = searchHit->searchScore.back().get();
+            return Handler::Status(Status::Delegate, &handlerSearchScore);
+        }
         else
         {
             if (_log) *_log << ("[HandlerSearchHit] Ignoring non-essential element name : " + name).c_str() << endl;
@@ -858,6 +918,7 @@ struct HandlerSearchHit : public SAXParser::Handler
 
 private:
 
+    HandlerSearchScore handlerSearchScore;
     HandlerAnalysisResult _handlerAnalysisResult;
     HandlerAlternativeProtein _handlerAlternativeProtein;   
     HandlerModificationInfo _handlerModificationInfo;
@@ -887,6 +948,7 @@ PWIZ_API_DECL bool SearchHit::operator==(const SearchHit& that) const
         numTolTerm == that.numTolTerm &&
         numMissedCleavages == that.numMissedCleavages &&
         isRejected == that.isRejected &&
+        proteinDescr == that.proteinDescr &&
         analysisResult == that.analysisResult &&
         alternativeProteins == that.alternativeProteins &&
         modificationInfo == that.modificationInfo;
@@ -1176,6 +1238,11 @@ PWIZ_API_DECL bool AminoAcidModification::operator!=(const AminoAcidModification
 
 PWIZ_API_DECL void Parameter::write(XMLWriter& writer) const
 {
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("name", name));
+    attributes.push_back(make_pair("value", value));
+
+    writer.startElement("parameter", attributes, XMLWriter::EmptyElement);
 }
 
 struct HandlerParameter : public SAXParser::Handler
@@ -1191,7 +1258,8 @@ struct HandlerParameter : public SAXParser::Handler
         if (!param)
             throw runtime_error("[HandlerParameter] Null Parameter");
 
-        if (name == "Parameter")
+        if (name == "Parameter" ||
+            name == "parameter")
         {
             getAttribute(attributes, "name", param->name);
             getAttribute(attributes, "value", param->value);

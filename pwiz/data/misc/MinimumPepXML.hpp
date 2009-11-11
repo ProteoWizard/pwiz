@@ -231,6 +231,39 @@ struct PWIZ_API_DECL ModificationInfo
 
 };
 
+struct PWIZ_API_DECL Parameter
+{
+    Parameter(const std::string& name = "", const std::string& value = "")
+        : name(name), value(value)
+    {}
+    
+    std::string name;
+    std::string value;
+
+    void write(XMLWriter& writer) const;
+    void read(std::istream& is);
+
+    bool operator==(const Parameter& that) const;
+    bool operator!=(const Parameter& that) const;
+};
+
+typedef boost::shared_ptr<Parameter> ParameterPtr;
+
+
+struct PWIZ_API_DECL SearchScore : Parameter
+{
+    SearchScore(const std::string& name = "", const std::string& value = "")
+        : Parameter(name, value)
+    {}
+
+    void write(XMLWriter& writer) const;
+    void read(std::istream& is);
+
+};
+
+typedef boost::shared_ptr<SearchScore> SearchScorePtr;
+
+
 struct PWIZ_API_DECL SearchHit
 {
     SearchHit() : hitRank(0),numTotalProteins(0), numMatchedIons(0), totalNumIons(0), calcNeutralPepMass(0), massDiff(0), numTolTerm(0), numMissedCleavages(0), isRejected(0) {}
@@ -253,6 +286,8 @@ struct PWIZ_API_DECL SearchHit
     std::vector<AlternativeProtein> alternativeProteins;
     ModificationInfo modificationInfo;
 
+    std::vector<SearchScorePtr> searchScore;
+    
     void write(XMLWriter& writer) const;
     void read(std::istream& is);
 
@@ -324,21 +359,6 @@ struct PWIZ_API_DECL AminoAcidModification
     bool operator!=(const AminoAcidModification& that) const;
 
 };
-
-struct PWIZ_API_DECL Parameter
-{
-    std::string name;
-    std::string value;
-
-    void write(XMLWriter& writer) const;
-    void read(std::istream& is);
-
-    bool operator==(const Parameter& that) const;
-    bool operator!=(const Parameter& that) const;
-};
-
-typedef boost::shared_ptr<Parameter> ParameterPtr;
-
 
 /// Database search settings
 struct PWIZ_API_DECL SearchSummary
