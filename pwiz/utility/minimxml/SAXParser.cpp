@@ -351,7 +351,7 @@ bool unbalancedQuote(const string& buffer)
             
     }
     
-    return quoteCount%2;
+    return ((quoteCount%2)!=0); // need explicit bool operation to quiet some compilers
 }
 
 //
