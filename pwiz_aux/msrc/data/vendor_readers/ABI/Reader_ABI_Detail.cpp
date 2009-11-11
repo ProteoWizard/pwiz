@@ -25,9 +25,9 @@
 #include "Reader_ABI_Detail.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
+#ifdef PWIZ_READER_ABI
 using namespace pwiz::vendor_api::ABI;
 
-#ifdef PWIZ_READER_ABI
 
 namespace pwiz {
 namespace msdata {
