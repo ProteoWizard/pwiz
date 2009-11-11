@@ -327,7 +327,7 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (args.GetEntities<WorkspaceSetting>().Count > 0)
+            if (args.GetEntities<WorkspaceSetting>().Count > 0 || args.GetEntities<MsDataFile>().Count > 0)
             {
                 UpdateColumnVisibility();
             }

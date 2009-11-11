@@ -173,7 +173,7 @@ namespace pwiz.Topograph.ui.Forms
                 session.BeginTransaction();
                 for (int i = 0; i < searchResults.Count; i++)
                 {
-                    if (!ProgressMonitor(100 + 100 * i / searchResults.Count))
+                    if (!ProgressMonitor(100 + 100*i/searchResults.Count))
                     {
                         return;
                     }
@@ -181,7 +181,7 @@ namespace pwiz.Topograph.ui.Forms
                     if (useMinXCorr)
                     {
                         double minXCorr;
-                        switch(searchResult.Charge)
+                        switch (searchResult.Charge)
                         {
                             case 1:
                                 minXCorr = _minXCorr1;
@@ -207,20 +207,21 @@ namespace pwiz.Topograph.ui.Forms
                             continue;
                         }
                         dbPeptide = new DbPeptide
-                        {
-                            Workspace = dbWorkspace,
-                            Protein = searchResult.Protein,
-                            ProteinDescription = searchResult.ProteinDescription,
-                            Sequence = trimmedSequence,
-                            FullSequence = searchResult.Sequence,
-                        };
+                                        {
+                                            Workspace = dbWorkspace,
+                                            Protein = searchResult.Protein,
+                                            ProteinDescription = searchResult.ProteinDescription,
+                                            Sequence = trimmedSequence,
+                                            FullSequence = searchResult.Sequence,
+                                        };
                         session.Save(dbPeptide);
                         peptides.Add(trimmedSequence, dbPeptide);
                     }
                     DbMsDataFile dbMsDataFile;
                     if (!dataFiles.TryGetValue(searchResult.Filename, out dbMsDataFile))
                     {
-                        var msDataFilePath = Workspace.ResolveMsDataFilePath(Path.GetDirectoryName(file), searchResult.Filename);
+                        var msDataFilePath = Workspace.ResolveMsDataFilePath(Path.GetDirectoryName(file),
+                                                                             searchResult.Filename);
                         dbMsDataFile = new DbMsDataFile
                                            {
                                                Name = searchResult.Filename,
@@ -280,14 +281,18 @@ namespace pwiz.Topograph.ui.Forms
                 dbWorkspace.MsDataFileCount = dataFiles.Count;
                 session.Update(dbWorkspace);
                 session.Transaction.Commit();
-                using (Workspace.GetWriteLock())
+            }
+
+            using (Workspace.GetWriteLock())
+            {
+                using (var session = Workspace.OpenSession())
                 {
                     foreach (var dbPeptide in modifiedPeptides)
                     {
                         var peptide = Workspace.Peptides.GetPeptide(dbPeptide);
                         if (peptide == null)
                         {
-                            peptide = new Peptide(Workspace, dbPeptide);
+                            peptide = new Peptide(Workspace, session.Get<DbPeptide>(dbPeptide.Id));
                             Workspace.Peptides.AddChild(dbPeptide.Id.Value, peptide);
                             Workspace.AddEntityModel(peptide);
                         }
@@ -298,7 +303,7 @@ namespace pwiz.Topograph.ui.Forms
                         var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbMsDataFile);
                         if (msDataFile == null)
                         {
-                            msDataFile = new MsDataFile(Workspace, dbMsDataFile);
+                            msDataFile = new MsDataFile(Workspace, session.Get<DbMsDataFile>(dbMsDataFile.Id));
                             Workspace.MsDataFiles.AddChild(msDataFile.Id.Value, msDataFile);
                             Workspace.AddEntityModel(msDataFile);
                         }

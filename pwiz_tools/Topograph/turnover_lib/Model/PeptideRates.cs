@@ -114,6 +114,10 @@ namespace pwiz.Topograph.Model
             {
                 return double.NaN;
             }
+            if (Math.Abs(value) > 1E20)
+            {
+                return double.NaN;
+            }
             return value;
         }
 
