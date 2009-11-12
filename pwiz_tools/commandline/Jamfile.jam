@@ -107,6 +107,13 @@ exe tab2mzid
     ;
 
 
+exe pep2mzid
+    : pep2mzid.cpp
+      ../../pwiz/data/mziddata//pwiz_data_mzid
+    : <include>../../..
+    ;
+
+
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
 
 
