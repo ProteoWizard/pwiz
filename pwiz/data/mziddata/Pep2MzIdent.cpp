@@ -75,6 +75,18 @@ struct sequence_p
     }
 };
 
+struct seq_p
+{
+    const string seq;
+    
+    seq_p(const string& seq) : seq(seq) {}
+
+    bool operator()(const DBSequencePtr& dbs) const
+    {
+        return (dbs->seq == seq);
+    }
+};
+
 template<typename T>
 struct id_p
 {
@@ -186,12 +198,10 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 
     for (size_t idx = 0; cvids[idx] != CVID_Unknown; idx++)
     {
-        cerr << "checking cvid " << cvids[idx] << endl;
         AnalysisSoftwarePtr as = findSoftware(software, cvids[idx]);
         
         if (!as.get())
         {
-            cerr << "FINALLY! We found " << cvids[idx] << endl;
             cvparam = CVParam(cvids[idx], "0.5");
             break;
         }
@@ -378,7 +388,8 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
     else
     {
         fs::path localPath(summary->searchDatabase.localPath);
-        searchDatabase->DatabaseName.userParams.push_back(UserParam(localPath.filename()));
+        searchDatabase->DatabaseName.userParams.push_back(
+            UserParam(localPath.filename()));
     }
 
     // TODO make this more elegant
@@ -467,8 +478,15 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
              shit != (*srit)->searchHit.end(); shit++)
         {
             const string pid = addPeptide(*shit, result);
+
+            if (find_if(mzid->sequenceCollection.dbSequences.begin(),
+                        mzid->sequenceCollection.dbSequences.end(),
+                        seq_p((*shit)->peptide)) !=
+                mzid->sequenceCollection.dbSequences.end())
+                continue;
             
-            DBSequencePtr dbs(new DBSequence("DBS_"+lexical_cast<string>(indices->dbseq++)));
+            DBSequencePtr dbs(new DBSequence("DBS_"+lexical_cast<string>(
+                                                 indices->dbseq++)));
             dbs->length = (*shit)->peptide.length();
             dbs->seq = (*shit)->peptide;
             dbs->accession = (*shit)->protein;
@@ -477,12 +495,13 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                 dbs->searchDatabasePtr = mzid->dataCollection.inputs.
                     searchDatabase.at(0);
             else
-                dbs->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SD_1"));
+                dbs->searchDatabasePtr = SearchDatabasePtr(
+                    new SearchDatabase("SD_1"));
 
             mzid->sequenceCollection.dbSequences.push_back(dbs);
             
             PeptideEvidencePtr pepEv(new PeptideEvidence(
-                                         "PEPEV_"+lexical_cast<string>(
+                                         "PE_"+lexical_cast<string>(
                                              indices->peptideEvidence++)));
             
             // TODO make sure handle the spectrum field
@@ -493,14 +512,16 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             pepEv->end = query->endScan;
             pepEv->dbSequencePtr = dbs;
     
-            SpectrumIdentificationItemPtr sii(new SpectrumIdentificationItem(
-                                                  "SII_"+lexical_cast<string>(indices->sii++)));
+            SpectrumIdentificationItemPtr sii(
+                new SpectrumIdentificationItem(
+                    "SII_"+lexical_cast<string>(indices->sii++)));
 
             // TODO find out if this is right.
             sii->chargeState = query->assumedCharge;
 
             // TODO get search_score
-            CVParam cvp = translateSearchScore("ionscore", (*shit)->searchScore);
+            CVParam cvp = translateSearchScore("ionscore",
+                                               (*shit)->searchScore);
 
             if (cvp.cvid != CVID_Unknown)
                 sii->paramGroup.set(cvp.cvid, cvp.value);
@@ -513,7 +534,8 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             // TODO handle precursorNeutralMass
             // TODO handle index/retentionTimeSec fields
     
-            SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
+            SpectrumIdentificationResultPtr sirp(
+                new SpectrumIdentificationResult());
             sirp->id = "SIR_"+lexical_cast<string>(indices->sir++);
 
             cvp = translateSearchScore("identityscore", (*shit)->searchScore);
@@ -522,12 +544,15 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             sirp->spectrumID = query->spectrum;
             sirp->spectrumIdentificationItem.push_back(sii);
             if (mzid->dataCollection.inputs.spectraData.size()>0)
-                sirp->spectraDataPtr = mzid->dataCollection.inputs.spectraData.at(0);
+                sirp->spectraDataPtr = mzid->dataCollection.inputs.
+                    spectraData.at(0);
             else
-                throw runtime_error("[Pep2MzIdent::translateQueries] no SpectraData");
+                throw runtime_error("[Pep2MzIdent::translateQueries] no "
+                                    "SpectraData");
     
             SpectrumIdentificationListPtr sil;
-            if (mzid->dataCollection.analysisData.spectrumIdentificationList.size() > 0)
+            if (mzid->dataCollection.analysisData.
+                spectrumIdentificationList.size() > 0)
             {
                 sil = mzid->dataCollection.analysisData.
                     spectrumIdentificationList.back();
@@ -635,7 +660,8 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
             sd->spectrumIDFormat.set(MS_spectrum_from_database_nativeID_format);
         }
         else
-            throw runtime_error(("[Pep2MzIdent::processParameter] Unknown file type for "+sd->location).c_str());
+            throw runtime_error(("[Pep2MzIdent::processParameter] Unknown "
+                                 "file type for "+sd->location).c_str());
         
         mzid->dataCollection.inputs.spectraData.push_back(sd);
     }
@@ -735,21 +761,24 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
                                      getCVID(parameter->value));
         }
     }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.01.accession")
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
+             "sourceFile.cvParam.01.accession")
     {
         istringstream oss(parameter->value.substr(
                               parameter->value.find_first_of(":")));
         size_t cvid;
         oss >> cvid;
     }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.02.accession")
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
+             "sourceFile.cvParam.02.accession")
     {
         istringstream oss(parameter->value.substr(
                               parameter->value.find_first_of(":")));
         size_t cvid;
         oss >> cvid;
     }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.03.accession")
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
+             "sourceFile.cvParam.03.accession")
     { 
         istringstream oss(parameter->value.substr(
                               parameter->value.find_first_of(":")));
@@ -757,21 +786,12 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
         
         oss >> cvid;
     }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList.sourceFile.cvParam.03.value")
+    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
+             "sourceFile.cvParam.03.value")
     {
     }
-    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.01.accession")
-    {
-        size_t idx = parameter->value.find_first_of(":");
-
-        if (idx == string::npos)
-            return;
-        
-        istringstream oss(parameter->value.substr(idx));
-        size_t cvid;
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.02.accession")
+    else if (parameter->name == "_mzML.referenceableParamGroupList."
+             "referenceableParamGroup.cvParam.01.accession")
     {
         size_t idx = parameter->value.find_first_of(":");
 
@@ -782,7 +802,20 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
         size_t cvid;
         oss >> cvid;
     }
-    else if (parameter->name == "_mzML.referenceableParamGroupList.referenceableParamGroup.cvParam.02.value")
+    else if (parameter->name == "_mzML.referenceableParamGroupList."
+             "referenceableParamGroup.cvParam.02.accession")
+    {
+        size_t idx = parameter->value.find_first_of(":");
+
+        if (idx == string::npos)
+            return;
+        
+        istringstream oss(parameter->value.substr(idx));
+        size_t cvid;
+        oss >> cvid;
+    }
+    else if (parameter->name == "_mzML.referenceableParamGroupList."
+             "referenceableParamGroup.cvParam.02.value")
     {
     }
     else if (starts_with(parameter->name, "_mzML.softwareList.") &&
@@ -834,6 +867,21 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
 void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
                                        MzIdentMLPtr mzid)
 {
+    if (parameter->name == "USERNAME" ||
+        parameter->name == "USEREMAIL" || 
+        parameter->name == "FILE" ||
+        parameter->name == "TOL" ||
+        parameter->name == "TOLU" ||
+        parameter->name == "ITOL" || 
+        parameter->name == "ITOLU" ||
+        starts_with(parameter->name, "_mzML.fileDescription.sourceFileList."
+                    "sourceFile.cvParam") ||
+        starts_with(parameter->name, "_mzML.referenceableParamGroupList."
+                    "referenceableParamGroup.cvParam") || 
+        starts_with(parameter->name, "_mzML.softwareList.") ||
+        starts_with(parameter->name, "_mzML.softwareList.software."))
+        return;
+
     if (parameter->name == "PEAK")
     {
         if (mzid->analysisProtocolCollection.proteinDetectionProtocol.size()==0)
@@ -852,6 +900,8 @@ void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
                                                 cvparam.cvid);
         pdp->analysisParams.set(MS_mascot_MaxProteinHits, parameter->value);
     }
+    
+    // TODO stick the rest in UserParam objects somewhere.
 }
 
 void Pep2MzIdent::translateEarlyMetadata()
