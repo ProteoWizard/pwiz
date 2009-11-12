@@ -45,7 +45,7 @@ PWIZ_API_DECL CVID translate(MassAnalyzerType type);
 PWIZ_API_DECL CVID translateAsIonizationType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(PolarityType polarityType);
-PWIZ_API_DECL CVID translate(ActivationType activationType);
+PWIZ_API_DECL void SetActivationType(ActivationType activationType, Activation& activation);
 
 } // detail
 } // msdata

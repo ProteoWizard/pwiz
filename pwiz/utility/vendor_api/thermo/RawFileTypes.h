@@ -96,7 +96,8 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Exactive,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
-    InstrumentModelType_LTQ_Velos
+    InstrumentModelType_LTQ_Velos,
+    InstrumentModelType_LTQ_Orbitrap_Velos,
 };
 
 
@@ -135,6 +136,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "LTQ ORBITRAP DISCOVERY")  return InstrumentModelType_LTQ_Orbitrap_Discovery;
     else if (type == "LTQ ORBITRAP XL")         return InstrumentModelType_LTQ_Orbitrap_XL;
     else if (type == "LTQ VELOS")               return InstrumentModelType_LTQ_Velos;
+    else if (type == "LTQ ORBITRAP VELOS")      return InstrumentModelType_LTQ_Orbitrap_Velos;
     else if (type == "LXQ")                     return InstrumentModelType_LXQ;
     else if (type == "LCQ FLEET")               return InstrumentModelType_LCQ_Fleet;
     else if (type == "ITQ 700")                 return InstrumentModelType_ITQ_700;
@@ -207,6 +209,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_Exactive:
         case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -300,7 +303,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
-        case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
             if (scanFilterType == ScanFilterMassAnalyzerType_FTMS)
                 return MassAnalyzerType_Orbitrap;
             else 
@@ -345,6 +348,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_XL_ETD:
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
+        case InstrumentModelType_LTQ_Velos:
             return MassAnalyzerType_Linear_Ion_Trap;
 
         case InstrumentModelType_DFS:
@@ -390,6 +394,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
@@ -498,6 +503,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
@@ -562,19 +568,18 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
 
 enum PWIZ_API_DECL ActivationType
 {
-    ActivationType_Unknown = -1,
-    ActivationType_CID = 0,         // Collision Induced Dissociation
-    ActivationType_MPD = 1,         // TODO: what is this?
-    ActivationType_ECD = 2,         // Electron Capture Dissociation
-    ActivationType_PQD = 3,         // Pulsed Q Dissociation
-    ActivationType_ETD = 4,         // Electron Transfer Dissociation
-    ActivationType_HCD = 5,         // High Energy CID
-    ActivationType_Any = 6,         // "any activation type" when used as input parameter
-    ActivationType_SA = 7,          // Supplemental CID
-    ActivationType_PTR = 8,         // Proton Transfer Reaction
-    ActivationType_NETD = 9,        // TODO: nano-ETD?
-    ActivationType_NPTR = 10,       // TODO: nano-PTR?
-    ActivationType_Count = 11
+    ActivationType_Unknown = 0,
+    ActivationType_CID = 1,         // Collision Induced Dissociation
+    ActivationType_MPD = 2,         // TODO: what is this?
+    ActivationType_ECD = 4,         // Electron Capture Dissociation
+    ActivationType_PQD = 8,         // Pulsed Q Dissociation
+    ActivationType_ETD = 16,         // Electron Transfer Dissociation
+    ActivationType_HCD = 32,         // High Energy CID
+    ActivationType_Any = 64,         // "any activation type" when used as input parameter
+    ActivationType_PTR = 128,         // Proton Transfer Reaction
+    ActivationType_NETD = 256,        // TODO: nano-ETD?
+    ActivationType_NPTR = 512,       // TODO: nano-PTR?
+    ActivationType_Count = 1024
 };
 
 

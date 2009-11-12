@@ -73,6 +73,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_Discovery:    return MS_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
         case InstrumentModelType_LTQ_Velos:                 return MS_LTQ_Velos;
+        case InstrumentModelType_LTQ_Orbitrap_Velos:        return MS_LTQ_Orbitrap_Velos;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
         case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
@@ -373,28 +374,21 @@ PWIZ_API_DECL CVID translate(PolarityType polarityType)
     }
 }
 
-
-PWIZ_API_DECL CVID translate(ActivationType activationType)
+PWIZ_API_DECL void SetActivationType(ActivationType activationType, Activation& activation)
 {
-    switch (activationType)
-    {
-        case ActivationType_CID:
-        case ActivationType_SA: // should supplemental CID map to CID?
-            return MS_collision_induced_dissociation;
-        case ActivationType_ETD:
-            return MS_electron_transfer_dissociation;
-        case ActivationType_ECD:
-            return MS_electron_capture_dissociation;
-        case ActivationType_PQD:
-            return MS_pulsed_q_dissociation;
-        case ActivationType_HCD:
-            return MS_high_energy_collision_induced_dissociation;
-        default:
-        case ActivationType_PTR: // what does this map to?
-        case ActivationType_MPD: // what does this map to?
-        case ActivationType_Unknown:
-            return CVID_Unknown;
-    }
+    if (activationType & ActivationType_CID)
+        activation.set(MS_collision_induced_dissociation);
+    if (activationType & ActivationType_ETD)
+        activation.set(MS_electron_transfer_dissociation);
+    if (activationType & ActivationType_ECD)
+        activation.set(MS_electron_capture_dissociation);
+    if (activationType & ActivationType_PQD)
+        activation.set(MS_pulsed_q_dissociation);
+    if (activationType & ActivationType_HCD)
+        activation.set(MS_high_energy_collision_induced_dissociation);
+    // ActivationType_PTR: // what does this map to?
+    // ActivationType_MPD: // what does this map to?
+    // ActivationType_Unknown:
 }
 
 } // detail

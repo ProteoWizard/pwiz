@@ -467,6 +467,11 @@ InstrumentModelType RawFileImpl::getInstrumentModel()
     if (instrumentModel_ == InstrumentModelType_Unknown)
     {
         string modelString = value(InstModel);
+        if (modelString == "LTQ Velos") //HACK: disambiguate LTQ Velos and Orbitrap Velos
+        {
+            modelString = value(InstName);
+        }
+
         instrumentModel_ = parseInstrumentModelType(modelString);
     }
     return instrumentModel_;

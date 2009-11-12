@@ -287,8 +287,6 @@ ScanFilter::parseActivationType(const string& word)
 		return ActivationType_ETD;
 	else if (word == "HCD")
 		return ActivationType_HCD;
-	else if (word == "SA")
-		return ActivationType_SA;
 	else if (word == "PTR")
 		return ActivationType_PTR;
 	else
@@ -699,7 +697,9 @@ ScanFilter::parse(string filterLine)
                 {
 				    energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
 				    if (energyPos != string::npos) {
-					    activationType_ = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
+					    activationType_ = static_cast<ActivationType>(activationType_ | parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1)));
+                        if (supplementalCIDOn_ == TriBool_True)
+                            activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
 					    if (activationType_ == ActivationType_Unknown)
 						    throw runtime_error("failed to parse activation type");
 				    } else

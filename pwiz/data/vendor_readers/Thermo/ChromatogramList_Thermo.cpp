@@ -147,7 +147,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             if (activationType == ActivationType_Unknown)
                 activationType = ActivationType_CID; // assume CID
 
-            result->precursor.activation.set(translate(activationType));
+            SetActivationType(activationType, result->precursor.activation);
             if (filterParser.activationType_ == ActivationType_CID)
                 result->precursor.activation.set(MS_collision_energy, filterParser.cidEnergy_[0]);
 

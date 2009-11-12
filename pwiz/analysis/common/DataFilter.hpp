@@ -20,8 +20,8 @@
 //
 
 
-#ifndef _IDATAFILTER_HPP_ 
-#define _IDATAFILTER_HPP_ 
+#ifndef _DATAFILTER_HPP_ 
+#define _DATAFILTER_HPP_ 
 
 
 #include "boost/shared_ptr.hpp"
@@ -54,4 +54,4 @@ typedef boost::shared_ptr<ChromatogramDataFilter> ChromatogramDataFilterPtr;
 } // namespace pwiz
 
 
-#endif // _ISPECTRUMDATAFILTER_HPP_ 
+#endif // _DATAFILTER_HPP_ 

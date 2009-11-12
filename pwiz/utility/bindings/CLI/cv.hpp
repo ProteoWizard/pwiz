@@ -3071,6 +3071,9 @@ public enum class CVID
     /// <summary>LTQ Velos: Thermo Scientific LTQ Velos MS.</summary>
     MS_LTQ_Velos = 1000855,
 
+    /// LTQ Orbitrap Velos: Thermo Scientific LTQ Orbitrap Velos MS
+    MS_LTQ_Orbitrap_Velos = 1001599,
+
     /// <summary>LTQ Velos ETD: Thermo Scientific LTQ Velos MS with ETD.</summary>
     MS_LTQ_Velos_ETD = 1000856,
 

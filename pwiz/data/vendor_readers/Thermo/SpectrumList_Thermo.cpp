@@ -397,8 +397,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             ActivationType activationType = scanInfo->activationType();
             if (activationType == ActivationType_Unknown)
                 activationType = ActivationType_CID; // assume CID
-            precursor.activation.set(translate(activationType));
-            if (activationType == ActivationType_CID || activationType == ActivationType_HCD)
+            SetActivationType(activationType, precursor.activation);
+            if ((activationType & ActivationType_CID) || (activationType & ActivationType_HCD))
                 precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
 
             if (msLevel != -1)
