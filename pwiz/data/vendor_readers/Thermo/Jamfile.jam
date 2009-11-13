@@ -134,7 +134,7 @@ rule test-requirements ( properties * )
     }
     else if ! $(.hasDLLs)
     {
-        echo "[data/vendor_readers/Thermo] Missing xdk/MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
+        echo "[data/vendor_readers/Thermo] Missing MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
         result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
     }
 

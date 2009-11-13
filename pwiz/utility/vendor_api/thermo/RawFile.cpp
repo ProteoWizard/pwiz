@@ -28,9 +28,9 @@
 //#define UPDATE_TLH
 
 #ifdef UPDATE_TLH
-#import "xdk/MSFileReader.XRawfile2.dll" rename_namespace("XRawfile")
+#import "MSFileReader.XRawfile2.dll" rename_namespace("XRawfile")
 #else
-#include "xdk/XRawFile2.tlh"
+#include "XRawFile2.tlh"
 #endif
 
 #include "RawFileValues.h"
