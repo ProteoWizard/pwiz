@@ -3083,9 +3083,6 @@ enum PWIZ_API_DECL CVID
     /// LTQ Velos: Thermo Scientific LTQ Velos MS.
     MS_LTQ_Velos = 1000855,
 
-    /// LTQ Orbitrap Velos: Thermo Scientific LTQ Orbitrap Velos MS
-    MS_LTQ_Orbitrap_Velos = 1001599,
-
     /// LTQ Velos ETD: Thermo Scientific LTQ Velos MS with ETD.
     MS_LTQ_Velos_ETD = 1000856,
 

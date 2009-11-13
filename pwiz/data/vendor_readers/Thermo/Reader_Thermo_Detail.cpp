@@ -73,7 +73,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_Discovery:    return MS_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
         case InstrumentModelType_LTQ_Velos:                 return MS_LTQ_Velos;
-        case InstrumentModelType_LTQ_Orbitrap_Velos:        return MS_LTQ_Orbitrap_Velos;
+        case InstrumentModelType_LTQ_Orbitrap_Velos:        return MS_LTQ_Velos;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
         case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
