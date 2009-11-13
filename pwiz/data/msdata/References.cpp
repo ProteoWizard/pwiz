@@ -170,6 +170,8 @@ PWIZ_API_DECL void resolve(Product& product, const MSData& msd)
 PWIZ_API_DECL void resolve(Scan& scan, const MSData& msd)
 {
     resolve(static_cast<ParamContainer&>(scan), msd);
+    if (!scan.instrumentConfigurationPtr.get())
+        scan.instrumentConfigurationPtr = msd.run.defaultInstrumentConfigurationPtr;
     resolve(scan.instrumentConfigurationPtr, msd.instrumentConfigurationPtrs);
     resolve(scan.scanWindows, msd);
 }

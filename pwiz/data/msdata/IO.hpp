@@ -132,11 +132,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanWindow& selectio
 PWIZ_API_DECL void read(std::istream& is, ScanWindow& selectionWindow);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MSData& msd);
 PWIZ_API_DECL void read(std::istream& is, Scan& scan);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList, const MSData& msd);
 PWIZ_API_DECL void read(std::istream& is, ScanList& scanList);
     
 
@@ -150,7 +150,7 @@ enum PWIZ_API_DECL BinaryDataFlag {IgnoreBinaryData, ReadBinaryData};
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
+void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
@@ -167,7 +167,7 @@ void read(std::istream& is, Chromatogram& chromatogram,
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, 
+void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);

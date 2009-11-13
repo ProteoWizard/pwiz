@@ -1395,7 +1395,7 @@ PWIZ_API_DECL void read(std::istream& is, ScanWindow& scanWindow)
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MSData& msd)
 {
     XMLWriter::Attributes attributes;
 
@@ -1413,8 +1413,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan)
     else
         attributes.push_back(make_pair("spectrumRef", scan.spectrumID)); // not an XML:IDREF
 
-    if (scan.instrumentConfigurationPtr.get())
+    // don't write the instrumentConfigurationRef if it's set to the default
+    const InstrumentConfigurationPtr& defaultIC = msd.run.defaultInstrumentConfigurationPtr;
+    if (scan.instrumentConfigurationPtr.get() &&
+        (!defaultIC.get() || scan.instrumentConfigurationPtr != defaultIC))
         attributes.push_back(make_pair("instrumentConfigurationRef", encode_xml_id_copy(scan.instrumentConfigurationPtr->id)));
+
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
     
@@ -1532,7 +1536,7 @@ PWIZ_API_DECL void read(std::istream& is, Scan& scan)
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList, const MSData& msd)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("count", lexical_cast<string>(scanList.scans.size())));
@@ -1541,7 +1545,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList)
     
     for (vector<Scan>::const_iterator it=scanList.scans.begin(); 
          it!=scanList.scans.end(); ++it)
-         write(writer, *it);
+         write(writer, *it, msd);
     
     writer.endElement();
 }
@@ -1808,7 +1812,7 @@ PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, cons
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, 
+void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd, 
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
@@ -1826,7 +1830,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum,
 
     writeParamContainer(writer, spectrum);
 
-    write(writer, spectrum.scanList);
+    write(writer, spectrum.scanList, msd);
 
     if (!spectrum.precursors.empty())
     {
@@ -2139,7 +2143,7 @@ PWIZ_API_DECL void read(std::istream& is, Chromatogram& chromatogram,
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
+void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            const IterationListenerRegistry* iterationListenerRegistry)
@@ -2175,7 +2179,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList,
 
         SpectrumPtr spectrum = spectrumList.spectrum(i, true);
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
-        write(writer, *spectrum, config);
+        write(writer, *spectrum, msd, config);
     }
 
     writer.endElement();
@@ -2372,7 +2376,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
         throw runtime_error("[IO::write(Run)] At least one spectrum or chromatogram must be present.");
 
     if (hasSpectrumList)
-        write(writer, *run.spectrumListPtr, config, spectrumPositions, iterationListenerRegistry);
+        write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry);
 
     if (hasChromatogramList)
         write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry);
