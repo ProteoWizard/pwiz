@@ -404,16 +404,23 @@ namespace pwiz.Topograph.ui.Forms
             var row = dataGridView.Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
             var peptideAnalysisId = (long)row.Tag;
-            using (var session = Workspace.OpenSession())
+            PeptideAnalysis peptideAnalysis;
+            using (Workspace.GetReadLock())
             {
-                var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisId, session);
+                using (var session = Workspace.OpenSession())
+                {
+                    peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisId, session);
+                }
+            }
+            using (Workspace.GetWriteLock())
+            {
                 if (column == colNote)
                 {
                     peptideAnalysis.Note = Convert.ToString(cell.Value);
                 }
                 else if (column == colStatus)
                 {
-                    peptideAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                    peptideAnalysis.ValidationStatus = (ValidationStatus)cell.Value;
                 }
             }
         }
