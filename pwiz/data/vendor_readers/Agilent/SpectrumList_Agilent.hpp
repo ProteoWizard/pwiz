@@ -53,10 +53,11 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     
 #ifdef PWIZ_READER_AGILENT
-    SpectrumList_Agilent(MassHunterDataPtr rawfile);
+    SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile);
 
     private:
 
+    const MSData& msd_;
     MassHunterDataPtr rawfile_;
     mutable size_t size_;
 

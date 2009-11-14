@@ -146,6 +146,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     //try
     //{

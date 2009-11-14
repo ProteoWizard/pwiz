@@ -44,8 +44,9 @@ namespace msdata {
 namespace detail {
 
 
-SpectrumList_Agilent::SpectrumList_Agilent(MassHunterDataPtr rawfile)
-:   rawfile_(rawfile),
+SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile)
+:   msd_(msd),
+    rawfile_(rawfile),
     size_(0),
     indexInitialized_(BOOST_ONCE_INIT)
 {
@@ -125,6 +126,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
     scan.set(MS_scan_start_time, rawfile_->getTicTimes()[ie.rowNumber], UO_minute);
 
     int msLevel = translateAsMSLevel(scanType);

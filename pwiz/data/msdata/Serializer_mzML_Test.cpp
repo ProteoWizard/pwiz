@@ -23,6 +23,7 @@
 
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
+#include "References.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -55,6 +56,8 @@ void testWriteRead(const MSData& msd, const Serializer_mzML::Config& config)
     shared_ptr<istringstream> iss(new istringstream(oss.str()));
     MSData msd2;
     mzmlSerializer.read(iss, msd2);
+
+    References::resolve(msd2);
 
     Diff<MSData> diff(msd, msd2);
     if (os_ && diff) *os_ << diff << endl; 

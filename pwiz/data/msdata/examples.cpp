@@ -304,6 +304,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
 
     s21.scanList.scans.push_back(Scan());
+    s21.scanList.scans.back().instrumentConfigurationPtr = instrumentConfigurationPtr;
     s21.scanList.set(MS_no_combination);
 
     // spectrum with MALDI spot information

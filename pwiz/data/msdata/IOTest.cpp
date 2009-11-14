@@ -23,6 +23,7 @@
 
 #include "IO.hpp"
 #include "Diff.hpp"
+#include "References.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
@@ -64,9 +65,33 @@ void testObject(const object_type& a)
 
     Diff<object_type> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
-    unit_assert(!diff);
+    unit_assert(!diff); 
+}
 
-    
+
+template <typename object_type>
+void testObjectWithMSData(const object_type& a, const MSData& msd)
+{
+    if (os_) *os_ << "testObject(): " << typeid(a).name() << endl;
+
+    // write 'a' out to a stream
+
+    ostringstream oss;
+    XMLWriter writer(oss);
+    IO::write(writer, a, msd);
+    if (os_) *os_ << oss.str() << endl;
+
+    // read 'b' in from stream
+
+    object_type b; 
+    istringstream iss(oss.str());
+    IO::read(iss, b);
+
+    // compare 'a' and 'b'
+
+    Diff<object_type> diff(a,b);
+    if (diff && os_) *os_ << "diff:\n" << diff << endl;
+    unit_assert(!diff); 
 }
 
 
@@ -78,7 +103,7 @@ void testObject_SpectrumList(const SpectrumList& a)
 
   ostringstream oss;
   XMLWriter writer(oss);
-  IO::write(writer, a);
+  IO::write(writer, a, MSData());
   if (os_) *os_ << oss.str() << endl;
 
   // read 'b' in from stream
@@ -361,7 +386,7 @@ void testScan()
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 
-    testObject(a);
+    testObjectWithMSData(a, MSData());
 }
 
 
@@ -379,7 +404,7 @@ void testScanList()
     a.scans.push_back(a1);
     a.scans.push_back(a2);
    
-    testObject(a);
+    testObjectWithMSData(a, MSData());
 }
 
 
@@ -509,7 +534,7 @@ void testSpectrum()
 
     ostringstream oss;
     XMLWriter writer(oss);
-    IO::write(writer, a);
+    IO::write(writer, a, MSData());
     if (os_) *os_ << oss.str() << endl;
 
     // read 'b' in from stream
@@ -641,7 +666,7 @@ void testSpectrumListWithPositions()
     ostringstream oss;
     XMLWriter writer(oss);
     vector<stream_offset> positions;
-    IO::write(writer, a, BinaryDataEncoder::Config(), &positions);
+    IO::write(writer, a, MSData(), BinaryDataEncoder::Config(), &positions);
 
     if (os_)
     {
@@ -713,7 +738,7 @@ void testSpectrumListWriteProgress()
     IterationListenerRegistry registry;
     registry.addListener(listener, 3); // callbacks: 0,2,5,8,10
 
-    IO::write(writer, a, BinaryDataEncoder::Config(), 0, &registry);
+    IO::write(writer, a, MSData(), BinaryDataEncoder::Config(), 0, &registry);
 
     if (os_) 
     {
@@ -738,7 +763,7 @@ void testSpectrumListWriteProgress()
     
     ostringstream oss2;
     XMLWriter writer2(oss2);
-    IO::write(writer2, a, BinaryDataEncoder::Config(), 0, &registry2);
+    IO::write(writer2, a, MSData(), BinaryDataEncoder::Config(), 0, &registry2);
 
     if (os_) 
     {
