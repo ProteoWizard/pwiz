@@ -387,15 +387,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private PeptideAnalysisFrame OpenPeptideAnalysis(PeptideAnalysis peptideAnalysis)
         {
-            var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
-            if (form != null)
-            {
-                form.Activate();
-                return form;
-            }
-            form = new PeptideAnalysisFrame(peptideAnalysis);
-            form.Show(DockPanel, DockState);
-            return form;
+            return PeptideAnalysisFrame.ShowPeptideAnalysis(peptideAnalysis);
         }
 
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)

@@ -93,6 +93,11 @@ namespace pwiz.Topograph.ui.Forms
             peptideFileAnalysisFrame.ShowForm<T>();
             return peptideFileAnalysisFrame;
         }
+        public static PeptideFileAnalysisFrame ShowFileAnalysisForm<T>(PeptideFileAnalysis peptideFileAnalysis) where T : PeptideFileAnalysisForm
+        {
+            var analysisForm = PeptideAnalysisFrame.ShowPeptideAnalysis(peptideFileAnalysis.PeptideAnalysis);
+            return ActivatePeptideDataForm<T>(analysisForm.PeptideAnalysisSummary, peptideFileAnalysis);
+        }
         public T ShowForm<T>() where T : PeptideFileAnalysisForm
         {
             Activate();

@@ -145,19 +145,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void ShowPeptideFileAnalysisForm<T>(PeptideFileAnalysis peptideFileAnalysis) where T:PeptideFileAnalysisForm
         {
-            var peptideAnalysisFrame =
-                Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideFileAnalysis.PeptideAnalysis);
-            if (peptideAnalysisFrame == null)
-            {
-                peptideAnalysisFrame = new PeptideAnalysisFrame(peptideFileAnalysis.PeptideAnalysis);
-                peptideAnalysisFrame.Show(DockPanel, DigitalRune.Windows.Docking.DockState.Document);
-            }
-            else
-            {
-                peptideAnalysisFrame.Activate();
-            }
-            PeptideFileAnalysisFrame.ActivatePeptideDataForm<T>(
-                peptideAnalysisFrame.PeptideAnalysisSummary, peptideFileAnalysis);
+            PeptideFileAnalysisFrame.ShowFileAnalysisForm<T>(peptideFileAnalysis);
         }
 
         private void dataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)

@@ -395,18 +395,15 @@ namespace pwiz.Topograph.ui.Controls
         }
         public Color GetColor(MzKey mzKey)
         {
+            int cCharge = PeptideAnalysis.MaxCharge - PeptideAnalysis.MinCharge;
+            int iCharge = mzKey.Charge - PeptideAnalysis.MinCharge;
+            int red = cCharge == 0 ? 0 : 128*iCharge/cCharge;
             int c = PeptideAnalysis.GetMassCount() - 1;
-            switch ((mzKey.Charge - PeptideAnalysis.MinCharge) %3)
+            if (c == 0)
             {
-                default:
-                    return Color.FromArgb(96 * mzKey.MassIndex / c, 192 * mzKey.MassIndex / c,
-                                   255 * (c - mzKey.MassIndex) / c);
-                case 1:
-                    return Color.FromArgb(128 * mzKey.MassIndex / c, 255 * (c - mzKey.MassIndex) / c, 128 * mzKey.MassIndex / c);
-                case 2:
-                    return Color.FromArgb(192*mzKey.MassIndex/c, 96*mzKey.MassIndex/c, 
-                        255*(c - mzKey.MassIndex)/c);
+                return Color.FromArgb(red, 0, 255);
             }
+            return Color.FromArgb(red, 255*mzKey.MassIndex/c, 255*(c - mzKey.MassIndex)/c);
         }
     }
 }

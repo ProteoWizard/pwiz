@@ -84,5 +84,18 @@ namespace pwiz.Topograph.ui.Forms
             get { return (PeptideAnalysis) EntityModel; }
         }
         public PeptideAnalysisSummary PeptideAnalysisSummary { get; private set; }
+
+        public static PeptideAnalysisFrame ShowPeptideAnalysis(PeptideAnalysis peptideAnalysis)
+        {
+            var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
+            if (form != null)
+            {
+                form.Activate();
+                return form;
+            }
+            form = new PeptideAnalysisFrame(peptideAnalysis);
+            form.Show(TurnoverForm.Instance.DocumentPanel, DockState.Document);
+            return form;
+        }
     }
 }

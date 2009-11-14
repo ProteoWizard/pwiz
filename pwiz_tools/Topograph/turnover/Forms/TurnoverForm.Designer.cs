@@ -49,6 +49,7 @@
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -140,7 +141,8 @@
             this.peptideAnalysesToolStripMenuItem,
             this.statusToolStripMenuItem,
             this.queryToolStripMenuItem,
-            this.mercuryToolStripMenuItem});
+            this.mercuryToolStripMenuItem,
+            this.halfLivesToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -236,6 +238,14 @@
             this.machineSettingsToolStripMenuItem.Text = "Miscellaneous...";
             this.machineSettingsToolStripMenuItem.Click += new System.EventHandler(this.machineSettingsToolStripMenuItem_Click);
             // 
+            // halfLivesToolStripMenuItem
+            // 
+            this.halfLivesToolStripMenuItem.Enabled = false;
+            this.halfLivesToolStripMenuItem.Name = "halfLivesToolStripMenuItem";
+            this.halfLivesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.halfLivesToolStripMenuItem.Text = "Half Lives";
+            this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
+            // 
             // TurnoverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -276,5 +286,6 @@
         private System.Windows.Forms.ToolStripMenuItem queryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem machineSettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mercuryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem halfLivesToolStripMenuItem;
     }
 }

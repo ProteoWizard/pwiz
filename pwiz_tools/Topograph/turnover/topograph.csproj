@@ -50,7 +50,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>32</ApplicationRevision>
+    <ApplicationRevision>34</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -188,6 +188,12 @@
     <Compile Include="Forms\GraphForm.Designer.cs">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\HalfLifeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HalfLifeForm.Designer.cs">
+      <DependentUpon>HalfLifeForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LongWaitDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -247,6 +253,12 @@
     </Compile>
     <Compile Include="Forms\QueryForm.Designer.cs">
       <DependentUpon>QueryForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\HalfLivesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HalfLivesForm.Designer.cs">
+      <DependentUpon>HalfLivesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\StatusForm.cs">
       <SubType>Form</SubType>
@@ -331,6 +343,9 @@
     <EmbeddedResource Include="Forms\GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HalfLifeForm.resx">
+      <DependentUpon>HalfLifeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\LongWaitDialog.resx">
       <DependentUpon>LongWaitDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -366,6 +381,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\QueryForm.resx">
       <DependentUpon>QueryForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HalfLivesForm.resx">
+      <DependentUpon>HalfLivesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SpectrumForm.resx">
       <DependentUpon>SpectrumForm.cs</DependentUpon>

@@ -148,6 +148,7 @@
     <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
+    <Compile Include="MsData\HalfLifeCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\BuiltInQuery.cs" />
     <Compile Include="Query\ColumnInfo.cs" />

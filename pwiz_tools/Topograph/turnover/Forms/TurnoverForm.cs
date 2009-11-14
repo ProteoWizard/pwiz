@@ -69,6 +69,7 @@ namespace pwiz.Topograph.ui.Forms
                         updateProteinNamesToolStripMenuItem,
                         machineSettingsToolStripMenuItem,
                         mercuryToolStripMenuItem,
+                        halfLivesToolStripMenuItem,
                 };
             }
         }
@@ -522,5 +523,19 @@ namespace pwiz.Topograph.ui.Forms
         {
             new MercuryForm(Workspace).Show(this);
         }
+
+        private void halfLivesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var ratesForm = Program.FindOpenForm<HalfLivesForm>();
+            if (ratesForm != null)
+            {
+                ratesForm.Activate();
+                return;
+            }
+            ratesForm = new HalfLivesForm(Workspace);
+            ratesForm.Show(dockPanel, DockState.Document);
+        }
+
+        public DockPanel DocumentPanel { get { return dockPanel; } }
     }
 }

@@ -58,7 +58,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             try
             {
-                if (!IsDisposed)
+                if (!IsDisposed && IsHandleCreated)
                 {
                     BeginInvoke(new Action(Close));
                 }

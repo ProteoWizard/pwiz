@@ -148,7 +148,7 @@ namespace pwiz.Topograph.ui.Forms
                     Program.AppName);
                 return;
             }
-            new PeptideAnalysisFrame(peptideAnalysis).Show(DockPanel, DockState.Document);
+            PeptideAnalysisFrame.ShowPeptideAnalysis(peptideAnalysis);
         }
 
         private void tbxMinTracerCount_Leave(object sender, EventArgs e)
