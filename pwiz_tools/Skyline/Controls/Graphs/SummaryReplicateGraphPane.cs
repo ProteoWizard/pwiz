@@ -351,6 +351,9 @@ namespace pwiz.Skyline.Controls.Graphs
             private static int GetCountSteps(IList<TransitionChromInfo> result)
             {
                 // Only for the first file
+                if (result == null)
+                    return 0;
+
                 int fileIndex = result[0].FileIndex;
                 int maxStep = 0;
                 foreach (var chromInfo in result)

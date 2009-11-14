@@ -395,15 +395,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 _regressionRefined = (_regressionAll == null ? null :
-                                                                        _regressionAll.FindThreshold(threshold,
-                                                                                                     2,
-                                                                                                     _peptidesTimes.Count,
-                                                                                                     _peptidesTimes,
-                                                                                                     _statisticsAll,
-                                                                                                     _scoreCache,
-                                                                                                     isCanceled,
-                                                                                                     ref _statisticsRefined,
-                                                                                                     ref _outlierIndexes));
+                    _regressionAll.FindThreshold(threshold,
+                                                 2,
+                                                 _peptidesTimes.Count,
+                                                 _peptidesTimes,
+                                                 _statisticsAll,
+                                                 _scoreCache,
+                                                 isCanceled,
+                                                 ref _statisticsRefined,
+                                                 ref _outlierIndexes));
 
                 if (ReferenceEquals(_regressionRefined, _regressionAll))
                     return null;
@@ -580,7 +580,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             lineScores[0] = score;
                             lineTimes[0] = time;
                         }
-                        else if (score > lineScores[1])
+                        if (score > lineScores[1])
                         {
                             lineScores[1] = score;
                             lineTimes[1] = time;

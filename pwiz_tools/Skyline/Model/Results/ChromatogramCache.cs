@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1050,11 +1050,21 @@ namespace pwiz.Skyline.Model.Results
                             }
                             collector.ProductIntensityMap.Add(productMz, tis);
                         }
-                        tis.Intensities.Add((float) intensity);
                         int lenTimes = tis.Times.Count;
-                        if (lenTimes > 0 && time < tis.Times[lenTimes - 1])
-                            throw new InvalidDataException(string.Format("Scan {0} has out of order time.", dataFile.GetSpectrumId(i)));
-                        tis.Times.Add((float) time);
+                        if (lenTimes == 0 || time >= tis.Times[lenTimes - 1])
+                        {
+                            tis.Times.Add((float)time);
+                            tis.Intensities.Add((float)intensity);
+                        }
+                        else
+                        {
+                            // Insert out of order time in the correct location
+                            int iGreater = tis.Times.BinarySearch((float)time);
+                            if (iGreater < 0)
+                                iGreater = ~iGreater;
+                            tis.Times.Insert(iGreater, (float)time);
+                            tis.Intensities.Insert(iGreater, (float)intensity);
+                        }
                     }
 
                     // If this was a multiple ion scan and not all ions had measurements,
@@ -1140,7 +1150,7 @@ namespace pwiz.Skyline.Model.Results
 
                     // Update status
                     int percent = (iKey++ * (percentComplete - percentStart) / arrayKeyIndex.Count) + percentStart;
-                    if (_status.PercentComplete != percent)
+                    if (!_status.IsPercentComplete(percent))
                     {
                         // Check for cancellation after each integer change in percent loaded.
                         if (_loader.IsCanceled)
@@ -1293,7 +1303,7 @@ namespace pwiz.Skyline.Model.Results
 //                        Debug.Assert(headData.MaxPeakIndex != -1);
 
                         var header = new ChromGroupHeaderInfo(chromDataSetNext.PrecursorMz,
-                                                         _currentFileIndex,
+                                                         currentFileIndex,
                                                          chromDataSetNext.Count,
                                                          _listTransitions.Count,
                                                          chromDataSetNext.CountPeaks,
@@ -1749,6 +1759,12 @@ namespace pwiz.Skyline.Model.Results
                         EvenlySpaceTimes();
                         return;
                     }
+                    // Moved to ProteoWizard
+                    else if (WiffZerosFix())
+                    {
+                        EvenlySpaceTimes();
+                        return;
+                    }
 
                     // If time deltas are sufficiently evenly spaced, then no further processing
                     // is necessary.
@@ -1769,6 +1785,10 @@ namespace pwiz.Skyline.Model.Results
                         var statIntervals = new Statistics(bestDeltas);
                         intervalDelta = statIntervals.Min();
                     }
+
+                    // Never go smaller than 1/2 a second.
+//                    if (intervalDelta < 0.5/60)
+//                        intervalDelta = 0.5/60;  // For breakpoint setting
 
                     bool inferZeros = false;
                     if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
@@ -1881,6 +1901,64 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                private bool WiffZerosFix()
+                {
+                    if (!HasFlankingZeros)
+                        return false;
+
+                    // Remove flagging zeros
+                    foreach (var chromData in _listChromData)
+                    {
+                        var times = chromData.Times;
+                        var intensities = chromData.Intensities;
+                        int start = 0;
+                        while (start < intensities.Length - 1 && intensities[start] == 0)
+                            start++;
+                        int end = intensities.Length;
+                        while (end > 0 && intensities[end - 1] == 0)
+                            end--;
+
+                        // Leave at least one bounding zero
+                        if (start > 0)
+                            start--;
+                        if (end < intensities.Length)
+                            end++;
+
+                        var timesNew = new float[end - start];
+                        var intensitiesNew = new float[end - start];
+                        Array.Copy(times, start, timesNew, 0, timesNew.Length);
+                        Array.Copy(intensities, start, intensitiesNew, 0, intensitiesNew.Length);
+                        chromData.FixChromatogram(timesNew, intensitiesNew);
+                    }
+                    return true;
+                }
+
+                private bool HasFlankingZeros
+                {
+                    get
+                    {
+                        // Check for case where all chromatograms have at least
+                        // 10 zero intensity entries on either side of the real data.
+                        foreach (var chromData in _listChromData)
+                        {
+                            var intensities = chromData.Intensities;
+                            if (intensities.Length < 10)
+                                return false;
+                            for (int i = 0; i < 10; i++)
+                            {
+                                if (intensities[i] != 0)
+                                    return false;
+                            }
+                            for (int i = intensities.Length - 1; i < 10; i++)
+                            {
+                                if (intensities[i] != 0)
+                                    return false;                                
+                            }
+                        }
+                        return true;
+                    }
+                }
+
                 private bool ThermoZerosFix()
                 {
                     // Check for interleaving zeros
@@ -1898,8 +1976,7 @@ namespace pwiz.Skyline.Model.Results
                             timesNew[iNew] = times[i];
                             intensitiesNew[iNew] = intensities[i];
                         }
-                        chromData.Times = timesNew;
-                        chromData.Intensities = intensitiesNew;
+                        chromData.FixChromatogram(timesNew, intensitiesNew);
                     }
                     return true;
                 }
@@ -2038,6 +2115,12 @@ namespace pwiz.Skyline.Model.Results
                 public IList<ChromPeak> Peaks { get; private set; }
                 public int MaxPeakIndex { get; set; }
                 public bool IsOptimizationData { get; set; }
+
+                public void FixChromatogram(float[] timesNew, float[] intensitiesNew)
+                {
+                    RawTimes = Times = timesNew;
+                    RawIntensities = Intensities = intensitiesNew;
+                }
             }
 
             private sealed class ChromDataPeak

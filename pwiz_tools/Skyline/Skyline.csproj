@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1479</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1479</ApplicationVersion>
+    <ApplicationRevision>1499</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1499</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -166,6 +166,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\Graphs\AreaReplicateGraphPane.cs" />
+    <Compile Include="Controls\Graphs\GraphRegression.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphRegression.Designer.cs">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\RTGraphController.cs" />
     <Compile Include="Controls\Graphs\SummaryReplicateGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryGraphPane.cs" />
@@ -723,6 +729,9 @@
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphRegression.resx">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSummary.resx">
       <DependentUpon>GraphSummary.cs</DependentUpon>

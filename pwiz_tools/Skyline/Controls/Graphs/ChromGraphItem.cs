@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     maxIndex = GetMaxIndex(peak.StartTime, peak.EndTime, ref iLastStart);
                 }
                 _arrayLabelIndexes[i] = maxIndex;
-                if (maxIndex != -1)
+                if (maxIndex != -1 && !_annotatedTimes.ContainsKey(_times[maxIndex]))
                     _annotatedTimes.Add(_times[maxIndex], i);
             }
 

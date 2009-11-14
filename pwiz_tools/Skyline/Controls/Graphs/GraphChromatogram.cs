@@ -411,13 +411,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+            catch (InvalidDataException)
+            {
+                DisplayFailureGraph(graphPane, nodeGroups);
+            }
             catch (IOException)
             {
-                if (nodeGroups != null)
-                {
-                    foreach (var nodeGroup in nodeGroups)
-                        graphControl.AddGraphItem(graphPane, new FailedChromGraphItem(nodeGroup), false);
-                }
+                DisplayFailureGraph(graphPane, nodeGroups);
             }
 
             // Show unavailable message, if no chromatogoram loaded
@@ -441,6 +441,15 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                         !Settings.Default.LockYChrom;
             graphControl.Refresh();
+        }
+
+        private void DisplayFailureGraph(MSGraphPane graphPane, TransitionGroupDocNode[] nodeGroups)
+        {
+            if (nodeGroups != null)
+            {
+                foreach (var nodeGroup in nodeGroups)
+                    graphControl.AddGraphItem(graphPane, new FailedChromGraphItem(nodeGroup), false);
+            }
         }
 
         private void DisplayTransitions(TransitionDocNode nodeTranSelected, ChromatogramSet chromatograms, float mzMatchTolerance,

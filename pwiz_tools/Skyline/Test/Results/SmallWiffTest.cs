@@ -111,7 +111,7 @@ namespace pwiz.SkylineTest.Results
 
             var docResultsSingle = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
 
-            AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 3, 9, 12, 27);
+            AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 5, 9, 14, 27);
 
             // Add mzXML version of test sample
             listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { testFilesDir.GetTestPath("051309_digestion-s3.mzXML") }));

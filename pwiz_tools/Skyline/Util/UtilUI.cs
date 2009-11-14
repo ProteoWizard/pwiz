@@ -149,6 +149,18 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public bool IsBegin { get { return State == ProgressState.begin; } }
 
+        public bool IsPercentComplete(int percent)
+        {
+            if (PercentZoomEnd == 0)
+                return (PercentComplete == percent);
+            return (PercentComplete == ZoomedToPercent(percent));
+        }
+
+        private int ZoomedToPercent(int percent)
+        {
+            return PercentZoomStart + percent*(PercentZoomEnd - PercentZoomStart)/100;
+        }
+
         #region Property change methods
 
         public ProgressStatus ChangePercentComplete(int prop)
@@ -159,7 +171,7 @@ namespace pwiz.Skyline.Util
                 if (prop == 100)
                     prop = PercentZoomEnd;
                 else
-                    prop = PercentZoomStart + prop*(PercentZoomEnd - PercentZoomStart)/100;
+                    prop = ZoomedToPercent(prop);
             }
             prop = Math.Min(100, Math.Max(0, prop));
             if (prop == PercentComplete)

@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -47,6 +47,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.textStepSize = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.btnShowGraph = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
             this.SuspendLayout();
             // 
@@ -72,7 +73,7 @@
             this.btnCancel.Location = new System.Drawing.Point(190, 44);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
+            this.btnCancel.TabIndex = 13;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -81,44 +82,44 @@
             this.btnOk.Location = new System.Drawing.Point(190, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 5;
+            this.btnOk.TabIndex = 12;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // gridRegression
             // 
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridRegression.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.gridRegression.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridRegression.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Charge,
             this.Slope,
             this.Intercept});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridRegression.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridRegression.DefaultCellStyle = dataGridViewCellStyle5;
             this.gridRegression.Location = new System.Drawing.Point(12, 95);
             this.gridRegression.Name = "gridRegression";
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridRegression.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.gridRegression.Size = new System.Drawing.Size(251, 157);
             this.gridRegression.TabIndex = 3;
             this.gridRegression.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridRegression_KeyDown);
@@ -156,7 +157,7 @@
             this.label6.Location = new System.Drawing.Point(9, 270);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(67, 13);
-            this.label6.TabIndex = 13;
+            this.label6.TabIndex = 4;
             this.label6.Text = "Optimization:";
             // 
             // groupBox1
@@ -164,17 +165,17 @@
             this.groupBox1.Location = new System.Drawing.Point(82, 270);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(181, 10);
-            this.groupBox1.TabIndex = 14;
+            this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             // 
             // btnUseCurrent
             // 
             this.btnUseCurrent.Enabled = false;
-            this.btnUseCurrent.Location = new System.Drawing.Point(97, 361);
+            this.btnUseCurrent.Location = new System.Drawing.Point(45, 361);
             this.btnUseCurrent.Name = "btnUseCurrent";
-            this.btnUseCurrent.Size = new System.Drawing.Size(75, 23);
-            this.btnUseCurrent.TabIndex = 19;
-            this.btnUseCurrent.Text = "&Use results";
+            this.btnUseCurrent.Size = new System.Drawing.Size(89, 23);
+            this.btnUseCurrent.TabIndex = 10;
+            this.btnUseCurrent.Text = "&Use Results";
             this.btnUseCurrent.UseVisualStyleBackColor = true;
             this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
             // 
@@ -183,7 +184,7 @@
             this.textStepCount.Location = new System.Drawing.Point(163, 321);
             this.textStepCount.Name = "textStepCount";
             this.textStepCount.Size = new System.Drawing.Size(100, 20);
-            this.textStepCount.TabIndex = 18;
+            this.textStepCount.TabIndex = 9;
             // 
             // label3
             // 
@@ -191,7 +192,7 @@
             this.label3.Location = new System.Drawing.Point(160, 304);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(62, 13);
-            this.label3.TabIndex = 17;
+            this.label3.TabIndex = 8;
             this.label3.Text = "Step &count:";
             // 
             // textStepSize
@@ -199,7 +200,7 @@
             this.textStepSize.Location = new System.Drawing.Point(12, 321);
             this.textStepSize.Name = "textStepSize";
             this.textStepSize.Size = new System.Drawing.Size(100, 20);
-            this.textStepSize.TabIndex = 16;
+            this.textStepSize.TabIndex = 7;
             // 
             // label5
             // 
@@ -207,8 +208,18 @@
             this.label5.Location = new System.Drawing.Point(9, 304);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(53, 13);
-            this.label5.TabIndex = 15;
+            this.label5.TabIndex = 6;
             this.label5.Text = "Step si&ze:";
+            // 
+            // btnShowGraph
+            // 
+            this.btnShowGraph.Location = new System.Drawing.Point(140, 360);
+            this.btnShowGraph.Name = "btnShowGraph";
+            this.btnShowGraph.Size = new System.Drawing.Size(89, 23);
+            this.btnShowGraph.TabIndex = 11;
+            this.btnShowGraph.Text = "&Show Graph...";
+            this.btnShowGraph.UseVisualStyleBackColor = true;
+            this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
             // 
             // EditCEDlg
             // 
@@ -217,6 +228,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(275, 395);
+            this.Controls.Add(this.btnShowGraph);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnUseCurrent);
@@ -261,5 +273,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textStepSize;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnShowGraph;
     }
 }

@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 AxisChange();
                 return;
             }
+
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null)
             {
@@ -81,6 +82,9 @@ namespace pwiz.Skyline.Controls.Graphs
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;
+            bool optimizationPresent = results.Chromatograms.Contains(
+                chrom => chrom.OptimizationFunction != null);
+
             // If the selected tree node is a transition, then its siblings are displayed.
             if (selectedTreeNode is TransitionTreeNode)
             {
@@ -120,14 +124,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (parentNode is TransitionGroupDocNode && displayType == DisplayTypeChrom.single)
             {
                 // If no optimization data, then show all the transitions
-                if (!results.Chromatograms.Contains(chrom => chrom.OptimizationFunction != null))
+                if (!optimizationPresent)
                     displayType = DisplayTypeChrom.all;
                 // Otherwise, do not stack the bars
                 else
                     BarSettings.Type = BarType.Cluster;
             }
 
-            GraphData graphData = new AreaGraphData(parentNode, displayType);
+            bool normalizeOpt = (optimizationPresent && displayType == DisplayTypeChrom.single &&
+                                 Settings.Default.AreaPercentView);
+            GraphData graphData = new AreaGraphData(parentNode, displayType, normalizeOpt);
 
             int selectedReplicateIndex = GraphSummary.ResultsIndex;
             double maxArea = -double.MaxValue;
@@ -212,9 +218,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.MaxAuto = false;
                 YAxis.Title.Text = "Peak Area Percentage";
             }
-            else if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
+            else
             {
-                YAxis.Scale.MaxAuto = true;
+                if (normalizeOpt)
+                    YAxis.Title.Text = "Peak Area Regression Percent";
+                if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
+                    YAxis.Scale.MaxAuto = true;
             }
             AxisChange();
         }
@@ -231,9 +240,47 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PointPair(xValue, PointPairBase.Missing);                
             }
 
-            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType)
+            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, bool normalize)
                 : base(docNode, displayType)
             {
+                if (normalize)
+                    Normalize();
+            }
+
+            private void Normalize()
+            {
+                foreach (var pointPairLists in PointPairLists)
+                {
+                    if (pointPairLists.Count == 0)
+                        continue;
+
+                    int numSteps = pointPairLists.Count/2;
+                    var pointPairListRegression = pointPairLists[numSteps];
+                    // Normalize all non-regression values to be percent of the regression
+                    for (int i = 0; i < pointPairLists.Count; i++)
+                    {
+                        if (i == numSteps)
+                            continue;
+
+                        var pointPairList = pointPairLists[i];
+                        for (int j = 0; j < pointPairList.Count; j++)
+                        {
+                            // If the regression value is missing, then normalization is not possible.
+                            if (pointPairListRegression[j].Y == PointPairBase.Missing)
+                                pointPairList[j].Y = PointPairBase.Missing;
+                            // If the value itself is not missing, then do the normalization
+                            else if (pointPairList[j].Y != PointPairBase.Missing)
+                                pointPairList[j].Y = pointPairList[j].Y / pointPairListRegression[j].Y * 100;                            
+                        }
+                    }
+                    // And make the regression values 100 percent
+                    for (int j = 0; j < pointPairListRegression.Count; j++)
+                    {
+                        // If it is missing, leave it missing.
+                        if (pointPairListRegression[j].Y != PointPairBase.Missing)
+                            pointPairListRegression[j].Y = 100;
+                    }
+                }                
             }
 
             public override PointPair PointPairMissing(int xValue)

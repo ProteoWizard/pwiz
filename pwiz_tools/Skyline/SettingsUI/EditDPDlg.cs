@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -43,6 +44,7 @@ namespace pwiz.Skyline.SettingsUI
             btnUseCurrent.Enabled = document.Settings.HasResults &&
                                     document.Settings.MeasuredResults.Chromatograms.Contains(
                                         chrom => chrom.OptimizationFunction is DeclusteringPotentialRegression);
+            btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
         public DeclusteringPotentialRegression Regression
@@ -122,16 +124,55 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
         {
+            DPRegressionData regressionData = GetRegressionData();
+            if (regressionData == null)
+                return;
+
+            var regressionLine = regressionData.RegressionLine;
+            if (regressionLine == null)
+            {
+                MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
+                return;                
+            }
+
+            textSlope.Text = string.Format("{0:F04}", regressionLine.Slope);
+            textIntercept.Text = string.Format("{0:F04}", regressionLine.Intercept);
+        }
+
+        private void btnShowGraph_Click(object sender, EventArgs e)
+        {
+            DPRegressionData regressionData = GetRegressionData();
+            if (regressionData == null)
+                return;
+            var graphData = new RegressionGraphData
+            {
+                Title = "Declustering Potential Regression",
+                LabelX = "Precursor M/Z",
+                LabelY = "Declustering Potential",
+                XValues = regressionData.PrecursorMzValues,
+                YValues = regressionData.BestValues,
+                RegressionLine = regressionData.RegressionLine,
+                RegressionLineCurrent = regressionData.RegressionLineSetting
+            };
+            var dlg = new GraphRegression(new[] { graphData });
+            dlg.ShowDialog(this);
+        }
+
+        private DPRegressionData GetRegressionData()
+        {
             var document = Program.ActiveDocumentUI;
             if (!document.Settings.HasResults)
-                return; // This shouldn't be possible, but just to be safe.
+                return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
                 MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
-                return;
+                return null;
             }
 
-            var regressionData = new DPRegressionData();
+            var regressionCurrent = _regression ??
+                document.Settings.TransitionSettings.Prediction.DeclusteringPotential;
+            var regressionData = new DPRegressionData(regressionCurrent != null ?
+                regressionCurrent.RegressionLine : null);
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
             for (int i = 0; i < chromatograms.Count; i++)
             {
@@ -145,20 +186,16 @@ namespace pwiz.Skyline.SettingsUI
                     regressionData.Add(regression, nodeGroup, i);
                 }
             }
-
-            var regressionLine = regressionData.RegressionLine;
-            if (regressionLine == null)
-            {
-                MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
-                return;                
-            }
-
-            textSlope.Text = string.Format("{0:F04}", regressionLine.Slope);
-            textIntercept.Text = string.Format("{0:F04}", regressionLine.Intercept);
+            return regressionData;
         }
 
         private sealed class DPRegressionData : RegressionData<DeclusteringPotentialRegression>
         {
+            public DPRegressionData(RegressionLine regressionLineSetting)
+                : base(regressionLineSetting)
+            {
+            }
+
             protected override double GetValue(DeclusteringPotentialRegression regression,
                 TransitionGroupDocNode nodeGroup, int step)
             {

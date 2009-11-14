@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
             btnUseCurrent.Enabled = document.Settings.HasResults &&
                                     document.Settings.MeasuredResults.Chromatograms.Contains(
                                         chrom => chrom.OptimizationFunction is CollisionEnergyRegression);
+            btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
         public CollisionEnergyRegression Regression
@@ -260,32 +262,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
         {
-            var document = Program.ActiveDocumentUI;
-            if (!document.Settings.HasResults)
-                return; // This shouldn't be possible, but just to be safe.
-            if (!document.Settings.MeasuredResults.IsLoaded)
-            {
-                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
+            CERegressionData[] arrayData = GetRegressionDatas();
+            if (arrayData == null)
                 return;
-            }
-
-            var arrayData = new CERegressionData[TransitionGroup.MAX_PRECURSOR_CHARGE + 1];
-            var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-            for (int i = 0; i < chromatograms.Count; i++)
-            {
-                var chromSet = chromatograms[i];
-                var regression = chromSet.OptimizationFunction as CollisionEnergyRegression;
-                if (regression == null)
-                    continue;
-
-                foreach (var nodeGroup in document.TransitionGroups)
-                {
-                    int charge = nodeGroup.TransitionGroup.PrecursorCharge;
-                    if (arrayData[charge] == null)
-                        arrayData[charge] = new CERegressionData();
-                    arrayData[charge].Add(regression, nodeGroup, i);
-                }
-            }
 
             bool hasRegressionLines = false;
             var regressionLines = new RegressionLine[arrayData.Length];
@@ -319,8 +298,80 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void btnShowGraph_Click(object sender, EventArgs e)
+        {
+            CERegressionData[] arrayData = GetRegressionDatas();
+            if (arrayData == null)
+                return;
+
+            var listGraphData = new List<RegressionGraphData>();
+            for (int charge = 0; charge < arrayData.Length; charge++)
+            {
+                var regressionData = arrayData[charge];
+                if (regressionData == null)
+                    continue;
+                listGraphData.Add(new RegressionGraphData
+                                      {
+                                          Title = string.Format("Collision Energy Regression Charge {0}", charge),
+                                          LabelX = "Precursor M/Z",
+                                          LabelY = "Collision Energy",
+                                          XValues = regressionData.PrecursorMzValues,
+                                          YValues = regressionData.BestValues,
+                                          RegressionLine = regressionData.RegressionLine,
+                                          RegressionLineCurrent = regressionData.RegressionLineSetting
+                                      });
+            }
+
+            var dlg = new GraphRegression(listGraphData);
+            dlg.ShowDialog(this);
+        }
+
+        private CERegressionData[] GetRegressionDatas()
+        {
+            var document = Program.ActiveDocumentUI;
+            if (!document.Settings.HasResults)
+                return null;
+            if (!document.Settings.MeasuredResults.IsLoaded)
+            {
+                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
+                return null;
+            }
+
+            var regressionCurrent = _regression ??
+                document.Settings.TransitionSettings.Prediction.CollisionEnergy;
+
+            var arrayData = new CERegressionData[TransitionGroup.MAX_PRECURSOR_CHARGE + 1];
+            var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+            for (int i = 0; i < chromatograms.Count; i++)
+            {
+                var chromSet = chromatograms[i];
+                var regression = chromSet.OptimizationFunction as CollisionEnergyRegression;
+                if (regression == null)
+                    continue;
+
+                foreach (var nodeGroup in document.TransitionGroups)
+                {
+                    int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    if (arrayData[charge] == null)
+                    {
+                        var chargeRegression = (_regression != null ?
+                            regressionCurrent.GetRegressionLine(charge) : null);
+                        arrayData[charge] = new CERegressionData(chargeRegression != null ?
+                            chargeRegression.RegressionLine : null);
+                    }
+                    arrayData[charge].Add(regression, nodeGroup, i);
+                }
+            }
+            return arrayData;
+        }
+
         private sealed class CERegressionData : RegressionData<CollisionEnergyRegression>
         {
+            public CERegressionData(RegressionLine regressionLineSetting)
+                : base(regressionLineSetting)
+            {
+            }
+
             protected override double GetValue(CollisionEnergyRegression regression,
                 TransitionGroupDocNode nodeGroup, int step)
             {
@@ -336,6 +387,12 @@ namespace pwiz.Skyline.SettingsUI
         private readonly List<double> _bestValues = new List<double>();
         private readonly List<double> _precursorMzValues = new List<double>();
 
+        protected RegressionData(RegressionLine regressionLineSetting)
+        {
+            RegressionLineSetting = regressionLineSetting;
+        }
+
+        public RegressionLine RegressionLineSetting { get; private set; }
         public RegressionLine RegressionLine
         {
             get
@@ -348,6 +405,8 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public double[] BestValues { get { return _bestValues.ToArray(); } }
+        public double[] PrecursorMzValues { get { return _precursorMzValues.ToArray(); } }
 
         public void Add(T regression, TransitionGroupDocNode nodeGroup, int iResult)
         {

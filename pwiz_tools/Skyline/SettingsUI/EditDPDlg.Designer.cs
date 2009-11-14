@@ -36,13 +36,14 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textSlope = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnUseCurrent = new System.Windows.Forms.Button();
             this.textStepCount = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textStepSize = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.btnShowGraph = new System.Windows.Forms.Button();
+            this.btnUseCurrent = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textName
@@ -70,7 +71,7 @@
             this.btnCancel.Location = new System.Drawing.Point(286, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 14;
+            this.btnCancel.TabIndex = 15;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -80,7 +81,7 @@
             this.btnOk.Location = new System.Drawing.Point(286, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 13;
+            this.btnOk.TabIndex = 14;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -116,17 +117,6 @@
             this.label1.Size = new System.Drawing.Size(37, 13);
             this.label1.TabIndex = 2;
             this.label1.Text = "&Slope:";
-            // 
-            // btnUseCurrent
-            // 
-            this.btnUseCurrent.Enabled = false;
-            this.btnUseCurrent.Location = new System.Drawing.Point(101, 223);
-            this.btnUseCurrent.Name = "btnUseCurrent";
-            this.btnUseCurrent.Size = new System.Drawing.Size(75, 23);
-            this.btnUseCurrent.TabIndex = 12;
-            this.btnUseCurrent.Text = "&Use results";
-            this.btnUseCurrent.UseVisualStyleBackColor = true;
-            this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
             // 
             // textStepCount
             // 
@@ -177,6 +167,27 @@
             this.label6.TabIndex = 6;
             this.label6.Text = "Optimization:";
             // 
+            // btnShowGraph
+            // 
+            this.btnShowGraph.Location = new System.Drawing.Point(141, 222);
+            this.btnShowGraph.Name = "btnShowGraph";
+            this.btnShowGraph.Size = new System.Drawing.Size(89, 23);
+            this.btnShowGraph.TabIndex = 13;
+            this.btnShowGraph.Text = "&Show Graph...";
+            this.btnShowGraph.UseVisualStyleBackColor = true;
+            this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
+            // 
+            // btnUseCurrent
+            // 
+            this.btnUseCurrent.Enabled = false;
+            this.btnUseCurrent.Location = new System.Drawing.Point(46, 223);
+            this.btnUseCurrent.Name = "btnUseCurrent";
+            this.btnUseCurrent.Size = new System.Drawing.Size(89, 23);
+            this.btnUseCurrent.TabIndex = 12;
+            this.btnUseCurrent.Text = "&Use Results";
+            this.btnUseCurrent.UseVisualStyleBackColor = true;
+            this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
+            // 
             // EditDPDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -184,9 +195,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(375, 258);
+            this.Controls.Add(this.btnShowGraph);
+            this.Controls.Add(this.btnUseCurrent);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.btnUseCurrent);
             this.Controls.Add(this.textStepCount);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textIntercept);
@@ -221,12 +233,13 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textSlope;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnUseCurrent;
         private System.Windows.Forms.TextBox textStepCount;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textStepSize;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button btnShowGraph;
+        private System.Windows.Forms.Button btnUseCurrent;
     }
 }

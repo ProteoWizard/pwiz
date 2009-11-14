@@ -1841,10 +1841,12 @@ namespace pwiz.Skyline.Model
 
         private static void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)
         {
+            if (chromInfo.OptimizationStep != 0)
+                writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
+
+            // Only write peak information, if it is not empty
             if (!chromInfo.IsEmpty)
             {
-                if (chromInfo.OptimizationStep != 0)
-                    writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);

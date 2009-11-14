@@ -769,6 +769,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double GetCollisionEnergy(int charge, double mz)
         {
+            ChargeRegressionLine rl = GetRegressionLine(charge);
+            return (rl == null ? 0 : Math.Round(rl.GetY(mz), 6));
+        }
+
+        public ChargeRegressionLine GetRegressionLine(int charge)
+        {
             ChargeRegressionLine rl = null;
             int delta = int.MaxValue;
 
@@ -788,7 +794,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         break;
                 }
             }
-            return (rl == null ? 0 : Math.Round(rl.GetY(mz), 6));
+            return rl;
         }
 
         #region Implementation of IXmlSerializable
@@ -913,23 +919,23 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public sealed class ChargeRegressionLine : IXmlSerializable, IComparable<ChargeRegressionLine>, IRegressionFunction
     {
-        private RegressionLine _regressionLine;
-
         public ChargeRegressionLine(int charge, double slope, double intercept)
         {
             Charge = charge;
-            _regressionLine = new RegressionLine(slope, intercept);
+            RegressionLine = new RegressionLine(slope, intercept);
         }
 
         public int Charge { get; private set; }
 
-        public double Slope { get { return _regressionLine.Slope; } }
+        public RegressionLine RegressionLine { get; private set; }
 
-        public double Intercept { get { return _regressionLine.Intercept; } }
+        public double Slope { get { return RegressionLine.Slope; } }
+
+        public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
         {
-            return _regressionLine.GetY(x);
+            return RegressionLine.GetY(x);
         }
 
         public int CompareTo(ChargeRegressionLine other)
@@ -965,7 +971,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             Charge = reader.GetIntAttribute(ATTR.charge, 2);
-            _regressionLine = RegressionLine.Deserialize(reader);
+            RegressionLine = RegressionLine.Deserialize(reader);
             // Consume tag
             reader.Read();
         }
@@ -974,7 +980,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             writer.WriteAttribute(ATTR.charge, Charge);
-            _regressionLine.WriteXmlAttributes(writer);
+            RegressionLine.WriteXmlAttributes(writer);
         }
 
         #endregion
@@ -985,7 +991,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._regressionLine, _regressionLine) && obj.Charge == Charge;
+            return Equals(obj.RegressionLine, RegressionLine) && obj.Charge == Charge;
         }
 
         public override bool Equals(object obj)
@@ -1000,7 +1006,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                return (_regressionLine.GetHashCode() * 397) ^ Charge;
+                return (RegressionLine.GetHashCode() * 397) ^ Charge;
             }
         }
 
@@ -1073,21 +1079,21 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public abstract class NamedRegressionLine : OptimizableRegression, IRegressionFunction
     {
-        private RegressionLine _regressionLine;
-
         protected NamedRegressionLine(string name, double slope, double intercept, double stepSize, int stepCount)
             : base(name, stepSize, stepCount)
         {
-            _regressionLine = new RegressionLine(slope, intercept);
+            RegressionLine = new RegressionLine(slope, intercept);
         }
 
-        public double Slope { get { return _regressionLine.Slope; } }
+        public RegressionLine RegressionLine { get; private set; }
 
-        public double Intercept { get { return _regressionLine.Intercept; } }
+        public double Slope { get { return RegressionLine.Slope; } }
+
+        public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
         {
-            return _regressionLine.GetY(x);
+            return RegressionLine.GetY(x);
         }
 
         #region Implementation of IXmlSerializable
@@ -1103,7 +1109,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             base.ReadXml(reader);
-            _regressionLine = RegressionLine.Deserialize(reader);
+            RegressionLine = RegressionLine.Deserialize(reader);
             // Consume tag
             reader.Read();
         }
@@ -1112,7 +1118,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             base.WriteXml(writer);
-            _regressionLine.WriteXmlAttributes(writer);
+            RegressionLine.WriteXmlAttributes(writer);
         }
 
         #endregion
@@ -1123,7 +1129,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj._regressionLine, _regressionLine);
+            return base.Equals(obj) && Equals(obj.RegressionLine, RegressionLine);
         }
 
         public override bool Equals(object obj)
@@ -1138,7 +1144,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 {
-                    return (base.GetHashCode()*397) ^ _regressionLine.GetHashCode();
+                    return (base.GetHashCode()*397) ^ RegressionLine.GetHashCode();
                 }
             }
         }
