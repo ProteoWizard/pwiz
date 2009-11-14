@@ -1006,7 +1006,11 @@ PWIZ_API_DECL MzIdentML::MzIdentML(const std::string& id_,
                                    const std::string& creationDate_)
     : IdentifiableType(id_), version(version_), creationDate(creationDate_)
 {
+#ifdef _MSC_VER
+    const char* format = "%Y-%m-%dT%X";
+#else
     const char* format = "%Y-%m-%dT%T";
+#endif
     
     if (creationDate.empty())
     {

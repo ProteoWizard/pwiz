@@ -7,16 +7,16 @@
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -67,7 +67,7 @@ void testIdentifiableType()
 
     b.id="b";
     b.name="b_name";
-    
+
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
@@ -156,7 +156,7 @@ void testIonType()
     unit_assert(!diff);
     if (os_ && diff) *os_ << diff << endl;
 
-    b.index.back() = 2; 
+    b.index.back() = 2;
     b.charge = 2;
     b.paramGroup.set(MS_frag__z_ion);
     b.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
@@ -170,10 +170,10 @@ void testIonType()
     // and correctly
     unit_assert(diff.a_b.index.size() == 1);
     unit_assert(diff.b_a.index.size() == 1);
-    unit_assert_equal(*diff.a_b.index.begin(), 1, epsilon);
-    unit_assert_equal(*diff.b_a.index.begin(), 2, epsilon);
-    unit_assert_equal(diff.a_b.charge, 1, epsilon);
-    unit_assert_equal(diff.b_a.charge, 2, epsilon);
+    unit_assert_equal(*diff.a_b.index.begin(), 1.0, epsilon);
+    unit_assert_equal(*diff.b_a.index.begin(), 2.0, epsilon);
+    unit_assert_equal(diff.a_b.charge, 1.0, epsilon);
+    unit_assert_equal(diff.b_a.charge, 2.0, epsilon);
     unit_assert(diff.a_b.paramGroup.empty());
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.b_a.fragmentArray.size() == 1);
@@ -213,7 +213,7 @@ void testMaterial()
     unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
     unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
     unit_assert(diff.b_a.cvParams.hasCVParam(MS_sample_name));
-                
+
 }
 
 
@@ -235,11 +235,11 @@ void testMeasure()
 
     // diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_product_ion_intensity));    
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_product_ion_intensity));
 }
 
 void testModParam()
@@ -304,7 +304,7 @@ void testPeptideEvidence()
 
     b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     b.start = 2;
-    b.end = 7;   
+    b.end = 7;
     b.pre = "A";
     b.post = "A";
     b.translationTablePtr = TranslationTablePtr(new TranslationTable("fer_elbaTnoitalsnarT"));
@@ -312,7 +312,7 @@ void testPeptideEvidence()
     b.isDecoy = false;
     b.missedCleavages = 1;
     b.paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
-    
+
     diff(a, b);
     if (os_) *os_ << diff << endl;
 
@@ -328,20 +328,20 @@ void testPeptideEvidence()
     unit_assert(diff.a_b.translationTablePtr->id == "TranslationTable_ref");
     unit_assert(diff.b_a.translationTablePtr.get());
     unit_assert(diff.b_a.translationTablePtr->id == "fer_elbaTnoitalsnarT");
-    unit_assert_equal(diff.a_b.start, 1, epsilon);
-    unit_assert_equal(diff.b_a.start, 2, epsilon);
-    unit_assert_equal(diff.a_b.end, 6, epsilon);
-    unit_assert_equal(diff.b_a.end, 7, epsilon);
+    unit_assert_equal(diff.a_b.start, 1.0, epsilon);
+    unit_assert_equal(diff.b_a.start, 2.0, epsilon);
+    unit_assert_equal(diff.a_b.end, 6.0, epsilon);
+    unit_assert_equal(diff.b_a.end, 7.0, epsilon);
     unit_assert(diff.a_b.pre == "-");
     unit_assert(diff.b_a.pre == "A");
     unit_assert(diff.a_b.post == "-");
     unit_assert(diff.b_a.post == "A");
-    unit_assert_equal(diff.a_b.frame, 0, epsilon);
-    unit_assert_equal(diff.b_a.frame, 1, epsilon);
+    unit_assert_equal(diff.a_b.frame, 0.0, epsilon);
+    unit_assert_equal(diff.b_a.frame, 1.0, epsilon);
     unit_assert(diff.a_b.isDecoy == true);
     unit_assert(diff.b_a.isDecoy == false);
-    unit_assert_equal(diff.a_b.missedCleavages, 0, epsilon);
-    unit_assert_equal(diff.b_a.missedCleavages, 1, epsilon);
+    unit_assert_equal(diff.a_b.missedCleavages, 0.0, epsilon);
+    unit_assert_equal(diff.b_a.missedCleavages, 1.0, epsilon);
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_mascot_expectation_value));
@@ -360,7 +360,7 @@ void testProteinAmbiguityGroup()
     a.paramGroup.set(MS_mascot_score, 164.4);
     b = a;
 
-    Diff<ProteinAmbiguityGroup> diff(a, b); 
+    Diff<ProteinAmbiguityGroup> diff(a, b);
     unit_assert(!diff);
 
     b.proteinDetectionHypothesis.clear();
@@ -390,11 +390,11 @@ void testProteinDetectionHypothesis()
     ProteinDetectionHypothesis a, b;
     Diff<ProteinDetectionHypothesis> diff(a,b);
     unit_assert(!diff);
-    
+
     a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
     b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     a.passThreshold = true;
-    b.passThreshold = false;    
+    b.passThreshold = false;
     a.peptideHypothesis.push_back("marjoram");
     b.peptideHypothesis.push_back("thyme");
     a.paramGroup.set(MS_mascot_expectation_value);
@@ -404,14 +404,14 @@ void testProteinDetectionHypothesis()
 
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.dbSequencePtr.get());
     unit_assert(diff.a_b.dbSequencePtr->id =="DBSequence_ref");
     unit_assert(diff.b_a.dbSequencePtr.get());
     unit_assert(diff.b_a.dbSequencePtr->id == "fer_ecneuqeSBD");
     unit_assert(diff.a_b.passThreshold == true);
-    unit_assert(diff.b_a.passThreshold == false);               
+    unit_assert(diff.b_a.passThreshold == false);
     unit_assert(diff.a_b.peptideHypothesis.size() == 1);
     unit_assert(diff.b_a.peptideHypothesis.size() == 1);
     unit_assert(diff.a_b.peptideHypothesis.back() == "marjoram");
@@ -429,13 +429,13 @@ void testSpectrumIdentificationList()
     SpectrumIdentificationList a, b;
     Diff<SpectrumIdentificationList> diff(a,b);
     unit_assert(!diff);
-    
+
     a.numSequencesSearched = 9;
     b.numSequencesSearched = 5;
 
     MeasurePtr testMeasure(new Measure());
     testMeasure->paramGroup.set(MS_mascot_expectation_value);
-    a.fragmentationTable.push_back(testMeasure); 
+    a.fragmentationTable.push_back(testMeasure);
 
     SpectrumIdentificationResultPtr testSIRPtr(new SpectrumIdentificationResult());
     testSIRPtr->paramGroup.set(MS_mascot_expectation_value);
@@ -448,8 +448,8 @@ void testSpectrumIdentificationList()
     unit_assert(diff);
 
     // and correctly
-    unit_assert_equal(diff.a_b.numSequencesSearched,9,epsilon);
-    unit_assert_equal(diff.b_a.numSequencesSearched,5,epsilon);
+    unit_assert_equal(diff.a_b.numSequencesSearched,9.0,epsilon);
+    unit_assert_equal(diff.b_a.numSequencesSearched,5.0,epsilon);
     unit_assert(diff.a_b.fragmentationTable.size() == 1);
     unit_assert(diff.b_a.fragmentationTable.size() == 0);
     unit_assert(diff.a_b.fragmentationTable.back()->paramGroup.hasCVParam(MS_mascot_expectation_value));
@@ -463,7 +463,7 @@ void testSpectrumIdentificationList()
 void testProteinDetectionList()
 {
     if (os_) *os_ << "testProteinDetectionList()\n";
-    
+
     ProteinDetectionList a,b;
     Diff<ProteinDetectionList> diff(a,b);
     unit_assert(!diff);
@@ -478,7 +478,7 @@ void testProteinDetectionList()
 
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.proteinAmbiguityGroup.size() == 1);
     unit_assert(diff.b_a.proteinAmbiguityGroup.size() == 0);
@@ -487,7 +487,7 @@ void testProteinDetectionList()
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
     unit_assert(diff.a_b.paramGroup.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__b_ion));
-    
+
 }
 
 
@@ -500,7 +500,7 @@ void testAnalysisData()
     unit_assert(!diff);
 
     a.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
-    a.spectrumIdentificationList.back()->numSequencesSearched = 5;    
+    a.spectrumIdentificationList.back()->numSequencesSearched = 5;
     b.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
     b.spectrumIdentificationList.back()->numSequencesSearched = 15;
 
@@ -516,13 +516,13 @@ void testAnalysisData()
     // and correctly
     unit_assert(diff.a_b.spectrumIdentificationList.size() == 1);
     unit_assert(diff.b_a.spectrumIdentificationList.size() == 1);
-    unit_assert_equal(diff.a_b.spectrumIdentificationList.back()->numSequencesSearched, 5, epsilon);
-    unit_assert_equal(diff.b_a.spectrumIdentificationList.back()->numSequencesSearched, 15, epsilon);
+    unit_assert_equal(diff.a_b.spectrumIdentificationList.back()->numSequencesSearched, 5.0, epsilon);
+    unit_assert_equal(diff.b_a.spectrumIdentificationList.back()->numSequencesSearched, 15.0, epsilon);
     unit_assert(diff.a_b.proteinDetectionListPtr.get());
     unit_assert(diff.b_a.proteinDetectionListPtr.get());
     unit_assert(diff.a_b.proteinDetectionListPtr->id == "rosemary");
     unit_assert(diff.b_a.proteinDetectionListPtr->id == "sage");
-        
+
 }
 
 
@@ -545,7 +545,7 @@ void testSearchDatabase()
 
     a.numResidues = 3;
     b.numResidues = 13;
-    
+
     a.fileFormat.set(MS_frag__z_ion);
     a.DatabaseName.set(MS_frag__z_ion);
 
@@ -554,23 +554,23 @@ void testSearchDatabase()
 
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.version == "1.0");
     unit_assert(diff.b_a.version == "1.1");
     unit_assert(diff.a_b.releaseDate == "20090726");
     unit_assert(diff.b_a.releaseDate == "20090727");
-    unit_assert_equal(diff.a_b.numDatabaseSequences, 5, epsilon);
-    unit_assert_equal(diff.b_a.numDatabaseSequences, 15, epsilon);
-    unit_assert_equal(diff.a_b.numResidues, 3, epsilon);
-    unit_assert_equal(diff.b_a.numResidues, 13, epsilon);
+    unit_assert_equal(diff.a_b.numDatabaseSequences, 5.0, epsilon);
+    unit_assert_equal(diff.b_a.numDatabaseSequences, 15.0, epsilon);
+    unit_assert_equal(diff.a_b.numResidues, 3.0, epsilon);
+    unit_assert_equal(diff.b_a.numResidues, 13.0, epsilon);
     unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
     unit_assert(diff.b_a.fileFormat.cvParams.size() == 0);
     unit_assert(diff.a_b.fileFormat.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.a_b.DatabaseName.cvParams.size() == 1);
     unit_assert(diff.b_a.DatabaseName.cvParams.size() == 0);
     unit_assert(diff.a_b.DatabaseName.hasCVParam(MS_frag__z_ion));
-                   
+
 }
 
 
@@ -630,7 +630,7 @@ void testSourceFile()
 
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.location == "madison");
     unit_assert(diff.b_a.location == "middleton");
@@ -645,8 +645,8 @@ void testSourceFile()
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
     unit_assert(diff.a_b.paramGroup.hasCVParam(MS_sample_number));
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_sample_name));               
-                
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_sample_name));
+
 }
 
 
@@ -654,14 +654,14 @@ void testInputs()
 {
 
     if (os_) *os_ << "testInputs()\n";
-    
+
     Inputs a, b;
     Diff<Inputs> diff(a,b);
     unit_assert(!diff);
 
     a.sourceFile.push_back(SourceFilePtr(new SourceFile()));
     a.sourceFile.back()->location = "Sector 9";
-    
+
     a.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase()));
     a.searchDatabase.back()->numDatabaseSequences = 100;
 
@@ -670,17 +670,17 @@ void testInputs()
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
-    
+
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.sourceFile.size() == 1);
     unit_assert(diff.b_a.sourceFile.size() == 0);
     unit_assert(diff.a_b.sourceFile.back()->location == "Sector 9");
     unit_assert(diff.a_b.searchDatabase.size() == 1);
     unit_assert(diff.b_a.searchDatabase.size() == 0);
-    unit_assert_equal(diff.a_b.searchDatabase.back()->numDatabaseSequences, 100, epsilon);
+    unit_assert_equal(diff.a_b.searchDatabase.back()->numDatabaseSequences, 100.0, epsilon);
     unit_assert(diff.a_b.spectraData.size() == 1);
     unit_assert(diff.b_a.spectraData.size() == 0);
     unit_assert(diff.a_b.spectraData.back()->location == "Cloud 9");
@@ -715,10 +715,10 @@ void testEnzyme()
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
-    
+
     // a diff was found
     unit_assert(diff);
-    
+
     // and correctly
     unit_assert(diff.a_b.id == "Donald Trump");
     unit_assert(diff.b_a.id == "Donald Duck");
@@ -737,7 +737,7 @@ void testEnzyme()
     unit_assert(diff.a_b.enzymeName.cvParams.size() == 1);
     unit_assert(diff.b_a.enzymeName.cvParams.size() == 0);
     unit_assert(diff.a_b.enzymeName.hasCVParam(MS_Trypsin));
-        
+
 }
 
 
@@ -748,7 +748,7 @@ void testEnzymes()
     Enzymes a, b;
     Diff<Enzymes> diff(a, b);
     if (diff && os_) *os_ << diff << endl;
-    
+
     a.independent = "indep";
     b.enzymes.push_back(EnzymePtr(new Enzyme()));
 }
@@ -799,7 +799,7 @@ void testResidue()
     if (os_) *os_ << "testResidue()\n";
 
     Residue a, b;
-    
+
     a.Code = "ON";
     a.Mass = 1.0;
     b = a;
@@ -856,17 +856,17 @@ void testAmbiguousResidue()
 void testFilter()
 {
     if (os_) *os_ << "testFilter()\n";
-    
+
     Filter a, b;
 
     a.filterType.set(MS_DB_filter_taxonomy);
     a.include.set(MS_DB_PI_filter);
     a.exclude.set(MS_translation_table);
     b = a;
-    
+
     Diff<Filter> diff(a, b);
     unit_assert(!diff);
-    
+
     b.filterType.clear();
     b.filterType.set(MS_database_filtering);
     b.include.clear();
@@ -876,7 +876,7 @@ void testFilter()
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
-    
+
     unit_assert(diff);
 
     unit_assert(diff.a_b.filterType.hasCVParam(MS_DB_filter_taxonomy));
@@ -933,9 +933,9 @@ void testContact()
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
-    
+
     unit_assert(diff);
-        
+
     b.address = "b_address";
     b.phone = "b_phone";
     b.email = "b_email";
@@ -946,7 +946,7 @@ void testContact()
     if (os_) *os_ << diff << endl;
 
     unit_assert(diff);
-    
+
 }
 
 
@@ -959,7 +959,7 @@ void testAffiliations()
     a.organizationPtr = OrganizationPtr(new Organization("id"));
 
     b = a;
-    
+
     Diff<Affiliations> diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
@@ -978,7 +978,7 @@ void testPerson()
     if (os_) *os_ << "testPerson()\n";
 
     Person a, b;
-    
+
     a.lastName = "last";
     a.firstName = "first";
     a.midInitials = "mi";
@@ -1176,13 +1176,13 @@ void testDataCollection()
     a.inputs.sourceFile.push_back(SourceFilePtr(new SourceFile()));
     b.inputs.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase()));
     a.inputs.spectraData.push_back(SpectraDataPtr(new SpectraData()));
-    
+
     // b.analysisData
     b.analysisData.spectrumIdentificationList.push_back(SpectrumIdentificationListPtr(new SpectrumIdentificationList()));
-        
+
     diff(a, b);
     if (os_) *os_ << diff << endl;
-    
+
 }
 
 
@@ -1294,7 +1294,7 @@ int main(int argc, char* argv[])
     {
         cerr << "Caught unknown exception.\n";
     }
-    
+
     return 1;
 }
 
