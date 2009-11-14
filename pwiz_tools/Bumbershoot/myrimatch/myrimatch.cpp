@@ -820,7 +820,6 @@ namespace myrimatch
 			    continue;*/
 
 			    int i;
-                vector<DigestedPeptide> digestedPeptides;
 			    for( i = threadInfo->workerNum; i < numProteins; i += g_numWorkers )
 			    {
 				    //cout << threadInfo->workerHostString <<	" is generating candidates from protein " << i << endl;
@@ -847,37 +846,18 @@ namespace myrimatch
                             STOP_PROFILER(11);
                             continue;
                         }
-                        digestedPeptides.clear();
+                        
+                        vector<DigestedPeptide> digestedPeptides;
                         START_PROFILER(12);
 						
 						PTMVariantList variantIterator( (*itr), g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants);
-						// Search each variant
-						do {
-							++ threadInfo->stats.numCandidatesGenerated;
-							// Match the variant against the spectra
-							START_PROFILER(1);
-							boost::int64_t queryComparisonCount = QuerySequence( variantIterator.ptmVariant, i, g_rtConfig->EstimateSearchTimeOnly );
-							STOP_PROFILER(1);
-							// Update the comparison statistics
-							if( queryComparisonCount > 0 )
-							{
-								threadInfo->stats.numComparisonsDone += queryComparisonCount;
-								++threadInfo->stats.numCandidatesQueried;
-								//cout << "QC>0" << queryComparisonCount << endl;
-							}
-							// Get the next variant
-						} while(variantIterator.next());
-
-						if(variantIterator.isSkipped) {
-							// Count the peptide as skipped.
-							++ threadInfo->stats.numCandidatesSkipped;
-						}
-                        STOP_PROFILER(12);
-
-                        /*if(MakePtmVariants( *itr, digestedPeptides, g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants )) {
+                        if(variantIterator.isSkipped) {
                             ++ threadInfo->stats.numCandidatesSkipped;
+                            STOP_PROFILER(12);
+                            continue;
                         }
                         STOP_PROFILER(12);
+                        variantIterator.getVariantsAsList(digestedPeptides);
                         threadInfo->stats.numCandidatesGenerated += digestedPeptides.size();
                         for( size_t j=0; j < digestedPeptides.size(); ++j )
                         {
@@ -891,7 +871,8 @@ namespace myrimatch
                                 ++threadInfo->stats.numCandidatesQueried;
                                 //cout << "QC>0" << queryComparisonCount << endl;
                             }
-                        }*/
+                        }
+
                         START_PROFILER(11);
                         ++itr;
                         STOP_PROFILER(11);
