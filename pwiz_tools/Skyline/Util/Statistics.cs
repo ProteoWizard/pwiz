@@ -294,6 +294,19 @@ namespace pwiz.Skyline.Util
             return new Statistics(normalized);
         }
 
+        private double SumOfSquares()
+        {
+            double s = 0;
+            foreach (double value in _list)
+                s += Math.Pow(value, 2);
+            return s;
+        }
+
+        private double VarianceTotal()
+        {
+            return (SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));            
+        }
+
         /// <summary>
         /// Calculates the variance of the set of numbers.
         /// </summary>
@@ -302,10 +315,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                double s = 0;
-                foreach (double value in _list)
-                    s += Math.Pow(value, 2);
-                return (s - _list.Length*Math.Pow(Mean(), 2)) / (_list.Length - 1);
+                return VarianceTotal() / (_list.Length - 1);
             }
             catch (Exception)
             {
@@ -598,6 +608,39 @@ namespace pwiz.Skyline.Util
             for (int i = 0; i < x.Length; i++)
                 residuals.Add(y._list[i] - (a*x._list[i] + b));
             return new Statistics(residuals.ToArray());
+        }
+
+        private static double StdDevY(Statistics y, Statistics x)
+        {
+            double s = 0;
+            Statistics residuals = Residuals(y, x);
+            foreach (double value in residuals._list)
+                s += Math.Pow(value, 2);
+            return Math.Sqrt(s / (residuals._list.Length - 2));
+        }
+
+        public static double StdDevA(Statistics y, Statistics x)
+        {
+            try
+            {
+                return StdDevY(y, x)*Math.Sqrt(x.SumOfSquares()/(x._list.Length*x.VarianceTotal()));
+            }
+            catch (Exception)
+            {
+                return double.NaN;
+            }
+        }
+
+        public static double StdDevB(Statistics y, Statistics x)
+        {
+            try
+            {
+                return StdDevY(y, x) / Math.Sqrt(x.VarianceTotal());
+            }
+            catch (Exception)
+            {
+                return double.NaN;
+            }
         }
 
         /// <summary>

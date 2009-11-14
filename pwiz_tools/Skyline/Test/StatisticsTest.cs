@@ -635,6 +635,67 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// A test of linear regression values on real CE optimization data.
+        /// </summary>
+        [TestMethod]
+        public void RegressionTest()
+        {
+            var statPrecursorMzs = new Statistics(new[]
+                {
+                    458.740356,
+                    533.294964,
+                    623.29589,
+                    471.256174,
+                    509.751255,
+                    490.245806,
+                    506.774731,
+                    487.281857,
+                    500.731477,
+                    713.317688,
+                    621.298432,
+                    499.272978,
+                    530.270147,
+                    869.449568,
+                    482.266541,
+                    540.290213,
+                    692.868631,
+                    634.355888,
+                    582.318971,
+                    653.361701
+                });
+
+            var statCEs = new Statistics(new[]
+                {
+                    17.911172,
+                    18.446029,
+                    25.50606,
+                    17.33671,
+                    23.645543,
+                    18.982357,
+                    19.544341,
+                    17.881583,
+                    18.33887,
+                    24.566801,
+                    22.438147,
+                    17.289281,
+                    23.343185,
+                    29.875285,
+                    17.711062,
+                    18.683867,
+                    23.871533,
+                    22.8821,
+                    20.112845,
+                    25.528298
+                });
+
+            // Values for this CE optimization regression were verified in Excel
+            Assert.AreEqual(statCEs.Beta(statPrecursorMzs), 0.029982, 0.000001);            
+            Assert.AreEqual(statCEs.Alpha(statPrecursorMzs), 4.104255, 0.0000001);
+            Assert.AreEqual(Statistics.StdDevB(statCEs, statPrecursorMzs), 0.003872, 0.000001);
+            Assert.AreEqual(Statistics.StdDevA(statCEs, statPrecursorMzs), 2.241899, 0.000001);
+        }
+
+        /// <summary>
         /// A test for A
         /// </summary>
         [TestMethod]
