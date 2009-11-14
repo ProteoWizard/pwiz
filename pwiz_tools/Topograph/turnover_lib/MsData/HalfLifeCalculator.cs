@@ -155,6 +155,7 @@ namespace pwiz.Topograph.MsData
                 {
                     RateConstant = rateConstant,
                     RateConstantError = rateConstantError,
+                    PointCount = timePoints.Count,
                 };
         }
 
@@ -246,6 +247,7 @@ namespace pwiz.Topograph.MsData
         {
             public double RateConstant { get; set; }
             public double RateConstantError { get; set; }
+            public int PointCount { get; set; }
             public double HalfLife
             {
                 get { return HalfLifeFromRateConstant(RateConstant);}

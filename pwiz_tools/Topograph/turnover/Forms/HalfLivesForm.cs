@@ -109,7 +109,7 @@ namespace pwiz.Topograph.ui.Forms
                     var cohortColumns = _cohortColumns[cohort];
                     var resultData = resultRow.ResultDatas[cohort];
                     row.Cells[cohortColumns.HalfLifeColumn.Index].Value = resultData.HalfLife;
-                    row.Cells[cohortColumns.HalfLifeErrorColumn.Index].Value = resultData.MinHalfLife.ToString("0.####") + "-" + resultData.MaxHalfLife.ToString("0.####");
+                    row.Cells[cohortColumns.HalfLifeErrorColumn.Index].Value = resultData.MinHalfLife.ToString("0.####") + "-" + resultData.MaxHalfLife.ToString("0.####") + " (" + resultData.PointCount + " pts)";
                 }
             }
         }

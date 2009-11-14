@@ -11,6 +11,7 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.Util;
 using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
@@ -60,7 +61,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             get
             {
-                return comboCohort.SelectedText;
+                return Convert.ToString(comboCohort.SelectedItem);
             }
             set
             {
@@ -190,8 +191,31 @@ namespace pwiz.Topograph.ui.Forms
             _peptideAnalyses.AddRange(peptideAnalyses);
         }
 
+        private void UpdateCohortCombo()
+        {
+            var cohortSet = new HashSet<String> {""};
+            foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
+            {
+                cohortSet.Add(msDataFile.Cohort ?? "");
+            }
+            var selectedCohort = (string) comboCohort.SelectedItem;
+            var cohorts = new List<String>(cohortSet);
+            cohorts.Sort();
+            if (Lists.EqualsDeep(cohorts, comboCohort.Items))
+            {
+                return;
+            }
+            comboCohort.Items.Clear();
+            foreach (var cohort in cohorts)
+            {
+                comboCohort.Items.Add(cohort);
+            }
+            comboCohort.SelectedIndex = Math.Max(0, cohorts.IndexOf(selectedCohort));
+        }
+
         private void Requery()
         {
+            UpdateCohortCombo();
             if (string.IsNullOrEmpty(Peptide))
             {
                 Text = TabText = "Half Life: " + ProteinName.Substring(0, Math.Min(20, ProteinName.Length));
