@@ -112,13 +112,16 @@ namespace pwiz.Topograph.Model
             }
             set
             {
-                if (_minCharge == value)
+                using (GetWriteLock())
                 {
-                    return;
+                    if (_minCharge == value)
+                    {
+                        return;
+                    }
+                    _minCharge = value;
+                    //InvalidateChromatograms();
+                    OnChange();
                 }
-                _minCharge = value;
-                //InvalidateChromatograms();
-                OnChange();
             }
         }
 
@@ -137,13 +140,16 @@ namespace pwiz.Topograph.Model
             }
             set
             {
-                if (_maxCharge == value)
+                using (GetWriteLock())
                 {
-                    return;
+                    if (_maxCharge == value)
+                    {
+                        return;
+                    }
+                    _maxCharge = value;
+                    //InvalidateChromatograms();
+                    OnChange();
                 }
-                _maxCharge = value;
-                //InvalidateChromatograms();
-                OnChange();
             } 
         }
 

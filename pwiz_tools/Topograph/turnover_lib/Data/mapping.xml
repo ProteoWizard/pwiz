@@ -187,12 +187,12 @@
       <one-to-many class="DbChromatogram" />
     </bag>
     <property name="ChromatogramCount" />
-    <bag name="Peaks" cascade="delete" inverse="true">
+    <bag name="Peaks" cascade="delete" inverse="true" batch-size="10">
       <key column="PeptideFileAnalysis" />
       <one-to-many class="DbPeak "/>
     </bag>
     <property name="PeakCount"/>
-    <bag name="PeptideDistributions" cascade="delete" inverse="true">
+    <bag name="PeptideDistributions" cascade="delete" inverse="true" batch-size="10">
       <key column="PeptideFileAnalysis"/>
       <one-to-many class="DbPeptideDistribution"/>
     </bag>
@@ -248,7 +248,7 @@
     <property name="PeptideQuantity" not-null="true" unique-key="PeptideDistribution" />
     <property name="Score" />
     <property name="TracerPercent" />
-    <bag name="PeptideAmounts" cascade="delete" inverse="true">
+    <bag name="PeptideAmounts" cascade="delete" inverse="true" batch-size="10">
       <key column="PeptideDistribution" />
       <one-to-many class="DbPeptideAmount"/>
     </bag>

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
@@ -112,6 +114,7 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[cohortColumns.HalfLifeErrorColumn.Index].Value = resultData.MinHalfLife.ToString("0.####") + "-" + resultData.MaxHalfLife.ToString("0.####") + " (" + resultData.PointCount + " pts)";
                 }
             }
+            btnSave.Enabled = true;
         }
 
         private class CohortColumns
@@ -174,5 +177,55 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Reload();
+            var dialog = new SaveFileDialog()
+                             {
+                                 Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
+                                 InitialDirectory = Settings.Default.ExportResultsDirectory,
+                             };
+            if (dialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            String filename = dialog.FileName;
+            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
+            Settings.Default.Save();
+            var columns = GetColumnsSortedByDisplayIndex();
+            using (var stream = File.OpenWrite(filename))
+            {
+                var writer = new StreamWriter(stream);
+                var tab = "";
+                foreach (var column in columns)
+                {
+                    writer.Write(tab);
+                    tab = "\t";
+                    writer.Write(column.HeaderText);
+                }
+                writer.WriteLine();
+                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow ++)
+                {
+                    var row = dataGridView1.Rows[iRow];
+                    tab = "";
+                    foreach (var column in columns)
+                    {
+                        writer.Write(tab);
+                        tab = "\t";
+                        writer.Write(row.Cells[column.Index].Value);
+                    }
+                    writer.WriteLine();
+                }
+            }
+        }
+        private IList<DataGridViewColumn> GetColumnsSortedByDisplayIndex()
+        {
+            var result = new DataGridViewColumn[dataGridView1.Columns.Count];
+            dataGridView1.Columns.CopyTo(result, 0);
+            Array.Sort(result, (a, b) => a.DisplayIndex.CompareTo(b.DisplayIndex));
+            return result;
+        }
+
     }
 }

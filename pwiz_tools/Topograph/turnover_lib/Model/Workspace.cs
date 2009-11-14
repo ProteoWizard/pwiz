@@ -526,7 +526,7 @@ namespace pwiz.Topograph.Model
                         peptide.Save(session);
                     }
                     longOperationBroker.UpdateStatusMessage("Saving peptide analyses");
-                    foreach (var peptideAnalysis in PeptideAnalyses.ListChildren())
+                    foreach (var peptideAnalysis in _dirtyPeptideAnalyses)
                     {
                         if (longOperationBroker.WasCancelled)
                         {
