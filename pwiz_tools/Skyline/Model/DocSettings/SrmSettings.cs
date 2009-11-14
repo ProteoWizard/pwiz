@@ -428,7 +428,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (LibrarySpec librarySpec in PeptideSettings.Libraries.LibrarySpecs)
                 {
-                    if (!defSet.SpectralLibraryList.Contains(librarySpec))
+                    if (librarySpec != null && !defSet.SpectralLibraryList.Contains(librarySpec))
                         defSet.SpectralLibraryList.Add(librarySpec);
                 }
             }
