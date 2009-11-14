@@ -63,6 +63,7 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
         {
             // some controllers don't have spectra (even if they have a NumSpectra value!)
             if (controllerType == Controller_Analog ||
+                controllerType == Controller_ADCard ||
                 controllerType == Controller_UV)
                 continue;
 

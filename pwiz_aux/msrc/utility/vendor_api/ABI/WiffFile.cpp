@@ -1,7 +1,7 @@
 //
 // $Id$
 //
-// 
+//
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
 // Copyright 2009 Vanderbilt University - Nashville, TN 37232
@@ -13,10 +13,10 @@
 //
 // http://creativecommons.org/licenses/by-nc-nd/3.0/us/
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -156,7 +156,7 @@ struct ExperimentImpl : public Experiment
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
     vector<double> cycleStartTimes;
-    
+
     typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
     TransitionParametersMap transitionParametersMap;
 };
@@ -397,12 +397,46 @@ void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vecto
         ChromatogramDetails::ChromatogramPoints^ cp =
             wifffile_->reader->Provider->GetXICPoints(index+1); // index is 1-based
 
-        times.resize(cp->Count);
-        intensities.resize(cp->Count);
-        for (int i=0; i < cp->Count; ++i)
+        int start = 0;
+        int end = cp->Count;
+///*
+        // The WIFF reader has a problem with adding tons of flanking zeros to
+        // scheduled data.  Here the extra flanking zeros are removed until the first
+        // and last non-zero intensities are found.
+        //
+        // Note that AB uses a zero baseline, making the arrays sparsely populated
+        // with non-zero data points, and that even a full copy of the larges arrays
+        // does not show up under a profiler when compared with the call above
+        // to GetXICPoints().  More complex code than the linear walks below are
+        // unlikely to yield noticeable benefit.
+
+        while (start < cp->Count && cp[start]->Y == 0)
+            start++;
+
+        if (start == cp->Count)
         {
-            times[i] = cp[i]->X;
-            intensities[i] = cp[i]->Y;
+            // All zeros, so just return empty arrays.
+            times.resize(0);
+            intensities.resize(0);
+            return;
+        }
+
+        while (cp[end - 1]->Y == 0)
+            end--;
+
+        // Leave at least one bounding zero
+        if (start > 0)
+            start--;
+        if (end < cp->Count)
+            end++;
+//*/
+        int count = end - start;
+        times.resize(count);
+        intensities.resize(count);
+        for (int i=0, iPoint = start; i < count; ++i, ++iPoint)
+        {
+            times[i] = cp[iPoint]->X;
+            intensities[i] = cp[iPoint]->Y;
         }
     )
 }
