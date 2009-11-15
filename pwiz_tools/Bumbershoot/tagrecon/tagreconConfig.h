@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasari
 //
 
 #ifndef _TAGRECONCONFIG_H
@@ -83,7 +83,8 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( int,				ScoreHistogramWidth,		800				) \
     RTCONFIG_VARIABLE( int,				ScoreHistogramHeight,		600				) \
     RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
-    RTCONFIG_VARIABLE( double,			MaxTagMassDeviation,		300.0			) \
+    RTCONFIG_VARIABLE( double,			MaxModificationMassPlus,	300.0			) \
+	RTCONFIG_VARIABLE( double,			MaxModificationMassMinus,	150.0			) \
 	RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
     RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
 	RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
@@ -97,19 +98,23 @@ namespace tagrecon
 {
 
     struct RunTimeConfig : public BaseRunTimeConfig
-    {
-    public:
-        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
+        {
+        public:
+        	RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
 
-        path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
+        	path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
 
-        boost::regex cleavageAgentRegex;
-        Digestion::Config digestionConfig;
+        	boost::regex cleavageAgentRegex;
+            Digestion::Config digestionConfig;
 
-        FragmentTypesBitset defaultFragmentTypes;
+            FragmentTypesBitset defaultFragmentTypes;
 
-        int				SpectraBatchSize;
-        int				ProteinBatchSize;
+			// Dynamic and static mods
+			DynamicModSet   dynamicMods;
+			StaticModSet    staticMods;
+
+            int				SpectraBatchSize;
+            int				ProteinBatchSize;
             int				ProteinIndexOffset;
             float			curMinSequenceMass;
             float			curMaxSequenceMass;
@@ -140,7 +145,7 @@ namespace tagrecon
             if( !exists(Blosum) )
                 throw runtime_error("unable to find Blosum matrix \"" + Blosum + "\"");
 
-            //cout << "ProteinDatabase:" << ProteinDatabase << "\n";
+                //cout << "ProteinDatabase:" << ProteinDatabase << "\n";
 
             trim(CleavageRules); // trim flanking whitespace
             if( CleavageRules.find(' ') == string::npos )
@@ -182,7 +187,7 @@ namespace tagrecon
             }
 
 
-            int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
+                int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
                 Digestion::Specificity specificity = (Digestion::Specificity) NumMinTerminiCleavages;
                 // maxLength of a peptide is the max_sequence_mass/mass_of_averagine_molecule
                 int maxLength = (int) (MaxSequenceMass/111.1254f);
@@ -257,20 +262,19 @@ namespace tagrecon
                 }
 
                 hasDynamicMods = false;
-                if( !DynamicMods.empty() )
-                {
-                    DynamicMods = TrimWhitespace( DynamicMods );
-                    g_residueMap->setDynamicMods( DynamicMods );
-                    if(g_residueMap->dynamicMods.size()>0) {
-                        hasDynamicMods = true;
-                    }
-                }
+				if( !DynamicMods.empty() )
+				{
+					DynamicMods = TrimWhitespace( DynamicMods );
+					dynamicMods = DynamicModSet( DynamicMods );
+					if(dynamicMods.size()>0)
+						hasDynamicMods = true;
+				}
 
-                if( !StaticMods.empty() )
-                {
-                    StaticMods = TrimWhitespace( StaticMods );
-                    g_residueMap->setStaticMods( StaticMods );
-                }
+				if( !StaticMods.empty() )
+				{
+					StaticMods = TrimWhitespace( StaticMods );
+					staticMods = StaticModSet( StaticMods );
+				}
 
                 maxChargeStateFromSpectra = 1;
                 PrecursorMassTolerance.push_back(PrecursorMzTolerance);

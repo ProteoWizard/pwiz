@@ -13,7 +13,7 @@
 //
 // The Original Code is the Bumbershoot core library.
 //
-// The Initial Developer of the Original Code is Surendra Dasaris.
+// The Initial Developer of the Original Code is Surendra Dasari.
 //
 // Copyright 2009 Vanderbilt University
 //
@@ -72,13 +72,20 @@ namespace freicore {
 				mass. Two modifications that can go on the same amino acid having masses with in
 				a specified mass tolerance are treated as same.
 			*/
-			bool operator() (const pair<float, string>& lhs, const pair<float, string>& rhs) const
-            {
+			bool operator() (const pair<float, string>& lhs, const pair<float, string>& rhs) const {
 				float deltaMass = lhs.first - rhs.first;
-				if(fabs(deltaMass) > deltaMassTolerance)
+				if(fabs(deltaMass) > deltaMassTolerance) {
 					return lhs.first < rhs.first;
-				else
+				} else {
 					return lhs.second < rhs.second;
+					/*if(lhs.second < rhs.second) {
+						return lhs.second < rhs.second;
+					} else if(lhs.second > rhs.second) {
+						return lhs.second > rhs.second;
+					} else {
+						return false;
+					}*/
+				}
 			}
 		};
 
@@ -165,6 +172,7 @@ namespace freicore {
 			void printMassToAminoAcidMap();
 			void printInterpretationMap();
 		};
+
 	}
 }
 #endif

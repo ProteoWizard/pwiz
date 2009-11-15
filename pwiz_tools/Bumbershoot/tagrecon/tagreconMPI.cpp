@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasari
 //
 
 #define BOOST_LIB_DIAGNOSTIC
@@ -53,11 +53,6 @@ namespace tagrecon
 			len = (int) g_rtConfig->cfgStr.length();
 			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x00, MPI_COMM_WORLD );
 			MPI_Send( (void*) g_rtConfig->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x01, MPI_COMM_WORLD );
-
-			// Send the residue map to all the child process
-			len = (int) g_residueMap->cfgStr.length();
-			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x02, MPI_COMM_WORLD );
-			MPI_Send( (void*) g_residueMap->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x03, MPI_COMM_WORLD );
 		}
 	}
 
@@ -74,13 +69,6 @@ namespace tagrecon
 		g_rtConfig->cfgStr.resize( len );
 		MPI_Recv( &g_rtConfig->cfgStr[0],					len,	MPI_CHAR,			0,		0x01, MPI_COMM_WORLD, &st );
 		g_rtConfig->initializeFromBuffer( g_rtConfig->cfgStr, "\r\n#" );
-
-		// Secondly, get the residue map and parse it out.
-		g_residueMap = new ResidueMap();
-		MPI_Recv( &len,										1,		MPI_INT,			0,		0x02, MPI_COMM_WORLD, &st );
-		g_residueMap->cfgStr.resize( len );
-		MPI_Recv( &g_residueMap->cfgStr[0],					len,	MPI_CHAR,			0,		0x03, MPI_COMM_WORLD, &st );
-		g_residueMap->initializeFromBuffer( g_residueMap->cfgStr );
 	}
 
 	/**!

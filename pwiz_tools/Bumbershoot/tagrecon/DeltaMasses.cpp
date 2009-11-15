@@ -13,7 +13,7 @@
 //
 // The Original Code is the Bumbershoot core library.
 //
-// The Initial Developer of the Original Code is Surendra Dasaris.
+// The Initial Developer of the Original Code is Surendra Dasari.
 //
 // Copyright 2009 Vanderbilt University
 //
@@ -42,7 +42,7 @@ namespace freicore {
 
 			// Get the static mods configured by the user and create a <aminoAcid,mass> map
 			multimap <string, float> staticModMap;
-			for(StaticModSet::iterator staticModIter = g_residueMap->staticMods.begin(); staticModIter != g_residueMap->staticMods.end(); staticModIter++) {
+			for(StaticModSet::iterator staticModIter = g_rtConfig->staticMods.begin(); staticModIter != g_rtConfig->staticMods.end(); staticModIter++) {
 				staticModMap.insert(multimap<string,float>::value_type(string(1,staticModIter->name),staticModIter->mass));
 			}
 
@@ -97,8 +97,6 @@ namespace freicore {
                             // Get the candidate masses
 							float candidateMonoMass = (float) (AminoAcid::Info::record((*from).second[0]).residueFormula.monoisotopicMass() - AminoAcid::Info::record((*to).second[0]).residueFormula.monoisotopicMass());
 							float candidateAvgMass = (float) (AminoAcid::Info::record((*from).second[0]).residueFormula.molecularWeight() - AminoAcid::Info::record((*to).second[0]).residueFormula.molecularWeight());
-                            //float candidateMonoMass = (float) (g_residueMap->getMonoMassByName((*from).second[0]) - g_residueMap->getMonoMassByName((*to).second[0]));
-                            //float candidateAvgMass = (float) (g_residueMap->getAvgMassByName((*from).second[0]) - g_residueMap->getAvgMassByName((*to).second[0]));
                             float candidateMass = g_rtConfig->UseAvgMassOfSequences ? candidateAvgMass : candidateMonoMass;
                             // Skip the I/L and Q/K subs
                             if(fabs(candidateMass)<0.8) {
