@@ -530,7 +530,7 @@ namespace pwiz.Topograph.Model
                     {
                         if (longOperationBroker.WasCancelled)
                         {
-                        retu: rn;
+                            return;
                         }
                         peptideAnalysis.SaveDeep(session);
                     }
