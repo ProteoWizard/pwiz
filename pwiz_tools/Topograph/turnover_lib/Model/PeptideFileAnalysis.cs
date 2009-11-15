@@ -203,6 +203,7 @@ namespace pwiz.Topograph.Model
                 dbPeptideAnalysis.FileAnalysisCount++;
                 session.Update(dbPeptideAnalysis);
                 session.Transaction.Commit();
+                workspace.ChromatogramGenerator.SetRequeryPending();
                 return peptideAnalysis.FileAnalyses.EnsurePeptideFileAnalysis(dbPeptideFileAnalysis);
             }
         }

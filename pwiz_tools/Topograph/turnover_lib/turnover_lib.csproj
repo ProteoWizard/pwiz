@@ -164,6 +164,7 @@
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\Lists.cs" />
     <Compile Include="Util\LongOperation.cs" />
+    <Compile Include="Util\PendingIdQueue.cs" />
     <Compile Include="Util\SessionWithLock.cs" />
     <Compile Include="Util\Statistics.cs" />
     <Compile Include="Util\WeakDictionary.cs" />

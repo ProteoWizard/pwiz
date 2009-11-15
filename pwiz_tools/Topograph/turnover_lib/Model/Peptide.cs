@@ -138,6 +138,7 @@ namespace pwiz.Topograph.Model
             {
                 Workspace.PeptideAnalyses.AddChild(peptideAnalysis.Id.Value, peptideAnalysis);
                 Workspace.AddEntityModel(peptideAnalysis);
+                Workspace.ChromatogramGenerator.SetRequeryPending();
                 return peptideAnalysis;
             }
         }

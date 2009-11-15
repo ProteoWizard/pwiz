@@ -25,6 +25,7 @@ using System.Threading;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.MsData
 {
@@ -34,7 +35,7 @@ namespace pwiz.Topograph.MsData
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.ManualReset);
         private Thread _resultCalculatorThread;
         private bool _isRunning;
-        private List<long> _fileAnalysisIds;
+        private readonly PendingIdQueue _pendingIdQueue = new PendingIdQueue();
         private int _fileAnalysisIndex;
 
         public ResultCalculator(Workspace workspace)
@@ -107,47 +108,49 @@ namespace pwiz.Topograph.MsData
             long? peptideAnalysisId = null;
             using (var session = _workspace.OpenSession())
             {
-                if (_fileAnalysisIds == null || _fileAnalysisIndex >= _fileAnalysisIds.Count)
+                while (_pendingIdQueue.PendingIdCount() > 0 || _pendingIdQueue.IsRequeryPending())
                 {
-                    var list = new List<long>();
-                    var query = session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
-                        + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
-                    query.List(list);
-                    _fileAnalysisIds = list;
-                    _fileAnalysisIndex = 0;
-                }
-                for (;_fileAnalysisIndex < _fileAnalysisIds.Count(); _fileAnalysisIndex++)
-                {
-                    var peptideFileAnalysis =
-                        session.Get<DbPeptideFileAnalysis>(_fileAnalysisIds[_fileAnalysisIndex]);
-                    if (peptideFileAnalysis == null)
+                    foreach (var fileAnalysisId in _pendingIdQueue.EnumerateIds())
                     {
-                        continue;
+                        var peptideFileAnalysis =
+                            session.Get<DbPeptideFileAnalysis>(fileAnalysisId);
+                        if (peptideFileAnalysis == null)
+                        {
+                            continue;
+                        }
+                        if (peptideFileAnalysis.ChromatogramCount == 0 || peptideFileAnalysis.PeptideDistributionCount != 0)
+                        {
+                            continue;
+                        }
+                        var id = peptideFileAnalysis.PeptideAnalysis.Id.Value;
+                        if (openPeptideAnalysisIds.Contains(id))
+                        {
+                            continue;
+                        }
+                        peptideAnalysisId = id;
+                        break;
                     }
-                    if (peptideFileAnalysis.ChromatogramCount == 0 || peptideFileAnalysis.PeptideDistributionCount != 0)
+                    if (_pendingIdQueue.IsRequeryPending())
                     {
-                        continue;
+                        var list = new List<long>();
+                        var query = session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
+                            + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
+                        query.List(list);
+                        _pendingIdQueue.SetQueriedIds(list);
                     }
-                    var id = peptideFileAnalysis.PeptideAnalysis.Id.Value;
-                    if (openPeptideAnalysisIds.Contains(id))
-                    {
-                        continue;
-                    }
-                    peptideAnalysisId = id;
-                    break;
                 }
             }
-            if (peptideAnalysisId == null)
+            if (peptideAnalysisId != null)
             {
-                return null;
-            }
-            using (_workspace.GetReadLock())
-            {
-                using (var session = _workspace.OpenSession())
+                using (_workspace.GetReadLock())
                 {
-                    return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
+                    using (var session = _workspace.OpenSession())
+                    {
+                        return _workspace.PeptideAnalyses.GetChild(peptideAnalysisId.Value, session);
+                    }
                 }
             }
+            return null;
         }
         
         public void Stop()
@@ -161,11 +164,6 @@ namespace pwiz.Topograph.MsData
                 _isRunning = false;
                 _eventWaitHandle.Set();
             }
-        }
-
-        public void Wake()
-        {
-            _eventWaitHandle.Set();
         }
 
         public bool IsRunning()
@@ -257,14 +255,26 @@ namespace pwiz.Topograph.MsData
             _workspace.SaveIfNotDirty(peptideAnalysis);
         }
         public String StatusMessage { get; private set; }
+
         public int PendingAnalysisCount { get
         {
-            var list = _fileAnalysisIds;
-            if (list != null)
-            {
-                return list.Count - _fileAnalysisIndex;
-            }
-            return 0;
+            return _pendingIdQueue.PendingIdCount();
         }}
+
+        public void AddPeptideFileAnalysisId(long id)
+        {
+            _pendingIdQueue.AddId(id);
+            _eventWaitHandle.Set();
+        }
+
+        public void SetRequeryPending()
+        {
+            _pendingIdQueue.SetRequeryPending();
+        }
+
+        public bool IsRequeryPending()
+        {
+            return _pendingIdQueue.IsRequeryPending();
+        }
     }
 }

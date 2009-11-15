@@ -167,7 +167,7 @@ namespace pwiz.Topograph.Enrichment
             return new DbTracerDef
                        {
                            AtomCount = 3,
-                           AtomPercentEnrichment = 98,
+                           AtomPercentEnrichment = 99.5,
                            DeltaMass = 3.018,
                            TracerSymbol = "Leu",
                            IsotopesEluteEarlier = true,

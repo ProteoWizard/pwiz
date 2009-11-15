@@ -43,6 +43,10 @@ namespace pwiz.Topograph.ui.Forms
             if (Workspace.SavedWorkspaceVersion.ChromatogramsValid(Workspace.WorkspaceVersion))
             {
                 tbxChromatogramMessage.Text = Workspace.ChromatogramGenerator.PendingAnalysisCount + " analyses left to process.";
+                if (Workspace.ChromatogramGenerator.IsRequeryPending())
+                {
+                    tbxChromatogramMessage.Text += " (Requery pending)";
+                }
             }
             else
             {
@@ -52,6 +56,10 @@ namespace pwiz.Topograph.ui.Forms
             if (Workspace.SavedWorkspaceVersion.Equals(Workspace.WorkspaceVersion))
             {
                 tbxResultCalculatorMessage.Text = Workspace.ResultCalculator.PendingAnalysisCount + " analyses left to process.";
+                if (Workspace.ResultCalculator.IsRequeryPending())
+                {
+                    tbxResultCalculatorMessage.Text += " (Requery pending)";
+                }
             }
             else
             {

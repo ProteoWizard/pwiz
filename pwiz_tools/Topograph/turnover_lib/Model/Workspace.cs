@@ -544,6 +544,8 @@ namespace pwiz.Topograph.Model
                     _dirtyPeptideAnalyses.Clear();
                     _dirtyPeptides.Clear();
                     IsDirty = false;
+                    _resultCalculator.SetRequeryPending();
+                    _chromatogramGenerator.SetRequeryPending();
                 }
             }
         }
