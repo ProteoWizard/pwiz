@@ -108,7 +108,7 @@ namespace pwiz.Topograph.MsData
             long? peptideAnalysisId = null;
             using (var session = _workspace.OpenSession())
             {
-                while (_pendingIdQueue.PendingIdCount() > 0 || _pendingIdQueue.IsRequeryPending())
+                while (peptideAnalysisId == null && _pendingIdQueue.PendingIdCount() > 0 || _pendingIdQueue.IsRequeryPending())
                 {
                     foreach (var fileAnalysisId in _pendingIdQueue.EnumerateIds())
                     {
