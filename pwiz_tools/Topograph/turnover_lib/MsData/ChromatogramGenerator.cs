@@ -478,6 +478,7 @@ namespace pwiz.Topograph.MsData
         public void SetRequeryPending()
         {
             _pendingIdQueue.SetRequeryPending();
+            _eventWaitHandle.Set();
         }
         public bool IsRequeryPending()
         {

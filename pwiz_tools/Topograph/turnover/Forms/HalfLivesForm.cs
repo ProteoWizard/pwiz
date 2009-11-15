@@ -98,6 +98,11 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
             dataGridView1.Rows.Clear();
+            if (calculator.ResultRows.Count == 0)
+            {
+                MessageBox.Show(this, "No results.  The problem might be that you have not set the time point on any data files.", Program.AppName);
+                return;
+            }
             dataGridView1.Rows.Add(calculator.ResultRows.Count);
             for (int iRow = 0; iRow < calculator.ResultRows.Count; iRow++) 
             {
