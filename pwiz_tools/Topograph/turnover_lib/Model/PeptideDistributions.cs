@@ -38,6 +38,12 @@ namespace pwiz.Topograph.Model
         {
             Parent = peptideFileAnalysis;
             SetId(peptideFileAnalysis.Id);
+            IsDirty = true;
+        }
+
+        public bool IsDirty
+        {
+            get; set;
         }
 
         public void Calculate(Peaks peaks)

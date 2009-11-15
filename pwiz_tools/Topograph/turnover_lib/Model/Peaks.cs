@@ -36,7 +36,10 @@ namespace pwiz.Topograph.Model
             SetId(peptideFileAnalysis.Id);
             PeakStart = peptideFileAnalysis.PeakStart;
             PeakEnd = peptideFileAnalysis.PeakEnd;
+            IsDirty = true;
         }
+
+        public bool IsDirty { get; set; }
 
         protected override IEnumerable<KeyValuePair<MzKey, DbPeak>> GetChildren(DbPeptideFileAnalysis parent)
         {

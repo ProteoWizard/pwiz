@@ -22,6 +22,12 @@ namespace pwiz.Topograph.Model
         {
             PeptideAnalysis = peptideAnalysis;
             SetId(peptideAnalysis.Id.Value);
+            IsDirty = true;
+        }
+
+        public bool IsDirty
+        {
+            get; set;
         }
 
         public bool Calculate(ICollection<PeptideDistributions> peptideDistributionsList, bool isComplete)

@@ -94,13 +94,10 @@ namespace pwiz.Topograph.Model
         {
         }
 
-        public bool IsDirty { get; protected set; }
-
         protected virtual void OnChange()
         {
             if (Parent != null)
             {
-                IsDirty = true;
                 Workspace.EntityChanged(this);
             }
         }
@@ -114,7 +111,6 @@ namespace pwiz.Topograph.Model
             set
             {
                 _parent = value;
-                IsDirty = false;
             }
         }
         public AutoLock GetReadLock()
@@ -140,7 +136,6 @@ namespace pwiz.Topograph.Model
 
         protected virtual void Load(T entity)
         {
-            IsDirty = false;
         }
 
         protected virtual T ConstructEntity(ISession session)

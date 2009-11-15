@@ -88,10 +88,29 @@ namespace pwiz.Topograph.Model
             foreach (var fileAnalysis in FileAnalyses.ListChildren())
             {
                 fileAnalysis.Save(session);
-                fileAnalysis.Peaks.Save(session);
-                fileAnalysis.PeptideDistributions.Save(session);
+                if (fileAnalysis.Peaks.IsDirty)
+                {
+                    fileAnalysis.Peaks.Save(session);
+                }
+                if (fileAnalysis.PeptideDistributions.IsDirty)
+                {
+                    fileAnalysis.PeptideDistributions.Save(session);
+                }
             }
-            PeptideRates.Save(session);
+            if (PeptideRates.IsDirty)
+            {
+                PeptideRates.Save(session);
+            }
+        }
+
+        public void AfterSaveDeep()
+        {
+            foreach (var fileAnalysis in FileAnalyses.ListChildren())
+            {
+                fileAnalysis.Peaks.IsDirty = false;
+                fileAnalysis.PeptideDistributions.IsDirty = false;
+            }
+            PeptideRates.IsDirty = false;
         }
 
         public Dictionary<int,IList<MzRange>> GetMzs()

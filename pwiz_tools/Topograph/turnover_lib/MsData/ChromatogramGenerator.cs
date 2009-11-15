@@ -73,23 +73,17 @@ namespace pwiz.Topograph.MsData
 
         public void Stop()
         {
-            lock(this)
+            if (!_isRunning)
             {
-                if (!_isRunning)
-                {
-                    return;
-                }
-                _isRunning = false;
-                _eventWaitHandle.Set();
+                return;
             }
+            _isRunning = false;
+            _eventWaitHandle.Set();
         }
 
         public bool IsRunning()
         {
-            lock(this)
-            {
-                return _isRunning;
-            }
+            return _isRunning;
         }
 
         public void GetProgress(out String statusMessage, out int progress)
@@ -214,6 +208,10 @@ namespace pwiz.Topograph.MsData
                 }
                 foreach (var analysis in analysisChromatograms)
                 {
+                    if (!_isRunning)
+                    {
+                        return;
+                    }
                     analysis.Init(_workspace);
                 }
                 try

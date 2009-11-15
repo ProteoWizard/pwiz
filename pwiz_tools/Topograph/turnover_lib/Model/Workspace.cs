@@ -530,13 +530,17 @@ namespace pwiz.Topograph.Model
                     {
                         if (longOperationBroker.WasCancelled)
                         {
-                            return;
+                        retu: rn;
                         }
                         peptideAnalysis.SaveDeep(session);
                     }
                     longOperationBroker.SetIsCancelleable(false);
                     session.Transaction.Commit();
                     SavedWorkspaceVersion = WorkspaceVersion;
+                    foreach (var peptideAnalysis in _dirtyPeptideAnalyses)
+                    {
+                        peptideAnalysis.AfterSaveDeep();
+                    }
                     _dirtyPeptideAnalyses.Clear();
                     _dirtyPeptides.Clear();
                     IsDirty = false;

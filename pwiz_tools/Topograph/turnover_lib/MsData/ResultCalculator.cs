@@ -34,6 +34,8 @@ namespace pwiz.Topograph.MsData
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.ManualReset);
         private Thread _resultCalculatorThread;
         private bool _isRunning;
+        private List<long> _fileAnalysisIds;
+        private int _fileAnalysisIndex;
 
         public ResultCalculator(Workspace workspace)
         {
@@ -105,11 +107,27 @@ namespace pwiz.Topograph.MsData
             long? peptideAnalysisId = null;
             using (var session = _workspace.OpenSession())
             {
-                var query = session.CreateQuery("FROM " + typeof(DbPeptideFileAnalysis) + " F"
-                    + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
-                foreach (DbPeptideFileAnalysis dbPeptideFileAnalysis in query.Enumerable())
+                if (_fileAnalysisIds == null || _fileAnalysisIndex >= _fileAnalysisIds.Count)
                 {
-                    var id = dbPeptideFileAnalysis.PeptideAnalysis.Id.Value;
+                    _fileAnalysisIds = new List<long>();
+                    _fileAnalysisIndex = 0;
+                    var query = session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
+                        + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
+                    query.List(_fileAnalysisIds);
+                }
+                for (;_fileAnalysisIndex < _fileAnalysisIds.Count(); _fileAnalysisIndex++)
+                {
+                    var peptideFileAnalysis =
+                        session.Get<DbPeptideFileAnalysis>(_fileAnalysisIds[_fileAnalysisIndex]);
+                    if (peptideFileAnalysis == null)
+                    {
+                        continue;
+                    }
+                    if (peptideFileAnalysis.ChromatogramCount == 0 || peptideFileAnalysis.PeptideDistributionCount != 0)
+                    {
+                        continue;
+                    }
+                    var id = peptideFileAnalysis.PeptideAnalysis.Id.Value;
                     if (openPeptideAnalysisIds.Contains(id))
                     {
                         continue;
