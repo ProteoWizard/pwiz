@@ -109,11 +109,12 @@ namespace pwiz.Topograph.MsData
             {
                 if (_fileAnalysisIds == null || _fileAnalysisIndex >= _fileAnalysisIds.Count)
                 {
-                    _fileAnalysisIds = new List<long>();
-                    _fileAnalysisIndex = 0;
+                    var list = new List<long>();
                     var query = session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
                         + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
-                    query.List(_fileAnalysisIds);
+                    query.List(list);
+                    _fileAnalysisIds = list;
+                    _fileAnalysisIndex = 0;
                 }
                 for (;_fileAnalysisIndex < _fileAnalysisIds.Count(); _fileAnalysisIndex++)
                 {
@@ -256,5 +257,14 @@ namespace pwiz.Topograph.MsData
             _workspace.SaveIfNotDirty(peptideAnalysis);
         }
         public String StatusMessage { get; private set; }
+        public int PendingAnalysisCount { get
+        {
+            var list = _fileAnalysisIds;
+            if (list != null)
+            {
+                return list.Count - _fileAnalysisIndex;
+            }
+            return 0;
+        }}
     }
 }

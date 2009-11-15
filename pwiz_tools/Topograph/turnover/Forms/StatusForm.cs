@@ -51,7 +51,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (Workspace.SavedWorkspaceVersion.Equals(Workspace.WorkspaceVersion))
             {
-                tbxResultCalculatorMessage.Text = "";
+                tbxResultCalculatorMessage.Text = Workspace.ResultCalculator.PendingAnalysisCount + " analyses left to process.";
             }
             else
             {
