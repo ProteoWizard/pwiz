@@ -100,18 +100,18 @@ exe chainsaw
     ;
 
 
-exe tab2mzid
-    : tab2mzid.cpp
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-    : <include>../../..
-    ;
+#exe tab2mzid
+#    : tab2mzid.cpp
+#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#    : <include>../../..
+#    ;
 
 
-exe pep2mzid
-    : pep2mzid.cpp
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-    : <include>../../..
-    ;
+#exe pep2mzid
+#    : pep2mzid.cpp
+#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#    : <include>../../..
+#    ;
 
 
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
