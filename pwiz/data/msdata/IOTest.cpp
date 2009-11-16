@@ -103,7 +103,8 @@ void testObject_SpectrumList(const SpectrumList& a)
 
   ostringstream oss;
   XMLWriter writer(oss);
-  IO::write(writer, a, MSData());
+  MSData dummy;
+  IO::write(writer, a, dummy);
   if (os_) *os_ << oss.str() << endl;
 
   // read 'b' in from stream
@@ -386,7 +387,8 @@ void testScan()
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
     a.scanWindows.push_back(ScanWindow(400.0, 1800.0, MS_m_z));
 
-    testObjectWithMSData(a, MSData());
+    MSData dummy;
+    testObjectWithMSData(a, dummy);
 }
 
 
@@ -403,8 +405,9 @@ void testScanList()
 
     a.scans.push_back(a1);
     a.scans.push_back(a2);
-   
-    testObjectWithMSData(a, MSData());
+
+    MSData dummy;
+    testObjectWithMSData(a, dummy);
 }
 
 
@@ -534,7 +537,8 @@ void testSpectrum()
 
     ostringstream oss;
     XMLWriter writer(oss);
-    IO::write(writer, a, MSData());
+    MSData dummy;
+    IO::write(writer, a, dummy);
     if (os_) *os_ << oss.str() << endl;
 
     // read 'b' in from stream
@@ -666,7 +670,8 @@ void testSpectrumListWithPositions()
     ostringstream oss;
     XMLWriter writer(oss);
     vector<stream_offset> positions;
-    IO::write(writer, a, MSData(), BinaryDataEncoder::Config(), &positions);
+    MSData dummy;
+    IO::write(writer, a, dummy, BinaryDataEncoder::Config(), &positions);
 
     if (os_)
     {
@@ -738,7 +743,8 @@ void testSpectrumListWriteProgress()
     IterationListenerRegistry registry;
     registry.addListener(listener, 3); // callbacks: 0,2,5,8,10
 
-    IO::write(writer, a, MSData(), BinaryDataEncoder::Config(), 0, &registry);
+    MSData dummy;
+    IO::write(writer, a, dummy, BinaryDataEncoder::Config(), 0, &registry);
 
     if (os_) 
     {
@@ -763,7 +769,7 @@ void testSpectrumListWriteProgress()
     
     ostringstream oss2;
     XMLWriter writer2(oss2);
-    IO::write(writer2, a, MSData(), BinaryDataEncoder::Config(), 0, &registry2);
+    IO::write(writer2, a, dummy, BinaryDataEncoder::Config(), 0, &registry2);
 
     if (os_) 
     {
