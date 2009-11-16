@@ -2037,6 +2037,12 @@ namespace pwiz.Skyline
         {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
         }
+
+        private void resultsGridToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowResultsGrid(true);
+        }
+
     }
 }
 

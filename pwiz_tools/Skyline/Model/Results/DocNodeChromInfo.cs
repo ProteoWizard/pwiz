@@ -94,6 +94,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? ratio,
                                         float? stdev,
                                         float? libraryDotProduct,
+                                        String note,
                                         bool userSet)
             : base(fileIndex)
         {
@@ -108,6 +109,7 @@ namespace pwiz.Skyline.Model.Results
             Ratio = ratio;
             RatioStdev = stdev;
             LibraryDotProduct = libraryDotProduct;
+            Note = note;
             UserSet = userSet;
         }
 
@@ -123,6 +125,7 @@ namespace pwiz.Skyline.Model.Results
         public float? Ratio { get; private set; }
         public float? RatioStdev { get; private set; }
         public float? LibraryDotProduct { get; private set; }
+        public String Note { get; private set; }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -137,6 +140,17 @@ namespace pwiz.Skyline.Model.Results
             im.Ratio = prop;
             im.RatioStdev = stdev;
             return im;
+        }
+
+        public TransitionGroupChromInfo ChangeNote(String note)
+        {
+            if (note == "")
+            {
+                note = null;
+            }
+            return ChangeProp(ImClone(this), 
+                (im, v) => { im.Note = v; im.UserSet = im.UserSet || v != null; }, 
+                note);
         }
 
         #endregion
@@ -155,6 +169,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm.Equals(Fwhm) &&
                    other.Ratio == Ratio &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
+                   other.Note == Note &&
                    other.UserSet.Equals(UserSet);
         }
 
@@ -194,7 +209,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak, float? ratio, bool userSet)
             : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, ratio, userSet)
+                   peak.IsFwhmDegenerate, ratio, null, userSet)
         {            
         }
 
@@ -202,7 +217,7 @@ namespace pwiz.Skyline.Model.Results
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, float? ratio,
-                                   bool userSet)
+                                   String note, bool userSet)
             : base(fileIndex)
         {
             OptimizationStep = optimizationStep;
@@ -215,6 +230,7 @@ namespace pwiz.Skyline.Model.Results
             Fwhm = fwhm;
             IsFwhmDegenerate = fwhmDegenerate;
             Ratio = ratio;
+            Note = note;
             UserSet = userSet;
         }
 
@@ -239,6 +255,8 @@ namespace pwiz.Skyline.Model.Results
         /// Set after creation at the peptide results calculation level
         /// </summary>
         public float? Ratio { get; private set; }
+
+        public String Note { get; private set; }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -273,6 +291,19 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), (im, v) => im.Rank = v, prop);
         }
 
+        public TransitionChromInfo ChangeNote(String note)
+        {
+            if (note == "")
+            {
+                note = null;
+            }
+            return ChangeProp(ImClone(this), (im, v) =>
+                                                 {
+                                                     im.Note = v;
+                                                     im.UserSet = im.UserSet || v != null;
+                                                 }, note);
+        }
+
         #endregion
 
         #region object overrides
@@ -293,6 +324,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Rank == Rank &&
                    other.Ratio.Equals(Ratio) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
+                   other.Note == Note &&
                    other.UserSet.Equals(UserSet);
         }
 
@@ -319,6 +351,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
                 result = (result*397) ^ OptimizationStep.GetHashCode();
+                result = (result*397) ^ (Note == null ? 0 : Note.GetHashCode());
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
             }

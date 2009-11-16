@@ -46,6 +46,7 @@ namespace pwiz.Skyline
         private GraphSpectrum _graphSpectrum;
         private GraphSummary _graphRetentionTime;
         private GraphSummary _graphPeakArea;
+        private ResultsGridForm _resultsGridForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
 
@@ -427,6 +428,7 @@ namespace pwiz.Skyline
                     DestroyGraphSpectrum();
                     DestroyGraphRetentionTime();
                     DestroyGraphPeakArea();
+                    DestroyResultsGrid();
                     foreach (GraphChromatogram graphChrom in _listGraphChrom)
                         DestroyGraphChrom(graphChrom);
                     _listGraphChrom.Clear();
@@ -459,6 +461,11 @@ namespace pwiz.Skyline
 
                     layoutLock.EnsureLocked();
                     ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
+                }
+                if (resultsGridToolStripMenuItem.Enabled != enable)
+                {
+                    resultsGridToolStripMenuItem.Enabled = enable;
+                    ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
                 }
                 if (peakAreasMenuItem.Enabled != enable)
                 {
@@ -1562,6 +1569,83 @@ namespace pwiz.Skyline
                 Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked = show;
             }
         }
+
+        private void ShowResultsGrid(bool show)
+        {
+            if (show)
+            {
+                if (_resultsGridForm != null)
+                {
+                    _resultsGridForm.Show();
+                }
+                else
+                {
+                    CreateResultsGrid();
+                    // TODO(nicksh): this code was copied from ShowGraphRetentionTime
+                    // coalesce duplicate code
+                    var rectFloat = dockPanel.Bounds;
+                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
+                    rectFloat.X += rectFloat.Width / 4;
+                    rectFloat.Y += rectFloat.Height / 3;
+                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
+                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
+                    // Make sure it is on the screen.
+                    var screen = Screen.FromControl(dockPanel);
+                    var rectScreen = screen.WorkingArea;
+                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+
+                    _resultsGridForm.Show(dockPanel, rectFloat);
+                }
+            }
+            else
+            {
+                if (_resultsGridForm != null)
+                {
+                    _resultsGridForm.Hide();
+                }
+            }
+        }
+        private ResultsGridForm CreateResultsGrid()
+        {
+            _resultsGridForm = new ResultsGridForm(this, SequenceTree);
+            _resultsGridForm.FormClosed += resultsGrid_FormClosed;
+            _resultsGridForm.VisibleChanged += graphPeakArea_VisibleChanged;
+            return _resultsGridForm;
+        }
+
+        private void DestroyResultsGrid()
+        {
+            if (_resultsGridForm != null)
+            {
+                _resultsGridForm.FormClosed -= resultsGrid_FormClosed;
+                _resultsGridForm.VisibleChanged -= resultsGrid_VisibleChanged;
+                _resultsGridForm.Close();
+                _resultsGridForm = null;
+            }
+        }
+
+        private void resultsGrid_VisibleChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowResultsGrid = resultsGridToolStripMenuItem.Checked =
+                (_resultsGridForm != null && _resultsGridForm.Visible);
+            splitMain.Panel2Collapsed = !VisibleDockContent;
+        }
+
+
+
+        void resultsGrid_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Update settings and menu check
+            Settings.Default.ShowResultsGrid = resultsGridToolStripMenuItem.Checked = false;
+
+            // Hide the dock panel, if this is its last graph pane.
+            if (dockPanel.Contents.Count == 0 ||
+                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _resultsGridForm))
+                splitMain.Panel2Collapsed = true;
+            _resultsGridForm = null;
+        }
+
 
         private GraphSummary CreateGraphRetentionTime()
         {

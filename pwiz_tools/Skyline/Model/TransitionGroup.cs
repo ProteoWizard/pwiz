@@ -507,11 +507,12 @@ namespace pwiz.Skyline.Model
                 // Make sure the list of group result calculators has iNext entries
                 while (_listResultCalcs.Count <= iNext)
                 {
-                    int iResult = _arrayChromInfoSets.Length;
+                    int transitionCount = _arrayChromInfoSets.Length;
+                    int iResult = _listResultCalcs.Count;
                     ChromInfoList<TransitionGroupChromInfo> listChromInfo = null;
                     if (_nodeGroup.HasResults && iResult < _nodeGroup.Results.Count)
                         listChromInfo = _nodeGroup.Results[iResult];
-                    _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(iResult, listChromInfo));
+                    _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(transitionCount, listChromInfo));
                 }
                 // Add the iNext entry
                 _listResultCalcs[iNext].AddChromInfoList(info);
@@ -728,7 +729,8 @@ namespace pwiz.Skyline.Model
                 if (chromInfo != null)
                 {
                     Ratio = chromInfo.Ratio;
-                    RatioStdev = chromInfo.RatioStdev;                    
+                    RatioStdev = chromInfo.RatioStdev;
+                    Note = chromInfo.Note;
                 }
             }
 
@@ -747,6 +749,7 @@ namespace pwiz.Skyline.Model
             private float? LibraryDotProduct { get; set; }
             private float? Ratio { get; set; }
             private float? RatioStdev { get; set; }
+            private String Note { get; set; }
             private bool UserSet { get; set; }
 
             private float PeakCountRatio { get { return ((float) PeakCount)/TransitionCount; } }
@@ -809,6 +812,7 @@ namespace pwiz.Skyline.Model
                                                     Ratio,
                                                     RatioStdev,
                                                     LibraryDotProduct,
+                                                    Note,
                                                     UserSet);
             }
         }

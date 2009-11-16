@@ -1,0 +1,846 @@
+﻿/*
+ * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+
+namespace pwiz.Skyline.Controls
+{
+    /// <summary>
+    /// Displays results in a grid
+    /// </summary>
+    public class ResultsGrid : DataGridView
+    {
+        private readonly Dictionary<RowIdentifier, DataGridViewRow> _chromInfoRows 
+            = new Dictionary<RowIdentifier, DataGridViewRow>();
+
+        private bool _inCommitEdit;
+
+        public ResultsGrid()
+        {
+            // Replicate
+            Columns.Add(ReplicateNameColumn = new DataGridViewTextBoxColumn
+                                                  {
+                                                      Name = "ReplicateName",
+                                                      HeaderText = "Replicate Name",
+                                                      ReadOnly = true,
+                                                  });
+            Columns.Add(FileNameColumn = new DataGridViewTextBoxColumn
+                                             {
+                                                 Name = "FileName",
+                                                 HeaderText = "File Name",
+                                                 ReadOnly = true
+                                             });
+            Columns.Add(SampleNameColumn = new DataGridViewTextBoxColumn
+                                               {
+                                                   Name = "SampleName",
+                                                   HeaderText = "Sample Name",
+                                                   ReadOnly = true
+                                               });
+            Columns.Add(OptStepColumn = new DataGridViewTextBoxColumn
+                                            {
+                                                Name = "OptStep",
+                                                HeaderText = "Opt Step",
+                                                ReadOnly = true,
+                                            });
+            // Peptide
+            Columns.Add(PeptidePeakFoundRatioColumn = new DataGridViewTextBoxColumn
+                                                          {
+                                                              Name = "PeptidePeakFoundRatio",
+                                                              HeaderText = "Peptide Peak Found Ratio",
+                                                              ReadOnly = true,
+                                                              DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
+                                                          });
+            Columns.Add(PeptideRetentionTimeColumn = new DataGridViewTextBoxColumn
+                                                         {
+                                                             Name = "PeptideRetentionTime",
+                                                             HeaderText = "Peptide Retention Time",
+                                                             ReadOnly = true,
+                                                             DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                                                         });
+            Columns.Add(RatioToStandardColumn = new DataGridViewTextBoxColumn
+                                                    {
+                                                        Name = "RatioToStandard",
+                                                        HeaderText = "Ratio To Standard",
+                                                        ReadOnly = true,
+                                                        DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                                                    });
+            // Precursor
+            Columns.Add(PrecursorPeakFoundRatioColumn = new DataGridViewTextBoxColumn
+                                                            {
+                                                                Name = "PrecursorPeakFound",
+                                                                HeaderText = "Precursor Peak Found Ratio",
+                                                                ReadOnly = true,
+                                                                DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
+                                                            });
+            Columns.Add(BestRetentionTimeColumn = new DataGridViewTextBoxColumn
+                                                      {
+                                                          Name = "BestRetentionTime",
+                                                          HeaderText = "Best Retention Time",
+                                                          ReadOnly = true,
+                                                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                                                      });
+            Columns.Add(MaxFwhmColumn = new DataGridViewTextBoxColumn
+                                            {
+                                                Name = "MaxFwhm",
+                                                HeaderText = "Max Fwhm",
+                                                ReadOnly = true,
+                                                DefaultCellStyle ={Format = Formats.RETENTION_TIME}
+                                            });
+            Columns.Add(MinStartTimeColumn = new DataGridViewTextBoxColumn
+                                                 {
+                                                     Name = "MinStartTime",
+                                                     HeaderText = "Min Start Time",
+                                                     ReadOnly = true,
+                                                     DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                                                 });
+            Columns.Add(MaxEndTimeColumn = new DataGridViewTextBoxColumn
+                                               {
+                                                   Name = "MaxEndTime",
+                                                   HeaderText = "Max End Time",
+                                                   ReadOnly = true,
+                                                   DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                                               });
+            Columns.Add(TotalAreaColumn = new DataGridViewTextBoxColumn
+                                              {
+                                                  Name = "TotalArea",
+                                                  HeaderText = "Total Area",
+                                                  ReadOnly = true,
+                                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                                              });
+            Columns.Add(LibraryDotProductColumn = new DataGridViewTextBoxColumn
+                                                      {
+                                                          Name = "LibraryDotProduct",
+                                                          HeaderText = "Library Dot Product",
+                                                          ReadOnly = true,
+                                                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                                                      });
+            Columns.Add(PrecursorNoteColumn = new DataGridViewTextBoxColumn
+                                                  {
+                                                      Name = "PrecursorNote",
+                                                      HeaderText = "Precursor Note",
+                                                  });
+            
+            // Transitions
+            Columns.Add(RetentionTimeColumn 
+                = new DataGridViewTextBoxColumn
+                  {
+                      Name = "RetentionTime",
+                      HeaderText = "Retention Time",
+                      ReadOnly = true,
+                      DefaultCellStyle = { Format = Formats.RETENTION_TIME },
+                  });
+            Columns.Add(FwhmColumn 
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "Fwhm",
+                        HeaderText = "Fwhm",
+                        ReadOnly = true,
+                        DefaultCellStyle = { Format = Formats.RETENTION_TIME },
+                    });
+            Columns.Add(StartTimeColumn 
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "StartTime",
+                        HeaderText = "Start Time",
+                        ReadOnly = true,
+                        DefaultCellStyle = {Format = Formats.RETENTION_TIME},
+                    });
+            Columns.Add(EndTimeColumn
+                        = new DataGridViewTextBoxColumn
+                              {
+                                  Name = "EndTime",
+                                  HeaderText = "End Time",
+                                  ReadOnly = true,
+                                  DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                              }
+                );
+            Columns.Add(AreaColumn
+                        = new DataGridViewTextBoxColumn
+                              {
+                                  Name = "Area",
+                                  HeaderText = "Area",
+                                  ReadOnly = true,
+                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                              });
+            Columns.Add(BackgroundColumn
+                        = new DataGridViewTextBoxColumn
+                              {
+                                  Name = "Background",
+                                  HeaderText = "Background",
+                                  ReadOnly = true,
+                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                              });
+            Columns.Add(AreaRatioColumn = new DataGridViewTextBoxColumn
+                                              {
+                                                  Name = "AreaRatio",
+                                                  HeaderText = "Area Ratio",
+                                                  ReadOnly = true,
+                                                  DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                                              });
+            Columns.Add(HeightColumn = new DataGridViewTextBoxColumn
+                                           {
+                                               Name = "Height",
+                                               HeaderText = "Height",
+                                               ReadOnly = true,
+                                               DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                                           });
+            Columns.Add(PeakRankColumn = new DataGridViewTextBoxColumn
+                                             {
+                                                 Name = "PeakRank",
+                                                 HeaderText = "Peak Rank",
+                                                 ReadOnly = true,
+                                             });
+            Columns.Add(TransitionNoteColumn = new DataGridViewTextBoxColumn
+                                                   {
+                                                       Name = "TransitionNote",
+                                                       HeaderText = "Transition Note"
+                                                   });
+            CellEndEdit += ResultsGrid_CellEndEdit;
+        }
+
+        public void Init(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
+        {
+            DocumentUiContainer = documentUiContainer;
+            SequenceTree = sequenceTree;
+        }
+
+        void ResultsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            _inCommitEdit = true;
+            try
+            {
+                var row = Rows[e.RowIndex];
+                var rowIdentifier = row.Tag as RowIdentifier;
+                if (rowIdentifier == null)
+                {
+                    return;
+                }
+                if (e.ColumnIndex == PrecursorNoteColumn.Index)
+                {
+                    var precursorDocNode = SelectedTransitionGroupDocNode;
+                    if (precursorDocNode == null)
+                    {
+                        return;
+                    }
+                    var chromInfoOld = GetChromInfo(SelectedTransitionGroupDocNode.Results, rowIdentifier);
+                    var chromInfoNew = chromInfoOld.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value));
+                    Debug.Assert(chromInfoNew.UserSet);
+                    Program.MainWindow.ModifyDocument("Set Note",
+                        doc => (SrmDocument)doc.ReplaceChild(
+                            PathToSelectedNode(precursorDocNode).Parent, SelectedTransitionGroupDocNode.ChangeResults(
+                            ChangeChromInfo(precursorDocNode.Results, rowIdentifier, chromInfoOld, chromInfoNew))));
+                    return;
+                }
+                if (e.ColumnIndex == TransitionNoteColumn.Index)
+                {
+                    var transitionDocNode = SelectedTransitionDocNode;
+                    if (transitionDocNode == null)
+                    {
+                        return;
+                    }
+                    var chromInfoOld = GetChromInfo(transitionDocNode.Results, rowIdentifier);
+                    var chromInfoNew = chromInfoOld.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value));
+                    Debug.Assert(chromInfoNew.UserSet);
+                    Program.MainWindow.ModifyDocument("Set Note",
+                        doc => (SrmDocument)doc.ReplaceChild(
+                            PathToSelectedNode(transitionDocNode).Parent, transitionDocNode.ChangeResults(
+                            ChangeChromInfo(transitionDocNode.Results, rowIdentifier, chromInfoOld, chromInfoNew))));
+                    return;
+                }
+            }
+            finally
+            {
+                _inCommitEdit = false;
+            }
+        }
+
+        /// <summary>
+        /// For a node which is either the currently selected node, or one of its
+        /// ancestors, return the path to that node.
+        /// </summary>
+        private IdentityPath PathToSelectedNode(DocNode docNode)
+        {
+            var identityPath = SelectedPath;
+            while (identityPath != null && !docNode.EqualsId(Document.FindNode(identityPath)))
+            {
+                identityPath = identityPath.Parent;
+            }
+            return identityPath;
+        }
+
+        TransitionGroupChromInfo GetChromInfo(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier)
+        {
+            foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
+            {
+                if (chromInfo.FileIndex == rowIdentifier.FileIndex && chromInfo.OptimizationStep == rowIdentifier.OptimizationStep)
+                {
+                    return chromInfo;
+                }
+            }
+            return null;
+        }
+
+        TransitionChromInfo GetChromInfo(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier)
+        {
+            foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
+            {
+                if (chromInfo.FileIndex == rowIdentifier.FileIndex && chromInfo.OptimizationStep == rowIdentifier.OptimizationStep)
+                {
+                    return chromInfo;
+                }
+            }
+            return null;
+        }
+
+        Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
+        {
+            var elements = new List<ChromInfoList<T>>();
+            bool found = false;
+            for (int iReplicate = 0; iReplicate < results.Count; iReplicate++)
+            {
+                var replicate = results[iReplicate];
+                if (iReplicate != rowIdentifier.ReplicateIndex)
+                {
+                    elements.Add(replicate);
+                }
+                else
+                {
+                    var chromInfoList = new List<T>();
+                    foreach (var chromInfo in replicate)
+                    {
+                        if (chromInfo != chromInfoOld)
+                        {
+                            chromInfoList.Add(chromInfo);
+                        }
+                        else
+                        {
+                            found = true;
+                            chromInfoList.Add(chromInfoNew);
+                        }
+                    }
+                    elements.Add(new ChromInfoList<T>(chromInfoList));
+                }
+            }
+            if (!found)
+            {
+                throw new InvalidOperationException("Element not found");
+            }
+            return new Results<T>(elements);
+        }
+
+        /// <summary>
+        /// Stores the Setting which controls the set and order of visible columns and their widths.
+        /// </summary>
+        void SaveColumnState()
+        {
+            var key = GetGridColumnsKey();
+            if (key == null)
+            {
+                return;
+            }
+            var gridColumns = new List<GridColumn>();
+            foreach (var column in GetColumnsSortedByDisplayIndex())
+            {
+                gridColumns.Add(new GridColumn(column.Name, column.Visible, column.Width));
+            }
+            var gridColumnsList = Settings.Default.GridColumnsList;
+            gridColumnsList.Add(new GridColumns(key, gridColumns));
+            Settings.Default.GridColumnsList = gridColumnsList;
+        }
+
+        private IList<DataGridViewColumn> GetColumnsSortedByDisplayIndex()
+        {
+            var result = new DataGridViewColumn[Columns.Count];
+            Columns.CopyTo(result, 0);
+            Array.Sort(result, (a,b)=>a.DisplayIndex.CompareTo(b.DisplayIndex));
+            return result;
+        }
+
+        private IList<DataGridViewColumn> TransitionColumns
+        {
+            get
+            {
+                return new DataGridViewColumn[]
+                           {
+                                RetentionTimeColumn,
+                                FwhmColumn,
+                                StartTimeColumn,
+                                EndTimeColumn,
+                                AreaColumn,
+                                BackgroundColumn,
+                                AreaRatioColumn,
+                                HeightColumn,
+                                PeakRankColumn,
+                                TransitionNoteColumn,
+                           };
+            }
+        }
+
+        IList<DataGridViewColumn> PrecursorColumns
+        {
+            get
+            {
+                return new DataGridViewColumn[]
+                           {
+                               PrecursorPeakFoundRatioColumn,
+                               BestRetentionTimeColumn,
+                               MaxFwhmColumn,
+                               MinStartTimeColumn,
+                               MaxEndTimeColumn,
+                               TotalAreaColumn,
+                               LibraryDotProductColumn,
+                               PrecursorNoteColumn,
+                           };
+            }
+        }
+
+        IList<DataGridViewColumn> PeptideColumns
+        {
+            get
+            {
+                return new DataGridViewColumn[]
+                           {
+                               PeptidePeakFoundRatioColumn,
+                               PeptideRetentionTimeColumn,
+                               RatioToStandardColumn,
+                           };
+            }
+        }
+
+        IList<DataGridViewColumn> ReplicateColumns
+        {
+            get
+            {
+                return new DataGridViewColumn[]
+                           {
+                               ReplicateNameColumn,
+                               FileNameColumn,
+                               SampleNameColumn,
+                               OptStepColumn,
+                           };
+            }
+        }
+
+        DataGridViewRow EnsureRow(RowIdentifier rowIdentifier)
+        {
+            DataGridViewRow row;
+            if (_chromInfoRows.TryGetValue(rowIdentifier, out row))
+            {
+                return row;
+            }
+            row = Rows[Rows.Add(new DataGridViewRow {Tag = rowIdentifier})];
+            row.Cells[OptStepColumn.Index].Value = rowIdentifier.OptimizationStep;
+            _chromInfoRows.Add(rowIdentifier, row);
+            return row;
+        }
+
+        /// <summary>
+        /// Figures out which nodes in the document tree this control will be displaying data from.
+        /// Remembers the selected IdentifyPath, TransitionDocNode, TransitionGroupDocNode and PeptideDocNode.
+        /// </summary>
+        private void UpdateSelectedTreeNode()
+        {
+            Document = SequenceTree.Document;
+            var srmTreeNode = SequenceTree.SelectedNode as SrmTreeNode;
+            if (srmTreeNode == null)
+            {
+                SelectedTransitionDocNode = null;
+                SelectedTransitionGroupDocNode = null;
+                SelectedPeptideDocNode = null;
+                SelectedPath = null;
+                return;
+            }
+            SelectedPath = srmTreeNode.Path;
+            SelectedTransitionDocNode = srmTreeNode.Model as TransitionDocNode;
+            if (SelectedTransitionDocNode != null)
+            {
+                srmTreeNode = srmTreeNode.SrmParent;
+            }
+            SelectedTransitionGroupDocNode = srmTreeNode.Model as TransitionGroupDocNode;
+            if (SelectedTransitionGroupDocNode != null)
+            {
+                srmTreeNode = srmTreeNode.SrmParent;
+            }
+            SelectedPeptideDocNode = srmTreeNode.Model as PeptideDocNode;
+        }
+
+        /// <summary>
+        /// Updates all of the UI.  Called whenever the document is modified, or the selected tree node changes.
+        /// </summary>
+        public void UpdateGrid()
+        {
+            EndEdit();
+            SaveColumnState();
+            UpdateSelectedTreeNode();
+            if (_inCommitEdit)
+            {
+                return;
+            }
+            if (SelectedPath == null || Document.Settings.MeasuredResults == null)
+            {
+                _chromInfoRows.Clear();
+                Rows.Clear();
+                return;
+            }
+            // Remember the set of rowIds that have data in them.  After updating the data, rows
+            // that are not in this set will be deleted from the grid
+            var rowIds = new HashSet<RowIdentifier>();
+
+            if (SelectedTransitionDocNode != null)
+            {
+                for (int iReplicate = 0; iReplicate < SelectedTransitionDocNode.Results.Count; iReplicate++) 
+                {
+                    var results = SelectedTransitionDocNode.Results[iReplicate];
+                    foreach (var chromInfo in results)
+                    {
+                        var rowId = new RowIdentifier(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep);
+                        rowIds.Add(rowId);
+                        var row = EnsureRow(rowId);
+                        row.Cells[RetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                        row.Cells[FwhmColumn.Index].Value = chromInfo.Fwhm;
+                        row.Cells[StartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
+                        row.Cells[EndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
+                        row.Cells[AreaColumn.Index].Value = chromInfo.Area;
+                        row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
+                        row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratio;
+                        row.Cells[HeightColumn.Index].Value = chromInfo.Height;
+                        row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
+                        row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Note;
+                    }
+                }
+            }
+
+            if (SelectedTransitionGroupDocNode != null)
+            {
+                for (int iReplicate = 0; iReplicate < SelectedTransitionGroupDocNode.Results.Count; iReplicate++)
+                {
+                    var results = SelectedTransitionGroupDocNode.Results[iReplicate];
+                    foreach (var chromInfo in results)
+                    {
+                        var rowId = new RowIdentifier(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep);
+                        rowIds.Add(rowId);
+                        var row = EnsureRow(rowId);
+                        row.Cells[PrecursorPeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
+                        row.Cells[BestRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                        row.Cells[MaxFwhmColumn.Index].Value = chromInfo.Fwhm;
+                        row.Cells[MinStartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
+                        row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
+                        row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
+                        row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
+                        row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;
+                    }
+                }
+            }
+            
+            // Ensure that there is a row for every file
+            for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+            {
+                var results = Document.Settings.MeasuredResults.Chromatograms[iReplicate];
+                for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
+                {
+                    var rowId = new RowIdentifier(iReplicate, iFile, 0);
+                    rowIds.Add(rowId);
+                    EnsureRow(rowId);
+                }
+            }
+
+            // Delete unused rows from the grid
+            var rowsToDelete = new HashSet<RowIdentifier>(_chromInfoRows.Keys);
+            rowsToDelete.ExceptWith(rowIds);
+            foreach (var rowId in rowsToDelete)
+            {
+                Rows.Remove(_chromInfoRows[rowId]);
+                _chromInfoRows.Remove(rowId);
+            }
+
+            // Group all of the optimization step rows by file that they're in.
+            var replicateRowDict = new Dictionary<RowIdentifier, ICollection<RowIdentifier>>();
+            foreach (var rowId in _chromInfoRows.Keys)
+            {
+                var rowIdZero = new RowIdentifier(rowId.ReplicateIndex, rowId.FileIndex, 0);
+                ICollection<RowIdentifier> optStepRowIds;
+                if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
+                {
+                    optStepRowIds = new List<RowIdentifier>();
+                    replicateRowDict.Add(rowIdZero, optStepRowIds);
+                }
+                optStepRowIds.Add(rowId);
+            }
+            // Update columns that do not depend on optimization step
+            for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+            {
+                var results = Document.Settings.MeasuredResults.Chromatograms[iReplicate];
+                for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
+                {
+                    var rowIdZero = new RowIdentifier(iReplicate, iFile, 0);
+                    var optStepRowIds = replicateRowDict[rowIdZero];
+                    var filePath = results.MSDataFilePaths[iFile];
+                    var fileName = SampleHelp.GetFileName(filePath);
+                    var sampleName = SampleHelp.GetFileSampleName(filePath);
+                    foreach (var rowId in optStepRowIds)
+                    {
+                        var row = _chromInfoRows[rowId];
+                        row.Cells[ReplicateNameColumn.Index].Value = results.Name;
+                        row.Cells[FileNameColumn.Index].Value = fileName;
+                        row.Cells[SampleNameColumn.Index].Value = sampleName;
+                    }
+                }
+            }
+            if (SelectedPeptideDocNode != null)
+            {
+                for (int iReplicate = 0; iReplicate < SelectedPeptideDocNode.Results.Count; iReplicate++)
+                {
+                    var results = SelectedPeptideDocNode.Results[iReplicate];
+                    foreach (var chromInfo in results)
+                    {
+                        var rowIdZero = new RowIdentifier(iReplicate, chromInfo.FileIndex, 0);
+                        var optStepRowIds = replicateRowDict[rowIdZero];
+                        foreach (var rowId in optStepRowIds)
+                        {
+                            var row = _chromInfoRows[rowId];
+                            row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
+                            row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                            row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
+                        }
+                    }
+                }
+            }
+            // Set the visible columns to the default
+            var defaultColumnSet = GetDefaultColumns();
+            foreach (DataGridViewColumn column in Columns)
+            {
+                column.Visible = defaultColumnSet.Contains(column);
+            }
+
+            // Update column visibility from the settings
+            GridColumns gridColumns = null;
+            var gridColumnsKey = GetGridColumnsKey();
+            if (gridColumnsKey != null)
+            {
+                Settings.Default.GridColumnsList.TryGetValue(gridColumnsKey, out gridColumns);
+            }
+            if (gridColumns != null)
+            {
+                var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
+                for (int iColumn = 0; iColumn < gridColumns.Columns.Count; iColumn++)
+                {
+                    var gridColumn = gridColumns.Columns[iColumn];
+                    var column = Columns[gridColumn.Name];
+                    if (column == null) {
+                        continue;
+                    }
+                    column.Width = gridColumn.Width;
+                    column.DisplayIndex = iColumn;
+                    column.Visible = gridColumn.Visible && availableColumnSet.Contains(column);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the name to use when saving the column state.  This name is a key for the class
+        /// <see cref="GridColumnsList" />
+        /// </summary>
+        String GetGridColumnsKey()
+        {
+            if (SelectedPath == null)
+            {
+                return null;
+            }
+            if (SelectedTransitionDocNode != null)
+            {
+                return typeof (TransitionDocNode).Name;
+            }
+            if (SelectedTransitionGroupDocNode != null)
+            {
+                return typeof (TransitionGroupDocNode).Name;
+            }
+            if (SelectedPeptideDocNode != null)
+            {
+                return typeof (PeptideDocNode).Name;
+            }
+            return typeof(PeptideGroupDocNode).Name;
+        }
+
+        /// <summary>
+        /// Returns the set of columns that should be displayed by default, based on
+        /// the current tree node selected.
+        /// The default order of the columns is controlled by GetAvailableColumns()
+        /// </summary>
+        public ICollection<DataGridViewColumn> GetDefaultColumns()
+        {
+            var result = new HashSet<DataGridViewColumn>();
+            result.Add(ReplicateNameColumn);
+            if (SelectedTransitionDocNode != null)
+            {
+                result.UnionWith(TransitionColumns);
+            }
+            else if (SelectedTransitionGroupDocNode != null)
+            {
+                result.UnionWith(PrecursorColumns);
+            }
+            else if (SelectedPeptideDocNode != null)
+            {
+                result.UnionWith(PeptideColumns);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the list of columns that the user is allowed to display based
+        /// on the currently selected tree node.
+        /// </summary>
+        public IList<DataGridViewColumn> GetAvailableColumns()
+        {
+            var result = new List<DataGridViewColumn>();
+            result.AddRange(ReplicateColumns);
+            if (SelectedPeptideDocNode != null)
+            {
+                result.AddRange(PeptideColumns);
+            }
+            if (SelectedTransitionGroupDocNode != null)
+            {
+                result.AddRange(PrecursorColumns);
+            }
+            if (SelectedTransitionDocNode != null)
+            {
+                result.AddRange(TransitionColumns);
+            }
+            return result;
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (DocumentUiContainer == null || SequenceTree == null)
+            {
+                return;
+            }
+            DocumentUiContainer.ListenUI(DocumentChanged);
+            SequenceTree.AfterSelect += SequenceTree_AfterSelect;
+            UpdateGrid();
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            if (DocumentUiContainer == null || SequenceTree == null)
+            {
+                return;
+            }
+            DocumentUiContainer.UnlistenUI(DocumentChanged);
+            SequenceTree.AfterSelect -= SequenceTree_AfterSelect;
+        }
+
+        private void DocumentChanged(object sender, DocumentChangedEventArgs args)
+        {
+            UpdateGrid();
+        }
+
+        void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            UpdateGrid();
+        }
+
+        public IDocumentUIContainer DocumentUiContainer { get; private set; }
+        public SequenceTree SequenceTree { get; private set; }
+
+        // Replicate Columns
+        public DataGridViewTextBoxColumn ReplicateNameColumn { get; private set; }
+        public DataGridViewTextBoxColumn FileNameColumn { get; private set; }
+        public DataGridViewTextBoxColumn SampleNameColumn { get; private set; }
+        public DataGridViewTextBoxColumn OptStepColumn { get; private set; }
+        // Peptide Columns
+        public DataGridViewTextBoxColumn PeptidePeakFoundRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn PeptideRetentionTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn RatioToStandardColumn { get; private set; }
+        // Precursor Columns
+        public DataGridViewTextBoxColumn PrecursorPeakFoundRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn BestRetentionTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn MaxFwhmColumn { get; private set; }
+        public DataGridViewTextBoxColumn MinStartTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn MaxEndTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
+        public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
+        public DataGridViewTextBoxColumn PrecursorNoteColumn { get; private set; }
+        // Transition Columns
+        public DataGridViewTextBoxColumn RetentionTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn FwhmColumn { get; private set; }
+        public DataGridViewTextBoxColumn StartTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn EndTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn AreaColumn { get; private set; }
+        public DataGridViewTextBoxColumn BackgroundColumn { get; private set; }
+        public DataGridViewTextBoxColumn AreaRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn HeightColumn { get; private set; }
+        public DataGridViewTextBoxColumn PeakRankColumn { get; private set; }
+        public DataGridViewTextBoxColumn TransitionNoteColumn { get; private set; }
+
+        private SrmDocument Document { get; set; }
+        private IdentityPath SelectedPath { get; set; }
+        private TransitionDocNode SelectedTransitionDocNode { get; set; }
+        private TransitionGroupDocNode SelectedTransitionGroupDocNode { get; set; }
+        private PeptideDocNode SelectedPeptideDocNode { get; set; }
+        
+        /// <summary>
+        /// Identifies which result a row in the grid refers to.
+        /// </summary>
+        class RowIdentifier
+        {
+            public RowIdentifier(int replicateIndex, int fileIndex, int optStep)
+            {
+                ReplicateIndex = replicateIndex;
+                FileIndex = fileIndex;
+                OptimizationStep = optStep;
+            }
+
+            public int ReplicateIndex { get; private set; }
+            public int FileIndex { get; private set; }
+            public int OptimizationStep { get; private set; }
+            public override bool Equals(object obj)
+            {
+                if (obj == this)
+                {
+                    return true;
+                }
+                var that = obj as RowIdentifier;
+                if (that == null)
+                {
+                    return false;
+                }
+                return ReplicateIndex == that.ReplicateIndex && FileIndex == that.FileIndex && OptimizationStep == that.OptimizationStep;
+            }
+            public override int GetHashCode()
+            {
+                int result = ReplicateIndex.GetHashCode();
+                result = result*31 + FileIndex.GetHashCode();
+                result = result*31 + OptimizationStep.GetHashCode();
+                return result;
+            }
+        }
+    }
+}

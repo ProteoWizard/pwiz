@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
                     {
                         // Something is wrong, if the value has already been added
                         Debug.Assert(chromInfoNew != null);
-
+                        chromInfoNew = chromInfoNew.ChangeNote(chromInfo.Note);
                         listChromInfoNew.Add(chromInfoNew);
                         chromInfoNew = null;    // Only add once
                     }

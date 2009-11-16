@@ -1269,6 +1269,12 @@ namespace pwiz.Skyline.Model
             float? ratio = reader.GetNullableFloatAttribute(ATTR.ratio);
             float? stdev = reader.GetNullableFloatAttribute(ATTR.ratio_stdev);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
+            String note = null;
+            if (!reader.IsEmptyElement)
+            {
+                reader.ReadStartElement();
+                note = ReadNote(reader);
+            }
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
@@ -1285,6 +1291,7 @@ namespace pwiz.Skyline.Model
                                                 ratio,
                                                 stdev,
                                                 libraryDotProduct,
+                                                note,
                                                 userSet);
         }
 
@@ -1496,8 +1503,14 @@ namespace pwiz.Skyline.Model
                 if (ratio.HasValue)
                     ratio = Math.Max(0, ratio.Value);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
+                String note = null;
+                if (!reader.IsEmptyElement)
+                {
+                    reader.ReadStartElement();
+                    note = ReadNote(reader);
+                }
                 return new TransitionChromInfo(indexFile, optimizationStep, retentionTime, startRetentionTime, endRetentionTime,
-                                               area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, userSet);
+                                               area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, note, userSet);
             }
         }
 
@@ -1789,6 +1802,10 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
             writer.WriteAttributeNullable(ATTR.ratio_stdev, chromInfo.RatioStdev);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
+            if (chromInfo.Note != null)
+            {
+                writer.WriteElementString(EL.note, chromInfo.Note);
+            }
         }
 
         /// <summary>
@@ -1858,7 +1875,11 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
                 writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);                
             }
-            writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);            
+            writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            if (chromInfo.Note != null)
+            {
+                writer.WriteElementString(EL.note, chromInfo.Note);
+            }
         }
 
         private static void WriteNote(XmlWriter writer, DocNode node)

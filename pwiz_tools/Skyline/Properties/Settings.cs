@@ -101,6 +101,23 @@ namespace pwiz.Skyline.Properties
         }
 
         [System.Configuration.UserScopedSettingAttribute]
+        public GridColumnsList GridColumnsList
+        {
+            get
+            {
+                if (this["GridColumnsList"] == null)
+                {
+                    var list = new GridColumnsList();
+                    GridColumnsList = list;
+                }
+                return ((GridColumnsList)(this["GridColumnsList"]));
+            }
+            set
+            {
+                this["GridColumnsList"] = value;
+            }
+        }
+        [System.Configuration.UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
             get
@@ -1039,5 +1056,13 @@ namespace pwiz.Skyline.Properties
         public virtual bool ExcludeDefault { get { return true; } }
 
         #endregion
+    }
+
+    public sealed class GridColumnsList : XmlMappedList<string, GridColumns>
+    {
+        public GridColumnsList()
+        {
+            
+        }
     }
 }

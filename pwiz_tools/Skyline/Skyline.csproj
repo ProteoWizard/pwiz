@@ -198,6 +198,9 @@
     <Compile Include="Controls\Graphs\GraphSpectrum.Designer.cs">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ResultsGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\HiLowMiddleErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\RTLinearRegressionGraphPane.cs" />
     <Compile Include="Controls\Graphs\RTReplicateGraphPane.cs" />
@@ -208,6 +211,18 @@
       <DependentUpon>LongWaitDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\RTScheduleGraphPane.cs" />
+    <Compile Include="Controls\ColumnChooser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ColumnChooser.Designer.cs">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ResultsGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ResultsGridForm.Designer.cs">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">
@@ -354,6 +369,7 @@
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />
     <Compile Include="Model\DocSettings\Extensions\SettingsExtensions.cs" />
+    <Compile Include="Model\DocSettings\GridColumns.cs" />
     <Compile Include="Model\DocSettings\ReportSpec.cs" />
     <Compile Include="Model\Hibernate\DbEntity.cs" />
     <Compile Include="Model\Hibernate\DbPeptide.cs" />
@@ -730,6 +746,9 @@
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ColumnChooser.resx">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphRegression.resx">
       <DependentUpon>GraphRegression.cs</DependentUpon>
     </EmbeddedResource>
@@ -748,6 +767,9 @@
     <EmbeddedResource Include="Controls\LongWaitDlg.resx">
       <DependentUpon>LongWaitDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ResultsGridForm.resx">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.resx">
       <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>

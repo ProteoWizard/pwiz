@@ -260,6 +260,7 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resultsGridToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -766,6 +767,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator10,
             this.retentionTimesMenuItem,
             this.timeGraphMenuItem,
+            this.resultsGridToolStripMenuItem,
             this.toolStripSeparator35,
             this.peakAreasMenuItem,
             this.areaGraphMenuItem,
@@ -2238,6 +2240,14 @@ namespace pwiz.Skyline
             this.areaPercentViewContextMenuItem.Text = "Normalized";
             this.areaPercentViewContextMenuItem.Click += new System.EventHandler(this.areaPercentViewContextMenuItem_Click);
             // 
+            // resultsGridToolStripMenuItem
+            // 
+            this.resultsGridToolStripMenuItem.Enabled = false;
+            this.resultsGridToolStripMenuItem.Name = "resultsGridToolStripMenuItem";
+            this.resultsGridToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.resultsGridToolStripMenuItem.Text = "Results Grid";
+            this.resultsGridToolStripMenuItem.Click += new System.EventHandler(this.resultsGridToolStripMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2506,6 +2516,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPercentViewContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resultsGridToolStripMenuItem;
     }
 }
 
