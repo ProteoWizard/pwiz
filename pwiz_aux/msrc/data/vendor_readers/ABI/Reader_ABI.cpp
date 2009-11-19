@@ -117,7 +117,16 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    msd.id = sampleName.empty() ? p.leaf() : sampleName;
+    msd.id = bfs::basename(p);
+    if (!sampleName.empty())
+    {
+        // if the basename is in the sample name, just use the sample name;
+        // otherwise add the sample name as a suffix
+        if(sampleName.find(msd.id) != string::npos)
+            msd.id = sampleName;
+        else
+            msd.id += "-" + sampleName;
+    }
 
     SoftwarePtr acquisitionSoftware(new Software);
     acquisitionSoftware->id = "Analyst";
@@ -149,7 +158,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
-    msd.run.id = sampleName.empty() ? p.leaf() : boost::to_lower_copy(sampleName);
+    msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
 }
 

@@ -87,12 +87,11 @@ using namespace pwiz::vendor_api::Bruker;
 
 namespace {
 
-void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format format, CompassDataPtr compassDataPtr)
+void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format format, CompassDataPtr compassDataPtr)
 {
     msd.cvs = defaultCVList();
 
-    bfs::path p(rootpath);
-    msd.id = p.leaf();
+    msd.id = bfs::basename(rootpath);
 
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
@@ -145,7 +144,7 @@ void fillInMetadata(const string& rootpath, MSData& msd, Reader_Bruker_Format fo
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = p.leaf();
+    msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());
 }
 
@@ -178,7 +177,7 @@ void Reader_Bruker::read(const string& filename,
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-    fillInMetadata(filename, result, format, compassDataPtr);
+    fillInMetadata(rootpath, result, format, compassDataPtr);
 }
 
 
@@ -214,4 +213,3 @@ PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& hea
 } // namespace pwiz
 
 #endif // PWIZ_READER_BRUKER
-

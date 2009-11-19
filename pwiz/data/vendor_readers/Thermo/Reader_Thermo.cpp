@@ -135,7 +135,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     sourceFile->set(MS_Thermo_RAW_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
-    msd.id = p.leaf();
+    msd.id = bfs::basename(p);
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
@@ -201,7 +201,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.run.id = boost::to_lower_copy(p.leaf());
+    msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate());
 }
 

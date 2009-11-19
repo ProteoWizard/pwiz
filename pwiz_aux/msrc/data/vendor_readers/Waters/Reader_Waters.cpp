@@ -143,8 +143,8 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    msd.id = p.leaf();
-    msd.run.id = p.leaf();
+    msd.id = bfs::basename(p);
+    msd.run.id = msd.id;
     //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
 }
 
@@ -157,7 +157,7 @@ void Reader_Waters::read(const string& filename,
                          int runIndex) const
 {
     if (runIndex != 0)
-        throw ReaderFail("[Reader_Waters::read] multiple samples not supported");
+        throw ReaderFail("[Reader_Waters::read] multiple runs not supported");
 
     RawDataPtr rawdata = RawData::create(filename);
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(rawdata));

@@ -287,6 +287,7 @@ class Reader_MGF : public Reader
         Serializer_MGF serializer;
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
+        result.id = result.run.id = bfs::basename(filename);
         result.fileDescription.sourceFilePtrs.back()->set(MS_multiple_peak_list_nativeID_format);
         result.fileDescription.sourceFilePtrs.back()->set(MS_Mascot_MGF_file);
         return;
@@ -340,7 +341,8 @@ class Reader_BTDX : public Reader
         if (location.empty()) location = ".";
         sourceFile->location = string("file:///") + location;
         result.fileDescription.sourceFilePtrs.push_back(sourceFile);
-        result.run.id = "Run1";
+
+        result.id = result.run.id = bfs::basename(filename);
         result.run.spectrumListPtr = SpectrumListPtr(SpectrumList_BTDX::create(is, result));
         result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramListSimple);
         return;

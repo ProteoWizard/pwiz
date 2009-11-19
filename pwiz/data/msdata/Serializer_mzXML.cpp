@@ -703,8 +703,8 @@ void process_parentFile(const string& fileName, const string& fileType,
     // the file level IDs can't be left empty so we set them to be the filename
     if (msd.id.empty() || msd.run.id.empty())
     {
-        msd.id = sf.name;
-        msd.run.id = sf.name;
+        msd.id = bfs::basename(sf.name);
+        msd.run.id = msd.id;
     }
 }
 

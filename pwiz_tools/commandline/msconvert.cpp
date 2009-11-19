@@ -61,14 +61,28 @@ struct Config
     :   outputPath("."), verbose(false)
     {}
 
-    string outputFilename(const string& inputFilename) const;
+    string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
 };
 
 
-string Config::outputFilename(const string& filename) const
+string Config::outputFilename(const string& filename, const MSData& msd) const
 {
-    namespace bfs = boost::filesystem;
-    bfs::path newFilename = bfs::basename(filename) + extension;
+    string runId = msd.run.id;
+
+    // if necessary, adjust runId so it makes a suitable filename
+    if (runId.empty())
+        runId = bfs::basename(filename);
+    else
+    {
+        string extension = bal::to_lower_copy(bfs::extension(runId));
+        if (extension == ".mzml" ||
+            extension == ".mzxml" ||
+            extension == ".xml" ||
+            extension == ".mgf")
+            runId = bfs::basename(runId);
+    }
+
+    bfs::path newFilename = runId + extension;
     bfs::path fullPath = bfs::path(outputPath) / newFilename;
     return fullPath.string(); 
 }
@@ -468,12 +482,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         const size_t iterationPeriod = 100;
         iterationListenerRegistry.addListener(feedback, iterationPeriod);
         IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
-     
-        // write out the new data file
 
-        string outputFilename = config.outputFilename(filename);
-        if (msdList.size() > 1)
-            outputFilename = bfs::change_extension(outputFilename, "-" + msd.run.id + config.extension).string();
+        // write out the new data file
+        string outputFilename = config.outputFilename(filename, msd);
         cout << "writing output file: " << outputFilename << endl;
         MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
     }
