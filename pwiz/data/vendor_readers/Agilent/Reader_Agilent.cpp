@@ -166,7 +166,7 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    msd.id = bal::to_lower_copy(p.filename());
+    msd.id = bfs::basename(p);
 
     SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";

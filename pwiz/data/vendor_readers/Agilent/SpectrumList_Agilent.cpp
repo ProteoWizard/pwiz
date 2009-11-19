@@ -117,7 +117,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
     result->index = index;
     result->id = ie.id;
 
-    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumById(ie.scanId);
+    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumByRow(ie.rowNumber);
     MSScanType scanType = spectrumPtr->getMSScanType();
     DeviceType deviceType = spectrumPtr->getDeviceType();
 
@@ -255,7 +255,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 
             size_t lastIndex = yArray.size() - 1;
 
-            for (size_t i=0; i < lastIndex; ++i)
+            for (size_t i=1; i < lastIndex; ++i)
                 if (yArray[i-1] > 0 || yArray[i] > 0 || yArray[i+1] > 0)
                 {
                     mzArray.push_back(xArray[i]);

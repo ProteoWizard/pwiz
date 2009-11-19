@@ -98,10 +98,12 @@ namespace {
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
     MHDAC::IMsdrPeakFilter^ result = gcnew MHDAC::MsdrPeakFilter();
-    if (!peakFilter.get()) return nullptr;
-    result->MaxNumPeaks = peakFilter->maxNumPeaks;
-    result->AbsoluteThreshold = peakFilter->absoluteThreshold;
-    result->RelativeThreshold = peakFilter->relativeThreshold;
+    if (peakFilter.get())
+    {
+        result->MaxNumPeaks = peakFilter->maxNumPeaks;
+        result->AbsoluteThreshold = peakFilter->absoluteThreshold;
+        result->RelativeThreshold = peakFilter->relativeThreshold;
+    }
     return result;
 }
 
@@ -114,6 +116,8 @@ MHDAC::IBDASpecFilter^ bdaSpecFilterForScanId(int scanId, bool preferProfileData
     // default is DesiredMSStorageType::PeakElseProfile
     if (preferProfileData)
         result->DesiredMSStorageType = MHDAC::DesiredMSStorageType::ProfileElsePeak;
+    else
+        result->DesiredMSStorageType = MHDAC::DesiredMSStorageType::PeakElseProfile;
 
     return result;
 }
@@ -414,13 +418,17 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
 {
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, nullptr, nullptr)));
+    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, nullptr, nullptr, MHDAC::DesiredMSStorageType::ProfileElsePeak)));
 }
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const
 {
-    MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = msdrPeakFilter(peakFilter);
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, msdrPeakFilter_, msdrPeakFilter_)));
+    // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
+    MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
+    if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
+        scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
+        msdrPeakFilter_ = msdrPeakFilter(peakFilter);
+    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, msdrPeakFilter_, msdrPeakFilter_, MHDAC::DesiredMSStorageType::PeakElseProfile)));
 }
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumById(int scanId) const
@@ -430,7 +438,12 @@ SpectrumPtr MassHunterDataImpl::getProfileSpectrumById(int scanId) const
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const
 {
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId), msdrPeakFilter(peakFilter))[0]));
+    // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
+    MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
+    if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
+        scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
+        msdrPeakFilter_ = msdrPeakFilter(peakFilter);
+    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId), msdrPeakFilter_)[0]));
 }
 
 
