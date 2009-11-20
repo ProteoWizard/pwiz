@@ -111,33 +111,6 @@ shared_ptr<T> find_id(vector< shared_ptr<T> >& list, const string& id)
 }
 
 
-CVID Pep2MzIdent::getCVID(const string& name)
-{
-    CVID id = translator.translate(name);
-
-    if (id == CVID_Unknown)
-    {
-        if (iequals(name, "mascot"))
-        {
-            id = MS_Mascot;
-        }
-        else if (iequals(name, "sequest"))
-        {
-            id = MS_Sequest;
-        }
-        else if (iequals(name, "phenyx"))
-        {
-            id = MS_Phenyx;
-        }
-        else if (iequals(name, "da"))
-        {
-            id = UO_dalton;
-        }
-    }
-    
-    return id;
-}
-
 struct search_score_p
 {
     const string name;
@@ -217,6 +190,122 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
     return cvparam;
 }
 
+AnalysisSoftwarePtr guessAnalysisSoftware(
+    const vector<AnalysisSoftwarePtr>& software)
+{
+    static const CVID cvids[] = {MS_Mascot, MS_Sequest,
+                                 MS_Phenyx, CVID_Unknown};
+    AnalysisSoftwarePtr asp(new AnalysisSoftware());
+
+    for (size_t idx = 0; cvids[idx] != CVID_Unknown; idx++)
+    {
+        AnalysisSoftwarePtr as = findSoftware(software, cvids[idx]);
+        
+        if (as.get() && !as->empty())
+        {
+            asp = as;
+            break;
+        }
+    }
+
+    return asp;
+}
+
+//
+// Pep2MzIdent
+//
+
+Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
+    : _mspa(mspa), mzid(mzid),
+      precursorMonoisotopic(false), fragmentMonoisotopic(false),
+      indices(new Indices())
+{
+    mzid->cvs.push_back(cv("MS"));
+    mzid->cvs.push_back(cv("UO"));
+    //translate();
+}
+
+void Pep2MzIdent::clear()
+{
+    indices = shared_ptr<Indices>(new Indices());
+
+    _mspa = MSMSPipelineAnalysis();
+
+    mzid = MzIdentMLPtr(new MzIdentML());
+    mzid->cvs.push_back(cv("MS"));
+    mzid->cvs.push_back(cv("UO"));
+
+    _translated = false;
+
+    precursorMonoisotopic = false;
+    fragmentMonoisotopic = false;
+
+    seqPeptidePairs.clear();
+    aminoAcidModifications = NULL;
+}
+
+void Pep2MzIdent::translateRoot()
+{
+    mzid->creationDate = _mspa.date;
+
+    translateEnzyme(_mspa.msmsRunSummary.sampleEnzyme, mzid);
+
+    earlyMetadata();
+
+    for (vector<SearchSummaryPtr>::const_iterator ss =
+             _mspa.msmsRunSummary.searchSummary.begin();
+         ss != _mspa.msmsRunSummary.searchSummary.end(); ss++)
+    {
+        translateSearch(*ss, mzid);
+    }
+
+    for (vector<SpectrumQueryPtr>::const_iterator it=_mspa.msmsRunSummary.spectrumQueries.begin(); it!=_mspa.msmsRunSummary.spectrumQueries.end(); it++)
+    {
+        translateQueries(*it, mzid);
+    }
+
+    lateMetadata();
+    
+    addFinalElements();
+}
+
+void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
+                                  MzIdentMLPtr result)
+{
+    SpectrumIdentificationProtocolPtr sip(
+        new SpectrumIdentificationProtocol(
+            "SIP_"+lexical_cast<string>(indices->sip++)));
+
+    // DEBUG
+    sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS"));
+    //sip->analysisSoftwarePtr = result->analysisSoftwareList.back();
+    sip->searchType.set(MS_ms_ms_search);
+    sip->threshold.cvParams.push_back(guessThreshold(mzid->analysisSoftwareList));
+    EnzymePtr enzyme(new Enzyme("E_"+lexical_cast<string>(indices->enzyme++)));
+
+    // Cross fingers and pray that the name enzyme matches a cv name.
+    // TODO create a more flexable conversion.
+    enzyme->enzymeName.set(getCVID(sampleEnzyme.name));
+    enzyme->enzymeName.userParams.
+        push_back(UserParam("description", sampleEnzyme.description));
+
+    if (sampleEnzyme.fidelity == "Semispecific")
+        enzyme->semiSpecific = true;
+    else if (sampleEnzyme.fidelity == "Nonspecific")
+        enzyme->semiSpecific = false;
+
+    enzyme->minDistance = sampleEnzyme.specificity.minSpace;
+
+    // TODO handle sense fields
+    // first attempt at regex
+    enzyme->siteRegexp = "[^"+sampleEnzyme.specificity.noCut+
+        "]["+sampleEnzyme.specificity.cut+"]";
+    
+    sip->enzymes.enzymes.push_back(enzyme);
+
+    result->analysisProtocolCollection.
+        spectrumIdentificationProtocol.push_back(sip);
+}
 
 CVParam Pep2MzIdent::translateSearchScore(const string& name, const vector<SearchScorePtr>& searchScore)
 {
@@ -266,82 +355,6 @@ CVID Pep2MzIdent::cvidFromSearchScore(const string& name)
     return id;
 }
 
-
-//
-// Pep2MzIdent
-//
-
-Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr _mzid)
-    : _mspa(mspa), mzid(_mzid),
-      precursorMonoisotopic(false), fragmentMonoisotopic(false),
-      indices(new Indices())
-{
-    mzid->cvs.push_back(cv("MS"));
-    mzid->cvs.push_back(cv("UO"));
-    translateRoot();
-}
-
-/// Translates pepXML data needed for the mzIdentML tag.
-void Pep2MzIdent::translateRoot()
-{
-    mzid->creationDate = _mspa.date;
-
-    translateEnzyme(_mspa.msmsRunSummary.sampleEnzyme, mzid);
-
-    translateEarlyMetadata();
-
-    for (vector<SearchSummaryPtr>::const_iterator ss=_mspa.msmsRunSummary.searchSummary.begin();
-         ss != _mspa.msmsRunSummary.searchSummary.end(); ss++)
-    {
-        translateSearch(*ss, mzid);
-    }
-
-    for (vector<SpectrumQueryPtr>::const_iterator it=_mspa.msmsRunSummary.spectrumQueries.begin(); it!=_mspa.msmsRunSummary.spectrumQueries.end(); it++)
-    {
-        translateQueries(*it, mzid);
-    }
-
-    addFinalElements();
-}
-
-// Copies the data in the enzyme tag into the mzIdentML tree.
-void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
-                                  MzIdentMLPtr result)
-{
-    SpectrumIdentificationProtocolPtr sip(
-        new SpectrumIdentificationProtocol(
-            "SIP_"+lexical_cast<string>(indices->sip++)));
-
-    // DEBUG
-    sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS"));
-    //sip->analysisSoftwarePtr = result->analysisSoftwareList.back();
-    sip->searchType.set(MS_ms_ms_search);
-    sip->threshold.cvParams.push_back(guessThreshold(mzid->analysisSoftwareList));
-    EnzymePtr enzyme(new Enzyme("E_"+lexical_cast<string>(indices->enzyme++)));
-
-    // Cross fingers and pray that the name enzyme matches a cv name.
-    // TODO create a more flexable conversion.
-    enzyme->enzymeName.set(getCVID(sampleEnzyme.name));
-    enzyme->enzymeName.userParams.
-        push_back(UserParam("description", sampleEnzyme.description));
-
-    if (sampleEnzyme.fidelity == "Semispecific")
-        enzyme->semiSpecific = true;
-    else if (sampleEnzyme.fidelity == "Nonspecific")
-        enzyme->semiSpecific = false;
-
-    enzyme->minDistance = sampleEnzyme.specificity.minSpace;
-
-    // TODO handle sense fields
-    // first attempt at regex
-    enzyme->siteRegexp = "[^"+sampleEnzyme.specificity.noCut+
-        "]["+sampleEnzyme.specificity.cut+"]";
-    
-    sip->enzymes.enzymes.push_back(enzyme);
-
-    result->analysisProtocolCollection.
-        spectrumIdentificationProtocol.push_back(sip);
-}
 
 void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
                                   MzIdentMLPtr result)
@@ -597,13 +610,14 @@ MzIdentMLPtr Pep2MzIdent::translate()
 {
     mzid = MzIdentMLPtr(new MzIdentML());
     mzid->cvs.push_back(cv("MS"));
+    mzid->cvs.push_back(cv("UO"));
    
     translateRoot();
 
     return mzid;
 }
 
-void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
+void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
                                         MzIdentMLPtr mzid)
 {
     if (parameter->name == "USERNAME")
@@ -864,7 +878,7 @@ void Pep2MzIdent::processEarlyParameter(ParameterPtr parameter,
     }
 }
 
-void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
+void Pep2MzIdent::lateParameters(ParameterPtr parameter,
                                        MzIdentMLPtr mzid)
 {
     if (parameter->name == "USERNAME" ||
@@ -880,9 +894,11 @@ void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
                     "referenceableParamGroup.cvParam") || 
         starts_with(parameter->name, "_mzML.softwareList.") ||
         starts_with(parameter->name, "_mzML.softwareList.software."))
+    {
+        // These parameters have already been dealt with in earlyParameters.
         return;
-
-    if (parameter->name == "PEAK")
+    }
+    else if (parameter->name == "PEAK")
     {
         if (mzid->analysisProtocolCollection.proteinDetectionProtocol.size()==0)
             mzid->analysisProtocolCollection.proteinDetectionProtocol.
@@ -893,6 +909,8 @@ void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
         
         ProteinDetectionProtocolPtr pdp = mzid->analysisProtocolCollection.
             proteinDetectionProtocol.back();
+        // TODO eventually use guessAnalysisSoftware
+        pdp->analysisSoftwarePtr  =AnalysisSoftwarePtr(new AnalysisSoftware("AS"));
 
         CVParam cvparam = guessThreshold(mzid->analysisSoftwareList);
         pdp->threshold.cvParams.push_back(cvparam);
@@ -904,7 +922,7 @@ void Pep2MzIdent::processLateParameter(ParameterPtr parameter,
     // TODO stick the rest in UserParam objects somewhere.
 }
 
-void Pep2MzIdent::translateEarlyMetadata()
+void Pep2MzIdent::earlyMetadata()
 {
     vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
     for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
@@ -914,12 +932,12 @@ void Pep2MzIdent::translateEarlyMetadata()
         for (vector<ParameterPtr>::const_iterator pit=pp.begin();
              pit != pp.end(); pit++)
         {
-            processEarlyParameter(*pit, mzid);
+            earlyParameters(*pit, mzid);
         }
     }
 }
 
-void Pep2MzIdent::translateLateMetadata()
+void Pep2MzIdent::lateMetadata()
 {
     vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
     for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
@@ -929,7 +947,7 @@ void Pep2MzIdent::translateLateMetadata()
         for (vector<ParameterPtr>::const_iterator pit=pp.begin();
              pit != pp.end(); pit++)
         {
-            processLateParameter(*pit, mzid);
+            lateParameters(*pit, mzid);
         }
     }
 }
@@ -954,38 +972,34 @@ const string Pep2MzIdent::addPeptide(const SearchHitPtr sh, MzIdentMLPtr& mzid)
     return pp->id;
 }
 
-/*
-void Pep2MzIdent::translateSpectrumQuery(SpectrumIdentificationListPtr result,
-                                         const SpectrumQueryPtr sq)
+
+CVID Pep2MzIdent::getCVID(const string& name)
 {
-    SpectrumIdentificationResultPtr sir(new SpectrumIdentificationResult());
-    if (mzid->dataCollection.inputs.spectraData.size() > 0)
-        sir->spectraDataPtr = mzid->dataCollection.inputs.spectraData.at(0);
-    
-    for (vector<SearchResultPtr>::const_iterator sr=sq->searchResult.begin();
-         sr != sq->searchResult.end(); sr++)
+    CVID id = translator.translate(name);
+
+    if (id == CVID_Unknown)
     {
-        for (vector<SearchHitPtr>::const_iterator sh=(*sr)->searchHit.begin();
-             sh != (*sr)->searchHit.end(); sh++)
+        if (iequals(name, "mascot"))
         {
-            SpectrumIdentificationItemPtr sii(new SpectrumIdentificationItem());    
-            PeptideEvidencePtr pepEv(new PeptideEvidence());
-            
-            sii->rank = (*sh)->hitRank;
-            sii->peptidePtr = PeptidePtr(new Peptide((*sh)->peptide));
-            pepEv->pre = (*sh)->peptidePrevAA;
-            pepEv->post = (*sh)->peptideNextAA;
-            sii->chargeState = sq->assumedCharge;
-            sii->experimentalMassToCharge = Ion::mz(sq->precursorNeutralMass, sq->assumedCharge);
-            sii->calculatedMassToCharge = Ion::mz((*sh)->calcNeutralPepMass, sq->assumedCharge);
-            
-            sir->spectrumIdentificationItem.push_back(sii);
+            id = MS_Mascot;
+        }
+        else if (iequals(name, "sequest"))
+        {
+            id = MS_Sequest;
+        }
+        else if (iequals(name, "phenyx"))
+        {
+            id = MS_Phenyx;
+        }
+        else if (iequals(name, "da"))
+        {
+            id = UO_dalton;
         }
     }
-
-    result->spectrumIdentificationResult.push_back(sir);
+    
+    return id;
 }
-*/
+
 void Pep2MzIdent::addFinalElements()
 {
     SpectrumIdentificationPtr sip(new SpectrumIdentification("SI"));
