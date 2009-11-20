@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1499</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1499</ApplicationVersion>
+    <ApplicationRevision>1528</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1528</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -166,6 +166,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\Graphs\AreaReplicateGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaPeptideGraphPane.cs" />
+    <Compile Include="Controls\Graphs\HiLowMiddleErrorBarItem.cs" />
+    <Compile Include="Controls\Graphs\MeanErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\GraphRegression.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -173,6 +176,7 @@
       <DependentUpon>GraphRegression.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\RTGraphController.cs" />
+    <Compile Include="Controls\Graphs\SummaryBarGraphPaneBase.cs" />
     <Compile Include="Controls\Graphs\SummaryReplicateGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryGraphPane.cs" />
     <Compile Include="Controls\Graphs\GraphSummary.cs">
@@ -201,7 +205,6 @@
     <Compile Include="Controls\ResultsGrid.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\HiLowMiddleErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\RTLinearRegressionGraphPane.cs" />
     <Compile Include="Controls\Graphs\RTReplicateGraphPane.cs" />
     <Compile Include="Controls\LongWaitDlg.cs">

@@ -691,8 +691,8 @@ namespace pwiz.SkylineTest
             // Values for this CE optimization regression were verified in Excel
             Assert.AreEqual(statCEs.Beta(statPrecursorMzs), 0.029982, 0.000001);            
             Assert.AreEqual(statCEs.Alpha(statPrecursorMzs), 4.104255, 0.0000001);
-            Assert.AreEqual(Statistics.StdDevB(statCEs, statPrecursorMzs), 0.003872, 0.000001);
-            Assert.AreEqual(Statistics.StdDevA(statCEs, statPrecursorMzs), 2.241899, 0.000001);
+            Assert.AreEqual(statCEs.StdErrBeta(statPrecursorMzs), 0.003872, 0.000001);
+            Assert.AreEqual(statCEs.StdErrAlpha(statPrecursorMzs), 2.241899, 0.000001);
         }
 
         /// <summary>

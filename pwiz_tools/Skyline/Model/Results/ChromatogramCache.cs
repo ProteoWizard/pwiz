@@ -1426,7 +1426,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         float min = float.MaxValue;
                         foreach (var chromData in _listChromData)
-                            min = Math.Min(min, chromData.RawTimes[0]);
+                        {
+                            if (chromData.RawTimes.Length > 0)
+                                min = Math.Min(min, chromData.RawTimes[0]);                            
+                        }
                         return min;
                     }
                 }
@@ -1437,8 +1440,39 @@ namespace pwiz.Skyline.Model.Results
                     {
                         float max = float.MinValue;
                         foreach (var chromData in _listChromData)
-                            max = Math.Max(max, chromData.RawTimes[0]);
+                        {
+                            if (chromData.RawTimes.Length > 0)
+                                max = Math.Max(max, chromData.RawTimes[0]);                            
+                        }
                         return max;
+                    }                    
+                }
+
+                private float MaxRawTime
+                {
+                    get
+                    {
+                        float max = float.MinValue;
+                        foreach (var chromData in _listChromData)
+                        {
+                            if (chromData.RawTimes.Length > 0)
+                                max = Math.Max(max, chromData.Times[chromData.Times.Length - 1]);
+                        }
+                        return max;
+                    }
+                }
+
+                private float MinEndTime
+                {
+                    get
+                    {
+                        float min = float.MaxValue;
+                        foreach (var chromData in _listChromData)
+                        {
+                            if (chromData.RawTimes.Length > 0)
+                                min = Math.Min(min, chromData.Times[chromData.Times.Length - 1]);                            
+                        }
+                        return min;
                     }                    
                 }
 
@@ -1446,7 +1480,7 @@ namespace pwiz.Skyline.Model.Results
                 /// If the minimum time is greater than two cycles from the maximum start,
                 /// then use the minimum, and interpolate other transitions from it.
                 /// Otherwise, try to avoid zeros at the edges, since they can create
-                /// change that looks like a peak.
+                /// change that look like a peak.
                 /// </summary>
                 /// <param name="interval">Interval that will be used for interpolation</param>
                 /// <returns>Value to use as the start time for chromatograms that do not infer zeros</returns>
@@ -1458,29 +1492,6 @@ namespace pwiz.Skyline.Model.Results
                         return min;
                     return max;
                 }
-
-                private float MaxRawTime
-                {
-                    get
-                    {
-                        float max = float.MinValue;
-                        foreach (var chromData in _listChromData)
-                            max = Math.Max(max, chromData.Times[chromData.Times.Length - 1]);
-                        return max;
-                    }
-                }
-
-                private float MinEndTime
-                {
-                    get
-                    {
-                        float min = float.MaxValue;
-                        foreach (var chromData in _listChromData)
-                            min = Math.Min(min, chromData.Times[chromData.Times.Length - 1]);
-                        return min;
-                    }                    
-                }
-
                 
                 /// <summary>
                 /// If the maximum time is greater than two cycles from the minimum end,
@@ -1760,11 +1771,11 @@ namespace pwiz.Skyline.Model.Results
                         return;
                     }
                     // Moved to ProteoWizard
-                    else if (WiffZerosFix())
-                    {
-                        EvenlySpaceTimes();
-                        return;
-                    }
+//                    else if (WiffZerosFix())
+//                    {
+//                        EvenlySpaceTimes();
+//                        return;
+//                    }
 
                     // If time deltas are sufficiently evenly spaced, then no further processing
                     // is necessary.
@@ -1822,7 +1833,7 @@ namespace pwiz.Skyline.Model.Results
 
                         int iTime = 0;
                         double timeLast = start;
-                        double intenLast = (inferZeros ? 0 : intensMeasured[0]);
+                        double intenLast = (inferZeros || intensMeasured.Length == 0 ? 0 : intensMeasured[0]);
                         for (int i = 0; i < timesMeasured.Length && iTime < timesNew.Length; i++)
                         {
                             double intenNext;

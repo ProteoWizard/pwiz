@@ -50,14 +50,14 @@
             this.graphControl.ScrollMinX = 0;
             this.graphControl.ScrollMinY = 0;
             this.graphControl.ScrollMinY2 = 0;
-            this.graphControl.Size = new System.Drawing.Size(501, 319);
+            this.graphControl.Size = new System.Drawing.Size(501, 234);
             this.graphControl.TabIndex = 1;
             // 
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnClose.Location = new System.Drawing.Point(434, 340);
+            this.btnClose.Location = new System.Drawing.Point(434, 255);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 2;
@@ -70,7 +70,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnClose;
-            this.ClientSize = new System.Drawing.Size(521, 375);
+            this.ClientSize = new System.Drawing.Size(521, 290);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.graphControl);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

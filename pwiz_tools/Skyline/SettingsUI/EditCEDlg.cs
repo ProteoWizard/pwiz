@@ -354,7 +354,7 @@ namespace pwiz.Skyline.SettingsUI
                     int charge = nodeGroup.TransitionGroup.PrecursorCharge;
                     if (arrayData[charge] == null)
                     {
-                        var chargeRegression = (_regression != null ?
+                        var chargeRegression = (regressionCurrent != null ?
                             regressionCurrent.GetRegressionLine(charge) : null);
                         arrayData[charge] = new CERegressionData(chargeRegression != null ?
                             chargeRegression.RegressionLine : null);

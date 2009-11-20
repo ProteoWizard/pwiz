@@ -45,10 +45,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!(GraphSummary.GraphPane is AreaReplicateGraphPane))
                         GraphSummary.GraphPane = new AreaReplicateGraphPane(GraphSummary);
                     break;
-//                case GraphTypeArea.peptide:
-//                    if (!(GraphPane is AreaPeptideGraphPane))
-//                        graphControl.MasterPane[0] = new AreaPeptideGraphPane { GraphPeakArea = this };
-//                    break;
+                case GraphTypeArea.peptide:
+                    if (!(GraphSummary.GraphPane is AreaPeptideGraphPane))
+                        GraphSummary.GraphPane = new AreaPeptideGraphPane(GraphSummary);
+                    break;
             }
         }
 

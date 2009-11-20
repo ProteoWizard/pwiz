@@ -462,9 +462,9 @@ namespace pwiz.Skyline
                     layoutLock.EnsureLocked();
                     ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
                 }
-                if (resultsGridToolStripMenuItem.Enabled != enable)
+                if (resultsGridMenuItem.Enabled != enable)
                 {
-                    resultsGridToolStripMenuItem.Enabled = enable;
+                    resultsGridMenuItem.Enabled = enable;
                     ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
                 }
                 if (peakAreasMenuItem.Enabled != enable)
@@ -519,7 +519,7 @@ namespace pwiz.Skyline
                                 if (graphChrom == null)
                                 {
                                     layoutLock.EnsureLocked();
-                                    CreateGraphCrom(name, nameLast, false);
+                                    CreateGraphChrom(name, nameLast, false);
 
                                     nameFirst = nameFirst ?? name;
                                     nameLast = name;
@@ -1322,7 +1322,7 @@ namespace pwiz.Skyline
             }
             else if (show)
             {
-                CreateGraphCrom(name, SelectedGraphChromName, false);
+                CreateGraphChrom(name, SelectedGraphChromName, false);
             }
         }
 
@@ -1379,7 +1379,7 @@ namespace pwiz.Skyline
             graphChrom.Close();
         }
 
-        private void CreateGraphCrom(string name, string namePosition, bool split)
+        private void CreateGraphChrom(string name, string namePosition, bool split)
         {
             // Create a new spectrum graph
             var graphChrom = CreateGraphChrom(name);
@@ -1569,83 +1569,6 @@ namespace pwiz.Skyline
                 Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked = show;
             }
         }
-
-        private void ShowResultsGrid(bool show)
-        {
-            if (show)
-            {
-                if (_resultsGridForm != null)
-                {
-                    _resultsGridForm.Show();
-                }
-                else
-                {
-                    CreateResultsGrid();
-                    // TODO(nicksh): this code was copied from ShowGraphRetentionTime
-                    // coalesce duplicate code
-                    var rectFloat = dockPanel.Bounds;
-                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
-                    rectFloat.X += rectFloat.Width / 4;
-                    rectFloat.Y += rectFloat.Height / 3;
-                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-                    // Make sure it is on the screen.
-                    var screen = Screen.FromControl(dockPanel);
-                    var rectScreen = screen.WorkingArea;
-                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-
-                    _resultsGridForm.Show(dockPanel, rectFloat);
-                }
-            }
-            else
-            {
-                if (_resultsGridForm != null)
-                {
-                    _resultsGridForm.Hide();
-                }
-            }
-        }
-        private ResultsGridForm CreateResultsGrid()
-        {
-            _resultsGridForm = new ResultsGridForm(this, SequenceTree);
-            _resultsGridForm.FormClosed += resultsGrid_FormClosed;
-            _resultsGridForm.VisibleChanged += graphPeakArea_VisibleChanged;
-            return _resultsGridForm;
-        }
-
-        private void DestroyResultsGrid()
-        {
-            if (_resultsGridForm != null)
-            {
-                _resultsGridForm.FormClosed -= resultsGrid_FormClosed;
-                _resultsGridForm.VisibleChanged -= resultsGrid_VisibleChanged;
-                _resultsGridForm.Close();
-                _resultsGridForm = null;
-            }
-        }
-
-        private void resultsGrid_VisibleChanged(object sender, EventArgs e)
-        {
-            Settings.Default.ShowResultsGrid = resultsGridToolStripMenuItem.Checked =
-                (_resultsGridForm != null && _resultsGridForm.Visible);
-            splitMain.Panel2Collapsed = !VisibleDockContent;
-        }
-
-
-
-        void resultsGrid_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            // Update settings and menu check
-            Settings.Default.ShowResultsGrid = resultsGridToolStripMenuItem.Checked = false;
-
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _resultsGridForm))
-                splitMain.Panel2Collapsed = true;
-            _resultsGridForm = null;
-        }
-
 
         private GraphSummary CreateGraphRetentionTime()
         {
@@ -2017,24 +1940,48 @@ namespace pwiz.Skyline
             var set = Settings.Default;
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
+            if (areaGraphContextMenuItem.DropDownItems.Count == 0)
+            {
+                areaGraphContextMenuItem.DropDownItems.AddRange(new[]
+                {
+                    areaReplicateComparisonContextMenuItem,
+                    areaPeptideComparisonContextMenuItem
+                });
+            }
 
             GraphTypeArea graphType = AreaGraphController.GraphType;
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
+            menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
+            // Sometimes child menuitems are stripped from the parent
+            if (transitionsContextMenuItem.DropDownItems.Count == 0)
+            {
+                transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                {
+                    singleTranContextMenuItem,
+                    allTranContextMenuItem,
+                    totalTranContextMenuItem
+                });
+            }
             if (graphType == GraphTypeArea.replicate)
             {
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
-                menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
-                // Sometimes child menuitems are stripped from the parent
-                if (transitionsContextMenuItem.DropDownItems.Count == 0)
-                {
-                    transitionsContextMenuItem.DropDownItems.AddRange(new[]
-                    {
-                        singleTranContextMenuItem,
-                        allTranContextMenuItem,
-                        totalTranContextMenuItem
-                    });
-                }
-                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);                
+                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
+                areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
             }
+            else if (graphType == GraphTypeArea.peptide)
+            {
+                menuStrip.Items.Insert(iInsert++, areaOrderContextMenuItem);
+                if (areaOrderContextMenuItem.DropDownItems.Count == 0)
+                {
+                    areaOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            areaOrderDocumentContextMenuItem,
+                            areaOrderRTContextMenuItem,
+                            areaOrderAreaContextMenuItem
+                        });
+                }
+            }
+            menuStrip.Items.Insert(iInsert++, areaLogScaleContextMenuItem);
+            areaLogScaleContextMenuItem.Checked = set.AreaLogScale;
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
 
@@ -2066,16 +2013,48 @@ namespace pwiz.Skyline
 
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not yet implemented");
+            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
+            ShowGraphPeakArea(true);
+            UpdatePeakAreaGraph();
+        }
 
-//            Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
-//            ShowGraphPeakArea(true);
-//            UpdatePeakAreaGraph();
+        private void areaOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            AreaPeptideOrder peptideOrder = AreaPeptideGraphPane.PeptideOrder;
+            areaOrderDocumentContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.document);
+            areaOrderRTContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.time);
+            areaOrderAreaContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.area);
+        }
+
+        private void areaOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.document.ToString();
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaOrderRTContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.time.ToString();
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaOrderAreaContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.area.ToString();
+            UpdatePeakAreaGraph();
         }
 
         private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.AreaPercentView = areaPercentViewContextMenuItem.Checked;
+            Settings.Default.AreaLogScale = !areaPercentViewContextMenuItem.Checked;
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaLogScaleContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaLogScale = areaLogScaleContextMenuItem.Checked;
+            Settings.Default.AreaPercentView = !areaLogScaleContextMenuItem.Checked;
             UpdatePeakAreaGraph();
         }
 
@@ -2083,6 +2062,91 @@ namespace pwiz.Skyline
         {
             if (_graphPeakArea != null)
                 _graphPeakArea.UpdateGraph();
+        }
+
+        #endregion
+
+        #region Results Grid
+
+        private void resultsGridMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowResultsGrid(Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked);
+        }
+
+        private void ShowResultsGrid(bool show)
+        {
+            if (show)
+            {
+                if (_resultsGridForm != null)
+                {
+                    _resultsGridForm.Show();
+                }
+                else
+                {
+                    _resultsGridForm = CreateResultsGrid();
+
+                    // TODO(nicksh): this code was copied from ShowGraphRetentionTime
+                    // coalesce duplicate code
+                    var rectFloat = dockPanel.Bounds;
+                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
+                    rectFloat.X += rectFloat.Width / 4;
+                    rectFloat.Y += rectFloat.Height / 3;
+                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
+                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
+                    // Make sure it is on the screen.
+                    var screen = Screen.FromControl(dockPanel);
+                    var rectScreen = screen.WorkingArea;
+                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+
+                    _resultsGridForm.Show(dockPanel, rectFloat);
+                }
+            }
+            else
+            {
+                if (_resultsGridForm != null)
+                {
+                    _resultsGridForm.Hide();
+                }
+            }
+        }
+
+        private ResultsGridForm CreateResultsGrid()
+        {
+            _resultsGridForm = new ResultsGridForm(this, SequenceTree);
+            _resultsGridForm.FormClosed += resultsGrid_FormClosed;
+            _resultsGridForm.VisibleChanged += graphPeakArea_VisibleChanged;
+            return _resultsGridForm;
+        }
+
+        private void DestroyResultsGrid()
+        {
+            if (_resultsGridForm != null)
+            {
+                _resultsGridForm.FormClosed -= resultsGrid_FormClosed;
+                _resultsGridForm.VisibleChanged -= resultsGrid_VisibleChanged;
+                _resultsGridForm.Close();
+                _resultsGridForm = null;
+            }
+        }
+
+        private void resultsGrid_VisibleChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked =
+                (_resultsGridForm != null && _resultsGridForm.Visible);
+            splitMain.Panel2Collapsed = !VisibleDockContent;
+        }
+
+        void resultsGrid_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Update settings and menu check
+            Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked = false;
+
+            // Hide the dock panel, if this is its last graph pane.
+            if (dockPanel.Contents.Count == 0 ||
+                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _resultsGridForm))
+                splitMain.Panel2Collapsed = true;
+            _resultsGridForm = null;
         }
 
         #endregion

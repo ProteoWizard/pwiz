@@ -955,7 +955,39 @@ namespace pwiz.Skyline.Properties {
                 this["AreaPercentView"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreaLogScale
+        {
+            get
+            {
+                return ((bool)(this["AreaLogScale"]));
+            }
+
+            set
+            {
+                this["AreaLogScale"] = value;
+            }
+
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("document")]
+        public string AreaPeptideOrderEnum
+        {
+            get
+            {
+                return ((string)(this["AreaPeptideOrderEnum"]));
+            }
+            set
+            {
+                this["AreaPeptideOrderEnum"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]

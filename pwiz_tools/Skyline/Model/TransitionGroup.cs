@@ -84,6 +84,23 @@ namespace pwiz.Skyline.Model
 
         public bool HasResults { get { return Results != null; } }
 
+        public IEnumerable<TransitionGroupChromInfo> ChromInfos
+        {
+            get
+            {
+                if (HasResults)
+                {
+                    foreach (var result in Results)
+                    {
+                        if (result == null)
+                            continue;
+                        foreach (var chromInfo in result)
+                            yield return chromInfo;
+                    }
+                }
+            }
+        }
+
         public ChromInfoList<TransitionGroupChromInfo> GetSafeChromInfo(int i)
         {
             return (HasResults && Results.Count > i ? Results[i] : null);

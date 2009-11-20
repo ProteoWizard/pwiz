@@ -62,6 +62,23 @@ namespace pwiz.Skyline.Model
             return new TransitionLibInfo(rmi.Rank, rmi.Intensity);
         }
 
+        public IEnumerable<TransitionChromInfo> ChromInfos
+        {
+            get
+            {
+                if (HasResults)
+                {
+                    foreach (var result in Results)
+                    {
+                        if (result == null)
+                            continue;
+                        foreach (var chromInfo in result)
+                            yield return chromInfo;
+                    }
+                }
+            }
+        }
+
         public Results<TransitionChromInfo> Results { get; private set; }
 
         public bool HasResults { get { return Results != null; } }

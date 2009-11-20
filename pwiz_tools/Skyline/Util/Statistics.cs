@@ -50,37 +50,37 @@ namespace pwiz.Skyline.Util
                 var i = new double[_list.Length];
                 _list.CopyTo(i, 0);
                 Array.Sort(i);
-                double val_mode = i[0], help_val_mode = i[0];
-                int old_counter = 0, new_counter = 0;
+                double valMode = i[0], helpValMode = i[0];
+                int oldCounter = 0, newCounter = 0;
                 int j = 0;
                 for (; j <= i.Length - 1; j++)
                 {
-                    if (i[j] == help_val_mode)
-                        new_counter++;
-                    else if (new_counter > old_counter)
+                    if (i[j] == helpValMode)
+                        newCounter++;
+                    else if (newCounter > oldCounter)
                     {
-                        val_mode = help_val_mode;
-                        old_counter = new_counter;
-                        new_counter = 1;
-                        help_val_mode = i[j];
+                        valMode = helpValMode;
+                        oldCounter = newCounter;
+                        newCounter = 1;
+                        helpValMode = i[j];
                     }
-                    else if (new_counter == old_counter)
+                    else if (newCounter == oldCounter)
                     {
-                        val_mode = double.NaN;
-                        help_val_mode = i[j];
-                        new_counter = 1;
+                        valMode = double.NaN;
+                        helpValMode = i[j];
+                        newCounter = 1;
                     }
                     else
                     {
-                        help_val_mode = i[j];
-                        new_counter = 1;
+                        helpValMode = i[j];
+                        newCounter = 1;
                     }
                 }
-                if (new_counter > old_counter)
-                    val_mode = help_val_mode;
-                else if (new_counter == old_counter)
-                    val_mode = double.NaN;
-                return val_mode;
+                if (newCounter > oldCounter)
+                    valMode = helpValMode;
+                else if (newCounter == oldCounter)
+                    valMode = double.NaN;
+                return valMode;
             }
             catch (Exception)
             {
@@ -100,42 +100,42 @@ namespace pwiz.Skyline.Util
                 _list.CopyTo(i, 0);
                 Array.Sort(i);
                 List<double> listModes = new List<double>();
-                double help_val_mode = i[0];
-                int old_counter = 0, new_counter = 0;
+                double helpValMode = i[0];
+                int oldCounter = 0, newCounter = 0;
                 int j = 0;
                 for (; j <= i.Length - 1; j++)
                 {
-                    if (i[j] == help_val_mode)
-                        new_counter++;
-                    else if (new_counter > old_counter)
+                    if (i[j] == helpValMode)
+                        newCounter++;
+                    else if (newCounter > oldCounter)
                     {
                         listModes.Clear();
-                        listModes.Add(help_val_mode);
+                        listModes.Add(helpValMode);
 
-                        old_counter = new_counter;
-                        new_counter = 1;
-                        help_val_mode = i[j];
+                        oldCounter = newCounter;
+                        newCounter = 1;
+                        helpValMode = i[j];
                     }
-                    else if (new_counter == old_counter)
+                    else if (newCounter == oldCounter)
                     {
-                        listModes.Add(help_val_mode);
+                        listModes.Add(helpValMode);
 
-                        help_val_mode = i[j];
-                        new_counter = 1;
+                        helpValMode = i[j];
+                        newCounter = 1;
                     }
                     else
                     {
-                        help_val_mode = i[j];
-                        new_counter = 1;
+                        helpValMode = i[j];
+                        newCounter = 1;
                     }
                 }
-                if (new_counter > old_counter)
+                if (newCounter > oldCounter)
                 {
                     listModes.Clear();
-                    listModes.Add(help_val_mode);
+                    listModes.Add(helpValMode);
                 }
-                else if (new_counter == old_counter)
-                    listModes.Add(help_val_mode);
+                else if (newCounter == oldCounter)
+                    listModes.Add(helpValMode);
                 return listModes.ToArray();
             }
             catch (Exception)
@@ -195,6 +195,9 @@ namespace pwiz.Skyline.Util
             return Percentile(0.75);
         }
 
+        /// <summary>
+        /// Sum of all the values in a set of numbers.
+        /// </summary>
         public double Sum()
         {
             double sum = 0;
@@ -294,6 +297,9 @@ namespace pwiz.Skyline.Util
             return new Statistics(normalized);
         }
 
+        /// <summary>
+        /// Base statistical value used in calculating variance and standard deviations.
+        /// </summary>
         private double SumOfSquares()
         {
             double s = 0;
@@ -302,6 +308,9 @@ namespace pwiz.Skyline.Util
             return s;
         }
 
+        /// <summary>
+        /// Base statistical value used in calculating variance and standard deviations.
+        /// </summary>
         private double VarianceTotal()
         {
             return (SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));            
@@ -366,11 +375,19 @@ namespace pwiz.Skyline.Util
             return Math.Sqrt(Variance(weights));
         }
 
+        /// <summary>
+        /// The standard error of the set of numbers.
+        /// </summary>
         public double StdErr()
         {
             return StdDev()/Math.Sqrt(_list.Length);
         }
 
+        /// <summary>
+        /// The standard error of the set of numbers around a weighted mean.
+        /// </summary>
+        /// <param name="weights">The weights</param>
+        /// <returns>Stadard error around weighted mean</returns>
         public double StdErr(Statistics weights)
         {
             return StdDev(weights)/Math.Sqrt(_list.Length);
@@ -436,10 +453,10 @@ namespace pwiz.Skyline.Util
                     return double.NaN;
 
                 int len = s1.Length;
-                double sum_mul = 0;
+                double sumMul = 0;
                 for (int i = 0; i < len; i++)
-                    sum_mul += (s1._list[i]*s2._list[i]);
-                return (sum_mul - len*s1.Mean()*s2.Mean())/(len - 1);
+                    sumMul += (s1._list[i]*s2._list[i]);
+                return (sumMul - len*s1.Mean()*s2.Mean())/(len - 1);
             }
             catch (Exception)
             {
@@ -610,6 +627,16 @@ namespace pwiz.Skyline.Util
             return new Statistics(residuals.ToArray());
         }
 
+        /// <summary>
+        /// Standard deviation of Y for a linear regression.
+        /// <para>
+        /// Described at:
+        /// http://www.chem.utoronto.ca/coursenotes/analsci/StatsTutorial/ErrRegr.html
+        /// </para>
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        /// <returns>The standard deviation in the y values for the linear regression</returns>
         private static double StdDevY(Statistics y, Statistics x)
         {
             double s = 0;
@@ -619,7 +646,29 @@ namespace pwiz.Skyline.Util
             return Math.Sqrt(s / (residuals._list.Length - 2));
         }
 
-        public static double StdDevA(Statistics y, Statistics x)
+        /// <summary>
+        /// Calculates the standard error of the alpha (y-intercept) coefficient for a
+        /// linear regression function using the current set of numbers as Y values
+        /// and another set as X values.
+        /// </summary>
+        /// <param name="x">X values</param>
+        /// <returns>Standard error of alpha</returns>
+        public double StdErrAlpha(Statistics x)
+        {
+            return StdErrAlpha(this, x);
+        }
+
+        /// <summary>
+        /// Standard error for the Alpha (y-intercept) coefficient of a linear
+        /// regression.
+        /// <para>
+        /// Described at:
+        /// http://www.chem.utoronto.ca/coursenotes/analsci/StatsTutorial/ErrRegr.html
+        /// </para>
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        public static double StdErrAlpha(Statistics y, Statistics x)
         {
             try
             {
@@ -631,7 +680,29 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static double StdDevB(Statistics y, Statistics x)
+        /// <summary>
+        /// Calculates the standard error of the beta (slope) coefficient for a
+        /// linear regression function using the current set of numbers as Y values
+        /// and another set as X values.
+        /// </summary>
+        /// <param name="x">X values</param>
+        /// <returns>Standard error of beta</returns>
+        public double StdErrBeta(Statistics x)
+        {
+            return StdErrBeta(this, x);
+        }
+
+        /// <summary>
+        /// Standard error for the Beta (slope) coefficient of a linear
+        /// regression.
+        /// <para>
+        /// Described at:
+        /// http://www.chem.utoronto.ca/coursenotes/analsci/StatsTutorial/ErrRegr.html
+        /// </para>
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        public static double StdErrBeta(Statistics y, Statistics x)
         {
             try
             {
