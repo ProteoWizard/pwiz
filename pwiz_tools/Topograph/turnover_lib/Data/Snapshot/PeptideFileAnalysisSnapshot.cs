@@ -57,6 +57,7 @@ namespace pwiz.Topograph.Data.Snapshot
                 {
                     distribution.LoadChildren(amounts, a=>a.TracerFormula);
                 }
+                distributions.AddChild(distribution.PeptideQuantity, distribution);
             }
             return distributions;
         }

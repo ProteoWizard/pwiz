@@ -170,7 +170,6 @@ namespace pwiz.Topograph.MsData
                         var snapshot = PeptideAnalysisSnapshot.LoadSnapshot(_workspace, peptideAnalysisId.Value, false);
                         if (snapshot == null)
                         {
-                            _eventWaitHandle.Reset();
                             return null;
                         }
                         peptideAnalysis = new PeptideAnalysis(_workspace, snapshot);

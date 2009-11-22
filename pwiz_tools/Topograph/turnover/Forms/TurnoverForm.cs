@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using NHibernate;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Fasta;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Enrichment;
@@ -305,9 +306,28 @@ namespace pwiz.Topograph.ui.Forms
         {
             var upgrader = new WorkspaceUpgrader(path);
             int version;
-            using (var connection = upgrader.OpenConnection())
+            try
             {
-                version = upgrader.ReadSchemaVersion(connection);
+                using (var connection = upgrader.OpenConnection())
+                {
+                    try
+                    {
+                        version = upgrader.ReadSchemaVersion(connection);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Out.WriteLine(e);
+                        MessageBox.Show(
+                            "Unable to read version number from the workspace.  This workspace may be too old to be upgraded.");
+                        return null;
+                    }
+                }
+            }
+            catch (Exception openException)
+            {
+                Console.Out.WriteLine(openException);
+                MessageBox.Show("Unable to open the database:" + openException.Message);
+                return null;
             }
             if (version > WorkspaceUpgrader.CurrentVersion || version < WorkspaceUpgrader.MinUpgradeableVersion)
             {
@@ -663,10 +683,7 @@ namespace pwiz.Topograph.ui.Forms
                 try
                 {
                     Workspace = OpenWorkspace(dialog.Filename);
-                    if (Workspace == null)
-                    {
-                        return;
-                    }
+                    return;
                 }
                 catch (Exception exception)
                 {
@@ -768,6 +785,21 @@ namespace pwiz.Topograph.ui.Forms
             }
             locksForm = new LocksForm(Workspace);
             locksForm.Show(DocumentPanel, DockState.Floating);
+        }
+
+        public PeptideAnalysis LoadPeptideAnalysis(long id)
+        {
+            PeptideAnalysis peptideAnalysis;
+            LoadPeptideAnalyses(new[] {id}).TryGetValue(id, out peptideAnalysis);
+            return peptideAnalysis;
+        }
+
+        public Dictionary<long,PeptideAnalysis> LoadPeptideAnalyses(ICollection<long> ids)
+        {
+            var job = new LoadPeptideAnalysisSnapshot(Workspace, ids);
+            var title = ids.Count == 1 ? "Loading peptide analysis" : "Loading " + ids.Count + " peptide analyses";
+            new LongOperationBroker(job, new LongWaitDialog(this, title)).LaunchJob();
+            return job.PeptideAnalyses;
         }
     }
 }

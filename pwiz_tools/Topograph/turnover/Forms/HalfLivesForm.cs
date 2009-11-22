@@ -155,7 +155,11 @@ namespace pwiz.Topograph.ui.Forms
                         }
                     }
                 }
-                var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                if (peptideAnalysis == null)
+                {
+                    return;
+                }
                 var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
                 if (form != null)
                 {

@@ -108,6 +108,7 @@
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbInstanceStatus.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
+    <Compile Include="Data\Snapshot\LoadPeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideFileAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\Snapshot.cs" />

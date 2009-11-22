@@ -90,7 +90,7 @@ namespace pwiz.Topograph.ui.Controls
                     }
                 }
             }
-            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
             if (peptideAnalysis == null)
             {
                 return;

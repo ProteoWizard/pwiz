@@ -164,7 +164,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void RequeryPeptideAnalyses()
         {
-            var peptideAnalyses = new List<PeptideAnalysis>();
+            var peptideAnalysisIds = new HashSet<long>();
             using (var session = Workspace.OpenSession())
             {
                 IQuery query;
@@ -182,13 +182,16 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 foreach (DbPeptideAnalysis dbPeptideAnalysis in query.List())
                 {
-                    var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
-                    peptideAnalysis.IncChromatogramRefCount();
-                    peptideAnalyses.Add(peptideAnalysis);
+                    peptideAnalysisIds.Add(dbPeptideAnalysis.Id.Value);
                 }
             }
+            var peptideAnalyses = TurnoverForm.Instance.LoadPeptideAnalyses(peptideAnalysisIds);
             ClearPeptideAnalyses();
-            _peptideAnalyses.AddRange(peptideAnalyses);
+            foreach (var peptideAnalysis in peptideAnalyses.Values)
+            {
+                peptideAnalysis.IncChromatogramRefCount();
+            }
+            _peptideAnalyses.AddRange(peptideAnalyses.Values);
         }
 
         private void UpdateCohortCombo()

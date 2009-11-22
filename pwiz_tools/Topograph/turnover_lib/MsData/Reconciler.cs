@@ -86,6 +86,44 @@ namespace pwiz.Topograph.MsData
             return _workspace.PeptideAnalyses.ListChildren().ToDictionary(a => a.Id.Value);
         }
 
+        public bool LoadPeptideAnalyses(Dictionary<long, PeptideAnalysis> peptideAnalyses)
+        {
+            lock(this)
+            {
+                var activePeptideAnalyses = GetActivePeptideAnalyses();
+                var missingIds = new List<long>();
+                foreach (var id in peptideAnalyses.Keys)
+                {
+                    PeptideAnalysis peptideAnalysis;
+                    if (activePeptideAnalyses.TryGetValue(id, out peptideAnalysis))
+                    {
+                        peptideAnalyses[id] = peptideAnalysis;
+                    }
+                    else
+                    {
+                        missingIds.Add(id);
+                    }
+                }
+                if (missingIds.Count == 0)
+                {
+                    return true;
+                }
+                foreach (var id in missingIds)
+                {
+                    activePeptideAnalyses[id] = null;
+                }
+                if (!ReconcileNow(activePeptideAnalyses))
+                {
+                    return false;
+                }
+                foreach (var id in missingIds)
+                {
+                    peptideAnalyses[id] = activePeptideAnalyses[id];
+                }
+                return true;
+            }
+        }
+
         public PeptideAnalysis LoadPeptideAnalysis(long id)
         {
             while (true)
@@ -220,7 +258,12 @@ namespace pwiz.Topograph.MsData
                         peptideAnalyses[id] = dbPeptideAnalysis;
                     }
                 }
-                if (maxChangeId == 0 && peptides.Count == 0 && msDataFiles.Count == 0 && !workspaceChanged)
+                if (maxChangeId == 0 
+                    && peptides.Count == 0 
+                    && msDataFiles.Count == 0 
+                    && !workspaceChanged 
+                    && peptideAnalysisIdsToSnapshot.Count == 0 
+                    && peptideAnalyses.Count == 0)
                 {
                     return true;
                 }
@@ -300,6 +343,11 @@ namespace pwiz.Topograph.MsData
                 _workspace.AddChangedPeptideAnalyses(peptideAnalyses);
                 _workspace.ResultCalculator.AddPeptideFileAnalysisIds(fileAnalysisIdsForResultCalculator);
                 _workspace.ChromatogramGenerator.AddPeptideFileAnalysisIds(fileAnalysisIdsForChromatogramGenerator);
+                if (workspaceChanged)
+                {
+                    _workspace.ChromatogramGenerator.SetRequeryPending();
+                    _workspace.ResultCalculator.SetRequeryPending();
+                }
                 _workspace.CheckDirty();
             }
             return true;

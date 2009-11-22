@@ -312,7 +312,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis((long) dataGridView.Rows[e.RowIndex].Tag);
+            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis((long) dataGridView.Rows[e.RowIndex].Tag);
             if (peptideAnalysis == null)
             {
                 return;
@@ -331,7 +331,7 @@ namespace pwiz.Topograph.ui.Forms
             var row = dataGridView.Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
             var peptideAnalysisId = (long)row.Tag;
-            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(peptideAnalysisId);
+            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(peptideAnalysisId);
             if (peptideAnalysis == null)
             {
                 return;
@@ -362,7 +362,11 @@ namespace pwiz.Topograph.ui.Forms
             }
             var column = dataGridView.Columns[e.ColumnIndex];
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis((long) row.Tag);
+            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis((long) row.Tag);
+            if (peptideAnalysis == null)
+            {
+                return;
+            }
 
             PeptideQuantity? peptideQuantity = null;
             if (column == colMinScoreTracerCount || column == colMaxScoreTracerCount)

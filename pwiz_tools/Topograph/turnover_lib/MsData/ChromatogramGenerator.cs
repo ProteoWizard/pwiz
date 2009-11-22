@@ -254,10 +254,16 @@ namespace pwiz.Topograph.MsData
                 ChromatogramTask chromatogramTask;
                 try
                 {
-                    chromatogramTask = GetTaskList();    
+                    _eventWaitHandle.Reset();
+                    chromatogramTask = GetTaskList();
+                    if (chromatogramTask != null)
+                    {
+                        _eventWaitHandle.Set();
+                    }
                 }
                 catch(Exception exception)
                 {
+                    _eventWaitHandle.Set();
                     Console.Out.WriteLine(exception);
                     _eventWaitHandle.WaitOne();
                     continue;
@@ -288,7 +294,6 @@ namespace pwiz.Topograph.MsData
                 }
                 else
                 {
-                    _eventWaitHandle.Reset();
                     _statusMessage = "Idle";
                 }
                 _progress = 0;
