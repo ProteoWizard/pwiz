@@ -51,8 +51,8 @@
     <property name="SearchResultCount" />
     <property name="Sequence" not-null="true" unique-key="PeptideSequence"/>
     <property name="FullSequence" />
-    <property name="Protein" length="1000"/>
-    <property name="ProteinDescription" length="10000" />
+    <property name="Protein" length="10000"/>
+    <property name="ProteinDescription" length="100000" />
   </class>
   <class name="DbPeptideSearchResult">
     <id name="Id">
